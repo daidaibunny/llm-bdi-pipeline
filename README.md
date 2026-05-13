@@ -40,6 +40,13 @@ planner/verifier executables. Those outputs are reproducible from the commands
 below, while the external executables must be installed on the local machine
 for full planning and verification experiments.
 
+The persistent intermediate benchmark records are tracked in `src/benchmark_data/`:
+
+- `src/benchmark_data/benchmark_queries.json` stores the full `115` natural-language
+  benchmark query records and their problem-file bindings.
+- `src/benchmark_data/queries_LTLf.json` stores the corresponding validated LTLf
+  temporal-specification records used by the pipeline.
+
 ## Repository Layout
 
 ```text

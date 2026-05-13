@@ -15,6 +15,16 @@ The default suite is designed to pass from a clean checkout with only Python
 dependencies installed. Tests that require unavailable external planner
 toolchains are skipped.
 
+## Tracked Benchmark Data
+
+The full benchmark query and temporal-specification records are checked in
+under `src/benchmark_data/` rather than under generated test-output folders:
+
+- `src/benchmark_data/benchmark_queries.json`
+  - `115` natural-language benchmark query records with problem-file bindings
+- `src/benchmark_data/queries_LTLf.json`
+  - the matching validated LTLf records consumed by the pipeline and tests
+
 ## Coverage Overview
 
 - `tests/evaluation/test_execution_logger.py`

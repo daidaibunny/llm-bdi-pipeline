@@ -3,6 +3,12 @@
 :icons: font
 :prewrap!:
 
+NOTE: This vendored runtime is used by the parent BDI-agent pipeline repository.
+That repository tracks its full benchmark query records in
+`src/benchmark_data/benchmark_queries.json` and the corresponding validated
+LTLf temporal-specification records in `src/benchmark_data/queries_LTLf.json`;
+generated run outputs remain local-only.
+
 Jason is an interpreter for an extended version of AgentSpeak. It implements the operational semantics of that language, and provides a platform for the development of multi-agent systems, with many user-customisable features. Jason is available as Open Source, and is distributed under GNU LGPL.
 
 Jason is developed by https://jomifred.github.io[Jomi F. Hübner] and http://www.inf.pucrs.br/r.bordini[Rafael H. Bordini], based on previous work done with many colleagues, in particular Michael Fisher, Joyce Martins, Álvaro Moreira, Renata Vieira, Willem Visser, Mike Wooldridge, but also many others, as acknowledged in the manual (see the http://jason-lang.github.io/[documents] page).
