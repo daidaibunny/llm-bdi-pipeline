@@ -1,61 +1,21 @@
-# Test Suite
+# Tests
 
-This directory contains the active regression and benchmark-acceptance checks for the current
-domain-complete pipeline mainline.
+The active test suite covers:
 
-## Test Command
+- PDDL parsing
+- stored LTLf event extraction and PDDL fluent mapping
+- DFA-driven high-level AgentSpeak(L) plan generation
+- plan-library artifact persistence
+- structural validation of `!g`/`dfa_state(...)` plans
 
-From the repository root, run:
-
-```bash
-uv run pytest
-```
-
-The default suite is designed to pass from a clean checkout with only Python
-dependencies installed. Tests that require unavailable external planner
-toolchains are skipped.
-
-## Tracked Benchmark Data
-
-The full benchmark query and temporal-specification records are checked in
-under `src/benchmark_data/` rather than under generated test-output folders:
-
-- `src/benchmark_data/benchmark_queries.json`
-  - `115` natural-language benchmark query records with problem-file bindings
-- `src/benchmark_data/queries_LTLf.json`
-  - the matching validated LTLf records consumed by the pipeline and tests
-
-## Coverage Overview
-
-- `tests/evaluation/test_execution_logger.py`
-  - semantic execution logger schema and active-step visibility
-- `tests/evaluation/test_structure.py`
-  - cleanup guards against retired imports and stage-numbered artifact keys
-- `tests/official_benchmark/test_ground_truth_baseline_units.py`
-  - problem-structure and official method-library unit coverage
-- `tests/official_benchmark/test_ground_truth_baseline.py`
-  - official domain preflight and official problem-root smoke coverage
-- `tests/run_official_problem_root_baseline.py`
-  - parallel four-domain full sweep harness for the `115` official problem-root cases
-
-## Recommended Commands
+Run the focused suite with:
 
 ```bash
-uv run pytest -q tests/evaluation/test_execution_logger.py
-uv run pytest -q tests/evaluation/test_structure.py
-uv run pytest -q tests/official_benchmark/test_ground_truth_baseline_units.py
-uv run pytest -q tests/official_benchmark/test_ground_truth_baseline.py -k smoke
-uv run python tests/run_official_problem_root_baseline.py --domain blocksworld --run-dir tests/generated/tmp
+uv run pytest \
+  tests/utils/test_pddl_parser.py \
+  tests/utils/test_symbol_normalizer.py \
+  tests/utils/test_negation_mode_resolver.py \
+  tests/utils/test_config.py \
+  tests/temporal_specification \
+  tests/plan_library
 ```
-
-Run the full live acceptance sweep only when doing final validation:
-
-```bash
-uv run python tests/run_official_problem_root_baseline.py
-```
-
-## Notes
-
-- Goal-grounding and method-synthesis tests that hit a live model require API access.
-- Official planning requires `pandaPIparser`, `pandaPIgrounder`, and `pandaPIengine`.
-- `tests/run_official_problem_root_baseline.py` is the canonical benchmark-backed acceptance harness.

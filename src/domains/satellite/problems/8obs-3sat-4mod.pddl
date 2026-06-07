@@ -1,0 +1,40 @@
+(define (problem 8obs_3sat_4mod)
+ (:domain satellite)
+ (:objects
+  instrument0 instrument1 instrument2 - instrument
+  satellite0 satellite1 satellite2 - satellite
+  spectrograph2 image0 infrared3 thermograph1 - mode
+  star0 star1 star3 planet9 groundstation2 planet5 phenomenon10 planet4 star8 phenomenon6 star7 - direction
+ )
+ (:init
+  (supports instrument0 spectrograph2)
+  (supports instrument0 image0)
+  (calibration_target instrument0 star0)
+  (on_board instrument0 satellite0)
+  (power_avail satellite0)
+  (pointing satellite0 star1)
+  (supports instrument1 image0)
+  (supports instrument1 spectrograph2)
+  (supports instrument1 thermograph1)
+  (calibration_target instrument1 star1)
+  (on_board instrument1 satellite1)
+  (power_avail satellite1)
+  (pointing satellite1 phenomenon6)
+  (supports instrument2 thermograph1)
+  (supports instrument2 infrared3)
+  (calibration_target instrument2 star1)
+  (on_board instrument2 satellite2)
+  (power_avail satellite2)
+  (pointing satellite2 star7)
+ )
+ (:goal (and
+  (have_image star3 thermograph1)
+  (have_image planet4 thermograph1)
+  (have_image planet5 image0)
+  (have_image phenomenon6 infrared3)
+  (have_image star7 image0)
+  (have_image star8 image0)
+  (have_image planet9 infrared3)
+  (have_image phenomenon10 spectrograph2)
+ ))
+)

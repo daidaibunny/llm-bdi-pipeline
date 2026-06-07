@@ -14,12 +14,13 @@ __all__ = [
 	"AgentSpeakPlan",
 	"AgentSpeakTrigger",
 	"LibraryValidationRecord",
+	"PlanGenerationSummary",
 	"PlanLibrary",
 	"PlanLibraryArtifactBundle",
 	"PlanLibraryGenerationPipeline",
 	"PlanLibrarySetResult",
-	"TranslationCoverage",
-	"build_plan_library",
+	"build_high_level_plan_library",
+	"build_high_level_plan_library_from_dfa",
 	"build_library_validation_record",
 	"deduplicate_plan_library",
 	"load_plan_library_artifact_bundle",
@@ -51,16 +52,16 @@ def __getattr__(name: str) -> Any:
 		"AgentSpeakPlan",
 		"AgentSpeakTrigger",
 		"LibraryValidationRecord",
+		"PlanGenerationSummary",
 		"PlanLibrary",
-		"TranslationCoverage",
 	}:
 		from .models import (
 			AgentSpeakBodyStep,
 			AgentSpeakPlan,
 			AgentSpeakTrigger,
 			LibraryValidationRecord,
+			PlanGenerationSummary,
 			PlanLibrary,
-			TranslationCoverage,
 		)
 
 		return {
@@ -68,21 +69,27 @@ def __getattr__(name: str) -> Any:
 			"AgentSpeakPlan": AgentSpeakPlan,
 			"AgentSpeakTrigger": AgentSpeakTrigger,
 			"LibraryValidationRecord": LibraryValidationRecord,
+			"PlanGenerationSummary": PlanGenerationSummary,
 			"PlanLibrary": PlanLibrary,
-			"TranslationCoverage": TranslationCoverage,
 		}[name]
 	if name == "PlanLibraryGenerationPipeline":
 		from .pipeline import PlanLibraryGenerationPipeline
 
 		return PlanLibraryGenerationPipeline
+	if name in {"build_high_level_plan_library", "build_high_level_plan_library_from_dfa"}:
+		from .dfa_high_level import (
+			build_high_level_plan_library,
+			build_high_level_plan_library_from_dfa,
+		)
+
+		return {
+			"build_high_level_plan_library": build_high_level_plan_library,
+			"build_high_level_plan_library_from_dfa": build_high_level_plan_library_from_dfa,
+		}[name]
 	if name == "render_plan_library_asl":
 		from .rendering import render_plan_library_asl
 
 		return render_plan_library_asl
-	if name == "build_plan_library":
-		from .translation import build_plan_library
-
-		return build_plan_library
 	if name == "build_library_validation_record":
 		from .validation import build_library_validation_record
 

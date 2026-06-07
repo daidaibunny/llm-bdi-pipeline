@@ -1,53 +1,31 @@
-"""
-Chapter 5 evaluation exports.
-
-Keep package import side effects minimal so evaluation submodules can import
-each other without forcing the full evaluation pipeline during package init.
-"""
+"""Evaluation support exports."""
 
 from __future__ import annotations
 
 from typing import Any
 
 __all__ = [
-	"EnvironmentAdapterResult",
-	"JasonRunner",
-	"JasonValidationError",
-	"JasonValidationResult",
-	"PlanLibraryEvaluationPipeline",
-	"Stage6EnvironmentAdapter",
-	"build_environment_adapter",
+	"DFABuilder",
+	"LTLfToDFA",
+	"build_dfa_from_ltlf",
 ]
 
 
 def __getattr__(name: str) -> Any:
-	if name == "PlanLibraryEvaluationPipeline":
-		from .pipeline import PlanLibraryEvaluationPipeline
-
-		return PlanLibraryEvaluationPipeline
 	if name in {
-		"EnvironmentAdapterResult",
-		"JasonRunner",
-		"JasonValidationError",
-		"JasonValidationResult",
-		"Stage6EnvironmentAdapter",
-		"build_environment_adapter",
+		"DFABuilder",
+		"LTLfToDFA",
+		"build_dfa_from_ltlf",
 	}:
-		from .runtime import (
-			EnvironmentAdapterResult,
-			JasonRunner,
-			JasonValidationError,
-			JasonValidationResult,
-			Stage6EnvironmentAdapter,
-			build_environment_adapter,
+		from .temporal_compilation import (
+			DFABuilder,
+			LTLfToDFA,
+			build_dfa_from_ltlf,
 		)
 
 		return {
-			"EnvironmentAdapterResult": EnvironmentAdapterResult,
-			"JasonRunner": JasonRunner,
-			"JasonValidationError": JasonValidationError,
-			"JasonValidationResult": JasonValidationResult,
-			"Stage6EnvironmentAdapter": Stage6EnvironmentAdapter,
-			"build_environment_adapter": build_environment_adapter,
+			"DFABuilder": DFABuilder,
+			"LTLfToDFA": LTLfToDFA,
+			"build_dfa_from_ltlf": build_dfa_from_ltlf,
 		}[name]
 	raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

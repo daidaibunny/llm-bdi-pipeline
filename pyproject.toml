@@ -27,22 +27,16 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 include = [
-    "compat*",
     "domain_model*",
     "evaluation*",
-    "execution_logging*",
-    "htn_evaluation*",
     "language_model*",
-    "method_library*",
     "plan_library*",
-    "planning*",
     "temporal_specification*",
     "utils*",
-    "verification*",
 ]
 
 [tool.setuptools.package-data]
-"*" = ["*.hddl", "*.json", "*.asl", "*.mas2j", "*.properties", "*.jar"]
+"*" = ["*.pddl", "*.json", "*.asl"]
 
 [dependency-groups]
 dev = [

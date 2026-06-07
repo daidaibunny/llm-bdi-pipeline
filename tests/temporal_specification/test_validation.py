@@ -19,13 +19,13 @@ from temporal_specification import (
 	referenced_events_from_formula,
 	validate_temporal_specification_record,
 )
-from tests.support.plan_library_generation_support import DOMAIN_FILES
-from utils.hddl_parser import HDDLParser
+from utils.pddl_parser import PDDLParser
 
 
 def test_query_sequence_loader_filters_domain_cases_in_numeric_order() -> None:
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
 	query_sequence, temporal_specifications = load_query_sequence_records(
-		domain_file=DOMAIN_FILES["blocksworld"],
+		domain_file=domain_file,
 	)
 
 	assert len(query_sequence) == len(temporal_specifications)
@@ -33,12 +33,13 @@ def test_query_sequence_loader_filters_domain_cases_in_numeric_order() -> None:
 	assert query_sequence[1].instruction_id == "query_2"
 	assert all(record.instruction_id.startswith("query_") for record in query_sequence[:3])
 	assert all("do_put_on" in record.ltlf_formula for record in temporal_specifications[:3])
-	assert all(str(record.problem_file).endswith(".hddl") for record in temporal_specifications[:3])
+	assert all(str(record.problem_file).endswith(".pddl") for record in temporal_specifications[:3])
 
 
 def test_query_sequence_loader_filters_explicit_query_ids_in_requested_order() -> None:
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
 	query_sequence, temporal_specifications = load_query_sequence_records(
-		domain_file=DOMAIN_FILES["blocksworld"],
+		domain_file=domain_file,
 		query_ids=("query_3", "query_1", "query_3"),
 	)
 
@@ -47,9 +48,10 @@ def test_query_sequence_loader_filters_explicit_query_ids_in_requested_order() -
 
 
 def test_query_sequence_loader_rejects_unknown_explicit_query_ids() -> None:
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
 	with pytest.raises(ValueError, match='Unknown query ids for domain "blocksworld": query_missing'):
 		load_query_sequence_records(
-			domain_file=DOMAIN_FILES["blocksworld"],
+			domain_file=domain_file,
 			query_ids=("query_missing",),
 		)
 
@@ -68,7 +70,7 @@ def test_extract_formula_atoms_and_referenced_events_preserve_source_order() -> 
 
 
 def test_temporal_spec_validation_preserves_repeated_event_identity() -> None:
-	domain = HDDLParser.parse_domain(DOMAIN_FILES["blocksworld"])
+	domain = _parse_blocks_domain()
 	record = TemporalSpecificationRecord(
 		instruction_id="query_repeat",
 		source_text="Repeat the same stacking task twice.",
@@ -90,7 +92,7 @@ def test_temporal_spec_validation_preserves_repeated_event_identity() -> None:
 
 
 def test_temporal_spec_validation_rejects_unknown_events() -> None:
-	domain = HDDLParser.parse_domain(DOMAIN_FILES["blocksworld"])
+	domain = _parse_blocks_domain()
 	record = TemporalSpecificationRecord(
 		instruction_id="query_invalid",
 		source_text="Use a task that does not exist in the domain.",
@@ -101,3 +103,7 @@ def test_temporal_spec_validation_rejects_unknown_events() -> None:
 
 	with pytest.raises(ValueError, match='references unknown event "unknown_task"'):
 		validate_temporal_specification_record(record, domain=domain)
+
+
+def _parse_blocks_domain():
+	return PDDLParser.parse_domain(PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl")

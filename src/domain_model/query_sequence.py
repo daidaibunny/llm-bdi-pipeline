@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Sequence, Tuple
 
-from utils.hddl_parser import HDDLParser
+from utils.pddl_parser import PDDLParser
 
 from temporal_specification import (
 	QueryInstructionRecord,
@@ -43,7 +43,7 @@ def infer_query_domain(
 	domain_file: str | Path,
 	explicit_domain: str | None = None,
 ) -> str:
-	"""Infer the query-dataset domain key for one HDDL domain file."""
+	"""Infer the query-dataset domain key for one PDDL domain file."""
 
 	if str(explicit_domain or "").strip():
 		domain_key = _DOMAIN_NAME_ALIASES.get(str(explicit_domain).strip().lower())
@@ -56,7 +56,7 @@ def infer_query_domain(
 	if parent_key:
 		return parent_key
 
-	parsed_domain = HDDLParser.parse_domain(str(domain_path))
+	parsed_domain = PDDLParser.parse_domain(str(domain_path))
 	domain_name_key = _DOMAIN_NAME_ALIASES.get(str(parsed_domain.name or "").strip().lower())
 	if domain_name_key:
 		return domain_name_key
@@ -89,7 +89,7 @@ def load_query_sequence_records(
 	"""Load the default query sequence and validated temporal specifications for one domain."""
 
 	domain_path = Path(domain_file).expanduser().resolve()
-	domain = HDDLParser.parse_domain(str(domain_path))
+	domain = PDDLParser.parse_domain(str(domain_path))
 	domain_key = infer_query_domain(domain_file=domain_path, explicit_domain=query_domain)
 	dataset = load_temporal_specification_dataset(dataset_path)
 	domain_cases = (

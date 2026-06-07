@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass, replace
 from typing import Any, Dict
 
-from method_library.synthesis.naming import sanitize_identifier
+from .rendering import sanitize_identifier
 
 from .models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 
@@ -53,7 +53,12 @@ def deduplicate_plan_library(plan_library: PlanLibrary) -> PlanLibrarySetResult:
 		index_by_fingerprint[fingerprint] = len(plans)
 		plans.append(plan)
 	return PlanLibrarySetResult(
-		plan_library=PlanLibrary(domain_name=plan_library.domain_name, plans=tuple(plans)),
+		plan_library=PlanLibrary(
+			domain_name=plan_library.domain_name,
+			plans=tuple(plans),
+			initial_beliefs=plan_library.initial_beliefs,
+			metadata=plan_library.metadata,
+		),
 		removed_duplicate_plans=removed_duplicates,
 		renamed_plans=renamed_plans,
 	)
