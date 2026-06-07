@@ -1,6 +1,4 @@
-"""
-Shared utility modules for the domain-complete HTN pipeline.
-"""
+"""Shared utility modules for the DFA-driven PDDL pipeline."""
 
 from .symbol_normalizer import SymbolNormalizer
 

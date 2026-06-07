@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 from utils.symbol_normalizer import SymbolNormalizer
 
 from .models import ReferencedEvent, TemporalSpecificationRecord
+from .pddl_mapping import EVENT_TO_FLUENT_BY_DOMAIN
 
 
 _FORMULA_OPERATOR_SEQUENCE_PATTERN = re.compile(r"^(?:WX|[FGXURW])+$")
@@ -100,17 +101,22 @@ def referenced_events_from_formula(ltlf_formula: str) -> Tuple[ReferencedEvent, 
 
 
 def build_domain_event_name_map(domain: Any) -> Dict[str, str]:
-	"""Build a raw-name lookup for task and action events declared by the domain."""
+	"""Build a raw-name lookup for PDDL events and mapped temporal fluents."""
 
 	name_map: Dict[str, str] = {}
-	for task in getattr(domain, "tasks", ()) or ():
-		task_name = str(getattr(task, "name", "") or "").strip()
-		if task_name:
-			name_map[task_name] = task_name
 	for action in getattr(domain, "actions", ()) or ():
 		action_name = str(getattr(action, "name", "") or "").strip()
 		if action_name:
 			name_map[action_name] = action_name
+	for predicate in getattr(domain, "predicates", ()) or ():
+		predicate_name = str(getattr(predicate, "name", "") or "").strip()
+		if predicate_name:
+			name_map[predicate_name] = predicate_name
+	predicate_names = set(name_map)
+	for mapping in EVENT_TO_FLUENT_BY_DOMAIN.values():
+		for event_name, fluent_name in mapping.items():
+			if fluent_name in predicate_names:
+				name_map[event_name] = fluent_name
 	return name_map
 
 

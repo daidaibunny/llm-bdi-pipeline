@@ -13,7 +13,6 @@ if _src_dir not in sys.path:
     sys.path.insert(0, _src_dir)
 
 from utils.symbol_normalizer import SymbolNormalizer
-from evaluation.goal_grounding.grounding_map import create_propositional_symbol
 
 
 def convert_formula_to_propositional_symbols(
@@ -177,8 +176,8 @@ def test_formula_conversion_contract():
     assert all_passed
 
 
-def test_grounding_map_integration():
-    """Test integration with create_propositional_symbol"""
+def test_create_propositional_symbol_integration():
+    """Test direct propositional symbol creation."""
     print("=" * 80)
     print("TEST 6: Integration with Grounding Map")
     print("=" * 80)
@@ -193,7 +192,7 @@ def test_grounding_map_integration():
 
     all_passed = True
     for predicate, args, expected in test_cases:
-        result = create_propositional_symbol(predicate, args, normalizer)
+        result = normalizer.create_propositional_symbol(predicate, args)
 
         if result == expected:
             print(f"✓ create_propositional_symbol('{predicate}', {args})")
@@ -229,7 +228,7 @@ def main():
         "Formula Normalization with Hyphens": _run_manual_test(test_formula_normalization_with_hyphens),
         "Symbol Restoration": _run_manual_test(test_symbol_restoration),
         "Formula Conversion Contract": _run_manual_test(test_formula_conversion_contract),
-        "Grounding Map Integration": _run_manual_test(test_grounding_map_integration),
+        "Symbol Creation Integration": _run_manual_test(test_create_propositional_symbol_integration),
     }
 
     print("=" * 80)

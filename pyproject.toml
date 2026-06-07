@@ -8,7 +8,6 @@ dependencies = [
     "dd>=0.6.0",
     "lark>=1.1.9",
     "openai>=2.6.0",
-    "pyperplan>=2.1",
     "ltlf2dfa>=1.0.2",
 ]
 
@@ -27,22 +26,17 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 include = [
-    "compat*",
     "domain_model*",
     "evaluation*",
-    "execution_logging*",
-    "htn_evaluation*",
     "language_model*",
-    "method_library*",
+    "low_level_planning*",
     "plan_library*",
-    "planning*",
     "temporal_specification*",
     "utils*",
-    "verification*",
 ]
 
 [tool.setuptools.package-data]
-"*" = ["*.hddl", "*.json", "*.asl", "*.mas2j", "*.properties", "*.jar"]
+"*" = ["*.pddl", "*.json", "*.asl"]
 
 [dependency-groups]
 dev = [

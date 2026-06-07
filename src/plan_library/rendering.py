@@ -4,10 +4,9 @@ Render structured AgentSpeak(L) plan libraries as textual `.asl` programs.
 
 from __future__ import annotations
 
-import re
 from typing import List
 
-from method_library.synthesis.naming import sanitize_identifier
+import re
 
 from .models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 
@@ -20,6 +19,10 @@ def render_plan_library_asl(plan_library: PlanLibrary) -> str:
 		f"/* Domain: {plan_library.domain_name} */",
 		"",
 	]
+	for belief in plan_library.initial_beliefs:
+		lines.append(f"{_render_atom(belief)}.")
+	if plan_library.initial_beliefs:
+		lines.append("")
 	for plan in plan_library.plans:
 		lines.extend(_render_plan(plan))
 		lines.append("")
@@ -47,6 +50,10 @@ def _render_body_step(step: AgentSpeakBodyStep) -> str:
 	call = _call(step.symbol, step.arguments)
 	if step.kind == "subgoal":
 		return f"!{call}"
+	if step.kind == "belief_addition":
+		return f"+{call}"
+	if step.kind == "belief_deletion":
+		return f"-{call}"
 	return call
 
 
@@ -99,6 +106,8 @@ def _render_term(term: str) -> str:
 		return "item"
 	if _is_agentspeak_variable(text):
 		return text
+	if re.fullmatch(r"[0-9]+(?:\.[0-9]+)?", text):
+		return text
 	if re.fullmatch(r"[a-z][A-Za-z0-9_]*", text):
 		return text
 	return sanitize_identifier(text)
@@ -110,3 +119,21 @@ def _jason_functor(symbol: str) -> str:
 
 def _is_agentspeak_variable(token: str) -> bool:
 	return re.fullmatch(r"[A-Z][A-Za-z0-9_]*", str(token or "").strip()) is not None
+
+
+def sanitize_identifier(value: str) -> str:
+	text = str(value or "").strip().replace("-", "_")
+	buffer: list[str] = []
+	for character in text:
+		if character.isalnum() or character == "_":
+			buffer.append(character.lower())
+		else:
+			buffer.append("_")
+	sanitized = "".join(buffer).strip("_")
+	while "__" in sanitized:
+		sanitized = sanitized.replace("__", "_")
+	if not sanitized:
+		sanitized = "item"
+	if not sanitized[0].isalpha():
+		sanitized = f"t_{sanitized}"
+	return sanitized
