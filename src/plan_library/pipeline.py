@@ -45,7 +45,7 @@ class PlanLibraryGenerationPipeline:
 		dfa_builder: DFABuilder | None = None,
 		fast_downward_executable: str | None = None,
 		enable_low_level_planning: bool = True,
-		render_primitive_actions: bool = False,
+		render_primitive_actions: bool = True,
 	) -> None:
 		self.project_root = Path(__file__).resolve().parents[2]
 		self.domain_file = str(Path(domain_file).expanduser().resolve())
@@ -212,6 +212,7 @@ class PlanLibraryGenerationPipeline:
 						domain_file=self.domain_file,
 						problem_file=str(problem_file),
 						target_context=request.target_context,
+						source_context=request.source_context,
 						cumulative_context=request.cumulative_context,
 						work_dir=str(work_dir),
 					),
@@ -234,10 +235,10 @@ class PlanLibraryGenerationPipeline:
 		domain_dir = self.project_root / "src" / "domains" / query_domain
 		domain_file_parent = Path(self.domain_file).resolve().parent
 		candidates = (
-			domain_dir / "problems" / str(problem_file).strip(),
-			domain_dir / str(problem_file).strip(),
 			domain_file_parent / "problems" / str(problem_file).strip(),
 			domain_file_parent / str(problem_file).strip(),
+			domain_dir / "problems" / str(problem_file).strip(),
+			domain_dir / str(problem_file).strip(),
 		)
 		for candidate in candidates:
 			if candidate.exists():

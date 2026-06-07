@@ -15,20 +15,21 @@ def write_goal_problem_variant(
 	base_problem_file: str | Path,
 	goal_literals: Iterable[str],
 	output_file: str | Path,
+	initial_facts: Iterable[PDDLFact] | None = None,
 ) -> Path:
 	"""Write a PDDL problem that reuses the base init state with a new goal."""
 
 	base_problem = PDDLParser.parse_problem(base_problem_file)
 	output_path = Path(output_file).expanduser().resolve()
 	output_path.parent.mkdir(parents=True, exist_ok=True)
-	goal_facts = tuple(_context_literal_to_fact(literal) for literal in goal_literals)
+	goal_facts = tuple(context_literal_to_fact(literal) for literal in goal_literals)
 	output_path.write_text(
 		_render_problem(
 			problem_name=f"{base_problem.name}_transition_goal",
 			domain_name=base_problem.domain_name,
 			objects=tuple(base_problem.objects),
 			object_types=base_problem.object_types,
-			init_facts=tuple(base_problem.init_facts),
+			init_facts=tuple(initial_facts) if initial_facts is not None else tuple(base_problem.init_facts),
 			goal_facts=goal_facts,
 		),
 		encoding="utf-8",
@@ -36,7 +37,9 @@ def write_goal_problem_variant(
 	return output_path
 
 
-def _context_literal_to_fact(literal: str) -> PDDLFact:
+def context_literal_to_fact(literal: str) -> PDDLFact:
+	"""Parse one AgentSpeak-style context literal into a PDDL fact."""
+
 	text = str(literal or "").strip()
 	is_positive = True
 	if text.lower().startswith("not "):

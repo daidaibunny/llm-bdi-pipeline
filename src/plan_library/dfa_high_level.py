@@ -23,6 +23,7 @@ class LowLevelPlanningRequest:
 	target_state: str
 	context: Tuple[str, ...]
 	target_context: Tuple[str, ...]
+	source_context: Tuple[str, ...]
 	cumulative_context: Tuple[str, ...]
 	raw_label: str
 
@@ -69,6 +70,17 @@ def build_high_level_plan_library_from_dfa(
 		transition
 		for transition in transitions
 		if _is_progress_transition(transition, distances, accepting_states)
+	)
+	progress_transitions = tuple(
+		sorted(
+			progress_transitions,
+			key=lambda transition: (
+				-distances.get(transition["source_state"], -1),
+				transition["source_state"],
+				transition["target_state"],
+				transition["raw_label"],
+			),
+		),
 	)
 	prefixes_by_state = _progress_prefixes_by_state(
 		initial_state=initial_state,
@@ -122,6 +134,7 @@ def build_high_level_plan_library_from_dfa(
 						target_state=target_state,
 						context=context,
 						target_context=target_context,
+						source_context=source_prefix,
 						cumulative_context=cumulative_context,
 						raw_label=raw_label,
 					),
@@ -328,17 +341,14 @@ def _build_low_level_body(
 	request: LowLevelPlanningRequest,
 ) -> tuple[Tuple[AgentSpeakBodyStep, ...], Dict[str, Any], Tuple[str, ...]]:
 	if low_level_planner is None:
-		return (
-			(AgentSpeakBodyStep("subgoal", f"achieve_{request.plan_name}"),),
-			{"low_level_planner": "unconfigured"},
-			(),
+		raise RuntimeError(
+			f"Low-level planner is required to render primitive actions for {request.plan_name}.",
 		)
 	response = low_level_planner(request)
 	if not response.body_steps:
-		return (
-			(AgentSpeakBodyStep("subgoal", f"achieve_{request.plan_name}"),),
-			response.certificate,
-			response.warnings,
+		raise RuntimeError(
+			"Low-level planner did not return primitive actions for "
+			f"{request.plan_name}: {response.certificate}",
 		)
 	return response.body_steps, response.certificate, response.warnings
 

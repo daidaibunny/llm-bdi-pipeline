@@ -83,12 +83,16 @@ Examples:
 	generate_parser.add_argument(
 		"--disable-low-level-planning",
 		action="store_true",
-		help="Generate high-level ASL subgoals without invoking Fast Downward.",
+		help=(
+			"Disable Fast Downward for diagnostics. Context-driven generation requires "
+			"primitive low-level actions for progress plans."
+		),
 	)
 	generate_parser.add_argument(
 		"--render-primitive-actions",
 		action="store_true",
-		help="Render solved low-level traces as primitive ASL actions when available.",
+		default=True,
+		help="Deprecated compatibility flag; primitive ASL actions are rendered by default.",
 	)
 	return parser
 
@@ -109,7 +113,7 @@ def main() -> None:
 			query_ids=tuple(args.query_id or ()),
 			fast_downward_executable=args.fast_downward,
 			enable_low_level_planning=not args.disable_low_level_planning,
-			render_primitive_actions=bool(args.render_primitive_actions),
+			render_primitive_actions=True,
 		)
 		results = pipeline.build_library_bundle(output_root=_absolute_path(args.output_root))
 	else:

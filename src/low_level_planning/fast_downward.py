@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Tuple
 
+from utils.pddl_parser import PDDLFact
+
 from .models import LowLevelAction, LowLevelPlanResult
 from .pddl_goal import write_goal_problem_variant
 
@@ -38,6 +40,7 @@ class FastDownwardPlanner:
 		goal_literals: Iterable[str],
 		work_dir: str | Path,
 		task_name: str,
+		initial_facts: Iterable[PDDLFact] | None = None,
 	) -> LowLevelPlanResult:
 		"""Solve a transition-level planning task with Fast Downward."""
 
@@ -46,6 +49,7 @@ class FastDownwardPlanner:
 			base_problem_file=base_problem_file,
 			goal_literals=tuple(goal_literals),
 			output_file=Path(work_dir).expanduser().resolve() / f"{task_name}.pddl",
+			initial_facts=tuple(initial_facts) if initial_facts is not None else None,
 		)
 		if executable is None:
 			return LowLevelPlanResult(

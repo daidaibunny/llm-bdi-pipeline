@@ -44,7 +44,7 @@ def test_progress_transitions_render_without_dfa_state_beliefs() -> None:
 	assert "dfa_state" not in asl
 	assert "+!g : on(b1, b2) <-" in asl
 	assert "+!g : not on(b1, b2) <-" in asl
-	assert "\t!achieve_query_1_transition_1_1_1_1_2;" in asl
+	assert "\tfake_action(b1, b2);" in asl
 	assert "\t!g." in asl
 
 
@@ -66,6 +66,7 @@ def test_only_progress_outgoing_transitions_become_actionable_plans() -> None:
 		domain_name="transport",
 		instruction_id="query_2",
 		dfa_payload=dfa_payload,
+		low_level_planner=_fake_low_level_planner,
 	)
 
 	actionable_plans = tuple(plan for plan in plan_library.plans if plan.body)
@@ -82,6 +83,6 @@ def test_only_progress_outgoing_transitions_become_actionable_plans() -> None:
 
 def _fake_low_level_planner(request: LowLevelPlanningRequest) -> LowLevelPlanningResponse:
 	return LowLevelPlanningResponse(
-		body_steps=(AgentSpeakBodyStep("subgoal", f"achieve_{request.plan_name}"),),
+		body_steps=(AgentSpeakBodyStep("action", "fake-action", ("b1", "b2")),),
 		certificate={"fake_planner": True},
 	)

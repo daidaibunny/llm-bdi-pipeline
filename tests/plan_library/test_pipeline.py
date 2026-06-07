@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from plan_library import PlanLibraryGenerationPipeline
@@ -23,13 +24,16 @@ class FakeDFABuilder:
 
 def test_plan_library_generation_pipeline_persists_dfa_artifacts(tmp_path: Path) -> None:
 	domain_file = _write_blocks_domain(tmp_path)
+	_write_blocks_problem(tmp_path, "p01.pddl")
 	query_dataset = _write_query_dataset(tmp_path)
+	fast_downward = _write_fake_fast_downward(tmp_path)
 	pipeline = PlanLibraryGenerationPipeline(
 		domain_file=str(domain_file),
 		query_dataset=str(query_dataset),
 		query_domain="blocksworld",
 		query_ids=("query_1",),
 		dfa_builder=FakeDFABuilder(),
+		fast_downward_executable=str(fast_downward),
 	)
 
 	result = pipeline.build_library_bundle(output_root=str(tmp_path / "artifact_bundle"))
@@ -60,18 +64,23 @@ def test_plan_library_generation_pipeline_persists_dfa_artifacts(tmp_path: Path)
 	assert "dfa_state" not in asl
 	assert "+!g : on(b1, b2) <-" in asl
 	assert "+!g : not on(b1, b2) <-" in asl
-	assert "!achieve_query_1_transition_1_1_1_query_1_q0_query_1_q1;" in asl
+	assert "!achieve_" not in asl
+	assert "\tstack(b1, b2);" in asl
 
 
 def test_plan_library_generation_pipeline_filters_selected_query_ids(tmp_path: Path) -> None:
 	domain_file = _write_blocks_domain(tmp_path)
+	_write_blocks_problem(tmp_path, "p01.pddl")
+	_write_blocks_problem(tmp_path, "p02.pddl")
 	query_dataset = _write_query_dataset(tmp_path)
+	fast_downward = _write_fake_fast_downward(tmp_path)
 	pipeline = PlanLibraryGenerationPipeline(
 		domain_file=str(domain_file),
 		query_dataset=str(query_dataset),
 		query_domain="blocksworld",
 		query_ids=("query_2", "query_1", "query_2"),
 		dfa_builder=FakeDFABuilder(),
+		fast_downward_executable=str(fast_downward),
 	)
 
 	result = pipeline.build_library_bundle(output_root=str(tmp_path / "artifact_bundle"))
@@ -108,17 +117,50 @@ def _write_blocks_domain(tmp_path: Path) -> Path:
 		  (clear ?x - block)
 		  (handempty)
 		  (holding ?x - block)
-		 )
-		 (:action stack
-		  :parameters (?x - block ?y - block)
-		  :precondition (and (holding ?x) (clear ?y))
-		  :effect (and (not (holding ?x)) (on ?x ?y))
-		 )
-		)
+			 )
+			 (:action stack
+			  :parameters (?x - block ?y - block)
+			  :precondition (and (clear ?x) (clear ?y))
+			  :effect (and (on ?x ?y))
+			 )
+			)
 		""",
 		encoding="utf-8",
 	)
 	return domain_file
+
+
+def _write_blocks_problem(tmp_path: Path, name: str) -> Path:
+	problem_file = tmp_path / name
+	problem_file.write_text(
+		"""
+		(define (problem p1)
+		 (:domain BLOCKS)
+		 (:objects b1 b2 - block)
+		 (:init (clear b1) (clear b2))
+		 (:goal (and (on b1 b2)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return problem_file
+
+
+def _write_fake_fast_downward(tmp_path: Path) -> Path:
+	driver = tmp_path / "fake-fast-downward.py"
+	driver.write_text(
+		"""#!/usr/bin/env python3
+import sys
+from pathlib import Path
+
+plan_file = Path(sys.argv[sys.argv.index("--plan-file") + 1])
+plan_file.write_text("(stack b1 b2)\\n; cost = 1\\n", encoding="utf-8")
+sys.exit(0)
+""",
+		encoding="utf-8",
+	)
+	os.chmod(driver, 0o755)
+	return driver
 
 
 def _write_query_dataset(tmp_path: Path) -> Path:
