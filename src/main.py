@@ -73,6 +73,23 @@ Examples:
 		"--output-root",
 		help="Optional explicit output root for the persisted plan-library artifact bundle.",
 	)
+	generate_parser.add_argument(
+		"--fast-downward",
+		help=(
+			"Optional path to the Fast Downward driver. If omitted, FAST_DOWNWARD "
+			"or PATH is used."
+		),
+	)
+	generate_parser.add_argument(
+		"--disable-low-level-planning",
+		action="store_true",
+		help="Generate high-level ASL subgoals without invoking Fast Downward.",
+	)
+	generate_parser.add_argument(
+		"--render-primitive-actions",
+		action="store_true",
+		help="Render solved low-level traces as primitive ASL actions when available.",
+	)
 	return parser
 
 
@@ -90,6 +107,9 @@ def main() -> None:
 			query_dataset=_absolute_path(args.query_dataset),
 			query_domain=args.query_domain,
 			query_ids=tuple(args.query_id or ()),
+			fast_downward_executable=args.fast_downward,
+			enable_low_level_planning=not args.disable_low_level_planning,
+			render_primitive_actions=bool(args.render_primitive_actions),
 		)
 		results = pipeline.build_library_bundle(output_root=_absolute_path(args.output_root))
 	else:

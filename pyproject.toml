@@ -8,7 +8,6 @@ dependencies = [
     "dd>=0.6.0",
     "lark>=1.1.9",
     "openai>=2.6.0",
-    "pyperplan>=2.1",
     "ltlf2dfa>=1.0.2",
 ]
 
@@ -30,6 +29,7 @@ include = [
     "domain_model*",
     "evaluation*",
     "language_model*",
+    "low_level_planning*",
     "plan_library*",
     "temporal_specification*",
     "utils*",

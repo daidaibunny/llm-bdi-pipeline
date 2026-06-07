@@ -1,5 +1,5 @@
 """
-Structural validation for DFA-driven AgentSpeak(L) plan libraries.
+Structural validation for context-driven AgentSpeak(L) plan libraries.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ def build_library_validation_record(
 	plan_library: PlanLibrary,
 	generation_summary: PlanGenerationSummary,
 ) -> LibraryValidationRecord:
-	"""Build a validation record for one DFA-driven plan library."""
+	"""Build a validation record for one generated plan library."""
 
 	plan_validation = validate_plan_library_structure(plan_library=plan_library)
 	checked_layers = dict(plan_validation.checked_layers)
@@ -51,7 +51,7 @@ def validate_plan_library_structure(
 	*,
 	plan_library: PlanLibrary,
 ) -> PlanLibraryStructuralValidation:
-	"""Validate the generated plan library against the high-level DFA contract."""
+	"""Validate the generated plan library against the context-driven contract."""
 
 	warnings: List[str] = []
 	plans = tuple(plan_library.plans or ())
@@ -64,12 +64,12 @@ def validate_plan_library_structure(
 	if not unique_plan_names:
 		warnings.append("Generated plan names are not unique.")
 
-	has_initial_state = any(
+	has_no_dfa_state_beliefs = not any(
 		str(belief or "").strip().startswith("dfa_state(")
 		for belief in tuple(plan_library.initial_beliefs or ())
 	)
-	if not has_initial_state:
-		warnings.append("Plan library is missing an initial dfa_state belief.")
+	if not has_no_dfa_state_beliefs:
+		warnings.append("Context-driven libraries must not expose dfa_state beliefs.")
 
 	entrypoint_valid = all(
 		str(plan.trigger.event_type or "").strip() == "achievement_goal"
@@ -81,35 +81,31 @@ def validate_plan_library_structure(
 		warnings.append("Every high-level plan must use the `!g` achievement-goal entrypoint.")
 
 	contexts_valid = all(
-		any(str(literal or "").strip().startswith("dfa_state(") for literal in plan.context)
+		not any(str(literal or "").strip().startswith("dfa_state(") for literal in plan.context)
 		for plan in plans
 	)
 	if not contexts_valid:
-		warnings.append("Every high-level plan context must include the current DFA state.")
+		warnings.append("Plan contexts must be generated from transition literals, not dfa_state.")
 
 	body_valid = True
 	for plan in plans:
 		body = tuple(plan.body or ())
 		if not body:
 			continue
-		if len(body) < 3:
-			body_valid = False
-			warnings.append(f"Transition plan '{plan.plan_name}' has an incomplete DFA update body.")
-			continue
 		if body[-1].kind != "subgoal" or body[-1].symbol != "g":
 			body_valid = False
 			warnings.append(f"Transition plan '{plan.plan_name}' does not recurse to `!g`.")
-		if body[0].kind != "belief_deletion" or body[1].kind != "belief_addition":
+		if any(step.symbol == "dfa_state" for step in body):
 			body_valid = False
-			warnings.append(f"Transition plan '{plan.plan_name}' does not update DFA state beliefs.")
+			warnings.append(f"Transition plan '{plan.plan_name}' still manipulates DFA state beliefs.")
 
 	return PlanLibraryStructuralValidation(
 		checked_layers={
 			"unique_plan_names": unique_plan_names,
-			"initial_state_belief": has_initial_state,
+			"no_dfa_state_beliefs": has_no_dfa_state_beliefs,
 			"goal_entrypoint": entrypoint_valid,
-			"dfa_contexts": contexts_valid,
-			"dfa_transition_bodies": body_valid,
+			"transition_contexts": contexts_valid,
+			"context_driven_bodies": body_valid,
 		},
 		warnings=tuple(dict.fromkeys(warnings)),
 	)

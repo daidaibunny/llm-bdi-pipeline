@@ -1,18 +1,28 @@
 from __future__ import annotations
 
-from plan_library.dfa_high_level import build_high_level_plan_library_from_dfa
+from plan_library.dfa_high_level import (
+	LowLevelPlanningRequest,
+	LowLevelPlanningResponse,
+	build_high_level_plan_library_from_dfa,
+)
+from plan_library.models import AgentSpeakBodyStep
 from plan_library.rendering import render_plan_library_asl
 
 
-def test_dfa_transition_guards_render_as_goal_contexts() -> None:
+def test_progress_transitions_render_without_dfa_state_beliefs() -> None:
 	dfa_payload = {
 		"initial_state": "1",
 		"accepting_states": ["3"],
 		"guarded_transitions": [
 			{
 				"source_state": "1",
+				"target_state": "dead",
+				"raw_label": "~do_put_on_b1_b2",
+			},
+			{
+				"source_state": "1",
 				"target_state": "2",
-				"raw_label": "do_put_on_b1_b2 & ~do_clear_b3",
+				"raw_label": "do_put_on_b1_b2",
 			},
 			{
 				"source_state": "2",
@@ -27,24 +37,27 @@ def test_dfa_transition_guards_render_as_goal_contexts() -> None:
 		domain_name="BLOCKS",
 		instruction_id="query_1",
 		dfa_payload=dfa_payload,
+		low_level_planner=_fake_low_level_planner,
 	)
 	asl = render_plan_library_asl(plan_library)
 
-	assert "dfa_state(1)." in asl
-	assert "+!g : dfa_state(1) & on(b1, b2) & not clear(b3) <-" in asl
-	assert "-dfa_state(1);" in asl
-	assert "+dfa_state(2);" in asl
+	assert "dfa_state" not in asl
+	assert "+!g : on(b1, b2) <-" in asl
+	assert "+!g : not on(b1, b2) <-" in asl
+	assert "\t!achieve_query_1_transition_1_1_1_1_2;" in asl
 	assert "\t!g." in asl
-	assert "+!g : dfa_state(3) <-" in asl
-	assert "true." in asl
 
 
-def test_every_transition_plan_uses_g_entrypoint_and_recurses() -> None:
+def test_only_progress_outgoing_transitions_become_actionable_plans() -> None:
 	dfa_payload = {
 		"initial_state": "q0",
-		"accepting_states": ["q1"],
+		"accepting_states": ["q2"],
 		"guarded_transitions": [
-			{"source_state": "q0", "target_state": "q1", "raw_label": "deliver_pkg_loc"},
+			{"source_state": "q0", "target_state": "q1", "raw_label": "deliver_pkg_a"},
+			{"source_state": "q0", "target_state": "dead", "raw_label": "~deliver_pkg_a"},
+			{"source_state": "q1", "target_state": "q2", "raw_label": "deliver_pkg_b"},
+			{"source_state": "q1", "target_state": "dead", "raw_label": "~deliver_pkg_b"},
+			{"source_state": "dead", "target_state": "dead", "raw_label": "true"},
 		],
 	}
 
@@ -55,7 +68,20 @@ def test_every_transition_plan_uses_g_entrypoint_and_recurses() -> None:
 		dfa_payload=dfa_payload,
 	)
 
-	assert {plan.trigger.symbol for plan in plan_library.plans} == {"g"}
-	transition_plan = next(plan for plan in plan_library.plans if plan.body)
-	assert transition_plan.body[-1].kind == "subgoal"
-	assert transition_plan.body[-1].symbol == "g"
+	actionable_plans = tuple(plan for plan in plan_library.plans if plan.body)
+	assert len(actionable_plans) == 2
+	assert all(
+		plan.binding_certificate[0]["is_progress_transition"] is True
+		for plan in actionable_plans
+	)
+	assert {
+		tuple(plan.binding_certificate[0]["target_context"])
+		for plan in actionable_plans
+	} == {("at(pkg, a)",), ("at(pkg, b)",)}
+
+
+def _fake_low_level_planner(request: LowLevelPlanningRequest) -> LowLevelPlanningResponse:
+	return LowLevelPlanningResponse(
+		body_steps=(AgentSpeakBodyStep("subgoal", f"achieve_{request.plan_name}"),),
+		certificate={"fake_planner": True},
+	)

@@ -6,26 +6,62 @@ task specifications and PDDL benchmark domains.
 The current architecture has two explicit levels:
 
 - High level: use the stored LTLf formula for each benchmark query, compile it to
-  a DFA with `ltlf2dfa`, and render DFA transitions as context-selected
+  a DFA with `ltlf2dfa`, analyze which outgoing transitions can still reach an
+  accepting state, and render those progress transitions as context-selected
   `+!g` AgentSpeak(L) plans.
-- Low level: action or subgoal selection between DFA states is intentionally left
-  open for the next design step.
+- Low level: each generated transition plan delegates to a Fast Downward-backed
+  `achieve_*` subgoal by default. The pipeline also writes transition-level
+  PDDL goal tasks and stores Fast Downward plan certificates when the driver is
+  available.
 
 ## Core Flow
 
 1. Load a PDDL domain from `src/domains/<domain>/domain.pddl`.
 2. Load stored query records from `src/benchmark_data/queries_LTLf.json`.
 3. Compile each stored LTLf formula into a DFA.
-4. Convert transition guards to AgentSpeak(L) plan contexts.
-5. Persist:
+4. Convert transition labels to AgentSpeak(L) plan contexts without exposing
+   internal `dfa_state(...)` beliefs.
+5. Compile each transition target context into a PDDL goal problem and ask Fast
+   Downward for a low-level trace.
+6. Persist:
    - `plan_library.json`
    - `plan_library.asl`
    - `dfa_metadata.json`
    - `generation_summary.json`
    - `library_validation.json`
 
-All generated high-level plans use `!g` as the entrypoint. Transition plans update
-the `dfa_state(...)` belief and recurse to `!g`; accepting-state plans terminate.
+All generated high-level plans use `!g` as the entrypoint. Transition plans call
+one low-level `achieve_*` subgoal and recurse to `!g`; accepting-context plans
+terminate.
+
+## Low-Level Planning
+
+Fast Downward is invoked through its `fast-downward.py` driver. The default
+configuration uses `--alias lama-first`; pass `--fast-downward` to point at a
+local driver explicitly.
+
+```bash
+uv run python src/main.py generate-library \
+  --domain-file ./src/domains/blocksworld/domain.pddl \
+  --query-domain blocksworld \
+  --query-id query_1 \
+  --fast-downward /path/to/fast-downward.py
+```
+
+For debugging or for environments without Fast Downward installed, use:
+
+```bash
+uv run python src/main.py generate-library \
+  --domain-file ./src/domains/blocksworld/domain.pddl \
+  --query-domain blocksworld \
+  --query-id query_1 \
+  --disable-low-level-planning
+```
+
+Fast Downward's official usage documentation is at
+https://www.fast-downward.org/latest/documentation/planner-usage/. Its landmark
+factory documentation, including HPS, RHW, and Zhu/Givan landmarks, is at
+https://www.fast-downward.org/latest/documentation/search/LandmarkFactory/.
 
 ## Benchmarks
 
@@ -64,5 +100,6 @@ uv run pytest \
   tests/utils/test_pddl_parser.py \
   tests/temporal_specification/test_pddl_mapping.py \
   tests/temporal_specification/test_validation.py \
+  tests/low_level_planning \
   tests/plan_library
 ```

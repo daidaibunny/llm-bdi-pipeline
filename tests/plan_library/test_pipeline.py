@@ -57,8 +57,10 @@ def test_plan_library_generation_pipeline_persists_dfa_artifacts(tmp_path: Path)
 	assert generation_summary["dfa_count"] == 1
 	assert generation_summary["plans_generated"] == 2
 	assert library_validation["passed"] is True
-	assert "dfa_state(query_1_q0)." in asl
-	assert "+!g : dfa_state(query_1_q0) & on(b1, b2) <-" in asl
+	assert "dfa_state" not in asl
+	assert "+!g : on(b1, b2) <-" in asl
+	assert "+!g : not on(b1, b2) <-" in asl
+	assert "!achieve_query_1_transition_1_1_1_query_1_q0_query_1_q1;" in asl
 
 
 def test_plan_library_generation_pipeline_filters_selected_query_ids(tmp_path: Path) -> None:

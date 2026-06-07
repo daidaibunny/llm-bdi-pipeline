@@ -10,7 +10,16 @@ from typing import Any, Dict, Optional, Sequence
 
 from domain_model import infer_query_domain, load_query_sequence_records
 from evaluation.temporal_compilation import DFABuilder
-from plan_library.dfa_high_level import build_high_level_plan_library
+from low_level_planning import (
+	FastDownwardPlannerConfig,
+	FastDownwardTransitionPlanner,
+	TransitionPlanningRequest,
+)
+from plan_library.dfa_high_level import (
+	LowLevelPlanningRequest,
+	LowLevelPlanningResponse,
+	build_high_level_plan_library,
+)
 from utils.pddl_parser import PDDLParser
 
 from .artifacts import (
@@ -34,6 +43,9 @@ class PlanLibraryGenerationPipeline:
 		query_domain: str | None = None,
 		query_ids: Sequence[str] | None = None,
 		dfa_builder: DFABuilder | None = None,
+		fast_downward_executable: str | None = None,
+		enable_low_level_planning: bool = True,
+		render_primitive_actions: bool = False,
 	) -> None:
 		self.project_root = Path(__file__).resolve().parents[2]
 		self.domain_file = str(Path(domain_file).expanduser().resolve())
@@ -46,6 +58,9 @@ class PlanLibraryGenerationPipeline:
 			if query_id_text
 		)
 		self._dfa_builder = dfa_builder or DFABuilder()
+		self._fast_downward_executable = fast_downward_executable
+		self._enable_low_level_planning = enable_low_level_planning
+		self._render_primitive_actions = render_primitive_actions
 
 	def build_library_bundle(
 		self,
@@ -65,16 +80,27 @@ class PlanLibraryGenerationPipeline:
 			domain_file=self.domain_file,
 			explicit_domain=self._query_domain,
 		)
+		artifact_root = (
+			Path(output_root).expanduser().resolve()
+			if output_root is not None
+			else self._default_artifact_root(query_domain)
+		)
 
 		try:
 			dfa_payloads: Dict[str, Dict[str, Any]] = {}
 			for record in temporal_specifications:
 				dfa_payloads[record.instruction_id] = self._dfa_builder.build(record)
 
+			low_level_planners = self._build_low_level_planners(
+				query_domain=query_domain,
+				temporal_specifications=temporal_specifications,
+				artifact_root=artifact_root,
+			)
 			plan_library = build_high_level_plan_library(
 				domain_key=query_domain,
 				domain_name=self.domain.name,
 				dfa_payloads=dfa_payloads,
+				low_level_planners=low_level_planners,
 			)
 			set_result = deduplicate_plan_library(plan_library)
 			plan_library = set_result.plan_library
@@ -103,11 +129,6 @@ class PlanLibraryGenerationPipeline:
 			if not library_validation.passed:
 				raise RuntimeError(library_validation.failure_reason or "Library validation failed.")
 
-			artifact_root = (
-				Path(output_root).expanduser().resolve()
-				if output_root is not None
-				else self._default_artifact_root(query_domain)
-			)
 			bundle = PlanLibraryArtifactBundle(
 				domain_name=self.domain.name,
 				query_sequence=query_sequence,
@@ -157,6 +178,71 @@ class PlanLibraryGenerationPipeline:
 		if len(self._query_ids) > 5:
 			selection_key = f"{selection_key}_plus_{len(self._query_ids) - 5}"
 		return selection_key or "selected_queries"
+
+	def _build_low_level_planners(
+		self,
+		*,
+		query_domain: str,
+		temporal_specifications: Sequence[Any],
+		artifact_root: Path,
+	) -> Dict[str, Any]:
+		if not self._enable_low_level_planning:
+			return {}
+		transition_planner = FastDownwardTransitionPlanner(
+			config=FastDownwardPlannerConfig(executable=self._fast_downward_executable),
+			render_primitive_actions=self._render_primitive_actions,
+		)
+		planners: Dict[str, Any] = {}
+		for record in temporal_specifications:
+			problem_file = self._resolve_problem_file(
+				query_domain=query_domain,
+				problem_file=getattr(record, "problem_file", None),
+			)
+			work_dir = artifact_root / "low_level" / str(record.instruction_id)
+
+			def _planner(
+				request: LowLevelPlanningRequest,
+				*,
+				problem_file: Path = problem_file,
+				work_dir: Path = work_dir,
+			) -> LowLevelPlanningResponse:
+				result = transition_planner.plan_transition(
+					TransitionPlanningRequest(
+						plan_name=request.plan_name,
+						domain_file=self.domain_file,
+						problem_file=str(problem_file),
+						target_context=request.target_context,
+						cumulative_context=request.cumulative_context,
+						work_dir=str(work_dir),
+					),
+				)
+				return LowLevelPlanningResponse(
+					body_steps=result.body_steps,
+					certificate=result.certificate,
+					warnings=result.warnings,
+				)
+
+			planners[str(record.instruction_id)] = _planner
+		return planners
+
+	def _resolve_problem_file(self, *, query_domain: str, problem_file: str | None) -> Path:
+		if not str(problem_file or "").strip():
+			raise ValueError("Low-level planning requires each query to declare a problem_file.")
+		problem_path = Path(str(problem_file).strip()).expanduser()
+		if problem_path.is_absolute() and problem_path.exists():
+			return problem_path.resolve()
+		domain_dir = self.project_root / "src" / "domains" / query_domain
+		domain_file_parent = Path(self.domain_file).resolve().parent
+		candidates = (
+			domain_dir / "problems" / str(problem_file).strip(),
+			domain_dir / str(problem_file).strip(),
+			domain_file_parent / "problems" / str(problem_file).strip(),
+			domain_file_parent / str(problem_file).strip(),
+		)
+		for candidate in candidates:
+			if candidate.exists():
+				return candidate.resolve()
+		raise FileNotFoundError(f"Could not resolve PDDL problem file: {problem_file}")
 
 
 def _artifact_slug(value: str) -> str:
