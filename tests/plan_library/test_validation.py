@@ -25,7 +25,7 @@ def test_library_validation_accepts_context_driven_contract() -> None:
 				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g"),
 				context=("not on(b1, b2)",),
 				body=(
-					AgentSpeakBodyStep("subgoal", "achieve_transition"),
+					AgentSpeakBodyStep("action", "stack", ("b1", "b2")),
 					AgentSpeakBodyStep("subgoal", "g"),
 				),
 			),

@@ -1,7 +1,7 @@
 # LLM BDI Pipeline
 
 This project generates high-level AgentSpeak(L) plan libraries from persisted LTLf
-task specifications and PDDL benchmark domains.
+temporal specifications and PDDL benchmark domains.
 
 The current architecture has two explicit levels:
 
@@ -9,10 +9,9 @@ The current architecture has two explicit levels:
   a DFA with `ltlf2dfa`, analyze which outgoing transitions can still reach an
   accepting state, and render those progress transitions as context-selected
   `+!g` AgentSpeak(L) plans.
-- Low level: each generated transition plan delegates to a Fast Downward-backed
-  `achieve_*` subgoal by default. The pipeline also writes transition-level
-  PDDL goal tasks and stores Fast Downward plan certificates when the driver is
-  available.
+- Low level: each generated transition target is compiled into a PDDL goal
+  problem. Fast Downward finds the primitive action trace, and those actions are
+  rendered directly in the AgentSpeak(L) plan body when the driver is available.
 
 ## Core Flow
 
@@ -30,8 +29,8 @@ The current architecture has two explicit levels:
    - `generation_summary.json`
    - `library_validation.json`
 
-All generated high-level plans use `!g` as the entrypoint. Transition plans call
-one low-level `achieve_*` subgoal and recurse to `!g`; accepting-context plans
+All generated high-level plans use `!g` as the entrypoint. Transition plans run
+their primitive action trace and recurse to `!g`; accepting-context plans
 terminate.
 
 ## Low-Level Planning
@@ -73,7 +72,7 @@ Benchmark files are PDDL:
 - `src/domains/transport`
 
 The stored LTLf formulas are not regenerated during plan-library generation.
-Legacy task-event names in those formulas are mapped to PDDL fluents, for example:
+Stored benchmark temporal atoms are mapped to PDDL fluents, for example:
 
 - `do_put_on(x, y)` -> `on(x, y)`
 - `get_soil_data(w)` -> `communicated_soil_data(w)`
