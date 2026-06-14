@@ -9,6 +9,13 @@ DFA pipeline.
 from __future__ import annotations
 
 from .clingo_backend import ClingoSelectionResult, ClingoSketchRuleSelector
+from .gp_backends import (
+	BackendManifest,
+	GPBackendRunner,
+	SketchPolicy,
+	discover_backend_manifest,
+	parse_dlplan_policy,
+)
 from .models import (
 	LiftedCall,
 	LiftedPlanRule,
@@ -24,7 +31,12 @@ __all__ = [
 	"LiftedPlanRule",
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
+	"BackendManifest",
+	"GPBackendRunner",
+	"SketchPolicy",
 	"SketchSynthesisReport",
 	"build_goal_conditioned_library_from_pddl",
+	"discover_backend_manifest",
 	"goal_facts_from_problem",
+	"parse_dlplan_policy",
 ]
