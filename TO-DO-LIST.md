@@ -14,10 +14,9 @@
 
 - [x] Add a goal-conditioned modular-sketch representation for lifted ASL libraries.
 - [x] Add Clingo-backed rule selection with capability coverage and cost minimization.
-- [x] Add a standard four-operator Blocksworld synthesizer for Layer B atomic modules and
-  Layer C goal dependency composer.
-- [x] Add explicit small transition-system enumeration for Blocksworld training evidence.
-- [x] Add tests for lifted ASL output, bottom-up goal dependency, read-only goal facts,
-  unsupported goals, and Clingo minimization.
+- [x] Add a domain-agnostic PDDL action-schema synthesizer for Layer B atomic modules
+  and Layer C goal composer.
+- [x] Add tests for arbitrary-domain lifted ASL output, Blocksworld through the generic
+  path, read-only goal facts, unsupported goals, and Clingo minimization.
 - [ ] Extend the Clingo constraints from capability coverage to full state-transition
   correctness/progress constraints over enumerated training transition systems.

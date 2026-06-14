@@ -8,15 +8,15 @@ DFA pipeline.
 
 from __future__ import annotations
 
-from .blocksworld import (
-	build_blocksworld_goal_conditioned_library,
-	goal_facts_from_problem,
-)
 from .clingo_backend import ClingoSelectionResult, ClingoSketchRuleSelector
 from .models import (
 	LiftedCall,
 	LiftedPlanRule,
 	SketchSynthesisReport,
+)
+from .schema_synthesis import (
+	build_goal_conditioned_library_from_pddl,
+	goal_facts_from_problem,
 )
 
 __all__ = [
@@ -25,6 +25,6 @@ __all__ = [
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
 	"SketchSynthesisReport",
-	"build_blocksworld_goal_conditioned_library",
+	"build_goal_conditioned_library_from_pddl",
 	"goal_facts_from_problem",
 ]
