@@ -29,6 +29,7 @@ def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain() -> None
 	assert "+!g : goal_at(P, L) & not at(P, L) <-" in asl
 	assert "\t!at(P, L);" in asl
 	assert "+!at(P, L) : at(P, L) <-" in asl
+	assert "+!at(P, To) : not at(P, From) <-" not in asl
 	assert "+!at(P, To) : at(P, From) & road(From, To) <-" in asl
 	assert "\tdrive(P, From, To)." in asl
 	assert "goal_at(pkg1, depot)." not in asl
@@ -46,14 +47,24 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 
 	assert "+!g : goal_on(X, Y) & not on(X, Y) <-" in asl
 	assert "+!on(X, Y) : on(X, Y) <-" in asl
+	assert "+!on(X, Y) : not holding(X) <-" in asl
+	assert "\t!holding(X);" in asl
 	assert "+!on(X, Y) : holding(X) & clear(Y) <-" in asl
 	assert "\tstack(X, Y)." in asl
 	assert "goal_on(b4, b2)." not in asl
+	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
+	assert "+!g : goal_on(Z, W) & goal_on(X, Y) & not on(Z, W) <-" not in asl
 	assert plan_library.metadata["training_goal_facts"] == (
 		"goal_on(b4, b2)",
 		"goal_on(b1, b4)",
 		"goal_on(b3, b1)",
 	)
+	transition_systems = plan_library.metadata["transition_systems"]
+	assert transition_systems[0]["goal_orderings"] == [
+		("goal_on(b4, b2)", "goal_on(b1, b4)"),
+		("goal_on(b4, b2)", "goal_on(b3, b1)"),
+		("goal_on(b1, b4)", "goal_on(b3, b1)"),
+	]
 
 
 def test_goal_facts_from_problem_are_read_only_problem_inputs() -> None:

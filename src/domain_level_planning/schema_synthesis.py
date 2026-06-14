@@ -18,6 +18,10 @@ from utils.pddl_parser import PDDLFact, PDDLParser, PDDLPredicate
 from .clingo_backend import ClingoSketchRuleSelector
 from .models import LiftedCall, LiftedPlanRule, SketchSynthesisReport
 from .pddl_expression import LiftedLiteral, parameter_variables, parse_pddl_literals
+from .transition_system import (
+	TrainingTransitionEvidence,
+	collect_training_transition_evidence,
+)
 
 
 def build_goal_conditioned_library_from_pddl(
@@ -28,8 +32,15 @@ def build_goal_conditioned_library_from_pddl(
 	"""Build a lifted goal-conditioned library for any STRIPS-style PDDL domain."""
 
 	domain = PDDLParser.parse_domain(domain_file)
-	training_goal_facts = _training_goal_facts(training_problem_files)
-	candidate_rules = _candidate_rules_from_domain(domain.predicates, domain.actions)
+	training_goal_facts, transition_evidence = _training_evidence(
+		domain=domain,
+		problem_files=training_problem_files,
+	)
+	candidate_rules = _candidate_rules_from_domain(
+		domain.predicates,
+		domain.actions,
+		transition_evidence=transition_evidence,
+	)
 	required_capabilities = _required_capabilities(
 		predicates=domain.predicates,
 		candidate_rules=candidate_rules,
@@ -61,6 +72,10 @@ def build_goal_conditioned_library_from_pddl(
 				_goal_fact_signature(fact)
 				for fact in training_goal_facts
 			),
+			"transition_systems": tuple(
+				evidence.to_dict()
+				for evidence in transition_evidence
+			),
 			"required_capabilities": tuple(required_capabilities),
 			"selected_rule_names": list(selection.selected_rule_names),
 			"selection_cost": selection.cost,
@@ -79,14 +94,95 @@ def goal_facts_from_problem(problem_file: str | Path) -> tuple[str, ...]:
 def _candidate_rules_from_domain(
 	predicates: Sequence[PDDLPredicate],
 	actions: Sequence[object],
+	*,
+	transition_evidence: Sequence[TrainingTransitionEvidence] = (),
 ) -> tuple[LiftedPlanRule, ...]:
 	rules: list[LiftedPlanRule] = []
+	producible_predicates = _producible_predicates(actions)
+	rules.extend(_goal_ordering_rules_from_evidence(transition_evidence))
 	for predicate in predicates:
 		rules.extend(_composer_rules(predicate))
 		rules.append(_already_true_rule(predicate))
+	rules.append(_terminal_composer_rule())
 	for action in actions:
-		rules.extend(_action_effect_rules(action))
+		rules.extend(
+			_action_effect_rules(
+				action,
+				producible_predicates=producible_predicates,
+			),
+		)
 	return tuple(rules)
+
+
+def _goal_ordering_rules_from_evidence(
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+) -> tuple[LiftedPlanRule, ...]:
+	rules: list[LiftedPlanRule] = []
+	seen_contexts: set[tuple[str, ...]] = set()
+	rule_index = 0
+	for evidence in transition_evidence:
+		for earlier, later in evidence.goal_orderings:
+			lifted = _lift_goal_ordering(earlier, later)
+			if lifted is None:
+				continue
+			context, body, pattern = lifted
+			dedup_key = context + (pattern,)
+			if dedup_key in seen_contexts:
+				continue
+			seen_contexts.add(dedup_key)
+			rule_index += 1
+			rules.append(
+				_rule(
+					f"g_order_{earlier.predicate}_before_{later.predicate}_{rule_index}",
+					"g",
+					(),
+					context,
+					body,
+					layer="composer",
+					capabilities=(f"order_{earlier.predicate}_before_{later.predicate}",),
+					cost=2,
+				),
+			)
+	return tuple(rules)
+
+
+def _lift_goal_ordering(
+	earlier: PDDLFact,
+	later: PDDLFact,
+) -> tuple[tuple[str, ...], tuple[LiftedCall, ...], str] | None:
+	if not earlier.is_positive or not later.is_positive:
+		return None
+	if not set(earlier.args).intersection(set(later.args)):
+		return None
+	object_variables: dict[str, str] = {}
+	variable_names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+
+	def _variables(objects: Iterable[str]) -> tuple[str, ...]:
+		variables: list[str] = []
+		for object_name in objects:
+			if object_name not in object_variables:
+				index = len(object_variables)
+				object_variables[object_name] = (
+					variable_names[index]
+					if index < len(variable_names)
+					else f"X{index + 1}"
+				)
+			variables.append(object_variables[object_name])
+		return tuple(variables)
+
+	later_arguments = _variables(later.args)
+	earlier_arguments = _variables(earlier.args)
+	context = (
+		_call(f"goal_{earlier.predicate}", earlier_arguments),
+		_call(f"goal_{later.predicate}", later_arguments),
+		f"not {_call(earlier.predicate, earlier_arguments)}",
+	)
+	body = (_subgoal(earlier.predicate, *earlier_arguments), _subgoal("g"))
+	pattern = "|".join(
+		object_variables[object_name]
+		for object_name in tuple(later.args) + tuple(earlier.args)
+	)
+	return context, body, pattern
 
 
 def _composer_rules(predicate: PDDLPredicate) -> tuple[LiftedPlanRule, ...]:
@@ -106,6 +202,18 @@ def _composer_rules(predicate: PDDLPredicate) -> tuple[LiftedPlanRule, ...]:
 	)
 
 
+def _terminal_composer_rule() -> LiftedPlanRule:
+	return _rule(
+		"g_done",
+		"g",
+		(),
+		("true",),
+		(),
+		layer="composer",
+		capabilities=("compose_terminal_goal",),
+	)
+
+
 def _already_true_rule(predicate: PDDLPredicate) -> LiftedPlanRule:
 	arguments = parameter_variables(predicate.parameters)
 	return _rule(
@@ -118,7 +226,11 @@ def _already_true_rule(predicate: PDDLPredicate) -> LiftedPlanRule:
 	)
 
 
-def _action_effect_rules(action: object) -> tuple[LiftedPlanRule, ...]:
+def _action_effect_rules(
+	action: object,
+	*,
+	producible_predicates: frozenset[str],
+) -> tuple[LiftedPlanRule, ...]:
 	action_name = str(getattr(action, "name"))
 	action_arguments = parameter_variables(getattr(action, "parameters"))
 	preconditions = parse_pddl_literals(str(getattr(action, "preconditions", "")))
@@ -131,6 +243,33 @@ def _action_effect_rules(action: object) -> tuple[LiftedPlanRule, ...]:
 	for effect in add_effects:
 		head_arguments = tuple(_var(argument) for argument in effect.arguments)
 		context = tuple(literal.signature() for literal in preconditions)
+		head_call = _subgoal(effect.predicate, *head_arguments)
+		for precondition in preconditions:
+			if _can_prepare_precondition(
+				precondition,
+				head_arguments=head_arguments,
+				producible_predicates=producible_predicates,
+			):
+				rules.append(
+					_rule(
+						f"{effect.predicate}_prepare_{precondition.predicate}_for_{action_name}",
+						effect.predicate,
+						head_arguments,
+						(f"not {_positive_signature(precondition)}",),
+						(
+							_subgoal(
+								precondition.predicate,
+								*tuple(_var(argument) for argument in precondition.arguments),
+							),
+							head_call,
+						),
+						capabilities=(
+							f"module_{effect.predicate}_prepare_"
+							f"{precondition.predicate}_for_{action_name}"
+						,),
+						cost=2,
+					),
+				)
 		rules.append(
 			_rule(
 				f"{effect.predicate}_via_{action_name}",
@@ -144,6 +283,33 @@ def _action_effect_rules(action: object) -> tuple[LiftedPlanRule, ...]:
 	return tuple(rules)
 
 
+def _producible_predicates(actions: Sequence[object]) -> frozenset[str]:
+	predicates: set[str] = set()
+	for action in actions:
+		for effect in parse_pddl_literals(str(getattr(action, "effects", ""))):
+			if effect.is_positive:
+				predicates.add(effect.predicate)
+	return frozenset(predicates)
+
+
+def _can_prepare_precondition(
+	precondition: LiftedLiteral,
+	*,
+	head_arguments: tuple[str, ...],
+	producible_predicates: frozenset[str],
+) -> bool:
+	if not precondition.is_positive:
+		return False
+	if precondition.predicate not in producible_predicates:
+		return False
+	precondition_variables = {_var(argument) for argument in precondition.arguments}
+	return precondition_variables.issubset(set(head_arguments))
+
+
+def _positive_signature(literal: LiftedLiteral) -> str:
+	return _call(literal.predicate, tuple(_var(argument) for argument in literal.arguments))
+
+
 def _required_capabilities(
 	*,
 	predicates: Sequence[PDDLPredicate],
@@ -155,6 +321,13 @@ def _required_capabilities(
 	for predicate in predicates:
 		required.append(f"compose_goal_{predicate.name}")
 		required.append(f"module_{predicate.name}_already_true")
+	required.append("compose_terminal_goal")
+	for rule in candidate_rules:
+		if rule.layer == "composer" and any(
+			capability.startswith("order_")
+			for capability in rule.capabilities
+		):
+			required.extend(rule.capabilities)
 	for rule in candidate_rules:
 		if rule.layer == "atomic" and rule.body:
 			required.extend(rule.capabilities)
@@ -171,12 +344,18 @@ def _required_capabilities(
 	return tuple(dict.fromkeys(required))
 
 
-def _training_goal_facts(problem_files: Sequence[str | Path]) -> tuple[PDDLFact, ...]:
+def _training_evidence(
+	*,
+	domain: object,
+	problem_files: Sequence[str | Path],
+) -> tuple[tuple[PDDLFact, ...], tuple[TrainingTransitionEvidence, ...]]:
 	facts: list[PDDLFact] = []
+	evidence: list[TrainingTransitionEvidence] = []
 	for problem_file in tuple(problem_files or ()):
 		problem = PDDLParser.parse_problem(problem_file)
 		facts.extend(problem.goal_facts)
-	return tuple(facts)
+		evidence.append(collect_training_transition_evidence(domain, problem))
+	return tuple(facts), tuple(evidence)
 
 
 def _rule(

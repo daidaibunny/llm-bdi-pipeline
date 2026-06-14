@@ -16,6 +16,8 @@
 - [x] Add Clingo-backed rule selection with capability coverage and cost minimization.
 - [x] Add a domain-agnostic PDDL action-schema synthesizer for Layer B atomic modules
   and Layer C goal composer.
+- [x] Add domain-agnostic small STRIPS transition evidence and shared-object goal
+  ordering extraction for Layer C.
 - [x] Add tests for arbitrary-domain lifted ASL output, Blocksworld through the generic
   path, read-only goal facts, unsupported goals, and Clingo minimization.
 - [ ] Extend the Clingo constraints from capability coverage to full state-transition
