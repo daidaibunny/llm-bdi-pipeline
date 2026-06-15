@@ -38,6 +38,9 @@
 - [x] Add paper-style bounded library validation over all reachable states in
   small training transition systems, including termination, high-level decision
   acyclicity, and goal-state fixed-point checks.
+- [x] Add explicit learned-policy audit reports for paper-backend sketch
+  artifacts, separating parseability, DLPlan feature binding, executable effect
+  binding, and ASL readiness.
 
 ## Unified Generalized-Planning-To-ASL Architecture Requirements
 
@@ -57,6 +60,7 @@
 | R12 | Resource safety for external learners. | Audit commands print guarded learner invocations by default and never run unbounded experiments in tests. | Done |
 | R13 | Blocksworld first-20 domain-level validation. | One lifted library synthesized from `p01` solves `p01`-`p20` through the bounded ASL executor; generated ASL contains no `achieve_*`, `transition_*`, or `dfa_state` names. | Done |
 | R14 | Paper-style bounded validation. | Synthesis reports include all-reachable-state validation for training transition systems, high-level decision acyclicity, and goal-state fixed-point checks. | Done |
+| R15 | Paper backend artifact audit. | External learner-sketches policies are parsed and reported with feature/rule counts, binding coverage, unsupported features, executable effect count, and ASL readiness. | Done |
 
 Remaining research hardening after the first unified architecture:
 

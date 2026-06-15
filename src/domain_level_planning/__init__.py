@@ -32,6 +32,10 @@ from .models import (
 	LiftedPlanRule,
 	SketchSynthesisReport,
 )
+from .paper_backend_audit import (
+	PaperPolicyAuditReport,
+	audit_learned_policy_for_asl_binding,
+)
 from .library_synthesis import (
 	ExternalSketchPolicySource,
 	UnifiedSynthesisResult,
@@ -81,6 +85,7 @@ __all__ = [
 	"SketchPipelineResult",
 	"SketchRule",
 	"SketchSynthesisReport",
+	"PaperPolicyAuditReport",
 	"UnifiedSynthesisResult",
 	"BoundedLibraryValidationReport",
 	"BoundedProblemValidation",
@@ -95,6 +100,7 @@ __all__ = [
 	"discover_backend_manifest",
 	"goal_facts_from_problem",
 	"assert_compilable_pddl_files",
+	"audit_learned_policy_for_asl_binding",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"synthesize_domain_level_asl_library",

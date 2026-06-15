@@ -12,12 +12,10 @@ from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTr
 from utils.pddl_parser import PDDLParser
 
 from .clingo_backend import ClingoSketchRuleSelector
-from .feature_binding import bind_goal_aligned_action_effect_candidates
-from .feature_binding import bind_recoverable_dlplan_features
-from .feature_binding import bind_unique_action_effect_candidates
-from .gp_backends import parse_dlplan_policy
 from .library_verifier import validate_library_on_bounded_transition_systems
 from .models import LiftedCall, LiftedPlanRule
+from .paper_backend_audit import PaperPolicyAuditReport
+from .paper_backend_audit import audit_learned_policy_for_asl_binding
 from .pddl_support import assert_compilable_pddl_files
 from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
@@ -64,7 +62,7 @@ def synthesize_domain_level_asl_library(
 		domain.actions,
 		transition_evidence=transition_evidence,
 	)
-	external_candidates, rejected_features = _external_sketch_candidates(
+	external_candidates, rejected_features, paper_policy_audits = _external_sketch_candidates(
 		domain=domain,
 		sources=external_sketch_policies,
 	)
@@ -123,6 +121,10 @@ def synthesize_domain_level_asl_library(
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
 		"selection_cost": selection.cost,
+		"paper_policy_audits": tuple(
+			audit.to_dict()
+			for audit in paper_policy_audits
+		),
 		"bounded_validation": (
 			bounded_validation.to_dict()
 			if bounded_validation is not None
@@ -141,17 +143,17 @@ def _external_sketch_candidates(
 	*,
 	domain,
 	sources: Sequence[ExternalSketchPolicySource],
-) -> tuple[tuple[LiftedPlanRule, ...], dict[str, str]]:
+) -> tuple[tuple[LiftedPlanRule, ...], dict[str, str], tuple[PaperPolicyAuditReport, ...]]:
 	candidates: list[LiftedPlanRule] = []
 	rejected: dict[str, str] = {}
+	audits: list[PaperPolicyAuditReport] = []
 	for source in sources:
-		policy = parse_dlplan_policy(Path(source.policy_file).read_text(encoding="utf-8"))
-		binding_report = bind_goal_aligned_action_effect_candidates(
-			policy=policy,
-			report=bind_unique_action_effect_candidates(
-				bind_recoverable_dlplan_features(policy=policy, domain=domain),
-			),
+		audit, policy, binding_report = audit_learned_policy_for_asl_binding(
+			source_name=source.name,
+			policy_file=source.policy_file,
+			domain=domain,
 		)
+		audits.append(audit)
 		for feature_id, expression in binding_report.unsupported_features.items():
 			rejected[f"{source.name}:{feature_id}"] = expression
 		candidates.extend(
@@ -162,7 +164,7 @@ def _external_sketch_candidates(
 				bindings=binding_report.bindings,
 			)
 		)
-	return tuple(candidates), rejected
+	return tuple(candidates), rejected, tuple(audits)
 
 
 def _bound_policy_rules_to_candidates(
