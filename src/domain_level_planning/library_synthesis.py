@@ -12,6 +12,8 @@ from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTr
 from utils.pddl_parser import PDDLParser
 
 from .clingo_backend import ClingoSketchRuleSelector
+from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
+from .gp_backends import run_learner_sketches
 from .library_verifier import BoundedLibraryValidationReport
 from .library_verifier import validate_library_on_bounded_transition_systems
 from .models import LiftedCall, LiftedPlanRule
@@ -70,6 +72,8 @@ def synthesize_domain_level_asl_library(
 	domain_file: str | Path,
 	training_problem_files: Sequence[str | Path] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
+	learner_sketches_backend: BackendManifest | None = None,
+	learner_sketches_runs: Sequence[LearnerSketchesRunConfig] = (),
 	synthesis_profile: str = "bootstrap",
 ) -> UnifiedSynthesisResult:
 	"""Synthesize one lifted domain-level ASL library through the unified path."""
@@ -89,10 +93,20 @@ def synthesize_domain_level_asl_library(
 		domain.actions,
 		transition_evidence=transition_evidence,
 	)
+	backend_run_results, learned_sources = _run_requested_learner_sketches(
+		backend=learner_sketches_backend,
+		run_configs=learner_sketches_runs,
+	)
+	all_external_sketch_policies = tuple(
+		(
+			*tuple(external_sketch_policies or ()),
+			*learned_sources,
+		),
+	)
 	external_candidates, rejected_features, paper_policy_audits, external_rule_reports = (
 		_external_sketch_candidates(
 			domain=domain,
-			sources=external_sketch_policies,
+			sources=all_external_sketch_policies,
 		)
 	)
 	candidate_rules = _deduplicate_rules(schema_candidates + external_candidates)
@@ -145,7 +159,7 @@ def synthesize_domain_level_asl_library(
 		)
 	paper_profile_failures = _paper_profile_failures(
 		training_problem_files=training_problem_files,
-		external_sketch_policies=external_sketch_policies,
+		external_sketch_policies=all_external_sketch_policies,
 		external_candidates=external_candidates,
 		paper_policy_audits=paper_policy_audits,
 		external_rule_reports=external_rule_reports,
@@ -166,7 +180,14 @@ def synthesize_domain_level_asl_library(
 			"acyclic_high_level_decision_trace",
 			"goal_state_fixed_point",
 		),
-		"external_policy_count": len(tuple(external_sketch_policies or ())),
+		"auto_learner_sketches_run_count": len(tuple(learner_sketches_runs or ())),
+		"auto_learner_sketches_policy_count": len(learned_sources),
+		"auto_learner_sketches_runs": tuple(
+			result.to_dict()
+			for result in backend_run_results
+		),
+		"external_policy_count": len(all_external_sketch_policies),
+		"manual_external_policy_count": len(tuple(external_sketch_policies or ())),
 		"schema_candidate_count": len(schema_candidates),
 		"external_candidate_count": len(external_candidates),
 		"candidate_count": len(candidate_rules),
@@ -269,6 +290,36 @@ def _paper_profile_failures(
 			),
 		)
 	return tuple(failures)
+
+
+def _run_requested_learner_sketches(
+	*,
+	backend: BackendManifest | None,
+	run_configs: Sequence[LearnerSketchesRunConfig],
+) -> tuple[tuple[LearnerSketchesRunResult, ...], tuple[ExternalSketchPolicySource, ...]]:
+	configs = tuple(run_configs or ())
+	if not configs:
+		return (), ()
+	if backend is None:
+		raise ValueError("learner_sketches_backend is required when learner_sketches_runs are provided.")
+	results: list[LearnerSketchesRunResult] = []
+	sources: list[ExternalSketchPolicySource] = []
+	for index, config in enumerate(configs, start=1):
+		result = run_learner_sketches(manifest=backend, config=config)
+		results.append(result)
+		if not result.succeeded or result.policy_file is None:
+			raise RuntimeError(
+				"learner-sketches did not produce a minimized policy: "
+				f"workspace={result.workspace}; returncode={result.returncode}; "
+				f"stderr={result.stderr.strip()}",
+			)
+		sources.append(
+			ExternalSketchPolicySource(
+				name=f"learner-sketches-{index}-{result.workspace.name}",
+				policy_file=result.policy_file,
+			),
+		)
+	return tuple(results), tuple(sources)
 
 
 def _external_sketch_candidates(

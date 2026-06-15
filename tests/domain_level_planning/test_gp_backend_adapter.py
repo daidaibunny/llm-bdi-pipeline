@@ -7,12 +7,15 @@ import pytest
 from domain_level_planning.gp_backends import (
 	BackendManifest,
 	GPBackendRunner,
+	LearnerSketchesRunConfig,
 	SketchCondition,
 	SketchEffect,
 	SketchPolicy,
 	SketchRule,
+	discover_learner_sketches_policy_file,
 	discover_backend_manifest,
 	parse_dlplan_policy,
+	run_learner_sketches,
 )
 
 
@@ -140,6 +143,97 @@ def test_backend_runner_fails_clearly_when_backend_is_missing(tmp_path: Path) ->
 			problems_directory=tmp_path / "problems",
 			workspace=tmp_path / "workspace",
 		)
+
+
+def test_run_learner_sketches_discovers_minimized_policy_artifact(tmp_path: Path) -> None:
+	backend = tmp_path / "learner-sketches"
+	learning = backend / "learning"
+	learning.mkdir(parents=True)
+	main = learning / "main.py"
+	main.write_text(
+		"""
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--domain_filepath")
+parser.add_argument("--problems_directory")
+parser.add_argument("--workspace")
+parser.add_argument("--width", type=int)
+parser.add_argument("--max_num_states_per_instance")
+parser.add_argument("--max_time_per_instance")
+args = parser.parse_args()
+output = Path(args.workspace) / "output"
+output.mkdir(parents=True, exist_ok=True)
+(output / f"sketch_minimized_{args.width}.txt").write_text(
+	'(:policy (:booleans ) (:numericals (f1 "n_count(c_primitive(done,0))")) '
+	'(:rule (:conditions ) (:effects (:e_n_inc f1))))',
+	encoding="utf-8",
+)
+(output / f"sketch_{args.width}.txt").write_text("raw", encoding="utf-8")
+print("learned")
+		""",
+		encoding="utf-8",
+	)
+	manifest = BackendManifest(
+		name="learner-sketches",
+		path=backend,
+		url="https://github.com/bonetblai/learner-sketches.git",
+		expected_commit="7a7ea6a",
+		present=True,
+	)
+	workspace = tmp_path / "workspace"
+
+	result = run_learner_sketches(
+		manifest=manifest,
+		config=LearnerSketchesRunConfig(
+			domain_file=tmp_path / "domain.pddl",
+			problems_directory=tmp_path / "problems",
+			workspace=workspace,
+			width=2,
+			python_executable="python3",
+			use_resource_guard=False,
+		),
+	)
+
+	assert result.succeeded is True
+	assert result.returncode == 0
+	assert result.policy_file == workspace / "output" / "sketch_minimized_2.txt"
+	assert result.raw_policy_file == workspace / "output" / "sketch_2.txt"
+	assert result.to_dict()["succeeded"] is True
+	assert "learned" in result.stdout
+	assert discover_learner_sketches_policy_file(workspace, width=2) == result.policy_file
+
+
+def test_run_learner_sketches_reports_missing_policy_as_failed(tmp_path: Path) -> None:
+	backend = tmp_path / "learner-sketches"
+	learning = backend / "learning"
+	learning.mkdir(parents=True)
+	(learning / "main.py").write_text("print('no policy')\n", encoding="utf-8")
+	manifest = BackendManifest(
+		name="learner-sketches",
+		path=backend,
+		url="https://github.com/bonetblai/learner-sketches.git",
+		expected_commit="7a7ea6a",
+		present=True,
+	)
+
+	result = run_learner_sketches(
+		manifest=manifest,
+		config=LearnerSketchesRunConfig(
+			domain_file=tmp_path / "domain.pddl",
+			problems_directory=tmp_path / "problems",
+			workspace=tmp_path / "workspace",
+			python_executable="python3",
+			use_resource_guard=False,
+		),
+	)
+
+	assert result.returncode == 0
+	assert result.policy_file is None
+	assert result.succeeded is False
 
 
 def test_d2l_commands_are_reproducible(tmp_path: Path) -> None:

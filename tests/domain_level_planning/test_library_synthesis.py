@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from domain_level_planning.gp_backends import BackendManifest
+from domain_level_planning.gp_backends import LearnerSketchesRunConfig
 from domain_level_planning.library_synthesis import (
 	ExternalSketchPolicySource,
 	synthesize_domain_level_asl_library,
@@ -193,6 +195,69 @@ def test_synthesis_profile_rejects_unknown_values(tmp_path: Path) -> None:
 		)
 
 
+def test_paper_profile_can_run_learner_sketches_backend_automatically(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
+	backend = _write_fake_learner_sketches_backend(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		learner_sketches_backend=backend,
+		learner_sketches_runs=(
+			LearnerSketchesRunConfig(
+				domain_file=domain_file,
+				problems_directory=tmp_path,
+				workspace=tmp_path / "auto-learner-workspace",
+				width=1,
+				python_executable="python3",
+				use_resource_guard=False,
+			),
+		),
+		synthesis_profile="paper",
+	)
+
+	assert result.report["paper_profile_ready"] is True
+	assert result.report["manual_external_policy_count"] == 0
+	assert result.report["auto_learner_sketches_run_count"] == 1
+	assert result.report["auto_learner_sketches_policy_count"] == 1
+	assert result.report["external_policy_count"] == 1
+	assert result.report["auto_learner_sketches_runs"][0]["succeeded"] is True
+	assert result.report["selected_candidate_sources"]["external_sketch"] == 1
+
+
+def test_synthesis_fails_when_auto_learner_sketches_produces_no_policy(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
+	backend_path = tmp_path / "learner-sketches-empty"
+	(backend_path / "learning").mkdir(parents=True)
+	(backend_path / "learning" / "main.py").write_text("print('no policy')\n", encoding="utf-8")
+
+	with pytest.raises(RuntimeError, match="did not produce a minimized policy"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			learner_sketches_backend=BackendManifest(
+				name="learner-sketches",
+				path=backend_path,
+				url="https://github.com/bonetblai/learner-sketches.git",
+				expected_commit="7a7ea6a",
+				present=True,
+			),
+			learner_sketches_runs=(
+				LearnerSketchesRunConfig(
+					domain_file=domain_file,
+					problems_directory=tmp_path,
+					workspace=tmp_path / "empty-workspace",
+					python_executable="python3",
+					use_resource_guard=False,
+				),
+			),
+		)
+
+
 def _write_generic_domain_problem_and_policy(
 	tmp_path: Path,
 	*,
@@ -241,6 +306,50 @@ def _write_generic_domain_problem_and_policy(
 		encoding="utf-8",
 	)
 	return domain_file, problem_file, policy_file
+
+
+def _write_fake_learner_sketches_backend(tmp_path: Path) -> BackendManifest:
+	backend_path = tmp_path / "learner-sketches"
+	learning = backend_path / "learning"
+	learning.mkdir(parents=True)
+	(learning / "main.py").write_text(
+		"""
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--domain_filepath")
+parser.add_argument("--problems_directory")
+parser.add_argument("--workspace")
+parser.add_argument("--width", type=int)
+parser.add_argument("--max_num_states_per_instance")
+parser.add_argument("--max_time_per_instance")
+args = parser.parse_args()
+output = Path(args.workspace) / "output"
+output.mkdir(parents=True, exist_ok=True)
+(output / f"sketch_minimized_{args.width}.txt").write_text(
+	'''
+	(:policy
+	(:booleans )
+	(:numericals (f_done "n_count(c_equal(c_primitive(done,0),c_primitive(done_g,0)))"))
+	(:rule (:conditions ) (:effects (:e_n_inc f_done)))
+	)
+	''',
+	encoding="utf-8",
+)
+print("fake learner completed")
+		""",
+		encoding="utf-8",
+	)
+	return BackendManifest(
+		name="learner-sketches",
+		path=backend_path,
+		url="https://github.com/bonetblai/learner-sketches.git",
+		expected_commit="7a7ea6a",
+		present=True,
+	)
 
 
 def _write_prepare_order_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:

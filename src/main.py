@@ -15,7 +15,9 @@ if _src_dir not in sys.path:
 
 from plan_library import PlanLibraryGenerationPipeline
 from domain_level_planning import (
+	discover_backend_manifest,
 	ExternalSketchPolicySource,
+	LearnerSketchesRunConfig,
 	SketchCompilationTarget,
 	compile_learner_sketch_policy_to_asl,
 	synthesize_domain_level_asl_library,
@@ -141,6 +143,40 @@ Examples:
 		help="Optional external sketch policy as name=/path/to/policy.txt.",
 	)
 	domain_level_parser.add_argument(
+		"--run-learner-sketches",
+		action="store_true",
+		help="Run the pinned learner-sketches backend and consume its minimized policy artifact.",
+	)
+	domain_level_parser.add_argument(
+		"--learner-sketches-backend-root",
+		help="Root containing .external/gp-backends/learner-sketches. Defaults to project .external/gp-backends.",
+	)
+	domain_level_parser.add_argument(
+		"--learner-sketches-problems-directory",
+		help="Training problems directory passed to learner-sketches. Defaults to the first training problem's parent.",
+	)
+	domain_level_parser.add_argument(
+		"--learner-sketches-workspace",
+		help="Workspace for learner-sketches output. Required when --run-learner-sketches is set.",
+	)
+	domain_level_parser.add_argument("--learner-sketches-width", type=int, default=1)
+	domain_level_parser.add_argument("--learner-sketches-max-rss-gb", type=float, default=16.0)
+	domain_level_parser.add_argument("--learner-sketches-timeout-seconds", type=int)
+	domain_level_parser.add_argument(
+		"--learner-sketches-max-states-per-instance",
+		type=int,
+		default=10000,
+	)
+	domain_level_parser.add_argument(
+		"--learner-sketches-max-time-per-instance",
+		type=int,
+		default=10000,
+	)
+	domain_level_parser.add_argument(
+		"--learner-sketches-python",
+		help="Python executable for learner-sketches. Defaults to backend environment detection.",
+	)
+	domain_level_parser.add_argument(
 		"--synthesis-profile",
 		choices=("bootstrap", "paper"),
 		default="bootstrap",
@@ -209,10 +245,52 @@ def main() -> None:
 			_parse_external_sketch_policy(value)
 			for value in tuple(args.external_sketch_policy or ())
 		)
+		learner_backend = None
+		learner_runs = ()
+		if args.run_learner_sketches:
+			if not args.learner_sketches_workspace:
+				parser.error("--learner-sketches-workspace is required with --run-learner-sketches")
+			if not training_problems and not args.learner_sketches_problems_directory:
+				parser.error(
+					"--training-problem or --learner-sketches-problems-directory is required "
+					"with --run-learner-sketches",
+				)
+			backend_root = (
+				Path(args.learner_sketches_backend_root).expanduser().resolve()
+				if args.learner_sketches_backend_root
+				else Path(__file__).resolve().parents[1] / ".external" / "gp-backends"
+			)
+			learner_backend = discover_backend_manifest(
+				root=backend_root,
+				name="learner-sketches",
+				url="https://github.com/bonetblai/learner-sketches.git",
+				commit="7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+			)
+			problems_directory = (
+				_absolute_path(args.learner_sketches_problems_directory)
+				if args.learner_sketches_problems_directory
+				else str(Path(training_problems[0]).parent)
+			)
+			learner_runs = (
+				LearnerSketchesRunConfig(
+					domain_file=domain_file,
+					problems_directory=problems_directory,
+					workspace=_absolute_path(args.learner_sketches_workspace),
+					width=args.learner_sketches_width,
+					python_executable=args.learner_sketches_python,
+					max_states_per_instance=args.learner_sketches_max_states_per_instance,
+					max_time_per_instance=args.learner_sketches_max_time_per_instance,
+					max_rss_gb=args.learner_sketches_max_rss_gb,
+					timeout_seconds=args.learner_sketches_timeout_seconds,
+					use_resource_guard=True,
+				),
+			)
 		result = synthesize_domain_level_asl_library(
 			domain_file=domain_file,
 			training_problem_files=training_problems,
 			external_sketch_policies=external_policies,
+			learner_sketches_backend=learner_backend,
+			learner_sketches_runs=learner_runs,
 			synthesis_profile=args.synthesis_profile,
 		)
 		asl_text = render_plan_library_asl(result.plan_library)

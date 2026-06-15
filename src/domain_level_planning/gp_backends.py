@@ -8,6 +8,8 @@ pipeline reproducible commands and parseable sketch outputs.
 from __future__ import annotations
 
 import re
+import shutil
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -74,6 +76,58 @@ class SketchPolicy:
 	boolean_features: Mapping[str, str] = field(default_factory=dict)
 	numerical_features: Mapping[str, str] = field(default_factory=dict)
 	parsed_rules: tuple[SketchRule, ...] = ()
+
+
+@dataclass(frozen=True)
+class LearnerSketchesRunConfig:
+	"""Configuration for one guarded learner-sketches training run."""
+
+	domain_file: str | Path
+	problems_directory: str | Path
+	workspace: str | Path
+	width: int = 1
+	python_executable: str | Path | None = None
+	max_states_per_instance: int = 10000
+	max_time_per_instance: int = 10000
+	max_rss_gb: float = DEFAULT_MAX_RSS_GB
+	poll_seconds: float = DEFAULT_POLL_SECONDS
+	timeout_seconds: int | None = None
+	additional_booleans: tuple[str, ...] = ()
+	additional_numericals: tuple[str, ...] = ()
+	use_resource_guard: bool = True
+
+
+@dataclass(frozen=True)
+class LearnerSketchesRunResult:
+	"""Result of one learner-sketches training run and discovered policies."""
+
+	command: tuple[str, ...]
+	workspace: Path
+	returncode: int
+	policy_file: Path | None
+	raw_policy_file: Path | None
+	stdout: str
+	stderr: str
+
+	@property
+	def succeeded(self) -> bool:
+		return self.returncode == 0 and self.policy_file is not None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"command": list(self.command),
+			"workspace": str(self.workspace),
+			"returncode": self.returncode,
+			"policy_file": str(self.policy_file) if self.policy_file is not None else None,
+			"raw_policy_file": (
+				str(self.raw_policy_file)
+				if self.raw_policy_file is not None
+				else None
+			),
+			"stdout": self.stdout,
+			"stderr": self.stderr,
+			"succeeded": self.succeeded,
+		}
 
 
 def discover_backend_manifest(
@@ -237,6 +291,79 @@ class GPBackendRunner:
 			)
 
 
+def run_learner_sketches(
+	*,
+	manifest: BackendManifest,
+	config: LearnerSketchesRunConfig,
+	env: Mapping[str, str] | None = None,
+) -> LearnerSketchesRunResult:
+	"""Run learner-sketches with guards and return the minimized policy artifact."""
+
+	runner = GPBackendRunner(manifest)
+	workspace = Path(config.workspace)
+	workspace.mkdir(parents=True, exist_ok=True)
+	python_executable = (
+		config.python_executable
+		if config.python_executable is not None
+		else _default_backend_python(manifest)
+	)
+	command = runner.learner_sketches_command(
+		domain_file=config.domain_file,
+		problems_directory=config.problems_directory,
+		workspace=workspace,
+		python_executable=python_executable,
+		width=config.width,
+		max_states_per_instance=config.max_states_per_instance,
+		max_time_per_instance=config.max_time_per_instance,
+		additional_booleans=config.additional_booleans,
+		additional_numericals=config.additional_numericals,
+	)
+	if config.use_resource_guard:
+		command = runner.guarded_command(
+			command,
+			label=f"learner-sketches:{workspace.name}",
+			max_rss_gb=config.max_rss_gb,
+			poll_seconds=config.poll_seconds,
+			timeout_seconds=config.timeout_seconds,
+		)
+	process = subprocess.run(
+		command,
+		check=False,
+		capture_output=True,
+		text=True,
+		env=dict(env) if env is not None else None,
+	)
+	policy_file = discover_learner_sketches_policy_file(workspace, width=config.width)
+	raw_policy_file = discover_learner_sketches_policy_file(
+		workspace,
+		width=config.width,
+		minimized=False,
+	)
+	return LearnerSketchesRunResult(
+		command=command,
+		workspace=workspace,
+		returncode=process.returncode,
+		policy_file=policy_file,
+		raw_policy_file=raw_policy_file,
+		stdout=process.stdout,
+		stderr=process.stderr,
+	)
+
+
+def discover_learner_sketches_policy_file(
+	workspace: str | Path,
+	*,
+	width: int,
+	minimized: bool = True,
+) -> Path | None:
+	"""Return learner-sketches policy file path if the expected artifact exists."""
+
+	output_dir = Path(workspace) / "output"
+	name = f"sketch_minimized_{width}.txt" if minimized else f"sketch_{width}.txt"
+	path = output_dir / name
+	return path if path.exists() else None
+
+
 def parse_dlplan_policy(policy_text: str) -> SketchPolicy:
 	"""Parse the feature table and rule forms from a DLPlan policy string."""
 
@@ -358,3 +485,14 @@ def _observed_git_commit(path: Path) -> str | None:
 		if ref_file.exists():
 			return ref_file.read_text(encoding="utf-8").strip()
 	return head or None
+
+
+def _default_backend_python(manifest: BackendManifest) -> str:
+	candidates = (
+		manifest.path.parent / ".venv" / "bin" / "python",
+		manifest.path / ".venv" / "bin" / "python",
+	)
+	for candidate in candidates:
+		if candidate.exists():
+			return str(candidate)
+	return shutil.which("python3") or "python3"

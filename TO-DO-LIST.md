@@ -63,9 +63,12 @@
 | R15 | Paper backend artifact audit. | External learner-sketches policies are parsed and reported with feature/rule counts, binding coverage, unsupported features, executable effect count, and ASL readiness. | Done |
 | R16 | Bootstrap and paper-grade synthesis profiles are separated. | `bootstrap` permits schema fallback; `paper` requires external learned policy rules to bind, bounded validation to pass, and rejects silent rule drops. | Done |
 | R17 | Execution semantics are explicit. | The executor can run planner-style backtracking validation or deterministic first-applicable ASL execution for held-out refinement. | Done |
+| R18 | learner-sketches can be invoked as a guarded synthesis backend. | The unified pipeline can run a pinned learner-sketches backend, discover `sketch_minimized_<width>.txt`, audit/bind it, and use it to satisfy `paper` profile without a manually supplied policy file. | Done |
 
 Remaining research hardening after the first unified architecture:
 
+- [x] Add a guarded automatic learner-sketches training adapter to the unified
+  synthesis pipeline.
 - [ ] Move bounded transition-progress checks directly into ASP constraints instead of
   selecting first and validating after selection.
 - [ ] Promote learner-sketches-style bounded-width ASP constraints from post-hoc
