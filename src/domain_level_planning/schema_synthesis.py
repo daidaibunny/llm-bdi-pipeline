@@ -32,6 +32,21 @@ def build_goal_conditioned_library_from_pddl(
 ) -> PlanLibrary:
 	"""Build a lifted goal-conditioned library for any STRIPS-style PDDL domain."""
 
+	from .library_synthesis import synthesize_domain_level_asl_library
+
+	return synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=training_problem_files,
+	).plan_library
+
+
+def build_schema_only_goal_conditioned_library_from_pddl(
+	*,
+	domain_file: str | Path,
+	training_problem_files: Sequence[str | Path] = (),
+) -> PlanLibrary:
+	"""Build a lifted goal-conditioned library from schema/evidence candidates only."""
+
 	assert_compilable_pddl_files(
 		domain_file=domain_file,
 		problem_files=tuple(training_problem_files or ()),

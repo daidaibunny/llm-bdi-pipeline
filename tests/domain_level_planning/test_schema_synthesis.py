@@ -31,7 +31,7 @@ def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain() -> None
 
 	assert plan_library.domain_name == "logistics-mini"
 	assert plan_library.initial_beliefs == ()
-	assert plan_library.metadata["generation_mode"] == "goal_conditioned_schema_synthesis"
+	assert plan_library.metadata["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
 	assert "+!g : goal_at(P, L) & not at(P, L) <-" in asl
 	assert "\t!at(P, L);" in asl
 	assert "+!at(P, L) : at(P, L) <-" in asl
@@ -61,12 +61,12 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 	assert "goal_on(b4, b2)." not in asl
 	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
 	assert "+!g : goal_on(Z, W) & goal_on(X, Y) & not on(Z, W) <-" not in asl
-	assert plan_library.metadata["training_goal_facts"] == (
+	transition_systems = plan_library.metadata["transition_systems"]
+	assert transition_systems[0]["goal_facts"] == [
 		"goal_on(b4, b2)",
 		"goal_on(b1, b4)",
 		"goal_on(b3, b1)",
-	)
-	transition_systems = plan_library.metadata["transition_systems"]
+	]
 	assert transition_systems[0]["goal_orderings"] == [
 		("goal_on(b4, b2)", "goal_on(b1, b4)"),
 		("goal_on(b4, b2)", "goal_on(b3, b1)"),
@@ -87,14 +87,13 @@ def test_goal_facts_from_problem_are_read_only_problem_inputs() -> None:
 def test_synthesis_report_exposes_clingo_schema_contract() -> None:
 	domain_file, _ = _write_logistics_domain_and_problem()
 	plan_library = build_goal_conditioned_library_from_pddl(domain_file=domain_file)
-	report = plan_library.metadata["synthesis_report"]
+	report = plan_library.metadata["unified_synthesis_report"]
 
 	assert report["theoretical_contract"] == "bounded_class_guarantee"
-	assert report["solver_family"] == "clingo_goal_conditioned_schema_synthesis"
-	assert report["runtime_full_trace_planner"] is False
-	assert report["uses_read_only_goal_facts"] is True
+	assert report["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
+	assert report["external_policy_count"] == 0
 	assert report["selected_rule_count"] > 0
-	assert report["candidate_rule_count"] >= report["selected_rule_count"]
+	assert report["candidate_count"] >= report["selected_rule_count"]
 
 
 def test_goal_ordering_rules_filter_ambiguous_lifted_ordering_evidence() -> None:

@@ -14,7 +14,12 @@ if _src_dir not in sys.path:
 	sys.path.insert(0, _src_dir)
 
 from plan_library import PlanLibraryGenerationPipeline
-from domain_level_planning import SketchCompilationTarget, compile_learner_sketch_policy_to_asl
+from domain_level_planning import (
+	ExternalSketchPolicySource,
+	SketchCompilationTarget,
+	compile_learner_sketch_policy_to_asl,
+	synthesize_domain_level_asl_library,
+)
 from plan_library.rendering import render_plan_library_asl
 
 
@@ -116,6 +121,25 @@ Examples:
 		action="store_true",
 		help="Do not append a recursive call to the target goal.",
 	)
+
+	domain_level_parser = subparsers.add_parser(
+		"synthesize-domain-library",
+		help="Synthesize a unified domain-level lifted AgentSpeak(L) library.",
+	)
+	domain_level_parser.add_argument("--domain-file", required=True, help="Path to the PDDL domain file.")
+	domain_level_parser.add_argument(
+		"--training-problem",
+		action="append",
+		default=[],
+		help="Training PDDL problem file. Repeat for multiple problems.",
+	)
+	domain_level_parser.add_argument("--output-file", help="Optional path for the generated .asl file.")
+	domain_level_parser.add_argument(
+		"--external-sketch-policy",
+		action="append",
+		default=[],
+		help="Optional external sketch policy as name=/path/to/policy.txt.",
+	)
 	return parser
 
 
@@ -166,12 +190,50 @@ def main() -> None:
 			"unsupported_features": dict(result.unsupported_features),
 			"output_file": _absolute_path(args.output_file),
 		}
+	elif args.command == "synthesize-domain-library":
+		domain_file = _require_existing_path(args.domain_file, label="Domain File")
+		training_problems = tuple(
+			_require_existing_path(path, label="Training Problem")
+			for path in tuple(args.training_problem or ())
+		)
+		external_policies = tuple(
+			_parse_external_sketch_policy(value)
+			for value in tuple(args.external_sketch_policy or ())
+		)
+		result = synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=training_problems,
+			external_sketch_policies=external_policies,
+		)
+		asl_text = render_plan_library_asl(result.plan_library)
+		if args.output_file:
+			output_file = Path(args.output_file).expanduser().resolve()
+			output_file.parent.mkdir(parents=True, exist_ok=True)
+			output_file.write_text(asl_text, encoding="utf-8")
+		results = {
+			"success": True,
+			"report": dict(result.report),
+			"rejected_external_features": dict(result.rejected_external_features),
+			"output_file": _absolute_path(args.output_file),
+		}
 	else:
 		parser.error(f"Unsupported command {args.command!r}")
 		return
 
 	print(json.dumps(results, indent=2, default=str))
 	sys.exit(0 if results.get("success", False) else 1)
+
+
+def _parse_external_sketch_policy(value: str) -> ExternalSketchPolicySource:
+	text = str(value or "").strip()
+	if "=" not in text:
+		raise ValueError("--external-sketch-policy must use name=/path/to/policy.txt")
+	name, path = text.split("=", 1)
+	policy_file = _require_existing_path(path, label="External Sketch Policy")
+	return ExternalSketchPolicySource(
+		name=name.strip() or Path(policy_file).stem,
+		policy_file=policy_file,
+	)
 
 
 if __name__ == "__main__":
