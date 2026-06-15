@@ -27,6 +27,7 @@ class SketchFeatureBinding:
 
 	condition_contexts: Mapping[str, tuple[str, ...]]
 	effect_body: Mapping[str, tuple[AgentSpeakBodyStep, ...]]
+	effect_contexts: Mapping[str, tuple[str, ...]] | None = None
 
 
 @dataclass(frozen=True)
@@ -67,12 +68,24 @@ def compile_bound_sketch_to_asl_library(
 				),
 			)
 		for effect in rule.effects:
+			context.extend(
+				_lookup_effect_context(
+					feature_bindings,
+					effect.feature_id,
+					effect.operator,
+				),
+			)
 			body.extend(
 				_lookup_effect_body(
 					feature_bindings,
 					effect.feature_id,
 					effect.operator,
 				),
+			)
+		if rule.effects and not body:
+			raise ValueError(
+				f"Sketch rule {rule_index} does not provide an executable ASL body "
+				f"after feature binding: {rule.raw}",
 			)
 		if compilation_target.recurse:
 			body.append(
@@ -158,6 +171,17 @@ def _lookup_effect_body(
 			f"No ASL body binding for effect operator {operator!r} "
 			f"on sketch feature {feature_id!r}.",
 		) from error
+
+
+def _lookup_effect_context(
+	feature_bindings: Mapping[str, SketchFeatureBinding],
+	feature_id: str,
+	operator: str,
+) -> Sequence[str]:
+	binding = _feature_binding(feature_bindings, feature_id)
+	if binding.effect_contexts is None:
+		return ()
+	return binding.effect_contexts.get(operator, ())
 
 
 def _feature_binding(

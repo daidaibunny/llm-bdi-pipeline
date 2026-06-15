@@ -87,6 +87,39 @@ def test_compile_bound_sketch_to_asl_can_target_lifted_atomic_module() -> None:
 	}
 
 
+def test_compile_bound_sketch_allows_effect_context_bindings() -> None:
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f1 "n_count(c_equal(r_primitive(done,0),r_primitive(done_g,0)))"))
+		(:rule (:conditions ) (:effects (:e_n_inc f1)))
+		)
+		""",
+	)
+
+	plan_library = compile_bound_sketch_to_asl_library(
+		domain_name="generic",
+		policy=policy,
+		feature_bindings={
+			"f1": SketchFeatureBinding(
+				condition_contexts={},
+				effect_contexts={
+					"e_n_inc": ("goal_done(X)", "not done(X)"),
+				},
+				effect_body={
+					"e_n_inc": (AgentSpeakBodyStep("subgoal", "done", ("X",)),),
+				},
+			),
+		},
+	)
+
+	asl = render_plan_library_asl(plan_library)
+
+	assert "+!g : goal_done(X) & not done(X) <-" in asl
+	assert "\t!done(X);" in asl
+
+
 def test_compile_bound_sketch_requires_explicit_feature_bindings() -> None:
 	policy = parse_dlplan_policy(
 		"""
@@ -103,6 +136,30 @@ def test_compile_bound_sketch_requires_explicit_feature_bindings() -> None:
 			domain_name="generic",
 			policy=policy,
 			feature_bindings={},
+		)
+
+
+def test_compile_bound_sketch_rejects_rules_without_executable_body() -> None:
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f1 "n_count(c_primitive(done,0))"))
+		(:rule (:conditions ) (:effects (:e_n_bot f1)))
+		)
+		""",
+	)
+
+	with pytest.raises(ValueError, match="does not provide an executable ASL body"):
+		compile_bound_sketch_to_asl_library(
+			domain_name="generic",
+			policy=policy,
+			feature_bindings={
+				"f1": SketchFeatureBinding(
+					condition_contexts={},
+					effect_body={"e_n_bot": ()},
+				),
+			},
 		)
 
 

@@ -20,6 +20,12 @@ from .gp_backends import (
 	discover_backend_manifest,
 	parse_dlplan_policy,
 )
+from .feature_binding import (
+	ActionEffectBindingCandidate,
+	FeatureBindingReport,
+	bind_recoverable_dlplan_features,
+	bind_unique_action_effect_candidates,
+)
 from .models import (
 	LiftedCall,
 	LiftedPlanRule,
@@ -40,6 +46,8 @@ __all__ = [
 	"LiftedPlanRule",
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
+	"ActionEffectBindingCandidate",
+	"FeatureBindingReport",
 	"BackendManifest",
 	"GPBackendRunner",
 	"SketchCondition",
@@ -51,6 +59,8 @@ __all__ = [
 	"SketchRule",
 	"SketchSynthesisReport",
 	"build_goal_conditioned_library_from_pddl",
+	"bind_recoverable_dlplan_features",
+	"bind_unique_action_effect_candidates",
 	"compile_bound_sketch_to_asl_library",
 	"discover_backend_manifest",
 	"goal_facts_from_problem",
