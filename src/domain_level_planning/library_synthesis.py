@@ -16,6 +16,7 @@ from .feature_binding import bind_goal_aligned_action_effect_candidates
 from .feature_binding import bind_recoverable_dlplan_features
 from .feature_binding import bind_unique_action_effect_candidates
 from .gp_backends import parse_dlplan_policy
+from .library_verifier import validate_library_on_bounded_transition_systems
 from .models import LiftedCall, LiftedPlanRule
 from .pddl_support import assert_compilable_pddl_files
 from .schema_synthesis import _candidate_rules_from_domain
@@ -97,9 +98,22 @@ def synthesize_domain_level_asl_library(
 			),
 		},
 	)
+	bounded_validation = None
+	if training_problem_files:
+		bounded_validation = validate_library_on_bounded_transition_systems(
+			plan_library=plan_library,
+			domain_file=domain_file,
+			problem_files=tuple(training_problem_files),
+		)
 	report = {
 		"generation_mode": "unified_goal_conditioned_modular_synthesis",
 		"theoretical_contract": "bounded_class_guarantee",
+		"paper_quality_checks": (
+			"transition_progress",
+			"bounded_all_reachable_states",
+			"acyclic_high_level_decision_trace",
+			"goal_state_fixed_point",
+		),
 		"external_policy_count": len(tuple(external_sketch_policies or ())),
 		"schema_candidate_count": len(schema_candidates),
 		"external_candidate_count": len(external_candidates),
@@ -109,6 +123,11 @@ def synthesize_domain_level_asl_library(
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
 		"selection_cost": selection.cost,
+		"bounded_validation": (
+			bounded_validation.to_dict()
+			if bounded_validation is not None
+			else None
+		),
 	}
 	plan_library.metadata["unified_synthesis_report"] = dict(report)
 	return UnifiedSynthesisResult(

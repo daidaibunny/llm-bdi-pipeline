@@ -96,14 +96,10 @@ def collect_training_transition_evidence(
 ) -> TrainingTransitionEvidence:
 	"""Explore a small grounded transition system and extract goal-order evidence."""
 
-	ground_actions = tuple(_ground_actions(domain.actions, problem))
-	initial_state = frozenset(
-		_atom(fact.predicate, fact.args)
-		for fact in problem.init_facts
-		if fact.is_positive
-	)
+	ground_actions = ground_actions_for_problem(domain.actions, problem)
+	initial_state = initial_state_from_problem(problem)
 	goal_atoms = tuple(
-		_atom(fact.predicate, fact.args)
+		fact_atom(fact.predicate, fact.args)
 		for fact in problem.goal_facts
 		if fact.is_positive
 	)
@@ -115,9 +111,9 @@ def collect_training_transition_evidence(
 	while queue and goal_state is None:
 		state = queue.popleft()
 		for action in ground_actions:
-			if not _is_applicable(state, action):
+			if not is_action_applicable(state, action):
 				continue
-			next_state = _apply_action(state, action)
+			next_state = apply_ground_action(state, action)
 			explored_transition_count += 1
 			if next_state in predecessors:
 				continue
@@ -127,7 +123,7 @@ def collect_training_transition_evidence(
 					f"Training transition-system exploration exceeded {max_states} states "
 					f"for problem {problem.name}."
 				)
-			if _satisfies(next_state, goal_atoms):
+			if satisfies_atoms(next_state, goal_atoms):
 				goal_state = next_state
 				break
 			queue.append(next_state)
@@ -158,7 +154,50 @@ def collect_training_transition_evidence(
 	)
 
 
-def _ground_actions(
+def initial_state_from_problem(problem: PDDLProblem) -> State:
+	"""Return the positive initial facts of a parsed PDDL problem."""
+
+	return frozenset(
+		fact_atom(fact.predicate, fact.args)
+		for fact in problem.init_facts
+		if fact.is_positive
+	)
+
+
+def ground_actions_for_problem(
+	actions: Sequence[PDDLAction],
+	problem: PDDLProblem,
+) -> tuple[GroundAction, ...]:
+	"""Ground action schemas against a parsed PDDL problem."""
+
+	return tuple(_iter_ground_actions(actions, problem))
+
+
+def is_action_applicable(state: State, action: GroundAction) -> bool:
+	"""Return whether a grounded action is applicable in a STRIPS state."""
+
+	return _is_applicable(state, action)
+
+
+def apply_ground_action(state: State, action: GroundAction) -> State:
+	"""Apply a grounded action to a STRIPS state."""
+
+	return _apply_action(state, action)
+
+
+def satisfies_atoms(state: State, atoms: tuple[str, ...]) -> bool:
+	"""Return whether all atoms hold in a STRIPS state."""
+
+	return _satisfies(state, atoms)
+
+
+def fact_atom(predicate: str, arguments: Iterable[str]) -> str:
+	"""Render a predicate and arguments into the project fact signature."""
+
+	return _atom(predicate, arguments)
+
+
+def _iter_ground_actions(
 	actions: Sequence[PDDLAction],
 	problem: PDDLProblem,
 ) -> Iterable[GroundAction]:

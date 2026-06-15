@@ -3,6 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from domain_level_planning.library_executor import evaluate_library_on_problem
+from domain_level_planning.library_verifier import (
+	validate_library_on_bounded_transition_systems,
+)
 from domain_level_planning.library_synthesis import synthesize_domain_level_asl_library
 from plan_library.rendering import render_plan_library_asl
 
@@ -14,10 +17,11 @@ BLOCKS_PROBLEMS = tuple(sorted((BLOCKS_ROOT / "problems").glob("p*.pddl")))
 
 
 def test_lifted_blocksworld_library_from_one_training_problem_solves_first_20() -> None:
-	plan_library = synthesize_domain_level_asl_library(
+	result = synthesize_domain_level_asl_library(
 		domain_file=BLOCKS_DOMAIN,
 		training_problem_files=(BLOCKS_PROBLEMS[0],),
-	).plan_library
+	)
+	plan_library = result.plan_library
 	asl = render_plan_library_asl(plan_library)
 
 	assert len(plan_library.plans) == 29
@@ -67,3 +71,65 @@ def test_lifted_blocksworld_library_from_one_training_problem_solves_first_20() 
 		128,
 		182,
 	]
+
+	bounded_validation = result.report["bounded_validation"]
+	assert bounded_validation["passed"] is True
+	assert bounded_validation["checked_problem_count"] == 1
+	assert bounded_validation["checked_state_count"] > 1
+	assert bounded_validation["failure_count"] == 0
+
+
+def test_bounded_verifier_checks_all_reachable_states_for_small_domain(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_tiny_switch_domain(tmp_path)
+	plan_library = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	).plan_library
+
+	report = validate_library_on_bounded_transition_systems(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_files=(problem_file,),
+		max_reachable_states=10,
+		max_execution_steps=10,
+		max_depth=10,
+	)
+
+	assert report.passed is True
+	assert report.checked_problem_count == 1
+	assert report.checked_state_count == 2
+	assert report.problem_reports[0].goal_state_count == 1
+	assert report.problem_reports[0].max_execution_steps == 1
+
+
+def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain tiny-switch)
+		 (:requirements :strips)
+		 (:predicates (ready) (done))
+		 (:action finish
+		  :parameters ()
+		  :precondition (ready)
+		  :effect (and (not (ready)) (done))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem tiny-p1)
+		 (:domain tiny-switch)
+		 (:objects)
+		 (:init (ready))
+		 (:goal (and (done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file

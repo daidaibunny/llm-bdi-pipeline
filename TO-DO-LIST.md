@@ -35,6 +35,9 @@
 - [x] Add a bounded lifted-ASL executor and verify that one domain-level
   Blocksworld library learned from `p01` solves `p01` through `p20` without
   runtime full-trace planning.
+- [x] Add paper-style bounded library validation over all reachable states in
+  small training transition systems, including termination, high-level decision
+  acyclicity, and goal-state fixed-point checks.
 
 ## Unified Generalized-Planning-To-ASL Architecture Requirements
 
@@ -53,11 +56,14 @@
 | R11 | Held-out and counterexample hooks exist. | Pipeline report exposes training evidence, selected sources, rejected candidates, and a place to add failed instances later. | Done |
 | R12 | Resource safety for external learners. | Audit commands print guarded learner invocations by default and never run unbounded experiments in tests. | Done |
 | R13 | Blocksworld first-20 domain-level validation. | One lifted library synthesized from `p01` solves `p01`-`p20` through the bounded ASL executor; generated ASL contains no `achieve_*`, `transition_*`, or `dfa_state` names. | Done |
+| R14 | Paper-style bounded validation. | Synthesis reports include all-reachable-state validation for training transition systems, high-level decision acyclicity, and goal-state fixed-point checks. | Done |
 
 Remaining research hardening after the first unified architecture:
 
 - [ ] Move bounded transition-progress checks directly into ASP constraints instead of
   selecting first and validating after selection.
+- [ ] Promote learner-sketches-style bounded-width ASP constraints from post-hoc
+  validation into the main synthesis objective.
 - [ ] Add an automatic counterexample-guided refinement loop for held-out failures.
 - [ ] Expand DLPlan feature binding coverage beyond currently recoverable predicate
   count and goal-aligned role patterns.

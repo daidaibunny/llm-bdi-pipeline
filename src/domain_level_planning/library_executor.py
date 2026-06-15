@@ -22,6 +22,8 @@ class LibraryExecutionResult:
 	solved: bool
 	steps: tuple[str, ...]
 	final_state: frozenset[str]
+	state_trace: tuple[frozenset[str], ...] = ()
+	decision_trace: tuple[frozenset[str], ...] = ()
 	failure_reason: str | None = None
 
 
@@ -47,14 +49,47 @@ def evaluate_library_on_problem(
 		for fact in problem.goal_facts
 		if fact.is_positive
 	)
-	state, steps, failure = _execute_subgoal(
+	goal_atoms = tuple(
+		fact_to_signature(fact)
+		for fact in problem.goal_facts
+		if fact.is_positive
+	)
+	return execute_library_from_state(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_name=problem.name,
+		initial_state=initial_state,
+		goal_facts=goal_beliefs,
+		goal_atoms=goal_atoms,
+		max_steps=max_steps,
+		max_depth=max_depth,
+	)
+
+
+def execute_library_from_state(
+	*,
+	plan_library: PlanLibrary,
+	domain_file: str | Path,
+	problem_name: str,
+	initial_state: frozenset[str],
+	goal_facts: tuple[str, ...],
+	goal_atoms: tuple[str, ...] | None = None,
+	max_steps: int = 2000,
+	max_depth: int = 200,
+) -> LibraryExecutionResult:
+	"""Execute a generated library from an arbitrary grounded STRIPS state."""
+
+	simulator = STRIPSStateSimulator(str(domain_file))
+	state, steps, state_trace, decision_trace, failure = _execute_subgoal(
 		plan_library=plan_library,
 		simulator=simulator,
-		state=initial_state,
-		goal_facts=goal_beliefs,
+		state=frozenset(initial_state),
+		goal_facts=goal_facts,
 		symbol="g",
 		arguments=(),
 		steps=(),
+		state_trace=(frozenset(initial_state),),
+		decision_trace=(),
 		max_steps=max_steps,
 		max_depth=max_depth,
 		depth=0,
@@ -62,23 +97,24 @@ def evaluate_library_on_problem(
 	)
 	if failure is not None:
 		return LibraryExecutionResult(
-			problem_name=problem.name,
+			problem_name=problem_name,
 			solved=False,
 			steps=steps,
 			final_state=state,
+			state_trace=state_trace,
+			decision_trace=decision_trace,
 			failure_reason=failure,
 		)
-	goal_atoms = tuple(
-		fact_to_signature(fact)
-		for fact in problem.goal_facts
-		if fact.is_positive
-	)
+	if goal_atoms is None:
+		goal_atoms = tuple(_state_atom_from_goal_fact(fact) for fact in goal_facts)
 	missing = tuple(atom for atom in goal_atoms if atom not in state)
 	return LibraryExecutionResult(
-		problem_name=problem.name,
+		problem_name=problem_name,
 		solved=not missing,
 		steps=steps,
 		final_state=state,
+		state_trace=state_trace,
+		decision_trace=decision_trace,
 		failure_reason=None if not missing else f"missing goals: {missing}",
 	)
 
@@ -92,20 +128,39 @@ def _execute_subgoal(
 	symbol: str,
 	arguments: tuple[str, ...],
 	steps: tuple[str, ...],
+	state_trace: tuple[frozenset[str], ...],
+	decision_trace: tuple[frozenset[str], ...],
 	max_steps: int,
 	max_depth: int,
 	depth: int,
 	active_stack: tuple[tuple[str, tuple[str, ...], frozenset[str]], ...],
-) -> tuple[frozenset[str], tuple[str, ...], str | None]:
+) -> tuple[
+	frozenset[str],
+	tuple[str, ...],
+	tuple[frozenset[str], ...],
+	tuple[frozenset[str], ...],
+	str | None,
+]:
+	current_decision_trace = (
+		decision_trace + (state,)
+		if symbol == "g"
+		else decision_trace
+	)
 	if symbol == "g" and _all_goal_facts_satisfied(state, goal_facts):
-		return state, steps, None
+		return state, steps, state_trace, current_decision_trace, None
 	if len(steps) >= max_steps:
-		return state, steps, "step limit exceeded"
+		return state, steps, state_trace, current_decision_trace, "step limit exceeded"
 	if depth > max_depth:
-		return state, steps, "recursion depth exceeded"
+		return state, steps, state_trace, current_decision_trace, "recursion depth exceeded"
 	frame = (symbol, arguments, state)
 	if frame in active_stack:
-		return state, steps, f"recursive loop on !{_call(symbol, arguments)}"
+		return (
+			state,
+			steps,
+			state_trace,
+			current_decision_trace,
+			f"recursive loop on !{_call(symbol, arguments)}",
+		)
 	for plan in _candidate_plans(plan_library, symbol, arguments):
 		substitution = _match_arguments(plan.trigger.arguments, arguments)
 		if substitution is None:
@@ -116,7 +171,7 @@ def _execute_subgoal(
 			state=state,
 			goal_facts=goal_facts,
 		):
-			next_state, next_steps, failure = _execute_body(
+			next_state, next_steps, next_trace, next_decision_trace, failure = _execute_body(
 				plan_library=plan_library,
 				simulator=simulator,
 				state=state,
@@ -124,14 +179,22 @@ def _execute_subgoal(
 				body=plan.body,
 				substitution=context_substitution,
 				steps=steps,
+				state_trace=state_trace,
+				decision_trace=current_decision_trace,
 				max_steps=max_steps,
 				max_depth=max_depth,
 				depth=depth,
 				active_stack=active_stack + (frame,),
 			)
 			if failure is None:
-				return next_state, next_steps, None
-	return state, steps, f"no applicable plan for !{_call(symbol, arguments)}"
+				return next_state, next_steps, next_trace, next_decision_trace, None
+	return (
+		state,
+		steps,
+		state_trace,
+		current_decision_trace,
+		f"no applicable plan for !{_call(symbol, arguments)}",
+	)
 
 
 def _execute_body(
@@ -143,17 +206,33 @@ def _execute_body(
 	body: Sequence[AgentSpeakBodyStep],
 	substitution: Mapping[str, str],
 	steps: tuple[str, ...],
+	state_trace: tuple[frozenset[str], ...],
+	decision_trace: tuple[frozenset[str], ...],
 	max_steps: int,
 	max_depth: int,
 	depth: int,
 	active_stack: tuple[tuple[str, tuple[str, ...], frozenset[str]], ...],
-) -> tuple[frozenset[str], tuple[str, ...], str | None]:
+) -> tuple[
+	frozenset[str],
+	tuple[str, ...],
+	tuple[frozenset[str], ...],
+	tuple[frozenset[str], ...],
+	str | None,
+]:
 	current_state = state
 	current_steps = steps
+	current_trace = state_trace
+	current_decision_trace = decision_trace
 	for step in body:
 		arguments = tuple(_ground_term(argument, substitution) for argument in step.arguments)
 		if step.kind == "subgoal":
-			current_state, current_steps, failure = _execute_subgoal(
+			(
+				current_state,
+				current_steps,
+				current_trace,
+				current_decision_trace,
+				failure,
+			) = _execute_subgoal(
 				plan_library=plan_library,
 				simulator=simulator,
 				state=current_state,
@@ -161,26 +240,53 @@ def _execute_body(
 				symbol=step.symbol,
 				arguments=arguments,
 				steps=current_steps,
+				state_trace=current_trace,
+				decision_trace=current_decision_trace,
 				max_steps=max_steps,
 				max_depth=max_depth,
 				depth=depth + 1,
 				active_stack=active_stack,
 			)
 			if failure is not None:
-				return current_state, current_steps, failure
+				return (
+					current_state,
+					current_steps,
+					current_trace,
+					current_decision_trace,
+					failure,
+				)
 			continue
 		if step.kind in {"action", "primitive_action"}:
 			action = LowLevelAction(step.symbol, arguments)
 			try:
 				current_state = simulator.apply_action(state=current_state, action=action)
 			except ValueError as error:
-				return current_state, current_steps, str(error)
+				return (
+					current_state,
+					current_steps,
+					current_trace,
+					current_decision_trace,
+					str(error),
+				)
 			current_steps = current_steps + (_call(action.name, action.arguments),)
+			current_trace = current_trace + (current_state,)
 			if len(current_steps) >= max_steps:
-				return current_state, current_steps, "step limit exceeded"
+				return (
+					current_state,
+					current_steps,
+					current_trace,
+					current_decision_trace,
+					"step limit exceeded",
+				)
 			continue
-		return current_state, current_steps, f"unsupported body step kind: {step.kind}"
-	return current_state, current_steps, None
+		return (
+			current_state,
+			current_steps,
+			current_trace,
+			current_decision_trace,
+			f"unsupported body step kind: {step.kind}",
+		)
+	return current_state, current_steps, current_trace, current_decision_trace, None
 
 
 def _candidate_plans(

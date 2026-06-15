@@ -37,6 +37,11 @@ from .library_synthesis import (
 	UnifiedSynthesisResult,
 	synthesize_domain_level_asl_library,
 )
+from .library_verifier import (
+	BoundedLibraryValidationReport,
+	BoundedProblemValidation,
+	validate_library_on_bounded_transition_systems,
+)
 from .pddl_support import (
 	PDDLSupportReport,
 	assert_compilable_pddl_files,
@@ -77,6 +82,8 @@ __all__ = [
 	"SketchRule",
 	"SketchSynthesisReport",
 	"UnifiedSynthesisResult",
+	"BoundedLibraryValidationReport",
+	"BoundedProblemValidation",
 	"PDDLSupportReport",
 	"build_goal_conditioned_library_from_pddl",
 	"build_schema_only_goal_conditioned_library_from_pddl",
@@ -91,4 +98,5 @@ __all__ = [
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"synthesize_domain_level_asl_library",
+	"validate_library_on_bounded_transition_systems",
 ]

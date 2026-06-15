@@ -27,6 +27,13 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	asl = render_plan_library_asl(result.plan_library)
 
 	assert result.report["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
+	assert result.report["paper_quality_checks"] == (
+		"transition_progress",
+		"bounded_all_reachable_states",
+		"acyclic_high_level_decision_trace",
+		"goal_state_fixed_point",
+	)
+	assert result.report["bounded_validation"]["passed"] is True
 	assert result.report["external_policy_count"] == 1
 	assert result.report["candidate_sources"]["external_sketch"] >= 1
 	assert result.report["candidate_sources"]["schema"] >= 1
