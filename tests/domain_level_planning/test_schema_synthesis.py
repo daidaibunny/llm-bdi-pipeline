@@ -8,6 +8,7 @@ from domain_level_planning import (
 )
 from domain_level_planning.schema_synthesis import _goal_ordering_rules_from_evidence
 from domain_level_planning.schema_synthesis import _validate_selected_rules_against_transition_progress
+from domain_level_planning.schema_synthesis import atomic_achievement_justifications
 from domain_level_planning.schema_synthesis import composer_state_coverage_required_rule_groups
 from domain_level_planning.schema_synthesis import transition_progress_required_rule_groups
 from utils.pddl_parser import PDDLParser
@@ -258,6 +259,65 @@ def test_unsupported_negative_training_goal_fails_instead_of_silent_fallback(
 		assert "positive achievement goals only" in str(exc)
 	else:
 		raise AssertionError("Expected unsupported negative goal to fail.")
+
+
+def test_atomic_achievement_justifications_explain_selected_action_rules() -> None:
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+	problem = PDDLParser.parse_problem(BLOCKS_P01)
+	from domain_level_planning.transition_system import (
+		collect_training_transition_evidence,
+	)
+
+	evidence = collect_training_transition_evidence(domain, problem)
+	# A schema-derived atomic rule: on(X,Y) is achieved by stack(X,Y).
+	on_via_stack = LiftedPlanRule(
+		name="on_via_stack",
+		head=LiftedCall("subgoal", "on", ("X", "Y")),
+		context=("holding(X)", "clear(Y)"),
+		body=(LiftedCall("action", "stack", ("X", "Y")),),
+		layer="atomic",
+	)
+	wrong_action = LiftedPlanRule(
+		name="on_via_unstack",
+		head=LiftedCall("subgoal", "on", ("X", "Y")),
+		context=("holding(X)", "clear(Y)"),
+		body=(LiftedCall("action", "unstack", ("X", "Y")),),
+		layer="atomic",
+	)
+
+	justifications = atomic_achievement_justifications(
+		(on_via_stack, wrong_action),
+		(evidence,),
+	)
+
+	# The stack rule is justified by real trace slices; the unstack rule is not.
+	assert justifications["on_via_stack"]
+	assert justifications["on_via_unstack"] == ()
+	# Each supporting slice grounds the rule head to a concrete on(...) fact.
+	for slice_ in justifications["on_via_stack"]:
+		assert slice_.target_fact.predicate == "on"
+		assert slice_.action_name == "stack"
+
+
+def test_atomic_achievement_justifications_ignore_composer_rules() -> None:
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+	problem = PDDLParser.parse_problem(BLOCKS_P01)
+	from domain_level_planning.transition_system import (
+		collect_training_transition_evidence,
+	)
+
+	evidence = collect_training_transition_evidence(domain, problem)
+	composer = LiftedPlanRule(
+		name="g_satisfy_goal_on",
+		head=LiftedCall("subgoal", "g", ()),
+		context=("goal_on(X, Y)", "not on(X, Y)"),
+		body=(LiftedCall("subgoal", "on", ("X", "Y")), LiftedCall("subgoal", "g", ())),
+		layer="composer",
+	)
+
+	justifications = atomic_achievement_justifications((composer,), (evidence,))
+
+	assert justifications == {}
 
 
 def _write_logistics_domain_and_problem(

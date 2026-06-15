@@ -57,6 +57,43 @@ class GoalProgressEvidence:
 
 
 @dataclass(frozen=True)
+class AtomicAchievementEvidence:
+	"""One trace slice where an action makes a (possibly non-goal) fact true.
+
+	Layer B atomic-module learning generalizes from these slices rather than from
+	final goal facts alone. Each slice records the achieving action, the grounded
+	preconditions that enabled it in the before-state, and whether this is the
+	last time the fact transitions from false to true in the plan.
+	"""
+
+	target_fact: PDDLFact
+	action_name: str
+	action_arguments: tuple[str, ...]
+	action_signature: str
+	step_index: int
+	enabling_preconditions: tuple[LiftedLiteral, ...]
+	before_state: tuple[str, ...]
+	after_state: tuple[str, ...]
+	is_last_achiever: bool = False
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"target_fact": _fact_signature(self.target_fact),
+			"action_name": self.action_name,
+			"action_arguments": list(self.action_arguments),
+			"action_signature": self.action_signature,
+			"step_index": self.step_index,
+			"is_last_achiever": self.is_last_achiever,
+			"enabling_preconditions": [
+				_atom(literal.predicate, literal.arguments)
+				for literal in self.enabling_preconditions
+			],
+			"before_state": list(self.before_state),
+			"after_state": list(self.after_state),
+		}
+
+
+@dataclass(frozen=True)
 class TrainingTransitionEvidence:
 	"""Small transition-system evidence extracted from one training problem."""
 
@@ -68,6 +105,7 @@ class TrainingTransitionEvidence:
 	goal_facts: tuple[str, ...]
 	goal_orderings: tuple[tuple[PDDLFact, PDDLFact], ...]
 	goal_progressions: tuple[GoalProgressEvidence, ...] = ()
+	atomic_achievements: tuple[AtomicAchievementEvidence, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -84,6 +122,10 @@ class TrainingTransitionEvidence:
 			"goal_progressions": [
 				progression.to_dict()
 				for progression in self.goal_progressions
+			],
+			"atomic_achievements": [
+				slice_.to_dict()
+				for slice_ in self.atomic_achievements
 			],
 		}
 
@@ -142,6 +184,10 @@ def collect_training_transition_evidence(
 		plan=plan,
 		goal_facts=tuple(fact for fact in problem.goal_facts if fact.is_positive),
 	)
+	atomic_achievements = atomic_achievements_from_plan(
+		initial_state=initial_state,
+		plan=plan,
+	)
 	return TrainingTransitionEvidence(
 		problem_name=problem.name,
 		object_count=len(problem.objects),
@@ -151,6 +197,7 @@ def collect_training_transition_evidence(
 		goal_facts=tuple(_goal_signature(fact) for fact in problem.goal_facts),
 		goal_orderings=goal_orderings,
 		goal_progressions=goal_progressions,
+		atomic_achievements=atomic_achievements,
 	)
 
 
@@ -387,9 +434,85 @@ def _goal_progressions_from_plan(
 	return tuple(progressions[atom] for atom in sorted(progressions))
 
 
+def atomic_achievements_from_plan(
+	*,
+	initial_state: State,
+	plan: tuple[GroundAction, ...],
+) -> tuple[AtomicAchievementEvidence, ...]:
+	"""Slice a plan into per-action atomic achievement evidence.
+
+	Every action add-effect that transitions a fact from false to true becomes a
+	slice, including intermediate non-goal facts. The last false-to-true
+	transition of each fact across the whole plan is flagged as the last achiever.
+	"""
+
+	slices: list[AtomicAchievementEvidence] = []
+	state = initial_state
+	for step_index, action in enumerate(plan, start=1):
+		next_state = _apply_action(state, action)
+		enabling = tuple(
+			precondition
+			for precondition in action.preconditions
+			if precondition.is_positive
+			and _atom(precondition.predicate, precondition.arguments) in state
+		)
+		for effect in action.add_effects:
+			atom = _atom(effect.predicate, effect.arguments)
+			if atom in state or atom not in next_state:
+				continue
+			slices.append(
+				AtomicAchievementEvidence(
+					target_fact=PDDLFact(
+						predicate=effect.predicate,
+						args=list(effect.arguments),
+						is_positive=True,
+					),
+					action_name=action.name,
+					action_arguments=action.arguments,
+					action_signature=action.signature(),
+					step_index=step_index,
+					enabling_preconditions=enabling,
+					before_state=tuple(sorted(state)),
+					after_state=tuple(sorted(next_state)),
+				),
+			)
+		state = next_state
+	return _mark_last_achievers(slices)
+
+
+def _mark_last_achievers(
+	slices: Sequence[AtomicAchievementEvidence],
+) -> tuple[AtomicAchievementEvidence, ...]:
+	last_step_by_atom: dict[str, int] = {}
+	for slice_ in slices:
+		atom = _atom(slice_.target_fact.predicate, slice_.target_fact.args)
+		last_step_by_atom[atom] = max(last_step_by_atom.get(atom, 0), slice_.step_index)
+	marked: list[AtomicAchievementEvidence] = []
+	for slice_ in slices:
+		atom = _atom(slice_.target_fact.predicate, slice_.target_fact.args)
+		marked.append(
+			AtomicAchievementEvidence(
+				target_fact=slice_.target_fact,
+				action_name=slice_.action_name,
+				action_arguments=slice_.action_arguments,
+				action_signature=slice_.action_signature,
+				step_index=slice_.step_index,
+				enabling_preconditions=slice_.enabling_preconditions,
+				before_state=slice_.before_state,
+				after_state=slice_.after_state,
+				is_last_achiever=slice_.step_index == last_step_by_atom[atom],
+			),
+		)
+	return tuple(marked)
+
+
 def _atom(predicate: str, arguments: Iterable[str]) -> str:
 	args = tuple(arguments)
 	return predicate if not args else f"{predicate}({', '.join(args)})"
+
+
+def _fact_signature(fact: PDDLFact) -> str:
+	return _atom(fact.predicate, fact.args)
 
 
 def _goal_signature(fact: PDDLFact) -> str:

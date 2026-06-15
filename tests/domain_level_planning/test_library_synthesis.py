@@ -120,6 +120,8 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert layer_b["candidate_count"] >= layer_b["selected_rule_count"] >= 1
 	assert layer_b["training_transition_progress_constraint_count"] == 1
 	assert layer_b["training_goal_progression_count"] == 1
+	assert layer_b["training_atomic_achievement_count"] == 1
+	assert layer_b["trace_justified_selected_rule_count"] >= 1
 	assert layer_c["target"] == "goal-conditioned conjunctive-goal composer rules"
 	assert layer_c["candidate_count"] >= layer_c["selected_rule_count"] >= 1
 	assert layer_c["training_state_coverage_constraint_count"] >= 1
@@ -131,6 +133,7 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert sources["external_sketch"]["rejected_rule_count"] == 0
 	assert sources["training_transition_systems"]["problem_count"] == 1
 	assert sources["training_transition_systems"]["goal_progression_count"] == 1
+	assert sources["training_transition_systems"]["atomic_achievement_count"] == 1
 	assert sources["counterexample_transition_systems"]["problem_count"] == 0
 
 

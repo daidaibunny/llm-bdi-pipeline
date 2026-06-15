@@ -625,19 +625,38 @@ def _has_selected_progress_rule(
 
 
 def _rule_covers_progression(rule: LiftedPlanRule, progression) -> bool:
+	return _rule_covers_action_achievement(
+		rule,
+		target_fact=progression.goal_fact,
+		action_name=progression.action_name,
+		action_arguments=progression.action_arguments,
+		before_state=frozenset(progression.before_state),
+	)
+
+
+def _rule_covers_action_achievement(
+	rule: LiftedPlanRule,
+	*,
+	target_fact: PDDLFact,
+	action_name: str,
+	action_arguments: Sequence[str],
+	before_state: frozenset[str],
+) -> bool:
+	"""Return whether a lifted atomic action-rule grounds to one achievement event."""
+
 	if rule.layer != "atomic":
 		return False
-	if rule.head.symbol != progression.goal_fact.predicate:
+	if rule.head.symbol != target_fact.predicate:
 		return False
-	substitution = _substitution_from_head(rule, progression.goal_fact)
+	substitution = _substitution_from_head(rule, target_fact)
 	if substitution is None:
 		return False
 	for step in rule.body:
-		if step.kind != "action" or step.symbol != progression.action_name:
+		if step.kind != "action" or step.symbol != action_name:
 			continue
 		action_substitution = _merge_substitution(
 			substitution,
-			dict(zip(step.arguments, progression.action_arguments)),
+			dict(zip(step.arguments, action_arguments)),
 		)
 		if action_substitution is None:
 			continue
@@ -645,12 +664,50 @@ def _rule_covers_progression(rule: LiftedPlanRule, progression) -> bool:
 			_context_literal_holds(
 				literal,
 				action_substitution,
-				frozenset(progression.before_state),
+				before_state,
 			)
 			for literal in rule.context
 		):
 			return True
 	return False
+
+
+def atomic_achievement_justifications(
+	selected_rules: Sequence[LiftedPlanRule],
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+) -> dict[str, tuple]:
+	"""Map each selected atomic action-rule to the trace slices that justify it.
+
+	A slice justifies a rule when the rule head grounds to the slice target fact,
+	the rule body issues the slice achiever action, and every rule context literal
+	holds in the slice before-state. Composer rules and rules with no action body
+	are not atomic-module justifications and are omitted from the result.
+	"""
+
+	all_slices = tuple(
+		slice_
+		for evidence in transition_evidence
+		for slice_ in getattr(evidence, "atomic_achievements", ()) or ()
+	)
+	justifications: dict[str, tuple] = {}
+	for rule in selected_rules:
+		if rule.layer != "atomic":
+			continue
+		if not any(step.kind == "action" for step in rule.body):
+			continue
+		supporting = tuple(
+			slice_
+			for slice_ in all_slices
+			if _rule_covers_action_achievement(
+				rule,
+				target_fact=slice_.target_fact,
+				action_name=slice_.action_name,
+				action_arguments=slice_.action_arguments,
+				before_state=frozenset(slice_.before_state),
+			)
+		)
+		justifications[rule.name] = supporting
+	return justifications
 
 
 def _substitution_from_head(

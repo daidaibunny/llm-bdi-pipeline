@@ -26,6 +26,7 @@ from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
 from .schema_synthesis import _training_evidence
 from .schema_synthesis import _validate_selected_rules_against_transition_progress
+from .schema_synthesis import atomic_achievement_justifications
 from .schema_synthesis import composer_state_coverage_required_rule_groups
 from .schema_synthesis import transition_progress_required_rule_groups
 
@@ -577,6 +578,25 @@ def _evidence_matrix(
 				len(getattr(evidence, "goal_progressions", ()) or ())
 				for evidence in tuple(counterexample_transition_evidence or ())
 			),
+			"training_atomic_achievement_count": sum(
+				len(getattr(evidence, "atomic_achievements", ()) or ())
+				for evidence in tuple(training_transition_evidence or ())
+			),
+			"counterexample_atomic_achievement_count": sum(
+				len(getattr(evidence, "atomic_achievements", ()) or ())
+				for evidence in tuple(counterexample_transition_evidence or ())
+			),
+			"trace_justified_selected_rule_count": sum(
+				1
+				for supporting in atomic_achievement_justifications(
+					selected_rules,
+					(
+						*tuple(training_transition_evidence or ()),
+						*tuple(counterexample_transition_evidence or ()),
+					),
+				).values()
+				if supporting
+			),
 		},
 		"layer_c_goal_composer": {
 			"target": "goal-conditioned conjunctive-goal composer rules",
@@ -683,6 +703,10 @@ def _transition_evidence_summary(evidence_items: Sequence[object]) -> dict[str, 
 		),
 		"goal_progression_count": sum(
 			len(getattr(evidence, "goal_progressions", ()) or ())
+			for evidence in items
+		),
+		"atomic_achievement_count": sum(
+			len(getattr(evidence, "atomic_achievements", ()) or ())
 			for evidence in items
 		),
 	}
