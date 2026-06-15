@@ -64,6 +64,7 @@
 | R16 | Bootstrap and paper-grade synthesis profiles are separated. | `bootstrap` permits schema fallback; `paper` requires external learned policy rules to bind, bounded validation to pass, and rejects silent rule drops. | Done |
 | R17 | Execution semantics are explicit. | The executor can run planner-style backtracking validation or deterministic first-applicable ASL execution for held-out refinement. | Done |
 | R18 | learner-sketches can be invoked as a guarded synthesis backend. | The unified pipeline can run a pinned learner-sketches backend, discover `sketch_minimized_<width>.txt`, audit/bind it, and use it to satisfy `paper` profile without a manually supplied policy file. | Done |
+| R19 | Recoverable learner-sketches role-count features bind without guessing. | `n_count(r_primitive(P,0,1))` is compiled to lifted predicate subgoal/action-effect candidates; object-specific distance features remain rejected. | Done |
 
 Remaining research hardening after the first unified architecture:
 
@@ -76,5 +77,7 @@ Remaining research hardening after the first unified architecture:
 - [x] Add an automatic counterexample-guided refinement loop for held-out failures.
 - [ ] Promote counterexample constraints into the ASP objective instead of adding
   whole failed problems only.
-- [ ] Expand DLPlan feature binding coverage beyond currently recoverable predicate
-  count and goal-aligned role patterns.
+- [x] Expand DLPlan feature binding coverage to recover plain primitive role-count
+  features used in learner-sketches Blocksworld policies.
+- [ ] Expand DLPlan feature binding coverage beyond currently recoverable predicate,
+  role-count, and goal-aligned role patterns.

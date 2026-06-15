@@ -186,6 +186,11 @@ def _bind_feature_expression(
 		predicate = primitive_concept.group(1)
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=False)
 
+	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
+	if primitive_role:
+		predicate = primitive_role.group(1)
+		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=False)
+
 	goal_concept = re.fullmatch(
 		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
@@ -416,10 +421,10 @@ def _rewrite_variables(text: str, substitution: Mapping[str, str]) -> str:
 
 
 def _primitive_count_predicate(expression: str) -> str | None:
-	match = re.fullmatch(
-		r"n_count\(c_primitive\(([^(),]+),0\)\)",
-		_normalize_expression(expression),
-	)
+	text = _normalize_expression(expression)
+	match = re.fullmatch(r"n_count\(c_primitive\(([^(),]+),0\)\)", text)
+	if not match:
+		match = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
 	return match.group(1) if match else None
 
 
