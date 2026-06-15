@@ -16,6 +16,7 @@ from plan_library.models import AgentSpeakBodyStep
 from utils.pddl_parser import PDDLAction, PDDLDomain
 
 from .gp_backends import SketchPolicy
+from .gp_backends import SketchEffect, SketchRule
 from .pddl_expression import parse_pddl_literals, parameter_variables
 from .sketch_asl_compiler import SketchFeatureBinding
 
@@ -35,9 +36,17 @@ class ActionEffectBindingCandidate:
 
 	feature_id: str
 	operator: str
+	effect_predicate: str
+	add_effects: tuple[tuple[str, tuple[str, ...]], ...]
 	action_name: str
 	context: tuple[str, ...]
 	body: tuple[AgentSpeakBodyStep, ...]
+
+
+@dataclass(frozen=True)
+class _GoalAlignedFeature:
+	predicate: str
+	arity: int
 
 
 def bind_recoverable_dlplan_features(
@@ -98,6 +107,55 @@ def bind_unique_action_effect_candidates(
 			effect_contexts=effect_contexts,
 			effect_body=effect_body,
 		)
+	return FeatureBindingReport(
+		bindings=bindings,
+		unsupported_features=report.unsupported_features,
+		action_effect_candidates=report.action_effect_candidates,
+	)
+
+
+def bind_goal_aligned_action_effect_candidates(
+	*,
+	policy: SketchPolicy,
+	report: FeatureBindingReport,
+) -> FeatureBindingReport:
+	"""Promote action candidates using goal-aligned feature effects as evidence."""
+
+	goal_aligned_features = {
+		feature_id: feature
+		for feature_id, expression in policy.features.items()
+		if (feature := _goal_aligned_feature(expression)) is not None
+	}
+	bindings = dict(report.bindings)
+	for rule in policy.parsed_rules:
+		progress_effects = _progress_effects(rule, goal_aligned_features)
+		if not progress_effects:
+			progress_effects = tuple(
+				_ProgressEffect(
+					predicate=feature.predicate,
+					arguments=_arguments_for_arity(feature.arity),
+				)
+				for feature in goal_aligned_features.values()
+			)
+		if not progress_effects:
+			continue
+		for effect in rule.effects:
+			candidates = report.action_effect_candidates.get(effect.feature_id, ())
+			if not candidates:
+				continue
+			matching = tuple(
+				_remap_candidate_to_progress_effect(candidate, progress_effect)
+				for candidate in candidates
+				for progress_effect in progress_effects
+				if candidate.operator == effect.operator
+				and _candidate_adds_predicate(candidate, progress_effect.predicate)
+			)
+			if len(matching) != 1:
+				continue
+			bindings[effect.feature_id] = _merge_action_candidate(
+				bindings[effect.feature_id],
+				matching[0],
+			)
 	return FeatureBindingReport(
 		bindings=bindings,
 		unsupported_features=report.unsupported_features,
@@ -197,7 +255,16 @@ def _action_effect_candidates(
 			literal.signature()
 			for literal in parse_pddl_literals(action.preconditions)
 		)
-		for effect in parse_pddl_literals(action.effects):
+		effects = parse_pddl_literals(action.effects)
+		add_effects = tuple(
+			(
+				effect.predicate,
+				tuple(_var(argument) for argument in effect.arguments),
+			)
+			for effect in effects
+			if effect.is_positive
+		)
+		for effect in effects:
 			if effect.predicate != predicate:
 				continue
 			if effect.is_positive:
@@ -206,12 +273,132 @@ def _action_effect_candidates(
 				ActionEffectBindingCandidate(
 					feature_id=feature_id,
 					operator="e_n_dec",
+					effect_predicate=effect.predicate,
+					add_effects=add_effects,
 					action_name=action.name,
 					context=preconditions,
 					body=(AgentSpeakBodyStep("primitive_action", action.name, action_arguments),),
 				),
 			)
 	return tuple(candidates)
+
+
+def _merge_action_candidate(
+	binding: SketchFeatureBinding,
+	candidate: ActionEffectBindingCandidate,
+) -> SketchFeatureBinding:
+	effect_contexts = dict(binding.effect_contexts or {})
+	effect_body = dict(binding.effect_body)
+	effect_contexts[candidate.operator] = candidate.context
+	effect_body[candidate.operator] = candidate.body
+	return SketchFeatureBinding(
+		condition_contexts=binding.condition_contexts,
+		effect_contexts=effect_contexts,
+		effect_body=effect_body,
+	)
+
+
+@dataclass(frozen=True)
+class _ProgressEffect:
+	predicate: str
+	arguments: tuple[str, ...]
+
+
+def _progress_effects(
+	rule: SketchRule,
+	goal_aligned_features: Mapping[str, _GoalAlignedFeature],
+) -> tuple[_ProgressEffect, ...]:
+	effects: list[_ProgressEffect] = []
+	for effect in rule.effects:
+		if effect.operator != "e_n_inc":
+			continue
+		feature = goal_aligned_features.get(effect.feature_id)
+		if feature is not None:
+			effects.append(
+				_ProgressEffect(
+					predicate=feature.predicate,
+					arguments=_arguments_for_arity(feature.arity),
+				),
+			)
+	return tuple(effects)
+
+
+def _candidate_adds_predicate(
+	candidate: ActionEffectBindingCandidate,
+	predicate: str,
+) -> bool:
+	return any(add_predicate == predicate for add_predicate, _ in candidate.add_effects)
+
+
+def _remap_candidate_to_progress_effect(
+	candidate: ActionEffectBindingCandidate,
+	progress_effect: _ProgressEffect,
+) -> ActionEffectBindingCandidate:
+	for add_predicate, add_arguments in candidate.add_effects:
+		if add_predicate != progress_effect.predicate:
+			continue
+		if len(add_arguments) != len(progress_effect.arguments):
+			continue
+		substitution = dict(zip(add_arguments, progress_effect.arguments))
+		progress_context = (
+			_call(f"goal_{progress_effect.predicate}", progress_effect.arguments),
+			f"not {_call(progress_effect.predicate, progress_effect.arguments)}",
+		)
+		return ActionEffectBindingCandidate(
+			feature_id=candidate.feature_id,
+			operator=candidate.operator,
+			effect_predicate=candidate.effect_predicate,
+			add_effects=candidate.add_effects,
+			action_name=candidate.action_name,
+			context=tuple(
+				dict.fromkeys(
+					(
+						*progress_context,
+						*(
+							_rewrite_variables(item, substitution)
+							for item in candidate.context
+						),
+					),
+				),
+			),
+			body=tuple(_rewrite_body_step(step, substitution) for step in candidate.body),
+		)
+	return candidate
+
+
+def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:
+	text = _normalize_expression(expression)
+	concept = re.fullmatch(
+		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
+		text,
+	)
+	if concept:
+		return _GoalAlignedFeature(predicate=concept.group(1), arity=1)
+	role = re.fullmatch(
+		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
+		text,
+	)
+	if role:
+		return _GoalAlignedFeature(predicate=role.group(1), arity=2)
+	return None
+
+
+def _rewrite_body_step(
+	step: AgentSpeakBodyStep,
+	substitution: Mapping[str, str],
+) -> AgentSpeakBodyStep:
+	return AgentSpeakBodyStep(
+		step.kind,
+		step.symbol,
+		tuple(substitution.get(argument, argument) for argument in step.arguments),
+	)
+
+
+def _rewrite_variables(text: str, substitution: Mapping[str, str]) -> str:
+	result = str(text)
+	for source, target in sorted(substitution.items(), key=lambda item: len(item[0]), reverse=True):
+		result = re.sub(rf"\b{re.escape(source)}\b", target, result)
+	return result
 
 
 def _primitive_count_predicate(expression: str) -> str | None:
@@ -224,6 +411,10 @@ def _primitive_count_predicate(expression: str) -> str | None:
 
 def _arguments_for_arity(arity: int) -> tuple[str, ...]:
 	return tuple(parameter_variables(tuple(f"?x{index}" for index in range(arity))))
+
+
+def _var(parameter: str) -> str:
+	return parameter_variables((parameter,))[0]
 
 
 def _call(predicate: str, arguments: tuple[str, ...]) -> str:

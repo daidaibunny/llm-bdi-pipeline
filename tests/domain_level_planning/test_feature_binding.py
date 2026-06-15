@@ -4,6 +4,7 @@ from pathlib import Path
 
 from domain_level_planning import (
 	SketchCompilationTarget,
+	bind_goal_aligned_action_effect_candidates,
 	bind_recoverable_dlplan_features,
 	bind_unique_action_effect_candidates,
 	compile_bound_sketch_to_asl_library,
@@ -129,6 +130,7 @@ def test_binding_reports_action_candidates_for_decreasing_primitive_counts(
 		"place",
 	)
 	assert candidates[0].operator == "e_n_dec"
+	assert candidates[0].effect_predicate == "holding"
 	assert candidates[0].context == ("holding(X)",)
 	assert candidates[0].body[0].symbol == "drop"
 	assert candidates[1].context == ("holding(X)", "clear(Y)")
@@ -191,6 +193,83 @@ def test_multiple_action_candidates_remain_ambiguous_instead_of_guessing(
 	assert len(report.action_effect_candidates["f1"]) == 2
 	feature_binding = report.bindings["f1"]
 	assert "e_n_dec" not in feature_binding.effect_body
+
+
+def test_goal_aligned_feature_effect_disambiguates_action_candidates(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path, include_place=True)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_on "n_count(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)))")
+		 (f_holding "n_count(c_primitive(holding,0))")
+		)
+		(:rule (:conditions )
+		 (:effects (:e_n_inc f_on) (:e_n_dec f_holding)))
+		)
+		""",
+	)
+
+	report = bind_goal_aligned_action_effect_candidates(
+		policy=policy,
+		report=bind_recoverable_dlplan_features(
+			policy=policy,
+			domain=PDDLParser.parse_domain(domain),
+		),
+	)
+	plan_library = compile_bound_sketch_to_asl_library(
+		domain_name="generic-blocks",
+		policy=policy,
+		target=SketchCompilationTarget(symbol="g", recurse=False),
+		feature_bindings=report.bindings,
+	)
+	asl = render_plan_library_asl(plan_library)
+
+	assert "+!g : goal_on(X0, X1) & not on(X0, X1) & holding(X0) & clear(X1) <-" in asl
+	assert "\t!on(X0, X1);" in asl
+	assert "\tplace(X0, X1)." in asl
+	assert "\tdrop(X)" not in asl
+
+
+def test_goal_aligned_feature_prior_disambiguates_auxiliary_effect_rules(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path, include_place=True)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_on "n_count(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)))")
+		 (f_holding "n_count(c_primitive(holding,0))")
+		)
+		(:rule (:conditions (:c_n_gt f_holding) (:c_n_gt f_on))
+		 (:effects (:e_n_dec f_holding)))
+		)
+		""",
+	)
+
+	report = bind_goal_aligned_action_effect_candidates(
+		policy=policy,
+		report=bind_recoverable_dlplan_features(
+			policy=policy,
+			domain=PDDLParser.parse_domain(domain),
+		),
+	)
+	plan_library = compile_bound_sketch_to_asl_library(
+		domain_name="generic-blocks",
+		policy=policy,
+		target=SketchCompilationTarget(symbol="g", recurse=False),
+		feature_bindings=report.bindings,
+	)
+	asl = render_plan_library_asl(plan_library)
+
+	assert "+!g : goal_on(X0, X1) & not on(X0, X1) & holding(X0) & clear(X1) <-" in asl
+	assert "\tplace(X0, X1)." in asl
+	assert "\tdrop(X0)" not in asl
 
 
 def _write_domain(tmp_path: Path, *, include_place: bool = True) -> Path:

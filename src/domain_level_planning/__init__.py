@@ -23,6 +23,7 @@ from .gp_backends import (
 from .feature_binding import (
 	ActionEffectBindingCandidate,
 	FeatureBindingReport,
+	bind_goal_aligned_action_effect_candidates,
 	bind_recoverable_dlplan_features,
 	bind_unique_action_effect_candidates,
 )
@@ -59,6 +60,7 @@ __all__ = [
 	"SketchRule",
 	"SketchSynthesisReport",
 	"build_goal_conditioned_library_from_pddl",
+	"bind_goal_aligned_action_effect_candidates",
 	"bind_recoverable_dlplan_features",
 	"bind_unique_action_effect_candidates",
 	"compile_bound_sketch_to_asl_library",
