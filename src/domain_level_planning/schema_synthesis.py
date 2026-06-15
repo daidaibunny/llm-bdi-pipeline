@@ -103,7 +103,6 @@ def _candidate_rules_from_domain(
 	for predicate in predicates:
 		rules.extend(_composer_rules(predicate))
 		rules.append(_already_true_rule(predicate))
-	rules.append(_terminal_composer_rule())
 	for action in actions:
 		rules.extend(
 			_action_effect_rules(
@@ -199,18 +198,6 @@ def _composer_rules(predicate: PDDLPredicate) -> tuple[LiftedPlanRule, ...]:
 			layer="composer",
 			capabilities=(f"compose_goal_{predicate.name}",),
 		),
-	)
-
-
-def _terminal_composer_rule() -> LiftedPlanRule:
-	return _rule(
-		"g_done",
-		"g",
-		(),
-		("true",),
-		(),
-		layer="composer",
-		capabilities=("compose_terminal_goal",),
 	)
 
 
@@ -321,7 +308,6 @@ def _required_capabilities(
 	for predicate in predicates:
 		required.append(f"compose_goal_{predicate.name}")
 		required.append(f"module_{predicate.name}_already_true")
-	required.append("compose_terminal_goal")
 	for rule in candidate_rules:
 		if rule.layer == "composer" and any(
 			capability.startswith("order_")

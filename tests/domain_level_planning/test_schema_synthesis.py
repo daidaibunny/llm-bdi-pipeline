@@ -33,6 +33,7 @@ def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain() -> None
 	assert "+!at(P, To) : at(P, From) & road(From, To) <-" in asl
 	assert "\tdrive(P, From, To)." in asl
 	assert "goal_at(pkg1, depot)." not in asl
+	assert "plan=g_done" not in asl
 	assert "!achieve_" not in asl
 	assert "!transition_" not in asl
 	assert "dfa_state" not in asl
