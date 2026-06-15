@@ -85,6 +85,10 @@ Remaining research hardening after the first unified architecture:
   features used in learner-sketches Blocksworld policies.
 - [x] Expand DLPlan feature binding coverage beyond currently recoverable predicate,
   role-count, and goal-aligned role patterns with nullary boolean feature support.
-- [ ] Continue auditing additional DLPlan expressions from external policies; only
-  bind patterns whose lifted PDDL meaning is recoverable without object-specific
-  guessing.
+- [x] Audit current learner-sketches Blocksworld DLPlan expressions. All
+  recoverable patterns in the existing artifacts are covered; object-specific
+  `n_concept_distance(c_one_of(...),...)` and vocabulary mismatches such as
+  `arm-empty` versus local `handempty` remain intentionally rejected.
+- [ ] Future research: implement a principled lifted treatment for object-specific
+  DLPlan distance features or an explicit verified vocabulary-adapter layer,
+  without guessing predicate equivalence from names.
