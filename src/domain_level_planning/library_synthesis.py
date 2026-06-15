@@ -11,6 +11,8 @@ from typing import Mapping, Sequence
 from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTrigger, PlanLibrary
 from utils.pddl_parser import PDDLParser
 
+from .architecture_contract import architecture_gap_summary
+from .architecture_contract import domain_level_architecture_contract
 from .clingo_backend import ClingoSketchRuleSelector
 from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
 from .gp_backends import run_learner_sketches
@@ -224,10 +226,15 @@ def synthesize_domain_level_asl_library(
 			"Paper synthesis profile requirements are not met: "
 			+ "; ".join(paper_profile_failures),
 		)
+	architecture_contract = domain_level_architecture_contract()
 	report = {
 		"generation_mode": "unified_goal_conditioned_modular_synthesis",
 		"synthesis_profile": profile,
 		"theoretical_contract": "bounded_class_guarantee",
+		"architecture_contract": architecture_contract.to_dict(),
+		"architecture_gap_summary": architecture_gap_summary(
+			architecture_contract.gaps,
+		),
 		"paper_quality_checks": (
 			"transition_progress",
 			"bounded_all_reachable_states",

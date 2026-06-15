@@ -13,6 +13,13 @@ from .clingo_backend import (
 	ClingoSelectionResult,
 	ClingoSketchRuleSelector,
 )
+from .architecture_contract import (
+	ArchitectureContract,
+	ArchitectureDecision,
+	ArchitectureGap,
+	architecture_gap_summary,
+	domain_level_architecture_contract,
+)
 from .gp_backends import (
 	BackendManifest,
 	GPBackendRunner,
@@ -84,6 +91,9 @@ from .sketch_asl_compiler import (
 __all__ = [
 	"LiftedCall",
 	"LiftedPlanRule",
+	"ArchitectureContract",
+	"ArchitectureDecision",
+	"ArchitectureGap",
 	"ClingoRequiredRuleGroup",
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
@@ -124,6 +134,8 @@ __all__ = [
 	"goal_facts_from_problem",
 	"assert_compilable_pddl_files",
 	"audit_learned_policy_for_asl_binding",
+	"architecture_gap_summary",
+	"domain_level_architecture_contract",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"run_learner_sketches",

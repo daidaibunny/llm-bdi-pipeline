@@ -1,94 +1,94 @@
 # To Do List
 
-## Current Refactor
+This file is the active progress tracker for the domain-level lifted
+AgentSpeak(L) library research line. Historical branch cleanup and completed
+PDDL/DFA migration tasks have been compacted; future work should update this
+file before claiming a milestone is complete.
 
-- [x] Create development branch `codex/dfa-pddl-plan-generation`.
-- [x] Locate the last git state before DFA/ltlf2dfa runtime deletion.
-- [x] Restore DFA compilation and high-level AgentSpeak generation.
-- [x] Replace benchmarks with PDDL files while preserving query bindings.
-- [x] Remove obsolete generation, parsing, runtime, and test paths.
-- [x] Run relevant tests.
-- [x] Push a milestone commit.
+## Current Research Target
 
-## Domain-Level Achievement Library
+Achievement goals are the current scope. Temporal extended goals remain the
+final target, but the DFA layer should sit above a credible achievement-goal
+library instead of generating query-specific ASL libraries.
 
-- [x] Add a goal-conditioned modular-sketch representation for lifted ASL libraries.
-- [x] Add Clingo-backed rule selection with capability coverage and cost minimization.
-- [x] Add a domain-agnostic PDDL action-schema synthesizer for Layer B atomic modules
-  and Layer C goal composer.
-- [x] Add domain-agnostic small STRIPS transition evidence and shared-object goal
-  ordering extraction for Layer C.
-- [x] Add tests for arbitrary-domain lifted ASL output, Blocksworld through the generic
-  path, read-only goal facts, unsupported goals, and Clingo minimization.
-- [x] Add strict PDDL syntax validation plus conservative compilable-fragment rejection
-  for domain-level ASL synthesis.
-- [x] Add generated-AgentSpeak validation and compound context rendering for PDDL/DFA
-  literal formulas.
-- [x] Add a learner-sketches policy-to-ASL pipeline and CLI path that compiles only
-  explicitly bound DLPlan feature rules.
-- [x] Add Layer C ambiguity filtering so contradictory lifted goal-order evidence is
-  not compiled as a hard composer rule.
-- [x] Add guarded backend audit commands and compile smoke output for existing
-  learner-sketches Blocksworld policies.
-- [x] Extend selection beyond capability coverage with bounded transition-progress
-  validation over enumerated training transition systems.
-- [x] Add a bounded lifted-ASL executor and verify that one domain-level
-  Blocksworld library learned from `p01` solves `p01` through `p20` without
-  runtime full-trace planning.
-- [x] Add paper-style bounded library validation over all reachable states in
-  small training transition systems, including termination, high-level decision
-  acyclicity, and goal-state fixed-point checks.
-- [x] Add explicit learned-policy audit reports for paper-backend sketch
-  artifacts, separating parseability, DLPlan feature binding, executable effect
-  binding, and ASL readiness.
+Target pipeline:
 
-## Unified Generalized-Planning-To-ASL Architecture Requirements
+```text
+PDDL domain + training problems
+→ external generalized-planning learner / traces / sketches
+→ feature binding
+→ Layer B atomic goal modules
+→ Layer C goal dependency composer
+→ lifted AgentSpeak(L) domain-level plan library
+→ held-out validation
+→ counterexample-guided refinement
+```
 
-| ID | Requirement | Acceptance check | Status |
-| --- | --- | --- | --- |
-| R1 | Single synthesis pipeline from PDDL domain, training problems, and optional external learned policies to one lifted ASL library. | One public API returns a `PlanLibrary` and synthesis report; callers do not manually combine schema and sketch paths. | Done |
-| R2 | No domain-specific production logic. | `src/domain_level_planning` contains no action/predicate special cases such as Blocksworld-only rules. Domain names may appear only in tests or audit experiment configs. | Done |
-| R3 | Reuse paper-code artifacts as inputs where available. | Pipeline consumes learner-sketches DLPlan policies from `.external/gp-backends` outputs and records them as external candidate sources. | Done |
-| R4 | Unified lifted intermediate representation. | External sketch bindings, schema-derived modules, and goal-order evidence all become `LiftedPlanRule` candidates with source metadata before selection. | Done |
-| R5 | Layer B atomic goal modules are domain-level and lifted. | Generated module heads are PDDL predicate goals such as `+!P(X,Y)`, never grounded object-specific heads or `achieve_*`. | Done |
-| R6 | Layer C composer is goal-conditioned and lifted. | Generated composer rules use read-only `goal_<predicate>` facts and PDDL state predicates; no permanent-protection flags or synthetic transition names. | Done |
-| R7 | Selection is constrained by bounded correctness/progress evidence. | Selected rules pass bounded transition-progress validation on enumerated training systems. Failures are explicit. | Done |
-| R8 | Unsupported PDDL or DLPlan semantics fail safely. | Conditional effects, numeric fluents, unsupported DLPlan features, and invalid ASL contexts fail with diagnostics instead of silent compilation. | Done |
-| R9 | ASL compiler is single-path and validates generated syntax subset. | Unified pipeline output is rendered through `render_plan_library_asl`; invalid generated context/body syntax raises. | Done |
-| R10 | External sketch path does not bypass Layer B/C. | Bound sketch rules are converted to candidate module/composer rules or rejected; they are not only compiled as a separate ASL skeleton. | Done |
-| R11 | Held-out and counterexample hooks exist. | Validation reports expose structured `LibraryCounterexample` records; refinement can add failed held-out problems into the next synthesis round. | Done |
-| R12 | Resource safety for external learners. | Audit commands print guarded learner invocations by default and never run unbounded experiments in tests. | Done |
-| R13 | Blocksworld first-20 domain-level validation. | One lifted library synthesized from `p01` solves `p01`-`p20` through the bounded ASL executor; generated ASL contains no `achieve_*`, `transition_*`, or `dfa_state` names. | Done |
-| R14 | Paper-style bounded validation. | Synthesis reports include all-reachable-state validation for training transition systems, high-level decision acyclicity, and goal-state fixed-point checks. | Done |
-| R15 | Paper backend artifact audit. | External learner-sketches policies are parsed and reported with feature/rule counts, binding coverage, unsupported features, executable effect count, and ASL readiness. | Done |
-| R16 | Bootstrap and paper-grade synthesis profiles are separated. | `bootstrap` permits schema fallback; `paper` requires external learned policy rules to bind, bounded validation to pass, and rejects silent rule drops. | Done |
-| R17 | Execution semantics are explicit. | The executor can run planner-style backtracking validation or deterministic first-applicable ASL execution for held-out refinement. | Done |
-| R18 | learner-sketches can be invoked as a guarded synthesis backend. | The unified pipeline can run a pinned learner-sketches backend, discover `sketch_minimized_<width>.txt`, audit/bind it, and use it to satisfy `paper` profile without a manually supplied policy file. | Done |
-| R19 | Recoverable learner-sketches role-count features bind without guessing. | `n_count(r_primitive(P,0,1))` is compiled to lifted predicate subgoal/action-effect candidates; object-specific distance features remain rejected. | Done |
-| R20 | Bounded transition progress constrains ASP selection. | Observed goal-progress transitions are converted into required rule groups before Clingo selection, with post-selection validation retained as a defensive check. | Done |
-| R21 | Counterexamples constrain synthesis without polluting base training data. | Failed held-out problems can be passed as counterexample problem files; their transition evidence becomes separate selector constraints and report fields. | Done |
-| R22 | Bounded sketch-style state coverage constrains ASP selection. | Every bounded reachable non-goal training or counterexample state must be covered by at least one applicable lifted `+!g` composer candidate before Clingo can select a library. | Done |
-| R23 | Nullary DLPlan boolean features bind conservatively. | `b_nullary(P)` features compile to PDDL predicate contexts and positive subgoal effects, while negative effects require explicit PDDL delete-action candidates. | Done |
+## Compact Completed Summary
 
-Remaining research hardening after the first unified architecture:
+| Area | Current status |
+| --- | --- |
+| HTN/HDDL removal | Completed; current benchmark direction is PDDL-only. |
+| DFA high-level restoration | Completed; DFA remains the future TEG controller, not the final low-level library generator. |
+| Domain-level synthesis skeleton | Implemented with schema candidates, external sketch candidates, Clingo selection, bounded validation, and counterexample inputs. |
+| External backend audit | Implemented for pinned learner-sketches, h-policy-learner, d2l, and MOOSE reproduction notes. |
+| Resource safety | External learner commands are guarded by default; keep memory at or below 16 GiB unless explicitly approved. |
+| No synthetic ASL names | Tests cover no `achieve_*`, `transition_*`, or `dfa_state` in generated domain-level ASL. |
+| No production Blocksworld hardcoding | Tests scan `src/domain_level_planning` for Blocksworld-only special cases. |
 
-- [x] Add a guarded automatic learner-sketches training adapter to the unified
-  synthesis pipeline.
-- [x] Move bounded transition-progress checks directly into ASP constraints instead of
-  selecting first and validating after selection.
-- [x] Promote learner-sketches-style bounded-width ASP constraints from post-hoc
-  validation into the main synthesis objective.
-- [x] Add an automatic counterexample-guided refinement loop for held-out failures.
-- [x] Promote counterexample constraints into the ASP objective instead of adding
-  whole failed problems only.
-- [x] Expand DLPlan feature binding coverage to recover plain primitive role-count
-  features used in learner-sketches Blocksworld policies.
-- [x] Expand DLPlan feature binding coverage beyond currently recoverable predicate,
-  role-count, and goal-aligned role patterns with nullary boolean feature support.
-- [x] Audit current learner-sketches Blocksworld DLPlan expressions. All
-  recoverable patterns in the existing artifacts are covered; object-specific
-  `n_concept_distance(c_one_of(...),...)` and vocabulary mismatches such as
-  `arm-empty` versus local `handempty` remain intentionally rejected.
-- [ ] Future research: implement a principled lifted treatment for object-specific
-  DLPlan distance features or an explicit verified vocabulary-adapter layer,
-  without guessing predicate equivalence from names.
+## Decisions To Confirm Or Keep Stable
+
+| ID | Decision | Current stance | Why it matters | Status |
+| --- | --- | --- | --- | --- |
+| D1 | Theoretical guarantee | Use bounded-class guarantee, not universal PDDL completeness. | Universal generalized planning from arbitrary PDDL is not a credible claim; the paper must define the expressible class. | Accepted; needs formal write-up. |
+| D2 | Main method family | Use goal-conditioned modular policy sketches, informed by serialized width and policy reuse. | This aligns subgoal decomposition with ASL modules better than flat policies or MOOSE-style singleton regression. | Accepted; implementation still incomplete. |
+| D3 | Goal representation | Keep read-only `goal_<predicate>` facts as problem/DFA goal descriptors. | A domain-level library must know the current instance goal without becoming query-specific. | Accepted; semantics need stronger tests and write-up. |
+| D4 | Fast Downward role | Use classical planners only for synthesis evidence, traces, counterexamples, and validation. | Runtime full-trace planning would collapse the contribution into a planner wrapper. | Accepted. |
+| D5 | TEG integration | Keep DFA as an upper-layer controller over the achievement-goal library. | The achievement-goal library should stay domain-level while DFA remains query-specific. | Accepted; later integration pending. |
+| D6 | Negative and disjunctive goals | Do not silently support them until semantics are designed. | Current Layer B/C assumes positive conjunctive achievement goals. | Open design decision. |
+| D7 | Object-specific DLPlan features | Reject them unless a principled lifting method is implemented. | Guessing object-specific bindings would break lifted domain-level claims. | Accepted; future method pending. |
+
+## Current Gaps
+
+| ID | Layer | Gap | Current implementation | Required improvement | Acceptance check | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| G1 | Theory | Bounded-class guarantee is not formal enough for a paper. | Reports now expose a machine-readable architecture contract with guarantee, non-goals, accepted/open decisions, and open gaps. | Define the full feature language, module language, composer language, progress, correctness, and validation scope in the paper method section. | A method section and machine-readable contract state assumptions and non-goals without ambiguity. | Partially done. |
+| G2 | Layer B | Atomic module learning is still mostly schema/sketch candidate selection. | PDDL add-effect rules, precondition subgoal preparation, external sketch candidates, and bounded progress constraints exist. | Add trace slicing, last-achiever extraction, anti-unification, multi-strategy module learning, and recursion descent checks. | From training traces and schemas, the system can justify each selected `+!P(...)` module and reject unsafe alternatives. | Open. |
+| G3 | Layer C | Goal dependency composer is the largest research gap. | Shared-object ordering evidence and bounded state-coverage constraints exist. | Learn lifted ordering/composer rules from traces, delete/precondition interference, final-goal causal structure, and failed executions. | Strong goal-dependency domains such as Blocksworld produce bottom-up composer rules without domain hardcoding. | Open. |
+| G4 | Goal facts | `goal_<predicate>` semantics need stricter contract. | Goal facts are read-only inputs and appear in composer contexts. | Explicitly validate they are not action effects or mutable ASL beliefs; define negative-goal representation before supporting it. | Tests prove goal facts are descriptors only and never compiled as primitive actions or mutable subgoals. | Partially done. |
+| G5 | Feature binding | DLPlan binding remains conservative. | Recoverable predicate, role-count, goal-aligned, role-intersection, and nullary features bind; object-specific and vocabulary-mismatch features are rejected. | Expand principled lifted bindings and produce accepted/rejected diagnostics for every backend rule. | Every external rule has a compiled or rejected reason with no silent fallback. | Partially done. |
+| G6 | External backends | Paper-code reuse is an audit pipeline, not yet the full learner. | learner-sketches policies can be parsed, audited, bound, and used when safe. | Compare backends systematically and identify which backend evidence should drive Layer B versus Layer C. | A backend matrix records input, output, reusable evidence, failure modes, and resource profile. | Partially done. |
+| G7 | ASL compiler | Compiler subset needs a stronger semantics contract. | Generated contexts/actions/subgoals are rendered and validated in tests. | Define supported ASL subset, plan ordering semantics, negation semantics, recursion termination policy, and primitive-action precondition handling. | Invalid contexts or unsupported semantics fail before output; deterministic execution is documented by report. | In progress. |
+| G8 | Validation | Current validation is bounded and smoke-test oriented. | Bounded all-reachable-state checks and first-applicable execution exist. | Add full experiment protocol: train/test splits, larger held-out instances, ablations, baselines, library size, runtime, and failure analysis. | Blocksworld and at least one non-Blocksworld domain have reproducible experiment tables. | Open. |
+| G9 | Counterexample refinement | Refinement hooks exist but are not a full learning loop. | Counterexample problem files add transition-progress and state-coverage constraints. | Classify execution failures and convert each failure type into lifted module/order constraints. | A failed held-out problem can automatically refine the library and improve validation coverage. | Partially done. |
+| G10 | PDDL scope | Supported PDDL fragment needs to be explicit. | STRIPS-style syntax validation rejects many unsupported requirements. | Decide exact support for negative goals, equality, typed objects, derived predicates, conditional effects, quantifiers, and numeric fluents. | `PDDLSupportReport` and paper text agree on supported and rejected fragments. | In progress. |
+| G11 | No-hardcoding | Audit should remain enforced as implementation grows. | A test scans domain-level production code for Blocksworld-only tokens. | Extend checks to generated libraries and new modules whenever they are added. | CI fails on Blocksworld-specific production branches or synthetic plan names. | In progress. |
+| G12 | TEG readiness | DFA-to-library interface is not yet implemented. | DFA high-level generation exists separately; achievement-goal library is domain-level. | Translate DFA guards into goal requests over the domain-level library without query-specific ASL generation. | A DFA transition guard can call the same lifted library used for ordinary achievement goals. | Later. |
+
+## Implementation Tasks
+
+| ID | Task | Gap addressed | Acceptance check | Status |
+| --- | --- | --- | --- | --- |
+| T1 | Add machine-readable architecture contract and gap report to synthesis output. | G1, G4, G7, G10 | `UnifiedSynthesisResult.report` exposes guarantee, decisions, support boundaries, and open gaps. | Done |
+| T2 | Add tests for the architecture contract report. | G1 | Tests assert bounded-class scope, `goal_*` decision, Layer B/C gap visibility, and no universal-PDDL claim. | Done |
+| T3 | Strengthen goal-fact descriptor tests. | G4 | Tests assert goal facts remain initial problem/DFA descriptors and are not emitted as initial beliefs. | Pending. |
+| T4 | Extend no-hardcoding and synthetic-name audit when new modules are added. | G11 | Tests cover source and rendered output for forbidden synthetic names. | Pending. |
+| T5 | Add backend evidence matrix to reports. | G6 | Report separates schema, external sketch, trace evidence, and counterexample evidence by layer. | Pending. |
+| T6 | Implement trace slicing and last-achiever evidence extraction for Layer B. | G2 | Training trace evidence can explain selected atomic rules beyond raw add-effect schema candidates. | Pending. |
+| T7 | Implement lifted anti-unification for repeated atomic-goal examples. | G2 | Repeated grounded examples produce one lifted module candidate with support count. | Pending. |
+| T8 | Add recursion descent/ranking checks for recursive modules. | G2, G7 | Recursive module candidates must expose a decreasing feature or be rejected. | Pending. |
+| T9 | Implement causal-interference ordering candidates for Layer C. | G3 | Delete/precondition interactions generate candidate composer ordering constraints. | Pending. |
+| T10 | Convert held-out execution failures into lifted refinement constraints. | G3, G9 | Failure classifier creates new required rule groups or candidate rules without polluting base training data. | Pending. |
+| T11 | Build reproducible Blocksworld first-20 experiment report from the current library path. | G8 | Train/test split, generated ASL, coverage, failures, and no-hardcoding checks are reproducible with one command. | Pending. |
+| T12 | Add at least one non-Blocksworld goal-dependency experiment. | G8, G11 | Demonstrates the approach is not tuned to Blocksworld. | Pending. |
+| T13 | Define and test the DFA guard to achievement-goal request adapter. | G12 | DFA guard conjunctions call `!P(...)` subgoals through the domain-level library. | Later. |
+
+## Current Completion Rule
+
+Before claiming a gap is complete:
+
+1. Add or update tests that fail before the change.
+2. Implement the smallest domain-agnostic change that satisfies the test.
+3. Run the relevant test suite.
+4. Update this file with the new status and evidence.
+5. Commit and push the milestone.

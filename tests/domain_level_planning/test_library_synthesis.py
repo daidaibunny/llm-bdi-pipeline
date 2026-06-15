@@ -57,6 +57,45 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert "dfa_state" not in asl
 
 
+def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
+			),
+		),
+	)
+
+	contract = result.report["architecture_contract"]
+	assert result.report["theoretical_contract"] == "bounded_class_guarantee"
+	assert "universal PDDL generalized-planning completeness" in contract["guarantee"]
+	assert "universal completeness for arbitrary PDDL domains" in contract["non_goals"]
+	assert "runtime full-trace planning for each new problem" in contract["non_goals"]
+	assert "read-only goal descriptors" in contract["goal_fact_semantics"]
+	assert "not primitive actions" in contract["goal_fact_semantics"]
+	assert result.report["architecture_gap_summary"]["open"] >= 3
+
+	decisions = {decision["id"]: decision for decision in contract["decisions"]}
+	assert decisions["D3"]["status"] == "accepted"
+	assert "goal_<predicate>" in decisions["D3"]["decision"]
+	assert decisions["D6"]["status"] == "open"
+
+	gaps = {gap["id"]: gap for gap in contract["gaps"]}
+	assert gaps["G2"]["layer"] == "Layer B"
+	assert gaps["G2"]["status"] == "open"
+	assert "trace-generalizing learner" in gaps["G2"]["gap"]
+	assert gaps["G3"]["layer"] == "Layer C"
+	assert gaps["G3"]["status"] == "open"
+	assert "main research gap" in gaps["G3"]["gap"]
+
+
 def test_unified_pipeline_reports_unsupported_external_features_without_guessing(
 	tmp_path: Path,
 ) -> None:
