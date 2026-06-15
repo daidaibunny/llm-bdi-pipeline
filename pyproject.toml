@@ -10,6 +10,9 @@ dependencies = [
     "openai>=2.6.0",
     "ltlf2dfa>=1.0.2",
     "clingo>=5.7.1",
+    "tarski>=0.8.2",
+    "bitarray>=3.8.1",
+    "natsort>=7.0.1",
 ]
 
 [project.scripts]

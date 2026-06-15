@@ -12,7 +12,11 @@ from .clingo_backend import ClingoSelectionResult, ClingoSketchRuleSelector
 from .gp_backends import (
 	BackendManifest,
 	GPBackendRunner,
+	SketchCondition,
+	SketchEffect,
+	SketchFeature,
 	SketchPolicy,
+	SketchRule,
 	discover_backend_manifest,
 	parse_dlplan_policy,
 )
@@ -25,6 +29,11 @@ from .schema_synthesis import (
 	build_goal_conditioned_library_from_pddl,
 	goal_facts_from_problem,
 )
+from .sketch_asl_compiler import (
+	SketchCompilationTarget,
+	SketchFeatureBinding,
+	compile_bound_sketch_to_asl_library,
+)
 
 __all__ = [
 	"LiftedCall",
@@ -33,9 +42,16 @@ __all__ = [
 	"ClingoSketchRuleSelector",
 	"BackendManifest",
 	"GPBackendRunner",
+	"SketchCondition",
+	"SketchCompilationTarget",
+	"SketchEffect",
+	"SketchFeature",
+	"SketchFeatureBinding",
 	"SketchPolicy",
+	"SketchRule",
 	"SketchSynthesisReport",
 	"build_goal_conditioned_library_from_pddl",
+	"compile_bound_sketch_to_asl_library",
 	"discover_backend_manifest",
 	"goal_facts_from_problem",
 	"parse_dlplan_policy",
