@@ -6,7 +6,13 @@ from domain_level_planning import (
 	build_goal_conditioned_library_from_pddl,
 	goal_facts_from_problem,
 )
+from domain_level_planning.schema_synthesis import _goal_ordering_rules_from_evidence
+from domain_level_planning.schema_synthesis import _validate_selected_rules_against_transition_progress
+from domain_level_planning.models import LiftedCall, LiftedPlanRule
+from domain_level_planning.transition_system import TrainingTransitionEvidence
+from domain_level_planning.transition_system import GoalProgressEvidence
 from plan_library.rendering import render_plan_library_asl
+from utils.pddl_parser import PDDLFact
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -91,6 +97,62 @@ def test_synthesis_report_exposes_clingo_schema_contract() -> None:
 	assert report["candidate_rule_count"] >= report["selected_rule_count"]
 
 
+def test_goal_ordering_rules_filter_ambiguous_lifted_ordering_evidence() -> None:
+	forward = (
+		PDDLFact("on", ["b", "c"]),
+		PDDLFact("on", ["a", "b"]),
+	)
+	reverse = (
+		PDDLFact("on", ["a", "b"]),
+		PDDLFact("on", ["b", "c"]),
+	)
+	rules = _goal_ordering_rules_from_evidence(
+		(
+			_training_evidence("forward", (forward,)),
+			_training_evidence("reverse", (reverse,)),
+		),
+	)
+
+	assert rules == ()
+
+
+def test_transition_progress_validation_rejects_selected_rules_with_wrong_action() -> None:
+	evidence = TrainingTransitionEvidence(
+		problem_name="p1",
+		object_count=1,
+		explored_state_count=2,
+		explored_transition_count=1,
+		plan_length=1,
+		goal_facts=("goal_done(a)",),
+		goal_orderings=(),
+		goal_progressions=(
+			GoalProgressEvidence(
+				goal_fact=PDDLFact("done", ["a"]),
+				action_name="finish",
+				action_arguments=("a",),
+				action_signature="finish(a)",
+				step_index=1,
+				before_state=("ready(a)",),
+				after_state=("done(a)", "ready(a)"),
+			),
+		),
+	)
+	rule = LiftedPlanRule(
+		name="done_via_wrong_action",
+		head=LiftedCall("subgoal", "done", ("X",)),
+		context=("ready(X)",),
+		body=(LiftedCall("action", "wait", ("X",)),),
+		layer="atomic",
+	)
+
+	try:
+		_validate_selected_rules_against_transition_progress((rule,), (evidence,))
+	except ValueError as exc:
+		assert "fails bounded transition-progress validation" in str(exc)
+	else:
+		raise AssertionError("Expected wrong selected action to fail validation.")
+
+
 def test_unsupported_negative_training_goal_fails_instead_of_silent_fallback(
 	tmp_path: Path,
 ) -> None:
@@ -156,3 +218,18 @@ def _write_logistics_domain_and_problem(
 		encoding="utf-8",
 	)
 	return domain_file, problem_file
+
+
+def _training_evidence(
+	name: str,
+	orderings: tuple[tuple[PDDLFact, PDDLFact], ...],
+) -> TrainingTransitionEvidence:
+	return TrainingTransitionEvidence(
+		problem_name=name,
+		object_count=3,
+		explored_state_count=1,
+		explored_transition_count=1,
+		plan_length=1,
+		goal_facts=(),
+		goal_orderings=orderings,
+	)

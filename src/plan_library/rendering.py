@@ -4,6 +4,7 @@ Render structured AgentSpeak(L) plan libraries as textual `.asl` programs.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import List
 
 import re
@@ -14,6 +15,7 @@ from .models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 def render_plan_library_asl(plan_library: PlanLibrary) -> str:
 	"""Render a structured plan library into a readable AgentSpeak(L) file."""
 
+	validate_generated_asl_library(plan_library)
 	lines: List[str] = [
 		"/* Generated AgentSpeak(L) Plan Library */",
 		f"/* Domain: {plan_library.domain_name} */",
@@ -31,7 +33,7 @@ def render_plan_library_asl(plan_library: PlanLibrary) -> str:
 
 def _render_plan(plan: AgentSpeakPlan) -> List[str]:
 	trigger = _call(plan.trigger.symbol, tuple(_raw_argument(argument) for argument in plan.trigger.arguments))
-	context = " & ".join(_render_context_literal(literal) for literal in plan.context) or "true"
+	context = " & ".join(_render_context_item(literal) for literal in plan.context) or "true"
 	body_items = [_render_body_step(step) for step in plan.body]
 	if not body_items:
 		body_items = ["true"]
@@ -87,6 +89,139 @@ def _render_context_literal(literal: str) -> str:
 	return _render_atom(text)
 
 
+def _render_context_item(literal: str) -> str:
+	rendered = _render_context_expression(str(literal or "").strip())
+	if rendered.precedence < _CONTEXT_PRECEDENCE["&"]:
+		return f"({rendered.text})"
+	return rendered.text
+
+
+@dataclass(frozen=True)
+class _RenderedContextExpression:
+	text: str
+	precedence: int
+
+
+_CONTEXT_PRECEDENCE = {
+	"|": 1,
+	"&": 2,
+	"not": 3,
+	"comparison": 4,
+	"atom": 5,
+}
+
+
+def _render_context_expression(expression: str) -> _RenderedContextExpression:
+	text = str(expression or "").strip()
+	if not text:
+		raise ValueError("Invalid AgentSpeak context expression: empty expression.")
+	text = _strip_balanced_outer_parentheses(text)
+	for operator in ("|", "&"):
+		parts = _split_top_level_operator(text, operator)
+		if len(parts) > 1:
+			rendered_parts = tuple(_render_context_expression(part) for part in parts)
+			precedence = _CONTEXT_PRECEDENCE[operator]
+			return _RenderedContextExpression(
+				text=f" {operator} ".join(
+					_maybe_parenthesize_context(part, precedence)
+					for part in rendered_parts
+				),
+				precedence=precedence,
+			)
+	if _starts_with_not_operator(text):
+		child = _render_context_expression(text[3:].strip())
+		return _RenderedContextExpression(
+			text=f"not {_maybe_parenthesize_context(child, _CONTEXT_PRECEDENCE['not'])}",
+			precedence=_CONTEXT_PRECEDENCE["not"],
+		)
+	for operator, rendered_operator in (("\\==", "\\\\=="), ("!=", "\\\\=="), ("==", "==")):
+		parts = _split_top_level_operator(text, operator)
+		if len(parts) == 2:
+			left, right = parts
+			return _RenderedContextExpression(
+				text=f"{_render_term(left)} {rendered_operator} {_render_term(right)}",
+				precedence=_CONTEXT_PRECEDENCE["comparison"],
+			)
+		if len(parts) > 2:
+			raise ValueError(
+				f"Invalid AgentSpeak context expression with repeated {operator!r}: {text}",
+			)
+	return _RenderedContextExpression(
+		text=_render_context_literal(text),
+		precedence=_CONTEXT_PRECEDENCE["atom"],
+	)
+
+
+def _starts_with_not_operator(text: str) -> bool:
+	return text.lower().startswith("not ") and bool(text[3:].strip())
+
+
+def _maybe_parenthesize_context(
+	rendered: _RenderedContextExpression,
+	parent_precedence: int,
+) -> str:
+	if rendered.precedence < parent_precedence:
+		return f"({rendered.text})"
+	return rendered.text
+
+
+def _split_top_level_operator(text: str, operator: str) -> tuple[str, ...]:
+	parts: list[str] = []
+	start = 0
+	depth = 0
+	index = 0
+	while index < len(text):
+		character = text[index]
+		if character == "(":
+			depth += 1
+			index += 1
+			continue
+		if character == ")":
+			depth -= 1
+			if depth < 0:
+				raise ValueError(f"Invalid AgentSpeak context expression: {text}")
+			index += 1
+			continue
+		if depth == 0 and text.startswith(operator, index):
+			part = text[start:index].strip()
+			if not part:
+				raise ValueError(f"Invalid AgentSpeak context expression: {text}")
+			parts.append(part)
+			index += len(operator)
+			start = index
+			continue
+		index += 1
+	if depth != 0:
+		raise ValueError(f"Invalid AgentSpeak context expression: {text}")
+	if parts:
+		part = text[start:].strip()
+		if not part:
+			raise ValueError(f"Invalid AgentSpeak context expression: {text}")
+		parts.append(part)
+	return tuple(parts or (text.strip(),))
+
+
+def _strip_balanced_outer_parentheses(text: str) -> str:
+	current = text
+	while current.startswith("(") and current.endswith(")") and _outer_parentheses_wrap(current):
+		current = current[1:-1].strip()
+	return current
+
+
+def _outer_parentheses_wrap(text: str) -> bool:
+	depth = 0
+	for index, character in enumerate(text):
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+			if depth == 0 and index != len(text) - 1:
+				return False
+			if depth < 0:
+				raise ValueError(f"Invalid AgentSpeak context expression: {text}")
+	return depth == 0
+
+
 def _render_atom(atom: str) -> str:
 	text = str(atom or "").strip()
 	if not text:
@@ -137,3 +272,26 @@ def sanitize_identifier(value: str) -> str:
 	if not sanitized[0].isalpha():
 		sanitized = f"t_{sanitized}"
 	return sanitized
+
+
+def validate_generated_asl_library(plan_library: PlanLibrary) -> None:
+	"""Validate the AgentSpeak(L) subset emitted by this renderer."""
+
+	for belief in plan_library.initial_beliefs:
+		_render_atom(belief)
+	for plan in plan_library.plans:
+		_call(plan.trigger.symbol, tuple(_raw_argument(argument) for argument in plan.trigger.arguments))
+		for context in plan.context:
+			_render_context_expression(context)
+		for step in plan.body:
+			if step.kind not in {
+				"action",
+				"primitive_action",
+				"subgoal",
+				"belief_addition",
+				"belief_deletion",
+			}:
+				raise ValueError(
+					f"Invalid AgentSpeak body step kind {step.kind!r} in plan {plan.plan_name!r}.",
+				)
+			_call(step.symbol, step.arguments)

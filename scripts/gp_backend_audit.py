@@ -19,6 +19,7 @@ from domain_level_planning.gp_backends import (
 	discover_backend_manifest,
 	parse_dlplan_policy,
 )
+from domain_level_planning.sketch_pipeline import compile_learner_sketch_policy_to_asl
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -70,6 +71,7 @@ def main() -> int:
 			"install-deps",
 			"blocksworld-smoke-command",
 			"learner-sketches-command",
+			"learner-sketches-compile-asl",
 			"learner-sketches-summary",
 			"d2l-docker-commands",
 			"parse-policy",
@@ -147,6 +149,9 @@ def main() -> int:
 			timeout_seconds=args.timeout_seconds,
 			unsafe_direct=args.unsafe_direct,
 		)
+		return 0
+	if args.command == "learner-sketches-compile-asl":
+		compile_learner_sketches_asl(args.backend_root, experiment=args.experiment)
 		return 0
 	if args.command == "learner-sketches-summary":
 		print_learner_sketches_summary(args.backend_root, experiment=args.experiment)
@@ -295,11 +300,15 @@ def print_learner_sketches_summary(root: Path, *, experiment: str) -> None:
 			if raw_policy_file.exists()
 			else None
 		)
+		binding_status = _learner_sketches_binding_status(
+			domain_file=config.domain_file,
+			policy_file=policy_file,
+		)
 		print(
 			f"{config.name}: present; width={config.width}; "
 			f"features={len(policy.features)}; rules={len(policy.parsed_rules)}; "
 			f"raw_rules={len(raw_policy.parsed_rules) if raw_policy else 'unknown'}; "
-			f"policy={policy_file}",
+			f"policy={policy_file}; {binding_status}",
 		)
 		for feature_id, feature_repr in policy.features.items():
 			print(f"  feature {feature_id}: {feature_repr}")
@@ -313,6 +322,29 @@ def print_learner_sketches_summary(root: Path, *, experiment: str) -> None:
 				for effect in rule.effects
 			) or "none"
 			print(f"  rule {index}: if {conditions} then {effects}")
+
+
+def compile_learner_sketches_asl(root: Path, *, experiment: str) -> None:
+	for config in _selected_learner_sketches_experiments(root, experiment):
+		policy_file = config.workspace / "output" / f"sketch_minimized_{config.width}.txt"
+		if not policy_file.exists():
+			print(f"{config.name}: missing; expected={policy_file}")
+			continue
+		output_file = config.workspace / "output" / f"sketch_minimized_{config.width}.asl"
+		result = compile_learner_sketch_policy_to_asl(
+			domain_file=config.domain_file,
+			policy_file=policy_file,
+		)
+		from plan_library.rendering import render_plan_library_asl
+
+		output_file.write_text(
+			render_plan_library_asl(result.plan_library),
+			encoding="utf-8",
+		)
+		print(
+			f"{config.name}: compiled; plans={len(result.plan_library.plans)}; "
+			f"output={output_file}",
+		)
 
 
 def print_d2l_docker_commands(root: Path) -> None:
@@ -356,6 +388,20 @@ def print_policy_summary(policy_file: Path) -> None:
 		print(f"feature {feature_id}: {feature_repr}")
 	for rule in policy.rules:
 		print(rule)
+
+
+def _learner_sketches_binding_status(*, domain_file: Path, policy_file: Path) -> str:
+	try:
+		result = compile_learner_sketch_policy_to_asl(
+			domain_file=domain_file,
+			policy_file=policy_file,
+		)
+	except Exception as error:
+		return f"binding=blocked ({error})"
+	return (
+		f"binding=ok; plans={len(result.plan_library.plans)}; "
+		f"unsupported_features={len(result.unsupported_features)}"
+	)
 
 
 def _blocksworld_smoke_config() -> SmokeConfig:

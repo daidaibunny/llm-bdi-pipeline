@@ -20,5 +20,15 @@
   ordering extraction for Layer C.
 - [x] Add tests for arbitrary-domain lifted ASL output, Blocksworld through the generic
   path, read-only goal facts, unsupported goals, and Clingo minimization.
-- [ ] Extend the Clingo constraints from capability coverage to full state-transition
-  correctness/progress constraints over enumerated training transition systems.
+- [x] Add strict PDDL syntax validation plus conservative compilable-fragment rejection
+  for domain-level ASL synthesis.
+- [x] Add generated-AgentSpeak validation and compound context rendering for PDDL/DFA
+  literal formulas.
+- [x] Add a learner-sketches policy-to-ASL pipeline and CLI path that compiles only
+  explicitly bound DLPlan feature rules.
+- [x] Add Layer C ambiguity filtering so contradictory lifted goal-order evidence is
+  not compiled as a hard composer rule.
+- [x] Add guarded backend audit commands and compile smoke output for existing
+  learner-sketches Blocksworld policies.
+- [x] Extend selection beyond capability coverage with bounded transition-progress
+  validation over enumerated training transition systems.

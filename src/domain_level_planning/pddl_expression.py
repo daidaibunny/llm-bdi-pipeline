@@ -62,7 +62,9 @@ def _literals_from_expression(expression: object) -> Iterable[LiftedLiteral]:
 			)
 		return ()
 	if head in {"or", "forall", "exists", "when", "imply"}:
-		return ()
+		raise ValueError(
+			f"Unsupported PDDL expression operator {head!r} in compilable STRIPS subset.",
+		)
 	return (
 		LiftedLiteral(
 			predicate=str(expression[0]),

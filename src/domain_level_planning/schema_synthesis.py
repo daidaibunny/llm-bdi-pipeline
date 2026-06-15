@@ -17,6 +17,7 @@ from utils.pddl_parser import PDDLFact, PDDLParser, PDDLPredicate
 
 from .clingo_backend import ClingoSketchRuleSelector
 from .models import LiftedCall, LiftedPlanRule, SketchSynthesisReport
+from .pddl_support import assert_compilable_pddl_files
 from .pddl_expression import LiftedLiteral, parameter_variables, parse_pddl_literals
 from .transition_system import (
 	TrainingTransitionEvidence,
@@ -31,6 +32,10 @@ def build_goal_conditioned_library_from_pddl(
 ) -> PlanLibrary:
 	"""Build a lifted goal-conditioned library for any STRIPS-style PDDL domain."""
 
+	assert_compilable_pddl_files(
+		domain_file=domain_file,
+		problem_files=tuple(training_problem_files or ()),
+	)
 	domain = PDDLParser.parse_domain(domain_file)
 	training_goal_facts, transition_evidence = _training_evidence(
 		domain=domain,
@@ -49,6 +54,10 @@ def build_goal_conditioned_library_from_pddl(
 	selection = ClingoSketchRuleSelector().select(
 		candidate_rules=candidate_rules,
 		required_capabilities=required_capabilities,
+	)
+	_validate_selected_rules_against_transition_progress(
+		selection.rules,
+		transition_evidence,
 	)
 	report = SketchSynthesisReport(
 		theoretical_contract="bounded_class_guarantee",
@@ -117,7 +126,14 @@ def _goal_ordering_rules_from_evidence(
 	transition_evidence: Sequence[TrainingTransitionEvidence],
 ) -> tuple[LiftedPlanRule, ...]:
 	rules: list[LiftedPlanRule] = []
-	seen_contexts: set[tuple[str, ...]] = set()
+	candidates: dict[
+		tuple[tuple[str, tuple[str, ...]], tuple[str, tuple[str, ...]]],
+		tuple[PDDLFact, PDDLFact, tuple[str, ...], tuple[LiftedCall, ...], str],
+	] = {}
+	support_counts: dict[
+		tuple[tuple[str, tuple[str, ...]], tuple[str, tuple[str, ...]]],
+		int,
+	] = {}
 	rule_index = 0
 	for evidence in transition_evidence:
 		for earlier, later in evidence.goal_orderings:
@@ -125,24 +141,57 @@ def _goal_ordering_rules_from_evidence(
 			if lifted is None:
 				continue
 			context, body, pattern = lifted
-			dedup_key = context + (pattern,)
-			if dedup_key in seen_contexts:
-				continue
-			seen_contexts.add(dedup_key)
-			rule_index += 1
-			rules.append(
-				_rule(
-					f"g_order_{earlier.predicate}_before_{later.predicate}_{rule_index}",
-					"g",
-					(),
-					context,
-					body,
-					layer="composer",
-					capabilities=(f"order_{earlier.predicate}_before_{later.predicate}",),
-					cost=2,
-				),
-			)
+			key = _goal_ordering_direction_key(earlier, later)
+			support_counts[key] = support_counts.get(key, 0) + 1
+			candidates.setdefault(key, (earlier, later, context, body, pattern))
+	for key, (earlier, later, context, body, pattern) in candidates.items():
+		reverse_key = _goal_ordering_direction_key(later, earlier)
+		if support_counts[key] <= support_counts.get(reverse_key, 0):
+			continue
+		rule_index += 1
+		rules.append(
+			_rule(
+				f"g_order_{earlier.predicate}_before_{later.predicate}_{rule_index}",
+				"g",
+				(),
+				context,
+				body,
+				layer="composer",
+				capabilities=(_goal_ordering_capability(key),),
+				cost=2,
+			),
+		)
 	return tuple(rules)
+
+
+def _goal_ordering_direction_key(
+	earlier: PDDLFact,
+	later: PDDLFact,
+) -> tuple[tuple[str, tuple[str, ...]], tuple[str, tuple[str, ...]]]:
+	object_variables: dict[str, str] = {}
+
+	def _canonical_arguments(arguments: Iterable[str]) -> tuple[str, ...]:
+		canonical: list[str] = []
+		for object_name in arguments:
+			if object_name not in object_variables:
+				object_variables[object_name] = f"V{len(object_variables)}"
+			canonical.append(object_variables[object_name])
+		return tuple(canonical)
+
+	return (
+		(earlier.predicate, _canonical_arguments(earlier.args)),
+		(later.predicate, _canonical_arguments(later.args)),
+	)
+
+
+def _goal_ordering_capability(
+	key: tuple[tuple[str, tuple[str, ...]], tuple[str, tuple[str, ...]]],
+) -> str:
+	earlier, later = key
+	return (
+		f"order_{earlier[0]}_{'_'.join(earlier[1])}_before_"
+		f"{later[0]}_{'_'.join(later[1])}"
+	)
 
 
 def _lift_goal_ordering(
@@ -394,6 +443,126 @@ def _compile_rule_to_plan(rule: LiftedPlanRule) -> AgentSpeakPlan:
 			},
 		),
 	)
+
+
+def _validate_selected_rules_against_transition_progress(
+	selected_rules: Sequence[LiftedPlanRule],
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+) -> None:
+	failures: list[str] = []
+	for evidence in transition_evidence:
+		for progression in evidence.goal_progressions:
+			if _has_selected_progress_rule(selected_rules, progression):
+				continue
+			failures.append(
+				(
+					f"{evidence.problem_name}: no selected lifted rule grounds to "
+					f"{progression.goal_fact.to_signature()} via "
+					f"{progression.action_signature} with context true before step "
+					f"{progression.step_index}"
+				),
+			)
+	if failures:
+		raise ValueError(
+			"Selected lifted library fails bounded transition-progress validation: "
+			+ "; ".join(failures),
+		)
+
+
+def _has_selected_progress_rule(
+	selected_rules: Sequence[LiftedPlanRule],
+	progression,
+) -> bool:
+	for rule in selected_rules:
+		if rule.layer != "atomic":
+			continue
+		if rule.head.symbol != progression.goal_fact.predicate:
+			continue
+		substitution = _substitution_from_head(rule, progression.goal_fact)
+		if substitution is None:
+			continue
+		for step in rule.body:
+			if step.kind != "action" or step.symbol != progression.action_name:
+				continue
+			action_substitution = _merge_substitution(
+				substitution,
+				dict(zip(step.arguments, progression.action_arguments)),
+			)
+			if action_substitution is None:
+				continue
+			if all(
+				_context_literal_holds(
+					literal,
+					action_substitution,
+					frozenset(progression.before_state),
+				)
+				for literal in rule.context
+			):
+				return True
+	return False
+
+
+def _substitution_from_head(
+	rule: LiftedPlanRule,
+	goal_fact: PDDLFact,
+) -> dict[str, str] | None:
+	if len(rule.head.arguments) != len(goal_fact.args):
+		return None
+	return _merge_substitution({}, dict(zip(rule.head.arguments, goal_fact.args)))
+
+
+def _merge_substitution(
+	base: dict[str, str],
+	additions: dict[str, str],
+) -> dict[str, str] | None:
+	merged = dict(base)
+	for variable, value in additions.items():
+		if variable in merged and merged[variable] != value:
+			return None
+		merged[variable] = value
+	return merged
+
+
+def _context_literal_holds(
+	literal: str,
+	substitution: dict[str, str],
+	state: frozenset[str],
+) -> bool:
+	text = str(literal or "").strip()
+	if not text or text.lower() == "true":
+		return True
+	if "!=" in text:
+		left, right = text.split("!=", 1)
+		return _ground_term(left, substitution) != _ground_term(right, substitution)
+	if "\\==" in text:
+		left, right = text.split("\\==", 1)
+		return _ground_term(left, substitution) != _ground_term(right, substitution)
+	if "==" in text:
+		left, right = text.split("==", 1)
+		return _ground_term(left, substitution) == _ground_term(right, substitution)
+	if text.lower().startswith("not "):
+		return _ground_context_atom(text[4:].strip(), substitution) not in state
+	return _ground_context_atom(text, substitution) in state
+
+
+def _ground_context_atom(atom: str, substitution: dict[str, str]) -> str:
+	text = str(atom or "").strip()
+	if "(" not in text:
+		return _ground_term(text, substitution)
+	if not text.endswith(")"):
+		return text
+	predicate, raw_arguments = text.split("(", 1)
+	arguments = tuple(
+		_ground_term(argument, substitution)
+		for argument in raw_arguments[:-1].split(",")
+		if argument.strip()
+	)
+	return _call(predicate.strip(), arguments)
+
+
+def _ground_term(term: str, substitution: dict[str, str]) -> str:
+	text = str(term or "").strip()
+	return substitution.get(text, text)
 
 
 def _goal_fact_signature(fact: PDDLFact) -> str:

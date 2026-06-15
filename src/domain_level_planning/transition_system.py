@@ -33,6 +33,30 @@ class GroundAction:
 
 
 @dataclass(frozen=True)
+class GoalProgressEvidence:
+	"""One observed action that makes a training goal fact true."""
+
+	goal_fact: PDDLFact
+	action_name: str
+	action_arguments: tuple[str, ...]
+	action_signature: str
+	step_index: int
+	before_state: tuple[str, ...]
+	after_state: tuple[str, ...]
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"goal_fact": _goal_signature(self.goal_fact),
+			"action_name": self.action_name,
+			"action_arguments": list(self.action_arguments),
+			"action_signature": self.action_signature,
+			"step_index": self.step_index,
+			"before_state": list(self.before_state),
+			"after_state": list(self.after_state),
+		}
+
+
+@dataclass(frozen=True)
 class TrainingTransitionEvidence:
 	"""Small transition-system evidence extracted from one training problem."""
 
@@ -43,6 +67,7 @@ class TrainingTransitionEvidence:
 	plan_length: int
 	goal_facts: tuple[str, ...]
 	goal_orderings: tuple[tuple[PDDLFact, PDDLFact], ...]
+	goal_progressions: tuple[GoalProgressEvidence, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -55,6 +80,10 @@ class TrainingTransitionEvidence:
 			"goal_orderings": [
 				(_goal_signature(earlier), _goal_signature(later))
 				for earlier, later in self.goal_orderings
+			],
+			"goal_progressions": [
+				progression.to_dict()
+				for progression in self.goal_progressions
 			],
 		}
 
@@ -112,6 +141,11 @@ def collect_training_transition_evidence(
 		plan=plan,
 		goal_facts=tuple(fact for fact in problem.goal_facts if fact.is_positive),
 	)
+	goal_progressions = _goal_progressions_from_plan(
+		initial_state=initial_state,
+		plan=plan,
+		goal_facts=tuple(fact for fact in problem.goal_facts if fact.is_positive),
+	)
 	return TrainingTransitionEvidence(
 		problem_name=problem.name,
 		object_count=len(problem.objects),
@@ -120,6 +154,7 @@ def collect_training_transition_evidence(
 		plan_length=len(plan),
 		goal_facts=tuple(_goal_signature(fact) for fact in problem.goal_facts),
 		goal_orderings=goal_orderings,
+		goal_progressions=goal_progressions,
 	)
 
 
@@ -255,6 +290,32 @@ def _goal_orderings_from_plan(
 			if earlier_step < later_step:
 				orderings.append((earlier, later))
 	return tuple(orderings)
+
+
+def _goal_progressions_from_plan(
+	*,
+	initial_state: State,
+	plan: tuple[GroundAction, ...],
+	goal_facts: tuple[PDDLFact, ...],
+) -> tuple[GoalProgressEvidence, ...]:
+	progressions: dict[str, GoalProgressEvidence] = {}
+	state = initial_state
+	for step_index, action in enumerate(plan, start=1):
+		next_state = _apply_action(state, action)
+		for fact in goal_facts:
+			atom = _atom(fact.predicate, fact.args)
+			if atom not in state and atom in next_state:
+				progressions[atom] = GoalProgressEvidence(
+					goal_fact=fact,
+					action_name=action.name,
+					action_arguments=action.arguments,
+					action_signature=action.signature(),
+					step_index=step_index,
+					before_state=tuple(sorted(state)),
+					after_state=tuple(sorted(next_state)),
+				)
+		state = next_state
+	return tuple(progressions[atom] for atom in sorted(progressions))
 
 
 def _atom(predicate: str, arguments: Iterable[str]) -> str:

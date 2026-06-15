@@ -32,9 +32,18 @@ from .models import (
 	LiftedPlanRule,
 	SketchSynthesisReport,
 )
+from .pddl_support import (
+	PDDLSupportReport,
+	assert_compilable_pddl_files,
+	inspect_pddl_support,
+)
 from .schema_synthesis import (
 	build_goal_conditioned_library_from_pddl,
 	goal_facts_from_problem,
+)
+from .sketch_pipeline import (
+	SketchPipelineResult,
+	compile_learner_sketch_policy_to_asl,
 )
 from .sketch_asl_compiler import (
 	SketchCompilationTarget,
@@ -57,14 +66,19 @@ __all__ = [
 	"SketchFeature",
 	"SketchFeatureBinding",
 	"SketchPolicy",
+	"SketchPipelineResult",
 	"SketchRule",
 	"SketchSynthesisReport",
+	"PDDLSupportReport",
 	"build_goal_conditioned_library_from_pddl",
 	"bind_goal_aligned_action_effect_candidates",
 	"bind_recoverable_dlplan_features",
 	"bind_unique_action_effect_candidates",
 	"compile_bound_sketch_to_asl_library",
+	"compile_learner_sketch_policy_to_asl",
 	"discover_backend_manifest",
 	"goal_facts_from_problem",
+	"assert_compilable_pddl_files",
+	"inspect_pddl_support",
 	"parse_dlplan_policy",
 ]

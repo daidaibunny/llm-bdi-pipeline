@@ -14,6 +14,8 @@ if _src_dir not in sys.path:
 	sys.path.insert(0, _src_dir)
 
 from plan_library import PlanLibraryGenerationPipeline
+from domain_level_planning import SketchCompilationTarget, compile_learner_sketch_policy_to_asl
+from plan_library.rendering import render_plan_library_asl
 
 
 def _absolute_path(path_text: str | None) -> str | None:
@@ -94,6 +96,26 @@ Examples:
 		default=True,
 		help="Deprecated compatibility flag; primitive ASL actions are rendered by default.",
 	)
+
+	sketch_parser = subparsers.add_parser(
+		"compile-sketch-policy",
+		help="Compile a bound learner-sketches policy into AgentSpeak(L).",
+	)
+	sketch_parser.add_argument("--domain-file", required=True, help="Path to the PDDL domain file.")
+	sketch_parser.add_argument("--policy-file", required=True, help="Path to a DLPlan policy file.")
+	sketch_parser.add_argument("--output-file", help="Optional path for the generated .asl file.")
+	sketch_parser.add_argument("--target-symbol", default="g", help="ASL achievement-goal target symbol.")
+	sketch_parser.add_argument(
+		"--target-argument",
+		action="append",
+		default=[],
+		help="Lifted target argument. Repeat for multiple arguments.",
+	)
+	sketch_parser.add_argument(
+		"--no-recurse",
+		action="store_true",
+		help="Do not append a recursive call to the target goal.",
+	)
 	return parser
 
 
@@ -116,6 +138,34 @@ def main() -> None:
 			render_primitive_actions=True,
 		)
 		results = pipeline.build_library_bundle(output_root=_absolute_path(args.output_root))
+	elif args.command == "compile-sketch-policy":
+		domain_file = _require_existing_path(args.domain_file, label="Domain File")
+		policy_file = _require_existing_path(args.policy_file, label="Policy File")
+		target = SketchCompilationTarget(
+			symbol=str(args.target_symbol).strip() or "g",
+			arguments=tuple(
+				str(argument).strip()
+				for argument in tuple(args.target_argument or ())
+				if str(argument).strip()
+			),
+			recurse=not args.no_recurse,
+		)
+		result = compile_learner_sketch_policy_to_asl(
+			domain_file=domain_file,
+			policy_file=policy_file,
+			target=target,
+		)
+		asl_text = render_plan_library_asl(result.plan_library)
+		if args.output_file:
+			output_file = Path(args.output_file).expanduser().resolve()
+			output_file.parent.mkdir(parents=True, exist_ok=True)
+			output_file.write_text(asl_text, encoding="utf-8")
+		results = {
+			"success": True,
+			"plan_count": len(result.plan_library.plans),
+			"unsupported_features": dict(result.unsupported_features),
+			"output_file": _absolute_path(args.output_file),
+		}
 	else:
 		parser.error(f"Unsupported command {args.command!r}")
 		return

@@ -202,6 +202,14 @@ def _bind_feature_expression(
 		predicate = goal_role.group(1)
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
 
+	goal_role_intersection = re.fullmatch(
+		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
+		text,
+	)
+	if goal_role_intersection:
+		predicate = goal_role_intersection.group(1)
+		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
+
 	return None
 
 
@@ -380,6 +388,12 @@ def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:
 	)
 	if role:
 		return _GoalAlignedFeature(predicate=role.group(1), arity=2)
+	role_intersection = re.fullmatch(
+		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
+		text,
+	)
+	if role_intersection:
+		return _GoalAlignedFeature(predicate=role_intersection.group(1), arity=2)
 	return None
 
 
