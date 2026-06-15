@@ -296,17 +296,19 @@ def _action_effect_rules(
 		context = tuple(literal.signature() for literal in preconditions)
 		head_call = _subgoal(effect.predicate, *head_arguments)
 		for precondition in preconditions:
-			if _can_prepare_precondition(
+			binding_context = _binding_context_for_precondition(
 				precondition,
 				head_arguments=head_arguments,
+				preconditions=preconditions,
 				producible_predicates=producible_predicates,
-			):
+			)
+			if binding_context is not None:
 				rules.append(
 					_rule(
 						f"{effect.predicate}_prepare_{precondition.predicate}_for_{action_name}",
 						effect.predicate,
 						head_arguments,
-						(f"not {_positive_signature(precondition)}",),
+						(*binding_context, f"not {_positive_signature(precondition)}"),
 						(
 							_subgoal(
 								precondition.predicate,
@@ -343,18 +345,45 @@ def _producible_predicates(actions: Sequence[object]) -> frozenset[str]:
 	return frozenset(predicates)
 
 
-def _can_prepare_precondition(
+def _binding_context_for_precondition(
 	precondition: LiftedLiteral,
 	*,
 	head_arguments: tuple[str, ...],
+	preconditions: tuple[LiftedLiteral, ...],
 	producible_predicates: frozenset[str],
-) -> bool:
+) -> tuple[str, ...] | None:
 	if not precondition.is_positive:
-		return False
+		return None
 	if precondition.predicate not in producible_predicates:
-		return False
+		return None
+	head_variables = set(head_arguments)
 	precondition_variables = {_var(argument) for argument in precondition.arguments}
-	return precondition_variables.issubset(set(head_arguments))
+	if precondition_variables.issubset(head_variables):
+		return ()
+
+	bound_variables = set(head_variables)
+	binding_literals: list[LiftedLiteral] = []
+	remaining = [
+		literal
+		for literal in preconditions
+		if literal != precondition and literal.is_positive
+	]
+	while not precondition_variables.issubset(bound_variables):
+		next_literal = None
+		for literal in remaining:
+			literal_variables = {_var(argument) for argument in literal.arguments}
+			if not literal_variables.intersection(bound_variables):
+				continue
+			if literal_variables.issubset(bound_variables):
+				continue
+			next_literal = literal
+			break
+		if next_literal is None:
+			return None
+		remaining.remove(next_literal)
+		binding_literals.append(next_literal)
+		bound_variables.update(_var(argument) for argument in next_literal.arguments)
+	return tuple(literal.signature() for literal in binding_literals)
 
 
 def _positive_signature(literal: LiftedLiteral) -> str:

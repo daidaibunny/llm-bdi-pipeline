@@ -32,6 +32,9 @@
   learner-sketches Blocksworld policies.
 - [x] Extend selection beyond capability coverage with bounded transition-progress
   validation over enumerated training transition systems.
+- [x] Add a bounded lifted-ASL executor and verify that one domain-level
+  Blocksworld library learned from `p01` solves `p01` through `p20` without
+  runtime full-trace planning.
 
 ## Unified Generalized-Planning-To-ASL Architecture Requirements
 
@@ -49,6 +52,7 @@
 | R10 | External sketch path does not bypass Layer B/C. | Bound sketch rules are converted to candidate module/composer rules or rejected; they are not only compiled as a separate ASL skeleton. | Done |
 | R11 | Held-out and counterexample hooks exist. | Pipeline report exposes training evidence, selected sources, rejected candidates, and a place to add failed instances later. | Done |
 | R12 | Resource safety for external learners. | Audit commands print guarded learner invocations by default and never run unbounded experiments in tests. | Done |
+| R13 | Blocksworld first-20 domain-level validation. | One lifted library synthesized from `p01` solves `p01`-`p20` through the bounded ASL executor; generated ASL contains no `achieve_*`, `transition_*`, or `dfa_state` names. | Done |
 
 Remaining research hardening after the first unified architecture:
 
