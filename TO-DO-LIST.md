@@ -56,11 +56,13 @@
 | R8 | Unsupported PDDL or DLPlan semantics fail safely. | Conditional effects, numeric fluents, unsupported DLPlan features, and invalid ASL contexts fail with diagnostics instead of silent compilation. | Done |
 | R9 | ASL compiler is single-path and validates generated syntax subset. | Unified pipeline output is rendered through `render_plan_library_asl`; invalid generated context/body syntax raises. | Done |
 | R10 | External sketch path does not bypass Layer B/C. | Bound sketch rules are converted to candidate module/composer rules or rejected; they are not only compiled as a separate ASL skeleton. | Done |
-| R11 | Held-out and counterexample hooks exist. | Pipeline report exposes training evidence, selected sources, rejected candidates, and a place to add failed instances later. | Done |
+| R11 | Held-out and counterexample hooks exist. | Validation reports expose structured `LibraryCounterexample` records; refinement can add failed held-out problems into the next synthesis round. | Done |
 | R12 | Resource safety for external learners. | Audit commands print guarded learner invocations by default and never run unbounded experiments in tests. | Done |
 | R13 | Blocksworld first-20 domain-level validation. | One lifted library synthesized from `p01` solves `p01`-`p20` through the bounded ASL executor; generated ASL contains no `achieve_*`, `transition_*`, or `dfa_state` names. | Done |
 | R14 | Paper-style bounded validation. | Synthesis reports include all-reachable-state validation for training transition systems, high-level decision acyclicity, and goal-state fixed-point checks. | Done |
 | R15 | Paper backend artifact audit. | External learner-sketches policies are parsed and reported with feature/rule counts, binding coverage, unsupported features, executable effect count, and ASL readiness. | Done |
+| R16 | Bootstrap and paper-grade synthesis profiles are separated. | `bootstrap` permits schema fallback; `paper` requires external learned policy rules to bind, bounded validation to pass, and rejects silent rule drops. | Done |
+| R17 | Execution semantics are explicit. | The executor can run planner-style backtracking validation or deterministic first-applicable ASL execution for held-out refinement. | Done |
 
 Remaining research hardening after the first unified architecture:
 
@@ -68,6 +70,8 @@ Remaining research hardening after the first unified architecture:
   selecting first and validating after selection.
 - [ ] Promote learner-sketches-style bounded-width ASP constraints from post-hoc
   validation into the main synthesis objective.
-- [ ] Add an automatic counterexample-guided refinement loop for held-out failures.
+- [x] Add an automatic counterexample-guided refinement loop for held-out failures.
+- [ ] Promote counterexample constraints into the ASP objective instead of adding
+  whole failed problems only.
 - [ ] Expand DLPlan feature binding coverage beyond currently recoverable predicate
   count and goal-aligned role patterns.

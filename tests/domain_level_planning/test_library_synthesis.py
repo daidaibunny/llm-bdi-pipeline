@@ -7,6 +7,7 @@ from domain_level_planning.library_synthesis import (
 	synthesize_domain_level_asl_library,
 )
 from plan_library.rendering import render_plan_library_asl
+import pytest
 
 
 def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
@@ -27,6 +28,7 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	asl = render_plan_library_asl(result.plan_library)
 
 	assert result.report["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
+	assert result.report["synthesis_profile"] == "bootstrap"
 	assert result.report["paper_quality_checks"] == (
 		"transition_progress",
 		"bounded_all_reachable_states",
@@ -34,9 +36,16 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 		"goal_state_fixed_point",
 	)
 	assert result.report["bounded_validation"]["passed"] is True
+	assert result.report["bounded_validation"]["counterexample_count"] == 0
 	assert result.report["external_policy_count"] == 1
 	assert result.report["candidate_sources"]["external_sketch"] >= 1
 	assert result.report["candidate_sources"]["schema"] >= 1
+	assert result.report["output_candidate_sources"]["external_sketch"] >= 1
+	assert result.report["paper_profile_ready"] is True
+	assert result.report["paper_profile_failures"] == ()
+	rule_reports = result.report["external_rule_binding_reports"]
+	assert len(rule_reports) == 1
+	assert rule_reports[0]["compiled"] is True
 	assert "+!g : goal_done(X0) & not done(X0) <-" in asl
 	assert "\t!done(X0);" in asl
 	assert "+!done(X) : ready(X) <-" in asl
@@ -73,6 +82,115 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 	}
 	assert result.report["external_candidate_count"] == 0
 	assert result.report["candidate_sources"]["schema"] > 0
+	assert result.report["paper_profile_ready"] is False
+	assert result.report["external_rule_binding_reports"][0]["compiled"] is False
+	assert result.report["external_rule_binding_reports"][0]["missing_condition_bindings"] == [
+		"f_bad:c_n_gt",
+	]
+	assert result.report["external_rule_binding_reports"][0]["missing_effect_bindings"] == [
+		"f_bad:e_n_dec",
+	]
+
+
+def test_paper_profile_requires_external_learned_policy(tmp_path: Path) -> None:
+	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
+
+	with pytest.raises(ValueError, match="requires at least one external learned sketch policy"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			synthesis_profile="paper",
+		)
+
+
+def test_paper_profile_rejects_uncompiled_external_policy_rules(tmp_path: Path) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+		policy_feature='(f_bad "n_concept_distance(c_one_of(a),r_primitive(done,0,1),c_primitive(done,0))")',
+		policy_rule="(:rule (:conditions (:c_n_gt f_bad)) (:effects (:e_n_dec f_bad)))",
+	)
+
+	with pytest.raises(ValueError, match="did not compile"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			external_sketch_policies=(
+				ExternalSketchPolicySource(
+					name="unsupported-sketch",
+					policy_file=policy_file,
+				),
+			),
+			synthesis_profile="paper",
+		)
+
+
+def test_paper_profile_accepts_bound_external_policy_and_bounded_validation(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
+			),
+		),
+		synthesis_profile="paper",
+	)
+
+	assert result.report["synthesis_profile"] == "paper"
+	assert result.report["paper_profile_ready"] is True
+	assert result.report["paper_profile_failures"] == ()
+	assert result.report["selected_candidate_sources"]["external_sketch"] == 1
+	assert result.report["output_candidate_sources"]["external_sketch"] == 1
+
+
+def test_external_policy_rules_are_rendered_before_schema_fallbacks(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
+			),
+		),
+	)
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert asl.index("plan=external_paper_sketch_smoke_1") < asl.index("plan=g_satisfy_goal_done")
+
+
+def test_atomic_action_rules_are_rendered_before_recursive_prepare_rules(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_prepare_order_domain_and_problem(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert asl.index("plan=holding_via_grab") < asl.index("plan=holding_prepare_ready_for_grab")
+
+
+def test_synthesis_profile_rejects_unknown_values(tmp_path: Path) -> None:
+	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
+
+	with pytest.raises(ValueError, match="either 'bootstrap' or 'paper'"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			synthesis_profile="oracle",
+		)
 
 
 def _write_generic_domain_problem_and_policy(
@@ -123,3 +241,42 @@ def _write_generic_domain_problem_and_policy(
 		encoding="utf-8",
 	)
 	return domain_file, problem_file, policy_file
+
+
+def _write_prepare_order_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "prepare-domain.pddl"
+	problem_file = tmp_path / "prepare-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain prepare-order)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (holding ?x)
+		 )
+		 (:action make_ready
+		  :parameters (?x)
+		  :precondition ()
+		  :effect (ready ?x)
+		 )
+		 (:action grab
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (holding ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem prepare-p1)
+		 (:domain prepare-order)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (holding a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file

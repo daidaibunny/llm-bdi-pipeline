@@ -12,6 +12,7 @@ from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTr
 from utils.pddl_parser import PDDLParser
 
 from .clingo_backend import ClingoSketchRuleSelector
+from .library_verifier import BoundedLibraryValidationReport
 from .library_verifier import validate_library_on_bounded_transition_systems
 from .models import LiftedCall, LiftedPlanRule
 from .paper_backend_audit import PaperPolicyAuditReport
@@ -40,14 +41,40 @@ class UnifiedSynthesisResult:
 	rejected_external_features: Mapping[str, str]
 
 
+@dataclass(frozen=True)
+class ExternalRuleBindingReport:
+	"""Compilation diagnostics for one learned paper-policy rule."""
+
+	source_name: str
+	rule_index: int
+	raw_rule: str
+	compiled: bool
+	missing_condition_bindings: tuple[str, ...] = ()
+	missing_effect_bindings: tuple[str, ...] = ()
+	empty_body: bool = False
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"source_name": self.source_name,
+			"rule_index": self.rule_index,
+			"raw_rule": self.raw_rule,
+			"compiled": self.compiled,
+			"missing_condition_bindings": list(self.missing_condition_bindings),
+			"missing_effect_bindings": list(self.missing_effect_bindings),
+			"empty_body": self.empty_body,
+		}
+
+
 def synthesize_domain_level_asl_library(
 	*,
 	domain_file: str | Path,
 	training_problem_files: Sequence[str | Path] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
+	synthesis_profile: str = "bootstrap",
 ) -> UnifiedSynthesisResult:
 	"""Synthesize one lifted domain-level ASL library through the unified path."""
 
+	profile = _normalize_synthesis_profile(synthesis_profile)
 	assert_compilable_pddl_files(
 		domain_file=domain_file,
 		problem_files=tuple(training_problem_files or ()),
@@ -62,9 +89,11 @@ def synthesize_domain_level_asl_library(
 		domain.actions,
 		transition_evidence=transition_evidence,
 	)
-	external_candidates, rejected_features, paper_policy_audits = _external_sketch_candidates(
-		domain=domain,
-		sources=external_sketch_policies,
+	external_candidates, rejected_features, paper_policy_audits, external_rule_reports = (
+		_external_sketch_candidates(
+			domain=domain,
+			sources=external_sketch_policies,
+		)
 	)
 	candidate_rules = _deduplicate_rules(schema_candidates + external_candidates)
 	required_capabilities = _required_capabilities(
@@ -72,6 +101,15 @@ def synthesize_domain_level_asl_library(
 		candidate_rules=candidate_rules,
 		training_goal_facts=training_goal_facts,
 	)
+	if profile == "paper":
+		required_capabilities = tuple(
+			dict.fromkeys(
+				(
+					*required_capabilities,
+					*_external_rule_capabilities(external_candidates),
+				),
+			),
+		)
 	selection = ClingoSketchRuleSelector().select(
 		candidate_rules=candidate_rules,
 		required_capabilities=required_capabilities,
@@ -80,7 +118,9 @@ def synthesize_domain_level_asl_library(
 		selection.rules,
 		transition_evidence,
 	)
-	output_rules = _deduplicate_rules(selection.rules + external_candidates)
+	output_rules = _order_output_rules(
+		_deduplicate_rules(external_candidates + selection.rules),
+	)
 	plan_library = PlanLibrary(
 		domain_name=domain.name,
 		plans=tuple(_compile_rule_to_plan(rule) for rule in output_rules),
@@ -103,8 +143,22 @@ def synthesize_domain_level_asl_library(
 			domain_file=domain_file,
 			problem_files=tuple(training_problem_files),
 		)
+	paper_profile_failures = _paper_profile_failures(
+		training_problem_files=training_problem_files,
+		external_sketch_policies=external_sketch_policies,
+		external_candidates=external_candidates,
+		paper_policy_audits=paper_policy_audits,
+		external_rule_reports=external_rule_reports,
+		bounded_validation=bounded_validation,
+	)
+	if profile == "paper" and paper_profile_failures:
+		raise ValueError(
+			"Paper synthesis profile requirements are not met: "
+			+ "; ".join(paper_profile_failures),
+		)
 	report = {
 		"generation_mode": "unified_goal_conditioned_modular_synthesis",
+		"synthesis_profile": profile,
 		"theoretical_contract": "bounded_class_guarantee",
 		"paper_quality_checks": (
 			"transition_progress",
@@ -120,11 +174,19 @@ def synthesize_domain_level_asl_library(
 		"output_rule_count": len(output_rules),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
+		"selected_candidate_sources": _candidate_source_counts(selection.rules),
+		"output_candidate_sources": _candidate_source_counts(output_rules),
 		"selection_cost": selection.cost,
 		"paper_policy_audits": tuple(
 			audit.to_dict()
 			for audit in paper_policy_audits
 		),
+		"external_rule_binding_reports": tuple(
+			report.to_dict()
+			for report in external_rule_reports
+		),
+		"paper_profile_ready": not paper_profile_failures,
+		"paper_profile_failures": tuple(paper_profile_failures),
 		"bounded_validation": (
 			bounded_validation.to_dict()
 			if bounded_validation is not None
@@ -139,14 +201,90 @@ def synthesize_domain_level_asl_library(
 	)
 
 
+def _normalize_synthesis_profile(profile: str) -> str:
+	normalized = str(profile or "bootstrap").strip().lower()
+	if normalized not in {"bootstrap", "paper"}:
+		raise ValueError(
+			"Synthesis profile must be either 'bootstrap' or 'paper'; "
+			f"received {profile!r}.",
+		)
+	return normalized
+
+
+def _paper_profile_failures(
+	*,
+	training_problem_files: Sequence[str | Path],
+	external_sketch_policies: Sequence[ExternalSketchPolicySource],
+	external_candidates: Sequence[LiftedPlanRule],
+	paper_policy_audits: Sequence[PaperPolicyAuditReport],
+	external_rule_reports: Sequence[ExternalRuleBindingReport],
+	bounded_validation: BoundedLibraryValidationReport | None,
+) -> tuple[str, ...]:
+	failures: list[str] = []
+	if not tuple(training_problem_files or ()):
+		failures.append("paper profile requires at least one training problem")
+	if not tuple(external_sketch_policies or ()):
+		failures.append("paper profile requires at least one external learned sketch policy")
+	if not tuple(paper_policy_audits or ()):
+		failures.append("paper profile has no parsed external policy audit")
+	if not tuple(external_rule_reports or ()):
+		failures.append("paper profile has no external learned rule binding reports")
+	if not tuple(external_candidates or ()):
+		failures.append("paper profile compiled no external learned sketch candidates")
+	for audit in tuple(paper_policy_audits or ()):
+		if not audit.ready_for_executable_asl:
+			failures.append(
+				(
+					f"external policy {audit.source_name!r} is not ready for executable ASL "
+					f"({len(audit.unsupported_features)} unsupported features, "
+					f"{audit.executable_effect_count} executable effects)"
+				),
+			)
+	for report in tuple(external_rule_reports or ()):
+		if report.compiled:
+			continue
+		failures.append(
+			(
+				f"external rule {report.source_name}:{report.rule_index} did not compile "
+				f"(missing conditions={report.missing_condition_bindings}, "
+				f"missing effects={report.missing_effect_bindings}, "
+				f"empty_body={report.empty_body})"
+			),
+		)
+	if bounded_validation is None:
+		failures.append("paper profile requires bounded validation over training problems")
+	elif not bounded_validation.passed:
+		failures.append(
+			(
+				"bounded validation failed "
+				f"({bounded_validation.failure_count} failures across "
+				f"{bounded_validation.checked_problem_count} problems)"
+			),
+		)
+	elif bounded_validation.execution_semantics != "deterministic_first_applicable_asl":
+		failures.append(
+			(
+				"paper profile requires deterministic first-applicable ASL validation; "
+				f"received {bounded_validation.execution_semantics}"
+			),
+		)
+	return tuple(failures)
+
+
 def _external_sketch_candidates(
 	*,
 	domain,
 	sources: Sequence[ExternalSketchPolicySource],
-) -> tuple[tuple[LiftedPlanRule, ...], dict[str, str], tuple[PaperPolicyAuditReport, ...]]:
+) -> tuple[
+	tuple[LiftedPlanRule, ...],
+	dict[str, str],
+	tuple[PaperPolicyAuditReport, ...],
+	tuple[ExternalRuleBindingReport, ...],
+]:
 	candidates: list[LiftedPlanRule] = []
 	rejected: dict[str, str] = {}
 	audits: list[PaperPolicyAuditReport] = []
+	rule_reports: list[ExternalRuleBindingReport] = []
 	for source in sources:
 		audit, policy, binding_report = audit_learned_policy_for_asl_binding(
 			source_name=source.name,
@@ -156,15 +294,14 @@ def _external_sketch_candidates(
 		audits.append(audit)
 		for feature_id, expression in binding_report.unsupported_features.items():
 			rejected[f"{source.name}:{feature_id}"] = expression
-		candidates.extend(
-			_rule
-			for _rule in _bound_policy_rules_to_candidates(
-				source=source,
-				policy=policy,
-				bindings=binding_report.bindings,
-			)
+		source_candidates, source_reports = _bound_policy_rules_to_candidates(
+			source=source,
+			policy=policy,
+			bindings=binding_report.bindings,
 		)
-	return tuple(candidates), rejected, tuple(audits)
+		candidates.extend(source_candidates)
+		rule_reports.extend(source_reports)
+	return tuple(candidates), rejected, tuple(audits), tuple(rule_reports)
 
 
 def _bound_policy_rules_to_candidates(
@@ -172,26 +309,43 @@ def _bound_policy_rules_to_candidates(
 	source: ExternalSketchPolicySource,
 	policy,
 	bindings,
-) -> tuple[LiftedPlanRule, ...]:
+) -> tuple[tuple[LiftedPlanRule, ...], tuple[ExternalRuleBindingReport, ...]]:
 	candidates: list[LiftedPlanRule] = []
+	reports: list[ExternalRuleBindingReport] = []
 	for index, rule in enumerate(policy.parsed_rules, start=1):
 		context: list[str] = []
 		body: list[LiftedCall] = []
-		try:
-			for condition in rule.conditions:
-				context.extend(
-					bindings[condition.feature_id].condition_contexts[condition.operator],
-				)
-			for effect in rule.effects:
-				binding = bindings[effect.feature_id]
-				context.extend((binding.effect_contexts or {}).get(effect.operator, ()))
-				body.extend(
-					_body_step_to_lifted_call(step)
-					for step in binding.effect_body[effect.operator]
-				)
-		except KeyError:
-			continue
-		if not body:
+		missing_conditions: list[str] = []
+		missing_effects: list[str] = []
+		for condition in rule.conditions:
+			binding = bindings.get(condition.feature_id)
+			if binding is None or condition.operator not in binding.condition_contexts:
+				missing_conditions.append(f"{condition.feature_id}:{condition.operator}")
+				continue
+			context.extend(binding.condition_contexts[condition.operator])
+		for effect in rule.effects:
+			binding = bindings.get(effect.feature_id)
+			if binding is None or effect.operator not in binding.effect_body:
+				missing_effects.append(f"{effect.feature_id}:{effect.operator}")
+				continue
+			context.extend((binding.effect_contexts or {}).get(effect.operator, ()))
+			body.extend(
+				_body_step_to_lifted_call(step)
+				for step in binding.effect_body[effect.operator]
+			)
+		compiled = not missing_conditions and not missing_effects and bool(body)
+		reports.append(
+			ExternalRuleBindingReport(
+				source_name=source.name,
+				rule_index=index,
+				raw_rule=rule.raw,
+				compiled=compiled,
+				missing_condition_bindings=tuple(missing_conditions),
+				missing_effect_bindings=tuple(missing_effects),
+				empty_body=not body,
+			),
+		)
+		if not compiled:
 			continue
 		candidates.append(
 			LiftedPlanRule(
@@ -205,7 +359,7 @@ def _bound_policy_rules_to_candidates(
 				cost=3,
 			),
 		)
-	return tuple(candidates)
+	return tuple(candidates), tuple(reports)
 
 
 def _body_step_to_lifted_call(step: AgentSpeakBodyStep) -> LiftedCall:
@@ -240,6 +394,61 @@ def _candidate_source_counts(rules: Sequence[LiftedPlanRule]) -> dict[str, int]:
 		)
 		counts[source] = counts.get(source, 0) + 1
 	return counts
+
+
+def _order_output_rules(rules: Sequence[LiftedPlanRule]) -> tuple[LiftedPlanRule, ...]:
+	"""Order plans for deterministic first-applicable AgentSpeak execution."""
+
+	return tuple(sorted(tuple(rules), key=_output_rule_sort_key))
+
+
+def _output_rule_sort_key(rule: LiftedPlanRule) -> tuple[int, int, int, str]:
+	priority = _rule_execution_priority(rule)
+	return (
+		priority,
+		_context_specificity_sort_value(rule, priority),
+		len(rule.body),
+		rule.name,
+	)
+
+
+def _context_specificity_sort_value(rule: LiftedPlanRule, priority: int) -> int:
+	if priority == 4:
+		return len(rule.context)
+	return -len(rule.context)
+
+
+def _rule_execution_priority(rule: LiftedPlanRule) -> int:
+	if rule.layer == "composer" and any(
+		capability.startswith("order_")
+		for capability in rule.capabilities
+	):
+		return 0
+	if rule.layer == "composer" and rule.rationale.startswith("external_policy:"):
+		return 1
+	if rule.layer == "composer":
+		return 2
+	if not rule.body:
+		return 3
+	if _is_direct_action_rule(rule):
+		return 4
+	return 5
+
+
+def _is_direct_action_rule(rule: LiftedPlanRule) -> bool:
+	return bool(rule.body) and all(
+		step.kind in {"action", "primitive_action"}
+		for step in rule.body
+	)
+
+
+def _external_rule_capabilities(rules: Sequence[LiftedPlanRule]) -> tuple[str, ...]:
+	return tuple(
+		capability
+		for rule in rules
+		if rule.rationale.startswith("external_policy:")
+		for capability in rule.capabilities
+	)
 
 
 def _compile_rule_to_plan(rule: LiftedPlanRule) -> AgentSpeakPlan:

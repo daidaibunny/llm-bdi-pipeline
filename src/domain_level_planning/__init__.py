@@ -44,12 +44,19 @@ from .library_synthesis import (
 from .library_verifier import (
 	BoundedLibraryValidationReport,
 	BoundedProblemValidation,
+	LibraryCounterexample,
 	validate_library_on_bounded_transition_systems,
 )
 from .pddl_support import (
 	PDDLSupportReport,
 	assert_compilable_pddl_files,
 	inspect_pddl_support,
+)
+from .refinement import (
+	CounterexampleGuidedSynthesisResult,
+	HeldoutProblemEvaluation,
+	RefinementRoundReport,
+	synthesize_with_counterexample_refinement,
 )
 from .schema_synthesis import (
 	build_goal_conditioned_library_from_pddl,
@@ -89,7 +96,11 @@ __all__ = [
 	"UnifiedSynthesisResult",
 	"BoundedLibraryValidationReport",
 	"BoundedProblemValidation",
+	"LibraryCounterexample",
 	"PDDLSupportReport",
+	"CounterexampleGuidedSynthesisResult",
+	"HeldoutProblemEvaluation",
+	"RefinementRoundReport",
 	"build_goal_conditioned_library_from_pddl",
 	"build_schema_only_goal_conditioned_library_from_pddl",
 	"bind_goal_aligned_action_effect_candidates",
@@ -104,5 +115,6 @@ __all__ = [
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"synthesize_domain_level_asl_library",
+	"synthesize_with_counterexample_refinement",
 	"validate_library_on_bounded_transition_systems",
 ]

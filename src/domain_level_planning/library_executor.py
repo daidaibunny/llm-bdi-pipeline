@@ -34,6 +34,7 @@ def evaluate_library_on_problem(
 	problem_file: str | Path,
 	max_steps: int = 2000,
 	max_depth: int = 200,
+	backtrack_on_body_failure: bool = False,
 ) -> LibraryExecutionResult:
 	"""Execute a generated library on one problem and check final goals."""
 
@@ -63,6 +64,7 @@ def evaluate_library_on_problem(
 		goal_atoms=goal_atoms,
 		max_steps=max_steps,
 		max_depth=max_depth,
+		backtrack_on_body_failure=backtrack_on_body_failure,
 	)
 
 
@@ -76,6 +78,7 @@ def execute_library_from_state(
 	goal_atoms: tuple[str, ...] | None = None,
 	max_steps: int = 2000,
 	max_depth: int = 200,
+	backtrack_on_body_failure: bool = False,
 ) -> LibraryExecutionResult:
 	"""Execute a generated library from an arbitrary grounded STRIPS state."""
 
@@ -92,6 +95,7 @@ def execute_library_from_state(
 		decision_trace=(),
 		max_steps=max_steps,
 		max_depth=max_depth,
+		backtrack_on_body_failure=backtrack_on_body_failure,
 		depth=0,
 		active_stack=(),
 	)
@@ -132,6 +136,7 @@ def _execute_subgoal(
 	decision_trace: tuple[frozenset[str], ...],
 	max_steps: int,
 	max_depth: int,
+	backtrack_on_body_failure: bool,
 	depth: int,
 	active_stack: tuple[tuple[str, tuple[str, ...], frozenset[str]], ...],
 ) -> tuple[
@@ -183,11 +188,14 @@ def _execute_subgoal(
 				decision_trace=current_decision_trace,
 				max_steps=max_steps,
 				max_depth=max_depth,
+				backtrack_on_body_failure=backtrack_on_body_failure,
 				depth=depth,
 				active_stack=active_stack + (frame,),
 			)
 			if failure is None:
 				return next_state, next_steps, next_trace, next_decision_trace, None
+			if not backtrack_on_body_failure:
+				return next_state, next_steps, next_trace, next_decision_trace, failure
 	return (
 		state,
 		steps,
@@ -210,6 +218,7 @@ def _execute_body(
 	decision_trace: tuple[frozenset[str], ...],
 	max_steps: int,
 	max_depth: int,
+	backtrack_on_body_failure: bool,
 	depth: int,
 	active_stack: tuple[tuple[str, tuple[str, ...], frozenset[str]], ...],
 ) -> tuple[
@@ -244,6 +253,7 @@ def _execute_body(
 				decision_trace=current_decision_trace,
 				max_steps=max_steps,
 				max_depth=max_depth,
+				backtrack_on_body_failure=backtrack_on_body_failure,
 				depth=depth + 1,
 				active_stack=active_stack,
 			)

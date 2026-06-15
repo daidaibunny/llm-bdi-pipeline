@@ -140,6 +140,15 @@ Examples:
 		default=[],
 		help="Optional external sketch policy as name=/path/to/policy.txt.",
 	)
+	domain_level_parser.add_argument(
+		"--synthesis-profile",
+		choices=("bootstrap", "paper"),
+		default="bootstrap",
+		help=(
+			"bootstrap permits schema-derived fallback; paper requires executable "
+			"external learned-policy bindings and bounded validation."
+		),
+	)
 	return parser
 
 
@@ -204,6 +213,7 @@ def main() -> None:
 			domain_file=domain_file,
 			training_problem_files=training_problems,
 			external_sketch_policies=external_policies,
+			synthesis_profile=args.synthesis_profile,
 		)
 		asl_text = render_plan_library_asl(result.plan_library)
 		if args.output_file:

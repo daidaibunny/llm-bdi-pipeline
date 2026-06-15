@@ -7,6 +7,10 @@ from domain_level_planning.library_verifier import (
 	validate_library_on_bounded_transition_systems,
 )
 from domain_level_planning.library_synthesis import synthesize_domain_level_asl_library
+from plan_library.models import AgentSpeakBodyStep
+from plan_library.models import AgentSpeakPlan
+from plan_library.models import AgentSpeakTrigger
+from plan_library.models import PlanLibrary
 from plan_library.rendering import render_plan_library_asl
 
 
@@ -51,29 +55,30 @@ def test_lifted_blocksworld_library_from_one_training_problem_solves_first_20() 
 	]
 	assert [len(result.steps) for result in results] == [
 		12,
-		18,
-		28,
-		34,
-		38,
-		62,
-		68,
+		30,
+		24,
+		32,
+		64,
+		66,
+		44,
 		88,
-		68,
+		76,
 		74,
 		94,
 		90,
-		92,
-		88,
-		110,
-		112,
-		134,
-		136,
+		90,
 		128,
-		182,
+		102,
+		116,
+		122,
+		126,
+		120,
+		172,
 	]
 
 	bounded_validation = result.report["bounded_validation"]
 	assert bounded_validation["passed"] is True
+	assert bounded_validation["execution_semantics"] == "deterministic_first_applicable_asl"
 	assert bounded_validation["checked_problem_count"] == 1
 	assert bounded_validation["checked_state_count"] > 1
 	assert bounded_validation["failure_count"] == 0
@@ -104,6 +109,48 @@ def test_bounded_verifier_checks_all_reachable_states_for_small_domain(
 	assert report.problem_reports[0].max_execution_steps == 1
 
 
+def test_executor_can_disable_planner_style_body_failure_backtracking(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_two_action_domain(tmp_path)
+	plan_library = PlanLibrary(
+		domain_name="two-action",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="bad_first",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("goal_done", "ready"),
+				body=(AgentSpeakBodyStep("action", "wrong"),),
+			),
+			AgentSpeakPlan(
+				plan_name="good_second",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("goal_done", "ready"),
+				body=(AgentSpeakBodyStep("action", "finish"),),
+			),
+		),
+	)
+
+	with_backtracking = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		backtrack_on_body_failure=True,
+	)
+	without_backtracking = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		backtrack_on_body_failure=False,
+	)
+
+	assert with_backtracking.solved is True
+	assert with_backtracking.steps == ("finish",)
+	assert without_backtracking.solved is False
+	assert "preconditions" in str(without_backtracking.failure_reason).lower()
+	assert "wrong" in str(without_backtracking.failure_reason)
+
+
 def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"
@@ -125,6 +172,42 @@ def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 		"""
 		(define (problem tiny-p1)
 		 (:domain tiny-switch)
+		 (:objects)
+		 (:init (ready))
+		 (:goal (and (done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_two_action_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain two-action)
+		 (:requirements :strips)
+		 (:predicates (ready) (wrong-ready) (done))
+		 (:action wrong
+		  :parameters ()
+		  :precondition (wrong-ready)
+		  :effect (done)
+		 )
+		 (:action finish
+		  :parameters ()
+		  :precondition (ready)
+		  :effect (done)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem two-action-p1)
+		 (:domain two-action)
 		 (:objects)
 		 (:init (ready))
 		 (:goal (and (done)))
