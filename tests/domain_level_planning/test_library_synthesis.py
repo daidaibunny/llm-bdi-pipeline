@@ -96,6 +96,44 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "main research gap" in gaps["G3"]["gap"]
 
 
+def test_unified_pipeline_reports_evidence_matrix_by_layer(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
+			),
+		),
+	)
+
+	matrix = result.report["evidence_matrix"]
+	layer_b = matrix["layer_b_atomic_modules"]
+	layer_c = matrix["layer_c_goal_composer"]
+	sources = matrix["sources"]
+	assert layer_b["target"] == "PDDL predicate achievement-goal modules"
+	assert layer_b["candidate_count"] >= layer_b["selected_rule_count"] >= 1
+	assert layer_b["training_transition_progress_constraint_count"] == 1
+	assert layer_b["training_goal_progression_count"] == 1
+	assert layer_c["target"] == "goal-conditioned conjunctive-goal composer rules"
+	assert layer_c["candidate_count"] >= layer_c["selected_rule_count"] >= 1
+	assert layer_c["training_state_coverage_constraint_count"] >= 1
+	assert sources["schema"]["candidate_count"] >= 1
+	assert sources["schema"]["layer_counts"]["atomic"] >= 1
+	assert sources["external_sketch"]["policy_count"] == 1
+	assert sources["external_sketch"]["candidate_count"] == 1
+	assert sources["external_sketch"]["compiled_rule_count"] == 1
+	assert sources["external_sketch"]["rejected_rule_count"] == 0
+	assert sources["training_transition_systems"]["problem_count"] == 1
+	assert sources["training_transition_systems"]["goal_progression_count"] == 1
+	assert sources["counterexample_transition_systems"]["problem_count"] == 0
+
+
 def test_unified_pipeline_reports_unsupported_external_features_without_guessing(
 	tmp_path: Path,
 ) -> None:

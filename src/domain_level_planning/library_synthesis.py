@@ -281,6 +281,21 @@ def synthesize_domain_level_asl_library(
 			report.to_dict()
 			for report in external_rule_reports
 		),
+		"evidence_matrix": _evidence_matrix(
+			schema_candidates=schema_candidates,
+			external_candidates=external_candidates,
+			candidate_rules=candidate_rules,
+			selected_rules=selection.rules,
+			output_rules=output_rules,
+			training_transition_evidence=transition_evidence,
+			counterexample_transition_evidence=counterexample_transition_evidence,
+			training_progress_rule_groups=training_progress_rule_groups,
+			counterexample_progress_rule_groups=counterexample_progress_rule_groups,
+			training_state_coverage_rule_groups=training_state_coverage_rule_groups,
+			counterexample_state_coverage_rule_groups=counterexample_state_coverage_rule_groups,
+			paper_policy_audits=paper_policy_audits,
+			external_rule_reports=external_rule_reports,
+		),
 		"paper_profile_ready": not paper_profile_failures,
 		"paper_profile_failures": tuple(paper_profile_failures),
 		"bounded_validation": (
@@ -520,6 +535,157 @@ def _candidate_source_counts(rules: Sequence[LiftedPlanRule]) -> dict[str, int]:
 		)
 		counts[source] = counts.get(source, 0) + 1
 	return counts
+
+
+def _evidence_matrix(
+	*,
+	schema_candidates: Sequence[LiftedPlanRule],
+	external_candidates: Sequence[LiftedPlanRule],
+	candidate_rules: Sequence[LiftedPlanRule],
+	selected_rules: Sequence[LiftedPlanRule],
+	output_rules: Sequence[LiftedPlanRule],
+	training_transition_evidence: Sequence[object],
+	counterexample_transition_evidence: Sequence[object],
+	training_progress_rule_groups: Sequence[object],
+	counterexample_progress_rule_groups: Sequence[object],
+	training_state_coverage_rule_groups: Sequence[object],
+	counterexample_state_coverage_rule_groups: Sequence[object],
+	paper_policy_audits: Sequence[PaperPolicyAuditReport],
+	external_rule_reports: Sequence[ExternalRuleBindingReport],
+) -> dict[str, object]:
+	"""Summarize which evidence sources support each synthesis layer."""
+
+	return {
+		"layer_b_atomic_modules": {
+			"target": "PDDL predicate achievement-goal modules",
+			"schema_candidate_count": _layer_count(schema_candidates, "atomic"),
+			"external_candidate_count": _layer_count(external_candidates, "atomic"),
+			"candidate_count": _layer_count(candidate_rules, "atomic"),
+			"selected_rule_count": _layer_count(selected_rules, "atomic"),
+			"output_rule_count": _layer_count(output_rules, "atomic"),
+			"training_transition_progress_constraint_count": len(
+				tuple(training_progress_rule_groups or ()),
+			),
+			"counterexample_transition_progress_constraint_count": len(
+				tuple(counterexample_progress_rule_groups or ()),
+			),
+			"training_goal_progression_count": sum(
+				len(getattr(evidence, "goal_progressions", ()) or ())
+				for evidence in tuple(training_transition_evidence or ())
+			),
+			"counterexample_goal_progression_count": sum(
+				len(getattr(evidence, "goal_progressions", ()) or ())
+				for evidence in tuple(counterexample_transition_evidence or ())
+			),
+		},
+		"layer_c_goal_composer": {
+			"target": "goal-conditioned conjunctive-goal composer rules",
+			"schema_candidate_count": _layer_count(schema_candidates, "composer"),
+			"external_candidate_count": _layer_count(external_candidates, "composer"),
+			"candidate_count": _layer_count(candidate_rules, "composer"),
+			"selected_rule_count": _layer_count(selected_rules, "composer"),
+			"output_rule_count": _layer_count(output_rules, "composer"),
+			"training_state_coverage_constraint_count": len(
+				tuple(training_state_coverage_rule_groups or ()),
+			),
+			"counterexample_state_coverage_constraint_count": len(
+				tuple(counterexample_state_coverage_rule_groups or ()),
+			),
+			"training_goal_ordering_count": sum(
+				len(getattr(evidence, "goal_orderings", ()) or ())
+				for evidence in tuple(training_transition_evidence or ())
+			),
+			"counterexample_goal_ordering_count": sum(
+				len(getattr(evidence, "goal_orderings", ()) or ())
+				for evidence in tuple(counterexample_transition_evidence or ())
+			),
+		},
+		"sources": {
+			"schema": {
+				"candidate_count": len(tuple(schema_candidates or ())),
+				"layer_counts": _layer_counts(schema_candidates),
+			},
+			"external_sketch": {
+				"policy_count": len(tuple(paper_policy_audits or ())),
+				"candidate_count": len(tuple(external_candidates or ())),
+				"layer_counts": _layer_counts(external_candidates),
+				"feature_count": sum(
+					audit.feature_count
+					for audit in tuple(paper_policy_audits or ())
+				),
+				"bound_feature_count": sum(
+					audit.bound_feature_count
+					for audit in tuple(paper_policy_audits or ())
+				),
+				"unsupported_feature_count": sum(
+					len(audit.unsupported_features)
+					for audit in tuple(paper_policy_audits or ())
+				),
+				"raw_rule_count": sum(
+					audit.rule_count
+					for audit in tuple(paper_policy_audits or ())
+				),
+				"compiled_rule_count": sum(
+					1
+					for report in tuple(external_rule_reports or ())
+					if report.compiled
+				),
+				"rejected_rule_count": sum(
+					1
+					for report in tuple(external_rule_reports or ())
+					if not report.compiled
+				),
+			},
+			"training_transition_systems": _transition_evidence_summary(
+				training_transition_evidence,
+			),
+			"counterexample_transition_systems": _transition_evidence_summary(
+				counterexample_transition_evidence,
+			),
+		},
+	}
+
+
+def _layer_count(rules: Sequence[LiftedPlanRule], layer: str) -> int:
+	return sum(1 for rule in tuple(rules or ()) if rule.layer == layer)
+
+
+def _layer_counts(rules: Sequence[LiftedPlanRule]) -> dict[str, int]:
+	counts: dict[str, int] = {}
+	for rule in tuple(rules or ()):
+		counts[rule.layer] = counts.get(rule.layer, 0) + 1
+	return counts
+
+
+def _transition_evidence_summary(evidence_items: Sequence[object]) -> dict[str, int]:
+	items = tuple(evidence_items or ())
+	return {
+		"problem_count": len(items),
+		"explored_state_count": sum(
+			int(getattr(evidence, "explored_state_count", 0) or 0)
+			for evidence in items
+		),
+		"explored_transition_count": sum(
+			int(getattr(evidence, "explored_transition_count", 0) or 0)
+			for evidence in items
+		),
+		"plan_length": sum(
+			int(getattr(evidence, "plan_length", 0) or 0)
+			for evidence in items
+		),
+		"goal_fact_count": sum(
+			len(getattr(evidence, "goal_facts", ()) or ())
+			for evidence in items
+		),
+		"goal_ordering_count": sum(
+			len(getattr(evidence, "goal_orderings", ()) or ())
+			for evidence in items
+		),
+		"goal_progression_count": sum(
+			len(getattr(evidence, "goal_progressions", ()) or ())
+			for evidence in items
+		),
+	}
 
 
 def _order_output_rules(rules: Sequence[LiftedPlanRule]) -> tuple[LiftedPlanRule, ...]:
