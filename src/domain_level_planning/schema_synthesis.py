@@ -20,8 +20,11 @@ from .models import LiftedCall, LiftedPlanRule, SketchSynthesisReport
 from .pddl_support import assert_compilable_pddl_files
 from .pddl_expression import LiftedLiteral, parameter_variables, parse_pddl_literals
 from .transition_system import (
+	State,
 	TrainingTransitionEvidence,
 	collect_training_transition_evidence,
+	fact_atom,
+	reachable_states_for_problem,
 )
 
 
@@ -72,6 +75,11 @@ def build_schema_only_goal_conditioned_library_from_pddl(
 		required_rule_groups=transition_progress_required_rule_groups(
 			candidate_rules,
 			transition_evidence,
+		)
+		+ composer_state_coverage_required_rule_groups(
+			candidate_rules,
+			domain=domain,
+			problem_files=training_problem_files,
 		),
 	)
 	_validate_selected_rules_against_transition_progress(
@@ -434,11 +442,68 @@ def _training_evidence(
 ) -> tuple[tuple[PDDLFact, ...], tuple[TrainingTransitionEvidence, ...]]:
 	facts: list[PDDLFact] = []
 	evidence: list[TrainingTransitionEvidence] = []
-	for problem_file in tuple(problem_files or ()):
+	for problem_position, problem_file in enumerate(tuple(problem_files or ()), start=1):
 		problem = PDDLParser.parse_problem(problem_file)
 		facts.extend(problem.goal_facts)
 		evidence.append(collect_training_transition_evidence(domain, problem))
 	return tuple(facts), tuple(evidence)
+
+
+def composer_state_coverage_required_rule_groups(
+	candidate_rules: Sequence[LiftedPlanRule],
+	*,
+	domain: object,
+	problem_files: Sequence[str | Path],
+	max_reachable_states: int = 20000,
+) -> tuple[ClingoRequiredRuleGroup, ...]:
+	"""Require the selected composer to cover every bounded non-goal state."""
+
+	groups: list[ClingoRequiredRuleGroup] = []
+	for problem_position, problem_file in enumerate(tuple(problem_files or ()), start=1):
+		problem = PDDLParser.parse_problem(problem_file)
+		goal_atoms = tuple(
+			fact_atom(fact.predicate, fact.args)
+			for fact in problem.goal_facts
+			if fact.is_positive
+		)
+		goal_facts = tuple(
+			fact_atom(f"goal_{fact.predicate}", fact.args)
+			for fact in problem.goal_facts
+			if fact.is_positive
+		)
+		for index, state in enumerate(
+			sorted(
+				reachable_states_for_problem(
+					domain,
+					problem,
+					max_states=max_reachable_states,
+				),
+				key=lambda item: tuple(sorted(item)),
+			),
+		):
+			if all(atom in state for atom in goal_atoms):
+				continue
+			rule_names = tuple(
+				rule.name
+				for rule in candidate_rules
+				if _composer_rule_is_applicable(
+					rule,
+					state=state,
+					goal_facts=goal_facts,
+				)
+			)
+			if not rule_names:
+				raise ValueError(
+					"No lifted composer candidate covers bounded reachable state "
+					f"{index} in problem {problem.name}.",
+				)
+			groups.append(
+				ClingoRequiredRuleGroup(
+					name=f"composer_state_{problem_position}_{problem.name}_{index}",
+					rule_names=rule_names,
+				),
+			)
+	return tuple(groups)
 
 
 def _rule(
@@ -631,6 +696,141 @@ def _context_literal_holds(
 	return _ground_context_atom(text, substitution) in state
 
 
+def _composer_rule_is_applicable(
+	rule: LiftedPlanRule,
+	*,
+	state: State,
+	goal_facts: tuple[str, ...],
+) -> bool:
+	if rule.layer != "composer":
+		return False
+	if rule.head.symbol != "g" or rule.head.arguments:
+		return False
+	return bool(
+		_context_substitutions(
+			contexts=rule.context,
+			state=state,
+			goal_facts=goal_facts,
+		),
+	)
+
+
+def _context_substitutions(
+	*,
+	contexts: Sequence[str],
+	state: State,
+	goal_facts: tuple[str, ...],
+) -> tuple[dict[str, str], ...]:
+	substitutions: tuple[dict[str, str], ...] = ({},)
+	for context in contexts:
+		next_substitutions: list[dict[str, str]] = []
+		for candidate in substitutions:
+			next_substitutions.extend(
+				_context_literal_substitutions(
+					context=context,
+					substitution=candidate,
+					state=state,
+					goal_facts=goal_facts,
+				),
+			)
+		substitutions = tuple(next_substitutions)
+		if not substitutions:
+			return ()
+	return substitutions
+
+
+def _context_literal_substitutions(
+	*,
+	context: str,
+	substitution: dict[str, str],
+	state: State,
+	goal_facts: tuple[str, ...],
+) -> tuple[dict[str, str], ...]:
+	text = str(context or "").strip()
+	if not text or text.lower() == "true":
+		return (dict(substitution),)
+	if "!=" in text:
+		left, right = text.split("!=", 1)
+		return (
+			(dict(substitution),)
+			if _ground_term(left, substitution) != _ground_term(right, substitution)
+			else ()
+		)
+	if "\\==" in text:
+		left, right = text.split("\\==", 1)
+		return (
+			(dict(substitution),)
+			if _ground_term(left, substitution) != _ground_term(right, substitution)
+			else ()
+		)
+	if "==" in text:
+		left, right = text.split("==", 1)
+		return (
+			(dict(substitution),)
+			if _ground_term(left, substitution) == _ground_term(right, substitution)
+			else ()
+		)
+	if text.lower().startswith("not "):
+		atom = text[4:].strip()
+		if _contains_unbound_variables(atom, substitution):
+			return ()
+		return (
+			(dict(substitution),)
+			if _ground_context_atom(atom, substitution) not in state
+			else ()
+		)
+	facts = goal_facts if text.startswith("goal_") else tuple(state)
+	return tuple(
+		merged
+		for fact in facts
+		if (merged := _match_atom(text, fact, substitution)) is not None
+	)
+
+
+def _match_atom(
+	pattern_atom: str,
+	fact_atom_value: str,
+	substitution: dict[str, str],
+) -> dict[str, str] | None:
+	pattern_predicate, pattern_arguments = _parse_atom(pattern_atom)
+	fact_predicate, fact_arguments = _parse_atom(fact_atom_value)
+	if pattern_predicate != fact_predicate:
+		return None
+	if len(pattern_arguments) != len(fact_arguments):
+		return None
+	merged = dict(substitution)
+	for pattern, value in zip(pattern_arguments, fact_arguments):
+		if _is_variable(pattern):
+			if pattern in merged and merged[pattern] != value:
+				return None
+			merged[pattern] = value
+		elif pattern != value:
+			return None
+	return merged
+
+
+def _parse_atom(atom: str) -> tuple[str, tuple[str, ...]]:
+	text = str(atom or "").strip()
+	if "(" not in text:
+		return text, ()
+	if not text.endswith(")"):
+		return text, ()
+	predicate, raw_arguments = text.split("(", 1)
+	return (
+		predicate.strip(),
+		tuple(
+			argument.strip()
+			for argument in raw_arguments[:-1].split(",")
+			if argument.strip()
+		),
+	)
+
+
+def _contains_unbound_variables(atom: str, substitution: dict[str, str]) -> bool:
+	_, arguments = _parse_atom(atom)
+	return any(_is_variable(argument) and argument not in substitution for argument in arguments)
+
+
 def _ground_context_atom(atom: str, substitution: dict[str, str]) -> str:
 	text = str(atom or "").strip()
 	if "(" not in text:
@@ -649,6 +849,11 @@ def _ground_context_atom(atom: str, substitution: dict[str, str]) -> str:
 def _ground_term(term: str, substitution: dict[str, str]) -> str:
 	text = str(term or "").strip()
 	return substitution.get(text, text)
+
+
+def _is_variable(token: str) -> bool:
+	text = str(token or "").strip()
+	return bool(text) and text[0].isupper()
 
 
 def _goal_fact_signature(fact: PDDLFact) -> str:

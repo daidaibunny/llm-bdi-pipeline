@@ -67,6 +67,8 @@
 | R19 | Recoverable learner-sketches role-count features bind without guessing. | `n_count(r_primitive(P,0,1))` is compiled to lifted predicate subgoal/action-effect candidates; object-specific distance features remain rejected. | Done |
 | R20 | Bounded transition progress constrains ASP selection. | Observed goal-progress transitions are converted into required rule groups before Clingo selection, with post-selection validation retained as a defensive check. | Done |
 | R21 | Counterexamples constrain synthesis without polluting base training data. | Failed held-out problems can be passed as counterexample problem files; their transition evidence becomes separate selector constraints and report fields. | Done |
+| R22 | Bounded sketch-style state coverage constrains ASP selection. | Every bounded reachable non-goal training or counterexample state must be covered by at least one applicable lifted `+!g` composer candidate before Clingo can select a library. | Done |
+| R23 | Nullary DLPlan boolean features bind conservatively. | `b_nullary(P)` features compile to PDDL predicate contexts and positive subgoal effects, while negative effects require explicit PDDL delete-action candidates. | Done |
 
 Remaining research hardening after the first unified architecture:
 
@@ -74,12 +76,15 @@ Remaining research hardening after the first unified architecture:
   synthesis pipeline.
 - [x] Move bounded transition-progress checks directly into ASP constraints instead of
   selecting first and validating after selection.
-- [ ] Promote learner-sketches-style bounded-width ASP constraints from post-hoc
+- [x] Promote learner-sketches-style bounded-width ASP constraints from post-hoc
   validation into the main synthesis objective.
 - [x] Add an automatic counterexample-guided refinement loop for held-out failures.
 - [x] Promote counterexample constraints into the ASP objective instead of adding
   whole failed problems only.
 - [x] Expand DLPlan feature binding coverage to recover plain primitive role-count
   features used in learner-sketches Blocksworld policies.
-- [ ] Expand DLPlan feature binding coverage beyond currently recoverable predicate,
-  role-count, and goal-aligned role patterns.
+- [x] Expand DLPlan feature binding coverage beyond currently recoverable predicate,
+  role-count, and goal-aligned role patterns with nullary boolean feature support.
+- [ ] Continue auditing additional DLPlan expressions from external policies; only
+  bind patterns whose lifted PDDL meaning is recoverable without object-specific
+  guessing.

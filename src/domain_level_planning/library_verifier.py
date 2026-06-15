@@ -8,7 +8,6 @@ cycles in high-level decision traces, and ensure goal states are fixed points.
 
 from __future__ import annotations
 
-from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -18,11 +17,8 @@ from utils.pddl_parser import PDDLDomain, PDDLParser, PDDLProblem
 
 from .library_executor import execute_library_from_state
 from .transition_system import State
-from .transition_system import apply_ground_action
 from .transition_system import fact_atom
-from .transition_system import ground_actions_for_problem
-from .transition_system import initial_state_from_problem
-from .transition_system import is_action_applicable
+from .transition_system import reachable_states_for_problem
 from .transition_system import satisfies_atoms
 
 
@@ -237,26 +233,13 @@ def _reachable_states(
 	problem: PDDLProblem,
 	max_states: int,
 ) -> frozenset[State]:
-	ground_actions = ground_actions_for_problem(domain.actions, problem)
-	initial_state = initial_state_from_problem(problem)
-	queue = deque([initial_state])
-	visited: set[State] = {initial_state}
-	while queue:
-		state = queue.popleft()
-		for action in ground_actions:
-			if not is_action_applicable(state, action):
-				continue
-			next_state = apply_ground_action(state, action)
-			if next_state in visited:
-				continue
-			visited.add(next_state)
-			if len(visited) > max_states:
-				raise ValueError(
-					f"Bounded library validation exceeded {max_states} reachable states "
-					f"for problem {problem.name}."
-				)
-			queue.append(next_state)
-	return frozenset(visited)
+	try:
+		return reachable_states_for_problem(domain, problem, max_states=max_states)
+	except ValueError as error:
+		raise ValueError(
+			f"Bounded library validation exceeded {max_states} reachable states "
+			f"for problem {problem.name}.",
+		) from error
 
 
 def _execution_failures(

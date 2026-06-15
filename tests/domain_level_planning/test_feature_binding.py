@@ -133,6 +133,62 @@ def test_primitive_role_count_reports_decreasing_action_candidates(
 	assert candidates[0].body[0].arguments == ("X", "Y")
 
 
+def test_bind_nullary_boolean_feature_to_lifted_subgoal(tmp_path: Path) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans (f1 "b_nullary(handempty)"))
+		(:numericals )
+		(:rule (:conditions (:c_b_neg f1)) (:effects (:e_b_pos f1)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+	plan_library = compile_bound_sketch_to_asl_library(
+		domain_name="generic-blocks",
+		policy=policy,
+		target=SketchCompilationTarget(symbol="g", recurse=False),
+		feature_bindings=report.bindings,
+	)
+	asl = render_plan_library_asl(plan_library)
+
+	assert report.unsupported_features == {}
+	assert "+!g : not handempty <-" in asl
+	assert "\t!handempty." in asl
+
+
+def test_nullary_boolean_feature_reports_delete_action_candidates(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans (f1 "b_nullary(handempty)"))
+		(:numericals )
+		(:rule (:conditions (:c_b_pos f1)) (:effects (:e_b_neg f1)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	candidates = report.action_effect_candidates["f1"]
+	assert tuple(candidate.action_name for candidate in candidates) == ("pick",)
+	assert candidates[0].operator == "e_b_neg"
+	assert candidates[0].effect_predicate == "handempty"
+	assert candidates[0].context == ("handempty", "clear(X)")
+	assert candidates[0].body[0].arguments == ("X",)
+
+
 def test_binding_reports_unsupported_complex_dlplan_features(tmp_path: Path) -> None:
 	domain = _write_domain(tmp_path)
 	policy = parse_dlplan_policy(
@@ -361,6 +417,11 @@ def _write_domain(tmp_path: Path, *, include_place: bool = True) -> Path:
 		  :parameters (?x - block)
 		  :precondition (holding ?x)
 		  :effect (and (handempty) (not (holding ?x)))
+		 )
+		 (:action pick
+		  :parameters (?x - block)
+		  :precondition (and (handempty) (clear ?x))
+		  :effect (and (holding ?x) (not (handempty)))
 		 )
 		 (:action remove
 		  :parameters (?x - block ?y - block)

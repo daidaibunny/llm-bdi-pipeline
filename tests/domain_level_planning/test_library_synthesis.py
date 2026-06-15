@@ -275,6 +275,8 @@ def test_counterexample_problems_add_selector_constraints_without_polluting_trai
 	assert result.report["counterexample_problem_count"] == 1
 	assert result.report["selector_training_progress_constraint_count"] == 1
 	assert result.report["selector_counterexample_progress_constraint_count"] == 2
+	assert result.report["selector_training_state_coverage_constraint_count"] > 0
+	assert result.report["selector_counterexample_state_coverage_constraint_count"] > 0
 	assert result.report["bounded_validation"]["checked_problem_count"] == 2
 	transition_system_names = tuple(
 		transition["problem_name"]

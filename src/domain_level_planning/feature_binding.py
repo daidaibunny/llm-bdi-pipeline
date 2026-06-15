@@ -69,7 +69,7 @@ def bind_recoverable_dlplan_features(
 			unsupported[feature_id] = expression
 			continue
 		bindings[feature_id] = binding
-		predicate = _primitive_count_predicate(expression)
+		predicate = _effect_candidate_predicate(expression)
 		if predicate is not None:
 			candidates = _action_effect_candidates(
 				feature_id=feature_id,
@@ -178,7 +178,13 @@ def _bind_feature_expression(
 				"c_b_pos": (predicate,),
 				"c_b_neg": (f"not {predicate}",),
 			},
-			effect_body={},
+			effect_contexts={
+				"e_b_pos": (f"not {predicate}",),
+				"e_b_neg": (predicate,),
+			},
+			effect_body={
+				"e_b_pos": (AgentSpeakBodyStep("subgoal", predicate, ()),),
+			},
 		)
 
 	primitive_concept = re.fullmatch(r"n_count\(c_primitive\(([^(),]+),0\)\)", text)
@@ -282,10 +288,11 @@ def _action_effect_candidates(
 				continue
 			if effect.is_positive:
 				continue
+			operator = "e_b_neg" if not effect.arguments else "e_n_dec"
 			candidates.append(
 				ActionEffectBindingCandidate(
 					feature_id=feature_id,
-					operator="e_n_dec",
+					operator=operator,
 					effect_predicate=effect.predicate,
 					add_effects=add_effects,
 					action_name=action.name,
@@ -426,6 +433,15 @@ def _primitive_count_predicate(expression: str) -> str | None:
 	if not match:
 		match = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
 	return match.group(1) if match else None
+
+
+def _nullary_predicate(expression: str) -> str | None:
+	match = re.fullmatch(r"b_nullary\(([^(),]+)\)", _normalize_expression(expression))
+	return match.group(1) if match else None
+
+
+def _effect_candidate_predicate(expression: str) -> str | None:
+	return _primitive_count_predicate(expression) or _nullary_predicate(expression)
 
 
 def _arguments_for_arity(arity: int) -> tuple[str, ...]:

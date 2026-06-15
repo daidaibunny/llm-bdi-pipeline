@@ -185,6 +185,36 @@ def apply_ground_action(state: State, action: GroundAction) -> State:
 	return _apply_action(state, action)
 
 
+def reachable_states_for_problem(
+	domain: PDDLDomain,
+	problem: PDDLProblem,
+	*,
+	max_states: int = 20000,
+) -> frozenset[State]:
+	"""Enumerate the bounded reachable STRIPS states for one grounded problem."""
+
+	ground_actions = ground_actions_for_problem(domain.actions, problem)
+	initial_state = initial_state_from_problem(problem)
+	queue = deque([initial_state])
+	visited: set[State] = {initial_state}
+	while queue:
+		state = queue.popleft()
+		for action in ground_actions:
+			if not is_action_applicable(state, action):
+				continue
+			next_state = apply_ground_action(state, action)
+			if next_state in visited:
+				continue
+			visited.add(next_state)
+			if len(visited) > max_states:
+				raise ValueError(
+					f"Reachable-state exploration exceeded {max_states} states "
+					f"for problem {problem.name}."
+				)
+			queue.append(next_state)
+	return frozenset(visited)
+
+
 def satisfies_atoms(state: State, atoms: tuple[str, ...]) -> bool:
 	"""Return whether all atoms hold in a STRIPS state."""
 

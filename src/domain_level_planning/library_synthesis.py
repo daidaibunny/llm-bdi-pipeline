@@ -24,6 +24,7 @@ from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
 from .schema_synthesis import _training_evidence
 from .schema_synthesis import _validate_selected_rules_against_transition_progress
+from .schema_synthesis import composer_state_coverage_required_rule_groups
 from .schema_synthesis import transition_progress_required_rule_groups
 
 
@@ -147,14 +148,28 @@ def synthesize_domain_level_asl_library(
 		candidate_rules,
 		counterexample_transition_evidence,
 	)
+	training_state_coverage_rule_groups = composer_state_coverage_required_rule_groups(
+		candidate_rules,
+		domain=domain,
+		problem_files=training_problem_files,
+	)
+	counterexample_state_coverage_rule_groups = composer_state_coverage_required_rule_groups(
+		candidate_rules,
+		domain=domain,
+		problem_files=counterexample_problem_files,
+	)
 	progress_rule_groups = (
 		*training_progress_rule_groups,
 		*counterexample_progress_rule_groups,
 	)
+	state_coverage_rule_groups = (
+		*training_state_coverage_rule_groups,
+		*counterexample_state_coverage_rule_groups,
+	)
 	selection = ClingoSketchRuleSelector().select(
 		candidate_rules=candidate_rules,
 		required_capabilities=required_capabilities,
-		required_rule_groups=progress_rule_groups,
+		required_rule_groups=(*progress_rule_groups, *state_coverage_rule_groups),
 	)
 	_validate_selected_rules_against_transition_progress(
 		selection.rules,
@@ -238,6 +253,13 @@ def synthesize_domain_level_asl_library(
 		"selector_training_progress_constraint_count": len(training_progress_rule_groups),
 		"selector_counterexample_progress_constraint_count": len(
 			counterexample_progress_rule_groups,
+		),
+		"selector_state_coverage_constraint_count": len(state_coverage_rule_groups),
+		"selector_training_state_coverage_constraint_count": len(
+			training_state_coverage_rule_groups,
+		),
+		"selector_counterexample_state_coverage_constraint_count": len(
+			counterexample_state_coverage_rule_groups,
 		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),

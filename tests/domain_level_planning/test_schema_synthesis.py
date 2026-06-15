@@ -8,7 +8,9 @@ from domain_level_planning import (
 )
 from domain_level_planning.schema_synthesis import _goal_ordering_rules_from_evidence
 from domain_level_planning.schema_synthesis import _validate_selected_rules_against_transition_progress
+from domain_level_planning.schema_synthesis import composer_state_coverage_required_rule_groups
 from domain_level_planning.schema_synthesis import transition_progress_required_rule_groups
+from utils.pddl_parser import PDDLParser
 from domain_level_planning.models import LiftedCall, LiftedPlanRule
 from domain_level_planning.transition_system import TrainingTransitionEvidence
 from domain_level_planning.transition_system import GoalProgressEvidence
@@ -196,6 +198,38 @@ def test_transition_progress_evidence_becomes_selector_constraints() -> None:
 
 	assert len(groups) == 1
 	assert groups[0].rule_names == ("done_via_finish",)
+
+
+def test_composer_state_coverage_becomes_selector_constraints(tmp_path: Path) -> None:
+	domain_file, problem_file = _write_logistics_domain_and_problem(tmp_path)
+	domain = PDDLParser.parse_domain(domain_file)
+	applicable_rule = LiftedPlanRule(
+		name="g_satisfy_at",
+		head=LiftedCall("subgoal", "g", ()),
+		context=("goal_at(P, L)", "not at(P, L)"),
+		body=(LiftedCall("subgoal", "at", ("P", "L")),),
+		layer="composer",
+		capabilities=("compose_goal_at",),
+		cost=5,
+	)
+	inapplicable_rule = LiftedPlanRule(
+		name="g_bad_route",
+		head=LiftedCall("subgoal", "g", ()),
+		context=("goal_at(P, L)", "blocked(P)"),
+		body=(LiftedCall("subgoal", "at", ("P", "L")),),
+		layer="composer",
+		capabilities=("compose_goal_at",),
+		cost=1,
+	)
+
+	groups = composer_state_coverage_required_rule_groups(
+		(inapplicable_rule, applicable_rule),
+		domain=domain,
+		problem_files=(problem_file,),
+	)
+
+	assert len(groups) == 1
+	assert groups[0].rule_names == ("g_satisfy_at",)
 
 
 def test_unsupported_negative_training_goal_fails_instead_of_silent_fallback(
