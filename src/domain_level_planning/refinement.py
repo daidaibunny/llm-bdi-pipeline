@@ -50,6 +50,7 @@ class RefinementRoundReport:
 
 	round_index: int
 	training_problem_files: tuple[str, ...]
+	counterexample_problem_files: tuple[str, ...]
 	heldout_evaluations: tuple[HeldoutProblemEvaluation, ...]
 	added_counterexample_problem_files: tuple[str, ...]
 	synthesis_report: dict[str, object]
@@ -58,6 +59,7 @@ class RefinementRoundReport:
 		return {
 			"round_index": self.round_index,
 			"training_problem_files": list(self.training_problem_files),
+			"counterexample_problem_files": list(self.counterexample_problem_files),
 			"heldout_evaluations": [
 				evaluation.to_dict()
 				for evaluation in self.heldout_evaluations
@@ -101,6 +103,7 @@ def synthesize_with_counterexample_refinement(
 	if max_refinement_rounds < 0:
 		raise ValueError("max_refinement_rounds must be non-negative.")
 	current_training = _unique_paths(training_problem_files)
+	counterexample_constraints = ()
 	heldout_files = _unique_paths(heldout_problem_files)
 	rounds: list[RefinementRoundReport] = []
 	final_result: UnifiedSynthesisResult | None = None
@@ -110,6 +113,7 @@ def synthesize_with_counterexample_refinement(
 		result = synthesize_domain_level_asl_library(
 			domain_file=domain_file,
 			training_problem_files=current_training,
+			counterexample_problem_files=counterexample_constraints,
 			external_sketch_policies=external_sketch_policies,
 			synthesis_profile=synthesis_profile,
 		)
@@ -135,6 +139,7 @@ def synthesize_with_counterexample_refinement(
 			RefinementRoundReport(
 				round_index=round_index,
 				training_problem_files=current_training,
+				counterexample_problem_files=counterexample_constraints,
 				heldout_evaluations=heldout_evaluations,
 				added_counterexample_problem_files=added_files,
 				synthesis_report=dict(result.report),
@@ -145,7 +150,9 @@ def synthesize_with_counterexample_refinement(
 			break
 		if round_index >= max_refinement_rounds or not added_files:
 			break
-		current_training = _unique_paths((*current_training, *added_files))
+		counterexample_constraints = _unique_paths(
+			(*counterexample_constraints, *added_files),
+		)
 
 	if final_result is None:
 		raise RuntimeError("Counterexample-guided synthesis produced no result.")

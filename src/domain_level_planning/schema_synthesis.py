@@ -15,7 +15,7 @@ from plan_library.models import (
 )
 from utils.pddl_parser import PDDLFact, PDDLParser, PDDLPredicate
 
-from .clingo_backend import ClingoSketchRuleSelector
+from .clingo_backend import ClingoRequiredRuleGroup, ClingoSketchRuleSelector
 from .models import LiftedCall, LiftedPlanRule, SketchSynthesisReport
 from .pddl_support import assert_compilable_pddl_files
 from .pddl_expression import LiftedLiteral, parameter_variables, parse_pddl_literals
@@ -69,6 +69,10 @@ def build_schema_only_goal_conditioned_library_from_pddl(
 	selection = ClingoSketchRuleSelector().select(
 		candidate_rules=candidate_rules,
 		required_capabilities=required_capabilities,
+		required_rule_groups=transition_progress_required_rule_groups(
+			candidate_rules,
+			transition_evidence,
+		),
 	)
 	_validate_selected_rules_against_transition_progress(
 		selection.rules,
@@ -513,36 +517,74 @@ def _validate_selected_rules_against_transition_progress(
 		)
 
 
+def transition_progress_required_rule_groups(
+	candidate_rules: Sequence[LiftedPlanRule],
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+) -> tuple[ClingoRequiredRuleGroup, ...]:
+	"""Return ASP selector constraints for observed training progress transitions."""
+
+	groups: list[ClingoRequiredRuleGroup] = []
+	for evidence in transition_evidence:
+		for progression in evidence.goal_progressions:
+			rule_names = tuple(
+				rule.name
+				for rule in candidate_rules
+				if _rule_covers_progression(rule, progression)
+			)
+			if not rule_names:
+				raise ValueError(
+					"No lifted candidate rule covers bounded transition-progress evidence: "
+					f"{evidence.problem_name}: {progression.goal_fact.to_signature()} via "
+					f"{progression.action_signature} before step {progression.step_index}.",
+				)
+			groups.append(
+				ClingoRequiredRuleGroup(
+					name=(
+						f"progress_{evidence.problem_name}_{progression.step_index}_"
+						f"{progression.goal_fact.predicate}"
+					),
+					rule_names=rule_names,
+				),
+			)
+	return tuple(groups)
+
+
 def _has_selected_progress_rule(
 	selected_rules: Sequence[LiftedPlanRule],
 	progression,
 ) -> bool:
 	for rule in selected_rules:
-		if rule.layer != "atomic":
+		if _rule_covers_progression(rule, progression):
+			return True
+	return False
+
+
+def _rule_covers_progression(rule: LiftedPlanRule, progression) -> bool:
+	if rule.layer != "atomic":
+		return False
+	if rule.head.symbol != progression.goal_fact.predicate:
+		return False
+	substitution = _substitution_from_head(rule, progression.goal_fact)
+	if substitution is None:
+		return False
+	for step in rule.body:
+		if step.kind != "action" or step.symbol != progression.action_name:
 			continue
-		if rule.head.symbol != progression.goal_fact.predicate:
+		action_substitution = _merge_substitution(
+			substitution,
+			dict(zip(step.arguments, progression.action_arguments)),
+		)
+		if action_substitution is None:
 			continue
-		substitution = _substitution_from_head(rule, progression.goal_fact)
-		if substitution is None:
-			continue
-		for step in rule.body:
-			if step.kind != "action" or step.symbol != progression.action_name:
-				continue
-			action_substitution = _merge_substitution(
-				substitution,
-				dict(zip(step.arguments, progression.action_arguments)),
+		if all(
+			_context_literal_holds(
+				literal,
+				action_substitution,
+				frozenset(progression.before_state),
 			)
-			if action_substitution is None:
-				continue
-			if all(
-				_context_literal_holds(
-					literal,
-					action_substitution,
-					frozenset(progression.before_state),
-				)
-				for literal in rule.context
-			):
-				return True
+			for literal in rule.context
+		):
+			return True
 	return False
 
 

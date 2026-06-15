@@ -24,6 +24,7 @@ from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
 from .schema_synthesis import _training_evidence
 from .schema_synthesis import _validate_selected_rules_against_transition_progress
+from .schema_synthesis import transition_progress_required_rule_groups
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,7 @@ def synthesize_domain_level_asl_library(
 	*,
 	domain_file: str | Path,
 	training_problem_files: Sequence[str | Path] = (),
+	counterexample_problem_files: Sequence[str | Path] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
 	learner_sketches_backend: BackendManifest | None = None,
 	learner_sketches_runs: Sequence[LearnerSketchesRunConfig] = (),
@@ -79,19 +81,32 @@ def synthesize_domain_level_asl_library(
 	"""Synthesize one lifted domain-level ASL library through the unified path."""
 
 	profile = _normalize_synthesis_profile(synthesis_profile)
+	training_problem_files = tuple(training_problem_files or ())
+	counterexample_problem_files = tuple(counterexample_problem_files or ())
 	assert_compilable_pddl_files(
 		domain_file=domain_file,
-		problem_files=tuple(training_problem_files or ()),
+		problem_files=tuple(
+			dict.fromkeys((*training_problem_files, *counterexample_problem_files)),
+		),
 	)
 	domain = PDDLParser.parse_domain(domain_file)
 	training_goal_facts, transition_evidence = _training_evidence(
 		domain=domain,
 		problem_files=training_problem_files,
 	)
+	counterexample_goal_facts, counterexample_transition_evidence = _training_evidence(
+		domain=domain,
+		problem_files=counterexample_problem_files,
+	)
+	all_goal_facts = (*training_goal_facts, *counterexample_goal_facts)
+	all_transition_evidence = (
+		*transition_evidence,
+		*counterexample_transition_evidence,
+	)
 	schema_candidates = _candidate_rules_from_domain(
 		domain.predicates,
 		domain.actions,
-		transition_evidence=transition_evidence,
+		transition_evidence=all_transition_evidence,
 	)
 	backend_run_results, learned_sources = _run_requested_learner_sketches(
 		backend=learner_sketches_backend,
@@ -113,7 +128,7 @@ def synthesize_domain_level_asl_library(
 	required_capabilities = _required_capabilities(
 		predicates=domain.predicates,
 		candidate_rules=candidate_rules,
-		training_goal_facts=training_goal_facts,
+		training_goal_facts=all_goal_facts,
 	)
 	if profile == "paper":
 		required_capabilities = tuple(
@@ -124,13 +139,26 @@ def synthesize_domain_level_asl_library(
 				),
 			),
 		)
+	training_progress_rule_groups = transition_progress_required_rule_groups(
+		candidate_rules,
+		transition_evidence,
+	)
+	counterexample_progress_rule_groups = transition_progress_required_rule_groups(
+		candidate_rules,
+		counterexample_transition_evidence,
+	)
+	progress_rule_groups = (
+		*training_progress_rule_groups,
+		*counterexample_progress_rule_groups,
+	)
 	selection = ClingoSketchRuleSelector().select(
 		candidate_rules=candidate_rules,
 		required_capabilities=required_capabilities,
+		required_rule_groups=progress_rule_groups,
 	)
 	_validate_selected_rules_against_transition_progress(
 		selection.rules,
-		transition_evidence,
+		all_transition_evidence,
 	)
 	output_rules = _order_output_rules(
 		_deduplicate_rules(external_candidates + selection.rules),
@@ -146,16 +174,27 @@ def synthesize_domain_level_asl_library(
 			"required_capabilities": tuple(required_capabilities),
 			"transition_systems": tuple(
 				evidence.to_dict()
+				for evidence in all_transition_evidence
+			),
+			"training_transition_systems": tuple(
+				evidence.to_dict()
 				for evidence in transition_evidence
+			),
+			"counterexample_transition_systems": tuple(
+				evidence.to_dict()
+				for evidence in counterexample_transition_evidence
 			),
 		},
 	)
 	bounded_validation = None
-	if training_problem_files:
+	validation_problem_files = tuple(
+		dict.fromkeys((*training_problem_files, *counterexample_problem_files)),
+	)
+	if validation_problem_files:
 		bounded_validation = validate_library_on_bounded_transition_systems(
 			plan_library=plan_library,
 			domain_file=domain_file,
-			problem_files=tuple(training_problem_files),
+			problem_files=validation_problem_files,
 		)
 	paper_profile_failures = _paper_profile_failures(
 		training_problem_files=training_problem_files,
@@ -188,11 +227,18 @@ def synthesize_domain_level_asl_library(
 		),
 		"external_policy_count": len(all_external_sketch_policies),
 		"manual_external_policy_count": len(tuple(external_sketch_policies or ())),
+		"training_problem_count": len(training_problem_files),
+		"counterexample_problem_count": len(counterexample_problem_files),
 		"schema_candidate_count": len(schema_candidates),
 		"external_candidate_count": len(external_candidates),
 		"candidate_count": len(candidate_rules),
 		"selected_rule_count": len(selection.rules),
 		"output_rule_count": len(output_rules),
+		"selector_progress_constraint_count": len(progress_rule_groups),
+		"selector_training_progress_constraint_count": len(training_progress_rule_groups),
+		"selector_counterexample_progress_constraint_count": len(
+			counterexample_progress_rule_groups,
+		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
 		"selected_candidate_sources": _candidate_source_counts(selection.rules),

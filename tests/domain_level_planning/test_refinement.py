@@ -29,7 +29,16 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 		str(dependent_problem.resolve()),
 	)
 	assert refined.rounds[1].heldout_evaluations[0].solved is True
-	assert str(dependent_problem.resolve()) in refined.rounds[1].training_problem_files
+	assert str(dependent_problem.resolve()) not in refined.rounds[1].training_problem_files
+	assert refined.rounds[1].counterexample_problem_files == (
+		str(dependent_problem.resolve()),
+	)
+	assert (
+		refined.rounds[1].synthesis_report[
+			"selector_counterexample_progress_constraint_count"
+		]
+		> 0
+	)
 
 	asl = render_plan_library_asl(refined.final_result.plan_library)
 	assert "+!g : goal_z_base(Y) & goal_a_top(X, Y) & not z_base(Y) <-" in asl

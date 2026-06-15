@@ -8,7 +8,11 @@ DFA pipeline.
 
 from __future__ import annotations
 
-from .clingo_backend import ClingoSelectionResult, ClingoSketchRuleSelector
+from .clingo_backend import (
+	ClingoRequiredRuleGroup,
+	ClingoSelectionResult,
+	ClingoSketchRuleSelector,
+)
 from .gp_backends import (
 	BackendManifest,
 	GPBackendRunner,
@@ -80,6 +84,7 @@ from .sketch_asl_compiler import (
 __all__ = [
 	"LiftedCall",
 	"LiftedPlanRule",
+	"ClingoRequiredRuleGroup",
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
 	"ActionEffectBindingCandidate",

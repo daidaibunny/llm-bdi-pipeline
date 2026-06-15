@@ -8,6 +8,7 @@ from domain_level_planning import (
 )
 from domain_level_planning.schema_synthesis import _goal_ordering_rules_from_evidence
 from domain_level_planning.schema_synthesis import _validate_selected_rules_against_transition_progress
+from domain_level_planning.schema_synthesis import transition_progress_required_rule_groups
 from domain_level_planning.models import LiftedCall, LiftedPlanRule
 from domain_level_planning.transition_system import TrainingTransitionEvidence
 from domain_level_planning.transition_system import GoalProgressEvidence
@@ -150,6 +151,51 @@ def test_transition_progress_validation_rejects_selected_rules_with_wrong_action
 		assert "fails bounded transition-progress validation" in str(exc)
 	else:
 		raise AssertionError("Expected wrong selected action to fail validation.")
+
+
+def test_transition_progress_evidence_becomes_selector_constraints() -> None:
+	evidence = TrainingTransitionEvidence(
+		problem_name="p1",
+		object_count=1,
+		explored_state_count=2,
+		explored_transition_count=1,
+		plan_length=1,
+		goal_facts=("goal_done(a)",),
+		goal_orderings=(),
+		goal_progressions=(
+			GoalProgressEvidence(
+				goal_fact=PDDLFact("done", ["a"]),
+				action_name="finish",
+				action_arguments=("a",),
+				action_signature="finish(a)",
+				step_index=1,
+				before_state=("ready(a)",),
+				after_state=("done(a)", "ready(a)"),
+			),
+		),
+	)
+	matching_rule = LiftedPlanRule(
+		name="done_via_finish",
+		head=LiftedCall("subgoal", "done", ("X",)),
+		context=("ready(X)",),
+		body=(LiftedCall("action", "finish", ("X",)),),
+		layer="atomic",
+	)
+	wrong_rule = LiftedPlanRule(
+		name="done_via_wait",
+		head=LiftedCall("subgoal", "done", ("X",)),
+		context=("ready(X)",),
+		body=(LiftedCall("action", "wait", ("X",)),),
+		layer="atomic",
+	)
+
+	groups = transition_progress_required_rule_groups(
+		(wrong_rule, matching_rule),
+		(evidence,),
+	)
+
+	assert len(groups) == 1
+	assert groups[0].rule_names == ("done_via_finish",)
 
 
 def test_unsupported_negative_training_goal_fails_instead_of_silent_fallback(

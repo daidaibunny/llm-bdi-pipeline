@@ -65,17 +65,19 @@
 | R17 | Execution semantics are explicit. | The executor can run planner-style backtracking validation or deterministic first-applicable ASL execution for held-out refinement. | Done |
 | R18 | learner-sketches can be invoked as a guarded synthesis backend. | The unified pipeline can run a pinned learner-sketches backend, discover `sketch_minimized_<width>.txt`, audit/bind it, and use it to satisfy `paper` profile without a manually supplied policy file. | Done |
 | R19 | Recoverable learner-sketches role-count features bind without guessing. | `n_count(r_primitive(P,0,1))` is compiled to lifted predicate subgoal/action-effect candidates; object-specific distance features remain rejected. | Done |
+| R20 | Bounded transition progress constrains ASP selection. | Observed goal-progress transitions are converted into required rule groups before Clingo selection, with post-selection validation retained as a defensive check. | Done |
+| R21 | Counterexamples constrain synthesis without polluting base training data. | Failed held-out problems can be passed as counterexample problem files; their transition evidence becomes separate selector constraints and report fields. | Done |
 
 Remaining research hardening after the first unified architecture:
 
 - [x] Add a guarded automatic learner-sketches training adapter to the unified
   synthesis pipeline.
-- [ ] Move bounded transition-progress checks directly into ASP constraints instead of
+- [x] Move bounded transition-progress checks directly into ASP constraints instead of
   selecting first and validating after selection.
 - [ ] Promote learner-sketches-style bounded-width ASP constraints from post-hoc
   validation into the main synthesis objective.
 - [x] Add an automatic counterexample-guided refinement loop for held-out failures.
-- [ ] Promote counterexample constraints into the ASP objective instead of adding
+- [x] Promote counterexample constraints into the ASP objective instead of adding
   whole failed problems only.
 - [x] Expand DLPlan feature binding coverage to recover plain primitive role-count
   features used in learner-sketches Blocksworld policies.

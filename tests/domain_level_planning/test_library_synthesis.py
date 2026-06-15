@@ -258,6 +258,31 @@ def test_synthesis_fails_when_auto_learner_sketches_produces_no_policy(
 		)
 
 
+def test_counterexample_problems_add_selector_constraints_without_polluting_training(
+	tmp_path: Path,
+) -> None:
+	domain_file, training_problem, counterexample_problem = _write_counterexample_domain(
+		tmp_path,
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(training_problem,),
+		counterexample_problem_files=(counterexample_problem,),
+	)
+
+	assert result.report["training_problem_count"] == 1
+	assert result.report["counterexample_problem_count"] == 1
+	assert result.report["selector_training_progress_constraint_count"] == 1
+	assert result.report["selector_counterexample_progress_constraint_count"] == 2
+	assert result.report["bounded_validation"]["checked_problem_count"] == 2
+	transition_system_names = tuple(
+		transition["problem_name"]
+		for transition in result.plan_library.metadata["counterexample_transition_systems"]
+	)
+	assert transition_system_names == ("counterexample-p1",)
+
+
 def _write_generic_domain_problem_and_policy(
 	tmp_path: Path,
 	*,
@@ -389,3 +414,56 @@ def _write_prepare_order_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]
 		encoding="utf-8",
 	)
 	return domain_file, problem_file
+
+
+def _write_counterexample_domain(tmp_path: Path) -> tuple[Path, Path, Path]:
+	domain_file = tmp_path / "counterexample-domain.pddl"
+	training_problem = tmp_path / "training.pddl"
+	counterexample_problem = tmp_path / "counterexample.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain counterexample-mini)
+		 (:requirements :strips :typing)
+		 (:types object)
+		 (:predicates
+		  (ready ?x - object)
+		  (base ?x - object)
+		  (top ?x - object)
+		 )
+		 (:action make_base
+		  :parameters (?x - object)
+		  :precondition (ready ?x)
+		  :effect (base ?x)
+		 )
+		 (:action make_top
+		  :parameters (?x - object)
+		  :precondition (base ?x)
+		  :effect (top ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	training_problem.write_text(
+		"""
+		(define (problem training-p1)
+		 (:domain counterexample-mini)
+		 (:objects a - object)
+		 (:init (ready a))
+		 (:goal (and (base a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	counterexample_problem.write_text(
+		"""
+		(define (problem counterexample-p1)
+		 (:domain counterexample-mini)
+		 (:objects b - object)
+		 (:init (ready b))
+		 (:goal (and (base b) (top b)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, training_problem, counterexample_problem
