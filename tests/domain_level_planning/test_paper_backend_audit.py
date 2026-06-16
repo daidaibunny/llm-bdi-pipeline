@@ -109,7 +109,9 @@ def test_audit_rejects_unbound_paper_policy_as_not_executable(tmp_path: Path) ->
 			"effect_operators": (),
 			"action_candidate_count": 0,
 			"promoted_effect_operators": (),
-			"rejection_reason": "unsupported_dlplan_feature_expression_or_domain_vocabulary",
+			"rejection_reason": (
+				"object_specific_dlplan_feature_requires_principled_lifting"
+			),
 		},
 	)
 

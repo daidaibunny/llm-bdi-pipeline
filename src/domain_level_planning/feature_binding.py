@@ -224,6 +224,10 @@ def _feature_binding_diagnostics(
 			unsupported=feature_id in unsupported_features,
 			action_effect_candidates=action_effect_candidates.get(feature_id, ()),
 			binding_kind=_feature_binding_kind(expression, predicate_arities),
+			rejection_reason=_unsupported_rejection_reason(
+				expression,
+				predicate_arities,
+			),
 		)
 		for feature_id, expression in features.items()
 	}
@@ -242,6 +246,7 @@ def _refresh_feature_binding_diagnostics(
 			unsupported=diagnostic.status == "unsupported",
 			action_effect_candidates=report.action_effect_candidates.get(feature_id, ()),
 			binding_kind=diagnostic.binding_kind,
+			rejection_reason=diagnostic.rejection_reason,
 		)
 		for feature_id, diagnostic in report.feature_diagnostics.items()
 	}
@@ -255,6 +260,7 @@ def _feature_binding_diagnostic(
 	unsupported: bool,
 	action_effect_candidates: tuple[ActionEffectBindingCandidate, ...],
 	binding_kind: str,
+	rejection_reason: str | None,
 ) -> FeatureBindingDiagnostic:
 	if binding is None or unsupported:
 		return FeatureBindingDiagnostic(
@@ -266,7 +272,10 @@ def _feature_binding_diagnostic(
 			effect_operators=(),
 			action_candidate_count=len(action_effect_candidates),
 			promoted_effect_operators=(),
-			rejection_reason="unsupported_dlplan_feature_expression_or_domain_vocabulary",
+			rejection_reason=(
+				rejection_reason
+				or "unsupported_dlplan_feature_expression_or_domain_vocabulary"
+			),
 		)
 	candidate_operators = {
 		candidate.operator
@@ -288,6 +297,60 @@ def _feature_binding_diagnostic(
 		promoted_effect_operators=promoted_effect_operators,
 		rejection_reason=None,
 	)
+
+
+def _unsupported_rejection_reason(
+	expression: str,
+	predicate_arities: Mapping[str, int],
+) -> str | None:
+	text = _normalize_expression(expression)
+	if "c_one_of(" in text or "r_one_of(" in text:
+		return "object_specific_dlplan_feature_requires_principled_lifting"
+	if "n_concept_distance(" in text:
+		return "distance_dlplan_feature_requires_principled_lifted_binding"
+	if _uses_recoverable_shape_with_bad_vocabulary(text, predicate_arities):
+		return "undeclared_or_wrong_arity_domain_vocabulary"
+	return None
+
+
+def _uses_recoverable_shape_with_bad_vocabulary(
+	text: str,
+	predicate_arities: Mapping[str, int],
+) -> bool:
+	nullary = re.fullmatch(r"b_nullary\(([^(),]+)\)", text)
+	if nullary:
+		return predicate_arities.get(nullary.group(1)) != 0
+
+	primitive_concept = re.fullmatch(r"n_count\(c_primitive\(([^(),]+),0\)\)", text)
+	if primitive_concept:
+		return primitive_concept.group(1) not in predicate_arities
+
+	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
+	if primitive_role:
+		return primitive_role.group(1) not in predicate_arities
+
+	goal_concept = re.fullmatch(
+		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
+		text,
+	)
+	if goal_concept:
+		return goal_concept.group(1) not in predicate_arities
+
+	goal_role = re.fullmatch(
+		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
+		text,
+	)
+	if goal_role:
+		return goal_role.group(1) not in predicate_arities
+
+	role_intersection = re.fullmatch(
+		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
+		text,
+	)
+	if role_intersection:
+		return role_intersection.group(1) not in predicate_arities
+
+	return False
 
 
 def _binding_has_primitive_action(

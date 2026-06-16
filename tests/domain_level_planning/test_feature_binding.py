@@ -262,7 +262,57 @@ def test_binding_reports_unsupported_complex_dlplan_features(tmp_path: Path) -> 
 	assert diagnostic.effect_operators == ()
 	assert diagnostic.action_candidate_count == 0
 	assert diagnostic.rejection_reason == (
-		"unsupported_dlplan_feature_expression_or_domain_vocabulary"
+		"object_specific_dlplan_feature_requires_principled_lifting"
+	)
+
+
+def test_binding_distinguishes_distance_feature_rejections(tmp_path: Path) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f137 "n_concept_distance(c_primitive(clear,0),r_primitive(on,0,1),c_primitive(clear,0))")
+		)
+		(:rule (:conditions (:c_n_gt f137)) (:effects (:e_n_dec f137)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	diagnostic = report.feature_diagnostics["f137"]
+	assert diagnostic.status == "unsupported"
+	assert diagnostic.rejection_reason == (
+		"distance_dlplan_feature_requires_principled_lifted_binding"
+	)
+
+
+def test_binding_distinguishes_domain_vocabulary_rejections(tmp_path: Path) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f_bad "n_count(r_primitive(stacked,0,1))"))
+		(:rule (:conditions (:c_n_gt f_bad)) (:effects (:e_n_inc f_bad)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	diagnostic = report.feature_diagnostics["f_bad"]
+	assert diagnostic.status == "unsupported"
+	assert diagnostic.rejection_reason == (
+		"undeclared_or_wrong_arity_domain_vocabulary"
 	)
 
 
