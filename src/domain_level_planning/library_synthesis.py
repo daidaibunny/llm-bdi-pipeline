@@ -13,7 +13,7 @@ from utils.pddl_parser import PDDLParser
 
 from .architecture_contract import architecture_gap_summary
 from .architecture_contract import domain_level_architecture_contract
-from .clingo_backend import ClingoSketchRuleSelector
+from .clingo_backend import ClingoRequiredRuleGroup, ClingoSketchRuleSelector
 from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
 from .gp_backends import backend_audit_matrix
 from .gp_backends import run_learner_sketches
@@ -82,6 +82,7 @@ def synthesize_domain_level_asl_library(
 	domain_file: str | Path,
 	training_problem_files: Sequence[str | Path] = (),
 	counterexample_problem_files: Sequence[str | Path] = (),
+	refinement_constraints: Sequence[object] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
 	learner_sketches_backend: BackendManifest | None = None,
 	learner_sketches_runs: Sequence[LearnerSketchesRunConfig] = (),
@@ -175,6 +176,10 @@ def synthesize_domain_level_asl_library(
 		domain=domain,
 		problem_files=counterexample_problem_files,
 	)
+	repair_rule_groups = _repair_required_rule_groups(
+		candidate_rules=candidate_rules,
+		refinement_constraints=refinement_constraints,
+	)
 	progress_rule_groups = (
 		*training_progress_rule_groups,
 		*counterexample_progress_rule_groups,
@@ -186,7 +191,11 @@ def synthesize_domain_level_asl_library(
 	selection = ClingoSketchRuleSelector().select(
 		candidate_rules=candidate_rules,
 		required_capabilities=required_capabilities,
-		required_rule_groups=(*progress_rule_groups, *state_coverage_rule_groups),
+		required_rule_groups=(
+			*progress_rule_groups,
+			*state_coverage_rule_groups,
+			*repair_rule_groups,
+		),
 	)
 	_validate_selected_rules_against_transition_progress(
 		selection.rules,
@@ -289,6 +298,7 @@ def synthesize_domain_level_asl_library(
 			counterexample_progress_rule_groups,
 		),
 		"selector_state_coverage_constraint_count": len(state_coverage_rule_groups),
+		"selector_repair_constraint_count": len(repair_rule_groups),
 		"selector_training_state_coverage_constraint_count": len(
 			training_state_coverage_rule_groups,
 		),
@@ -301,12 +311,16 @@ def synthesize_domain_level_asl_library(
 			counterexample_state_coverage_rule_groups=(
 				counterexample_state_coverage_rule_groups
 			),
+			explicit_refinement_constraints=refinement_constraints,
+			repair_rule_groups=repair_rule_groups,
 		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
 		"selected_candidate_sources": _candidate_source_counts(selection.rules),
 		"output_candidate_sources": _candidate_source_counts(output_rules),
 		"selection_cost": selection.cost,
+		"selected_rule_names": tuple(selection.selected_rule_names),
+		"output_rule_names": tuple(rule.name for rule in output_rules),
 		"paper_policy_audits": tuple(
 			audit.to_dict()
 			for audit in paper_policy_audits
@@ -536,6 +550,67 @@ def _bound_policy_rules_to_candidates(
 			),
 		)
 	return tuple(candidates), tuple(reports)
+
+
+def _repair_required_rule_groups(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	refinement_constraints: Sequence[object],
+) -> tuple[ClingoRequiredRuleGroup, ...]:
+	groups: list[ClingoRequiredRuleGroup] = []
+	for index, constraint in enumerate(tuple(refinement_constraints or ()), start=1):
+		if getattr(constraint, "constraint_type", "") != (
+			"counterexample_atomic_precondition_repair"
+		):
+			continue
+		target_predicates = tuple(
+			_atom_predicate(atom)
+			for atom in tuple(getattr(constraint, "lifted_missing_goals", ()) or ())
+			if _atom_predicate(atom)
+		)
+		precondition_predicates = tuple(
+			_atom_predicate(atom)
+			for atom in tuple(getattr(constraint, "lifted_missing_preconditions", ()) or ())
+			if _atom_predicate(atom)
+		)
+		failing_action = str(getattr(constraint, "failing_action", "") or "")
+		required_capabilities = tuple(
+			f"module_{target}_prepare_{precondition}_for_{failing_action}"
+			for target in target_predicates
+			for precondition in precondition_predicates
+			if target and precondition and failing_action
+		)
+		rule_names = tuple(
+			rule.name
+			for rule in tuple(candidate_rules or ())
+			if any(
+				capability in rule.capabilities
+				for capability in required_capabilities
+			)
+		)
+		if not rule_names:
+			raise ValueError(
+				"No lifted candidate rule satisfies primitive-precondition repair "
+				"constraint "
+				f"{index}: target={target_predicates}, "
+				f"precondition={precondition_predicates}, action={failing_action!r}.",
+			)
+		groups.append(
+			ClingoRequiredRuleGroup(
+				name=f"repair_{index}_{'_'.join(required_capabilities)}",
+				rule_names=rule_names,
+			),
+		)
+	return tuple(groups)
+
+
+def _atom_predicate(atom: str) -> str:
+	text = str(atom or "").strip()
+	if text.startswith("not "):
+		text = text[4:].strip()
+	if "(" not in text:
+		return text
+	return text.split("(", 1)[0].strip()
 
 
 def _body_step_to_lifted_call(step: AgentSpeakBodyStep) -> LiftedCall:
@@ -821,12 +896,16 @@ def _counterexample_refinement_summary(
 	counterexample_transition_evidence: Sequence[object],
 	counterexample_progress_rule_groups: Sequence[object],
 	counterexample_state_coverage_rule_groups: Sequence[object],
+	explicit_refinement_constraints: Sequence[object],
+	repair_rule_groups: Sequence[ClingoRequiredRuleGroup],
 ) -> dict[str, object]:
 	"""Summarize hard selector constraints induced by counterexamples."""
 
 	evidence_items = tuple(counterexample_transition_evidence or ())
 	progress_groups = tuple(counterexample_progress_rule_groups or ())
 	state_groups = tuple(counterexample_state_coverage_rule_groups or ())
+	explicit_constraints = tuple(explicit_refinement_constraints or ())
+	repair_groups = tuple(repair_rule_groups or ())
 	return {
 		"problem_count": len(evidence_items),
 		"problem_names": tuple(
@@ -835,12 +914,34 @@ def _counterexample_refinement_summary(
 		),
 		"transition_progress_required_group_count": len(progress_groups),
 		"state_coverage_required_group_count": len(state_groups),
-		"required_group_count": len(progress_groups) + len(state_groups),
+		"explicit_refinement_constraint_count": len(explicit_constraints),
+		"explicit_repair_constraint_count": sum(
+			1
+			for constraint in explicit_constraints
+			if getattr(constraint, "constraint_type", "") == (
+				"counterexample_atomic_precondition_repair"
+			)
+		),
+		"repair_required_group_count": len(repair_groups),
+		"repair_required_groups": tuple(
+			{
+				"name": group.name,
+				"constraint_type": "counterexample_atomic_precondition_repair",
+				"rule_names": group.rule_names,
+			}
+			for group in repair_groups
+		),
+		"required_group_count": (
+			len(progress_groups)
+			+ len(state_groups)
+			+ len(repair_groups)
+		),
 		"required_group_types": tuple(
 			group_type
 			for group_type, groups in (
 				("counterexample_transition_progress", progress_groups),
 				("counterexample_state_coverage", state_groups),
+				("counterexample_atomic_precondition_repair", repair_groups),
 			)
 			if groups
 		),

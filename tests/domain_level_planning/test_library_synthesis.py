@@ -8,6 +8,7 @@ from domain_level_planning.library_synthesis import (
 	ExternalSketchPolicySource,
 	synthesize_domain_level_asl_library,
 )
+from domain_level_planning.refinement import RefinementConstraint
 from plan_library.rendering import render_plan_library_asl
 import pytest
 
@@ -169,7 +170,8 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "main research gap" in gaps["G3"]["gap"]
 	assert "counterexample failure classification" in gaps["G3"]["current_state"]
 	assert "primitive-precondition repair evidence" in gaps["G3"]["current_state"]
-	assert "directly generate new composer/module candidates" in gaps["G3"]["required_improvement"]
+	assert "selector hard groups" in gaps["G3"]["current_state"]
+	assert "when no existing lifted candidate matches" in gaps["G3"]["required_improvement"]
 	assert gaps["G7"]["layer"] == "TEG"
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "DFA guards can be translated" in gaps["G7"]["current_state"]
@@ -488,6 +490,49 @@ def test_counterexample_problems_add_selector_constraints_without_polluting_trai
 	assert transition_system_names == ("counterexample-p1",)
 
 
+def test_refinement_repair_constraints_become_selector_required_groups(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_precondition_repair_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(problem_file),
+		problem_name="repair-p1",
+		failure_reason="Action preconditions are not satisfied for finish(a).",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		failing_action="finish",
+		failing_action_arguments=("a",),
+		lifted_failing_action="finish(X)",
+		missing_preconditions=("armed(a)",),
+		lifted_missing_preconditions=("armed(X)",),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+
+	refinement = result.report["counterexample_refinement_constraints"]
+	assert refinement["explicit_repair_constraint_count"] == 1
+	assert refinement["repair_required_group_count"] == 1
+	assert refinement["repair_required_groups"][0]["constraint_type"] == (
+		"counterexample_atomic_precondition_repair"
+	)
+	assert refinement["repair_required_groups"][0]["rule_names"] == (
+		"done_prepare_armed_for_finish",
+	)
+	assert result.report["selector_repair_constraint_count"] == 1
+	assert "done_prepare_armed_for_finish" in result.report["selected_rule_names"]
+
+
 def _write_generic_domain_problem_and_policy(
 	tmp_path: Path,
 	*,
@@ -672,3 +717,43 @@ def _write_counterexample_domain(tmp_path: Path) -> tuple[Path, Path, Path]:
 		encoding="utf-8",
 	)
 	return domain_file, training_problem, counterexample_problem
+
+
+def _write_precondition_repair_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "repair-domain.pddl"
+	problem_file = tmp_path / "repair-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain repair-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (seed ?x)
+		  (armed ?x)
+		  (done ?x)
+		 )
+		 (:action arm
+		  :parameters (?x)
+		  :precondition (seed ?x)
+		  :effect (armed ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (armed ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem repair-p1)
+		 (:domain repair-mini)
+		 (:objects a)
+		 (:init (seed a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file

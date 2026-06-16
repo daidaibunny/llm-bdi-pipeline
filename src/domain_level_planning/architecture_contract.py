@@ -211,11 +211,13 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"Shared-object trace order evidence, schema causal-interference "
 					"ordering candidates, bounded state-coverage constraints, and "
 					"counterexample failure classification exist; primitive-precondition "
-					"repair evidence is lifted into Layer B constraints."
+					"repair evidence is lifted into Layer B constraints and consumed "
+					"as selector hard groups when matching prepare rules exist."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "
-					"classifications directly generate new composer/module candidates."
+					"classifications generate new composer/module candidates when no "
+					"existing lifted candidate matches."
 				),
 				status="partially_done",
 			),

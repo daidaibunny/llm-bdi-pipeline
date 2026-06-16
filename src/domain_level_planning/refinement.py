@@ -167,6 +167,7 @@ def synthesize_with_counterexample_refinement(
 		raise ValueError("max_refinement_rounds must be non-negative.")
 	current_training = _unique_paths(training_problem_files)
 	counterexample_constraints = ()
+	explicit_refinement_constraints: tuple[RefinementConstraint, ...] = ()
 	heldout_files = _unique_paths(heldout_problem_files)
 	rounds: list[RefinementRoundReport] = []
 	final_result: UnifiedSynthesisResult | None = None
@@ -177,6 +178,7 @@ def synthesize_with_counterexample_refinement(
 			domain_file=domain_file,
 			training_problem_files=current_training,
 			counterexample_problem_files=counterexample_constraints,
+			refinement_constraints=explicit_refinement_constraints,
 			external_sketch_policies=external_sketch_policies,
 			synthesis_profile=synthesis_profile,
 		)
@@ -221,6 +223,9 @@ def synthesize_with_counterexample_refinement(
 			break
 		counterexample_constraints = _unique_paths(
 			(*counterexample_constraints, *added_files),
+		)
+		explicit_refinement_constraints = tuple(
+			dict.fromkeys((*explicit_refinement_constraints, *round_constraints)),
 		)
 
 	if final_result is None:
