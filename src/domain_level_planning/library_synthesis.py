@@ -89,6 +89,7 @@ class RepairConstraintBindingReport:
 	failing_action: str
 	required_capabilities: tuple[str, ...]
 	rule_names: tuple[str, ...]
+	available_capabilities: tuple[str, ...] = ()
 	rejection_reason: str | None = None
 
 	def to_dict(self) -> dict[str, object]:
@@ -100,6 +101,7 @@ class RepairConstraintBindingReport:
 			"precondition_predicates": self.precondition_predicates,
 			"failing_action": self.failing_action,
 			"required_capabilities": self.required_capabilities,
+			"available_capabilities": self.available_capabilities,
 			"rule_names": self.rule_names,
 			"rejection_reason": self.rejection_reason,
 		}
@@ -630,6 +632,12 @@ def _repair_required_rule_groups(
 				for capability in required_capabilities
 			)
 		)
+		available_capabilities = _repair_available_capabilities(
+			candidate_rules=candidate_rules,
+			target_predicates=target_predicates,
+			precondition_predicates=precondition_predicates,
+			failing_action=failing_action,
+		)
 		if not rule_names:
 			reports.append(
 				RepairConstraintBindingReport(
@@ -641,7 +649,11 @@ def _repair_required_rule_groups(
 					failing_action=failing_action,
 					required_capabilities=required_capabilities,
 					rule_names=(),
-					rejection_reason="no_matching_lifted_prepare_rule",
+					available_capabilities=available_capabilities,
+					rejection_reason=_repair_rejection_reason(
+						precondition_predicates=precondition_predicates,
+						available_capabilities=available_capabilities,
+					),
 				),
 			)
 			continue
@@ -661,10 +673,63 @@ def _repair_required_rule_groups(
 				failing_action=failing_action,
 				required_capabilities=required_capabilities,
 				rule_names=rule_names,
+				available_capabilities=available_capabilities,
 				rejection_reason=None,
 			),
 		)
 	return tuple(groups), tuple(reports)
+
+
+def _repair_available_capabilities(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	target_predicates: tuple[str, ...],
+	precondition_predicates: tuple[str, ...],
+	failing_action: str,
+) -> tuple[str, ...]:
+	relevant_prefixes = tuple(
+		dict.fromkeys(
+			(
+				*(
+					f"module_{target}_prepare_"
+					for target in target_predicates
+				),
+				*(
+					f"module_{precondition}_action_"
+					for precondition in precondition_predicates
+				),
+				*(
+					f"module_{target}_action_{failing_action}"
+					for target in target_predicates
+					if failing_action
+				),
+			),
+		),
+	)
+	return tuple(
+		dict.fromkeys(
+			capability
+			for rule in tuple(candidate_rules or ())
+			for capability in rule.capabilities
+			if any(capability.startswith(prefix) for prefix in relevant_prefixes)
+		),
+	)
+
+
+def _repair_rejection_reason(
+	*,
+	precondition_predicates: tuple[str, ...],
+	available_capabilities: tuple[str, ...],
+) -> str:
+	if any(
+		not any(
+			capability.startswith(f"module_{precondition}_action_")
+			for capability in available_capabilities
+		)
+		for precondition in precondition_predicates
+	):
+		return "unproducible_precondition_predicate"
+	return "no_matching_lifted_prepare_rule"
 
 
 def _atom_predicate(atom: str) -> str:

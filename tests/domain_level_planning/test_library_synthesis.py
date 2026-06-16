@@ -588,6 +588,12 @@ def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(
 	assert refinement["rejected_repair_constraints"][0]["required_capabilities"] == (
 		"module_done_prepare_calibrated_for_finish",
 	)
+	assert refinement["rejected_repair_constraints"][0]["rejection_reason"] == (
+		"unproducible_precondition_predicate"
+	)
+	assert "module_calibrated_action_" not in " ".join(
+		refinement["rejected_repair_constraints"][0]["available_capabilities"],
+	)
 	assert result.report["paper_profile_ready"] is False
 	assert any(
 		"unmatched primitive-precondition repair" in failure
