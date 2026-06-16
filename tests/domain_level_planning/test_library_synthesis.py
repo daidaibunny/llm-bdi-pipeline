@@ -485,6 +485,57 @@ def test_paper_profile_accepts_bound_external_policy_and_bounded_validation(
 	assert result.report["output_candidate_sources"]["external_sketch"] == 1
 
 
+def test_paper_profile_rejects_unobserved_schema_action_modules(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_unobserved_action_domain_problem_and_policy(
+		tmp_path,
+	)
+
+	bootstrap = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
+			),
+		),
+	)
+	layer_b = bootstrap.report["evidence_matrix"]["layer_b_atomic_modules"]
+	verdict_by_rule = {
+		item["rule_name"]: item["verdict"]
+		for item in layer_b["selected_atomic_rule_evidence"]
+	}
+	assert verdict_by_rule["done_via_finish"] == "trace_justified"
+	unobserved_schema_rules = tuple(
+		item
+		for item in layer_b["selected_atomic_rule_evidence"]
+		if item["verdict"] == "schema_unobserved_action_body"
+	)
+	assert len(unobserved_schema_rules) == 1
+	assert unobserved_schema_rules[0]["head"] == "bonus(X)"
+	assert bootstrap.report["paper_profile_ready"] is False
+	assert any(
+		"unjustified schema action atomic rule" in failure
+		and "head=bonus(X)" in failure
+		for failure in bootstrap.report["paper_profile_failures"]
+	)
+
+	with pytest.raises(ValueError, match="unjustified schema action atomic rule"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			external_sketch_policies=(
+				ExternalSketchPolicySource(
+					name="paper-sketch-smoke",
+					policy_file=policy_file,
+				),
+			),
+			synthesis_profile="paper",
+		)
+
+
 def test_unified_pipeline_rejects_unsupported_pddl_before_synthesis(tmp_path: Path) -> None:
 	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
 	domain_file.write_text(
@@ -1458,6 +1509,59 @@ def _write_generic_domain_problem_and_policy(
 		(:booleans )
 		(:numericals {policy_feature})
 		{policy_rule}
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file, policy_file
+
+
+def _write_unobserved_action_domain_problem_and_policy(
+	tmp_path: Path,
+) -> tuple[Path, Path, Path]:
+	domain_file = tmp_path / "unobserved-action-domain.pddl"
+	problem_file = tmp_path / "unobserved-action-problem.pddl"
+	policy_file = tmp_path / "unobserved-action-policy.txt"
+	domain_file.write_text(
+		"""
+		(define (domain generic-unobserved-action)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (done ?x)
+		  (bonus ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		 (:action grant-bonus
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (bonus ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p1)
+		 (:domain generic-unobserved-action)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f_done "n_count(c_equal(c_primitive(done,0),c_primitive(done_g,0)))"))
+		(:rule (:conditions ) (:effects (:e_n_inc f_done)))
 		)
 		""",
 		encoding="utf-8",

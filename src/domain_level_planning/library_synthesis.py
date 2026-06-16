@@ -375,6 +375,8 @@ def synthesize_domain_level_asl_library(
 		training_problem_files=training_problem_files,
 		external_sketch_policies=all_external_sketch_policies,
 		external_candidates=external_candidates,
+		selected_rules=selection.rules,
+		transition_evidence=all_transition_evidence,
 		paper_policy_audits=paper_policy_audits,
 		external_rule_reports=external_rule_reports,
 		repair_binding_reports=repair_binding_reports,
@@ -536,6 +538,8 @@ def _paper_profile_failures(
 	training_problem_files: Sequence[str | Path],
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
 	external_candidates: Sequence[LiftedPlanRule],
+	selected_rules: Sequence[LiftedPlanRule],
+	transition_evidence: Sequence[object],
 	paper_policy_audits: Sequence[PaperPolicyAuditReport],
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
@@ -554,6 +558,23 @@ def _paper_profile_failures(
 		failures.append("paper profile has no external learned rule binding reports")
 	if not tuple(external_candidates or ()):
 		failures.append("paper profile compiled no external learned sketch candidates")
+	for record in _selected_atomic_rule_evidence(
+		selected_rules=selected_rules,
+		atomic_justifications=atomic_achievement_justifications(
+			selected_rules,
+			transition_evidence,
+		),
+	):
+		if record["verdict"] != "schema_unobserved_action_body":
+			continue
+		failures.append(
+			(
+				"unjustified schema action atomic rule "
+				f"{record['rule_name']} "
+				f"(head={record['head']}; source={record['source']}; "
+				f"trace_support_count={record['trace_support_count']})"
+			),
+		)
 	for audit in tuple(paper_policy_audits or ()):
 		if not audit.ready_for_executable_asl:
 			failures.append(
