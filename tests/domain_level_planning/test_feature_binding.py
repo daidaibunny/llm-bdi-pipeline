@@ -316,6 +316,34 @@ def test_binding_distinguishes_domain_vocabulary_rejections(tmp_path: Path) -> N
 	)
 
 
+def test_binding_rejects_role_features_for_non_binary_predicates(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f_bad "n_count(r_primitive(clear,0,1))"))
+		(:rule (:conditions (:c_n_gt f_bad)) (:effects (:e_n_inc f_bad)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	diagnostic = report.feature_diagnostics["f_bad"]
+	assert report.bindings == {}
+	assert diagnostic.status == "unsupported"
+	assert diagnostic.binding_kind == "unsupported"
+	assert diagnostic.rejection_reason == (
+		"undeclared_or_wrong_arity_domain_vocabulary"
+	)
+
+
 def test_binding_reports_action_candidates_for_decreasing_primitive_counts(
 	tmp_path: Path,
 ) -> None:

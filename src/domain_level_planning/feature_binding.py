@@ -323,32 +323,32 @@ def _uses_recoverable_shape_with_bad_vocabulary(
 
 	primitive_concept = re.fullmatch(r"n_count\(c_primitive\(([^(),]+),0\)\)", text)
 	if primitive_concept:
-		return primitive_concept.group(1) not in predicate_arities
+		return predicate_arities.get(primitive_concept.group(1)) != 1
 
 	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
 	if primitive_role:
-		return primitive_role.group(1) not in predicate_arities
+		return predicate_arities.get(primitive_role.group(1)) != 2
 
 	goal_concept = re.fullmatch(
 		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
 	)
 	if goal_concept:
-		return goal_concept.group(1) not in predicate_arities
+		return predicate_arities.get(goal_concept.group(1)) != 1
 
 	goal_role = re.fullmatch(
 		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
 		text,
 	)
 	if goal_role:
-		return goal_role.group(1) not in predicate_arities
+		return predicate_arities.get(goal_role.group(1)) != 2
 
 	role_intersection = re.fullmatch(
 		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
 		text,
 	)
 	if role_intersection:
-		return role_intersection.group(1) not in predicate_arities
+		return predicate_arities.get(role_intersection.group(1)) != 2
 
 	return False
 
@@ -406,11 +406,15 @@ def _bind_feature_expression(
 	primitive_concept = re.fullmatch(r"n_count\(c_primitive\(([^(),]+),0\)\)", text)
 	if primitive_concept:
 		predicate = primitive_concept.group(1)
+		if predicate_arities.get(predicate) != 1:
+			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=False)
 
 	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
 	if primitive_role:
 		predicate = primitive_role.group(1)
+		if predicate_arities.get(predicate) != 2:
+			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=False)
 
 	goal_concept = re.fullmatch(
@@ -419,6 +423,8 @@ def _bind_feature_expression(
 	)
 	if goal_concept:
 		predicate = goal_concept.group(1)
+		if predicate_arities.get(predicate) != 1:
+			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
 
 	goal_role = re.fullmatch(
@@ -427,6 +433,8 @@ def _bind_feature_expression(
 	)
 	if goal_role:
 		predicate = goal_role.group(1)
+		if predicate_arities.get(predicate) != 2:
+			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
 
 	goal_role_intersection = re.fullmatch(
@@ -435,6 +443,8 @@ def _bind_feature_expression(
 	)
 	if goal_role_intersection:
 		predicate = goal_role_intersection.group(1)
+		if predicate_arities.get(predicate) != 2:
+			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
 
 	return None
@@ -457,14 +467,14 @@ def _feature_binding_kind(
 	if primitive_concept:
 		return (
 			"primitive_concept_count"
-			if primitive_concept.group(1) in predicate_arities
+			if predicate_arities.get(primitive_concept.group(1)) == 1
 			else "unsupported"
 		)
 	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
 	if primitive_role:
 		return (
 			"primitive_role_count"
-			if primitive_role.group(1) in predicate_arities
+			if predicate_arities.get(primitive_role.group(1)) == 2
 			else "unsupported"
 		)
 	goal_concept = re.fullmatch(
@@ -474,7 +484,7 @@ def _feature_binding_kind(
 	if goal_concept:
 		return (
 			"goal_aligned_concept_count"
-			if goal_concept.group(1) in predicate_arities
+			if predicate_arities.get(goal_concept.group(1)) == 1
 			else "unsupported"
 		)
 	goal_role = re.fullmatch(
@@ -484,7 +494,7 @@ def _feature_binding_kind(
 	if goal_role:
 		return (
 			"goal_aligned_role_count"
-			if goal_role.group(1) in predicate_arities
+			if predicate_arities.get(goal_role.group(1)) == 2
 			else "unsupported"
 		)
 	role_intersection = re.fullmatch(
@@ -494,7 +504,7 @@ def _feature_binding_kind(
 	if role_intersection:
 		return (
 			"goal_aligned_role_intersection_count"
-			if role_intersection.group(1) in predicate_arities
+			if predicate_arities.get(role_intersection.group(1)) == 2
 			else "unsupported"
 		)
 	return "unsupported"

@@ -270,7 +270,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"Recoverable lifted patterns bind; object-specific, distance, "
 					"and vocabulary-mismatch patterns are rejected with distinct "
-					"rejection diagnostics."
+					"rejection diagnostics; concept, role, and nullary DLPlan "
+					"features must match PDDL predicate arities before binding."
 				),
 				required_improvement=(
 					"Expand only principled lifted bindings, especially for "
