@@ -31,6 +31,7 @@ def run_domain_level_experiment(
 	max_depth: int = 1000,
 	use_counterexample_refinement: bool = False,
 	max_refinement_rounds: int = 1,
+	ablation_label: str | None = None,
 ) -> dict[str, object]:
 	"""Run one reproducible domain-level library experiment."""
 
@@ -91,6 +92,8 @@ def run_domain_level_experiment(
 		"experiment_protocol": _experiment_protocol(
 			synthesis_profile=synthesis_profile,
 			external_sketch_policies=external_sketch_policies,
+			use_counterexample_refinement=use_counterexample_refinement,
+			ablation_label=ablation_label,
 		),
 		"train_problem_count": len(tuple(training_problem_files or ())),
 		"training_problem_files": [
@@ -154,7 +157,15 @@ def _experiment_protocol(
 	*,
 	synthesis_profile: str,
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
+	use_counterexample_refinement: bool,
+	ablation_label: str | None,
 ) -> dict[str, object]:
+	ablation = _ablation_record(
+		label=ablation_label,
+		synthesis_profile=synthesis_profile,
+		external_sketch_policies=external_sketch_policies,
+		use_counterexample_refinement=use_counterexample_refinement,
+	)
 	return {
 		"scope": "bounded_domain_level_lifted_asl_evaluation",
 		"training_source": "provided_pddl_training_problems",
@@ -163,11 +174,30 @@ def _experiment_protocol(
 		"external_policy_count": len(tuple(external_sketch_policies or ())),
 		"runtime_planner": "none",
 		"baselines": [],
-		"ablations": [],
+		"ablations": [] if ablation is None else [ablation],
 		"limitations": [
 			"coverage is measured only over the listed evaluation PDDL problems",
 			"no IPC-wide baseline table is implied by this smoke protocol",
 		],
+	}
+
+
+def _ablation_record(
+	*,
+	label: str | None,
+	synthesis_profile: str,
+	external_sketch_policies: Sequence[ExternalSketchPolicySource],
+	use_counterexample_refinement: bool,
+) -> dict[str, object] | None:
+	text = str(label or "").strip()
+	if not text:
+		return None
+	return {
+		"label": text,
+		"synthesis_profile": str(synthesis_profile or "bootstrap"),
+		"external_policy_count": len(tuple(external_sketch_policies or ())),
+		"counterexample_refinement": bool(use_counterexample_refinement),
+		"runtime_planner": "none",
 	}
 
 

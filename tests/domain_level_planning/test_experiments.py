@@ -209,6 +209,34 @@ def test_domain_level_experiment_can_run_paper_profile_with_external_policy(
 	assert report["experiment_protocol"]["external_policy_count"] == 1
 
 
+def test_domain_level_experiment_records_explicit_ablation_metadata(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+	)
+
+	report = run_domain_level_experiment(
+		experiment_name="bootstrap-ablation-smoke",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		ablation_label="bootstrap_schema_only",
+		max_execution_steps=100,
+		max_depth=50,
+	)
+
+	assert report["experiment_protocol"]["ablations"] == [
+		{
+			"label": "bootstrap_schema_only",
+			"synthesis_profile": "bootstrap",
+			"external_policy_count": 0,
+			"counterexample_refinement": False,
+			"runtime_planner": "none",
+		},
+	]
+
+
 def test_generated_output_audit_includes_plan_head_subset() -> None:
 	audit = _generated_output_audit(
 		{
