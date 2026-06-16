@@ -379,9 +379,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"STRIPS-style positive conjunctive achievement goals serialize "
 					"cleanly; unsupported requirements, unsupported expression operators, "
-					"negative goals, numeric fragments, and action-cost fragments are "
-					"rejected with structured reasons and machine-readable diagnostics "
-					"before compilation proceeds."
+					"PDDL predicate symbols outside the current AgentSpeak atom "
+					"identifier subset, negative goals, numeric fragments, and "
+					"action-cost fragments are rejected with structured reasons and "
+					"machine-readable diagnostics before compilation proceeds."
 				),
 				required_improvement=(
 					"Keep the report aligned with future fragment expansions, especially "

@@ -66,6 +66,7 @@ SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 	"classical finite-domain PDDL files parsed before lifted ASL synthesis",
 	"positive conjunctive predicate achievement goals only",
 	"primitive action schemas with predicate preconditions and predicate effects",
+	"predicate symbols must fit the current AgentSpeak atom identifier subset",
 	"typing, equality, and negative preconditions are accepted only inside the project parser subset",
 	(
 		"derived predicates, conditional effects, quantifiers, preferences, "
@@ -235,6 +236,9 @@ def inspect_pddl_support(
 		for diagnostic in _unsupported_goal_diagnostics(problem_path, problem_text):
 			reasons.append(diagnostic.message)
 			diagnostics.append(diagnostic)
+	for diagnostic in _unsupported_asl_symbol_diagnostics(domain_path, domain_text):
+		reasons.append(diagnostic.message)
+		diagnostics.append(diagnostic)
 
 	return PDDLSupportReport(
 		domain_file=domain_path,
@@ -345,6 +349,69 @@ def _unsupported_goal_diagnostics(
 			message=message,
 		),
 	)
+
+
+def _unsupported_asl_symbol_diagnostics(
+	domain_path: Path,
+	domain_text: str,
+) -> tuple[PDDLUnsupportedDiagnostic, ...]:
+	diagnostics: list[PDDLUnsupportedDiagnostic] = []
+	for kind, symbol in tuple(
+		("predicate", predicate)
+		for predicate in _declared_predicate_names(domain_text)
+	):
+		if _is_supported_asl_identifier(symbol):
+			continue
+		location = f"{domain_path}:{kind}"
+		message = (
+			f"{domain_path}: PDDL {kind} {symbol!r} is outside the current "
+			"AgentSpeak identifier subset"
+		)
+		diagnostics.append(
+			PDDLUnsupportedDiagnostic(
+				kind="unsupported_asl_symbol",
+				location=location,
+				symbol=symbol,
+				message=message,
+			),
+		)
+	return tuple(diagnostics)
+
+
+def _declared_predicate_names(domain_text: str) -> tuple[str, ...]:
+	predicate_block = _keyword_block(domain_text, "predicates")
+	if predicate_block is None:
+		return ()
+	return tuple(
+		dict.fromkeys(
+			match.group(1)
+			for match in re.finditer(
+				r"\(([A-Za-z_][A-Za-z0-9_-]*)\b",
+				predicate_block,
+			)
+			if match.group(1).lower() != "and"
+		),
+	)
+
+
+def _keyword_block(text: str, keyword: str) -> str | None:
+	match = re.search(rf"\(:{re.escape(keyword)}(?:\s|\))", text, flags=re.IGNORECASE)
+	if match is None:
+		return None
+	start = match.start()
+	depth = 0
+	for index in range(start, len(text)):
+		if text[index] == "(":
+			depth += 1
+		elif text[index] == ")":
+			depth -= 1
+			if depth == 0:
+				return text[start : index + 1]
+	return None
+
+
+def _is_supported_asl_identifier(symbol: str) -> bool:
+	return re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", str(symbol or "")) is not None
 
 
 def _deduplicate_diagnostics(
