@@ -91,6 +91,7 @@ class RepairConstraintBindingReport:
 	required_capabilities: tuple[str, ...]
 	rule_names: tuple[str, ...]
 	available_capabilities: tuple[str, ...] = ()
+	undeclared_predicates: tuple[str, ...] = ()
 	rejection_reason: str | None = None
 
 	def to_dict(self) -> dict[str, object]:
@@ -104,6 +105,7 @@ class RepairConstraintBindingReport:
 			"required_capabilities": self.required_capabilities,
 			"available_capabilities": self.available_capabilities,
 			"rule_names": self.rule_names,
+			"undeclared_predicates": self.undeclared_predicates,
 			"rejection_reason": self.rejection_reason,
 		}
 
@@ -193,6 +195,7 @@ def synthesize_domain_level_asl_library(
 	)
 	repair_synthesized_candidates = _repair_synthesized_candidate_rules(
 		actions=domain.actions,
+		predicates=domain.predicates,
 		refinement_constraints=refinement_constraints,
 	)
 	explicit_goal_ordering_candidates = _explicit_goal_ordering_candidate_rules(
@@ -248,6 +251,7 @@ def synthesize_domain_level_asl_library(
 	)
 	repair_rule_groups, repair_binding_reports = _repair_required_rule_groups(
 		candidate_rules=candidate_rules,
+		predicates=domain.predicates,
 		refinement_constraints=refinement_constraints,
 	)
 	goal_ordering_rule_groups, goal_ordering_binding_reports = (
@@ -669,10 +673,12 @@ def _bound_policy_rules_to_candidates(
 def _repair_required_rule_groups(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
+	predicates: Sequence[object],
 	refinement_constraints: Sequence[object],
 ) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[RepairConstraintBindingReport, ...]]:
 	groups: list[ClingoRequiredRuleGroup] = []
 	reports: list[RepairConstraintBindingReport] = []
+	declared_predicates = _declared_predicate_names(predicates)
 	for index, constraint in enumerate(tuple(refinement_constraints or ()), start=1):
 		constraint_type = str(getattr(constraint, "constraint_type", "") or "")
 		if constraint_type != "counterexample_atomic_precondition_repair":
@@ -688,6 +694,28 @@ def _repair_required_rule_groups(
 			if _atom_predicate(atom)
 		)
 		failing_action = str(getattr(constraint, "failing_action", "") or "")
+		undeclared_predicates = _undeclared_repair_predicates(
+			target_predicates=target_predicates,
+			precondition_predicates=precondition_predicates,
+			declared_predicates=declared_predicates,
+		)
+		if undeclared_predicates:
+			reports.append(
+				RepairConstraintBindingReport(
+					constraint_index=index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					precondition_predicates=precondition_predicates,
+					failing_action=failing_action,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					undeclared_predicates=undeclared_predicates,
+					rejection_reason="undeclared_repair_predicate",
+				),
+			)
+			continue
 		required_capabilities = tuple(
 			f"module_{target}_prepare_{precondition}_for_{failing_action}"
 			for target in target_predicates
@@ -753,6 +781,7 @@ def _repair_required_rule_groups(
 def _repair_synthesized_candidate_rules(
 	*,
 	actions: Sequence[object],
+	predicates: Sequence[object],
 	refinement_constraints: Sequence[object],
 ) -> tuple[LiftedPlanRule, ...]:
 	"""Generate safe missing-prepare candidates from lifted repair evidence.
@@ -763,6 +792,7 @@ def _repair_synthesized_candidate_rules(
 	"""
 
 	rules: list[LiftedPlanRule] = []
+	declared_predicates = _declared_predicate_names(predicates)
 	producible_predicates = _positive_effect_predicates(actions)
 	for constraint in tuple(refinement_constraints or ()):
 		if getattr(constraint, "constraint_type", "") != (
@@ -779,6 +809,8 @@ def _repair_synthesized_candidate_rules(
 			target_predicate, target_arguments = _parse_lifted_atom(target_atom)
 			if not target_predicate:
 				continue
+			if target_predicate not in declared_predicates:
+				continue
 			for missing_atom in tuple(
 				getattr(constraint, "lifted_missing_preconditions", ()) or (),
 			):
@@ -786,6 +818,8 @@ def _repair_synthesized_candidate_rules(
 					missing_atom,
 				)
 				if not precondition_predicate:
+					continue
+				if precondition_predicate not in declared_predicates:
 					continue
 				if precondition_predicate not in producible_predicates:
 					continue
@@ -1016,6 +1050,21 @@ def _declared_predicate_names(predicates: Sequence[object]) -> frozenset[str]:
 		str(getattr(predicate, "name", "") or "")
 		for predicate in tuple(predicates or ())
 		if str(getattr(predicate, "name", "") or "")
+	)
+
+
+def _undeclared_repair_predicates(
+	*,
+	target_predicates: tuple[str, ...],
+	precondition_predicates: tuple[str, ...],
+	declared_predicates: frozenset[str],
+) -> tuple[str, ...]:
+	return tuple(
+		dict.fromkeys(
+			predicate
+			for predicate in (*target_predicates, *precondition_predicates)
+			if predicate and predicate not in declared_predicates
+		),
 	)
 
 
