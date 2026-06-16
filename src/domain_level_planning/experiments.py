@@ -5,6 +5,7 @@ Reproducible domain-level lifted-library experiment reporting.
 from __future__ import annotations
 
 from pathlib import Path
+from time import perf_counter
 from typing import Sequence
 
 from plan_library.rendering import render_plan_library_asl
@@ -30,6 +31,7 @@ def run_domain_level_experiment(
 ) -> dict[str, object]:
 	"""Run one reproducible domain-level library experiment."""
 
+	synthesis_started = perf_counter()
 	if use_counterexample_refinement:
 		refined = synthesize_with_counterexample_refinement(
 			domain_file=domain_file,
@@ -48,11 +50,13 @@ def run_domain_level_experiment(
 			counterexample_problem_files=counterexample_problem_files,
 		)
 		refinement_trace = None
+	synthesis_duration = perf_counter() - synthesis_started
 	plan_library = result.plan_library
 	asl = render_plan_library_asl(plan_library)
 	domain = PDDLParser.parse_domain(domain_file)
-	evaluation_results = tuple(
-		_evaluate_problem(
+	evaluation_started = perf_counter()
+	evaluation_with_runtime = tuple(
+		_evaluate_problem_with_runtime(
 			plan_library=plan_library,
 			domain_file=domain_file,
 			problem_file=problem_file,
@@ -61,6 +65,9 @@ def run_domain_level_experiment(
 		)
 		for problem_file in tuple(evaluation_problem_files or ())
 	)
+	evaluation_duration = perf_counter() - evaluation_started
+	evaluation_results = tuple(item[0] for item in evaluation_with_runtime)
+	evaluation_runtimes = tuple(item[1] for item in evaluation_with_runtime)
 	contract = audit_domain_level_library_contract(
 		plan_library,
 		declared_predicates=domain.predicates,
@@ -103,6 +110,17 @@ def run_domain_level_experiment(
 			"domain_name": plan_library.domain_name,
 			"plan_count": len(tuple(plan_library.plans or ())),
 			"initial_belief_count": len(tuple(plan_library.initial_beliefs or ())),
+			"primitive_action_call_count": _body_step_count(
+				plan_library,
+				{"action", "primitive_action"},
+			),
+			"subgoal_call_count": _body_step_count(plan_library, {"subgoal"}),
+			"asl_line_count": len([line for line in asl.splitlines() if line.strip()]),
+		},
+		"runtime_seconds": {
+			"synthesis": synthesis_duration,
+			"evaluation_total": evaluation_duration,
+			"evaluation_by_problem": list(evaluation_runtimes),
 		},
 		"domain_level_contract": contract_dict,
 		"generated_output_audit": generated_output_audit,
@@ -115,6 +133,38 @@ def run_domain_level_experiment(
 		"synthesis_report": dict(result.report),
 		"refinement_trace": refinement_trace,
 		"asl": asl,
+	}
+
+
+def _body_step_count(plan_library, kinds: set[str]) -> int:
+	return sum(
+		1
+		for plan in tuple(plan_library.plans or ())
+		for step in tuple(plan.body or ())
+		if step.kind in kinds
+	)
+
+
+def _evaluate_problem_with_runtime(
+	*,
+	plan_library,
+	domain_file: str | Path,
+	problem_file: str | Path,
+	max_execution_steps: int,
+	max_depth: int,
+) -> tuple[dict[str, object], dict[str, object]]:
+	started = perf_counter()
+	result = _evaluate_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		max_execution_steps=max_execution_steps,
+		max_depth=max_depth,
+	)
+	return result, {
+		"problem_name": result["problem_name"],
+		"problem_file": result["problem_file"],
+		"duration_seconds": perf_counter() - started,
 	}
 
 

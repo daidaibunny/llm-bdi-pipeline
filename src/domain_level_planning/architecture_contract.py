@@ -270,12 +270,13 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"Training and counterexample problems receive bounded first-applicable "
 					"validation; external backend audit reports now identify whether each "
 					"paper backend currently drives Layer B/Layer C synthesis or remains "
-					"a guarded audit-only baseline."
+					"a guarded audit-only baseline; domain-level experiment reports "
+					"include library size and runtime metrics."
 				),
 				required_improvement=(
 					"Add train/test splits, held-out scaling, ablations, baselines, "
-					"failure analysis, and verified adapters before non-learner-sketches "
-					"backends can drive synthesis."
+					"deeper failure analysis, and verified adapters before "
+					"non-learner-sketches backends can drive synthesis."
 				),
 				status="open",
 			),

@@ -49,6 +49,16 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert report["generated_output_audit"]["declared_pddl_symbols"] is True
 	assert report["generated_output_audit"]["violation_count"] == 0
 	assert report["plan_library"]["plan_count"] > 0
+	assert report["plan_library"]["primitive_action_call_count"] > 0
+	assert report["plan_library"]["subgoal_call_count"] > 0
+	assert report["plan_library"]["asl_line_count"] > 0
+	assert report["runtime_seconds"]["synthesis"] >= 0
+	assert report["runtime_seconds"]["evaluation_total"] >= 0
+	assert len(report["runtime_seconds"]["evaluation_by_problem"]) == 2
+	assert all(
+		item["duration_seconds"] >= 0
+		for item in report["runtime_seconds"]["evaluation_by_problem"]
+	)
 	assert "+!g : goal_base(X) & not base(X) <-" in report["asl"]
 	assert "!achieve_" not in report["asl"]
 	assert "!transition_" not in report["asl"]
