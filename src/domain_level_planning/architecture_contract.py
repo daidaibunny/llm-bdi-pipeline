@@ -223,7 +223,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"constraints synthesize Layer C composer candidates and selector "
 					"hard groups, with rejected binding diagnostics when the lifted "
 					"ordering or repair evidence is not executable or references "
-					"undeclared predicates."
+					"undeclared predicates or wrong predicate arities."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "

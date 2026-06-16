@@ -683,6 +683,7 @@ def _repair_required_rule_groups(
 	groups: list[ClingoRequiredRuleGroup] = []
 	reports: list[RepairConstraintBindingReport] = []
 	declared_predicates = _declared_predicate_names(predicates)
+	predicate_arities = _declared_predicate_arities(predicates)
 	for index, constraint in enumerate(tuple(refinement_constraints or ()), start=1):
 		constraint_type = str(getattr(constraint, "constraint_type", "") or "")
 		if constraint_type != "counterexample_atomic_precondition_repair":
@@ -717,6 +718,30 @@ def _repair_required_rule_groups(
 					available_capabilities=(),
 					undeclared_predicates=undeclared_predicates,
 					rejection_reason="undeclared_repair_predicate",
+				),
+			)
+			continue
+		target_atoms = tuple(getattr(constraint, "lifted_missing_goals", ()) or ())
+		precondition_atoms = tuple(
+			getattr(constraint, "lifted_missing_preconditions", ()) or (),
+		)
+		wrong_arity_predicates = _wrong_arity_lifted_predicates(
+			atoms=(*target_atoms, *precondition_atoms),
+			predicate_arities=predicate_arities,
+		)
+		if wrong_arity_predicates:
+			reports.append(
+				RepairConstraintBindingReport(
+					constraint_index=index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					precondition_predicates=precondition_predicates,
+					failing_action=failing_action,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					rejection_reason="wrong_repair_predicate_arity",
 				),
 			)
 			continue
@@ -797,6 +822,7 @@ def _repair_synthesized_candidate_rules(
 
 	rules: list[LiftedPlanRule] = []
 	declared_predicates = _declared_predicate_names(predicates)
+	predicate_arities = _declared_predicate_arities(predicates)
 	producible_predicates = _positive_effect_predicates(actions)
 	for constraint in tuple(refinement_constraints or ()):
 		if getattr(constraint, "constraint_type", "") != (
@@ -815,6 +841,12 @@ def _repair_synthesized_candidate_rules(
 				continue
 			if target_predicate not in declared_predicates:
 				continue
+			if not _predicate_arity_matches(
+				target_predicate,
+				target_arguments,
+				predicate_arities,
+			):
+				continue
 			for missing_atom in tuple(
 				getattr(constraint, "lifted_missing_preconditions", ()) or (),
 			):
@@ -824,6 +856,12 @@ def _repair_synthesized_candidate_rules(
 				if not precondition_predicate:
 					continue
 				if precondition_predicate not in declared_predicates:
+					continue
+				if not _predicate_arity_matches(
+					precondition_predicate,
+					precondition_arguments,
+					predicate_arities,
+				):
 					continue
 				if precondition_predicate not in producible_predicates:
 					continue
@@ -881,6 +919,7 @@ def _explicit_goal_ordering_candidate_rules(
 	rules: list[LiftedPlanRule] = []
 	index = 0
 	declared_predicates = _declared_predicate_names(predicates)
+	predicate_arities = _declared_predicate_arities(predicates)
 	for constraint in tuple(refinement_constraints or ()):
 		if getattr(constraint, "constraint_type", "") != "counterexample_goal_ordering":
 			continue
@@ -896,6 +935,16 @@ def _explicit_goal_ordering_candidate_rules(
 			if (
 				earlier_predicate not in declared_predicates
 				or later_predicate not in declared_predicates
+			):
+				continue
+			if not _predicate_arity_matches(
+				earlier_predicate,
+				earlier_arguments,
+				predicate_arities,
+			) or not _predicate_arity_matches(
+				later_predicate,
+				later_arguments,
+				predicate_arities,
 			):
 				continue
 			if not set(earlier_arguments).intersection(later_arguments):
@@ -943,6 +992,7 @@ def _goal_ordering_required_rule_groups(
 	reports: list[GoalOrderingConstraintBindingReport] = []
 	group_index = 0
 	declared_predicates = _declared_predicate_names(predicates)
+	predicate_arities = _declared_predicate_arities(predicates)
 	for constraint_index, constraint in enumerate(
 		tuple(refinement_constraints or ()),
 		start=1,
@@ -985,6 +1035,28 @@ def _goal_ordering_required_rule_groups(
 						required_capability=None,
 						rule_names=(),
 						rejection_reason="undeclared_goal_ordering_predicate",
+					),
+				)
+				continue
+			if not _predicate_arity_matches(
+				earlier_predicate,
+				earlier_arguments,
+				predicate_arities,
+			) or not _predicate_arity_matches(
+				later_predicate,
+				later_arguments,
+				predicate_arities,
+			):
+				reports.append(
+					GoalOrderingConstraintBindingReport(
+						constraint_index=constraint_index,
+						ordering_index=ordering_index,
+						matched=False,
+						earlier_goal=str(earlier_goal),
+						later_goal=str(later_goal),
+						required_capability=None,
+						rule_names=(),
+						rejection_reason="wrong_goal_ordering_predicate_arity",
 					),
 				)
 				continue
@@ -1055,6 +1127,40 @@ def _declared_predicate_names(predicates: Sequence[object]) -> frozenset[str]:
 		for predicate in tuple(predicates or ())
 		if str(getattr(predicate, "name", "") or "")
 	)
+
+
+def _declared_predicate_arities(predicates: Sequence[object]) -> dict[str, int]:
+	return {
+		str(getattr(predicate, "name", "") or ""): len(
+			tuple(getattr(predicate, "parameters", ()) or ()),
+		)
+		for predicate in tuple(predicates or ())
+		if str(getattr(predicate, "name", "") or "")
+	}
+
+
+def _wrong_arity_lifted_predicates(
+	*,
+	atoms: Sequence[str],
+	predicate_arities: Mapping[str, int],
+) -> tuple[str, ...]:
+	wrong: list[str] = []
+	for atom in tuple(atoms or ()):
+		predicate, arguments = _parse_lifted_atom(atom)
+		if not predicate:
+			continue
+		if not _predicate_arity_matches(predicate, arguments, predicate_arities):
+			wrong.append(predicate)
+	return tuple(dict.fromkeys(wrong))
+
+
+def _predicate_arity_matches(
+	predicate: str,
+	arguments: tuple[str, ...],
+	predicate_arities: Mapping[str, int],
+) -> bool:
+	expected = predicate_arities.get(predicate)
+	return expected is None or expected == len(arguments)
 
 
 def _undeclared_repair_predicates(
