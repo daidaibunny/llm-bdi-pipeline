@@ -5,7 +5,7 @@ Domain-agnostic lifted ASL synthesis from PDDL action schemas.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 from plan_library.models import (
 	AgentSpeakBodyStep,
@@ -64,6 +64,13 @@ def build_schema_only_goal_conditioned_library_from_pddl(
 		domain.actions,
 		transition_evidence=transition_evidence,
 	)
+	candidate_rules, recursion_audit = filter_rules_by_recursion_descent(
+		candidate_rules,
+		ranking_states=recursion_ranking_states_from_problem_files(
+			domain=domain,
+			problem_files=training_problem_files,
+		),
+	)
 	required_capabilities = _required_capabilities(
 		predicates=domain.predicates,
 		candidate_rules=candidate_rules,
@@ -115,6 +122,7 @@ def build_schema_only_goal_conditioned_library_from_pddl(
 			"required_capabilities": tuple(required_capabilities),
 			"selected_rule_names": list(selection.selected_rule_names),
 			"selection_cost": selection.cost,
+			"recursion_descent_audit": recursion_audit,
 			"synthesis_report": report.to_dict(),
 		},
 	)
@@ -148,6 +156,284 @@ def _candidate_rules_from_domain(
 			),
 		)
 	return tuple(rules)
+
+
+def filter_rules_by_recursion_descent(
+	rules: Sequence[LiftedPlanRule],
+	*,
+	ranking_states: Sequence[State] = (),
+) -> tuple[tuple[LiftedPlanRule, ...], Mapping[str, object]]:
+	"""Reject recursive atomic rules without a structural progress certificate.
+
+	The current lifted module language has no numeric ranking field. The
+	domain-agnostic certificate we can prove from the rule structure is therefore
+	limited but useful: before a rule recurses to its own head, it must call a
+	different positive subgoal whose corresponding fact is explicitly missing in
+	the rule context. This is exactly the prepare-rule shape generated from PDDL
+	action preconditions: `not pre(...) <- !pre(...); !target(...)`.
+	"""
+
+	audit = recursion_descent_audit(rules, ranking_states=ranking_states)
+	rejected_names = {
+		str(certificate["rule_name"])
+		for certificate in tuple(audit["certificates"])
+		if not bool(certificate["accepted"])
+	}
+	filtered = tuple(
+		rule for rule in tuple(rules or ()) if rule.name not in rejected_names
+	)
+	return filtered, audit
+
+
+def recursion_descent_audit(
+	rules: Sequence[LiftedPlanRule],
+	*,
+	ranking_states: Sequence[State] = (),
+) -> Mapping[str, object]:
+	"""Return structural recursion-descent certificates for lifted rules."""
+
+	certificates = tuple(
+		_recursive_rule_certificate(rule, ranking_states=ranking_states)
+		for rule in tuple(rules or ())
+		if _recursive_body_indices(rule)
+	)
+	accepted = tuple(
+		certificate for certificate in certificates if bool(certificate["accepted"])
+	)
+	rejected = tuple(
+		certificate for certificate in certificates if not bool(certificate["accepted"])
+	)
+	return {
+		"contract": "missing_positive_precondition_before_same_goal_recursion",
+		"ranking_contract": (
+			"same_predicate_recursion_must_follow_bounded_acyclic_relation"
+		),
+		"recursive_rule_count": len(certificates),
+		"accepted_recursive_rule_count": len(accepted),
+		"rejected_recursive_rule_count": len(rejected),
+		"certificates": certificates,
+		"violations": tuple(
+			f"{certificate['rule_name']}: {certificate['reason']}"
+			for certificate in rejected
+		),
+	}
+
+
+def recursion_ranking_states_from_problem_files(
+	*,
+	domain: object,
+	problem_files: Sequence[str | Path],
+	max_reachable_states: int = 20000,
+) -> tuple[State, ...]:
+	"""Collect bounded reachable states used as recursion-ranking evidence."""
+
+	states: list[State] = []
+	for problem_file in tuple(problem_files or ()):
+		problem = PDDLParser.parse_problem(problem_file)
+		states.extend(
+			sorted(
+				reachable_states_for_problem(
+					domain,
+					problem,
+					max_states=max_reachable_states,
+				),
+				key=lambda item: tuple(sorted(item)),
+			),
+		)
+	return tuple(dict.fromkeys(states))
+
+
+def _recursive_rule_certificate(
+	rule: LiftedPlanRule,
+	*,
+	ranking_states: Sequence[State],
+) -> dict[str, object]:
+	recursive_indices = _recursive_body_indices(rule)
+	first_recursive_index = recursive_indices[0]
+	first_recursive_call = rule.body[first_recursive_index]
+	prefix_subgoals = tuple(
+		step
+		for step in rule.body[:first_recursive_index]
+		if step.kind == "subgoal" and step.symbol != rule.head.symbol
+	)
+	context_missing_atoms = {
+		_strip_negation(context)
+		for context in tuple(rule.context or ())
+		if _is_negated_atom(context)
+	}
+	for subgoal in prefix_subgoals:
+		subgoal_atom = _call(subgoal.symbol, subgoal.arguments)
+		if subgoal_atom not in context_missing_atoms:
+			continue
+		return {
+			"rule_name": rule.name,
+			"head": _call(rule.head.symbol, rule.head.arguments),
+			"accepted": True,
+			"descent_subgoal": subgoal_atom,
+			"missing_context": f"not {subgoal_atom}",
+			"recursive_call_index": first_recursive_index,
+			"reason": "missing positive precondition is pursued before recursion",
+		}
+	if prefix_subgoals:
+		return {
+			"rule_name": rule.name,
+			"head": _call(rule.head.symbol, rule.head.arguments),
+			"accepted": False,
+			"descent_subgoal": None,
+			"missing_context": None,
+			"recursive_call_index": first_recursive_index,
+			"reason": (
+				"prefix subgoals are not paired with a missing context literal; "
+				"requires an explicit ranking feature before recursive compilation"
+			),
+		}
+	if first_recursive_call.symbol == rule.head.symbol and (
+		tuple(first_recursive_call.arguments or ()) != tuple(rule.head.arguments or ())
+	):
+		ranking_certificate = _bounded_acyclic_relation_certificate(
+			rule,
+			first_recursive_call,
+			ranking_states=ranking_states,
+			recursive_call_index=first_recursive_index,
+		)
+		if ranking_certificate is not None:
+			return ranking_certificate
+		return {
+			"rule_name": rule.name,
+			"head": _call(rule.head.symbol, rule.head.arguments),
+			"accepted": False,
+			"descent_subgoal": None,
+			"missing_context": None,
+			"recursive_call_index": first_recursive_index,
+			"reason": (
+				"same-predicate recursion changes arguments and requires an explicit "
+				"ranking feature before recursive compilation"
+			),
+		}
+	return {
+		"rule_name": rule.name,
+		"head": _call(rule.head.symbol, rule.head.arguments),
+		"accepted": False,
+		"descent_subgoal": None,
+		"missing_context": None,
+		"recursive_call_index": first_recursive_index,
+		"reason": "no missing positive precondition subgoal appears before recursion",
+	}
+
+
+def _bounded_acyclic_relation_certificate(
+	rule: LiftedPlanRule,
+	recursive_call: LiftedCall,
+	*,
+	ranking_states: Sequence[State],
+	recursive_call_index: int,
+) -> dict[str, object] | None:
+	changed_pairs = tuple(
+		(head_arg, recursive_arg)
+		for head_arg, recursive_arg in zip(rule.head.arguments, recursive_call.arguments)
+		if head_arg != recursive_arg
+	)
+	if not changed_pairs or not tuple(ranking_states or ()):
+		return None
+	context_atoms = tuple(
+		_parse_atom(context)
+		for context in tuple(rule.context or ())
+		if not _is_negated_atom(context)
+	)
+	for head_arg, recursive_arg in changed_pairs:
+		for predicate, arguments in context_atoms:
+			if head_arg not in arguments or recursive_arg not in arguments:
+				continue
+			head_position = arguments.index(head_arg)
+			recursive_position = arguments.index(recursive_arg)
+			if head_position == recursive_position:
+				continue
+			if _relation_is_acyclic_in_states(
+				predicate=predicate,
+				head_position=head_position,
+				recursive_position=recursive_position,
+				states=ranking_states,
+			):
+				return {
+					"rule_name": rule.name,
+					"head": _call(rule.head.symbol, rule.head.arguments),
+					"accepted": True,
+					"descent_subgoal": _call(recursive_call.symbol, recursive_call.arguments),
+					"missing_context": None,
+					"recursive_call_index": recursive_call_index,
+					"ranking_relation": predicate,
+					"ranking_edge": f"{head_arg}->{recursive_arg}",
+					"ranking_state_count": len(tuple(ranking_states or ())),
+					"reason": "recursive call follows a bounded acyclic context relation",
+				}
+	return None
+
+
+def _relation_is_acyclic_in_states(
+	*,
+	predicate: str,
+	head_position: int,
+	recursive_position: int,
+	states: Sequence[State],
+) -> bool:
+	observed_edge = False
+	for state in tuple(states or ()):
+		edges: set[tuple[str, str]] = set()
+		for atom in state:
+			fact_predicate, fact_arguments = _parse_atom(atom)
+			if fact_predicate != predicate:
+				continue
+			if max(head_position, recursive_position) >= len(fact_arguments):
+				continue
+			observed_edge = True
+			edges.add((fact_arguments[head_position], fact_arguments[recursive_position]))
+		if _has_cycle(edges):
+			return False
+	return observed_edge
+
+
+def _has_cycle(edges: set[tuple[str, str]]) -> bool:
+	graph: dict[str, set[str]] = {}
+	for source, target in edges:
+		graph.setdefault(source, set()).add(target)
+		graph.setdefault(target, set())
+	visiting: set[str] = set()
+	visited: set[str] = set()
+
+	def _visit(node: str) -> bool:
+		if node in visiting:
+			return True
+		if node in visited:
+			return False
+		visiting.add(node)
+		for successor in graph.get(node, ()):
+			if _visit(successor):
+				return True
+		visiting.remove(node)
+		visited.add(node)
+		return False
+
+	return any(_visit(node) for node in tuple(graph))
+
+
+def _recursive_body_indices(rule: LiftedPlanRule) -> tuple[int, ...]:
+	if rule.layer != "atomic":
+		return ()
+	return tuple(
+		index
+		for index, step in enumerate(tuple(rule.body or ()))
+		if step.kind == "subgoal"
+		and step.symbol == rule.head.symbol
+	)
+
+
+def _is_negated_atom(context: str) -> bool:
+	return str(context or "").strip().lower().startswith("not ")
+
+
+def _strip_negation(context: str) -> str:
+	text = str(context or "").strip()
+	return text[4:].strip() if text.lower().startswith("not ") else text
 
 
 def _goal_ordering_rules_from_evidence(

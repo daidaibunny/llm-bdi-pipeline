@@ -11,6 +11,8 @@ from domain_level_planning.schema_synthesis import _validate_selected_rules_agai
 from domain_level_planning.schema_synthesis import atomic_achievement_justifications
 from domain_level_planning.schema_synthesis import causal_interference_ordering_rules
 from domain_level_planning.schema_synthesis import composer_state_coverage_required_rule_groups
+from domain_level_planning.schema_synthesis import filter_rules_by_recursion_descent
+from domain_level_planning.schema_synthesis import recursion_descent_audit
 from domain_level_planning.schema_synthesis import transition_progress_required_rule_groups
 from utils.pddl_parser import PDDLParser
 from domain_level_planning.models import LiftedCall, LiftedPlanRule
@@ -363,6 +365,107 @@ def test_causal_interference_orderings_are_empty_without_shared_structure(
 	# logistics-mini has a single goal predicate with no producer/consumer chain
 	# across goal instances, so no causal ordering should be invented.
 	assert rules == ()
+
+
+def test_recursion_descent_audit_accepts_missing_precondition_prepare_rule() -> None:
+	rule = LiftedPlanRule(
+		name="holding_prepare_ready_for_grab",
+		head=LiftedCall("subgoal", "holding", ("X",)),
+		context=("not ready(X)",),
+		body=(
+			LiftedCall("subgoal", "ready", ("X",)),
+			LiftedCall("subgoal", "holding", ("X",)),
+		),
+		layer="atomic",
+	)
+
+	audit = recursion_descent_audit((rule,))
+
+	assert audit["recursive_rule_count"] == 1
+	assert audit["accepted_recursive_rule_count"] == 1
+	assert audit["rejected_recursive_rule_count"] == 0
+	certificate = audit["certificates"][0]
+	assert certificate["rule_name"] == "holding_prepare_ready_for_grab"
+	assert certificate["accepted"] is True
+	assert certificate["descent_subgoal"] == "ready(X)"
+	assert certificate["missing_context"] == "not ready(X)"
+
+
+def test_recursion_descent_filter_rejects_self_recursion_without_progress() -> None:
+	unsafe = LiftedPlanRule(
+		name="done_unsafe_self_loop",
+		head=LiftedCall("subgoal", "done", ("X",)),
+		context=("not done(X)",),
+		body=(LiftedCall("subgoal", "done", ("X",)),),
+		layer="atomic",
+	)
+	safe = LiftedPlanRule(
+		name="done_via_finish",
+		head=LiftedCall("subgoal", "done", ("X",)),
+		context=("ready(X)",),
+		body=(LiftedCall("action", "finish", ("X",)),),
+		layer="atomic",
+	)
+
+	filtered, audit = filter_rules_by_recursion_descent((unsafe, safe))
+
+	assert filtered == (safe,)
+	assert audit["recursive_rule_count"] == 1
+	assert audit["accepted_recursive_rule_count"] == 0
+	assert audit["rejected_recursive_rule_count"] == 1
+	assert audit["violations"] == (
+		"done_unsafe_self_loop: no missing positive precondition subgoal appears before recursion",
+	)
+
+
+def test_recursion_descent_filter_rejects_recursive_call_without_ranking() -> None:
+	rule = LiftedPlanRule(
+		name="at_recursive_path_without_ranking",
+		head=LiftedCall("subgoal", "at", ("P", "To")),
+		context=("road(From, To)", "not at(P, From)"),
+		body=(
+			LiftedCall("subgoal", "at", ("P", "From")),
+			LiftedCall("subgoal", "at", ("P", "To")),
+		),
+		layer="atomic",
+	)
+
+	filtered, audit = filter_rules_by_recursion_descent((rule,))
+
+	assert filtered == ()
+	assert audit["rejected_recursive_rule_count"] == 1
+	assert audit["certificates"][0]["accepted"] is False
+	assert "requires an explicit ranking feature" in audit["certificates"][0]["reason"]
+
+
+def test_recursion_descent_accepts_argument_changing_recursion_with_acyclic_relation() -> None:
+	rule = LiftedPlanRule(
+		name="clear_prepare_clear_for_unstack",
+		head=LiftedCall("subgoal", "clear", ("Y",)),
+		context=("on(X, Y)", "not clear(X)"),
+		body=(
+			LiftedCall("subgoal", "clear", ("X",)),
+			LiftedCall("subgoal", "clear", ("Y",)),
+		),
+		layer="atomic",
+	)
+	ranking_states = (
+		frozenset({"on(a, b)", "on(b, c)"}),
+		frozenset({"on(d, e)"}),
+	)
+
+	filtered, audit = filter_rules_by_recursion_descent(
+		(rule,),
+		ranking_states=ranking_states,
+	)
+
+	assert filtered == (rule,)
+	assert audit["accepted_recursive_rule_count"] == 1
+	certificate = audit["certificates"][0]
+	assert certificate["accepted"] is True
+	assert certificate["ranking_relation"] == "on"
+	assert certificate["ranking_edge"] == "Y->X"
+	assert certificate["reason"] == "recursive call follows a bounded acyclic context relation"
 
 
 def _goal_context_signature(

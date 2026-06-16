@@ -152,6 +152,13 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert layer_b["anti_unified_patterns"][0]["action_name"] == "finish"
 	assert layer_b["anti_unified_patterns"][0]["action_arguments"] == ["X"]
 	assert layer_b["anti_unified_patterns"][0]["enabling_preconditions"] == ["ready(X)"]
+	assert layer_b["recursion_descent"]["contract"] == (
+		"missing_positive_precondition_before_same_goal_recursion"
+	)
+	assert layer_b["recursion_descent"]["ranking_contract"] == (
+		"same_predicate_recursion_must_follow_bounded_acyclic_relation"
+	)
+	assert result.report["recursion_descent_audit"] == layer_b["recursion_descent"]
 	assert layer_c["target"] == "goal-conditioned conjunctive-goal composer rules"
 	assert layer_c["candidate_count"] >= layer_c["selected_rule_count"] >= 1
 	assert layer_c["training_state_coverage_constraint_count"] >= 1

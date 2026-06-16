@@ -29,6 +29,8 @@ from .schema_synthesis import _training_evidence
 from .schema_synthesis import _validate_selected_rules_against_transition_progress
 from .schema_synthesis import atomic_achievement_justifications
 from .schema_synthesis import composer_state_coverage_required_rule_groups
+from .schema_synthesis import filter_rules_by_recursion_descent
+from .schema_synthesis import recursion_ranking_states_from_problem_files
 from .schema_synthesis import transition_progress_required_rule_groups
 from .transition_system import anti_unify_training_atomic_achievements
 
@@ -130,7 +132,16 @@ def synthesize_domain_level_asl_library(
 			sources=all_external_sketch_policies,
 		)
 	)
-	candidate_rules = _deduplicate_rules(schema_candidates + external_candidates)
+	raw_candidate_rules = _deduplicate_rules(schema_candidates + external_candidates)
+	candidate_rules, recursion_descent_audit = filter_rules_by_recursion_descent(
+		raw_candidate_rules,
+		ranking_states=recursion_ranking_states_from_problem_files(
+			domain=domain,
+			problem_files=tuple(
+				dict.fromkeys((*training_problem_files, *counterexample_problem_files)),
+			),
+		),
+	)
 	required_capabilities = _required_capabilities(
 		predicates=domain.predicates,
 		candidate_rules=candidate_rules,
@@ -263,7 +274,9 @@ def synthesize_domain_level_asl_library(
 		"counterexample_problem_count": len(counterexample_problem_files),
 		"schema_candidate_count": len(schema_candidates),
 		"external_candidate_count": len(external_candidates),
+		"raw_candidate_count": len(raw_candidate_rules),
 		"candidate_count": len(candidate_rules),
+		"recursion_descent_audit": recursion_descent_audit,
 		"selected_rule_count": len(selection.rules),
 		"output_rule_count": len(output_rules),
 		"selector_progress_constraint_count": len(progress_rule_groups),
@@ -305,6 +318,7 @@ def synthesize_domain_level_asl_library(
 			counterexample_state_coverage_rule_groups=counterexample_state_coverage_rule_groups,
 			paper_policy_audits=paper_policy_audits,
 			external_rule_reports=external_rule_reports,
+			recursion_descent_audit=recursion_descent_audit,
 		),
 		"paper_profile_ready": not paper_profile_failures,
 		"paper_profile_failures": tuple(paper_profile_failures),
@@ -570,6 +584,7 @@ def _evidence_matrix(
 	counterexample_state_coverage_rule_groups: Sequence[object],
 	paper_policy_audits: Sequence[PaperPolicyAuditReport],
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
+	recursion_descent_audit: Mapping[str, object],
 ) -> dict[str, object]:
 	"""Summarize which evidence sources support each synthesis layer."""
 
@@ -641,6 +656,7 @@ def _evidence_matrix(
 			"anti_unified_patterns": tuple(
 				pattern.to_dict() for pattern in all_atomic_patterns
 			),
+			"recursion_descent": dict(recursion_descent_audit),
 		},
 		"layer_c_goal_composer": {
 			"target": "goal-conditioned conjunctive-goal composer rules",
