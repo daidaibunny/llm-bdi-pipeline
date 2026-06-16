@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 
@@ -53,8 +53,8 @@ def audit_domain_level_library_contract(
 
 	violations: list[str] = []
 	plans = tuple(plan_library.plans or ())
-	predicate_names = _declared_names(declared_predicates)
-	action_names = _declared_names(declared_actions)
+	predicate_arities = _declared_arities(declared_predicates)
+	action_arities = _declared_arities(declared_actions)
 	no_initial_beliefs = not tuple(plan_library.initial_beliefs or ())
 	if not no_initial_beliefs:
 		violations.append("Domain-level libraries must not emit problem-specific initial beliefs.")
@@ -68,8 +68,8 @@ def audit_domain_level_library_contract(
 	lifted_contexts = _collect_context_lifting_violations(plans, violations)
 	declared_pddl_symbols = _collect_declared_pddl_symbol_violations(
 		plans,
-		declared_predicates=predicate_names,
-		declared_actions=action_names,
+		declared_predicates=predicate_arities,
+		declared_actions=action_arities,
 		violations=violations,
 	)
 	checked_layers = {
@@ -220,8 +220,8 @@ def _collect_context_lifting_violations(
 def _collect_declared_pddl_symbol_violations(
 	plans: Iterable[AgentSpeakPlan],
 	*,
-	declared_predicates: frozenset[str],
-	declared_actions: frozenset[str],
+	declared_predicates: Mapping[str, int | None],
+	declared_actions: Mapping[str, int | None],
 	violations: list[str],
 ) -> bool:
 	if not declared_predicates and not declared_actions:
@@ -236,8 +236,21 @@ def _collect_declared_pddl_symbol_violations(
 					f"{plan.trigger.symbol!r} as plan head."
 				),
 			)
+		elif plan.trigger.symbol != "g" and not _arity_matches(
+			declared_predicates[plan.trigger.symbol],
+			len(tuple(plan.trigger.arguments or ())),
+		):
+			passed = False
+			violations.append(
+				(
+					f"Plan {plan.plan_name!r} uses PDDL predicate "
+					f"{_schema_signature(plan.trigger.symbol, declared_predicates[plan.trigger.symbol])} "
+					f"with wrong arity {len(tuple(plan.trigger.arguments or ()))} "
+					"as plan head."
+				),
+			)
 		for context in tuple(plan.context or ()):
-			for symbol, _arguments in _context_atoms(context):
+			for symbol, arguments in _context_atoms(context):
 				if symbol.startswith("goal_"):
 					predicate = symbol[len("goal_") :]
 				else:
@@ -248,6 +261,15 @@ def _collect_declared_pddl_symbol_violations(
 						(
 							f"Plan {plan.plan_name!r} uses undeclared PDDL predicate "
 							f"{predicate!r} in context {context!r}."
+						),
+					)
+				elif not _arity_matches(declared_predicates[predicate], len(arguments)):
+					passed = False
+					violations.append(
+						(
+							f"Plan {plan.plan_name!r} uses PDDL predicate "
+							f"{_schema_signature(predicate, declared_predicates[predicate])} "
+							f"with wrong arity {len(arguments)} in context {context!r}."
 						),
 					)
 		for step in tuple(plan.body or ()):
@@ -262,6 +284,19 @@ def _collect_declared_pddl_symbol_violations(
 							f"{step.symbol!r} as body subgoal."
 						),
 					)
+				elif not _arity_matches(
+					declared_predicates[step.symbol],
+					len(tuple(step.arguments or ())),
+				):
+					passed = False
+					violations.append(
+						(
+							f"Plan {plan.plan_name!r} uses PDDL predicate "
+							f"{_schema_signature(step.symbol, declared_predicates[step.symbol])} "
+							f"with wrong arity {len(tuple(step.arguments or ()))} "
+							"as body subgoal."
+						),
+					)
 				continue
 			if step.kind in {"action", "primitive_action"}:
 				if step.symbol not in declared_actions:
@@ -270,6 +305,18 @@ def _collect_declared_pddl_symbol_violations(
 						(
 							f"Plan {plan.plan_name!r} uses undeclared PDDL action "
 							f"{step.symbol!r}."
+						),
+					)
+				elif not _arity_matches(
+					declared_actions[step.symbol],
+					len(tuple(step.arguments or ())),
+				):
+					passed = False
+					violations.append(
+						(
+							f"Plan {plan.plan_name!r} uses PDDL action "
+							f"{_schema_signature(step.symbol, declared_actions[step.symbol])} "
+							f"with wrong arity {len(tuple(step.arguments or ()))}."
 						),
 					)
 	return passed
@@ -349,12 +396,26 @@ def _is_lifted_variable(argument: str) -> bool:
 	return bool(text) and text[0].isupper()
 
 
-def _declared_names(items: Sequence[object]) -> frozenset[str]:
-	return frozenset(
-		text
-		for text in (
-			str(getattr(item, "name", item) or "").strip()
-			for item in tuple(items or ())
-		)
-		if text
-	)
+def _declared_arities(items: Sequence[object] | Mapping[str, int]) -> dict[str, int | None]:
+	if isinstance(items, Mapping):
+		return {
+			str(name).strip(): int(arity)
+			for name, arity in items.items()
+			if str(name).strip()
+		}
+	arities: dict[str, int | None] = {}
+	for item in tuple(items or ()):
+		name = str(getattr(item, "name", item) or "").strip()
+		if not name:
+			continue
+		parameters = getattr(item, "parameters", None)
+		arities[name] = len(tuple(parameters or ())) if parameters is not None else None
+	return arities
+
+
+def _arity_matches(expected: int | None, observed: int) -> bool:
+	return expected is None or expected == observed
+
+
+def _schema_signature(symbol: str, arity: int | None) -> str:
+	return f"{symbol}/{arity}" if arity is not None else symbol

@@ -144,6 +144,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "declared PDDL primitive action" in (
 		hypothesis["module_language"]["body_calls"]
 	)
+	assert "matching schema arities" in hypothesis["module_language"]["body_calls"]
 	assert "goal-conditioned +!g rules" in hypothesis["composer_language"]["rule_shape"]
 	assert "bounded reachable states" in hypothesis["progress_language"]["validation_scope"]
 	assert hypothesis["correctness_language"]["claim_scope"] == (

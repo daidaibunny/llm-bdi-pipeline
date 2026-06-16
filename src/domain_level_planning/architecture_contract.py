@@ -129,7 +129,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 		layer_b_target=(
 			"learn lifted atomic predicate-goal modules whose heads are declared "
 			"PDDL achievement predicates and whose bodies contain declared PDDL "
-			"primitive actions or declared PDDL predicate subgoals"
+			"primitive actions or declared PDDL predicate subgoals with matching "
+			"schema arities"
 		),
 		layer_c_target=(
 			"learn lifted goal-conditioned composer rules that choose which atomic "
@@ -301,7 +302,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"contexts": "implicit conjunction of supported state and goal literals",
 			"body_calls": (
 				"declared PDDL primitive action calls and declared PDDL predicate "
-				"subgoal calls"
+				"subgoal calls with matching schema arities"
 			),
 			"recursion": (
 				"same-predicate recursion requires a missing-precondition or "

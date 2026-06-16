@@ -117,6 +117,36 @@ def test_domain_level_library_contract_rejects_undeclared_pddl_symbols() -> None
 	assert any("unknown_action" in violation for violation in report.violations)
 
 
+def test_domain_level_library_contract_rejects_wrong_pddl_arities() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="bad_arities",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X", "Y")),
+				context=("goal_done(X, Y)", "ready"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "done", ()),
+					AgentSpeakBodyStep("action", "finish", ("X", "Y")),
+				),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates={"ready": 1, "done": 1},
+		declared_actions={"finish": 1},
+	)
+
+	assert report.passed is False
+	assert report.checked_layers["declared_pddl_symbols"] is False
+	assert any("wrong arity" in violation for violation in report.violations)
+	assert any("done/1" in violation for violation in report.violations)
+	assert any("ready/1" in violation for violation in report.violations)
+	assert any("finish/1" in violation for violation in report.violations)
+
+
 def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
