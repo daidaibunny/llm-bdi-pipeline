@@ -102,7 +102,7 @@ def test_dfa_controller_exposes_progress_request_diagnostics(
 
 	assert [diagnostic["target_state"] for diagnostic in diagnostics] == ["q1", "q2"]
 	assert [diagnostic["supported"] for diagnostic in diagnostics] == [False, True]
-	assert diagnostics[0]["rejection_reason"] == "unsupported_negative_or_disjunctive_guard"
+	assert diagnostics[0]["rejection_reason"] == "unsupported_negative_guard"
 	assert diagnostics[1]["request"]["goal_facts"] == ["goal_ready"]
 
 

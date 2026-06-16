@@ -119,6 +119,19 @@ def inspect_dfa_guard_to_achievement_request(
 	"""Return a structured diagnostic for adapting one DFA guard."""
 
 	normalized_guard = str(raw_guard or "").strip() or "true"
+	raw_rejection_reason = _unsupported_raw_guard_reason(normalized_guard)
+	if raw_rejection_reason is not None:
+		message = (
+			"DFA guard adapter currently supports positive conjunctive "
+			f"achievement requests only; received {raw_guard!r}."
+		)
+		return DFAGuardAdaptationDiagnostic(
+			raw_guard=normalized_guard,
+			supported=False,
+			state_literals=(),
+			rejection_reason=raw_rejection_reason,
+			message=message,
+		)
 	state_literals = tuple(
 		literal
 		for literal in map_event_expression_to_pddl_context(
@@ -136,7 +149,7 @@ def inspect_dfa_guard_to_achievement_request(
 			raw_guard=normalized_guard,
 			supported=False,
 			state_literals=state_literals,
-			rejection_reason="unsupported_negative_or_disjunctive_guard",
+			rejection_reason=_unsupported_literal_reason(state_literals),
 			message=message,
 		)
 	try:
@@ -184,6 +197,25 @@ def _is_unsupported_literal(literal: str) -> bool:
 		or text.lower().startswith("not ")
 		or "|" in text
 	)
+
+
+def _unsupported_raw_guard_reason(raw_guard: str) -> str | None:
+	text = str(raw_guard or "").strip().lower()
+	if text == "false":
+		return "unsupported_false_guard"
+	if "|" in str(raw_guard or ""):
+		return "unsupported_disjunctive_guard"
+	return None
+
+
+def _unsupported_literal_reason(literals: Sequence[str]) -> str:
+	if any(str(literal or "").strip().lower() == "false" for literal in literals):
+		return "unsupported_false_guard"
+	if any("|" in str(literal or "") for literal in literals):
+		return "unsupported_disjunctive_guard"
+	if any(str(literal or "").strip().lower().startswith("not ") for literal in literals):
+		return "unsupported_negative_guard"
+	return "unsupported_guard_literal"
 
 
 def _parse_atom(atom: str) -> tuple[str, tuple[str, ...]]:

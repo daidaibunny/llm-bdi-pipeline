@@ -119,14 +119,14 @@ def test_dfa_guard_adapter_reports_structured_rejection_diagnostics() -> None:
 	)
 
 	assert diagnostic.supported is False
-	assert diagnostic.rejection_reason == "unsupported_negative_or_disjunctive_guard"
+	assert diagnostic.rejection_reason == "unsupported_negative_guard"
 	assert diagnostic.raw_guard == "not on(b1,b2)"
 	assert diagnostic.state_literals == ("not on(b1, b2)",)
 	assert diagnostic.request is None
 	assert diagnostic.to_dict() == {
 		"raw_guard": "not on(b1,b2)",
 		"supported": False,
-		"rejection_reason": "unsupported_negative_or_disjunctive_guard",
+		"rejection_reason": "unsupported_negative_guard",
 		"message": (
 			"DFA guard adapter currently supports positive conjunctive "
 			"achievement requests only; received 'not on(b1,b2)'."
@@ -134,3 +134,21 @@ def test_dfa_guard_adapter_reports_structured_rejection_diagnostics() -> None:
 		"state_literals": ["not on(b1, b2)"],
 		"request": None,
 	}
+
+
+def test_dfa_guard_adapter_distinguishes_disjunction_and_false_rejections() -> None:
+	disjunction = inspect_dfa_guard_to_achievement_request(
+		"on(b1,b2) | clear(b1)",
+		domain_key="blocksworld",
+		domain_file=BLOCKS_DOMAIN,
+	)
+	false_guard = inspect_dfa_guard_to_achievement_request(
+		"false",
+		domain_key="blocksworld",
+		domain_file=BLOCKS_DOMAIN,
+	)
+
+	assert disjunction.supported is False
+	assert disjunction.rejection_reason == "unsupported_disjunctive_guard"
+	assert false_guard.supported is False
+	assert false_guard.rejection_reason == "unsupported_false_guard"

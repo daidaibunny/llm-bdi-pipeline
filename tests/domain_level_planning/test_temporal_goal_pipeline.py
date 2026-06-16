@@ -149,7 +149,7 @@ def test_temporal_goal_artifact_records_rejected_dfa_guard_diagnostics(
 	assert diagnostics[0]["target_state"] == "q1"
 	assert diagnostics[0]["diagnostic"]["supported"] is False
 	assert diagnostics[0]["diagnostic"]["rejection_reason"] == (
-		"unsupported_negative_or_disjunctive_guard"
+		"unsupported_negative_guard"
 	)
 
 	paths = persist_domain_level_temporal_artifact(
@@ -160,7 +160,7 @@ def test_temporal_goal_artifact_records_rejected_dfa_guard_diagnostics(
 		Path(paths["dfa_progress_diagnostics"]).read_text(encoding="utf-8"),
 	)
 	assert persisted["query_1"][0]["diagnostic"]["rejection_reason"] == (
-		"unsupported_negative_or_disjunctive_guard"
+		"unsupported_negative_guard"
 	)
 
 

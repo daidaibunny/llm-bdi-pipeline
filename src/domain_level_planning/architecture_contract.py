@@ -435,7 +435,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"progress requests; the runtime controller can execute repeated "
 					"progress steps until an accepting DFA state; "
 					"the artifact pipeline records structured accepted/rejected DFA "
-					"guard diagnostics; the supported ASL subset and execution "
+					"guard diagnostics with distinct negative, false, and disjunctive "
+					"rejection reasons, and raw disjunctions are rejected before "
+					"event-to-PDDL mapping can partially accept one branch; the "
+					"supported ASL subset and execution "
 					"semantics are reported with each domain-level contract."
 				),
 				required_improvement=(
