@@ -324,6 +324,20 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert layer_c["target"] == "goal-conditioned conjunctive-goal composer rules"
 	assert layer_c["candidate_count"] >= layer_c["selected_rule_count"] >= 1
 	assert layer_c["training_state_coverage_constraint_count"] >= 1
+	assert layer_c["selected_composer_rule_evidence"]
+	assert layer_c["output_composer_rule_evidence"]
+	composer_verdicts = {
+		item["rule_name"]: item["verdict"]
+		for item in layer_c["selected_composer_rule_evidence"]
+	}
+	output_composer_verdicts = {
+		item["rule_name"]: item["verdict"]
+		for item in layer_c["output_composer_rule_evidence"]
+	}
+	assert output_composer_verdicts["external_paper_sketch_smoke_1"] == (
+		"external_policy_bound"
+	)
+	assert composer_verdicts["g_satisfy_goal_done"] == "schema_goal_dispatch"
 	assert sources["schema"]["candidate_count"] >= 1
 	assert sources["schema"]["layer_counts"]["atomic"] >= 1
 	assert sources["external_sketch"]["policy_count"] == 1

@@ -2173,6 +2173,12 @@ def _evidence_matrix(
 				candidate_rules,
 				"order_",
 			),
+			"selected_composer_rule_evidence": _selected_composer_rule_evidence(
+				selected_rules,
+			),
+			"output_composer_rule_evidence": _selected_composer_rule_evidence(
+				output_rules,
+			),
 		},
 		"sources": {
 			"schema": {
@@ -2338,6 +2344,46 @@ def _atomic_rule_evidence_record(
 		"verdict": verdict,
 		"trace_support_count": len(supporting_slices),
 		"has_action_body": has_action_body,
+		"capabilities": tuple(rule.capabilities),
+	}
+
+
+def _selected_composer_rule_evidence(
+	selected_rules: Sequence[LiftedPlanRule],
+) -> tuple[dict[str, object], ...]:
+	return tuple(
+		_composer_rule_evidence_record(rule)
+		for rule in tuple(selected_rules or ())
+		if rule.layer == "composer"
+	)
+
+
+def _composer_rule_evidence_record(rule: LiftedPlanRule) -> dict[str, object]:
+	source = _candidate_source(rule)
+	if source == "external_sketch":
+		verdict = "external_policy_bound"
+	elif source == "counterexample_goal_ordering":
+		verdict = "counterexample_goal_ordering_synthesized"
+	elif any(
+		capability.startswith("causal_order_")
+		for capability in tuple(rule.capabilities or ())
+	):
+		verdict = "schema_causal_ordering"
+	elif any(
+		capability.startswith("order_")
+		for capability in tuple(rule.capabilities or ())
+	):
+		verdict = "trace_ordering"
+	else:
+		verdict = "schema_goal_dispatch"
+	return {
+		"rule_name": rule.name,
+		"head": _call(rule.head.symbol, rule.head.arguments),
+		"source": source,
+		"rationale": rule.rationale,
+		"verdict": verdict,
+		"context": tuple(rule.context),
+		"body": tuple(_call(step.symbol, step.arguments) for step in tuple(rule.body or ())),
 		"capabilities": tuple(rule.capabilities),
 	}
 
