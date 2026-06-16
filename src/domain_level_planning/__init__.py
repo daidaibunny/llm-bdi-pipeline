@@ -56,6 +56,10 @@ from .library_synthesis import (
 	UnifiedSynthesisResult,
 	synthesize_domain_level_asl_library,
 )
+from .library_contract import (
+	DomainLevelLibraryContractReport,
+	audit_domain_level_library_contract,
+)
 from .library_verifier import (
 	BoundedLibraryValidationReport,
 	BoundedProblemValidation,
@@ -115,6 +119,7 @@ __all__ = [
 	"SketchSynthesisReport",
 	"PaperPolicyAuditReport",
 	"UnifiedSynthesisResult",
+	"DomainLevelLibraryContractReport",
 	"BoundedLibraryValidationReport",
 	"BoundedProblemValidation",
 	"LibraryCounterexample",
@@ -134,6 +139,7 @@ __all__ = [
 	"goal_facts_from_problem",
 	"assert_compilable_pddl_files",
 	"audit_learned_policy_for_asl_binding",
+	"audit_domain_level_library_contract",
 	"architecture_gap_summary",
 	"domain_level_architecture_contract",
 	"inspect_pddl_support",

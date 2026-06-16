@@ -16,6 +16,7 @@ from .architecture_contract import domain_level_architecture_contract
 from .clingo_backend import ClingoSketchRuleSelector
 from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
 from .gp_backends import run_learner_sketches
+from .library_contract import audit_domain_level_library_contract
 from .library_verifier import BoundedLibraryValidationReport
 from .library_verifier import validate_library_on_bounded_transition_systems
 from .models import LiftedCall, LiftedPlanRule
@@ -204,6 +205,12 @@ def synthesize_domain_level_asl_library(
 			),
 		},
 	)
+	contract_report = audit_domain_level_library_contract(plan_library)
+	if not contract_report.passed:
+		raise ValueError(
+			"Generated domain-level library violates the lifted ASL contract: "
+			+ "; ".join(contract_report.violations),
+		)
 	bounded_validation = None
 	validation_problem_files = tuple(
 		dict.fromkeys((*training_problem_files, *counterexample_problem_files)),
@@ -242,6 +249,7 @@ def synthesize_domain_level_asl_library(
 			"acyclic_high_level_decision_trace",
 			"goal_state_fixed_point",
 		),
+		"domain_level_contract": contract_report.to_dict(),
 		"auto_learner_sketches_run_count": len(tuple(learner_sketches_runs or ())),
 		"auto_learner_sketches_policy_count": len(learned_sources),
 		"auto_learner_sketches_runs": tuple(

@@ -56,6 +56,8 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 		"acyclic_high_level_decision_trace",
 		"goal_state_fixed_point",
 	)
+	assert result.report["domain_level_contract"]["passed"] is True
+	assert all(result.report["domain_level_contract"]["checked_layers"].values())
 	assert result.report["bounded_validation"]["passed"] is True
 	assert result.report["bounded_validation"]["counterexample_count"] == 0
 	assert result.report["external_policy_count"] == 1
