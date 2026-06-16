@@ -34,6 +34,12 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 	assert report["generated_output_audit"]["passed"] is True
 	assert report["generated_output_audit"]["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["no_grounded_plan_terms"] is True
+	assert report["plan_library"]["primitive_action_call_count"] > 0
+	assert report["plan_library"]["subgoal_call_count"] > 0
+	assert report["plan_library"]["asl_line_count"] > 0
+	assert report["runtime_seconds"]["synthesis"] >= 0
+	assert report["runtime_seconds"]["evaluation_total"] >= 0
+	assert len(report["runtime_seconds"]["evaluation_by_problem"]) == 2
 
 	trace = report["refinement_trace"]
 	assert trace["converged"] is True

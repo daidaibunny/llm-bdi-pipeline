@@ -117,6 +117,7 @@ PDDL domain + training problems
 | T46 | Include repair rejection reasons in paper-profile failures. | G9 | Paper-profile failure messages for unmatched primitive-precondition repairs now include the machine-readable rejection reason, including negative repair rejections. | Done |
 | T47 | Expose backend consumption roles. | G6 | `backend_audit_matrix()` now states whether each pinned external backend currently drives Layer B/Layer C synthesis, how it is consumed, and what adapter gap blocks audit-only backends. | Done |
 | T48 | Add experiment size and runtime metrics. | G8 | Domain-level experiment reports now include primitive-action/subgoal/ASL-line counts plus synthesis and per-problem evaluation runtimes. | Done |
+| T49 | Assert experiment metrics in script-level reports. | G8 | Blocksworld and Labworkflow script tests assert the generated JSON reports include library size metrics plus synthesis and per-problem evaluation runtimes. | Done |
 
 ## Current Completion Rule
 
