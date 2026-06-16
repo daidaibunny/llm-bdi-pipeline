@@ -356,6 +356,22 @@ def classify_heldout_failure_for_refinement(
 	)
 	lifted_missing_goals = _lift_atom_group(missing_goals)
 	lifted_satisfied_goals = _lift_atom_group(satisfied_goals)
+	if missing_goals and _is_top_level_composer_failure(counterexample.failure_reason):
+		return (
+			RefinementConstraint(
+				failure_kind="missing_composer_or_context",
+				target_layer="layer_c_goal_composer",
+				constraint_type="counterexample_state_coverage",
+				problem_file=str(Path(problem_file).expanduser().resolve()),
+				problem_name=problem.name,
+				failure_reason=counterexample.failure_reason,
+				ground_missing_goals=missing_goals,
+				ground_satisfied_goals=satisfied_goals,
+				lifted_missing_goals=lifted_missing_goals,
+				lifted_satisfied_goals=lifted_satisfied_goals,
+				required_rule_group_types=("counterexample_state_coverage",),
+			),
+		)
 	if missing_goals and satisfied_goals and tuple(counterexample.steps):
 		orderings = _lift_goal_orderings_from_failure(
 			earlier_atoms=missing_goals,
@@ -599,6 +615,14 @@ def _target_missing_goals_for_failure(
 	return (failed_atom,) if failed_atom in all_missing_goals else all_missing_goals
 
 
+def _is_top_level_composer_failure(failure_reason: str) -> bool:
+	return re.search(
+		r"no\s+applicable\s+plan\s+for\s+!g\b",
+		str(failure_reason or ""),
+		re.IGNORECASE,
+	) is not None
+
+
 def _lift_atom_group(
 	atoms: Sequence[str],
 	object_variables: dict[str, str] | None = None,
@@ -663,6 +687,8 @@ def _object_variable_mapping(atoms: Sequence[str]) -> dict[str, str]:
 
 def _failure_kind(failure_reason: str) -> str:
 	text = str(failure_reason or "").lower()
+	if re.search(r"no\s+applicable\s+plan\s+for\s+!g\b", text):
+		return "missing_composer_or_context"
 	if "no applicable plan" in text:
 		return "missing_module_or_context"
 	if "preconditions" in text:
@@ -716,6 +742,16 @@ def _refinement_summary(
 		"constraint_count": len(constraints),
 		"repair_constraint_count": sum(
 			1 for constraint in constraints if "repair" in constraint.constraint_type
+		),
+		"state_coverage_constraint_count": sum(
+			1
+			for constraint in constraints
+			if constraint.constraint_type == "counterexample_state_coverage"
+		),
+		"atomic_progress_constraint_count": sum(
+			1
+			for constraint in constraints
+			if constraint.constraint_type == "counterexample_atomic_progress"
 		),
 		"constraints_by_failure_kind": _count_by(
 			constraint.failure_kind for constraint in constraints

@@ -241,7 +241,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"Negative precondition repairs are rejected explicitly instead "
 					"of being misread as positive achievement modules. Missing-module "
 					"failures that name a concrete failed atomic subgoal are refined "
-					"into precise atomic-progress constraints for that subgoal. Selected and "
+					"into precise atomic-progress constraints for that subgoal; top-level "
+					"missing-composer failures are classified as Layer C state-coverage "
+					"refinements. Selected and "
 					"output composer rules are reported with lifted provenance manifests."
 				),
 				required_improvement=(
@@ -335,7 +337,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"wrong-arity, undeclared-symbol, and negative precondition repairs "
 					"produce machine-readable matched or rejected diagnostics; missing-module "
 					"failures are narrowed to the named failed atomic subgoal when the "
-					"failure text identifies one."
+					"failure text identifies one, while `!g` failures are treated as "
+					"composer state-coverage failures."
 				),
 				required_improvement=(
 					"Connect more failure classes to generated candidate rules and "
