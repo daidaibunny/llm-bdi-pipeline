@@ -92,6 +92,7 @@ class RepairConstraintBindingReport:
 	rule_names: tuple[str, ...]
 	available_capabilities: tuple[str, ...] = ()
 	undeclared_predicates: tuple[str, ...] = ()
+	negative_precondition_predicates: tuple[str, ...] = ()
 	rejection_reason: str | None = None
 
 	def to_dict(self) -> dict[str, object]:
@@ -106,6 +107,7 @@ class RepairConstraintBindingReport:
 			"available_capabilities": self.available_capabilities,
 			"rule_names": self.rule_names,
 			"undeclared_predicates": self.undeclared_predicates,
+			"negative_precondition_predicates": self.negative_precondition_predicates,
 			"rejection_reason": self.rejection_reason,
 		}
 
@@ -756,6 +758,15 @@ def _repair_required_rule_groups(
 			for atom in tuple(getattr(constraint, "lifted_missing_preconditions", ()) or ())
 			if _atom_predicate(atom)
 		)
+		negative_precondition_predicates = tuple(
+			dict.fromkeys(
+				_atom_predicate(atom)
+				for atom in tuple(
+					getattr(constraint, "lifted_missing_preconditions", ()) or (),
+				)
+				if str(atom or "").strip().startswith("not ") and _atom_predicate(atom)
+			),
+		)
 		failing_action = str(getattr(constraint, "failing_action", "") or "")
 		if failing_action not in action_arities:
 			reports.append(
@@ -790,6 +801,23 @@ def _repair_required_rule_groups(
 					rule_names=(),
 					available_capabilities=(),
 					rejection_reason="wrong_repair_failing_action_arity",
+				),
+			)
+			continue
+		if negative_precondition_predicates:
+			reports.append(
+				RepairConstraintBindingReport(
+					constraint_index=index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					precondition_predicates=precondition_predicates,
+					failing_action=failing_action,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					negative_precondition_predicates=negative_precondition_predicates,
+					rejection_reason="negative_repair_precondition_unsupported",
 				),
 			)
 			continue

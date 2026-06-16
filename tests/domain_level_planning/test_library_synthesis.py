@@ -190,6 +190,9 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "wrong predicate arities" in gaps["G3"]["current_state"]
 	assert "wrong-arity repair failing actions" in gaps["G3"]["current_state"]
 	assert "wrong-arity atomic-progress diagnostics" in gaps["G3"]["current_state"]
+	assert "Negative precondition repairs are rejected explicitly" in (
+		gaps["G3"]["current_state"]
+	)
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
@@ -1239,6 +1242,49 @@ def test_repair_refinement_rejects_wrong_failing_action_arity(
 	assert rejected["failing_action"] == "finish"
 
 
+def test_repair_refinement_rejects_negative_precondition_repairs(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_negative_repair_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(problem_file),
+		problem_name="negative-repair-p1",
+		failure_reason="Action preconditions are not satisfied for finish(a).",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		failing_action="finish",
+		failing_action_arguments=("a",),
+		lifted_failing_action="finish(X)",
+		missing_preconditions=("not blocked(a)",),
+		lifted_missing_preconditions=("not blocked(X)",),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	rejected = refinement["rejected_repair_constraints"][0]
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert result.report["repair_synthesized_candidate_count"] == 0
+	assert refinement["repair_required_group_count"] == 0
+	assert rejected["rejection_reason"] == "negative_repair_precondition_unsupported"
+	assert rejected["target_predicates"] == ("done",)
+	assert rejected["precondition_predicates"] == ("blocked",)
+	assert rejected["negative_precondition_predicates"] == ("blocked",)
+	assert rejected["required_capabilities"] == ()
+	assert "prepare_blocked_for_finish" not in asl
+
+
 def _write_generic_domain_problem_and_policy(
 	tmp_path: Path,
 	*,
@@ -1485,6 +1531,45 @@ def _write_goal_bound_repair_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:objects a b)
 		 (:init (seed a))
 		 (:goal (and (linked a b) (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_negative_repair_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "negative-repair-domain.pddl"
+	problem_file = tmp_path / "negative-repair-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain negative-repair-mini)
+		 (:requirements :strips :negative-preconditions)
+		 (:predicates
+		  (blocked ?x)
+		  (done ?x)
+		 )
+		 (:action block
+		  :parameters (?x)
+		  :precondition ()
+		  :effect (blocked ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (not (blocked ?x))
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem negative-repair-p1)
+		 (:domain negative-repair-mini)
+		 (:objects a)
+		 (:init)
+		 (:goal (and (done a)))
 		)
 		""",
 		encoding="utf-8",

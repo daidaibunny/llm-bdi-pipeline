@@ -227,7 +227,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"hard groups, with rejected binding diagnostics when the lifted "
 					"ordering or repair evidence is not executable or references "
 					"undeclared predicates or wrong predicate arities; wrong-arity "
-					"atomic-progress diagnostics identify the offending predicates."
+					"atomic-progress diagnostics identify the offending predicates. "
+					"Negative precondition repairs are rejected explicitly instead "
+					"of being misread as positive achievement modules."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "
