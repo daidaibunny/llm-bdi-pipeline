@@ -52,6 +52,71 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 	}
 
 
+def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="g_satisfy_goal_done",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("goal_done(X)", "not done(X)"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "done", ("X",)),
+					AgentSpeakBodyStep("subgoal", "g"),
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="done_via_finish",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("ready(X)",),
+				body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates=("ready", "done"),
+		declared_actions=("finish",),
+	)
+
+	assert report.passed is True
+	assert report.checked_layers["declared_pddl_symbols"] is True
+	assert report.violations == ()
+
+
+def test_domain_level_library_contract_rejects_undeclared_pddl_symbols() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="bad_head",
+				trigger=AgentSpeakTrigger("achievement_goal", "unknown_head", ("X",)),
+				context=("goal_done(X)", "not unknown_context(X)"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "unknown_subgoal", ("X",)),
+					AgentSpeakBodyStep("action", "unknown_action", ("X",)),
+				),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates=("done",),
+		declared_actions=("finish",),
+	)
+
+	assert report.passed is False
+	assert report.checked_layers["declared_pddl_symbols"] is False
+	assert any("undeclared PDDL predicate" in violation for violation in report.violations)
+	assert any("unknown_head" in violation for violation in report.violations)
+	assert any("unknown_context" in violation for violation in report.violations)
+	assert any("unknown_subgoal" in violation for violation in report.violations)
+	assert any("undeclared PDDL action" in violation for violation in report.violations)
+	assert any("unknown_action" in violation for violation in report.violations)
+
+
 def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",

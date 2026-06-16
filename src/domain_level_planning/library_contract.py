@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 
@@ -45,11 +45,16 @@ class DomainLevelLibraryContractReport:
 
 def audit_domain_level_library_contract(
 	plan_library: PlanLibrary,
+	*,
+	declared_predicates: Sequence[object] = (),
+	declared_actions: Sequence[object] = (),
 ) -> DomainLevelLibraryContractReport:
 	"""Check that a generated library stays domain-level, lifted, and clean."""
 
 	violations: list[str] = []
 	plans = tuple(plan_library.plans or ())
+	predicate_names = _declared_names(declared_predicates)
+	action_names = _declared_names(declared_actions)
 	no_initial_beliefs = not tuple(plan_library.initial_beliefs or ())
 	if not no_initial_beliefs:
 		violations.append("Domain-level libraries must not emit problem-specific initial beliefs.")
@@ -61,12 +66,19 @@ def audit_domain_level_library_contract(
 	lifted_body_calls = _collect_body_lifting_violations(plans, violations)
 	context_subset = _collect_context_subset_violations(plans, violations)
 	lifted_contexts = _collect_context_lifting_violations(plans, violations)
+	declared_pddl_symbols = _collect_declared_pddl_symbol_violations(
+		plans,
+		declared_predicates=predicate_names,
+		declared_actions=action_names,
+		violations=violations,
+	)
 	checked_layers = {
 		"no_initial_beliefs": no_initial_beliefs,
 		"no_synthetic_names": no_synthetic_names,
 		"goal_descriptors_read_only": goal_descriptors_read_only,
 		"body_step_subset": body_step_subset,
 		"context_subset": context_subset,
+		"declared_pddl_symbols": declared_pddl_symbols,
 		"lifted_plan_heads": lifted_heads,
 		"lifted_body_calls": lifted_body_calls,
 		"lifted_contexts": lifted_contexts,
@@ -205,6 +217,64 @@ def _collect_context_lifting_violations(
 	return passed
 
 
+def _collect_declared_pddl_symbol_violations(
+	plans: Iterable[AgentSpeakPlan],
+	*,
+	declared_predicates: frozenset[str],
+	declared_actions: frozenset[str],
+	violations: list[str],
+) -> bool:
+	if not declared_predicates and not declared_actions:
+		return True
+	passed = True
+	for plan in tuple(plans or ()):
+		if plan.trigger.symbol != "g" and plan.trigger.symbol not in declared_predicates:
+			passed = False
+			violations.append(
+				(
+					f"Plan {plan.plan_name!r} uses undeclared PDDL predicate "
+					f"{plan.trigger.symbol!r} as plan head."
+				),
+			)
+		for context in tuple(plan.context or ()):
+			for symbol, _arguments in _context_atoms(context):
+				if symbol.startswith("goal_"):
+					predicate = symbol[len("goal_") :]
+				else:
+					predicate = symbol
+				if predicate not in declared_predicates:
+					passed = False
+					violations.append(
+						(
+							f"Plan {plan.plan_name!r} uses undeclared PDDL predicate "
+							f"{predicate!r} in context {context!r}."
+						),
+					)
+		for step in tuple(plan.body or ()):
+			if step.kind == "subgoal":
+				if step.symbol == "g":
+					continue
+				if step.symbol not in declared_predicates:
+					passed = False
+					violations.append(
+						(
+							f"Plan {plan.plan_name!r} uses undeclared PDDL predicate "
+							f"{step.symbol!r} as body subgoal."
+						),
+					)
+				continue
+			if step.kind in {"action", "primitive_action"}:
+				if step.symbol not in declared_actions:
+					passed = False
+					violations.append(
+						(
+							f"Plan {plan.plan_name!r} uses undeclared PDDL action "
+							f"{step.symbol!r}."
+						),
+					)
+	return passed
+
+
 def _library_strings(plan_library: PlanLibrary) -> Iterable[tuple[str, str]]:
 	for belief in tuple(plan_library.initial_beliefs or ()):
 		yield "initial belief", str(belief)
@@ -223,6 +293,14 @@ def _contains_synthetic_name(value: str) -> bool:
 
 
 def _context_atoms(context: str) -> Iterable[tuple[str, tuple[str, ...]]]:
+	text = str(context or "").strip()
+	if text.lower().startswith("not "):
+		text = text[4:].strip()
+	if not text or text.lower() == "true":
+		return
+	if "(" not in text and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", text):
+		yield text, ()
+		return
 	for match in re.finditer(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(([^()]*)\)", context):
 		symbol = match.group(1)
 		arguments = tuple(
@@ -269,3 +347,14 @@ def _is_lifted_variable(argument: str) -> bool:
 	if ":" in text:
 		text = text.split(":", 1)[0].strip()
 	return bool(text) and text[0].isupper()
+
+
+def _declared_names(items: Sequence[object]) -> frozenset[str]:
+	return frozenset(
+		text
+		for text in (
+			str(getattr(item, "name", item) or "").strip()
+			for item in tuple(items or ())
+		)
+		if text
+	)

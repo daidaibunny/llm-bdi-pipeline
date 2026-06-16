@@ -310,7 +310,11 @@ def synthesize_domain_level_asl_library(
 			),
 		},
 	)
-	contract_report = audit_domain_level_library_contract(plan_library)
+	contract_report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates=domain.predicates,
+		declared_actions=domain.actions,
+	)
 	if not contract_report.passed:
 		raise ValueError(
 			"Generated domain-level library violates the lifted ASL contract: "

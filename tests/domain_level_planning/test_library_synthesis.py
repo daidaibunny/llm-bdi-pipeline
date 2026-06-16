@@ -139,9 +139,11 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		for item in hypothesis["feature_language"]["goal_features"]
 	)
 	assert hypothesis["module_language"]["heads"] == (
-		"PDDL predicate achievement goals and zero-argument +!g"
+		"declared PDDL predicate achievement goals and zero-argument +!g"
 	)
-	assert "primitive action" in hypothesis["module_language"]["body_calls"]
+	assert "declared PDDL primitive action" in (
+		hypothesis["module_language"]["body_calls"]
+	)
 	assert "goal-conditioned +!g rules" in hypothesis["composer_language"]["rule_shape"]
 	assert "bounded reachable states" in hypothesis["progress_language"]["validation_scope"]
 	assert hypothesis["correctness_language"]["claim_scope"] == (

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Sequence
 
 from plan_library.rendering import render_plan_library_asl
+from utils.pddl_parser import PDDLParser
 
 from .library_contract import audit_domain_level_library_contract
 from .library_executor import evaluate_library_on_problem
@@ -49,6 +50,7 @@ def run_domain_level_experiment(
 		refinement_trace = None
 	plan_library = result.plan_library
 	asl = render_plan_library_asl(plan_library)
+	domain = PDDLParser.parse_domain(domain_file)
 	evaluation_results = tuple(
 		_evaluate_problem(
 			plan_library=plan_library,
@@ -59,7 +61,11 @@ def run_domain_level_experiment(
 		)
 		for problem_file in tuple(evaluation_problem_files or ())
 	)
-	contract = audit_domain_level_library_contract(plan_library)
+	contract = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates=domain.predicates,
+		declared_actions=domain.actions,
+	)
 	contract_dict = contract.to_dict()
 	generated_output_audit = _generated_output_audit(contract_dict)
 	solved_count = sum(1 for item in evaluation_results if bool(item["solved"]))
@@ -130,6 +136,9 @@ def _generated_output_audit(contract: dict[str, object]) -> dict[str, object]:
 		"supported_asl_subset": bool(
 			checked_layers.get("body_step_subset")
 			and checked_layers.get("context_subset")
+		),
+		"declared_pddl_symbols": bool(
+			checked_layers.get("declared_pddl_symbols", True),
 		),
 		"checked_layers": checked_layers,
 		"violation_count": len(violations),
