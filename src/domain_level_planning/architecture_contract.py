@@ -226,7 +226,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"constraints synthesize Layer C composer candidates and selector "
 					"hard groups, with rejected binding diagnostics when the lifted "
 					"ordering or repair evidence is not executable or references "
-					"undeclared predicates or wrong predicate arities."
+					"undeclared predicates or wrong predicate arities; wrong-arity "
+					"atomic-progress diagnostics identify the offending predicates."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "
@@ -248,8 +249,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				id="G5",
 				layer="feature binding",
 				gap="DLPlan feature binding is intentionally conservative.",
-				current_state="Recoverable lifted patterns bind; object-specific patterns are rejected.",
-				required_improvement="Expand only principled lifted bindings and report every rejection.",
+				current_state=(
+					"Recoverable lifted patterns bind; object-specific, distance, "
+					"and vocabulary-mismatch patterns are rejected with distinct "
+					"rejection diagnostics."
+				),
+				required_improvement=(
+					"Expand only principled lifted bindings, especially for "
+					"object-specific or distance features, and report every rejection."
+				),
 				status="partially_done",
 			),
 			ArchitectureGap(
@@ -303,7 +311,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			),
 			"external_features": (
 				"accepted DLPlan features with explicit ASL bindings",
-				"rejected object-specific or vocabulary-mismatched features",
+				"rejected object-specific, distance, or vocabulary-mismatched features",
 			),
 		},
 		module_language={

@@ -151,6 +151,9 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		"bounded training/counterexample/held-out transition systems"
 	)
 	assert "arbitrary PDDL domains" in hypothesis["exclusions"]
+	assert "rejected object-specific, distance, or vocabulary-mismatched features" in (
+		hypothesis["feature_language"]["external_features"]
+	)
 	gap_summary = result.report["architecture_gap_summary"]
 	assert gap_summary["open"] >= 1
 	assert gap_summary["in_progress"] >= 1
@@ -186,9 +189,16 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "repair evidence" in gaps["G3"]["current_state"]
 	assert "wrong predicate arities" in gaps["G3"]["current_state"]
 	assert "wrong-arity repair failing actions" in gaps["G3"]["current_state"]
+	assert "wrong-arity atomic-progress diagnostics" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
+	assert gaps["G5"]["status"] == "partially_done"
+	assert "object-specific" in gaps["G5"]["current_state"]
+	assert "distance" in gaps["G5"]["current_state"]
+	assert "vocabulary-mismatch" in gaps["G5"]["current_state"]
+	assert "distinct rejection diagnostics" in gaps["G5"]["current_state"]
+	assert "object-specific or distance features" in gaps["G5"]["required_improvement"]
 	assert gaps["G7"]["layer"] == "TEG"
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "DFA guards can be translated" in gaps["G7"]["current_state"]

@@ -112,6 +112,7 @@ PDDL domain + training problems
 | T41 | Consume atomic-progress refinement constraints. | G3, G9 | `counterexample_atomic_progress` refinements become selector hard groups when declared predicates have matching atomic action rules, and invalid or unmatched constraints are reported without generating guessed rules. | Done |
 | T42 | Classify unsupported DLPlan feature-binding reasons. | G5, G6 | Object-specific features, distance features, and recoverable-shape vocabulary mismatches now produce distinct machine-readable rejection reasons instead of one generic unsupported-feature reason. | Done |
 | T43 | Report wrong-arity atomic-progress predicates. | G9, G11 | Wrong-arity `counterexample_atomic_progress` constraints now include `wrong_arity_predicates` in machine-readable rejected diagnostics. | Done |
+| T44 | Align architecture contract with current diagnostics. | G1, G5, G9 | The machine-readable architecture contract now documents distinct object-specific/distance/vocabulary feature-binding rejections and wrong-arity atomic-progress diagnostics. | Done |
 
 ## Current Completion Rule
 
