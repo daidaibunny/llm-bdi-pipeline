@@ -195,11 +195,14 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"Schema, sketch, bounded progress candidates, trace slicing, "
 					"last achievers, anti-unified support patterns, and recursion "
-					"descent audits are reported."
+					"descent audits are reported; repair diagnostics from "
+					"counterexample precondition failures are included in the "
+					"Layer B evidence matrix."
 				),
 				required_improvement=(
 					"Add a multi-strategy module learner that generalizes from these "
-					"evidence sources and rejects unsafe alternatives."
+					"evidence sources, including repair diagnostics, and rejects "
+					"unsafe alternatives."
 				),
 				status="partially_done",
 			),

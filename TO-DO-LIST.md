@@ -93,6 +93,7 @@ PDDL domain + training problems
 | T22 | Consume primitive-precondition repair constraints during synthesis. | G3, G9 | `synthesize_domain_level_asl_library(..., refinement_constraints=...)` maps `counterexample_atomic_precondition_repair` constraints onto matching lifted prepare-rule selector hard groups and reports the matched rule names and repair constraint counts. | Done |
 | T23 | Report unmatched repair constraints without guessing. | G9 | Bootstrap synthesis records unmatched primitive-precondition repair constraints as rejected binding diagnostics; paper profile fails explicitly on unmatched repair evidence instead of silently claiming the failure was consumed. | Done |
 | T24 | Add repair evidence to the Layer B evidence matrix. | G2, G9 | `UnifiedSynthesisResult.report["evidence_matrix"]["layer_b_atomic_modules"]` exposes repair constraint counts and matched/rejected repair binding reports beside trace, anti-unification, and recursion evidence. | Done |
+| T25 | Keep architecture contract aligned with repair evidence. | G1, G2 | `ArchitectureContract.to_dict()` now states that Layer B evidence includes counterexample repair diagnostics and that the multi-strategy learner must use them. | Done |
 
 ## Current Completion Rule
 

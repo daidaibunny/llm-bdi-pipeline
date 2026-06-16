@@ -164,7 +164,9 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "trace slicing" in gaps["G2"]["current_state"]
 	assert "anti-unified" in gaps["G2"]["current_state"]
 	assert "recursion descent" in gaps["G2"]["current_state"]
+	assert "repair diagnostics" in gaps["G2"]["current_state"]
 	assert "multi-strategy module learner" in gaps["G2"]["required_improvement"]
+	assert "repair diagnostics" in gaps["G2"]["required_improvement"]
 	assert gaps["G3"]["layer"] == "Layer C"
 	assert gaps["G3"]["status"] == "partially_done"
 	assert "main research gap" in gaps["G3"]["gap"]
