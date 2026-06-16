@@ -31,6 +31,9 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 	assert report["coverage"]["failed_count"] == 0
 	assert report["domain_level_contract"]["passed"] is True
 	assert report["no_synthetic_names"] is True
+	assert report["generated_output_audit"]["passed"] is True
+	assert report["generated_output_audit"]["no_synthetic_names"] is True
+	assert report["generated_output_audit"]["no_grounded_plan_terms"] is True
 
 	trace = report["refinement_trace"]
 	assert trace["converged"] is True

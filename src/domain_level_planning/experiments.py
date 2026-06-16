@@ -60,6 +60,8 @@ def run_domain_level_experiment(
 		for problem_file in tuple(evaluation_problem_files or ())
 	)
 	contract = audit_domain_level_library_contract(plan_library)
+	contract_dict = contract.to_dict()
+	generated_output_audit = _generated_output_audit(contract_dict)
 	solved_count = sum(1 for item in evaluation_results if bool(item["solved"]))
 	failed = tuple(item for item in evaluation_results if not bool(item["solved"]))
 	return {
@@ -96,7 +98,8 @@ def run_domain_level_experiment(
 			"plan_count": len(tuple(plan_library.plans or ())),
 			"initial_belief_count": len(tuple(plan_library.initial_beliefs or ())),
 		},
-		"domain_level_contract": contract.to_dict(),
+		"domain_level_contract": contract_dict,
+		"generated_output_audit": generated_output_audit,
 		"no_synthetic_names": (
 			"achieve_" not in asl
 			and "transition_" not in asl
@@ -106,6 +109,31 @@ def run_domain_level_experiment(
 		"synthesis_report": dict(result.report),
 		"refinement_trace": refinement_trace,
 		"asl": asl,
+	}
+
+
+def _generated_output_audit(contract: dict[str, object]) -> dict[str, object]:
+	checked_layers = dict(contract.get("checked_layers") or {})
+	violations = tuple(str(item) for item in contract.get("violations") or ())
+	return {
+		"passed": bool(contract.get("passed")),
+		"no_synthetic_names": bool(checked_layers.get("no_synthetic_names")),
+		"no_grounded_plan_terms": bool(
+			checked_layers.get("lifted_plan_heads")
+			and checked_layers.get("lifted_body_calls")
+			and checked_layers.get("lifted_contexts")
+		),
+		"no_initial_beliefs": bool(checked_layers.get("no_initial_beliefs")),
+		"goal_descriptors_read_only": bool(
+			checked_layers.get("goal_descriptors_read_only"),
+		),
+		"supported_asl_subset": bool(
+			checked_layers.get("body_step_subset")
+			and checked_layers.get("context_subset")
+		),
+		"checked_layers": checked_layers,
+		"violation_count": len(violations),
+		"violations": list(violations),
 	}
 
 

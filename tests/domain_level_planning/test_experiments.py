@@ -40,6 +40,13 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert report["domain_level_contract"]["passed"] is True
 	assert report["bounded_validation"]["passed"] is True
 	assert report["no_synthetic_names"] is True
+	assert report["generated_output_audit"]["passed"] is True
+	assert report["generated_output_audit"]["no_synthetic_names"] is True
+	assert report["generated_output_audit"]["no_grounded_plan_terms"] is True
+	assert report["generated_output_audit"]["no_initial_beliefs"] is True
+	assert report["generated_output_audit"]["goal_descriptors_read_only"] is True
+	assert report["generated_output_audit"]["supported_asl_subset"] is True
+	assert report["generated_output_audit"]["violation_count"] == 0
 	assert report["plan_library"]["plan_count"] > 0
 	assert "+!g : goal_base(X) & not base(X) <-" in report["asl"]
 	assert "!achieve_" not in report["asl"]
