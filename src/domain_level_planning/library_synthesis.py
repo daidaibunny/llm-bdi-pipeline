@@ -136,6 +136,34 @@ class GoalOrderingConstraintBindingReport:
 		}
 
 
+@dataclass(frozen=True)
+class AtomicProgressConstraintBindingReport:
+	"""Selector binding diagnostics for one atomic-progress refinement constraint."""
+
+	constraint_index: int
+	constraint_type: str
+	matched: bool
+	target_predicates: tuple[str, ...]
+	required_capabilities: tuple[str, ...]
+	rule_names: tuple[str, ...]
+	available_capabilities: tuple[str, ...] = ()
+	undeclared_predicates: tuple[str, ...] = ()
+	rejection_reason: str | None = None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"constraint_index": self.constraint_index,
+			"constraint_type": self.constraint_type,
+			"matched": self.matched,
+			"target_predicates": self.target_predicates,
+			"required_capabilities": self.required_capabilities,
+			"available_capabilities": self.available_capabilities,
+			"rule_names": self.rule_names,
+			"undeclared_predicates": self.undeclared_predicates,
+			"rejection_reason": self.rejection_reason,
+		}
+
+
 def synthesize_domain_level_asl_library(
 	*,
 	domain_file: str | Path,
@@ -262,6 +290,13 @@ def synthesize_domain_level_asl_library(
 			refinement_constraints=refinement_constraints,
 		)
 	)
+	atomic_progress_rule_groups, atomic_progress_binding_reports = (
+		_atomic_progress_required_rule_groups(
+			candidate_rules=candidate_rules,
+			predicates=domain.predicates,
+			refinement_constraints=refinement_constraints,
+		)
+	)
 	progress_rule_groups = (
 		*training_progress_rule_groups,
 		*counterexample_progress_rule_groups,
@@ -278,6 +313,7 @@ def synthesize_domain_level_asl_library(
 			*state_coverage_rule_groups,
 			*repair_rule_groups,
 			*goal_ordering_rule_groups,
+			*atomic_progress_rule_groups,
 		),
 	)
 	_validate_selected_rules_against_transition_progress(
@@ -339,6 +375,7 @@ def synthesize_domain_level_asl_library(
 		external_rule_reports=external_rule_reports,
 		repair_binding_reports=repair_binding_reports,
 		goal_ordering_binding_reports=goal_ordering_binding_reports,
+		atomic_progress_binding_reports=atomic_progress_binding_reports,
 		bounded_validation=bounded_validation,
 	)
 	if profile == "paper" and paper_profile_failures:
@@ -392,6 +429,7 @@ def synthesize_domain_level_asl_library(
 		),
 		"selector_state_coverage_constraint_count": len(state_coverage_rule_groups),
 		"selector_repair_constraint_count": len(repair_rule_groups),
+		"selector_atomic_progress_constraint_count": len(atomic_progress_rule_groups),
 		"selector_training_state_coverage_constraint_count": len(
 			training_state_coverage_rule_groups,
 		),
@@ -409,6 +447,8 @@ def synthesize_domain_level_asl_library(
 			repair_binding_reports=repair_binding_reports,
 			goal_ordering_rule_groups=goal_ordering_rule_groups,
 			goal_ordering_binding_reports=goal_ordering_binding_reports,
+			atomic_progress_rule_groups=atomic_progress_rule_groups,
+			atomic_progress_binding_reports=atomic_progress_binding_reports,
 		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
@@ -443,6 +483,7 @@ def synthesize_domain_level_asl_library(
 			external_rule_reports=external_rule_reports,
 			repair_binding_reports=repair_binding_reports,
 			goal_ordering_binding_reports=goal_ordering_binding_reports,
+			atomic_progress_binding_reports=atomic_progress_binding_reports,
 			recursion_descent_audit=recursion_descent_audit,
 		),
 		"paper_profile_ready": not paper_profile_failures,
@@ -480,6 +521,7 @@ def _paper_profile_failures(
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
+	atomic_progress_binding_reports: Sequence[AtomicProgressConstraintBindingReport],
 	bounded_validation: BoundedLibraryValidationReport | None,
 ) -> tuple[str, ...]:
 	failures: list[str] = []
@@ -531,6 +573,17 @@ def _paper_profile_failures(
 				"unmatched goal-ordering refinement constraint "
 				f"{report.constraint_index}.{report.ordering_index} "
 				f"({report.earlier_goal} before {report.later_goal}; "
+				f"reason={report.rejection_reason})"
+			),
+		)
+	for report in tuple(atomic_progress_binding_reports or ()):
+		if report.matched:
+			continue
+		failures.append(
+			(
+				"unmatched atomic-progress refinement constraint "
+				f"{report.constraint_index} "
+				f"(required capabilities={report.required_capabilities}; "
 				f"reason={report.rejection_reason})"
 			),
 		)
@@ -1167,6 +1220,129 @@ def _goal_ordering_required_rule_groups(
 	return tuple(groups), tuple(reports)
 
 
+def _atomic_progress_required_rule_groups(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	predicates: Sequence[object],
+	refinement_constraints: Sequence[object],
+) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[AtomicProgressConstraintBindingReport, ...]]:
+	groups: list[ClingoRequiredRuleGroup] = []
+	reports: list[AtomicProgressConstraintBindingReport] = []
+	declared_predicates = _declared_predicate_names(predicates)
+	predicate_arities = _declared_predicate_arities(predicates)
+	for constraint_index, constraint in enumerate(
+		tuple(refinement_constraints or ()),
+		start=1,
+	):
+		constraint_type = str(getattr(constraint, "constraint_type", "") or "")
+		if constraint_type != "counterexample_atomic_progress":
+			continue
+		target_atoms = tuple(getattr(constraint, "lifted_missing_goals", ()) or ())
+		target_predicates = tuple(
+			_atom_predicate(atom)
+			for atom in target_atoms
+			if _atom_predicate(atom)
+		)
+		undeclared_predicates = tuple(
+			dict.fromkeys(
+				predicate
+				for predicate in target_predicates
+				if predicate not in declared_predicates
+			),
+		)
+		if undeclared_predicates:
+			reports.append(
+				AtomicProgressConstraintBindingReport(
+					constraint_index=constraint_index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					undeclared_predicates=undeclared_predicates,
+					rejection_reason="undeclared_atomic_progress_predicate",
+				),
+			)
+			continue
+		wrong_arity_predicates = _wrong_arity_lifted_predicates(
+			atoms=target_atoms,
+			predicate_arities=predicate_arities,
+		)
+		if wrong_arity_predicates:
+			reports.append(
+				AtomicProgressConstraintBindingReport(
+					constraint_index=constraint_index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					rejection_reason="wrong_atomic_progress_predicate_arity",
+				),
+			)
+			continue
+		required_capabilities = tuple(
+			f"module_{predicate}_action"
+			for predicate in target_predicates
+		)
+		rule_names = tuple(
+			rule.name
+			for rule in tuple(candidate_rules or ())
+			if rule.layer == "atomic"
+			and any(
+				capability.startswith(f"module_{predicate}_action_")
+				for predicate in target_predicates
+				for capability in rule.capabilities
+			)
+		)
+		available_capabilities = tuple(
+			dict.fromkeys(
+				capability
+				for rule in tuple(candidate_rules or ())
+				for capability in rule.capabilities
+				if any(
+					capability.startswith(f"module_{predicate}_")
+					for predicate in target_predicates
+				)
+			),
+		)
+		if not rule_names:
+			reports.append(
+				AtomicProgressConstraintBindingReport(
+					constraint_index=constraint_index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					required_capabilities=required_capabilities,
+					rule_names=(),
+					available_capabilities=available_capabilities,
+					rejection_reason="no_matching_atomic_progress_rule",
+				),
+			)
+			continue
+		groups.append(
+			ClingoRequiredRuleGroup(
+				name=f"atomic_progress_{constraint_index}_{'_'.join(target_predicates)}",
+				rule_names=rule_names,
+			),
+		)
+		reports.append(
+			AtomicProgressConstraintBindingReport(
+				constraint_index=constraint_index,
+				constraint_type=constraint_type,
+				matched=True,
+				target_predicates=target_predicates,
+				required_capabilities=required_capabilities,
+				rule_names=rule_names,
+				available_capabilities=available_capabilities,
+				rejection_reason=None,
+			),
+		)
+	return tuple(groups), tuple(reports)
+
+
 def _declared_predicate_names(predicates: Sequence[object]) -> frozenset[str]:
 	return frozenset(
 		str(getattr(predicate, "name", "") or "")
@@ -1526,6 +1702,7 @@ def _evidence_matrix(
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
+	atomic_progress_binding_reports: Sequence[AtomicProgressConstraintBindingReport],
 	recursion_descent_audit: Mapping[str, object],
 ) -> dict[str, object]:
 	"""Summarize which evidence sources support each synthesis layer."""
@@ -1543,6 +1720,7 @@ def _evidence_matrix(
 		),
 	)
 	repair_reports = tuple(repair_binding_reports or ())
+	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
 	return {
 		"layer_b_atomic_modules": {
@@ -1563,6 +1741,13 @@ def _evidence_matrix(
 				tuple(counterexample_progress_rule_groups or ()),
 			),
 			"repair_constraint_count": len(repair_reports),
+			"atomic_progress_constraint_count": len(atomic_progress_reports),
+			"matched_atomic_progress_constraint_count": sum(
+				1 for report in atomic_progress_reports if report.matched
+			),
+			"rejected_atomic_progress_constraint_count": sum(
+				1 for report in atomic_progress_reports if not report.matched
+			),
 			"matched_repair_constraint_count": sum(
 				1 for report in repair_reports if report.matched
 			),
@@ -1572,6 +1757,10 @@ def _evidence_matrix(
 			"repair_constraint_binding_reports": tuple(
 				report.to_dict()
 				for report in repair_reports
+			),
+			"atomic_progress_constraint_binding_reports": tuple(
+				report.to_dict()
+				for report in atomic_progress_reports
 			),
 			"training_goal_progression_count": sum(
 				len(getattr(evidence, "goal_progressions", ()) or ())
@@ -1797,6 +1986,8 @@ def _counterexample_refinement_summary(
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	goal_ordering_rule_groups: Sequence[ClingoRequiredRuleGroup],
 	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
+	atomic_progress_rule_groups: Sequence[ClingoRequiredRuleGroup],
+	atomic_progress_binding_reports: Sequence[AtomicProgressConstraintBindingReport],
 ) -> dict[str, object]:
 	"""Summarize hard selector constraints induced by counterexamples."""
 
@@ -1808,6 +1999,8 @@ def _counterexample_refinement_summary(
 	repair_reports = tuple(repair_binding_reports or ())
 	goal_ordering_groups = tuple(goal_ordering_rule_groups or ())
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
+	atomic_progress_groups = tuple(atomic_progress_rule_groups or ())
+	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
 	return {
 		"problem_count": len(evidence_items),
 		"problem_names": tuple(
@@ -1825,6 +2018,14 @@ def _counterexample_refinement_summary(
 			)
 		),
 		"repair_required_group_count": len(repair_groups),
+		"atomic_progress_required_group_count": len(atomic_progress_groups),
+		"atomic_progress_constraint_count": len(atomic_progress_reports),
+		"matched_atomic_progress_constraint_count": sum(
+			1 for report in atomic_progress_reports if report.matched
+		),
+		"rejected_atomic_progress_constraint_count": sum(
+			1 for report in atomic_progress_reports if not report.matched
+		),
 		"goal_ordering_required_group_count": len(goal_ordering_groups),
 		"goal_ordering_constraint_count": len(goal_ordering_reports),
 		"matched_goal_ordering_constraint_count": sum(
@@ -1851,6 +2052,18 @@ def _counterexample_refinement_summary(
 			}
 			for group in repair_groups
 		),
+		"atomic_progress_required_groups": tuple(
+			{
+				"name": group.name,
+				"constraint_type": "counterexample_atomic_progress",
+				"rule_names": group.rule_names,
+			}
+			for group in atomic_progress_groups
+		),
+		"atomic_progress_constraint_binding_reports": tuple(
+			report.to_dict()
+			for report in atomic_progress_reports
+		),
 		"goal_ordering_required_groups": tuple(
 			{
 				"name": group.name,
@@ -1873,11 +2086,17 @@ def _counterexample_refinement_summary(
 			for report in repair_reports
 			if not report.matched
 		),
+		"rejected_atomic_progress_constraints": tuple(
+			report.to_dict()
+			for report in atomic_progress_reports
+			if not report.matched
+		),
 		"required_group_count": (
 			len(progress_groups)
 			+ len(state_groups)
 			+ len(repair_groups)
 			+ len(goal_ordering_groups)
+			+ len(atomic_progress_groups)
 		),
 		"required_group_types": tuple(
 			group_type
@@ -1886,6 +2105,7 @@ def _counterexample_refinement_summary(
 				("counterexample_state_coverage", state_groups),
 				("counterexample_atomic_precondition_repair", repair_groups),
 				("counterexample_goal_ordering", goal_ordering_groups),
+				("counterexample_atomic_progress", atomic_progress_groups),
 			)
 			if groups
 		),

@@ -176,6 +176,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "counterexample failure classification" in gaps["G3"]["current_state"]
 	assert "primitive-precondition repair evidence" in gaps["G3"]["current_state"]
 	assert "selector hard groups" in gaps["G3"]["current_state"]
+	assert "Atomic-progress refinement constraints" in gaps["G3"]["current_state"]
 	assert "Goal-bound primitive-precondition failures" in gaps["G3"]["current_state"]
 	assert "Explicit counterexample goal-ordering constraints" in (
 		gaps["G3"]["current_state"]
@@ -732,6 +733,72 @@ def test_refinement_repair_constraints_become_selector_required_groups(
 	)
 	assert result.report["selector_repair_constraint_count"] == 1
 	assert "done_prepare_armed_for_finish" in result.report["selected_rule_names"]
+
+
+def test_atomic_progress_refinement_constraints_become_selector_required_groups(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_counterexample_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="missing_module_or_context",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_progress",
+		problem_file=str(problem_file),
+		problem_name="training-p1",
+		failure_reason="no applicable plan for !base(b)",
+		ground_missing_goals=("base(b)",),
+		lifted_missing_goals=("base(X)",),
+		required_rule_group_types=("counterexample_atomic_progress",),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	layer_b = result.report["evidence_matrix"]["layer_b_atomic_modules"]
+
+	assert refinement["atomic_progress_required_group_count"] == 1
+	assert refinement["rejected_atomic_progress_constraint_count"] == 0
+	assert refinement["required_group_types"] == ("counterexample_atomic_progress",)
+	assert refinement["atomic_progress_required_groups"][0]["rule_names"] == (
+		"base_via_make_base",
+	)
+	assert "base_via_make_base" in result.report["selected_rule_names"]
+	assert layer_b["atomic_progress_constraint_count"] == 1
+	assert layer_b["matched_atomic_progress_constraint_count"] == 1
+
+
+def test_atomic_progress_refinement_rejects_undeclared_predicates(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_counterexample_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="missing_module_or_context",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_progress",
+		problem_file=str(problem_file),
+		problem_name="training-p1",
+		failure_reason="no applicable plan for !unknown(b)",
+		ground_missing_goals=("unknown(b)",),
+		lifted_missing_goals=("unknown(X)",),
+		required_rule_group_types=("counterexample_atomic_progress",),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	rejected = refinement["rejected_atomic_progress_constraints"][0]
+
+	assert refinement["atomic_progress_required_group_count"] == 0
+	assert refinement["rejected_atomic_progress_constraint_count"] == 1
+	assert rejected["rejection_reason"] == "undeclared_atomic_progress_predicate"
+	assert rejected["target_predicates"] == ("unknown",)
+	assert rejected["undeclared_predicates"] == ("unknown",)
 
 
 def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(

@@ -217,6 +217,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"counterexample failure classification exist; primitive-precondition "
 					"repair evidence is lifted into Layer B constraints and consumed "
 					"as selector hard groups when matching prepare rules exist. "
+					"Atomic-progress refinement constraints are consumed as selector "
+					"hard groups when matching atomic action rules exist. "
 					"Goal-bound primitive-precondition failures can synthesize new "
 					"safe Layer B prepare candidates when read-only goal facts bind "
 					"all extra variables; undeclared or wrong-arity repair failing "
