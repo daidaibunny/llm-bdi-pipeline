@@ -178,6 +178,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		gaps["G3"]["current_state"]
 	)
 	assert "rejected binding diagnostics" in gaps["G3"]["current_state"]
+	assert "undeclared predicates" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
@@ -516,11 +517,11 @@ def test_goal_ordering_refinement_constraint_synthesizes_composer_candidate(
 		problem_file=str(dependent_problem),
 		problem_name="counterexample-p1",
 		failure_reason="missing goals after bad ordering",
-		ground_missing_goals=("ready(a)",),
-		ground_satisfied_goals=("done(a)",),
-		lifted_missing_goals=("ready(X)",),
-		lifted_satisfied_goals=("done(X)",),
-		lifted_orderings=(("goal_ready(X)", "goal_done(X)"),),
+		ground_missing_goals=("base(a)",),
+		ground_satisfied_goals=("top(a)",),
+		lifted_missing_goals=("base(X)",),
+		lifted_satisfied_goals=("top(X)",),
+		lifted_orderings=(("goal_base(X)", "goal_top(X)"),),
 		required_rule_group_types=(
 			"counterexample_goal_ordering",
 		),
@@ -539,15 +540,15 @@ def test_goal_ordering_refinement_constraint_synthesizes_composer_candidate(
 	assert refinement["goal_ordering_required_group_count"] == 1
 	assert refinement["required_group_types"] == ("counterexample_goal_ordering",)
 	assert refinement["goal_ordering_required_groups"][0]["rule_names"] == (
-		"g_counterexample_order_ready_before_done_1",
+		"g_counterexample_order_base_before_top_1",
 	)
-	assert "g_counterexample_order_ready_before_done_1" in (
+	assert "g_counterexample_order_base_before_top_1" in (
 		result.report["selected_rule_names"]
 	)
 
 	asl = render_plan_library_asl(result.plan_library)
-	assert "+!g : goal_ready(X) & goal_done(X) & not ready(X) <-" in asl
-	assert "\t!ready(X);" in asl
+	assert "+!g : goal_base(X) & goal_top(X) & not base(X) <-" in asl
+	assert "\t!base(X);" in asl
 	assert "\t!g." in asl
 	assert "!achieve_" not in asl
 	assert "!transition_" not in asl
@@ -567,7 +568,7 @@ def test_invalid_goal_ordering_refinement_is_reported_without_guessing(
 		problem_file=str(dependent_problem),
 		problem_name="counterexample-p1",
 		failure_reason="missing goals after bad ordering",
-		lifted_orderings=(("goal_ready(X)", "goal_done(Y)"),),
+		lifted_orderings=(("goal_base(X)", "goal_top(Y)"),),
 		required_rule_group_types=(
 			"counterexample_goal_ordering",
 		),
@@ -585,8 +586,8 @@ def test_invalid_goal_ordering_refinement_is_reported_without_guessing(
 	assert refinement["goal_ordering_required_group_count"] == 0
 	assert refinement["rejected_goal_ordering_constraint_count"] == 1
 	assert rejected["matched"] is False
-	assert rejected["earlier_goal"] == "goal_ready(X)"
-	assert rejected["later_goal"] == "goal_done(Y)"
+	assert rejected["earlier_goal"] == "goal_base(X)"
+	assert rejected["later_goal"] == "goal_top(Y)"
 	assert rejected["rejection_reason"] == "disconnected_goal_ordering_variables"
 	assert result.report["paper_profile_ready"] is False
 	assert any(
@@ -601,6 +602,41 @@ def test_invalid_goal_ordering_refinement_is_reported_without_guessing(
 			refinement_constraints=(constraint,),
 			synthesis_profile="paper",
 		)
+
+
+def test_goal_ordering_refinement_rejects_undeclared_predicates(
+	tmp_path: Path,
+) -> None:
+	domain_file, training_problem, dependent_problem = _write_counterexample_domain(
+		tmp_path,
+	)
+	constraint = RefinementConstraint(
+		failure_kind="goal_ordering_failure",
+		target_layer="layer_c_goal_composer",
+		constraint_type="counterexample_goal_ordering",
+		problem_file=str(dependent_problem),
+		problem_name="counterexample-p1",
+		failure_reason="missing goals after bad ordering",
+		lifted_orderings=(("goal_ready(X)", "goal_unknown(X)"),),
+		required_rule_group_types=(
+			"counterexample_goal_ordering",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(training_problem,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	rejected = refinement["rejected_goal_ordering_constraints"][0]
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert result.report["explicit_goal_ordering_candidate_count"] == 0
+	assert refinement["goal_ordering_required_group_count"] == 0
+	assert rejected["rejection_reason"] == "undeclared_goal_ordering_predicate"
+	assert "!unknown(X)" not in asl
+	assert "goal_unknown(X)" not in asl
 
 
 def test_refinement_repair_constraints_become_selector_required_groups(

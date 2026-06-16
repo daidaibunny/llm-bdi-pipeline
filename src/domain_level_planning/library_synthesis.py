@@ -196,6 +196,7 @@ def synthesize_domain_level_asl_library(
 		refinement_constraints=refinement_constraints,
 	)
 	explicit_goal_ordering_candidates = _explicit_goal_ordering_candidate_rules(
+		predicates=domain.predicates,
 		refinement_constraints=refinement_constraints,
 	)
 	raw_candidate_rules = _deduplicate_rules(
@@ -252,6 +253,7 @@ def synthesize_domain_level_asl_library(
 	goal_ordering_rule_groups, goal_ordering_binding_reports = (
 		_goal_ordering_required_rule_groups(
 			candidate_rules=candidate_rules,
+			predicates=domain.predicates,
 			refinement_constraints=refinement_constraints,
 		)
 	)
@@ -833,12 +835,14 @@ def _repair_synthesized_candidate_rules(
 
 def _explicit_goal_ordering_candidate_rules(
 	*,
+	predicates: Sequence[object],
 	refinement_constraints: Sequence[object],
 ) -> tuple[LiftedPlanRule, ...]:
 	"""Compile lifted goal-ordering refinement constraints into composer rules."""
 
 	rules: list[LiftedPlanRule] = []
 	index = 0
+	declared_predicates = _declared_predicate_names(predicates)
 	for constraint in tuple(refinement_constraints or ()):
 		if getattr(constraint, "constraint_type", "") != "counterexample_goal_ordering":
 			continue
@@ -850,6 +854,11 @@ def _explicit_goal_ordering_candidate_rules(
 			)
 			later_predicate, later_arguments = _parse_goal_descriptor_atom(later_goal)
 			if not earlier_predicate or not later_predicate:
+				continue
+			if (
+				earlier_predicate not in declared_predicates
+				or later_predicate not in declared_predicates
+			):
 				continue
 			if not set(earlier_arguments).intersection(later_arguments):
 				continue
@@ -889,11 +898,13 @@ def _explicit_goal_ordering_candidate_rules(
 def _goal_ordering_required_rule_groups(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
+	predicates: Sequence[object],
 	refinement_constraints: Sequence[object],
 ) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[GoalOrderingConstraintBindingReport, ...]]:
 	groups: list[ClingoRequiredRuleGroup] = []
 	reports: list[GoalOrderingConstraintBindingReport] = []
 	group_index = 0
+	declared_predicates = _declared_predicate_names(predicates)
 	for constraint_index, constraint in enumerate(
 		tuple(refinement_constraints or ()),
 		start=1,
@@ -919,6 +930,23 @@ def _goal_ordering_required_rule_groups(
 						required_capability=None,
 						rule_names=(),
 						rejection_reason="invalid_goal_descriptor",
+					),
+				)
+				continue
+			if (
+				earlier_predicate not in declared_predicates
+				or later_predicate not in declared_predicates
+			):
+				reports.append(
+					GoalOrderingConstraintBindingReport(
+						constraint_index=constraint_index,
+						ordering_index=ordering_index,
+						matched=False,
+						earlier_goal=str(earlier_goal),
+						later_goal=str(later_goal),
+						required_capability=None,
+						rule_names=(),
+						rejection_reason="undeclared_goal_ordering_predicate",
 					),
 				)
 				continue
@@ -981,6 +1009,14 @@ def _goal_ordering_required_rule_groups(
 				),
 			)
 	return tuple(groups), tuple(reports)
+
+
+def _declared_predicate_names(predicates: Sequence[object]) -> frozenset[str]:
+	return frozenset(
+		str(getattr(predicate, "name", "") or "")
+		for predicate in tuple(predicates or ())
+		if str(getattr(predicate, "name", "") or "")
+	)
 
 
 def _repair_available_capabilities(
