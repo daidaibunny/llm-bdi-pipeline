@@ -31,6 +31,12 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 
 	report = json.loads(output.read_text(encoding="utf-8"))
 	assert report["experiment_name"] == "blocksworld-first20"
+	assert report["experiment_protocol"]["scope"] == (
+		"bounded_domain_level_lifted_asl_evaluation"
+	)
+	assert report["experiment_protocol"]["runtime_planner"] == "none"
+	assert report["experiment_protocol"]["baselines"] == []
+	assert report["experiment_protocol"]["ablations"] == []
 	assert report["train_problem_count"] == 1
 	assert report["evaluation_problem_count"] == 2
 	assert report["coverage"]["solved_count"] == 2

@@ -26,6 +26,18 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 
 	assert report["experiment_name"] == "counterexample-mini-smoke"
 	assert report["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
+	assert report["experiment_protocol"] == {
+		"scope": "bounded_domain_level_lifted_asl_evaluation",
+		"training_source": "provided_pddl_training_problems",
+		"evaluation_source": "provided_pddl_evaluation_problems",
+		"runtime_planner": "none",
+		"baselines": [],
+		"ablations": [],
+		"limitations": [
+			"coverage is measured only over the listed evaluation PDDL problems",
+			"no IPC-wide baseline table is implied by this smoke protocol",
+		],
+	}
 	assert report["train_problem_count"] == 1
 	assert report["evaluation_problem_count"] == 2
 	assert report["coverage"]["solved_count"] == 2

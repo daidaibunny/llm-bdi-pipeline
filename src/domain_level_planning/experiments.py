@@ -81,6 +81,7 @@ def run_domain_level_experiment(
 		"experiment_name": experiment_name,
 		"domain_file": _resolved(domain_file),
 		"generation_mode": result.report["generation_mode"],
+		"experiment_protocol": _experiment_protocol(),
 		"train_problem_count": len(tuple(training_problem_files or ())),
 		"training_problem_files": [
 			_resolved(path) for path in tuple(training_problem_files or ())
@@ -135,6 +136,21 @@ def run_domain_level_experiment(
 		"refinement_analysis": _refinement_analysis(refinement_trace),
 		"refinement_trace": refinement_trace,
 		"asl": asl,
+	}
+
+
+def _experiment_protocol() -> dict[str, object]:
+	return {
+		"scope": "bounded_domain_level_lifted_asl_evaluation",
+		"training_source": "provided_pddl_training_problems",
+		"evaluation_source": "provided_pddl_evaluation_problems",
+		"runtime_planner": "none",
+		"baselines": [],
+		"ablations": [],
+		"limitations": [
+			"coverage is measured only over the listed evaluation PDDL problems",
+			"no IPC-wide baseline table is implied by this smoke protocol",
+		],
 	}
 
 

@@ -27,6 +27,12 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 
 	report = json.loads(output.read_text(encoding="utf-8"))
 	assert report["experiment_name"] == "labworkflow-dependency"
+	assert report["experiment_protocol"]["scope"] == (
+		"bounded_domain_level_lifted_asl_evaluation"
+	)
+	assert report["experiment_protocol"]["runtime_planner"] == "none"
+	assert report["experiment_protocol"]["baselines"] == []
+	assert report["experiment_protocol"]["ablations"] == []
 	assert report["coverage"]["solved_count"] == 2
 	assert report["coverage"]["failed_count"] == 0
 	assert report["failure_analysis"]["failed_problem_count"] == 0
