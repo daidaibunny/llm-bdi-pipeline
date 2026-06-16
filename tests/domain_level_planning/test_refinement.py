@@ -213,6 +213,82 @@ def test_missing_top_level_composer_failure_targets_layer_c_state_coverage(
 	}
 
 
+def test_recursive_loop_failure_targets_recursive_atomic_module_diagnostics(
+	tmp_path: Path,
+) -> None:
+	_, _, dependent_problem = _write_ordering_domain(tmp_path)
+	problem = PDDLParser.parse_problem(dependent_problem)
+	counterexample = LibraryCounterexample(
+		problem_name=problem.name,
+		state_index=0,
+		failure_reason="recursive loop on !z_base(b)",
+		state=("seed(a)", "seed(b)"),
+		goal_facts=("goal_z_base(b)", "goal_a_top(a, b)"),
+		goal_atoms=("z_base(b)", "a_top(a, b)"),
+		was_goal_state=False,
+		steps=(),
+		final_state=("seed(a)", "seed(b)"),
+	)
+
+	constraints = classify_heldout_failure_for_refinement(
+		problem_file=dependent_problem,
+		problem=problem,
+		counterexample=counterexample,
+	)
+
+	assert len(constraints) == 1
+	constraint = constraints[0]
+	assert constraint.failure_kind == "recursive_loop"
+	assert constraint.target_layer == "layer_b_atomic_modules"
+	assert constraint.constraint_type == "counterexample_recursive_loop"
+	assert constraint.ground_missing_goals == ("z_base(b)",)
+	assert constraint.lifted_missing_goals == ("z_base(X)",)
+	assert constraint.required_rule_group_types == ("counterexample_recursion_descent",)
+	round_report = _refinement_summary_like((constraint,))
+	assert round_report["recursive_loop_constraint_count"] == 1
+	assert round_report["constraints_by_target_layer"] == {
+		"layer_b_atomic_modules": 1,
+	}
+
+
+def test_step_limit_failure_reports_nontermination_diagnostics(
+	tmp_path: Path,
+) -> None:
+	_, _, dependent_problem = _write_ordering_domain(tmp_path)
+	problem = PDDLParser.parse_problem(dependent_problem)
+	counterexample = LibraryCounterexample(
+		problem_name=problem.name,
+		state_index=0,
+		failure_reason="step limit exceeded",
+		state=("seed(a)", "seed(b)"),
+		goal_facts=("goal_z_base(b)", "goal_a_top(a, b)"),
+		goal_atoms=("z_base(b)", "a_top(a, b)"),
+		was_goal_state=False,
+		steps=("make_base(b)",),
+		final_state=("seed(a)", "seed(b)", "z_base(b)"),
+	)
+
+	constraints = classify_heldout_failure_for_refinement(
+		problem_file=dependent_problem,
+		problem=problem,
+		counterexample=counterexample,
+	)
+
+	assert len(constraints) == 1
+	constraint = constraints[0]
+	assert constraint.failure_kind == "nontermination"
+	assert constraint.target_layer == "execution_semantics"
+	assert constraint.constraint_type == "counterexample_nontermination"
+	assert constraint.ground_missing_goals == ("a_top(a, b)",)
+	assert constraint.lifted_missing_goals == ("a_top(X, Y)",)
+	assert constraint.required_rule_group_types == ("counterexample_nontermination",)
+	round_report = _refinement_summary_like((constraint,))
+	assert round_report["nontermination_constraint_count"] == 1
+	assert round_report["constraints_by_type"] == {
+		"counterexample_nontermination": 1,
+	}
+
+
 def _write_ordering_domain(tmp_path: Path) -> tuple[Path, Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	single_goal_problem = tmp_path / "single-goal.pddl"

@@ -356,6 +356,18 @@ def classify_heldout_failure_for_refinement(
 	)
 	lifted_missing_goals = _lift_atom_group(missing_goals)
 	lifted_satisfied_goals = _lift_atom_group(satisfied_goals)
+	termination_constraint = _termination_failure_constraint(
+		problem_file=problem_file,
+		problem_name=problem.name,
+		counterexample=counterexample,
+		missing_goals=missing_goals,
+		satisfied_goals=satisfied_goals,
+		lifted_missing_goals=lifted_missing_goals,
+		lifted_satisfied_goals=lifted_satisfied_goals,
+		failed_subgoal=failed_subgoal,
+	)
+	if termination_constraint is not None:
+		return (termination_constraint,)
 	if missing_goals and _is_top_level_composer_failure(counterexample.failure_reason):
 		return (
 			RefinementConstraint(
@@ -445,6 +457,53 @@ def classify_heldout_failure_for_refinement(
 			required_rule_group_types=("counterexample_state_coverage",),
 		),
 	)
+
+
+def _termination_failure_constraint(
+	*,
+	problem_file: str | Path,
+	problem_name: str,
+	counterexample: LibraryCounterexample,
+	missing_goals: tuple[str, ...],
+	satisfied_goals: tuple[str, ...],
+	lifted_missing_goals: tuple[str, ...],
+	lifted_satisfied_goals: tuple[str, ...],
+	failed_subgoal: tuple[str, tuple[str, ...]] | None,
+) -> RefinementConstraint | None:
+	failure_kind = _failure_kind(counterexample.failure_reason)
+	if failure_kind == "recursive_loop":
+		return RefinementConstraint(
+			failure_kind=failure_kind,
+			target_layer=(
+				"layer_c_goal_composer"
+				if failed_subgoal is not None and failed_subgoal[0] == "g"
+				else "layer_b_atomic_modules"
+			),
+			constraint_type="counterexample_recursive_loop",
+			problem_file=str(Path(problem_file).expanduser().resolve()),
+			problem_name=problem_name,
+			failure_reason=counterexample.failure_reason,
+			ground_missing_goals=missing_goals,
+			ground_satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
+			required_rule_group_types=("counterexample_recursion_descent",),
+		)
+	if failure_kind == "nontermination":
+		return RefinementConstraint(
+			failure_kind=failure_kind,
+			target_layer="execution_semantics",
+			constraint_type="counterexample_nontermination",
+			problem_file=str(Path(problem_file).expanduser().resolve()),
+			problem_name=problem_name,
+			failure_reason=counterexample.failure_reason,
+			ground_missing_goals=missing_goals,
+			ground_satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
+			required_rule_group_types=("counterexample_nontermination",),
+		)
+	return None
 
 
 def _primitive_precondition_repair_constraint(
@@ -583,13 +642,19 @@ def _parse_failing_action(failure_reason: str) -> tuple[str, tuple[str, ...]] | 
 
 def _parse_failed_subgoal(failure_reason: str) -> tuple[str, tuple[str, ...]] | None:
 	match = re.search(
-		r"no\s+applicable\s+plan\s+for\s+!([A-Za-z_][A-Za-z0-9_-]*)\(([^()]*)\)",
+		(
+			r"(?:no\s+applicable\s+plan\s+for|recursive\s+loop\s+on)\s+"
+			r"!([A-Za-z_][A-Za-z0-9_-]*)\(([^()]*)\)"
+		),
 		str(failure_reason or ""),
 		re.IGNORECASE,
 	)
 	if match is None:
 		match = re.search(
-			r"no\s+applicable\s+plan\s+for\s+!([A-Za-z_][A-Za-z0-9_-]*)\b",
+			(
+				r"(?:no\s+applicable\s+plan\s+for|recursive\s+loop\s+on)\s+"
+				r"!([A-Za-z_][A-Za-z0-9_-]*)\b"
+			),
 			str(failure_reason or ""),
 			re.IGNORECASE,
 		)
@@ -752,6 +817,16 @@ def _refinement_summary(
 			1
 			for constraint in constraints
 			if constraint.constraint_type == "counterexample_atomic_progress"
+		),
+		"recursive_loop_constraint_count": sum(
+			1
+			for constraint in constraints
+			if constraint.constraint_type == "counterexample_recursive_loop"
+		),
+		"nontermination_constraint_count": sum(
+			1
+			for constraint in constraints
+			if constraint.constraint_type == "counterexample_nontermination"
 		),
 		"constraints_by_failure_kind": _count_by(
 			constraint.failure_kind for constraint in constraints

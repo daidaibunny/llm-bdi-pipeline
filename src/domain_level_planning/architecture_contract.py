@@ -243,7 +243,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"failures that name a concrete failed atomic subgoal are refined "
 					"into precise atomic-progress constraints for that subgoal; top-level "
 					"missing-composer failures are classified as Layer C state-coverage "
-					"refinements. Selected and "
+					"refinements; recursive-loop and step-limit failures are reported "
+					"as non-generative termination diagnostics. Selected and "
 					"output composer rules are reported with lifted provenance manifests."
 				),
 				required_improvement=(
@@ -338,7 +339,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"produce machine-readable matched or rejected diagnostics; missing-module "
 					"failures are narrowed to the named failed atomic subgoal when the "
 					"failure text identifies one, while `!g` failures are treated as "
-					"composer state-coverage failures."
+					"composer state-coverage failures; recursive-loop and nontermination "
+					"failures are separated from progress and ordering refinements."
 				),
 				required_improvement=(
 					"Connect more failure classes to generated candidate rules and "
