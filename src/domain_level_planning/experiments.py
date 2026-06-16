@@ -285,7 +285,8 @@ def _generated_output_audit(contract: dict[str, object]) -> dict[str, object]:
 			checked_layers.get("goal_descriptors_read_only"),
 		),
 		"supported_asl_subset": bool(
-			checked_layers.get("body_step_subset")
+			checked_layers.get("plan_head_subset")
+			and checked_layers.get("body_step_subset")
 			and checked_layers.get("context_subset")
 		),
 		"declared_pddl_symbols": bool(

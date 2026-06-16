@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from domain_level_planning.experiments import run_domain_level_experiment
+from domain_level_planning.experiments import _generated_output_audit
 from tests.domain_level_planning.test_library_synthesis import (
 	_write_counterexample_domain,
 )
@@ -148,3 +149,27 @@ def test_domain_level_experiment_reports_failure_analysis(
 		"max": 1,
 		"mean": 0.5,
 	}
+
+
+def test_generated_output_audit_includes_plan_head_subset() -> None:
+	audit = _generated_output_audit(
+		{
+			"passed": False,
+			"checked_layers": {
+				"no_synthetic_names": True,
+				"lifted_plan_heads": True,
+				"lifted_body_calls": True,
+				"lifted_contexts": True,
+				"no_initial_beliefs": True,
+				"goal_descriptors_read_only": True,
+				"plan_head_subset": False,
+				"body_step_subset": True,
+				"context_subset": True,
+				"declared_pddl_symbols": True,
+			},
+			"violations": ["Plan 'bad' uses unsupported plan trigger kind."],
+		},
+	)
+
+	assert audit["supported_asl_subset"] is False
+	assert audit["violations"] == ["Plan 'bad' uses unsupported plan trigger kind."]
