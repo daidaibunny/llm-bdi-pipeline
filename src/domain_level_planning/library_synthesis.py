@@ -77,6 +77,34 @@ class ExternalRuleBindingReport:
 		}
 
 
+@dataclass(frozen=True)
+class RepairConstraintBindingReport:
+	"""Selector binding diagnostics for one refinement repair constraint."""
+
+	constraint_index: int
+	constraint_type: str
+	matched: bool
+	target_predicates: tuple[str, ...]
+	precondition_predicates: tuple[str, ...]
+	failing_action: str
+	required_capabilities: tuple[str, ...]
+	rule_names: tuple[str, ...]
+	rejection_reason: str | None = None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"constraint_index": self.constraint_index,
+			"constraint_type": self.constraint_type,
+			"matched": self.matched,
+			"target_predicates": self.target_predicates,
+			"precondition_predicates": self.precondition_predicates,
+			"failing_action": self.failing_action,
+			"required_capabilities": self.required_capabilities,
+			"rule_names": self.rule_names,
+			"rejection_reason": self.rejection_reason,
+		}
+
+
 def synthesize_domain_level_asl_library(
 	*,
 	domain_file: str | Path,
@@ -176,7 +204,7 @@ def synthesize_domain_level_asl_library(
 		domain=domain,
 		problem_files=counterexample_problem_files,
 	)
-	repair_rule_groups = _repair_required_rule_groups(
+	repair_rule_groups, repair_binding_reports = _repair_required_rule_groups(
 		candidate_rules=candidate_rules,
 		refinement_constraints=refinement_constraints,
 	)
@@ -250,6 +278,7 @@ def synthesize_domain_level_asl_library(
 		external_candidates=external_candidates,
 		paper_policy_audits=paper_policy_audits,
 		external_rule_reports=external_rule_reports,
+		repair_binding_reports=repair_binding_reports,
 		bounded_validation=bounded_validation,
 	)
 	if profile == "paper" and paper_profile_failures:
@@ -313,6 +342,7 @@ def synthesize_domain_level_asl_library(
 			),
 			explicit_refinement_constraints=refinement_constraints,
 			repair_rule_groups=repair_rule_groups,
+			repair_binding_reports=repair_binding_reports,
 		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
@@ -378,6 +408,7 @@ def _paper_profile_failures(
 	external_candidates: Sequence[LiftedPlanRule],
 	paper_policy_audits: Sequence[PaperPolicyAuditReport],
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
+	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	bounded_validation: BoundedLibraryValidationReport | None,
 ) -> tuple[str, ...]:
 	failures: list[str] = []
@@ -409,6 +440,16 @@ def _paper_profile_failures(
 				f"(missing conditions={report.missing_condition_bindings}, "
 				f"missing effects={report.missing_effect_bindings}, "
 				f"empty_body={report.empty_body})"
+			),
+		)
+	for report in tuple(repair_binding_reports or ()):
+		if report.matched:
+			continue
+		failures.append(
+			(
+				"unmatched primitive-precondition repair constraint "
+				f"{report.constraint_index} "
+				f"(required capabilities={report.required_capabilities})"
 			),
 		)
 	if bounded_validation is None:
@@ -556,12 +597,12 @@ def _repair_required_rule_groups(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
 	refinement_constraints: Sequence[object],
-) -> tuple[ClingoRequiredRuleGroup, ...]:
+) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[RepairConstraintBindingReport, ...]]:
 	groups: list[ClingoRequiredRuleGroup] = []
+	reports: list[RepairConstraintBindingReport] = []
 	for index, constraint in enumerate(tuple(refinement_constraints or ()), start=1):
-		if getattr(constraint, "constraint_type", "") != (
-			"counterexample_atomic_precondition_repair"
-		):
+		constraint_type = str(getattr(constraint, "constraint_type", "") or "")
+		if constraint_type != "counterexample_atomic_precondition_repair":
 			continue
 		target_predicates = tuple(
 			_atom_predicate(atom)
@@ -589,19 +630,40 @@ def _repair_required_rule_groups(
 			)
 		)
 		if not rule_names:
-			raise ValueError(
-				"No lifted candidate rule satisfies primitive-precondition repair "
-				"constraint "
-				f"{index}: target={target_predicates}, "
-				f"precondition={precondition_predicates}, action={failing_action!r}.",
+			reports.append(
+				RepairConstraintBindingReport(
+					constraint_index=index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					precondition_predicates=precondition_predicates,
+					failing_action=failing_action,
+					required_capabilities=required_capabilities,
+					rule_names=(),
+					rejection_reason="no_matching_lifted_prepare_rule",
+				),
 			)
+			continue
 		groups.append(
 			ClingoRequiredRuleGroup(
 				name=f"repair_{index}_{'_'.join(required_capabilities)}",
 				rule_names=rule_names,
 			),
 		)
-	return tuple(groups)
+		reports.append(
+			RepairConstraintBindingReport(
+				constraint_index=index,
+				constraint_type=constraint_type,
+				matched=True,
+				target_predicates=target_predicates,
+				precondition_predicates=precondition_predicates,
+				failing_action=failing_action,
+				required_capabilities=required_capabilities,
+				rule_names=rule_names,
+				rejection_reason=None,
+			),
+		)
+	return tuple(groups), tuple(reports)
 
 
 def _atom_predicate(atom: str) -> str:
@@ -898,6 +960,7 @@ def _counterexample_refinement_summary(
 	counterexample_state_coverage_rule_groups: Sequence[object],
 	explicit_refinement_constraints: Sequence[object],
 	repair_rule_groups: Sequence[ClingoRequiredRuleGroup],
+	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 ) -> dict[str, object]:
 	"""Summarize hard selector constraints induced by counterexamples."""
 
@@ -906,6 +969,7 @@ def _counterexample_refinement_summary(
 	state_groups = tuple(counterexample_state_coverage_rule_groups or ())
 	explicit_constraints = tuple(explicit_refinement_constraints or ())
 	repair_groups = tuple(repair_rule_groups or ())
+	repair_reports = tuple(repair_binding_reports or ())
 	return {
 		"problem_count": len(evidence_items),
 		"problem_names": tuple(
@@ -923,6 +987,16 @@ def _counterexample_refinement_summary(
 			)
 		),
 		"repair_required_group_count": len(repair_groups),
+		"matched_repair_constraint_count": sum(
+			1 for report in repair_reports if report.matched
+		),
+		"rejected_repair_constraint_count": sum(
+			1 for report in repair_reports if not report.matched
+		),
+		"repair_constraint_binding_reports": tuple(
+			report.to_dict()
+			for report in repair_reports
+		),
 		"repair_required_groups": tuple(
 			{
 				"name": group.name,
@@ -930,6 +1004,11 @@ def _counterexample_refinement_summary(
 				"rule_names": group.rule_names,
 			}
 			for group in repair_groups
+		),
+		"rejected_repair_constraints": tuple(
+			report.to_dict()
+			for report in repair_reports
+			if not report.matched
 		),
 		"required_group_count": (
 			len(progress_groups)

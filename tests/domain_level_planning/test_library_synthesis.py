@@ -533,6 +533,63 @@ def test_refinement_repair_constraints_become_selector_required_groups(
 	assert "done_prepare_armed_for_finish" in result.report["selected_rule_names"]
 
 
+def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_unmatched_repair_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(problem_file),
+		problem_name="unmatched-repair-p1",
+		failure_reason="Action preconditions are not satisfied for finish(a).",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		failing_action="finish",
+		failing_action_arguments=("a",),
+		lifted_failing_action="finish(X)",
+		missing_preconditions=("calibrated(a)",),
+		lifted_missing_preconditions=("calibrated(X)",),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+
+	refinement = result.report["counterexample_refinement_constraints"]
+	assert refinement["explicit_repair_constraint_count"] == 1
+	assert refinement["repair_required_group_count"] == 0
+	assert refinement["rejected_repair_constraint_count"] == 1
+	assert refinement["rejected_repair_constraints"][0]["target_predicates"] == ("done",)
+	assert refinement["rejected_repair_constraints"][0]["precondition_predicates"] == (
+		"calibrated",
+	)
+	assert refinement["rejected_repair_constraints"][0]["failing_action"] == "finish"
+	assert refinement["rejected_repair_constraints"][0]["required_capabilities"] == (
+		"module_done_prepare_calibrated_for_finish",
+	)
+	assert result.report["paper_profile_ready"] is False
+	assert any(
+		"unmatched primitive-precondition repair" in failure
+		for failure in result.report["paper_profile_failures"]
+	)
+
+	with pytest.raises(ValueError, match="unmatched primitive-precondition repair"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			refinement_constraints=(constraint,),
+			synthesis_profile="paper",
+		)
+
+
 def _write_generic_domain_problem_and_policy(
 	tmp_path: Path,
 	*,
@@ -659,6 +716,46 @@ def _write_prepare_order_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]
 		 (:objects a)
 		 (:init (ready a))
 		 (:goal (and (holding a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_unmatched_repair_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "unmatched-repair-domain.pddl"
+	problem_file = tmp_path / "unmatched-repair-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain unmatched-repair-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (armed ?x)
+		  (calibrated ?x)
+		  (done ?x)
+		 )
+		 (:action arm
+		  :parameters (?x)
+		  :precondition ()
+		  :effect (armed ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (armed ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem unmatched-repair-p1)
+		 (:domain unmatched-repair-mini)
+		 (:objects a)
+		 (:init)
+		 (:goal (and (done a)))
 		)
 		""",
 		encoding="utf-8",
