@@ -37,6 +37,19 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 	assert report["generated_output_audit"]["passed"] is True
 	assert report["generated_output_audit"]["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["no_grounded_plan_terms"] is True
+	assert report["generated_output_audit"]["violation_count"] == 0
+	assert report["generated_output_audit"]["violations"] == []
+	assert set(report["generated_output_audit"]["checked_layers"]) >= {
+		"no_initial_beliefs",
+		"no_synthetic_names",
+		"goal_descriptors_read_only",
+		"body_step_subset",
+		"context_subset",
+		"declared_pddl_symbols",
+		"lifted_plan_heads",
+		"lifted_body_calls",
+		"lifted_contexts",
+	}
 	assert report["plan_library"]["primitive_action_call_count"] > 0
 	assert report["plan_library"]["subgoal_call_count"] > 0
 	assert report["plan_library"]["asl_line_count"] > 0

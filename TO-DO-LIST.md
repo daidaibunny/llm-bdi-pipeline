@@ -143,6 +143,7 @@ PDDL domain + training problems
 | T72 | Add evidence-weighted costs for primitive action strategies. | G2 | Schema-derived atomic action rules justified by training trace slices now receive lower selector cost than unobserved schema action fallbacks, and Layer B evidence reports count evidence-weighted versus unobserved action rules. | Done |
 | T73 | Select among context-compatible primitive action strategies. | G2 | Atomic action rules with the same lifted head and same lifted context are grouped so Clingo selects one evidence-weighted strategy instead of requiring every action schema; Blocksworld keeps distinct pickup/unstack and stack/putdown contexts and still solves the first-20 smoke tests. | Done |
 | T74 | Reject PDDL predicate symbols outside the current AgentSpeak atom identifier subset. | G10 | PDDL predicate names containing unsupported AgentSpeak atom identifier characters are now rejected by `PDDLSupportReport` with `unsupported_asl_symbol` diagnostics before ASL generation or final library contract checks; IPC-style hyphenated action names remain accepted as primitive body calls. | Done |
+| T75 | Assert generated-output audit violation details in experiment reports. | G8, G11 | Unit and script-level experiment tests now require `generated_output_audit.violations == []` and expose the checked Layer contract keys, so reports are explainable instead of only pass/fail summaries. | Done |
 
 ## Current Completion Rule
 

@@ -48,6 +48,18 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert report["generated_output_audit"]["supported_asl_subset"] is True
 	assert report["generated_output_audit"]["declared_pddl_symbols"] is True
 	assert report["generated_output_audit"]["violation_count"] == 0
+	assert report["generated_output_audit"]["violations"] == []
+	assert set(report["generated_output_audit"]["checked_layers"]) >= {
+		"no_initial_beliefs",
+		"no_synthetic_names",
+		"goal_descriptors_read_only",
+		"body_step_subset",
+		"context_subset",
+		"declared_pddl_symbols",
+		"lifted_plan_heads",
+		"lifted_body_calls",
+		"lifted_contexts",
+	}
 	assert report["refinement_analysis"] == {
 		"enabled": False,
 		"converged": None,
