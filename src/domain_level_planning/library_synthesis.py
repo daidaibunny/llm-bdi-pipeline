@@ -1956,6 +1956,13 @@ def _evidence_matrix(
 			*tuple(counterexample_transition_evidence or ()),
 		),
 	)
+	atomic_justifications = atomic_achievement_justifications(
+		selected_rules,
+		(
+			*tuple(training_transition_evidence or ()),
+			*tuple(counterexample_transition_evidence or ()),
+		),
+	)
 	repair_reports = tuple(repair_binding_reports or ())
 	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
@@ -2017,14 +2024,12 @@ def _evidence_matrix(
 			),
 			"trace_justified_selected_rule_count": sum(
 				1
-				for supporting in atomic_achievement_justifications(
-					selected_rules,
-					(
-						*tuple(training_transition_evidence or ()),
-						*tuple(counterexample_transition_evidence or ()),
-					),
-				).values()
+				for supporting in atomic_justifications.values()
 				if supporting
+			),
+			"selected_atomic_rule_evidence": _selected_atomic_rule_evidence(
+				selected_rules=selected_rules,
+				atomic_justifications=atomic_justifications,
 			),
 			"anti_unified_pattern_count": len(all_atomic_patterns),
 			"training_anti_unified_pattern_count": len(training_atomic_patterns),
@@ -2210,6 +2215,53 @@ def _transition_evidence_summary(evidence_items: Sequence[object]) -> dict[str, 
 			len(getattr(evidence, "atomic_achievements", ()) or ())
 			for evidence in items
 		),
+	}
+
+
+def _selected_atomic_rule_evidence(
+	*,
+	selected_rules: Sequence[LiftedPlanRule],
+	atomic_justifications: Mapping[str, tuple],
+) -> tuple[dict[str, object], ...]:
+	return tuple(
+		_atomic_rule_evidence_record(
+			rule=rule,
+			supporting_slices=tuple(atomic_justifications.get(rule.name, ())),
+		)
+		for rule in tuple(selected_rules or ())
+		if rule.layer == "atomic"
+	)
+
+
+def _atomic_rule_evidence_record(
+	*,
+	rule: LiftedPlanRule,
+	supporting_slices: tuple,
+) -> dict[str, object]:
+	has_action_body = any(
+		step.kind == "action"
+		for step in tuple(rule.body or ())
+	)
+	source = _candidate_source(rule)
+	if supporting_slices:
+		verdict = "trace_justified"
+	elif source == "external_sketch":
+		verdict = "external_policy_bound"
+	elif source == "counterexample_repair":
+		verdict = "counterexample_repair_synthesized"
+	elif not has_action_body:
+		verdict = "schema_no_action_body"
+	else:
+		verdict = "schema_unobserved_action_body"
+	return {
+		"rule_name": rule.name,
+		"head": _call(rule.head.symbol, rule.head.arguments),
+		"source": source,
+		"rationale": rule.rationale,
+		"verdict": verdict,
+		"trace_support_count": len(supporting_slices),
+		"has_action_body": has_action_body,
+		"capabilities": tuple(rule.capabilities),
 	}
 
 

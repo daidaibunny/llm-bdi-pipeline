@@ -208,7 +208,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"descent audits are reported; repair diagnostics from "
 					"counterexample precondition failures are included in the "
 					"Layer B evidence matrix; selected and output rules are reported "
-					"with lifted provenance manifests."
+					"with lifted provenance manifests; selected atomic rules now "
+					"receive per-rule evidence verdicts such as trace-justified, "
+					"schema-no-action-body, external-policy-bound, or "
+					"counterexample-repair-synthesized."
 				),
 				required_improvement=(
 					"Add a multi-strategy module learner that generalizes from these "

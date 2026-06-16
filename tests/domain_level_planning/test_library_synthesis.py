@@ -305,6 +305,15 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert layer_b["anti_unified_patterns"][0]["action_name"] == "finish"
 	assert layer_b["anti_unified_patterns"][0]["action_arguments"] == ["X"]
 	assert layer_b["anti_unified_patterns"][0]["enabling_preconditions"] == ["ready(X)"]
+	assert layer_b["selected_atomic_rule_evidence"]
+	evidence_by_rule = {
+		item["rule_name"]: item
+		for item in layer_b["selected_atomic_rule_evidence"]
+	}
+	assert evidence_by_rule["done_via_finish"]["verdict"] == "trace_justified"
+	assert evidence_by_rule["done_via_finish"]["trace_support_count"] == 1
+	assert evidence_by_rule["done_via_finish"]["source"] == "schema"
+	assert evidence_by_rule["done_already_true"]["verdict"] == "schema_no_action_body"
 	assert layer_b["recursion_descent"]["contract"] == (
 		"missing_positive_precondition_before_same_goal_recursion"
 	)
