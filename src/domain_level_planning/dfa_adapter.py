@@ -37,6 +37,28 @@ class DFAAchievementRequest:
 		}
 
 
+@dataclass(frozen=True)
+class DFAGuardAdaptationDiagnostic:
+	"""Structured support diagnostic for one DFA guard adaptation attempt."""
+
+	raw_guard: str
+	supported: bool
+	state_literals: tuple[str, ...]
+	request: DFAAchievementRequest | None = None
+	rejection_reason: str | None = None
+	message: str | None = None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"raw_guard": self.raw_guard,
+			"supported": self.supported,
+			"rejection_reason": self.rejection_reason,
+			"message": self.message,
+			"state_literals": list(self.state_literals),
+			"request": self.request.to_dict() if self.request is not None else None,
+		}
+
+
 def adapt_dfa_guarded_transition_to_achievement_request(
 	transition: Mapping[str, object],
 	*,
@@ -76,29 +98,66 @@ def adapt_dfa_guard_to_achievement_request(
 	silently compiled into mutable goal descriptors or query-specific plans.
 	"""
 
+	diagnostic = inspect_dfa_guard_to_achievement_request(
+		raw_guard,
+		domain_key=domain_key,
+		domain_file=domain_file,
+		declared_predicates=declared_predicates,
+	)
+	if diagnostic.request is None:
+		raise ValueError(diagnostic.message or "DFA guard adaptation failed.")
+	return diagnostic.request
+
+
+def inspect_dfa_guard_to_achievement_request(
+	raw_guard: str,
+	*,
+	domain_key: str,
+	domain_file: str | Path | None = None,
+	declared_predicates: Sequence[object] | Mapping[str, int | None] = (),
+) -> DFAGuardAdaptationDiagnostic:
+	"""Return a structured diagnostic for adapting one DFA guard."""
+
+	normalized_guard = str(raw_guard or "").strip() or "true"
 	state_literals = tuple(
 		literal
 		for literal in map_event_expression_to_pddl_context(
-			raw_guard,
+			normalized_guard,
 			domain_key=domain_key,
 		)
 		if literal and literal != "true"
 	)
 	if any(_is_unsupported_literal(literal) for literal in state_literals):
-		raise ValueError(
+		message = (
 			"DFA guard adapter currently supports positive conjunctive "
-			f"achievement requests only; received {raw_guard!r}.",
+			f"achievement requests only; received {raw_guard!r}."
 		)
-	parsed_atoms = tuple(_parse_atom(literal) for literal in state_literals)
-	_validate_guard_atoms(
-		parsed_atoms,
-		declared_predicates=_predicate_arities(
-			domain_file=domain_file,
-			declared_predicates=declared_predicates,
-		),
-	)
-	return DFAAchievementRequest(
-		raw_guard=str(raw_guard or "").strip() or "true",
+		return DFAGuardAdaptationDiagnostic(
+			raw_guard=normalized_guard,
+			supported=False,
+			state_literals=state_literals,
+			rejection_reason="unsupported_negative_or_disjunctive_guard",
+			message=message,
+		)
+	try:
+		parsed_atoms = tuple(_parse_atom(literal) for literal in state_literals)
+		_validate_guard_atoms(
+			parsed_atoms,
+			declared_predicates=_predicate_arities(
+				domain_file=domain_file,
+				declared_predicates=declared_predicates,
+			),
+		)
+	except ValueError as error:
+		return DFAGuardAdaptationDiagnostic(
+			raw_guard=normalized_guard,
+			supported=False,
+			state_literals=state_literals,
+			rejection_reason=_schema_rejection_reason(str(error)),
+			message=str(error),
+		)
+	request = DFAAchievementRequest(
+		raw_guard=normalized_guard,
 		state_literals=state_literals,
 		goal_facts=tuple(
 			_call(f"goal_{predicate}", arguments)
@@ -108,6 +167,12 @@ def adapt_dfa_guard_to_achievement_request(
 			AgentSpeakBodyStep("subgoal", predicate, arguments)
 			for predicate, arguments in parsed_atoms
 		),
+	)
+	return DFAGuardAdaptationDiagnostic(
+		raw_guard=normalized_guard,
+		supported=True,
+		state_literals=state_literals,
+		request=request,
 	)
 
 
@@ -194,3 +259,13 @@ def _call(predicate: str, arguments: Sequence[str]) -> str:
 def _optional_text(value: object) -> str | None:
 	text = str(value or "").strip()
 	return text or None
+
+
+def _schema_rejection_reason(message: str) -> str:
+	if "undeclared PDDL predicate" in message:
+		return "undeclared_pddl_predicate"
+	if "wrong arity" in message:
+		return "wrong_pddl_predicate_arity"
+	if "Invalid DFA guard atom" in message:
+		return "invalid_guard_atom"
+	return "unsupported_guard_schema"

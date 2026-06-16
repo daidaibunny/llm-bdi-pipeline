@@ -48,8 +48,10 @@ from .feature_binding import (
 )
 from .dfa_adapter import (
 	DFAAchievementRequest,
+	DFAGuardAdaptationDiagnostic,
 	adapt_dfa_guard_to_achievement_request,
 	adapt_dfa_guarded_transition_to_achievement_request,
+	inspect_dfa_guard_to_achievement_request,
 )
 from .dfa_controller import (
 	DFARunExecutionResult,
@@ -57,6 +59,7 @@ from .dfa_controller import (
 	execute_dfa_until_accepting,
 	execute_dfa_progress_step,
 	progress_requests_from_dfa_state,
+	progress_transitions_from_dfa_state,
 )
 from .experiments import run_domain_level_experiment
 from .models import (
@@ -128,6 +131,7 @@ __all__ = [
 	"ClingoSketchRuleSelector",
 	"ActionEffectBindingCandidate",
 	"DFAAchievementRequest",
+	"DFAGuardAdaptationDiagnostic",
 	"DFAProgressExecutionResult",
 	"DFARunExecutionResult",
 	"FeatureBindingDiagnostic",
@@ -179,12 +183,14 @@ __all__ = [
 	"domain_level_architecture_contract",
 	"adapt_dfa_guard_to_achievement_request",
 	"adapt_dfa_guarded_transition_to_achievement_request",
+	"inspect_dfa_guard_to_achievement_request",
 	"execute_dfa_progress_step",
 	"execute_dfa_until_accepting",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"persist_domain_level_temporal_artifact",
 	"progress_requests_from_dfa_state",
+	"progress_transitions_from_dfa_state",
 	"run_learner_sketches",
 	"run_domain_level_experiment",
 	"synthesize_domain_level_asl_library",

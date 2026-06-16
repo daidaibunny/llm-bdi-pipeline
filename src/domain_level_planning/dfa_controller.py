@@ -77,12 +77,6 @@ def progress_requests_from_dfa_state(
 ) -> tuple[DFAAchievementRequest, ...]:
 	"""Return all schema-valid outgoing DFA requests that reduce distance to acceptance."""
 
-	state = str(current_dfa_state or "").strip()
-	if not state:
-		raise ValueError("current_dfa_state must be non-empty.")
-	accepting_states = _accepting_states(dfa_payload)
-	transitions = _normalise_transitions(dfa_payload)
-	distances = _distances_to_accepting(transitions, accepting_states)
 	return tuple(
 		adapt_dfa_guarded_transition_to_achievement_request(
 			transition,
@@ -90,6 +84,28 @@ def progress_requests_from_dfa_state(
 			domain_file=domain_file,
 			declared_predicates=declared_predicates,
 		)
+		for transition in progress_transitions_from_dfa_state(
+			dfa_payload=dfa_payload,
+			current_dfa_state=current_dfa_state,
+		)
+	)
+
+
+def progress_transitions_from_dfa_state(
+	*,
+	dfa_payload: Mapping[str, Any],
+	current_dfa_state: str,
+) -> tuple[dict[str, str], ...]:
+	"""Return outgoing DFA transition records that reduce distance to acceptance."""
+
+	state = str(current_dfa_state or "").strip()
+	if not state:
+		raise ValueError("current_dfa_state must be non-empty.")
+	accepting_states = _accepting_states(dfa_payload)
+	transitions = _normalise_transitions(dfa_payload)
+	distances = _distances_to_accepting(transitions, accepting_states)
+	return tuple(
+		transition
 		for transition in transitions
 		if _is_progress_transition(
 			transition,

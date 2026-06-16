@@ -235,6 +235,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "runtime controller" in gaps["G12"]["current_state"]
 	assert "temporal artifact pipeline" in gaps["G12"]["current_state"]
 	assert "repeated progress steps" in gaps["G12"]["current_state"]
+	assert "accepted/rejected DFA guard diagnostics" in gaps["G12"]["current_state"]
 	assert "negative/disjunctive guard semantics" in gaps["G12"]["required_improvement"]
 	assert "beyond smoke tests" in gaps["G12"]["required_improvement"]
 

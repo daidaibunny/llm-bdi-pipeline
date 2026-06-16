@@ -18,7 +18,8 @@ from temporal_specification import TemporalSpecificationRecord
 from utils.pddl_parser import PDDLParser
 
 from .dfa_adapter import DFAAchievementRequest
-from .dfa_controller import progress_requests_from_dfa_state
+from .dfa_adapter import inspect_dfa_guard_to_achievement_request
+from .dfa_controller import progress_transitions_from_dfa_state
 from .library_synthesis import ExternalSketchPolicySource
 from .library_synthesis import UnifiedSynthesisResult
 from .library_synthesis import synthesize_domain_level_asl_library
@@ -35,6 +36,7 @@ class DomainLevelTemporalArtifact:
 	synthesis_result: UnifiedSynthesisResult
 	dfa_metadata: dict[str, dict[str, Any]]
 	dfa_progress_requests: dict[str, tuple[DFAAchievementRequest, ...]]
+	dfa_progress_diagnostics: dict[str, tuple[dict[str, object], ...]]
 
 	@property
 	def plan_library(self):
@@ -53,6 +55,9 @@ class DomainLevelTemporalArtifact:
 			"dfa_metadata": dict(self.dfa_metadata),
 			"dfa_progress_requests": _progress_requests_to_dict(
 				self.dfa_progress_requests,
+			),
+			"dfa_progress_diagnostics": _progress_diagnostics_to_dict(
+				self.dfa_progress_diagnostics,
 			),
 		}
 
@@ -91,16 +96,18 @@ def build_domain_level_temporal_artifact(
 	builder = dfa_builder or DFABuilder()
 	dfa_metadata: dict[str, dict[str, Any]] = {}
 	dfa_progress_requests: dict[str, tuple[DFAAchievementRequest, ...]] = {}
+	dfa_progress_diagnostics: dict[str, tuple[dict[str, object], ...]] = {}
 	for record in temporal_specifications:
 		payload = dict(builder.build(record))
 		dfa_metadata[record.instruction_id] = payload
-		dfa_progress_requests[record.instruction_id] = progress_requests_from_dfa_state(
-			dfa_payload=payload,
-			current_dfa_state=str(payload.get("initial_state") or ""),
+		requests, diagnostics = _inspect_progress_requests_from_initial_state(
+			payload=payload,
 			domain_key=resolved_query_domain,
 			domain_file=domain_path,
 			declared_predicates=domain.predicates,
 		)
+		dfa_progress_requests[record.instruction_id] = requests
+		dfa_progress_diagnostics[record.instruction_id] = diagnostics
 	return DomainLevelTemporalArtifact(
 		domain_name=domain.name,
 		query_domain=resolved_query_domain,
@@ -109,6 +116,7 @@ def build_domain_level_temporal_artifact(
 		synthesis_result=synthesis_result,
 		dfa_metadata=dfa_metadata,
 		dfa_progress_requests=dfa_progress_requests,
+		dfa_progress_diagnostics=dfa_progress_diagnostics,
 	)
 
 
@@ -130,6 +138,7 @@ def persist_domain_level_temporal_artifact(
 		"synthesis_report": root / "synthesis_report.json",
 		"dfa_metadata": root / "dfa_metadata.json",
 		"dfa_progress_requests": root / "dfa_progress_requests.json",
+		"dfa_progress_diagnostics": root / "dfa_progress_diagnostics.json",
 	}
 	metadata = {
 		"domain_name": artifact.domain_name,
@@ -159,6 +168,10 @@ def persist_domain_level_temporal_artifact(
 		paths["dfa_progress_requests"],
 		_progress_requests_to_dict(artifact.dfa_progress_requests),
 	)
+	_write_json(
+		paths["dfa_progress_diagnostics"],
+		_progress_diagnostics_to_dict(artifact.dfa_progress_diagnostics),
+	)
 	return {name: str(path) for name, path in paths.items()}
 
 
@@ -168,6 +181,71 @@ def _progress_requests_to_dict(
 	return {
 		query_id: [request.to_dict() for request in tuple(query_requests or ())]
 		for query_id, query_requests in requests.items()
+	}
+
+
+def _progress_diagnostics_to_dict(
+	diagnostics: Mapping[str, Sequence[Mapping[str, object]]],
+) -> dict[str, list[dict[str, object]]]:
+	return {
+		query_id: [dict(item) for item in tuple(query_diagnostics or ())]
+		for query_id, query_diagnostics in diagnostics.items()
+	}
+
+
+def _inspect_progress_requests_from_initial_state(
+	*,
+	payload: Mapping[str, Any],
+	domain_key: str,
+	domain_file: Path,
+	declared_predicates: Sequence[object],
+) -> tuple[tuple[DFAAchievementRequest, ...], tuple[dict[str, object], ...]]:
+	requests: list[DFAAchievementRequest] = []
+	diagnostics: list[dict[str, object]] = []
+	for transition in progress_transitions_from_dfa_state(
+		dfa_payload=payload,
+		current_dfa_state=str(payload.get("initial_state") or ""),
+	):
+		request, diagnostic = _progress_transition_diagnostic(
+			transition=transition,
+			domain_key=domain_key,
+			domain_file=domain_file,
+			declared_predicates=declared_predicates,
+		)
+		if request is not None:
+			requests.append(request)
+		diagnostics.append(diagnostic)
+	return tuple(requests), tuple(diagnostics)
+
+
+def _progress_transition_diagnostic(
+	*,
+	transition: Mapping[str, object],
+	domain_key: str,
+	domain_file: Path,
+	declared_predicates: Sequence[object],
+) -> tuple[DFAAchievementRequest | None, dict[str, object]]:
+	diagnostic = inspect_dfa_guard_to_achievement_request(
+		str(transition.get("raw_label") or "true"),
+		domain_key=domain_key,
+		domain_file=domain_file,
+		declared_predicates=declared_predicates,
+	)
+	request = None
+	if diagnostic.request is not None:
+		request = DFAAchievementRequest(
+			raw_guard=diagnostic.request.raw_guard,
+			state_literals=diagnostic.request.state_literals,
+			goal_facts=diagnostic.request.goal_facts,
+			body_steps=diagnostic.request.body_steps,
+			source_state=str(transition.get("source_state") or "").strip() or None,
+			target_state=str(transition.get("target_state") or "").strip() or None,
+		)
+	return request, {
+		"source_state": str(transition.get("source_state") or "").strip(),
+		"target_state": str(transition.get("target_state") or "").strip(),
+		"raw_guard": str(transition.get("raw_label") or "true").strip() or "true",
+		"diagnostic": diagnostic.to_dict(),
 	}
 
 

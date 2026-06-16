@@ -5,6 +5,7 @@ import pytest
 from domain_level_planning.dfa_adapter import (
 	adapt_dfa_guard_to_achievement_request,
 	adapt_dfa_guarded_transition_to_achievement_request,
+	inspect_dfa_guard_to_achievement_request,
 )
 from plan_library.models import AgentSpeakBodyStep
 from utils.pddl_parser import PDDLParser
@@ -108,3 +109,28 @@ def test_dfa_guard_adapter_rejects_wrong_pddl_predicate_arity() -> None:
 			domain_key="blocksworld",
 			domain_file=BLOCKS_DOMAIN,
 		)
+
+
+def test_dfa_guard_adapter_reports_structured_rejection_diagnostics() -> None:
+	diagnostic = inspect_dfa_guard_to_achievement_request(
+		"not on(b1,b2)",
+		domain_key="blocksworld",
+		domain_file=BLOCKS_DOMAIN,
+	)
+
+	assert diagnostic.supported is False
+	assert diagnostic.rejection_reason == "unsupported_negative_or_disjunctive_guard"
+	assert diagnostic.raw_guard == "not on(b1,b2)"
+	assert diagnostic.state_literals == ("not on(b1, b2)",)
+	assert diagnostic.request is None
+	assert diagnostic.to_dict() == {
+		"raw_guard": "not on(b1,b2)",
+		"supported": False,
+		"rejection_reason": "unsupported_negative_or_disjunctive_guard",
+		"message": (
+			"DFA guard adapter currently supports positive conjunctive "
+			"achievement requests only; received 'not on(b1,b2)'."
+		),
+		"state_literals": ["not on(b1, b2)"],
+		"request": None,
+	}

@@ -384,8 +384,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"library separately from query-specific DFA metadata and "
 					"progress requests; the runtime controller can execute repeated "
 					"progress steps until an accepting DFA state; "
-					"the supported ASL subset and execution semantics are reported "
-					"with each domain-level contract."
+					"the artifact pipeline records structured accepted/rejected DFA "
+					"guard diagnostics; the supported ASL subset and execution "
+					"semantics are reported with each domain-level contract."
 				),
 				required_improvement=(
 					"Define unsupported negative/disjunctive guard semantics and "
