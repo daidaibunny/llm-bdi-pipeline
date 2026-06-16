@@ -49,6 +49,22 @@ def test_pddl_support_report_serializes_rejected_action_costs(tmp_path: Path) ->
 	assert any(block.endswith("domain.pddl::functions") for block in serialized["unsupported_blocks"])
 	assert any(block.endswith("problem.pddl::metric") for block in serialized["unsupported_blocks"])
 	assert "increase" in serialized["unsupported_expression_operators"]
+	assert {
+		"kind": "unsupported_requirement",
+		"location": str(domain_file),
+		"symbol": ":action-costs",
+		"message": "requirement :action-costs has no compiler support",
+	} in serialized["unsupported_diagnostics"]
+	assert any(
+		diagnostic["kind"] == "unsupported_block"
+		and diagnostic["symbol"] == ":functions"
+		for diagnostic in serialized["unsupported_diagnostics"]
+	)
+	assert any(
+		diagnostic["kind"] == "unsupported_expression_operator"
+		and diagnostic["symbol"] == "increase"
+		for diagnostic in serialized["unsupported_diagnostics"]
+	)
 	assert any(":action-costs" in reason for reason in serialized["unsupported_reasons"])
 	assert any(":functions" in reason for reason in serialized["unsupported_reasons"])
 	assert any(":metric" in reason for reason in serialized["unsupported_reasons"])
@@ -88,6 +104,17 @@ def test_pddl_support_report_rejects_negative_problem_goals(tmp_path: Path) -> N
 	serialized = report.to_dict()
 
 	assert serialized["is_compilable"] is False
+	assert serialized["unsupported_diagnostics"] == [
+		{
+			"kind": "unsupported_goal_fragment",
+			"location": str(problem_file),
+			"symbol": ":goal",
+			"message": (
+				f"{problem_file}: problem goals must be positive achievement goals only "
+				"inside a conjunction of predicate atoms"
+			),
+		},
+	]
 	assert any(
 		"positive achievement goals only" in reason
 		for reason in serialized["unsupported_reasons"]

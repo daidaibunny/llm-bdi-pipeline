@@ -54,6 +54,7 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert result.report["pddl_support"]["is_compilable"] is True
 	assert result.report["pddl_support"]["requirements"] == [":strips"]
 	assert result.report["pddl_support"]["unsupported_reasons"] == []
+	assert result.report["pddl_support"]["unsupported_diagnostics"] == []
 	assert result.plan_library.metadata["pddl_support"] == result.report["pddl_support"]
 	assert result.report["paper_quality_checks"] == (
 		"transition_progress",
@@ -228,6 +229,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G10"]["layer"] == "PDDL scope"
 	assert gaps["G10"]["status"] == "done_current_fragment"
 	assert "STRIPS" in gaps["G10"]["current_state"]
+	assert "machine-readable diagnostics" in gaps["G10"]["current_state"]
 	assert gaps["G11"]["layer"] == "no-hardcoding"
 	assert gaps["G11"]["status"] == "partially_done"
 	assert "domain-specific" in gaps["G11"]["required_improvement"]

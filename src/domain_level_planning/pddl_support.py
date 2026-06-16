@@ -75,6 +75,24 @@ SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 
 
 @dataclass(frozen=True)
+class PDDLUnsupportedDiagnostic:
+	"""One structured reason why a PDDL file is outside the supported fragment."""
+
+	kind: str
+	location: str
+	symbol: str
+	message: str
+
+	def to_dict(self) -> dict[str, str]:
+		return {
+			"kind": self.kind,
+			"location": self.location,
+			"symbol": self.symbol,
+			"message": self.message,
+		}
+
+
+@dataclass(frozen=True)
 class PDDLSupportReport:
 	"""Supported-fragment result for one PDDL domain/problem set."""
 
@@ -86,6 +104,7 @@ class PDDLSupportReport:
 	unsupported_blocks: tuple[str, ...]
 	unsupported_expression_operators: tuple[str, ...]
 	unsupported_reasons: tuple[str, ...]
+	unsupported_diagnostics: tuple[PDDLUnsupportedDiagnostic, ...] = ()
 
 	@property
 	def is_compilable(self) -> bool:
@@ -103,6 +122,10 @@ class PDDLSupportReport:
 			"unsupported_blocks": list(self.unsupported_blocks),
 			"unsupported_expression_operators": list(self.unsupported_expression_operators),
 			"unsupported_reasons": list(self.unsupported_reasons),
+			"unsupported_diagnostics": [
+				diagnostic.to_dict()
+				for diagnostic in self.unsupported_diagnostics
+			],
 			"is_compilable": self.is_compilable,
 			"supported_requirement_set": sorted(SUPPORTED_REQUIREMENTS),
 			"known_unsupported_requirement_set": sorted(UNSUPPORTED_REQUIREMENTS),
@@ -147,6 +170,7 @@ def inspect_pddl_support(
 	)
 	requirements = tuple(_requirements(domain_text))
 	reasons: list[str] = []
+	diagnostics: list[PDDLUnsupportedDiagnostic] = []
 	unsupported_requirements: list[str] = []
 	unsupported_blocks: list[str] = []
 	unsupported_operators: list[str] = []
@@ -154,10 +178,28 @@ def inspect_pddl_support(
 	for requirement in requirements:
 		if requirement in UNSUPPORTED_REQUIREMENTS:
 			unsupported_requirements.append(requirement)
-			reasons.append(f"requirement {requirement} is not supported")
+			message = f"requirement {requirement} is not supported"
+			reasons.append(message)
+			diagnostics.append(
+				PDDLUnsupportedDiagnostic(
+					kind="unsupported_requirement",
+					location=str(domain_path),
+					symbol=requirement,
+					message=message,
+				),
+			)
 		elif requirement not in SUPPORTED_REQUIREMENTS:
 			unsupported_requirements.append(requirement)
-			reasons.append(f"requirement {requirement} has no compiler support")
+			message = f"requirement {requirement} has no compiler support"
+			reasons.append(message)
+			diagnostics.append(
+				PDDLUnsupportedDiagnostic(
+					kind="unsupported_requirement",
+					location=str(domain_path),
+					symbol=requirement,
+					message=message,
+				),
+			)
 
 	for file_label, text in (
 		(str(domain_path), domain_text),
@@ -166,16 +208,33 @@ def inspect_pddl_support(
 		for block in sorted(UNSUPPORTED_DOMAIN_BLOCKS):
 			if _contains_pddl_block(text, block):
 				location = f"{file_label}:{block}"
+				message = f"{file_label}: block {block} is not supported"
 				unsupported_blocks.append(location)
-				reasons.append(f"{file_label}: block {block} is not supported")
+				reasons.append(message)
+				diagnostics.append(
+					PDDLUnsupportedDiagnostic(
+						kind="unsupported_block",
+						location=file_label,
+						symbol=block,
+						message=message,
+					),
+				)
 		for operator in _unsupported_expression_operators(text):
+			message = f"{file_label}: Unsupported PDDL expression operator {operator!r}"
 			unsupported_operators.append(operator)
-			reasons.append(
-				f"{file_label}: Unsupported PDDL expression operator {operator!r}",
+			reasons.append(message)
+			diagnostics.append(
+				PDDLUnsupportedDiagnostic(
+					kind="unsupported_expression_operator",
+					location=file_label,
+					symbol=operator,
+					message=message,
+				),
 			)
 	for problem_path, problem_text in zip(problem_paths, problem_texts):
-		for reason in _unsupported_goal_reasons(problem_path, problem_text):
-			reasons.append(reason)
+		for diagnostic in _unsupported_goal_diagnostics(problem_path, problem_text):
+			reasons.append(diagnostic.message)
+			diagnostics.append(diagnostic)
 
 	return PDDLSupportReport(
 		domain_file=domain_path,
@@ -190,6 +249,7 @@ def inspect_pddl_support(
 		unsupported_blocks=tuple(dict.fromkeys(unsupported_blocks)),
 		unsupported_expression_operators=tuple(dict.fromkeys(unsupported_operators)),
 		unsupported_reasons=tuple(dict.fromkeys(reasons)),
+		unsupported_diagnostics=tuple(_deduplicate_diagnostics(diagnostics)),
 	)
 
 
@@ -257,18 +317,53 @@ def _contains_pddl_block(text: str, block: str) -> bool:
 
 
 def _unsupported_goal_reasons(problem_path: Path, problem_text: str) -> tuple[str, ...]:
+	return tuple(
+		diagnostic.message
+		for diagnostic in _unsupported_goal_diagnostics(problem_path, problem_text)
+	)
+
+
+def _unsupported_goal_diagnostics(
+	problem_path: Path,
+	problem_text: str,
+) -> tuple[PDDLUnsupportedDiagnostic, ...]:
 	goal_expression = _keyword_expression(problem_text, "goal")
 	if goal_expression is None:
 		return ()
 	parsed = _parse_form(goal_expression)
 	if _is_positive_conjunctive_goal(parsed):
 		return ()
+	message = (
+		f"{problem_path}: problem goals must be positive achievement goals only "
+		"inside a conjunction of predicate atoms"
+	)
 	return (
-		(
-			f"{problem_path}: problem goals must be positive achievement goals only "
-			"inside a conjunction of predicate atoms"
+		PDDLUnsupportedDiagnostic(
+			kind="unsupported_goal_fragment",
+			location=str(problem_path),
+			symbol=":goal",
+			message=message,
 		),
 	)
+
+
+def _deduplicate_diagnostics(
+	diagnostics: Iterable[PDDLUnsupportedDiagnostic],
+) -> tuple[PDDLUnsupportedDiagnostic, ...]:
+	seen: set[tuple[str, str, str, str]] = set()
+	deduplicated: list[PDDLUnsupportedDiagnostic] = []
+	for diagnostic in diagnostics:
+		key = (
+			diagnostic.kind,
+			diagnostic.location,
+			diagnostic.symbol,
+			diagnostic.message,
+		)
+		if key in seen:
+			continue
+		seen.add(key)
+		deduplicated.append(diagnostic)
+	return tuple(deduplicated)
 
 
 def _keyword_expression(text: str, keyword: str) -> str | None:
