@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from domain_level_planning.experiments import run_domain_level_experiment
+from domain_level_planning.experiments import compare_domain_level_experiment_reports
 from domain_level_planning.experiments import _generated_output_audit
 from domain_level_planning.library_synthesis import ExternalSketchPolicySource
 from tests.domain_level_planning.test_library_synthesis import (
@@ -233,6 +234,76 @@ def test_domain_level_experiment_records_explicit_ablation_metadata(
 			"external_policy_count": 0,
 			"counterexample_refinement": False,
 			"runtime_planner": "none",
+		},
+	]
+
+
+def test_compare_domain_level_experiment_reports_builds_ablation_table(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+	)
+	bootstrap = run_domain_level_experiment(
+		experiment_name="bootstrap-ablation",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		ablation_label="bootstrap_schema_only",
+		max_execution_steps=100,
+		max_depth=50,
+	)
+	paper = run_domain_level_experiment(
+		experiment_name="paper-ablation",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
+			),
+		),
+		synthesis_profile="paper",
+		ablation_label="paper_external_sketch",
+		max_execution_steps=100,
+		max_depth=50,
+	)
+
+	table = compare_domain_level_experiment_reports((bootstrap, paper))
+
+	assert table["report_count"] == 2
+	assert table["best_by_coverage"] in {"bootstrap_schema_only", "paper_external_sketch"}
+	assert table["rows"] == [
+		{
+			"label": "bootstrap_schema_only",
+			"experiment_name": "bootstrap-ablation",
+			"synthesis_profile": "bootstrap",
+			"external_policy_count": 0,
+			"counterexample_refinement": False,
+			"solved_count": 1,
+			"failed_count": 0,
+			"coverage_ratio": 1.0,
+			"plan_count": bootstrap["plan_library"]["plan_count"],
+			"primitive_action_call_count": bootstrap["plan_library"][
+				"primitive_action_call_count"
+			],
+			"subgoal_call_count": bootstrap["plan_library"]["subgoal_call_count"],
+		},
+		{
+			"label": "paper_external_sketch",
+			"experiment_name": "paper-ablation",
+			"synthesis_profile": "paper",
+			"external_policy_count": 1,
+			"counterexample_refinement": False,
+			"solved_count": 1,
+			"failed_count": 0,
+			"coverage_ratio": 1.0,
+			"plan_count": paper["plan_library"]["plan_count"],
+			"primitive_action_call_count": paper["plan_library"][
+				"primitive_action_call_count"
+			],
+			"subgoal_call_count": paper["plan_library"]["subgoal_call_count"],
 		},
 	]
 

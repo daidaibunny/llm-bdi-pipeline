@@ -349,12 +349,14 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"reports include coverage, generated ASL, generated-output audit, "
 					"library size and runtime metrics, including synthesis and "
 					"evaluation runtime metrics, compact Layer B and Layer C learning "
-					"audit summaries, optional explicit ablation metadata, plus top-level "
-					"refinement analysis for convergence and constraint-type counts."
+					"audit summaries, optional explicit ablation metadata, a pure "
+					"already-run report comparison table helper, plus top-level refinement "
+					"analysis for convergence and constraint-type counts."
 				),
 				required_improvement=(
 					"Add broader experiment protocol with more domains, actual ablations "
-					"and baseline tables, held-out scaling, and deeper failure analysis."
+					"and externally comparable baseline tables, held-out scaling, and "
+					"deeper failure analysis."
 				),
 				status="partially_done",
 			),

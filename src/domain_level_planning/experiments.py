@@ -261,6 +261,70 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 	}
 
 
+def compare_domain_level_experiment_reports(
+	reports: Sequence[dict[str, object]],
+) -> dict[str, object]:
+	"""Build a compact comparison table from already-run experiment reports."""
+
+	rows = tuple(_comparison_row(report) for report in tuple(reports or ()))
+	return {
+		"report_count": len(rows),
+		"best_by_coverage": _best_by_coverage(rows),
+		"rows": list(rows),
+	}
+
+
+def _comparison_row(report: dict[str, object]) -> dict[str, object]:
+	protocol = dict(report.get("experiment_protocol") or {})
+	coverage = dict(report.get("coverage") or {})
+	plan_library = dict(report.get("plan_library") or {})
+	ablation = _primary_ablation(protocol, report)
+	return {
+		"label": str(ablation.get("label") or report.get("experiment_name") or ""),
+		"experiment_name": str(report.get("experiment_name") or ""),
+		"synthesis_profile": str(protocol.get("synthesis_profile") or "bootstrap"),
+		"external_policy_count": int(protocol.get("external_policy_count") or 0),
+		"counterexample_refinement": bool(
+			ablation.get("counterexample_refinement", False),
+		),
+		"solved_count": int(coverage.get("solved_count") or 0),
+		"failed_count": int(coverage.get("failed_count") or 0),
+		"coverage_ratio": float(coverage.get("coverage_ratio") or 0.0),
+		"plan_count": int(plan_library.get("plan_count") or 0),
+		"primitive_action_call_count": int(
+			plan_library.get("primitive_action_call_count") or 0,
+		),
+		"subgoal_call_count": int(plan_library.get("subgoal_call_count") or 0),
+	}
+
+
+def _primary_ablation(
+	protocol: dict[str, object],
+	report: dict[str, object],
+) -> dict[str, object]:
+	ablations = tuple(protocol.get("ablations") or ())
+	if ablations:
+		return dict(ablations[0])
+	return {
+		"label": report.get("experiment_name") or "",
+		"counterexample_refinement": False,
+	}
+
+
+def _best_by_coverage(rows: Sequence[dict[str, object]]) -> str | None:
+	if not rows:
+		return None
+	best = max(
+		tuple(rows),
+		key=lambda row: (
+			float(row.get("coverage_ratio") or 0.0),
+			int(row.get("solved_count") or 0),
+			-int(row.get("failed_count") or 0),
+		),
+	)
+	return str(best.get("label") or "")
+
+
 def _count_by_key(items, key: str) -> dict[str, int]:
 	counts: dict[str, int] = {}
 	for item in tuple(items or ()):
