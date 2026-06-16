@@ -607,6 +607,8 @@ def test_paper_profile_excludes_unobserved_schema_action_modules(
 		for item in layer_b["selected_atomic_rule_evidence"]
 	}
 	assert verdict_by_rule["done_via_finish"] == "trace_justified"
+	assert layer_b["evidence_weighted_action_rule_count"] >= 1
+	assert layer_b["unobserved_schema_action_rule_count"] >= 1
 	unobserved_schema_rules = tuple(
 		item
 		for item in layer_b["selected_atomic_rule_evidence"]
@@ -614,6 +616,11 @@ def test_paper_profile_excludes_unobserved_schema_action_modules(
 	)
 	assert len(unobserved_schema_rules) == 1
 	assert unobserved_schema_rules[0]["head"] == "bonus(X)"
+	bootstrap_costs = {
+		item["name"]: item["cost"]
+		for item in bootstrap.report["selected_rule_manifest"]
+	}
+	assert bootstrap_costs["done_via_finish"] < bootstrap_costs["bonus_via_grant-bonus"]
 	assert bootstrap.report["paper_profile_ready"] is False
 	assert any(
 		"unjustified schema action atomic rule" in failure

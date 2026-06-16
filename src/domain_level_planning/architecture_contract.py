@@ -211,8 +211,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"with lifted provenance manifests; selected atomic rules now "
 					"receive per-rule evidence verdicts such as trace-justified, "
 					"schema-no-action-body, external-policy-bound, or "
-					"counterexample-repair-synthesized; paper-profile exclusion "
-					"removes unsupported schema action capabilities before selection."
+					"counterexample-repair-synthesized; trace-supported primitive "
+					"action strategies receive lower selector cost than unobserved "
+					"schema fallbacks; paper-profile exclusion removes unsupported "
+					"schema action capabilities before selection."
 				),
 				required_improvement=(
 					"Add a multi-strategy module learner that generalizes from these "

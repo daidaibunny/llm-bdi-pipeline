@@ -4,6 +4,7 @@ Domain-agnostic lifted ASL synthesis from PDDL action schemas.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
@@ -155,7 +156,7 @@ def _candidate_rules_from_domain(
 				producible_predicates=producible_predicates,
 			),
 		)
-	return tuple(rules)
+	return _weight_atomic_action_rules_by_evidence(rules, transition_evidence)
 
 
 def filter_rules_by_recursion_descent(
@@ -942,6 +943,36 @@ def _action_effect_rules(
 			),
 		)
 	return tuple(rules)
+
+
+def _weight_atomic_action_rules_by_evidence(
+	rules: Sequence[LiftedPlanRule],
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+) -> tuple[LiftedPlanRule, ...]:
+	"""Prefer trace-supported primitive strategies without deleting alternatives."""
+
+	if not tuple(transition_evidence or ()):
+		return tuple(rules or ())
+	justifications = atomic_achievement_justifications(rules, transition_evidence)
+	weighted: list[LiftedPlanRule] = []
+	for rule in tuple(rules or ()):
+		if not _is_schema_atomic_action_rule(rule):
+			weighted.append(rule)
+			continue
+		support_count = len(tuple(justifications.get(rule.name, ())))
+		weighted.append(replace(rule, cost=1 if support_count else 4))
+	return tuple(weighted)
+
+
+def _is_schema_atomic_action_rule(rule: LiftedPlanRule) -> bool:
+	return (
+		rule.layer == "atomic"
+		and any(step.kind == "action" for step in tuple(rule.body or ()))
+		and any(
+			capability.startswith("module_") and "_action_" in capability
+			for capability in tuple(rule.capabilities or ())
+		)
+	)
 
 
 def _producible_predicates(actions: Sequence[object]) -> frozenset[str]:

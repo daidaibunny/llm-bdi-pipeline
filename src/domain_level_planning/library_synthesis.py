@@ -2411,6 +2411,21 @@ def _evidence_matrix(
 				for supporting in atomic_justifications.values()
 				if supporting
 			),
+			"evidence_weighted_action_rule_count": sum(
+				1
+				for rule in tuple(candidate_rules or ())
+				if rule.layer == "atomic"
+				and any(step.kind == "action" for step in tuple(rule.body or ()))
+				and rule.cost == 1
+			),
+			"unobserved_schema_action_rule_count": sum(
+				1
+				for rule in tuple(candidate_rules or ())
+				if rule.layer == "atomic"
+				and any(step.kind == "action" for step in tuple(rule.body or ()))
+				and _candidate_source(rule) == "schema"
+				and rule.cost > 1
+			),
 			"selected_atomic_rule_evidence": _selected_atomic_rule_evidence(
 				selected_rules=selected_rules,
 				atomic_justifications=atomic_justifications,
