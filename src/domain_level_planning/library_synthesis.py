@@ -252,6 +252,7 @@ def synthesize_domain_level_asl_library(
 	repair_rule_groups, repair_binding_reports = _repair_required_rule_groups(
 		candidate_rules=candidate_rules,
 		predicates=domain.predicates,
+		actions=domain.actions,
 		refinement_constraints=refinement_constraints,
 	)
 	goal_ordering_rule_groups, goal_ordering_binding_reports = (
@@ -678,12 +679,14 @@ def _repair_required_rule_groups(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
 	predicates: Sequence[object],
+	actions: Sequence[object],
 	refinement_constraints: Sequence[object],
 ) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[RepairConstraintBindingReport, ...]]:
 	groups: list[ClingoRequiredRuleGroup] = []
 	reports: list[RepairConstraintBindingReport] = []
 	declared_predicates = _declared_predicate_names(predicates)
 	predicate_arities = _declared_predicate_arities(predicates)
+	action_arities = _declared_action_arities(actions)
 	for index, constraint in enumerate(tuple(refinement_constraints or ()), start=1):
 		constraint_type = str(getattr(constraint, "constraint_type", "") or "")
 		if constraint_type != "counterexample_atomic_precondition_repair":
@@ -699,6 +702,42 @@ def _repair_required_rule_groups(
 			if _atom_predicate(atom)
 		)
 		failing_action = str(getattr(constraint, "failing_action", "") or "")
+		if failing_action not in action_arities:
+			reports.append(
+				RepairConstraintBindingReport(
+					constraint_index=index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					precondition_predicates=precondition_predicates,
+					failing_action=failing_action,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					rejection_reason="undeclared_repair_failing_action",
+				),
+			)
+			continue
+		if not _repair_failing_action_arity_matches(
+			constraint=constraint,
+			failing_action=failing_action,
+			action_arities=action_arities,
+		):
+			reports.append(
+				RepairConstraintBindingReport(
+					constraint_index=index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					precondition_predicates=precondition_predicates,
+					failing_action=failing_action,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					rejection_reason="wrong_repair_failing_action_arity",
+				),
+			)
+			continue
 		undeclared_predicates = _undeclared_repair_predicates(
 			target_predicates=target_predicates,
 			precondition_predicates=precondition_predicates,
@@ -823,6 +862,7 @@ def _repair_synthesized_candidate_rules(
 	rules: list[LiftedPlanRule] = []
 	declared_predicates = _declared_predicate_names(predicates)
 	predicate_arities = _declared_predicate_arities(predicates)
+	action_arities = _declared_action_arities(actions)
 	producible_predicates = _positive_effect_predicates(actions)
 	for constraint in tuple(refinement_constraints or ()):
 		if getattr(constraint, "constraint_type", "") != (
@@ -833,6 +873,12 @@ def _repair_synthesized_candidate_rules(
 		failing_action = str(getattr(constraint, "failing_action", "") or "")
 		action = _action_by_name(actions, failing_action)
 		if action is None:
+			continue
+		if not _repair_failing_action_arity_matches(
+			constraint=constraint,
+			failing_action=failing_action,
+			action_arities=action_arities,
+		):
 			continue
 		action_preconditions = parse_pddl_literals(str(getattr(action, "preconditions", "")))
 		for target_atom in tuple(getattr(constraint, "lifted_missing_goals", ()) or ()):
@@ -1137,6 +1183,37 @@ def _declared_predicate_arities(predicates: Sequence[object]) -> dict[str, int]:
 		for predicate in tuple(predicates or ())
 		if str(getattr(predicate, "name", "") or "")
 	}
+
+
+def _declared_action_arities(actions: Sequence[object]) -> dict[str, int]:
+	return {
+		str(getattr(action, "name", "") or ""): len(
+			tuple(getattr(action, "parameters", ()) or ()),
+		)
+		for action in tuple(actions or ())
+		if str(getattr(action, "name", "") or "")
+	}
+
+
+def _repair_failing_action_arity_matches(
+	*,
+	constraint: object,
+	failing_action: str,
+	action_arities: Mapping[str, int],
+) -> bool:
+	expected = action_arities.get(failing_action)
+	if expected is None:
+		return False
+	lifted_action = str(getattr(constraint, "lifted_failing_action", "") or "")
+	action_name, lifted_arguments = _parse_lifted_atom(lifted_action)
+	if action_name:
+		if action_name != failing_action:
+			return False
+		return len(lifted_arguments) == expected
+	failing_action_arguments = tuple(
+		getattr(constraint, "failing_action_arguments", ()) or (),
+	)
+	return len(failing_action_arguments) == expected
 
 
 def _wrong_arity_lifted_predicates(

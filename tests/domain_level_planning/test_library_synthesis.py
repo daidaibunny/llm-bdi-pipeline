@@ -184,6 +184,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "undeclared predicates" in gaps["G3"]["current_state"]
 	assert "repair evidence" in gaps["G3"]["current_state"]
 	assert "wrong predicate arities" in gaps["G3"]["current_state"]
+	assert "wrong-arity repair failing actions" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
@@ -803,12 +804,12 @@ def test_unmatched_repair_reports_producible_precondition_without_prepare_rule(
 		constraint_type="counterexample_atomic_precondition_repair",
 		problem_file=str(problem_file),
 		problem_name="producible-unmatched-p1",
-		failure_reason="Action preconditions are not satisfied for finish(a).",
+		failure_reason="Action preconditions are not satisfied for finish(a, b).",
 		ground_missing_goals=("done(a)",),
 		lifted_missing_goals=("done(X)",),
 		failing_action="finish",
-		failing_action_arguments=("a",),
-		lifted_failing_action="finish(X)",
+		failing_action_arguments=("a", "b"),
+		lifted_failing_action="finish(X, Y)",
 		missing_preconditions=("linked(a, b)",),
 		lifted_missing_preconditions=("linked(X, Y)",),
 		required_rule_group_types=(
@@ -1048,6 +1049,82 @@ def test_repair_refinement_rejects_wrong_precondition_predicate_arity(
 	assert rejected["rejection_reason"] == "wrong_repair_predicate_arity"
 	assert rejected["precondition_predicates"] == ("linked",)
 	assert "!linked(X)" not in asl
+
+
+def test_repair_refinement_rejects_undeclared_failing_action(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_goal_bound_repair_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(problem_file),
+		problem_name="bad-action-repair-p1",
+		failure_reason="Action preconditions are not satisfied for missing(a, b).",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		failing_action="missing",
+		failing_action_arguments=("a", "b"),
+		lifted_failing_action="missing(X, Y)",
+		missing_preconditions=("linked(a, b)",),
+		lifted_missing_preconditions=("linked(X, Y)",),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	rejected = refinement["rejected_repair_constraints"][0]
+
+	assert result.report["repair_synthesized_candidate_count"] == 0
+	assert refinement["repair_required_group_count"] == 0
+	assert rejected["rejection_reason"] == "undeclared_repair_failing_action"
+	assert rejected["failing_action"] == "missing"
+
+
+def test_repair_refinement_rejects_wrong_failing_action_arity(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_goal_bound_repair_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(problem_file),
+		problem_name="bad-action-arity-repair-p1",
+		failure_reason="Action preconditions are not satisfied for finish(a).",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		failing_action="finish",
+		failing_action_arguments=("a",),
+		lifted_failing_action="finish(X)",
+		missing_preconditions=("linked(a, b)",),
+		lifted_missing_preconditions=("linked(X, Y)",),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	rejected = refinement["rejected_repair_constraints"][0]
+
+	assert result.report["repair_synthesized_candidate_count"] == 0
+	assert refinement["repair_required_group_count"] == 0
+	assert rejected["rejection_reason"] == "wrong_repair_failing_action_arity"
+	assert rejected["failing_action"] == "finish"
 
 
 def _write_generic_domain_problem_and_policy(
