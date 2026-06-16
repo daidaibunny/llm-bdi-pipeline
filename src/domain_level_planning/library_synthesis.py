@@ -148,6 +148,7 @@ class AtomicProgressConstraintBindingReport:
 	rule_names: tuple[str, ...]
 	available_capabilities: tuple[str, ...] = ()
 	undeclared_predicates: tuple[str, ...] = ()
+	wrong_arity_predicates: tuple[str, ...] = ()
 	rejection_reason: str | None = None
 
 	def to_dict(self) -> dict[str, object]:
@@ -160,6 +161,7 @@ class AtomicProgressConstraintBindingReport:
 			"available_capabilities": self.available_capabilities,
 			"rule_names": self.rule_names,
 			"undeclared_predicates": self.undeclared_predicates,
+			"wrong_arity_predicates": self.wrong_arity_predicates,
 			"rejection_reason": self.rejection_reason,
 		}
 
@@ -1279,6 +1281,7 @@ def _atomic_progress_required_rule_groups(
 					required_capabilities=(),
 					rule_names=(),
 					available_capabilities=(),
+					wrong_arity_predicates=wrong_arity_predicates,
 					rejection_reason="wrong_atomic_progress_predicate_arity",
 				),
 			)

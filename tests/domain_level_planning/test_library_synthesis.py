@@ -801,6 +801,37 @@ def test_atomic_progress_refinement_rejects_undeclared_predicates(
 	assert rejected["undeclared_predicates"] == ("unknown",)
 
 
+def test_atomic_progress_refinement_reports_wrong_arity_predicates(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_counterexample_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="missing_module_or_context",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_progress",
+		problem_file=str(problem_file),
+		problem_name="training-p1",
+		failure_reason="no applicable plan for !base(b, c)",
+		ground_missing_goals=("base(b, c)",),
+		lifted_missing_goals=("base(X, Y)",),
+		required_rule_group_types=("counterexample_atomic_progress",),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	rejected = refinement["rejected_atomic_progress_constraints"][0]
+
+	assert refinement["atomic_progress_required_group_count"] == 0
+	assert refinement["rejected_atomic_progress_constraint_count"] == 1
+	assert rejected["rejection_reason"] == "wrong_atomic_progress_predicate_arity"
+	assert rejected["target_predicates"] == ("base",)
+	assert rejected["wrong_arity_predicates"] == ("base",)
+
+
 def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(
 	tmp_path: Path,
 ) -> None:
