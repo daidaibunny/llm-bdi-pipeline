@@ -143,6 +143,15 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert layer_b["training_goal_progression_count"] == 1
 	assert layer_b["training_atomic_achievement_count"] == 1
 	assert layer_b["trace_justified_selected_rule_count"] >= 1
+	assert layer_b["anti_unified_pattern_count"] == 1
+	assert layer_b["training_anti_unified_pattern_count"] == 1
+	assert layer_b["anti_unified_support_count"] == 1
+	assert layer_b["anti_unified_last_achiever_support_count"] == 1
+	assert layer_b["anti_unified_patterns"][0]["target_predicate"] == "done"
+	assert layer_b["anti_unified_patterns"][0]["target_arguments"] == ["X"]
+	assert layer_b["anti_unified_patterns"][0]["action_name"] == "finish"
+	assert layer_b["anti_unified_patterns"][0]["action_arguments"] == ["X"]
+	assert layer_b["anti_unified_patterns"][0]["enabling_preconditions"] == ["ready(X)"]
 	assert layer_c["target"] == "goal-conditioned conjunctive-goal composer rules"
 	assert layer_c["candidate_count"] >= layer_c["selected_rule_count"] >= 1
 	assert layer_c["training_state_coverage_constraint_count"] >= 1

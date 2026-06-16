@@ -94,6 +94,32 @@ class AtomicAchievementEvidence:
 
 
 @dataclass(frozen=True)
+class LiftedAtomicAchievementPattern:
+	"""Anti-unified Layer B evidence shared by grounded achievement slices."""
+
+	target_predicate: str
+	target_arguments: tuple[str, ...]
+	action_name: str
+	action_arguments: tuple[str, ...]
+	enabling_preconditions: tuple[str, ...]
+	support_count: int
+	last_achiever_support_count: int
+	example_signatures: tuple[str, ...]
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"target_predicate": self.target_predicate,
+			"target_arguments": list(self.target_arguments),
+			"action_name": self.action_name,
+			"action_arguments": list(self.action_arguments),
+			"enabling_preconditions": list(self.enabling_preconditions),
+			"support_count": self.support_count,
+			"last_achiever_support_count": self.last_achiever_support_count,
+			"example_signatures": list(self.example_signatures),
+		}
+
+
+@dataclass(frozen=True)
 class TrainingTransitionEvidence:
 	"""Small transition-system evidence extracted from one training problem."""
 
@@ -480,6 +506,73 @@ def atomic_achievements_from_plan(
 	return _mark_last_achievers(slices)
 
 
+def anti_unify_atomic_achievements(
+	slices: Sequence[AtomicAchievementEvidence],
+) -> tuple[LiftedAtomicAchievementPattern, ...]:
+	"""Anti-unify grounded atomic achievement slices into lifted support patterns."""
+
+	grouped: dict[tuple[object, ...], list[AtomicAchievementEvidence]] = {}
+	for slice_ in tuple(slices or ()):
+		pattern = _anti_unified_slice_pattern(slice_)
+		grouped.setdefault(pattern, []).append(slice_)
+	patterns: list[LiftedAtomicAchievementPattern] = []
+	for pattern, support in grouped.items():
+		(
+			target_predicate,
+			target_arguments,
+			action_name,
+			action_arguments,
+			enabling_preconditions,
+		) = pattern
+		examples = tuple(
+			(
+				f"{_fact_signature(slice_.target_fact)} via "
+				f"{slice_.action_signature}@{slice_.step_index}"
+			)
+			for slice_ in support
+		)
+		patterns.append(
+			LiftedAtomicAchievementPattern(
+				target_predicate=str(target_predicate),
+				target_arguments=tuple(target_arguments),
+				action_name=str(action_name),
+				action_arguments=tuple(action_arguments),
+				enabling_preconditions=tuple(enabling_preconditions),
+				support_count=len(support),
+				last_achiever_support_count=sum(
+					1 for slice_ in support if slice_.is_last_achiever
+				),
+				example_signatures=examples,
+			),
+		)
+	return tuple(
+		sorted(
+			patterns,
+			key=lambda item: (
+				item.target_predicate,
+				item.action_name,
+				item.target_arguments,
+				item.action_arguments,
+				item.enabling_preconditions,
+			),
+		),
+	)
+
+
+def anti_unify_training_atomic_achievements(
+	evidence_items: Sequence[TrainingTransitionEvidence],
+) -> tuple[LiftedAtomicAchievementPattern, ...]:
+	"""Anti-unify atomic achievement slices across training evidence objects."""
+
+	return anti_unify_atomic_achievements(
+		tuple(
+			slice_
+			for evidence in tuple(evidence_items or ())
+			for slice_ in tuple(getattr(evidence, "atomic_achievements", ()) or ())
+		),
+	)
+
+
 def _mark_last_achievers(
 	slices: Sequence[AtomicAchievementEvidence],
 ) -> tuple[AtomicAchievementEvidence, ...]:
@@ -504,6 +597,40 @@ def _mark_last_achievers(
 			),
 		)
 	return tuple(marked)
+
+
+def _anti_unified_slice_pattern(slice_: AtomicAchievementEvidence) -> tuple[object, ...]:
+	object_variables: dict[str, str] = {}
+
+	def _variables(arguments: Iterable[str]) -> tuple[str, ...]:
+		return tuple(_variable_for_object(argument, object_variables) for argument in arguments)
+
+	target_arguments = _variables(slice_.target_fact.args)
+	action_arguments = _variables(slice_.action_arguments)
+	enabling_preconditions = tuple(
+		sorted(
+			_atom(literal.predicate, _variables(literal.arguments))
+			for literal in slice_.enabling_preconditions
+		),
+	)
+	return (
+		slice_.target_fact.predicate,
+		target_arguments,
+		slice_.action_name,
+		action_arguments,
+		enabling_preconditions,
+	)
+
+
+def _variable_for_object(object_name: str, mapping: dict[str, str]) -> str:
+	if object_name not in mapping:
+		mapping[object_name] = _variable_name(len(mapping))
+	return mapping[object_name]
+
+
+def _variable_name(index: int) -> str:
+	names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+	return names[index] if index < len(names) else f"X{index + 1}"
 
 
 def _atom(predicate: str, arguments: Iterable[str]) -> str:

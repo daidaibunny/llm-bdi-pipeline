@@ -30,6 +30,7 @@ from .schema_synthesis import _validate_selected_rules_against_transition_progre
 from .schema_synthesis import atomic_achievement_justifications
 from .schema_synthesis import composer_state_coverage_required_rule_groups
 from .schema_synthesis import transition_progress_required_rule_groups
+from .transition_system import anti_unify_training_atomic_achievements
 
 
 @dataclass(frozen=True)
@@ -572,6 +573,18 @@ def _evidence_matrix(
 ) -> dict[str, object]:
 	"""Summarize which evidence sources support each synthesis layer."""
 
+	training_atomic_patterns = anti_unify_training_atomic_achievements(
+		training_transition_evidence,
+	)
+	counterexample_atomic_patterns = anti_unify_training_atomic_achievements(
+		counterexample_transition_evidence,
+	)
+	all_atomic_patterns = anti_unify_training_atomic_achievements(
+		(
+			*tuple(training_transition_evidence or ()),
+			*tuple(counterexample_transition_evidence or ()),
+		),
+	)
 	return {
 		"layer_b_atomic_modules": {
 			"target": "PDDL predicate achievement-goal modules",
@@ -612,6 +625,21 @@ def _evidence_matrix(
 					),
 				).values()
 				if supporting
+			),
+			"anti_unified_pattern_count": len(all_atomic_patterns),
+			"training_anti_unified_pattern_count": len(training_atomic_patterns),
+			"counterexample_anti_unified_pattern_count": len(
+				counterexample_atomic_patterns,
+			),
+			"anti_unified_support_count": sum(
+				pattern.support_count for pattern in all_atomic_patterns
+			),
+			"anti_unified_last_achiever_support_count": sum(
+				pattern.last_achiever_support_count
+				for pattern in all_atomic_patterns
+			),
+			"anti_unified_patterns": tuple(
+				pattern.to_dict() for pattern in all_atomic_patterns
 			),
 		},
 		"layer_c_goal_composer": {

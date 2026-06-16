@@ -4,6 +4,8 @@ from pathlib import Path
 
 from domain_level_planning.transition_system import (
 	AtomicAchievementEvidence,
+	anti_unify_atomic_achievements,
+	anti_unify_training_atomic_achievements,
 	atomic_achievements_from_plan,
 	collect_training_transition_evidence,
 )
@@ -134,3 +136,41 @@ def test_atomic_achievement_evidence_is_serializable() -> None:
 		AtomicAchievementEvidence.__dataclass_fields__["is_last_achiever"].default,
 		bool,
 	)
+
+
+def test_atomic_achievement_anti_unification_groups_repeated_grounded_examples() -> None:
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+	problem = PDDLParser.parse_problem(BLOCKS_P01)
+
+	evidence = collect_training_transition_evidence(domain, problem)
+	patterns = anti_unify_atomic_achievements(evidence.atomic_achievements)
+
+	on_stack = [
+		pattern
+		for pattern in patterns
+		if pattern.target_predicate == "on" and pattern.action_name == "stack"
+	]
+	assert len(on_stack) == 1
+	pattern = on_stack[0]
+	assert pattern.target_arguments == ("X", "Y")
+	assert pattern.action_arguments == ("X", "Y")
+	assert pattern.enabling_preconditions == ("clear(Y)", "holding(X)")
+	assert pattern.support_count >= 1
+	assert pattern.last_achiever_support_count >= 1
+	assert pattern.example_signatures
+	assert pattern.to_dict()["support_count"] == pattern.support_count
+
+
+def test_training_atomic_anti_unification_merges_across_evidence_objects() -> None:
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+	problem = PDDLParser.parse_problem(BLOCKS_P01)
+
+	evidence = collect_training_transition_evidence(domain, problem)
+	patterns = anti_unify_training_atomic_achievements((evidence, evidence))
+
+	on_stack = next(
+		pattern
+		for pattern in patterns
+		if pattern.target_predicate == "on" and pattern.action_name == "stack"
+	)
+	assert on_stack.support_count >= 2
