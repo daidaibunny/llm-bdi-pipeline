@@ -28,6 +28,35 @@ class FeatureBindingReport:
 	bindings: Mapping[str, SketchFeatureBinding]
 	unsupported_features: Mapping[str, str]
 	action_effect_candidates: Mapping[str, tuple["ActionEffectBindingCandidate", ...]]
+	feature_diagnostics: Mapping[str, "FeatureBindingDiagnostic"]
+
+
+@dataclass(frozen=True)
+class FeatureBindingDiagnostic:
+	"""Machine-readable explanation for one DLPlan feature-binding decision."""
+
+	feature_id: str
+	expression: str
+	status: str
+	binding_kind: str
+	condition_operators: tuple[str, ...]
+	effect_operators: tuple[str, ...]
+	action_candidate_count: int
+	promoted_effect_operators: tuple[str, ...]
+	rejection_reason: str | None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"feature_id": self.feature_id,
+			"expression": self.expression,
+			"status": self.status,
+			"binding_kind": self.binding_kind,
+			"condition_operators": self.condition_operators,
+			"effect_operators": self.effect_operators,
+			"action_candidate_count": self.action_candidate_count,
+			"promoted_effect_operators": self.promoted_effect_operators,
+			"rejection_reason": self.rejection_reason,
+		}
 
 
 @dataclass(frozen=True)
@@ -78,10 +107,18 @@ def bind_recoverable_dlplan_features(
 			)
 			if candidates:
 				action_candidates[feature_id] = candidates
+	diagnostics = _feature_binding_diagnostics(
+		features=policy.features,
+		bindings=bindings,
+		unsupported_features=unsupported,
+		action_effect_candidates=action_candidates,
+		predicate_arities=predicate_arities,
+	)
 	return FeatureBindingReport(
 		bindings=bindings,
 		unsupported_features=unsupported,
 		action_effect_candidates=action_candidates,
+		feature_diagnostics=diagnostics,
 	)
 
 
@@ -111,6 +148,10 @@ def bind_unique_action_effect_candidates(
 		bindings=bindings,
 		unsupported_features=report.unsupported_features,
 		action_effect_candidates=report.action_effect_candidates,
+		feature_diagnostics=_refresh_feature_binding_diagnostics(
+			report=report,
+			bindings=bindings,
+		),
 	)
 
 
@@ -160,6 +201,118 @@ def bind_goal_aligned_action_effect_candidates(
 		bindings=bindings,
 		unsupported_features=report.unsupported_features,
 		action_effect_candidates=report.action_effect_candidates,
+		feature_diagnostics=_refresh_feature_binding_diagnostics(
+			report=report,
+			bindings=bindings,
+		),
+	)
+
+
+def _feature_binding_diagnostics(
+	*,
+	features: Mapping[str, str],
+	bindings: Mapping[str, SketchFeatureBinding],
+	unsupported_features: Mapping[str, str],
+	action_effect_candidates: Mapping[str, tuple[ActionEffectBindingCandidate, ...]],
+	predicate_arities: Mapping[str, int],
+) -> Mapping[str, FeatureBindingDiagnostic]:
+	return {
+		feature_id: _feature_binding_diagnostic(
+			feature_id=feature_id,
+			expression=expression,
+			binding=bindings.get(feature_id),
+			unsupported=feature_id in unsupported_features,
+			action_effect_candidates=action_effect_candidates.get(feature_id, ()),
+			binding_kind=_feature_binding_kind(expression, predicate_arities),
+		)
+		for feature_id, expression in features.items()
+	}
+
+
+def _refresh_feature_binding_diagnostics(
+	*,
+	report: FeatureBindingReport,
+	bindings: Mapping[str, SketchFeatureBinding],
+) -> Mapping[str, FeatureBindingDiagnostic]:
+	return {
+		feature_id: _feature_binding_diagnostic(
+			feature_id=feature_id,
+			expression=diagnostic.expression,
+			binding=bindings.get(feature_id),
+			unsupported=diagnostic.status == "unsupported",
+			action_effect_candidates=report.action_effect_candidates.get(feature_id, ()),
+			binding_kind=diagnostic.binding_kind,
+		)
+		for feature_id, diagnostic in report.feature_diagnostics.items()
+	}
+
+
+def _feature_binding_diagnostic(
+	*,
+	feature_id: str,
+	expression: str,
+	binding: SketchFeatureBinding | None,
+	unsupported: bool,
+	action_effect_candidates: tuple[ActionEffectBindingCandidate, ...],
+	binding_kind: str,
+) -> FeatureBindingDiagnostic:
+	if binding is None or unsupported:
+		return FeatureBindingDiagnostic(
+			feature_id=feature_id,
+			expression=expression,
+			status="unsupported",
+			binding_kind="unsupported",
+			condition_operators=(),
+			effect_operators=(),
+			action_candidate_count=len(action_effect_candidates),
+			promoted_effect_operators=(),
+			rejection_reason="unsupported_dlplan_feature_expression_or_domain_vocabulary",
+		)
+	candidate_operators = {
+		candidate.operator
+		for candidate in action_effect_candidates
+	}
+	promoted_effect_operators = tuple(
+		operator
+		for operator in sorted(candidate_operators)
+		if _binding_has_primitive_action(binding, operator)
+	)
+	return FeatureBindingDiagnostic(
+		feature_id=feature_id,
+		expression=expression,
+		status="bound",
+		binding_kind=binding_kind,
+		condition_operators=tuple(sorted(binding.condition_contexts)),
+		effect_operators=_ordered_operators(binding.effect_body),
+		action_candidate_count=len(action_effect_candidates),
+		promoted_effect_operators=promoted_effect_operators,
+		rejection_reason=None,
+	)
+
+
+def _binding_has_primitive_action(
+	binding: SketchFeatureBinding,
+	operator: str,
+) -> bool:
+	return any(
+		step.kind == "primitive_action"
+		for step in binding.effect_body.get(operator, ())
+	)
+
+
+def _ordered_operators(operators: Mapping[str, object]) -> tuple[str, ...]:
+	preferred_order = {
+		"e_n_bot": 0,
+		"e_n_inc": 1,
+		"e_n_dec": 2,
+		"e_b_pos": 3,
+		"e_b_neg": 4,
+	}
+	return tuple(
+		sorted(
+			operators,
+			key=lambda operator: (preferred_order.get(operator, 100), operator),
+		),
 	)
 
 
@@ -222,6 +375,66 @@ def _bind_feature_expression(
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
 
 	return None
+
+
+def _feature_binding_kind(
+	expression: str,
+	predicate_arities: Mapping[str, int],
+) -> str:
+	text = _normalize_expression(expression)
+	nullary = re.fullmatch(r"b_nullary\(([^(),]+)\)", text)
+	if nullary:
+		predicate = nullary.group(1)
+		return (
+			"nullary_boolean"
+			if predicate_arities.get(predicate) == 0
+			else "unsupported"
+		)
+	primitive_concept = re.fullmatch(r"n_count\(c_primitive\(([^(),]+),0\)\)", text)
+	if primitive_concept:
+		return (
+			"primitive_concept_count"
+			if primitive_concept.group(1) in predicate_arities
+			else "unsupported"
+		)
+	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
+	if primitive_role:
+		return (
+			"primitive_role_count"
+			if primitive_role.group(1) in predicate_arities
+			else "unsupported"
+		)
+	goal_concept = re.fullmatch(
+		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
+		text,
+	)
+	if goal_concept:
+		return (
+			"goal_aligned_concept_count"
+			if goal_concept.group(1) in predicate_arities
+			else "unsupported"
+		)
+	goal_role = re.fullmatch(
+		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
+		text,
+	)
+	if goal_role:
+		return (
+			"goal_aligned_role_count"
+			if goal_role.group(1) in predicate_arities
+			else "unsupported"
+		)
+	role_intersection = re.fullmatch(
+		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
+		text,
+	)
+	if role_intersection:
+		return (
+			"goal_aligned_role_intersection_count"
+			if role_intersection.group(1) in predicate_arities
+			else "unsupported"
+		)
+	return "unsupported"
 
 
 def _predicate_count_binding(

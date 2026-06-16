@@ -71,6 +71,12 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert result.report["bounded_validation"]["passed"] is True
 	assert result.report["bounded_validation"]["counterexample_count"] == 0
 	assert result.report["external_policy_count"] == 1
+	policy_audits = result.report["paper_policy_audits"]
+	assert policy_audits[0]["feature_binding_diagnostics"][0]["status"] == "bound"
+	assert policy_audits[0]["feature_binding_diagnostics"][0]["binding_kind"] == (
+		"goal_aligned_concept_count"
+	)
+	assert policy_audits[0]["feature_binding_diagnostics"][0]["rejection_reason"] is None
 	backend_matrix = {
 		entry["name"]: entry
 		for entry in result.report["backend_audit_matrix"]

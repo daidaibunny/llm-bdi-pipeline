@@ -106,6 +106,46 @@ def test_bind_primitive_role_count_to_lifted_subgoal(tmp_path: Path) -> None:
 	assert "\t!on(X0, X1)." in asl
 
 
+def test_binding_diagnostics_explain_supported_feature_bindings(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f1 "n_count(r_primitive(on,0,1))"))
+		(:rule (:conditions (:c_n_eq f1)) (:effects (:e_n_inc f1)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	diagnostic = report.feature_diagnostics["f1"]
+	assert diagnostic.feature_id == "f1"
+	assert diagnostic.status == "bound"
+	assert diagnostic.binding_kind == "primitive_role_count"
+	assert diagnostic.condition_operators == ("c_n_eq", "c_n_gt")
+	assert diagnostic.effect_operators == ("e_n_bot", "e_n_inc")
+	assert diagnostic.action_candidate_count == 1
+	assert diagnostic.rejection_reason is None
+	assert diagnostic.to_dict() == {
+		"feature_id": "f1",
+		"expression": "n_count(r_primitive(on,0,1))",
+		"status": "bound",
+		"binding_kind": "primitive_role_count",
+		"condition_operators": ("c_n_eq", "c_n_gt"),
+		"effect_operators": ("e_n_bot", "e_n_inc"),
+		"action_candidate_count": 1,
+		"promoted_effect_operators": (),
+		"rejection_reason": None,
+	}
+
+
 def test_primitive_role_count_reports_decreasing_action_candidates(
 	tmp_path: Path,
 ) -> None:
@@ -215,6 +255,15 @@ def test_binding_reports_unsupported_complex_dlplan_features(tmp_path: Path) -> 
 			"c_one_of(b2)),c_primitive(on-table,0))"
 		),
 	}
+	diagnostic = report.feature_diagnostics["f137"]
+	assert diagnostic.status == "unsupported"
+	assert diagnostic.binding_kind == "unsupported"
+	assert diagnostic.condition_operators == ()
+	assert diagnostic.effect_operators == ()
+	assert diagnostic.action_candidate_count == 0
+	assert diagnostic.rejection_reason == (
+		"unsupported_dlplan_feature_expression_or_domain_vocabulary"
+	)
 
 
 def test_binding_reports_action_candidates_for_decreasing_primitive_counts(
@@ -305,6 +354,10 @@ def test_multiple_action_candidates_remain_ambiguous_instead_of_guessing(
 	assert len(report.action_effect_candidates["f1"]) == 2
 	feature_binding = report.bindings["f1"]
 	assert "e_n_dec" not in feature_binding.effect_body
+	diagnostic = report.feature_diagnostics["f1"]
+	assert diagnostic.status == "bound"
+	assert diagnostic.action_candidate_count == 2
+	assert diagnostic.promoted_effect_operators == ()
 
 
 def test_goal_aligned_feature_effect_disambiguates_action_candidates(

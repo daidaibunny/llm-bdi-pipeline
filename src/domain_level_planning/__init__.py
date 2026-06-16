@@ -40,6 +40,7 @@ from .gp_backends import (
 )
 from .feature_binding import (
 	ActionEffectBindingCandidate,
+	FeatureBindingDiagnostic,
 	FeatureBindingReport,
 	bind_goal_aligned_action_effect_candidates,
 	bind_recoverable_dlplan_features,
@@ -115,6 +116,7 @@ __all__ = [
 	"ClingoSketchRuleSelector",
 	"ActionEffectBindingCandidate",
 	"DFAAchievementRequest",
+	"FeatureBindingDiagnostic",
 	"FeatureBindingReport",
 	"BackendManifest",
 	"ExternalSketchPolicySource",
