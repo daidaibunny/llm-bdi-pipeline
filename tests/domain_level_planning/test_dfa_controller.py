@@ -5,6 +5,7 @@ from pathlib import Path
 from domain_level_planning.dfa_controller import (
 	execute_dfa_until_accepting,
 	execute_dfa_progress_step,
+	inspect_progress_requests_from_dfa_state,
 	progress_requests_from_dfa_state,
 	progress_transitions_from_dfa_state,
 )
@@ -77,6 +78,32 @@ def test_dfa_controller_exposes_all_progress_requests_from_branching_state(
 		(AgentSpeakBodyStep("subgoal", "done", ()),),
 		(AgentSpeakBodyStep("subgoal", "ready", ()),),
 	]
+
+
+def test_dfa_controller_exposes_progress_request_diagnostics(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_tiny_domain(tmp_path)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1", "q2"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "not done"},
+			{"source_state": "q0", "target_state": "q2", "raw_label": "ready"},
+		],
+	}
+
+	diagnostics = inspect_progress_requests_from_dfa_state(
+		dfa_payload=dfa_payload,
+		current_dfa_state="q0",
+		domain_key="tiny",
+		domain_file=domain_file,
+	)
+
+	assert [diagnostic["target_state"] for diagnostic in diagnostics] == ["q1", "q2"]
+	assert [diagnostic["supported"] for diagnostic in diagnostics] == [False, True]
+	assert diagnostics[0]["rejection_reason"] == "unsupported_negative_or_disjunctive_guard"
+	assert diagnostics[1]["request"]["goal_facts"] == ["goal_ready"]
 
 
 def test_dfa_controller_filters_non_progress_transitions() -> None:

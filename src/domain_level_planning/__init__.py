@@ -59,6 +59,7 @@ from .dfa_controller import (
 	DFAProgressExecutionResult,
 	execute_dfa_until_accepting,
 	execute_dfa_progress_step,
+	inspect_progress_requests_from_dfa_state,
 	progress_requests_from_dfa_state,
 	progress_transitions_from_dfa_state,
 )
@@ -188,6 +189,7 @@ __all__ = [
 	"inspect_dfa_guard_to_achievement_request",
 	"execute_dfa_progress_step",
 	"execute_dfa_until_accepting",
+	"inspect_progress_requests_from_dfa_state",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"persist_domain_level_temporal_artifact",
