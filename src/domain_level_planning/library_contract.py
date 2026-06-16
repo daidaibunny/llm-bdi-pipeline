@@ -66,6 +66,7 @@ def audit_domain_level_library_contract(
 
 	no_synthetic_names = _collect_synthetic_name_violations(plan_library, violations)
 	goal_descriptors_read_only = _collect_goal_descriptor_violations(plan_library, violations)
+	plan_head_subset = _collect_plan_head_subset_violations(plans, violations)
 	lifted_heads = _collect_head_lifting_violations(plans, violations)
 	body_step_subset = _collect_body_step_subset_violations(plans, violations)
 	lifted_body_calls = _collect_body_lifting_violations(plans, violations)
@@ -81,6 +82,7 @@ def audit_domain_level_library_contract(
 		"no_initial_beliefs": no_initial_beliefs,
 		"no_synthetic_names": no_synthetic_names,
 		"goal_descriptors_read_only": goal_descriptors_read_only,
+		"plan_head_subset": plan_head_subset,
 		"body_step_subset": body_step_subset,
 		"context_subset": context_subset,
 		"declared_pddl_symbols": declared_pddl_symbols,
@@ -93,6 +95,24 @@ def audit_domain_level_library_contract(
 		checked_layers=checked_layers,
 		violations=tuple(dict.fromkeys(violations)),
 	)
+
+
+def _collect_plan_head_subset_violations(
+	plans: Iterable[AgentSpeakPlan],
+	violations: list[str],
+) -> bool:
+	passed = True
+	for plan in tuple(plans or ()):
+		if str(plan.trigger.event_type or "").strip() == "achievement_goal":
+			continue
+		passed = False
+		violations.append(
+			(
+				f"Plan {plan.plan_name!r} uses unsupported plan trigger kind "
+				f"{plan.trigger.event_type!r}; supported plan heads are achievement goals only."
+			),
+		)
+	return passed
 
 
 def _collect_synthetic_name_violations(

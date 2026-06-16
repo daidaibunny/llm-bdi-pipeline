@@ -53,6 +53,7 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 		"no_initial_beliefs",
 		"no_synthetic_names",
 		"goal_descriptors_read_only",
+		"plan_head_subset",
 		"body_step_subset",
 		"context_subset",
 		"declared_pddl_symbols",

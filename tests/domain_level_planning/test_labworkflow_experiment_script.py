@@ -43,6 +43,7 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 		"no_initial_beliefs",
 		"no_synthetic_names",
 		"goal_descriptors_read_only",
+		"plan_head_subset",
 		"body_step_subset",
 		"context_subset",
 		"declared_pddl_symbols",

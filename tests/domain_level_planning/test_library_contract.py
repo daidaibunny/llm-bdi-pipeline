@@ -152,6 +152,26 @@ def test_domain_level_library_contract_rejects_wrong_pddl_arities() -> None:
 	assert any("finish/1" in violation for violation in report.violations)
 
 
+def test_domain_level_library_contract_rejects_non_achievement_triggers() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="bad_trigger_kind",
+				trigger=AgentSpeakTrigger("belief_addition", "done", ("X",)),
+				context=("ready(X)",),
+				body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(plan_library)
+
+	assert report.passed is False
+	assert report.checked_layers["plan_head_subset"] is False
+	assert any("unsupported plan trigger kind" in violation for violation in report.violations)
+
+
 def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",

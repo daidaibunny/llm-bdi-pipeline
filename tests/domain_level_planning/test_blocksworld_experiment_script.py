@@ -49,6 +49,7 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 		"no_initial_beliefs",
 		"no_synthetic_names",
 		"goal_descriptors_read_only",
+		"plan_head_subset",
 		"body_step_subset",
 		"context_subset",
 		"declared_pddl_symbols",
