@@ -218,12 +218,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"as selector hard groups when matching prepare rules exist. "
 					"Goal-bound primitive-precondition failures can synthesize new "
 					"safe Layer B prepare candidates when read-only goal facts bind "
-					"all extra variables."
+					"all extra variables. Explicit counterexample goal-ordering "
+					"constraints synthesize Layer C composer candidates and selector "
+					"hard groups."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "
 					"classifications generate new composer/module candidates beyond "
-					"the current goal-bound primitive-precondition repair subset."
+					"the current explicit goal-ordering and goal-bound primitive-"
+					"precondition repair subsets."
 				),
 				status="partially_done",
 			),

@@ -169,8 +169,14 @@ def synthesize_domain_level_asl_library(
 		actions=domain.actions,
 		refinement_constraints=refinement_constraints,
 	)
+	explicit_goal_ordering_candidates = _explicit_goal_ordering_candidate_rules(
+		refinement_constraints=refinement_constraints,
+	)
 	raw_candidate_rules = _deduplicate_rules(
-		schema_candidates + external_candidates + repair_synthesized_candidates,
+		schema_candidates
+		+ external_candidates
+		+ repair_synthesized_candidates
+		+ explicit_goal_ordering_candidates,
 	)
 	candidate_rules, recursion_descent_audit = filter_rules_by_recursion_descent(
 		raw_candidate_rules,
@@ -217,6 +223,10 @@ def synthesize_domain_level_asl_library(
 		candidate_rules=candidate_rules,
 		refinement_constraints=refinement_constraints,
 	)
+	goal_ordering_rule_groups = _goal_ordering_required_rule_groups(
+		candidate_rules=candidate_rules,
+		refinement_constraints=refinement_constraints,
+	)
 	progress_rule_groups = (
 		*training_progress_rule_groups,
 		*counterexample_progress_rule_groups,
@@ -232,6 +242,7 @@ def synthesize_domain_level_asl_library(
 			*progress_rule_groups,
 			*state_coverage_rule_groups,
 			*repair_rule_groups,
+			*goal_ordering_rule_groups,
 		),
 	)
 	_validate_selected_rules_against_transition_progress(
@@ -326,6 +337,9 @@ def synthesize_domain_level_asl_library(
 		"schema_candidate_count": len(schema_candidates),
 		"external_candidate_count": len(external_candidates),
 		"repair_synthesized_candidate_count": len(repair_synthesized_candidates),
+		"explicit_goal_ordering_candidate_count": len(
+			explicit_goal_ordering_candidates,
+		),
 		"raw_candidate_count": len(raw_candidate_rules),
 		"candidate_count": len(candidate_rules),
 		"recursion_descent_audit": recursion_descent_audit,
@@ -353,6 +367,7 @@ def synthesize_domain_level_asl_library(
 			explicit_refinement_constraints=refinement_constraints,
 			repair_rule_groups=repair_rule_groups,
 			repair_binding_reports=repair_binding_reports,
+			goal_ordering_rule_groups=goal_ordering_rule_groups,
 		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
@@ -373,6 +388,7 @@ def synthesize_domain_level_asl_library(
 			schema_candidates=schema_candidates,
 			external_candidates=external_candidates,
 			repair_synthesized_candidates=repair_synthesized_candidates,
+			explicit_goal_ordering_candidates=explicit_goal_ordering_candidates,
 			candidate_rules=candidate_rules,
 			selected_rules=selection.rules,
 			output_rules=output_rules,
@@ -772,6 +788,103 @@ def _repair_synthesized_candidate_rules(
 	return tuple(rules)
 
 
+def _explicit_goal_ordering_candidate_rules(
+	*,
+	refinement_constraints: Sequence[object],
+) -> tuple[LiftedPlanRule, ...]:
+	"""Compile lifted goal-ordering refinement constraints into composer rules."""
+
+	rules: list[LiftedPlanRule] = []
+	index = 0
+	for constraint in tuple(refinement_constraints or ()):
+		if getattr(constraint, "constraint_type", "") != "counterexample_goal_ordering":
+			continue
+		for earlier_goal, later_goal in tuple(
+			getattr(constraint, "lifted_orderings", ()) or (),
+		):
+			earlier_predicate, earlier_arguments = _parse_goal_descriptor_atom(
+				earlier_goal,
+			)
+			later_predicate, later_arguments = _parse_goal_descriptor_atom(later_goal)
+			if not earlier_predicate or not later_predicate:
+				continue
+			if not set(earlier_arguments).intersection(later_arguments):
+				continue
+			index += 1
+			rules.append(
+				LiftedPlanRule(
+					name=(
+						f"g_counterexample_order_{earlier_predicate}_before_"
+						f"{later_predicate}_{index}"
+					),
+					head=LiftedCall("subgoal", "g", ()),
+					context=(
+						_call(f"goal_{earlier_predicate}", earlier_arguments),
+						_call(f"goal_{later_predicate}", later_arguments),
+						f"not {_call(earlier_predicate, earlier_arguments)}",
+					),
+					body=(
+						LiftedCall("subgoal", earlier_predicate, earlier_arguments),
+						LiftedCall("subgoal", "g", ()),
+					),
+					layer="composer",
+					rationale="counterexample_goal_ordering",
+					capabilities=(
+						_goal_ordering_constraint_capability(
+							earlier_predicate=earlier_predicate,
+							earlier_arguments=earlier_arguments,
+							later_predicate=later_predicate,
+							later_arguments=later_arguments,
+						),
+					),
+					cost=1,
+				),
+			)
+	return tuple(rules)
+
+
+def _goal_ordering_required_rule_groups(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	refinement_constraints: Sequence[object],
+) -> tuple[ClingoRequiredRuleGroup, ...]:
+	groups: list[ClingoRequiredRuleGroup] = []
+	index = 0
+	for constraint in tuple(refinement_constraints or ()):
+		if getattr(constraint, "constraint_type", "") != "counterexample_goal_ordering":
+			continue
+		for earlier_goal, later_goal in tuple(
+			getattr(constraint, "lifted_orderings", ()) or (),
+		):
+			earlier_predicate, earlier_arguments = _parse_goal_descriptor_atom(
+				earlier_goal,
+			)
+			later_predicate, later_arguments = _parse_goal_descriptor_atom(later_goal)
+			if not earlier_predicate or not later_predicate:
+				continue
+			capability = _goal_ordering_constraint_capability(
+				earlier_predicate=earlier_predicate,
+				earlier_arguments=earlier_arguments,
+				later_predicate=later_predicate,
+				later_arguments=later_arguments,
+			)
+			rule_names = tuple(
+				rule.name
+				for rule in tuple(candidate_rules or ())
+				if capability in rule.capabilities
+			)
+			if not rule_names:
+				continue
+			index += 1
+			groups.append(
+				ClingoRequiredRuleGroup(
+					name=f"goal_ordering_{index}_{capability}",
+					rule_names=rule_names,
+				),
+			)
+	return tuple(groups)
+
+
 def _repair_available_capabilities(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
@@ -918,6 +1031,26 @@ def _parse_lifted_atom(atom: str) -> tuple[str, tuple[str, ...]]:
 	)
 
 
+def _parse_goal_descriptor_atom(atom: str) -> tuple[str, tuple[str, ...]]:
+	predicate, arguments = _parse_lifted_atom(atom)
+	if not predicate.startswith("goal_"):
+		return "", ()
+	return predicate[len("goal_") :], arguments
+
+
+def _goal_ordering_constraint_capability(
+	*,
+	earlier_predicate: str,
+	earlier_arguments: tuple[str, ...],
+	later_predicate: str,
+	later_arguments: tuple[str, ...],
+) -> str:
+	return (
+		f"counterexample_order_{earlier_predicate}_{'_'.join(earlier_arguments)}"
+		f"_before_{later_predicate}_{'_'.join(later_arguments)}"
+	)
+
+
 def _parameter_to_variable(parameter: str) -> str:
 	return parameter_variables((str(parameter),))[0]
 
@@ -999,6 +1132,8 @@ def _candidate_source(rule: LiftedPlanRule) -> str:
 		return "external_sketch"
 	if rule.rationale == "counterexample_repair":
 		return "counterexample_repair"
+	if rule.rationale == "counterexample_goal_ordering":
+		return "counterexample_goal_ordering"
 	return "schema"
 
 
@@ -1007,6 +1142,7 @@ def _evidence_matrix(
 	schema_candidates: Sequence[LiftedPlanRule],
 	external_candidates: Sequence[LiftedPlanRule],
 	repair_synthesized_candidates: Sequence[LiftedPlanRule],
+	explicit_goal_ordering_candidates: Sequence[LiftedPlanRule],
 	candidate_rules: Sequence[LiftedPlanRule],
 	selected_rules: Sequence[LiftedPlanRule],
 	output_rules: Sequence[LiftedPlanRule],
@@ -1113,6 +1249,10 @@ def _evidence_matrix(
 			"target": "goal-conditioned conjunctive-goal composer rules",
 			"schema_candidate_count": _layer_count(schema_candidates, "composer"),
 			"external_candidate_count": _layer_count(external_candidates, "composer"),
+			"explicit_goal_ordering_candidate_count": _layer_count(
+				explicit_goal_ordering_candidates,
+				"composer",
+			),
 			"candidate_count": _layer_count(candidate_rules, "composer"),
 			"selected_rule_count": _layer_count(selected_rules, "composer"),
 			"output_rule_count": _layer_count(output_rules, "composer"),
@@ -1182,6 +1322,10 @@ def _evidence_matrix(
 			"counterexample_repair": {
 				"candidate_count": len(tuple(repair_synthesized_candidates or ())),
 				"layer_counts": _layer_counts(repair_synthesized_candidates),
+			},
+			"counterexample_goal_ordering": {
+				"candidate_count": len(tuple(explicit_goal_ordering_candidates or ())),
+				"layer_counts": _layer_counts(explicit_goal_ordering_candidates),
 			},
 			"training_transition_systems": _transition_evidence_summary(
 				training_transition_evidence,
@@ -1268,6 +1412,7 @@ def _counterexample_refinement_summary(
 	explicit_refinement_constraints: Sequence[object],
 	repair_rule_groups: Sequence[ClingoRequiredRuleGroup],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
+	goal_ordering_rule_groups: Sequence[ClingoRequiredRuleGroup],
 ) -> dict[str, object]:
 	"""Summarize hard selector constraints induced by counterexamples."""
 
@@ -1277,6 +1422,7 @@ def _counterexample_refinement_summary(
 	explicit_constraints = tuple(explicit_refinement_constraints or ())
 	repair_groups = tuple(repair_rule_groups or ())
 	repair_reports = tuple(repair_binding_reports or ())
+	goal_ordering_groups = tuple(goal_ordering_rule_groups or ())
 	return {
 		"problem_count": len(evidence_items),
 		"problem_names": tuple(
@@ -1294,6 +1440,7 @@ def _counterexample_refinement_summary(
 			)
 		),
 		"repair_required_group_count": len(repair_groups),
+		"goal_ordering_required_group_count": len(goal_ordering_groups),
 		"matched_repair_constraint_count": sum(
 			1 for report in repair_reports if report.matched
 		),
@@ -1312,6 +1459,14 @@ def _counterexample_refinement_summary(
 			}
 			for group in repair_groups
 		),
+		"goal_ordering_required_groups": tuple(
+			{
+				"name": group.name,
+				"constraint_type": "counterexample_goal_ordering",
+				"rule_names": group.rule_names,
+			}
+			for group in goal_ordering_groups
+		),
 		"rejected_repair_constraints": tuple(
 			report.to_dict()
 			for report in repair_reports
@@ -1321,6 +1476,7 @@ def _counterexample_refinement_summary(
 			len(progress_groups)
 			+ len(state_groups)
 			+ len(repair_groups)
+			+ len(goal_ordering_groups)
 		),
 		"required_group_types": tuple(
 			group_type
@@ -1328,6 +1484,7 @@ def _counterexample_refinement_summary(
 				("counterexample_transition_progress", progress_groups),
 				("counterexample_state_coverage", state_groups),
 				("counterexample_atomic_precondition_repair", repair_groups),
+				("counterexample_goal_ordering", goal_ordering_groups),
 			)
 			if groups
 		),
