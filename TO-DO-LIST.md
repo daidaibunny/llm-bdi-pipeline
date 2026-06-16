@@ -63,7 +63,7 @@ PDDL domain + training problems
 | G9 | Counterexample refinement | Refinement hooks exist but are not a full learning loop. | Counterexample problem files add transition-progress and state-coverage constraints; held-out failures are classified into lifted Layer B/Layer C refinement records. | Broaden failure-type coverage and connect more failure classes to generated candidate rules, not only required groups. | A failed held-out problem can automatically refine the library and improve validation coverage. | Partially done. |
 | G10 | PDDL scope | Supported PDDL fragment needs to be explicit. | STRIPS-style syntax validation rejects many unsupported requirements. | Decide exact support for negative goals, equality, typed objects, derived predicates, conditional effects, quantifiers, and numeric fluents. | `PDDLSupportReport` and paper text agree on supported and rejected fragments. | In progress. |
 | G11 | No-hardcoding | Audit should remain enforced as implementation grows. | Tests scan domain-level production code for domain-specific tokens and generated libraries; Blocksworld and Labworkflow experiments use the same generic runner. | Keep extending these checks whenever new modules or generated artifacts are added. | CI fails on domain-specific production branches or synthetic/non-lifted generated plan libraries. | Partially done. |
-| G12 | TEG readiness | DFA-to-library interface is not yet implemented. | DFA high-level generation exists separately; achievement-goal library is domain-level. | Translate DFA guards into goal requests over the domain-level library without query-specific ASL generation. | A DFA transition guard can call the same lifted library used for ordinary achievement goals. | Later. |
+| G12 | TEG readiness | DFA-to-library interface is not yet fully integrated. | Positive conjunctive DFA guards can be adapted into read-only `goal_<predicate>` facts and PDDL predicate subgoal calls for the domain-level library. | Integrate the adapter into the runtime DFA controller and define negative/disjunctive guard semantics. | A DFA transition guard can call the same lifted library used for ordinary achievement goals. | Partially done. |
 
 ## Implementation Tasks
 
@@ -81,7 +81,7 @@ PDDL domain + training problems
 | T10 | Convert held-out execution failures into lifted refinement constraints. | G3, G9 | Failure classifier creates lifted Layer B/Layer C refinement records and counterexample required-rule-group summaries without polluting base training data. | Done |
 | T11 | Build reproducible Blocksworld first-20 experiment report from the current library path. | G8 | Train/test split, generated ASL, coverage, failures, and no-hardcoding checks are reproducible with one command. | Done |
 | T12 | Add at least one non-Blocksworld goal-dependency experiment. | G8, G11 | Demonstrates the approach is not tuned to Blocksworld. | Done |
-| T13 | Define and test the DFA guard to achievement-goal request adapter. | G12 | DFA guard conjunctions call `!P(...)` subgoals through the domain-level library. | Later. |
+| T13 | Define and test the DFA guard to achievement-goal request adapter. | G12 | DFA guard conjunctions call `!P(...)` subgoals through the domain-level library. | Done |
 
 ## Current Completion Rule
 

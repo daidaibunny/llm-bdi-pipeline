@@ -42,6 +42,11 @@ from .feature_binding import (
 	bind_recoverable_dlplan_features,
 	bind_unique_action_effect_candidates,
 )
+from .dfa_adapter import (
+	DFAAchievementRequest,
+	adapt_dfa_guard_to_achievement_request,
+	adapt_dfa_guarded_transition_to_achievement_request,
+)
 from .experiments import run_domain_level_experiment
 from .models import (
 	LiftedCall,
@@ -105,6 +110,7 @@ __all__ = [
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
 	"ActionEffectBindingCandidate",
+	"DFAAchievementRequest",
 	"FeatureBindingReport",
 	"BackendManifest",
 	"ExternalSketchPolicySource",
@@ -147,6 +153,8 @@ __all__ = [
 	"audit_domain_level_library_contract",
 	"architecture_gap_summary",
 	"domain_level_architecture_contract",
+	"adapt_dfa_guard_to_achievement_request",
+	"adapt_dfa_guarded_transition_to_achievement_request",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"run_learner_sketches",

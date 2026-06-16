@@ -205,9 +205,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				id="G7",
 				layer="TEG",
 				gap="DFA guard requests are not yet connected to the domain-level library.",
-				current_state="DFA generation and achievement-goal library synthesis are separate.",
-				required_improvement="Translate DFA guards into calls over the same lifted AG library.",
-				status="later",
+				current_state=(
+					"Positive conjunctive DFA guards can be translated into "
+					"goal facts and PDDL predicate subgoal calls."
+				),
+				required_improvement=(
+					"Integrate the adapter into the runtime DFA controller and "
+					"define unsupported negative/disjunctive guard semantics."
+				),
+				status="partially_done",
 			),
 		),
 	)
