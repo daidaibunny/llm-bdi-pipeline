@@ -232,6 +232,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "object-specific" in gaps["G5"]["current_state"]
 	assert "distance" in gaps["G5"]["current_state"]
 	assert "vocabulary-mismatch" in gaps["G5"]["current_state"]
+	assert "goal-aligned concept/role intersection" in gaps["G5"]["current_state"]
 	assert "distinct rejection diagnostics" in gaps["G5"]["current_state"]
 	assert "object-specific or distance features" in gaps["G5"]["required_improvement"]
 	assert gaps["G6"]["layer"] == "external backends"

@@ -350,6 +350,13 @@ def _uses_recoverable_shape_with_bad_vocabulary(
 	if role_intersection:
 		return predicate_arities.get(role_intersection.group(1)) != 2
 
+	concept_intersection = re.fullmatch(
+		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
+		text,
+	)
+	if concept_intersection:
+		return predicate_arities.get(concept_intersection.group(1)) != 1
+
 	return False
 
 
@@ -447,6 +454,16 @@ def _bind_feature_expression(
 			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
 
+	goal_concept_intersection = re.fullmatch(
+		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
+		text,
+	)
+	if goal_concept_intersection:
+		predicate = goal_concept_intersection.group(1)
+		if predicate_arities.get(predicate) != 1:
+			return None
+		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
+
 	return None
 
 
@@ -505,6 +522,16 @@ def _feature_binding_kind(
 		return (
 			"goal_aligned_role_intersection_count"
 			if predicate_arities.get(role_intersection.group(1)) == 2
+			else "unsupported"
+		)
+	concept_intersection = re.fullmatch(
+		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
+		text,
+	)
+	if concept_intersection:
+		return (
+			"goal_aligned_concept_intersection_count"
+			if predicate_arities.get(concept_intersection.group(1)) == 1
 			else "unsupported"
 		)
 	return "unsupported"
@@ -692,6 +719,12 @@ def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:
 	)
 	if role_intersection:
 		return _GoalAlignedFeature(predicate=role_intersection.group(1), arity=2)
+	concept_intersection = re.fullmatch(
+		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
+		text,
+	)
+	if concept_intersection:
+		return _GoalAlignedFeature(predicate=concept_intersection.group(1), arity=1)
 	return None
 
 
