@@ -9,6 +9,7 @@ from domain_level_planning import (
 from domain_level_planning.schema_synthesis import _goal_ordering_rules_from_evidence
 from domain_level_planning.schema_synthesis import _validate_selected_rules_against_transition_progress
 from domain_level_planning.schema_synthesis import atomic_achievement_justifications
+from domain_level_planning.schema_synthesis import causal_interference_ordering_rules
 from domain_level_planning.schema_synthesis import composer_state_coverage_required_rule_groups
 from domain_level_planning.schema_synthesis import transition_progress_required_rule_groups
 from utils.pddl_parser import PDDLParser
@@ -318,6 +319,66 @@ def test_atomic_achievement_justifications_ignore_composer_rules() -> None:
 	justifications = atomic_achievement_justifications((composer,), (evidence,))
 
 	assert justifications == {}
+
+
+def test_causal_interference_orders_blocksworld_tower_without_traces() -> None:
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+
+	rules = causal_interference_ordering_rules(domain)
+
+	# Schema-only causal structure must recover the bottom-up tower ordering:
+	# on(Y,Z) before on(X,Y), driven by stack(Y,Z) supplying clear(Y) which
+	# stack(X,Y) consumes as a precondition. No trace evidence is used.
+	tower_rules = [
+		rule
+		for rule in rules
+		if rule.head.symbol == "g"
+		and any(call.symbol == "on" for call in rule.body)
+	]
+	assert tower_rules
+	rule = tower_rules[0]
+	assert rule.layer == "composer"
+	# Earlier achieved goal is the lower pair on(Y, Z); the rule pursues it first.
+	assert ("goal_on", "Y", "Z") == _goal_context_signature(rule.context, "on", 0)
+	assert ("goal_on", "X", "Y") == _goal_context_signature(rule.context, "on", 1)
+	first_body = rule.body[0]
+	assert first_body.symbol == "on"
+	assert first_body.arguments == ("Y", "Z")
+	# Every candidate exposes a schema causal-interference capability.
+	for candidate in rules:
+		assert any(
+			capability.startswith("causal_order_")
+			for capability in candidate.capabilities
+		)
+
+
+def test_causal_interference_orderings_are_empty_without_shared_structure(
+	tmp_path: Path,
+) -> None:
+	domain_file, _ = _write_logistics_domain_and_problem(tmp_path)
+	domain = PDDLParser.parse_domain(domain_file)
+
+	rules = causal_interference_ordering_rules(domain)
+
+	# logistics-mini has a single goal predicate with no producer/consumer chain
+	# across goal instances, so no causal ordering should be invented.
+	assert rules == ()
+
+
+def _goal_context_signature(
+	context: tuple[str, ...],
+	predicate: str,
+	occurrence: int,
+) -> tuple[str, ...]:
+	matches = [
+		literal
+		for literal in context
+		if literal.strip().startswith(f"goal_{predicate}(")
+	]
+	literal = matches[occurrence].strip()
+	name, raw = literal.split("(", 1)
+	args = tuple(part.strip() for part in raw[:-1].split(","))
+	return (name, *args)
 
 
 def _write_logistics_domain_and_problem(

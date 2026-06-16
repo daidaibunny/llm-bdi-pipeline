@@ -136,6 +136,7 @@ def _candidate_rules_from_domain(
 	rules: list[LiftedPlanRule] = []
 	producible_predicates = _producible_predicates(actions)
 	rules.extend(_goal_ordering_rules_from_evidence(transition_evidence))
+	rules.extend(_causal_interference_ordering_rules(actions))
 	for predicate in predicates:
 		rules.extend(_composer_rules(predicate))
 		rules.append(_already_true_rule(predicate))
@@ -258,6 +259,191 @@ def _lift_goal_ordering(
 		for object_name in tuple(later.args) + tuple(earlier.args)
 	)
 	return context, body, pattern
+
+
+def causal_interference_ordering_rules(domain: object) -> tuple[LiftedPlanRule, ...]:
+	"""Derive lifted composer ordering rules from schema causal structure.
+
+	A producer goal predicate must be achieved before a consumer goal predicate
+	when the producer's achieving action adds a fact that the consumer's achieving
+	action requires as a precondition, and the shared link variables are all goal
+	arguments. This recovers bottom-up nested orderings from action schemas alone,
+	with no training traces and no domain-specific tokens.
+	"""
+
+	return _causal_interference_ordering_rules(getattr(domain, "actions", ()) or ())
+
+
+def _causal_interference_ordering_rules(
+	actions: Sequence[object],
+) -> tuple[LiftedPlanRule, ...]:
+	achievers = _goal_predicate_achievers(actions)
+	seen: set[tuple[str, str, tuple[tuple[int, int], ...]]] = set()
+	rules: list[LiftedPlanRule] = []
+	index = 0
+	for consumer_pred, consumer_list in achievers.items():
+		for producer_pred, producer_list in achievers.items():
+			for consumer in consumer_list:
+				for producer in producer_list:
+					for link in _producer_consumer_links(producer, consumer):
+						key = (producer_pred, consumer_pred, link)
+						if key in seen:
+							continue
+						lifted = _lift_causal_ordering(producer, consumer, link)
+						if lifted is None:
+							continue
+						seen.add(key)
+						index += 1
+						context, body, capability = lifted
+						rules.append(
+							_rule(
+								f"g_causal_order_{producer_pred}_before_{consumer_pred}_{index}",
+								"g",
+								(),
+								context,
+								body,
+								layer="composer",
+								capabilities=(capability,),
+								cost=2,
+							),
+						)
+	return tuple(rules)
+
+
+def _goal_predicate_achievers(actions: Sequence[object]) -> dict[str, tuple[dict, ...]]:
+	achievers: dict[str, list[dict]] = {}
+	for action in actions:
+		preconditions = tuple(
+			literal
+			for literal in parse_pddl_literals(str(getattr(action, "preconditions", "")))
+			if literal.is_positive
+		)
+		add_effects = tuple(
+			literal
+			for literal in parse_pddl_literals(str(getattr(action, "effects", "")))
+			if literal.is_positive
+		)
+		for add in add_effects:
+			if not add.arguments:
+				continue
+			achievers.setdefault(add.predicate, []).append(
+				{
+					"action": str(getattr(action, "name")),
+					"target": add,
+					"preconditions": preconditions,
+					"add_effects": add_effects,
+				},
+			)
+	return {predicate: tuple(items) for predicate, items in achievers.items()}
+
+
+def _producer_consumer_links(
+	producer: dict,
+	consumer: dict,
+) -> tuple[tuple[tuple[int, int], ...], ...]:
+	"""Return goal-argument links where a producer add supplies a consumer pre.
+
+	Each link is a tuple of (consumer_target_index, producer_target_index) pairs
+	identifying which goal arguments must denote the same object for the
+	producer's added fact to be exactly the consumer precondition it enables.
+	"""
+
+	producer_positions = _argument_positions(producer["target"].arguments)
+	consumer_positions = _argument_positions(consumer["target"].arguments)
+	links: list[tuple[tuple[int, int], ...]] = []
+	for precondition in consumer["preconditions"]:
+		for supplied in producer["add_effects"]:
+			if precondition.predicate != supplied.predicate:
+				continue
+			if len(precondition.arguments) != len(supplied.arguments):
+				continue
+			if not precondition.arguments:
+				continue
+			pairs: list[tuple[int, int]] = []
+			grounded = True
+			for consumer_arg, producer_arg in zip(
+				precondition.arguments,
+				supplied.arguments,
+			):
+				consumer_index = consumer_positions.get(consumer_arg)
+				producer_index = producer_positions.get(producer_arg)
+				if consumer_index is None or producer_index is None:
+					grounded = False
+					break
+				pairs.append((consumer_index, producer_index))
+			if not grounded or not pairs:
+				continue
+			links.append(tuple(pairs))
+	return tuple(dict.fromkeys(links))
+
+
+def _lift_causal_ordering(
+	producer: dict,
+	consumer: dict,
+	link: tuple[tuple[int, int], ...],
+) -> tuple[tuple[str, ...], tuple[LiftedCall, ...], str] | None:
+	consumer_arity = len(consumer["target"].arguments)
+	producer_arity = len(producer["target"].arguments)
+	consumer_to_producer = {
+		consumer_index: producer_index for consumer_index, producer_index in link
+	}
+	if len(consumer_to_producer) != len(link):
+		return None
+	# Build shared object identities: consumer slots first (so X is the topmost
+	# consumer argument and Y the linked block), then producer slots, collapsing
+	# linked producer slots onto their consumer identity.
+	identities: dict[tuple[str, int], int] = {}
+	next_id = 0
+	for consumer_index in range(consumer_arity):
+		identities[("c", consumer_index)] = next_id
+		next_id += 1
+	for producer_index in range(producer_arity):
+		linked_consumer = next(
+			(
+				consumer_index
+				for consumer_index, mapped in consumer_to_producer.items()
+				if mapped == producer_index
+			),
+			None,
+		)
+		if linked_consumer is not None:
+			identities[("p", producer_index)] = identities[("c", linked_consumer)]
+		else:
+			identities[("p", producer_index)] = next_id
+			next_id += 1
+	if next_id <= max(consumer_arity, producer_arity):
+		return None
+	variable_names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+	if next_id > len(variable_names):
+		return None
+
+	def _variable(slot: tuple[str, int]) -> str:
+		return variable_names[identities[slot]]
+
+	consumer_args = tuple(_variable(("c", index)) for index in range(consumer_arity))
+	producer_args = tuple(_variable(("p", index)) for index in range(producer_arity))
+	if consumer_args == producer_args:
+		return None
+	consumer_pred = consumer["target"].predicate
+	producer_pred = producer["target"].predicate
+	context = (
+		_call(f"goal_{producer_pred}", producer_args),
+		_call(f"goal_{consumer_pred}", consumer_args),
+		f"not {_call(producer_pred, producer_args)}",
+	)
+	body = (_subgoal(producer_pred, *producer_args), _subgoal("g"))
+	capability = (
+		f"causal_order_{producer_pred}_{'_'.join(producer_args)}_before_"
+		f"{consumer_pred}_{'_'.join(consumer_args)}"
+	)
+	return context, body, capability
+
+
+def _argument_positions(arguments: Sequence[str]) -> dict[str, int]:
+	positions: dict[str, int] = {}
+	for index, argument in enumerate(arguments):
+		positions.setdefault(argument, index)
+	return positions
 
 
 def _composer_rules(predicate: PDDLPredicate) -> tuple[LiftedPlanRule, ...]:

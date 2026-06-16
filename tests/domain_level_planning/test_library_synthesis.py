@@ -12,6 +12,25 @@ from plan_library.rendering import render_plan_library_asl
 import pytest
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
+BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "problems" / "p01.pddl"
+
+
+def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None:
+	result = synthesize_domain_level_asl_library(
+		domain_file=BLOCKS_DOMAIN,
+		training_problem_files=(BLOCKS_P01,),
+	)
+
+	layer_c = result.report["evidence_matrix"]["layer_c_goal_composer"]
+	# Schema causal interference must contribute composer ordering candidates that
+	# do not depend on training traces.
+	assert layer_c["causal_interference_candidate_count"] >= 1
+	asl = render_plan_library_asl(result.plan_library)
+	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
+
+
 def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	tmp_path: Path,
 ) -> None:

@@ -4,7 +4,7 @@ Unified domain-level synthesis from PDDL, training evidence, and paper policies.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -510,19 +510,27 @@ def _body_step_to_lifted_call(step: AgentSpeakBodyStep) -> LiftedCall:
 
 
 def _deduplicate_rules(rules: Sequence[LiftedPlanRule]) -> tuple[LiftedPlanRule, ...]:
-	seen: set[tuple[object, ...]] = set()
+	index_by_key: dict[tuple[object, ...], int] = {}
 	deduplicated: list[LiftedPlanRule] = []
 	for rule in rules:
-		key = (
-			rule.head,
-			rule.context,
-			rule.body,
-			rule.layer,
-		)
-		if key in seen:
+		key = (rule.head, rule.context, rule.body, rule.layer)
+		existing_index = index_by_key.get(key)
+		if existing_index is None:
+			index_by_key[key] = len(deduplicated)
+			deduplicated.append(rule)
 			continue
-		seen.add(key)
-		deduplicated.append(rule)
+		# Same lifted rule reached from multiple evidence sources (for example a
+		# trace-observed ordering and a schema causal-interference ordering): keep
+		# one rule but union the capabilities so both evidence tags survive.
+		existing = deduplicated[existing_index]
+		merged_capabilities = tuple(
+			dict.fromkeys((*existing.capabilities, *rule.capabilities)),
+		)
+		if merged_capabilities != existing.capabilities:
+			deduplicated[existing_index] = replace(
+				existing,
+				capabilities=merged_capabilities,
+			)
 	return tuple(deduplicated)
 
 
@@ -619,6 +627,18 @@ def _evidence_matrix(
 				len(getattr(evidence, "goal_orderings", ()) or ())
 				for evidence in tuple(counterexample_transition_evidence or ())
 			),
+			"causal_interference_candidate_count": _ordering_rule_count(
+				candidate_rules,
+				"causal_order_",
+			),
+			"causal_interference_selected_count": _ordering_rule_count(
+				selected_rules,
+				"causal_order_",
+			),
+			"trace_ordering_candidate_count": _ordering_rule_count(
+				candidate_rules,
+				"order_",
+			),
 		},
 		"sources": {
 			"schema": {
@@ -668,6 +688,27 @@ def _evidence_matrix(
 
 def _layer_count(rules: Sequence[LiftedPlanRule], layer: str) -> int:
 	return sum(1 for rule in tuple(rules or ()) if rule.layer == layer)
+
+
+def _ordering_rule_count(rules: Sequence[LiftedPlanRule], prefix: str) -> int:
+	"""Count composer rules whose capability marks a given ordering source.
+
+	The trace-evidence prefix ``order_`` must not also match schema causal rules
+	tagged ``causal_order_``; matching is therefore exact on the capability stem.
+	"""
+
+	def _matches(capability: str) -> bool:
+		if prefix == "order_":
+			return capability.startswith("order_") and not capability.startswith(
+				"causal_order_",
+			)
+		return capability.startswith(prefix)
+
+	return sum(
+		1
+		for rule in tuple(rules or ())
+		if any(_matches(capability) for capability in rule.capabilities)
+	)
 
 
 def _layer_counts(rules: Sequence[LiftedPlanRule]) -> dict[str, int]:
