@@ -4,6 +4,10 @@ from pathlib import Path
 
 from domain_level_planning.experiments import run_domain_level_experiment
 from domain_level_planning.experiments import _generated_output_audit
+from domain_level_planning.library_synthesis import ExternalSketchPolicySource
+from tests.domain_level_planning.test_library_synthesis import (
+	_write_generic_domain_problem_and_policy,
+)
 from tests.domain_level_planning.test_library_synthesis import (
 	_write_counterexample_domain,
 )
@@ -31,6 +35,8 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 		"scope": "bounded_domain_level_lifted_asl_evaluation",
 		"training_source": "provided_pddl_training_problems",
 		"evaluation_source": "provided_pddl_evaluation_problems",
+		"synthesis_profile": "bootstrap",
+		"external_policy_count": 0,
 		"runtime_planner": "none",
 		"baselines": [],
 		"ablations": [],
@@ -149,6 +155,38 @@ def test_domain_level_experiment_reports_failure_analysis(
 		"max": 1,
 		"mean": 0.5,
 	}
+
+
+def test_domain_level_experiment_can_run_paper_profile_with_external_policy(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+	)
+
+	report = run_domain_level_experiment(
+		experiment_name="paper-profile-smoke",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
+			),
+		),
+		synthesis_profile="paper",
+		max_execution_steps=100,
+		max_depth=50,
+	)
+
+	assert report["coverage"]["solved_count"] == 1
+	assert report["synthesis_report"]["synthesis_profile"] == "paper"
+	assert report["synthesis_report"]["paper_profile_ready"] is True
+	assert report["synthesis_report"]["external_policy_count"] == 1
+	assert report["synthesis_report"]["selected_candidate_sources"]["external_sketch"] == 1
+	assert report["experiment_protocol"]["synthesis_profile"] == "paper"
+	assert report["experiment_protocol"]["external_policy_count"] == 1
 
 
 def test_generated_output_audit_includes_plan_head_subset() -> None:

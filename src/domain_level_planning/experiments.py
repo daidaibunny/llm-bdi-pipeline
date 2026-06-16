@@ -13,6 +13,7 @@ from utils.pddl_parser import PDDLParser
 
 from .library_contract import audit_domain_level_library_contract
 from .library_executor import evaluate_library_on_problem
+from .library_synthesis import ExternalSketchPolicySource
 from .library_synthesis import synthesize_domain_level_asl_library
 from .refinement import synthesize_with_counterexample_refinement
 
@@ -24,6 +25,8 @@ def run_domain_level_experiment(
 	training_problem_files: Sequence[str | Path],
 	evaluation_problem_files: Sequence[str | Path],
 	counterexample_problem_files: Sequence[str | Path] = (),
+	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
+	synthesis_profile: str = "bootstrap",
 	max_execution_steps: int = 10000,
 	max_depth: int = 1000,
 	use_counterexample_refinement: bool = False,
@@ -37,6 +40,8 @@ def run_domain_level_experiment(
 			domain_file=domain_file,
 			training_problem_files=training_problem_files,
 			heldout_problem_files=evaluation_problem_files,
+			external_sketch_policies=external_sketch_policies,
+			synthesis_profile=synthesis_profile,
 			max_refinement_rounds=max_refinement_rounds,
 			max_execution_steps=max_execution_steps,
 			max_depth=max_depth,
@@ -48,6 +53,8 @@ def run_domain_level_experiment(
 			domain_file=domain_file,
 			training_problem_files=training_problem_files,
 			counterexample_problem_files=counterexample_problem_files,
+			external_sketch_policies=external_sketch_policies,
+			synthesis_profile=synthesis_profile,
 		)
 		refinement_trace = None
 	synthesis_duration = perf_counter() - synthesis_started
@@ -81,7 +88,10 @@ def run_domain_level_experiment(
 		"experiment_name": experiment_name,
 		"domain_file": _resolved(domain_file),
 		"generation_mode": result.report["generation_mode"],
-		"experiment_protocol": _experiment_protocol(),
+		"experiment_protocol": _experiment_protocol(
+			synthesis_profile=synthesis_profile,
+			external_sketch_policies=external_sketch_policies,
+		),
 		"train_problem_count": len(tuple(training_problem_files or ())),
 		"training_problem_files": [
 			_resolved(path) for path in tuple(training_problem_files or ())
@@ -139,11 +149,17 @@ def run_domain_level_experiment(
 	}
 
 
-def _experiment_protocol() -> dict[str, object]:
+def _experiment_protocol(
+	*,
+	synthesis_profile: str,
+	external_sketch_policies: Sequence[ExternalSketchPolicySource],
+) -> dict[str, object]:
 	return {
 		"scope": "bounded_domain_level_lifted_asl_evaluation",
 		"training_source": "provided_pddl_training_problems",
 		"evaluation_source": "provided_pddl_evaluation_problems",
+		"synthesis_profile": str(synthesis_profile or "bootstrap"),
+		"external_policy_count": len(tuple(external_sketch_policies or ())),
 		"runtime_planner": "none",
 		"baselines": [],
 		"ablations": [],
