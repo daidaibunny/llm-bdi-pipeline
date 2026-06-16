@@ -197,6 +197,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "recursion descent" in gaps["G2"]["current_state"]
 	assert "repair diagnostics" in gaps["G2"]["current_state"]
 	assert "provenance manifests" in gaps["G2"]["current_state"]
+	assert "paper-profile exclusion" in gaps["G2"]["current_state"]
 	assert "multi-strategy module learner" in gaps["G2"]["required_improvement"]
 	assert "repair diagnostics" in gaps["G2"]["required_improvement"]
 	assert gaps["G3"]["layer"] == "Layer C"
@@ -220,6 +221,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		gaps["G3"]["current_state"]
 	)
 	assert "provenance manifests" in gaps["G3"]["current_state"]
+	assert "per-rule composer evidence verdicts" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)

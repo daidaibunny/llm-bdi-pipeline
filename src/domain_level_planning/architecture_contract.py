@@ -211,7 +211,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"with lifted provenance manifests; selected atomic rules now "
 					"receive per-rule evidence verdicts such as trace-justified, "
 					"schema-no-action-body, external-policy-bound, or "
-					"counterexample-repair-synthesized."
+					"counterexample-repair-synthesized; paper-profile exclusion "
+					"removes unsupported schema action capabilities before selection."
 				),
 				required_improvement=(
 					"Add a multi-strategy module learner that generalizes from these "
@@ -248,7 +249,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"missing-composer failures are classified as Layer C state-coverage "
 					"refinements; recursive-loop and step-limit failures are reported "
 					"as non-generative termination diagnostics. Selected and "
-					"output composer rules are reported with lifted provenance manifests."
+					"output composer rules are reported with lifted provenance manifests "
+					"and per-rule composer evidence verdicts."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "
