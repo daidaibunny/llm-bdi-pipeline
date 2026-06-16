@@ -173,7 +173,10 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "counterexample failure classification" in gaps["G3"]["current_state"]
 	assert "primitive-precondition repair evidence" in gaps["G3"]["current_state"]
 	assert "selector hard groups" in gaps["G3"]["current_state"]
-	assert "when no existing lifted candidate matches" in gaps["G3"]["required_improvement"]
+	assert "Goal-bound primitive-precondition failures" in gaps["G3"]["current_state"]
+	assert "current goal-bound primitive-precondition repair subset" in (
+		gaps["G3"]["required_improvement"]
+	)
 	assert gaps["G7"]["layer"] == "TEG"
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "DFA guards can be translated" in gaps["G7"]["current_state"]
@@ -577,6 +580,7 @@ def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(
 	)
 
 	refinement = result.report["counterexample_refinement_constraints"]
+	assert result.report["repair_synthesized_candidate_count"] == 0
 	assert refinement["explicit_repair_constraint_count"] == 1
 	assert refinement["repair_required_group_count"] == 0
 	assert refinement["rejected_repair_constraint_count"] == 1
@@ -648,6 +652,59 @@ def test_unmatched_repair_reports_producible_precondition_without_prepare_rule(
 	)
 	assert "module_linked_action_make_link" in rejected["available_capabilities"]
 	assert "module_done_action_finish" in rejected["available_capabilities"]
+
+
+def test_goal_bound_repair_synthesizes_missing_prepare_candidate(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_goal_bound_repair_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(problem_file),
+		problem_name="goal-bound-repair-p1",
+		failure_reason="Action preconditions are not satisfied for finish(a, b).",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		failing_action="finish",
+		failing_action_arguments=("a", "b"),
+		lifted_failing_action="finish(X, Y)",
+		missing_preconditions=("linked(a, b)",),
+		lifted_missing_preconditions=("linked(X, Y)",),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+
+	assert result.report["repair_synthesized_candidate_count"] == 1
+	assert result.report["candidate_sources"]["counterexample_repair"] == 1
+	assert result.report["selected_candidate_sources"]["counterexample_repair"] == 1
+	assert refinement["repair_required_group_count"] == 1
+	assert refinement["rejected_repair_constraint_count"] == 0
+	assert refinement["repair_required_groups"][0]["rule_names"] == (
+		"done_repair_prepare_linked_for_finish",
+	)
+	assert "done_repair_prepare_linked_for_finish" in result.report["selected_rule_names"]
+	layer_b = result.report["evidence_matrix"]["layer_b_atomic_modules"]
+	assert layer_b["repair_synthesized_candidate_count"] == 1
+	assert layer_b["matched_repair_constraint_count"] == 1
+
+	asl = render_plan_library_asl(result.plan_library)
+	assert "+!done(X) : goal_linked(X, Y) & not linked(X, Y) <-" in asl
+	assert "\t!linked(X, Y);" in asl
+	assert "\t!done(X)." in asl
+	assert "!achieve_" not in asl
+	assert "!transition_" not in asl
+	assert "dfa_state" not in asl
 
 
 def _write_generic_domain_problem_and_policy(
@@ -856,6 +913,46 @@ def _write_producible_but_unmatched_repair_domain(tmp_path: Path) -> tuple[Path,
 		 (:objects a b)
 		 (:init (seed a))
 		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_goal_bound_repair_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "goal-bound-repair-domain.pddl"
+	problem_file = tmp_path / "goal-bound-repair-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain goal-bound-repair-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (seed ?x)
+		  (linked ?x ?y)
+		  (done ?x)
+		 )
+		 (:action make_link
+		  :parameters (?x ?y)
+		  :precondition (seed ?x)
+		  :effect (linked ?x ?y)
+		 )
+		 (:action finish
+		  :parameters (?x ?y)
+		  :precondition (linked ?x ?y)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem goal-bound-repair-p1)
+		 (:domain goal-bound-repair-mini)
+		 (:objects a b)
+		 (:init (seed a))
+		 (:goal (and (linked a b) (done a)))
 		)
 		""",
 		encoding="utf-8",

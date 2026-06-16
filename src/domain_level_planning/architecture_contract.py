@@ -215,12 +215,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"ordering candidates, bounded state-coverage constraints, and "
 					"counterexample failure classification exist; primitive-precondition "
 					"repair evidence is lifted into Layer B constraints and consumed "
-					"as selector hard groups when matching prepare rules exist."
+					"as selector hard groups when matching prepare rules exist. "
+					"Goal-bound primitive-precondition failures can synthesize new "
+					"safe Layer B prepare candidates when read-only goal facts bind "
+					"all extra variables."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "
-					"classifications generate new composer/module candidates when no "
-					"existing lifted candidate matches."
+					"classifications generate new composer/module candidates beyond "
+					"the current goal-bound primitive-precondition repair subset."
 				),
 				status="partially_done",
 			),

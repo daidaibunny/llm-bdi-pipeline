@@ -23,6 +23,7 @@ from .library_verifier import validate_library_on_bounded_transition_systems
 from .models import LiftedCall, LiftedPlanRule
 from .paper_backend_audit import PaperPolicyAuditReport
 from .paper_backend_audit import audit_learned_policy_for_asl_binding
+from .pddl_expression import parameter_variables, parse_pddl_literals
 from .pddl_support import assert_compilable_pddl_files
 from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
@@ -164,7 +165,13 @@ def synthesize_domain_level_asl_library(
 			sources=all_external_sketch_policies,
 		)
 	)
-	raw_candidate_rules = _deduplicate_rules(schema_candidates + external_candidates)
+	repair_synthesized_candidates = _repair_synthesized_candidate_rules(
+		actions=domain.actions,
+		refinement_constraints=refinement_constraints,
+	)
+	raw_candidate_rules = _deduplicate_rules(
+		schema_candidates + external_candidates + repair_synthesized_candidates,
+	)
 	candidate_rules, recursion_descent_audit = filter_rules_by_recursion_descent(
 		raw_candidate_rules,
 		ranking_states=recursion_ranking_states_from_problem_files(
@@ -318,6 +325,7 @@ def synthesize_domain_level_asl_library(
 		"counterexample_problem_count": len(counterexample_problem_files),
 		"schema_candidate_count": len(schema_candidates),
 		"external_candidate_count": len(external_candidates),
+		"repair_synthesized_candidate_count": len(repair_synthesized_candidates),
 		"raw_candidate_count": len(raw_candidate_rules),
 		"candidate_count": len(candidate_rules),
 		"recursion_descent_audit": recursion_descent_audit,
@@ -364,6 +372,7 @@ def synthesize_domain_level_asl_library(
 		"evidence_matrix": _evidence_matrix(
 			schema_candidates=schema_candidates,
 			external_candidates=external_candidates,
+			repair_synthesized_candidates=repair_synthesized_candidates,
 			candidate_rules=candidate_rules,
 			selected_rules=selection.rules,
 			output_rules=output_rules,
@@ -680,6 +689,89 @@ def _repair_required_rule_groups(
 	return tuple(groups), tuple(reports)
 
 
+def _repair_synthesized_candidate_rules(
+	*,
+	actions: Sequence[object],
+	refinement_constraints: Sequence[object],
+) -> tuple[LiftedPlanRule, ...]:
+	"""Generate safe missing-prepare candidates from lifted repair evidence.
+
+	The synthesis is deliberately conservative: a repair module may introduce
+	extra variables only when a read-only goal descriptor binds them in the
+	context. This prevents emitting ASL bodies with free variables.
+	"""
+
+	rules: list[LiftedPlanRule] = []
+	producible_predicates = _positive_effect_predicates(actions)
+	for constraint in tuple(refinement_constraints or ()):
+		if getattr(constraint, "constraint_type", "") != (
+			"counterexample_atomic_precondition_repair"
+		):
+			continue
+		problem_goal_atoms = _repair_constraint_goal_atoms(constraint)
+		failing_action = str(getattr(constraint, "failing_action", "") or "")
+		action = _action_by_name(actions, failing_action)
+		if action is None:
+			continue
+		action_preconditions = parse_pddl_literals(str(getattr(action, "preconditions", "")))
+		for target_atom in tuple(getattr(constraint, "lifted_missing_goals", ()) or ()):
+			target_predicate, target_arguments = _parse_lifted_atom(target_atom)
+			if not target_predicate:
+				continue
+			for missing_atom in tuple(
+				getattr(constraint, "lifted_missing_preconditions", ()) or (),
+			):
+				precondition_predicate, precondition_arguments = _parse_lifted_atom(
+					missing_atom,
+				)
+				if not precondition_predicate:
+					continue
+				if precondition_predicate not in producible_predicates:
+					continue
+				matched_precondition = _matching_positive_action_precondition(
+					action_preconditions,
+					predicate=precondition_predicate,
+					arguments=precondition_arguments,
+				)
+				if matched_precondition is None:
+					continue
+				context = _repair_candidate_context(
+					target_arguments=target_arguments,
+					precondition_predicate=precondition_predicate,
+					precondition_arguments=precondition_arguments,
+					missing_atom=missing_atom,
+					problem_goal_atoms=problem_goal_atoms,
+				)
+				if context is None:
+					continue
+				rules.append(
+					LiftedPlanRule(
+						name=(
+							f"{target_predicate}_repair_prepare_"
+							f"{precondition_predicate}_for_{failing_action}"
+						),
+						head=LiftedCall("subgoal", target_predicate, target_arguments),
+						context=context,
+						body=(
+							LiftedCall(
+								"subgoal",
+								precondition_predicate,
+								precondition_arguments,
+							),
+							LiftedCall("subgoal", target_predicate, target_arguments),
+						),
+						layer="atomic",
+						rationale="counterexample_repair",
+						capabilities=(
+							f"module_{target_predicate}_prepare_"
+							f"{precondition_predicate}_for_{failing_action}",
+						),
+						cost=4,
+					),
+				)
+	return tuple(rules)
+
+
 def _repair_available_capabilities(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
@@ -714,6 +806,129 @@ def _repair_available_capabilities(
 			if any(capability.startswith(prefix) for prefix in relevant_prefixes)
 		),
 	)
+
+
+def _action_by_name(actions: Sequence[object], action_name: str) -> object | None:
+	for action in tuple(actions or ()):
+		if str(getattr(action, "name", "")) == action_name:
+			return action
+	return None
+
+
+def _positive_effect_predicates(actions: Sequence[object]) -> frozenset[str]:
+	predicates: set[str] = set()
+	for action in tuple(actions or ()):
+		for effect in parse_pddl_literals(str(getattr(action, "effects", ""))):
+			if effect.is_positive:
+				predicates.add(effect.predicate)
+	return frozenset(predicates)
+
+
+def _matching_positive_action_precondition(
+	preconditions: Sequence[object],
+	*,
+	predicate: str,
+	arguments: tuple[str, ...],
+) -> object | None:
+	for precondition in tuple(preconditions or ()):
+		if not bool(getattr(precondition, "is_positive", False)):
+			continue
+		if str(getattr(precondition, "predicate", "")) != predicate:
+			continue
+		precondition_arguments = tuple(
+			_parameter_to_variable(argument)
+			for argument in tuple(getattr(precondition, "arguments", ()) or ())
+		)
+		if precondition_arguments == arguments:
+			return precondition
+	return None
+
+
+def _repair_candidate_context(
+	*,
+	target_arguments: tuple[str, ...],
+	precondition_predicate: str,
+	precondition_arguments: tuple[str, ...],
+	missing_atom: str,
+	problem_goal_atoms: tuple[str, ...],
+) -> tuple[str, ...] | None:
+	bound_variables = {
+		argument for argument in target_arguments if _is_lifted_variable(argument)
+	}
+	precondition_variables = {
+		argument for argument in precondition_arguments if _is_lifted_variable(argument)
+	}
+	extra_variables = precondition_variables - bound_variables
+	if not extra_variables:
+		return (f"not {_call(precondition_predicate, precondition_arguments)}",)
+	if missing_atom not in problem_goal_atoms:
+		return None
+	goal_context = _call(f"goal_{precondition_predicate}", precondition_arguments)
+	return (
+		goal_context,
+		f"not {_call(precondition_predicate, precondition_arguments)}",
+	)
+
+
+def _repair_constraint_goal_atoms(constraint: object) -> tuple[str, ...]:
+	problem_file = str(getattr(constraint, "problem_file", "") or "")
+	if not problem_file:
+		return ()
+	try:
+		problem = PDDLParser.parse_problem(problem_file)
+	except Exception:
+		return ()
+	lifted_missing_preconditions = tuple(
+		getattr(constraint, "lifted_missing_preconditions", ()) or (),
+	)
+	ground_missing_preconditions = tuple(
+		getattr(constraint, "missing_preconditions", ()) or (),
+	)
+	lifted_by_ground = dict(
+		zip(ground_missing_preconditions, lifted_missing_preconditions),
+	)
+	goal_signatures = {
+		_call(fact.predicate, fact.args)
+		for fact in tuple(problem.goal_facts or ())
+		if fact.is_positive
+	}
+	return tuple(
+		lifted
+		for ground, lifted in lifted_by_ground.items()
+		if ground in goal_signatures
+	)
+
+
+def _parse_lifted_atom(atom: str) -> tuple[str, tuple[str, ...]]:
+	text = str(atom or "").strip()
+	if text.startswith("not "):
+		return "", ()
+	if "(" not in text:
+		return text, ()
+	if not text.endswith(")"):
+		return "", ()
+	predicate, raw_arguments = text.split("(", 1)
+	return (
+		predicate.strip(),
+		tuple(
+			argument.strip()
+			for argument in raw_arguments[:-1].split(",")
+			if argument.strip()
+		),
+	)
+
+
+def _parameter_to_variable(parameter: str) -> str:
+	return parameter_variables((str(parameter),))[0]
+
+
+def _is_lifted_variable(argument: str) -> bool:
+	text = str(argument or "").strip()
+	return bool(text) and text[0].isupper()
+
+
+def _call(predicate: str, arguments: Sequence[str]) -> str:
+	return predicate if not arguments else f"{predicate}({', '.join(arguments)})"
 
 
 def _repair_rejection_reason(
@@ -774,19 +989,24 @@ def _deduplicate_rules(rules: Sequence[LiftedPlanRule]) -> tuple[LiftedPlanRule,
 def _candidate_source_counts(rules: Sequence[LiftedPlanRule]) -> dict[str, int]:
 	counts: dict[str, int] = {}
 	for rule in rules:
-		source = (
-			"external_sketch"
-			if rule.rationale.startswith("external_policy:")
-			else "schema"
-		)
+		source = _candidate_source(rule)
 		counts[source] = counts.get(source, 0) + 1
 	return counts
+
+
+def _candidate_source(rule: LiftedPlanRule) -> str:
+	if rule.rationale.startswith("external_policy:"):
+		return "external_sketch"
+	if rule.rationale == "counterexample_repair":
+		return "counterexample_repair"
+	return "schema"
 
 
 def _evidence_matrix(
 	*,
 	schema_candidates: Sequence[LiftedPlanRule],
 	external_candidates: Sequence[LiftedPlanRule],
+	repair_synthesized_candidates: Sequence[LiftedPlanRule],
 	candidate_rules: Sequence[LiftedPlanRule],
 	selected_rules: Sequence[LiftedPlanRule],
 	output_rules: Sequence[LiftedPlanRule],
@@ -821,6 +1041,10 @@ def _evidence_matrix(
 			"target": "PDDL predicate achievement-goal modules",
 			"schema_candidate_count": _layer_count(schema_candidates, "atomic"),
 			"external_candidate_count": _layer_count(external_candidates, "atomic"),
+			"repair_synthesized_candidate_count": _layer_count(
+				repair_synthesized_candidates,
+				"atomic",
+			),
 			"candidate_count": _layer_count(candidate_rules, "atomic"),
 			"selected_rule_count": _layer_count(selected_rules, "atomic"),
 			"output_rule_count": _layer_count(output_rules, "atomic"),
@@ -954,6 +1178,10 @@ def _evidence_matrix(
 					for report in tuple(external_rule_reports or ())
 					if not report.compiled
 				),
+			},
+			"counterexample_repair": {
+				"candidate_count": len(tuple(repair_synthesized_candidates or ())),
+				"layer_counts": _layer_counts(repair_synthesized_candidates),
 			},
 			"training_transition_systems": _transition_evidence_summary(
 				training_transition_evidence,
