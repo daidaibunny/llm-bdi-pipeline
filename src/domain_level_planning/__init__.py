@@ -17,7 +17,9 @@ from .architecture_contract import (
 	ArchitectureContract,
 	ArchitectureDecision,
 	ArchitectureGap,
+	HypothesisClassContract,
 	architecture_gap_summary,
+	bounded_hypothesis_class_contract,
 	domain_level_architecture_contract,
 )
 from .gp_backends import (
@@ -107,6 +109,7 @@ __all__ = [
 	"ArchitectureContract",
 	"ArchitectureDecision",
 	"ArchitectureGap",
+	"HypothesisClassContract",
 	"ClingoRequiredRuleGroup",
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
@@ -154,6 +157,7 @@ __all__ = [
 	"audit_learned_policy_for_asl_binding",
 	"audit_domain_level_library_contract",
 	"architecture_gap_summary",
+	"bounded_hypothesis_class_contract",
 	"domain_level_architecture_contract",
 	"adapt_dfa_guard_to_achievement_request",
 	"adapt_dfa_guarded_transition_to_achievement_request",

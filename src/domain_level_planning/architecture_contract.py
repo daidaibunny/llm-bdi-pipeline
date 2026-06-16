@@ -49,6 +49,30 @@ class ArchitectureGap:
 
 
 @dataclass(frozen=True)
+class HypothesisClassContract:
+	"""Machine-readable bounded hypothesis class for paper claims."""
+
+	name: str
+	feature_language: dict[str, object]
+	module_language: dict[str, object]
+	composer_language: dict[str, object]
+	progress_language: dict[str, object]
+	correctness_language: dict[str, object]
+	exclusions: tuple[str, ...]
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"name": self.name,
+			"feature_language": dict(self.feature_language),
+			"module_language": dict(self.module_language),
+			"composer_language": dict(self.composer_language),
+			"progress_language": dict(self.progress_language),
+			"correctness_language": dict(self.correctness_language),
+			"exclusions": list(self.exclusions),
+		}
+
+
+@dataclass(frozen=True)
 class ArchitectureContract:
 	"""The bounded-class synthesis contract reported with each library."""
 
@@ -59,6 +83,7 @@ class ArchitectureContract:
 	layer_b_target: str
 	layer_c_target: str
 	goal_fact_semantics: str
+	hypothesis_class: HypothesisClassContract
 	decisions: tuple[ArchitectureDecision, ...]
 	gaps: tuple[ArchitectureGap, ...]
 
@@ -71,6 +96,7 @@ class ArchitectureContract:
 			"layer_b_target": self.layer_b_target,
 			"layer_c_target": self.layer_c_target,
 			"goal_fact_semantics": self.goal_fact_semantics,
+			"hypothesis_class": self.hypothesis_class.to_dict(),
 			"decisions": [decision.to_dict() for decision in self.decisions],
 			"gaps": [gap.to_dict() for gap in self.gaps],
 		}
@@ -114,6 +140,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"PDDL goals or future DFA requests; they are not primitive actions, "
 			"mutable beliefs, or synthetic achievement goals"
 		),
+		hypothesis_class=bounded_hypothesis_class_contract(),
 		decisions=(
 			ArchitectureDecision(
 				id="D1",
@@ -231,6 +258,79 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				),
 				status="partially_done",
 			),
+		),
+	)
+
+
+def bounded_hypothesis_class_contract() -> HypothesisClassContract:
+	"""Return the exact bounded hypothesis class claimed by the implementation."""
+
+	return HypothesisClassContract(
+		name="goal_conditioned_modular_sketch_asl",
+		feature_language={
+			"state_features": (
+				"PDDL predicates over lifted variables",
+				"negation-as-absence context literals",
+				"safe lifted DLPlan feature bindings only",
+			),
+			"goal_features": (
+				"read-only goal_<predicate> descriptors",
+				"positive conjunctive achievement goals",
+			),
+			"external_features": (
+				"accepted DLPlan features with explicit ASL bindings",
+				"rejected object-specific or vocabulary-mismatched features",
+			),
+		},
+		module_language={
+			"heads": "PDDL predicate achievement goals and zero-argument +!g",
+			"contexts": "implicit conjunction of supported state and goal literals",
+			"body_calls": "PDDL primitive action calls and PDDL predicate subgoal calls",
+			"recursion": (
+				"same-predicate recursion requires a missing-precondition or "
+				"bounded acyclic-relation descent certificate"
+			),
+		},
+		composer_language={
+			"rule_shape": "goal-conditioned +!g rules selecting one atomic module",
+			"ordering_evidence": (
+				"trace orderings",
+				"schema causal interference",
+				"counterexample goal ordering",
+			),
+			"goal_dependency_scope": "positive conjunctive achievement goals",
+		},
+		progress_language={
+			"selection_constraints": (
+				"capability coverage",
+				"transition-progress required groups",
+				"bounded state-coverage required groups",
+			),
+			"validation_scope": "bounded reachable states from training and counterexample problems",
+			"termination_checks": (
+				"recursion descent audit",
+				"bounded execution step limit",
+				"acyclic high-level decision trace validation",
+			),
+		},
+		correctness_language={
+			"claim_scope": "bounded training/counterexample/held-out transition systems",
+			"success_condition": "all positive goal atoms satisfied at fixed point",
+			"runtime_planning": "no full-trace planner call during library execution",
+			"evidence": (
+				"synthesis report",
+				"architecture contract",
+				"domain-level contract",
+				"bounded validation report",
+				"experiment report",
+			),
+		},
+		exclusions=(
+			"arbitrary PDDL domains",
+			"negative or disjunctive achievement goals",
+			"numeric fluents and action costs",
+			"derived predicates and conditional effects",
+			"runtime full-trace planning as the plan-library executor",
 		),
 	)
 

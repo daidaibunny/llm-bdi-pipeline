@@ -121,6 +121,26 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "runtime full-trace planning for each new problem" in contract["non_goals"]
 	assert "read-only goal descriptors" in contract["goal_fact_semantics"]
 	assert "not primitive actions" in contract["goal_fact_semantics"]
+	hypothesis = contract["hypothesis_class"]
+	assert hypothesis["name"] == "goal_conditioned_modular_sketch_asl"
+	assert any(
+		"PDDL predicates" in item
+		for item in hypothesis["feature_language"]["state_features"]
+	)
+	assert any(
+		"goal_<predicate>" in item
+		for item in hypothesis["feature_language"]["goal_features"]
+	)
+	assert hypothesis["module_language"]["heads"] == (
+		"PDDL predicate achievement goals and zero-argument +!g"
+	)
+	assert "primitive action" in hypothesis["module_language"]["body_calls"]
+	assert "goal-conditioned +!g rules" in hypothesis["composer_language"]["rule_shape"]
+	assert "bounded reachable states" in hypothesis["progress_language"]["validation_scope"]
+	assert hypothesis["correctness_language"]["claim_scope"] == (
+		"bounded training/counterexample/held-out transition systems"
+	)
+	assert "arbitrary PDDL domains" in hypothesis["exclusions"]
 	gap_summary = result.report["architecture_gap_summary"]
 	assert gap_summary["open"] >= 1
 	assert gap_summary["in_progress"] >= 1
