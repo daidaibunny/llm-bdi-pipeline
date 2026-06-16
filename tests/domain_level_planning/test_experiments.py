@@ -57,6 +57,10 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert report["evaluation_results"][1]["solved"] is True
 	assert report["evaluation_results"][1]["step_count"] == 2
 	assert report["domain_level_contract"]["passed"] is True
+	assert report["domain_level_contract"]["goal_descriptor_usage"]["read_only"] is True
+	assert report["domain_level_contract"]["goal_descriptor_usage"][
+		"context_descriptors"
+	]
 	assert report["bounded_validation"]["passed"] is True
 	assert report["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["passed"] is True

@@ -37,6 +37,7 @@ class DomainLevelLibraryContractReport:
 	passed: bool
 	checked_layers: dict[str, bool]
 	violations: tuple[str, ...] = ()
+	goal_descriptor_usage: Mapping[str, object] | None = None
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -45,6 +46,7 @@ class DomainLevelLibraryContractReport:
 			"violations": list(self.violations),
 			"supported_asl_subset": dict(SUPPORTED_ASL_SUBSET),
 			"execution_semantics": dict(EXECUTION_SEMANTICS),
+			"goal_descriptor_usage": dict(self.goal_descriptor_usage or {}),
 		}
 
 
@@ -78,6 +80,7 @@ def audit_domain_level_library_contract(
 		declared_actions=action_arities,
 		violations=violations,
 	)
+	goal_descriptor_usage = _goal_descriptor_usage(plan_library)
 	checked_layers = {
 		"no_initial_beliefs": no_initial_beliefs,
 		"no_synthetic_names": no_synthetic_names,
@@ -94,6 +97,7 @@ def audit_domain_level_library_contract(
 		passed=all(checked_layers.values()),
 		checked_layers=checked_layers,
 		violations=tuple(dict.fromkeys(violations)),
+		goal_descriptor_usage=goal_descriptor_usage,
 	)
 
 
@@ -145,8 +149,46 @@ def _collect_goal_descriptor_violations(
 				passed = False
 				violations.append(
 					f"Read-only goal descriptor used in body step of plan {plan.plan_name!r}.",
-				)
+			)
 	return passed
+
+
+def _goal_descriptor_usage(plan_library: PlanLibrary) -> dict[str, object]:
+	context_descriptors: list[dict[str, object]] = []
+	mutable_locations: list[dict[str, str]] = []
+	for belief in tuple(plan_library.initial_beliefs or ()):
+		if _atom_symbol(belief).startswith("goal_"):
+			mutable_locations.append(
+				{"location": "initial_belief", "descriptor": str(belief)},
+			)
+	for plan in tuple(plan_library.plans or ()):
+		if plan.trigger.symbol.startswith("goal_"):
+			mutable_locations.append(
+				{"location": "plan_head", "descriptor": plan.trigger.symbol},
+			)
+		for context in tuple(plan.context or ()):
+			for symbol, arguments in _context_atoms(context):
+				if not symbol.startswith("goal_"):
+					continue
+				context_descriptors.append(
+					{
+						"descriptor": _format_atom(symbol, arguments),
+						"pddl_predicate": symbol[len("goal_") :],
+						"arguments": list(arguments),
+						"plan_name": plan.plan_name,
+						"negated": str(context or "").strip().lower().startswith("not "),
+					},
+				)
+		for step in tuple(plan.body or ()):
+			if step.symbol.startswith("goal_"):
+				mutable_locations.append(
+					{"location": f"body_step:{step.kind}", "descriptor": step.symbol},
+				)
+	return {
+		"context_descriptors": context_descriptors,
+		"mutable_locations": mutable_locations,
+		"read_only": not mutable_locations,
+	}
 
 
 def _collect_head_lifting_violations(
@@ -381,6 +423,10 @@ def _context_atoms(context: str) -> Iterable[tuple[str, tuple[str, ...]]]:
 			if argument.strip()
 		)
 		yield symbol, arguments
+
+
+def _format_atom(symbol: str, arguments: Sequence[str]) -> str:
+	return symbol if not tuple(arguments or ()) else f"{symbol}({', '.join(arguments)})"
 
 
 def _atom_symbol(atom: str) -> str:

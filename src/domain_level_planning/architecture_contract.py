@@ -273,8 +273,13 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				id="G4",
 				layer="goal representation",
 				gap="Goal-fact semantics need stronger validation and documentation.",
-				current_state="goal_<predicate> facts are used as read-only descriptors.",
-				required_improvement="Prove they are not emitted as mutable beliefs or primitive actions.",
+				current_state=(
+					"goal_<predicate> facts are used as read-only descriptors; the "
+					"library contract rejects them as initial beliefs, plan heads, "
+					"body calls, actions, or belief updates, and now reports every "
+					"context descriptor with its mapped PDDL predicate and read-only status."
+				),
+				required_improvement="Define negative-goal representation before supporting it.",
 				status="partially_done",
 			),
 			ArchitectureGap(

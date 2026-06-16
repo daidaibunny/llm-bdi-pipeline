@@ -55,6 +55,19 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 			"violations produce primitive-precondition counterexamples"
 		),
 	}
+	assert serialized["goal_descriptor_usage"] == {
+		"context_descriptors": [
+			{
+				"descriptor": "goal_done(X)",
+				"pddl_predicate": "done",
+				"arguments": ["X"],
+				"plan_name": "g_satisfy_goal_done",
+				"negated": False,
+			},
+		],
+		"mutable_locations": [],
+		"read_only": True,
+	}
 
 
 def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
