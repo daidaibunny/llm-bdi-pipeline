@@ -62,6 +62,12 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	)
 	assert result.report["domain_level_contract"]["passed"] is True
 	assert all(result.report["domain_level_contract"]["checked_layers"].values())
+	assert result.report["domain_level_contract"]["supported_asl_subset"]["body_steps"] == (
+		"PDDL primitive action calls and PDDL predicate subgoal calls only"
+	)
+	assert result.report["domain_level_contract"]["execution_semantics"]["plan_selection"] == (
+		"deterministic_first_applicable_asl_order"
+	)
 	assert result.report["bounded_validation"]["passed"] is True
 	assert result.report["bounded_validation"]["counterexample_count"] == 0
 	assert result.report["external_policy_count"] == 1
@@ -130,6 +136,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G7"]["layer"] == "TEG"
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "DFA guards can be translated" in gaps["G7"]["current_state"]
+	assert "ASL subset and execution semantics" in gaps["G7"]["current_state"]
 	assert "runtime DFA controller" in gaps["G7"]["required_improvement"]
 
 

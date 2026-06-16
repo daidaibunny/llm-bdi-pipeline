@@ -34,6 +34,22 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 	assert report.passed is True
 	assert all(report.checked_layers.values())
 	assert report.violations == ()
+	serialized = report.to_dict()
+	assert serialized["supported_asl_subset"]["plan_heads"] == (
+		"PDDL predicate achievement goals or zero-argument +!g only"
+	)
+	assert serialized["supported_asl_subset"]["body_steps"] == (
+		"PDDL primitive action calls and PDDL predicate subgoal calls only"
+	)
+	assert serialized["supported_asl_subset"]["contexts"] == (
+		"implicit conjunction of atom or not atom context literals only"
+	)
+	assert serialized["execution_semantics"] == {
+		"plan_selection": "deterministic_first_applicable_asl_order",
+		"context_semantics": "implicit conjunction over supported context literals",
+		"negation_semantics": "negation-as-absence over the current state or goal descriptor set",
+		"goal_state_semantics": "fixed point: +!g has no applicable unsatisfied-goal plan",
+	}
 
 
 def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() -> None:
@@ -48,7 +64,14 @@ def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() ->
 				body=(
 					AgentSpeakBodyStep("subgoal", "goal_done", ("a",)),
 					AgentSpeakBodyStep("action", "transition_action", ("a",)),
+					AgentSpeakBodyStep("belief_addition", "done", ("a",)),
 				),
+			),
+			AgentSpeakPlan(
+				plan_name="bad_context",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("ready(X) | staged(X)", "X == Y"),
+				body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
 			),
 		),
 	)
@@ -62,6 +85,10 @@ def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() ->
 	assert report.checked_layers["lifted_plan_heads"] is False
 	assert report.checked_layers["lifted_body_calls"] is False
 	assert report.checked_layers["lifted_contexts"] is False
+	assert report.checked_layers["body_step_subset"] is False
+	assert report.checked_layers["context_subset"] is False
 	assert any("Synthetic name" in violation for violation in report.violations)
 	assert any("grounded argument" in violation for violation in report.violations)
 	assert any("goal descriptor" in violation for violation in report.violations)
+	assert any("unsupported body step kind" in violation for violation in report.violations)
+	assert any("unsupported context expression" in violation for violation in report.violations)
