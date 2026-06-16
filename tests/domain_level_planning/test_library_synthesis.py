@@ -226,6 +226,8 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
+	assert "termination diagnostic counts" in gaps["G9"]["current_state"]
+	assert "diagnostic group types" in gaps["G9"]["current_state"]
 	assert gaps["G5"]["status"] == "partially_done"
 	assert "object-specific" in gaps["G5"]["current_state"]
 	assert "distance" in gaps["G5"]["current_state"]
@@ -735,6 +737,62 @@ def test_counterexample_problems_add_selector_constraints_without_polluting_trai
 		for transition in result.plan_library.metadata["counterexample_transition_systems"]
 	)
 	assert transition_system_names == ("counterexample-p1",)
+
+
+def test_termination_refinement_diagnostics_are_reported_in_synthesis(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
+	recursive_constraint = RefinementConstraint(
+		failure_kind="recursive_loop",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_recursive_loop",
+		problem_file=str(problem_file),
+		problem_name="p1",
+		failure_reason="recursive loop on !done(a)",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		required_rule_group_types=("counterexample_recursion_descent",),
+	)
+	nontermination_constraint = RefinementConstraint(
+		failure_kind="nontermination",
+		target_layer="execution_semantics",
+		constraint_type="counterexample_nontermination",
+		problem_file=str(problem_file),
+		problem_name="p1",
+		failure_reason="step limit exceeded",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		required_rule_group_types=("counterexample_nontermination",),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(recursive_constraint, nontermination_constraint),
+	)
+
+	refinement = result.report["counterexample_refinement_constraints"]
+	assert refinement["recursive_loop_constraint_count"] == 1
+	assert refinement["nontermination_constraint_count"] == 1
+	assert refinement["termination_diagnostics"] == (
+		{
+			"constraint_type": "counterexample_recursive_loop",
+			"failure_kind": "recursive_loop",
+			"target_layer": "layer_b_atomic_modules",
+			"lifted_missing_goals": ("done(X)",),
+			"failure_reason": "recursive loop on !done(a)",
+		},
+		{
+			"constraint_type": "counterexample_nontermination",
+			"failure_kind": "nontermination",
+			"target_layer": "execution_semantics",
+			"lifted_missing_goals": ("done(X)",),
+			"failure_reason": "step limit exceeded",
+		},
+	)
+	assert "counterexample_recursion_descent" in refinement["diagnostic_group_types"]
+	assert "counterexample_nontermination" in refinement["diagnostic_group_types"]
 
 
 def test_goal_ordering_refinement_constraint_synthesizes_composer_candidate(

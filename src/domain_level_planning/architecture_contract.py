@@ -352,7 +352,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"failures are narrowed to the named failed atomic subgoal when the "
 					"failure text identifies one, while `!g` failures are treated as "
 					"composer state-coverage failures; recursive-loop and nontermination "
-					"failures are separated from progress and ordering refinements."
+					"failures are separated from progress and ordering refinements; "
+					"unified synthesis reports expose termination diagnostic counts "
+					"and diagnostic group types."
 				),
 				required_improvement=(
 					"Connect more failure classes to generated candidate rules and "

@@ -2413,6 +2413,14 @@ def _counterexample_refinement_summary(
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
 	atomic_progress_groups = tuple(atomic_progress_rule_groups or ())
 	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
+	termination_constraints = tuple(
+		constraint
+		for constraint in explicit_constraints
+		if getattr(constraint, "constraint_type", "") in {
+			"counterexample_recursive_loop",
+			"counterexample_nontermination",
+		}
+	)
 	return {
 		"problem_count": len(evidence_items),
 		"problem_names": tuple(
@@ -2432,6 +2440,39 @@ def _counterexample_refinement_summary(
 		"repair_required_group_count": len(repair_groups),
 		"atomic_progress_required_group_count": len(atomic_progress_groups),
 		"atomic_progress_constraint_count": len(atomic_progress_reports),
+		"recursive_loop_constraint_count": sum(
+			1
+			for constraint in termination_constraints
+			if getattr(constraint, "constraint_type", "") == "counterexample_recursive_loop"
+		),
+		"nontermination_constraint_count": sum(
+			1
+			for constraint in termination_constraints
+			if getattr(constraint, "constraint_type", "") == (
+				"counterexample_nontermination"
+			)
+		),
+		"termination_diagnostics": tuple(
+			{
+				"constraint_type": str(getattr(constraint, "constraint_type", "")),
+				"failure_kind": str(getattr(constraint, "failure_kind", "")),
+				"target_layer": str(getattr(constraint, "target_layer", "")),
+				"lifted_missing_goals": tuple(
+					getattr(constraint, "lifted_missing_goals", ()) or (),
+				),
+				"failure_reason": str(getattr(constraint, "failure_reason", "")),
+			}
+			for constraint in termination_constraints
+		),
+		"diagnostic_group_types": tuple(
+			dict.fromkeys(
+				group_type
+				for constraint in termination_constraints
+				for group_type in tuple(
+					getattr(constraint, "required_rule_group_types", ()) or (),
+				)
+			),
+		),
 		"matched_atomic_progress_constraint_count": sum(
 			1 for report in atomic_progress_reports if report.matched
 		),
