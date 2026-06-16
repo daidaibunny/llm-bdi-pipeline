@@ -265,12 +265,14 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"Positive conjunctive DFA guards can be translated into "
 					"schema-validated goal facts and PDDL predicate subgoal calls; "
+					"a runtime controller can select DFA progress transitions and "
+					"execute them through the same domain-level lifted ASL library; "
 					"the supported ASL subset and execution semantics are reported "
 					"with each domain-level contract."
 				),
 				required_improvement=(
-					"Integrate the adapter into the runtime DFA controller and "
-					"define unsupported negative/disjunctive guard semantics."
+					"Integrate this controller into the artifact pipeline and define "
+					"unsupported negative/disjunctive guard semantics."
 				),
 				status="partially_done",
 			),

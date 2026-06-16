@@ -51,6 +51,11 @@ from .dfa_adapter import (
 	adapt_dfa_guard_to_achievement_request,
 	adapt_dfa_guarded_transition_to_achievement_request,
 )
+from .dfa_controller import (
+	DFAProgressExecutionResult,
+	execute_dfa_progress_step,
+	progress_requests_from_dfa_state,
+)
 from .experiments import run_domain_level_experiment
 from .models import (
 	LiftedCall,
@@ -116,6 +121,7 @@ __all__ = [
 	"ClingoSketchRuleSelector",
 	"ActionEffectBindingCandidate",
 	"DFAAchievementRequest",
+	"DFAProgressExecutionResult",
 	"FeatureBindingDiagnostic",
 	"FeatureBindingReport",
 	"BackendManifest",
@@ -163,8 +169,10 @@ __all__ = [
 	"domain_level_architecture_contract",
 	"adapt_dfa_guard_to_achievement_request",
 	"adapt_dfa_guarded_transition_to_achievement_request",
+	"execute_dfa_progress_step",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
+	"progress_requests_from_dfa_state",
 	"run_learner_sketches",
 	"run_domain_level_experiment",
 	"synthesize_domain_level_asl_library",
