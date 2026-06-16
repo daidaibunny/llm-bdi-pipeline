@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 from domain_level_planning.library_executor import evaluate_library_on_problem
+from domain_level_planning.library_verifier import LibraryCounterexample
+from domain_level_planning.refinement import classify_heldout_failure_for_refinement
 from domain_level_planning.refinement import synthesize_with_counterexample_refinement
 from plan_library.rendering import render_plan_library_asl
+from utils.pddl_parser import PDDLParser
 
 
 def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
@@ -86,6 +90,54 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 	assert execution.steps == ("make_base(b)", "make_top(a, b)")
 
 
+def test_primitive_precondition_failure_refinement_reports_lifted_layer_b_evidence(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_precondition_failure_domain(tmp_path)
+	problem = PDDLParser.parse_problem(problem_file)
+	counterexample = LibraryCounterexample(
+		problem_name=problem.name,
+		state_index=0,
+		failure_reason="Action preconditions are not satisfied for finish(a).",
+		state=("ready(a)",),
+		goal_facts=("goal_done(a)",),
+		goal_atoms=("done(a)",),
+		was_goal_state=False,
+		steps=(),
+		final_state=("ready(a)",),
+	)
+
+	constraints = classify_heldout_failure_for_refinement(
+		problem_file=problem_file,
+		problem=problem,
+		counterexample=counterexample,
+		domain_file=domain_file,
+	)
+
+	assert len(constraints) == 1
+	constraint = constraints[0]
+	assert constraint.failure_kind == "primitive_precondition_failure"
+	assert constraint.target_layer == "layer_b_atomic_modules"
+	assert constraint.constraint_type == "counterexample_atomic_precondition_repair"
+	assert constraint.ground_missing_goals == ("done(a)",)
+	assert constraint.lifted_missing_goals == ("done(X)",)
+	assert constraint.failing_action == "finish"
+	assert constraint.failing_action_arguments == ("a",)
+	assert constraint.lifted_failing_action == "finish(X)"
+	assert constraint.missing_preconditions == ("armed(a)",)
+	assert constraint.lifted_missing_preconditions == ("armed(X)",)
+	assert constraint.required_rule_group_types == (
+		"counterexample_transition_progress",
+		"counterexample_atomic_precondition_repair",
+	)
+	assert constraint.to_dict()["lifted_missing_preconditions"] == ["armed(X)"]
+	round_report = _refinement_summary_like((constraint,))
+	assert round_report["repair_constraint_count"] == 1
+	assert round_report["constraints_by_type"] == {
+		"counterexample_atomic_precondition_repair": 1,
+	}
+
+
 def _write_ordering_domain(tmp_path: Path) -> tuple[Path, Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	single_goal_problem = tmp_path / "single-goal.pddl"
@@ -137,3 +189,59 @@ def _write_ordering_domain(tmp_path: Path) -> tuple[Path, Path, Path]:
 		encoding="utf-8",
 	)
 	return domain_file, single_goal_problem, dependent_problem
+
+
+def _write_precondition_failure_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "precondition-domain.pddl"
+	problem_file = tmp_path / "precondition-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain precondition-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (armed ?x)
+		  (done ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (and (ready ?x) (armed ?x))
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem precondition-p1)
+		 (:domain precondition-mini)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _refinement_summary_like(constraints):
+	from domain_level_planning.refinement import CounterexampleGuidedSynthesisResult
+	from domain_level_planning.refinement import RefinementRoundReport
+
+	return CounterexampleGuidedSynthesisResult(
+		final_result=SimpleNamespace(report={}),
+		rounds=(
+			RefinementRoundReport(
+				round_index=0,
+				training_problem_files=(),
+				counterexample_problem_files=(),
+				heldout_evaluations=(),
+				added_counterexample_problem_files=(),
+				refinement_constraints=tuple(constraints),
+				synthesis_report={},
+			),
+		),
+		converged=False,
+	).to_dict()["refinement_summary"]

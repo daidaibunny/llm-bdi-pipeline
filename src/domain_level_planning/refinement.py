@@ -9,6 +9,8 @@ from pathlib import Path
 import re
 from typing import Sequence
 
+from low_level_planning.models import LowLevelAction
+from low_level_planning.strips_state import STRIPSStateSimulator
 from .library_executor import evaluate_library_on_problem
 from .library_synthesis import ExternalSketchPolicySource
 from .library_synthesis import UnifiedSynthesisResult
@@ -31,7 +33,14 @@ class RefinementConstraint:
 	failure_reason: str
 	ground_missing_goals: tuple[str, ...] = ()
 	ground_satisfied_goals: tuple[str, ...] = ()
+	lifted_missing_goals: tuple[str, ...] = ()
+	lifted_satisfied_goals: tuple[str, ...] = ()
 	lifted_orderings: tuple[tuple[str, str], ...] = ()
+	failing_action: str | None = None
+	failing_action_arguments: tuple[str, ...] = ()
+	lifted_failing_action: str | None = None
+	missing_preconditions: tuple[str, ...] = ()
+	lifted_missing_preconditions: tuple[str, ...] = ()
 	required_rule_group_types: tuple[str, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
@@ -44,9 +53,16 @@ class RefinementConstraint:
 			"failure_reason": self.failure_reason,
 			"ground_missing_goals": list(self.ground_missing_goals),
 			"ground_satisfied_goals": list(self.ground_satisfied_goals),
+			"lifted_missing_goals": list(self.lifted_missing_goals),
+			"lifted_satisfied_goals": list(self.lifted_satisfied_goals),
 			"lifted_orderings": [
 				list(ordering) for ordering in self.lifted_orderings
 			],
+			"failing_action": self.failing_action,
+			"failing_action_arguments": list(self.failing_action_arguments),
+			"lifted_failing_action": self.lifted_failing_action,
+			"missing_preconditions": list(self.missing_preconditions),
+			"lifted_missing_preconditions": list(self.lifted_missing_preconditions),
 			"required_rule_group_types": list(self.required_rule_group_types),
 		}
 
@@ -277,6 +293,7 @@ def _evaluate_heldout_problem(
 				problem_file=problem_file,
 				problem=problem,
 				counterexample=counterexample,
+				domain_file=domain_file,
 			)
 		),
 	)
@@ -317,6 +334,7 @@ def classify_heldout_failure_for_refinement(
 	problem_file: str | Path,
 	problem,
 	counterexample: LibraryCounterexample,
+	domain_file: str | Path | None = None,
 ) -> tuple[RefinementConstraint, ...]:
 	"""Classify a failed held-out execution into lifted refinement constraints."""
 
@@ -326,6 +344,8 @@ def classify_heldout_failure_for_refinement(
 	satisfied_goals = tuple(
 		atom for atom in counterexample.goal_atoms if atom in counterexample.final_state
 	)
+	lifted_missing_goals = _lift_atom_group(missing_goals)
+	lifted_satisfied_goals = _lift_atom_group(satisfied_goals)
 	if missing_goals and satisfied_goals and tuple(counterexample.steps):
 		orderings = _lift_goal_orderings_from_failure(
 			earlier_atoms=missing_goals,
@@ -342,6 +362,8 @@ def classify_heldout_failure_for_refinement(
 					failure_reason=counterexample.failure_reason,
 					ground_missing_goals=missing_goals,
 					ground_satisfied_goals=satisfied_goals,
+					lifted_missing_goals=lifted_missing_goals,
+					lifted_satisfied_goals=lifted_satisfied_goals,
 					lifted_orderings=orderings,
 					required_rule_group_types=(
 						"counterexample_transition_progress",
@@ -351,6 +373,18 @@ def classify_heldout_failure_for_refinement(
 				),
 			)
 	if missing_goals:
+		precondition_repair = _primitive_precondition_repair_constraint(
+			problem_file=problem_file,
+			problem_name=problem.name,
+			domain_file=domain_file,
+			counterexample=counterexample,
+			missing_goals=missing_goals,
+			satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
+		)
+		if precondition_repair is not None:
+			return (precondition_repair,)
 		return (
 			RefinementConstraint(
 				failure_kind=_failure_kind(counterexample.failure_reason),
@@ -361,6 +395,8 @@ def classify_heldout_failure_for_refinement(
 				failure_reason=counterexample.failure_reason,
 				ground_missing_goals=missing_goals,
 				ground_satisfied_goals=satisfied_goals,
+				lifted_missing_goals=lifted_missing_goals,
+				lifted_satisfied_goals=lifted_satisfied_goals,
 				required_rule_group_types=("counterexample_transition_progress",),
 			),
 		)
@@ -374,7 +410,85 @@ def classify_heldout_failure_for_refinement(
 			failure_reason=counterexample.failure_reason,
 			ground_missing_goals=missing_goals,
 			ground_satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
 			required_rule_group_types=("counterexample_state_coverage",),
+		),
+	)
+
+
+def _primitive_precondition_repair_constraint(
+	*,
+	problem_file: str | Path,
+	problem_name: str,
+	domain_file: str | Path | None,
+	counterexample: LibraryCounterexample,
+	missing_goals: tuple[str, ...],
+	satisfied_goals: tuple[str, ...],
+	lifted_missing_goals: tuple[str, ...],
+	lifted_satisfied_goals: tuple[str, ...],
+) -> RefinementConstraint | None:
+	if _failure_kind(counterexample.failure_reason) != "primitive_precondition_failure":
+		return None
+	if domain_file is None:
+		return None
+	failing_action = _parse_failing_action(counterexample.failure_reason)
+	if failing_action is None:
+		return None
+	simulator = STRIPSStateSimulator(str(domain_file))
+	semantics = simulator.ground_action(
+		LowLevelAction(failing_action[0], failing_action[1]),
+	)
+	failure_state = frozenset(counterexample.final_state or counterexample.state)
+	missing_preconditions = tuple(
+		sorted(
+			semantics.positive_preconditions - failure_state,
+		),
+	)
+	violated_negative_preconditions = tuple(
+		f"not {atom}"
+		for atom in sorted(semantics.negative_preconditions & failure_state)
+	)
+	unsatisfied_preconditions = (
+		*missing_preconditions,
+		*violated_negative_preconditions,
+	)
+	if not unsatisfied_preconditions:
+		return None
+	object_variables = _object_variable_mapping(
+		(
+			*missing_goals,
+			*satisfied_goals,
+			*unsatisfied_preconditions,
+		),
+	)
+	lifted_action = _lift_action_call(
+		failing_action[0],
+		failing_action[1],
+		object_variables,
+	)
+	return RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(Path(problem_file).expanduser().resolve()),
+		problem_name=problem_name,
+		failure_reason=counterexample.failure_reason,
+		ground_missing_goals=missing_goals,
+		ground_satisfied_goals=satisfied_goals,
+		lifted_missing_goals=_lift_atom_group(missing_goals, object_variables),
+		lifted_satisfied_goals=_lift_atom_group(satisfied_goals, object_variables),
+		failing_action=failing_action[0],
+		failing_action_arguments=failing_action[1],
+		lifted_failing_action=lifted_action,
+		missing_preconditions=unsatisfied_preconditions,
+		lifted_missing_preconditions=_lift_atom_group(
+			unsatisfied_preconditions,
+			object_variables,
+		),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
 		),
 	)
 
@@ -420,6 +534,83 @@ def _lift_goal_pair(earlier_atom: str, later_atom: str) -> tuple[str, str] | Non
 		fact_atom(f"goal_{earlier_predicate}", earlier_variables),
 		fact_atom(f"goal_{later_predicate}", later_variables),
 	)
+
+
+def _parse_failing_action(failure_reason: str) -> tuple[str, tuple[str, ...]] | None:
+	match = re.search(
+		r"for\s+([A-Za-z_][A-Za-z0-9_-]*)\(([^()]*)\)",
+		str(failure_reason or ""),
+	)
+	if match is None:
+		return None
+	arguments = tuple(
+		argument.strip()
+		for argument in match.group(2).split(",")
+		if argument.strip()
+	)
+	return match.group(1), arguments
+
+
+def _lift_atom_group(
+	atoms: Sequence[str],
+	object_variables: dict[str, str] | None = None,
+) -> tuple[str, ...]:
+	if object_variables is None:
+		object_variables = _object_variable_mapping(atoms)
+	return tuple(
+		_lift_atom(atom, object_variables)
+		for atom in tuple(atoms or ())
+	)
+
+
+def _lift_atom(
+	atom: str,
+	object_variables: dict[str, str],
+) -> str:
+	text = str(atom or "").strip()
+	if text.startswith("not "):
+		return f"not {_lift_atom(text[4:].strip(), object_variables)}"
+	predicate, arguments = _parse_atom(text)
+	return fact_atom(
+		predicate,
+		tuple(
+			object_variables.get(argument, argument)
+			for argument in arguments
+		),
+	)
+
+
+def _lift_action_call(
+	action_name: str,
+	arguments: Sequence[str],
+	object_variables: dict[str, str],
+) -> str:
+	return fact_atom(
+		action_name,
+		tuple(
+			object_variables.get(argument, argument)
+			for argument in tuple(arguments or ())
+		),
+	)
+
+
+def _object_variable_mapping(atoms: Sequence[str]) -> dict[str, str]:
+	object_variables: dict[str, str] = {}
+	variable_names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+	for atom in tuple(atoms or ()):
+		predicate, arguments = _parse_atom(str(atom).removeprefix("not ").strip())
+		if not predicate:
+			continue
+		for argument in arguments:
+			if argument in object_variables:
+				continue
+			index = len(object_variables)
+			object_variables[argument] = (
+				variable_names[index]
+				if index < len(variable_names)
+				else f"X{index + 1}"
+			)
+	return object_variables
 
 
 def _failure_kind(failure_reason: str) -> str:
@@ -475,6 +666,9 @@ def _refinement_summary(
 		),
 		"final_counterexample_problem_count": len(final_counterexamples),
 		"constraint_count": len(constraints),
+		"repair_constraint_count": sum(
+			1 for constraint in constraints if "repair" in constraint.constraint_type
+		),
 		"constraints_by_failure_kind": _count_by(
 			constraint.failure_kind for constraint in constraints
 		),

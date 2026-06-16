@@ -168,7 +168,8 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G3"]["status"] == "partially_done"
 	assert "main research gap" in gaps["G3"]["gap"]
 	assert "counterexample failure classification" in gaps["G3"]["current_state"]
-	assert "broader counterexample failure types" in gaps["G3"]["required_improvement"]
+	assert "primitive-precondition repair evidence" in gaps["G3"]["current_state"]
+	assert "directly generate new composer/module candidates" in gaps["G3"]["required_improvement"]
 	assert gaps["G7"]["layer"] == "TEG"
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "DFA guards can be translated" in gaps["G7"]["current_state"]
