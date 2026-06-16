@@ -105,7 +105,10 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "runtime full-trace planning for each new problem" in contract["non_goals"]
 	assert "read-only goal descriptors" in contract["goal_fact_semantics"]
 	assert "not primitive actions" in contract["goal_fact_semantics"]
-	assert result.report["architecture_gap_summary"]["open"] >= 3
+	gap_summary = result.report["architecture_gap_summary"]
+	assert gap_summary["open"] >= 1
+	assert gap_summary["in_progress"] >= 1
+	assert gap_summary["partially_done"] >= 4
 
 	decisions = {decision["id"]: decision for decision in contract["decisions"]}
 	assert decisions["D3"]["status"] == "accepted"
@@ -114,11 +117,20 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 
 	gaps = {gap["id"]: gap for gap in contract["gaps"]}
 	assert gaps["G2"]["layer"] == "Layer B"
-	assert gaps["G2"]["status"] == "open"
-	assert "trace-generalizing learner" in gaps["G2"]["gap"]
+	assert gaps["G2"]["status"] == "partially_done"
+	assert "trace slicing" in gaps["G2"]["current_state"]
+	assert "anti-unified" in gaps["G2"]["current_state"]
+	assert "recursion descent" in gaps["G2"]["current_state"]
+	assert "multi-strategy module learner" in gaps["G2"]["required_improvement"]
 	assert gaps["G3"]["layer"] == "Layer C"
-	assert gaps["G3"]["status"] == "open"
+	assert gaps["G3"]["status"] == "partially_done"
 	assert "main research gap" in gaps["G3"]["gap"]
+	assert "counterexample failure classification" in gaps["G3"]["current_state"]
+	assert "broader counterexample failure types" in gaps["G3"]["required_improvement"]
+	assert gaps["G7"]["layer"] == "TEG"
+	assert gaps["G7"]["status"] == "partially_done"
+	assert "DFA guards can be translated" in gaps["G7"]["current_state"]
+	assert "runtime DFA controller" in gaps["G7"]["required_improvement"]
 
 
 def test_unified_pipeline_reports_evidence_matrix_by_layer(

@@ -164,18 +164,32 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			ArchitectureGap(
 				id="G2",
 				layer="Layer B",
-				gap="Atomic module learning is not yet a full trace-generalizing learner.",
-				current_state="Schema, sketch, and bounded progress candidates are selected.",
-				required_improvement="Add trace slicing, last achievers, anti-unification, and recursion descent checks.",
-				status="open",
+				gap="Atomic module learning still lacks a full multi-strategy module learner.",
+				current_state=(
+					"Schema, sketch, bounded progress candidates, trace slicing, "
+					"last achievers, anti-unified support patterns, and recursion "
+					"descent audits are reported."
+				),
+				required_improvement=(
+					"Add a multi-strategy module learner that generalizes from these "
+					"evidence sources and rejects unsafe alternatives."
+				),
+				status="partially_done",
 			),
 			ArchitectureGap(
 				id="G3",
 				layer="Layer C",
 				gap="Goal dependency composition remains the main research gap.",
-				current_state="Shared-object order evidence and bounded coverage constraints exist.",
-				required_improvement="Learn composer rules from traces, causal interference, and counterexamples.",
-				status="open",
+				current_state=(
+					"Shared-object trace order evidence, schema causal-interference "
+					"ordering candidates, bounded state-coverage constraints, and "
+					"counterexample failure classification exist."
+				),
+				required_improvement=(
+					"Learn richer final-goal causal structures and broader "
+					"counterexample failure types as reusable composer rules."
+				),
+				status="partially_done",
 			),
 			ArchitectureGap(
 				id="G4",
