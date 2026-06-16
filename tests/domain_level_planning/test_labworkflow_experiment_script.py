@@ -39,6 +39,10 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 	assert report["failure_analysis"]["failure_reason_counts"] == {}
 	assert report["failure_analysis"]["step_count_summary"]["max"] >= 0
 	assert report["domain_level_contract"]["passed"] is True
+	assert report["domain_level_contract"]["goal_descriptor_usage"]["read_only"] is True
+	assert report["domain_level_contract"]["goal_descriptor_usage"][
+		"context_descriptors"
+	]
 	assert report["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["passed"] is True
 	assert report["generated_output_audit"]["no_synthetic_names"] is True
@@ -60,6 +64,12 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 	assert report["plan_library"]["primitive_action_call_count"] > 0
 	assert report["plan_library"]["subgoal_call_count"] > 0
 	assert report["plan_library"]["asl_line_count"] > 0
+	assert report["learning_audit"]["layer_b_atomic_modules"][
+		"atomic_action_strategy_group_count"
+	] > 0
+	assert report["learning_audit"]["layer_c_goal_composer"][
+		"composer_candidate_count"
+	] > 0
 	assert report["runtime_seconds"]["synthesis"] >= 0
 	assert report["runtime_seconds"]["evaluation_total"] >= 0
 	assert len(report["runtime_seconds"]["evaluation_by_problem"]) == 2
