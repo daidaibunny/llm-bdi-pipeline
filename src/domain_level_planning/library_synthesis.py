@@ -467,6 +467,10 @@ def synthesize_domain_level_asl_library(
 		"output_rule_manifest": tuple(
 			_rule_to_manifest(rule) for rule in output_rules
 		),
+		"rule_manifest_audit": _rule_manifest_audit(
+			selected_rules=selection.rules,
+			output_rules=output_rules,
+		),
 		"paper_policy_audits": tuple(
 			audit.to_dict()
 			for audit in paper_policy_audits
@@ -1741,6 +1745,104 @@ def _call_to_manifest(call: LiftedCall) -> dict[str, object]:
 		"symbol": call.symbol,
 		"arguments": list(call.arguments),
 	}
+
+
+def _rule_manifest_audit(
+	*,
+	selected_rules: Sequence[LiftedPlanRule],
+	output_rules: Sequence[LiftedPlanRule],
+) -> dict[str, object]:
+	violations: list[str] = []
+	for collection_name, rules in (
+		("selected", selected_rules),
+		("output", output_rules),
+	):
+		for rule in tuple(rules or ()):
+			_collect_rule_manifest_violations(
+				collection_name=collection_name,
+				rule=rule,
+				violations=violations,
+			)
+	no_synthetic_names = not any("synthetic name" in violation for violation in violations)
+	no_grounded_terms = not any("grounded term" in violation for violation in violations)
+	return {
+		"passed": not violations,
+		"selected_rule_count": len(tuple(selected_rules or ())),
+		"output_rule_count": len(tuple(output_rules or ())),
+		"no_synthetic_names": no_synthetic_names,
+		"no_grounded_terms": no_grounded_terms,
+		"violation_count": len(violations),
+		"violations": list(dict.fromkeys(violations)),
+	}
+
+
+def _collect_rule_manifest_violations(
+	*,
+	collection_name: str,
+	rule: LiftedPlanRule,
+	violations: list[str],
+) -> None:
+	for label, value in _rule_manifest_strings(rule):
+		if _contains_synthetic_report_name(value):
+			violations.append(
+				f"{collection_name} rule {rule.name}: synthetic name in {label}: {value}",
+			)
+	for call_label, call in (("head", rule.head), *tuple(
+		(f"body[{index}]", call)
+		for index, call in enumerate(tuple(rule.body or ()))
+	)):
+		for argument in tuple(call.arguments or ()):
+			if not argument or argument[0].isupper():
+				continue
+			violations.append(
+				(
+					f"{collection_name} rule {rule.name}: grounded term in "
+					f"{call_label} argument {argument}"
+				),
+			)
+	for context in tuple(rule.context or ()):
+		for argument in _context_arguments(context):
+			if not argument or argument[0].isupper():
+				continue
+			violations.append(
+				(
+					f"{collection_name} rule {rule.name}: grounded term in "
+					f"context argument {argument}"
+				),
+			)
+
+
+def _rule_manifest_strings(rule: LiftedPlanRule) -> tuple[tuple[str, str], ...]:
+	return (
+		("name", rule.name),
+		("rationale", rule.rationale),
+		("head symbol", rule.head.symbol),
+		*tuple(("context", context) for context in tuple(rule.context or ())),
+		*tuple(("capability", capability) for capability in tuple(rule.capabilities or ())),
+		*tuple(
+			(f"body symbol {index}", call.symbol)
+			for index, call in enumerate(tuple(rule.body or ()))
+		),
+	)
+
+
+def _contains_synthetic_report_name(value: str) -> bool:
+	text = str(value or "").lower()
+	return "achieve_" in text or "transition_" in text or "dfa_state" in text
+
+
+def _context_arguments(context: str) -> tuple[str, ...]:
+	text = str(context or "").strip()
+	if text.lower().startswith("not "):
+		text = text[4:].strip()
+	if "(" not in text or not text.endswith(")"):
+		return ()
+	_, raw_arguments = text.split("(", 1)
+	return tuple(
+		argument.strip()
+		for argument in raw_arguments[:-1].split(",")
+		if argument.strip()
+	)
 
 
 def _evidence_matrix(

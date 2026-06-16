@@ -232,6 +232,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "machine-readable diagnostics" in gaps["G10"]["current_state"]
 	assert gaps["G11"]["layer"] == "no-hardcoding"
 	assert gaps["G11"]["status"] == "partially_done"
+	assert "rule manifest leakage" in gaps["G11"]["current_state"]
 	assert "domain-specific" in gaps["G11"]["required_improvement"]
 	assert gaps["G12"]["layer"] == "TEG"
 	assert gaps["G12"]["status"] == "partially_done"
@@ -328,6 +329,14 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert all("achieve_" not in item["name"] for item in output_manifest)
 	assert all("transition_" not in item["name"] for item in output_manifest)
 	assert all("dfa_state" not in item["name"] for item in output_manifest)
+	manifest_audit = result.report["rule_manifest_audit"]
+	assert manifest_audit["passed"] is True
+	assert manifest_audit["selected_rule_count"] == result.report["selected_rule_count"]
+	assert manifest_audit["output_rule_count"] == result.report["output_rule_count"]
+	assert manifest_audit["no_synthetic_names"] is True
+	assert manifest_audit["no_grounded_terms"] is True
+	assert manifest_audit["violation_count"] == 0
+	assert manifest_audit["violations"] == []
 
 
 def test_unified_pipeline_reports_unsupported_external_features_without_guessing(

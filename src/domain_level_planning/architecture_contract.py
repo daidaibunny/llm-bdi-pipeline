@@ -365,7 +365,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"Tests scan domain-level production code and generated libraries for "
 					"synthetic names, grounded terms, mutable goal descriptors, "
-					"undeclared symbols, wrong arities, and known domain-specific tokens."
+					"undeclared symbols, wrong arities, selected/output rule manifest "
+					"leakage, and known domain-specific tokens."
 				),
 				required_improvement=(
 					"Keep extending these checks whenever new modules or generated "

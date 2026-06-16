@@ -123,6 +123,7 @@ PDDL domain + training problems
 | T52 | Add structured DFA guard adaptation diagnostics. | G12 | DFA guard adaptation now exposes accepted/rejected diagnostics; temporal artifacts persist DFA progress diagnostics while keeping unsupported negative/disjunctive guards rejected rather than silently compiled. | Done |
 | T53 | Add selected/output rule provenance manifests. | G2, G3, G8 | Unified synthesis reports now expose selected and output lifted-rule manifests with source, rationale, head, context, body, capabilities, and cost for auditability. | Done |
 | T54 | Add structured PDDL unsupported-fragment diagnostics. | G10 | PDDL support reports now expose machine-readable unsupported requirement, block, expression-operator, and goal-fragment diagnostics in addition to legacy reason strings. | Done |
+| T55 | Add rule manifest cleanliness audit. | G11 | Unified synthesis reports now audit selected/output rule manifests for synthetic names and grounded terms so intermediate report artifacts stay aligned with final ASL cleanliness checks. | Done |
 
 ## Current Completion Rule
 
