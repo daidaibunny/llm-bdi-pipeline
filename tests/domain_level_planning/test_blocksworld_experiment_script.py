@@ -1,0 +1,40 @@
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_blocksworld_first20_script_writes_reproducible_json_report(
+	tmp_path: Path,
+) -> None:
+	output = tmp_path / "blocksworld-smoke.json"
+
+	subprocess.run(
+		(
+			sys.executable,
+			str(PROJECT_ROOT / "scripts" / "run_blocksworld_first20_experiment.py"),
+			"--output",
+			str(output),
+			"--train-count",
+			"1",
+			"--eval-count",
+			"2",
+		),
+		cwd=PROJECT_ROOT,
+		check=True,
+	)
+
+	report = json.loads(output.read_text(encoding="utf-8"))
+	assert report["experiment_name"] == "blocksworld-first20"
+	assert report["train_problem_count"] == 1
+	assert report["evaluation_problem_count"] == 2
+	assert report["coverage"]["solved_count"] == 2
+	assert report["coverage"]["failed_count"] == 0
+	assert report["domain_level_contract"]["passed"] is True
+	assert report["no_synthetic_names"] is True
+	assert "+!g : goal_on" in report["asl"]

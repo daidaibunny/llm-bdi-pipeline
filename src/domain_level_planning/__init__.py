@@ -42,6 +42,7 @@ from .feature_binding import (
 	bind_recoverable_dlplan_features,
 	bind_unique_action_effect_candidates,
 )
+from .experiments import run_domain_level_experiment
 from .models import (
 	LiftedCall,
 	LiftedPlanRule,
@@ -149,6 +150,7 @@ __all__ = [
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"run_learner_sketches",
+	"run_domain_level_experiment",
 	"synthesize_domain_level_asl_library",
 	"synthesize_with_counterexample_refinement",
 	"validate_library_on_bounded_transition_systems",
