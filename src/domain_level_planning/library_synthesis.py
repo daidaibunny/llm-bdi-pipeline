@@ -91,7 +91,7 @@ def synthesize_domain_level_asl_library(
 	profile = _normalize_synthesis_profile(synthesis_profile)
 	training_problem_files = tuple(training_problem_files or ())
 	counterexample_problem_files = tuple(counterexample_problem_files or ())
-	assert_compilable_pddl_files(
+	pddl_support = assert_compilable_pddl_files(
 		domain_file=domain_file,
 		problem_files=tuple(
 			dict.fromkeys((*training_problem_files, *counterexample_problem_files)),
@@ -200,6 +200,7 @@ def synthesize_domain_level_asl_library(
 		initial_beliefs=(),
 		metadata={
 			"generation_mode": "unified_goal_conditioned_modular_synthesis",
+			"pddl_support": pddl_support.to_dict(),
 			"selected_rule_names": list(selection.selected_rule_names),
 			"output_rule_names": [rule.name for rule in output_rules],
 			"required_capabilities": tuple(required_capabilities),
@@ -251,6 +252,7 @@ def synthesize_domain_level_asl_library(
 		"generation_mode": "unified_goal_conditioned_modular_synthesis",
 		"synthesis_profile": profile,
 		"theoretical_contract": "bounded_class_guarantee",
+		"pddl_support": pddl_support.to_dict(),
 		"architecture_contract": architecture_contract.to_dict(),
 		"architecture_gap_summary": architecture_gap_summary(
 			architecture_contract.gaps,

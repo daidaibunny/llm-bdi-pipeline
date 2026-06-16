@@ -50,6 +50,10 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 
 	assert result.report["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
 	assert result.report["synthesis_profile"] == "bootstrap"
+	assert result.report["pddl_support"]["is_compilable"] is True
+	assert result.report["pddl_support"]["requirements"] == [":strips"]
+	assert result.report["pddl_support"]["unsupported_reasons"] == []
+	assert result.plan_library.metadata["pddl_support"] == result.report["pddl_support"]
 	assert result.report["paper_quality_checks"] == (
 		"transition_progress",
 		"bounded_all_reachable_states",
@@ -265,6 +269,23 @@ def test_paper_profile_accepts_bound_external_policy_and_bounded_validation(
 	assert result.report["paper_profile_failures"] == ()
 	assert result.report["selected_candidate_sources"]["external_sketch"] == 1
 	assert result.report["output_candidate_sources"]["external_sketch"] == 1
+
+
+def test_unified_pipeline_rejects_unsupported_pddl_before_synthesis(tmp_path: Path) -> None:
+	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
+	domain_file.write_text(
+		domain_file.read_text(encoding="utf-8").replace(
+			"(:requirements :strips)",
+			"(:requirements :strips :conditional-effects)",
+		),
+		encoding="utf-8",
+	)
+
+	with pytest.raises(ValueError, match="requirement :conditional-effects is not supported"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+		)
 
 
 def test_external_policy_rules_are_rendered_before_schema_fallbacks(
