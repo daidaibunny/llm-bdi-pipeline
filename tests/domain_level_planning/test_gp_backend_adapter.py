@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -12,6 +14,7 @@ from domain_level_planning.gp_backends import (
 	SketchEffect,
 	SketchPolicy,
 	SketchRule,
+	backend_audit_matrix,
 	discover_learner_sketches_policy_file,
 	discover_backend_manifest,
 	parse_dlplan_policy,
@@ -52,6 +55,70 @@ def test_discover_backend_manifest_reports_missing_backend(tmp_path: Path) -> No
 
 	assert manifest.present is False
 	assert manifest.path == tmp_path / "h-policy-learner"
+
+
+def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
+	tmp_path: Path,
+) -> None:
+	learner = tmp_path / "learner-sketches"
+	learner.mkdir()
+	(learner / ".git").mkdir()
+	(learner / ".git" / "HEAD").write_text(
+		"7a7ea6a6356035afa16ed958b53d8edc86994e0a\n",
+		encoding="utf-8",
+	)
+	d2l = tmp_path / "d2l"
+	d2l.mkdir()
+	(d2l / ".git").mkdir()
+	(d2l / ".git" / "HEAD").write_text("wrong-commit\n", encoding="utf-8")
+
+	matrix = backend_audit_matrix(root=tmp_path)
+	by_name = {entry["name"]: entry for entry in matrix}
+
+	assert set(by_name) == {"learner-sketches", "h-policy-learner", "d2l"}
+	assert by_name["learner-sketches"]["present"] is True
+	assert by_name["learner-sketches"]["pin_status"] == "ok"
+	assert by_name["learner-sketches"]["paper_role"] == (
+		"serialized-width sketch learner for qualitative DLPlan policies"
+	)
+	assert by_name["learner-sketches"]["preferred_use"] == (
+		"external learned sketch evidence for conservative feature binding"
+	)
+	assert "feature_rule_policy" in by_name["learner-sketches"]["output_artifacts"]
+	assert "Layer B/C sketch evidence" in by_name["learner-sketches"]["reusable_evidence"]
+	assert by_name["learner-sketches"]["resource_profile"]["default_max_rss_gb"] == 16.0
+	assert by_name["learner-sketches"]["resource_profile"]["guard_required"] is True
+
+	assert by_name["h-policy-learner"]["present"] is False
+	assert by_name["h-policy-learner"]["pin_status"] == "missing"
+	assert "missing_backend" in by_name["h-policy-learner"]["failure_modes"]
+	assert "hierarchical policy" in by_name["h-policy-learner"]["paper_role"]
+
+	assert by_name["d2l"]["present"] is True
+	assert by_name["d2l"]["pin_status"] == "mismatch"
+	assert "pin_mismatch" in by_name["d2l"]["failure_modes"]
+	assert "Docker" in by_name["d2l"]["resource_profile"]["execution_environment"]
+
+
+def test_backend_audit_status_cli_prints_matrix_entries(tmp_path: Path) -> None:
+	script = Path(__file__).resolve().parents[2] / "scripts" / "gp_backend_audit.py"
+
+	result = subprocess.run(
+		(
+			sys.executable,
+			str(script),
+			"status",
+			"--backend-root",
+			str(tmp_path),
+		),
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+
+	assert "learner-sketches: missing; observed=unknown; pinned=missing" in result.stdout
+	assert "h-policy-learner: missing; observed=unknown; pinned=missing" in result.stdout
+	assert "d2l: missing; observed=unknown; pinned=missing" in result.stdout
 
 
 def test_learner_sketches_command_is_reproducible(tmp_path: Path) -> None:

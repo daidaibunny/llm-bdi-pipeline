@@ -71,6 +71,16 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert result.report["bounded_validation"]["passed"] is True
 	assert result.report["bounded_validation"]["counterexample_count"] == 0
 	assert result.report["external_policy_count"] == 1
+	backend_matrix = {
+		entry["name"]: entry
+		for entry in result.report["backend_audit_matrix"]
+	}
+	assert backend_matrix["learner-sketches"]["paper_role"] == (
+		"serialized-width sketch learner for qualitative DLPlan policies"
+	)
+	assert backend_matrix["learner-sketches"]["resource_profile"]["guard_required"] is True
+	assert "Layer B/C sketch evidence" in backend_matrix["learner-sketches"]["reusable_evidence"]
+	assert "description-logic policy learner baseline" in backend_matrix["d2l"]["paper_role"]
 	assert result.report["candidate_sources"]["external_sketch"] >= 1
 	assert result.report["candidate_sources"]["schema"] >= 1
 	assert result.report["output_candidate_sources"]["external_sketch"] >= 1

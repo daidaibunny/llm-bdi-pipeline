@@ -20,6 +20,108 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MAX_RSS_GB = 16.0
 DEFAULT_POLL_SECONDS = 5.0
 
+PINNED_BACKENDS = (
+	{
+		"name": "learner-sketches",
+		"url": "https://github.com/bonetblai/learner-sketches.git",
+		"commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+	},
+	{
+		"name": "h-policy-learner",
+		"url": "https://github.com/drexlerd/h-policy-learner.git",
+		"commit": "03e345537208ab804c1f4958bf183b65d4863a62",
+	},
+	{
+		"name": "d2l",
+		"url": "https://github.com/rleap-project/d2l.git",
+		"commit": "0620e169c894d79b3c84f435dba1462996f7c270",
+	},
+)
+
+BACKEND_RESEARCH_PROFILES = {
+	"learner-sketches": {
+		"paper_role": "serialized-width sketch learner for qualitative DLPlan policies",
+		"preferred_use": "external learned sketch evidence for conservative feature binding",
+		"input_artifacts": (
+			"PDDL domain",
+			"training PDDL problems",
+			"width bound",
+		),
+		"output_artifacts": (
+			"feature_rule_policy",
+			"raw_policy",
+			"minimized_policy",
+		),
+		"reusable_evidence": (
+			"Layer B/C sketch evidence",
+			"DLPlan feature vocabulary",
+			"qualitative feature conditions and effects",
+		),
+		"known_failure_modes": (
+			"unsupported_dlplan_feature_binding",
+			"vocabulary_mismatch",
+			"missing_policy_artifact",
+		),
+		"resource_profile": {
+			"execution_environment": "local Python with resource_guard.py",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+	},
+	"h-policy-learner": {
+		"paper_role": "hierarchical policy learner for reusable generalized policies",
+		"preferred_use": "backend audit and representation baseline",
+		"input_artifacts": (
+			"PDDL-like benchmark tasks",
+			"paper experiment scripts",
+		),
+		"output_artifacts": (
+			"hierarchical policy",
+			"experiment logs",
+		),
+		"reusable_evidence": (
+			"policy-reuse representation baseline",
+			"hierarchical policy language comparison",
+		),
+		"known_failure_modes": (
+			"missing_backend",
+			"unmapped_policy_language",
+			"environment_reproduction_gap",
+		),
+		"resource_profile": {
+			"execution_environment": "paper scripts; guarded before long runs",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+	},
+	"d2l": {
+		"paper_role": "description-logic policy learner baseline",
+		"preferred_use": "feature-learning and generalized-policy baseline audit",
+		"input_artifacts": (
+			"paper benchmark selector",
+			"Docker/apptainer-compatible environment",
+		),
+		"output_artifacts": (
+			"description_logic_policy",
+			"experiment logs",
+		),
+		"reusable_evidence": (
+			"description-logic feature templates",
+			"generalized-policy baseline behavior",
+		),
+		"known_failure_modes": (
+			"pin_mismatch",
+			"docker_image_missing",
+			"unmapped_policy_language",
+		),
+		"resource_profile": {
+			"execution_environment": "Docker linux/amd64 paper environment",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+	},
+}
+
 
 @dataclass(frozen=True)
 class BackendManifest:
@@ -150,6 +252,45 @@ def discover_backend_manifest(
 		present=backend_path.exists(),
 		observed_commit=observed_commit,
 	)
+
+
+def backend_audit_matrix(
+	*,
+	root: str | Path = DEFAULT_BACKEND_ROOT,
+) -> tuple[dict[str, object], ...]:
+	"""Return paper-backend audit evidence without running external learners."""
+
+	entries: list[dict[str, object]] = []
+	for backend in PINNED_BACKENDS:
+		manifest = discover_backend_manifest(
+			root=root,
+			name=backend["name"],
+			url=backend["url"],
+			commit=backend["commit"],
+		)
+		profile = BACKEND_RESEARCH_PROFILES[manifest.name]
+		pin_status = _pin_status(manifest)
+		failures = _backend_failure_modes(manifest=manifest, pin_status=pin_status)
+		entries.append(
+			{
+				"name": manifest.name,
+				"url": manifest.url,
+				"path": str(manifest.path),
+				"expected_commit": manifest.expected_commit,
+				"observed_commit": manifest.observed_commit,
+				"present": manifest.present,
+				"pin_status": pin_status,
+				"paper_role": profile["paper_role"],
+				"preferred_use": profile["preferred_use"],
+				"input_artifacts": list(profile["input_artifacts"]),
+				"output_artifacts": list(profile["output_artifacts"]),
+				"reusable_evidence": list(profile["reusable_evidence"]),
+				"failure_modes": failures,
+				"known_failure_modes": list(profile["known_failure_modes"]),
+				"resource_profile": dict(profile["resource_profile"]),
+			},
+		)
+	return tuple(entries)
 
 
 class GPBackendRunner:
@@ -485,6 +626,31 @@ def _observed_git_commit(path: Path) -> str | None:
 		if ref_file.exists():
 			return ref_file.read_text(encoding="utf-8").strip()
 	return head or None
+
+
+def _pin_status(manifest: BackendManifest) -> str:
+	if not manifest.present:
+		return "missing"
+	if manifest.observed_commit is None:
+		return "unknown"
+	if manifest.observed_commit.startswith(manifest.expected_commit[:12]):
+		return "ok"
+	return "mismatch"
+
+
+def _backend_failure_modes(
+	*,
+	manifest: BackendManifest,
+	pin_status: str,
+) -> list[str]:
+	failures: list[str] = []
+	if not manifest.present:
+		failures.append("missing_backend")
+	elif pin_status == "mismatch":
+		failures.append("pin_mismatch")
+	elif pin_status == "unknown":
+		failures.append("unknown_git_commit")
+	return failures
 
 
 def _default_backend_python(manifest: BackendManifest) -> str:

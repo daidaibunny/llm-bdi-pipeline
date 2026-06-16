@@ -16,6 +16,7 @@ from typing import Iterable
 from domain_level_planning.gp_backends import (
 	DEFAULT_BACKEND_ROOT,
 	GPBackendRunner,
+	backend_audit_matrix,
 	discover_backend_manifest,
 	parse_dlplan_policy,
 )
@@ -206,17 +207,14 @@ def install_backend_dependencies(root: Path) -> None:
 
 
 def print_backend_status(root: Path) -> None:
-	for backend in BACKENDS:
-		manifest = discover_backend_manifest(
-			root=root,
-			name=backend["name"],
-			url=backend["url"],
-			commit=backend["commit"],
+	for entry in backend_audit_matrix(root=root):
+		state = "present" if entry["present"] else "missing"
+		observed = entry["observed_commit"] or "unknown"
+		pinned = entry["pin_status"]
+		print(
+			f"{entry['name']}: {state}; observed={observed}; "
+			f"pinned={pinned}; path={entry['path']}"
 		)
-		state = "present" if manifest.present else "missing"
-		observed = manifest.observed_commit or "unknown"
-		pinned = "ok" if observed.startswith(manifest.expected_commit[:12]) else "check"
-		print(f"{manifest.name}: {state}; observed={observed}; pinned={pinned}; path={manifest.path}")
 
 
 def print_blocksworld_smoke_command(

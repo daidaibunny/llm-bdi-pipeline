@@ -15,6 +15,7 @@ from .architecture_contract import architecture_gap_summary
 from .architecture_contract import domain_level_architecture_contract
 from .clingo_backend import ClingoSketchRuleSelector
 from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
+from .gp_backends import backend_audit_matrix
 from .gp_backends import run_learner_sketches
 from .library_contract import audit_domain_level_library_contract
 from .library_verifier import BoundedLibraryValidationReport
@@ -265,6 +266,7 @@ def synthesize_domain_level_asl_library(
 		),
 		"domain_level_contract": contract_report.to_dict(),
 		"auto_learner_sketches_run_count": len(tuple(learner_sketches_runs or ())),
+		"backend_audit_matrix": backend_audit_matrix(),
 		"auto_learner_sketches_policy_count": len(learned_sources),
 		"auto_learner_sketches_runs": tuple(
 			result.to_dict()
