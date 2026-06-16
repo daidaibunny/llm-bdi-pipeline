@@ -19,7 +19,9 @@ from domain_level_planning import (
 	ExternalSketchPolicySource,
 	LearnerSketchesRunConfig,
 	SketchCompilationTarget,
+	build_domain_level_temporal_artifact,
 	compile_learner_sketch_policy_to_asl,
+	persist_domain_level_temporal_artifact,
 	synthesize_domain_level_asl_library,
 )
 from plan_library.rendering import render_plan_library_asl
@@ -185,6 +187,42 @@ Examples:
 			"external learned-policy bindings and bounded validation."
 		),
 	)
+
+	temporal_artifact_parser = subparsers.add_parser(
+		"build-temporal-domain-artifact",
+		help="Build a domain-level ASL library plus query-specific DFA controller metadata.",
+	)
+	temporal_artifact_parser.add_argument("--domain-file", required=True, help="Path to the PDDL domain file.")
+	temporal_artifact_parser.add_argument(
+		"--training-problem",
+		action="append",
+		default=[],
+		help="Training PDDL problem file. Repeat for multiple problems.",
+	)
+	temporal_artifact_parser.add_argument(
+		"--query-dataset",
+		help="Optional path to a stored temporal-specification dataset. Defaults to queries_LTLf.json.",
+	)
+	temporal_artifact_parser.add_argument(
+		"--query-domain",
+		help="Optional explicit dataset domain key. Otherwise inferred from the domain file.",
+	)
+	temporal_artifact_parser.add_argument(
+		"--query-id",
+		action="append",
+		help="Stored benchmark query identifier to include. Repeat for multiple queries.",
+	)
+	temporal_artifact_parser.add_argument(
+		"--output-root",
+		required=True,
+		help="Output root for the domain-level temporal artifact bundle.",
+	)
+	temporal_artifact_parser.add_argument(
+		"--synthesis-profile",
+		choices=("bootstrap", "paper"),
+		default="bootstrap",
+		help="Domain-level library synthesis profile.",
+	)
 	return parser
 
 
@@ -304,6 +342,37 @@ def main() -> None:
 			"rejected_external_features": dict(result.rejected_external_features),
 			"output_file": _absolute_path(args.output_file),
 		}
+	elif args.command == "build-temporal-domain-artifact":
+		domain_file = _require_existing_path(args.domain_file, label="Domain File")
+		training_problems = tuple(
+			_require_existing_path(path, label="Training Problem")
+			for path in tuple(args.training_problem or ())
+		)
+		artifact = build_domain_level_temporal_artifact(
+			domain_file=domain_file,
+			training_problem_files=training_problems,
+			query_dataset=_absolute_path(args.query_dataset),
+			query_domain=args.query_domain,
+			query_ids=tuple(args.query_id or ()),
+			synthesis_profile=args.synthesis_profile,
+		)
+		artifact_paths = persist_domain_level_temporal_artifact(
+			artifact_root=_require_output_root(args.output_root),
+			artifact=artifact,
+		)
+		results = {
+			"success": True,
+			"artifact_root": _absolute_path(args.output_root),
+			"artifact_paths": artifact_paths,
+			"query_count": len(artifact.query_sequence),
+			"dfa_count": len(artifact.dfa_metadata),
+			"dfa_progress_request_count": sum(
+				len(requests) for requests in artifact.dfa_progress_requests.values()
+			),
+			"domain_level_contract": dict(
+				artifact.synthesis_result.report.get("domain_level_contract") or {},
+			),
+		}
 	else:
 		parser.error(f"Unsupported command {args.command!r}")
 		return
@@ -322,6 +391,16 @@ def _parse_external_sketch_policy(value: str) -> ExternalSketchPolicySource:
 		name=name.strip() or Path(policy_file).stem,
 		policy_file=policy_file,
 	)
+
+
+def _require_output_root(path_text: str | None) -> str:
+	resolved_path = _absolute_path(path_text)
+	if not resolved_path:
+		print("=" * 80)
+		print("ERROR: Output Root Required")
+		print("=" * 80)
+		sys.exit(1)
+	return resolved_path
 
 
 if __name__ == "__main__":

@@ -46,10 +46,8 @@ def infer_query_domain(
 	"""Infer the query-dataset domain key for one PDDL domain file."""
 
 	if str(explicit_domain or "").strip():
-		domain_key = _DOMAIN_NAME_ALIASES.get(str(explicit_domain).strip().lower())
-		if domain_key:
-			return domain_key
-		raise ValueError(f'Unsupported query-domain key "{explicit_domain}".')
+		explicit_key = str(explicit_domain).strip().lower()
+		return _DOMAIN_NAME_ALIASES.get(explicit_key, explicit_key)
 
 	domain_path = Path(domain_file).expanduser().resolve()
 	parent_key = _DOMAIN_NAME_ALIASES.get(domain_path.parent.name.strip().lower())

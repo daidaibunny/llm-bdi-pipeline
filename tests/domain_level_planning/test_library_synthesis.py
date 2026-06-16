@@ -192,8 +192,10 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "DFA guards can be translated" in gaps["G7"]["current_state"]
 	assert "runtime controller" in gaps["G7"]["current_state"]
+	assert "temporal artifact pipeline" in gaps["G7"]["current_state"]
 	assert "ASL subset and execution semantics" in gaps["G7"]["current_state"]
-	assert "artifact pipeline" in gaps["G7"]["required_improvement"]
+	assert "negative/disjunctive guard semantics" in gaps["G7"]["required_improvement"]
+	assert "beyond one progress step" in gaps["G7"]["required_improvement"]
 
 
 def test_unified_pipeline_reports_evidence_matrix_by_layer(

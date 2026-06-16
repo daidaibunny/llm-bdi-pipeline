@@ -108,6 +108,11 @@ from .sketch_asl_compiler import (
 	SketchFeatureBinding,
 	compile_bound_sketch_to_asl_library,
 )
+from .temporal_goal_pipeline import (
+	DomainLevelTemporalArtifact,
+	build_domain_level_temporal_artifact,
+	persist_domain_level_temporal_artifact,
+)
 
 __all__ = [
 	"LiftedCall",
@@ -141,6 +146,7 @@ __all__ = [
 	"PaperPolicyAuditReport",
 	"UnifiedSynthesisResult",
 	"DomainLevelLibraryContractReport",
+	"DomainLevelTemporalArtifact",
 	"BoundedLibraryValidationReport",
 	"BoundedProblemValidation",
 	"LibraryCounterexample",
@@ -154,6 +160,7 @@ __all__ = [
 	"bind_goal_aligned_action_effect_candidates",
 	"bind_recoverable_dlplan_features",
 	"bind_unique_action_effect_candidates",
+	"build_domain_level_temporal_artifact",
 	"compile_bound_sketch_to_asl_library",
 	"compile_learner_sketch_policy_to_asl",
 	"classify_heldout_failure_for_refinement",
@@ -172,6 +179,7 @@ __all__ = [
 	"execute_dfa_progress_step",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
+	"persist_domain_level_temporal_artifact",
 	"progress_requests_from_dfa_state",
 	"run_learner_sketches",
 	"run_domain_level_experiment",

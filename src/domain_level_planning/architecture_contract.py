@@ -267,12 +267,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"schema-validated goal facts and PDDL predicate subgoal calls; "
 					"a runtime controller can select DFA progress transitions and "
 					"execute them through the same domain-level lifted ASL library; "
+					"a temporal artifact pipeline persists the domain-level ASL "
+					"library separately from query-specific DFA metadata and "
+					"progress requests; "
 					"the supported ASL subset and execution semantics are reported "
 					"with each domain-level contract."
 				),
 				required_improvement=(
-					"Integrate this controller into the artifact pipeline and define "
-					"unsupported negative/disjunctive guard semantics."
+					"Define unsupported negative/disjunctive guard semantics and "
+					"extend runtime temporal-goal evaluation beyond one progress step."
 				),
 				status="partially_done",
 			),
