@@ -143,6 +143,7 @@ def run_domain_level_experiment(
 		),
 		"bounded_validation": result.report.get("bounded_validation"),
 		"synthesis_report": dict(result.report),
+		"learning_audit": _learning_audit(result.report),
 		"refinement_analysis": _refinement_analysis(refinement_trace),
 		"refinement_trace": refinement_trace,
 		"asl": asl,
@@ -168,6 +169,74 @@ def _experiment_protocol(
 			"no IPC-wide baseline table is implied by this smoke protocol",
 		],
 	}
+
+
+def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
+	"""Expose compact learner evidence summaries in experiment reports."""
+
+	matrix = dict(synthesis_report.get("evidence_matrix") or {})
+	layer_b = dict(matrix.get("layer_b_atomic_modules") or {})
+	layer_c = dict(matrix.get("layer_c_goal_composer") or {})
+	strategy_groups = tuple(layer_b.get("atomic_action_strategy_groups") or ())
+	strategy_candidates = tuple(
+		candidate
+		for group in strategy_groups
+		for candidate in tuple(dict(group).get("candidates") or ())
+	)
+	composer_candidates = tuple(layer_c.get("composer_candidate_evidence") or ())
+	return {
+		"layer_b_atomic_modules": {
+			"atomic_action_strategy_group_count": len(strategy_groups),
+			"atomic_action_strategy_candidate_count": len(strategy_candidates),
+			"selected_atomic_action_strategy_candidate_count": sum(
+				1 for candidate in strategy_candidates if bool(candidate.get("selected"))
+			),
+			"rejected_atomic_action_strategy_candidate_count": sum(
+				1 for candidate in strategy_candidates if not bool(candidate.get("selected"))
+			),
+			"atomic_action_strategy_verdict_counts": _count_by_key(
+				strategy_candidates,
+				"verdict",
+			),
+			"atomic_action_strategy_rejection_counts": _count_by_key(
+				(
+					candidate
+					for candidate in strategy_candidates
+					if candidate.get("rejection_reason") is not None
+				),
+				"rejection_reason",
+			),
+		},
+		"layer_c_goal_composer": {
+			"composer_candidate_count": len(composer_candidates),
+			"selected_composer_candidate_count": sum(
+				1 for candidate in composer_candidates if bool(candidate.get("selected"))
+			),
+			"rejected_composer_candidate_count": sum(
+				1 for candidate in composer_candidates if not bool(candidate.get("selected"))
+			),
+			"composer_candidate_verdict_counts": _count_by_key(
+				composer_candidates,
+				"verdict",
+			),
+			"composer_candidate_rejection_counts": _count_by_key(
+				(
+					candidate
+					for candidate in composer_candidates
+					if candidate.get("rejection_reason") is not None
+				),
+				"rejection_reason",
+			),
+		},
+	}
+
+
+def _count_by_key(items, key: str) -> dict[str, int]:
+	counts: dict[str, int] = {}
+	for item in tuple(items or ()):
+		value = str(dict(item).get(key) or "unknown")
+		counts[value] = counts.get(value, 0) + 1
+	return dict(sorted(counts.items()))
 
 
 def _body_step_count(plan_library, kinds: set[str]) -> int:

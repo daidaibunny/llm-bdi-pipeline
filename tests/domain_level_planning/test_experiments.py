@@ -95,6 +95,22 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert report["plan_library"]["primitive_action_call_count"] > 0
 	assert report["plan_library"]["subgoal_call_count"] > 0
 	assert report["plan_library"]["asl_line_count"] > 0
+	assert report["learning_audit"]["layer_b_atomic_modules"][
+		"atomic_action_strategy_group_count"
+	] >= 1
+	assert report["learning_audit"]["layer_b_atomic_modules"][
+		"atomic_action_strategy_candidate_count"
+	] >= report["learning_audit"]["layer_b_atomic_modules"][
+		"selected_atomic_action_strategy_candidate_count"
+	]
+	assert report["learning_audit"]["layer_c_goal_composer"][
+		"composer_candidate_count"
+	] >= report["learning_audit"]["layer_c_goal_composer"][
+		"selected_composer_candidate_count"
+	]
+	assert "schema_goal_dispatch" in report["learning_audit"]["layer_c_goal_composer"][
+		"composer_candidate_verdict_counts"
+	]
 	assert report["runtime_seconds"]["synthesis"] >= 0
 	assert report["runtime_seconds"]["evaluation_total"] >= 0
 	assert len(report["runtime_seconds"]["evaluation_by_problem"]) == 2

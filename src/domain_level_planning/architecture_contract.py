@@ -343,8 +343,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"synthetic goal-dependency benchmark runner exist; experiment "
 					"reports include coverage, generated ASL, generated-output audit, "
 					"library size and runtime metrics, including synthesis and "
-					"evaluation runtime metrics, plus top-level refinement analysis "
-					"for convergence and constraint-type counts."
+					"evaluation runtime metrics, compact Layer B and Layer C learning "
+					"audit summaries, plus top-level refinement analysis for convergence "
+					"and constraint-type counts."
 				),
 				required_improvement=(
 					"Add broader experiment protocol with more domains, ablations, "
