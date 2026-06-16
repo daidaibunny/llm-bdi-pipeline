@@ -609,6 +609,47 @@ def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(
 		)
 
 
+def test_unmatched_repair_reports_producible_precondition_without_prepare_rule(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_producible_but_unmatched_repair_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="primitive_precondition_failure",
+		target_layer="layer_b_atomic_modules",
+		constraint_type="counterexample_atomic_precondition_repair",
+		problem_file=str(problem_file),
+		problem_name="producible-unmatched-p1",
+		failure_reason="Action preconditions are not satisfied for finish(a).",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		failing_action="finish",
+		failing_action_arguments=("a",),
+		lifted_failing_action="finish(X)",
+		missing_preconditions=("linked(a, b)",),
+		lifted_missing_preconditions=("linked(X, Y)",),
+		required_rule_group_types=(
+			"counterexample_transition_progress",
+			"counterexample_atomic_precondition_repair",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+
+	rejected = result.report["counterexample_refinement_constraints"][
+		"rejected_repair_constraints"
+	][0]
+	assert rejected["rejection_reason"] == "no_matching_lifted_prepare_rule"
+	assert rejected["required_capabilities"] == (
+		"module_done_prepare_linked_for_finish",
+	)
+	assert "module_linked_action_make_link" in rejected["available_capabilities"]
+	assert "module_done_action_finish" in rejected["available_capabilities"]
+
+
 def _write_generic_domain_problem_and_policy(
 	tmp_path: Path,
 	*,
@@ -774,6 +815,46 @@ def _write_unmatched_repair_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:domain unmatched-repair-mini)
 		 (:objects a)
 		 (:init)
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_producible_but_unmatched_repair_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "producible-unmatched-domain.pddl"
+	problem_file = tmp_path / "producible-unmatched-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain producible-unmatched-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (seed ?x)
+		  (linked ?x ?y)
+		  (done ?x)
+		 )
+		 (:action make_link
+		  :parameters (?x ?y)
+		  :precondition (seed ?x)
+		  :effect (linked ?x ?y)
+		 )
+		 (:action finish
+		  :parameters (?x ?y)
+		  :precondition (linked ?x ?y)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem producible-unmatched-p1)
+		 (:domain producible-unmatched-mini)
+		 (:objects a b)
+		 (:init (seed a))
 		 (:goal (and (done a)))
 		)
 		""",

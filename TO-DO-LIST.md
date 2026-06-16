@@ -95,6 +95,7 @@ PDDL domain + training problems
 | T24 | Add repair evidence to the Layer B evidence matrix. | G2, G9 | `UnifiedSynthesisResult.report["evidence_matrix"]["layer_b_atomic_modules"]` exposes repair constraint counts and matched/rejected repair binding reports beside trace, anti-unification, and recursion evidence. | Done |
 | T25 | Keep architecture contract aligned with repair evidence. | G1, G2 | `ArchitectureContract.to_dict()` now states that Layer B evidence includes counterexample repair diagnostics and that the multi-strategy learner must use them. | Done |
 | T26 | Classify unmatched repair rejection reasons. | G9 | Rejected primitive-precondition repair reports expose relevant available capabilities and distinguish unproducible precondition predicates from other missing lifted prepare-rule matches. | Done |
+| T27 | Cover producible-but-unmatched repair rejection. | G9 | Tests verify primitive-precondition repair diagnostics distinguish producible missing preconditions with no matching lifted prepare rule from truly unproducible predicates. | Done |
 
 ## Current Completion Rule
 
