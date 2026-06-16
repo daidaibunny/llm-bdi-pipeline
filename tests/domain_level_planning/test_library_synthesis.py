@@ -89,6 +89,27 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert backend_matrix["learner-sketches"]["resource_profile"]["guard_required"] is True
 	assert "Layer B/C sketch evidence" in backend_matrix["learner-sketches"]["reusable_evidence"]
 	assert "description-logic policy learner baseline" in backend_matrix["d2l"]["paper_role"]
+	assert result.report["external_backend_consumption_summary"] == {
+		"policy_count": 1,
+		"ready_policy_count": 1,
+		"compiled_rule_count": 1,
+		"rejected_rule_count": 0,
+		"candidate_count": result.report["external_candidate_count"],
+		"policies": (
+			{
+				"source_name": "paper-sketch-smoke",
+				"ready_for_executable_asl": True,
+				"feature_count": 1,
+				"bound_feature_count": 1,
+				"unsupported_feature_count": 0,
+				"rule_count": 1,
+				"compiled_rule_count": 1,
+				"rejected_rule_count": 0,
+				"candidate_count": result.report["external_candidate_count"],
+				"rejection_reasons": (),
+			},
+		),
+	}
 	assert result.report["candidate_sources"]["external_sketch"] >= 1
 	assert result.report["candidate_sources"]["schema"] >= 1
 	assert result.report["output_candidate_sources"]["external_sketch"] >= 1
@@ -366,6 +387,29 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 	}
 	assert result.report["external_candidate_count"] == 0
 	assert result.report["candidate_sources"]["schema"] > 0
+	assert result.report["external_backend_consumption_summary"] == {
+		"policy_count": 1,
+		"ready_policy_count": 0,
+		"compiled_rule_count": 0,
+		"rejected_rule_count": 1,
+		"candidate_count": 0,
+		"policies": (
+			{
+				"source_name": "unsupported-sketch",
+				"ready_for_executable_asl": False,
+				"feature_count": 1,
+				"bound_feature_count": 0,
+				"unsupported_feature_count": 1,
+				"rule_count": 1,
+				"compiled_rule_count": 0,
+				"rejected_rule_count": 1,
+				"candidate_count": 0,
+				"rejection_reasons": (
+					"object_specific_dlplan_feature_requires_principled_lifting",
+				),
+			},
+		),
+	}
 	assert result.report["paper_profile_ready"] is False
 	assert result.report["external_rule_binding_reports"][0]["compiled"] is False
 	assert result.report["external_rule_binding_reports"][0]["missing_condition_bindings"] == [

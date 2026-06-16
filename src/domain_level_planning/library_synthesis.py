@@ -406,6 +406,11 @@ def synthesize_domain_level_asl_library(
 		"domain_level_contract": contract_report.to_dict(),
 		"auto_learner_sketches_run_count": len(tuple(learner_sketches_runs or ())),
 		"backend_audit_matrix": backend_audit_matrix(),
+		"external_backend_consumption_summary": _external_backend_consumption_summary(
+			paper_policy_audits=paper_policy_audits,
+			external_rule_reports=external_rule_reports,
+			external_candidates=external_candidates,
+		),
 		"auto_learner_sketches_policy_count": len(learned_sources),
 		"auto_learner_sketches_runs": tuple(
 			result.to_dict()
@@ -650,6 +655,76 @@ def _run_requested_learner_sketches(
 			),
 		)
 	return tuple(results), tuple(sources)
+
+
+def _external_backend_consumption_summary(
+	*,
+	paper_policy_audits: Sequence[PaperPolicyAuditReport],
+	external_rule_reports: Sequence[ExternalRuleBindingReport],
+	external_candidates: Sequence[LiftedPlanRule],
+) -> dict[str, object]:
+	audits = tuple(paper_policy_audits or ())
+	rule_reports = tuple(external_rule_reports or ())
+	candidates = tuple(external_candidates or ())
+	policies = tuple(
+		_external_policy_consumption(
+			audit=audit,
+			rule_reports=rule_reports,
+			external_candidates=candidates,
+		)
+		for audit in audits
+	)
+	return {
+		"policy_count": len(audits),
+		"ready_policy_count": sum(
+			1 for audit in audits if audit.ready_for_executable_asl
+		),
+		"compiled_rule_count": sum(
+			1 for report in rule_reports if report.compiled
+		),
+		"rejected_rule_count": sum(
+			1 for report in rule_reports if not report.compiled
+		),
+		"candidate_count": len(candidates),
+		"policies": policies,
+	}
+
+
+def _external_policy_consumption(
+	*,
+	audit: PaperPolicyAuditReport,
+	rule_reports: Sequence[ExternalRuleBindingReport],
+	external_candidates: Sequence[LiftedPlanRule],
+) -> dict[str, object]:
+	source_reports = tuple(
+		report
+		for report in tuple(rule_reports or ())
+		if report.source_name == audit.source_name
+	)
+	source_candidate_count = sum(
+		1
+		for rule in tuple(external_candidates or ())
+		if rule.rationale == f"external_policy:{audit.source_name}"
+	)
+	rejection_reasons = tuple(
+		dict.fromkeys(
+			str(diagnostic.rejection_reason)
+			for diagnostic in audit.feature_binding_diagnostics
+			if diagnostic.rejection_reason
+		),
+	)
+	return {
+		"source_name": audit.source_name,
+		"ready_for_executable_asl": audit.ready_for_executable_asl,
+		"feature_count": audit.feature_count,
+		"bound_feature_count": audit.bound_feature_count,
+		"unsupported_feature_count": len(audit.unsupported_features),
+		"rule_count": audit.rule_count,
+		"compiled_rule_count": sum(1 for report in source_reports if report.compiled),
+		"rejected_rule_count": sum(1 for report in source_reports if not report.compiled),
+		"candidate_count": source_candidate_count,
+		"rejection_reasons": rejection_reasons,
+	}
 
 
 def _external_sketch_candidates(
