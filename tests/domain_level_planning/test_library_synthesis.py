@@ -155,16 +155,19 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		hypothesis["feature_language"]["external_features"]
 	)
 	gap_summary = result.report["architecture_gap_summary"]
-	assert gap_summary["open"] >= 1
 	assert gap_summary["in_progress"] >= 1
 	assert gap_summary["partially_done"] >= 4
+	assert gap_summary["done_current_fragment"] == 1
 
 	decisions = {decision["id"]: decision for decision in contract["decisions"]}
 	assert decisions["D3"]["status"] == "accepted"
 	assert "goal_<predicate>" in decisions["D3"]["decision"]
 	assert decisions["D6"]["status"] == "open"
+	assert decisions["D7"]["status"] == "accepted"
+	assert "object-specific DLPlan features" in decisions["D7"]["decision"]
 
 	gaps = {gap["id"]: gap for gap in contract["gaps"]}
+	assert set(gaps) == {f"G{index}" for index in range(1, 13)}
 	assert gaps["G2"]["layer"] == "Layer B"
 	assert gaps["G2"]["status"] == "partially_done"
 	assert "trace slicing" in gaps["G2"]["current_state"]
@@ -202,21 +205,38 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "vocabulary-mismatch" in gaps["G5"]["current_state"]
 	assert "distinct rejection diagnostics" in gaps["G5"]["current_state"]
 	assert "object-specific or distance features" in gaps["G5"]["required_improvement"]
-	assert gaps["G6"]["status"] == "open"
-	assert "backend audit reports" in gaps["G6"]["current_state"]
-	assert "Layer B/Layer C synthesis" in gaps["G6"]["current_state"]
-	assert "guarded audit-only baseline" in gaps["G6"]["current_state"]
-	assert "library size and runtime metrics" in gaps["G6"]["current_state"]
-	assert "verified adapters" in gaps["G6"]["required_improvement"]
-	assert gaps["G7"]["layer"] == "TEG"
+	assert gaps["G6"]["layer"] == "external backends"
+	assert gaps["G6"]["status"] == "partially_done"
+	assert "learner-sketches" in gaps["G6"]["current_state"]
+	assert "h-policy-learner" in gaps["G6"]["current_state"]
+	assert "d2l" in gaps["G6"]["current_state"]
+	assert "verified policy-to-ASL adapters" in gaps["G6"]["required_improvement"]
+	assert gaps["G7"]["layer"] == "ASL compiler"
 	assert gaps["G7"]["status"] == "partially_done"
-	assert "DFA guards can be translated" in gaps["G7"]["current_state"]
-	assert "runtime controller" in gaps["G7"]["current_state"]
-	assert "temporal artifact pipeline" in gaps["G7"]["current_state"]
-	assert "repeated progress steps" in gaps["G7"]["current_state"]
-	assert "ASL subset and execution semantics" in gaps["G7"]["current_state"]
-	assert "negative/disjunctive guard semantics" in gaps["G7"]["required_improvement"]
-	assert "beyond smoke tests" in gaps["G7"]["required_improvement"]
+	assert "deterministic first-applicable" in gaps["G7"]["current_state"]
+	assert "primitive-action precondition handling" in gaps["G7"]["required_improvement"]
+	assert gaps["G8"]["layer"] == "validation"
+	assert gaps["G8"]["status"] == "partially_done"
+	assert "library size and runtime metrics" in gaps["G8"]["current_state"]
+	assert "ablations" in gaps["G8"]["required_improvement"]
+	assert gaps["G9"]["layer"] == "counterexample refinement"
+	assert gaps["G9"]["status"] == "partially_done"
+	assert "negative precondition repairs" in gaps["G9"]["current_state"]
+	assert "failure classes" in gaps["G9"]["required_improvement"]
+	assert gaps["G10"]["layer"] == "PDDL scope"
+	assert gaps["G10"]["status"] == "done_current_fragment"
+	assert "STRIPS" in gaps["G10"]["current_state"]
+	assert gaps["G11"]["layer"] == "no-hardcoding"
+	assert gaps["G11"]["status"] == "partially_done"
+	assert "domain-specific" in gaps["G11"]["required_improvement"]
+	assert gaps["G12"]["layer"] == "TEG"
+	assert gaps["G12"]["status"] == "partially_done"
+	assert "DFA guards can be translated" in gaps["G12"]["current_state"]
+	assert "runtime controller" in gaps["G12"]["current_state"]
+	assert "temporal artifact pipeline" in gaps["G12"]["current_state"]
+	assert "repeated progress steps" in gaps["G12"]["current_state"]
+	assert "negative/disjunctive guard semantics" in gaps["G12"]["required_improvement"]
+	assert "beyond smoke tests" in gaps["G12"]["required_improvement"]
 
 
 def test_unified_pipeline_reports_evidence_matrix_by_layer(

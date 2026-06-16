@@ -179,6 +179,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				status="open",
 				rationale="Current Layer B/C semantics are positive conjunctive achievement-goal based.",
 			),
+			ArchitectureDecision(
+				id="D7",
+				decision="Reject object-specific DLPlan features unless principled lifting exists.",
+				status="accepted",
+				rationale=(
+					"Guessing bindings for object-specific features would break the "
+					"domain-level lifted-library claim."
+				),
+			),
 		),
 		gaps=(
 			ArchitectureGap(
@@ -264,26 +273,108 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			),
 			ArchitectureGap(
 				id="G6",
-				layer="validation",
-				gap="Bounded validation is not yet a full experiment protocol.",
+				layer="external backends",
+				gap="Paper-code reuse is an audit pipeline, not yet the full learner.",
 				current_state=(
-					"Training and counterexample problems receive bounded first-applicable "
-					"validation; external backend audit reports now identify whether each "
-					"paper backend currently drives Layer B/Layer C synthesis or remains "
-					"a guarded audit-only baseline; domain-level experiment reports "
-					"include library size and runtime metrics."
+					"learner-sketches policies can be parsed, audited, bound, and used "
+					"when safe; h-policy-learner and d2l are pinned and reported in the "
+					"backend audit matrix but remain audit-only until verified adapters "
+					"exist."
 				),
 				required_improvement=(
-					"Add train/test splits, held-out scaling, ablations, baselines, "
-					"deeper failure analysis, and verified adapters before "
-					"non-learner-sketches backends can drive synthesis."
+					"Implement verified policy-to-ASL adapters for non-learner-sketches "
+					"backends before allowing them to drive Layer B or Layer C synthesis."
 				),
-				status="open",
+				status="partially_done",
 			),
 			ArchitectureGap(
 				id="G7",
+				layer="ASL compiler",
+				gap="Compiler subset needs a full paper-level semantics contract.",
+				current_state=(
+					"Generated heads, contexts, primitive actions, and subgoal calls are "
+					"schema-checked; deterministic first-applicable execution and the "
+					"currently supported ASL subset are reported with the library."
+				),
+				required_improvement=(
+					"Define primitive-action precondition handling in the paper method "
+					"section and extend the contract whenever more AgentSpeak constructs "
+					"are intentionally supported."
+				),
+				status="partially_done",
+			),
+			ArchitectureGap(
+				id="G8",
+				layer="validation",
+				gap="Current validation is bounded and smoke-test oriented.",
+				current_state=(
+					"Bounded all-reachable-state checks, first-applicable execution, "
+					"one IPC-style first-20 benchmark runner, and one non-matching "
+					"synthetic goal-dependency benchmark runner exist; experiment "
+					"reports include coverage, generated ASL, generated-output audit, "
+					"library size and runtime metrics, including synthesis and "
+					"evaluation runtime metrics."
+				),
+				required_improvement=(
+					"Add broader experiment protocol with more domains, ablations, "
+					"baselines, held-out scaling, and deeper failure analysis."
+				),
+				status="partially_done",
+			),
+			ArchitectureGap(
+				id="G9",
+				layer="counterexample refinement",
+				gap="Refinement hooks exist but are not a full learning loop.",
+				current_state=(
+					"Held-out failures are classified into lifted Layer B or Layer C "
+					"records; primitive repair, atomic-progress, explicit goal-ordering, "
+					"wrong-arity, undeclared-symbol, and negative precondition repairs "
+					"produce machine-readable matched or rejected diagnostics."
+				),
+				required_improvement=(
+					"Connect more failure classes to generated candidate rules and "
+					"synthesize missing candidates outside the current explicit "
+					"goal-ordering and goal-bound repair subsets."
+				),
+				status="partially_done",
+			),
+			ArchitectureGap(
+				id="G10",
+				layer="PDDL scope",
+				gap="Supported PDDL fragment must stay explicit and machine-readable.",
+				current_state=(
+					"STRIPS-style positive conjunctive achievement goals serialize "
+					"cleanly; unsupported requirements, unsupported expression operators, "
+					"negative goals, numeric fragments, and action-cost fragments are "
+					"rejected with structured reasons before compilation proceeds."
+				),
+				required_improvement=(
+					"Keep the report aligned with future fragment expansions, especially "
+					"negative goals, disjunctive goals, derived predicates, conditional "
+					"effects, quantifiers, or numeric fluents."
+				),
+				status="done_current_fragment",
+			),
+			ArchitectureGap(
+				id="G11",
+				layer="no-hardcoding",
+				gap="No-hardcoding audit must remain enforced as implementation grows.",
+				current_state=(
+					"Tests scan domain-level production code and generated libraries for "
+					"synthetic names, grounded terms, mutable goal descriptors, "
+					"undeclared symbols, wrong arities, and known domain-specific tokens."
+				),
+				required_improvement=(
+					"Keep extending these checks whenever new modules or generated "
+					"artifacts are added so domain-specific production branches cannot "
+					"silently enter the library path."
+				),
+				status="partially_done",
+			),
+			ArchitectureGap(
+				id="G12",
 				layer="TEG",
-				gap="DFA guard requests are not yet connected to the domain-level library.",
+				gap="DFA-to-library interface is not yet fully integrated.",
 				current_state=(
 					"Positive conjunctive DFA guards can be translated into "
 					"schema-validated goal facts and PDDL predicate subgoal calls; "
