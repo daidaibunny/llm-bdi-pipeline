@@ -105,6 +105,7 @@ def run_domain_level_experiment(
 				str(item["problem_name"]) for item in failed
 			],
 		},
+		"failure_analysis": _failure_analysis(evaluation_results),
 		"evaluation_results": list(evaluation_results),
 		"plan_library": {
 			"domain_name": plan_library.domain_name,
@@ -143,6 +144,43 @@ def _body_step_count(plan_library, kinds: set[str]) -> int:
 		for step in tuple(plan.body or ())
 		if step.kind in kinds
 	)
+
+
+def _failure_analysis(evaluation_results: Sequence[dict[str, object]]) -> dict[str, object]:
+	failed = tuple(item for item in evaluation_results if not bool(item["solved"]))
+	reason_counts: dict[str, int] = {}
+	for item in failed:
+		reason = str(item.get("failure_reason") or "unknown")
+		reason_counts[reason] = reason_counts.get(reason, 0) + 1
+	step_counts = tuple(int(item.get("step_count") or 0) for item in evaluation_results)
+	return {
+		"failed_problem_count": len(failed),
+		"failure_reason_counts": dict(sorted(reason_counts.items())),
+		"failed_problems": [
+			{
+				"problem_name": str(item["problem_name"]),
+				"problem_file": str(item["problem_file"]),
+				"failure_reason": item.get("failure_reason"),
+				"step_count": int(item.get("step_count") or 0),
+			}
+			for item in failed
+		],
+		"step_count_summary": _numeric_summary(step_counts),
+	}
+
+
+def _numeric_summary(values: Sequence[int]) -> dict[str, float | int | None]:
+	if not values:
+		return {
+			"min": None,
+			"max": None,
+			"mean": None,
+		}
+	return {
+		"min": min(values),
+		"max": max(values),
+		"mean": sum(values) / len(values),
+	}
 
 
 def _evaluate_problem_with_runtime(

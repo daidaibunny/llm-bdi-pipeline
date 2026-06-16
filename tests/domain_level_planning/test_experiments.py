@@ -63,3 +63,52 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert "!achieve_" not in report["asl"]
 	assert "!transition_" not in report["asl"]
 	assert "dfa_state" not in report["asl"]
+
+
+def test_domain_level_experiment_reports_failure_analysis(
+	tmp_path: Path,
+) -> None:
+	domain_file, training_problem, _heldout_problem = _write_counterexample_domain(
+		tmp_path,
+	)
+	failing_problem = tmp_path / "impossible.pddl"
+	failing_problem.write_text(
+		"""
+		(define (problem impossible-p1)
+		 (:domain counterexample-mini)
+		 (:objects c - object)
+		 (:init)
+		 (:goal (and (top c)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	report = run_domain_level_experiment(
+		experiment_name="counterexample-failure-analysis",
+		domain_file=domain_file,
+		training_problem_files=(training_problem,),
+		evaluation_problem_files=(training_problem, failing_problem),
+		max_execution_steps=100,
+		max_depth=50,
+	)
+
+	assert report["coverage"]["solved_count"] == 1
+	assert report["coverage"]["failed_count"] == 1
+	assert report["failure_analysis"]["failed_problem_count"] == 1
+	assert report["failure_analysis"]["failure_reason_counts"] == {
+		"no applicable plan for !base(c)": 1,
+	}
+	assert report["failure_analysis"]["failed_problems"] == [
+		{
+			"problem_name": "impossible-p1",
+			"problem_file": str(failing_problem.resolve()),
+			"failure_reason": "no applicable plan for !base(c)",
+			"step_count": 0,
+		},
+	]
+	assert report["failure_analysis"]["step_count_summary"] == {
+		"min": 0,
+		"max": 1,
+		"mean": 0.5,
+	}

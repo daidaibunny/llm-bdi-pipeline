@@ -119,6 +119,7 @@ PDDL domain + training problems
 | T48 | Add experiment size and runtime metrics. | G8 | Domain-level experiment reports now include primitive-action/subgoal/ASL-line counts plus synthesis and per-problem evaluation runtimes. | Done |
 | T49 | Assert experiment metrics in script-level reports. | G8 | Blocksworld and Labworkflow script tests assert the generated JSON reports include library size metrics plus synthesis and per-problem evaluation runtimes. | Done |
 | T50 | Align architecture contract with current gap model. | G1, G6, G7, G8, G9, G10, G11, G12 | Unified synthesis reports now expose the current G1-G12 gap taxonomy, D7 object-specific feature decision, and gap statuses matching the active TODO contract. | Done |
+| T51 | Add experiment failure-analysis summaries. | G8 | Domain-level experiment reports now include failed problem details, failure-reason counts, and evaluation step-count summaries; unit and script tests assert the fields. | Done |
 
 ## Current Completion Rule
 

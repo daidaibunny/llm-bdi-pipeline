@@ -35,6 +35,9 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 	assert report["evaluation_problem_count"] == 2
 	assert report["coverage"]["solved_count"] == 2
 	assert report["coverage"]["failed_count"] == 0
+	assert report["failure_analysis"]["failed_problem_count"] == 0
+	assert report["failure_analysis"]["failure_reason_counts"] == {}
+	assert report["failure_analysis"]["step_count_summary"]["max"] >= 0
 	assert report["domain_level_contract"]["passed"] is True
 	assert report["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["passed"] is True
