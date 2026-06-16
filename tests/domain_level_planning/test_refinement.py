@@ -23,6 +23,17 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 
 	assert refined.converged is True
 	assert len(refined.rounds) == 2
+	summary = refined.to_dict()["refinement_summary"]
+	assert summary["converged"] is True
+	assert summary["round_count"] == 2
+	assert summary["failed_heldout_evaluation_count"] == 1
+	assert summary["solved_heldout_evaluation_count"] == 1
+	assert summary["added_counterexample_problem_count"] == 1
+	assert summary["constraint_count"] == 1
+	assert summary["constraints_by_failure_kind"] == {"goal_ordering_failure": 1}
+	assert summary["constraints_by_target_layer"] == {"layer_c_goal_composer": 1}
+	assert summary["constraints_by_type"] == {"counterexample_goal_ordering": 1}
+	assert summary["final_counterexample_problem_count"] == 1
 	assert refined.rounds[0].heldout_evaluations[0].solved is False
 	assert refined.rounds[0].heldout_evaluations[0].counterexample is not None
 	constraint = refined.rounds[0].heldout_evaluations[0].refinement_constraints[0]

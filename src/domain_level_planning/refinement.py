@@ -125,6 +125,10 @@ class CounterexampleGuidedSynthesisResult:
 	def to_dict(self) -> dict[str, object]:
 		return {
 			"converged": self.converged,
+			"refinement_summary": _refinement_summary(
+				rounds=self.rounds,
+				converged=self.converged,
+			),
 			"rounds": [round_report.to_dict() for round_report in self.rounds],
 			"final_report": dict(self.final_result.report),
 		}
@@ -429,6 +433,66 @@ def _failure_kind(failure_reason: str) -> str:
 	if "step limit" in text:
 		return "nontermination"
 	return "execution_failure"
+
+
+def _refinement_summary(
+	*,
+	rounds: tuple[RefinementRoundReport, ...],
+	converged: bool,
+) -> dict[str, object]:
+	evaluations = tuple(
+		evaluation
+		for round_report in tuple(rounds or ())
+		for evaluation in round_report.heldout_evaluations
+	)
+	constraints = tuple(
+		constraint
+		for round_report in tuple(rounds or ())
+		for constraint in round_report.refinement_constraints
+	)
+	added_counterexamples = tuple(
+		path
+		for round_report in tuple(rounds or ())
+		for path in round_report.added_counterexample_problem_files
+	)
+	final_counterexamples = (
+		tuple(rounds[-1].counterexample_problem_files)
+		if rounds
+		else ()
+	)
+	return {
+		"converged": converged,
+		"round_count": len(tuple(rounds or ())),
+		"heldout_evaluation_count": len(evaluations),
+		"failed_heldout_evaluation_count": sum(
+			1 for evaluation in evaluations if not evaluation.solved
+		),
+		"solved_heldout_evaluation_count": sum(
+			1 for evaluation in evaluations if evaluation.solved
+		),
+		"added_counterexample_problem_count": len(
+			tuple(dict.fromkeys(added_counterexamples)),
+		),
+		"final_counterexample_problem_count": len(final_counterexamples),
+		"constraint_count": len(constraints),
+		"constraints_by_failure_kind": _count_by(
+			constraint.failure_kind for constraint in constraints
+		),
+		"constraints_by_target_layer": _count_by(
+			constraint.target_layer for constraint in constraints
+		),
+		"constraints_by_type": _count_by(
+			constraint.constraint_type for constraint in constraints
+		),
+	}
+
+
+def _count_by(values) -> dict[str, int]:
+	counts: dict[str, int] = {}
+	for value in values:
+		key = str(value)
+		counts[key] = counts.get(key, 0) + 1
+	return counts
 
 
 def _parse_atom(atom: str) -> tuple[str, tuple[str, ...]]:

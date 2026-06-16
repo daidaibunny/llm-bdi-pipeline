@@ -37,6 +37,12 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 
 	trace = report["refinement_trace"]
 	assert trace["converged"] is True
+	assert trace["refinement_summary"]["converged"] is True
+	assert trace["refinement_summary"]["round_count"] == 2
+	assert trace["refinement_summary"]["constraint_count"] == 1
+	assert trace["refinement_summary"]["constraints_by_target_layer"] == {
+		"layer_c_goal_composer": 1,
+	}
 	assert trace["rounds"][0]["heldout_evaluations"][1]["solved"] is False
 	constraint = trace["rounds"][0]["refinement_constraints"][0]
 	assert constraint["failure_kind"] == "goal_ordering_failure"
