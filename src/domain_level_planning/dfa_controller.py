@@ -41,6 +41,32 @@ class DFAProgressExecutionResult:
 		}
 
 
+@dataclass(frozen=True)
+class DFARunExecutionResult:
+	"""Execution result for repeatedly progressing a DFA until acceptance."""
+
+	accepted: bool
+	initial_dfa_state: str
+	final_dfa_state: str
+	initial_state: frozenset[str]
+	final_state: frozenset[str]
+	progress_steps: tuple[DFAProgressExecutionResult, ...]
+	primitive_steps: tuple[str, ...]
+	failure_reason: str | None = None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"accepted": self.accepted,
+			"initial_dfa_state": self.initial_dfa_state,
+			"final_dfa_state": self.final_dfa_state,
+			"initial_state": sorted(self.initial_state),
+			"final_state": sorted(self.final_state),
+			"progress_steps": [step.to_dict() for step in self.progress_steps],
+			"primitive_steps": list(self.primitive_steps),
+			"failure_reason": self.failure_reason,
+		}
+
+
 def progress_requests_from_dfa_state(
 	*,
 	dfa_payload: Mapping[str, Any],
@@ -138,6 +164,87 @@ def execute_dfa_progress_step(
 			if requests
 			else "no DFA progress transition from current state"
 		),
+	)
+
+
+def execute_dfa_until_accepting(
+	*,
+	plan_library: PlanLibrary,
+	domain_file: str | Path,
+	domain_key: str,
+	dfa_payload: Mapping[str, Any],
+	initial_state: frozenset[str],
+	initial_dfa_state: str | None = None,
+	declared_predicates: Sequence[object] | Mapping[str, int | None] = (),
+	max_progress_steps: int = 64,
+	max_execution_steps_per_progress: int = 2000,
+	max_depth: int = 200,
+	backtrack_on_body_failure: bool = False,
+) -> DFARunExecutionResult:
+	"""Execute DFA progress requests through the library until an accepting state."""
+
+	if max_progress_steps < 0:
+		raise ValueError("max_progress_steps must be non-negative.")
+	accepting_states = _accepting_states(dfa_payload)
+	current_dfa_state = str(
+		initial_dfa_state
+		or dfa_payload.get("initial_state")
+		or "",
+	).strip()
+	if not current_dfa_state:
+		raise ValueError("DFA payload must include an initial_state or receive initial_dfa_state.")
+	current_state = frozenset(initial_state)
+	progress_steps: list[DFAProgressExecutionResult] = []
+	primitive_steps: tuple[str, ...] = ()
+
+	while current_dfa_state not in accepting_states:
+		if len(progress_steps) >= max_progress_steps:
+			return DFARunExecutionResult(
+				accepted=False,
+				initial_dfa_state=str(initial_dfa_state or dfa_payload.get("initial_state") or ""),
+				final_dfa_state=current_dfa_state,
+				initial_state=frozenset(initial_state),
+				final_state=current_state,
+				progress_steps=tuple(progress_steps),
+				primitive_steps=primitive_steps,
+				failure_reason="DFA progress step limit exceeded",
+			)
+		step_result = execute_dfa_progress_step(
+			plan_library=plan_library,
+			domain_file=domain_file,
+			domain_key=domain_key,
+			dfa_payload=dfa_payload,
+			current_dfa_state=current_dfa_state,
+			current_state=current_state,
+			declared_predicates=declared_predicates,
+			max_execution_steps=max_execution_steps_per_progress,
+			max_depth=max_depth,
+			backtrack_on_body_failure=backtrack_on_body_failure,
+		)
+		progress_steps.append(step_result)
+		if not step_result.progressed or step_result.execution is None or step_result.target_dfa_state is None:
+			return DFARunExecutionResult(
+				accepted=False,
+				initial_dfa_state=str(initial_dfa_state or dfa_payload.get("initial_state") or ""),
+				final_dfa_state=current_dfa_state,
+				initial_state=frozenset(initial_state),
+				final_state=current_state,
+				progress_steps=tuple(progress_steps),
+				primitive_steps=primitive_steps,
+				failure_reason=step_result.failure_reason,
+			)
+		current_dfa_state = step_result.target_dfa_state
+		current_state = frozenset(step_result.execution.final_state)
+		primitive_steps = primitive_steps + tuple(step_result.execution.steps)
+
+	return DFARunExecutionResult(
+		accepted=True,
+		initial_dfa_state=str(initial_dfa_state or dfa_payload.get("initial_state") or ""),
+		final_dfa_state=current_dfa_state,
+		initial_state=frozenset(initial_state),
+		final_state=current_state,
+		progress_steps=tuple(progress_steps),
+		primitive_steps=primitive_steps,
 	)
 
 

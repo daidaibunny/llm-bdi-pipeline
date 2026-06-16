@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from domain_level_planning.dfa_controller import (
+	execute_dfa_until_accepting,
 	execute_dfa_progress_step,
 	progress_requests_from_dfa_state,
 )
@@ -100,6 +101,70 @@ def test_dfa_controller_rejects_guard_outside_pddl_schema(tmp_path: Path) -> Non
 		raise AssertionError("Expected undeclared DFA guard predicate to fail.")
 
 
+def test_dfa_controller_executes_multiple_progress_steps_until_accepting(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_two_step_domain(tmp_path)
+	plan_library = _two_step_plan_library()
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q2"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "a_done"},
+			{"source_state": "q1", "target_state": "q2", "raw_label": "b_done"},
+		],
+	}
+
+	result = execute_dfa_until_accepting(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		domain_key="two-step",
+		dfa_payload=dfa_payload,
+		initial_state=frozenset({"ready_a"}),
+	)
+
+	assert result.accepted is True
+	assert result.final_dfa_state == "q2"
+	assert result.primitive_steps == ("make_a", "make_b")
+	assert result.progress_steps[0].execution is not None
+	assert result.progress_steps[0].execution.final_state == frozenset({"a_done"})
+	assert result.final_state == frozenset({"b_done"})
+	assert [step.target_dfa_state for step in result.progress_steps] == ["q1", "q2"]
+	assert result.failure_reason is None
+	serialized = result.to_dict()
+	assert serialized["accepted"] is True
+	assert serialized["primitive_steps"] == ["make_a", "make_b"]
+
+
+def test_dfa_controller_reports_unaccepted_when_progress_limit_is_reached(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_two_step_domain(tmp_path)
+	plan_library = _two_step_plan_library()
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q2"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "a_done"},
+			{"source_state": "q1", "target_state": "q2", "raw_label": "b_done"},
+		],
+	}
+
+	result = execute_dfa_until_accepting(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		domain_key="two-step",
+		dfa_payload=dfa_payload,
+		initial_state=frozenset({"ready_a"}),
+		max_progress_steps=1,
+	)
+
+	assert result.accepted is False
+	assert result.final_dfa_state == "q1"
+	assert result.primitive_steps == ("make_a",)
+	assert result.failure_reason == "DFA progress step limit exceeded"
+
+
 def _tiny_plan_library() -> PlanLibrary:
 	return PlanLibrary(
 		domain_name="tiny",
@@ -140,6 +205,68 @@ def _write_tiny_domain(tmp_path: Path) -> Path:
 		  :parameters ()
 		  :precondition (ready)
 		  :effect (and (not (ready)) (done))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file
+
+
+def _two_step_plan_library() -> PlanLibrary:
+	return PlanLibrary(
+		domain_name="two-step",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="g_satisfy_a",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("goal_a_done", "not a_done"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "a_done"),
+					AgentSpeakBodyStep("subgoal", "g"),
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="g_satisfy_b",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("goal_b_done", "not b_done"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "b_done"),
+					AgentSpeakBodyStep("subgoal", "g"),
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="a_via_make_a",
+				trigger=AgentSpeakTrigger("achievement_goal", "a_done"),
+				context=("ready_a",),
+				body=(AgentSpeakBodyStep("action", "make_a"),),
+			),
+			AgentSpeakPlan(
+				plan_name="b_via_make_b",
+				trigger=AgentSpeakTrigger("achievement_goal", "b_done"),
+				context=("a_done",),
+				body=(AgentSpeakBodyStep("action", "make_b"),),
+			),
+		),
+	)
+
+
+def _write_two_step_domain(tmp_path: Path) -> Path:
+	domain_file = tmp_path / "two-step-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain two-step)
+		 (:requirements :strips)
+		 (:predicates (ready_a) (a_done) (b_done))
+		 (:action make_a
+		  :parameters ()
+		  :precondition (ready_a)
+		  :effect (and (not (ready_a)) (a_done))
+		 )
+		 (:action make_b
+		  :parameters ()
+		  :precondition (a_done)
+		  :effect (and (not (a_done)) (b_done))
 		 )
 		)
 		""",

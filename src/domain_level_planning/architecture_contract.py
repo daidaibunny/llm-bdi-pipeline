@@ -269,13 +269,14 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"execute them through the same domain-level lifted ASL library; "
 					"a temporal artifact pipeline persists the domain-level ASL "
 					"library separately from query-specific DFA metadata and "
-					"progress requests; "
+					"progress requests; the runtime controller can execute repeated "
+					"progress steps until an accepting DFA state; "
 					"the supported ASL subset and execution semantics are reported "
 					"with each domain-level contract."
 				),
 				required_improvement=(
 					"Define unsupported negative/disjunctive guard semantics and "
-					"extend runtime temporal-goal evaluation beyond one progress step."
+					"run broader temporal-goal evaluation beyond smoke tests."
 				),
 				status="partially_done",
 			),

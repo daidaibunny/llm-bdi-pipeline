@@ -52,7 +52,9 @@ from .dfa_adapter import (
 	adapt_dfa_guarded_transition_to_achievement_request,
 )
 from .dfa_controller import (
+	DFARunExecutionResult,
 	DFAProgressExecutionResult,
+	execute_dfa_until_accepting,
 	execute_dfa_progress_step,
 	progress_requests_from_dfa_state,
 )
@@ -127,6 +129,7 @@ __all__ = [
 	"ActionEffectBindingCandidate",
 	"DFAAchievementRequest",
 	"DFAProgressExecutionResult",
+	"DFARunExecutionResult",
 	"FeatureBindingDiagnostic",
 	"FeatureBindingReport",
 	"BackendManifest",
@@ -177,6 +180,7 @@ __all__ = [
 	"adapt_dfa_guard_to_achievement_request",
 	"adapt_dfa_guarded_transition_to_achievement_request",
 	"execute_dfa_progress_step",
+	"execute_dfa_until_accepting",
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"persist_domain_level_temporal_artifact",
