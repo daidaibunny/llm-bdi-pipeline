@@ -357,13 +357,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"failure text identifies one, while `!g` failures are treated as "
 					"composer state-coverage failures; recursive-loop and nontermination "
 					"failures are separated from progress and ordering refinements; "
-					"unified synthesis reports expose termination diagnostic counts "
-					"and diagnostic group types."
+					"explicit counterexample state-coverage failures can synthesize or "
+					"merge conservative goal-dispatch composer candidates and bind them "
+					"as selector hard groups; unified synthesis reports expose termination "
+					"diagnostic counts and diagnostic group types."
 				),
 				required_improvement=(
 					"Connect more failure classes to generated candidate rules and "
 					"synthesize missing candidates outside the current explicit "
-					"goal-ordering and goal-bound repair subsets."
+					"goal-ordering, state-coverage, and goal-bound repair subsets."
 				),
 				status="partially_done",
 			),

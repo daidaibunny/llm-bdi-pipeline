@@ -190,6 +190,34 @@ class AtomicProgressConstraintBindingReport:
 		}
 
 
+@dataclass(frozen=True)
+class StateCoverageConstraintBindingReport:
+	"""Selector binding diagnostics for one explicit state-coverage constraint."""
+
+	constraint_index: int
+	matched: bool
+	target_predicates: tuple[str, ...]
+	required_capabilities: tuple[str, ...]
+	rule_names: tuple[str, ...]
+	available_capabilities: tuple[str, ...] = ()
+	undeclared_predicates: tuple[str, ...] = ()
+	wrong_arity_predicates: tuple[str, ...] = ()
+	rejection_reason: str | None = None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"constraint_index": self.constraint_index,
+			"matched": self.matched,
+			"target_predicates": self.target_predicates,
+			"required_capabilities": self.required_capabilities,
+			"available_capabilities": self.available_capabilities,
+			"rule_names": self.rule_names,
+			"undeclared_predicates": self.undeclared_predicates,
+			"wrong_arity_predicates": self.wrong_arity_predicates,
+			"rejection_reason": self.rejection_reason,
+		}
+
+
 def synthesize_domain_level_asl_library(
 	*,
 	domain_file: str | Path,
@@ -259,11 +287,16 @@ def synthesize_domain_level_asl_library(
 		predicates=domain.predicates,
 		refinement_constraints=refinement_constraints,
 	)
+	state_coverage_synthesized_candidates = _state_coverage_synthesized_candidate_rules(
+		predicates=domain.predicates,
+		refinement_constraints=refinement_constraints,
+	)
 	raw_candidate_rules = _deduplicate_rules(
 		schema_candidates
 		+ external_candidates
 		+ repair_synthesized_candidates
-		+ explicit_goal_ordering_candidates,
+		+ explicit_goal_ordering_candidates
+		+ state_coverage_synthesized_candidates,
 	)
 	candidate_rules, recursion_descent_audit = filter_rules_by_recursion_descent(
 		raw_candidate_rules,
@@ -327,6 +360,13 @@ def synthesize_domain_level_asl_library(
 			refinement_constraints=refinement_constraints,
 		)
 	)
+	explicit_state_coverage_rule_groups, state_coverage_binding_reports = (
+		_state_coverage_required_rule_groups(
+			candidate_rules=candidate_rules,
+			predicates=domain.predicates,
+			refinement_constraints=refinement_constraints,
+		)
+	)
 	atomic_progress_rule_groups, atomic_progress_binding_reports = (
 		_atomic_progress_required_rule_groups(
 			candidate_rules=candidate_rules,
@@ -350,6 +390,7 @@ def synthesize_domain_level_asl_library(
 			*state_coverage_rule_groups,
 			*repair_rule_groups,
 			*goal_ordering_rule_groups,
+			*explicit_state_coverage_rule_groups,
 			*atomic_progress_rule_groups,
 		),
 	)
@@ -470,6 +511,9 @@ def synthesize_domain_level_asl_library(
 		"explicit_goal_ordering_candidate_count": len(
 			explicit_goal_ordering_candidates,
 		),
+		"state_coverage_synthesized_candidate_count": len(
+			state_coverage_synthesized_candidates,
+		),
 		"raw_candidate_count": len(raw_candidate_rules),
 		"candidate_count": len(candidate_rules),
 		"recursion_descent_audit": recursion_descent_audit,
@@ -485,6 +529,9 @@ def synthesize_domain_level_asl_library(
 		),
 		"selector_state_coverage_constraint_count": len(state_coverage_rule_groups),
 		"selector_repair_constraint_count": len(repair_rule_groups),
+		"selector_explicit_state_coverage_constraint_count": len(
+			explicit_state_coverage_rule_groups,
+		),
 		"selector_atomic_progress_constraint_count": len(atomic_progress_rule_groups),
 		"selector_training_state_coverage_constraint_count": len(
 			training_state_coverage_rule_groups,
@@ -503,6 +550,8 @@ def synthesize_domain_level_asl_library(
 			repair_binding_reports=repair_binding_reports,
 			goal_ordering_rule_groups=goal_ordering_rule_groups,
 			goal_ordering_binding_reports=goal_ordering_binding_reports,
+			explicit_state_coverage_rule_groups=explicit_state_coverage_rule_groups,
+			state_coverage_binding_reports=state_coverage_binding_reports,
 			atomic_progress_rule_groups=atomic_progress_rule_groups,
 			atomic_progress_binding_reports=atomic_progress_binding_reports,
 		),
@@ -536,6 +585,9 @@ def synthesize_domain_level_asl_library(
 			external_candidates=external_candidates,
 			repair_synthesized_candidates=repair_synthesized_candidates,
 			explicit_goal_ordering_candidates=explicit_goal_ordering_candidates,
+			state_coverage_synthesized_candidates=(
+				state_coverage_synthesized_candidates
+			),
 			candidate_rules=candidate_rules,
 			selected_rules=selection.rules,
 			output_rules=output_rules,
@@ -549,6 +601,7 @@ def synthesize_domain_level_asl_library(
 			external_rule_reports=external_rule_reports,
 			repair_binding_reports=repair_binding_reports,
 			goal_ordering_binding_reports=goal_ordering_binding_reports,
+			state_coverage_binding_reports=state_coverage_binding_reports,
 			atomic_progress_binding_reports=atomic_progress_binding_reports,
 			recursion_descent_audit=recursion_descent_audit,
 		),
@@ -1345,6 +1398,53 @@ def _explicit_goal_ordering_candidate_rules(
 	return tuple(rules)
 
 
+def _state_coverage_synthesized_candidate_rules(
+	*,
+	predicates: Sequence[object],
+	refinement_constraints: Sequence[object],
+) -> tuple[LiftedPlanRule, ...]:
+	"""Generate conservative composer rules from explicit state-coverage failures."""
+
+	rules: list[LiftedPlanRule] = []
+	index = 0
+	declared_predicates = _declared_predicate_names(predicates)
+	predicate_arities = _declared_predicate_arities(predicates)
+	for constraint in tuple(refinement_constraints or ()):
+		if getattr(constraint, "constraint_type", "") != "counterexample_state_coverage":
+			continue
+		for missing_goal in tuple(getattr(constraint, "lifted_missing_goals", ()) or ()):
+			predicate, arguments = _parse_lifted_atom(missing_goal)
+			if not predicate or predicate not in declared_predicates:
+				continue
+			if not _predicate_arity_matches(predicate, arguments, predicate_arities):
+				continue
+			index += 1
+			rules.append(
+				LiftedPlanRule(
+					name=f"g_counterexample_state_coverage_{predicate}_{index}",
+					head=LiftedCall("subgoal", "g", ()),
+					context=(
+						_call(f"goal_{predicate}", arguments),
+						f"not {_call(predicate, arguments)}",
+					),
+					body=(
+						LiftedCall("subgoal", predicate, arguments),
+						LiftedCall("subgoal", "g", ()),
+					),
+					layer="composer",
+					rationale="counterexample_state_coverage",
+					capabilities=(
+						_state_coverage_constraint_capability(
+							predicate=predicate,
+							arguments=arguments,
+						),
+					),
+					cost=2,
+				),
+			)
+	return tuple(rules)
+
+
 def _goal_ordering_required_rule_groups(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
@@ -1481,6 +1581,125 @@ def _goal_ordering_required_rule_groups(
 					rejection_reason=None,
 				),
 			)
+	return tuple(groups), tuple(reports)
+
+
+def _state_coverage_required_rule_groups(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	predicates: Sequence[object],
+	refinement_constraints: Sequence[object],
+) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[StateCoverageConstraintBindingReport, ...]]:
+	groups: list[ClingoRequiredRuleGroup] = []
+	reports: list[StateCoverageConstraintBindingReport] = []
+	declared_predicates = _declared_predicate_names(predicates)
+	predicate_arities = _declared_predicate_arities(predicates)
+	for constraint_index, constraint in enumerate(
+		tuple(refinement_constraints or ()),
+		start=1,
+	):
+		if getattr(constraint, "constraint_type", "") != "counterexample_state_coverage":
+			continue
+		target_atoms = tuple(getattr(constraint, "lifted_missing_goals", ()) or ())
+		target_predicates = tuple(
+			_atom_predicate(atom)
+			for atom in target_atoms
+			if _atom_predicate(atom)
+		)
+		undeclared_predicates = tuple(
+			dict.fromkeys(
+				predicate
+				for predicate in target_predicates
+				if predicate not in declared_predicates
+			),
+		)
+		if undeclared_predicates:
+			reports.append(
+				StateCoverageConstraintBindingReport(
+					constraint_index=constraint_index,
+					matched=False,
+					target_predicates=target_predicates,
+					required_capabilities=(),
+					rule_names=(),
+					undeclared_predicates=undeclared_predicates,
+					rejection_reason="undeclared_state_coverage_predicate",
+				),
+			)
+			continue
+		wrong_arity_predicates = _wrong_arity_lifted_predicates(
+			atoms=target_atoms,
+			predicate_arities=predicate_arities,
+		)
+		if wrong_arity_predicates:
+			reports.append(
+				StateCoverageConstraintBindingReport(
+					constraint_index=constraint_index,
+					matched=False,
+					target_predicates=target_predicates,
+					required_capabilities=(),
+					rule_names=(),
+					wrong_arity_predicates=wrong_arity_predicates,
+					rejection_reason="wrong_state_coverage_predicate_arity",
+				),
+			)
+			continue
+		required_capabilities = tuple(
+			_state_coverage_constraint_capability(
+				predicate=predicate,
+				arguments=arguments,
+			)
+			for predicate, arguments in (
+				_parse_lifted_atom(atom)
+				for atom in target_atoms
+			)
+			if predicate
+		)
+		rule_names = tuple(
+			rule.name
+			for rule in tuple(candidate_rules or ())
+			if any(
+				capability in tuple(rule.capabilities or ())
+				for capability in required_capabilities
+			)
+		)
+		available_capabilities = tuple(
+			dict.fromkeys(
+				capability
+				for rule in tuple(candidate_rules or ())
+				for capability in tuple(rule.capabilities or ())
+				if capability.startswith("state_coverage_goal_")
+			),
+		)
+		if not rule_names:
+			reports.append(
+				StateCoverageConstraintBindingReport(
+					constraint_index=constraint_index,
+					matched=False,
+					target_predicates=target_predicates,
+					required_capabilities=required_capabilities,
+					rule_names=(),
+					available_capabilities=available_capabilities,
+					rejection_reason="no_matching_lifted_state_coverage_composer_rule",
+				),
+			)
+			continue
+		groups.append(
+			ClingoRequiredRuleGroup(
+				name=f"state_coverage_{constraint_index}_{'_'.join(target_predicates)}",
+				rule_names=rule_names,
+			),
+		)
+		reports.append(
+			StateCoverageConstraintBindingReport(
+				constraint_index=constraint_index,
+				matched=True,
+				target_predicates=target_predicates,
+				required_capabilities=required_capabilities,
+				rule_names=rule_names,
+				available_capabilities=available_capabilities,
+				rejection_reason=None,
+			),
+		)
 	return tuple(groups), tuple(reports)
 
 
@@ -1862,6 +2081,15 @@ def _goal_ordering_constraint_capability(
 	)
 
 
+def _state_coverage_constraint_capability(
+	*,
+	predicate: str,
+	arguments: Sequence[str],
+) -> str:
+	argument_suffix = "_".join(tuple(arguments or ()))
+	return f"state_coverage_goal_{predicate}_{argument_suffix}".rstrip("_")
+
+
 def _parameter_to_variable(parameter: str) -> str:
 	return parameter_variables((str(parameter),))[0]
 
@@ -1945,6 +2173,11 @@ def _candidate_source(rule: LiftedPlanRule) -> str:
 		return "counterexample_repair"
 	if rule.rationale == "counterexample_goal_ordering":
 		return "counterexample_goal_ordering"
+	if rule.rationale == "counterexample_state_coverage" or any(
+		capability.startswith("state_coverage_goal_")
+		for capability in tuple(rule.capabilities or ())
+	):
+		return "counterexample_state_coverage"
 	return "schema"
 
 
@@ -2074,6 +2307,7 @@ def _evidence_matrix(
 	external_candidates: Sequence[LiftedPlanRule],
 	repair_synthesized_candidates: Sequence[LiftedPlanRule],
 	explicit_goal_ordering_candidates: Sequence[LiftedPlanRule],
+	state_coverage_synthesized_candidates: Sequence[LiftedPlanRule],
 	candidate_rules: Sequence[LiftedPlanRule],
 	selected_rules: Sequence[LiftedPlanRule],
 	output_rules: Sequence[LiftedPlanRule],
@@ -2087,6 +2321,7 @@ def _evidence_matrix(
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
+	state_coverage_binding_reports: Sequence[StateCoverageConstraintBindingReport],
 	atomic_progress_binding_reports: Sequence[AtomicProgressConstraintBindingReport],
 	recursion_descent_audit: Mapping[str, object],
 ) -> dict[str, object]:
@@ -2114,6 +2349,7 @@ def _evidence_matrix(
 	repair_reports = tuple(repair_binding_reports or ())
 	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
+	state_coverage_reports = tuple(state_coverage_binding_reports or ())
 	return {
 		"layer_b_atomic_modules": {
 			"target": "PDDL predicate achievement-goal modules",
@@ -2204,6 +2440,10 @@ def _evidence_matrix(
 				explicit_goal_ordering_candidates,
 				"composer",
 			),
+			"state_coverage_synthesized_candidate_count": _layer_count(
+				state_coverage_synthesized_candidates,
+				"composer",
+			),
 			"goal_ordering_constraint_count": len(goal_ordering_reports),
 			"matched_goal_ordering_constraint_count": sum(
 				1 for report in goal_ordering_reports if report.matched
@@ -2214,6 +2454,19 @@ def _evidence_matrix(
 			"goal_ordering_constraint_binding_reports": tuple(
 				report.to_dict()
 				for report in goal_ordering_reports
+			),
+			"explicit_state_coverage_constraint_count": len(
+				state_coverage_reports,
+			),
+			"matched_explicit_state_coverage_constraint_count": sum(
+				1 for report in state_coverage_reports if report.matched
+			),
+			"rejected_explicit_state_coverage_constraint_count": sum(
+				1 for report in state_coverage_reports if not report.matched
+			),
+			"state_coverage_constraint_binding_reports": tuple(
+				report.to_dict()
+				for report in state_coverage_reports
 			),
 			"candidate_count": _layer_count(candidate_rules, "composer"),
 			"selected_rule_count": _layer_count(selected_rules, "composer"),
@@ -2294,6 +2547,12 @@ def _evidence_matrix(
 			"counterexample_goal_ordering": {
 				"candidate_count": len(tuple(explicit_goal_ordering_candidates or ())),
 				"layer_counts": _layer_counts(explicit_goal_ordering_candidates),
+			},
+			"counterexample_state_coverage": {
+				"candidate_count": len(
+					tuple(state_coverage_synthesized_candidates or ()),
+				),
+				"layer_counts": _layer_counts(state_coverage_synthesized_candidates),
 			},
 			"training_transition_systems": _transition_evidence_summary(
 				training_transition_evidence,
@@ -2435,6 +2694,8 @@ def _composer_rule_evidence_record(rule: LiftedPlanRule) -> dict[str, object]:
 		verdict = "external_policy_bound"
 	elif source == "counterexample_goal_ordering":
 		verdict = "counterexample_goal_ordering_synthesized"
+	elif source == "counterexample_state_coverage":
+		verdict = "counterexample_state_coverage_synthesized"
 	elif any(
 		capability.startswith(("causal_order_", "delete_threat_order_"))
 		for capability in tuple(rule.capabilities or ())
@@ -2469,6 +2730,8 @@ def _counterexample_refinement_summary(
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	goal_ordering_rule_groups: Sequence[ClingoRequiredRuleGroup],
 	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
+	explicit_state_coverage_rule_groups: Sequence[ClingoRequiredRuleGroup],
+	state_coverage_binding_reports: Sequence[StateCoverageConstraintBindingReport],
 	atomic_progress_rule_groups: Sequence[ClingoRequiredRuleGroup],
 	atomic_progress_binding_reports: Sequence[AtomicProgressConstraintBindingReport],
 ) -> dict[str, object]:
@@ -2482,6 +2745,8 @@ def _counterexample_refinement_summary(
 	repair_reports = tuple(repair_binding_reports or ())
 	goal_ordering_groups = tuple(goal_ordering_rule_groups or ())
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
+	explicit_state_groups = tuple(explicit_state_coverage_rule_groups or ())
+	state_coverage_reports = tuple(state_coverage_binding_reports or ())
 	atomic_progress_groups = tuple(atomic_progress_rule_groups or ())
 	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
 	termination_constraints = tuple(
@@ -2551,6 +2816,14 @@ def _counterexample_refinement_summary(
 			1 for report in atomic_progress_reports if not report.matched
 		),
 		"goal_ordering_required_group_count": len(goal_ordering_groups),
+		"explicit_state_coverage_required_group_count": len(explicit_state_groups),
+		"explicit_state_coverage_constraint_count": len(state_coverage_reports),
+		"matched_explicit_state_coverage_constraint_count": sum(
+			1 for report in state_coverage_reports if report.matched
+		),
+		"rejected_explicit_state_coverage_constraint_count": sum(
+			1 for report in state_coverage_reports if not report.matched
+		),
 		"goal_ordering_constraint_count": len(goal_ordering_reports),
 		"matched_goal_ordering_constraint_count": sum(
 			1 for report in goal_ordering_reports if report.matched
@@ -2600,6 +2873,18 @@ def _counterexample_refinement_summary(
 			report.to_dict()
 			for report in goal_ordering_reports
 		),
+		"explicit_state_coverage_required_groups": tuple(
+			{
+				"name": group.name,
+				"constraint_type": "counterexample_state_coverage",
+				"rule_names": group.rule_names,
+			}
+			for group in explicit_state_groups
+		),
+		"state_coverage_constraint_binding_reports": tuple(
+			report.to_dict()
+			for report in state_coverage_reports
+		),
 		"rejected_goal_ordering_constraints": tuple(
 			report.to_dict()
 			for report in goal_ordering_reports
@@ -2615,11 +2900,17 @@ def _counterexample_refinement_summary(
 			for report in atomic_progress_reports
 			if not report.matched
 		),
+		"rejected_explicit_state_coverage_constraints": tuple(
+			report.to_dict()
+			for report in state_coverage_reports
+			if not report.matched
+		),
 		"required_group_count": (
 			len(progress_groups)
 			+ len(state_groups)
 			+ len(repair_groups)
 			+ len(goal_ordering_groups)
+			+ len(explicit_state_groups)
 			+ len(atomic_progress_groups)
 		),
 		"required_group_types": tuple(
@@ -2629,6 +2920,7 @@ def _counterexample_refinement_summary(
 				("counterexample_state_coverage", state_groups),
 				("counterexample_atomic_precondition_repair", repair_groups),
 				("counterexample_goal_ordering", goal_ordering_groups),
+				("counterexample_explicit_state_coverage", explicit_state_groups),
 				("counterexample_atomic_progress", atomic_progress_groups),
 			)
 			if groups

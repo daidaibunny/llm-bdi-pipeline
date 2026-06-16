@@ -1130,6 +1130,52 @@ def test_atomic_progress_refinement_constraints_become_selector_required_groups(
 	assert layer_b["matched_atomic_progress_constraint_count"] == 1
 
 
+def test_state_coverage_refinement_synthesizes_composer_candidate(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_counterexample_domain(tmp_path)
+	constraint = RefinementConstraint(
+		failure_kind="missing_composer_or_context",
+		target_layer="layer_c_goal_composer",
+		constraint_type="counterexample_state_coverage",
+		problem_file=str(problem_file),
+		problem_name="training-p1",
+		failure_reason="no applicable plan for !g",
+		ground_missing_goals=("base(b)",),
+		lifted_missing_goals=("base(X)",),
+		required_rule_group_types=("counterexample_state_coverage",),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	layer_c = result.report["evidence_matrix"]["layer_c_goal_composer"]
+
+	assert result.report["state_coverage_synthesized_candidate_count"] == 1
+	assert result.report["candidate_sources"]["counterexample_state_coverage"] == 1
+	assert result.report["selected_candidate_sources"]["counterexample_state_coverage"] == 1
+	assert refinement["explicit_state_coverage_required_group_count"] == 1
+	assert refinement["matched_explicit_state_coverage_constraint_count"] == 1
+	assert refinement["required_group_types"] == (
+		"counterexample_explicit_state_coverage",
+	)
+	assert refinement["explicit_state_coverage_required_groups"][0]["rule_names"] == (
+		"g_satisfy_goal_base",
+	)
+	assert layer_c["state_coverage_synthesized_candidate_count"] == 1
+	assert layer_c["matched_explicit_state_coverage_constraint_count"] == 1
+	output_evidence = {
+		record["rule_name"]: record
+		for record in layer_c["output_composer_rule_evidence"]
+	}
+	assert output_evidence["g_satisfy_goal_base"]["verdict"] == (
+		"counterexample_state_coverage_synthesized"
+	)
+
+
 def test_atomic_progress_refinement_rejects_undeclared_predicates(
 	tmp_path: Path,
 ) -> None:
