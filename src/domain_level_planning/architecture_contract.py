@@ -264,9 +264,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				gap="DFA guard requests are not yet connected to the domain-level library.",
 				current_state=(
 					"Positive conjunctive DFA guards can be translated into "
-					"goal facts and PDDL predicate subgoal calls; the supported "
-					"ASL subset and execution semantics are reported with each "
-					"domain-level contract."
+					"schema-validated goal facts and PDDL predicate subgoal calls; "
+					"the supported ASL subset and execution semantics are reported "
+					"with each domain-level contract."
 				),
 				required_improvement=(
 					"Integrate the adapter into the runtime DFA controller and "
