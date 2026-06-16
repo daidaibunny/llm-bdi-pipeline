@@ -67,6 +67,13 @@ BACKEND_RESEARCH_PROFILES = {
 			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
 			"guard_required": True,
 		},
+		"current_consumption_role": {
+			"drives_layer_b": True,
+			"drives_layer_c": True,
+			"consumed_by_synthesis": True,
+			"consumption_mode": "parsed_bound_policy_rules",
+			"blocking_gap": None,
+		},
 	},
 	"h-policy-learner": {
 		"paper_role": "hierarchical policy learner for reusable generalized policies",
@@ -93,6 +100,13 @@ BACKEND_RESEARCH_PROFILES = {
 			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
 			"guard_required": True,
 		},
+		"current_consumption_role": {
+			"drives_layer_b": False,
+			"drives_layer_c": False,
+			"consumed_by_synthesis": False,
+			"consumption_mode": "audit_only_representation_baseline",
+			"blocking_gap": "no_verified_policy_to_lifted_asl_adapter",
+		},
 	},
 	"d2l": {
 		"paper_role": "description-logic policy learner baseline",
@@ -118,6 +132,13 @@ BACKEND_RESEARCH_PROFILES = {
 			"execution_environment": "Docker linux/amd64 paper environment",
 			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
 			"guard_required": True,
+		},
+		"current_consumption_role": {
+			"drives_layer_b": False,
+			"drives_layer_c": False,
+			"consumed_by_synthesis": False,
+			"consumption_mode": "audit_only_feature_policy_baseline",
+			"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
 		},
 	},
 }
@@ -288,6 +309,7 @@ def backend_audit_matrix(
 				"failure_modes": failures,
 				"known_failure_modes": list(profile["known_failure_modes"]),
 				"resource_profile": dict(profile["resource_profile"]),
+				"current_consumption_role": dict(profile["current_consumption_role"]),
 			},
 		)
 	return tuple(entries)

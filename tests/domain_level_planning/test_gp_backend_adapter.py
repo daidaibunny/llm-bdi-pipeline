@@ -88,16 +88,37 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "Layer B/C sketch evidence" in by_name["learner-sketches"]["reusable_evidence"]
 	assert by_name["learner-sketches"]["resource_profile"]["default_max_rss_gb"] == 16.0
 	assert by_name["learner-sketches"]["resource_profile"]["guard_required"] is True
+	assert by_name["learner-sketches"]["current_consumption_role"] == {
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "parsed_bound_policy_rules",
+		"blocking_gap": None,
+	}
 
 	assert by_name["h-policy-learner"]["present"] is False
 	assert by_name["h-policy-learner"]["pin_status"] == "missing"
 	assert "missing_backend" in by_name["h-policy-learner"]["failure_modes"]
 	assert "hierarchical policy" in by_name["h-policy-learner"]["paper_role"]
+	assert by_name["h-policy-learner"]["current_consumption_role"] == {
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"consumed_by_synthesis": False,
+		"consumption_mode": "audit_only_representation_baseline",
+		"blocking_gap": "no_verified_policy_to_lifted_asl_adapter",
+	}
 
 	assert by_name["d2l"]["present"] is True
 	assert by_name["d2l"]["pin_status"] == "mismatch"
 	assert "pin_mismatch" in by_name["d2l"]["failure_modes"]
 	assert "Docker" in by_name["d2l"]["resource_profile"]["execution_environment"]
+	assert by_name["d2l"]["current_consumption_role"] == {
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"consumed_by_synthesis": False,
+		"consumption_mode": "audit_only_feature_policy_baseline",
+		"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+	}
 
 
 def test_backend_audit_status_cli_prints_matrix_entries(tmp_path: Path) -> None:

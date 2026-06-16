@@ -266,8 +266,17 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				id="G6",
 				layer="validation",
 				gap="Bounded validation is not yet a full experiment protocol.",
-				current_state="Training and counterexample problems receive bounded first-applicable validation.",
-				required_improvement="Add train/test splits, held-out scaling, ablations, baselines, and failure analysis.",
+				current_state=(
+					"Training and counterexample problems receive bounded first-applicable "
+					"validation; external backend audit reports now identify whether each "
+					"paper backend currently drives Layer B/Layer C synthesis or remains "
+					"a guarded audit-only baseline."
+				),
+				required_improvement=(
+					"Add train/test splits, held-out scaling, ablations, baselines, "
+					"failure analysis, and verified adapters before non-learner-sketches "
+					"backends can drive synthesis."
+				),
 				status="open",
 			),
 			ArchitectureGap(
