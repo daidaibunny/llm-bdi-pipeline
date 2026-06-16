@@ -485,7 +485,7 @@ def test_paper_profile_accepts_bound_external_policy_and_bounded_validation(
 	assert result.report["output_candidate_sources"]["external_sketch"] == 1
 
 
-def test_paper_profile_rejects_unobserved_schema_action_modules(
+def test_paper_profile_excludes_unobserved_schema_action_modules(
 	tmp_path: Path,
 ) -> None:
 	domain_file, problem_file, policy_file = _write_unobserved_action_domain_problem_and_policy(
@@ -522,18 +522,41 @@ def test_paper_profile_rejects_unobserved_schema_action_modules(
 		for failure in bootstrap.report["paper_profile_failures"]
 	)
 
-	with pytest.raises(ValueError, match="unjustified schema action atomic rule"):
-		synthesize_domain_level_asl_library(
-			domain_file=domain_file,
-			training_problem_files=(problem_file,),
-			external_sketch_policies=(
-				ExternalSketchPolicySource(
-					name="paper-sketch-smoke",
-					policy_file=policy_file,
-				),
+	paper = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="paper-sketch-smoke",
+				policy_file=policy_file,
 			),
-			synthesis_profile="paper",
-		)
+		),
+		synthesis_profile="paper",
+	)
+	paper_layer_b = paper.report["evidence_matrix"]["layer_b_atomic_modules"]
+	paper_verdicts = {
+		item["rule_name"]: item["verdict"]
+		for item in paper_layer_b["selected_atomic_rule_evidence"]
+	}
+	assert paper.report["paper_profile_ready"] is True
+	assert paper.report["paper_profile_failures"] == ()
+	assert paper.report["paper_profile_excluded_schema_capabilities"] == (
+		"module_bonus_action_grant-bonus",
+	)
+	assert paper_verdicts["done_via_finish"] == "trace_justified"
+	assert not any(
+		item["verdict"] == "schema_unobserved_action_body"
+		for item in paper_layer_b["selected_atomic_rule_evidence"]
+	)
+	assert not any(
+		item["head"] == {
+			"kind": "subgoal",
+			"symbol": "bonus",
+			"arguments": ["X"],
+		}
+		and item["body"]
+		for item in paper.report["output_rule_manifest"]
+	)
 
 
 def test_unified_pipeline_rejects_unsupported_pddl_before_synthesis(tmp_path: Path) -> None:

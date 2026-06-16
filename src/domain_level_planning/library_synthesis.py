@@ -254,7 +254,15 @@ def synthesize_domain_level_asl_library(
 		candidate_rules=candidate_rules,
 		training_goal_facts=all_goal_facts,
 	)
+	paper_profile_excluded_schema_capabilities: tuple[str, ...] = ()
 	if profile == "paper":
+		required_capabilities, paper_profile_excluded_schema_capabilities = (
+			_paper_profile_required_capabilities(
+				required_capabilities=required_capabilities,
+				candidate_rules=candidate_rules,
+				transition_evidence=all_transition_evidence,
+			)
+		)
 		required_capabilities = tuple(
 			dict.fromkeys(
 				(
@@ -431,6 +439,9 @@ def synthesize_domain_level_asl_library(
 		"raw_candidate_count": len(raw_candidate_rules),
 		"candidate_count": len(candidate_rules),
 		"recursion_descent_audit": recursion_descent_audit,
+		"paper_profile_excluded_schema_capabilities": (
+			paper_profile_excluded_schema_capabilities
+		),
 		"selected_rule_count": len(selection.rules),
 		"output_rule_count": len(output_rules),
 		"selector_progress_constraint_count": len(progress_rule_groups),
@@ -646,6 +657,51 @@ def _paper_profile_failures(
 			),
 		)
 	return tuple(failures)
+
+
+def _paper_profile_required_capabilities(
+	*,
+	required_capabilities: Sequence[str],
+	candidate_rules: Sequence[LiftedPlanRule],
+	transition_evidence: Sequence[object],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+	"""Keep paper-profile schema action requirements evidence-backed.
+
+	Bootstrap synthesis keeps every schema action capability as a broad candidate
+	coverage target. The paper profile is stricter: a schema-derived primitive
+	action module must be supported by transition evidence, an external learned
+	policy, or counterexample repair before it can become a required output
+	capability.
+	"""
+
+	atomic_justifications = atomic_achievement_justifications(
+		candidate_rules,
+		transition_evidence,
+	)
+	schema_action_capabilities_by_rule = {
+		rule.name: tuple(rule.capabilities)
+		for rule in tuple(candidate_rules or ())
+		if rule.layer == "atomic"
+		and rule.body
+		and _candidate_source(rule) == "schema"
+	}
+	unjustified_capabilities = {
+		capability
+		for rule_name, capabilities in schema_action_capabilities_by_rule.items()
+		if not tuple(atomic_justifications.get(rule_name, ()))
+		for capability in capabilities
+	}
+	filtered = tuple(
+		capability
+		for capability in tuple(required_capabilities or ())
+		if capability not in unjustified_capabilities
+	)
+	excluded = tuple(
+		capability
+		for capability in tuple(required_capabilities or ())
+		if capability in unjustified_capabilities
+	)
+	return tuple(dict.fromkeys(filtered)), tuple(dict.fromkeys(excluded))
 
 
 def _run_requested_learner_sketches(
