@@ -518,6 +518,25 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 	)
 	assert consumption["source_gate_reports"][0]["accepted"] is True
 	assert consumption["source_gate_reports"][0]["backend_name"] == "learner-sketches"
+	policy_audit = result.report["paper_policy_audits"][0]
+	assert policy_audit["feature_binding_diagnostics"] == (
+		{
+			"feature_id": "f_bad",
+			"expression": (
+				"n_concept_distance(c_one_of(a),r_primitive(done,0,1),"
+				"c_primitive(done,0))"
+			),
+			"status": "unsupported",
+			"binding_kind": "unsupported",
+			"condition_operators": (),
+			"effect_operators": (),
+			"action_candidate_count": 0,
+			"promoted_effect_operators": (),
+			"rejection_reason": (
+				"object_specific_dlplan_feature_requires_principled_lifting"
+			),
+		},
+	)
 	assert result.report["paper_profile_ready"] is False
 	assert result.report["external_rule_binding_reports"][0]["compiled"] is False
 	assert result.report["external_rule_binding_reports"][0]["missing_condition_bindings"] == [
