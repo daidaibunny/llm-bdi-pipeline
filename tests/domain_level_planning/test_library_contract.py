@@ -49,6 +49,11 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 		"context_semantics": "implicit conjunction over supported context literals",
 		"negation_semantics": "negation-as-absence over the current state or goal descriptor set",
 		"goal_state_semantics": "fixed point: +!g has no applicable unsatisfied-goal plan",
+		"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
+		"primitive_precondition_semantics": (
+			"primitive action preconditions are checked at execution time; "
+			"violations produce primitive-precondition counterexamples"
+		),
 	}
 
 

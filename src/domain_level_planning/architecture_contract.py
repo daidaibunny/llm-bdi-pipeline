@@ -301,10 +301,12 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"Generated heads, contexts, primitive actions, and subgoal calls are "
 					"schema-checked; deterministic first-applicable execution and the "
-					"currently supported ASL subset are reported with the library."
+					"currently supported ASL subset are reported with the library; "
+					"primitive actions are applied by the PDDL STRIPS simulator and "
+					"precondition violations become primitive-precondition counterexamples."
 				),
 				required_improvement=(
-					"Define primitive-action precondition handling in the paper method "
+					"Mirror primitive-action precondition handling in the paper method "
 					"section and extend the contract whenever more AgentSpeak constructs "
 					"are intentionally supported."
 				),
