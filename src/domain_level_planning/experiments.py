@@ -132,6 +132,7 @@ def run_domain_level_experiment(
 		),
 		"bounded_validation": result.report.get("bounded_validation"),
 		"synthesis_report": dict(result.report),
+		"refinement_analysis": _refinement_analysis(refinement_trace),
 		"refinement_trace": refinement_trace,
 		"asl": asl,
 	}
@@ -167,6 +168,52 @@ def _failure_analysis(evaluation_results: Sequence[dict[str, object]]) -> dict[s
 		],
 		"step_count_summary": _numeric_summary(step_counts),
 	}
+
+
+def _refinement_analysis(refinement_trace: dict[str, object] | None) -> dict[str, object]:
+	if refinement_trace is None:
+		return {
+			"enabled": False,
+			"converged": None,
+			"round_count": 0,
+			"constraint_count": 0,
+			"constraints_by_type": {},
+			"constraints_by_failure_kind": {},
+			"constraints_by_target_layer": {},
+			"first_round_failed_heldout_count": 0,
+			"final_round_failed_heldout_count": 0,
+		}
+	summary = dict(refinement_trace.get("refinement_summary") or {})
+	rounds = tuple(refinement_trace.get("rounds") or ())
+	return {
+		"enabled": True,
+		"converged": bool(refinement_trace.get("converged")),
+		"round_count": int(summary.get("round_count") or len(rounds)),
+		"constraint_count": int(summary.get("constraint_count") or 0),
+		"constraints_by_type": dict(summary.get("constraints_by_type") or {}),
+		"constraints_by_failure_kind": dict(
+			summary.get("constraints_by_failure_kind") or {},
+		),
+		"constraints_by_target_layer": dict(
+			summary.get("constraints_by_target_layer") or {},
+		),
+		"first_round_failed_heldout_count": _round_failed_heldout_count(
+			rounds[0] if rounds else None,
+		),
+		"final_round_failed_heldout_count": _round_failed_heldout_count(
+			rounds[-1] if rounds else None,
+		),
+	}
+
+
+def _round_failed_heldout_count(round_report: object | None) -> int:
+	if not isinstance(round_report, dict):
+		return 0
+	return sum(
+		1
+		for evaluation in tuple(round_report.get("heldout_evaluations") or ())
+		if not bool(dict(evaluation).get("solved"))
+	)
 
 
 def _numeric_summary(values: Sequence[int]) -> dict[str, float | int | None]:

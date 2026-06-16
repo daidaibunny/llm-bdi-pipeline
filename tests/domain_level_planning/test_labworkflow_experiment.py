@@ -26,6 +26,17 @@ def test_labworkflow_refinement_experiment_learns_goal_dependency() -> None:
 
 	assert report["coverage"]["coverage_ratio"] == 1.0
 	assert report["plan_library"]["domain_name"] == "labworkflow"
+	assert report["refinement_analysis"] == {
+		"enabled": True,
+		"converged": True,
+		"round_count": 2,
+		"constraint_count": 1,
+		"constraints_by_type": {"counterexample_goal_ordering": 1},
+		"constraints_by_failure_kind": {"goal_ordering_failure": 1},
+		"constraints_by_target_layer": {"layer_c_goal_composer": 1},
+		"first_round_failed_heldout_count": 1,
+		"final_round_failed_heldout_count": 0,
+	}
 	assert report["refinement_trace"]["converged"] is True
 	assert report["refinement_trace"]["rounds"][0]["refinement_constraints"][0][
 		"constraint_type"
