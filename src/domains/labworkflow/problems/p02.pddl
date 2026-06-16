@@ -1,0 +1,6 @@
+(define (problem labworkflow-p02)
+ (:domain labworkflow)
+ (:objects s1 - sample r1 - reagent)
+ (:init (sample_available s1) (reagent_available r1))
+ (:goal (and (reagent_logged r1) (analysis_done s1 r1)))
+)
