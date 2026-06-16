@@ -2365,7 +2365,7 @@ def _composer_rule_evidence_record(rule: LiftedPlanRule) -> dict[str, object]:
 	elif source == "counterexample_goal_ordering":
 		verdict = "counterexample_goal_ordering_synthesized"
 	elif any(
-		capability.startswith("causal_order_")
+		capability.startswith(("causal_order_", "delete_threat_order_"))
 		for capability in tuple(rule.capabilities or ())
 	):
 		verdict = "schema_causal_ordering"

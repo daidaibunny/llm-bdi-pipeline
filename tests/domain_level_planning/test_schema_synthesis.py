@@ -349,9 +349,57 @@ def test_causal_interference_orders_blocksworld_tower_without_traces() -> None:
 	# Every candidate exposes a schema causal-interference capability.
 	for candidate in rules:
 		assert any(
-			capability.startswith("causal_order_")
+			capability.startswith(("causal_order_", "delete_threat_order_"))
 			for capability in candidate.capabilities
 		)
+
+
+def test_causal_interference_orders_delete_threat_goals_without_traces(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "delete-threat-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain delete-threat-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (a ?x)
+		  (b ?x)
+		 )
+		 (:action make-a
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (and (a ?x) (not (b ?x)))
+		 )
+		 (:action make-b
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (b ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	domain = PDDLParser.parse_domain(domain_file)
+
+	rules = causal_interference_ordering_rules(domain)
+
+	delete_threat_rules = tuple(
+		rule
+		for rule in rules
+		if any(
+			capability.startswith("delete_threat_order_a_")
+			for capability in rule.capabilities
+		)
+	)
+	assert len(delete_threat_rules) == 1
+	rule = delete_threat_rules[0]
+	assert rule.context == ("goal_a(X)", "goal_b(X)", "not a(X)")
+	assert rule.body == (
+		LiftedCall("subgoal", "a", ("X",)),
+		LiftedCall("subgoal", "g", ()),
+	)
 
 
 def test_causal_interference_orderings_are_empty_without_shared_structure(

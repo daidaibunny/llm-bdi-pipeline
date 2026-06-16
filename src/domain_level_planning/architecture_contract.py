@@ -227,7 +227,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				gap="Goal dependency composition remains the main research gap.",
 				current_state=(
 					"Shared-object trace order evidence, schema causal-interference "
-					"ordering candidates, bounded state-coverage constraints, and "
+					"ordering candidates for precondition-support and delete-threat "
+					"relations, bounded state-coverage constraints, and "
 					"counterexample failure classification exist; primitive-precondition "
 					"repair evidence is lifted into Layer B constraints and consumed "
 					"as selector hard groups when matching prepare rules exist. "

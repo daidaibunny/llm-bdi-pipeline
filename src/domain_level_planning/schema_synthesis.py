@@ -593,6 +593,33 @@ def _causal_interference_ordering_rules(
 								cost=2,
 							),
 						)
+	for threat_pred, threat_list in achievers.items():
+		for threatened_pred, threatened_list in achievers.items():
+			for threat in threat_list:
+				for threatened in threatened_list:
+					for link in _delete_threat_links(threat, threatened):
+						key = (f"delete:{threat_pred}", threatened_pred, link)
+						if key in seen:
+							continue
+						lifted = _lift_delete_threat_ordering(threat, threatened, link)
+						if lifted is None:
+							continue
+						seen.add(key)
+						index += 1
+						context, body, capability = lifted
+						rules.append(
+							_rule(
+								f"g_delete_threat_order_{threat_pred}_before_"
+								f"{threatened_pred}_{index}",
+								"g",
+								(),
+								context,
+								body,
+								layer="composer",
+								capabilities=(capability,),
+								cost=2,
+							),
+						)
 	return tuple(rules)
 
 
@@ -609,6 +636,11 @@ def _goal_predicate_achievers(actions: Sequence[object]) -> dict[str, tuple[dict
 			for literal in parse_pddl_literals(str(getattr(action, "effects", "")))
 			if literal.is_positive
 		)
+		delete_effects = tuple(
+			literal
+			for literal in parse_pddl_literals(str(getattr(action, "effects", "")))
+			if not literal.is_positive
+		)
 		for add in add_effects:
 			if not add.arguments:
 				continue
@@ -618,6 +650,7 @@ def _goal_predicate_achievers(actions: Sequence[object]) -> dict[str, tuple[dict
 					"target": add,
 					"preconditions": preconditions,
 					"add_effects": add_effects,
+					"delete_effects": delete_effects,
 				},
 			)
 	return {predicate: tuple(items) for predicate, items in achievers.items()}
@@ -660,6 +693,40 @@ def _producer_consumer_links(
 			if not grounded or not pairs:
 				continue
 			links.append(tuple(pairs))
+	return tuple(dict.fromkeys(links))
+
+
+def _delete_threat_links(
+	threat: dict,
+	threatened: dict,
+) -> tuple[tuple[tuple[int, int], ...], ...]:
+	"""Return links where achieving one goal deletes another goal literal."""
+
+	threat_positions = _argument_positions(threat["target"].arguments)
+	threatened_positions = _argument_positions(threatened["target"].arguments)
+	links: list[tuple[tuple[int, int], ...]] = []
+	for deleted in threat["delete_effects"]:
+		if deleted.predicate != threatened["target"].predicate:
+			continue
+		if len(deleted.arguments) != len(threatened["target"].arguments):
+			continue
+		if not deleted.arguments:
+			continue
+		pairs: list[tuple[int, int]] = []
+		grounded = True
+		for deleted_arg, threatened_arg in zip(
+			deleted.arguments,
+			threatened["target"].arguments,
+		):
+			threat_index = threat_positions.get(deleted_arg)
+			threatened_index = threatened_positions.get(threatened_arg)
+			if threat_index is None or threatened_index is None:
+				grounded = False
+				break
+			pairs.append((threat_index, threatened_index))
+		if not grounded or not pairs:
+			continue
+		links.append(tuple(pairs))
 	return tuple(dict.fromkeys(links))
 
 
@@ -721,6 +788,63 @@ def _lift_causal_ordering(
 	capability = (
 		f"causal_order_{producer_pred}_{'_'.join(producer_args)}_before_"
 		f"{consumer_pred}_{'_'.join(consumer_args)}"
+	)
+	return context, body, capability
+
+
+def _lift_delete_threat_ordering(
+	threat: dict,
+	threatened: dict,
+	link: tuple[tuple[int, int], ...],
+) -> tuple[tuple[str, ...], tuple[LiftedCall, ...], str] | None:
+	threat_arity = len(threat["target"].arguments)
+	threatened_arity = len(threatened["target"].arguments)
+	threat_to_threatened = {
+		threat_index: threatened_index for threat_index, threatened_index in link
+	}
+	if len(threat_to_threatened) != len(link):
+		return None
+	identities: dict[tuple[str, int], int] = {}
+	next_id = 0
+	for threat_index in range(threat_arity):
+		identities[("t", threat_index)] = next_id
+		next_id += 1
+	for threatened_index in range(threatened_arity):
+		linked_threat = next(
+			(
+				threat_index
+				for threat_index, mapped in threat_to_threatened.items()
+				if mapped == threatened_index
+			),
+			None,
+		)
+		if linked_threat is not None:
+			identities[("d", threatened_index)] = identities[("t", linked_threat)]
+		else:
+			identities[("d", threatened_index)] = next_id
+			next_id += 1
+	variable_names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+	if next_id > len(variable_names):
+		return None
+
+	def _variable(slot: tuple[str, int]) -> str:
+		return variable_names[identities[slot]]
+
+	threat_args = tuple(_variable(("t", index)) for index in range(threat_arity))
+	threatened_args = tuple(
+		_variable(("d", index)) for index in range(threatened_arity)
+	)
+	threat_pred = threat["target"].predicate
+	threatened_pred = threatened["target"].predicate
+	context = (
+		_call(f"goal_{threat_pred}", threat_args),
+		_call(f"goal_{threatened_pred}", threatened_args),
+		f"not {_call(threat_pred, threat_args)}",
+	)
+	body = (_subgoal(threat_pred, *threat_args), _subgoal("g"))
+	capability = (
+		f"delete_threat_order_{threat_pred}_{'_'.join(threat_args)}_before_"
+		f"{threatened_pred}_{'_'.join(threatened_args)}"
 	)
 	return context, body, capability
 
