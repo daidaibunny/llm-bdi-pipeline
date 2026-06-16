@@ -373,6 +373,7 @@ def synthesize_domain_level_asl_library(
 			counterexample_state_coverage_rule_groups=counterexample_state_coverage_rule_groups,
 			paper_policy_audits=paper_policy_audits,
 			external_rule_reports=external_rule_reports,
+			repair_binding_reports=repair_binding_reports,
 			recursion_descent_audit=recursion_descent_audit,
 		),
 		"paper_profile_ready": not paper_profile_failures,
@@ -732,6 +733,7 @@ def _evidence_matrix(
 	counterexample_state_coverage_rule_groups: Sequence[object],
 	paper_policy_audits: Sequence[PaperPolicyAuditReport],
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
+	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	recursion_descent_audit: Mapping[str, object],
 ) -> dict[str, object]:
 	"""Summarize which evidence sources support each synthesis layer."""
@@ -748,6 +750,7 @@ def _evidence_matrix(
 			*tuple(counterexample_transition_evidence or ()),
 		),
 	)
+	repair_reports = tuple(repair_binding_reports or ())
 	return {
 		"layer_b_atomic_modules": {
 			"target": "PDDL predicate achievement-goal modules",
@@ -761,6 +764,17 @@ def _evidence_matrix(
 			),
 			"counterexample_transition_progress_constraint_count": len(
 				tuple(counterexample_progress_rule_groups or ()),
+			),
+			"repair_constraint_count": len(repair_reports),
+			"matched_repair_constraint_count": sum(
+				1 for report in repair_reports if report.matched
+			),
+			"rejected_repair_constraint_count": sum(
+				1 for report in repair_reports if not report.matched
+			),
+			"repair_constraint_binding_reports": tuple(
+				report.to_dict()
+				for report in repair_reports
 			),
 			"training_goal_progression_count": sum(
 				len(getattr(evidence, "goal_progressions", ()) or ())

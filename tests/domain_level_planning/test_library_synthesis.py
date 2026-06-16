@@ -202,6 +202,10 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert layer_b["target"] == "PDDL predicate achievement-goal modules"
 	assert layer_b["candidate_count"] >= layer_b["selected_rule_count"] >= 1
 	assert layer_b["training_transition_progress_constraint_count"] == 1
+	assert layer_b["repair_constraint_count"] == 0
+	assert layer_b["matched_repair_constraint_count"] == 0
+	assert layer_b["rejected_repair_constraint_count"] == 0
+	assert layer_b["repair_constraint_binding_reports"] == ()
 	assert layer_b["training_goal_progression_count"] == 1
 	assert layer_b["training_atomic_achievement_count"] == 1
 	assert layer_b["trace_justified_selected_rule_count"] >= 1
@@ -527,6 +531,13 @@ def test_refinement_repair_constraints_become_selector_required_groups(
 		"counterexample_atomic_precondition_repair"
 	)
 	assert refinement["repair_required_groups"][0]["rule_names"] == (
+		"done_prepare_armed_for_finish",
+	)
+	layer_b = result.report["evidence_matrix"]["layer_b_atomic_modules"]
+	assert layer_b["repair_constraint_count"] == 1
+	assert layer_b["matched_repair_constraint_count"] == 1
+	assert layer_b["rejected_repair_constraint_count"] == 0
+	assert layer_b["repair_constraint_binding_reports"][0]["rule_names"] == (
 		"done_prepare_armed_for_finish",
 	)
 	assert result.report["selector_repair_constraint_count"] == 1
