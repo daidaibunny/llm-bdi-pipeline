@@ -25,6 +25,23 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 	assert len(refined.rounds) == 2
 	assert refined.rounds[0].heldout_evaluations[0].solved is False
 	assert refined.rounds[0].heldout_evaluations[0].counterexample is not None
+	constraint = refined.rounds[0].heldout_evaluations[0].refinement_constraints[0]
+	assert constraint.failure_kind == "goal_ordering_failure"
+	assert constraint.target_layer == "layer_c_goal_composer"
+	assert constraint.constraint_type == "counterexample_goal_ordering"
+	assert constraint.lifted_orderings == (
+		("goal_z_base(Y)", "goal_a_top(X, Y)"),
+	)
+	assert constraint.required_rule_group_types == (
+		"counterexample_transition_progress",
+		"counterexample_state_coverage",
+		"counterexample_goal_ordering",
+	)
+	assert refined.rounds[0].refinement_constraints == (constraint,)
+	assert (
+		refined.rounds[0].to_dict()["refinement_constraints"][0]["failure_kind"]
+		== "goal_ordering_failure"
+	)
 	assert refined.rounds[0].added_counterexample_problem_files == (
 		str(dependent_problem.resolve()),
 	)

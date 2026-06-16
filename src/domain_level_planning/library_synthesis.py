@@ -291,6 +291,13 @@ def synthesize_domain_level_asl_library(
 		"selector_counterexample_state_coverage_constraint_count": len(
 			counterexample_state_coverage_rule_groups,
 		),
+		"counterexample_refinement_constraints": _counterexample_refinement_summary(
+			counterexample_transition_evidence=counterexample_transition_evidence,
+			counterexample_progress_rule_groups=counterexample_progress_rule_groups,
+			counterexample_state_coverage_rule_groups=(
+				counterexample_state_coverage_rule_groups
+			),
+		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
 		"selected_candidate_sources": _candidate_source_counts(selection.rules),
@@ -802,6 +809,38 @@ def _transition_evidence_summary(evidence_items: Sequence[object]) -> dict[str, 
 			len(getattr(evidence, "atomic_achievements", ()) or ())
 			for evidence in items
 		),
+	}
+
+
+def _counterexample_refinement_summary(
+	*,
+	counterexample_transition_evidence: Sequence[object],
+	counterexample_progress_rule_groups: Sequence[object],
+	counterexample_state_coverage_rule_groups: Sequence[object],
+) -> dict[str, object]:
+	"""Summarize hard selector constraints induced by counterexamples."""
+
+	evidence_items = tuple(counterexample_transition_evidence or ())
+	progress_groups = tuple(counterexample_progress_rule_groups or ())
+	state_groups = tuple(counterexample_state_coverage_rule_groups or ())
+	return {
+		"problem_count": len(evidence_items),
+		"problem_names": tuple(
+			str(getattr(evidence, "problem_name", ""))
+			for evidence in evidence_items
+		),
+		"transition_progress_required_group_count": len(progress_groups),
+		"state_coverage_required_group_count": len(state_groups),
+		"required_group_count": len(progress_groups) + len(state_groups),
+		"required_group_types": tuple(
+			group_type
+			for group_type, groups in (
+				("counterexample_transition_progress", progress_groups),
+				("counterexample_state_coverage", state_groups),
+			)
+			if groups
+		),
+		"base_training_pollution": False,
 	}
 
 

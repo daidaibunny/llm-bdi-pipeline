@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import Sequence
 
 from .library_executor import evaluate_library_on_problem
@@ -19,6 +20,38 @@ from utils.pddl_parser import PDDLParser
 
 
 @dataclass(frozen=True)
+class RefinementConstraint:
+	"""Lifted counterexample constraint proposed from one held-out failure."""
+
+	failure_kind: str
+	target_layer: str
+	constraint_type: str
+	problem_file: str
+	problem_name: str
+	failure_reason: str
+	ground_missing_goals: tuple[str, ...] = ()
+	ground_satisfied_goals: tuple[str, ...] = ()
+	lifted_orderings: tuple[tuple[str, str], ...] = ()
+	required_rule_group_types: tuple[str, ...] = ()
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"failure_kind": self.failure_kind,
+			"target_layer": self.target_layer,
+			"constraint_type": self.constraint_type,
+			"problem_file": self.problem_file,
+			"problem_name": self.problem_name,
+			"failure_reason": self.failure_reason,
+			"ground_missing_goals": list(self.ground_missing_goals),
+			"ground_satisfied_goals": list(self.ground_satisfied_goals),
+			"lifted_orderings": [
+				list(ordering) for ordering in self.lifted_orderings
+			],
+			"required_rule_group_types": list(self.required_rule_group_types),
+		}
+
+
+@dataclass(frozen=True)
 class HeldoutProblemEvaluation:
 	"""Execution result for one held-out problem under one synthesized library."""
 
@@ -28,6 +61,7 @@ class HeldoutProblemEvaluation:
 	step_count: int
 	failure_reason: str | None = None
 	counterexample: LibraryCounterexample | None = None
+	refinement_constraints: tuple[RefinementConstraint, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -41,6 +75,10 @@ class HeldoutProblemEvaluation:
 				if self.counterexample is not None
 				else None
 			),
+			"refinement_constraints": [
+				constraint.to_dict()
+				for constraint in self.refinement_constraints
+			],
 		}
 
 
@@ -53,6 +91,7 @@ class RefinementRoundReport:
 	counterexample_problem_files: tuple[str, ...]
 	heldout_evaluations: tuple[HeldoutProblemEvaluation, ...]
 	added_counterexample_problem_files: tuple[str, ...]
+	refinement_constraints: tuple[RefinementConstraint, ...]
 	synthesis_report: dict[str, object]
 
 	def to_dict(self) -> dict[str, object]:
@@ -67,6 +106,10 @@ class RefinementRoundReport:
 			"added_counterexample_problem_files": list(
 				self.added_counterexample_problem_files,
 			),
+			"refinement_constraints": [
+				constraint.to_dict()
+				for constraint in self.refinement_constraints
+			],
 			"synthesis_report": dict(self.synthesis_report),
 		}
 
@@ -135,6 +178,11 @@ def synthesize_with_counterexample_refinement(
 			for file_path in failed_files
 			if file_path not in current_training
 		)
+		round_constraints = tuple(
+			constraint
+			for evaluation in heldout_evaluations
+			for constraint in evaluation.refinement_constraints
+		)
 		rounds.append(
 			RefinementRoundReport(
 				round_index=round_index,
@@ -142,6 +190,7 @@ def synthesize_with_counterexample_refinement(
 				counterexample_problem_files=counterexample_constraints,
 				heldout_evaluations=heldout_evaluations,
 				added_counterexample_problem_files=added_files,
+				refinement_constraints=round_constraints,
 				synthesis_report=dict(result.report),
 			),
 		)
@@ -200,20 +249,30 @@ def _evaluate_heldout_problem(
 		max_depth=max_depth,
 		backtrack_on_body_failure=False,
 	)
+	counterexample = (
+		None
+		if execution.solved
+		else _counterexample_from_heldout_failure(
+			problem=problem,
+			failure_reason=execution.failure_reason or "held-out execution failed",
+			steps=execution.steps,
+			final_state=execution.final_state,
+		)
+	)
 	return HeldoutProblemEvaluation(
 		problem_file=str(Path(problem_file).expanduser().resolve()),
 		problem_name=problem.name,
 		solved=execution.solved,
 		step_count=len(execution.steps),
 		failure_reason=execution.failure_reason,
-		counterexample=(
-			None
-			if execution.solved
-			else _counterexample_from_heldout_failure(
+		counterexample=counterexample,
+		refinement_constraints=(
+			()
+			if counterexample is None
+			else classify_heldout_failure_for_refinement(
+				problem_file=problem_file,
 				problem=problem,
-				failure_reason=execution.failure_reason or "held-out execution failed",
-				steps=execution.steps,
-				final_state=execution.final_state,
+				counterexample=counterexample,
 			)
 		),
 	)
@@ -246,6 +305,142 @@ def _counterexample_from_heldout_failure(
 		was_goal_state=False,
 		steps=steps,
 		final_state=tuple(sorted(final_state)),
+	)
+
+
+def classify_heldout_failure_for_refinement(
+	*,
+	problem_file: str | Path,
+	problem,
+	counterexample: LibraryCounterexample,
+) -> tuple[RefinementConstraint, ...]:
+	"""Classify a failed held-out execution into lifted refinement constraints."""
+
+	missing_goals = tuple(
+		atom for atom in counterexample.goal_atoms if atom not in counterexample.final_state
+	)
+	satisfied_goals = tuple(
+		atom for atom in counterexample.goal_atoms if atom in counterexample.final_state
+	)
+	if missing_goals and satisfied_goals and tuple(counterexample.steps):
+		orderings = _lift_goal_orderings_from_failure(
+			earlier_atoms=missing_goals,
+			later_atoms=satisfied_goals,
+		)
+		if orderings:
+			return (
+				RefinementConstraint(
+					failure_kind="goal_ordering_failure",
+					target_layer="layer_c_goal_composer",
+					constraint_type="counterexample_goal_ordering",
+					problem_file=str(Path(problem_file).expanduser().resolve()),
+					problem_name=problem.name,
+					failure_reason=counterexample.failure_reason,
+					ground_missing_goals=missing_goals,
+					ground_satisfied_goals=satisfied_goals,
+					lifted_orderings=orderings,
+					required_rule_group_types=(
+						"counterexample_transition_progress",
+						"counterexample_state_coverage",
+						"counterexample_goal_ordering",
+					),
+				),
+			)
+	if missing_goals:
+		return (
+			RefinementConstraint(
+				failure_kind=_failure_kind(counterexample.failure_reason),
+				target_layer="layer_b_atomic_modules",
+				constraint_type="counterexample_atomic_progress",
+				problem_file=str(Path(problem_file).expanduser().resolve()),
+				problem_name=problem.name,
+				failure_reason=counterexample.failure_reason,
+				ground_missing_goals=missing_goals,
+				ground_satisfied_goals=satisfied_goals,
+				required_rule_group_types=("counterexample_transition_progress",),
+			),
+		)
+	return (
+		RefinementConstraint(
+			failure_kind=_failure_kind(counterexample.failure_reason),
+			target_layer="execution_semantics",
+			constraint_type="counterexample_execution_trace",
+			problem_file=str(Path(problem_file).expanduser().resolve()),
+			problem_name=problem.name,
+			failure_reason=counterexample.failure_reason,
+			ground_missing_goals=missing_goals,
+			ground_satisfied_goals=satisfied_goals,
+			required_rule_group_types=("counterexample_state_coverage",),
+		),
+	)
+
+
+def _lift_goal_orderings_from_failure(
+	*,
+	earlier_atoms: Sequence[str],
+	later_atoms: Sequence[str],
+) -> tuple[tuple[str, str], ...]:
+	orderings: list[tuple[str, str]] = []
+	for earlier in tuple(earlier_atoms or ()):
+		for later in tuple(later_atoms or ()):
+			lifted = _lift_goal_pair(earlier, later)
+			if lifted is not None:
+				orderings.append(lifted)
+	return tuple(dict.fromkeys(orderings))
+
+
+def _lift_goal_pair(earlier_atom: str, later_atom: str) -> tuple[str, str] | None:
+	earlier_predicate, earlier_args = _parse_atom(earlier_atom)
+	later_predicate, later_args = _parse_atom(later_atom)
+	if not set(earlier_args).intersection(later_args):
+		return None
+	object_variables: dict[str, str] = {}
+	variable_names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+
+	def _variables(arguments: Sequence[str]) -> tuple[str, ...]:
+		variables: list[str] = []
+		for argument in arguments:
+			if argument not in object_variables:
+				index = len(object_variables)
+				object_variables[argument] = (
+					variable_names[index]
+					if index < len(variable_names)
+					else f"X{index + 1}"
+				)
+			variables.append(object_variables[argument])
+		return tuple(variables)
+
+	later_variables = _variables(later_args)
+	earlier_variables = _variables(earlier_args)
+	return (
+		fact_atom(f"goal_{earlier_predicate}", earlier_variables),
+		fact_atom(f"goal_{later_predicate}", later_variables),
+	)
+
+
+def _failure_kind(failure_reason: str) -> str:
+	text = str(failure_reason or "").lower()
+	if "no applicable plan" in text:
+		return "missing_module_or_context"
+	if "preconditions" in text:
+		return "primitive_precondition_failure"
+	if "recursive loop" in text:
+		return "recursive_loop"
+	if "step limit" in text:
+		return "nontermination"
+	return "execution_failure"
+
+
+def _parse_atom(atom: str) -> tuple[str, tuple[str, ...]]:
+	text = str(atom or "").strip()
+	if "(" not in text:
+		return text, ()
+	match = re.fullmatch(r"\s*([^()\s]+)\((.*)\)\s*", text)
+	if match is None:
+		return text, ()
+	return (
+		match.group(1).strip(),
+		tuple(part.strip() for part in match.group(2).split(",") if part.strip()),
 	)
 
 

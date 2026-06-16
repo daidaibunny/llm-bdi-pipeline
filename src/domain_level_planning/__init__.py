@@ -74,7 +74,9 @@ from .pddl_support import (
 from .refinement import (
 	CounterexampleGuidedSynthesisResult,
 	HeldoutProblemEvaluation,
+	RefinementConstraint,
 	RefinementRoundReport,
+	classify_heldout_failure_for_refinement,
 	synthesize_with_counterexample_refinement,
 )
 from .schema_synthesis import (
@@ -126,6 +128,7 @@ __all__ = [
 	"PDDLSupportReport",
 	"CounterexampleGuidedSynthesisResult",
 	"HeldoutProblemEvaluation",
+	"RefinementConstraint",
 	"RefinementRoundReport",
 	"build_goal_conditioned_library_from_pddl",
 	"build_schema_only_goal_conditioned_library_from_pddl",
@@ -134,6 +137,7 @@ __all__ = [
 	"bind_unique_action_effect_candidates",
 	"compile_bound_sketch_to_asl_library",
 	"compile_learner_sketch_policy_to_asl",
+	"classify_heldout_failure_for_refinement",
 	"discover_learner_sketches_policy_file",
 	"discover_backend_manifest",
 	"goal_facts_from_problem",
