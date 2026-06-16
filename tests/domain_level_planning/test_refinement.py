@@ -138,6 +138,40 @@ def test_primitive_precondition_failure_refinement_reports_lifted_layer_b_eviden
 	}
 
 
+def test_missing_module_failure_targets_failed_atomic_subgoal_only(
+	tmp_path: Path,
+) -> None:
+	domain_file, _, dependent_problem = _write_ordering_domain(tmp_path)
+	problem = PDDLParser.parse_problem(dependent_problem)
+	counterexample = LibraryCounterexample(
+		problem_name=problem.name,
+		state_index=0,
+		failure_reason="no applicable plan for !z_base(b)",
+		state=("seed(a)", "seed(b)"),
+		goal_facts=("goal_z_base(b)", "goal_a_top(a, b)"),
+		goal_atoms=("z_base(b)", "a_top(a, b)"),
+		was_goal_state=False,
+		steps=(),
+		final_state=("seed(a)", "seed(b)"),
+	)
+
+	constraints = classify_heldout_failure_for_refinement(
+		problem_file=dependent_problem,
+		problem=problem,
+		counterexample=counterexample,
+		domain_file=domain_file,
+	)
+
+	assert len(constraints) == 1
+	constraint = constraints[0]
+	assert constraint.failure_kind == "missing_module_or_context"
+	assert constraint.target_layer == "layer_b_atomic_modules"
+	assert constraint.constraint_type == "counterexample_atomic_progress"
+	assert constraint.ground_missing_goals == ("z_base(b)",)
+	assert constraint.lifted_missing_goals == ("z_base(X)",)
+	assert constraint.required_rule_group_types == ("counterexample_atomic_progress",)
+
+
 def _write_ordering_domain(tmp_path: Path) -> tuple[Path, Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	single_goal_problem = tmp_path / "single-goal.pddl"

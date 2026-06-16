@@ -343,11 +343,16 @@ def classify_heldout_failure_for_refinement(
 ) -> tuple[RefinementConstraint, ...]:
 	"""Classify a failed held-out execution into lifted refinement constraints."""
 
-	missing_goals = tuple(
+	all_missing_goals = tuple(
 		atom for atom in counterexample.goal_atoms if atom not in counterexample.final_state
 	)
 	satisfied_goals = tuple(
 		atom for atom in counterexample.goal_atoms if atom in counterexample.final_state
+	)
+	failed_subgoal = _parse_failed_subgoal(counterexample.failure_reason)
+	missing_goals = _target_missing_goals_for_failure(
+		all_missing_goals=all_missing_goals,
+		failed_subgoal=failed_subgoal,
 	)
 	lifted_missing_goals = _lift_atom_group(missing_goals)
 	lifted_satisfied_goals = _lift_atom_group(satisfied_goals)
@@ -402,7 +407,11 @@ def classify_heldout_failure_for_refinement(
 				ground_satisfied_goals=satisfied_goals,
 				lifted_missing_goals=lifted_missing_goals,
 				lifted_satisfied_goals=lifted_satisfied_goals,
-				required_rule_group_types=("counterexample_transition_progress",),
+				required_rule_group_types=(
+					("counterexample_atomic_progress",)
+					if failed_subgoal is not None
+					else ("counterexample_transition_progress",)
+				),
 			),
 		)
 	return (
@@ -554,6 +563,40 @@ def _parse_failing_action(failure_reason: str) -> tuple[str, tuple[str, ...]] | 
 		if argument.strip()
 	)
 	return match.group(1), arguments
+
+
+def _parse_failed_subgoal(failure_reason: str) -> tuple[str, tuple[str, ...]] | None:
+	match = re.search(
+		r"no\s+applicable\s+plan\s+for\s+!([A-Za-z_][A-Za-z0-9_-]*)\(([^()]*)\)",
+		str(failure_reason or ""),
+		re.IGNORECASE,
+	)
+	if match is None:
+		match = re.search(
+			r"no\s+applicable\s+plan\s+for\s+!([A-Za-z_][A-Za-z0-9_-]*)\b",
+			str(failure_reason or ""),
+			re.IGNORECASE,
+		)
+		if match is None:
+			return None
+		return match.group(1), ()
+	arguments = tuple(
+		argument.strip()
+		for argument in match.group(2).split(",")
+		if argument.strip()
+	)
+	return match.group(1), arguments
+
+
+def _target_missing_goals_for_failure(
+	*,
+	all_missing_goals: tuple[str, ...],
+	failed_subgoal: tuple[str, tuple[str, ...]] | None,
+) -> tuple[str, ...]:
+	if failed_subgoal is None:
+		return all_missing_goals
+	failed_atom = fact_atom(failed_subgoal[0], failed_subgoal[1])
+	return (failed_atom,) if failed_atom in all_missing_goals else all_missing_goals
 
 
 def _lift_atom_group(

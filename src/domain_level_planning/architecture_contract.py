@@ -239,7 +239,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"undeclared predicates or wrong predicate arities; wrong-arity "
 					"atomic-progress diagnostics identify the offending predicates. "
 					"Negative precondition repairs are rejected explicitly instead "
-					"of being misread as positive achievement modules. Selected and "
+					"of being misread as positive achievement modules. Missing-module "
+					"failures that name a concrete failed atomic subgoal are refined "
+					"into precise atomic-progress constraints for that subgoal. Selected and "
 					"output composer rules are reported with lifted provenance manifests."
 				),
 				required_improvement=(
@@ -331,7 +333,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"Held-out failures are classified into lifted Layer B or Layer C "
 					"records; primitive repair, atomic-progress, explicit goal-ordering, "
 					"wrong-arity, undeclared-symbol, and negative precondition repairs "
-					"produce machine-readable matched or rejected diagnostics."
+					"produce machine-readable matched or rejected diagnostics; missing-module "
+					"failures are narrowed to the named failed atomic subgoal when the "
+					"failure text identifies one."
 				),
 				required_improvement=(
 					"Connect more failure classes to generated candidate rules and "
