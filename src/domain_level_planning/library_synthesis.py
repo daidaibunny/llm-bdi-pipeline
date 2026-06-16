@@ -459,6 +459,7 @@ def synthesize_domain_level_asl_library(
 	paper_profile_failures = _paper_profile_failures(
 		training_problem_files=training_problem_files,
 		external_sketch_policies=all_external_sketch_policies,
+		source_gate_reports=external_source_gate_reports,
 		external_candidates=external_candidates,
 		selected_rules=selection.rules,
 		transition_evidence=all_transition_evidence,
@@ -650,6 +651,7 @@ def _paper_profile_failures(
 	*,
 	training_problem_files: Sequence[str | Path],
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
+	source_gate_reports: Sequence[ExternalBackendSourceGateReport],
 	external_candidates: Sequence[LiftedPlanRule],
 	selected_rules: Sequence[LiftedPlanRule],
 	transition_evidence: Sequence[object],
@@ -665,6 +667,16 @@ def _paper_profile_failures(
 		failures.append("paper profile requires at least one training problem")
 	if not tuple(external_sketch_policies or ()):
 		failures.append("paper profile requires at least one external learned sketch policy")
+	for report in tuple(source_gate_reports or ()):
+		if report.accepted:
+			continue
+		failures.append(
+			(
+				"rejected external learned policy source "
+				f"{report.source_name!r} from backend {report.backend_name!r} "
+				f"(reason={report.rejection_reason})"
+			),
+		)
 	if not tuple(paper_policy_audits or ()):
 		failures.append("paper profile has no parsed external policy audit")
 	if not tuple(external_rule_reports or ()):

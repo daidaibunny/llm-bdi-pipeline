@@ -584,6 +584,30 @@ def test_paper_profile_accepts_bound_external_policy_and_bounded_validation(
 	assert result.report["output_candidate_sources"]["external_sketch"] == 1
 
 
+def test_paper_profile_rejects_audit_only_external_policy_sources(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
+
+	with pytest.raises(ValueError, match="rejected external learned policy source"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			external_sketch_policies=(
+				ExternalSketchPolicySource(
+					name="paper-sketch-smoke",
+					policy_file=policy_file,
+				),
+				ExternalSketchPolicySource(
+					name="d2l-policy-smoke",
+					policy_file=policy_file,
+					backend_name="d2l",
+				),
+			),
+			synthesis_profile="paper",
+		)
+
+
 def test_paper_profile_excludes_unobserved_schema_action_modules(
 	tmp_path: Path,
 ) -> None:
