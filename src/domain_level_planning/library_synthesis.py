@@ -2402,6 +2402,13 @@ def _evidence_matrix(
 			*tuple(counterexample_transition_evidence or ()),
 		),
 	)
+	all_atomic_justifications = atomic_achievement_justifications(
+		candidate_rules,
+		(
+			*tuple(training_transition_evidence or ()),
+			*tuple(counterexample_transition_evidence or ()),
+		),
+	)
 	repair_reports = tuple(repair_binding_reports or ())
 	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
@@ -2423,6 +2430,12 @@ def _evidence_matrix(
 			),
 			"atomic_action_strategy_group_count": len(
 				tuple(atomic_action_strategy_rule_groups or ()),
+			),
+			"atomic_action_strategy_groups": _atomic_action_strategy_group_reports(
+				action_strategy_groups=atomic_action_strategy_rule_groups,
+				candidate_rules=candidate_rules,
+				selected_rules=selected_rules,
+				atomic_justifications=all_atomic_justifications,
 			),
 			"selected_atomic_action_strategy_count": sum(
 				1
@@ -2732,6 +2745,99 @@ def _selected_atomic_rule_evidence(
 		for rule in tuple(selected_rules or ())
 		if rule.layer == "atomic"
 	)
+
+
+def _atomic_action_strategy_group_reports(
+	*,
+	action_strategy_groups: Sequence[ClingoRequiredRuleGroup],
+	candidate_rules: Sequence[LiftedPlanRule],
+	selected_rules: Sequence[LiftedPlanRule],
+	atomic_justifications: Mapping[str, tuple],
+) -> tuple[dict[str, object], ...]:
+	"""Explain selected and rejected primitive strategies in each Layer B group."""
+
+	rule_by_name = {rule.name: rule for rule in tuple(candidate_rules or ())}
+	selected_names = {rule.name for rule in tuple(selected_rules or ())}
+	reports: list[dict[str, object]] = []
+	for group in tuple(action_strategy_groups or ()):
+		group_rules = tuple(
+			rule_by_name[rule_name]
+			for rule_name in tuple(group.rule_names or ())
+			if rule_name in rule_by_name
+		)
+		if not group_rules:
+			continue
+		selected_group_rules = tuple(
+			rule for rule in group_rules if rule.name in selected_names
+		)
+		selected_group_support = sum(
+			len(tuple(atomic_justifications.get(rule.name, ())))
+			for rule in selected_group_rules
+		)
+		candidate_reports = tuple(
+			_atomic_action_strategy_candidate_report(
+				rule=rule,
+				selected=rule.name in selected_names,
+				selected_group_support=selected_group_support,
+				atomic_justifications=atomic_justifications,
+			)
+			for rule in group_rules
+		)
+		first_rule = group_rules[0]
+		reports.append(
+			{
+				"group_name": group.name,
+				"head": _call(first_rule.head.symbol, first_rule.head.arguments),
+				"context": tuple(first_rule.context),
+				"selected_rule_names": tuple(rule.name for rule in selected_group_rules),
+				"candidate_count": len(group_rules),
+				"candidates": candidate_reports,
+			},
+		)
+	return tuple(reports)
+
+
+def _atomic_action_strategy_candidate_report(
+	*,
+	rule: LiftedPlanRule,
+	selected: bool,
+	selected_group_support: int,
+	atomic_justifications: Mapping[str, tuple],
+) -> dict[str, object]:
+	supporting_slices = tuple(atomic_justifications.get(rule.name, ()))
+	record = _atomic_rule_evidence_record(
+		rule=rule,
+		supporting_slices=supporting_slices,
+	)
+	record["selected"] = selected
+	record["cost"] = rule.cost
+	record["body"] = tuple(
+		_call(step.symbol, step.arguments)
+		for step in tuple(rule.body or ())
+	)
+	record["rejection_reason"] = _atomic_action_strategy_rejection_reason(
+		selected=selected,
+		verdict=str(record["verdict"]),
+		trace_support_count=len(supporting_slices),
+		selected_group_support=selected_group_support,
+	)
+	return record
+
+
+def _atomic_action_strategy_rejection_reason(
+	*,
+	selected: bool,
+	verdict: str,
+	trace_support_count: int,
+	selected_group_support: int,
+) -> str | None:
+	if selected:
+		return None
+	if selected_group_support > 0 and trace_support_count == 0:
+		return "dominated_by_trace_supported_strategy"
+	if verdict == "schema_unobserved_action_body":
+		return "unobserved_schema_strategy_not_selected"
+	return "higher_cost_or_redundant_strategy"
 
 
 def _atomic_rule_evidence_record(

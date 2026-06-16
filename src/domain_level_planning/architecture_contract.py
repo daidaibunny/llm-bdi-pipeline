@@ -214,13 +214,16 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"counterexample-repair-synthesized; trace-supported primitive "
 					"action strategies receive lower selector cost, and context-compatible "
 					"primitive action alternatives are selected through strategy groups "
-					"instead of requiring every action schema; paper-profile exclusion "
-					"removes unsupported schema action capabilities before selection."
+					"instead of requiring every action schema; those strategy groups "
+					"now report selected and rejected candidate strategies with trace "
+					"support, verdicts, costs, and rejection reasons; paper-profile "
+					"exclusion removes unsupported schema action capabilities before selection."
 				),
 				required_improvement=(
 					"Add a multi-strategy module learner that generalizes from these "
-					"evidence sources, including repair diagnostics, and rejects "
-					"unsafe alternatives."
+					"evidence sources, including repair diagnostics and candidate "
+					"comparison reports, and rejects unsafe alternatives beyond the "
+					"current evidence-weighted selector."
 				),
 				status="partially_done",
 			),

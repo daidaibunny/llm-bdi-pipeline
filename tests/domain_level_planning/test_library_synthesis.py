@@ -742,6 +742,20 @@ def test_layer_b_selects_one_evidence_backed_action_strategy_per_goal(
 	assert layer_b["atomic_action_strategy_group_count"] == 1
 	assert layer_b["selected_atomic_action_strategy_count"] == 1
 	assert layer_b["selected_unobserved_schema_action_strategy_count"] == 0
+	strategy_groups = layer_b["atomic_action_strategy_groups"]
+	assert len(strategy_groups) == 1
+	assert strategy_groups[0]["head"] == "done(X)"
+	candidates = {
+		candidate["rule_name"]: candidate
+		for candidate in strategy_groups[0]["candidates"]
+	}
+	assert candidates["done_via_finish"]["selected"] is True
+	assert candidates["done_via_finish"]["verdict"] == "trace_justified"
+	assert candidates["done_via_backup_finish"]["selected"] is False
+	assert candidates["done_via_backup_finish"]["verdict"] == "schema_unobserved_action_body"
+	assert candidates["done_via_backup_finish"]["rejection_reason"] == (
+		"dominated_by_trace_supported_strategy"
+	)
 
 
 def test_external_policy_rules_are_rendered_before_schema_fallbacks(
