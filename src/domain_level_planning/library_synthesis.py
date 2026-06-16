@@ -3040,6 +3040,10 @@ def _counterexample_refinement_summary(
 					getattr(constraint, "lifted_missing_goals", ()) or (),
 				),
 				"failure_reason": str(getattr(constraint, "failure_reason", "")),
+				"generative": False,
+				"non_generative_reason": _termination_non_generative_reason(
+					str(getattr(constraint, "constraint_type", "")),
+				),
 			}
 			for constraint in termination_constraints
 		),
@@ -3170,6 +3174,14 @@ def _counterexample_refinement_summary(
 		),
 		"base_training_pollution": False,
 	}
+
+
+def _termination_non_generative_reason(constraint_type: str) -> str:
+	if constraint_type == "counterexample_recursive_loop":
+		return "requires_recursion_ranking_or_descent_certificate"
+	if constraint_type == "counterexample_nontermination":
+		return "requires_execution_or_ranking_semantics_change"
+	return "not_bound_to_candidate_generation"
 
 
 def _order_output_rules(rules: Sequence[LiftedPlanRule]) -> tuple[LiftedPlanRule, ...]:

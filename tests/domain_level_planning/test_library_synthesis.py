@@ -961,6 +961,8 @@ def test_termination_refinement_diagnostics_are_reported_in_synthesis(
 			"target_layer": "layer_b_atomic_modules",
 			"lifted_missing_goals": ("done(X)",),
 			"failure_reason": "recursive loop on !done(a)",
+			"generative": False,
+			"non_generative_reason": "requires_recursion_ranking_or_descent_certificate",
 		},
 		{
 			"constraint_type": "counterexample_nontermination",
@@ -968,6 +970,8 @@ def test_termination_refinement_diagnostics_are_reported_in_synthesis(
 			"target_layer": "execution_semantics",
 			"lifted_missing_goals": ("done(X)",),
 			"failure_reason": "step limit exceeded",
+			"generative": False,
+			"non_generative_reason": "requires_execution_or_ranking_semantics_change",
 		},
 	)
 	assert "counterexample_recursion_descent" in refinement["diagnostic_group_types"]
