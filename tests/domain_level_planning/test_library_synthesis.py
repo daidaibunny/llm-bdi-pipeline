@@ -1283,6 +1283,18 @@ def test_repair_refinement_rejects_negative_precondition_repairs(
 	assert rejected["negative_precondition_predicates"] == ("blocked",)
 	assert rejected["required_capabilities"] == ()
 	assert "prepare_blocked_for_finish" not in asl
+	assert any(
+		"reason=negative_repair_precondition_unsupported" in failure
+		for failure in result.report["paper_profile_failures"]
+	)
+
+	with pytest.raises(ValueError, match="negative_repair_precondition_unsupported"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			refinement_constraints=(constraint,),
+			synthesis_profile="paper",
+		)
 
 
 def _write_generic_domain_problem_and_policy(

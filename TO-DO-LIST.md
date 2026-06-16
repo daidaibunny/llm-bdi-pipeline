@@ -114,6 +114,7 @@ PDDL domain + training problems
 | T43 | Report wrong-arity atomic-progress predicates. | G9, G11 | Wrong-arity `counterexample_atomic_progress` constraints now include `wrong_arity_predicates` in machine-readable rejected diagnostics. | Done |
 | T44 | Align architecture contract with current diagnostics. | G1, G5, G9 | The machine-readable architecture contract now documents distinct object-specific/distance/vocabulary feature-binding rejections and wrong-arity atomic-progress diagnostics. | Done |
 | T45 | Reject negative precondition repairs explicitly. | G9 | `counterexample_atomic_precondition_repair` constraints with `not P(...)` preconditions are reported as `negative_repair_precondition_unsupported` and are not matched to positive achievement-module capabilities. | Done |
+| T46 | Include repair rejection reasons in paper-profile failures. | G9 | Paper-profile failure messages for unmatched primitive-precondition repairs now include the machine-readable rejection reason, including negative repair rejections. | Done |
 
 ## Current Completion Rule
 

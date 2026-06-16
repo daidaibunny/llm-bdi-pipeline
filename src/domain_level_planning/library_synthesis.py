@@ -566,7 +566,8 @@ def _paper_profile_failures(
 			(
 				"unmatched primitive-precondition repair constraint "
 				f"{report.constraint_index} "
-				f"(required capabilities={report.required_capabilities})"
+				f"(required capabilities={report.required_capabilities}; "
+				f"reason={report.rejection_reason})"
 			),
 		)
 	for report in tuple(goal_ordering_binding_reports or ()):
