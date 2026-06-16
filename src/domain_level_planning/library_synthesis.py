@@ -30,6 +30,7 @@ from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
 from .schema_synthesis import _training_evidence
 from .schema_synthesis import _validate_selected_rules_against_transition_progress
+from .schema_synthesis import atomic_action_strategy_required_rule_groups
 from .schema_synthesis import atomic_achievement_justifications
 from .schema_synthesis import composer_state_coverage_required_rule_groups
 from .schema_synthesis import filter_rules_by_recursion_descent
@@ -333,6 +334,15 @@ def synthesize_domain_level_asl_library(
 		candidate_rules,
 		transition_evidence,
 	)
+	atomic_action_strategy_rule_groups = atomic_action_strategy_required_rule_groups(
+		candidate_rules,
+	)
+	if profile == "paper":
+		atomic_action_strategy_rule_groups = _paper_profile_action_strategy_groups(
+			candidate_rules=candidate_rules,
+			action_strategy_groups=atomic_action_strategy_rule_groups,
+			transition_evidence=all_transition_evidence,
+		)
 	counterexample_progress_rule_groups = transition_progress_required_rule_groups(
 		candidate_rules,
 		counterexample_transition_evidence,
@@ -387,6 +397,7 @@ def synthesize_domain_level_asl_library(
 		required_capabilities=required_capabilities,
 		required_rule_groups=(
 			*progress_rule_groups,
+			*atomic_action_strategy_rule_groups,
 			*state_coverage_rule_groups,
 			*repair_rule_groups,
 			*goal_ordering_rule_groups,
@@ -523,6 +534,9 @@ def synthesize_domain_level_asl_library(
 		"selected_rule_count": len(selection.rules),
 		"output_rule_count": len(output_rules),
 		"selector_progress_constraint_count": len(progress_rule_groups),
+		"selector_atomic_action_strategy_constraint_count": len(
+			atomic_action_strategy_rule_groups,
+		),
 		"selector_training_progress_constraint_count": len(training_progress_rule_groups),
 		"selector_counterexample_progress_constraint_count": len(
 			counterexample_progress_rule_groups,
@@ -594,6 +608,7 @@ def synthesize_domain_level_asl_library(
 			training_transition_evidence=transition_evidence,
 			counterexample_transition_evidence=counterexample_transition_evidence,
 			training_progress_rule_groups=training_progress_rule_groups,
+			atomic_action_strategy_rule_groups=atomic_action_strategy_rule_groups,
 			counterexample_progress_rule_groups=counterexample_progress_rule_groups,
 			training_state_coverage_rule_groups=training_state_coverage_rule_groups,
 			counterexample_state_coverage_rule_groups=counterexample_state_coverage_rule_groups,
@@ -785,10 +800,38 @@ def _paper_profile_required_capabilities(
 	)
 	excluded = tuple(
 		capability
-		for capability in tuple(required_capabilities or ())
-		if capability in unjustified_capabilities
+		for capability in unjustified_capabilities
 	)
 	return tuple(dict.fromkeys(filtered)), tuple(dict.fromkeys(excluded))
+
+
+def _paper_profile_action_strategy_groups(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	action_strategy_groups: Sequence[ClingoRequiredRuleGroup],
+	transition_evidence: Sequence[object],
+) -> tuple[ClingoRequiredRuleGroup, ...]:
+	atomic_justifications = atomic_achievement_justifications(
+		candidate_rules,
+		transition_evidence,
+	)
+	justified_names = {
+		rule_name
+		for rule_name, justifications in atomic_justifications.items()
+		if tuple(justifications)
+	}
+	return tuple(
+		ClingoRequiredRuleGroup(
+			name=group.name,
+			rule_names=tuple(
+				rule_name
+				for rule_name in tuple(group.rule_names or ())
+				if rule_name in justified_names
+			),
+		)
+		for group in tuple(action_strategy_groups or ())
+		if any(rule_name in justified_names for rule_name in tuple(group.rule_names or ()))
+	)
 
 
 def _run_requested_learner_sketches(
@@ -2314,6 +2357,7 @@ def _evidence_matrix(
 	training_transition_evidence: Sequence[object],
 	counterexample_transition_evidence: Sequence[object],
 	training_progress_rule_groups: Sequence[object],
+	atomic_action_strategy_rule_groups: Sequence[object],
 	counterexample_progress_rule_groups: Sequence[object],
 	training_state_coverage_rule_groups: Sequence[object],
 	counterexample_state_coverage_rule_groups: Sequence[object],
@@ -2364,6 +2408,23 @@ def _evidence_matrix(
 			"output_rule_count": _layer_count(output_rules, "atomic"),
 			"training_transition_progress_constraint_count": len(
 				tuple(training_progress_rule_groups or ()),
+			),
+			"atomic_action_strategy_group_count": len(
+				tuple(atomic_action_strategy_rule_groups or ()),
+			),
+			"selected_atomic_action_strategy_count": sum(
+				1
+				for rule in tuple(selected_rules or ())
+				if rule.layer == "atomic"
+				and any(step.kind == "action" for step in tuple(rule.body or ()))
+			),
+			"selected_unobserved_schema_action_strategy_count": sum(
+				1
+				for record in _selected_atomic_rule_evidence(
+					selected_rules=selected_rules,
+					atomic_justifications=atomic_justifications,
+				)
+				if record["verdict"] == "schema_unobserved_action_body"
 			),
 			"counterexample_transition_progress_constraint_count": len(
 				tuple(counterexample_progress_rule_groups or ()),

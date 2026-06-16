@@ -84,6 +84,7 @@ def build_schema_only_goal_conditioned_library_from_pddl(
 			candidate_rules,
 			transition_evidence,
 		)
+		+ atomic_action_strategy_required_rule_groups(candidate_rules)
 		+ composer_state_coverage_required_rule_groups(
 			candidate_rules,
 			domain=domain,
@@ -1047,7 +1048,11 @@ def _required_capabilities(
 		):
 			required.extend(rule.capabilities)
 	for rule in candidate_rules:
-		if rule.layer == "atomic" and rule.body:
+		if (
+			rule.layer == "atomic"
+			and rule.body
+			and not _is_schema_atomic_action_rule(rule)
+		):
 			required.extend(rule.capabilities)
 	for fact in training_goal_facts:
 		if not fact.is_positive:
@@ -1060,6 +1065,34 @@ def _required_capabilities(
 		required.append(f"compose_goal_{fact.predicate}")
 		required.append(f"module_{fact.predicate}_already_true")
 	return tuple(dict.fromkeys(required))
+
+
+def atomic_action_strategy_required_rule_groups(
+	candidate_rules: Sequence[LiftedPlanRule],
+) -> tuple[ClingoRequiredRuleGroup, ...]:
+	"""Require one primitive action strategy per atomic predicate, not all of them."""
+
+	grouped: dict[tuple[str, tuple[str, ...], tuple[str, ...]], list[str]] = {}
+	for rule in tuple(candidate_rules or ()):
+		if not _is_schema_atomic_action_rule(rule):
+			continue
+		key = (
+			rule.head.symbol,
+			tuple(rule.head.arguments or ()),
+			tuple(sorted(tuple(rule.context or ()))),
+		)
+		grouped.setdefault(key, []).append(rule.name)
+	return tuple(
+		ClingoRequiredRuleGroup(
+			name=f"atomic_action_strategy_{symbol}_{index}",
+			rule_names=tuple(dict.fromkeys(rule_names)),
+		)
+		for index, ((symbol, _arguments, _context), rule_names) in enumerate(
+			sorted(grouped.items(), key=lambda item: (item[0][0], item[0][1], item[0][2])),
+			start=1,
+		)
+		if rule_names
+	)
 
 
 def _training_evidence(

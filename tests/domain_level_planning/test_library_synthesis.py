@@ -682,6 +682,25 @@ def test_unified_pipeline_rejects_unsupported_pddl_before_synthesis(tmp_path: Pa
 		)
 
 
+def test_layer_b_selects_one_evidence_backed_action_strategy_per_goal(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_multi_strategy_domain_and_problem(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	selected_names = set(result.report["selected_rule_names"])
+	layer_b = result.report["evidence_matrix"]["layer_b_atomic_modules"]
+
+	assert "done_via_finish" in selected_names
+	assert "done_via_backup_finish" not in selected_names
+	assert layer_b["atomic_action_strategy_group_count"] == 1
+	assert layer_b["selected_atomic_action_strategy_count"] == 1
+	assert layer_b["selected_unobserved_schema_action_strategy_count"] == 0
+
+
 def test_external_policy_rules_are_rendered_before_schema_fallbacks(
 	tmp_path: Path,
 ) -> None:
@@ -1798,6 +1817,45 @@ def _write_unobserved_action_domain_problem_and_policy(
 		encoding="utf-8",
 	)
 	return domain_file, problem_file, policy_file
+
+
+def _write_multi_strategy_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "multi-strategy-domain.pddl"
+	problem_file = tmp_path / "multi-strategy-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain generic-multi-strategy)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (done ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		 (:action backup_finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p1)
+		 (:domain generic-multi-strategy)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
 
 
 def _write_fake_learner_sketches_backend(tmp_path: Path) -> BackendManifest:
