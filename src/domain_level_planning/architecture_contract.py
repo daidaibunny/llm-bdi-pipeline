@@ -220,7 +220,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"safe Layer B prepare candidates when read-only goal facts bind "
 					"all extra variables. Explicit counterexample goal-ordering "
 					"constraints synthesize Layer C composer candidates and selector "
-					"hard groups."
+					"hard groups, with rejected binding diagnostics when the lifted "
+					"ordering is not executable."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "

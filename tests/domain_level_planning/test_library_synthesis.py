@@ -177,6 +177,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "Explicit counterexample goal-ordering constraints" in (
 		gaps["G3"]["current_state"]
 	)
+	assert "rejected binding diagnostics" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
@@ -551,6 +552,55 @@ def test_goal_ordering_refinement_constraint_synthesizes_composer_candidate(
 	assert "!achieve_" not in asl
 	assert "!transition_" not in asl
 	assert "dfa_state" not in asl
+
+
+def test_invalid_goal_ordering_refinement_is_reported_without_guessing(
+	tmp_path: Path,
+) -> None:
+	domain_file, training_problem, dependent_problem = _write_counterexample_domain(
+		tmp_path,
+	)
+	constraint = RefinementConstraint(
+		failure_kind="goal_ordering_failure",
+		target_layer="layer_c_goal_composer",
+		constraint_type="counterexample_goal_ordering",
+		problem_file=str(dependent_problem),
+		problem_name="counterexample-p1",
+		failure_reason="missing goals after bad ordering",
+		lifted_orderings=(("goal_ready(X)", "goal_done(Y)"),),
+		required_rule_group_types=(
+			"counterexample_goal_ordering",
+		),
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(training_problem,),
+		refinement_constraints=(constraint,),
+	)
+	refinement = result.report["counterexample_refinement_constraints"]
+	rejected = refinement["rejected_goal_ordering_constraints"][0]
+
+	assert result.report["explicit_goal_ordering_candidate_count"] == 0
+	assert refinement["goal_ordering_required_group_count"] == 0
+	assert refinement["rejected_goal_ordering_constraint_count"] == 1
+	assert rejected["matched"] is False
+	assert rejected["earlier_goal"] == "goal_ready(X)"
+	assert rejected["later_goal"] == "goal_done(Y)"
+	assert rejected["rejection_reason"] == "disconnected_goal_ordering_variables"
+	assert result.report["paper_profile_ready"] is False
+	assert any(
+		"unmatched goal-ordering refinement constraint" in failure
+		for failure in result.report["paper_profile_failures"]
+	)
+
+	with pytest.raises(ValueError, match="unmatched goal-ordering refinement"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(training_problem,),
+			refinement_constraints=(constraint,),
+			synthesis_profile="paper",
+		)
 
 
 def test_refinement_repair_constraints_become_selector_required_groups(

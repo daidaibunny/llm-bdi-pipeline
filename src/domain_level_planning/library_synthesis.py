@@ -108,6 +108,32 @@ class RepairConstraintBindingReport:
 		}
 
 
+@dataclass(frozen=True)
+class GoalOrderingConstraintBindingReport:
+	"""Selector binding diagnostics for one explicit goal-ordering constraint."""
+
+	constraint_index: int
+	ordering_index: int
+	matched: bool
+	earlier_goal: str
+	later_goal: str
+	required_capability: str | None
+	rule_names: tuple[str, ...]
+	rejection_reason: str | None = None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"constraint_index": self.constraint_index,
+			"ordering_index": self.ordering_index,
+			"matched": self.matched,
+			"earlier_goal": self.earlier_goal,
+			"later_goal": self.later_goal,
+			"required_capability": self.required_capability,
+			"rule_names": self.rule_names,
+			"rejection_reason": self.rejection_reason,
+		}
+
+
 def synthesize_domain_level_asl_library(
 	*,
 	domain_file: str | Path,
@@ -223,9 +249,11 @@ def synthesize_domain_level_asl_library(
 		candidate_rules=candidate_rules,
 		refinement_constraints=refinement_constraints,
 	)
-	goal_ordering_rule_groups = _goal_ordering_required_rule_groups(
-		candidate_rules=candidate_rules,
-		refinement_constraints=refinement_constraints,
+	goal_ordering_rule_groups, goal_ordering_binding_reports = (
+		_goal_ordering_required_rule_groups(
+			candidate_rules=candidate_rules,
+			refinement_constraints=refinement_constraints,
+		)
 	)
 	progress_rule_groups = (
 		*training_progress_rule_groups,
@@ -299,6 +327,7 @@ def synthesize_domain_level_asl_library(
 		paper_policy_audits=paper_policy_audits,
 		external_rule_reports=external_rule_reports,
 		repair_binding_reports=repair_binding_reports,
+		goal_ordering_binding_reports=goal_ordering_binding_reports,
 		bounded_validation=bounded_validation,
 	)
 	if profile == "paper" and paper_profile_failures:
@@ -368,6 +397,7 @@ def synthesize_domain_level_asl_library(
 			repair_rule_groups=repair_rule_groups,
 			repair_binding_reports=repair_binding_reports,
 			goal_ordering_rule_groups=goal_ordering_rule_groups,
+			goal_ordering_binding_reports=goal_ordering_binding_reports,
 		),
 		"rejected_external_feature_count": len(rejected_features),
 		"candidate_sources": _candidate_source_counts(candidate_rules),
@@ -401,6 +431,7 @@ def synthesize_domain_level_asl_library(
 			paper_policy_audits=paper_policy_audits,
 			external_rule_reports=external_rule_reports,
 			repair_binding_reports=repair_binding_reports,
+			goal_ordering_binding_reports=goal_ordering_binding_reports,
 			recursion_descent_audit=recursion_descent_audit,
 		),
 		"paper_profile_ready": not paper_profile_failures,
@@ -437,6 +468,7 @@ def _paper_profile_failures(
 	paper_policy_audits: Sequence[PaperPolicyAuditReport],
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
+	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
 	bounded_validation: BoundedLibraryValidationReport | None,
 ) -> tuple[str, ...]:
 	failures: list[str] = []
@@ -478,6 +510,17 @@ def _paper_profile_failures(
 				"unmatched primitive-precondition repair constraint "
 				f"{report.constraint_index} "
 				f"(required capabilities={report.required_capabilities})"
+			),
+		)
+	for report in tuple(goal_ordering_binding_reports or ()):
+		if report.matched:
+			continue
+		failures.append(
+			(
+				"unmatched goal-ordering refinement constraint "
+				f"{report.constraint_index}.{report.ordering_index} "
+				f"({report.earlier_goal} before {report.later_goal}; "
+				f"reason={report.rejection_reason})"
 			),
 		)
 	if bounded_validation is None:
@@ -847,20 +890,51 @@ def _goal_ordering_required_rule_groups(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
 	refinement_constraints: Sequence[object],
-) -> tuple[ClingoRequiredRuleGroup, ...]:
+) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[GoalOrderingConstraintBindingReport, ...]]:
 	groups: list[ClingoRequiredRuleGroup] = []
-	index = 0
-	for constraint in tuple(refinement_constraints or ()):
+	reports: list[GoalOrderingConstraintBindingReport] = []
+	group_index = 0
+	for constraint_index, constraint in enumerate(
+		tuple(refinement_constraints or ()),
+		start=1,
+	):
 		if getattr(constraint, "constraint_type", "") != "counterexample_goal_ordering":
 			continue
-		for earlier_goal, later_goal in tuple(
+		for ordering_index, (earlier_goal, later_goal) in enumerate(
 			getattr(constraint, "lifted_orderings", ()) or (),
+			start=1,
 		):
 			earlier_predicate, earlier_arguments = _parse_goal_descriptor_atom(
 				earlier_goal,
 			)
 			later_predicate, later_arguments = _parse_goal_descriptor_atom(later_goal)
 			if not earlier_predicate or not later_predicate:
+				reports.append(
+					GoalOrderingConstraintBindingReport(
+						constraint_index=constraint_index,
+						ordering_index=ordering_index,
+						matched=False,
+						earlier_goal=str(earlier_goal),
+						later_goal=str(later_goal),
+						required_capability=None,
+						rule_names=(),
+						rejection_reason="invalid_goal_descriptor",
+					),
+				)
+				continue
+			if not set(earlier_arguments).intersection(later_arguments):
+				reports.append(
+					GoalOrderingConstraintBindingReport(
+						constraint_index=constraint_index,
+						ordering_index=ordering_index,
+						matched=False,
+						earlier_goal=str(earlier_goal),
+						later_goal=str(later_goal),
+						required_capability=None,
+						rule_names=(),
+						rejection_reason="disconnected_goal_ordering_variables",
+					),
+				)
 				continue
 			capability = _goal_ordering_constraint_capability(
 				earlier_predicate=earlier_predicate,
@@ -874,15 +948,39 @@ def _goal_ordering_required_rule_groups(
 				if capability in rule.capabilities
 			)
 			if not rule_names:
+				reports.append(
+					GoalOrderingConstraintBindingReport(
+						constraint_index=constraint_index,
+						ordering_index=ordering_index,
+						matched=False,
+						earlier_goal=str(earlier_goal),
+						later_goal=str(later_goal),
+						required_capability=capability,
+						rule_names=(),
+						rejection_reason="no_matching_lifted_composer_rule",
+					),
+				)
 				continue
-			index += 1
+			group_index += 1
 			groups.append(
 				ClingoRequiredRuleGroup(
-					name=f"goal_ordering_{index}_{capability}",
+					name=f"goal_ordering_{group_index}_{capability}",
 					rule_names=rule_names,
 				),
 			)
-	return tuple(groups)
+			reports.append(
+				GoalOrderingConstraintBindingReport(
+					constraint_index=constraint_index,
+					ordering_index=ordering_index,
+					matched=True,
+					earlier_goal=str(earlier_goal),
+					later_goal=str(later_goal),
+					required_capability=capability,
+					rule_names=rule_names,
+					rejection_reason=None,
+				),
+			)
+	return tuple(groups), tuple(reports)
 
 
 def _repair_available_capabilities(
@@ -1155,6 +1253,7 @@ def _evidence_matrix(
 	paper_policy_audits: Sequence[PaperPolicyAuditReport],
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
+	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
 	recursion_descent_audit: Mapping[str, object],
 ) -> dict[str, object]:
 	"""Summarize which evidence sources support each synthesis layer."""
@@ -1172,6 +1271,7 @@ def _evidence_matrix(
 		),
 	)
 	repair_reports = tuple(repair_binding_reports or ())
+	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
 	return {
 		"layer_b_atomic_modules": {
 			"target": "PDDL predicate achievement-goal modules",
@@ -1252,6 +1352,17 @@ def _evidence_matrix(
 			"explicit_goal_ordering_candidate_count": _layer_count(
 				explicit_goal_ordering_candidates,
 				"composer",
+			),
+			"goal_ordering_constraint_count": len(goal_ordering_reports),
+			"matched_goal_ordering_constraint_count": sum(
+				1 for report in goal_ordering_reports if report.matched
+			),
+			"rejected_goal_ordering_constraint_count": sum(
+				1 for report in goal_ordering_reports if not report.matched
+			),
+			"goal_ordering_constraint_binding_reports": tuple(
+				report.to_dict()
+				for report in goal_ordering_reports
 			),
 			"candidate_count": _layer_count(candidate_rules, "composer"),
 			"selected_rule_count": _layer_count(selected_rules, "composer"),
@@ -1413,6 +1524,7 @@ def _counterexample_refinement_summary(
 	repair_rule_groups: Sequence[ClingoRequiredRuleGroup],
 	repair_binding_reports: Sequence[RepairConstraintBindingReport],
 	goal_ordering_rule_groups: Sequence[ClingoRequiredRuleGroup],
+	goal_ordering_binding_reports: Sequence[GoalOrderingConstraintBindingReport],
 ) -> dict[str, object]:
 	"""Summarize hard selector constraints induced by counterexamples."""
 
@@ -1423,6 +1535,7 @@ def _counterexample_refinement_summary(
 	repair_groups = tuple(repair_rule_groups or ())
 	repair_reports = tuple(repair_binding_reports or ())
 	goal_ordering_groups = tuple(goal_ordering_rule_groups or ())
+	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
 	return {
 		"problem_count": len(evidence_items),
 		"problem_names": tuple(
@@ -1441,6 +1554,13 @@ def _counterexample_refinement_summary(
 		),
 		"repair_required_group_count": len(repair_groups),
 		"goal_ordering_required_group_count": len(goal_ordering_groups),
+		"goal_ordering_constraint_count": len(goal_ordering_reports),
+		"matched_goal_ordering_constraint_count": sum(
+			1 for report in goal_ordering_reports if report.matched
+		),
+		"rejected_goal_ordering_constraint_count": sum(
+			1 for report in goal_ordering_reports if not report.matched
+		),
 		"matched_repair_constraint_count": sum(
 			1 for report in repair_reports if report.matched
 		),
@@ -1466,6 +1586,15 @@ def _counterexample_refinement_summary(
 				"rule_names": group.rule_names,
 			}
 			for group in goal_ordering_groups
+		),
+		"goal_ordering_constraint_binding_reports": tuple(
+			report.to_dict()
+			for report in goal_ordering_reports
+		),
+		"rejected_goal_ordering_constraints": tuple(
+			report.to_dict()
+			for report in goal_ordering_reports
+			if not report.matched
 		),
 		"rejected_repair_constraints": tuple(
 			report.to_dict()
