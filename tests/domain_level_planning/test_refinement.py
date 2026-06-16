@@ -34,6 +34,8 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 	assert summary["solved_heldout_evaluation_count"] == 1
 	assert summary["added_counterexample_problem_count"] == 1
 	assert summary["constraint_count"] == 1
+	assert summary["generative_constraint_count"] == 1
+	assert summary["diagnostic_constraint_count"] == 0
 	assert summary["constraints_by_failure_kind"] == {"goal_ordering_failure": 1}
 	assert summary["constraints_by_target_layer"] == {"layer_c_goal_composer": 1}
 	assert summary["constraints_by_type"] == {"counterexample_goal_ordering": 1}
@@ -133,6 +135,8 @@ def test_primitive_precondition_failure_refinement_reports_lifted_layer_b_eviden
 	assert constraint.to_dict()["lifted_missing_preconditions"] == ["armed(X)"]
 	round_report = _refinement_summary_like((constraint,))
 	assert round_report["repair_constraint_count"] == 1
+	assert round_report["generative_constraint_count"] == 1
+	assert round_report["diagnostic_constraint_count"] == 0
 	assert round_report["constraints_by_type"] == {
 		"counterexample_atomic_precondition_repair": 1,
 	}
@@ -246,6 +250,8 @@ def test_recursive_loop_failure_targets_recursive_atomic_module_diagnostics(
 	assert constraint.required_rule_group_types == ("counterexample_recursion_descent",)
 	round_report = _refinement_summary_like((constraint,))
 	assert round_report["recursive_loop_constraint_count"] == 1
+	assert round_report["generative_constraint_count"] == 0
+	assert round_report["diagnostic_constraint_count"] == 1
 	assert round_report["constraints_by_target_layer"] == {
 		"layer_b_atomic_modules": 1,
 	}
@@ -284,6 +290,8 @@ def test_step_limit_failure_reports_nontermination_diagnostics(
 	assert constraint.required_rule_group_types == ("counterexample_nontermination",)
 	round_report = _refinement_summary_like((constraint,))
 	assert round_report["nontermination_constraint_count"] == 1
+	assert round_report["generative_constraint_count"] == 0
+	assert round_report["diagnostic_constraint_count"] == 1
 	assert round_report["constraints_by_type"] == {
 		"counterexample_nontermination": 1,
 	}

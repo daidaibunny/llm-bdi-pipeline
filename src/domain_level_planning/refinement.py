@@ -805,6 +805,12 @@ def _refinement_summary(
 		),
 		"final_counterexample_problem_count": len(final_counterexamples),
 		"constraint_count": len(constraints),
+		"generative_constraint_count": sum(
+			1 for constraint in constraints if _is_generative_constraint(constraint)
+		),
+		"diagnostic_constraint_count": sum(
+			1 for constraint in constraints if not _is_generative_constraint(constraint)
+		),
 		"repair_constraint_count": sum(
 			1 for constraint in constraints if "repair" in constraint.constraint_type
 		),
@@ -837,6 +843,15 @@ def _refinement_summary(
 		"constraints_by_type": _count_by(
 			constraint.constraint_type for constraint in constraints
 		),
+	}
+
+
+def _is_generative_constraint(constraint: RefinementConstraint) -> bool:
+	return constraint.constraint_type in {
+		"counterexample_atomic_precondition_repair",
+		"counterexample_atomic_progress",
+		"counterexample_goal_ordering",
+		"counterexample_state_coverage",
 	}
 
 
