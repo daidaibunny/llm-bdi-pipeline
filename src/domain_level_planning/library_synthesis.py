@@ -16,6 +16,7 @@ from .architecture_contract import domain_level_architecture_contract
 from .clingo_backend import ClingoRequiredRuleGroup, ClingoSketchRuleSelector
 from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
 from .gp_backends import backend_audit_matrix
+from .gp_backends import backend_consumption_role
 from .gp_backends import run_learner_sketches
 from .library_contract import audit_domain_level_library_contract
 from .library_verifier import BoundedLibraryValidationReport
@@ -43,6 +44,27 @@ class ExternalSketchPolicySource:
 
 	name: str
 	policy_file: str | Path
+	backend_name: str = "learner-sketches"
+
+
+@dataclass(frozen=True)
+class ExternalBackendSourceGateReport:
+	"""Consumption gate for one external policy artifact."""
+
+	source_name: str
+	backend_name: str
+	accepted: bool
+	consumption_role: Mapping[str, object]
+	rejection_reason: str | None = None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"source_name": self.source_name,
+			"backend_name": self.backend_name,
+			"accepted": self.accepted,
+			"consumption_role": dict(self.consumption_role),
+			"rejection_reason": self.rejection_reason,
+		}
 
 
 @dataclass(frozen=True)
@@ -219,10 +241,13 @@ def synthesize_domain_level_asl_library(
 			*learned_sources,
 		),
 	)
+	consumable_external_sources, external_source_gate_reports = (
+		_gate_external_policy_sources(all_external_sketch_policies)
+	)
 	external_candidates, rejected_features, paper_policy_audits, external_rule_reports = (
 		_external_sketch_candidates(
 			domain=domain,
-			sources=all_external_sketch_policies,
+			sources=consumable_external_sources,
 		)
 	)
 	repair_synthesized_candidates = _repair_synthesized_candidate_rules(
@@ -420,6 +445,7 @@ def synthesize_domain_level_asl_library(
 			paper_policy_audits=paper_policy_audits,
 			external_rule_reports=external_rule_reports,
 			external_candidates=external_candidates,
+			source_gate_reports=external_source_gate_reports,
 		),
 		"auto_learner_sketches_policy_count": len(learned_sources),
 		"auto_learner_sketches_runs": tuple(
@@ -427,6 +453,14 @@ def synthesize_domain_level_asl_library(
 			for result in backend_run_results
 		),
 		"external_policy_count": len(all_external_sketch_policies),
+		"consumable_external_policy_count": len(consumable_external_sources),
+		"rejected_external_policy_count": sum(
+			1 for gate_report in external_source_gate_reports if not gate_report.accepted
+		),
+		"external_policy_source_gate_reports": tuple(
+			gate_report.to_dict()
+			for gate_report in external_source_gate_reports
+		),
 		"manual_external_policy_count": len(tuple(external_sketch_policies or ())),
 		"training_problem_count": len(training_problem_files),
 		"counterexample_problem_count": len(counterexample_problem_files),
@@ -729,9 +763,42 @@ def _run_requested_learner_sketches(
 			ExternalSketchPolicySource(
 				name=f"learner-sketches-{index}-{result.workspace.name}",
 				policy_file=result.policy_file,
+				backend_name="learner-sketches",
 			),
 		)
 	return tuple(results), tuple(sources)
+
+
+def _gate_external_policy_sources(
+	sources: Sequence[ExternalSketchPolicySource],
+) -> tuple[
+	tuple[ExternalSketchPolicySource, ...],
+	tuple[ExternalBackendSourceGateReport, ...],
+]:
+	accepted_sources: list[ExternalSketchPolicySource] = []
+	reports: list[ExternalBackendSourceGateReport] = []
+	for source in tuple(sources or ()):
+		backend_name = str(source.backend_name or "").strip() or "unknown"
+		role = backend_consumption_role(backend_name)
+		accepted = bool(role.get("consumed_by_synthesis"))
+		rejection_reason = None
+		if accepted:
+			accepted_sources.append(source)
+		else:
+			rejection_reason = str(
+				role.get("blocking_gap")
+				or "backend_not_verified_for_synthesis_consumption",
+			)
+		reports.append(
+			ExternalBackendSourceGateReport(
+				source_name=source.name,
+				backend_name=backend_name,
+				accepted=accepted,
+				consumption_role=role,
+				rejection_reason=rejection_reason,
+			),
+		)
+	return tuple(accepted_sources), tuple(reports)
 
 
 def _external_backend_consumption_summary(
@@ -739,10 +806,12 @@ def _external_backend_consumption_summary(
 	paper_policy_audits: Sequence[PaperPolicyAuditReport],
 	external_rule_reports: Sequence[ExternalRuleBindingReport],
 	external_candidates: Sequence[LiftedPlanRule],
+	source_gate_reports: Sequence[ExternalBackendSourceGateReport] = (),
 ) -> dict[str, object]:
 	audits = tuple(paper_policy_audits or ())
 	rule_reports = tuple(external_rule_reports or ())
 	candidates = tuple(external_candidates or ())
+	gate_reports = tuple(source_gate_reports or ())
 	policies = tuple(
 		_external_policy_consumption(
 			audit=audit,
@@ -763,6 +832,8 @@ def _external_backend_consumption_summary(
 			1 for report in rule_reports if not report.compiled
 		),
 		"candidate_count": len(candidates),
+		"source_gate_reports": tuple(report.to_dict() for report in gate_reports),
+		"rejected_source_count": sum(1 for report in gate_reports if not report.accepted),
 		"policies": policies,
 	}
 

@@ -89,27 +89,57 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert backend_matrix["learner-sketches"]["resource_profile"]["guard_required"] is True
 	assert "Layer B/C sketch evidence" in backend_matrix["learner-sketches"]["reusable_evidence"]
 	assert "description-logic policy learner baseline" in backend_matrix["d2l"]["paper_role"]
-	assert result.report["external_backend_consumption_summary"] == {
-		"policy_count": 1,
-		"ready_policy_count": 1,
-		"compiled_rule_count": 1,
-		"rejected_rule_count": 0,
-		"candidate_count": result.report["external_candidate_count"],
-		"policies": (
-			{
-				"source_name": "paper-sketch-smoke",
-				"ready_for_executable_asl": True,
-				"feature_count": 1,
-				"bound_feature_count": 1,
-				"unsupported_feature_count": 0,
-				"rule_count": 1,
-				"compiled_rule_count": 1,
-				"rejected_rule_count": 0,
-				"candidate_count": result.report["external_candidate_count"],
-				"rejection_reasons": (),
+	consumption = result.report["external_backend_consumption_summary"]
+	assert consumption["policy_count"] == 1
+	assert consumption["ready_policy_count"] == 1
+	assert consumption["compiled_rule_count"] == 1
+	assert consumption["rejected_rule_count"] == 0
+	assert consumption["candidate_count"] == result.report["external_candidate_count"]
+	assert consumption["rejected_source_count"] == 0
+	assert consumption["policies"] == (
+		{
+			"source_name": "paper-sketch-smoke",
+			"ready_for_executable_asl": True,
+			"feature_count": 1,
+			"bound_feature_count": 1,
+			"unsupported_feature_count": 0,
+			"rule_count": 1,
+			"compiled_rule_count": 1,
+			"rejected_rule_count": 0,
+			"candidate_count": result.report["external_candidate_count"],
+			"rejection_reasons": (),
+		},
+	)
+	assert consumption["source_gate_reports"] == (
+		{
+			"source_name": "paper-sketch-smoke",
+			"backend_name": "learner-sketches",
+			"accepted": True,
+			"consumption_role": {
+				"drives_layer_b": True,
+				"drives_layer_c": True,
+				"consumed_by_synthesis": True,
+				"consumption_mode": "parsed_bound_policy_rules",
+				"blocking_gap": None,
 			},
-		),
-	}
+			"rejection_reason": None,
+		},
+	)
+	assert result.report["external_policy_source_gate_reports"] == (
+		{
+			"source_name": "paper-sketch-smoke",
+			"backend_name": "learner-sketches",
+			"accepted": True,
+			"consumption_role": {
+				"drives_layer_b": True,
+				"drives_layer_c": True,
+				"consumed_by_synthesis": True,
+				"consumption_mode": "parsed_bound_policy_rules",
+				"blocking_gap": None,
+			},
+			"rejection_reason": None,
+		},
+	)
 	assert result.report["candidate_sources"]["external_sketch"] >= 1
 	assert result.report["candidate_sources"]["schema"] >= 1
 	assert result.report["output_candidate_sources"]["external_sketch"] >= 1
@@ -125,6 +155,53 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert "!achieve_" not in asl
 	assert "!transition_" not in asl
 	assert "dfa_state" not in asl
+
+
+def test_unified_pipeline_blocks_audit_only_external_backends(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="d2l-policy-smoke",
+				policy_file=policy_file,
+				backend_name="d2l",
+			),
+		),
+	)
+
+	assert result.report["external_policy_count"] == 1
+	assert result.report["consumable_external_policy_count"] == 0
+	assert result.report["rejected_external_policy_count"] == 1
+	assert result.report["external_candidate_count"] == 0
+	assert result.report["paper_policy_audits"] == ()
+	assert result.report["external_rule_binding_reports"] == ()
+	assert result.report["external_policy_source_gate_reports"] == (
+		{
+			"source_name": "d2l-policy-smoke",
+			"backend_name": "d2l",
+			"accepted": False,
+			"consumption_role": {
+				"drives_layer_b": False,
+				"drives_layer_c": False,
+				"consumed_by_synthesis": False,
+				"consumption_mode": "audit_only_feature_policy_baseline",
+				"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+			},
+			"rejection_reason": "no_verified_d2l_policy_parser_or_asl_binding",
+		},
+	)
+	assert result.report["external_backend_consumption_summary"][
+		"rejected_source_count"
+	] == 1
+	assert result.report["external_backend_consumption_summary"][
+		"source_gate_reports"
+	] == result.report["external_policy_source_gate_reports"]
+	assert "external_d2l" not in render_plan_library_asl(result.plan_library)
 
 
 def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
@@ -416,29 +493,31 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 	}
 	assert result.report["external_candidate_count"] == 0
 	assert result.report["candidate_sources"]["schema"] > 0
-	assert result.report["external_backend_consumption_summary"] == {
-		"policy_count": 1,
-		"ready_policy_count": 0,
-		"compiled_rule_count": 0,
-		"rejected_rule_count": 1,
-		"candidate_count": 0,
-		"policies": (
-			{
-				"source_name": "unsupported-sketch",
-				"ready_for_executable_asl": False,
-				"feature_count": 1,
-				"bound_feature_count": 0,
-				"unsupported_feature_count": 1,
-				"rule_count": 1,
-				"compiled_rule_count": 0,
-				"rejected_rule_count": 1,
-				"candidate_count": 0,
-				"rejection_reasons": (
-					"object_specific_dlplan_feature_requires_principled_lifting",
-				),
-			},
-		),
-	}
+	consumption = result.report["external_backend_consumption_summary"]
+	assert consumption["policy_count"] == 1
+	assert consumption["ready_policy_count"] == 0
+	assert consumption["compiled_rule_count"] == 0
+	assert consumption["rejected_rule_count"] == 1
+	assert consumption["candidate_count"] == 0
+	assert consumption["rejected_source_count"] == 0
+	assert consumption["policies"] == (
+		{
+			"source_name": "unsupported-sketch",
+			"ready_for_executable_asl": False,
+			"feature_count": 1,
+			"bound_feature_count": 0,
+			"unsupported_feature_count": 1,
+			"rule_count": 1,
+			"compiled_rule_count": 0,
+			"rejected_rule_count": 1,
+			"candidate_count": 0,
+			"rejection_reasons": (
+				"object_specific_dlplan_feature_requires_principled_lifting",
+			),
+		},
+	)
+	assert consumption["source_gate_reports"][0]["accepted"] is True
+	assert consumption["source_gate_reports"][0]["backend_name"] == "learner-sketches"
 	assert result.report["paper_profile_ready"] is False
 	assert result.report["external_rule_binding_reports"][0]["compiled"] is False
 	assert result.report["external_rule_binding_reports"][0]["missing_condition_bindings"] == [

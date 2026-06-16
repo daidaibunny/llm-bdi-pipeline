@@ -33,6 +33,7 @@ from .gp_backends import (
 	SketchPolicy,
 	SketchRule,
 	backend_audit_matrix,
+	backend_consumption_role,
 	discover_learner_sketches_policy_file,
 	discover_backend_manifest,
 	parse_dlplan_policy,
@@ -72,6 +73,7 @@ from .paper_backend_audit import (
 	audit_learned_policy_for_asl_binding,
 )
 from .library_synthesis import (
+	ExternalBackendSourceGateReport,
 	ExternalSketchPolicySource,
 	UnifiedSynthesisResult,
 	synthesize_domain_level_asl_library,

@@ -15,6 +15,7 @@ from domain_level_planning.gp_backends import (
 	SketchPolicy,
 	SketchRule,
 	backend_audit_matrix,
+	backend_consumption_role,
 	discover_learner_sketches_policy_file,
 	discover_backend_manifest,
 	parse_dlplan_policy,
@@ -118,6 +119,31 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumed_by_synthesis": False,
 		"consumption_mode": "audit_only_feature_policy_baseline",
 		"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+	}
+
+
+def test_backend_consumption_role_blocks_audit_only_backends() -> None:
+	assert backend_consumption_role("learner-sketches")["consumed_by_synthesis"] is True
+	assert backend_consumption_role("h-policy-learner") == {
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"consumed_by_synthesis": False,
+		"consumption_mode": "audit_only_representation_baseline",
+		"blocking_gap": "no_verified_policy_to_lifted_asl_adapter",
+	}
+	assert backend_consumption_role("d2l") == {
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"consumed_by_synthesis": False,
+		"consumption_mode": "audit_only_feature_policy_baseline",
+		"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+	}
+	assert backend_consumption_role("unknown-paper-code") == {
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"consumed_by_synthesis": False,
+		"consumption_mode": "unknown_backend_audit_only",
+		"blocking_gap": "no_pinned_backend_profile_or_verified_adapter",
 	}
 
 

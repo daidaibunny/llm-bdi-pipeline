@@ -294,9 +294,12 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"learner-sketches policies can be parsed, audited, bound, and used "
 					"when safe; h-policy-learner and d2l are pinned and reported in the "
 					"backend audit matrix but remain audit-only until verified adapters "
-					"exist; each synthesis run reports an external backend consumption "
-					"summary for ready policies, compiled rules, rejected rules, candidates, "
-					"and feature rejection reasons."
+					"exist; external policy sources pass through a synthesis-consumption "
+					"gate before parsing, so audit-only or unknown backends are rejected "
+					"with machine-readable blocking gaps; each synthesis run reports an "
+					"external backend consumption summary for accepted/rejected sources, "
+					"ready policies, compiled rules, rejected rules, candidates, and "
+					"feature rejection reasons."
 				),
 				required_improvement=(
 					"Implement verified policy-to-ASL adapters for non-learner-sketches "

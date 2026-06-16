@@ -315,6 +315,21 @@ def backend_audit_matrix(
 	return tuple(entries)
 
 
+def backend_consumption_role(name: str) -> dict[str, object]:
+	"""Return whether a paper backend may currently drive synthesis."""
+
+	profile = BACKEND_RESEARCH_PROFILES.get(str(name or "").strip())
+	if profile is None:
+		return {
+			"drives_layer_b": False,
+			"drives_layer_c": False,
+			"consumed_by_synthesis": False,
+			"consumption_mode": "unknown_backend_audit_only",
+			"blocking_gap": "no_pinned_backend_profile_or_verified_adapter",
+		}
+	return dict(profile["current_consumption_role"])
+
+
 class GPBackendRunner:
 	"""Build reproducible invocations for external generalized-planning code."""
 
