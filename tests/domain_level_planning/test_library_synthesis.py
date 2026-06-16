@@ -174,6 +174,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "anti-unified" in gaps["G2"]["current_state"]
 	assert "recursion descent" in gaps["G2"]["current_state"]
 	assert "repair diagnostics" in gaps["G2"]["current_state"]
+	assert "provenance manifests" in gaps["G2"]["current_state"]
 	assert "multi-strategy module learner" in gaps["G2"]["required_improvement"]
 	assert "repair diagnostics" in gaps["G2"]["required_improvement"]
 	assert gaps["G3"]["layer"] == "Layer C"
@@ -196,6 +197,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "Negative precondition repairs are rejected explicitly" in (
 		gaps["G3"]["current_state"]
 	)
+	assert "provenance manifests" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
@@ -299,6 +301,31 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert sources["training_transition_systems"]["goal_progression_count"] == 1
 	assert sources["training_transition_systems"]["atomic_achievement_count"] == 1
 	assert sources["counterexample_transition_systems"]["problem_count"] == 0
+	selected_manifest = result.report["selected_rule_manifest"]
+	output_manifest = result.report["output_rule_manifest"]
+	assert len(selected_manifest) == result.report["selected_rule_count"]
+	assert len(output_manifest) == result.report["output_rule_count"]
+	external_manifest = next(
+		item for item in output_manifest if item["source"] == "external_sketch"
+	)
+	assert external_manifest["name"] == "external_paper_sketch_smoke_1"
+	assert external_manifest["layer"] == "composer"
+	assert external_manifest["rationale"] == "external_policy:paper-sketch-smoke"
+	assert external_manifest["head"] == {
+		"kind": "subgoal",
+		"symbol": "g",
+		"arguments": [],
+	}
+	assert external_manifest["body"] == [
+		{"kind": "subgoal", "symbol": "done", "arguments": ["X0"]},
+		{"kind": "subgoal", "symbol": "g", "arguments": []},
+	]
+	assert external_manifest["capabilities"] == [
+		"external_policy_paper_sketch_smoke_1",
+	]
+	assert all("achieve_" not in item["name"] for item in output_manifest)
+	assert all("transition_" not in item["name"] for item in output_manifest)
+	assert all("dfa_state" not in item["name"] for item in output_manifest)
 
 
 def test_unified_pipeline_reports_unsupported_external_features_without_guessing(

@@ -207,7 +207,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"last achievers, anti-unified support patterns, and recursion "
 					"descent audits are reported; repair diagnostics from "
 					"counterexample precondition failures are included in the "
-					"Layer B evidence matrix."
+					"Layer B evidence matrix; selected and output rules are reported "
+					"with lifted provenance manifests."
 				),
 				required_improvement=(
 					"Add a multi-strategy module learner that generalizes from these "
@@ -238,7 +239,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"undeclared predicates or wrong predicate arities; wrong-arity "
 					"atomic-progress diagnostics identify the offending predicates. "
 					"Negative precondition repairs are rejected explicitly instead "
-					"of being misread as positive achievement modules."
+					"of being misread as positive achievement modules. Selected and "
+					"output composer rules are reported with lifted provenance manifests."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "

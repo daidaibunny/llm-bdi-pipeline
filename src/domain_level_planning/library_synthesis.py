@@ -461,6 +461,12 @@ def synthesize_domain_level_asl_library(
 		"selection_cost": selection.cost,
 		"selected_rule_names": tuple(selection.selected_rule_names),
 		"output_rule_names": tuple(rule.name for rule in output_rules),
+		"selected_rule_manifest": tuple(
+			_rule_to_manifest(rule) for rule in selection.rules
+		),
+		"output_rule_manifest": tuple(
+			_rule_to_manifest(rule) for rule in output_rules
+		),
 		"paper_policy_audits": tuple(
 			audit.to_dict()
 			for audit in paper_policy_audits
@@ -1713,6 +1719,28 @@ def _candidate_source(rule: LiftedPlanRule) -> str:
 	if rule.rationale == "counterexample_goal_ordering":
 		return "counterexample_goal_ordering"
 	return "schema"
+
+
+def _rule_to_manifest(rule: LiftedPlanRule) -> dict[str, object]:
+	return {
+		"name": rule.name,
+		"layer": rule.layer,
+		"source": _candidate_source(rule),
+		"rationale": rule.rationale,
+		"head": _call_to_manifest(rule.head),
+		"context": list(rule.context),
+		"body": [_call_to_manifest(call) for call in tuple(rule.body or ())],
+		"capabilities": list(rule.capabilities),
+		"cost": rule.cost,
+	}
+
+
+def _call_to_manifest(call: LiftedCall) -> dict[str, object]:
+	return {
+		"kind": call.kind,
+		"symbol": call.symbol,
+		"arguments": list(call.arguments),
+	}
 
 
 def _evidence_matrix(
