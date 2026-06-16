@@ -28,6 +28,22 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 	# Schema causal interference must contribute composer ordering candidates that
 	# do not depend on training traces.
 	assert layer_c["causal_interference_candidate_count"] >= 1
+	candidate_evidence = layer_c["composer_candidate_evidence"]
+	assert any(
+		item["verdict"] == "schema_causal_ordering"
+		and item["selected"] is True
+		and item["body"] == ("on(Y, Z)", "g")
+		for item in candidate_evidence
+	)
+	assert all(
+		item["rejection_reason"] is None
+		or item["rejection_reason"]
+		in {
+			"not_required_for_bounded_training_states",
+			"higher_cost_or_redundant_composer",
+		}
+		for item in candidate_evidence
+	)
 	asl = render_plan_library_asl(result.plan_library)
 	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
 

@@ -257,7 +257,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"refinements; recursive-loop and step-limit failures are reported "
 					"as non-generative termination diagnostics. Selected and "
 					"output composer rules are reported with lifted provenance manifests "
-					"and per-rule composer evidence verdicts."
+					"and per-rule composer evidence verdicts; all composer candidates "
+					"now report selected/rejected status, costs, verdicts, and "
+					"rejection reasons."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "

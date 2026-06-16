@@ -2598,6 +2598,10 @@ def _evidence_matrix(
 				candidate_rules,
 				"order_",
 			),
+			"composer_candidate_evidence": _composer_candidate_evidence(
+				candidate_rules=candidate_rules,
+				selected_rules=selected_rules,
+			),
 			"selected_composer_rule_evidence": _selected_composer_rule_evidence(
 				selected_rules,
 			),
@@ -2880,6 +2884,51 @@ def _selected_composer_rule_evidence(
 		for rule in tuple(selected_rules or ())
 		if rule.layer == "composer"
 	)
+
+
+def _composer_candidate_evidence(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	selected_rules: Sequence[LiftedPlanRule],
+) -> tuple[dict[str, object], ...]:
+	"""Explain selected and rejected Layer C composer candidates."""
+
+	selected_names = {rule.name for rule in tuple(selected_rules or ())}
+	return tuple(
+		_composer_candidate_evidence_record(
+			rule=rule,
+			selected=rule.name in selected_names,
+		)
+		for rule in tuple(candidate_rules or ())
+		if rule.layer == "composer"
+	)
+
+
+def _composer_candidate_evidence_record(
+	*,
+	rule: LiftedPlanRule,
+	selected: bool,
+) -> dict[str, object]:
+	record = _composer_rule_evidence_record(rule)
+	record["selected"] = selected
+	record["cost"] = rule.cost
+	record["rejection_reason"] = _composer_candidate_rejection_reason(
+		selected=selected,
+		verdict=str(record["verdict"]),
+	)
+	return record
+
+
+def _composer_candidate_rejection_reason(
+	*,
+	selected: bool,
+	verdict: str,
+) -> str | None:
+	if selected:
+		return None
+	if verdict in {"schema_goal_dispatch", "schema_causal_ordering", "trace_ordering"}:
+		return "not_required_for_bounded_training_states"
+	return "higher_cost_or_redundant_composer"
 
 
 def _composer_rule_evidence_record(rule: LiftedPlanRule) -> dict[str, object]:
