@@ -535,6 +535,25 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	assert manifest_audit["violations"] == []
 
 
+def test_unified_pipeline_reports_pddl_to_asl_action_symbol_mapping(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_hyphenated_action_domain_and_problem(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	symbol_map = result.report["pddl_to_asl_symbol_map"]
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert symbol_map["actions"]["make-done"] == "make_done"
+	assert symbol_map["changed_actions"] == {"make-done": "make_done"}
+	assert result.plan_library.metadata["pddl_to_asl_symbol_map"] == symbol_map
+	assert "make_done(X)" in asl
+	assert "make-done(X)" not in asl
+
+
 def test_unified_pipeline_reports_unsupported_external_features_without_guessing(
 	tmp_path: Path,
 ) -> None:
@@ -2073,6 +2092,40 @@ def _write_unobserved_action_domain_problem_and_policy(
 		encoding="utf-8",
 	)
 	return domain_file, problem_file, policy_file
+
+
+def _write_hyphenated_action_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "hyphen-action-domain.pddl"
+	problem_file = tmp_path / "hyphen-action-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain generic-hyphen-action)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (done ?x)
+		 )
+		 (:action make-done
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem hyphen-action-p1)
+		 (:domain generic-hyphen-action)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
 
 
 def _write_multi_strategy_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:

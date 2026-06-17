@@ -143,6 +143,7 @@ def run_domain_level_experiment(
 		},
 		"domain_level_contract": contract_dict,
 		"generated_output_audit": generated_output_audit,
+		"pddl_to_asl_symbol_map": result.report.get("pddl_to_asl_symbol_map"),
 		"no_synthetic_names": (
 			"achieve_" not in asl
 			and "transition_" not in asl

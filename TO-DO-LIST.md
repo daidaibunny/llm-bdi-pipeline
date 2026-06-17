@@ -184,6 +184,7 @@ PDDL domain + training problems
 | T113 | Surface external-sketch selected/output counts in experiment summaries. | G8 | `paper_quality_summary` and comparison rows now include selected and output external-sketch candidate counts, so bootstrap audits with external policies cannot be confused with paper-profile runs that actually select learned sketch rules. | Done |
 | T114 | Assert external-sketch selection counts in script reports. | G8 | Blocksworld and Labworkflow CLI JSON report tests now require `paper_quality_summary.selected_external_sketch_candidate_count == 0` and `output_external_sketch_candidate_count == 0` for the current default bootstrap runs, keeping script outputs aligned with the paper-quality summary contract. | Done |
 | T115 | Report selected external-sketch rule names. | G6, G8 | `paper_quality_summary` now includes selected and output external-sketch lifted rule names derived from the synthesis rule manifests; unit and script tests assert empty names for bootstrap runs and the concrete learned rule name for paper-profile smoke. | Done |
+| T116 | Record PDDL-to-ASL symbol mapping. | G7, G8 | Unified synthesis and experiment reports now expose a `pddl_to_asl_symbol_map` for predicates, goal descriptors, and primitive actions, including changed action names such as PDDL `make-done` rendered as ASL `make_done`; tests cover the mapping in plan-library metadata, synthesis reports, experiment reports, and rendered ASL. | Done |
 
 ## Current Completion Rule
 

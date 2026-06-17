@@ -82,6 +82,10 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert report["domain_level_contract"]["goal_descriptor_usage"][
 		"context_descriptors"
 	]
+	assert report["pddl_to_asl_symbol_map"] == report["synthesis_report"][
+		"pddl_to_asl_symbol_map"
+	]
+	assert report["pddl_to_asl_symbol_map"]["changed_actions"] == {}
 	assert report["bounded_validation"]["passed"] is True
 	assert report["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["passed"] is True

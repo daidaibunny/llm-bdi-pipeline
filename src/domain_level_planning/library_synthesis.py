@@ -8,6 +8,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from plan_library.rendering import sanitize_identifier
 from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTrigger, PlanLibrary
 from utils.pddl_parser import PDDLParser
 
@@ -443,6 +444,7 @@ def synthesize_domain_level_asl_library(
 				evidence.to_dict()
 				for evidence in counterexample_transition_evidence
 			),
+			"pddl_to_asl_symbol_map": _pddl_to_asl_symbol_map(domain),
 		},
 	)
 	contract_report = audit_domain_level_library_contract(
@@ -501,6 +503,7 @@ def synthesize_domain_level_asl_library(
 			"goal_state_fixed_point",
 		),
 		"domain_level_contract": contract_report.to_dict(),
+		"pddl_to_asl_symbol_map": _pddl_to_asl_symbol_map(domain),
 		"auto_learner_sketches_run_count": len(tuple(learner_sketches_runs or ())),
 		"backend_audit_matrix": backend_audit_matrix(),
 		"external_backend_consumption_summary": _external_backend_consumption_summary(
@@ -654,6 +657,43 @@ def _normalize_synthesis_profile(profile: str) -> str:
 			f"received {profile!r}.",
 		)
 	return normalized
+
+
+def _pddl_to_asl_symbol_map(domain: object) -> dict[str, object]:
+	"""Map original PDDL schema symbols to their rendered AgentSpeak functors."""
+
+	predicate_symbols = {
+		str(getattr(predicate, "name")): sanitize_identifier(str(getattr(predicate, "name")))
+		for predicate in tuple(getattr(domain, "predicates", ()) or ())
+	}
+	action_symbols = {
+		str(getattr(action, "name")): sanitize_identifier(str(getattr(action, "name")))
+		for action in tuple(getattr(domain, "actions", ()) or ())
+	}
+	goal_descriptor_symbols = {
+		f"goal_{predicate}": sanitize_identifier(f"goal_{predicate}")
+		for predicate in predicate_symbols
+	}
+	return {
+		"predicates": predicate_symbols,
+		"actions": action_symbols,
+		"goal_descriptors": goal_descriptor_symbols,
+		"changed_predicates": {
+			pddl_symbol: asl_symbol
+			for pddl_symbol, asl_symbol in predicate_symbols.items()
+			if pddl_symbol != asl_symbol
+		},
+		"changed_actions": {
+			pddl_symbol: asl_symbol
+			for pddl_symbol, asl_symbol in action_symbols.items()
+			if pddl_symbol != asl_symbol
+		},
+		"changed_goal_descriptors": {
+			pddl_symbol: asl_symbol
+			for pddl_symbol, asl_symbol in goal_descriptor_symbols.items()
+			if pddl_symbol != asl_symbol
+		},
+	}
 
 
 def _paper_profile_failures(
