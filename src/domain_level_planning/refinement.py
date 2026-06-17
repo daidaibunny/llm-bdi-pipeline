@@ -811,6 +811,12 @@ def _refinement_summary(
 		"added_counterexample_problem_count": len(
 			tuple(dict.fromkeys(added_counterexamples)),
 		),
+		"constraint_only_refinement_round_count": sum(
+			1
+			for round_report in tuple(rounds or ())
+			if round_report.refinement_constraints
+			and not round_report.added_counterexample_problem_files
+		),
 		"final_counterexample_problem_count": len(final_counterexamples),
 		"constraint_count": len(constraints),
 		"generative_constraint_count": sum(

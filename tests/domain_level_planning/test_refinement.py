@@ -152,6 +152,12 @@ def test_counterexample_refinement_continues_on_new_constraints_without_new_file
 	assert len(refined.rounds) == 2
 	assert refined.rounds[0].added_counterexample_problem_files == ()
 	assert refined.rounds[0].refinement_constraints
+	assert (
+		refined.to_dict()["refinement_summary"][
+			"constraint_only_refinement_round_count"
+		]
+		== 1
+	)
 	assert synthesis_calls[0]["counterexample_problem_files"] == (problem_path,)
 	assert synthesis_calls[1]["refinement_constraints"] == (constraint,)
 	assert refined.rounds[1].heldout_evaluations[0].solved is True
