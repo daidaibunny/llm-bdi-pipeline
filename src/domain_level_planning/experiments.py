@@ -313,6 +313,8 @@ def compare_domain_level_experiment_reports(
 		"report_count": len(rows),
 		"baseline_count": len(baselines),
 		"best_by_coverage": _best_by_coverage(rows),
+		"best_baseline_by_coverage": _best_baseline_by_coverage(baselines),
+		"best_baseline_delta_vs_library": _best_baseline_delta_vs_library(baselines),
 		"baselines": list(baselines),
 		"rows": list(rows),
 	}
@@ -388,6 +390,33 @@ def _best_by_coverage(rows: Sequence[dict[str, object]]) -> str | None:
 		),
 	)
 	return str(best.get("label") or "")
+
+
+def _best_baseline_by_coverage(rows: Sequence[dict[str, object]]) -> str | None:
+	if not rows:
+		return None
+	best = _best_baseline_row(rows)
+	return str(best.get("label") or "")
+
+
+def _best_baseline_delta_vs_library(
+	rows: Sequence[dict[str, object]],
+) -> float | None:
+	if not rows:
+		return None
+	best = _best_baseline_row(rows)
+	return float(best.get("coverage_delta_vs_library") or 0.0)
+
+
+def _best_baseline_row(rows: Sequence[dict[str, object]]) -> dict[str, object]:
+	return max(
+		tuple(rows),
+		key=lambda row: (
+			float(row.get("coverage_ratio") or 0.0),
+			int(row.get("solved_count") or 0),
+			-int(row.get("failed_count") or 0),
+		),
+	)
 
 
 def _count_by_key(items, key: str) -> dict[str, int]:

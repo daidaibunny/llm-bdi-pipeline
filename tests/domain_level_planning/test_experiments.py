@@ -375,6 +375,8 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 	table = compare_domain_level_experiment_reports((report,))
 
 	assert table["baseline_count"] == 1
+	assert table["best_baseline_by_coverage"] == "planner-offline"
+	assert table["best_baseline_delta_vs_library"] == 0.0
 	assert table["baselines"] == [
 		{
 			"report_label": "baseline-comparison",
