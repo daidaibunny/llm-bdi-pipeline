@@ -347,13 +347,19 @@ def _baseline_comparison_row(
 	baseline: object,
 ) -> dict[str, object]:
 	item = dict(baseline or {})
+	library_coverage = float(
+		dict(report.get("coverage") or {}).get("coverage_ratio") or 0.0,
+	)
+	baseline_coverage = float(item.get("coverage_ratio") or 0.0)
 	return {
 		"report_label": str(report.get("experiment_name") or ""),
 		"label": str(item.get("label") or ""),
 		"solver_family": str(item.get("solver_family") or "external_baseline"),
 		"solved_count": int(item.get("solved_count") or 0),
 		"failed_count": int(item.get("failed_count") or 0),
-		"coverage_ratio": float(item.get("coverage_ratio") or 0.0),
+		"coverage_ratio": baseline_coverage,
+		"library_coverage_ratio": library_coverage,
+		"coverage_delta_vs_library": baseline_coverage - library_coverage,
 	}
 
 

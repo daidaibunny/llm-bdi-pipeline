@@ -165,6 +165,7 @@ PDDL domain + training problems
 | T94 | Surface schema ordering counts in experiment audits. | G3, G8 | Experiment `learning_audit.layer_c_goal_composer` now exposes causal-interference and delete-threat ordering candidate/selected counts; the Blocksworld script report test asserts both are present and selected. | Done |
 | T95 | Record completed baseline metadata in experiment protocols. | G8 | `run_domain_level_experiment(..., baselines=...)` now records already-completed external baseline coverage metadata without running hidden planners, and `compare_domain_level_experiment_reports(...)` summarizes those baseline rows beside ASL-library ablations. | Done |
 | T96 | Let new refinement constraints drive another synthesis round. | G9 | `synthesize_with_counterexample_refinement(...)` now accepts existing counterexample problem files and continues when a failed held-out evaluation produces new lifted constraints, even if no new problem file was added; the refinement summary reports constraint-only refinement rounds, and tests cover this control-flow case without domain-specific logic. | Done |
+| T97 | Compare baseline coverage against the ASL library. | G8 | Baseline rows from `compare_domain_level_experiment_reports(...)` now include the corresponding ASL-library coverage and `coverage_delta_vs_library`, so already-completed external baselines can be reported without hidden planner runs. | Done |
 
 ## Current Completion Rule
 

@@ -383,6 +383,8 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 			"solved_count": 1,
 			"failed_count": 0,
 			"coverage_ratio": 1.0,
+			"library_coverage_ratio": 1.0,
+			"coverage_delta_vs_library": 0.0,
 		},
 	]
 
