@@ -30,6 +30,7 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 	assert layer_c["causal_interference_candidate_count"] >= 1
 	assert layer_c["delete_threat_ordering_candidate_count"] >= 1
 	assert layer_c["delete_threat_ordering_selected_count"] >= 1
+	assert layer_c["trace_ordering_selected_count"] >= 1
 	candidate_evidence = layer_c["composer_candidate_evidence"]
 	assert any(
 		item["verdict"] == "schema_causal_ordering"

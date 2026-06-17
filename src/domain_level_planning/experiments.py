@@ -280,6 +280,12 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 			"delete_threat_ordering_selected_count": int(
 				layer_c.get("delete_threat_ordering_selected_count") or 0,
 			),
+			"trace_ordering_candidate_count": int(
+				layer_c.get("trace_ordering_candidate_count") or 0,
+			),
+			"trace_ordering_selected_count": int(
+				layer_c.get("trace_ordering_selected_count") or 0,
+			),
 			"composer_candidate_verdict_counts": _count_by_key(
 				composer_candidates,
 				"verdict",

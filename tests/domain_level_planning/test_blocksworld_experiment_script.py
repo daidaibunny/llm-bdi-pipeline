@@ -82,6 +82,9 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 	assert report["learning_audit"]["layer_c_goal_composer"][
 		"delete_threat_ordering_selected_count"
 	] > 0
+	assert report["learning_audit"]["layer_c_goal_composer"][
+		"trace_ordering_selected_count"
+	] > 0
 	assert report["runtime_seconds"]["synthesis"] >= 0
 	assert report["runtime_seconds"]["evaluation_total"] >= 0
 	assert len(report["runtime_seconds"]["evaluation_by_problem"]) == 2

@@ -2606,6 +2606,10 @@ def _evidence_matrix(
 				candidate_rules,
 				"order_",
 			),
+			"trace_ordering_selected_count": _ordering_rule_count(
+				selected_rules,
+				"order_",
+			),
 			"composer_candidate_evidence": _composer_candidate_evidence(
 				candidate_rules=candidate_rules,
 				selected_rules=selected_rules,
