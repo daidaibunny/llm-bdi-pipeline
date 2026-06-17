@@ -14,6 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from domain_level_planning.experiments import run_domain_level_experiment  # noqa: E402
+from domain_level_planning.library_synthesis import ExternalSketchPolicySource  # noqa: E402
 
 
 def main() -> None:
@@ -40,6 +41,27 @@ def main() -> None:
 	)
 	parser.add_argument("--max-steps", type=int, default=10000)
 	parser.add_argument("--max-depth", type=int, default=1000)
+	parser.add_argument(
+		"--synthesis-profile",
+		choices=("bootstrap", "paper"),
+		default="bootstrap",
+		help="Synthesis strictness profile passed to the unified learner.",
+	)
+	parser.add_argument(
+		"--external-sketch-policy",
+		action="append",
+		default=(),
+		metavar="NAME=PATH",
+		help=(
+			"External learner-sketches policy artifact to consume. "
+			"May be repeated; NAME= may be omitted."
+		),
+	)
+	parser.add_argument(
+		"--ablation-label",
+		default=None,
+		help="Explicit ablation label for the experiment protocol.",
+	)
 	args = parser.parse_args()
 
 	blocks_root = PROJECT_ROOT / "src" / "domains" / "blocksworld"
@@ -59,6 +81,15 @@ def main() -> None:
 		domain_file=blocks_root / "domain.pddl",
 		training_problem_files=problems[: args.train_count],
 		evaluation_problem_files=problems[: args.eval_count],
+		external_sketch_policies=_parse_external_sketch_policies(
+			tuple(args.external_sketch_policy or ()),
+		),
+		synthesis_profile=args.synthesis_profile,
+		ablation_label=_default_ablation_label(
+			explicit_label=args.ablation_label,
+			synthesis_profile=args.synthesis_profile,
+			external_policy_count=len(tuple(args.external_sketch_policy or ())),
+		),
 		max_execution_steps=args.max_steps,
 		max_depth=args.max_depth,
 	)
@@ -73,6 +104,50 @@ def main() -> None:
 		f"coverage={report['coverage']['solved_count']}/"
 		f"{report['evaluation_problem_count']}",
 	)
+
+
+def _parse_external_sketch_policies(
+	raw_sources: tuple[str, ...],
+) -> tuple[ExternalSketchPolicySource, ...]:
+	sources: list[ExternalSketchPolicySource] = []
+	for index, raw_source in enumerate(tuple(raw_sources or ()), start=1):
+		text = str(raw_source or "").strip()
+		if not text:
+			continue
+		if "=" in text:
+			name, raw_path = text.split("=", 1)
+			source_name = name.strip() or f"external-sketch-{index}"
+			policy_path = Path(raw_path.strip())
+		else:
+			source_name = f"external-sketch-{index}"
+			policy_path = Path(text)
+		sources.append(
+			ExternalSketchPolicySource(
+				name=source_name,
+				policy_file=policy_path,
+				backend_name="learner-sketches",
+			),
+		)
+	return tuple(sources)
+
+
+def _default_ablation_label(
+	*,
+	explicit_label: str | None,
+	synthesis_profile: str,
+	external_policy_count: int,
+) -> str:
+	label = str(explicit_label or "").strip()
+	if label:
+		return label
+	profile = str(synthesis_profile or "bootstrap").strip().lower()
+	if profile == "paper" and external_policy_count:
+		return "paper_external_sketch"
+	if profile == "paper":
+		return "paper_profile"
+	if external_policy_count:
+		return "bootstrap_external_sketch"
+	return "bootstrap_schema_only"
 
 
 if __name__ == "__main__":

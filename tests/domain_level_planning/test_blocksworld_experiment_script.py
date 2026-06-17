@@ -5,6 +5,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+from scripts.run_blocksworld_first20_experiment import (
+	_default_ablation_label,
+	_parse_external_sketch_policies,
+)
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -36,7 +41,15 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 	)
 	assert report["experiment_protocol"]["runtime_planner"] == "none"
 	assert report["experiment_protocol"]["baselines"] == []
-	assert report["experiment_protocol"]["ablations"] == []
+	assert report["experiment_protocol"]["ablations"] == [
+		{
+			"label": "bootstrap_schema_only",
+			"synthesis_profile": "bootstrap",
+			"external_policy_count": 0,
+			"counterexample_refinement": False,
+			"runtime_planner": "none",
+		},
+	]
 	assert report["train_problem_count"] == 1
 	assert report["evaluation_problem_count"] == 2
 	assert report["coverage"]["solved_count"] == 2
@@ -89,3 +102,38 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 	assert report["runtime_seconds"]["evaluation_total"] >= 0
 	assert len(report["runtime_seconds"]["evaluation_by_problem"]) == 2
 	assert "+!g : goal_on" in report["asl"]
+
+
+def test_blocksworld_script_parses_external_policy_arguments(tmp_path: Path) -> None:
+	policy_a = tmp_path / "policy-a.txt"
+	policy_b = tmp_path / "policy-b.txt"
+	policy_a.write_text("", encoding="utf-8")
+	policy_b.write_text("", encoding="utf-8")
+
+	sources = _parse_external_sketch_policies(
+		(
+			f"learned-clear={policy_a}",
+			str(policy_b),
+		),
+	)
+
+	assert len(sources) == 2
+	assert sources[0].name == "learned-clear"
+	assert sources[0].policy_file == policy_a
+	assert sources[1].name == "external-sketch-2"
+	assert sources[1].policy_file == policy_b
+	assert _default_ablation_label(
+		explicit_label=None,
+		synthesis_profile="bootstrap",
+		external_policy_count=0,
+	) == "bootstrap_schema_only"
+	assert _default_ablation_label(
+		explicit_label=None,
+		synthesis_profile="paper",
+		external_policy_count=1,
+	) == "paper_external_sketch"
+	assert _default_ablation_label(
+		explicit_label="custom",
+		synthesis_profile="paper",
+		external_policy_count=0,
+	) == "custom"
