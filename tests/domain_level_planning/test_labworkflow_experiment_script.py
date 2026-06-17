@@ -32,7 +32,15 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 	)
 	assert report["experiment_protocol"]["runtime_planner"] == "none"
 	assert report["experiment_protocol"]["baselines"] == []
-	assert report["experiment_protocol"]["ablations"] == []
+	assert report["experiment_protocol"]["ablations"] == [
+		{
+			"label": "bootstrap_counterexample_refinement",
+			"synthesis_profile": "bootstrap",
+			"external_policy_count": 0,
+			"counterexample_refinement": True,
+			"runtime_planner": "none",
+		},
+	]
 	assert report["coverage"]["solved_count"] == 2
 	assert report["coverage"]["failed_count"] == 0
 	assert report["failure_analysis"]["failed_problem_count"] == 0
@@ -96,3 +104,33 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 	assert "!achieve_" not in report["asl"]
 	assert "!transition_" not in report["asl"]
 	assert "dfa_state" not in report["asl"]
+
+
+def test_labworkflow_dependency_script_accepts_explicit_ablation_label(
+	tmp_path: Path,
+) -> None:
+	output = tmp_path / "labworkflow-custom-ablation.json"
+
+	subprocess.run(
+		(
+			sys.executable,
+			str(PROJECT_ROOT / "scripts" / "run_labworkflow_dependency_experiment.py"),
+			"--output",
+			str(output),
+			"--ablation-label",
+			"custom_labworkflow_profile",
+		),
+		cwd=PROJECT_ROOT,
+		check=True,
+	)
+
+	report = json.loads(output.read_text(encoding="utf-8"))
+	assert report["experiment_protocol"]["ablations"] == [
+		{
+			"label": "custom_labworkflow_profile",
+			"synthesis_profile": "bootstrap",
+			"external_policy_count": 0,
+			"counterexample_refinement": True,
+			"runtime_planner": "none",
+		},
+	]

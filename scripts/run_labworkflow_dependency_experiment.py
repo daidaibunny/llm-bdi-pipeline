@@ -28,6 +28,11 @@ def main() -> None:
 	)
 	parser.add_argument("--max-steps", type=int, default=100)
 	parser.add_argument("--max-depth", type=int, default=50)
+	parser.add_argument(
+		"--ablation-label",
+		default=None,
+		help="Explicit ablation label for the experiment protocol.",
+	)
 	args = parser.parse_args()
 
 	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
@@ -43,6 +48,8 @@ def main() -> None:
 		max_refinement_rounds=1,
 		max_execution_steps=args.max_steps,
 		max_depth=args.max_depth,
+		ablation_label=args.ablation_label
+		or "bootstrap_counterexample_refinement",
 	)
 	args.output.parent.mkdir(parents=True, exist_ok=True)
 	args.output.write_text(
