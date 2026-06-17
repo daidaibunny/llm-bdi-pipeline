@@ -32,6 +32,7 @@ def run_domain_level_experiment(
 	use_counterexample_refinement: bool = False,
 	max_refinement_rounds: int = 1,
 	ablation_label: str | None = None,
+	baselines: Sequence[dict[str, object]] = (),
 ) -> dict[str, object]:
 	"""Run one reproducible domain-level library experiment."""
 
@@ -94,6 +95,7 @@ def run_domain_level_experiment(
 			external_sketch_policies=external_sketch_policies,
 			use_counterexample_refinement=use_counterexample_refinement,
 			ablation_label=ablation_label,
+			baselines=baselines,
 		),
 		"train_problem_count": len(tuple(training_problem_files or ())),
 		"training_problem_files": [
@@ -159,6 +161,7 @@ def _experiment_protocol(
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
 	use_counterexample_refinement: bool,
 	ablation_label: str | None,
+	baselines: Sequence[dict[str, object]] = (),
 ) -> dict[str, object]:
 	ablation = _ablation_record(
 		label=ablation_label,
@@ -173,13 +176,32 @@ def _experiment_protocol(
 		"synthesis_profile": str(synthesis_profile or "bootstrap"),
 		"external_policy_count": len(tuple(external_sketch_policies or ())),
 		"runtime_planner": "none",
-		"baselines": [],
+		"baselines": _baseline_records(baselines),
 		"ablations": [] if ablation is None else [ablation],
 		"limitations": [
 			"coverage is measured only over the listed evaluation PDDL problems",
 			"no IPC-wide baseline table is implied by this smoke protocol",
 		],
 	}
+
+
+def _baseline_records(
+	baselines: Sequence[dict[str, object]],
+) -> list[dict[str, object]]:
+	records: list[dict[str, object]] = []
+	for baseline in tuple(baselines or ()):
+		item = dict(baseline or {})
+		records.append(
+			{
+				"label": str(item.get("label") or ""),
+				"solver_family": str(item.get("solver_family") or "external_baseline"),
+				"solved_count": int(item.get("solved_count") or 0),
+				"failed_count": int(item.get("failed_count") or 0),
+				"coverage_ratio": float(item.get("coverage_ratio") or 0.0),
+				"runtime_planner": str(item.get("runtime_planner") or "offline_baseline_only"),
+			},
+		)
+	return records
 
 
 def _ablation_record(
@@ -279,9 +301,18 @@ def compare_domain_level_experiment_reports(
 	"""Build a compact comparison table from already-run experiment reports."""
 
 	rows = tuple(_comparison_row(report) for report in tuple(reports or ()))
+	baselines = tuple(
+		_baseline_comparison_row(report, baseline)
+		for report in tuple(reports or ())
+		for baseline in tuple(
+			dict(report.get("experiment_protocol") or {}).get("baselines") or (),
+		)
+	)
 	return {
 		"report_count": len(rows),
+		"baseline_count": len(baselines),
 		"best_by_coverage": _best_by_coverage(rows),
+		"baselines": list(baselines),
 		"rows": list(rows),
 	}
 
@@ -307,6 +338,21 @@ def _comparison_row(report: dict[str, object]) -> dict[str, object]:
 			plan_library.get("primitive_action_call_count") or 0,
 		),
 		"subgoal_call_count": int(plan_library.get("subgoal_call_count") or 0),
+	}
+
+
+def _baseline_comparison_row(
+	report: dict[str, object],
+	baseline: object,
+) -> dict[str, object]:
+	item = dict(baseline or {})
+	return {
+		"report_label": str(report.get("experiment_name") or ""),
+		"label": str(item.get("label") or ""),
+		"solver_family": str(item.get("solver_family") or "external_baseline"),
+		"solved_count": int(item.get("solved_count") or 0),
+		"failed_count": int(item.get("failed_count") or 0),
+		"coverage_ratio": float(item.get("coverage_ratio") or 0.0),
 	}
 
 

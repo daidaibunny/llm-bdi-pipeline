@@ -238,6 +238,45 @@ def test_domain_level_experiment_records_explicit_ablation_metadata(
 	]
 
 
+def test_domain_level_experiment_records_completed_baseline_metadata(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+	)
+
+	report = run_domain_level_experiment(
+		experiment_name="baseline-smoke",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		baselines=(
+			{
+				"label": "external-planner-offline",
+				"solver_family": "classical_planner",
+				"solved_count": 1,
+				"failed_count": 0,
+				"coverage_ratio": 1.0,
+				"runtime_planner": "offline_baseline_only",
+			},
+		),
+		max_execution_steps=100,
+		max_depth=50,
+	)
+
+	assert report["experiment_protocol"]["baselines"] == [
+		{
+			"label": "external-planner-offline",
+			"solver_family": "classical_planner",
+			"solved_count": 1,
+			"failed_count": 0,
+			"coverage_ratio": 1.0,
+			"runtime_planner": "offline_baseline_only",
+		},
+	]
+	assert report["experiment_protocol"]["runtime_planner"] == "none"
+
+
 def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	tmp_path: Path,
 ) -> None:
@@ -274,6 +313,7 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 
 	assert table["report_count"] == 2
 	assert table["best_by_coverage"] in {"bootstrap_schema_only", "paper_external_sketch"}
+	assert table["baseline_count"] == 0
 	assert table["rows"] == [
 		{
 			"label": "bootstrap_schema_only",
@@ -304,6 +344,45 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 				"primitive_action_call_count"
 			],
 			"subgoal_call_count": paper["plan_library"]["subgoal_call_count"],
+		},
+	]
+
+
+def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+	)
+	report = run_domain_level_experiment(
+		experiment_name="baseline-comparison",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		baselines=(
+			{
+				"label": "planner-offline",
+				"solver_family": "classical_planner",
+				"coverage_ratio": 1.0,
+				"solved_count": 1,
+				"failed_count": 0,
+			},
+		),
+		max_execution_steps=100,
+		max_depth=50,
+	)
+
+	table = compare_domain_level_experiment_reports((report,))
+
+	assert table["baseline_count"] == 1
+	assert table["baselines"] == [
+		{
+			"report_label": "baseline-comparison",
+			"label": "planner-offline",
+			"solver_family": "classical_planner",
+			"solved_count": 1,
+			"failed_count": 0,
+			"coverage_ratio": 1.0,
 		},
 	]
 

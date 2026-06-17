@@ -355,8 +355,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"evaluation runtime metrics, compact Layer B and Layer C learning "
 					"audit summaries, including schema causal and delete-threat ordering "
 					"candidate/selected counts, optional explicit ablation metadata, "
-					"a pure already-run report comparison table helper, plus top-level "
-					"refinement analysis for convergence and constraint-type counts."
+					"optional already-completed external baseline metadata without running "
+					"hidden planners, a pure already-run report comparison table helper "
+					"with baseline rows, plus top-level refinement analysis for convergence "
+					"and constraint-type counts."
 				),
 				required_improvement=(
 					"Add broader experiment protocol with more domains, actual ablations "
