@@ -245,6 +245,18 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 			"rejected_composer_candidate_count": sum(
 				1 for candidate in composer_candidates if not bool(candidate.get("selected"))
 			),
+			"causal_interference_candidate_count": int(
+				layer_c.get("causal_interference_candidate_count") or 0,
+			),
+			"causal_interference_selected_count": int(
+				layer_c.get("causal_interference_selected_count") or 0,
+			),
+			"delete_threat_ordering_candidate_count": int(
+				layer_c.get("delete_threat_ordering_candidate_count") or 0,
+			),
+			"delete_threat_ordering_selected_count": int(
+				layer_c.get("delete_threat_ordering_selected_count") or 0,
+			),
 			"composer_candidate_verdict_counts": _count_by_key(
 				composer_candidates,
 				"verdict",
