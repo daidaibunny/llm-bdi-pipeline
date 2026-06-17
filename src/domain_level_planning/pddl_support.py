@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
 
+from plan_library.rendering import sanitize_identifier
 from tarski.io import PDDLReader
 
 
@@ -67,6 +68,7 @@ SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 	"positive conjunctive predicate achievement goals only",
 	"primitive action schemas with predicate preconditions and predicate effects",
 	"predicate symbols must fit the current AgentSpeak atom identifier subset",
+	"primitive action symbols may be sanitized for AgentSpeak but must remain unique",
 	"typing, equality, and negative preconditions are accepted only inside the project parser subset",
 	(
 		"derived predicates, conditional effects, quantifiers, preferences, "
@@ -239,6 +241,12 @@ def inspect_pddl_support(
 	for diagnostic in _unsupported_asl_symbol_diagnostics(domain_path, domain_text):
 		reasons.append(diagnostic.message)
 		diagnostics.append(diagnostic)
+	for diagnostic in _unsupported_asl_symbol_collision_diagnostics(
+		domain_path,
+		domain_text,
+	):
+		reasons.append(diagnostic.message)
+		diagnostics.append(diagnostic)
 
 	return PDDLSupportReport(
 		domain_file=domain_path,
@@ -378,6 +386,35 @@ def _unsupported_asl_symbol_diagnostics(
 	return tuple(diagnostics)
 
 
+def _unsupported_asl_symbol_collision_diagnostics(
+	domain_path: Path,
+	domain_text: str,
+) -> tuple[PDDLUnsupportedDiagnostic, ...]:
+	diagnostics: list[PDDLUnsupportedDiagnostic] = []
+	for kind, symbols in (("action", _declared_action_names(domain_text)),):
+		by_asl_symbol: dict[str, list[str]] = {}
+		for symbol in symbols:
+			by_asl_symbol.setdefault(sanitize_identifier(symbol), []).append(symbol)
+		for asl_symbol, pddl_symbols in sorted(by_asl_symbol.items()):
+			unique_symbols = tuple(dict.fromkeys(pddl_symbols))
+			if len(unique_symbols) < 2:
+				continue
+			quoted_symbols = ", ".join(repr(symbol) for symbol in unique_symbols)
+			message = (
+				f"{domain_path}: PDDL {kind} symbols ({quoted_symbols}) collapse "
+				f"to the same AgentSpeak functor {asl_symbol!r}"
+			)
+			diagnostics.append(
+				PDDLUnsupportedDiagnostic(
+					kind="unsupported_asl_symbol_collision",
+					location=f"{domain_path}:{kind}",
+					symbol=asl_symbol,
+					message=message,
+				),
+			)
+	return tuple(diagnostics)
+
+
 def _declared_predicate_names(domain_text: str) -> tuple[str, ...]:
 	predicate_block = _keyword_block(domain_text, "predicates")
 	if predicate_block is None:
@@ -390,6 +427,19 @@ def _declared_predicate_names(domain_text: str) -> tuple[str, ...]:
 				predicate_block,
 			)
 			if match.group(1).lower() != "and"
+		),
+	)
+
+
+def _declared_action_names(domain_text: str) -> tuple[str, ...]:
+	return tuple(
+		dict.fromkeys(
+			match.group(1)
+			for match in re.finditer(
+				r"\(:action\s+([A-Za-z_][A-Za-z0-9_-]*)\b",
+				domain_text,
+				flags=re.IGNORECASE,
+			)
 		),
 	)
 

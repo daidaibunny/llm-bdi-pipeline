@@ -146,6 +146,30 @@ def test_pddl_support_rejects_predicates_outside_current_asl_identifier_subset(
 	)
 
 
+def test_pddl_support_rejects_action_symbols_that_collide_after_asl_rendering(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_colliding_action_symbol_domain_and_problem(tmp_path)
+
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+
+	assert serialized["is_compilable"] is False
+	assert {
+		"kind": "unsupported_asl_symbol_collision",
+		"location": f"{domain_file}:action",
+		"symbol": "make_done",
+		"message": (
+			f"{domain_file}: PDDL action symbols ('make-done', 'make_done') "
+			"collapse to the same AgentSpeak functor 'make_done'"
+		),
+	} in serialized["unsupported_diagnostics"]
+	assert any(
+		"collapse to the same AgentSpeak functor" in reason
+		for reason in serialized["unsupported_reasons"]
+	)
+
+
 def _write_minimal_strips_domain_and_problem(
 	tmp_path: Path,
 	*,
@@ -180,6 +204,47 @@ def _write_minimal_strips_domain_and_problem(
 		 (:objects a - item)
 		 (:init (ready a))
 		 (:goal {goal})
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_colliding_action_symbol_domain_and_problem(
+	tmp_path: Path,
+) -> tuple[Path, Path]:
+	domain_file = tmp_path / "collision-domain.pddl"
+	problem_file = tmp_path / "collision-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain action-collision)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready)
+		  (done)
+		 )
+		 (:action make-done
+		  :parameters ()
+		  :precondition (ready)
+		  :effect (done)
+		 )
+		 (:action make_done
+		  :parameters ()
+		  :precondition (ready)
+		  :effect (done)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem action-collision-p1)
+		 (:domain action-collision)
+		 (:objects)
+		 (:init (ready))
+		 (:goal (and (done)))
 		)
 		""",
 		encoding="utf-8",
