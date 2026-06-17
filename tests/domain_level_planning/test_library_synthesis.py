@@ -176,6 +176,48 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert "dfa_state" not in asl
 
 
+def test_unified_pipeline_consumes_reverse_role_external_sketch(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_binary_domain_problem_and_policy(
+		tmp_path,
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="reverse-role-sketch",
+				policy_file=policy_file,
+			),
+		),
+	)
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert result.report["paper_profile_ready"] is True
+	assert result.report["external_backend_consumption_summary"]["ready_policy_count"] == 1
+	assert result.report["external_rule_binding_reports"] == (
+		{
+			"source_name": "reverse-role-sketch",
+			"rule_index": 1,
+			"raw_rule": "(:rule (:conditions ) (:effects (:e_n_inc f_link)))",
+			"compiled": True,
+			"missing_condition_bindings": [],
+			"missing_effect_bindings": [],
+			"empty_body": False,
+		},
+	)
+	policy_audit = result.report["paper_policy_audits"][0]
+	assert policy_audit["feature_binding_diagnostics"][0]["binding_kind"] == (
+		"goal_aligned_reverse_role_count"
+	)
+	assert policy_audit["feature_binding_diagnostics"][0]["status"] == "bound"
+	assert result.report["output_candidate_sources"]["external_sketch"] == 1
+	assert "+!g : goal_link(X1, X0) & not link(X1, X0) <-" in asl
+	assert "\t!link(X1, X0);" in asl
+
+
 def test_unified_pipeline_blocks_audit_only_external_backends(
 	tmp_path: Path,
 ) -> None:
@@ -1839,6 +1881,53 @@ def _write_generic_domain_problem_and_policy(
 		(:booleans )
 		(:numericals {policy_feature})
 		{policy_rule}
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file, policy_file
+
+
+def _write_binary_domain_problem_and_policy(tmp_path: Path) -> tuple[Path, Path, Path]:
+	domain_file = tmp_path / "binary-domain.pddl"
+	problem_file = tmp_path / "binary-problem.pddl"
+	policy_file = tmp_path / "binary-policy.txt"
+	domain_file.write_text(
+		"""
+		(define (domain generic-binary)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x ?y)
+		  (link ?x ?y)
+		 )
+		 (:action connect
+		  :parameters (?x ?y)
+		  :precondition (ready ?x ?y)
+		  :effect (link ?x ?y)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem binary-p1)
+		 (:domain generic-binary)
+		 (:objects a b)
+		 (:init (ready a b))
+		 (:goal (and (link a b)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_link "n_count(c_equal(r_primitive(link,1,0),r_primitive(link_g,1,0)))")
+		)
+		(:rule (:conditions ) (:effects (:e_n_inc f_link)))
 		)
 		""",
 		encoding="utf-8",

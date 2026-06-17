@@ -309,9 +309,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				gap="Paper-code reuse is an audit pipeline, not yet the full learner.",
 				current_state=(
 					"learner-sketches policies can be parsed, audited, bound, and used "
-					"when safe; h-policy-learner and d2l are pinned and reported in the "
-					"backend audit matrix but remain audit-only until verified adapters "
-					"exist; external policy sources pass through a synthesis-consumption "
+					"when safe, including policies that use forward or reverse binary "
+					"role DLPlan features; h-policy-learner and d2l are pinned and "
+					"reported in the backend audit matrix but remain audit-only until "
+					"verified adapters exist; external policy sources pass through a synthesis-consumption "
 					"gate before parsing, so audit-only or unknown backends are rejected "
 					"with machine-readable blocking gaps; each synthesis run reports an "
 					"external backend consumption summary for accepted/rejected sources, "
