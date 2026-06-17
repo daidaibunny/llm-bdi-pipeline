@@ -25,6 +25,8 @@ def test_labworkflow_refinement_experiment_learns_goal_dependency() -> None:
 	)
 
 	assert report["coverage"]["coverage_ratio"] == 1.0
+	assert report["paper_quality_summary"]["synthesis_profile"] == "bootstrap"
+	assert report["paper_quality_summary"]["schema_only_bootstrap"] is False
 	assert report["plan_library"]["domain_name"] == "labworkflow"
 	assert report["refinement_analysis"] == {
 		"enabled": True,

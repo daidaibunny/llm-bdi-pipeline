@@ -164,7 +164,11 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 	return {
 		"synthesis_profile": profile,
 		"paper_profile_ready": bool(synthesis_report.get("paper_profile_ready")),
-		"schema_only_bootstrap": profile == "bootstrap" and external_policy_count == 0,
+		"schema_only_bootstrap": _is_schema_only_bootstrap(
+			synthesis_report=synthesis_report,
+			profile=profile,
+			external_policy_count=external_policy_count,
+		),
 		"external_policy_count": external_policy_count,
 		"external_policy_required_for_paper_profile": any(
 			"external learned sketch policy" in failure
@@ -173,6 +177,23 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 		"blocking_failure_count": len(failures),
 		"blocking_failures": list(failures),
 	}
+
+
+def _is_schema_only_bootstrap(
+	*,
+	synthesis_report: dict[str, object],
+	profile: str,
+	external_policy_count: int,
+) -> bool:
+	if profile != "bootstrap" or external_policy_count != 0:
+		return False
+	refinement_counts = (
+		"counterexample_problem_count",
+		"repair_synthesized_candidate_count",
+		"explicit_goal_ordering_candidate_count",
+		"state_coverage_synthesized_candidate_count",
+	)
+	return all(int(synthesis_report.get(key) or 0) == 0 for key in refinement_counts)
 
 
 def _experiment_protocol(
