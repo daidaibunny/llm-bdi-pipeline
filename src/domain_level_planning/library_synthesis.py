@@ -174,6 +174,7 @@ class AtomicProgressConstraintBindingReport:
 	available_capabilities: tuple[str, ...] = ()
 	undeclared_predicates: tuple[str, ...] = ()
 	wrong_arity_predicates: tuple[str, ...] = ()
+	invalid_lifted_goals: tuple[str, ...] = ()
 	producer_actions_by_predicate: Mapping[str, tuple[str, ...]] | None = None
 	producible_target_predicates: tuple[str, ...] = ()
 	unproducible_target_predicates: tuple[str, ...] = ()
@@ -190,6 +191,7 @@ class AtomicProgressConstraintBindingReport:
 			"rule_names": self.rule_names,
 			"undeclared_predicates": self.undeclared_predicates,
 			"wrong_arity_predicates": self.wrong_arity_predicates,
+			"invalid_lifted_goals": self.invalid_lifted_goals,
 			"producer_actions_by_predicate": dict(
 				self.producer_actions_by_predicate or {},
 			),
@@ -1790,10 +1792,16 @@ def _atomic_progress_required_rule_groups(
 		if constraint_type != "counterexample_atomic_progress":
 			continue
 		target_atoms = tuple(getattr(constraint, "lifted_missing_goals", ()) or ())
+		parsed_targets = tuple(_parse_lifted_atom(atom) for atom in target_atoms)
 		target_predicates = tuple(
-			_atom_predicate(atom)
-			for atom in target_atoms
-			if _atom_predicate(atom)
+			predicate
+			for predicate, _arguments in parsed_targets
+			if predicate
+		)
+		invalid_lifted_goals = tuple(
+			atom
+			for atom, (predicate, _arguments) in zip(target_atoms, parsed_targets)
+			if not predicate
 		)
 		producer_actions_by_predicate = _producer_actions_for_target_predicates(
 			target_predicates=target_predicates,
@@ -1806,6 +1814,24 @@ def _atomic_progress_required_rule_groups(
 			declared_predicates=declared_predicates,
 			producible_target_predicates=producible_target_predicates,
 		)
+		if invalid_lifted_goals:
+			reports.append(
+				AtomicProgressConstraintBindingReport(
+					constraint_index=constraint_index,
+					constraint_type=constraint_type,
+					matched=False,
+					target_predicates=target_predicates,
+					required_capabilities=(),
+					rule_names=(),
+					available_capabilities=(),
+					invalid_lifted_goals=invalid_lifted_goals,
+					producer_actions_by_predicate=producer_actions_by_predicate,
+					producible_target_predicates=producible_target_predicates,
+					unproducible_target_predicates=unproducible_target_predicates,
+					rejection_reason="invalid_atomic_progress_lifted_goal",
+				),
+			)
+			continue
 		undeclared_predicates = tuple(
 			dict.fromkeys(
 				predicate
