@@ -50,6 +50,10 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 			"runtime_planner": "none",
 		},
 	]
+	assert report["paper_quality_summary"][
+		"selected_external_sketch_candidate_count"
+	] == 0
+	assert report["paper_quality_summary"]["output_external_sketch_candidate_count"] == 0
 	assert report["train_problem_count"] == 1
 	assert report["evaluation_problem_count"] == 2
 	assert report["coverage"]["solved_count"] == 2

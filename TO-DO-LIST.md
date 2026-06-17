@@ -182,6 +182,7 @@ PDDL domain + training problems
 | T111 | Require learned policy rules to be executable before marking paper audit ready. | G6 | `PaperPolicyAuditReport.ready_for_executable_asl` now checks every parsed rule for bound condition operators, bound effect operators, and non-empty executable bodies; tests cover a policy whose features bind but whose rule condition cannot compile. | Done |
 | T112 | Prevent unselected external learned sketches from bypassing synthesis. | G6, G8 | Output ASL now contains only selector-selected rules; paper profile fails when external learned candidates compile but none are selected, while bootstrap reports can still audit external candidates without emitting them. | Done |
 | T113 | Surface external-sketch selected/output counts in experiment summaries. | G8 | `paper_quality_summary` and comparison rows now include selected and output external-sketch candidate counts, so bootstrap audits with external policies cannot be confused with paper-profile runs that actually select learned sketch rules. | Done |
+| T114 | Assert external-sketch selection counts in script reports. | G8 | Blocksworld and Labworkflow CLI JSON report tests now require `paper_quality_summary.selected_external_sketch_candidate_count == 0` and `output_external_sketch_candidate_count == 0` for the current default bootstrap runs, keeping script outputs aligned with the paper-quality summary contract. | Done |
 
 ## Current Completion Rule
 

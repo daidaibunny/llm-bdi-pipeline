@@ -41,6 +41,10 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 			"runtime_planner": "none",
 		},
 	]
+	assert report["paper_quality_summary"][
+		"selected_external_sketch_candidate_count"
+	] == 0
+	assert report["paper_quality_summary"]["output_external_sketch_candidate_count"] == 0
 	assert report["coverage"]["solved_count"] == 2
 	assert report["coverage"]["failed_count"] == 0
 	assert report["failure_analysis"]["failed_problem_count"] == 0
