@@ -176,6 +176,7 @@ class AtomicProgressConstraintBindingReport:
 	wrong_arity_predicates: tuple[str, ...] = ()
 	producer_actions_by_predicate: Mapping[str, tuple[str, ...]] | None = None
 	producible_target_predicates: tuple[str, ...] = ()
+	unproducible_target_predicates: tuple[str, ...] = ()
 	rejection_reason: str | None = None
 
 	def to_dict(self) -> dict[str, object]:
@@ -193,6 +194,7 @@ class AtomicProgressConstraintBindingReport:
 				self.producer_actions_by_predicate or {},
 			),
 			"producible_target_predicates": self.producible_target_predicates,
+			"unproducible_target_predicates": self.unproducible_target_predicates,
 			"rejection_reason": self.rejection_reason,
 		}
 
@@ -1796,6 +1798,11 @@ def _atomic_progress_required_rule_groups(
 			all_producer_actions_by_predicate=all_producer_actions_by_predicate,
 		)
 		producible_target_predicates = tuple(producer_actions_by_predicate.keys())
+		unproducible_target_predicates = _unproducible_target_predicates(
+			target_predicates=target_predicates,
+			declared_predicates=declared_predicates,
+			producible_target_predicates=producible_target_predicates,
+		)
 		undeclared_predicates = tuple(
 			dict.fromkeys(
 				predicate
@@ -1816,6 +1823,7 @@ def _atomic_progress_required_rule_groups(
 					undeclared_predicates=undeclared_predicates,
 					producer_actions_by_predicate=producer_actions_by_predicate,
 					producible_target_predicates=producible_target_predicates,
+					unproducible_target_predicates=unproducible_target_predicates,
 					rejection_reason="undeclared_atomic_progress_predicate",
 				),
 			)
@@ -1837,6 +1845,7 @@ def _atomic_progress_required_rule_groups(
 					wrong_arity_predicates=wrong_arity_predicates,
 					producer_actions_by_predicate=producer_actions_by_predicate,
 					producible_target_predicates=producible_target_predicates,
+					unproducible_target_predicates=unproducible_target_predicates,
 					rejection_reason="wrong_atomic_progress_predicate_arity",
 				),
 			)
@@ -1878,7 +1887,12 @@ def _atomic_progress_required_rule_groups(
 					available_capabilities=available_capabilities,
 					producer_actions_by_predicate=producer_actions_by_predicate,
 					producible_target_predicates=producible_target_predicates,
-					rejection_reason="no_matching_atomic_progress_rule",
+					unproducible_target_predicates=unproducible_target_predicates,
+					rejection_reason=(
+						"unproducible_atomic_progress_predicate"
+						if unproducible_target_predicates
+						else "no_matching_atomic_progress_rule"
+					),
 				),
 			)
 			continue
@@ -1899,6 +1913,7 @@ def _atomic_progress_required_rule_groups(
 				available_capabilities=available_capabilities,
 				producer_actions_by_predicate=producer_actions_by_predicate,
 				producible_target_predicates=producible_target_predicates,
+				unproducible_target_predicates=unproducible_target_predicates,
 				rejection_reason=None,
 			),
 		)
@@ -2078,6 +2093,20 @@ def _producer_actions_for_target_predicates(
 		if predicate in declared_predicates
 		and tuple(all_producer_actions_by_predicate.get(predicate, ()))
 	}
+
+
+def _unproducible_target_predicates(
+	*,
+	target_predicates: Sequence[str],
+	declared_predicates: frozenset[str],
+	producible_target_predicates: Sequence[str],
+) -> tuple[str, ...]:
+	producible = set(producible_target_predicates or ())
+	return tuple(
+		predicate
+		for predicate in tuple(dict.fromkeys(target_predicates or ()))
+		if predicate in declared_predicates and predicate not in producible
+	)
 
 
 def _matching_positive_action_precondition(
