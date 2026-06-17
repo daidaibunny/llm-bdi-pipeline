@@ -46,6 +46,22 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 			"no IPC-wide baseline table is implied by this smoke protocol",
 		],
 	}
+	paper_quality = report["paper_quality_summary"]
+	assert paper_quality["synthesis_profile"] == "bootstrap"
+	assert paper_quality["paper_profile_ready"] is False
+	assert paper_quality["schema_only_bootstrap"] is True
+	assert paper_quality["external_policy_count"] == 0
+	assert paper_quality["external_policy_required_for_paper_profile"] is True
+	assert paper_quality["blocking_failure_count"] == len(
+		paper_quality["blocking_failures"],
+	)
+	assert "paper profile requires at least one external learned sketch policy" in (
+		paper_quality["blocking_failures"]
+	)
+	assert any(
+		"unjustified schema action atomic rule" in failure
+		for failure in paper_quality["blocking_failures"]
+	)
 	assert report["train_problem_count"] == 1
 	assert report["evaluation_problem_count"] == 2
 	assert report["coverage"]["solved_count"] == 2
@@ -208,6 +224,15 @@ def test_domain_level_experiment_can_run_paper_profile_with_external_policy(
 	assert report["synthesis_report"]["selected_candidate_sources"]["external_sketch"] == 1
 	assert report["experiment_protocol"]["synthesis_profile"] == "paper"
 	assert report["experiment_protocol"]["external_policy_count"] == 1
+	assert report["paper_quality_summary"] == {
+		"synthesis_profile": "paper",
+		"paper_profile_ready": True,
+		"schema_only_bootstrap": False,
+		"external_policy_count": 1,
+		"external_policy_required_for_paper_profile": False,
+		"blocking_failure_count": 0,
+		"blocking_failures": [],
+	}
 
 
 def test_domain_level_experiment_records_explicit_ablation_metadata(

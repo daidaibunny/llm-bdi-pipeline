@@ -98,6 +98,7 @@ def run_domain_level_experiment(
 			ablation_label=ablation_label,
 			baselines=baselines,
 		),
+		"paper_quality_summary": _paper_quality_summary(result.report),
 		"train_problem_count": len(tuple(training_problem_files or ())),
 		"training_problem_files": [
 			_resolved(path) for path in tuple(training_problem_files or ())
@@ -153,6 +154,24 @@ def run_domain_level_experiment(
 		"refinement_analysis": _refinement_analysis(refinement_trace),
 		"refinement_trace": refinement_trace,
 		"asl": asl,
+	}
+
+
+def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, object]:
+	profile = str(synthesis_report.get("synthesis_profile") or "bootstrap")
+	failures = tuple(str(item) for item in synthesis_report.get("paper_profile_failures") or ())
+	external_policy_count = int(synthesis_report.get("external_policy_count") or 0)
+	return {
+		"synthesis_profile": profile,
+		"paper_profile_ready": bool(synthesis_report.get("paper_profile_ready")),
+		"schema_only_bootstrap": profile == "bootstrap" and external_policy_count == 0,
+		"external_policy_count": external_policy_count,
+		"external_policy_required_for_paper_profile": any(
+			"external learned sketch policy" in failure
+			for failure in failures
+		),
+		"blocking_failure_count": len(failures),
+		"blocking_failures": list(failures),
 	}
 
 
