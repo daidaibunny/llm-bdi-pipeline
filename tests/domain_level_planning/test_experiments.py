@@ -53,6 +53,8 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert paper_quality["external_policy_count"] == 0
 	assert paper_quality["selected_external_sketch_candidate_count"] == 0
 	assert paper_quality["output_external_sketch_candidate_count"] == 0
+	assert paper_quality["selected_external_sketch_rule_names"] == []
+	assert paper_quality["output_external_sketch_rule_names"] == []
 	assert paper_quality["external_policy_required_for_paper_profile"] is True
 	assert paper_quality["blocking_failure_count"] == len(
 		paper_quality["blocking_failures"],
@@ -233,6 +235,8 @@ def test_domain_level_experiment_can_run_paper_profile_with_external_policy(
 		"external_policy_count": 1,
 		"selected_external_sketch_candidate_count": 1,
 		"output_external_sketch_candidate_count": 1,
+		"selected_external_sketch_rule_names": ["external_paper_sketch_smoke_1"],
+		"output_external_sketch_rule_names": ["external_paper_sketch_smoke_1"],
 		"external_policy_required_for_paper_profile": False,
 		"blocking_failure_count": 0,
 		"blocking_failures": [],

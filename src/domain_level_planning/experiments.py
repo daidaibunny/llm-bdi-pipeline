@@ -163,6 +163,12 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 	external_policy_count = int(synthesis_report.get("external_policy_count") or 0)
 	selected_sources = dict(synthesis_report.get("selected_candidate_sources") or {})
 	output_sources = dict(synthesis_report.get("output_candidate_sources") or {})
+	selected_external_rule_names = _external_sketch_rule_names(
+		synthesis_report.get("selected_rule_manifest"),
+	)
+	output_external_rule_names = _external_sketch_rule_names(
+		synthesis_report.get("output_rule_manifest"),
+	)
 	return {
 		"synthesis_profile": profile,
 		"paper_profile_ready": bool(synthesis_report.get("paper_profile_ready")),
@@ -178,6 +184,8 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 		"output_external_sketch_candidate_count": int(
 			output_sources.get("external_sketch") or 0,
 		),
+		"selected_external_sketch_rule_names": selected_external_rule_names,
+		"output_external_sketch_rule_names": output_external_rule_names,
 		"external_policy_required_for_paper_profile": any(
 			"external learned sketch policy" in failure
 			for failure in failures
@@ -185,6 +193,21 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 		"blocking_failure_count": len(failures),
 		"blocking_failures": list(failures),
 	}
+
+
+def _external_sketch_rule_names(raw_manifest: object) -> list[str]:
+	"""Return selected/output learned-sketch rule names from a synthesis manifest."""
+
+	names: list[str] = []
+	for raw_item in tuple(raw_manifest or ()):
+		if not isinstance(raw_item, dict):
+			continue
+		if raw_item.get("source") != "external_sketch":
+			continue
+		name = str(raw_item.get("name") or "").strip()
+		if name:
+			names.append(name)
+	return names
 
 
 def _is_schema_only_bootstrap(
