@@ -354,6 +354,26 @@ def test_causal_interference_orders_blocksworld_tower_without_traces() -> None:
 		)
 
 
+def test_schema_synthesis_selects_schema_causal_ordering_without_traces() -> None:
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=BLOCKS_DOMAIN,
+		training_problem_files=(),
+	)
+	asl = render_plan_library_asl(plan_library)
+	report = plan_library.metadata["unified_synthesis_report"]
+
+	causal_plan = "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-"
+	generic_plan = "+!g : goal_on(X, Y) & not on(X, Y) <-"
+	assert causal_plan in asl
+	assert asl.index(causal_plan) < asl.index(generic_plan)
+	assert (
+		report["evidence_matrix"]["layer_c_goal_composer"][
+			"causal_interference_selected_count"
+		]
+		> 0
+	)
+
+
 def test_causal_interference_orders_delete_threat_goals_without_traces(
 	tmp_path: Path,
 ) -> None:

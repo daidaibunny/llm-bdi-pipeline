@@ -259,7 +259,11 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"output composer rules are reported with lifted provenance manifests "
 					"and per-rule composer evidence verdicts; all composer candidates "
 					"now report selected/rejected status, costs, verdicts, and "
-					"rejection reasons."
+					"rejection reasons. Schema-derived causal and delete-threat "
+					"ordering capabilities are selector requirements and deterministic "
+					"ASL output prioritizes them before generic goal dispatch, so "
+					"bottom-up composer rules can be emitted from PDDL schema structure "
+					"without training traces or domain-specific code."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "

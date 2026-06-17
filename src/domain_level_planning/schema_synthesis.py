@@ -1043,7 +1043,7 @@ def _required_capabilities(
 		required.append(f"module_{predicate.name}_already_true")
 	for rule in candidate_rules:
 		if rule.layer == "composer" and any(
-			capability.startswith("order_")
+			_is_ordering_capability(capability)
 			for capability in rule.capabilities
 		):
 			required.extend(rule.capabilities)
@@ -1065,6 +1065,10 @@ def _required_capabilities(
 		required.append(f"compose_goal_{fact.predicate}")
 		required.append(f"module_{fact.predicate}_already_true")
 	return tuple(dict.fromkeys(required))
+
+
+def _is_ordering_capability(capability: str) -> bool:
+	return capability.startswith(("order_", "causal_order_", "delete_threat_order_"))
 
 
 def atomic_action_strategy_required_rule_groups(

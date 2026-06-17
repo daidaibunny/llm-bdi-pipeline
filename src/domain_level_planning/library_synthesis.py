@@ -2594,6 +2594,14 @@ def _evidence_matrix(
 				selected_rules,
 				"causal_order_",
 			),
+			"delete_threat_ordering_candidate_count": _ordering_rule_count(
+				candidate_rules,
+				"delete_threat_order_",
+			),
+			"delete_threat_ordering_selected_count": _ordering_rule_count(
+				selected_rules,
+				"delete_threat_order_",
+			),
 			"trace_ordering_candidate_count": _ordering_rule_count(
 				candidate_rules,
 				"order_",
@@ -3208,7 +3216,7 @@ def _context_specificity_sort_value(rule: LiftedPlanRule, priority: int) -> int:
 
 def _rule_execution_priority(rule: LiftedPlanRule) -> int:
 	if rule.layer == "composer" and any(
-		capability.startswith("order_")
+		_composer_capability_is_ordering(capability)
 		for capability in rule.capabilities
 	):
 		return 0
@@ -3221,6 +3229,10 @@ def _rule_execution_priority(rule: LiftedPlanRule) -> int:
 	if _is_direct_action_rule(rule):
 		return 4
 	return 5
+
+
+def _composer_capability_is_ordering(capability: str) -> bool:
+	return capability.startswith(("order_", "causal_order_", "delete_threat_order_"))
 
 
 def _is_direct_action_rule(rule: LiftedPlanRule) -> bool:

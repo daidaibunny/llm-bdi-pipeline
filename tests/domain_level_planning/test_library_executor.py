@@ -28,10 +28,17 @@ def test_lifted_blocksworld_library_from_one_training_problem_solves_first_20() 
 	plan_library = result.plan_library
 	asl = render_plan_library_asl(plan_library)
 
-	assert len(plan_library.plans) == 29
+	assert len(plan_library.plans) == 35
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
 	assert "dfa_state" not in asl
+	causal_plan = "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-"
+	generic_plan = "+!g : goal_on(X, Y) & not on(X, Y) <-"
+	assert causal_plan in asl
+	assert asl.index(causal_plan) < asl.index(generic_plan)
+	layer_c = result.report["evidence_matrix"]["layer_c_goal_composer"]
+	assert layer_c["causal_interference_selected_count"] >= 1
+	assert layer_c["delete_threat_ordering_selected_count"] >= 1
 
 	results = tuple(
 		evaluate_library_on_problem(
