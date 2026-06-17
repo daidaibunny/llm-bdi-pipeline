@@ -321,7 +321,11 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"with machine-readable blocking gaps; each synthesis run reports an "
 					"external backend consumption summary for accepted/rejected sources, "
 					"ready policies, compiled rules, rejected rules, candidates, and "
-					"feature rejection reasons."
+					"feature rejection reasons; paper policy audit readiness requires "
+					"every parsed learned rule to have bound conditions, bound effects, "
+					"and a non-empty executable body; external learned sketch candidates "
+					"must be selected by the Clingo synthesis step before they appear "
+					"in output ASL."
 				),
 				required_improvement=(
 					"Implement verified policy-to-ASL adapters for non-learner-sketches "

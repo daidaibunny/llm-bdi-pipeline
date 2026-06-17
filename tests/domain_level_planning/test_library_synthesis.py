@@ -383,6 +383,8 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "learner-sketches" in gaps["G6"]["current_state"]
 	assert "h-policy-learner" in gaps["G6"]["current_state"]
 	assert "d2l" in gaps["G6"]["current_state"]
+	assert "every parsed learned rule" in gaps["G6"]["current_state"]
+	assert "selected by the Clingo synthesis step" in gaps["G6"]["current_state"]
 	assert "verified policy-to-ASL adapters" in gaps["G6"]["required_improvement"]
 	assert gaps["G7"]["layer"] == "ASL compiler"
 	assert gaps["G7"]["status"] == "partially_done"
