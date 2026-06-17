@@ -161,6 +161,8 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 	profile = str(synthesis_report.get("synthesis_profile") or "bootstrap")
 	failures = tuple(str(item) for item in synthesis_report.get("paper_profile_failures") or ())
 	external_policy_count = int(synthesis_report.get("external_policy_count") or 0)
+	selected_sources = dict(synthesis_report.get("selected_candidate_sources") or {})
+	output_sources = dict(synthesis_report.get("output_candidate_sources") or {})
 	return {
 		"synthesis_profile": profile,
 		"paper_profile_ready": bool(synthesis_report.get("paper_profile_ready")),
@@ -170,6 +172,12 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 			external_policy_count=external_policy_count,
 		),
 		"external_policy_count": external_policy_count,
+		"selected_external_sketch_candidate_count": int(
+			selected_sources.get("external_sketch") or 0,
+		),
+		"output_external_sketch_candidate_count": int(
+			output_sources.get("external_sketch") or 0,
+		),
 		"external_policy_required_for_paper_profile": any(
 			"external learned sketch policy" in failure
 			for failure in failures
@@ -385,6 +393,12 @@ def _comparison_row(report: dict[str, object]) -> dict[str, object]:
 		"coverage_ratio": float(coverage.get("coverage_ratio") or 0.0),
 		"paper_profile_ready": bool(paper_quality.get("paper_profile_ready")),
 		"schema_only_bootstrap": bool(paper_quality.get("schema_only_bootstrap")),
+		"selected_external_sketch_candidate_count": int(
+			paper_quality.get("selected_external_sketch_candidate_count") or 0,
+		),
+		"output_external_sketch_candidate_count": int(
+			paper_quality.get("output_external_sketch_candidate_count") or 0,
+		),
 		"paper_blocking_failure_count": int(
 			paper_quality.get("blocking_failure_count") or 0,
 		),

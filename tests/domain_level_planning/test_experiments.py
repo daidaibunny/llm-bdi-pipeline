@@ -51,6 +51,8 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert paper_quality["paper_profile_ready"] is False
 	assert paper_quality["schema_only_bootstrap"] is True
 	assert paper_quality["external_policy_count"] == 0
+	assert paper_quality["selected_external_sketch_candidate_count"] == 0
+	assert paper_quality["output_external_sketch_candidate_count"] == 0
 	assert paper_quality["external_policy_required_for_paper_profile"] is True
 	assert paper_quality["blocking_failure_count"] == len(
 		paper_quality["blocking_failures"],
@@ -229,6 +231,8 @@ def test_domain_level_experiment_can_run_paper_profile_with_external_policy(
 		"paper_profile_ready": True,
 		"schema_only_bootstrap": False,
 		"external_policy_count": 1,
+		"selected_external_sketch_candidate_count": 1,
+		"output_external_sketch_candidate_count": 1,
 		"external_policy_required_for_paper_profile": False,
 		"blocking_failure_count": 0,
 		"blocking_failures": [],
@@ -351,6 +355,8 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 			"coverage_ratio": 1.0,
 			"paper_profile_ready": False,
 			"schema_only_bootstrap": True,
+			"selected_external_sketch_candidate_count": 0,
+			"output_external_sketch_candidate_count": 0,
 			"paper_blocking_failure_count": bootstrap["paper_quality_summary"][
 				"blocking_failure_count"
 			],
@@ -371,6 +377,8 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 			"coverage_ratio": 1.0,
 			"paper_profile_ready": True,
 			"schema_only_bootstrap": False,
+			"selected_external_sketch_candidate_count": 1,
+			"output_external_sketch_candidate_count": 1,
 			"paper_blocking_failure_count": 0,
 			"plan_count": paper["plan_library"]["plan_count"],
 			"primitive_action_call_count": paper["plan_library"][
