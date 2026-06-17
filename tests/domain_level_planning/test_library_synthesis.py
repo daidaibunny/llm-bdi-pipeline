@@ -1353,6 +1353,8 @@ def test_atomic_progress_refinement_rejects_undeclared_predicates(
 	assert rejected["rejection_reason"] == "undeclared_atomic_progress_predicate"
 	assert rejected["target_predicates"] == ("unknown",)
 	assert rejected["undeclared_predicates"] == ("unknown",)
+	assert rejected["producer_actions_by_predicate"] == {}
+	assert rejected["producible_target_predicates"] == ()
 
 
 def test_atomic_progress_refinement_reports_wrong_arity_predicates(
@@ -1384,6 +1386,8 @@ def test_atomic_progress_refinement_reports_wrong_arity_predicates(
 	assert rejected["rejection_reason"] == "wrong_atomic_progress_predicate_arity"
 	assert rejected["target_predicates"] == ("base",)
 	assert rejected["wrong_arity_predicates"] == ("base",)
+	assert rejected["producer_actions_by_predicate"] == {"base": ("make_base",)}
+	assert rejected["producible_target_predicates"] == ("base",)
 
 
 def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(

@@ -174,6 +174,8 @@ class AtomicProgressConstraintBindingReport:
 	available_capabilities: tuple[str, ...] = ()
 	undeclared_predicates: tuple[str, ...] = ()
 	wrong_arity_predicates: tuple[str, ...] = ()
+	producer_actions_by_predicate: Mapping[str, tuple[str, ...]] | None = None
+	producible_target_predicates: tuple[str, ...] = ()
 	rejection_reason: str | None = None
 
 	def to_dict(self) -> dict[str, object]:
@@ -187,6 +189,10 @@ class AtomicProgressConstraintBindingReport:
 			"rule_names": self.rule_names,
 			"undeclared_predicates": self.undeclared_predicates,
 			"wrong_arity_predicates": self.wrong_arity_predicates,
+			"producer_actions_by_predicate": dict(
+				self.producer_actions_by_predicate or {},
+			),
+			"producible_target_predicates": self.producible_target_predicates,
 			"rejection_reason": self.rejection_reason,
 		}
 
@@ -381,6 +387,7 @@ def synthesize_domain_level_asl_library(
 		_atomic_progress_required_rule_groups(
 			candidate_rules=candidate_rules,
 			predicates=domain.predicates,
+			actions=domain.actions,
 			refinement_constraints=refinement_constraints,
 		)
 	)
@@ -1762,12 +1769,14 @@ def _atomic_progress_required_rule_groups(
 	*,
 	candidate_rules: Sequence[LiftedPlanRule],
 	predicates: Sequence[object],
+	actions: Sequence[object],
 	refinement_constraints: Sequence[object],
 ) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[AtomicProgressConstraintBindingReport, ...]]:
 	groups: list[ClingoRequiredRuleGroup] = []
 	reports: list[AtomicProgressConstraintBindingReport] = []
 	declared_predicates = _declared_predicate_names(predicates)
 	predicate_arities = _declared_predicate_arities(predicates)
+	all_producer_actions_by_predicate = _positive_effect_actions_by_predicate(actions)
 	for constraint_index, constraint in enumerate(
 		tuple(refinement_constraints or ()),
 		start=1,
@@ -1781,6 +1790,12 @@ def _atomic_progress_required_rule_groups(
 			for atom in target_atoms
 			if _atom_predicate(atom)
 		)
+		producer_actions_by_predicate = _producer_actions_for_target_predicates(
+			target_predicates=target_predicates,
+			declared_predicates=declared_predicates,
+			all_producer_actions_by_predicate=all_producer_actions_by_predicate,
+		)
+		producible_target_predicates = tuple(producer_actions_by_predicate.keys())
 		undeclared_predicates = tuple(
 			dict.fromkeys(
 				predicate
@@ -1799,6 +1814,8 @@ def _atomic_progress_required_rule_groups(
 					rule_names=(),
 					available_capabilities=(),
 					undeclared_predicates=undeclared_predicates,
+					producer_actions_by_predicate=producer_actions_by_predicate,
+					producible_target_predicates=producible_target_predicates,
 					rejection_reason="undeclared_atomic_progress_predicate",
 				),
 			)
@@ -1818,6 +1835,8 @@ def _atomic_progress_required_rule_groups(
 					rule_names=(),
 					available_capabilities=(),
 					wrong_arity_predicates=wrong_arity_predicates,
+					producer_actions_by_predicate=producer_actions_by_predicate,
+					producible_target_predicates=producible_target_predicates,
 					rejection_reason="wrong_atomic_progress_predicate_arity",
 				),
 			)
@@ -1857,6 +1876,8 @@ def _atomic_progress_required_rule_groups(
 					required_capabilities=required_capabilities,
 					rule_names=(),
 					available_capabilities=available_capabilities,
+					producer_actions_by_predicate=producer_actions_by_predicate,
+					producible_target_predicates=producible_target_predicates,
 					rejection_reason="no_matching_atomic_progress_rule",
 				),
 			)
@@ -1876,6 +1897,8 @@ def _atomic_progress_required_rule_groups(
 				required_capabilities=required_capabilities,
 				rule_names=rule_names,
 				available_capabilities=available_capabilities,
+				producer_actions_by_predicate=producer_actions_by_predicate,
+				producible_target_predicates=producible_target_predicates,
 				rejection_reason=None,
 			),
 		)
@@ -2020,6 +2043,41 @@ def _positive_effect_predicates(actions: Sequence[object]) -> frozenset[str]:
 			if effect.is_positive:
 				predicates.add(effect.predicate)
 	return frozenset(predicates)
+
+
+def _positive_effect_actions_by_predicate(
+	actions: Sequence[object],
+) -> dict[str, tuple[str, ...]]:
+	action_names_by_predicate: dict[str, list[str]] = {}
+	for action in tuple(actions or ()):
+		action_name = str(getattr(action, "name", "") or "")
+		if not action_name:
+			continue
+		for effect in parse_pddl_literals(str(getattr(action, "effects", ""))):
+			if not effect.is_positive:
+				continue
+			action_names_by_predicate.setdefault(
+				effect.predicate,
+				[],
+			).append(action_name)
+	return {
+		predicate: tuple(dict.fromkeys(action_names))
+		for predicate, action_names in action_names_by_predicate.items()
+	}
+
+
+def _producer_actions_for_target_predicates(
+	*,
+	target_predicates: Sequence[str],
+	declared_predicates: frozenset[str],
+	all_producer_actions_by_predicate: Mapping[str, tuple[str, ...]],
+) -> dict[str, tuple[str, ...]]:
+	return {
+		predicate: tuple(all_producer_actions_by_predicate[predicate])
+		for predicate in tuple(dict.fromkeys(target_predicates or ()))
+		if predicate in declared_predicates
+		and tuple(all_producer_actions_by_predicate.get(predicate, ()))
+	}
 
 
 def _matching_positive_action_precondition(
