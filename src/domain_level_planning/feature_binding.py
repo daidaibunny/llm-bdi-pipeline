@@ -76,6 +76,13 @@ class ActionEffectBindingCandidate:
 class _GoalAlignedFeature:
 	predicate: str
 	arity: int
+	argument_order: tuple[int, ...] | None = None
+
+
+@dataclass(frozen=True)
+class _RoleFeature:
+	predicate: str
+	argument_order: tuple[int, int]
 
 
 def bind_recoverable_dlplan_features(
@@ -174,7 +181,7 @@ def bind_goal_aligned_action_effect_candidates(
 			progress_effects = tuple(
 				_ProgressEffect(
 					predicate=feature.predicate,
-					arguments=_arguments_for_arity(feature.arity),
+					arguments=_feature_arguments(feature),
 				)
 				for feature in goal_aligned_features.values()
 			)
@@ -325,9 +332,9 @@ def _uses_recoverable_shape_with_bad_vocabulary(
 	if primitive_concept:
 		return predicate_arities.get(primitive_concept.group(1)) != 1
 
-	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
+	primitive_role = _primitive_role_feature(text)
 	if primitive_role:
-		return predicate_arities.get(primitive_role.group(1)) != 2
+		return predicate_arities.get(primitive_role.predicate) != 2
 
 	goal_concept = re.fullmatch(
 		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
@@ -336,19 +343,13 @@ def _uses_recoverable_shape_with_bad_vocabulary(
 	if goal_concept:
 		return predicate_arities.get(goal_concept.group(1)) != 1
 
-	goal_role = re.fullmatch(
-		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+	goal_role = _goal_role_feature(text)
 	if goal_role:
-		return predicate_arities.get(goal_role.group(1)) != 2
+		return predicate_arities.get(goal_role.predicate) != 2
 
-	role_intersection = re.fullmatch(
-		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+	role_intersection = _goal_role_intersection_feature(text)
 	if role_intersection:
-		return predicate_arities.get(role_intersection.group(1)) != 2
+		return predicate_arities.get(role_intersection.predicate) != 2
 
 	concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
@@ -417,12 +418,17 @@ def _bind_feature_expression(
 			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=False)
 
-	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
+	primitive_role = _primitive_role_feature(text)
 	if primitive_role:
-		predicate = primitive_role.group(1)
+		predicate = primitive_role.predicate
 		if predicate_arities.get(predicate) != 2:
 			return None
-		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=False)
+		return _predicate_count_binding(
+			predicate,
+			predicate_arities,
+			goal_aligned=False,
+			argument_order=primitive_role.argument_order,
+		)
 
 	goal_concept = re.fullmatch(
 		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
@@ -434,25 +440,29 @@ def _bind_feature_expression(
 			return None
 		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
 
-	goal_role = re.fullmatch(
-		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+	goal_role = _goal_role_feature(text)
 	if goal_role:
-		predicate = goal_role.group(1)
+		predicate = goal_role.predicate
 		if predicate_arities.get(predicate) != 2:
 			return None
-		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
+		return _predicate_count_binding(
+			predicate,
+			predicate_arities,
+			goal_aligned=True,
+			argument_order=goal_role.argument_order,
+		)
 
-	goal_role_intersection = re.fullmatch(
-		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+	goal_role_intersection = _goal_role_intersection_feature(text)
 	if goal_role_intersection:
-		predicate = goal_role_intersection.group(1)
+		predicate = goal_role_intersection.predicate
 		if predicate_arities.get(predicate) != 2:
 			return None
-		return _predicate_count_binding(predicate, predicate_arities, goal_aligned=True)
+		return _predicate_count_binding(
+			predicate,
+			predicate_arities,
+			goal_aligned=True,
+			argument_order=goal_role_intersection.argument_order,
+		)
 
 	goal_concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
@@ -487,12 +497,14 @@ def _feature_binding_kind(
 			if predicate_arities.get(primitive_concept.group(1)) == 1
 			else "unsupported"
 		)
-	primitive_role = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
+	primitive_role = _primitive_role_feature(text)
 	if primitive_role:
+		if predicate_arities.get(primitive_role.predicate) != 2:
+			return "unsupported"
 		return (
 			"primitive_role_count"
-			if predicate_arities.get(primitive_role.group(1)) == 2
-			else "unsupported"
+			if primitive_role.argument_order == (0, 1)
+			else "primitive_reverse_role_count"
 		)
 	goal_concept = re.fullmatch(
 		r"n_count\(c_equal\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
@@ -504,25 +516,23 @@ def _feature_binding_kind(
 			if predicate_arities.get(goal_concept.group(1)) == 1
 			else "unsupported"
 		)
-	goal_role = re.fullmatch(
-		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+	goal_role = _goal_role_feature(text)
 	if goal_role:
+		if predicate_arities.get(goal_role.predicate) != 2:
+			return "unsupported"
 		return (
 			"goal_aligned_role_count"
-			if predicate_arities.get(goal_role.group(1)) == 2
-			else "unsupported"
+			if goal_role.argument_order == (0, 1)
+			else "goal_aligned_reverse_role_count"
 		)
-	role_intersection = re.fullmatch(
-		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+	role_intersection = _goal_role_intersection_feature(text)
 	if role_intersection:
+		if predicate_arities.get(role_intersection.predicate) != 2:
+			return "unsupported"
 		return (
 			"goal_aligned_role_intersection_count"
-			if predicate_arities.get(role_intersection.group(1)) == 2
-			else "unsupported"
+			if role_intersection.argument_order == (0, 1)
+			else "goal_aligned_reverse_role_intersection_count"
 		)
 	concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
@@ -542,13 +552,20 @@ def _predicate_count_binding(
 	predicate_arities: Mapping[str, int],
 	*,
 	goal_aligned: bool,
+	argument_order: tuple[int, ...] | None = None,
 ) -> SketchFeatureBinding | None:
 	arity = predicate_arities.get(predicate)
 	if arity is None:
 		return None
 	arguments = _arguments_for_arity(arity)
-	atom = _call(predicate, arguments)
-	goal_atom = _call(f"goal_{predicate}", arguments)
+	if argument_order is not None:
+		if sorted(argument_order) != list(range(arity)):
+			return None
+		atom_arguments = tuple(arguments[index] for index in argument_order)
+	else:
+		atom_arguments = arguments
+	atom = _call(predicate, atom_arguments)
+	goal_atom = _call(f"goal_{predicate}", atom_arguments)
 	condition_contexts: dict[str, tuple[str, ...]] = {
 		"c_n_gt": (),
 		"c_n_eq": (),
@@ -558,12 +575,12 @@ def _predicate_count_binding(
 	if goal_aligned:
 		effect_contexts["e_n_inc"] = (goal_atom, f"not {atom}")
 		effect_body["e_n_inc"] = (
-			AgentSpeakBodyStep("subgoal", predicate, arguments),
+			AgentSpeakBodyStep("subgoal", predicate, atom_arguments),
 		)
 	else:
 		effect_contexts["e_n_inc"] = (f"not {atom}",)
 		effect_body["e_n_inc"] = (
-			AgentSpeakBodyStep("subgoal", predicate, arguments),
+			AgentSpeakBodyStep("subgoal", predicate, atom_arguments),
 		)
 	effect_contexts["e_n_bot"] = ()
 	effect_body["e_n_bot"] = ()
@@ -650,10 +667,17 @@ def _progress_effects(
 			effects.append(
 				_ProgressEffect(
 					predicate=feature.predicate,
-					arguments=_arguments_for_arity(feature.arity),
+					arguments=_feature_arguments(feature),
 				),
 			)
 	return tuple(effects)
+
+
+def _feature_arguments(feature: _GoalAlignedFeature) -> tuple[str, ...]:
+	arguments = _arguments_for_arity(feature.arity)
+	if feature.argument_order is None:
+		return arguments
+	return tuple(arguments[index] for index in feature.argument_order)
 
 
 def _candidate_adds_predicate(
@@ -707,18 +731,20 @@ def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:
 	)
 	if concept:
 		return _GoalAlignedFeature(predicate=concept.group(1), arity=1)
-	role = re.fullmatch(
-		r"n_count\(c_equal\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+	role = _goal_role_feature(text)
 	if role:
-		return _GoalAlignedFeature(predicate=role.group(1), arity=2)
-	role_intersection = re.fullmatch(
-		r"n_count\(r_and\(r_primitive\(([^(),]+),0,1\),r_primitive\(\1_g,0,1\)\)\)",
-		text,
-	)
+		return _GoalAlignedFeature(
+			predicate=role.predicate,
+			arity=2,
+			argument_order=role.argument_order,
+		)
+	role_intersection = _goal_role_intersection_feature(text)
 	if role_intersection:
-		return _GoalAlignedFeature(predicate=role_intersection.group(1), arity=2)
+		return _GoalAlignedFeature(
+			predicate=role_intersection.predicate,
+			arity=2,
+			argument_order=role_intersection.argument_order,
+		)
 	concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
@@ -726,6 +752,56 @@ def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:
 	if concept_intersection:
 		return _GoalAlignedFeature(predicate=concept_intersection.group(1), arity=1)
 	return None
+
+
+def _primitive_role_feature(text: str) -> _RoleFeature | None:
+	match = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),([01]),([01])\)\)", text)
+	if not match:
+		return None
+	first = int(match.group(2))
+	second = int(match.group(3))
+	if first == second:
+		return None
+	return _RoleFeature(
+		predicate=match.group(1),
+		argument_order=(first, second),
+	)
+
+
+def _goal_role_feature(text: str) -> _RoleFeature | None:
+	match = re.fullmatch(
+		r"n_count\(c_equal\(r_primitive\(([^(),]+),([01]),([01])\),"
+		r"r_primitive\(\1_g,\2,\3\)\)\)",
+		text,
+	)
+	if not match:
+		return None
+	first = int(match.group(2))
+	second = int(match.group(3))
+	if first == second:
+		return None
+	return _RoleFeature(
+		predicate=match.group(1),
+		argument_order=(first, second),
+	)
+
+
+def _goal_role_intersection_feature(text: str) -> _RoleFeature | None:
+	match = re.fullmatch(
+		r"n_count\(r_and\(r_primitive\(([^(),]+),([01]),([01])\),"
+		r"r_primitive\(\1_g,\2,\3\)\)\)",
+		text,
+	)
+	if not match:
+		return None
+	first = int(match.group(2))
+	second = int(match.group(3))
+	if first == second:
+		return None
+	return _RoleFeature(
+		predicate=match.group(1),
+		argument_order=(first, second),
+	)
 
 
 def _rewrite_body_step(
@@ -749,9 +825,10 @@ def _rewrite_variables(text: str, substitution: Mapping[str, str]) -> str:
 def _primitive_count_predicate(expression: str) -> str | None:
 	text = _normalize_expression(expression)
 	match = re.fullmatch(r"n_count\(c_primitive\(([^(),]+),0\)\)", text)
-	if not match:
-		match = re.fullmatch(r"n_count\(r_primitive\(([^(),]+),0,1\)\)", text)
-	return match.group(1) if match else None
+	if match:
+		return match.group(1)
+	role = _primitive_role_feature(text)
+	return role.predicate if role is not None else None
 
 
 def _nullary_predicate(expression: str) -> str | None:

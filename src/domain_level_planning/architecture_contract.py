@@ -293,9 +293,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"Recoverable lifted patterns bind; object-specific, distance, "
 					"and vocabulary-mismatch patterns are rejected with distinct "
-					"rejection diagnostics; concept, role, nullary, and goal-aligned "
-					"concept/role intersection DLPlan features must match PDDL "
-					"predicate arities before binding."
+					"rejection diagnostics; concept, forward/reverse role, nullary, "
+					"and goal-aligned concept/role intersection DLPlan features must "
+					"match PDDL predicate arities before binding."
 				),
 				required_improvement=(
 					"Expand only principled lifted bindings, especially for "
@@ -470,12 +470,12 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 
 	return HypothesisClassContract(
 		name="goal_conditioned_modular_sketch_asl",
-		feature_language={
-			"state_features": (
-				"PDDL predicates over lifted variables",
-				"negation-as-absence context literals",
-				"safe lifted DLPlan feature bindings only",
-			),
+			feature_language={
+				"state_features": (
+					"PDDL predicates over lifted variables",
+					"negation-as-absence context literals",
+					"safe lifted DLPlan feature bindings, including forward/reverse binary roles",
+				),
 			"goal_features": (
 				"read-only goal_<predicate> descriptors",
 				"positive conjunctive achievement goals",
