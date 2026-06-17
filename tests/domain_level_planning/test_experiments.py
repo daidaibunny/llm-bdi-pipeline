@@ -349,6 +349,11 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 			"solved_count": 1,
 			"failed_count": 0,
 			"coverage_ratio": 1.0,
+			"paper_profile_ready": False,
+			"schema_only_bootstrap": True,
+			"paper_blocking_failure_count": bootstrap["paper_quality_summary"][
+				"blocking_failure_count"
+			],
 			"plan_count": bootstrap["plan_library"]["plan_count"],
 			"primitive_action_call_count": bootstrap["plan_library"][
 				"primitive_action_call_count"
@@ -364,6 +369,9 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 			"solved_count": 1,
 			"failed_count": 0,
 			"coverage_ratio": 1.0,
+			"paper_profile_ready": True,
+			"schema_only_bootstrap": False,
+			"paper_blocking_failure_count": 0,
 			"plan_count": paper["plan_library"]["plan_count"],
 			"primitive_action_call_count": paper["plan_library"][
 				"primitive_action_call_count"

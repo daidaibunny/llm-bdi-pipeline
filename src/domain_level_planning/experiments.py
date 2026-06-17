@@ -349,6 +349,7 @@ def _comparison_row(report: dict[str, object]) -> dict[str, object]:
 	protocol = dict(report.get("experiment_protocol") or {})
 	coverage = dict(report.get("coverage") or {})
 	plan_library = dict(report.get("plan_library") or {})
+	paper_quality = dict(report.get("paper_quality_summary") or {})
 	ablation = _primary_ablation(protocol, report)
 	return {
 		"label": str(ablation.get("label") or report.get("experiment_name") or ""),
@@ -361,6 +362,11 @@ def _comparison_row(report: dict[str, object]) -> dict[str, object]:
 		"solved_count": int(coverage.get("solved_count") or 0),
 		"failed_count": int(coverage.get("failed_count") or 0),
 		"coverage_ratio": float(coverage.get("coverage_ratio") or 0.0),
+		"paper_profile_ready": bool(paper_quality.get("paper_profile_ready")),
+		"schema_only_bootstrap": bool(paper_quality.get("schema_only_bootstrap")),
+		"paper_blocking_failure_count": int(
+			paper_quality.get("blocking_failure_count") or 0,
+		),
 		"plan_count": int(plan_library.get("plan_count") or 0),
 		"primitive_action_call_count": int(
 			plan_library.get("primitive_action_call_count") or 0,
