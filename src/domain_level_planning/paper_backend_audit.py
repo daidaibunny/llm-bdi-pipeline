@@ -88,10 +88,9 @@ def audit_learned_policy_for_asl_binding(
 		unsupported_features=binding_report.unsupported_features,
 		action_effect_candidate_count=action_candidate_count,
 		executable_effect_count=executable_effect_count,
-		ready_for_executable_asl=(
-			not binding_report.unsupported_features
-			and executable_effect_count > 0
-			and len(policy.parsed_rules) > 0
+		ready_for_executable_asl=_policy_rules_are_executable(
+			policy=policy,
+			bindings=binding_report.bindings,
 		),
 		feature_binding_diagnostics=tuple(
 			binding_report.feature_diagnostics[feature_id]
@@ -99,3 +98,27 @@ def audit_learned_policy_for_asl_binding(
 		),
 	)
 	return report, policy, binding_report
+
+
+def _policy_rules_are_executable(
+	*,
+	policy: SketchPolicy,
+	bindings: Mapping[str, object],
+) -> bool:
+	rules = tuple(policy.parsed_rules or ())
+	if not rules:
+		return False
+	for rule in rules:
+		body_step_count = 0
+		for condition in rule.conditions:
+			binding = bindings.get(condition.feature_id)
+			if binding is None or condition.operator not in binding.condition_contexts:
+				return False
+		for effect in rule.effects:
+			binding = bindings.get(effect.feature_id)
+			if binding is None or effect.operator not in binding.effect_body:
+				return False
+			body_step_count += len(binding.effect_body[effect.operator])
+		if body_step_count == 0:
+			return False
+	return True

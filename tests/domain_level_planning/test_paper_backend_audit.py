@@ -116,6 +116,36 @@ def test_audit_rejects_unbound_paper_policy_as_not_executable(tmp_path: Path) ->
 	)
 
 
+def test_audit_rejects_policy_with_bound_features_but_uncompiled_rule(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_domain(tmp_path)
+	policy_file = tmp_path / "uncompiled-rule-policy.txt"
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_on "n_count(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)))")
+		)
+		(:rule (:conditions (:c_n_lt f_on)) (:effects (:e_n_inc f_on)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	report, _, _ = audit_learned_policy_for_asl_binding(
+		source_name="learner-sketches:uncompiled-rule",
+		policy_file=policy_file,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert report.unsupported_features == {}
+	assert report.bound_feature_count == 1
+	assert report.executable_effect_count > 0
+	assert report.ready_for_executable_asl is False
+
+
 def _write_domain(tmp_path: Path) -> Path:
 	domain_file = tmp_path / "domain.pddl"
 	domain_file.write_text(
