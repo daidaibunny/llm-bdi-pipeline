@@ -759,7 +759,10 @@ def _paper_profile_failures(
 				"unmatched atomic-progress refinement constraint "
 				f"{report.constraint_index} "
 				f"(required capabilities={report.required_capabilities}; "
-				f"reason={report.rejection_reason})"
+				f"reason={report.rejection_reason}; "
+				f"producible={report.producible_target_predicates}; "
+				f"unproducible={report.unproducible_target_predicates}; "
+				f"producers={dict(report.producer_actions_by_predicate or {})})"
 			),
 		)
 	if bounded_validation is None:

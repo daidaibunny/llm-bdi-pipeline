@@ -1421,6 +1421,14 @@ def test_atomic_progress_refinement_reports_unproducible_declared_predicates(
 	assert rejected["producer_actions_by_predicate"] == {}
 	assert rejected["producible_target_predicates"] == ()
 	assert rejected["unproducible_target_predicates"] == ("calibrated",)
+	assert any(
+		(
+			"reason=unproducible_atomic_progress_predicate" in failure
+			and "unproducible=('calibrated',)" in failure
+			and "producers={}" in failure
+		)
+		for failure in result.report["paper_profile_failures"]
+	)
 
 
 def test_unmatched_refinement_repair_constraints_are_reported_without_guessing(
