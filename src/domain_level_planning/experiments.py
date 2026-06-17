@@ -42,6 +42,7 @@ def run_domain_level_experiment(
 			domain_file=domain_file,
 			training_problem_files=training_problem_files,
 			heldout_problem_files=evaluation_problem_files,
+			counterexample_problem_files=counterexample_problem_files,
 			external_sketch_policies=external_sketch_policies,
 			synthesis_profile=synthesis_profile,
 			max_refinement_rounds=max_refinement_rounds,

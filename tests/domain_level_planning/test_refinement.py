@@ -5,6 +5,8 @@ from types import SimpleNamespace
 
 from domain_level_planning.library_executor import evaluate_library_on_problem
 from domain_level_planning.library_verifier import LibraryCounterexample
+from domain_level_planning.refinement import HeldoutProblemEvaluation
+from domain_level_planning.refinement import RefinementConstraint
 from domain_level_planning.refinement import classify_heldout_failure_for_refinement
 from domain_level_planning.refinement import synthesize_with_counterexample_refinement
 from plan_library.rendering import render_plan_library_asl
@@ -90,6 +92,69 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 	)
 	assert execution.solved is True
 	assert execution.steps == ("make_base(b)", "make_top(a, b)")
+
+
+def test_counterexample_refinement_continues_on_new_constraints_without_new_files(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	problem_file = tmp_path / "already-training.pddl"
+	problem_file.write_text("", encoding="utf-8")
+	problem_path = str(problem_file.resolve())
+	constraint = RefinementConstraint(
+		failure_kind="missing_composer_or_context",
+		target_layer="layer_c_goal_composer",
+		constraint_type="counterexample_state_coverage",
+		problem_file=problem_path,
+		problem_name="already-training",
+		failure_reason="no applicable plan for !g",
+		ground_missing_goals=("done(a)",),
+		lifted_missing_goals=("done(X)",),
+		required_rule_group_types=("counterexample_state_coverage",),
+	)
+	synthesis_calls: list[dict[str, object]] = []
+
+	def fake_synthesize(**kwargs):
+		synthesis_calls.append(dict(kwargs))
+		return SimpleNamespace(report={"round": len(synthesis_calls)})
+
+	def fake_evaluate(**kwargs):
+		has_constraints = bool(synthesis_calls[-1]["refinement_constraints"])
+		return (
+			HeldoutProblemEvaluation(
+				problem_file=problem_path,
+				problem_name="already-training",
+				solved=has_constraints,
+				step_count=1 if has_constraints else 0,
+				failure_reason=None if has_constraints else "no applicable plan for !g",
+				refinement_constraints=() if has_constraints else (constraint,),
+			),
+		)
+
+	monkeypatch.setattr(
+		"domain_level_planning.refinement.synthesize_domain_level_asl_library",
+		fake_synthesize,
+	)
+	monkeypatch.setattr(
+		"domain_level_planning.refinement._evaluate_heldout_problems",
+		fake_evaluate,
+	)
+
+	refined = synthesize_with_counterexample_refinement(
+		domain_file=tmp_path / "domain.pddl",
+		training_problem_files=(problem_file,),
+		heldout_problem_files=(problem_file,),
+		counterexample_problem_files=(problem_file,),
+		max_refinement_rounds=1,
+	)
+
+	assert refined.converged is True
+	assert len(refined.rounds) == 2
+	assert refined.rounds[0].added_counterexample_problem_files == ()
+	assert refined.rounds[0].refinement_constraints
+	assert synthesis_calls[0]["counterexample_problem_files"] == (problem_path,)
+	assert synthesis_calls[1]["refinement_constraints"] == (constraint,)
+	assert refined.rounds[1].heldout_evaluations[0].solved is True
 
 
 def test_primitive_precondition_failure_refinement_reports_lifted_layer_b_evidence(

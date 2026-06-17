@@ -155,6 +155,7 @@ def synthesize_with_counterexample_refinement(
 	domain_file: str | Path,
 	training_problem_files: Sequence[str | Path] = (),
 	heldout_problem_files: Sequence[str | Path] = (),
+	counterexample_problem_files: Sequence[str | Path] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
 	synthesis_profile: str = "bootstrap",
 	max_refinement_rounds: int = 1,
@@ -166,7 +167,7 @@ def synthesize_with_counterexample_refinement(
 	if max_refinement_rounds < 0:
 		raise ValueError("max_refinement_rounds must be non-negative.")
 	current_training = _unique_paths(training_problem_files)
-	counterexample_constraints = ()
+	counterexample_constraints = _unique_paths(counterexample_problem_files)
 	explicit_refinement_constraints: tuple[RefinementConstraint, ...] = ()
 	heldout_files = _unique_paths(heldout_problem_files)
 	rounds: list[RefinementRoundReport] = []
@@ -219,13 +220,20 @@ def synthesize_with_counterexample_refinement(
 		if not failed_files:
 			converged = True
 			break
-		if round_index >= max_refinement_rounds or not added_files:
+		new_explicit_constraints = tuple(
+			constraint
+			for constraint in round_constraints
+			if constraint not in explicit_refinement_constraints
+		)
+		if round_index >= max_refinement_rounds or (
+			not added_files and not new_explicit_constraints
+		):
 			break
 		counterexample_constraints = _unique_paths(
 			(*counterexample_constraints, *added_files),
 		)
 		explicit_refinement_constraints = tuple(
-			dict.fromkeys((*explicit_refinement_constraints, *round_constraints)),
+			dict.fromkeys((*explicit_refinement_constraints, *new_explicit_constraints)),
 		)
 
 	if final_result is None:
