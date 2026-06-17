@@ -420,9 +420,7 @@ def synthesize_domain_level_asl_library(
 		selection.rules,
 		all_transition_evidence,
 	)
-	output_rules = _order_output_rules(
-		_deduplicate_rules(external_candidates + selection.rules),
-	)
+	output_rules = _order_output_rules(_deduplicate_rules(selection.rules))
 	plan_library = PlanLibrary(
 		domain_name=domain.name,
 		plans=tuple(_compile_rule_to_plan(rule) for rule in output_rules),
@@ -694,6 +692,8 @@ def _paper_profile_failures(
 		failures.append("paper profile has no external learned rule binding reports")
 	if not tuple(external_candidates or ()):
 		failures.append("paper profile compiled no external learned sketch candidates")
+	elif not any(_candidate_source(rule) == "external_sketch" for rule in selected_rules):
+		failures.append("paper profile selected no external learned sketch candidates")
 	for record in _selected_atomic_rule_evidence(
 		selected_rules=selected_rules,
 		atomic_justifications=atomic_achievement_justifications(

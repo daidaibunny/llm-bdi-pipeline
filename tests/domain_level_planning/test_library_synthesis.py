@@ -114,6 +114,9 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert consumption["compiled_rule_count"] == 1
 	assert consumption["rejected_rule_count"] == 0
 	assert consumption["candidate_count"] == result.report["external_candidate_count"]
+	assert result.report["output_candidate_sources"].get("external_sketch", 0) == (
+		result.report["selected_candidate_sources"].get("external_sketch", 0)
+	)
 	assert consumption["rejected_source_count"] == 0
 	assert consumption["policies"] == (
 		{
@@ -161,14 +164,14 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	)
 	assert result.report["candidate_sources"]["external_sketch"] >= 1
 	assert result.report["candidate_sources"]["schema"] >= 1
-	assert result.report["output_candidate_sources"]["external_sketch"] >= 1
-	assert result.report["paper_profile_ready"] is True
-	assert result.report["paper_profile_failures"] == ()
+	assert result.report["output_candidate_sources"].get("external_sketch", 0) == 0
+	assert result.report["paper_profile_ready"] is False
+	assert "paper profile selected no external learned sketch candidates" in (
+		result.report["paper_profile_failures"]
+	)
 	rule_reports = result.report["external_rule_binding_reports"]
 	assert len(rule_reports) == 1
 	assert rule_reports[0]["compiled"] is True
-	assert "+!g : goal_done(X0) & not done(X0) <-" in asl
-	assert "\t!done(X0);" in asl
 	assert "+!done(X) : ready(X) <-" in asl
 	assert "\tfinish(X)." in asl
 	assert "!achieve_" not in asl
@@ -192,6 +195,7 @@ def test_unified_pipeline_consumes_reverse_role_external_sketch(
 				policy_file=policy_file,
 			),
 		),
+		synthesis_profile="paper",
 	)
 	asl = render_plan_library_asl(result.plan_library)
 
@@ -279,6 +283,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 				policy_file=policy_file,
 			),
 		),
+		synthesis_profile="paper",
 	)
 
 	contract = result.report["architecture_contract"]
@@ -424,6 +429,7 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 				policy_file=policy_file,
 			),
 		),
+		synthesis_profile="paper",
 	)
 
 	matrix = result.report["evidence_matrix"]
@@ -833,6 +839,7 @@ def test_external_policy_rules_are_rendered_before_schema_fallbacks(
 				policy_file=policy_file,
 			),
 		),
+		synthesis_profile="paper",
 	)
 	asl = render_plan_library_asl(result.plan_library)
 
