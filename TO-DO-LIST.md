@@ -188,6 +188,7 @@ PDDL domain + training problems
 | T117 | Reject ASL action-symbol collisions. | G7, G10 | PDDL support inspection now rejects domains where distinct primitive action names collapse to the same rendered AgentSpeak functor after sanitization, while still allowing non-colliding hyphenated IPC-style action names; tests cover a `make-done`/`make_done` collision diagnostic. | Done |
 | T118 | Prioritize primitive-precondition refinement. | G9 | Held-out failures whose reason is a primitive action precondition violation now generate Layer B atomic-precondition repair constraints before considering goal-ordering heuristics, even when another goal has already been satisfied; tests cover the previous misclassification as `goal_ordering_failure`. | Done |
 | T119 | Explain ambiguous DLPlan action-effect candidates. | G5, G6 | Feature-binding diagnostics now include each action-effect candidate's feature id, DLPlan operator, affected predicate, PDDL action name, lifted context, primitive body step, and add effects, so ambiguous primitive bindings are auditable instead of reported only as a count. | Done |
+| T120 | Align architecture contract with action-candidate diagnostics. | G1, G5 | The machine-readable architecture contract now states that feature-binding diagnostics include action-candidate details for ambiguous primitive effect bindings, keeping synthesis reports aligned with the current G5 implementation. | Done |
 
 ## Current Completion Rule
 

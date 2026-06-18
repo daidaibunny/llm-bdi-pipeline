@@ -299,7 +299,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"and vocabulary-mismatch patterns are rejected with distinct "
 					"rejection diagnostics; concept, forward/reverse role, nullary, "
 					"and goal-aligned concept/role intersection DLPlan features must "
-					"match PDDL predicate arities before binding."
+					"match PDDL predicate arities before binding; feature diagnostics "
+					"now include action-candidate details for ambiguous primitive "
+					"effect bindings instead of only reporting candidate counts."
 				),
 				required_improvement=(
 					"Expand only principled lifted bindings, especially for "
