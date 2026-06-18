@@ -595,6 +595,39 @@ def _causal_interference_ordering_rules(
 								cost=2,
 							),
 						)
+					for binding_link in _producer_consumer_binding_links(
+						producer,
+						consumer,
+					):
+						key = (
+							f"binding:{producer_pred}",
+							consumer_pred,
+							_binding_link_key(binding_link),
+						)
+						if key in seen:
+							continue
+						lifted = _lift_binding_causal_ordering(
+							producer,
+							consumer,
+							binding_link,
+						)
+						if lifted is None:
+							continue
+						seen.add(key)
+						index += 1
+						context, body, capability = lifted
+						rules.append(
+							_rule(
+								f"g_causal_order_{producer_pred}_before_{consumer_pred}_{index}",
+								"g",
+								(),
+								context,
+								body,
+								layer="composer",
+								capabilities=(capability,),
+								cost=2,
+							),
+						)
 	for threat_pred, threat_list in achievers.items():
 		for threatened_pred, threatened_list in achievers.items():
 			for threat in threat_list:
@@ -732,6 +765,100 @@ def _delete_threat_links(
 	return tuple(dict.fromkeys(links))
 
 
+def _producer_consumer_binding_links(
+	producer: dict,
+	consumer: dict,
+) -> tuple[dict[str, object], ...]:
+	"""Return causal links requiring consumer preconditions to bind variables."""
+
+	if producer["target"].predicate == consumer["target"].predicate:
+		return ()
+	producer_positions = _argument_positions(producer["target"].arguments)
+	consumer_positions = _argument_positions(consumer["target"].arguments)
+	links: list[dict[str, object]] = []
+	for precondition in consumer["preconditions"]:
+		for supplied in producer["add_effects"]:
+			if precondition.predicate != supplied.predicate:
+				continue
+			if len(precondition.arguments) != len(supplied.arguments):
+				continue
+			if not precondition.arguments:
+				continue
+			direct_pairs: list[tuple[int, int]] = []
+			hidden_pairs: list[tuple[str, int]] = []
+			grounded = True
+			for consumer_arg, producer_arg in zip(
+				precondition.arguments,
+				supplied.arguments,
+			):
+				producer_index = producer_positions.get(producer_arg)
+				if producer_index is None:
+					grounded = False
+					break
+				consumer_index = consumer_positions.get(consumer_arg)
+				if consumer_index is not None:
+					direct_pairs.append((consumer_index, producer_index))
+				else:
+					hidden_pairs.append((consumer_arg, producer_index))
+			if not grounded or not hidden_pairs:
+				continue
+			binding_literals = _binding_literals_for_hidden_arguments(
+				hidden_arguments=tuple(argument for argument, _index in hidden_pairs),
+				consumer=consumer,
+				supplied_precondition=precondition,
+			)
+			if binding_literals is None:
+				continue
+			links.append(
+				{
+					"direct_pairs": tuple(direct_pairs),
+					"hidden_pairs": tuple(hidden_pairs),
+					"binding_literals": binding_literals,
+				},
+			)
+	return tuple(links)
+
+
+def _binding_literals_for_hidden_arguments(
+	*,
+	hidden_arguments: tuple[str, ...],
+	consumer: dict,
+	supplied_precondition: LiftedLiteral,
+) -> tuple[LiftedLiteral, ...] | None:
+	"""Find one-hop positive preconditions that bind hidden variables."""
+
+	remaining = set(hidden_arguments)
+	consumer_target_arguments = set(consumer["target"].arguments)
+	allowed_arguments = consumer_target_arguments | remaining
+	bindings: list[LiftedLiteral] = []
+	for literal in consumer["preconditions"]:
+		if literal == supplied_precondition or not literal.is_positive:
+			continue
+		literal_arguments = set(literal.arguments)
+		if not literal_arguments.intersection(remaining):
+			continue
+		if not literal_arguments.intersection(consumer_target_arguments):
+			continue
+		if not literal_arguments.issubset(allowed_arguments):
+			continue
+		bindings.append(literal)
+		remaining.difference_update(literal_arguments)
+		if not remaining:
+			return tuple(bindings)
+	return None
+
+
+def _binding_link_key(binding_link: dict[str, object]) -> tuple[object, ...]:
+	return (
+		tuple(binding_link.get("direct_pairs") or ()),
+		tuple(binding_link.get("hidden_pairs") or ()),
+		tuple(
+			literal.signature()
+			for literal in tuple(binding_link.get("binding_literals") or ())
+		),
+	)
+
+
 def _lift_causal_ordering(
 	producer: dict,
 	consumer: dict,
@@ -792,6 +919,125 @@ def _lift_causal_ordering(
 		f"{consumer_pred}_{'_'.join(consumer_args)}"
 	)
 	return context, body, capability
+
+
+def _lift_binding_causal_ordering(
+	producer: dict,
+	consumer: dict,
+	binding_link: dict[str, object],
+) -> tuple[tuple[str, ...], tuple[LiftedCall, ...], str] | None:
+	consumer_arity = len(consumer["target"].arguments)
+	producer_arity = len(producer["target"].arguments)
+	direct_pairs = tuple(binding_link.get("direct_pairs") or ())
+	hidden_pairs = tuple(binding_link.get("hidden_pairs") or ())
+	consumer_to_producer = {
+		consumer_index: producer_index for consumer_index, producer_index in direct_pairs
+	}
+	if len(consumer_to_producer) != len(direct_pairs):
+		return None
+	hidden_to_producer: dict[str, tuple[int, ...]] = {}
+	for hidden_argument, producer_index in hidden_pairs:
+		hidden_to_producer.setdefault(str(hidden_argument), ())
+		hidden_to_producer[str(hidden_argument)] = (
+			*hidden_to_producer[str(hidden_argument)],
+			int(producer_index),
+		)
+	identities: dict[tuple[str, int], int] = {}
+	hidden_identities: dict[str, int] = {}
+	next_id = 0
+	for consumer_index in range(consumer_arity):
+		identities[("c", consumer_index)] = next_id
+		next_id += 1
+	for hidden_argument in sorted(hidden_to_producer):
+		hidden_identities[hidden_argument] = next_id
+		next_id += 1
+	for producer_index in range(producer_arity):
+		linked_consumer = next(
+			(
+				consumer_index
+				for consumer_index, mapped in consumer_to_producer.items()
+				if mapped == producer_index
+			),
+			None,
+		)
+		if linked_consumer is not None:
+			identities[("p", producer_index)] = identities[("c", linked_consumer)]
+			continue
+		linked_hidden = next(
+			(
+				hidden_argument
+				for hidden_argument, producer_indices in hidden_to_producer.items()
+				if producer_index in producer_indices
+			),
+			None,
+		)
+		if linked_hidden is not None:
+			identities[("p", producer_index)] = hidden_identities[linked_hidden]
+			continue
+		identities[("p", producer_index)] = next_id
+		next_id += 1
+	variable_names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+	if next_id > len(variable_names):
+		return None
+
+	def _variable(identity: int) -> str:
+		return variable_names[identity]
+
+	consumer_args = tuple(
+		_variable(identities[("c", index)]) for index in range(consumer_arity)
+	)
+	producer_args = tuple(
+		_variable(identities[("p", index)]) for index in range(producer_arity)
+	)
+	binding_contexts = _binding_context_signatures(
+		consumer=consumer,
+		binding_literals=tuple(binding_link.get("binding_literals") or ()),
+		consumer_identities=identities,
+		hidden_identities=hidden_identities,
+		variable_names=variable_names,
+	)
+	if binding_contexts is None:
+		return None
+	producer_pred = producer["target"].predicate
+	consumer_pred = consumer["target"].predicate
+	context = (
+		_call(f"goal_{producer_pred}", producer_args),
+		_call(f"goal_{consumer_pred}", consumer_args),
+		*binding_contexts,
+		f"not {_call(producer_pred, producer_args)}",
+	)
+	body = (_subgoal(producer_pred, *producer_args), _subgoal("g"))
+	capability = (
+		f"causal_order_{producer_pred}_{'_'.join(producer_args)}_before_"
+		f"{consumer_pred}_{'_'.join(consumer_args)}_via_"
+		f"{'_'.join(context.split('(', 1)[0] for context in binding_contexts)}"
+	)
+	return context, body, capability
+
+
+def _binding_context_signatures(
+	*,
+	consumer: dict,
+	binding_literals: tuple[LiftedLiteral, ...],
+	consumer_identities: dict[tuple[str, int], int],
+	hidden_identities: dict[str, int],
+	variable_names: tuple[str, ...],
+) -> tuple[str, ...] | None:
+	consumer_positions = _argument_positions(consumer["target"].arguments)
+	signatures: list[str] = []
+	for literal in binding_literals:
+		arguments: list[str] = []
+		for argument in literal.arguments:
+			consumer_index = consumer_positions.get(argument)
+			if consumer_index is not None:
+				arguments.append(variable_names[consumer_identities[("c", consumer_index)]])
+				continue
+			hidden_identity = hidden_identities.get(argument)
+			if hidden_identity is None:
+				return None
+			arguments.append(variable_names[hidden_identity])
+		signatures.append(_call(literal.predicate, arguments))
+	return tuple(signatures)
 
 
 def _lift_delete_threat_ordering(

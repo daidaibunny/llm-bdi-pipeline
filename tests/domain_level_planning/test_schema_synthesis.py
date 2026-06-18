@@ -336,6 +336,14 @@ def test_causal_interference_orders_blocksworld_tower_without_traces() -> None:
 		for rule in rules
 		if rule.head.symbol == "g"
 		and any(call.symbol == "on" for call in rule.body)
+		and len(
+			[
+				context
+				for context in rule.context
+				if context.strip().startswith("goal_on(")
+			],
+		)
+		== 2
 	]
 	assert tower_rules
 	rule = tower_rules[0]
@@ -419,6 +427,60 @@ def test_causal_interference_orders_delete_threat_goals_without_traces(
 	assert rule.body == (
 		LiftedCall("subgoal", "a", ("X",)),
 		LiftedCall("subgoal", "g", ()),
+	)
+
+
+def test_causal_interference_uses_binding_preconditions_for_hidden_goal_argument(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "indirect-causal-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain indirect-causal-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (assigned ?task ?tool)
+		  (prepared ?tool)
+		  (done ?task)
+		 )
+		 (:action prepare
+		  :parameters (?tool)
+		  :precondition ()
+		  :effect (prepared ?tool)
+		 )
+		 (:action finish
+		  :parameters (?task ?tool)
+		  :precondition (and (assigned ?task ?tool) (prepared ?tool))
+		  :effect (done ?task)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	domain = PDDLParser.parse_domain(domain_file)
+
+	rules = causal_interference_ordering_rules(domain)
+
+	indirect_rules = tuple(
+		rule
+		for rule in rules
+		if rule.context
+		== (
+			"goal_prepared(Y)",
+			"goal_done(X)",
+			"assigned(X, Y)",
+			"not prepared(Y)",
+		)
+	)
+	assert len(indirect_rules) == 1
+	rule = indirect_rules[0]
+	assert rule.body == (
+		LiftedCall("subgoal", "prepared", ("Y",)),
+		LiftedCall("subgoal", "g", ()),
+	)
+	assert any(
+		capability.startswith("causal_order_prepared_Y_before_done_X")
+		for capability in rule.capabilities
 	)
 
 
