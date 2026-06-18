@@ -389,6 +389,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G7"]["layer"] == "ASL compiler"
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "deterministic first-applicable" in gaps["G7"]["current_state"]
+	assert "PDDL-to-ASL symbol mapping" in gaps["G7"]["current_state"]
 	assert "primitive-action precondition handling" in gaps["G7"]["required_improvement"]
 	assert gaps["G8"]["layer"] == "validation"
 	assert gaps["G8"]["status"] == "partially_done"
@@ -402,6 +403,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G10"]["status"] == "done_current_fragment"
 	assert "STRIPS" in gaps["G10"]["current_state"]
 	assert "machine-readable diagnostics" in gaps["G10"]["current_state"]
+	assert "action-symbol collisions" in gaps["G10"]["current_state"]
 	assert gaps["G11"]["layer"] == "no-hardcoding"
 	assert gaps["G11"]["status"] == "partially_done"
 	assert "rule manifest leakage" in gaps["G11"]["current_state"]

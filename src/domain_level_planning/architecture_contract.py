@@ -342,7 +342,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"schema-checked; deterministic first-applicable execution and the "
 					"currently supported ASL subset are reported with the library; "
 					"primitive actions are applied by the PDDL STRIPS simulator and "
-					"precondition violations become primitive-precondition counterexamples."
+					"precondition violations become primitive-precondition counterexamples; "
+					"PDDL-to-ASL symbol mapping records sanitized primitive action "
+					"functors so rendered ASL can be traced back to original PDDL schemas."
 				),
 				required_improvement=(
 					"Mirror primitive-action precondition handling in the paper method "
@@ -422,7 +424,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"PDDL predicate symbols outside the current AgentSpeak atom "
 					"identifier subset, negative goals, numeric fragments, and "
 					"action-cost fragments are rejected with structured reasons and "
-					"machine-readable diagnostics before compilation proceeds."
+					"machine-readable diagnostics before compilation proceeds; "
+					"action-symbol collisions after AgentSpeak sanitization are also "
+					"rejected before ASL generation."
 				),
 				required_improvement=(
 					"Keep the report aligned with future fragment expansions, especially "
