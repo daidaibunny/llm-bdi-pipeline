@@ -3202,6 +3202,7 @@ def _composer_rule_evidence_record(rule: LiftedPlanRule) -> dict[str, object]:
 		"verdict": verdict,
 		"ordering_kind": _composer_ordering_kind(rule),
 		"ordered_goals": _composer_ordered_goals(rule),
+		"ordering_binding_contexts": _composer_ordering_binding_contexts(rule),
 		"context": tuple(rule.context),
 		"body": tuple(_call(step.symbol, step.arguments) for step in tuple(rule.body or ())),
 		"capabilities": tuple(rule.capabilities),
@@ -3212,7 +3213,15 @@ def _composer_ordering_kind(rule: LiftedPlanRule) -> str | None:
 	capabilities = tuple(rule.capabilities or ())
 	if any(capability.startswith("delete_threat_order_") for capability in capabilities):
 		return "schema_delete_threat"
-	if any(capability.startswith("causal_order_") for capability in capabilities):
+	if any(
+		capability.startswith("causal_order_") and "_via_" in capability
+		for capability in capabilities
+	):
+		return "schema_causal_precondition_binding_support"
+	if any(
+		capability.startswith("causal_order_")
+		for capability in capabilities
+	):
 		return "schema_causal_precondition_support"
 	if any(capability.startswith("order_") for capability in capabilities):
 		return "trace_goal_ordering"
@@ -3234,6 +3243,18 @@ def _composer_ordered_goals(rule: LiftedPlanRule) -> dict[str, str | None]:
 		"earlier": earlier,
 		"later": later,
 	}
+
+
+def _composer_ordering_binding_contexts(rule: LiftedPlanRule) -> tuple[str, ...]:
+	if _composer_ordering_kind(rule) != "schema_causal_precondition_binding_support":
+		return ()
+	return tuple(
+		context
+		for context in tuple(rule.context or ())
+		if context
+		and not str(context).startswith("goal_")
+		and not str(context).strip().lower().startswith("not ")
+	)
 
 
 def _first_body_subgoal(rule: LiftedPlanRule) -> str | None:

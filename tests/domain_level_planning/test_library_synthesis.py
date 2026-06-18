@@ -45,6 +45,18 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 	)
 	assert any(
 		item["verdict"] == "schema_causal_ordering"
+		and item["selected"] is True
+		and item["body"] == ("on(Y, Z)", "g")
+		and item["ordering_kind"] == "schema_causal_precondition_binding_support"
+		and item["ordered_goals"] == {
+			"earlier": "on(Y, Z)",
+			"later": "clear(X)",
+		}
+		and item["ordering_binding_contexts"] == ("on(Y, X)",)
+		for item in candidate_evidence
+	)
+	assert any(
+		item["verdict"] == "schema_causal_ordering"
 		and item["ordering_kind"] == "schema_delete_threat"
 		and item["ordered_goals"]["earlier"]
 		for item in candidate_evidence
@@ -381,6 +393,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "ordered-goal patterns" in gaps["G3"]["current_state"]
 	assert "one-hop positive precondition bindings" in gaps["G3"]["current_state"]
 	assert "hidden producer goal arguments" in gaps["G3"]["current_state"]
+	assert "binding contexts separately" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
