@@ -42,6 +42,7 @@ class FeatureBindingDiagnostic:
 	condition_operators: tuple[str, ...]
 	effect_operators: tuple[str, ...]
 	action_candidate_count: int
+	action_candidates: tuple[Mapping[str, object], ...]
 	promoted_effect_operators: tuple[str, ...]
 	rejection_reason: str | None
 
@@ -54,6 +55,7 @@ class FeatureBindingDiagnostic:
 			"condition_operators": self.condition_operators,
 			"effect_operators": self.effect_operators,
 			"action_candidate_count": self.action_candidate_count,
+			"action_candidates": self.action_candidates,
 			"promoted_effect_operators": self.promoted_effect_operators,
 			"rejection_reason": self.rejection_reason,
 		}
@@ -278,6 +280,7 @@ def _feature_binding_diagnostic(
 			condition_operators=(),
 			effect_operators=(),
 			action_candidate_count=len(action_effect_candidates),
+			action_candidates=_action_candidate_summaries(action_effect_candidates),
 			promoted_effect_operators=(),
 			rejection_reason=(
 				rejection_reason
@@ -301,9 +304,36 @@ def _feature_binding_diagnostic(
 		condition_operators=tuple(sorted(binding.condition_contexts)),
 		effect_operators=_ordered_operators(binding.effect_body),
 		action_candidate_count=len(action_effect_candidates),
+		action_candidates=_action_candidate_summaries(action_effect_candidates),
 		promoted_effect_operators=promoted_effect_operators,
 		rejection_reason=None,
 	)
+
+
+def _action_candidate_summaries(
+	candidates: tuple[ActionEffectBindingCandidate, ...],
+) -> tuple[Mapping[str, object], ...]:
+	return tuple(_action_candidate_summary(candidate) for candidate in candidates)
+
+
+def _action_candidate_summary(
+	candidate: ActionEffectBindingCandidate,
+) -> Mapping[str, object]:
+	return {
+		"feature_id": candidate.feature_id,
+		"operator": candidate.operator,
+		"effect_predicate": candidate.effect_predicate,
+		"action_name": candidate.action_name,
+		"context": candidate.context,
+		"body": tuple(step.to_dict() for step in candidate.body),
+		"add_effects": tuple(
+			{
+				"predicate": predicate,
+				"arguments": arguments,
+			}
+			for predicate, arguments in candidate.add_effects
+		),
+	}
 
 
 def _unsupported_rejection_reason(

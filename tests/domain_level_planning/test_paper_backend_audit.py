@@ -48,6 +48,7 @@ def test_audit_reports_learned_policy_binding_readiness(tmp_path: Path) -> None:
 			"condition_operators": ("c_n_eq", "c_n_gt"),
 			"effect_operators": ("e_n_bot", "e_n_inc"),
 			"action_candidate_count": 0,
+			"action_candidates": (),
 			"promoted_effect_operators": (),
 			"rejection_reason": None,
 		},
@@ -59,6 +60,32 @@ def test_audit_reports_learned_policy_binding_readiness(tmp_path: Path) -> None:
 			"condition_operators": ("c_n_eq", "c_n_gt"),
 			"effect_operators": ("e_n_bot", "e_n_inc", "e_n_dec"),
 			"action_candidate_count": 1,
+			"action_candidates": (
+				{
+					"feature_id": "f_holding",
+					"operator": "e_n_dec",
+					"effect_predicate": "holding",
+					"action_name": "place",
+					"context": ("holding(X)", "clear(Y)"),
+					"body": (
+						{
+							"kind": "primitive_action",
+							"symbol": "place",
+							"arguments": ["X", "Y"],
+						},
+					),
+					"add_effects": (
+						{
+							"predicate": "on",
+							"arguments": ("X", "Y"),
+						},
+						{
+							"predicate": "handempty",
+							"arguments": (),
+						},
+					),
+				},
+			),
 			"promoted_effect_operators": ("e_n_dec",),
 			"rejection_reason": None,
 		},
@@ -108,6 +135,7 @@ def test_audit_rejects_unbound_paper_policy_as_not_executable(tmp_path: Path) ->
 			"condition_operators": (),
 			"effect_operators": (),
 			"action_candidate_count": 0,
+			"action_candidates": (),
 			"promoted_effect_operators": (),
 			"rejection_reason": (
 				"object_specific_dlplan_feature_requires_principled_lifting"

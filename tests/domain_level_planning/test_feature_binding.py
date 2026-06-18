@@ -236,6 +236,28 @@ def test_binding_diagnostics_explain_supported_feature_bindings(
 	assert diagnostic.condition_operators == ("c_n_eq", "c_n_gt")
 	assert diagnostic.effect_operators == ("e_n_bot", "e_n_inc")
 	assert diagnostic.action_candidate_count == 1
+	assert diagnostic.action_candidates == (
+		{
+			"feature_id": "f1",
+			"operator": "e_n_dec",
+			"effect_predicate": "on",
+			"action_name": "remove",
+			"context": ("on(X, Y)", "clear(X)"),
+			"body": (
+				{
+					"kind": "primitive_action",
+					"symbol": "remove",
+					"arguments": ["X", "Y"],
+				},
+			),
+			"add_effects": (
+				{
+					"predicate": "clear",
+					"arguments": ("Y",),
+				},
+			),
+		},
+	)
 	assert diagnostic.rejection_reason is None
 	assert diagnostic.to_dict() == {
 		"feature_id": "f1",
@@ -245,6 +267,28 @@ def test_binding_diagnostics_explain_supported_feature_bindings(
 		"condition_operators": ("c_n_eq", "c_n_gt"),
 		"effect_operators": ("e_n_bot", "e_n_inc"),
 		"action_candidate_count": 1,
+		"action_candidates": (
+			{
+				"feature_id": "f1",
+				"operator": "e_n_dec",
+				"effect_predicate": "on",
+				"action_name": "remove",
+				"context": ("on(X, Y)", "clear(X)"),
+				"body": (
+					{
+						"kind": "primitive_action",
+						"symbol": "remove",
+						"arguments": ["X", "Y"],
+					},
+				),
+				"add_effects": (
+					{
+						"predicate": "clear",
+						"arguments": ("Y",),
+					},
+				),
+			},
+		),
 		"promoted_effect_operators": (),
 		"rejection_reason": None,
 	}
@@ -540,6 +584,52 @@ def test_multiple_action_candidates_remain_ambiguous_instead_of_guessing(
 	assert diagnostic.status == "bound"
 	assert diagnostic.action_candidate_count == 2
 	assert diagnostic.promoted_effect_operators == ()
+	assert diagnostic.action_candidates == (
+		{
+			"feature_id": "f1",
+			"operator": "e_n_dec",
+			"effect_predicate": "holding",
+			"action_name": "drop",
+			"context": ("holding(X)",),
+			"body": (
+				{
+					"kind": "primitive_action",
+					"symbol": "drop",
+					"arguments": ["X"],
+				},
+			),
+			"add_effects": (
+				{
+					"predicate": "handempty",
+					"arguments": (),
+				},
+			),
+		},
+		{
+			"feature_id": "f1",
+			"operator": "e_n_dec",
+			"effect_predicate": "holding",
+			"action_name": "place",
+			"context": ("holding(X)", "clear(Y)"),
+			"body": (
+				{
+					"kind": "primitive_action",
+					"symbol": "place",
+					"arguments": ["X", "Y"],
+				},
+			),
+			"add_effects": (
+				{
+					"predicate": "on",
+					"arguments": ("X", "Y"),
+				},
+				{
+					"predicate": "handempty",
+					"arguments": (),
+				},
+			),
+		},
+	)
 
 
 def test_goal_aligned_feature_effect_disambiguates_action_candidates(

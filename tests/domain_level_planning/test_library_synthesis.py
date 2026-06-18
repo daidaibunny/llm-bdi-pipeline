@@ -621,6 +621,7 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 			"condition_operators": (),
 			"effect_operators": (),
 			"action_candidate_count": 0,
+			"action_candidates": (),
 			"promoted_effect_operators": (),
 			"rejection_reason": (
 				"object_specific_dlplan_feature_requires_principled_lifting"
