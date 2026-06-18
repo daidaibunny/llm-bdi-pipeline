@@ -61,3 +61,65 @@ def test_generic_domain_level_experiment_script_runs_any_pddl_split(
 	assert report["validation_scope"]["evaluation_problem_count"] == 2
 	assert report["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["passed"] is True
+
+
+def test_generic_domain_level_experiment_script_accepts_completed_baseline_json(
+	tmp_path: Path,
+) -> None:
+	output = tmp_path / "generic-labworkflow-baseline.json"
+	baseline_json = tmp_path / "baselines.json"
+	baseline_json.write_text(
+		json.dumps(
+			[
+				{
+					"label": "offline-planner",
+					"solver_family": "classical_planner",
+					"solved_count": 2,
+					"failed_count": 0,
+					"coverage_ratio": 1.0,
+				},
+			],
+		),
+		encoding="utf-8",
+	)
+	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+
+	subprocess.run(
+		(
+			sys.executable,
+			str(PROJECT_ROOT / "scripts" / "run_domain_level_experiment.py"),
+			"--experiment-name",
+			"generic-labworkflow-baseline-smoke",
+			"--domain-file",
+			str(lab_root / "domain.pddl"),
+			"--train-problem",
+			str(lab_root / "problems" / "p01.pddl"),
+			"--eval-problem",
+			str(lab_root / "problems" / "p01.pddl"),
+			"--eval-problem",
+			str(lab_root / "problems" / "p02.pddl"),
+			"--baseline-json",
+			str(baseline_json),
+			"--max-steps",
+			"100",
+			"--max-depth",
+			"50",
+			"--output",
+			str(output),
+		),
+		cwd=PROJECT_ROOT,
+		check=True,
+	)
+
+	report = json.loads(output.read_text(encoding="utf-8"))
+	assert report["experiment_protocol"]["runtime_planner"] == "none"
+	assert report["experiment_protocol"]["baselines"] == [
+		{
+			"label": "offline-planner",
+			"solver_family": "classical_planner",
+			"solved_count": 2,
+			"failed_count": 0,
+			"coverage_ratio": 1.0,
+			"runtime_planner": "offline_baseline_only",
+		},
+	]

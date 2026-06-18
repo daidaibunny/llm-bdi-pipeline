@@ -90,6 +90,16 @@ def main() -> None:
 		help="Explicit ablation label for the experiment protocol.",
 	)
 	parser.add_argument(
+		"--baseline-json",
+		type=Path,
+		action="append",
+		default=[],
+		help=(
+			"Completed baseline metadata JSON. The file may contain one object "
+			"or a list of objects; no planner is run by this script."
+		),
+	)
+	parser.add_argument(
 		"--output",
 		type=Path,
 		required=True,
@@ -120,6 +130,7 @@ def main() -> None:
 		use_counterexample_refinement=args.use_counterexample_refinement,
 		max_refinement_rounds=args.max_refinement_rounds,
 		ablation_label=args.ablation_label,
+		baselines=_read_baseline_records(tuple(args.baseline_json or ())),
 	)
 	args.output.parent.mkdir(parents=True, exist_ok=True)
 	args.output.write_text(
@@ -159,6 +170,18 @@ def _parse_external_sketch_policies(
 			),
 		)
 	return tuple(sources)
+
+
+def _read_baseline_records(paths: tuple[Path, ...]) -> tuple[dict[str, object], ...]:
+	records: list[dict[str, object]] = []
+	for path in tuple(paths or ()):
+		raw = json.loads(path.read_text(encoding="utf-8"))
+		items = raw if isinstance(raw, list) else [raw]
+		for item in items:
+			if not isinstance(item, dict):
+				raise ValueError(f"Baseline file {path} contains a non-object record.")
+			records.append(dict(item))
+	return tuple(records)
 
 
 if __name__ == "__main__":
