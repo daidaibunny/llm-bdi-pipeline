@@ -209,6 +209,7 @@ def test_unified_pipeline_consumes_reverse_role_external_sketch(
 			"compiled": True,
 			"missing_condition_bindings": [],
 			"missing_effect_bindings": [],
+			"missing_binding_diagnostics": [],
 			"empty_body": False,
 		},
 	)
@@ -636,6 +637,44 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 	]
 	assert result.report["external_rule_binding_reports"][0]["missing_effect_bindings"] == [
 		"f_bad:e_n_dec",
+	]
+	assert result.report["external_rule_binding_reports"][0][
+		"missing_binding_diagnostics"
+	] == [
+		{
+			"feature_id": "f_bad",
+			"operator": "c_n_gt",
+			"binding_role": "condition",
+			"expression": (
+				"n_concept_distance(c_one_of(a),r_primitive(done,0,1),"
+				"c_primitive(done,0))"
+			),
+			"status": "unsupported",
+			"binding_kind": "unsupported",
+			"available_condition_operators": (),
+			"available_effect_operators": (),
+			"rejection_reason": (
+				"object_specific_dlplan_feature_requires_principled_lifting"
+			),
+			"action_candidates": (),
+		},
+		{
+			"feature_id": "f_bad",
+			"operator": "e_n_dec",
+			"binding_role": "effect",
+			"expression": (
+				"n_concept_distance(c_one_of(a),r_primitive(done,0,1),"
+				"c_primitive(done,0))"
+			),
+			"status": "unsupported",
+			"binding_kind": "unsupported",
+			"available_condition_operators": (),
+			"available_effect_operators": (),
+			"rejection_reason": (
+				"object_specific_dlplan_feature_requires_principled_lifting"
+			),
+			"action_candidates": (),
+		},
 	]
 
 

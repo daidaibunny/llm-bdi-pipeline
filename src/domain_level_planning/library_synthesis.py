@@ -88,6 +88,7 @@ class ExternalRuleBindingReport:
 	compiled: bool
 	missing_condition_bindings: tuple[str, ...] = ()
 	missing_effect_bindings: tuple[str, ...] = ()
+	missing_binding_diagnostics: tuple[Mapping[str, object], ...] = ()
 	empty_body: bool = False
 
 	def to_dict(self) -> dict[str, object]:
@@ -98,6 +99,7 @@ class ExternalRuleBindingReport:
 			"compiled": self.compiled,
 			"missing_condition_bindings": list(self.missing_condition_bindings),
 			"missing_effect_bindings": list(self.missing_effect_bindings),
+			"missing_binding_diagnostics": list(self.missing_binding_diagnostics),
 			"empty_body": self.empty_body,
 		}
 
@@ -1064,6 +1066,7 @@ def _external_sketch_candidates(
 			source=source,
 			policy=policy,
 			bindings=binding_report.bindings,
+			feature_diagnostics=binding_report.feature_diagnostics,
 		)
 		candidates.extend(source_candidates)
 		rule_reports.extend(source_reports)
@@ -1075,6 +1078,7 @@ def _bound_policy_rules_to_candidates(
 	source: ExternalSketchPolicySource,
 	policy,
 	bindings,
+	feature_diagnostics: Mapping[str, object],
 ) -> tuple[tuple[LiftedPlanRule, ...], tuple[ExternalRuleBindingReport, ...]]:
 	candidates: list[LiftedPlanRule] = []
 	reports: list[ExternalRuleBindingReport] = []
@@ -1083,16 +1087,33 @@ def _bound_policy_rules_to_candidates(
 		body: list[LiftedCall] = []
 		missing_conditions: list[str] = []
 		missing_effects: list[str] = []
+		missing_binding_diagnostics: list[Mapping[str, object]] = []
 		for condition in rule.conditions:
 			binding = bindings.get(condition.feature_id)
 			if binding is None or condition.operator not in binding.condition_contexts:
 				missing_conditions.append(f"{condition.feature_id}:{condition.operator}")
+				missing_binding_diagnostics.append(
+					_missing_feature_binding_diagnostic(
+						feature_diagnostics=feature_diagnostics,
+						feature_id=condition.feature_id,
+						operator=condition.operator,
+						binding_role="condition",
+					),
+				)
 				continue
 			context.extend(binding.condition_contexts[condition.operator])
 		for effect in rule.effects:
 			binding = bindings.get(effect.feature_id)
 			if binding is None or effect.operator not in binding.effect_body:
 				missing_effects.append(f"{effect.feature_id}:{effect.operator}")
+				missing_binding_diagnostics.append(
+					_missing_feature_binding_diagnostic(
+						feature_diagnostics=feature_diagnostics,
+						feature_id=effect.feature_id,
+						operator=effect.operator,
+						binding_role="effect",
+					),
+				)
 				continue
 			context.extend((binding.effect_contexts or {}).get(effect.operator, ()))
 			body.extend(
@@ -1108,6 +1129,7 @@ def _bound_policy_rules_to_candidates(
 				compiled=compiled,
 				missing_condition_bindings=tuple(missing_conditions),
 				missing_effect_bindings=tuple(missing_effects),
+				missing_binding_diagnostics=tuple(missing_binding_diagnostics),
 				empty_body=not body,
 			),
 		)
@@ -1126,6 +1148,45 @@ def _bound_policy_rules_to_candidates(
 			),
 		)
 	return tuple(candidates), tuple(reports)
+
+
+def _missing_feature_binding_diagnostic(
+	*,
+	feature_diagnostics: Mapping[str, object],
+	feature_id: str,
+	operator: str,
+	binding_role: str,
+) -> Mapping[str, object]:
+	diagnostic = feature_diagnostics.get(feature_id)
+	if diagnostic is None:
+		return {
+			"feature_id": feature_id,
+			"operator": operator,
+			"binding_role": binding_role,
+			"expression": None,
+			"status": "missing_feature",
+			"binding_kind": "unsupported",
+			"available_condition_operators": (),
+			"available_effect_operators": (),
+			"rejection_reason": "missing_feature_diagnostic",
+			"action_candidates": (),
+		}
+	return {
+		"feature_id": feature_id,
+		"operator": operator,
+		"binding_role": binding_role,
+		"expression": getattr(diagnostic, "expression", None),
+		"status": getattr(diagnostic, "status", "unknown"),
+		"binding_kind": getattr(diagnostic, "binding_kind", "unknown"),
+		"available_condition_operators": tuple(
+			getattr(diagnostic, "condition_operators", ()),
+		),
+		"available_effect_operators": tuple(
+			getattr(diagnostic, "effect_operators", ()),
+		),
+		"rejection_reason": getattr(diagnostic, "rejection_reason", None),
+		"action_candidates": tuple(getattr(diagnostic, "action_candidates", ())),
+	}
 
 
 def _repair_required_rule_groups(
