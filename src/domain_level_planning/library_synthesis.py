@@ -770,6 +770,7 @@ def _paper_profile_failures(
 				f"external rule {report.source_name}:{report.rule_index} did not compile "
 				f"(missing conditions={report.missing_condition_bindings}, "
 				f"missing effects={report.missing_effect_bindings}, "
+				f"missing binding diagnostics={_missing_binding_failure_summary(report)}, "
 				f"empty_body={report.empty_body})"
 			),
 		)
@@ -827,6 +828,19 @@ def _paper_profile_failures(
 			),
 		)
 	return tuple(failures)
+
+
+def _missing_binding_failure_summary(
+	report: ExternalRuleBindingReport,
+) -> tuple[str, ...]:
+	return tuple(
+		(
+			f"{diagnostic.get('feature_id')}:"
+			f"{diagnostic.get('operator')}:"
+			f"{diagnostic.get('rejection_reason') or 'operator_not_bound'}"
+		)
+		for diagnostic in tuple(report.missing_binding_diagnostics or ())
+	)
 
 
 def _paper_profile_required_capabilities(

@@ -696,7 +696,7 @@ def test_paper_profile_rejects_uncompiled_external_policy_rules(tmp_path: Path) 
 		policy_rule="(:rule (:conditions (:c_n_gt f_bad)) (:effects (:e_n_dec f_bad)))",
 	)
 
-	with pytest.raises(ValueError, match="did not compile"):
+	with pytest.raises(ValueError) as error:
 		synthesize_domain_level_asl_library(
 			domain_file=domain_file,
 			training_problem_files=(problem_file,),
@@ -708,6 +708,10 @@ def test_paper_profile_rejects_uncompiled_external_policy_rules(tmp_path: Path) 
 			),
 			synthesis_profile="paper",
 		)
+	message = str(error.value)
+	assert "did not compile" in message
+	assert "f_bad:c_n_gt:object_specific_dlplan_feature_requires_principled_lifting" in message
+	assert "f_bad:e_n_dec:object_specific_dlplan_feature_requires_principled_lifting" in message
 
 
 def test_paper_profile_accepts_bound_external_policy_and_bounded_validation(
