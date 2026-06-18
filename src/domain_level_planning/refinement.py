@@ -392,6 +392,19 @@ def classify_heldout_failure_for_refinement(
 				required_rule_group_types=("counterexample_state_coverage",),
 			),
 		)
+	if missing_goals:
+		precondition_repair = _primitive_precondition_repair_constraint(
+			problem_file=problem_file,
+			problem_name=problem.name,
+			domain_file=domain_file,
+			counterexample=counterexample,
+			missing_goals=missing_goals,
+			satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
+		)
+		if precondition_repair is not None:
+			return (precondition_repair,)
 	if missing_goals and satisfied_goals and tuple(counterexample.steps):
 		orderings = _lift_goal_orderings_from_failure(
 			earlier_atoms=missing_goals,
@@ -419,18 +432,6 @@ def classify_heldout_failure_for_refinement(
 				),
 			)
 	if missing_goals:
-		precondition_repair = _primitive_precondition_repair_constraint(
-			problem_file=problem_file,
-			problem_name=problem.name,
-			domain_file=domain_file,
-			counterexample=counterexample,
-			missing_goals=missing_goals,
-			satisfied_goals=satisfied_goals,
-			lifted_missing_goals=lifted_missing_goals,
-			lifted_satisfied_goals=lifted_satisfied_goals,
-		)
-		if precondition_repair is not None:
-			return (precondition_repair,)
 		return (
 			RefinementConstraint(
 				failure_kind=_failure_kind(counterexample.failure_reason),

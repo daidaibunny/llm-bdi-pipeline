@@ -186,6 +186,7 @@ PDDL domain + training problems
 | T115 | Report selected external-sketch rule names. | G6, G8 | `paper_quality_summary` now includes selected and output external-sketch lifted rule names derived from the synthesis rule manifests; unit and script tests assert empty names for bootstrap runs and the concrete learned rule name for paper-profile smoke. | Done |
 | T116 | Record PDDL-to-ASL symbol mapping. | G7, G8 | Unified synthesis and experiment reports now expose a `pddl_to_asl_symbol_map` for predicates, goal descriptors, and primitive actions, including changed action names such as PDDL `make-done` rendered as ASL `make_done`; tests cover the mapping in plan-library metadata, synthesis reports, experiment reports, and rendered ASL. | Done |
 | T117 | Reject ASL action-symbol collisions. | G7, G10 | PDDL support inspection now rejects domains where distinct primitive action names collapse to the same rendered AgentSpeak functor after sanitization, while still allowing non-colliding hyphenated IPC-style action names; tests cover a `make-done`/`make_done` collision diagnostic. | Done |
+| T118 | Prioritize primitive-precondition refinement. | G9 | Held-out failures whose reason is a primitive action precondition violation now generate Layer B atomic-precondition repair constraints before considering goal-ordering heuristics, even when another goal has already been satisfied; tests cover the previous misclassification as `goal_ordering_failure`. | Done |
 
 ## Current Completion Rule
 

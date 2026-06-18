@@ -213,6 +213,46 @@ def test_primitive_precondition_failure_refinement_reports_lifted_layer_b_eviden
 	}
 
 
+def test_primitive_precondition_failure_takes_priority_over_goal_ordering(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_precondition_failure_with_satisfied_goal_domain(
+		tmp_path,
+	)
+	problem = PDDLParser.parse_problem(problem_file)
+	counterexample = LibraryCounterexample(
+		problem_name=problem.name,
+		state_index=0,
+		failure_reason="Action preconditions are not satisfied for finish(a).",
+		state=("ready(a)",),
+		goal_facts=("goal_done(a)", "goal_logged(a)"),
+		goal_atoms=("done(a)", "logged(a)"),
+		was_goal_state=False,
+		steps=("log(a)",),
+		final_state=("ready(a)", "logged(a)"),
+	)
+
+	constraints = classify_heldout_failure_for_refinement(
+		problem_file=problem_file,
+		problem=problem,
+		counterexample=counterexample,
+		domain_file=domain_file,
+	)
+
+	assert len(constraints) == 1
+	constraint = constraints[0]
+	assert constraint.failure_kind == "primitive_precondition_failure"
+	assert constraint.target_layer == "layer_b_atomic_modules"
+	assert constraint.constraint_type == "counterexample_atomic_precondition_repair"
+	assert constraint.ground_missing_goals == ("done(a)",)
+	assert constraint.ground_satisfied_goals == ("logged(a)",)
+	assert constraint.lifted_missing_goals == ("done(X)",)
+	assert constraint.lifted_satisfied_goals == ("logged(X)",)
+	assert constraint.missing_preconditions == ("armed(a)",)
+	assert constraint.lifted_missing_preconditions == ("armed(X)",)
+	assert constraint.lifted_orderings == ()
+
+
 def test_missing_module_failure_targets_failed_atomic_subgoal_only(
 	tmp_path: Path,
 ) -> None:
@@ -449,6 +489,49 @@ def _write_precondition_failure_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:objects a)
 		 (:init (ready a))
 		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_precondition_failure_with_satisfied_goal_domain(
+	tmp_path: Path,
+) -> tuple[Path, Path]:
+	domain_file = tmp_path / "precondition-plus-satisfied-domain.pddl"
+	problem_file = tmp_path / "precondition-plus-satisfied-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain precondition-plus-satisfied-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (armed ?x)
+		  (done ?x)
+		  (logged ?x)
+		 )
+		 (:action log
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (logged ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (and (ready ?x) (armed ?x))
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem precondition-plus-satisfied-p1)
+		 (:domain precondition-plus-satisfied-mini)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (done a) (logged a)))
 		)
 		""",
 		encoding="utf-8",
