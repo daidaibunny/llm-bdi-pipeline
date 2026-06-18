@@ -191,6 +191,7 @@ PDDL domain + training problems
 | T120 | Align architecture contract with action-candidate diagnostics. | G1, G5 | The machine-readable architecture contract now states that feature-binding diagnostics include action-candidate details for ambiguous primitive effect bindings, keeping synthesis reports aligned with the current G5 implementation. | Done |
 | T121 | Explain missing external rule bindings. | G5, G6 | `ExternalRuleBindingReport` now includes structured diagnostics for each missing learned-policy condition/effect binding, including the DLPlan expression, available bound operators, rejection reason, and action-candidate details. | Done |
 | T122 | Surface missing learned-rule reasons in strict paper profile failures. | G6 | Strict paper-profile errors now include compact `feature:operator:reason` summaries for uncompiled external learned sketch rules, so failed runs explain whether the blocker is object-specific lifting, distance binding, vocabulary mismatch, or another missing binding. | Done |
+| T123 | Align architecture contract with external binding diagnostics. | G1, G6 | The machine-readable architecture contract now states that external backend consumption reports per-missing-rule-binding diagnostics and strict paper-profile failures include compact `feature:operator` binding reasons. | Done |
 
 ## Current Completion Rule
 
