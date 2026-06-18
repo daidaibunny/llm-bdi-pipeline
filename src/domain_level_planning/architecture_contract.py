@@ -267,7 +267,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"ordering capabilities are selector requirements and deterministic "
 					"ASL output prioritizes them before generic goal dispatch, so "
 					"bottom-up composer rules can be emitted from PDDL schema structure "
-					"without training traces or domain-specific code."
+					"without training traces or domain-specific code. Composer evidence "
+					"now records ordering kind and ordered-goal patterns for trace, "
+					"schema causal-precondition, schema delete-threat, and counterexample "
+					"ordering candidates."
 				),
 				required_improvement=(
 					"Learn richer final-goal causal structures and make failure "
@@ -371,7 +374,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"evaluation runtime metrics, compact Layer B and Layer C learning "
 					"audit summaries, including schema causal and delete-threat ordering "
 					"candidate/selected counts plus trace-ordering candidate/selected "
-					"counts, optional explicit ablation metadata, "
+					"counts and composer ordering-kind counts, optional explicit ablation metadata, "
 					"optional already-completed external baseline metadata without running "
 					"hidden planners, a pure already-run report comparison table helper "
 					"with baseline rows, best-baseline summaries, and coverage deltas "

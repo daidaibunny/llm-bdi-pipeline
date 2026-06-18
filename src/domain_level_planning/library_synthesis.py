@@ -3200,10 +3200,70 @@ def _composer_rule_evidence_record(rule: LiftedPlanRule) -> dict[str, object]:
 		"source": source,
 		"rationale": rule.rationale,
 		"verdict": verdict,
+		"ordering_kind": _composer_ordering_kind(rule),
+		"ordered_goals": _composer_ordered_goals(rule),
 		"context": tuple(rule.context),
 		"body": tuple(_call(step.symbol, step.arguments) for step in tuple(rule.body or ())),
 		"capabilities": tuple(rule.capabilities),
 	}
+
+
+def _composer_ordering_kind(rule: LiftedPlanRule) -> str | None:
+	capabilities = tuple(rule.capabilities or ())
+	if any(capability.startswith("delete_threat_order_") for capability in capabilities):
+		return "schema_delete_threat"
+	if any(capability.startswith("causal_order_") for capability in capabilities):
+		return "schema_causal_precondition_support"
+	if any(capability.startswith("order_") for capability in capabilities):
+		return "trace_goal_ordering"
+	source = _candidate_source(rule)
+	if source == "counterexample_goal_ordering":
+		return "counterexample_goal_ordering"
+	return None
+
+
+def _composer_ordered_goals(rule: LiftedPlanRule) -> dict[str, str | None]:
+	if _composer_ordering_kind(rule) is None:
+		return {
+			"earlier": None,
+			"later": None,
+		}
+	earlier = _first_body_subgoal(rule)
+	later = _later_goal_context(rule, earlier=earlier)
+	return {
+		"earlier": earlier,
+		"later": later,
+	}
+
+
+def _first_body_subgoal(rule: LiftedPlanRule) -> str | None:
+	for step in tuple(rule.body or ()):
+		if step.kind == "subgoal" and step.symbol != "g":
+			return _call(step.symbol, step.arguments)
+	return None
+
+
+def _later_goal_context(
+	rule: LiftedPlanRule,
+	*,
+	earlier: str | None,
+) -> str | None:
+	for context in tuple(rule.context or ()):
+		goal = _goal_descriptor_to_goal_atom(context)
+		if goal is None or goal == earlier:
+			continue
+		return goal
+	return None
+
+
+def _goal_descriptor_to_goal_atom(context: str) -> str | None:
+	text = str(context or "").strip()
+	if not text.startswith("goal_"):
+		return None
+	atom = text.removeprefix("goal_")
+	if not atom:
+		return None
+	return atom
 
 
 def _counterexample_refinement_summary(

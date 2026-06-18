@@ -36,6 +36,17 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 		item["verdict"] == "schema_causal_ordering"
 		and item["selected"] is True
 		and item["body"] == ("on(Y, Z)", "g")
+		and item["ordering_kind"] == "schema_causal_precondition_support"
+		and item["ordered_goals"] == {
+			"earlier": "on(Y, Z)",
+			"later": "on(X, Y)",
+		}
+		for item in candidate_evidence
+	)
+	assert any(
+		item["verdict"] == "schema_causal_ordering"
+		and item["ordering_kind"] == "schema_delete_threat"
+		and item["ordered_goals"]["earlier"]
 		for item in candidate_evidence
 	)
 	assert all(
@@ -367,6 +378,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	)
 	assert "provenance manifests" in gaps["G3"]["current_state"]
 	assert "per-rule composer evidence verdicts" in gaps["G3"]["current_state"]
+	assert "ordered-goal patterns" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
@@ -399,6 +411,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G8"]["status"] == "partially_done"
 	assert "library size and runtime metrics" in gaps["G8"]["current_state"]
 	assert "validation-scope summary" in gaps["G8"]["current_state"]
+	assert "composer ordering-kind counts" in gaps["G8"]["current_state"]
 	assert "ablations" in gaps["G8"]["required_improvement"]
 	assert gaps["G9"]["layer"] == "counterexample refinement"
 	assert gaps["G9"]["status"] == "partially_done"

@@ -366,6 +366,14 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 				composer_candidates,
 				"verdict",
 			),
+			"composer_ordering_kind_counts": _count_by_key(
+				(
+					candidate
+					for candidate in composer_candidates
+					if candidate.get("ordering_kind") is not None
+				),
+				"ordering_kind",
+			),
 			"composer_candidate_rejection_counts": _count_by_key(
 				(
 					candidate

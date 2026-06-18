@@ -148,6 +148,12 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	assert "schema_goal_dispatch" in report["learning_audit"]["layer_c_goal_composer"][
 		"composer_candidate_verdict_counts"
 	]
+	assert isinstance(
+		report["learning_audit"]["layer_c_goal_composer"][
+			"composer_ordering_kind_counts"
+		],
+		dict,
+	)
 	assert report["runtime_seconds"]["synthesis"] >= 0
 	assert report["runtime_seconds"]["evaluation_total"] >= 0
 	assert len(report["runtime_seconds"]["evaluation_by_problem"]) == 2
