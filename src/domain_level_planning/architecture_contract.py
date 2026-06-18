@@ -367,8 +367,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				gap="Current validation is bounded and smoke-test oriented.",
 				current_state=(
 					"Bounded all-reachable-state checks, first-applicable execution, "
-					"one IPC-style first-20 benchmark runner, and one non-matching "
-					"synthetic goal-dependency benchmark runner exist; experiment "
+					"one IPC-style first-20 benchmark runner, one non-matching "
+					"synthetic goal-dependency benchmark runner, a generic PDDL split "
+					"experiment runner, and a report-comparison CLI exist; experiment "
 					"reports include coverage, generated ASL, generated-output audit, "
 					"library size and runtime metrics, including synthesis and "
 					"evaluation runtime metrics, compact Layer B and Layer C learning "
@@ -377,6 +378,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"counts and composer ordering-kind counts, optional explicit ablation metadata, "
 					"optional already-completed external baseline metadata without running "
 					"hidden planners, a pure already-run report comparison table helper "
+					"and CLI "
 					"with baseline rows, best-baseline summaries, and coverage deltas "
 					"against the ASL library, a validation-scope summary that separates "
 					"synthesis-time bounded validation from evaluation coverage, plus "

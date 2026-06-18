@@ -197,6 +197,7 @@ PDDL domain + training problems
 | T126 | Explain Layer C ordering evidence patterns. | G3, G8 | Composer evidence now records `ordering_kind` and `ordered_goals` for trace, schema causal-precondition, schema delete-threat, and counterexample ordering candidates; experiment learning audits summarize ordering-kind counts. | Done |
 | T127 | Add a generic PDDL domain-level experiment CLI. | G8, G11 | `scripts/run_domain_level_experiment.py` accepts arbitrary PDDL domain/training/evaluation/counterexample splits, optional counterexample refinement, bootstrap or paper synthesis profile, external learner-sketches policies, and explicit ablation labels; the Labworkflow script-level smoke test proves the runner is not Blocksworld-specific and preserves generated-output audits. | Done |
 | T128 | Add a completed-report comparison CLI. | G8 | `scripts/compare_domain_level_experiments.py` converts already-run experiment report JSON files into a reproducible ablation/baseline comparison table without rerunning hidden planners or learners; the script test covers best-by-coverage and paper-profile markers. | Done |
+| T129 | Align the architecture contract with generic experiment tooling. | G1, G8 | The machine-readable architecture contract now states that G8 includes a generic PDDL split experiment runner and report-comparison CLI; the architecture-contract test asserts those terms so report prose does not drift from available tooling. | Done |
 
 ## Current Completion Rule
 
