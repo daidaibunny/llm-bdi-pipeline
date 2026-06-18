@@ -398,6 +398,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G8"]["layer"] == "validation"
 	assert gaps["G8"]["status"] == "partially_done"
 	assert "library size and runtime metrics" in gaps["G8"]["current_state"]
+	assert "validation-scope summary" in gaps["G8"]["current_state"]
 	assert "ablations" in gaps["G8"]["required_improvement"]
 	assert gaps["G9"]["layer"] == "counterexample refinement"
 	assert gaps["G9"]["status"] == "partially_done"

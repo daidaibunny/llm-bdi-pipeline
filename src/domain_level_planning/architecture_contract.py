@@ -375,8 +375,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"optional already-completed external baseline metadata without running "
 					"hidden planners, a pure already-run report comparison table helper "
 					"with baseline rows, best-baseline summaries, and coverage deltas "
-					"against the ASL library, plus top-level refinement analysis for "
-					"convergence and constraint-type counts."
+					"against the ASL library, a validation-scope summary that separates "
+					"synthesis-time bounded validation from evaluation coverage, plus "
+					"top-level refinement analysis for convergence and constraint-type counts."
 				),
 				required_improvement=(
 					"Add broader experiment protocol with more domains, actual ablations "

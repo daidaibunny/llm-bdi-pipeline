@@ -193,6 +193,7 @@ PDDL domain + training problems
 | T122 | Surface missing learned-rule reasons in strict paper profile failures. | G6 | Strict paper-profile errors now include compact `feature:operator:reason` summaries for uncompiled external learned sketch rules, so failed runs explain whether the blocker is object-specific lifting, distance binding, vocabulary mismatch, or another missing binding. | Done |
 | T123 | Align architecture contract with external binding diagnostics. | G1, G6 | The machine-readable architecture contract now states that external backend consumption reports per-missing-rule-binding diagnostics and strict paper-profile failures include compact `feature:operator` binding reasons. | Done |
 | T124 | Distinguish bounded validation scope from evaluation coverage. | G8 | Experiment reports now include `validation_scope`, which records the synthesis-time bounded validation problem names/count separately from evaluation problem count and marks coverage as runtime execution over the provided evaluation set. | Done |
+| T125 | Align architecture contract with validation-scope reports. | G1, G8 | The machine-readable architecture contract now states that experiment reports include a validation-scope summary separating synthesis-time bounded validation from evaluation coverage. | Done |
 
 ## Current Completion Rule
 
