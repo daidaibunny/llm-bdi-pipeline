@@ -380,8 +380,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"hidden planners, a pure already-run report comparison table helper "
 					"and CLI "
 					"with baseline rows, best-baseline summaries, and coverage deltas "
-					"against the ASL library, generic runner ingestion of completed "
-					"baseline JSON metadata, a validation-scope summary that separates "
+					"against the ASL library, validated generic-runner ingestion of "
+					"completed baseline JSON metadata, a validation-scope summary that separates "
 					"synthesis-time bounded validation from evaluation coverage, plus "
 					"top-level refinement analysis for convergence and constraint-type counts."
 				),

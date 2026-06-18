@@ -177,11 +177,82 @@ def _read_baseline_records(paths: tuple[Path, ...]) -> tuple[dict[str, object], 
 	for path in tuple(paths or ()):
 		raw = json.loads(path.read_text(encoding="utf-8"))
 		items = raw if isinstance(raw, list) else [raw]
-		for item in items:
+		for index, item in enumerate(items, start=1):
 			if not isinstance(item, dict):
 				raise ValueError(f"Baseline file {path} contains a non-object record.")
-			records.append(dict(item))
+			records.append(_validate_baseline_record(path=path, index=index, record=item))
 	return tuple(records)
+
+
+def _validate_baseline_record(
+	*,
+	path: Path,
+	index: int,
+	record: dict[str, object],
+) -> dict[str, object]:
+	required_fields = ("label", "solved_count", "failed_count", "coverage_ratio")
+	for field in required_fields:
+		if field not in record:
+			raise ValueError(
+				f"Baseline file {path} record {index} missing required baseline field "
+				f"{field!r}.",
+			)
+	label = str(record["label"]).strip()
+	if not label:
+		raise ValueError(f"Baseline file {path} record {index} has an empty label.")
+	solved_count = _baseline_non_negative_int(
+		record["solved_count"],
+		field="solved_count",
+		path=path,
+		index=index,
+	)
+	failed_count = _baseline_non_negative_int(
+		record["failed_count"],
+		field="failed_count",
+		path=path,
+		index=index,
+	)
+	coverage_ratio = _baseline_coverage_ratio(
+		record["coverage_ratio"],
+		path=path,
+		index=index,
+	)
+	validated = dict(record)
+	validated["label"] = label
+	validated["solved_count"] = solved_count
+	validated["failed_count"] = failed_count
+	validated["coverage_ratio"] = coverage_ratio
+	return validated
+
+
+def _baseline_non_negative_int(
+	value: object,
+	*,
+	field: str,
+	path: Path,
+	index: int,
+) -> int:
+	if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+		raise ValueError(
+			f"Baseline file {path} record {index} field {field!r} must be a "
+			"non-negative integer.",
+		)
+	return value
+
+
+def _baseline_coverage_ratio(value: object, *, path: Path, index: int) -> float:
+	if isinstance(value, bool) or not isinstance(value, int | float):
+		raise ValueError(
+			f"Baseline file {path} record {index} field 'coverage_ratio' must be "
+			"a number in [0, 1].",
+		)
+	ratio = float(value)
+	if ratio < 0.0 or ratio > 1.0:
+		raise ValueError(
+			f"Baseline file {path} record {index} field 'coverage_ratio' must be "
+			"a number in [0, 1].",
+		)
+	return ratio
 
 
 if __name__ == "__main__":

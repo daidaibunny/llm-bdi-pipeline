@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+from scripts.run_domain_level_experiment import _read_baseline_records
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -123,3 +127,16 @@ def test_generic_domain_level_experiment_script_accepts_completed_baseline_json(
 			"runtime_planner": "offline_baseline_only",
 		},
 	]
+
+
+def test_generic_experiment_baseline_json_requires_completed_coverage_fields(
+	tmp_path: Path,
+) -> None:
+	baseline_json = tmp_path / "bad-baseline.json"
+	baseline_json.write_text(
+		json.dumps({"label": "missing-coverage"}),
+		encoding="utf-8",
+	)
+
+	with pytest.raises(ValueError, match="missing required baseline field"):
+		_read_baseline_records((baseline_json,))
