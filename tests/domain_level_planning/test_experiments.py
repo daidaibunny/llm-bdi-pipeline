@@ -87,6 +87,14 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	]
 	assert report["pddl_to_asl_symbol_map"]["changed_actions"] == {}
 	assert report["bounded_validation"]["passed"] is True
+	assert report["validation_scope"] == {
+		"bounded_validation_problem_count": 1,
+		"bounded_validation_source": "training_and_counterexample_problem_files",
+		"bounded_validation_problem_names": ["training-p1"],
+		"evaluation_problem_count": 2,
+		"evaluation_source": "evaluation_problem_files",
+		"coverage_is_heldout_runtime_execution": True,
+	}
 	assert report["no_synthetic_names"] is True
 	assert report["generated_output_audit"]["passed"] is True
 	assert report["generated_output_audit"]["no_synthetic_names"] is True

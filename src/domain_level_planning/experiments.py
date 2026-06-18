@@ -144,6 +144,10 @@ def run_domain_level_experiment(
 		"domain_level_contract": contract_dict,
 		"generated_output_audit": generated_output_audit,
 		"pddl_to_asl_symbol_map": result.report.get("pddl_to_asl_symbol_map"),
+		"validation_scope": _validation_scope(
+			bounded_validation=result.report.get("bounded_validation"),
+			evaluation_results=evaluation_results,
+		),
 		"no_synthetic_names": (
 			"achieve_" not in asl
 			and "transition_" not in asl
@@ -524,6 +528,28 @@ def _body_step_count(plan_library, kinds: set[str]) -> int:
 		for step in tuple(plan.body or ())
 		if step.kind in kinds
 	)
+
+
+def _validation_scope(
+	*,
+	bounded_validation: object,
+	evaluation_results: Sequence[dict[str, object]],
+) -> dict[str, object]:
+	validation = dict(bounded_validation or {})
+	return {
+		"bounded_validation_problem_count": int(
+			validation.get("checked_problem_count") or 0,
+		),
+		"bounded_validation_source": "training_and_counterexample_problem_files",
+		"bounded_validation_problem_names": [
+			str(item.get("problem_name") or "")
+			for item in tuple(validation.get("problem_reports") or ())
+			if isinstance(item, dict)
+		],
+		"evaluation_problem_count": len(tuple(evaluation_results or ())),
+		"evaluation_source": "evaluation_problem_files",
+		"coverage_is_heldout_runtime_execution": True,
+	}
 
 
 def _failure_analysis(evaluation_results: Sequence[dict[str, object]]) -> dict[str, object]:

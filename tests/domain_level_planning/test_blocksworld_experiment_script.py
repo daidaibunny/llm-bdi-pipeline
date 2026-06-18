@@ -60,6 +60,14 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 	assert report["evaluation_problem_count"] == 2
 	assert report["coverage"]["solved_count"] == 2
 	assert report["coverage"]["failed_count"] == 0
+	assert report["validation_scope"] == {
+		"bounded_validation_problem_count": 1,
+		"bounded_validation_source": "training_and_counterexample_problem_files",
+		"bounded_validation_problem_names": ["p01"],
+		"evaluation_problem_count": 2,
+		"evaluation_source": "evaluation_problem_files",
+		"coverage_is_heldout_runtime_execution": True,
+	}
 	assert report["failure_analysis"]["failed_problem_count"] == 0
 	assert report["failure_analysis"]["failure_reason_counts"] == {}
 	assert report["failure_analysis"]["step_count_summary"]["max"] >= 0
