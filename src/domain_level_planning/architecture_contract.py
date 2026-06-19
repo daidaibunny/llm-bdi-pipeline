@@ -271,7 +271,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"ordering also supports bounded positive-precondition binding "
 					"closures for hidden producer goal arguments when the producer "
 					"and consumer goal predicates differ, and composer evidence reports "
-					"those binding contexts separately from direct causal orderings. Composer evidence "
+					"those binding contexts and binding depth separately from direct causal orderings. Composer evidence "
 					"now records ordering kind and ordered-goal patterns for trace, "
 					"schema causal-precondition, schema delete-threat, and counterexample "
 					"ordering candidates."

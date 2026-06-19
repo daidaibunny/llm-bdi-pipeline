@@ -3203,6 +3203,7 @@ def _composer_rule_evidence_record(rule: LiftedPlanRule) -> dict[str, object]:
 		"ordering_kind": _composer_ordering_kind(rule),
 		"ordered_goals": _composer_ordered_goals(rule),
 		"ordering_binding_contexts": _composer_ordering_binding_contexts(rule),
+		"ordering_binding_depth": len(_composer_ordering_binding_contexts(rule)),
 		"context": tuple(rule.context),
 		"body": tuple(_call(step.symbol, step.arguments) for step in tuple(rule.body or ())),
 		"capabilities": tuple(rule.capabilities),

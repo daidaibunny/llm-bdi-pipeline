@@ -374,6 +374,15 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 				),
 				"ordering_kind",
 			),
+			"max_schema_binding_ordering_candidate_depth": (
+				_max_schema_binding_ordering_depth(composer_candidates)
+			),
+			"max_schema_binding_ordering_selected_depth": (
+				_max_schema_binding_ordering_depth(composer_candidates, selected_only=True)
+			),
+			"max_schema_binding_ordering_depth": (
+				_max_schema_binding_ordering_depth(composer_candidates, selected_only=True)
+			),
 			"composer_candidate_rejection_counts": _count_by_key(
 				(
 					candidate
@@ -527,6 +536,23 @@ def _count_by_key(items, key: str) -> dict[str, int]:
 		value = str(dict(item).get(key) or "unknown")
 		counts[value] = counts.get(value, 0) + 1
 	return dict(sorted(counts.items()))
+
+
+def _max_schema_binding_ordering_depth(
+	composer_candidates,
+	*,
+	selected_only: bool = False,
+) -> int:
+	return max(
+		(
+			int(dict(candidate).get("ordering_binding_depth") or 0)
+			for candidate in tuple(composer_candidates or ())
+			if dict(candidate).get("ordering_kind")
+			== "schema_causal_precondition_binding_support"
+			and (not selected_only or bool(dict(candidate).get("selected")))
+		),
+		default=0,
+	)
 
 
 def _body_step_count(plan_library, kinds: set[str]) -> int:

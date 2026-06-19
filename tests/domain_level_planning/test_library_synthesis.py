@@ -74,6 +74,41 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
 
 
+def test_unified_pipeline_reports_multi_hop_schema_binding_ordering(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_multi_hop_causal_domain_and_problem(tmp_path)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(result.plan_library)
+
+	expected_plan = (
+		"+!g : goal_prepared(Z) & goal_done(X) & assigned(X, Y) "
+		"& station_tool(Y, Z) & not prepared(Z) <-"
+	)
+	assert expected_plan in asl
+	assert "\t!prepared(Z);" in asl
+	layer_c = result.report["evidence_matrix"]["layer_c_goal_composer"]
+	multi_hop_records = tuple(
+		item
+		for item in layer_c["composer_candidate_evidence"]
+		if item["ordering_kind"] == "schema_causal_precondition_binding_support"
+		and item["ordered_goals"] == {
+			"earlier": "prepared(Z)",
+			"later": "done(X)",
+		}
+	)
+	assert len(multi_hop_records) == 1
+	assert multi_hop_records[0]["ordering_binding_contexts"] == (
+		"assigned(X, Y)",
+		"station_tool(Y, Z)",
+	)
+	assert multi_hop_records[0]["ordering_binding_depth"] == 2
+
+
 def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	tmp_path: Path,
 ) -> None:
@@ -395,7 +430,9 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		gaps["G3"]["current_state"]
 	)
 	assert "hidden producer goal arguments" in gaps["G3"]["current_state"]
-	assert "binding contexts separately" in gaps["G3"]["current_state"]
+	assert "binding contexts and binding depth separately" in (
+		gaps["G3"]["current_state"]
+	)
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
 		gaps["G3"]["required_improvement"]
 	)
@@ -2123,6 +2160,51 @@ def _write_binary_domain_problem_and_policy(tmp_path: Path) -> tuple[Path, Path,
 		encoding="utf-8",
 	)
 	return domain_file, problem_file, policy_file
+
+
+def _write_multi_hop_causal_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "multi-hop-causal-domain.pddl"
+	problem_file = tmp_path / "multi-hop-causal-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain multi-hop-causal-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (assigned ?task ?station)
+		  (station_tool ?station ?tool)
+		  (prepared ?tool)
+		  (done ?task)
+		 )
+		 (:action prepare
+		  :parameters (?tool)
+		  :precondition ()
+		  :effect (prepared ?tool)
+		 )
+		 (:action finish
+		  :parameters (?task ?station ?tool)
+		  :precondition (and
+		   (assigned ?task ?station)
+		   (station_tool ?station ?tool)
+		   (prepared ?tool)
+		  )
+		  :effect (done ?task)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem multi-hop-causal-p1)
+		 (:domain multi-hop-causal-mini)
+		 (:objects task1 station1 tool1)
+		 (:init (assigned task1 station1) (station_tool station1 tool1))
+		 (:goal (and (prepared tool1) (done task1)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
 
 
 def _write_unobserved_action_domain_problem_and_policy(

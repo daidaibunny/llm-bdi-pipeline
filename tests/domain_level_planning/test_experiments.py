@@ -12,6 +12,9 @@ from tests.domain_level_planning.test_library_synthesis import (
 from tests.domain_level_planning.test_library_synthesis import (
 	_write_counterexample_domain,
 )
+from tests.domain_level_planning.test_library_synthesis import (
+	_write_multi_hop_causal_domain_and_problem,
+)
 
 
 def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
@@ -214,6 +217,30 @@ def test_domain_level_experiment_reports_failure_analysis(
 		"max": 1,
 		"mean": 0.5,
 	}
+
+
+def test_domain_level_experiment_reports_schema_binding_depth(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_multi_hop_causal_domain_and_problem(tmp_path)
+
+	report = run_domain_level_experiment(
+		experiment_name="multi-hop-binding-smoke",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		max_execution_steps=100,
+		max_depth=50,
+	)
+
+	layer_c = report["learning_audit"]["layer_c_goal_composer"]
+	assert layer_c["composer_ordering_kind_counts"][
+		"schema_causal_precondition_binding_support"
+	] == 1
+	assert layer_c["max_schema_binding_ordering_candidate_depth"] == 2
+	assert layer_c["max_schema_binding_ordering_selected_depth"] == 2
+	assert layer_c["max_schema_binding_ordering_depth"] == 2
+	assert "assigned(X, Y) & station_tool(Y, Z)" in report["asl"]
 
 
 def test_domain_level_experiment_can_run_paper_profile_with_external_policy(
