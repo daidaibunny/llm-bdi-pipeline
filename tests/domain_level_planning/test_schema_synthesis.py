@@ -484,6 +484,68 @@ def test_causal_interference_uses_binding_preconditions_for_hidden_goal_argument
 	)
 
 
+def test_causal_interference_uses_multi_hop_binding_preconditions_for_hidden_goal_argument(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "multi-hop-causal-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain multi-hop-causal-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (assigned ?task ?station)
+		  (station_tool ?station ?tool)
+		  (prepared ?tool)
+		  (done ?task)
+		 )
+		 (:action prepare
+		  :parameters (?tool)
+		  :precondition ()
+		  :effect (prepared ?tool)
+		 )
+		 (:action finish
+		  :parameters (?task ?station ?tool)
+		  :precondition (and
+		   (assigned ?task ?station)
+		   (station_tool ?station ?tool)
+		   (prepared ?tool)
+		  )
+		  :effect (done ?task)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	domain = PDDLParser.parse_domain(domain_file)
+
+	rules = causal_interference_ordering_rules(domain)
+
+	indirect_rules = tuple(
+		rule
+		for rule in rules
+		if rule.context
+		== (
+			"goal_prepared(Z)",
+			"goal_done(X)",
+			"assigned(X, Y)",
+			"station_tool(Y, Z)",
+			"not prepared(Z)",
+		)
+	)
+	assert len(indirect_rules) == 1
+	rule = indirect_rules[0]
+	assert rule.body == (
+		LiftedCall("subgoal", "prepared", ("Z",)),
+		LiftedCall("subgoal", "g", ()),
+	)
+	assert any(
+		capability.startswith(
+			"causal_order_prepared_Z_before_done_X_via_assigned_station_tool",
+		)
+		for capability in rule.capabilities
+	)
+
+
 def test_causal_interference_orderings_are_empty_without_shared_structure(
 	tmp_path: Path,
 ) -> None:

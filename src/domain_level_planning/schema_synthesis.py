@@ -825,26 +825,37 @@ def _binding_literals_for_hidden_arguments(
 	consumer: dict,
 	supplied_precondition: LiftedLiteral,
 ) -> tuple[LiftedLiteral, ...] | None:
-	"""Find one-hop positive preconditions that bind hidden variables."""
+	"""Find a connected positive-precondition chain that binds hidden variables."""
 
-	remaining = set(hidden_arguments)
-	consumer_target_arguments = set(consumer["target"].arguments)
-	allowed_arguments = consumer_target_arguments | remaining
-	bindings: list[LiftedLiteral] = []
-	for literal in consumer["preconditions"]:
-		if literal == supplied_precondition or not literal.is_positive:
-			continue
-		literal_arguments = set(literal.arguments)
-		if not literal_arguments.intersection(remaining):
-			continue
-		if not literal_arguments.intersection(consumer_target_arguments):
-			continue
-		if not literal_arguments.issubset(allowed_arguments):
-			continue
-		bindings.append(literal)
-		remaining.difference_update(literal_arguments)
-		if not remaining:
-			return tuple(bindings)
+	hidden = frozenset(hidden_arguments)
+	initial_bound = frozenset(consumer["target"].arguments)
+	if hidden.issubset(initial_bound):
+		return ()
+	available_literals = tuple(
+		literal
+		for literal in consumer["preconditions"]
+		if literal != supplied_precondition and literal.is_positive
+	)
+	frontier: list[tuple[frozenset[str], tuple[int, ...]]] = [(initial_bound, ())]
+	visited = {initial_bound}
+	while frontier:
+		bound_arguments, literal_indices = frontier.pop(0)
+		for index, literal in enumerate(available_literals):
+			if index in literal_indices:
+				continue
+			literal_arguments = frozenset(literal.arguments)
+			if not literal_arguments.intersection(bound_arguments):
+				continue
+			next_bound_arguments = bound_arguments | literal_arguments
+			if next_bound_arguments == bound_arguments:
+				continue
+			next_literal_indices = (*literal_indices, index)
+			if hidden.issubset(next_bound_arguments):
+				return tuple(available_literals[item] for item in next_literal_indices)
+			if next_bound_arguments in visited:
+				continue
+			visited.add(next_bound_arguments)
+			frontier.append((next_bound_arguments, next_literal_indices))
 	return None
 
 
@@ -943,13 +954,24 @@ def _lift_binding_causal_ordering(
 			int(producer_index),
 		)
 	identities: dict[tuple[str, int], int] = {}
-	hidden_identities: dict[str, int] = {}
+	binding_argument_identities: dict[str, int] = {}
 	next_id = 0
 	for consumer_index in range(consumer_arity):
 		identities[("c", consumer_index)] = next_id
 		next_id += 1
+	consumer_arguments = set(consumer["target"].arguments)
+	for literal in tuple(binding_link.get("binding_literals") or ()):
+		for argument in tuple(literal.arguments or ()):
+			if argument in consumer_arguments:
+				continue
+			if argument in binding_argument_identities:
+				continue
+			binding_argument_identities[argument] = next_id
+			next_id += 1
 	for hidden_argument in sorted(hidden_to_producer):
-		hidden_identities[hidden_argument] = next_id
+		if hidden_argument in binding_argument_identities:
+			continue
+		binding_argument_identities[hidden_argument] = next_id
 		next_id += 1
 	for producer_index in range(producer_arity):
 		linked_consumer = next(
@@ -972,7 +994,7 @@ def _lift_binding_causal_ordering(
 			None,
 		)
 		if linked_hidden is not None:
-			identities[("p", producer_index)] = hidden_identities[linked_hidden]
+			identities[("p", producer_index)] = binding_argument_identities[linked_hidden]
 			continue
 		identities[("p", producer_index)] = next_id
 		next_id += 1
@@ -993,7 +1015,7 @@ def _lift_binding_causal_ordering(
 		consumer=consumer,
 		binding_literals=tuple(binding_link.get("binding_literals") or ()),
 		consumer_identities=identities,
-		hidden_identities=hidden_identities,
+		binding_argument_identities=binding_argument_identities,
 		variable_names=variable_names,
 	)
 	if binding_contexts is None:
@@ -1020,7 +1042,7 @@ def _binding_context_signatures(
 	consumer: dict,
 	binding_literals: tuple[LiftedLiteral, ...],
 	consumer_identities: dict[tuple[str, int], int],
-	hidden_identities: dict[str, int],
+	binding_argument_identities: dict[str, int],
 	variable_names: tuple[str, ...],
 ) -> tuple[str, ...] | None:
 	consumer_positions = _argument_positions(consumer["target"].arguments)
@@ -1032,10 +1054,10 @@ def _binding_context_signatures(
 			if consumer_index is not None:
 				arguments.append(variable_names[consumer_identities[("c", consumer_index)]])
 				continue
-			hidden_identity = hidden_identities.get(argument)
-			if hidden_identity is None:
+			binding_identity = binding_argument_identities.get(argument)
+			if binding_identity is None:
 				return None
-			arguments.append(variable_names[hidden_identity])
+			arguments.append(variable_names[binding_identity])
 		signatures.append(_call(literal.predicate, arguments))
 	return tuple(signatures)
 

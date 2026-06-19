@@ -391,7 +391,9 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "provenance manifests" in gaps["G3"]["current_state"]
 	assert "per-rule composer evidence verdicts" in gaps["G3"]["current_state"]
 	assert "ordered-goal patterns" in gaps["G3"]["current_state"]
-	assert "one-hop positive precondition bindings" in gaps["G3"]["current_state"]
+	assert "bounded positive-precondition binding closures" in (
+		gaps["G3"]["current_state"]
+	)
 	assert "hidden producer goal arguments" in gaps["G3"]["current_state"]
 	assert "binding contexts separately" in gaps["G3"]["current_state"]
 	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
