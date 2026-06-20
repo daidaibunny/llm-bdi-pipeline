@@ -2915,6 +2915,10 @@ def _evidence_matrix(
 				candidate_rules=candidate_rules,
 				selected_rules=selected_rules,
 			),
+			"goal_agenda": _goal_agenda_report(
+				candidate_rules=candidate_rules,
+				selected_rules=selected_rules,
+			),
 			"selected_composer_rule_evidence": _selected_composer_rule_evidence(
 				selected_rules,
 			),
@@ -3326,6 +3330,107 @@ def _composer_ordering_binding_contexts(rule: LiftedPlanRule) -> tuple[str, ...]
 		and not str(context).startswith("goal_")
 		and not str(context).strip().lower().startswith("not ")
 	)
+
+
+def _goal_agenda_report(
+	*,
+	candidate_rules: Sequence[LiftedPlanRule],
+	selected_rules: Sequence[LiftedPlanRule],
+) -> dict[str, object]:
+	"""Summarize Layer C goal-dependency orderings as an agenda graph."""
+
+	selected_names = {rule.name for rule in tuple(selected_rules or ())}
+	edges = tuple(
+		_goal_agenda_edge(rule, selected=rule.name in selected_names)
+		for rule in tuple(candidate_rules or ())
+		if rule.layer == "composer" and _composer_ordering_kind(rule) is not None
+	)
+	support_edges = tuple(edge for edge in edges if edge["category"] == "support")
+	selected_support_edges = tuple(
+		edge for edge in support_edges if bool(edge["selected"])
+	)
+	delete_threat_edges = tuple(
+		edge for edge in edges if edge["category"] == "delete_threat"
+	)
+	selected_delete_threat_edges = tuple(
+		edge for edge in delete_threat_edges if bool(edge["selected"])
+	)
+	selected_cycles = _agenda_cycles(selected_support_edges)
+	all_cycles = _agenda_cycles(support_edges)
+	return {
+		"semantics": (
+			"support edges order final goals for serialized achievement; "
+			"delete-threat edges are reported separately because they describe "
+			"interference, not permanent landmark protection"
+		),
+		"edge_count": len(edges),
+		"selected_edge_count": sum(1 for edge in edges if bool(edge["selected"])),
+		"support_edge_count": len(support_edges),
+		"selected_support_edge_count": len(selected_support_edges),
+		"delete_threat_edge_count": len(delete_threat_edges),
+		"selected_delete_threat_edge_count": len(selected_delete_threat_edges),
+		"support_agenda_acyclic": not all_cycles,
+		"support_cycles": all_cycles,
+		"selected_support_agenda_acyclic": not selected_cycles,
+		"selected_support_cycles": selected_cycles,
+		"edges": edges,
+	}
+
+
+def _goal_agenda_edge(rule: LiftedPlanRule, *, selected: bool) -> dict[str, object]:
+	ordering_kind = _composer_ordering_kind(rule)
+	ordered_goals = _composer_ordered_goals(rule)
+	category = (
+		"delete_threat"
+		if ordering_kind == "schema_delete_threat"
+		else "support"
+	)
+	binding_contexts = _composer_ordering_binding_contexts(rule)
+	return {
+		"rule_name": rule.name,
+		"selected": selected,
+		"category": category,
+		"ordering_kind": ordering_kind,
+		"earlier": ordered_goals["earlier"],
+		"later": ordered_goals["later"],
+		"binding_contexts": binding_contexts,
+		"binding_depth": len(binding_contexts),
+		"source": _candidate_source(rule),
+		"context": tuple(rule.context),
+		"body": tuple(_call(step.symbol, step.arguments) for step in tuple(rule.body or ())),
+		"capabilities": tuple(rule.capabilities),
+	}
+
+
+def _agenda_cycles(edges: Sequence[Mapping[str, object]]) -> tuple[tuple[str, ...], ...]:
+	graph: dict[str, set[str]] = {}
+	for edge in tuple(edges or ()):
+		earlier = edge.get("earlier")
+		later = edge.get("later")
+		if not earlier or not later:
+			continue
+		graph.setdefault(str(earlier), set()).add(str(later))
+		graph.setdefault(str(later), set())
+	cycles: list[tuple[str, ...]] = []
+	visiting: list[str] = []
+	visited: set[str] = set()
+
+	def _visit(node: str) -> None:
+		if node in visiting:
+			start = visiting.index(node)
+			cycles.append(tuple((*visiting[start:], node)))
+			return
+		if node in visited:
+			return
+		visiting.append(node)
+		for successor in sorted(graph.get(node, ())):
+			_visit(successor)
+		visiting.pop()
+		visited.add(node)
+
+	for node in sorted(graph):
+		_visit(node)
+	return tuple(dict.fromkeys(cycles))
 
 
 def _first_body_subgoal(rule: LiftedPlanRule) -> str | None:

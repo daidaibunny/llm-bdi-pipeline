@@ -61,6 +61,20 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 		and item["ordered_goals"]["earlier"]
 		for item in candidate_evidence
 	)
+	agenda = layer_c["goal_agenda"]
+	assert agenda["support_edge_count"] >= 1
+	assert agenda["selected_support_edge_count"] >= 1
+	assert agenda["selected_support_agenda_acyclic"] is True
+	assert agenda["selected_support_cycles"] == ()
+	assert agenda["delete_threat_edge_count"] >= 1
+	assert any(
+		edge["selected"] is True
+		and edge["category"] == "support"
+		and edge["ordering_kind"] == "schema_causal_precondition_support"
+		and edge["earlier"] == "on(Y, Z)"
+		and edge["later"] == "on(X, Y)"
+		for edge in agenda["edges"]
+	)
 	assert all(
 		item["rejection_reason"] is None
 		or item["rejection_reason"]
@@ -107,6 +121,18 @@ def test_unified_pipeline_reports_multi_hop_schema_binding_ordering(
 		"station_tool(Y, Z)",
 	)
 	assert multi_hop_records[0]["ordering_binding_depth"] == 2
+	agenda = layer_c["goal_agenda"]
+	assert any(
+		edge["selected"] is True
+		and edge["earlier"] == "prepared(Z)"
+		and edge["later"] == "done(X)"
+		and edge["binding_contexts"] == (
+			"assigned(X, Y)",
+			"station_tool(Y, Z)",
+		)
+		and edge["binding_depth"] == 2
+		for edge in agenda["edges"]
+	)
 
 
 def test_unified_pipeline_combines_external_sketch_and_schema_candidates(

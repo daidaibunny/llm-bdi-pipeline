@@ -362,6 +362,28 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 			"trace_ordering_selected_count": int(
 				layer_c.get("trace_ordering_selected_count") or 0,
 			),
+			"goal_agenda_edge_count": int(
+				dict(layer_c.get("goal_agenda") or {}).get("edge_count") or 0,
+			),
+			"goal_agenda_support_edge_count": int(
+				dict(layer_c.get("goal_agenda") or {}).get("support_edge_count") or 0,
+			),
+			"goal_agenda_delete_threat_edge_count": int(
+				dict(layer_c.get("goal_agenda") or {}).get("delete_threat_edge_count")
+				or 0,
+			),
+			"selected_goal_agenda_support_edge_count": int(
+				dict(layer_c.get("goal_agenda") or {}).get(
+					"selected_support_edge_count",
+				)
+				or 0,
+			),
+			"selected_goal_agenda_acyclic": bool(
+				dict(layer_c.get("goal_agenda") or {}).get(
+					"selected_support_agenda_acyclic",
+					True,
+				),
+			),
 			"composer_candidate_verdict_counts": _count_by_key(
 				composer_candidates,
 				"verdict",

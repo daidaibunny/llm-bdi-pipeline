@@ -240,6 +240,10 @@ def test_domain_level_experiment_reports_schema_binding_depth(
 	assert layer_c["max_schema_binding_ordering_candidate_depth"] == 2
 	assert layer_c["max_schema_binding_ordering_selected_depth"] == 2
 	assert layer_c["max_schema_binding_ordering_depth"] == 2
+	assert layer_c["goal_agenda_support_edge_count"] == 1
+	assert layer_c["selected_goal_agenda_support_edge_count"] == 1
+	assert layer_c["goal_agenda_delete_threat_edge_count"] == 0
+	assert layer_c["selected_goal_agenda_acyclic"] is True
 	assert "assigned(X, Y) & station_tool(Y, Z)" in report["asl"]
 
 
