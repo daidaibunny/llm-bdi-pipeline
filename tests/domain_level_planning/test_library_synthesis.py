@@ -1324,6 +1324,59 @@ def test_goal_ordering_refinement_constraint_synthesizes_composer_candidate(
 	assert "dfa_state" not in asl
 
 
+def test_paper_profile_rejects_cyclic_selected_goal_agenda(
+	tmp_path: Path,
+) -> None:
+	domain_file, training_problem, dependent_problem = _write_counterexample_domain(
+		tmp_path,
+	)
+	forward = RefinementConstraint(
+		failure_kind="goal_ordering_failure",
+		target_layer="layer_c_goal_composer",
+		constraint_type="counterexample_goal_ordering",
+		problem_file=str(dependent_problem),
+		problem_name="counterexample-p1",
+		failure_reason="missing goals after bad ordering",
+		lifted_orderings=(("goal_base(X)", "goal_top(X)"),),
+		required_rule_group_types=("counterexample_goal_ordering",),
+	)
+	reverse = RefinementConstraint(
+		failure_kind="goal_ordering_failure",
+		target_layer="layer_c_goal_composer",
+		constraint_type="counterexample_goal_ordering",
+		problem_file=str(dependent_problem),
+		problem_name="counterexample-p1",
+		failure_reason="missing goals after bad ordering",
+		lifted_orderings=(("goal_top(X)", "goal_base(X)"),),
+		required_rule_group_types=("counterexample_goal_ordering",),
+	)
+
+	bootstrap = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(training_problem,),
+		refinement_constraints=(forward, reverse),
+	)
+	agenda = bootstrap.report["evidence_matrix"]["layer_c_goal_composer"][
+		"goal_agenda"
+	]
+
+	assert agenda["selected_support_agenda_acyclic"] is False
+	assert agenda["selected_support_cycles"] == (("base(X)", "top(X)", "base(X)"),)
+	assert bootstrap.report["paper_profile_ready"] is False
+	assert any(
+		"selected Layer C support agenda is cyclic" in failure
+		for failure in bootstrap.report["paper_profile_failures"]
+	)
+
+	with pytest.raises(ValueError, match="selected Layer C support agenda is cyclic"):
+		synthesize_domain_level_asl_library(
+			domain_file=domain_file,
+			training_problem_files=(training_problem,),
+			refinement_constraints=(forward, reverse),
+			synthesis_profile="paper",
+		)
+
+
 def test_invalid_goal_ordering_refinement_is_reported_without_guessing(
 	tmp_path: Path,
 ) -> None:

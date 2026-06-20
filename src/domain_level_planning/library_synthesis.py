@@ -813,6 +813,17 @@ def _paper_profile_failures(
 				f"producers={dict(report.producer_actions_by_predicate or {})})"
 			),
 		)
+	selected_goal_agenda = _goal_agenda_report(
+		candidate_rules=selected_rules,
+		selected_rules=selected_rules,
+	)
+	if not bool(selected_goal_agenda["selected_support_agenda_acyclic"]):
+		failures.append(
+			(
+				"selected Layer C support agenda is cyclic "
+				f"(cycles={selected_goal_agenda['selected_support_cycles']})"
+			),
+		)
 	if bounded_validation is None:
 		failures.append("paper profile requires bounded validation over training problems")
 	elif not bounded_validation.passed:
