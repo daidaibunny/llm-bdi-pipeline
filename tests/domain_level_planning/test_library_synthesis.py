@@ -369,6 +369,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		hypothesis["module_language"]["body_calls"]
 	)
 	assert "matching schema arities" in hypothesis["module_language"]["body_calls"]
+	assert "every body variable" in hypothesis["module_language"]["body_calls"]
 	assert "goal-conditioned +!g rules" in hypothesis["composer_language"]["rule_shape"]
 	assert "bounded reachable states" in hypothesis["progress_language"]["validation_scope"]
 	assert hypothesis["correctness_language"]["claim_scope"] == (
@@ -460,6 +461,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "deterministic first-applicable" in gaps["G7"]["current_state"]
 	assert "PDDL-to-ASL symbol mapping" in gaps["G7"]["current_state"]
+	assert "variable-binding safety" in gaps["G7"]["current_state"]
 	assert "primitive-action precondition handling" in gaps["G7"]["required_improvement"]
 	assert gaps["G8"]["layer"] == "validation"
 	assert gaps["G8"]["status"] == "partially_done"

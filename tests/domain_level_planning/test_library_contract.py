@@ -225,3 +225,43 @@ def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() ->
 	assert any("goal descriptor" in violation for violation in report.violations)
 	assert any("unsupported body step kind" in violation for violation in report.violations)
 	assert any("unsupported context expression" in violation for violation in report.violations)
+
+
+def test_domain_level_library_contract_rejects_unbound_body_variables() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="done_via_choose",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("ready(X)",),
+				body=(AgentSpeakBodyStep("action", "choose", ("X", "Y")),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(plan_library)
+
+	assert report.passed is False
+	assert report.checked_layers["variable_binding_safety"] is False
+	assert any("unbound variable" in violation for violation in report.violations)
+	assert any("Y" in violation for violation in report.violations)
+
+
+def test_domain_level_library_contract_allows_context_bound_body_variables() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="done_via_assigned_tool",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("assigned(X, Y)", "ready(Y)"),
+				body=(AgentSpeakBodyStep("action", "finish", ("X", "Y")),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(plan_library)
+
+	assert report.passed is True
+	assert report.checked_layers["variable_binding_safety"] is True

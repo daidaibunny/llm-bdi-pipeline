@@ -74,6 +74,7 @@ def audit_domain_level_library_contract(
 	lifted_body_calls = _collect_body_lifting_violations(plans, violations)
 	context_subset = _collect_context_subset_violations(plans, violations)
 	lifted_contexts = _collect_context_lifting_violations(plans, violations)
+	variable_binding_safety = _collect_variable_binding_violations(plans, violations)
 	declared_pddl_symbols = _collect_declared_pddl_symbol_violations(
 		plans,
 		declared_predicates=predicate_arities,
@@ -92,6 +93,7 @@ def audit_domain_level_library_contract(
 		"lifted_plan_heads": lifted_heads,
 		"lifted_body_calls": lifted_body_calls,
 		"lifted_contexts": lifted_contexts,
+		"variable_binding_safety": variable_binding_safety,
 	}
 	return DomainLevelLibraryContractReport(
 		passed=all(checked_layers.values()),
@@ -281,6 +283,45 @@ def _collect_context_lifting_violations(
 							f"Context atom {atom!r} contains grounded argument "
 							f"{argument!r} in {plan.plan_name!r}.",
 						)
+	return passed
+
+
+def _collect_variable_binding_violations(
+	plans: Iterable[AgentSpeakPlan],
+	violations: list[str],
+) -> bool:
+	"""Require every body variable to be bound by the head or positive context."""
+
+	passed = True
+	for plan in tuple(plans or ()):
+		bound_variables = {
+			argument
+			for argument in tuple(plan.trigger.arguments or ())
+			if _is_lifted_variable(argument)
+		}
+		for context in tuple(plan.context or ()):
+			if str(context or "").strip().lower().startswith("not "):
+				continue
+			for _symbol, arguments in _context_atoms(context):
+				bound_variables.update(
+					argument
+					for argument in arguments
+					if _is_lifted_variable(argument)
+				)
+		for step in tuple(plan.body or ()):
+			for argument in tuple(step.arguments or ()):
+				if not _is_lifted_variable(argument):
+					continue
+				if argument in bound_variables:
+					continue
+				passed = False
+				violations.append(
+					(
+						f"Body step {step.symbol!r} contains unbound variable "
+						f"{argument!r} in {plan.plan_name!r}; variables must be "
+						"bound by the plan head or positive context literals."
+					),
+				)
 	return passed
 
 

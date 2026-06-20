@@ -355,6 +355,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"currently supported ASL subset are reported with the library; "
 					"primitive actions are applied by the PDDL STRIPS simulator and "
 					"precondition violations become primitive-precondition counterexamples; "
+					"variable-binding safety rejects body action or subgoal arguments not "
+					"bound by the plan head or positive context literals; "
 					"PDDL-to-ASL symbol mapping records sanitized primitive action "
 					"functors so rendered ASL can be traced back to original PDDL schemas."
 				),
@@ -524,7 +526,8 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"contexts": "implicit conjunction of supported state and goal literals",
 			"body_calls": (
 				"declared PDDL primitive action calls and declared PDDL predicate "
-				"subgoal calls with matching schema arities"
+				"subgoal calls with matching schema arities; every body variable "
+				"must be bound by the plan head or positive context literals"
 			),
 			"recursion": (
 				"same-predicate recursion requires a missing-precondition or "

@@ -1201,17 +1201,57 @@ def _action_effect_rules(
 						cost=2,
 					),
 				)
-		rules.append(
-			_rule(
-				f"{effect.predicate}_via_{action_name}",
-				effect.predicate,
-				head_arguments,
-				context,
-				(_action(action_name, *action_arguments),),
-				capabilities=(f"module_{effect.predicate}_action_{action_name}",),
-			),
-		)
+		if _body_variables_are_bound(
+			head_arguments=head_arguments,
+			context=context,
+			body=(action_arguments,),
+		):
+			rules.append(
+				_rule(
+					f"{effect.predicate}_via_{action_name}",
+					effect.predicate,
+					head_arguments,
+					context,
+					(_action(action_name, *action_arguments),),
+					capabilities=(f"module_{effect.predicate}_action_{action_name}",),
+				),
+			)
 	return tuple(rules)
+
+
+def _body_variables_are_bound(
+	*,
+	head_arguments: Sequence[str],
+	context: Sequence[str],
+	body: Sequence[Sequence[str]],
+) -> bool:
+	bound_variables = {
+		argument for argument in tuple(head_arguments or ()) if _is_variable(argument)
+	}
+	for context_literal in tuple(context or ()):
+		text = str(context_literal or "").strip()
+		if text.lower().startswith("not "):
+			continue
+		for argument in _context_literal_arguments(text):
+			if _is_variable(argument):
+				bound_variables.add(argument)
+	for arguments in tuple(body or ()):
+		for argument in tuple(arguments or ()):
+			if _is_variable(argument) and argument not in bound_variables:
+				return False
+	return True
+
+
+def _context_literal_arguments(context_literal: str) -> tuple[str, ...]:
+	text = str(context_literal or "").strip()
+	if "(" not in text or not text.endswith(")"):
+		return ()
+	_, raw_arguments = text.split("(", 1)
+	return tuple(
+		argument.strip()
+		for argument in raw_arguments[:-1].split(",")
+		if argument.strip()
+	)
 
 
 def _weight_atomic_action_rules_by_evidence(

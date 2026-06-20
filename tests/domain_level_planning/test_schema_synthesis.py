@@ -52,6 +52,53 @@ def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain() -> None
 	assert "dfa_state" not in asl
 
 
+def test_schema_synthesizer_rejects_action_rules_with_unbound_parameters(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "unbound-action-domain.pddl"
+	problem_file = tmp_path / "unbound-action-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain unbound-action-mini)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (done ?x)
+		 )
+		 (:action choose
+		  :parameters (?x ?y)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem unbound-action-p1)
+		 (:domain unbound-action-mini)
+		 (:objects a b)
+		 (:init (ready a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	try:
+		build_goal_conditioned_library_from_pddl(
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+		)
+	except ValueError as exc:
+		message = str(exc)
+		assert "No lifted candidate rule covers bounded transition-progress evidence" in message
+		assert "done(a)" in message
+	else:
+		raise AssertionError("Expected unbound action-parameter rule to be rejected.")
+
+
 def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_code() -> None:
 	plan_library = build_goal_conditioned_library_from_pddl(
 		domain_file=BLOCKS_DOMAIN,
