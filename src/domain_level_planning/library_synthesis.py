@@ -2714,6 +2714,12 @@ def _evidence_matrix(
 	atomic_progress_reports = tuple(atomic_progress_binding_reports or ())
 	goal_ordering_reports = tuple(goal_ordering_binding_reports or ())
 	state_coverage_reports = tuple(state_coverage_binding_reports or ())
+	atomic_strategy_groups = _atomic_action_strategy_group_reports(
+		action_strategy_groups=atomic_action_strategy_rule_groups,
+		candidate_rules=candidate_rules,
+		selected_rules=selected_rules,
+		atomic_justifications=all_atomic_justifications,
+	)
 	return {
 		"layer_b_atomic_modules": {
 			"target": "PDDL predicate achievement-goal modules",
@@ -2732,11 +2738,9 @@ def _evidence_matrix(
 			"atomic_action_strategy_group_count": len(
 				tuple(atomic_action_strategy_rule_groups or ()),
 			),
-			"atomic_action_strategy_groups": _atomic_action_strategy_group_reports(
-				action_strategy_groups=atomic_action_strategy_rule_groups,
-				candidate_rules=candidate_rules,
-				selected_rules=selected_rules,
-				atomic_justifications=all_atomic_justifications,
+			"atomic_action_strategy_groups": atomic_strategy_groups,
+			"atomic_strategy_portfolio": _atomic_strategy_portfolio(
+				atomic_strategy_groups,
 			),
 			"selected_atomic_action_strategy_count": sum(
 				1
@@ -3143,6 +3147,89 @@ def _atomic_action_strategy_candidate_report(
 		selected_group_support=selected_group_support,
 	)
 	return record
+
+
+def _atomic_strategy_portfolio(
+	strategy_groups: Sequence[Mapping[str, object]],
+) -> dict[str, object]:
+	"""Summarize Layer B primitive-action strategy choices per lifted context."""
+
+	group_records = tuple(
+		_atomic_strategy_portfolio_group(group)
+		for group in tuple(strategy_groups or ())
+	)
+	return {
+		"semantics": (
+			"one primitive action strategy is selected for each lifted atomic "
+			"goal/context group; trace-supported selected strategies dominate "
+			"unobserved schema alternatives when available"
+		),
+		"group_count": len(group_records),
+		"multi_strategy_group_count": sum(
+			1 for group in group_records if int(group["candidate_count"]) > 1
+		),
+		"trace_backed_selected_group_count": sum(
+			1
+			for group in group_records
+			if "trace_justified" in tuple(group["selected_verdicts"])
+		),
+		"unsafe_or_unjustified_selected_group_count": sum(
+			1
+			for group in group_records
+			if any(
+				verdict == "schema_unobserved_action_body"
+				for verdict in tuple(group["selected_verdicts"])
+			)
+		),
+		"dominated_rejected_candidate_count": sum(
+			1
+			for group in group_records
+			for reason in tuple(group["rejection_reasons"])
+			if reason == "dominated_by_trace_supported_strategy"
+		),
+		"groups": group_records,
+	}
+
+
+def _atomic_strategy_portfolio_group(
+	group: Mapping[str, object],
+) -> dict[str, object]:
+	candidates = tuple(dict(candidate) for candidate in tuple(group.get("candidates") or ()))
+	selected_candidates = tuple(
+		candidate for candidate in candidates if bool(candidate.get("selected"))
+	)
+	rejected_candidates = tuple(
+		candidate for candidate in candidates if not bool(candidate.get("selected"))
+	)
+	return {
+		"group_name": str(group.get("group_name") or ""),
+		"head": str(group.get("head") or ""),
+		"context": tuple(group.get("context") or ()),
+		"candidate_count": len(candidates),
+		"selected_rule_names": tuple(
+			str(candidate.get("rule_name") or "")
+			for candidate in selected_candidates
+		),
+		"selected_verdicts": tuple(
+			dict.fromkeys(
+				str(candidate.get("verdict") or "")
+				for candidate in selected_candidates
+				if candidate.get("verdict")
+			),
+		),
+		"trace_support_count": sum(
+			int(candidate.get("trace_support_count") or 0)
+			for candidate in selected_candidates
+		),
+		"rejected_candidate_count": len(rejected_candidates),
+		"rejection_reasons": tuple(
+			dict.fromkeys(
+				str(candidate.get("rejection_reason") or "")
+				for candidate in rejected_candidates
+				if candidate.get("rejection_reason")
+			),
+		),
+	}
 
 
 def _atomic_action_strategy_rejection_reason(

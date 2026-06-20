@@ -1047,6 +1047,25 @@ def test_layer_b_selects_one_evidence_backed_action_strategy_per_goal(
 	assert candidates["done_via_backup_finish"]["rejection_reason"] == (
 		"dominated_by_trace_supported_strategy"
 	)
+	portfolio = layer_b["atomic_strategy_portfolio"]
+	assert portfolio["group_count"] == 1
+	assert portfolio["multi_strategy_group_count"] == 1
+	assert portfolio["trace_backed_selected_group_count"] == 1
+	assert portfolio["unsafe_or_unjustified_selected_group_count"] == 0
+	assert portfolio["dominated_rejected_candidate_count"] == 1
+	assert portfolio["groups"] == (
+		{
+			"group_name": strategy_groups[0]["group_name"],
+			"head": "done(X)",
+			"context": ("ready(X)",),
+			"candidate_count": 2,
+			"selected_rule_names": ("done_via_finish",),
+			"selected_verdicts": ("trace_justified",),
+			"trace_support_count": 1,
+			"rejected_candidate_count": 1,
+			"rejection_reasons": ("dominated_by_trace_supported_strategy",),
+		},
+	)
 
 
 def test_external_policy_rules_are_rendered_before_schema_fallbacks(

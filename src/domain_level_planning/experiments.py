@@ -307,6 +307,7 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 	layer_b = dict(matrix.get("layer_b_atomic_modules") or {})
 	layer_c = dict(matrix.get("layer_c_goal_composer") or {})
 	strategy_groups = tuple(layer_b.get("atomic_action_strategy_groups") or ())
+	strategy_portfolio = dict(layer_b.get("atomic_strategy_portfolio") or {})
 	strategy_candidates = tuple(
 		candidate
 		for group in strategy_groups
@@ -322,6 +323,21 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 			),
 			"rejected_atomic_action_strategy_candidate_count": sum(
 				1 for candidate in strategy_candidates if not bool(candidate.get("selected"))
+			),
+			"atomic_strategy_portfolio_group_count": int(
+				strategy_portfolio.get("group_count") or 0,
+			),
+			"atomic_strategy_portfolio_multi_strategy_group_count": int(
+				strategy_portfolio.get("multi_strategy_group_count") or 0,
+			),
+			"atomic_strategy_portfolio_trace_backed_selected_group_count": int(
+				strategy_portfolio.get("trace_backed_selected_group_count") or 0,
+			),
+			"atomic_strategy_portfolio_unjustified_selected_group_count": int(
+				strategy_portfolio.get("unsafe_or_unjustified_selected_group_count") or 0,
+			),
+			"atomic_strategy_portfolio_dominated_rejected_candidate_count": int(
+				strategy_portfolio.get("dominated_rejected_candidate_count") or 0,
 			),
 			"atomic_action_strategy_verdict_counts": _count_by_key(
 				strategy_candidates,

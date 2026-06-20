@@ -143,6 +143,11 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	] >= report["learning_audit"]["layer_b_atomic_modules"][
 		"selected_atomic_action_strategy_candidate_count"
 	]
+	assert report["learning_audit"]["layer_b_atomic_modules"][
+		"atomic_strategy_portfolio_group_count"
+	] == report["learning_audit"]["layer_b_atomic_modules"][
+		"atomic_action_strategy_group_count"
+	]
 	assert report["learning_audit"]["layer_c_goal_composer"][
 		"composer_candidate_count"
 	] >= report["learning_audit"]["layer_c_goal_composer"][
