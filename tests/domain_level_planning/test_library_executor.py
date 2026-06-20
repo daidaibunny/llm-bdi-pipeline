@@ -162,6 +162,32 @@ def test_executor_can_disable_planner_style_body_failure_backtracking(
 	assert "wrong" in str(without_backtracking.failure_reason)
 
 
+def test_executor_treats_context_literals_as_order_independent_conjunction(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_single_object_done_domain(tmp_path)
+	plan_library = PlanLibrary(
+		domain_name="single-object-done",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="g_satisfy_done_with_negation_first",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("not done(X)", "goal_done(X)", "ready(X)"),
+				body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
+			),
+		),
+	)
+
+	execution = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+	)
+
+	assert execution.solved is True
+	assert execution.steps == ("finish(a)",)
+
+
 def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"
@@ -186,6 +212,37 @@ def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:objects)
 		 (:init (ready))
 		 (:goal (and (done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_single_object_done_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "single-object-domain.pddl"
+	problem_file = tmp_path / "single-object-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain single-object-done)
+		 (:requirements :strips)
+		 (:predicates (ready ?x) (done ?x))
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem single-object-p1)
+		 (:domain single-object-done)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (done a)))
 		)
 		""",
 		encoding="utf-8",

@@ -19,7 +19,10 @@ SUPPORTED_ASL_SUBSET = {
 
 EXECUTION_SEMANTICS = {
 	"plan_selection": "deterministic_first_applicable_asl_order",
-	"context_semantics": "implicit conjunction over supported context literals",
+	"context_semantics": (
+		"order-independent implicit conjunction over supported context literals; "
+		"positive context atoms bind variables before negated context atoms are checked"
+	),
 	"negation_semantics": "negation-as-absence over the current state or goal descriptor set",
 	"goal_state_semantics": "fixed point: +!g has no applicable unsatisfied-goal plan",
 	"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",

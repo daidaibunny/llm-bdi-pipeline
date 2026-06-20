@@ -335,7 +335,17 @@ def _context_substitutions(
 	goal_facts: tuple[str, ...],
 ) -> tuple[dict[str, str], ...]:
 	substitutions = (dict(substitution),)
-	for context in contexts:
+	positive_contexts = tuple(
+		context
+		for context in tuple(contexts or ())
+		if not _is_negated_context_literal(context)
+	)
+	negative_contexts = tuple(
+		context
+		for context in tuple(contexts or ())
+		if _is_negated_context_literal(context)
+	)
+	for context in positive_contexts:
 		next_substitutions: list[dict[str, str]] = []
 		for candidate in substitutions:
 			next_substitutions.extend(
@@ -349,7 +359,25 @@ def _context_substitutions(
 		substitutions = tuple(next_substitutions)
 		if not substitutions:
 			return ()
+	for context in negative_contexts:
+		next_substitutions = []
+		for candidate in substitutions:
+			next_substitutions.extend(
+				_satisfying_substitutions_for_context(
+					context=context,
+					substitution=candidate,
+					state=state,
+					goal_facts=goal_facts,
+				),
+			)
+		substitutions = tuple(next_substitutions)
+		if not substitutions:
+			return ()
 	return substitutions
+
+
+def _is_negated_context_literal(context: str) -> bool:
+	return str(context or "").strip().lower().startswith("not ")
 
 
 def _satisfying_substitutions_for_context(

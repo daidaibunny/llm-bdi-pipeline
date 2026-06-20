@@ -354,6 +354,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"Generated heads, contexts, primitive actions, and subgoal calls are "
 					"schema-checked; deterministic first-applicable execution and the "
 					"currently supported ASL subset are reported with the library; "
+					"context execution is order-independent over implicit conjunctions, "
+					"with positive literals binding variables before negated literals; "
 					"primitive actions are applied by the PDDL STRIPS simulator and "
 					"precondition violations become primitive-precondition counterexamples; "
 					"variable-binding safety rejects body action or subgoal arguments not "

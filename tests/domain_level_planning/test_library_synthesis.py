@@ -513,6 +513,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert gaps["G7"]["layer"] == "ASL compiler"
 	assert gaps["G7"]["status"] == "partially_done"
 	assert "deterministic first-applicable" in gaps["G7"]["current_state"]
+	assert "context execution is order-independent" in gaps["G7"]["current_state"]
 	assert "PDDL-to-ASL symbol mapping" in gaps["G7"]["current_state"]
 	assert "variable-binding safety" in gaps["G7"]["current_state"]
 	assert "primitive-action precondition handling" in gaps["G7"]["required_improvement"]
