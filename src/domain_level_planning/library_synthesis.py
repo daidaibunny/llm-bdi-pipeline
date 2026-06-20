@@ -89,6 +89,7 @@ class ExternalRuleBindingReport:
 	missing_condition_bindings: tuple[str, ...] = ()
 	missing_effect_bindings: tuple[str, ...] = ()
 	missing_binding_diagnostics: tuple[Mapping[str, object], ...] = ()
+	unbound_body_variables: tuple[str, ...] = ()
 	empty_body: bool = False
 
 	def to_dict(self) -> dict[str, object]:
@@ -100,6 +101,7 @@ class ExternalRuleBindingReport:
 			"missing_condition_bindings": list(self.missing_condition_bindings),
 			"missing_effect_bindings": list(self.missing_effect_bindings),
 			"missing_binding_diagnostics": list(self.missing_binding_diagnostics),
+			"unbound_body_variables": list(self.unbound_body_variables),
 			"empty_body": self.empty_body,
 		}
 
@@ -771,6 +773,7 @@ def _paper_profile_failures(
 				f"(missing conditions={report.missing_condition_bindings}, "
 				f"missing effects={report.missing_effect_bindings}, "
 				f"missing binding diagnostics={_missing_binding_failure_summary(report)}, "
+				f"unbound body variables={report.unbound_body_variables}, "
 				f"empty_body={report.empty_body})"
 			),
 		)
@@ -1134,7 +1137,23 @@ def _bound_policy_rules_to_candidates(
 				_body_step_to_lifted_call(step)
 				for step in binding.effect_body[effect.operator]
 			)
-		compiled = not missing_conditions and not missing_effects and bool(body)
+		unbound_body_variables = _unbound_body_variables(
+			context=tuple(context),
+			body=tuple(body),
+		)
+		if unbound_body_variables:
+			missing_binding_diagnostics.append(
+				_unbound_body_variables_diagnostic(
+					context=tuple(context),
+					unbound_body_variables=unbound_body_variables,
+				),
+			)
+		compiled = (
+			not missing_conditions
+			and not missing_effects
+			and not unbound_body_variables
+			and bool(body)
+		)
 		reports.append(
 			ExternalRuleBindingReport(
 				source_name=source.name,
@@ -1144,6 +1163,7 @@ def _bound_policy_rules_to_candidates(
 				missing_condition_bindings=tuple(missing_conditions),
 				missing_effect_bindings=tuple(missing_effects),
 				missing_binding_diagnostics=tuple(missing_binding_diagnostics),
+				unbound_body_variables=unbound_body_variables,
 				empty_body=not body,
 			),
 		)
@@ -1162,6 +1182,56 @@ def _bound_policy_rules_to_candidates(
 			),
 		)
 	return tuple(candidates), tuple(reports)
+
+
+def _unbound_body_variables(
+	*,
+	context: Sequence[str],
+	body: Sequence[LiftedCall],
+) -> tuple[str, ...]:
+	bound_variables = _positive_context_variables(context)
+	unbound: list[str] = []
+	for step in tuple(body or ()):
+		for argument in tuple(step.arguments or ()):
+			if not _is_lifted_variable(argument):
+				continue
+			if argument in bound_variables:
+				continue
+			unbound.append(argument)
+	return tuple(dict.fromkeys(unbound))
+
+
+def _positive_context_variables(context: Sequence[str]) -> tuple[str, ...]:
+	variables: list[str] = []
+	for literal in tuple(context or ()):
+		text = str(literal or "").strip()
+		if text.lower().startswith("not "):
+			continue
+		for argument in _context_arguments(text):
+			if _is_lifted_variable(argument):
+				variables.append(argument)
+	return tuple(dict.fromkeys(variables))
+
+
+def _unbound_body_variables_diagnostic(
+	*,
+	context: Sequence[str],
+	unbound_body_variables: tuple[str, ...],
+) -> Mapping[str, object]:
+	return {
+		"feature_id": None,
+		"operator": None,
+		"binding_role": "body",
+		"expression": None,
+		"status": "uncompiled",
+		"binding_kind": "variable_binding_safety",
+		"available_condition_operators": (),
+		"available_effect_operators": (),
+		"rejection_reason": "unbound_body_variables",
+		"action_candidates": (),
+		"unbound_body_variables": unbound_body_variables,
+		"bound_variables": _positive_context_variables(context),
+	}
 
 
 def _missing_feature_binding_diagnostic(

@@ -268,6 +268,7 @@ def test_unified_pipeline_consumes_reverse_role_external_sketch(
 			"missing_condition_bindings": [],
 			"missing_effect_bindings": [],
 			"missing_binding_diagnostics": [],
+			"unbound_body_variables": [],
 			"empty_body": False,
 		},
 	)
@@ -279,6 +280,57 @@ def test_unified_pipeline_consumes_reverse_role_external_sketch(
 	assert result.report["output_candidate_sources"]["external_sketch"] == 1
 	assert "+!g : goal_link(X1, X0) & not link(X1, X0) <-" in asl
 	assert "\t!link(X1, X0);" in asl
+
+
+def test_external_policy_rule_rejects_unbound_body_variables(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_unbound_external_action_policy(
+		tmp_path,
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="unbound-action-sketch",
+				policy_file=policy_file,
+			),
+		),
+	)
+
+	consumption = result.report["external_backend_consumption_summary"]
+	assert consumption["ready_policy_count"] == 0
+	assert consumption["compiled_rule_count"] == 0
+	assert consumption["rejected_rule_count"] == 1
+	rule_report = result.report["external_rule_binding_reports"][0]
+	assert rule_report["compiled"] is False
+	assert rule_report["missing_condition_bindings"] == []
+	assert rule_report["missing_effect_bindings"] == []
+	assert rule_report["empty_body"] is False
+	assert rule_report["unbound_body_variables"] == ["Y"]
+	assert rule_report["missing_binding_diagnostics"] == [
+		{
+			"feature_id": None,
+			"operator": None,
+			"binding_role": "body",
+			"expression": None,
+			"status": "uncompiled",
+			"binding_kind": "variable_binding_safety",
+			"available_condition_operators": (),
+			"available_effect_operators": (),
+			"rejection_reason": "unbound_body_variables",
+			"action_candidates": (),
+			"unbound_body_variables": ("Y",),
+			"bound_variables": ("X0",),
+		},
+	]
+	assert result.report["paper_profile_ready"] is False
+	assert any(
+		"unbound body variables=('Y',)" in failure
+		for failure in result.report["paper_profile_failures"]
+	)
 
 
 def test_unified_pipeline_blocks_audit_only_external_backends(
@@ -455,6 +507,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "per-missing-rule-binding diagnostics" in gaps["G6"]["current_state"]
 	assert "feature:operator" in gaps["G6"]["current_state"]
 	assert "every parsed learned rule" in gaps["G6"]["current_state"]
+	assert "unbound-body-variable diagnostics" in gaps["G6"]["current_state"]
 	assert "selected by the Clingo synthesis step" in gaps["G6"]["current_state"]
 	assert "verified policy-to-ASL adapters" in gaps["G6"]["required_improvement"]
 	assert gaps["G7"]["layer"] == "ASL compiler"
@@ -2157,6 +2210,60 @@ def _write_binary_domain_problem_and_policy(tmp_path: Path) -> tuple[Path, Path,
 		 (f_link "n_count(c_equal(r_primitive(link,1,0),r_primitive(link_g,1,0)))")
 		)
 		(:rule (:conditions ) (:effects (:e_n_inc f_link)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file, policy_file
+
+
+def _write_unbound_external_action_policy(tmp_path: Path) -> tuple[Path, Path, Path]:
+	domain_file = tmp_path / "unbound-external-domain.pddl"
+	problem_file = tmp_path / "unbound-external-problem.pddl"
+	policy_file = tmp_path / "unbound-external-policy.txt"
+	domain_file.write_text(
+		"""
+		(define (domain unbound-external)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?x)
+		  (done ?x)
+		  (token ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		 (:action choose
+		  :parameters (?x ?y)
+		  :precondition (ready ?x)
+		  :effect (and (done ?x) (not (token ?x)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem unbound-external-p1)
+		 (:domain unbound-external)
+		 (:objects a b)
+		 (:init (ready a) (token a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_done "n_count(c_equal(c_primitive(done,0),c_primitive(done_g,0)))")
+		 (f_token "n_count(c_primitive(token,0))")
+		)
+		(:rule (:conditions ) (:effects (:e_n_inc f_done) (:e_n_dec f_token)))
 		)
 		""",
 		encoding="utf-8",

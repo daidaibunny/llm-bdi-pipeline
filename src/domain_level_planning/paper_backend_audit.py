@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import Mapping
 
 from utils.pddl_parser import PDDLDomain
@@ -109,16 +110,60 @@ def _policy_rules_are_executable(
 	if not rules:
 		return False
 	for rule in rules:
+		context: list[str] = []
+		body_variables: list[str] = []
 		body_step_count = 0
 		for condition in rule.conditions:
 			binding = bindings.get(condition.feature_id)
 			if binding is None or condition.operator not in binding.condition_contexts:
 				return False
+			context.extend(binding.condition_contexts[condition.operator])
 		for effect in rule.effects:
 			binding = bindings.get(effect.feature_id)
 			if binding is None or effect.operator not in binding.effect_body:
 				return False
+			context.extend((binding.effect_contexts or {}).get(effect.operator, ()))
+			for step in binding.effect_body[effect.operator]:
+				body_variables.extend(
+					argument
+					for argument in tuple(step.arguments or ())
+					if _is_lifted_variable(argument)
+				)
 			body_step_count += len(binding.effect_body[effect.operator])
 		if body_step_count == 0:
 			return False
+		if any(
+			variable not in _positive_context_variables(context)
+			for variable in tuple(dict.fromkeys(body_variables))
+		):
+			return False
 	return True
+
+
+def _positive_context_variables(context: list[str]) -> tuple[str, ...]:
+	variables: list[str] = []
+	for literal in tuple(context or ()):
+		text = str(literal or "").strip()
+		if text.lower().startswith("not "):
+			continue
+		for argument in _context_arguments(text):
+			if _is_lifted_variable(argument):
+				variables.append(argument)
+	return tuple(dict.fromkeys(variables))
+
+
+def _context_arguments(context_literal: str) -> tuple[str, ...]:
+	text = str(context_literal or "").strip()
+	if "(" not in text or not text.endswith(")"):
+		return ()
+	_, raw_arguments = text.split("(", 1)
+	return tuple(
+		argument.strip()
+		for argument in raw_arguments[:-1].split(",")
+		if argument.strip()
+	)
+
+
+def _is_lifted_variable(argument: str) -> bool:
+	text = str(argument or "").strip()
+	return bool(text) and bool(re.match(r"^[A-Z]", text))
