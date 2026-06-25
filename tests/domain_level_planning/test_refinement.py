@@ -328,6 +328,49 @@ def test_missing_top_level_composer_failure_targets_layer_c_state_coverage(
 	}
 
 
+def test_top_level_failure_after_progress_keeps_goal_ordering_signal(
+	tmp_path: Path,
+) -> None:
+	_, _, dependent_problem = _write_ordering_domain(tmp_path)
+	problem = PDDLParser.parse_problem(dependent_problem)
+	counterexample = LibraryCounterexample(
+		problem_name=problem.name,
+		state_index=0,
+		failure_reason="no applicable plan for !g",
+		state=("seed(a)", "seed(b)"),
+		goal_facts=("goal_z_base(b)", "goal_a_top(a, b)"),
+		goal_atoms=("z_base(b)", "a_top(a, b)"),
+		was_goal_state=False,
+		steps=("make_top(a, b)",),
+		final_state=("seed(a)", "a_top(a, b)"),
+	)
+
+	constraints = classify_heldout_failure_for_refinement(
+		problem_file=dependent_problem,
+		problem=problem,
+		counterexample=counterexample,
+	)
+
+	assert tuple(constraint.constraint_type for constraint in constraints) == (
+		"counterexample_goal_ordering",
+		"counterexample_state_coverage",
+	)
+	assert constraints[0].failure_kind == "goal_ordering_failure"
+	assert constraints[0].target_layer == "layer_c_goal_composer"
+	assert constraints[0].lifted_orderings == (
+		("goal_z_base(Y)", "goal_a_top(X, Y)"),
+	)
+	assert constraints[1].failure_kind == "missing_composer_or_context"
+	assert constraints[1].target_layer == "layer_c_goal_composer"
+	round_report = _refinement_summary_like(constraints)
+	assert round_report["goal_ordering_constraint_count"] == 1
+	assert round_report["state_coverage_constraint_count"] == 1
+	assert round_report["constraints_by_type"] == {
+		"counterexample_goal_ordering": 1,
+		"counterexample_state_coverage": 1,
+	}
+
+
 def test_recursive_loop_failure_targets_recursive_atomic_module_diagnostics(
 	tmp_path: Path,
 ) -> None:

@@ -377,7 +377,34 @@ def classify_heldout_failure_for_refinement(
 	if termination_constraint is not None:
 		return (termination_constraint,)
 	if missing_goals and _is_top_level_composer_failure(counterexample.failure_reason):
-		return (
+		constraints: list[RefinementConstraint] = []
+		if satisfied_goals and tuple(counterexample.steps):
+			orderings = _lift_goal_orderings_from_failure(
+				earlier_atoms=missing_goals,
+				later_atoms=satisfied_goals,
+			)
+			if orderings:
+				constraints.append(
+					RefinementConstraint(
+						failure_kind="goal_ordering_failure",
+						target_layer="layer_c_goal_composer",
+						constraint_type="counterexample_goal_ordering",
+						problem_file=str(Path(problem_file).expanduser().resolve()),
+						problem_name=problem.name,
+						failure_reason=counterexample.failure_reason,
+						ground_missing_goals=missing_goals,
+						ground_satisfied_goals=satisfied_goals,
+						lifted_missing_goals=lifted_missing_goals,
+						lifted_satisfied_goals=lifted_satisfied_goals,
+						lifted_orderings=orderings,
+						required_rule_group_types=(
+							"counterexample_transition_progress",
+							"counterexample_state_coverage",
+							"counterexample_goal_ordering",
+						),
+					),
+				)
+		constraints.append(
 			RefinementConstraint(
 				failure_kind="missing_composer_or_context",
 				target_layer="layer_c_goal_composer",
@@ -392,6 +419,7 @@ def classify_heldout_failure_for_refinement(
 				required_rule_group_types=("counterexample_state_coverage",),
 			),
 		)
+		return tuple(constraints)
 	if missing_goals:
 		precondition_repair = _primitive_precondition_repair_constraint(
 			problem_file=problem_file,
@@ -833,6 +861,11 @@ def _refinement_summary(
 			1
 			for constraint in constraints
 			if constraint.constraint_type == "counterexample_state_coverage"
+		),
+		"goal_ordering_constraint_count": sum(
+			1
+			for constraint in constraints
+			if constraint.constraint_type == "counterexample_goal_ordering"
 		),
 		"atomic_progress_constraint_count": sum(
 			1
