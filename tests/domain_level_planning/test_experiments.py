@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+import time
 
 import pytest
 
+from domain_level_planning import experiments as experiments_module
 from domain_level_planning.experiments import run_domain_level_experiment
 from domain_level_planning.experiments import compare_domain_level_experiment_reports
 from domain_level_planning.experiments import _generated_output_audit
@@ -224,6 +226,48 @@ def test_domain_level_experiment_reports_failure_analysis(
 		"max": 1,
 		"mean": 0.5,
 	}
+
+
+def test_domain_level_experiment_records_per_problem_evaluation_timeout(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	domain_file, training_problem, _heldout_problem = _write_counterexample_domain(
+		tmp_path,
+	)
+
+	def slow_evaluation(*args, **kwargs):
+		time.sleep(1)
+		return {}
+
+	monkeypatch.setattr(experiments_module, "_evaluate_problem", slow_evaluation)
+
+	report = run_domain_level_experiment(
+		experiment_name="counterexample-timeout-analysis",
+		domain_file=domain_file,
+		training_problem_files=(training_problem,),
+		evaluation_problem_files=(training_problem,),
+		max_execution_steps=100,
+		max_depth=50,
+		evaluation_timeout_seconds=0.01,
+	)
+
+	assert report["coverage"]["solved_count"] == 0
+	assert report["coverage"]["failed_count"] == 1
+	assert report["evaluation_results"] == [
+		{
+			"problem_file": str(training_problem.resolve()),
+			"problem_name": "training-p1",
+			"solved": False,
+			"step_count": 0,
+			"steps": [],
+			"failure_reason": (
+				"evaluation timeout exceeded timeout_seconds=0.01 "
+				"for problem training-p1"
+			),
+		},
+	]
+	assert report["runtime_seconds"]["evaluation_by_problem"][0]["timed_out"] is True
 
 
 def test_domain_level_experiment_reports_schema_binding_depth(

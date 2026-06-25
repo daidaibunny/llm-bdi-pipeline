@@ -69,6 +69,15 @@ def main() -> None:
 	parser.add_argument("--max-steps", type=int, default=10000)
 	parser.add_argument("--max-depth", type=int, default=1000)
 	parser.add_argument(
+		"--evaluation-timeout-seconds",
+		type=float,
+		default=None,
+		help=(
+			"Optional per-evaluation-problem wall-clock timeout. "
+			"Timed-out problems are reported as failed and later problems continue."
+		),
+	)
+	parser.add_argument(
 		"--synthesis-profile",
 		choices=("bootstrap", "paper"),
 		default="bootstrap",
@@ -146,6 +155,7 @@ def main() -> None:
 		synthesis_profile=args.synthesis_profile,
 		max_execution_steps=args.max_steps,
 		max_depth=args.max_depth,
+		evaluation_timeout_seconds=args.evaluation_timeout_seconds,
 		use_counterexample_refinement=args.use_counterexample_refinement,
 		max_refinement_rounds=args.max_refinement_rounds,
 		ablation_label=args.ablation_label,

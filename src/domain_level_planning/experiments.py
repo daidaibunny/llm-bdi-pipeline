@@ -4,9 +4,11 @@ Reproducible domain-level lifted-library experiment reporting.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from pathlib import Path
+import signal
 from time import perf_counter
-from typing import Sequence
+from typing import Iterator, Sequence
 
 from plan_library.rendering import render_plan_library_asl
 from utils.pddl_parser import PDDLParser
@@ -30,6 +32,7 @@ def run_domain_level_experiment(
 	synthesis_profile: str = "bootstrap",
 	max_execution_steps: int = 10000,
 	max_depth: int = 1000,
+	evaluation_timeout_seconds: float | None = None,
 	use_counterexample_refinement: bool = False,
 	max_refinement_rounds: int = 1,
 	ablation_label: str | None = None,
@@ -75,6 +78,7 @@ def run_domain_level_experiment(
 			problem_file=problem_file,
 			max_execution_steps=max_execution_steps,
 			max_depth=max_depth,
+			timeout_seconds=evaluation_timeout_seconds,
 		)
 		for problem_file in tuple(evaluation_problem_files or ())
 	)
@@ -727,20 +731,81 @@ def _evaluate_problem_with_runtime(
 	problem_file: str | Path,
 	max_execution_steps: int,
 	max_depth: int,
+	timeout_seconds: float | None = None,
 ) -> tuple[dict[str, object], dict[str, object]]:
 	started = perf_counter()
-	result = _evaluate_problem(
-		plan_library=plan_library,
-		domain_file=domain_file,
-		problem_file=problem_file,
-		max_execution_steps=max_execution_steps,
-		max_depth=max_depth,
-	)
+	timed_out = False
+	try:
+		with _evaluation_timeout(problem_file, timeout_seconds=timeout_seconds):
+			result = _evaluate_problem(
+				plan_library=plan_library,
+				domain_file=domain_file,
+				problem_file=problem_file,
+				max_execution_steps=max_execution_steps,
+				max_depth=max_depth,
+			)
+	except TimeoutError as error:
+		timed_out = True
+		problem = PDDLParser.parse_problem(problem_file)
+		result = {
+			"problem_file": _resolved(problem_file),
+			"problem_name": problem.name,
+			"solved": False,
+			"step_count": 0,
+			"steps": [],
+			"failure_reason": str(error),
+		}
 	return result, {
 		"problem_name": result["problem_name"],
 		"problem_file": result["problem_file"],
 		"duration_seconds": perf_counter() - started,
+		"timed_out": timed_out,
 	}
+
+
+@contextmanager
+def _evaluation_timeout(
+	problem_file: str | Path,
+	*,
+	timeout_seconds: float | None,
+) -> Iterator[None]:
+	if timeout_seconds is None:
+		yield
+		return
+	timeout = float(timeout_seconds)
+	if timeout <= 0:
+		yield
+		return
+	problem = PDDLParser.parse_problem(problem_file)
+	previous_handler = signal.getsignal(signal.SIGALRM)
+	previous_timer = signal.getitimer(signal.ITIMER_REAL)
+	started = perf_counter()
+
+	def handle_timeout(_signum: int, _frame: object) -> None:
+		raise TimeoutError(
+			"evaluation timeout exceeded "
+			f"timeout_seconds={timeout:g} for problem {problem.name}",
+		)
+
+	signal.signal(signal.SIGALRM, handle_timeout)
+	signal.setitimer(signal.ITIMER_REAL, timeout)
+	try:
+		yield
+	finally:
+		signal.signal(signal.SIGALRM, previous_handler)
+		_restore_timer(previous_timer, elapsed=perf_counter() - started)
+
+
+def _restore_timer(previous_timer: tuple[float, float], *, elapsed: float) -> None:
+	previous_delay, previous_interval = previous_timer
+	if previous_delay <= 0:
+		signal.setitimer(signal.ITIMER_REAL, 0.0)
+		return
+	signal.setitimer(
+		signal.ITIMER_REAL,
+		max(0.000001, previous_delay - elapsed),
+		previous_interval,
+	)
 
 
 def _generated_output_audit(contract: dict[str, object]) -> dict[str, object]:

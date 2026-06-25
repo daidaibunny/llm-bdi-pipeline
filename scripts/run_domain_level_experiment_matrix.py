@@ -6,11 +6,13 @@ Run a configured matrix of domain-level lifted-library experiments.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import json
 from pathlib import Path
+import signal
 from time import perf_counter
 import traceback
-from typing import Sequence
+from typing import Iterator, Sequence
 
 import sys
 
@@ -42,7 +44,7 @@ def main() -> None:
 	)
 	parser.add_argument(
 		"--preset",
-		choices=("current-minimum", "paper-diagnostic-smoke"),
+		choices=("current-minimum", "paper-diagnostic-smoke", "paper-expanded-smoke"),
 		default="paper-diagnostic-smoke",
 		help="Built-in matrix preset used when --config is omitted.",
 	)
@@ -99,7 +101,8 @@ def run_experiment_matrix(
 		report_file = output_dir / f"{_slug(_entry_name(entry, index=index))}.json"
 		entry_started = perf_counter()
 		try:
-			report = _run_matrix_entry(entry, config_base=config_base)
+			with _entry_timeout(entry, index=index):
+				report = _run_matrix_entry(entry, config_base=config_base)
 			report["matrix_status"] = "succeeded"
 			report["matrix_entry"] = _matrix_entry_metadata(entry, index=index)
 		except Exception as error:
@@ -172,6 +175,7 @@ def _run_matrix_entry(
 		synthesis_profile=str(entry.get("synthesis_profile") or "bootstrap"),
 		max_execution_steps=int(entry.get("max_steps") or 10000),
 		max_depth=int(entry.get("max_depth") or 1000),
+		evaluation_timeout_seconds=_optional_float(entry.get("evaluation_timeout_seconds")),
 		use_counterexample_refinement=bool(
 			entry.get("use_counterexample_refinement", False),
 		),
@@ -182,6 +186,41 @@ def _run_matrix_entry(
 			entry.get("allow_paper_profile_failures", False),
 		),
 	)
+
+
+@contextmanager
+def _entry_timeout(
+	entry: dict[str, object],
+	*,
+	index: int,
+) -> Iterator[None]:
+	"""Raise TimeoutError when a matrix row exceeds its configured time budget."""
+
+	raw_timeout = entry.get("timeout_seconds")
+	if raw_timeout is None:
+		yield
+		return
+	timeout_seconds = float(raw_timeout)
+	if timeout_seconds <= 0:
+		yield
+		return
+	name = _entry_name(entry, index=index)
+	previous_handler = signal.getsignal(signal.SIGALRM)
+	previous_timer = signal.getitimer(signal.ITIMER_REAL)
+	started = perf_counter()
+
+	def handle_timeout(_signum: int, _frame: object) -> None:
+		raise TimeoutError(
+			f"Matrix entry {name!r} exceeded timeout_seconds={timeout_seconds:g}.",
+		)
+
+	signal.signal(signal.SIGALRM, handle_timeout)
+	signal.setitimer(signal.ITIMER_REAL, timeout_seconds)
+	try:
+		yield
+	finally:
+		signal.signal(signal.SIGALRM, previous_handler)
+		_restore_timer(previous_timer, elapsed=perf_counter() - started)
 
 
 def _failure_report(
@@ -395,6 +434,14 @@ def _matrix_entry_metadata(entry: dict[str, object], *, index: int) -> dict[str,
 		"allow_paper_profile_failures": bool(
 			entry.get("allow_paper_profile_failures", False),
 		),
+		"timeout_seconds": (
+			float(entry["timeout_seconds"])
+			if entry.get("timeout_seconds") is not None
+			else None
+		),
+		"evaluation_timeout_seconds": _optional_float(
+			entry.get("evaluation_timeout_seconds"),
+		),
 	}
 
 
@@ -476,7 +523,7 @@ def _preset_config(preset: str) -> dict[str, object]:
 			"ablation_label": "bootstrap_counterexample_refinement",
 		},
 	]
-	if preset == "paper-diagnostic-smoke":
+	if preset in {"paper-diagnostic-smoke", "paper-expanded-smoke"}:
 		experiments.extend(
 			[
 				{
@@ -488,6 +535,7 @@ def _preset_config(preset: str) -> dict[str, object]:
 					"eval_base": "src/domains/blocksworld/problems",
 					"eval_glob": "p*.pddl",
 					"eval_count": 20,
+					"timeout_seconds": 120,
 					"synthesis_profile": "paper",
 					"external_sketch_policies": [f"blocks_4_on_2={blocks_policy}"],
 					"external_sketch_vocabularies": [f"blocks_4_on_2={blocks_vocab}"],
@@ -515,6 +563,75 @@ def _preset_config(preset: str) -> dict[str, object]:
 				},
 			],
 		)
+	if preset == "paper-expanded-smoke":
+		experiments.extend(
+			[
+				{
+					"name": "blocksworld-bootstrap-train1-all30",
+					"domain_file": "src/domains/blocksworld/domain.pddl",
+					"train_base": "src/domains/blocksworld/problems",
+					"train_glob": "p*.pddl",
+					"train_count": 1,
+					"eval_base": "src/domains/blocksworld/problems",
+					"eval_glob": "p*.pddl",
+					"eval_count": 30,
+					"max_steps": 20000,
+					"max_depth": 2000,
+					"timeout_seconds": 180,
+					"evaluation_timeout_seconds": 5,
+					"synthesis_profile": "bootstrap",
+					"ablation_label": "bootstrap_train1_all30",
+				},
+				{
+					"name": "transport-bootstrap-train3-first10",
+					"domain_file": "src/domains/transport/domain.pddl",
+					"train_base": "src/domains/transport/problems",
+					"train_glob": "pfile*.pddl",
+					"train_count": 3,
+					"eval_base": "src/domains/transport/problems",
+					"eval_glob": "pfile*.pddl",
+					"eval_count": 10,
+					"max_steps": 20000,
+					"max_depth": 2000,
+					"timeout_seconds": 180,
+					"evaluation_timeout_seconds": 5,
+					"synthesis_profile": "bootstrap",
+					"ablation_label": "bootstrap_train3_first10",
+				},
+				{
+					"name": "satellite-bootstrap-train3-first10",
+					"domain_file": "src/domains/satellite/domain.pddl",
+					"train_base": "src/domains/satellite/problems",
+					"train_glob": "*.pddl",
+					"train_count": 3,
+					"eval_base": "src/domains/satellite/problems",
+					"eval_glob": "*.pddl",
+					"eval_count": 10,
+					"max_steps": 20000,
+					"max_depth": 2000,
+					"timeout_seconds": 180,
+					"evaluation_timeout_seconds": 5,
+					"synthesis_profile": "bootstrap",
+					"ablation_label": "bootstrap_train3_first10",
+				},
+				{
+					"name": "marsrover-bootstrap-train3-first10",
+					"domain_file": "src/domains/marsrover/domain.pddl",
+					"train_base": "src/domains/marsrover/problems",
+					"train_glob": "pfile*.pddl",
+					"train_count": 3,
+					"eval_base": "src/domains/marsrover/problems",
+					"eval_glob": "pfile*.pddl",
+					"eval_count": 10,
+					"max_steps": 20000,
+					"max_depth": 2000,
+					"timeout_seconds": 180,
+					"evaluation_timeout_seconds": 5,
+					"synthesis_profile": "bootstrap",
+					"ablation_label": "bootstrap_train3_first10",
+				},
+			],
+		)
 	return {
 		"matrix_name": preset,
 		"experiments": experiments,
@@ -529,6 +646,24 @@ def _resolve_path(value: object, *, config_base: Path) -> Path:
 	if base_candidate.exists():
 		return base_candidate
 	return (PROJECT_ROOT / path).resolve()
+
+
+def _optional_float(value: object) -> float | None:
+	if value is None:
+		return None
+	return float(value)
+
+
+def _restore_timer(previous_timer: tuple[float, float], *, elapsed: float) -> None:
+	previous_delay, previous_interval = previous_timer
+	if previous_delay <= 0:
+		signal.setitimer(signal.ITIMER_REAL, 0.0)
+		return
+	signal.setitimer(
+		signal.ITIMER_REAL,
+		max(0.000001, previous_delay - elapsed),
+		previous_interval,
+	)
 
 
 def _entry_name(entry: dict[str, object], *, index: int) -> str:

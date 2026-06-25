@@ -41,6 +41,7 @@ PDDL domain + training/counterexample problems
 | No hardcoding | Tests scan production domain-level code for domain-specific special cases and generated synthetic/grounded names. |
 | External policy adapters | External learned policies may use an explicit source-local predicate vocabulary JSON adapter. Adapter targets are validated against the active PDDL domain; undeclared mappings are rejected instead of guessed. |
 | Feature binding | Action-effect candidates now include both add and delete effects, promote unique candidates per qualitative operator, add type guards from PDDL action parameters, and promote trace-supported macros only for type-ambiguous effect predicates. Ambiguous candidates remain unpromoted instead of guessed. |
+| Expanded matrix safety | Matrix rows now support an entry-level `timeout_seconds`, and experiment evaluation supports per-problem `evaluation_timeout_seconds` so one hard held-out problem becomes a structured failure instead of hanging the whole matrix. |
 
 Latest known Blocksworld smoke result:
 
@@ -101,6 +102,8 @@ strict paper profile with diagnostics: coverage=20/20 and bounded validation
 | G7 | Counterexample refinement | Refinement loop exists, but not every failure class generates new executable candidates. | Held-out failures improve coverage through generated Layer B/Layer C candidates whenever the failure is inside the supported class; unsupported cases are reported precisely. | Medium |
 | G8 | Temporal extended goals | DFA-to-library interface exists for positive conjunctive guards, but broader TEG evaluation is pending. | Query-specific DFA controller calls the same domain-level library and reports guard diagnostics without generating query-specific ASL libraries. | Medium |
 | G9 | Paper comparison | MOOSE and other generalized-planning systems have been studied, but current ASL pipeline lacks final comparative tables. | Completed baseline metadata and/or reproduced baseline runs are compared against the lifted ASL library under a clear protocol. | Medium |
+| G10 | Training scalability | Larger training problems can exceed the bounded explicit transition-system explorer, and some domains produce no bounded training plan. | Synthesis can use planner traces or external learner artifacts as evidence when explicit reachable-state enumeration is infeasible, while still keeping runtime planner-free. | High |
+| G11 | Transport-style logistics modules | Generic schema/trace rules can solve tiny Transport cases, but learned `at(X,Y)` modules do not yet robustly compose move/load/unload/capacity strategies across held-out problems. | Layer B learns type-safe multi-strategy logistics modules, and Layer C composes package and vehicle location goals without recursive loops or unsatisfied load preconditions. | High |
 
 ## Immediate Next Tasks
 
@@ -117,6 +120,7 @@ strict paper profile with diagnostics: coverage=20/20 and bounded validation
 | N9 | Keep no-hardcoding and generated-output audits current after every synthesis change. | G2, G3, G8 | `uv run pytest tests/domain_level_planning/test_no_domain_hardcoding.py -q` and relevant generated-output tests pass. | Ongoing, latest pass: no-hardcoding audit passed and full suite passed with `249 passed, 2 warnings` after N11 changes. |
 | N10 | Build a paper-grade experiment matrix runner. | G6, G9 | A single command runs configured domain/profile entries, writes per-entry reports, writes comparison rows, preserves diagnostic failures, and does not call runtime full-trace planners or unguarded external learners. | Done for current infrastructure: `scripts/run_domain_level_experiment_matrix.py` consumes JSON configs or the `paper-diagnostic-smoke` preset, writes `matrix-summary.json`, per-experiment reports, and `comparison.json`; tests cover success plus diagnostic failure rows and fail-fast behavior. Latest preset run produced 5/5 succeeded rows: Blocksworld bootstrap 20/20, Blocksworld paper external 20/20, Labworkflow refinement 2/2, Transport diagnostic 1/1, and Satellite diagnostic 1/1. |
 | N11 | Fix generic typed/action-cost/equality PDDL support without domain hardcoding. | G2, G5, G6 | Equality contexts execute correctly, metric-only action costs are ignored as cost updates, hyphenated symbols render safely, typed action rules cannot bind objects of the wrong PDDL type, and the diagnostic matrix reaches 5/5 succeeded rows. | Done: added generic equality support in contract/executor/transition simulation/rendering; accepted metric-only `:action-costs`, `:functions`, `:metric`, and `increase` effects while preserving collision checks; added PDDL type guard facts and action-parameter type contexts; fixed Clingo rule-id collisions for hyphenated or duplicate rule names; added trace-supported macros for type-ambiguous effect predicates only. Evidence: `uv run pytest -q` -> `249 passed, 2 warnings`; `paper-diagnostic-smoke` matrix -> `succeeded=5 failed=0`; no-hardcoding test passed. |
+| N12 | Expand the matrix across all local PDDL domains and make long rows diagnostic-safe. | G6, G10, G11 | `paper-expanded-smoke` covers Blocksworld, Labworkflow, Transport, Satellite, and Marsrover; per-entry and per-problem timeouts prevent runaway rows; failures identify the next generic Layer B/C gaps. | Done for current diagnostic scope: `paper-expanded-smoke` writes 9 reports with 8 matrix successes and 1 matrix failure. Results: Blocksworld first20 20/20; Blocksworld paper external first20 20/20 and paper-ready; Blocksworld train1 all30 20/30 with p21-p30 per-problem timeouts; Labworkflow 2/2; Transport train3 first10 3/10 with `at` strategy/recursive-loop failures; Satellite train3 first10 10/10; Marsrover train3 first10 fails at synthesis because no bounded transition-system training plan is found. Evidence command: `uv run python scripts/run_domain_level_experiment_matrix.py --preset paper-expanded-smoke --output-dir tmp/domain-level-experiment-matrix/paper-expanded-smoke`. |
 
 ## Commands To Use
 
@@ -131,6 +135,9 @@ uv run python scripts/run_blocksworld_first20_experiment.py \
 uv run python scripts/run_domain_level_experiment_matrix.py \
   --preset paper-diagnostic-smoke \
   --output-dir tmp/domain-level-experiment-matrix/paper-diagnostic-smoke
+uv run python scripts/run_domain_level_experiment_matrix.py \
+  --preset paper-expanded-smoke \
+  --output-dir tmp/domain-level-experiment-matrix/paper-expanded-smoke
 ```
 
 External backend audit:

@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
+
+from scripts.run_domain_level_experiment_matrix import _preset_config
+from scripts.run_domain_level_experiment_matrix import run_experiment_matrix
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -139,6 +143,79 @@ def test_experiment_matrix_script_fail_fast_exits_on_first_error(
 	assert result.returncode != 0
 	assert "negative problem goals are not supported" in result.stderr
 	assert not (output_dir / "matrix-summary.json").exists()
+
+
+def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
+	config = _preset_config("paper-expanded-smoke")
+	experiments = tuple(config["experiments"])
+	experiment_names = {str(item["name"]) for item in experiments}
+	domain_files = {str(item["domain_file"]) for item in experiments}
+
+	assert config["matrix_name"] == "paper-expanded-smoke"
+	assert {
+		"src/domains/blocksworld/domain.pddl",
+		"src/domains/labworkflow/domain.pddl",
+		"src/domains/transport/domain.pddl",
+		"src/domains/satellite/domain.pddl",
+		"src/domains/marsrover/domain.pddl",
+	}.issubset(domain_files)
+	assert "blocksworld-paper-external-on2" in experiment_names
+	assert "blocksworld-bootstrap-train1-all30" in experiment_names
+	assert "transport-bootstrap-train3-first10" in experiment_names
+	assert "satellite-bootstrap-train3-first10" in experiment_names
+	assert "marsrover-bootstrap-train3-first10" in experiment_names
+	assert all("achieve" not in name for name in experiment_names)
+
+	expanded_rows = {
+		str(item["name"]): item for item in experiments
+	}
+	assert expanded_rows["blocksworld-bootstrap-train1-all30"]["train_count"] == 1
+	assert expanded_rows["blocksworld-bootstrap-train1-all30"]["eval_count"] == 30
+	assert expanded_rows["transport-bootstrap-train3-first10"]["eval_count"] == 10
+	assert expanded_rows["satellite-bootstrap-train3-first10"]["eval_count"] == 10
+	assert expanded_rows["marsrover-bootstrap-train3-first10"]["eval_count"] == 10
+
+
+def test_experiment_matrix_writes_diagnostic_row_when_entry_times_out(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	output_dir = tmp_path / "matrix-output"
+	config = {
+		"matrix_name": "timeout-matrix",
+		"experiments": [
+			{
+				"name": "slow-entry",
+				"domain_file": str(lab_root / "domain.pddl"),
+				"train_problems": [str(lab_root / "problems" / "p01.pddl")],
+				"eval_problems": [str(lab_root / "problems" / "p01.pddl")],
+				"timeout_seconds": 0.01,
+			},
+		],
+	}
+
+	def slow_entry(*args, **kwargs):
+		time.sleep(1)
+		return {}
+
+	monkeypatch.setattr(
+		"scripts.run_domain_level_experiment_matrix._run_matrix_entry",
+		slow_entry,
+	)
+
+	summary = run_experiment_matrix(
+		config=config,
+		config_base=PROJECT_ROOT,
+		output_dir=output_dir,
+		continue_on_error=True,
+	)
+	report = json.loads((output_dir / "slow-entry.json").read_text(encoding="utf-8"))
+
+	assert summary["failed_count"] == 1
+	assert report["matrix_status"] == "failed"
+	assert report["error"]["type"] == "TimeoutError"
+	assert "timeout_seconds=0.01" in report["error"]["message"]
 
 
 def _write_negative_goal_case(tmp_path: Path) -> tuple[Path, Path]:
