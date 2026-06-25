@@ -158,6 +158,9 @@ def synthesize_with_counterexample_refinement(
 	counterexample_problem_files: Sequence[str | Path] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
 	synthesis_profile: str = "bootstrap",
+	use_synthesis_planner_traces: bool = False,
+	synthesis_planner_executable: str | Path | None = None,
+	synthesis_planner_timeout_seconds: int = 60,
 	max_refinement_rounds: int = 1,
 	max_execution_steps: int = 2000,
 	max_depth: int = 200,
@@ -182,6 +185,9 @@ def synthesize_with_counterexample_refinement(
 			refinement_constraints=explicit_refinement_constraints,
 			external_sketch_policies=external_sketch_policies,
 			synthesis_profile=synthesis_profile,
+			use_synthesis_planner_traces=use_synthesis_planner_traces,
+			synthesis_planner_executable=synthesis_planner_executable,
+			synthesis_planner_timeout_seconds=synthesis_planner_timeout_seconds,
 		)
 		final_result = result
 		heldout_evaluations = _evaluate_heldout_problems(

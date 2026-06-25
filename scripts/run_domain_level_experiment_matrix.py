@@ -176,6 +176,17 @@ def _run_matrix_entry(
 		max_execution_steps=int(entry.get("max_steps") or 10000),
 		max_depth=int(entry.get("max_depth") or 1000),
 		evaluation_timeout_seconds=_optional_float(entry.get("evaluation_timeout_seconds")),
+		use_synthesis_planner_traces=bool(
+			entry.get("use_synthesis_planner_traces", False),
+		),
+		synthesis_planner_executable=(
+			_resolve_path(entry["synthesis_planner_executable"], config_base=config_base)
+			if entry.get("synthesis_planner_executable") is not None
+			else None
+		),
+		synthesis_planner_timeout_seconds=int(
+			entry.get("synthesis_planner_timeout_seconds") or 60,
+		),
 		use_counterexample_refinement=bool(
 			entry.get("use_counterexample_refinement", False),
 		),
@@ -442,6 +453,9 @@ def _matrix_entry_metadata(entry: dict[str, object], *, index: int) -> dict[str,
 		"evaluation_timeout_seconds": _optional_float(
 			entry.get("evaluation_timeout_seconds"),
 		),
+		"use_synthesis_planner_traces": bool(
+			entry.get("use_synthesis_planner_traces", False),
+		),
 	}
 
 
@@ -595,6 +609,9 @@ def _preset_config(preset: str) -> dict[str, object]:
 					"max_depth": 2000,
 					"timeout_seconds": 180,
 					"evaluation_timeout_seconds": 5,
+					"use_synthesis_planner_traces": True,
+					"synthesis_planner_executable": "fast-downward/fast-downward.py",
+					"synthesis_planner_timeout_seconds": 60,
 					"synthesis_profile": "bootstrap",
 					"ablation_label": "bootstrap_train3_first10",
 				},
@@ -611,6 +628,9 @@ def _preset_config(preset: str) -> dict[str, object]:
 					"max_depth": 2000,
 					"timeout_seconds": 180,
 					"evaluation_timeout_seconds": 5,
+					"use_synthesis_planner_traces": True,
+					"synthesis_planner_executable": "fast-downward/fast-downward.py",
+					"synthesis_planner_timeout_seconds": 60,
 					"synthesis_profile": "bootstrap",
 					"ablation_label": "bootstrap_train3_first10",
 				},

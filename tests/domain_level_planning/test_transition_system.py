@@ -9,9 +9,11 @@ from domain_level_planning.transition_system import (
 	anti_unify_training_atomic_achievements,
 	atomic_achievements_from_plan,
 	collect_training_transition_evidence,
+	collect_training_transition_evidence_from_plan,
 	ground_actions_for_problem,
 	is_action_applicable,
 )
+from low_level_planning.models import LowLevelAction
 from utils.pddl_parser import PDDLParser
 
 
@@ -179,6 +181,32 @@ def test_training_atomic_anti_unification_merges_across_evidence_objects() -> No
 	assert on_stack.support_count >= 2
 
 
+def test_training_evidence_can_be_built_from_offline_planner_trace() -> None:
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+	problem = PDDLParser.parse_problem(BLOCKS_P01)
+	bounded = collect_training_transition_evidence(domain, problem)
+	trace_actions = tuple(
+		LowLevelAction(action.name, action.arguments)
+		for action in bounded.plan_actions
+	)
+
+	evidence = collect_training_transition_evidence_from_plan(
+		domain,
+		problem,
+		trace_actions,
+		evidence_source="offline_planner_trace",
+	)
+
+	assert evidence.evidence_source == "offline_planner_trace"
+	assert evidence.explored_state_count == 0
+	assert evidence.explored_transition_count == len(trace_actions)
+	assert evidence.plan_length == bounded.plan_length
+	assert evidence.plan_actions == bounded.plan_actions
+	assert evidence.goal_progressions
+	assert evidence.atomic_achievements
+	assert evidence.to_dict()["evidence_source"] == "offline_planner_trace"
+
+
 def test_transition_system_evaluates_equality_preconditions_and_ignores_numeric_effects(
 	tmp_path: Path,
 ) -> None:
@@ -199,6 +227,21 @@ def test_transition_system_evaluates_equality_preconditions_and_ignores_numeric_
 	assert is_action_applicable(state, same_action) is False
 	assert apply_ground_action(state, distinct_action) == frozenset(
 		{"ready(a)", "ready(b)", "done(a, b)"},
+	)
+
+
+def test_transition_system_matches_pddl_types_case_insensitively(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_mixed_case_type_domain(tmp_path)
+	domain = PDDLParser.parse_domain(domain_file)
+	problem = PDDLParser.parse_problem(problem_file)
+
+	actions = ground_actions_for_problem(domain.actions, problem, domain_types=domain.types)
+
+	assert any(
+		action.signature() == "calibrate(camera0, target0)"
+		for action in actions
 	)
 
 
@@ -231,6 +274,38 @@ def _write_distinct_metric_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:init (ready a) (ready b) (= (total-cost) 0))
 		 (:goal (and (done a b)))
 		 (:metric minimize (total-cost))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_mixed_case_type_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "mixed-case-domain.pddl"
+	problem_file = tmp_path / "mixed-case-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain mixed-case-types)
+		 (:requirements :strips :typing)
+		 (:types camera objective)
+		 (:predicates (ready ?c - camera ?o - objective) (done ?c - camera ?o - objective))
+		 (:action calibrate
+		  :parameters (?c - camera ?o - objective)
+		  :precondition (ready ?c ?o)
+		  :effect (done ?c ?o)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem mixed-case-p1)
+		 (:domain mixed-case-types)
+		 (:objects camera0 - Camera target0 - Objective)
+		 (:init (ready camera0 target0))
+		 (:goal (and (done camera0 target0)))
 		)
 		""",
 		encoding="utf-8",

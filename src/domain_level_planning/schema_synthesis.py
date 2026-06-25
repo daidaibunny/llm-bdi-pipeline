@@ -26,6 +26,7 @@ from .transition_system import (
 	TrainingTransitionEvidence,
 	apply_ground_action,
 	collect_training_transition_evidence,
+	collect_training_transition_evidence_from_plan,
 	fact_atom,
 	reachable_states_for_problem,
 )
@@ -147,12 +148,17 @@ def _candidate_rules_from_domain(
 ) -> tuple[LiftedPlanRule, ...]:
 	rules: list[LiftedPlanRule] = []
 	producible_predicates = _producible_predicates(actions)
-	trace_macro_predicates = _effect_type_ambiguous_predicates(actions)
+	trace_macro_predicates = (
+		_effect_type_ambiguous_predicates(actions)
+		| _goal_progression_predicates(transition_evidence)
+		| _atomic_achievement_predicates(transition_evidence)
+	)
 	rules.extend(_goal_ordering_rules_from_evidence(transition_evidence))
 	rules.extend(
 		_trace_macro_rules_from_evidence(
 			transition_evidence,
 			target_predicates=trace_macro_predicates,
+			used_parameters_by_action=_action_used_parameters_by_name(actions),
 		),
 	)
 	rules.extend(_causal_interference_ordering_rules(actions))
@@ -262,6 +268,17 @@ def _recursive_rule_certificate(
 	recursive_indices = _recursive_body_indices(rule)
 	first_recursive_index = recursive_indices[0]
 	first_recursive_call = rule.body[first_recursive_index]
+	if first_recursive_call.symbol == rule.head.symbol and (
+		tuple(first_recursive_call.arguments or ()) != tuple(rule.head.arguments or ())
+	):
+		ranking_certificate = _bounded_acyclic_relation_certificate(
+			rule,
+			first_recursive_call,
+			ranking_states=ranking_states,
+			recursive_call_index=first_recursive_index,
+		)
+		if ranking_certificate is not None:
+			return ranking_certificate
 	prefix_subgoals = tuple(
 		step
 		for step in rule.body[:first_recursive_index]
@@ -301,14 +318,6 @@ def _recursive_rule_certificate(
 	if first_recursive_call.symbol == rule.head.symbol and (
 		tuple(first_recursive_call.arguments or ()) != tuple(rule.head.arguments or ())
 	):
-		ranking_certificate = _bounded_acyclic_relation_certificate(
-			rule,
-			first_recursive_call,
-			ranking_states=ranking_states,
-			recursive_call_index=first_recursive_index,
-		)
-		if ranking_certificate is not None:
-			return ranking_certificate
 		return {
 			"rule_name": rule.name,
 			"head": _call(rule.head.symbol, rule.head.arguments),
@@ -493,6 +502,7 @@ def _trace_macro_rules_from_evidence(
 	transition_evidence: Sequence[TrainingTransitionEvidence],
 	*,
 	target_predicates: frozenset[str],
+	used_parameters_by_action: Mapping[str, frozenset[str]] | None = None,
 ) -> tuple[LiftedPlanRule, ...]:
 	if not target_predicates:
 		return ()
@@ -523,6 +533,54 @@ def _trace_macro_rules_from_evidence(
 				segment=segment,
 				start_state=start_state,
 				target_predicates=target_predicates,
+				used_parameters_by_action=used_parameters_by_action or {},
+			)
+			if rule is None:
+				continue
+			rule_index += 1
+			rules.append(rule)
+			prefix = plan[:step_index]
+			if prefix != segment:
+				prefix_rule = _trace_macro_rule(
+					index=rule_index,
+					target_fact=progression.goal_fact,
+					segment=prefix,
+					start_state=states[0] if states else frozenset(),
+					target_predicates=target_predicates,
+					used_parameters_by_action=used_parameters_by_action or {},
+					name_suffix="prefix",
+					cost=2,
+				)
+				if prefix_rule is not None:
+					rule_index += 1
+					rules.append(prefix_rule)
+		for slice_ in sorted(
+			tuple(getattr(evidence, "atomic_achievements", ()) or ()),
+			key=lambda item: (
+				int(getattr(item, "step_index", 0)),
+				str(getattr(item, "action_signature", "")),
+				str(getattr(getattr(item, "target_fact", None), "predicate", "")),
+			),
+		):
+			target_fact = getattr(slice_, "target_fact", None)
+			if target_fact is None:
+				continue
+			step_index = int(getattr(slice_, "step_index", 0))
+			if step_index <= 0:
+				continue
+			prefix = plan[:step_index]
+			start_state = states[0] if states else frozenset()
+			if not prefix or not start_state:
+				continue
+			rule = _trace_macro_rule(
+				index=rule_index,
+				target_fact=target_fact,
+				segment=prefix,
+				start_state=start_state,
+				target_predicates=target_predicates,
+				used_parameters_by_action=used_parameters_by_action or {},
+				name_suffix="atomic",
+				cost=3,
 			)
 			if rule is None:
 				continue
@@ -551,10 +609,18 @@ def _trace_macro_rule(
 	segment: Sequence[object],
 	start_state: State,
 	target_predicates: frozenset[str],
+	used_parameters_by_action: Mapping[str, frozenset[str]],
+	name_suffix: str = "",
+	cost: int = 1,
 ) -> LiftedPlanRule | None:
 	if not target_fact.is_positive:
 		return None
 	if target_fact.predicate not in target_predicates:
+		return None
+	if not _trace_macro_actions_use_all_schema_parameters(
+		segment,
+		used_parameters_by_action=used_parameters_by_action,
+	):
 		return None
 	object_variables: dict[str, str] = {}
 
@@ -600,15 +666,62 @@ def _trace_macro_rule(
 	):
 		return None
 	return _rule(
-		f"{target_fact.predicate}_trace_macro_{index}",
+		"_".join(
+			part
+			for part in (
+				target_fact.predicate,
+				"trace_macro",
+				name_suffix,
+				str(index),
+			)
+			if part
+		),
 		target_fact.predicate,
 		head_arguments,
 		context,
 		body,
 		capabilities=(f"module_{target_fact.predicate}_trace_macro_{index}",),
 		rationale="trace_supported_atomic_macro",
-		cost=1,
+		cost=cost,
 	)
+
+
+def _action_used_parameters_by_name(
+	actions: Sequence[object],
+) -> dict[str, frozenset[str]]:
+	used_by_name: dict[str, frozenset[str]] = {}
+	for action in tuple(actions or ()):
+		used_parameters: set[str] = set()
+		literals = (
+			*parse_pddl_literals(str(getattr(action, "preconditions", ""))),
+			*parse_pddl_literals(str(getattr(action, "effects", ""))),
+		)
+		for literal in literals:
+			used_parameters.update(
+				argument
+				for argument in tuple(literal.arguments or ())
+				if str(argument).strip().startswith("?")
+			)
+		used_by_name[str(getattr(action, "name"))] = frozenset(used_parameters)
+	return used_by_name
+
+
+def _trace_macro_actions_use_all_schema_parameters(
+	segment: Sequence[object],
+	*,
+	used_parameters_by_action: Mapping[str, frozenset[str]],
+) -> bool:
+	for action in tuple(segment or ()):
+		substitution = getattr(action, "substitution", None)
+		if not substitution:
+			continue
+		used_parameters = used_parameters_by_action.get(str(getattr(action, "name")))
+		if used_parameters is None:
+			continue
+		for parameter in tuple(substitution.keys()):
+			if parameter not in used_parameters:
+				return False
+	return True
 
 
 def _trace_macro_context(
@@ -671,6 +784,28 @@ def _effect_type_ambiguous_predicates(actions: Sequence[object]) -> frozenset[st
 		predicate
 		for predicate, signatures in signatures_by_predicate.items()
 		if len(signatures) > 1
+	)
+
+
+def _goal_progression_predicates(
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+) -> frozenset[str]:
+	return frozenset(
+		progression.goal_fact.predicate
+		for evidence in tuple(transition_evidence or ())
+		for progression in tuple(getattr(evidence, "goal_progressions", ()) or ())
+		if progression.goal_fact.is_positive
+	)
+
+
+def _atomic_achievement_predicates(
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+) -> frozenset[str]:
+	return frozenset(
+		slice_.target_fact.predicate
+		for evidence in tuple(transition_evidence or ())
+		for slice_ in tuple(getattr(evidence, "atomic_achievements", ()) or ())
+		if slice_.target_fact.is_positive
 	)
 
 
@@ -1498,6 +1633,10 @@ def _is_schema_atomic_action_rule(rule: LiftedPlanRule) -> bool:
 	)
 
 
+def _is_trace_macro_rule(rule: LiftedPlanRule) -> bool:
+	return str(rule.rationale or "") == "trace_supported_atomic_macro"
+
+
 def _producible_predicates(actions: Sequence[object]) -> frozenset[str]:
 	predicates: set[str] = set()
 	for action in actions:
@@ -1574,6 +1713,7 @@ def _required_capabilities(
 			rule.layer == "atomic"
 			and rule.body
 			and not _is_schema_atomic_action_rule(rule)
+			and not _is_trace_macro_rule(rule)
 		):
 			required.extend(rule.capabilities)
 	for fact in training_goal_facts:
@@ -1625,13 +1765,32 @@ def _training_evidence(
 	*,
 	domain: object,
 	problem_files: Sequence[str | Path],
+	domain_file: str | Path | None = None,
+	planner_trace_provider: object | None = None,
 ) -> tuple[tuple[PDDLFact, ...], tuple[TrainingTransitionEvidence, ...]]:
 	facts: list[PDDLFact] = []
 	evidence: list[TrainingTransitionEvidence] = []
 	for problem_position, problem_file in enumerate(tuple(problem_files or ()), start=1):
 		problem = PDDLParser.parse_problem(problem_file)
 		facts.extend(problem.goal_facts)
-		evidence.append(collect_training_transition_evidence(domain, problem))
+		try:
+			evidence.append(collect_training_transition_evidence(domain, problem))
+		except ValueError as error:
+			if planner_trace_provider is None:
+				raise
+			trace_actions = planner_trace_provider(
+				domain_file=domain_file,
+				problem_file=Path(problem_file),
+				failure=error,
+			)
+			evidence.append(
+				collect_training_transition_evidence_from_plan(
+					domain,
+					problem,
+					tuple(trace_actions or ()),
+					evidence_source="offline_planner_trace",
+				),
+			)
 	return tuple(facts), tuple(evidence)
 
 

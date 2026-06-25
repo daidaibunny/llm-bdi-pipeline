@@ -7,6 +7,8 @@ from domain_level_planning import (
 	goal_facts_from_problem,
 )
 from domain_level_planning.schema_synthesis import _goal_ordering_rules_from_evidence
+from domain_level_planning.schema_synthesis import _candidate_rules_from_domain
+from domain_level_planning.schema_synthesis import _training_evidence as _collect_training_evidence
 from domain_level_planning.schema_synthesis import _validate_selected_rules_against_transition_progress
 from domain_level_planning.schema_synthesis import atomic_achievement_justifications
 from domain_level_planning.schema_synthesis import causal_interference_ordering_rules
@@ -50,6 +52,71 @@ def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain() -> None
 	assert "!achieve_" not in asl
 	assert "!transition_" not in asl
 	assert "dfa_state" not in asl
+
+
+def test_atomic_achievement_trace_macros_cover_intermediate_predicates(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "relay-domain.pddl"
+	problem_file = tmp_path / "relay-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain relay-mini)
+		 (:requirements :strips :typing)
+		 (:types item place - object)
+		 (:predicates
+		  (pos ?x - item ?p - place)
+		  (link ?from ?to - place)
+		  (target ?p - place)
+		  (done ?x - item)
+		 )
+		 (:action move
+		  :parameters (?x - item ?from ?to - place)
+		  :precondition (and (pos ?x ?from) (link ?from ?to))
+		  :effect (and (not (pos ?x ?from)) (pos ?x ?to))
+		 )
+		 (:action finish
+		  :parameters (?x - item ?p - place)
+		  :precondition (and (pos ?x ?p) (target ?p))
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem relay-p1)
+		 (:domain relay-mini)
+		 (:objects box - item a b c - place)
+		 (:init (pos box a) (link a b) (link b c) (target c))
+		 (:goal (and (done box)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(plan_library)
+	domain = PDDLParser.parse_domain(domain_file)
+	_, transition_evidence = _collect_training_evidence(
+		domain=domain,
+		problem_files=(problem_file,),
+	)
+	candidate_rules = _candidate_rules_from_domain(
+		domain.predicates,
+		domain.actions,
+		transition_evidence=transition_evidence,
+	)
+
+	assert "trace_macro" not in asl
+	assert any(
+		rule.name.startswith("pos_trace_macro_atomic")
+		for rule in candidate_rules
+	)
 
 
 def test_schema_synthesizer_rejects_action_rules_with_unbound_parameters(
@@ -708,6 +775,35 @@ def test_recursion_descent_accepts_argument_changing_recursion_with_acyclic_rela
 	assert certificate["ranking_relation"] == "on"
 	assert certificate["ranking_edge"] == "Y->X"
 	assert certificate["reason"] == "recursive call follows a bounded acyclic context relation"
+
+
+def test_recursion_descent_prefers_ranking_for_prefixed_argument_changing_recursion() -> None:
+	rule = LiftedPlanRule(
+		name="pos_prepare_ready_then_recurse",
+		head=LiftedCall("subgoal", "pos", ("P", "To")),
+		context=("link(From, To)", "not ready(P)"),
+		body=(
+			LiftedCall("subgoal", "ready", ("P",)),
+			LiftedCall("subgoal", "pos", ("P", "From")),
+			LiftedCall("subgoal", "pos", ("P", "To")),
+		),
+		layer="atomic",
+	)
+	ranking_states = (
+		frozenset({"link(a, b)", "link(b, c)"}),
+	)
+
+	filtered, audit = filter_rules_by_recursion_descent(
+		(rule,),
+		ranking_states=ranking_states,
+	)
+
+	assert filtered == (rule,)
+	assert audit["accepted_recursive_rule_count"] == 1
+	certificate = audit["certificates"][0]
+	assert certificate["accepted"] is True
+	assert certificate["ranking_relation"] == "link"
+	assert certificate["ranking_edge"] == "To->From"
 
 
 def _goal_context_signature(

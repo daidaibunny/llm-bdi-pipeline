@@ -135,10 +135,12 @@ class TrainingTransitionEvidence:
 	atomic_achievements: tuple[AtomicAchievementEvidence, ...] = ()
 	initial_state: tuple[str, ...] = ()
 	plan_actions: tuple[GroundAction, ...] = ()
+	evidence_source: str = "bounded_transition_system"
 
 	def to_dict(self) -> dict[str, object]:
 		return {
 			"problem_name": self.problem_name,
+			"evidence_source": self.evidence_source,
 			"object_count": self.object_count,
 			"explored_state_count": self.explored_state_count,
 			"explored_transition_count": self.explored_transition_count,
@@ -238,6 +240,85 @@ def collect_training_transition_evidence(
 		atomic_achievements=atomic_achievements,
 		initial_state=tuple(sorted(initial_state)),
 		plan_actions=plan,
+	)
+
+
+def collect_training_transition_evidence_from_plan(
+	domain: PDDLDomain,
+	problem: PDDLProblem,
+	plan_actions: Sequence[object],
+	*,
+	evidence_source: str = "offline_planner_trace",
+) -> TrainingTransitionEvidence:
+	"""Extract training evidence from an externally supplied grounded plan trace.
+
+	The plan is used only as offline synthesis evidence. Every action is checked
+	against the grounded PDDL schemas and simulated from the problem initial
+	state, so stale or invalid planner output cannot silently justify ASL rules.
+	"""
+
+	ground_actions = ground_actions_for_problem(
+		domain.actions,
+		problem,
+		domain_types=domain.types,
+	)
+	ground_action_by_signature = {
+		action.signature(): action for action in ground_actions
+	}
+	plan = tuple(
+		_ground_plan_action(
+			raw_action,
+			ground_action_by_signature=ground_action_by_signature,
+		)
+		for raw_action in tuple(plan_actions or ())
+	)
+	if not plan:
+		raise ValueError(
+			f"Offline planner trace for problem {problem.name} contains no actions.",
+		)
+	initial_state = initial_state_from_problem(problem, domain_types=domain.types)
+	state = initial_state
+	for step_index, action in enumerate(plan, start=1):
+		if not is_action_applicable(state, action):
+			raise ValueError(
+				"Offline planner trace action is not applicable for problem "
+				f"{problem.name} at step {step_index}: {action.signature()}",
+			)
+		state = apply_ground_action(state, action)
+	goal_atoms = tuple(
+		fact_atom(fact.predicate, fact.args)
+		for fact in problem.goal_facts
+		if fact.is_positive
+	)
+	if not satisfies_atoms(state, goal_atoms):
+		raise ValueError(
+			f"Offline planner trace does not satisfy training goals for {problem.name}.",
+		)
+	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
+	return TrainingTransitionEvidence(
+		problem_name=problem.name,
+		object_count=len(problem.objects),
+		explored_state_count=0,
+		explored_transition_count=len(plan),
+		plan_length=len(plan),
+		goal_facts=tuple(_goal_signature(fact) for fact in problem.goal_facts),
+		goal_orderings=_goal_orderings_from_plan(
+			initial_state=initial_state,
+			plan=plan,
+			goal_facts=goal_facts,
+		),
+		goal_progressions=_goal_progressions_from_plan(
+			initial_state=initial_state,
+			plan=plan,
+			goal_facts=goal_facts,
+		),
+		atomic_achievements=atomic_achievements_from_plan(
+			initial_state=initial_state,
+			plan=plan,
+		),
+		initial_state=tuple(sorted(initial_state)),
+		plan_actions=plan,
+		evidence_source=evidence_source,
 	)
 
 
@@ -459,6 +540,21 @@ def _reconstruct_plan(
 		cursor = previous
 	actions.reverse()
 	return tuple(actions)
+
+
+def _ground_plan_action(
+	raw_action: object,
+	*,
+	ground_action_by_signature: dict[str, GroundAction],
+) -> GroundAction:
+	name = str(getattr(raw_action, "name", "")).strip()
+	arguments = tuple(str(argument) for argument in getattr(raw_action, "arguments", ()) or ())
+	signature = _atom(name, arguments)
+	if signature in ground_action_by_signature:
+		return ground_action_by_signature[signature]
+	if not arguments and name in ground_action_by_signature:
+		return ground_action_by_signature[name]
+	raise ValueError(f"Unknown grounded planner action: {signature}")
 
 
 def _goal_orderings_from_plan(

@@ -78,6 +78,27 @@ def main() -> None:
 		),
 	)
 	parser.add_argument(
+		"--use-synthesis-planner-traces",
+		action="store_true",
+		help=(
+			"Allow synthesis to call an offline planner for training traces when "
+			"bounded transition-system evidence collection fails. Runtime evaluation "
+			"still uses the generated library only."
+		),
+	)
+	parser.add_argument(
+		"--synthesis-planner-executable",
+		type=Path,
+		default=None,
+		help="Optional Fast Downward executable for synthesis-time trace fallback.",
+	)
+	parser.add_argument(
+		"--synthesis-planner-timeout-seconds",
+		type=int,
+		default=60,
+		help="Per-problem Fast Downward timeout for synthesis-time trace fallback.",
+	)
+	parser.add_argument(
 		"--synthesis-profile",
 		choices=("bootstrap", "paper"),
 		default="bootstrap",
@@ -156,6 +177,9 @@ def main() -> None:
 		max_execution_steps=args.max_steps,
 		max_depth=args.max_depth,
 		evaluation_timeout_seconds=args.evaluation_timeout_seconds,
+		use_synthesis_planner_traces=args.use_synthesis_planner_traces,
+		synthesis_planner_executable=args.synthesis_planner_executable,
+		synthesis_planner_timeout_seconds=args.synthesis_planner_timeout_seconds,
 		use_counterexample_refinement=args.use_counterexample_refinement,
 		max_refinement_rounds=args.max_refinement_rounds,
 		ablation_label=args.ablation_label,

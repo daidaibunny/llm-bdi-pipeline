@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from domain_level_planning import schema_synthesis
 from domain_level_planning.gp_backends import BackendManifest
 from domain_level_planning.gp_backends import LearnerSketchesRunConfig
 from domain_level_planning.library_synthesis import (
@@ -9,6 +10,7 @@ from domain_level_planning.library_synthesis import (
 	synthesize_domain_level_asl_library,
 )
 from domain_level_planning.refinement import RefinementConstraint
+from low_level_planning.models import LowLevelAction
 from plan_library.rendering import render_plan_library_asl
 import pytest
 
@@ -86,6 +88,44 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 	)
 	asl = render_plan_library_asl(result.plan_library)
 	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
+
+
+def test_unified_pipeline_can_use_offline_planner_trace_when_bounded_training_fails(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	domain_file, training_problem, _heldout_problem = _write_counterexample_domain(
+		tmp_path,
+	)
+
+	def bounded_evidence_fails(*args, **kwargs):
+		raise ValueError("bounded training intentionally failed")
+
+	def planner_trace_provider(*, domain_file, problem_file, failure):
+		assert Path(problem_file) == training_problem
+		assert "bounded training intentionally failed" in str(failure)
+		return (LowLevelAction("make_base", ("a",)),)
+
+	monkeypatch.setattr(
+		schema_synthesis,
+		"collect_training_transition_evidence",
+		bounded_evidence_fails,
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(training_problem,),
+		planner_trace_provider=planner_trace_provider,
+	)
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert "+!base(X)" in asl
+	assert result.report["synthesis_planner_trace_evidence_count"] == 1
+	assert result.report["training_transition_systems"][0]["evidence_source"] == (
+		"offline_planner_trace"
+	)
+	assert result.report["bounded_state_training_problem_count"] == 0
+	assert result.report["runtime_full_trace_planner"] is False
 
 
 def test_unified_pipeline_reports_multi_hop_schema_binding_ordering(

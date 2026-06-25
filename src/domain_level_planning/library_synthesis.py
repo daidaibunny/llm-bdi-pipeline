@@ -7,8 +7,11 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 import json
 from pathlib import Path
-from typing import Mapping, Sequence
+import tempfile
+from typing import Callable, Mapping, Sequence
 
+from low_level_planning.fast_downward import FastDownwardPlanner
+from low_level_planning.fast_downward import FastDownwardPlannerConfig
 from plan_library.rendering import sanitize_identifier
 from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTrigger, PlanLibrary
 from utils.pddl_parser import PDDLParser
@@ -244,6 +247,10 @@ def synthesize_domain_level_asl_library(
 	training_problem_files: Sequence[str | Path] = (),
 	counterexample_problem_files: Sequence[str | Path] = (),
 	refinement_constraints: Sequence[object] = (),
+	planner_trace_provider: Callable[..., Sequence[object]] | None = None,
+	use_synthesis_planner_traces: bool = False,
+	synthesis_planner_executable: str | Path | None = None,
+	synthesis_planner_timeout_seconds: int = 60,
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
 	learner_sketches_backend: BackendManifest | None = None,
 	learner_sketches_runs: Sequence[LearnerSketchesRunConfig] = (),
@@ -262,13 +269,31 @@ def synthesize_domain_level_asl_library(
 		),
 	)
 	domain = PDDLParser.parse_domain(domain_file)
+	effective_planner_trace_provider = planner_trace_provider
+	if effective_planner_trace_provider is None and use_synthesis_planner_traces:
+		effective_planner_trace_provider = _fast_downward_trace_provider(
+			executable=synthesis_planner_executable,
+			timeout_seconds=synthesis_planner_timeout_seconds,
+		)
 	training_goal_facts, transition_evidence = _training_evidence(
 		domain=domain,
+		domain_file=domain_file,
 		problem_files=training_problem_files,
+		planner_trace_provider=effective_planner_trace_provider,
 	)
 	counterexample_goal_facts, counterexample_transition_evidence = _training_evidence(
 		domain=domain,
+		domain_file=domain_file,
 		problem_files=counterexample_problem_files,
+		planner_trace_provider=effective_planner_trace_provider,
+	)
+	bounded_training_problem_files = _bounded_problem_files(
+		training_problem_files,
+		transition_evidence,
+	)
+	bounded_counterexample_problem_files = _bounded_problem_files(
+		counterexample_problem_files,
+		counterexample_transition_evidence,
 	)
 	all_goal_facts = (*training_goal_facts, *counterexample_goal_facts)
 	all_transition_evidence = (
@@ -319,14 +344,20 @@ def synthesize_domain_level_asl_library(
 		+ explicit_goal_ordering_candidates
 		+ state_coverage_synthesized_candidates,
 	)
-	candidate_rules, recursion_descent_audit = filter_rules_by_recursion_descent(
-		raw_candidate_rules,
-		ranking_states=recursion_ranking_states_from_problem_files(
-			domain=domain,
-			problem_files=tuple(
-				dict.fromkeys((*training_problem_files, *counterexample_problem_files)),
+	ranking_states, ranking_state_skips = _safe_recursion_ranking_states(
+		domain=domain,
+		problem_files=tuple(
+			dict.fromkeys(
+				(
+					*bounded_training_problem_files,
+					*bounded_counterexample_problem_files,
+				),
 			),
 		),
+	)
+	candidate_rules, recursion_descent_audit = filter_rules_by_recursion_descent(
+		raw_candidate_rules,
+		ranking_states=ranking_states,
 	)
 	required_capabilities = _required_capabilities(
 		predicates=domain.predicates,
@@ -367,15 +398,19 @@ def synthesize_domain_level_asl_library(
 		candidate_rules,
 		counterexample_transition_evidence,
 	)
-	training_state_coverage_rule_groups = composer_state_coverage_required_rule_groups(
-		candidate_rules,
-		domain=domain,
-		problem_files=training_problem_files,
+	training_state_coverage_rule_groups, training_state_coverage_skips = (
+		_safe_composer_state_coverage_required_rule_groups(
+			candidate_rules,
+			domain=domain,
+			problem_files=bounded_training_problem_files,
+		)
 	)
-	counterexample_state_coverage_rule_groups = composer_state_coverage_required_rule_groups(
-		candidate_rules,
-		domain=domain,
-		problem_files=counterexample_problem_files,
+	counterexample_state_coverage_rule_groups, counterexample_state_coverage_skips = (
+		_safe_composer_state_coverage_required_rule_groups(
+			candidate_rules,
+			domain=domain,
+			problem_files=bounded_counterexample_problem_files,
+		)
 	)
 	repair_rule_groups, repair_binding_reports = _repair_required_rule_groups(
 		candidate_rules=candidate_rules,
@@ -468,14 +503,24 @@ def synthesize_domain_level_asl_library(
 		)
 	bounded_validation = None
 	validation_problem_files = tuple(
-		dict.fromkeys((*training_problem_files, *counterexample_problem_files)),
+		dict.fromkeys(
+			(
+				*bounded_training_problem_files,
+				*bounded_counterexample_problem_files,
+			),
+		),
 	)
 	if validation_problem_files:
-		bounded_validation = validate_library_on_bounded_transition_systems(
-			plan_library=plan_library,
-			domain_file=domain_file,
-			problem_files=validation_problem_files,
-		)
+		try:
+			bounded_validation = validate_library_on_bounded_transition_systems(
+				plan_library=plan_library,
+				domain_file=domain_file,
+				problem_files=validation_problem_files,
+			)
+		except ValueError as error:
+			if not _is_bounded_state_exploration_failure(error):
+				raise
+			bounded_validation = None
 	paper_profile_failures = _paper_profile_failures(
 		training_problem_files=training_problem_files,
 		external_sketch_policies=all_external_sketch_policies,
@@ -538,6 +583,42 @@ def synthesize_domain_level_asl_library(
 		"manual_external_policy_count": len(tuple(external_sketch_policies or ())),
 		"training_problem_count": len(training_problem_files),
 		"counterexample_problem_count": len(counterexample_problem_files),
+		"transition_systems": tuple(
+			evidence.to_dict()
+			for evidence in all_transition_evidence
+		),
+		"training_transition_systems": tuple(
+			evidence.to_dict()
+			for evidence in transition_evidence
+		),
+		"counterexample_transition_systems": tuple(
+			evidence.to_dict()
+			for evidence in counterexample_transition_evidence
+		),
+		"runtime_full_trace_planner": False,
+		"synthesis_planner_trace_enabled": bool(effective_planner_trace_provider),
+		"synthesis_planner_trace_provider": (
+			"custom"
+			if planner_trace_provider is not None
+			else "fast_downward"
+			if use_synthesis_planner_traces
+			else None
+		),
+		"synthesis_planner_trace_evidence_count": _evidence_source_count(
+			all_transition_evidence,
+			"offline_planner_trace",
+		),
+		"bounded_state_training_problem_count": len(bounded_training_problem_files),
+		"bounded_state_counterexample_problem_count": len(
+			bounded_counterexample_problem_files,
+		),
+		"bounded_state_skip_reasons": tuple(
+			(
+				*ranking_state_skips,
+				*training_state_coverage_skips,
+				*counterexample_state_coverage_skips,
+			),
+		),
 		"schema_candidate_count": len(schema_candidates),
 		"external_candidate_count": len(external_candidates),
 		"repair_synthesized_candidate_count": len(repair_synthesized_candidates),
@@ -666,6 +747,127 @@ def _normalize_synthesis_profile(profile: str) -> str:
 			f"received {profile!r}.",
 		)
 	return normalized
+
+
+def _bounded_problem_files(
+	problem_files: Sequence[str | Path],
+	evidence: Sequence[object],
+) -> tuple[str | Path, ...]:
+	return tuple(
+		problem_file
+		for problem_file, item in zip(tuple(problem_files or ()), tuple(evidence or ()))
+		if getattr(item, "evidence_source", "") == "bounded_transition_system"
+	)
+
+
+def _safe_recursion_ranking_states(
+	*,
+	domain: object,
+	problem_files: Sequence[str | Path],
+) -> tuple[tuple[object, ...], tuple[str, ...]]:
+	try:
+		return (
+			recursion_ranking_states_from_problem_files(
+				domain=domain,
+				problem_files=problem_files,
+			),
+			(),
+		)
+	except ValueError as error:
+		if not _is_bounded_state_exploration_failure(error):
+			raise
+		return (), (str(error),)
+
+
+def _safe_composer_state_coverage_required_rule_groups(
+	candidate_rules: Sequence[LiftedPlanRule],
+	*,
+	domain: object,
+	problem_files: Sequence[str | Path],
+) -> tuple[tuple[ClingoRequiredRuleGroup, ...], tuple[str, ...]]:
+	try:
+		return (
+			composer_state_coverage_required_rule_groups(
+				candidate_rules,
+				domain=domain,
+				problem_files=problem_files,
+			),
+			(),
+		)
+	except ValueError as error:
+		if not _is_bounded_state_exploration_failure(error):
+			raise
+		return (), (str(error),)
+
+
+def _is_bounded_state_exploration_failure(error: Exception) -> bool:
+	text = str(error)
+	return (
+		"Reachable-state exploration exceeded" in text
+		or "Bounded library validation exceeded" in text
+	)
+
+
+def _fast_downward_trace_provider(
+	*,
+	executable: str | Path | None,
+	timeout_seconds: int,
+) -> Callable[..., Sequence[object]]:
+	planner = FastDownwardPlanner(
+		FastDownwardPlannerConfig(
+			executable=str(executable) if executable is not None else None,
+			timeout_seconds=timeout_seconds,
+		),
+	)
+
+	def provider(
+		*,
+		domain_file: str | Path | None,
+		problem_file: str | Path,
+		failure: Exception,
+	) -> Sequence[object]:
+		if domain_file is None:
+			raise ValueError("Fast Downward synthesis trace provider requires domain_file.")
+		problem = PDDLParser.parse_problem(problem_file)
+		goal_literals = tuple(
+			_fact_goal_literal(fact)
+			for fact in tuple(problem.goal_facts or ())
+			if fact.is_positive
+		)
+		with tempfile.TemporaryDirectory(prefix="domain-level-planner-trace-") as tmp_dir:
+			result = planner.solve_transition_goal(
+				domain_file=domain_file,
+				base_problem_file=problem_file,
+				goal_literals=goal_literals,
+				work_dir=tmp_dir,
+				task_name=f"{problem.name}_training_trace",
+			)
+		if result.success and result.actions:
+			return result.actions
+		raise ValueError(
+			"Offline synthesis planner failed after bounded evidence collection "
+			f"failed for {problem.name}: bounded_failure={failure}; "
+			f"planner_error={result.error}",
+		)
+
+	return provider
+
+
+def _fact_goal_literal(fact: object) -> str:
+	predicate = str(getattr(fact, "predicate"))
+	arguments = tuple(str(argument) for argument in getattr(fact, "args", ()) or ())
+	return predicate if not arguments else f"{predicate}({', '.join(arguments)})"
+
+
+def _evidence_source_count(
+	evidence: Sequence[object],
+	source: str,
+) -> int:
+	return sum(
+		1
+		for item in tuple(evidence or ())
+		if getattr(item, "evidence_source", "") == source
+	)
 
 
 def _pddl_to_asl_symbol_map(domain: object) -> dict[str, object]:
