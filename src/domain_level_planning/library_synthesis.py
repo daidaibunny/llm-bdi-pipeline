@@ -5,6 +5,7 @@ Unified domain-level synthesis from PDDL, training evidence, and paper policies.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import json
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -47,6 +48,7 @@ class ExternalSketchPolicySource:
 	name: str
 	policy_file: str | Path
 	backend_name: str = "learner-sketches"
+	vocabulary_file: str | Path | None = None
 
 
 @dataclass(frozen=True)
@@ -736,7 +738,7 @@ def _paper_profile_failures(
 		failures.append("paper profile has no external learned rule binding reports")
 	if not tuple(external_candidates or ()):
 		failures.append("paper profile compiled no external learned sketch candidates")
-	elif not any(_candidate_source(rule) == "external_sketch" for rule in selected_rules):
+	elif not any(_has_external_policy_evidence(rule) for rule in selected_rules):
 		failures.append("paper profile selected no external learned sketch candidates")
 	for record in _selected_atomic_rule_evidence(
 		selected_rules=selected_rules,
@@ -1086,6 +1088,7 @@ def _external_sketch_candidates(
 			source_name=source.name,
 			policy_file=source.policy_file,
 			domain=domain,
+			vocabulary_map=_read_external_vocabulary_map(source.vocabulary_file),
 		)
 		audits.append(audit)
 		for feature_id, expression in binding_report.unsupported_features.items():
@@ -1099,6 +1102,29 @@ def _external_sketch_candidates(
 		candidates.extend(source_candidates)
 		rule_reports.extend(source_reports)
 	return tuple(candidates), rejected, tuple(audits), tuple(rule_reports)
+
+
+def _read_external_vocabulary_map(
+	path: str | Path | None,
+) -> Mapping[str, str]:
+	"""Read a source-local explicit predicate vocabulary adapter."""
+
+	if path is None:
+		return {}
+	raw = json.loads(Path(path).read_text(encoding="utf-8"))
+	if isinstance(raw, dict) and "predicate_map" in raw:
+		raw_map = raw["predicate_map"]
+	else:
+		raw_map = raw
+	if not isinstance(raw_map, dict):
+		raise ValueError(
+			f"External sketch vocabulary adapter {path} must be a JSON object "
+			"or contain a 'predicate_map' object.",
+		)
+	return {
+		str(source): str(target)
+		for source, target in raw_map.items()
+	}
 
 
 def _bound_policy_rules_to_candidates(
@@ -2534,7 +2560,7 @@ def _candidate_source_counts(rules: Sequence[LiftedPlanRule]) -> dict[str, int]:
 
 
 def _candidate_source(rule: LiftedPlanRule) -> str:
-	if rule.rationale.startswith("external_policy:"):
+	if _has_external_policy_evidence(rule):
 		return "external_sketch"
 	if rule.rationale == "counterexample_repair":
 		return "counterexample_repair"
@@ -2546,6 +2572,13 @@ def _candidate_source(rule: LiftedPlanRule) -> str:
 	):
 		return "counterexample_state_coverage"
 	return "schema"
+
+
+def _has_external_policy_evidence(rule: LiftedPlanRule) -> bool:
+	return rule.rationale.startswith("external_policy:") or any(
+		capability.startswith("external_policy_")
+		for capability in tuple(rule.capabilities or ())
+	)
 
 
 def _rule_to_manifest(rule: LiftedPlanRule) -> dict[str, object]:

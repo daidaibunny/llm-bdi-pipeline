@@ -50,11 +50,21 @@ def main() -> None:
 	parser.add_argument(
 		"--external-sketch-policy",
 		action="append",
-		default=(),
+		default=[],
 		metavar="NAME=PATH",
 		help=(
 			"External learner-sketches policy artifact to consume. "
 			"May be repeated; NAME= may be omitted."
+		),
+	)
+	parser.add_argument(
+		"--external-sketch-vocabulary",
+		action="append",
+		default=[],
+		metavar="NAME=PATH",
+		help=(
+			"Explicit predicate vocabulary adapter JSON for one external policy "
+			"source. NAME must match an --external-sketch-policy source."
 		),
 	)
 	parser.add_argument(
@@ -83,6 +93,7 @@ def main() -> None:
 		evaluation_problem_files=problems[: args.eval_count],
 		external_sketch_policies=_parse_external_sketch_policies(
 			tuple(args.external_sketch_policy or ()),
+			tuple(args.external_sketch_vocabulary or ()),
 		),
 		synthesis_profile=args.synthesis_profile,
 		ablation_label=_default_ablation_label(
@@ -108,7 +119,11 @@ def main() -> None:
 
 def _parse_external_sketch_policies(
 	raw_sources: tuple[str, ...],
+	raw_vocabulary_sources: tuple[str, ...] = (),
 ) -> tuple[ExternalSketchPolicySource, ...]:
+	vocabulary_files = _parse_external_sketch_vocabulary_sources(
+		raw_vocabulary_sources,
+	)
 	sources: list[ExternalSketchPolicySource] = []
 	for index, raw_source in enumerate(tuple(raw_sources or ()), start=1):
 		text = str(raw_source or "").strip()
@@ -126,9 +141,41 @@ def _parse_external_sketch_policies(
 				name=source_name,
 				policy_file=policy_path,
 				backend_name="learner-sketches",
+				vocabulary_file=vocabulary_files.get(source_name),
 			),
 		)
+	unknown_vocabulary_sources = tuple(
+		source_name
+		for source_name in vocabulary_files
+		if source_name not in {source.name for source in sources}
+	)
+	if unknown_vocabulary_sources:
+		raise ValueError(
+			"External sketch vocabulary source has no matching policy source: "
+			+ ", ".join(unknown_vocabulary_sources),
+		)
 	return tuple(sources)
+
+
+def _parse_external_sketch_vocabulary_sources(
+	raw_sources: tuple[str, ...],
+) -> dict[str, Path]:
+	vocabulary_files: dict[str, Path] = {}
+	for raw_source in tuple(raw_sources or ()):
+		text = str(raw_source or "").strip()
+		if not text:
+			continue
+		if "=" not in text:
+			raise ValueError(
+				"--external-sketch-vocabulary must use NAME=PATH so the adapter "
+				"cannot be applied to the wrong learned policy.",
+			)
+		source_name, raw_path = text.split("=", 1)
+		name = source_name.strip()
+		if not name:
+			raise ValueError("--external-sketch-vocabulary NAME must not be empty.")
+		vocabulary_files[name] = Path(raw_path.strip())
+	return vocabulary_files
 
 
 def _default_ablation_label(

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from domain_level_planning.paper_backend_audit import audit_learned_policy_for_asl_binding
 from utils.pddl_parser import PDDLParser
 
@@ -172,6 +174,77 @@ def test_audit_rejects_policy_with_bound_features_but_uncompiled_rule(
 	assert report.bound_feature_count == 1
 	assert report.executable_effect_count > 0
 	assert report.ready_for_executable_asl is False
+
+
+def test_audit_applies_explicit_predicate_vocabulary_adapter(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain table-domain)
+		 (:requirements :strips)
+		 (:predicates
+		  (ontable ?x)
+		  (holding ?x)
+		 )
+		 (:action putdown
+		  :parameters (?x)
+		  :precondition (holding ?x)
+		  :effect (and (ontable ?x) (not (holding ?x)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	policy_file = tmp_path / "external-policy.txt"
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f_table "n_count(c_primitive(on-table,0))"))
+		(:rule (:conditions ) (:effects (:e_n_inc f_table)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	report, policy, binding_report = audit_learned_policy_for_asl_binding(
+		source_name="learner-sketches:vocab",
+		policy_file=policy_file,
+		domain=PDDLParser.parse_domain(domain_file),
+		vocabulary_map={"on-table": "ontable"},
+	)
+
+	assert policy.features["f_table"] == "n_count(c_primitive(ontable,0))"
+	assert report.vocabulary_adapter == {"on-table": "ontable"}
+	assert report.unsupported_features == {}
+	assert binding_report.feature_diagnostics["f_table"].status == "bound"
+
+
+def test_audit_rejects_vocabulary_adapter_targets_outside_domain(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_domain(tmp_path)
+	policy_file = tmp_path / "external-policy.txt"
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f_table "n_count(c_primitive(on-table,0))"))
+		(:rule (:conditions ) (:effects (:e_n_inc f_table)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	with pytest.raises(ValueError, match="does not declare target predicate"):
+		audit_learned_policy_for_asl_binding(
+			source_name="learner-sketches:vocab",
+			policy_file=policy_file,
+			domain=PDDLParser.parse_domain(domain_file),
+			vocabulary_map={"on-table": "ontable"},
+		)
 
 
 def _write_domain(tmp_path: Path) -> Path:

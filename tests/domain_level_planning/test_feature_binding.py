@@ -235,8 +235,13 @@ def test_binding_diagnostics_explain_supported_feature_bindings(
 	assert diagnostic.binding_kind == "primitive_role_count"
 	assert diagnostic.condition_operators == ("c_n_eq", "c_n_gt")
 	assert diagnostic.effect_operators == ("e_n_bot", "e_n_inc")
-	assert diagnostic.action_candidate_count == 1
-	assert diagnostic.action_candidates == (
+	assert diagnostic.action_candidate_count == 2
+	decreasing_candidates = tuple(
+		candidate
+		for candidate in diagnostic.action_candidates
+		if candidate["operator"] == "e_n_dec"
+	)
+	assert decreasing_candidates == (
 		{
 			"feature_id": "f1",
 			"operator": "e_n_dec",
@@ -266,29 +271,8 @@ def test_binding_diagnostics_explain_supported_feature_bindings(
 		"binding_kind": "primitive_role_count",
 		"condition_operators": ("c_n_eq", "c_n_gt"),
 		"effect_operators": ("e_n_bot", "e_n_inc"),
-		"action_candidate_count": 1,
-		"action_candidates": (
-			{
-				"feature_id": "f1",
-				"operator": "e_n_dec",
-				"effect_predicate": "on",
-				"action_name": "remove",
-				"context": ("on(X, Y)", "clear(X)"),
-				"body": (
-					{
-						"kind": "primitive_action",
-						"symbol": "remove",
-						"arguments": ["X", "Y"],
-					},
-				),
-				"add_effects": (
-					{
-						"predicate": "clear",
-						"arguments": ("Y",),
-					},
-				),
-			},
-		),
+		"action_candidate_count": 2,
+		"action_candidates": diagnostic.action_candidates,
 		"promoted_effect_operators": (),
 		"rejection_reason": None,
 	}
@@ -313,11 +297,46 @@ def test_primitive_role_count_reports_decreasing_action_candidates(
 		domain=PDDLParser.parse_domain(domain),
 	)
 
-	candidates = report.action_effect_candidates["f1"]
+	candidates = tuple(
+		candidate
+		for candidate in report.action_effect_candidates["f1"]
+		if candidate.operator == "e_n_dec"
+	)
 	assert tuple(candidate.action_name for candidate in candidates) == ("remove",)
 	assert candidates[0].operator == "e_n_dec"
 	assert candidates[0].effect_predicate == "on"
 	assert candidates[0].context == ("on(X, Y)", "clear(X)")
+	assert candidates[0].body[0].arguments == ("X", "Y")
+
+
+def test_primitive_role_count_reports_increasing_action_candidates(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f1 "n_count(r_primitive(on,0,1))"))
+		(:rule (:conditions (:c_n_eq f1)) (:effects (:e_n_inc f1)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	candidates = tuple(
+		candidate
+		for candidate in report.action_effect_candidates["f1"]
+		if candidate.operator == "e_n_inc"
+	)
+	assert tuple(candidate.action_name for candidate in candidates) == ("place",)
+	assert candidates[0].operator == "e_n_inc"
+	assert candidates[0].effect_predicate == "on"
+	assert candidates[0].context == ("holding(X)", "clear(Y)")
 	assert candidates[0].body[0].arguments == ("X", "Y")
 
 
@@ -369,7 +388,11 @@ def test_nullary_boolean_feature_reports_delete_action_candidates(
 		domain=PDDLParser.parse_domain(domain),
 	)
 
-	candidates = report.action_effect_candidates["f1"]
+	candidates = tuple(
+		candidate
+		for candidate in report.action_effect_candidates["f1"]
+		if candidate.operator == "e_b_neg"
+	)
 	assert tuple(candidate.action_name for candidate in candidates) == ("pick",)
 	assert candidates[0].operator == "e_b_neg"
 	assert candidates[0].effect_predicate == "handempty"
@@ -511,7 +534,11 @@ def test_binding_reports_action_candidates_for_decreasing_primitive_counts(
 		domain=PDDLParser.parse_domain(domain),
 	)
 
-	candidates = report.action_effect_candidates["f1"]
+	candidates = tuple(
+		candidate
+		for candidate in report.action_effect_candidates["f1"]
+		if candidate.operator == "e_n_dec"
+	)
 	assert tuple(candidate.action_name for candidate in candidates) == (
 		"drop",
 		"place",
@@ -522,6 +549,37 @@ def test_binding_reports_action_candidates_for_decreasing_primitive_counts(
 	assert candidates[0].body[0].symbol == "drop"
 	assert candidates[1].context == ("holding(X)", "clear(Y)")
 	assert candidates[1].body[0].arguments == ("X", "Y")
+
+
+def test_binding_reports_action_candidates_for_increasing_primitive_counts(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path, include_place=False)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f1 "n_count(c_primitive(holding,0))"))
+		(:rule (:conditions (:c_n_eq f1)) (:effects (:e_n_inc f1)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	candidates = tuple(
+		candidate
+		for candidate in report.action_effect_candidates["f1"]
+		if candidate.operator == "e_n_inc"
+	)
+	assert len(candidates) == 1
+	assert candidates[0].effect_predicate == "holding"
+	assert candidates[0].action_name == "pick"
+	assert candidates[0].context == ("handempty", "clear(X)")
+	assert candidates[0].body[0].arguments == ("X",)
 
 
 def test_unique_action_candidate_can_be_promoted_to_executable_binding(
@@ -577,14 +635,19 @@ def test_multiple_action_candidates_remain_ambiguous_instead_of_guessing(
 		),
 	)
 
-	assert len(report.action_effect_candidates["f1"]) == 2
+	assert len(report.action_effect_candidates["f1"]) == 3
 	feature_binding = report.bindings["f1"]
 	assert "e_n_dec" not in feature_binding.effect_body
 	diagnostic = report.feature_diagnostics["f1"]
 	assert diagnostic.status == "bound"
-	assert diagnostic.action_candidate_count == 2
-	assert diagnostic.promoted_effect_operators == ()
-	assert diagnostic.action_candidates == (
+	assert diagnostic.action_candidate_count == 3
+	assert diagnostic.promoted_effect_operators == ("e_n_inc",)
+	decreasing_candidates = tuple(
+		candidate
+		for candidate in diagnostic.action_candidates
+		if candidate["operator"] == "e_n_dec"
+	)
+	assert decreasing_candidates == (
 		{
 			"feature_id": "f1",
 			"operator": "e_n_dec",

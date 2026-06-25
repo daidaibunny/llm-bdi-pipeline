@@ -138,21 +138,19 @@ def bind_unique_action_effect_candidates(
 
 	bindings = dict(report.bindings)
 	for feature_id, candidates in report.action_effect_candidates.items():
-		if len(candidates) != 1:
-			continue
-		candidate = candidates[0]
-		binding = bindings.get(feature_id)
-		if binding is None:
-			continue
-		effect_contexts = dict(binding.effect_contexts or {})
-		effect_body = dict(binding.effect_body)
-		effect_contexts[candidate.operator] = candidate.context
-		effect_body[candidate.operator] = candidate.body
-		bindings[feature_id] = SketchFeatureBinding(
-			condition_contexts=binding.condition_contexts,
-			effect_contexts=effect_contexts,
-			effect_body=effect_body,
-		)
+		for candidate in _unique_candidates_by_operator(candidates):
+			binding = bindings.get(feature_id)
+			if binding is None:
+				continue
+			effect_contexts = dict(binding.effect_contexts or {})
+			effect_body = dict(binding.effect_body)
+			effect_contexts[candidate.operator] = candidate.context
+			effect_body[candidate.operator] = candidate.body
+			bindings[feature_id] = SketchFeatureBinding(
+				condition_contexts=binding.condition_contexts,
+				effect_contexts=effect_contexts,
+				effect_body=effect_body,
+			)
 	return FeatureBindingReport(
 		bindings=bindings,
 		unsupported_features=report.unsupported_features,
@@ -161,6 +159,19 @@ def bind_unique_action_effect_candidates(
 			report=report,
 			bindings=bindings,
 		),
+	)
+
+
+def _unique_candidates_by_operator(
+	candidates: tuple[ActionEffectBindingCandidate, ...],
+) -> tuple[ActionEffectBindingCandidate, ...]:
+	by_operator: dict[str, list[ActionEffectBindingCandidate]] = {}
+	for candidate in candidates:
+		by_operator.setdefault(candidate.operator, []).append(candidate)
+	return tuple(
+		operator_candidates[0]
+		for operator_candidates in by_operator.values()
+		if len(operator_candidates) == 1
 	)
 
 
@@ -647,8 +658,9 @@ def _action_effect_candidates(
 			if effect.predicate != predicate:
 				continue
 			if effect.is_positive:
-				continue
-			operator = "e_b_neg" if not effect.arguments else "e_n_dec"
+				operator = "e_b_pos" if not effect.arguments else "e_n_inc"
+			else:
+				operator = "e_b_neg" if not effect.arguments else "e_n_dec"
 			candidates.append(
 				ActionEffectBindingCandidate(
 					feature_id=feature_id,

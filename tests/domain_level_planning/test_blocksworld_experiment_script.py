@@ -127,21 +127,28 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 def test_blocksworld_script_parses_external_policy_arguments(tmp_path: Path) -> None:
 	policy_a = tmp_path / "policy-a.txt"
 	policy_b = tmp_path / "policy-b.txt"
+	vocabulary = tmp_path / "vocab.json"
 	policy_a.write_text("", encoding="utf-8")
 	policy_b.write_text("", encoding="utf-8")
+	vocabulary.write_text("{}", encoding="utf-8")
 
 	sources = _parse_external_sketch_policies(
 		(
 			f"learned-clear={policy_a}",
 			str(policy_b),
 		),
+		(
+			f"learned-clear={vocabulary}",
+		),
 	)
 
 	assert len(sources) == 2
 	assert sources[0].name == "learned-clear"
 	assert sources[0].policy_file == policy_a
+	assert sources[0].vocabulary_file == vocabulary
 	assert sources[1].name == "external-sketch-2"
 	assert sources[1].policy_file == policy_b
+	assert sources[1].vocabulary_file is None
 	assert _default_ablation_label(
 		explicit_label=None,
 		synthesis_profile="bootstrap",
@@ -157,3 +164,41 @@ def test_blocksworld_script_parses_external_policy_arguments(tmp_path: Path) -> 
 		synthesis_profile="paper",
 		external_policy_count=0,
 	) == "custom"
+
+
+def test_blocksworld_first20_script_accepts_external_policy_cli_argument(
+	tmp_path: Path,
+) -> None:
+	output = tmp_path / "blocksworld-external-policy.json"
+	policy_file = tmp_path / "policy.txt"
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals (f_clear "n_count(c_primitive(clear,0))"))
+		(:rule (:conditions (:c_n_gt f_clear)) (:effects (:e_n_inc f_clear)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	subprocess.run(
+		(
+			sys.executable,
+			str(PROJECT_ROOT / "scripts" / "run_blocksworld_first20_experiment.py"),
+			"--output",
+			str(output),
+			"--train-count",
+			"1",
+			"--eval-count",
+			"1",
+			"--external-sketch-policy",
+			f"clear-smoke={policy_file}",
+		),
+		cwd=PROJECT_ROOT,
+		check=True,
+	)
+
+	report = json.loads(output.read_text(encoding="utf-8"))
+	assert report["paper_quality_summary"]["external_policy_count"] == 1
+	assert report["experiment_protocol"]["ablations"][0]["external_policy_count"] == 1

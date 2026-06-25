@@ -39,6 +39,8 @@ PDDL domain + training/counterexample problems
 | Experiments | Generic PDDL experiment runner, Blocksworld first-20 runner, Labworkflow dependency runner, and completed-report comparison CLI exist. |
 | Resource safety | External learner commands must use `scripts/resource_guard.py`; keep memory at or below 16 GiB unless explicitly approved. |
 | No hardcoding | Tests scan production domain-level code for domain-specific special cases and generated synthetic/grounded names. |
+| External policy adapters | External learned policies may use an explicit source-local predicate vocabulary JSON adapter. Adapter targets are validated against the active PDDL domain; undeclared mappings are rejected instead of guessed. |
+| Feature binding | Action-effect candidates now include both add and delete effects and promote unique candidates per qualitative operator. Ambiguous candidates remain unpromoted instead of guessed. |
 
 Latest known Blocksworld smoke result:
 
@@ -49,6 +51,24 @@ coverage: 20/20
 profile: bootstrap_schema_only
 runtime planner: none
 paper-profile ready: false, because no external learned sketch policy is selected
+```
+
+Latest learner-sketches Blocksworld audit:
+
+```text
+policy: blocks_4_on_1, existing official learner-sketches artifact
+adapter: explicit predicate_map {"on-table": "ontable", "arm-empty": "handempty"}
+bootstrap+external coverage: 20/20
+external audit: 2/2 features bound, 3/3 learned rules compiled
+strict paper profile: fails bounded validation when aggregate feature rules are
+  forced into executable ASL
+blocker class: external sketch is qualitative aggregate feature progress; it
+  still needs principled variable/effect binding before it is a safe runtime
+  composer
+policy: blocks_4_on_2
+external audit: 1/1 features bound, 1/1 learned rules compiled
+strict paper profile: still fails bounded validation under current forced
+  external-composer semantics
 ```
 
 ## Stable Decisions
@@ -70,8 +90,8 @@ paper-profile ready: false, because no external learned sketch policy is selecte
 | G1 | Theory | Bounded-class guarantee exists as machine-readable reports, but not yet as final paper prose. | A paper-ready method section defines the feature language, module language, composer language, correctness scope, validation scope, and exclusions. | High |
 | G2 | Layer B | Atomic modules still rely on schema/trace heuristics plus reports, not a full learned multi-strategy module learner. | The learner can justify each selected atomic module from traces, external sketches, or repairs, and can reject unsafe alternatives beyond simple cost/coverage rules. | High |
 | G3 | Layer C | Goal dependency handling is much stronger, but still not a complete learned composer. | Goal-agenda and composer synthesis handle goal-dependent domains robustly, with acyclic support agendas, explainable delete-threat diagnostics, and counterexample-driven new composer candidates. | High |
-| G4 | External learners | learner-sketches can be audited/bound, but Blocksworld paper-profile is not yet passing with a real external policy. | A guarded learner-sketches run produces a policy artifact that is parsed, bound, selected, validated, and included in a paper-profile experiment. | High |
-| G5 | Feature binding | Safe DLPlan bindings are conservative. | Every external feature either compiles to PDDL literals/actions/subgoals or has a precise rejection reason; additional principled lifted bindings are added only when justified. | Medium |
+| G4 | External learners | learner-sketches Blocksworld artifacts can now be parsed, vocabulary-adapted, bound, and compiled, but strict paper-profile validation fails when aggregate feature sketches are forced as executable ASL composer rules. | A guarded learner-sketches run produces a policy artifact that is parsed, bound, selected, validated, and included in a paper-profile experiment. | High |
+| G5 | Feature binding | Safe DLPlan bindings are conservative but now support explicit vocabulary adapters and add/delete action-effect candidates. Aggregate feature rules still lack a principled variable bridge to target goal parameters. | Every external feature either compiles to PDDL literals/actions/subgoals or has a precise rejection reason; additional principled lifted bindings are added only when justified. | Medium |
 | G6 | Validation | Current validation is smoke/bounded, not yet a broad paper experiment suite. | Multiple IPC-style domains, train/test scaling, ablations, external baselines, failure analysis, and reproducible tables. | High |
 | G7 | Counterexample refinement | Refinement loop exists, but not every failure class generates new executable candidates. | Held-out failures improve coverage through generated Layer B/Layer C candidates whenever the failure is inside the supported class; unsupported cases are reported precisely. | Medium |
 | G8 | Temporal extended goals | DFA-to-library interface exists for positive conjunctive guards, but broader TEG evaluation is pending. | Query-specific DFA controller calls the same domain-level library and reports guard diagnostics without generating query-specific ASL libraries. | Medium |
@@ -81,14 +101,15 @@ paper-profile ready: false, because no external learned sketch policy is selecte
 
 | ID | Task | Gap | Acceptance check | Status |
 | --- | --- | --- | --- | --- |
-| N1 | Run a guarded learner-sketches Blocksworld policy experiment and try a strict paper-profile synthesis run. | G4, G6 | Report shows whether external policy is parsed, bound, selected, and whether bounded validation passes. Memory guard must be at or below 16 GiB. | Open |
-| N2 | If N1 fails, classify the blocker precisely: vocabulary mismatch, unsupported DLPlan feature, unbound body variables, empty learned rule body, or unselected external candidate. | G4, G5 | Paper-profile failure message and `paper_policy_audits` identify the exact blocker without silent fallback. | Open |
-| N3 | Improve Layer B candidate learning where selected modules are schema-only or unjustified in paper profile. | G2 | Add failing tests from a generic PDDL domain; selected atomic modules become trace/external/repair justified or explicitly rejected. | Open |
-| N4 | Improve Layer C counterexample candidate generation beyond explicit ordering/state coverage. | G3, G7 | A held-out goal-dependency failure generates a new executable composer/module candidate and improves held-out coverage. | Open |
-| N5 | Build a broader experiment matrix. | G6, G9 | At least Blocksworld plus one non-Blocksworld domain report coverage, library size, runtime, learning audit, paper-profile readiness, and baseline comparison rows. | Open |
-| N6 | Write the paper-method theory section from the machine-readable architecture contract. | G1 | Prose matches implementation reports and states bounded-class assumptions without overclaiming. | Open |
-| N7 | Define negative/disjunctive goal and DFA guard semantics. | G5, G8 | Unsupported cases either remain rejected with precise diagnostics or get a tested semantics and ASL compilation path. | Open |
-| N8 | Keep no-hardcoding and generated-output audits current after every synthesis change. | G2, G3, G8 | `uv run pytest tests/domain_level_planning/test_no_domain_hardcoding.py -q` and relevant generated-output tests pass. | Ongoing |
+| N1 | Run a guarded learner-sketches Blocksworld policy experiment and try a strict paper-profile synthesis run. | G4, G6 | Report shows whether external policy is parsed, bound, selected, and whether bounded validation passes. Memory guard must be at or below 16 GiB. | Partial: existing official artifacts were reused without rerunning learner. `blocks_4_on_1` and `blocks_4_on_2` parse/bind/compile with explicit vocabulary adapter; strict paper profile still fails bounded validation. |
+| N2 | If N1 fails, classify the blocker precisely: vocabulary mismatch, unsupported DLPlan feature, unbound body variables, empty learned rule body, or unselected external candidate. | G4, G5 | Paper-profile failure message and `paper_policy_audits` identify the exact blocker without silent fallback. | Done for current audit: initial blocker was vocabulary mismatch (`on-table`/`arm-empty`) plus missing add-effect candidates; after fixes, blocker is unsafe aggregate-feature-to-executable-composer semantics and missing principled variable bridge. |
+| N3 | Implement a principled variable/effect bridge for external aggregate sketches. | G4, G5 | External auxiliary effects are compiled only when schema support links their variables to target goal parameters; unsafe aggregate rules are rejected with precise diagnostics instead of becoming runtime composer plans. | Next |
+| N4 | Improve Layer B candidate learning where selected modules are schema-only or unjustified in paper profile. | G2 | Add failing tests from a generic PDDL domain; selected atomic modules become trace/external/repair justified or explicitly rejected. | Open |
+| N5 | Improve Layer C counterexample candidate generation beyond explicit ordering/state coverage. | G3, G7 | A held-out goal-dependency failure generates a new executable composer/module candidate and improves held-out coverage. | Open |
+| N6 | Build a broader experiment matrix. | G6, G9 | At least Blocksworld plus one non-Blocksworld domain report coverage, library size, runtime, learning audit, paper-profile readiness, and baseline comparison rows. | Open |
+| N7 | Write the paper-method theory section from the machine-readable architecture contract. | G1 | Prose matches implementation reports and states bounded-class assumptions without overclaiming. | Open |
+| N8 | Define negative/disjunctive goal and DFA guard semantics. | G5, G8 | Unsupported cases either remain rejected with precise diagnostics or get a tested semantics and ASL compilation path. | Open |
+| N9 | Keep no-hardcoding and generated-output audits current after every synthesis change. | G2, G3, G8 | `uv run pytest tests/domain_level_planning/test_no_domain_hardcoding.py -q` and relevant generated-output tests pass. | Ongoing |
 
 ## Commands To Use
 

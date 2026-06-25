@@ -7,7 +7,7 @@ binding work required to turn that sketch into executable lifted AgentSpeak(L).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import re
 from typing import Mapping
@@ -37,6 +37,7 @@ class PaperPolicyAuditReport:
 	executable_effect_count: int
 	ready_for_executable_asl: bool
 	feature_binding_diagnostics: tuple[FeatureBindingDiagnostic, ...]
+	vocabulary_adapter: Mapping[str, str] = field(default_factory=dict)
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -53,6 +54,7 @@ class PaperPolicyAuditReport:
 				diagnostic.to_dict()
 				for diagnostic in self.feature_binding_diagnostics
 			),
+			"vocabulary_adapter": dict(self.vocabulary_adapter),
 		}
 
 
@@ -61,11 +63,20 @@ def audit_learned_policy_for_asl_binding(
 	source_name: str,
 	policy_file: str | Path,
 	domain: PDDLDomain,
+	vocabulary_map: Mapping[str, str] | None = None,
 ) -> tuple[PaperPolicyAuditReport, SketchPolicy, FeatureBindingReport]:
 	"""Parse and bind one learned DLPlan policy artifact."""
 
 	path = Path(policy_file)
-	policy = parse_dlplan_policy(path.read_text(encoding="utf-8"))
+	adapter = _validated_vocabulary_map(
+		domain=domain,
+		vocabulary_map=dict(vocabulary_map or {}),
+	)
+	policy_text = _apply_predicate_vocabulary_map(
+		path.read_text(encoding="utf-8"),
+		adapter,
+	)
+	policy = parse_dlplan_policy(policy_text)
 	binding_report = bind_goal_aligned_action_effect_candidates(
 		policy=policy,
 		report=bind_unique_action_effect_candidates(
@@ -97,8 +108,62 @@ def audit_learned_policy_for_asl_binding(
 			binding_report.feature_diagnostics[feature_id]
 			for feature_id in policy.features
 		),
+		vocabulary_adapter=adapter,
 	)
 	return report, policy, binding_report
+
+
+def _validated_vocabulary_map(
+	*,
+	domain: PDDLDomain,
+	vocabulary_map: Mapping[str, str],
+) -> Mapping[str, str]:
+	"""Validate an explicit external-to-local predicate-name adapter."""
+
+	if not vocabulary_map:
+		return {}
+	predicate_names = {predicate.name for predicate in domain.predicates}
+	adapter: dict[str, str] = {}
+	for raw_source, raw_target in vocabulary_map.items():
+		source = str(raw_source or "").strip()
+		target = str(raw_target or "").strip()
+		if not source or not target:
+			raise ValueError("Vocabulary adapter entries must use non-empty names.")
+		if source.endswith("_g") or target.endswith("_g"):
+			raise ValueError(
+				"Vocabulary adapter entries must map base predicate names; "
+				"goal-suffixed names are derived automatically.",
+			)
+		if target not in predicate_names:
+			raise ValueError(
+				f"Vocabulary adapter for source predicate {source!r} does not "
+				f"declare target predicate {target!r} in the PDDL domain.",
+			)
+		adapter[source] = target
+	return adapter
+
+
+def _apply_predicate_vocabulary_map(
+	text: str,
+	vocabulary_map: Mapping[str, str],
+) -> str:
+	"""Apply an explicit predicate-name adapter to a DLPlan policy text."""
+
+	rewritten = text
+	for source, target in sorted(
+		vocabulary_map.items(),
+		key=lambda item: len(item[0]),
+		reverse=True,
+	):
+		pattern = re.compile(
+			rf"(?<![A-Za-z0-9_-]){re.escape(source)}(?P<suffix>_g)?"
+			r"(?![A-Za-z0-9_-])",
+		)
+		rewritten = pattern.sub(
+			lambda match: f"{target}{match.group('suffix') or ''}",
+			rewritten,
+		)
+	return rewritten
 
 
 def _policy_rules_are_executable(
