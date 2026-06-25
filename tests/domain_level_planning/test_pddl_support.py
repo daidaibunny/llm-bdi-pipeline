@@ -93,6 +93,19 @@ def test_schema_synthesis_rejects_disjunctive_problem_goals(tmp_path: Path) -> N
 			training_problem_files=(problem_file,),
 		)
 
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+	assert {
+		"kind": "unsupported_disjunctive_goal",
+		"location": str(problem_file),
+		"symbol": "or",
+		"message": (
+			f"{problem_file}: disjunctive problem goals are not supported; "
+			"supported goals are positive achievement goals only: predicate atoms "
+			"optionally inside an and conjunction"
+		),
+	} in serialized["unsupported_diagnostics"]
+
 
 def test_pddl_support_report_rejects_negative_problem_goals(tmp_path: Path) -> None:
 	domain_file, problem_file = _write_minimal_strips_domain_and_problem(
@@ -106,17 +119,18 @@ def test_pddl_support_report_rejects_negative_problem_goals(tmp_path: Path) -> N
 	assert serialized["is_compilable"] is False
 	assert serialized["unsupported_diagnostics"] == [
 		{
-			"kind": "unsupported_goal_fragment",
+			"kind": "unsupported_negative_goal",
 			"location": str(problem_file),
-			"symbol": ":goal",
+			"symbol": "not",
 			"message": (
-				f"{problem_file}: problem goals must be positive achievement goals only "
-				"inside a conjunction of predicate atoms"
+				f"{problem_file}: negative problem goals are not supported; "
+				"supported goals are positive achievement goals only: predicate atoms "
+				"optionally inside an and conjunction"
 			),
 		},
 	]
 	assert any(
-		"positive achievement goals only" in reason
+		"negative problem goals are not supported" in reason
 		for reason in serialized["unsupported_reasons"]
 	)
 

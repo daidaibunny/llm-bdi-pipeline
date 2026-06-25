@@ -345,15 +345,17 @@ def _unsupported_goal_diagnostics(
 	parsed = _parse_form(goal_expression)
 	if _is_positive_conjunctive_goal(parsed):
 		return ()
+	kind, symbol, fragment_label = _unsupported_goal_fragment(parsed)
 	message = (
-		f"{problem_path}: problem goals must be positive achievement goals only "
-		"inside a conjunction of predicate atoms"
+		f"{problem_path}: {fragment_label} problem goals are not supported; "
+		"supported goals are positive achievement goals only: predicate atoms "
+		"optionally inside an and conjunction"
 	)
 	return (
 		PDDLUnsupportedDiagnostic(
-			kind="unsupported_goal_fragment",
+			kind=kind,
 			location=str(problem_path),
-			symbol=":goal",
+			symbol=symbol,
 			message=message,
 		),
 	)
@@ -519,6 +521,27 @@ def _is_positive_goal_atom(expression: object) -> bool:
 	if head in UNSUPPORTED_EXPRESSION_OPERATORS or head in {"not", "="}:
 		return False
 	return all(not isinstance(argument, tuple) for argument in expression[1:])
+
+
+def _unsupported_goal_fragment(expression: object) -> tuple[str, str, str]:
+	if _contains_operator(expression, "not"):
+		return ("unsupported_negative_goal", "not", "negative")
+	if _contains_operator(expression, "or"):
+		return ("unsupported_disjunctive_goal", "or", "disjunctive")
+	if _contains_operator(expression, "="):
+		return ("unsupported_goal_equality", "=", "equality")
+	for operator in sorted(UNSUPPORTED_EXPRESSION_OPERATORS):
+		if _contains_operator(expression, operator):
+			return ("unsupported_goal_operator", operator, f"{operator!r}")
+	return ("unsupported_goal_fragment", ":goal", "non-conjunctive")
+
+
+def _contains_operator(expression: object, operator: str) -> bool:
+	if not isinstance(expression, tuple) or not expression:
+		return False
+	if str(expression[0]).lower() == operator:
+		return True
+	return any(_contains_operator(child, operator) for child in expression[1:])
 
 
 def _unsupported_expression_operators(text: str) -> tuple[str, ...]:
