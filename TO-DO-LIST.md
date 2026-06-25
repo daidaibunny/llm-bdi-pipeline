@@ -113,7 +113,8 @@ strict paper profile with diagnostics: coverage=20/20 and bounded validation
 | N6 | Build a broader experiment matrix. | G6, G9 | At least Blocksworld plus one non-Blocksworld domain report coverage, library size, runtime, learning audit, paper-profile readiness, and baseline comparison rows. | Done for current minimum matrix: `tmp/domain-level-experiment-matrix/blocksworld-paper-on2.json` gives Blocksworld first-20 coverage 20/20, plan_count=38, paper_profile_ready=true, selected external sketch=1; `tmp/domain-level-experiment-matrix/labworkflow-refinement.json` gives non-Blocksworld coverage 2/2, plan_count=11, counterexample goal-ordering refinement converged; `tmp/domain-level-experiment-matrix/comparison.json` records comparison rows. Larger paper suite and external baselines remain G6/G9 future work. |
 | N7 | Write the paper-method theory section from the machine-readable architecture contract. | G1 | Prose matches implementation reports and states bounded-class assumptions without overclaiming. | Done for implementation source of truth: `architecture_contract` now emits `paper_method_summary` paragraphs derived from the bounded-class, feature, module, composer, progress, correctness, runtime-planner, and exclusion fields; tests assert the summary covers the required theory terms without creating a separate stale documentation file. |
 | N8 | Define negative/disjunctive goal and DFA guard semantics. | G5, G8 | Unsupported cases either remain rejected with precise diagnostics or get a tested semantics and ASL compilation path. | Done for current scope by explicit rejection: PDDL problem goals now distinguish `unsupported_negative_goal` and `unsupported_disjunctive_goal`; DFA guards already report `unsupported_negative_guard`, `unsupported_disjunctive_guard`, and `unsupported_false_guard`; tests cover both achievement-goal and temporal guard paths. Future support still requires a separate semantics design before compilation. |
-| N9 | Keep no-hardcoding and generated-output audits current after every synthesis change. | G2, G3, G8 | `uv run pytest tests/domain_level_planning/test_no_domain_hardcoding.py -q` and relevant generated-output tests pass. | Ongoing, latest pass: no-hardcoding audit passed and full suite passed with `243 passed, 2 warnings` after N7/N8 changes. |
+| N9 | Keep no-hardcoding and generated-output audits current after every synthesis change. | G2, G3, G8 | `uv run pytest tests/domain_level_planning/test_no_domain_hardcoding.py -q` and relevant generated-output tests pass. | Ongoing, latest pass: no-hardcoding audit passed and full suite passed with `245 passed, 2 warnings` after N10 changes. |
+| N10 | Build a paper-grade experiment matrix runner. | G6, G9 | A single command runs configured domain/profile entries, writes per-entry reports, writes comparison rows, preserves diagnostic failures, and does not call runtime full-trace planners or unguarded external learners. | Done for current infrastructure: `scripts/run_domain_level_experiment_matrix.py` consumes JSON configs or the `paper-diagnostic-smoke` preset, writes `matrix-summary.json`, per-experiment reports, and `comparison.json`; tests cover success plus diagnostic failure rows and fail-fast behavior. Real preset run produced 5 rows: Blocksworld bootstrap 20/20, Blocksworld paper external 20/20, Labworkflow refinement 2/2, Transport unsupported-fragment diagnostic, and Satellite unsupported-context diagnostic. |
 
 ## Commands To Use
 
@@ -125,6 +126,9 @@ uv run pytest tests/domain_level_planning/test_no_domain_hardcoding.py -q
 uv run python scripts/run_blocksworld_first20_experiment.py \
   --output tmp/blocksworld-first20-experiment/report.json \
   --train-count 1 --eval-count 20
+uv run python scripts/run_domain_level_experiment_matrix.py \
+  --preset paper-diagnostic-smoke \
+  --output-dir tmp/domain-level-experiment-matrix/paper-diagnostic-smoke
 ```
 
 External backend audit:
