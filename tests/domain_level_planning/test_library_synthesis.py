@@ -359,6 +359,165 @@ def test_external_policy_rule_rejects_unbound_body_variables(
 	)
 
 
+def test_external_policy_rule_rejects_auxiliary_effect_without_goal_progress(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "bridge-domain.pddl"
+	problem_file = tmp_path / "bridge-problem.pddl"
+	policy_file = tmp_path / "bridge-policy.txt"
+	domain_file.write_text(
+		"""
+		(define (domain bridge-domain)
+		 (:requirements :strips)
+		 (:predicates
+		  (need ?x)
+		  (ready ?x)
+		  (done ?x)
+		 )
+		 (:action prepare
+		  :parameters (?x)
+		  :precondition (need ?x)
+		  :effect (ready ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem bridge-p1)
+		 (:domain bridge-domain)
+		 (:objects a)
+		 (:init (need a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_done "n_count(c_equal(c_primitive(done,0),c_primitive(done_g,0)))")
+		 (f_ready "n_count(c_primitive(ready,0))")
+		)
+		(:rule (:conditions (:c_n_eq f_done))
+		 (:effects (:e_n_inc f_ready) (:e_n_bot f_done)))
+		(:rule (:conditions )
+		 (:effects (:e_n_inc f_ready) (:e_n_inc f_done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="bridge-sketch",
+				policy_file=policy_file,
+			),
+		),
+	)
+
+	reports = result.report["external_rule_binding_reports"]
+	assert reports[0]["compiled"] is False
+	assert reports[0]["missing_binding_diagnostics"] == [
+		{
+			"feature_id": None,
+			"operator": None,
+			"binding_role": "rule",
+			"expression": None,
+			"status": "uncompiled",
+			"binding_kind": "goal_progress_safety",
+			"available_condition_operators": (),
+			"available_effect_operators": (),
+			"rejection_reason": "no_goal_progress_evidence",
+			"action_candidates": (),
+		},
+	]
+	assert reports[1]["compiled"] is True
+
+
+def test_paper_profile_keeps_prepare_rules_needed_by_external_composer(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "prepare-domain.pddl"
+	problem_file = tmp_path / "prepare-problem.pddl"
+	policy_file = tmp_path / "prepare-policy.txt"
+	domain_file.write_text(
+		"""
+		(define (domain prepare-domain)
+		 (:requirements :strips)
+		 (:predicates
+		  (need ?x)
+		  (ready ?x)
+		  (done ?x)
+		 )
+		 (:action prepare
+		  :parameters (?x)
+		  :precondition (need ?x)
+		  :effect (ready ?x)
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem prepare-p1)
+		 (:domain prepare-domain)
+		 (:objects a)
+		 (:init (need a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_done "n_count(c_equal(c_primitive(done,0),c_primitive(done_g,0)))")
+		)
+		(:rule (:conditions ) (:effects (:e_n_inc f_done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="prepare-sketch",
+				policy_file=policy_file,
+			),
+		),
+		synthesis_profile="paper",
+	)
+	asl = render_plan_library_asl(result.plan_library)
+
+	assert result.report["paper_profile_ready"] is True
+	assert "plan=external_prepare_sketch_1" in asl
+	assert "plan=done_prepare_ready_for_finish" in asl
+	assert "plan=ready_via_prepare" in asl
+
+
 def test_unified_pipeline_blocks_audit_only_external_backends(
 	tmp_path: Path,
 ) -> None:

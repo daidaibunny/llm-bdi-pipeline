@@ -19,6 +19,7 @@ from .feature_binding import bind_recoverable_dlplan_features
 from .feature_binding import bind_unique_action_effect_candidates
 from .feature_binding import FeatureBindingDiagnostic
 from .feature_binding import FeatureBindingReport
+from .feature_binding import goal_aligned_policy_feature_ids
 from .gp_backends import SketchPolicy
 from .gp_backends import parse_dlplan_policy
 
@@ -77,12 +78,15 @@ def audit_learned_policy_for_asl_binding(
 		adapter,
 	)
 	policy = parse_dlplan_policy(policy_text)
-	binding_report = bind_goal_aligned_action_effect_candidates(
-		policy=policy,
-		report=bind_unique_action_effect_candidates(
-			bind_recoverable_dlplan_features(policy=policy, domain=domain),
-		),
-	)
+	base_report = bind_recoverable_dlplan_features(policy=policy, domain=domain)
+	if goal_aligned_policy_feature_ids(policy):
+		binding_report = bind_goal_aligned_action_effect_candidates(
+			policy=policy,
+			report=base_report,
+			domain=domain,
+		)
+	else:
+		binding_report = bind_unique_action_effect_candidates(base_report)
 	executable_effect_count = sum(
 		len(binding.effect_body)
 		for binding in binding_report.bindings.values()

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from domain_level_planning.experiments import run_domain_level_experiment
 from domain_level_planning.experiments import compare_domain_level_experiment_reports
 from domain_level_planning.experiments import _generated_output_audit
@@ -295,6 +297,42 @@ def test_domain_level_experiment_can_run_paper_profile_with_external_policy(
 		"blocking_failure_count": 0,
 		"blocking_failures": [],
 	}
+
+
+def test_domain_level_experiment_can_write_failed_paper_profile_report(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+	)
+
+	with pytest.raises(ValueError, match="external learned sketch policy"):
+		run_domain_level_experiment(
+			experiment_name="paper-profile-fail-fast",
+			domain_file=domain_file,
+			training_problem_files=(problem_file,),
+			evaluation_problem_files=(problem_file,),
+			synthesis_profile="paper",
+			max_execution_steps=100,
+			max_depth=50,
+		)
+
+	report = run_domain_level_experiment(
+		experiment_name="paper-profile-diagnostic",
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		evaluation_problem_files=(problem_file,),
+		synthesis_profile="paper",
+		max_execution_steps=100,
+		max_depth=50,
+		fail_on_paper_profile_failure=False,
+	)
+
+	assert report["synthesis_report"]["paper_profile_ready"] is False
+	assert "paper profile requires at least one external learned sketch policy" in (
+		report["synthesis_report"]["paper_profile_failures"]
+	)
+	assert report["paper_quality_summary"]["blocking_failure_count"] > 0
 
 
 def test_domain_level_experiment_records_explicit_ablation_metadata(

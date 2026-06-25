@@ -179,6 +179,7 @@ def bind_goal_aligned_action_effect_candidates(
 	*,
 	policy: SketchPolicy,
 	report: FeatureBindingReport,
+	domain: PDDLDomain | None = None,
 ) -> FeatureBindingReport:
 	"""Promote action candidates using goal-aligned feature effects as evidence."""
 
@@ -191,12 +192,9 @@ def bind_goal_aligned_action_effect_candidates(
 	for rule in policy.parsed_rules:
 		progress_effects = _progress_effects(rule, goal_aligned_features)
 		if not progress_effects:
-			progress_effects = tuple(
-				_ProgressEffect(
-					predicate=feature.predicate,
-					arguments=_feature_arguments(feature),
-				)
-				for feature in goal_aligned_features.values()
+			progress_effects = _progress_effect_priors(
+				rule,
+				goal_aligned_features,
 			)
 		if not progress_effects:
 			continue
@@ -205,11 +203,15 @@ def bind_goal_aligned_action_effect_candidates(
 			if not candidates:
 				continue
 			matching = tuple(
-				_remap_candidate_to_progress_effect(candidate, progress_effect)
+				remapped
 				for candidate in candidates
 				for progress_effect in progress_effects
+				for remapped in _remap_candidate_to_progress_effects(
+					candidate=candidate,
+					progress_effect=progress_effect,
+					domain_actions=tuple(domain.actions) if domain is not None else (),
+				)
 				if candidate.operator == effect.operator
-				and _candidate_adds_predicate(candidate, progress_effect.predicate)
 			)
 			if len(matching) != 1:
 				continue
@@ -225,6 +227,16 @@ def bind_goal_aligned_action_effect_candidates(
 			report=report,
 			bindings=bindings,
 		),
+	)
+
+
+def goal_aligned_policy_feature_ids(policy: SketchPolicy) -> tuple[str, ...]:
+	"""Return feature ids whose DLPlan expression refers to goal-aligned facts."""
+
+	return tuple(
+		feature_id
+		for feature_id, expression in policy.features.items()
+		if _goal_aligned_feature(expression) is not None
 	)
 
 
@@ -696,6 +708,12 @@ class _ProgressEffect:
 	arguments: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class _ProducerPreconditionBridge:
+	predicate: str
+	arguments: tuple[str, ...]
+
+
 def _progress_effects(
 	rule: SketchRule,
 	goal_aligned_features: Mapping[str, _GoalAlignedFeature],
@@ -715,6 +733,28 @@ def _progress_effects(
 	return tuple(effects)
 
 
+def _progress_effect_priors(
+	rule: SketchRule,
+	goal_aligned_features: Mapping[str, _GoalAlignedFeature],
+) -> tuple[_ProgressEffect, ...]:
+	"""Use already-positive goal-aligned conditions as weak disambiguation priors."""
+
+	effects: list[_ProgressEffect] = []
+	for condition in rule.conditions:
+		if condition.operator != "c_n_gt":
+			continue
+		feature = goal_aligned_features.get(condition.feature_id)
+		if feature is None:
+			continue
+		effects.append(
+			_ProgressEffect(
+				predicate=feature.predicate,
+				arguments=_feature_arguments(feature),
+			),
+		)
+	return tuple(effects)
+
+
 def _feature_arguments(feature: _GoalAlignedFeature) -> tuple[str, ...]:
 	arguments = _arguments_for_arity(feature.arity)
 	if feature.argument_order is None:
@@ -729,40 +769,107 @@ def _candidate_adds_predicate(
 	return any(add_predicate == predicate for add_predicate, _ in candidate.add_effects)
 
 
-def _remap_candidate_to_progress_effect(
+def _remap_candidate_to_progress_effects(
+	*,
 	candidate: ActionEffectBindingCandidate,
 	progress_effect: _ProgressEffect,
-) -> ActionEffectBindingCandidate:
+	domain_actions: tuple[PDDLAction, ...],
+) -> tuple[ActionEffectBindingCandidate, ...]:
+	remapped: list[ActionEffectBindingCandidate] = []
 	for add_predicate, add_arguments in candidate.add_effects:
 		if add_predicate != progress_effect.predicate:
 			continue
 		if len(add_arguments) != len(progress_effect.arguments):
 			continue
 		substitution = dict(zip(add_arguments, progress_effect.arguments))
-		progress_context = (
-			_call(f"goal_{progress_effect.predicate}", progress_effect.arguments),
-			f"not {_call(progress_effect.predicate, progress_effect.arguments)}",
+		remapped.append(
+			_remap_candidate_with_substitution(candidate, progress_effect, substitution),
 		)
-		return ActionEffectBindingCandidate(
-			feature_id=candidate.feature_id,
-			operator=candidate.operator,
-			effect_predicate=candidate.effect_predicate,
-			add_effects=candidate.add_effects,
-			action_name=candidate.action_name,
-			context=tuple(
-				dict.fromkeys(
-					(
-						*progress_context,
-						*(
-							_rewrite_variables(item, substitution)
-							for item in candidate.context
-						),
+	for bridge in _producer_precondition_bridges(
+		actions=domain_actions,
+		progress_effect=progress_effect,
+	):
+		for add_predicate, add_arguments in candidate.add_effects:
+			if add_predicate != bridge.predicate:
+				continue
+			if len(add_arguments) != len(bridge.arguments):
+				continue
+			substitution = dict(zip(add_arguments, bridge.arguments))
+			remapped.append(
+				_remap_candidate_with_substitution(
+					candidate,
+					progress_effect,
+					substitution,
+				),
+			)
+	return tuple(dict.fromkeys(remapped))
+
+
+def _producer_precondition_bridges(
+	*,
+	actions: tuple[PDDLAction, ...],
+	progress_effect: _ProgressEffect,
+) -> tuple[_ProducerPreconditionBridge, ...]:
+	bridges: list[_ProducerPreconditionBridge] = []
+	for action in actions:
+		effects = parse_pddl_literals(action.effects)
+		for effect in effects:
+			if not effect.is_positive or effect.predicate != progress_effect.predicate:
+				continue
+			if len(effect.arguments) != len(progress_effect.arguments):
+				continue
+			producer_substitution = dict(
+				zip(
+					(_var(argument) for argument in effect.arguments),
+					progress_effect.arguments,
+				),
+			)
+			for precondition in parse_pddl_literals(action.preconditions):
+				if not precondition.is_positive:
+					continue
+				rewritten_arguments = tuple(
+					producer_substitution.get(_var(argument))
+					for argument in precondition.arguments
+				)
+				if any(argument is None for argument in rewritten_arguments):
+					continue
+				bridges.append(
+					_ProducerPreconditionBridge(
+						predicate=precondition.predicate,
+						arguments=tuple(str(argument) for argument in rewritten_arguments),
+					),
+				)
+	return tuple(dict.fromkeys(bridges))
+
+
+def _remap_candidate_with_substitution(
+	candidate: ActionEffectBindingCandidate,
+	progress_effect: _ProgressEffect,
+	substitution: Mapping[str, str],
+) -> ActionEffectBindingCandidate:
+	progress_context = (
+		_call(f"goal_{progress_effect.predicate}", progress_effect.arguments),
+		f"not {_call(progress_effect.predicate, progress_effect.arguments)}",
+	)
+	return ActionEffectBindingCandidate(
+		feature_id=candidate.feature_id,
+		operator=candidate.operator,
+		effect_predicate=candidate.effect_predicate,
+		add_effects=candidate.add_effects,
+		action_name=candidate.action_name,
+		context=tuple(
+			dict.fromkeys(
+				(
+					*progress_context,
+					*(
+						_rewrite_variables(item, substitution)
+						for item in candidate.context
 					),
 				),
 			),
-			body=tuple(_rewrite_body_step(step, substitution) for step in candidate.body),
-		)
-	return candidate
+		),
+		body=tuple(_rewrite_body_step(step, substitution) for step in candidate.body),
+	)
 
 
 def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:

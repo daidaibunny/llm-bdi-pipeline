@@ -16,6 +16,7 @@ from utils.pddl_parser import PDDLParser
 from .architecture_contract import architecture_gap_summary
 from .architecture_contract import domain_level_architecture_contract
 from .clingo_backend import ClingoRequiredRuleGroup, ClingoSketchRuleSelector
+from .feature_binding import goal_aligned_policy_feature_ids
 from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
 from .gp_backends import backend_audit_matrix
 from .gp_backends import backend_consumption_role
@@ -246,6 +247,7 @@ def synthesize_domain_level_asl_library(
 	learner_sketches_backend: BackendManifest | None = None,
 	learner_sketches_runs: Sequence[LearnerSketchesRunConfig] = (),
 	synthesis_profile: str = "bootstrap",
+	fail_on_paper_profile_failure: bool = True,
 ) -> UnifiedSynthesisResult:
 	"""Synthesize one lifted domain-level ASL library through the unified path."""
 
@@ -487,7 +489,7 @@ def synthesize_domain_level_asl_library(
 		atomic_progress_binding_reports=atomic_progress_binding_reports,
 		bounded_validation=bounded_validation,
 	)
-	if profile == "paper" and paper_profile_failures:
+	if profile == "paper" and paper_profile_failures and fail_on_paper_profile_failure:
 		raise ValueError(
 			"Paper synthesis profile requirements are not met: "
 			+ "; ".join(paper_profile_failures),
@@ -884,6 +886,7 @@ def _paper_profile_required_capabilities(
 		if rule.layer == "atomic"
 		and rule.body
 		and _candidate_source(rule) == "schema"
+		and _is_direct_action_rule(rule)
 	}
 	unjustified_capabilities = {
 		capability
@@ -1136,12 +1139,20 @@ def _bound_policy_rules_to_candidates(
 ) -> tuple[tuple[LiftedPlanRule, ...], tuple[ExternalRuleBindingReport, ...]]:
 	candidates: list[LiftedPlanRule] = []
 	reports: list[ExternalRuleBindingReport] = []
+	goal_aligned_feature_ids = goal_aligned_policy_feature_ids(policy)
 	for index, rule in enumerate(policy.parsed_rules, start=1):
 		context: list[str] = []
 		body: list[LiftedCall] = []
 		missing_conditions: list[str] = []
 		missing_effects: list[str] = []
 		missing_binding_diagnostics: list[Mapping[str, object]] = []
+		missing_rule_progress = (
+			bool(goal_aligned_feature_ids)
+			and not _external_rule_has_goal_progress_evidence(
+				rule=rule,
+				goal_aligned_feature_ids=goal_aligned_feature_ids,
+			)
+		)
 		for condition in rule.conditions:
 			binding = bindings.get(condition.feature_id)
 			if binding is None or condition.operator not in binding.condition_contexts:
@@ -1185,10 +1196,15 @@ def _bound_policy_rules_to_candidates(
 					unbound_body_variables=unbound_body_variables,
 				),
 			)
+		if missing_rule_progress:
+			missing_binding_diagnostics.append(
+				_no_goal_progress_evidence_diagnostic(),
+			)
 		compiled = (
 			not missing_conditions
 			and not missing_effects
 			and not unbound_body_variables
+			and not missing_rule_progress
 			and bool(body)
 		)
 		reports.append(
@@ -1219,6 +1235,38 @@ def _bound_policy_rules_to_candidates(
 			),
 		)
 	return tuple(candidates), tuple(reports)
+
+
+def _external_rule_has_goal_progress_evidence(
+	*,
+	rule,
+	goal_aligned_feature_ids: tuple[str, ...],
+) -> bool:
+	goal_feature_set = set(goal_aligned_feature_ids)
+	return any(
+		effect.feature_id in goal_feature_set
+		and effect.operator in {"e_n_inc", "e_b_pos"}
+		for effect in tuple(rule.effects or ())
+	) or any(
+		condition.feature_id in goal_feature_set
+		and condition.operator in {"c_n_gt", "c_b_pos"}
+		for condition in tuple(rule.conditions or ())
+	)
+
+
+def _no_goal_progress_evidence_diagnostic() -> Mapping[str, object]:
+	return {
+		"feature_id": None,
+		"operator": None,
+		"binding_role": "rule",
+		"expression": None,
+		"status": "uncompiled",
+		"binding_kind": "goal_progress_safety",
+		"available_condition_operators": (),
+		"available_effect_operators": (),
+		"rejection_reason": "no_goal_progress_evidence",
+		"action_candidates": (),
+	}
 
 
 def _unbound_body_variables(

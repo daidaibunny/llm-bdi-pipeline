@@ -734,6 +734,45 @@ def test_goal_aligned_feature_effect_disambiguates_action_candidates(
 	assert "\tdrop(X)" not in asl
 
 
+def test_goal_aligned_feature_bridges_auxiliary_action_to_target_precondition(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path, include_place=True)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_on "n_count(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)))")
+		 (f_holding "n_count(c_primitive(holding,0))")
+		)
+		(:rule (:conditions )
+		 (:effects (:e_n_inc f_holding) (:e_n_inc f_on)))
+		)
+		""",
+	)
+
+	report = bind_goal_aligned_action_effect_candidates(
+		policy=policy,
+		report=bind_recoverable_dlplan_features(
+			policy=policy,
+			domain=PDDLParser.parse_domain(domain),
+		),
+		domain=PDDLParser.parse_domain(domain),
+	)
+	plan_library = compile_bound_sketch_to_asl_library(
+		domain_name="generic-blocks",
+		policy=policy,
+		target=SketchCompilationTarget(symbol="g", recurse=False),
+		feature_bindings=report.bindings,
+	)
+	asl = render_plan_library_asl(plan_library)
+
+	assert "+!g : goal_on(X0, X1) & not on(X0, X1) & handempty & clear(X0) <-" in asl
+	assert "\tpick(X0);" in asl
+	assert "\t!on(X0, X1)." in asl
+
+
 def test_goal_aligned_reverse_role_effect_disambiguates_action_candidates(
 	tmp_path: Path,
 ) -> None:

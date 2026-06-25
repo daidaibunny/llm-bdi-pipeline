@@ -72,6 +72,14 @@ def main() -> None:
 		default=None,
 		help="Explicit ablation label for the experiment protocol.",
 	)
+	parser.add_argument(
+		"--allow-paper-profile-failures",
+		action="store_true",
+		help=(
+			"Write a diagnostic report even when strict paper-profile checks fail. "
+			"Default behavior remains fail-fast."
+		),
+	)
 	args = parser.parse_args()
 
 	blocks_root = PROJECT_ROOT / "src" / "domains" / "blocksworld"
@@ -103,6 +111,7 @@ def main() -> None:
 		),
 		max_execution_steps=args.max_steps,
 		max_depth=args.max_depth,
+		fail_on_paper_profile_failure=not args.allow_paper_profile_failures,
 	)
 	args.output.parent.mkdir(parents=True, exist_ok=True)
 	args.output.write_text(

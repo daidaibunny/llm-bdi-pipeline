@@ -110,6 +110,14 @@ def main() -> None:
 		),
 	)
 	parser.add_argument(
+		"--allow-paper-profile-failures",
+		action="store_true",
+		help=(
+			"Write a diagnostic report even when strict paper-profile checks fail. "
+			"Default behavior remains fail-fast."
+		),
+	)
+	parser.add_argument(
 		"--output",
 		type=Path,
 		required=True,
@@ -142,6 +150,7 @@ def main() -> None:
 		max_refinement_rounds=args.max_refinement_rounds,
 		ablation_label=args.ablation_label,
 		baselines=_read_baseline_records(tuple(args.baseline_json or ())),
+		fail_on_paper_profile_failure=not args.allow_paper_profile_failures,
 	)
 	args.output.parent.mkdir(parents=True, exist_ok=True)
 	args.output.write_text(

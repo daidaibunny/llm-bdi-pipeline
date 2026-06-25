@@ -33,6 +33,7 @@ def run_domain_level_experiment(
 	max_refinement_rounds: int = 1,
 	ablation_label: str | None = None,
 	baselines: Sequence[dict[str, object]] = (),
+	fail_on_paper_profile_failure: bool = True,
 ) -> dict[str, object]:
 	"""Run one reproducible domain-level library experiment."""
 
@@ -58,6 +59,7 @@ def run_domain_level_experiment(
 			counterexample_problem_files=counterexample_problem_files,
 			external_sketch_policies=external_sketch_policies,
 			synthesis_profile=synthesis_profile,
+			fail_on_paper_profile_failure=fail_on_paper_profile_failure,
 		)
 		refinement_trace = None
 	synthesis_duration = perf_counter() - synthesis_started
