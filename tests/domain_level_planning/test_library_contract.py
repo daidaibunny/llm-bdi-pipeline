@@ -42,7 +42,8 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 		"PDDL primitive action calls and PDDL predicate subgoal calls only"
 	)
 	assert serialized["supported_asl_subset"]["contexts"] == (
-		"implicit conjunction of atom or not atom context literals only"
+		"implicit conjunction of atom, not atom, equality, or inequality "
+		"context literals only"
 	)
 	assert serialized["execution_semantics"] == {
 		"plan_selection": "deterministic_first_applicable_asl_order",
@@ -102,6 +103,31 @@ def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 	)
 
 	assert report.passed is True
+	assert report.checked_layers["declared_pddl_symbols"] is True
+	assert report.violations == ()
+
+
+def test_domain_level_library_contract_accepts_lifted_equality_contexts() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="done_when_distinct",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X", "Y")),
+				context=("ready(X)", "not =(X, Y)"),
+				body=(AgentSpeakBodyStep("action", "finish", ("X", "Y")),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates={"ready": 1, "done": 2},
+		declared_actions={"finish": 2},
+	)
+
+	assert report.passed is True
+	assert report.checked_layers["context_subset"] is True
 	assert report.checked_layers["declared_pddl_symbols"] is True
 	assert report.violations == ()
 

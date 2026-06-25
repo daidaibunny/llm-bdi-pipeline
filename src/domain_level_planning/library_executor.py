@@ -13,6 +13,8 @@ from low_level_planning.strips_state import STRIPSStateSimulator, fact_to_signat
 from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 from utils.pddl_parser import PDDLParser
 
+from .pddl_types import object_type_atoms
+
 
 @dataclass(frozen=True)
 class LibraryExecutionResult:
@@ -41,9 +43,14 @@ def evaluate_library_on_problem(
 	problem = PDDLParser.parse_problem(problem_file)
 	simulator = STRIPSStateSimulator(str(domain_file))
 	initial_state = frozenset(
-		fact_to_signature(fact)
-		for fact in problem.init_facts
-		if fact.is_positive
+		(
+			*(
+				fact_to_signature(fact)
+				for fact in problem.init_facts
+				if fact.is_positive
+			),
+			*object_type_atoms(problem, simulator.domain.types),
+		),
 	)
 	goal_beliefs = tuple(
 		_goal_fact(fact.predicate, fact.args)
@@ -394,9 +401,23 @@ def _satisfying_substitutions_for_context(
 		atom = text[4:].strip()
 		if _contains_unbound_variables(atom, substitution):
 			return ()
+		if _is_equality_atom(atom):
+			return (
+				(dict(substitution),)
+				if not _equality_atom_holds(atom, substitution)
+				else ()
+			)
 		return (
 			(dict(substitution),)
 			if _ground_atom(atom, substitution) not in state
+			else ()
+		)
+	if _is_equality_atom(text):
+		if _contains_unbound_variables(text, substitution):
+			return ()
+		return (
+			(dict(substitution),)
+			if _equality_atom_holds(text, substitution)
 			else ()
 		)
 	facts = goal_facts if text.startswith("goal_") else tuple(state)
@@ -445,6 +466,19 @@ def _ground_atom(atom: str, substitution: Mapping[str, str]) -> str:
 		if argument.strip()
 	)
 	return _call(predicate.strip(), arguments)
+
+
+def _is_equality_atom(atom: str) -> bool:
+	predicate, arguments = _parse_atom(atom)
+	return predicate == "=" and len(arguments) == 2
+
+
+def _equality_atom_holds(atom: str, substitution: Mapping[str, str]) -> bool:
+	_, arguments = _parse_atom(atom)
+	if len(arguments) != 2:
+		return False
+	left, right = (_ground_term(argument, substitution) for argument in arguments)
+	return left == right
 
 
 def _parse_atom(atom: str) -> tuple[str, tuple[str, ...]]:

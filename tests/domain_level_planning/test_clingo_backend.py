@@ -112,6 +112,32 @@ def test_clingo_selector_supports_required_rule_groups() -> None:
 	assert result.cost == 2
 
 
+def test_clingo_selector_keeps_rules_distinct_when_rendered_atoms_would_collide() -> None:
+	selector = ClingoSketchRuleSelector()
+
+	result = selector.select(
+		candidate_rules=(
+			LiftedPlanRule(
+				name="prepare-a-b",
+				head=LiftedCall("subgoal", "done", ("X",)),
+				context=(),
+				capabilities=("cap-a-b",),
+				cost=1,
+			),
+			LiftedPlanRule(
+				name="prepare_a_b",
+				head=LiftedCall("subgoal", "done", ("X",)),
+				context=(),
+				capabilities=("cap_a_b",),
+				cost=1,
+			),
+		),
+		required_capabilities=("cap-a-b", "cap_a_b"),
+	)
+
+	assert result.selected_rule_names == ("prepare-a-b", "prepare_a_b")
+
+
 def test_clingo_selector_rejects_unknown_rule_constraints() -> None:
 	selector = ClingoSketchRuleSelector()
 

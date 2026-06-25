@@ -4,7 +4,6 @@ Clingo-backed selection for lifted modular-sketch rules.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -49,15 +48,19 @@ class ClingoSketchRuleSelector:
 		if not required:
 			raise ValueError("Clingo sketch selection requires at least one capability.")
 
+		rule_ids = tuple(f"r{index}" for index, _rule in enumerate(rules))
+		capability_ids = _capability_ids(rules, required)
 		required_rule_atoms = _validate_rule_names(
 			rules,
 			required_rule_names,
 			label="required",
+			rule_ids=rule_ids,
 		)
 		forbidden_rule_atoms = _validate_rule_names(
 			rules,
 			forbidden_rule_names,
 			label="forbidden",
+			rule_ids=rule_ids,
 		)
 		conflicts = tuple(sorted(set(required_rule_atoms).intersection(forbidden_rule_atoms)))
 		if conflicts:
@@ -65,11 +68,17 @@ class ClingoSketchRuleSelector:
 				"Clingo sketch selection received conflicting required and forbidden "
 				f"rules: {conflicts}.",
 			)
-		required_groups = _validate_required_rule_groups(rules, required_rule_groups)
+		required_groups = _validate_required_rule_groups(
+			rules,
+			required_rule_groups,
+			rule_ids=rule_ids,
+		)
 
 		program = _build_selection_program(
 			rules,
 			required,
+			rule_ids=rule_ids,
+			capability_ids=capability_ids,
 			required_rule_atoms=required_rule_atoms,
 			forbidden_rule_atoms=forbidden_rule_atoms,
 			required_rule_groups=required_groups,
@@ -93,7 +102,9 @@ class ClingoSketchRuleSelector:
 			raise RuntimeError("Clingo could not select a satisfying modular-sketch library.")
 
 		selected = set(selected_names)
-		selected_rules = tuple(rule for rule in rules if _atom(rule.name) in selected)
+		selected_rules = tuple(
+			rule for index, rule in enumerate(rules) if rule_ids[index] in selected
+		)
 		if len(selected_rules) != len(selected):
 			raise RuntimeError("Clingo selected a rule that was not present in the candidates.")
 		return ClingoSelectionResult(
@@ -107,19 +118,21 @@ def _build_selection_program(
 	rules: tuple[LiftedPlanRule, ...],
 	required_capabilities: tuple[str, ...],
 	*,
+	rule_ids: tuple[str, ...],
+	capability_ids: dict[str, str],
 	required_rule_atoms: tuple[str, ...] = (),
 	forbidden_rule_atoms: tuple[str, ...] = (),
 	required_rule_groups: tuple[tuple[str, tuple[str, ...]], ...] = (),
 ) -> str:
 	lines: list[str] = []
-	for rule in rules:
-		rule_atom = _atom(rule.name)
+	for index, rule in enumerate(rules):
+		rule_atom = rule_ids[index]
 		lines.append(f"rule({rule_atom}).")
 		lines.append(f"cost({rule_atom},{int(rule.cost)}).")
 		for capability in rule.capabilities:
-			lines.append(f"cap({rule_atom},{_atom(capability)}).")
+			lines.append(f"cap({rule_atom},{capability_ids[capability]}).")
 	for capability in required_capabilities:
-		lines.append(f"required({_atom(capability)}).")
+		lines.append(f"required({capability_ids[capability]}).")
 	for rule_atom in required_rule_atoms:
 		lines.append(f"required_rule({rule_atom}).")
 	for rule_atom in forbidden_rule_atoms:
@@ -146,10 +159,28 @@ def _validate_rule_names(
 	rule_names: Iterable[str],
 	*,
 	label: str,
+	rule_ids: tuple[str, ...],
 ) -> tuple[str, ...]:
-	rule_atoms = {_atom(rule.name) for rule in rules}
-	normalized = tuple(dict.fromkeys(_atom(rule_name) for rule_name in tuple(rule_names or ())))
-	missing = tuple(rule_atom for rule_atom in normalized if rule_atom not in rule_atoms)
+	rule_id_set = set(rule_ids)
+	normalized_rule_ids: list[str] = []
+	missing_names: list[str] = []
+	for rule_name in tuple(rule_names or ()):
+		matching_rule_ids = _rule_ids_for_name(
+			rules=rules,
+			rule_ids=rule_ids,
+			rule_name=str(rule_name),
+		)
+		if not matching_rule_ids:
+			missing_names.append(str(rule_name))
+			continue
+		normalized_rule_ids.extend(matching_rule_ids)
+	normalized = tuple(dict.fromkeys(normalized_rule_ids))
+	if missing_names:
+		raise ValueError(
+			f"Clingo sketch selection received unknown {label} rules: "
+			f"{tuple(dict.fromkeys(missing_names))}.",
+		)
+	missing = tuple(rule_id for rule_id in normalized if rule_id not in rule_id_set)
 	if missing:
 		raise ValueError(
 			f"Clingo sketch selection received unknown {label} rules: {missing}.",
@@ -160,17 +191,38 @@ def _validate_rule_names(
 def _validate_required_rule_groups(
 	rules: tuple[LiftedPlanRule, ...],
 	required_rule_groups: Iterable[ClingoRequiredRuleGroup],
+	*,
+	rule_ids: tuple[str, ...],
 ) -> tuple[tuple[str, tuple[str, ...]], ...]:
-	rule_atoms = {_atom(rule.name) for rule in rules}
+	rule_id_set = set(rule_ids)
 	groups: list[tuple[str, tuple[str, ...]]] = []
-	for group in tuple(required_rule_groups or ()):
-		group_name = _atom(group.name)
-		member_atoms = tuple(dict.fromkeys(_atom(rule_name) for rule_name in group.rule_names))
+	for index, group in enumerate(tuple(required_rule_groups or ())):
+		group_name = f"g{index}"
+		missing_names: list[str] = []
+		member_rule_ids: list[str] = []
+		for rule_name in group.rule_names:
+			matching_rule_ids = _rule_ids_for_name(
+				rules=rules,
+				rule_ids=rule_ids,
+				rule_name=str(rule_name),
+			)
+			if not matching_rule_ids:
+				missing_names.append(str(rule_name))
+				continue
+			member_rule_ids.extend(matching_rule_ids)
+		if missing_names:
+			raise ValueError(
+				f"Required rule group {group.name!r} contains unknown rules: "
+				f"{tuple(dict.fromkeys(missing_names))}.",
+			)
+		member_atoms = tuple(
+			dict.fromkeys(member_rule_ids),
+		)
 		if not member_atoms:
 			raise ValueError(
 				f"Required rule group {group.name!r} does not contain any candidate rules.",
 			)
-		missing = tuple(rule_atom for rule_atom in member_atoms if rule_atom not in rule_atoms)
+		missing = tuple(rule_id for rule_id in member_atoms if rule_id not in rule_id_set)
 		if missing:
 			raise ValueError(
 				f"Required rule group {group.name!r} contains unknown rules: {missing}.",
@@ -179,11 +231,34 @@ def _validate_required_rule_groups(
 	return tuple(groups)
 
 
-def _atom(value: str) -> str:
-	text = re.sub(r"[^A-Za-z0-9_]", "_", str(value or "").strip().lower())
-	while "__" in text:
-		text = text.replace("__", "_")
-	text = text.strip("_") or "item"
-	if not text[0].isalpha():
-		text = f"r_{text}"
-	return text
+def _rule_ids_for_name(
+	*,
+	rules: tuple[LiftedPlanRule, ...],
+	rule_ids: tuple[str, ...],
+	rule_name: str,
+) -> tuple[str, ...]:
+	return tuple(
+		rule_ids[index]
+		for index, rule in enumerate(rules)
+		if rule.name == rule_name
+	)
+
+
+def _capability_ids(
+	rules: tuple[LiftedPlanRule, ...],
+	required_capabilities: tuple[str, ...],
+) -> dict[str, str]:
+	capabilities = tuple(
+		dict.fromkeys(
+			tuple(required_capabilities)
+			+ tuple(
+				capability
+				for rule in rules
+				for capability in tuple(rule.capabilities or ())
+			),
+		),
+	)
+	return {
+		capability: f"c{index}"
+		for index, capability in enumerate(capabilities)
+	}

@@ -15,6 +15,7 @@ from .library_contract import audit_domain_level_library_contract
 from .library_executor import evaluate_library_on_problem
 from .library_synthesis import ExternalSketchPolicySource
 from .library_synthesis import synthesize_domain_level_asl_library
+from .pddl_types import declared_type_names, type_guard_symbol
 from .refinement import synthesize_with_counterexample_refinement
 
 
@@ -82,7 +83,7 @@ def run_domain_level_experiment(
 	evaluation_runtimes = tuple(item[1] for item in evaluation_with_runtime)
 	contract = audit_domain_level_library_contract(
 		plan_library,
-		declared_predicates=domain.predicates,
+		declared_predicates=_declared_predicate_arities_with_type_guards(domain),
 		declared_actions=domain.actions,
 	)
 	contract_dict = contract.to_dict()
@@ -200,6 +201,16 @@ def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, obj
 		"blocking_failure_count": len(failures),
 		"blocking_failures": list(failures),
 	}
+
+
+def _declared_predicate_arities_with_type_guards(domain: object) -> dict[str, int]:
+	arities = {
+		str(getattr(predicate, "name")): len(tuple(getattr(predicate, "parameters", ()) or ()))
+		for predicate in tuple(getattr(domain, "predicates", ()) or ())
+	}
+	for type_name in declared_type_names(tuple(getattr(domain, "types", ()) or ())):
+		arities.setdefault(type_guard_symbol(type_name), 1)
+	return arities
 
 
 def _external_sketch_rule_names(raw_manifest: object) -> list[str]:

@@ -38,36 +38,18 @@ def test_pddl_support_report_serializes_supported_fragment(tmp_path: Path) -> No
 	)
 
 
-def test_pddl_support_report_serializes_rejected_action_costs(tmp_path: Path) -> None:
+def test_pddl_support_report_accepts_metric_only_action_costs(tmp_path: Path) -> None:
 	domain_file, problem_file = _write_action_costs_domain_and_problem(tmp_path)
 
 	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
 	serialized = report.to_dict()
 
-	assert serialized["is_compilable"] is False
-	assert serialized["unsupported_requirements"] == [":action-costs"]
-	assert any(block.endswith("domain.pddl::functions") for block in serialized["unsupported_blocks"])
-	assert any(block.endswith("problem.pddl::metric") for block in serialized["unsupported_blocks"])
-	assert "increase" in serialized["unsupported_expression_operators"]
-	assert {
-		"kind": "unsupported_requirement",
-		"location": str(domain_file),
-		"symbol": ":action-costs",
-		"message": "requirement :action-costs has no compiler support",
-	} in serialized["unsupported_diagnostics"]
-	assert any(
-		diagnostic["kind"] == "unsupported_block"
-		and diagnostic["symbol"] == ":functions"
-		for diagnostic in serialized["unsupported_diagnostics"]
-	)
-	assert any(
-		diagnostic["kind"] == "unsupported_expression_operator"
-		and diagnostic["symbol"] == "increase"
-		for diagnostic in serialized["unsupported_diagnostics"]
-	)
-	assert any(":action-costs" in reason for reason in serialized["unsupported_reasons"])
-	assert any(":functions" in reason for reason in serialized["unsupported_reasons"])
-	assert any(":metric" in reason for reason in serialized["unsupported_reasons"])
+	assert serialized["is_compilable"] is True
+	assert serialized["unsupported_requirements"] == []
+	assert serialized["unsupported_blocks"] == []
+	assert serialized["unsupported_expression_operators"] == []
+	assert serialized["unsupported_reasons"] == []
+	assert ":action-costs" in serialized["supported_requirement_set"]
 
 
 def test_compilable_pddl_support_rejects_conditional_effects(tmp_path: Path) -> None:
@@ -135,7 +117,7 @@ def test_pddl_support_report_rejects_negative_problem_goals(tmp_path: Path) -> N
 	)
 
 
-def test_pddl_support_rejects_predicates_outside_current_asl_identifier_subset(
+def test_pddl_support_accepts_hyphenated_symbols_when_rendering_is_unambiguous(
 	tmp_path: Path,
 ) -> None:
 	domain_file, problem_file = _write_hyphenated_symbol_domain_and_problem(tmp_path)
@@ -143,21 +125,8 @@ def test_pddl_support_rejects_predicates_outside_current_asl_identifier_subset(
 	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
 	serialized = report.to_dict()
 
-	assert serialized["is_compilable"] is False
-	assert {
-		"kind": "unsupported_asl_symbol",
-		"location": f"{domain_file}:predicate",
-		"symbol": "needs-ready",
-		"message": (
-			f"{domain_file}: PDDL predicate 'needs-ready' is outside the current "
-			"AgentSpeak identifier subset"
-		),
-	} in serialized["unsupported_diagnostics"]
-	assert not any(
-		diagnostic["kind"] == "unsupported_asl_symbol"
-		and diagnostic["location"] == f"{domain_file}:action"
-		for diagnostic in serialized["unsupported_diagnostics"]
-	)
+	assert serialized["is_compilable"] is True
+	assert serialized["unsupported_diagnostics"] == []
 
 
 def test_pddl_support_rejects_action_symbols_that_collide_after_asl_rendering(

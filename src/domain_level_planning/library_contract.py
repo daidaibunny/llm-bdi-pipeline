@@ -12,7 +12,10 @@ from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 
 SUPPORTED_ASL_SUBSET = {
 	"plan_heads": "PDDL predicate achievement goals or zero-argument +!g only",
-	"contexts": "implicit conjunction of atom or not atom context literals only",
+	"contexts": (
+		"implicit conjunction of atom, not atom, equality, or inequality "
+		"context literals only"
+	),
 	"body_steps": "PDDL primitive action calls and PDDL predicate subgoal calls only",
 	"initial_beliefs": "empty for domain-level reusable libraries",
 }
@@ -364,6 +367,8 @@ def _collect_declared_pddl_symbol_violations(
 			for symbol, arguments in _context_atoms(context):
 				if symbol.startswith("goal_"):
 					predicate = symbol[len("goal_") :]
+				elif symbol == "=":
+					continue
 				else:
 					predicate = symbol
 				if predicate not in declared_predicates:
@@ -456,10 +461,21 @@ def _context_atoms(context: str) -> Iterable[tuple[str, tuple[str, ...]]]:
 		text = text[4:].strip()
 	if not text or text.lower() == "true":
 		return
-	if "(" not in text and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", text):
+	if "(" not in text and re.fullmatch(_PDDL_SYMBOL_PATTERN, text):
 		yield text, ()
 		return
-	for match in re.finditer(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(([^()]*)\)", context):
+	if text.startswith("=") and text.endswith(")"):
+		arguments = tuple(
+			argument.strip()
+			for argument in text[2:-1].split(",")
+			if argument.strip()
+		)
+		yield "=", arguments
+		return
+	for match in re.finditer(
+		rf"(?<![A-Za-z0-9_-])({_PDDL_SYMBOL_PATTERN})\s*\(([^()]*)\)",
+		context,
+	):
 		symbol = match.group(1)
 		arguments = tuple(
 			argument.strip()
@@ -495,10 +511,12 @@ def _is_supported_context_literal(context: str) -> bool:
 
 def _is_atom_literal(text: str) -> bool:
 	if "(" not in text:
-		return bool(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", text))
+		return bool(re.fullmatch(_PDDL_SYMBOL_PATTERN, text))
+	if text.startswith("="):
+		return bool(re.fullmatch(r"=\s*\(\s*[^()]+,\s*[^()]+\s*\)", text))
 	return bool(
 		re.fullmatch(
-			r"[A-Za-z_][A-Za-z0-9_]*\s*\(\s*[^()]*\s*\)",
+			rf"{_PDDL_SYMBOL_PATTERN}\s*\(\s*[^()]*\s*\)",
 			text,
 		),
 	)
@@ -534,3 +552,6 @@ def _arity_matches(expected: int | None, observed: int) -> bool:
 
 def _schema_signature(symbol: str, arity: int | None) -> str:
 	return f"{symbol}/{arity}" if arity is not None else symbol
+
+
+_PDDL_SYMBOL_PATTERN = r"[A-Za-z_][A-Za-z0-9_-]*"

@@ -19,6 +19,7 @@ SUPPORTED_REQUIREMENTS = frozenset(
 		":typing",
 		":negative-preconditions",
 		":equality",
+		":action-costs",
 	}
 )
 
@@ -41,9 +42,7 @@ UNSUPPORTED_DOMAIN_BLOCKS = frozenset(
 	{
 		":derived",
 		":durative-action",
-		":functions",
 		":constraints",
-		":metric",
 	}
 )
 
@@ -67,12 +66,13 @@ SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 	"classical finite-domain PDDL files parsed before lifted ASL synthesis",
 	"positive conjunctive predicate achievement goals only",
 	"primitive action schemas with predicate preconditions and predicate effects",
-	"predicate symbols must fit the current AgentSpeak atom identifier subset",
-	"primitive action symbols may be sanitized for AgentSpeak but must remain unique",
+	"PDDL predicate and action symbols may be sanitized for AgentSpeak rendering",
+	"sanitized predicate and action functors must remain unique",
+	"metric-only action-costs functions and increase effects are ignored by ASL synthesis",
 	"typing, equality, and negative preconditions are accepted only inside the project parser subset",
 	(
-		"derived predicates, conditional effects, quantifiers, preferences, "
-		"durative actions, and numeric fluents are rejected"
+		"derived predicates, conditional effects, quantifiers, preferences, durative "
+		"actions, and numeric fluents used as logical state conditions are rejected"
 	),
 )
 
@@ -238,9 +238,6 @@ def inspect_pddl_support(
 		for diagnostic in _unsupported_goal_diagnostics(problem_path, problem_text):
 			reasons.append(diagnostic.message)
 			diagnostics.append(diagnostic)
-	for diagnostic in _unsupported_asl_symbol_diagnostics(domain_path, domain_text):
-		reasons.append(diagnostic.message)
-		diagnostics.append(diagnostic)
 	for diagnostic in _unsupported_asl_symbol_collision_diagnostics(
 		domain_path,
 		domain_text,
@@ -361,39 +358,15 @@ def _unsupported_goal_diagnostics(
 	)
 
 
-def _unsupported_asl_symbol_diagnostics(
-	domain_path: Path,
-	domain_text: str,
-) -> tuple[PDDLUnsupportedDiagnostic, ...]:
-	diagnostics: list[PDDLUnsupportedDiagnostic] = []
-	for kind, symbol in tuple(
-		("predicate", predicate)
-		for predicate in _declared_predicate_names(domain_text)
-	):
-		if _is_supported_asl_identifier(symbol):
-			continue
-		location = f"{domain_path}:{kind}"
-		message = (
-			f"{domain_path}: PDDL {kind} {symbol!r} is outside the current "
-			"AgentSpeak identifier subset"
-		)
-		diagnostics.append(
-			PDDLUnsupportedDiagnostic(
-				kind="unsupported_asl_symbol",
-				location=location,
-				symbol=symbol,
-				message=message,
-			),
-		)
-	return tuple(diagnostics)
-
-
 def _unsupported_asl_symbol_collision_diagnostics(
 	domain_path: Path,
 	domain_text: str,
 ) -> tuple[PDDLUnsupportedDiagnostic, ...]:
 	diagnostics: list[PDDLUnsupportedDiagnostic] = []
-	for kind, symbols in (("action", _declared_action_names(domain_text)),):
+	for kind, symbols in (
+		("predicate", _declared_predicate_names(domain_text)),
+		("action", _declared_action_names(domain_text)),
+	):
 		by_asl_symbol: dict[str, list[str]] = {}
 		for symbol in symbols:
 			by_asl_symbol.setdefault(sanitize_identifier(symbol), []).append(symbol)
@@ -460,10 +433,6 @@ def _keyword_block(text: str, keyword: str) -> str | None:
 			if depth == 0:
 				return text[start : index + 1]
 	return None
-
-
-def _is_supported_asl_identifier(symbol: str) -> bool:
-	return re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", str(symbol or "")) is not None
 
 
 def _deduplicate_diagnostics(
@@ -555,10 +524,22 @@ def _collect_unsupported_operators(expression: object, operators: list[str]) -> 
 	if not isinstance(expression, tuple) or not expression:
 		return
 	head = str(expression[0]).lower()
+	if _is_supported_numeric_effect_expression(expression):
+		return
 	if head in UNSUPPORTED_EXPRESSION_OPERATORS:
 		operators.append(head)
 	for child in expression[1:]:
 		_collect_unsupported_operators(child, operators)
+
+
+def _is_supported_numeric_effect_expression(expression: object) -> bool:
+	return (
+		isinstance(expression, tuple)
+		and len(expression) >= 3
+		and str(expression[0]).lower() == "increase"
+		and isinstance(expression[1], tuple)
+		and bool(expression[1])
+	)
 
 
 def _top_level_forms(text: str) -> tuple[str, ...]:

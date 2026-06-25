@@ -20,9 +20,11 @@ from .clingo_backend import ClingoRequiredRuleGroup, ClingoSketchRuleSelector
 from .models import LiftedCall, LiftedPlanRule, SketchSynthesisReport
 from .pddl_support import assert_compilable_pddl_files
 from .pddl_expression import LiftedLiteral, parameter_variables, parse_pddl_literals
+from .pddl_types import parameter_name, parameter_type, type_guard_symbol
 from .transition_system import (
 	State,
 	TrainingTransitionEvidence,
+	apply_ground_action,
 	collect_training_transition_evidence,
 	fact_atom,
 	reachable_states_for_problem,
@@ -145,7 +147,14 @@ def _candidate_rules_from_domain(
 ) -> tuple[LiftedPlanRule, ...]:
 	rules: list[LiftedPlanRule] = []
 	producible_predicates = _producible_predicates(actions)
+	trace_macro_predicates = _effect_type_ambiguous_predicates(actions)
 	rules.extend(_goal_ordering_rules_from_evidence(transition_evidence))
+	rules.extend(
+		_trace_macro_rules_from_evidence(
+			transition_evidence,
+			target_predicates=trace_macro_predicates,
+		),
+	)
 	rules.extend(_causal_interference_ordering_rules(actions))
 	for predicate in predicates:
 		rules.extend(_composer_rules(predicate))
@@ -478,6 +487,191 @@ def _goal_ordering_rules_from_evidence(
 			),
 		)
 	return tuple(rules)
+
+
+def _trace_macro_rules_from_evidence(
+	transition_evidence: Sequence[TrainingTransitionEvidence],
+	*,
+	target_predicates: frozenset[str],
+) -> tuple[LiftedPlanRule, ...]:
+	if not target_predicates:
+		return ()
+	rules: list[LiftedPlanRule] = []
+	rule_index = 0
+	for evidence in tuple(transition_evidence or ()):
+		plan = tuple(getattr(evidence, "plan_actions", ()) or ())
+		if not plan:
+			continue
+		states = _states_for_plan(
+			initial_state=frozenset(getattr(evidence, "initial_state", ()) or ()),
+			plan=plan,
+		)
+		previous_step = 0
+		for progression in sorted(
+			tuple(getattr(evidence, "goal_progressions", ()) or ()),
+			key=lambda item: int(getattr(item, "step_index", 0)),
+		):
+			step_index = int(getattr(progression, "step_index", 0))
+			segment = plan[previous_step:step_index]
+			start_state = states[previous_step] if previous_step < len(states) else frozenset()
+			previous_step = step_index
+			if not segment or not start_state:
+				continue
+			rule = _trace_macro_rule(
+				index=rule_index,
+				target_fact=progression.goal_fact,
+				segment=segment,
+				start_state=start_state,
+				target_predicates=target_predicates,
+			)
+			if rule is None:
+				continue
+			rule_index += 1
+			rules.append(rule)
+	return tuple(rules)
+
+
+def _states_for_plan(
+	*,
+	initial_state: State,
+	plan: Sequence[object],
+) -> tuple[State, ...]:
+	states: list[State] = [frozenset(initial_state)]
+	current_state = frozenset(initial_state)
+	for action in tuple(plan or ()):
+		current_state = apply_ground_action(current_state, action)
+		states.append(current_state)
+	return tuple(states)
+
+
+def _trace_macro_rule(
+	*,
+	index: int,
+	target_fact: PDDLFact,
+	segment: Sequence[object],
+	start_state: State,
+	target_predicates: frozenset[str],
+) -> LiftedPlanRule | None:
+	if not target_fact.is_positive:
+		return None
+	if target_fact.predicate not in target_predicates:
+		return None
+	object_variables: dict[str, str] = {}
+
+	def variable_for(object_name: str) -> str:
+		if object_name not in object_variables:
+			object_variables[object_name] = _trace_variable(len(object_variables))
+		return object_variables[object_name]
+
+	for argument in tuple(target_fact.args or ()):
+		variable_for(str(argument))
+	for action in tuple(segment or ()):
+		for argument in tuple(getattr(action, "arguments", ()) or ()):
+			variable_for(str(argument))
+	for fact in tuple(sorted(start_state)):
+		_predicate, arguments = _parse_atom(fact)
+		for argument in arguments:
+			if argument in object_variables:
+				continue
+			if _fact_mentions_segment_object(fact, object_variables):
+				variable_for(argument)
+
+	head_arguments = tuple(variable_for(str(argument)) for argument in target_fact.args)
+	needed_context = _trace_macro_context(
+		start_state=start_state,
+		segment=segment,
+		object_variables=object_variables,
+	)
+	target_atom = _call(target_fact.predicate, head_arguments)
+	context = (*needed_context, f"not {target_atom}")
+	body = tuple(
+		_action(
+			str(getattr(action, "name")),
+			*tuple(variable_for(str(argument)) for argument in getattr(action, "arguments", ())),
+		)
+		for action in tuple(segment or ())
+	)
+	if not body:
+		return None
+	if not _body_variables_are_bound(
+		head_arguments=head_arguments,
+		context=context,
+		body=tuple(step.arguments for step in body),
+	):
+		return None
+	return _rule(
+		f"{target_fact.predicate}_trace_macro_{index}",
+		target_fact.predicate,
+		head_arguments,
+		context,
+		body,
+		capabilities=(f"module_{target_fact.predicate}_trace_macro_{index}",),
+		rationale="trace_supported_atomic_macro",
+		cost=1,
+	)
+
+
+def _trace_macro_context(
+	*,
+	start_state: State,
+	segment: Sequence[object],
+	object_variables: Mapping[str, str],
+) -> tuple[str, ...]:
+	required_atoms = {
+		_call(literal.predicate, literal.arguments)
+		for action in tuple(segment or ())
+		for literal in tuple(getattr(action, "preconditions", ()) or ())
+		if literal.is_positive and literal.predicate != "="
+	}
+	context_atoms: list[str] = []
+	for fact in tuple(sorted(start_state)):
+		predicate, arguments = _parse_atom(fact)
+		if fact not in required_atoms and not predicate.startswith("type_"):
+			continue
+		if not set(arguments).issubset(set(object_variables)):
+			continue
+		context_atoms.append(
+			_call(
+				predicate,
+				tuple(object_variables[argument] for argument in arguments),
+			),
+		)
+	return tuple(dict.fromkeys(context_atoms))
+
+
+def _fact_mentions_segment_object(
+	fact: str,
+	object_variables: Mapping[str, str],
+) -> bool:
+	_predicate, arguments = _parse_atom(fact)
+	return bool(set(arguments).intersection(object_variables))
+
+
+def _trace_variable(index: int) -> str:
+	names = ("X", "Y", "Z", "W", "V", "U", "T", "S")
+	return names[index] if index < len(names) else f"X{index + 1}"
+
+
+def _effect_type_ambiguous_predicates(actions: Sequence[object]) -> frozenset[str]:
+	signatures_by_predicate: dict[str, set[tuple[str, ...]]] = {}
+	for action in tuple(actions or ()):
+		type_by_parameter = {
+			parameter_name(str(parameter)): parameter_type(str(parameter))
+			for parameter in tuple(getattr(action, "parameters", ()) or ())
+		}
+		for effect in parse_pddl_literals(str(getattr(action, "effects", ""))):
+			if not effect.is_positive or effect.predicate == "=":
+				continue
+			signature = tuple(
+				type_by_parameter.get(str(argument), "object")
+				for argument in tuple(effect.arguments or ())
+			)
+			signatures_by_predicate.setdefault(effect.predicate, set()).add(signature)
+	return frozenset(
+		predicate
+		for predicate, signatures in signatures_by_predicate.items()
+		if len(signatures) > 1
+	)
 
 
 def _goal_ordering_direction_key(
@@ -1162,6 +1356,7 @@ def _action_effect_rules(
 ) -> tuple[LiftedPlanRule, ...]:
 	action_name = str(getattr(action, "name"))
 	action_arguments = parameter_variables(getattr(action, "parameters"))
+	type_context = _action_type_contexts(action)
 	preconditions = parse_pddl_literals(str(getattr(action, "preconditions", "")))
 	add_effects = tuple(
 		effect
@@ -1171,7 +1366,7 @@ def _action_effect_rules(
 	rules: list[LiftedPlanRule] = []
 	for effect in add_effects:
 		head_arguments = tuple(_var(argument) for argument in effect.arguments)
-		context = tuple(literal.signature() for literal in preconditions)
+		context = (*type_context, *(literal.signature() for literal in preconditions))
 		head_call = _subgoal(effect.predicate, *head_arguments)
 		for precondition in preconditions:
 			binding_context = _binding_context_for_precondition(
@@ -1186,7 +1381,11 @@ def _action_effect_rules(
 						f"{effect.predicate}_prepare_{precondition.predicate}_for_{action_name}",
 						effect.predicate,
 						head_arguments,
-						(*binding_context, f"not {_positive_signature(precondition)}"),
+						(
+							*type_context,
+							*binding_context,
+							f"not {_positive_signature(precondition)}",
+						),
 						(
 							_subgoal(
 								precondition.predicate,
@@ -1217,6 +1416,21 @@ def _action_effect_rules(
 				),
 			)
 	return tuple(rules)
+
+
+def _action_type_contexts(action: object) -> tuple[str, ...]:
+	contexts: list[str] = []
+	for parameter in tuple(getattr(action, "parameters", ()) or ()):
+		type_name = parameter_type(str(parameter))
+		if type_name == "object":
+			continue
+		contexts.append(
+			_call(
+				type_guard_symbol(type_name),
+				(parameter_variables((parameter_name(str(parameter)),))[0],),
+			),
+		)
+	return tuple(dict.fromkeys(contexts))
 
 
 def _body_variables_are_bound(
@@ -1486,6 +1700,7 @@ def _rule(
 	body: Iterable[LiftedCall],
 	*,
 	layer: str = "atomic",
+	rationale: str = "",
 	capabilities: Iterable[str] = (),
 	cost: int = 1,
 ) -> LiftedPlanRule:
@@ -1495,6 +1710,7 @@ def _rule(
 		context=tuple(context),
 		body=tuple(body),
 		layer=layer,
+		rationale=rationale,
 		capabilities=tuple(capabilities),
 		cost=cost,
 	)

@@ -7,6 +7,27 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
+NUMERIC_EFFECT_OPERATORS = frozenset(
+	{
+		"increase",
+		"decrease",
+		"assign",
+		"scale-up",
+		"scale-down",
+	}
+)
+
+UNSUPPORTED_LOGICAL_OPERATORS = frozenset(
+	{
+		"or",
+		"forall",
+		"exists",
+		"when",
+		"imply",
+		"preference",
+	}
+)
+
 
 @dataclass(frozen=True)
 class LiftedLiteral:
@@ -53,24 +74,40 @@ def _literals_from_expression(expression: object) -> Iterable[LiftedLiteral]:
 	if head == "not" and len(expression) == 2:
 		child = expression[1]
 		if isinstance(child, tuple) and child:
+			if _is_numeric_effect_expression(child):
+				return ()
 			return (
 				LiftedLiteral(
 					predicate=str(child[0]),
-					arguments=tuple(str(argument) for argument in child[1:]),
+					arguments=_literal_arguments(child[1:]),
 					is_positive=False,
 				),
 			)
 		return ()
-	if head in {"or", "forall", "exists", "when", "imply"}:
+	if _is_numeric_effect_expression(expression):
+		return ()
+	if head in UNSUPPORTED_LOGICAL_OPERATORS:
 		raise ValueError(
 			f"Unsupported PDDL expression operator {head!r} in compilable STRIPS subset.",
 		)
 	return (
 		LiftedLiteral(
 			predicate=str(expression[0]),
-			arguments=tuple(str(argument) for argument in expression[1:]),
+			arguments=_literal_arguments(expression[1:]),
 			is_positive=True,
 		),
+	)
+
+
+def _literal_arguments(arguments: Iterable[object]) -> tuple[str, ...]:
+	return tuple(str(argument) for argument in arguments if not isinstance(argument, tuple))
+
+
+def _is_numeric_effect_expression(expression: object) -> bool:
+	return (
+		isinstance(expression, tuple)
+		and bool(expression)
+		and str(expression[0]).lower() in NUMERIC_EFFECT_OPERATORS
 	)
 
 

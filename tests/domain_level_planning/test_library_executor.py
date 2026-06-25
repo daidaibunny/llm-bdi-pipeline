@@ -28,7 +28,7 @@ def test_lifted_blocksworld_library_from_one_training_problem_solves_first_20() 
 	plan_library = result.plan_library
 	asl = render_plan_library_asl(plan_library)
 
-	assert len(plan_library.plans) == 37
+	assert len(plan_library.plans) == 40
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
 	assert "dfa_state" not in asl
@@ -188,6 +188,41 @@ def test_executor_treats_context_literals_as_order_independent_conjunction(
 	assert execution.steps == ("finish(a)",)
 
 
+def test_executor_evaluates_lifted_inequality_contexts_and_preconditions(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_distinct_pair_domain(tmp_path)
+	plan_library = PlanLibrary(
+		domain_name="distinct-pair",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="g_satisfy_distinct_done",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("goal_done(X, Y)", "not done(X, Y)"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "done", ("X", "Y")),
+					AgentSpeakBodyStep("subgoal", "g"),
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="done_when_distinct",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X", "Y")),
+				context=("ready(X)", "ready(Y)", "not =(X, Y)"),
+				body=(AgentSpeakBodyStep("action", "finish", ("X", "Y")),),
+			),
+		),
+	)
+
+	execution = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+	)
+
+	assert execution.solved is True
+	assert execution.steps == ("finish(a, b)",)
+
+
 def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"
@@ -212,6 +247,40 @@ def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:objects)
 		 (:init (ready))
 		 (:goal (and (done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_distinct_pair_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "distinct-pair-domain.pddl"
+	problem_file = tmp_path / "distinct-pair-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain distinct-pair)
+		 (:requirements :strips :equality :negative-preconditions)
+		 (:predicates
+		  (ready ?x)
+		  (done ?x ?y)
+		 )
+		 (:action finish
+		  :parameters (?x ?y)
+		  :precondition (and (ready ?x) (ready ?y) (not (= ?x ?y)))
+		  :effect (done ?x ?y)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem distinct-pair-p1)
+		 (:domain distinct-pair)
+		 (:objects a b)
+		 (:init (ready a) (ready b))
+		 (:goal (and (done a b)))
 		)
 		""",
 		encoding="utf-8",

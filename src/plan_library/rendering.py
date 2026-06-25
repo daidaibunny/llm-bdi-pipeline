@@ -32,7 +32,10 @@ def render_plan_library_asl(plan_library: PlanLibrary) -> str:
 
 
 def _render_plan(plan: AgentSpeakPlan) -> List[str]:
-	trigger = _call(plan.trigger.symbol, tuple(_raw_argument(argument) for argument in plan.trigger.arguments))
+	trigger = _call(
+		plan.trigger.symbol,
+		tuple(_raw_argument(argument) for argument in plan.trigger.arguments),
+	)
 	context = " & ".join(_render_context_item(literal) for literal in plan.context) or "true"
 	body_items = [_render_body_step(step) for step in plan.body]
 	if not body_items:
@@ -79,7 +82,16 @@ def _render_context_literal(literal: str) -> str:
 	if text.startswith("!"):
 		return f"not {_render_atom(text[1:].strip())}"
 	if text.lower().startswith("not "):
-		return f"not {_render_atom(text[4:].strip())}"
+		atom = text[4:].strip()
+		equality = _parse_equality_atom(atom)
+		if equality is not None:
+			left, right = equality
+			return f"{_render_term(left)} \\\\== {_render_term(right)}"
+		return f"not {_render_atom(atom)}"
+	equality = _parse_equality_atom(text)
+	if equality is not None:
+		left, right = equality
+		return f"{_render_term(left)} == {_render_term(right)}"
 	if "!=" in text:
 		left, right = text.split("!=", 1)
 		return f"{_render_term(left)} \\\\== {_render_term(right)}"
@@ -226,6 +238,10 @@ def _render_atom(atom: str) -> str:
 	text = str(atom or "").strip()
 	if not text:
 		return "true"
+	equality = _parse_equality_atom(text)
+	if equality is not None:
+		left, right = equality
+		return f"{_render_term(left)} == {_render_term(right)}"
 	if "(" not in text:
 		return _jason_functor(text)
 	if not text.endswith(")"):
@@ -246,6 +262,21 @@ def _render_term(term: str) -> str:
 	if re.fullmatch(r"[a-z][A-Za-z0-9_]*", text):
 		return text
 	return sanitize_identifier(text)
+
+
+def _parse_equality_atom(atom: str) -> tuple[str, str] | None:
+	text = str(atom or "").strip()
+	if not text.startswith("=") or not text.endswith(")"):
+		return None
+	raw_arguments = text[2:-1] if text.startswith("=(") else ""
+	arguments = tuple(
+		argument.strip()
+		for argument in raw_arguments.split(",")
+		if argument.strip()
+	)
+	if len(arguments) != 2:
+		return None
+	return arguments[0], arguments[1]
 
 
 def _jason_functor(symbol: str) -> str:

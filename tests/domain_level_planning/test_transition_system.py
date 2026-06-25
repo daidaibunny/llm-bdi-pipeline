@@ -4,10 +4,13 @@ from pathlib import Path
 
 from domain_level_planning.transition_system import (
 	AtomicAchievementEvidence,
+	apply_ground_action,
 	anti_unify_atomic_achievements,
 	anti_unify_training_atomic_achievements,
 	atomic_achievements_from_plan,
 	collect_training_transition_evidence,
+	ground_actions_for_problem,
+	is_action_applicable,
 )
 from utils.pddl_parser import PDDLParser
 
@@ -174,3 +177,62 @@ def test_training_atomic_anti_unification_merges_across_evidence_objects() -> No
 		if pattern.target_predicate == "on" and pattern.action_name == "stack"
 	)
 	assert on_stack.support_count >= 2
+
+
+def test_transition_system_evaluates_equality_preconditions_and_ignores_numeric_effects(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_distinct_metric_domain(tmp_path)
+	domain = PDDLParser.parse_domain(domain_file)
+	problem = PDDLParser.parse_problem(problem_file)
+	actions = ground_actions_for_problem(domain.actions, problem)
+
+	distinct_action = next(
+		action for action in actions if action.signature() == "finish(a, b)"
+	)
+	same_action = next(
+		action for action in actions if action.signature() == "finish(a, a)"
+	)
+	state = frozenset({"ready(a)", "ready(b)"})
+
+	assert is_action_applicable(state, distinct_action) is True
+	assert is_action_applicable(state, same_action) is False
+	assert apply_ground_action(state, distinct_action) == frozenset(
+		{"ready(a)", "ready(b)", "done(a, b)"},
+	)
+
+
+def _write_distinct_metric_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "distinct-metric-domain.pddl"
+	problem_file = tmp_path / "distinct-metric-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain distinct-metric)
+		 (:requirements :strips :equality :negative-preconditions :action-costs)
+		 (:predicates
+		  (ready ?x)
+		  (done ?x ?y)
+		 )
+		 (:functions (total-cost))
+		 (:action finish
+		  :parameters (?x ?y)
+		  :precondition (and (ready ?x) (ready ?y) (not (= ?x ?y)))
+		  :effect (and (done ?x ?y) (increase (total-cost) 1))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem distinct-metric-p1)
+		 (:domain distinct-metric)
+		 (:objects a b)
+		 (:init (ready a) (ready b) (= (total-cost) 0))
+		 (:goal (and (done a b)))
+		 (:metric minimize (total-cost))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file

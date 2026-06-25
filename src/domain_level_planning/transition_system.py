@@ -12,6 +12,7 @@ from typing import Iterable, Sequence
 from utils.pddl_parser import PDDLAction, PDDLDomain, PDDLFact, PDDLProblem
 
 from .pddl_expression import LiftedLiteral, parse_pddl_literals
+from .pddl_types import object_belongs_to_type, object_type_atoms
 
 
 State = frozenset[str]
@@ -132,6 +133,8 @@ class TrainingTransitionEvidence:
 	goal_orderings: tuple[tuple[PDDLFact, PDDLFact], ...]
 	goal_progressions: tuple[GoalProgressEvidence, ...] = ()
 	atomic_achievements: tuple[AtomicAchievementEvidence, ...] = ()
+	initial_state: tuple[str, ...] = ()
+	plan_actions: tuple[GroundAction, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -153,6 +156,11 @@ class TrainingTransitionEvidence:
 				slice_.to_dict()
 				for slice_ in self.atomic_achievements
 			],
+			"initial_state": list(self.initial_state),
+			"plan_actions": [
+				action.signature()
+				for action in self.plan_actions
+			],
 		}
 
 
@@ -164,8 +172,12 @@ def collect_training_transition_evidence(
 ) -> TrainingTransitionEvidence:
 	"""Explore a small grounded transition system and extract goal-order evidence."""
 
-	ground_actions = ground_actions_for_problem(domain.actions, problem)
-	initial_state = initial_state_from_problem(problem)
+	ground_actions = ground_actions_for_problem(
+		domain.actions,
+		problem,
+		domain_types=domain.types,
+	)
+	initial_state = initial_state_from_problem(problem, domain_types=domain.types)
 	goal_atoms = tuple(
 		fact_atom(fact.predicate, fact.args)
 		for fact in problem.goal_facts
@@ -224,26 +236,39 @@ def collect_training_transition_evidence(
 		goal_orderings=goal_orderings,
 		goal_progressions=goal_progressions,
 		atomic_achievements=atomic_achievements,
+		initial_state=tuple(sorted(initial_state)),
+		plan_actions=plan,
 	)
 
 
-def initial_state_from_problem(problem: PDDLProblem) -> State:
+def initial_state_from_problem(
+	problem: PDDLProblem,
+	*,
+	domain_types: Sequence[str] = (),
+) -> State:
 	"""Return the positive initial facts of a parsed PDDL problem."""
 
 	return frozenset(
-		fact_atom(fact.predicate, fact.args)
-		for fact in problem.init_facts
-		if fact.is_positive
+		(
+			*(
+				fact_atom(fact.predicate, fact.args)
+				for fact in problem.init_facts
+				if fact.is_positive
+			),
+			*object_type_atoms(problem, domain_types),
+		),
 	)
 
 
 def ground_actions_for_problem(
 	actions: Sequence[PDDLAction],
 	problem: PDDLProblem,
+	*,
+	domain_types: Sequence[str] = (),
 ) -> tuple[GroundAction, ...]:
 	"""Ground action schemas against a parsed PDDL problem."""
 
-	return tuple(_iter_ground_actions(actions, problem))
+	return tuple(_iter_ground_actions(actions, problem, domain_types=domain_types))
 
 
 def is_action_applicable(state: State, action: GroundAction) -> bool:
@@ -266,8 +291,12 @@ def reachable_states_for_problem(
 ) -> frozenset[State]:
 	"""Enumerate the bounded reachable STRIPS states for one grounded problem."""
 
-	ground_actions = ground_actions_for_problem(domain.actions, problem)
-	initial_state = initial_state_from_problem(problem)
+	ground_actions = ground_actions_for_problem(
+		domain.actions,
+		problem,
+		domain_types=domain.types,
+	)
+	initial_state = initial_state_from_problem(problem, domain_types=domain.types)
 	queue = deque([initial_state])
 	visited: set[State] = {initial_state}
 	while queue:
@@ -303,10 +332,15 @@ def fact_atom(predicate: str, arguments: Iterable[str]) -> str:
 def _iter_ground_actions(
 	actions: Sequence[PDDLAction],
 	problem: PDDLProblem,
+	*,
+	domain_types: Sequence[str] = (),
 ) -> Iterable[GroundAction]:
 	for action in actions:
 		parameters = tuple(_parameter_name_type(parameter) for parameter in action.parameters)
-		object_domains = tuple(_objects_for_type(problem, type_name) for _, type_name in parameters)
+		object_domains = tuple(
+			_objects_for_type(problem, type_name, domain_types=domain_types)
+			for _, type_name in parameters
+		)
 		for objects in product(*object_domains):
 			substitution = {
 				name: object_name
@@ -330,15 +364,27 @@ def _iter_ground_actions(
 			)
 
 
-def _objects_for_type(problem: PDDLProblem, type_name: str) -> tuple[str, ...]:
+def _objects_for_type(
+	problem: PDDLProblem,
+	type_name: str,
+	*,
+	domain_types: Sequence[str] = (),
+) -> tuple[str, ...]:
 	if type_name in {"", "object"}:
 		return tuple(problem.objects)
 	typed_objects = tuple(
 		object_name
 		for object_name in problem.objects
-		if problem.object_types.get(object_name, "object") == type_name
+		if object_belongs_to_type(
+			object_name,
+			object_types=problem.object_types,
+			requested_type=type_name,
+			type_tokens=domain_types,
+		)
 	)
-	return typed_objects or tuple(problem.objects)
+	if typed_objects or domain_types:
+		return typed_objects
+	return tuple(problem.objects)
 
 
 def _parameter_name_type(parameter: str) -> tuple[str, str]:
@@ -362,6 +408,13 @@ def _ground_literal(
 
 def _is_applicable(state: State, action: GroundAction) -> bool:
 	for precondition in action.preconditions:
+		if precondition.predicate == "=":
+			holds = _equality_holds(precondition.arguments)
+			if precondition.is_positive and not holds:
+				return False
+			if not precondition.is_positive and holds:
+				return False
+			continue
 		atom = _atom(precondition.predicate, precondition.arguments)
 		if precondition.is_positive and atom not in state:
 			return False
@@ -373,10 +426,21 @@ def _is_applicable(state: State, action: GroundAction) -> bool:
 def _apply_action(state: State, action: GroundAction) -> State:
 	next_state = set(state)
 	for effect in action.delete_effects:
+		if effect.predicate == "=":
+			continue
 		next_state.discard(_atom(effect.predicate, effect.arguments))
 	for effect in action.add_effects:
+		if effect.predicate == "=":
+			continue
 		next_state.add(_atom(effect.predicate, effect.arguments))
 	return frozenset(next_state)
+
+
+def _equality_holds(arguments: tuple[str, ...]) -> bool:
+	if len(arguments) != 2:
+		return False
+	left, right = arguments
+	return left == right
 
 
 def _satisfies(state: State, goal_atoms: tuple[str, ...]) -> bool:

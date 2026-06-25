@@ -108,9 +108,12 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 
 	assert "+!g : goal_on(X, Y) & not on(X, Y) <-" in asl
 	assert "+!on(X, Y) : on(X, Y) <-" in asl
-	assert "+!on(X, Y) : not holding(X) <-" in asl
+	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not holding(X) <-" in asl
 	assert "\t!holding(X);" in asl
-	assert "+!on(X, Y) : holding(X) & clear(Y) <-" in asl
+	assert (
+		"+!on(X, Y) : type_block(X) & type_block(Y) & holding(X) & clear(Y) <-"
+		in asl
+	)
 	assert "\tstack(X, Y)." in asl
 	assert "goal_on(b4, b2)." not in asl
 	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl

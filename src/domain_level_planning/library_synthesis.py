@@ -29,6 +29,7 @@ from .paper_backend_audit import PaperPolicyAuditReport
 from .paper_backend_audit import audit_learned_policy_for_asl_binding
 from .pddl_expression import parameter_variables, parse_pddl_literals
 from .pddl_support import assert_compilable_pddl_files
+from .pddl_types import declared_type_names, type_guard_symbol
 from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
 from .schema_synthesis import _training_evidence
@@ -457,7 +458,7 @@ def synthesize_domain_level_asl_library(
 	)
 	contract_report = audit_domain_level_library_contract(
 		plan_library,
-		declared_predicates=domain.predicates,
+		declared_predicates=_declared_predicate_arities_with_type_guards(domain),
 		declared_actions=domain.actions,
 	)
 	if not contract_report.passed:
@@ -702,6 +703,16 @@ def _pddl_to_asl_symbol_map(domain: object) -> dict[str, object]:
 			if pddl_symbol != asl_symbol
 		},
 	}
+
+
+def _declared_predicate_arities_with_type_guards(domain: object) -> dict[str, int]:
+	arities = {
+		str(getattr(predicate, "name")): len(tuple(getattr(predicate, "parameters", ()) or ()))
+		for predicate in tuple(getattr(domain, "predicates", ()) or ())
+	}
+	for type_name in declared_type_names(tuple(getattr(domain, "types", ()) or ())):
+		arities.setdefault(type_guard_symbol(type_name), 1)
+	return arities
 
 
 def _paper_profile_failures(

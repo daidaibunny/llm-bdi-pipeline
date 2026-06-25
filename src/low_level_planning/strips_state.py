@@ -21,6 +21,8 @@ class GroundActionSemantics:
 	negative_preconditions: frozenset[str]
 	add_effects: frozenset[str]
 	delete_effects: frozenset[str]
+	positive_equalities: frozenset[tuple[str, str]] = frozenset()
+	negative_equalities: frozenset[tuple[str, str]] = frozenset()
 
 
 class STRIPSStateSimulator:
@@ -68,7 +70,15 @@ class STRIPSStateSimulator:
 		semantics = self.ground_action(action)
 		missing = semantics.positive_preconditions - current_state
 		violated = semantics.negative_preconditions & current_state
-		if missing or violated:
+		equality_violated = any(
+			left != right
+			for left, right in semantics.positive_equalities
+		)
+		inequality_violated = any(
+			left == right
+			for left, right in semantics.negative_equalities
+		)
+		if missing or violated or equality_violated or inequality_violated:
 			raise ValueError(
 				"Action preconditions are not satisfied for "
 				f"{action.name}({', '.join(action.arguments)})."
@@ -85,16 +95,26 @@ class STRIPSStateSimulator:
 			_parameter_name(parameter): argument
 			for parameter, argument in zip(schema.parameters, action.arguments)
 		}
-		positive_preconditions, negative_preconditions = _parse_fact_set(
+		(
+			positive_preconditions,
+			negative_preconditions,
+			positive_equalities,
+			negative_equalities,
+		) = _parse_fact_set(
 			schema.preconditions,
 			substitution=substitution,
 		)
-		add_effects, delete_effects = _parse_fact_set(schema.effects, substitution=substitution)
+		add_effects, delete_effects, _, _ = _parse_fact_set(
+			schema.effects,
+			substitution=substitution,
+		)
 		return GroundActionSemantics(
 			positive_preconditions=frozenset(positive_preconditions),
 			negative_preconditions=frozenset(negative_preconditions),
 			add_effects=frozenset(add_effects),
 			delete_effects=frozenset(delete_effects),
+			positive_equalities=frozenset(positive_equalities),
+			negative_equalities=frozenset(negative_equalities),
 		)
 
 
@@ -118,32 +138,54 @@ def _parse_fact_set(
 	expression: str,
 	*,
 	substitution: dict[str, str],
-) -> tuple[set[str], set[str]]:
+) -> tuple[set[str], set[str], set[tuple[str, str]], set[tuple[str, str]]]:
 	text = str(expression or "").strip()
 	if not text:
-		return set(), set()
+		return set(), set(), set(), set()
 	expressions = _inner_expressions(text)
 	if not expressions and text.startswith("("):
 		expressions = (text,)
 	positive: set[str] = set()
 	negative: set[str] = set()
+	positive_equalities: set[tuple[str, str]] = set()
+	negative_equalities: set[tuple[str, str]] = set()
 	for item in expressions:
 		item_text = item.strip()
+		if _is_numeric_effect_expression(item_text):
+			continue
 		if item_text.lower().startswith("(not"):
 			inner = _inner_expressions(item_text)
 			if inner:
-				negative.add(_ground_atom(inner[0], substitution=substitution))
+				inner_text = inner[0].strip()
+				if _is_equality_expression(inner_text):
+					negative_equalities.add(
+						_ground_equality(inner_text, substitution=substitution),
+					)
+				elif not _is_numeric_effect_expression(inner_text):
+					negative.add(_ground_atom(inner_text, substitution=substitution))
 			continue
 		if item_text.lower().startswith("(and"):
-			nested_positive, nested_negative = _parse_fact_set(
+			(
+				nested_positive,
+				nested_negative,
+				nested_positive_equalities,
+				nested_negative_equalities,
+			) = _parse_fact_set(
 				item_text,
 				substitution=substitution,
 			)
 			positive.update(nested_positive)
 			negative.update(nested_negative)
+			positive_equalities.update(nested_positive_equalities)
+			negative_equalities.update(nested_negative_equalities)
+			continue
+		if _is_equality_expression(item_text):
+			positive_equalities.add(
+				_ground_equality(item_text, substitution=substitution),
+			)
 			continue
 		positive.add(_ground_atom(item_text, substitution=substitution))
-	return positive, negative
+	return positive, negative, positive_equalities, negative_equalities
 
 
 def _ground_atom(expression: str, *, substitution: dict[str, str]) -> str:
@@ -153,6 +195,33 @@ def _ground_atom(expression: str, *, substitution: dict[str, str]) -> str:
 	predicate = tokens[0]
 	args = tuple(substitution.get(token, token) for token in tokens[1:])
 	return predicate if not args else f"{predicate}({', '.join(args)})"
+
+
+def _ground_equality(
+	expression: str,
+	*,
+	substitution: dict[str, str],
+) -> tuple[str, str]:
+	tokens = str(expression or "").strip("() \n\t").split()
+	if len(tokens) != 3 or tokens[0] != "=":
+		raise ValueError(f"Cannot ground unsupported equality expression: {expression}")
+	return substitution.get(tokens[1], tokens[1]), substitution.get(tokens[2], tokens[2])
+
+
+def _is_equality_expression(expression: str) -> bool:
+	tokens = str(expression or "").strip("() \n\t").split()
+	return len(tokens) == 3 and tokens[0] == "="
+
+
+def _is_numeric_effect_expression(expression: str) -> bool:
+	tokens = str(expression or "").strip("() \n\t").split(maxsplit=1)
+	return bool(tokens) and tokens[0].lower() in {
+		"increase",
+		"decrease",
+		"assign",
+		"scale-up",
+		"scale-down",
+	}
 
 
 def _inner_expressions(expression: str) -> tuple[str, ...]:
