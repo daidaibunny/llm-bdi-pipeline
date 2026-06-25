@@ -589,6 +589,14 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "runtime full-trace planning for each new problem" in contract["non_goals"]
 	assert "read-only goal descriptors" in contract["goal_fact_semantics"]
 	assert "not primitive actions" in contract["goal_fact_semantics"]
+	method_summary = contract["paper_method_summary"]
+	assert len(method_summary) >= 5
+	assert "bounded-class guarantee" in method_summary[0]
+	assert "universal PDDL generalized-planning completeness" in method_summary[0]
+	assert "Layer B" in " ".join(method_summary)
+	assert "Layer C" in " ".join(method_summary)
+	assert "runtime full-trace planning" in " ".join(method_summary)
+	assert "negative or disjunctive achievement goals" in " ".join(method_summary)
 	hypothesis = contract["hypothesis_class"]
 	assert hypothesis["name"] == "goal_conditioned_modular_sketch_asl"
 	assert any(

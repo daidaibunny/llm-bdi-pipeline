@@ -96,10 +96,73 @@ class ArchitectureContract:
 			"layer_b_target": self.layer_b_target,
 			"layer_c_target": self.layer_c_target,
 			"goal_fact_semantics": self.goal_fact_semantics,
+			"paper_method_summary": list(self.paper_method_summary()),
 			"hypothesis_class": self.hypothesis_class.to_dict(),
 			"decisions": [decision.to_dict() for decision in self.decisions],
 			"gaps": [gap.to_dict() for gap in self.gaps],
 		}
+
+	def paper_method_summary(self) -> tuple[str, ...]:
+		"""Return paper-ready prose derived from the machine-readable contract."""
+
+		hypothesis = self.hypothesis_class
+		exclusions = ", ".join(hypothesis.exclusions)
+		return (
+			(
+				"We use a bounded-class guarantee: the system synthesizes and "
+				"validates the best lifted AgentSpeak(L) plan library it can find "
+				"inside the current goal-conditioned modular sketch hypothesis "
+				"class, and it does not claim universal PDDL generalized-planning "
+				"completeness."
+			),
+			(
+				"The representation is domain-level and lifted. State features are "
+				f"{_series(hypothesis.feature_language['state_features'])}; goal "
+				f"features are {_series(hypothesis.feature_language['goal_features'])}. "
+				f"{self.goal_fact_semantics}."
+			),
+			(
+				"Layer B learns atomic predicate-goal modules. "
+				f"{self.layer_b_target}; bodies may use "
+				f"{hypothesis.module_language['body_calls']}."
+			),
+			(
+				"Layer C learns the conjunctive-goal composer. "
+				f"{self.layer_c_target}; rules have the shape "
+				f"{hypothesis.composer_language['rule_shape']} and use ordering "
+				f"evidence from {_series(hypothesis.composer_language['ordering_evidence'])}."
+			),
+			(
+				"Synthesis is offline and evidence-driven. The selector enforces "
+				f"{_series(hypothesis.progress_language['selection_constraints'])}, "
+				f"and validation is scoped to "
+				f"{hypothesis.progress_language['validation_scope']}."
+			),
+			(
+				"Correctness is claimed only for "
+				f"{hypothesis.correctness_language['claim_scope']}, with success "
+				f"defined as {hypothesis.correctness_language['success_condition']}. "
+				f"{self.runtime_planner_policy}; runtime full-trace planning is not "
+				"the library executor."
+			),
+			(
+				"The current exclusions are: "
+				f"{exclusions}. Unsupported cases, including negative or disjunctive "
+				"achievement goals, must be rejected with diagnostics before ASL "
+				"compilation unless a separate semantics is added."
+			),
+		)
+
+
+def _series(items: object) -> str:
+	if isinstance(items, str):
+		return items
+	values = tuple(str(item) for item in tuple(items or ()))
+	if not values:
+		return ""
+	if len(values) == 1:
+		return values[0]
+	return ", ".join(values[:-1]) + f", and {values[-1]}"
 
 
 def domain_level_architecture_contract() -> ArchitectureContract:
