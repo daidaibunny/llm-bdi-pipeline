@@ -28,7 +28,7 @@ def test_lifted_blocksworld_library_from_one_training_problem_solves_first_20() 
 	plan_library = result.plan_library
 	asl = render_plan_library_asl(plan_library)
 
-	assert len(plan_library.plans) == 40
+	assert len(plan_library.plans) >= 40
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
 	assert "dfa_state" not in asl

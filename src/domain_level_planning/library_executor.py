@@ -189,13 +189,18 @@ def _execute_subgoal(
 			f"recursive loop on !{_call(symbol, arguments)}",
 		)
 	candidate_plans = _candidate_plans(plan_library, symbol, arguments)
+	derived_goal_facts = _goal_facts_for_derived_contexts(
+		goal_facts=goal_facts,
+		symbol=symbol,
+		arguments=arguments,
+	)
 	derived_context_facts = (
 		_derived_context_facts(
 			plan_library=plan_library,
 			state=state,
-			goal_facts=goal_facts,
+			goal_facts=derived_goal_facts,
 		)
-		if _plans_need_derived_context_facts(candidate_plans, goal_facts)
+		if _plans_need_derived_context_facts(candidate_plans, derived_goal_facts)
 		else ()
 	)
 	for plan in candidate_plans:
@@ -236,6 +241,20 @@ def _execute_subgoal(
 		current_decision_trace,
 		f"no applicable plan for !{_call(symbol, arguments)}",
 	)
+
+
+def _goal_facts_for_derived_contexts(
+	*,
+	goal_facts: tuple[str, ...],
+	symbol: str,
+	arguments: tuple[str, ...],
+) -> tuple[str, ...]:
+	if symbol == "g" or not tuple(arguments or ()):
+		return goal_facts
+	current_subgoal = _goal_fact(symbol, arguments)
+	if current_subgoal in goal_facts:
+		return goal_facts
+	return (*goal_facts, current_subgoal)
 
 
 def _execute_body(

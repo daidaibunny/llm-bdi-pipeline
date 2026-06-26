@@ -81,7 +81,10 @@ rules or planner traces.
 Failures are part of the method claim. A failed run is paper-useful only if it
 is classified into a precise reason: unsupported \pddl{} fragment, unbound
 external feature, missing atomic module, missing composer rule,
-counterexample-refinement limit, or cyclic-route progress without a ranking
-feature. Transport and Marsrover currently belong to the last category. They
-should either remain diagnostic limitations or be addressed by a principled
-reachability/ranking feature before they are used as positive evidence.
+counterexample-refinement limit, cyclic-route progress without a ranking
+feature, or a reachable mid-state outside the current policy fragment.
+Transport can be used as positive evidence for typed-overloaded
+carrier/resource delivery from problem initial states only when the report also
+states the remaining bounded mid-state validation counterexamples. Marsrover
+remains a training-scalability diagnostic until bounded exploration or trace
+evidence can be handled within the declared resource limits.

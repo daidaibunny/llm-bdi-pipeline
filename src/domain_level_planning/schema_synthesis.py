@@ -165,6 +165,7 @@ def _candidate_rules_from_domain(
 		),
 	)
 	rules.extend(route_progress_candidate_rules(actions))
+	rules.extend(_causal_chain_action_rules(actions))
 	rules.extend(_causal_interference_ordering_rules(actions))
 	for predicate in predicates:
 		rules.extend(_composer_rules(predicate))
@@ -541,6 +542,13 @@ def _recursive_rule_certificate(
 	if first_recursive_call.symbol == rule.head.symbol and (
 		tuple(first_recursive_call.arguments or ()) != tuple(rule.head.arguments or ())
 	):
+		typed_partition_certificate = _typed_partition_recursion_certificate(
+			rule,
+			first_recursive_call,
+			recursive_call_index=first_recursive_index,
+		)
+		if typed_partition_certificate is not None:
+			return typed_partition_certificate
 		ranking_certificate = _bounded_acyclic_relation_certificate(
 			rule,
 			first_recursive_call,
@@ -641,6 +649,60 @@ def _route_step_recursion_certificate(
 		"ranking_edge": "static_shortest_path_distance_decreases",
 		"reason": "recursive action is guarded by a route-step distance-decrease context",
 	}
+
+
+def _typed_partition_recursion_certificate(
+	rule: LiftedPlanRule,
+	recursive_call: LiftedCall,
+	*,
+	recursive_call_index: int,
+) -> dict[str, object] | None:
+	if recursive_call.symbol != rule.head.symbol:
+		return None
+	if tuple(recursive_call.arguments or ()) == tuple(rule.head.arguments or ()):
+		return None
+	type_by_variable = _type_guard_context_by_variable(rule.context)
+	for head_argument, recursive_argument in zip(
+		tuple(rule.head.arguments or ()),
+		tuple(recursive_call.arguments or ()),
+	):
+		if head_argument == recursive_argument:
+			continue
+		head_type = type_by_variable.get(head_argument)
+		recursive_type = type_by_variable.get(recursive_argument)
+		if head_type is None or recursive_type is None or head_type == recursive_type:
+			continue
+		return {
+			"rule_name": rule.name,
+			"head": _call(rule.head.symbol, rule.head.arguments),
+			"accepted": True,
+			"descent_subgoal": _call(recursive_call.symbol, recursive_call.arguments),
+			"missing_context": None,
+			"recursive_call_index": recursive_call_index,
+			"ranking_relation": "typed_predicate_partition",
+			"ranking_edge": f"{head_argument}:{head_type}->{recursive_argument}:{recursive_type}",
+			"reason": (
+				"same-predicate subgoal is over a different typed argument "
+				"partition, so it delegates to another module family"
+			),
+		}
+	return None
+
+
+def _type_guard_context_by_variable(contexts: Sequence[str]) -> dict[str, str]:
+	types: dict[str, str] = {}
+	for context in tuple(contexts or ()):
+		text = str(context or "").strip()
+		if text.lower().startswith("not "):
+			continue
+		symbol, arguments = _parse_atom(text)
+		if not symbol.startswith("type_") or len(arguments) != 1:
+			continue
+		argument = arguments[0]
+		if not _is_variable(argument):
+			continue
+		types.setdefault(argument, symbol[len("type_") :])
+	return types
 
 
 def _bounded_acyclic_relation_certificate(
@@ -1787,6 +1849,343 @@ def _already_true_rule(predicate: PDDLPredicate) -> LiftedPlanRule:
 	)
 
 
+def _causal_chain_action_rules(actions: Sequence[object]) -> tuple[LiftedPlanRule, ...]:
+	"""Generate lifted two-action causal-chain modules from PDDL schemas.
+
+	These candidates cover typed carrier/resource patterns where a target action
+	can achieve the requested predicate only after one of its preconditions has
+	been achieved by another action. The generated body delegates that supplied
+	precondition to its own atomic module, achieves any remaining producible
+	final-action preconditions, then executes the final action.
+	"""
+
+	infos = tuple(_action_schema_info(action) for action in tuple(actions or ()))
+	producible_predicates = frozenset(
+		effect.predicate
+		for info in infos
+		for effect in info["add_effects"]
+		if effect.is_positive
+	)
+	type_ambiguous_predicates = _effect_type_ambiguous_predicates(actions)
+	rules: list[LiftedPlanRule] = []
+	seen: set[tuple[object, ...]] = set()
+	index = 0
+	for final in infos:
+		for target_effect in tuple(final["add_effects"]):
+			if not target_effect.arguments:
+				continue
+			if target_effect.predicate not in type_ambiguous_predicates:
+				continue
+			for supplied_precondition in tuple(final["preconditions"]):
+				if (
+					not supplied_precondition.is_positive
+					or supplied_precondition.predicate == target_effect.predicate
+					or supplied_precondition.predicate not in producible_predicates
+					or not set(supplied_precondition.arguments).intersection(
+						set(target_effect.arguments),
+					)
+				):
+					continue
+				for producer in infos:
+					for producer_effect in tuple(producer["add_effects"]):
+						rule = _lift_causal_chain_action_rule(
+							index=index,
+							final=final,
+							producer=producer,
+							target_effect=target_effect,
+							supplied_precondition=supplied_precondition,
+							producer_effect=producer_effect,
+							producible_predicates=producible_predicates,
+						)
+						if rule is None:
+							continue
+						key = (
+							rule.head.symbol,
+							rule.head.arguments,
+							rule.context,
+							rule.body,
+						)
+						if key in seen:
+							continue
+						seen.add(key)
+						rules.append(rule)
+						index += 1
+	return tuple(rules)
+
+
+def _action_schema_info(action: object) -> dict[str, object]:
+	return {
+		"action": action,
+		"name": str(getattr(action, "name")),
+		"parameters": tuple(getattr(action, "parameters", ()) or ()),
+		"parameter_variables": parameter_variables(getattr(action, "parameters")),
+		"type_context": _action_type_contexts(action),
+		"preconditions": tuple(
+			literal
+			for literal in parse_pddl_literals(str(getattr(action, "preconditions", "")))
+			if literal.is_positive
+		),
+		"add_effects": tuple(
+			literal
+			for literal in parse_pddl_literals(str(getattr(action, "effects", "")))
+			if literal.is_positive
+		),
+	}
+
+
+def _lift_causal_chain_action_rule(
+	*,
+	index: int,
+	final: Mapping[str, object],
+	producer: Mapping[str, object],
+	target_effect: LiftedLiteral,
+	supplied_precondition: LiftedLiteral,
+	producer_effect: LiftedLiteral,
+	producible_predicates: frozenset[str],
+) -> LiftedPlanRule | None:
+	if producer_effect.predicate != supplied_precondition.predicate:
+		return None
+	if len(producer_effect.arguments) != len(supplied_precondition.arguments):
+		return None
+	if not producer_effect.arguments:
+		return None
+	final_substitution = _schema_variable_substitution(final)
+	producer_substitution: dict[str, str] = {}
+	for final_argument, producer_argument in zip(
+		supplied_precondition.arguments,
+		producer_effect.arguments,
+	):
+		final_value = final_substitution.get(final_argument, _var(final_argument))
+		current = producer_substitution.get(producer_argument)
+		if current is not None and current != final_value:
+			return None
+		producer_substitution[producer_argument] = final_value
+	if not _extend_producer_substitution_from_shared_static_preconditions(
+		final=final,
+		producer=producer,
+		final_substitution=final_substitution,
+		producer_substitution=producer_substitution,
+		producible_predicates=producible_predicates,
+	):
+		return None
+	_complete_fresh_producer_substitution(
+		producer_substitution,
+		producer=producer,
+		used_variables=tuple(final_substitution.values()),
+	)
+	head_arguments = tuple(
+		final_substitution.get(argument, _var(argument))
+		for argument in target_effect.arguments
+	)
+	final_action_arguments = tuple(final["parameter_variables"])
+	supplied_arguments = tuple(
+		final_substitution.get(argument, _var(argument))
+		for argument in supplied_precondition.arguments
+	)
+	body: list[LiftedCall] = [
+		_subgoal(supplied_precondition.predicate, *supplied_arguments),
+	]
+	for precondition in tuple(final["preconditions"]):
+		if precondition == supplied_precondition:
+			continue
+		if _literal_supplied_by_producer(
+			precondition,
+			producer=producer,
+			final_substitution=final_substitution,
+			producer_substitution=producer_substitution,
+		):
+			continue
+		if precondition.predicate not in producible_predicates:
+			continue
+		precondition_arguments = tuple(
+			final_substitution.get(argument, _var(argument))
+			for argument in precondition.arguments
+		)
+		body.append(_subgoal(precondition.predicate, *precondition_arguments))
+	body.append(_action(str(final["name"]), *final_action_arguments))
+	context = (
+		*tuple(final["type_context"]),
+		*_causal_chain_resource_contexts(
+			final=final,
+			producer=producer,
+			supplied_precondition=supplied_precondition,
+			final_substitution=final_substitution,
+			producer_substitution=producer_substitution,
+			producible_predicates=producible_predicates,
+		),
+		f"not {_call(target_effect.predicate, head_arguments)}",
+	)
+	if not _body_variables_are_bound(
+		head_arguments=head_arguments,
+		context=context,
+		body=tuple(step.arguments for step in body),
+	):
+		return None
+	return _rule(
+		(
+			f"{target_effect.predicate}_causal_chain_{index}_via_"
+			f"{supplied_precondition.predicate}_for_{final['name']}"
+		),
+		target_effect.predicate,
+		head_arguments,
+		context,
+		tuple(body),
+		capabilities=(
+			(
+				f"module_{target_effect.predicate}_causal_chain_"
+				f"{supplied_precondition.predicate}_{final['name']}_{index}"
+			),
+		),
+		rationale="schema_causal_chain_action_module",
+		cost=2,
+	)
+
+
+def _schema_variable_substitution(action_info: Mapping[str, object]) -> dict[str, str]:
+	return {
+		parameter_name(str(parameter)): variable
+		for parameter, variable in zip(
+			tuple(action_info["parameters"]),
+			tuple(action_info["parameter_variables"]),
+		)
+	}
+
+
+def _complete_fresh_producer_substitution(
+	substitution: dict[str, str],
+	*,
+	producer: Mapping[str, object],
+	used_variables: Sequence[str],
+) -> None:
+	used = set(tuple(used_variables or ())) | set(substitution.values())
+	for parameter in tuple(producer["parameters"]):
+		name = parameter_name(str(parameter))
+		if name in substitution:
+			continue
+		variable = _fresh_route_variable(_var(name), tuple(sorted(used)))
+		substitution[name] = variable
+		used.add(variable)
+
+
+def _extend_producer_substitution_from_shared_static_preconditions(
+	*,
+	final: Mapping[str, object],
+	producer: Mapping[str, object],
+	final_substitution: Mapping[str, str],
+	producer_substitution: dict[str, str],
+	producible_predicates: frozenset[str],
+) -> bool:
+	changed = True
+	while changed:
+		changed = False
+		for final_precondition in tuple(final["preconditions"]):
+			if final_precondition.predicate in producible_predicates:
+				continue
+			for producer_precondition in tuple(producer["preconditions"]):
+				if producer_precondition.predicate in producible_predicates:
+					continue
+				next_substitution = _unify_final_and_producer_literals(
+					final_precondition,
+					producer_precondition,
+					final_substitution=final_substitution,
+					producer_substitution=producer_substitution,
+				)
+				if next_substitution is None:
+					continue
+				if next_substitution == producer_substitution:
+					continue
+				producer_substitution.clear()
+				producer_substitution.update(next_substitution)
+				changed = True
+	return True
+
+
+def _unify_final_and_producer_literals(
+	final_literal: LiftedLiteral,
+	producer_literal: LiftedLiteral,
+	*,
+	final_substitution: Mapping[str, str],
+	producer_substitution: Mapping[str, str],
+) -> dict[str, str] | None:
+	if final_literal.predicate != producer_literal.predicate:
+		return None
+	if len(final_literal.arguments) != len(producer_literal.arguments):
+		return None
+	merged = dict(producer_substitution)
+	for final_argument, producer_argument in zip(
+		final_literal.arguments,
+		producer_literal.arguments,
+	):
+		final_value = final_substitution.get(final_argument, _var(final_argument))
+		current = merged.get(producer_argument)
+		if current is not None and current != final_value:
+			return None
+		merged[producer_argument] = final_value
+	return merged
+
+
+def _literal_supplied_by_producer(
+	precondition: LiftedLiteral,
+	*,
+	producer: Mapping[str, object],
+	final_substitution: Mapping[str, str],
+	producer_substitution: Mapping[str, str],
+) -> bool:
+	target_signature = _literal_signature_with_substitution(
+		precondition,
+		final_substitution,
+	)
+	return any(
+		_literal_signature_with_substitution(effect, producer_substitution)
+		== target_signature
+		for effect in tuple(producer["add_effects"])
+	)
+
+
+def _causal_chain_resource_contexts(
+	*,
+	final: Mapping[str, object],
+	producer: Mapping[str, object],
+	supplied_precondition: LiftedLiteral,
+	final_substitution: Mapping[str, str],
+	producer_substitution: Mapping[str, str],
+	producible_predicates: frozenset[str],
+) -> tuple[str, ...]:
+	final_variables = set(tuple(final["parameter_variables"]))
+	contexts: list[str] = []
+	for precondition in tuple(final["preconditions"]):
+		if precondition == supplied_precondition:
+			continue
+		if precondition.predicate in producible_predicates:
+			continue
+		context = _literal_signature_with_substitution(precondition, final_substitution)
+		if _literal_variables(context).issubset(final_variables):
+			contexts.append(context)
+	for precondition in tuple(producer["preconditions"]):
+		context = _literal_signature_with_substitution(precondition, producer_substitution)
+		if _literal_variables(context).issubset(final_variables):
+			contexts.append(context)
+	return tuple(dict.fromkeys(contexts))
+
+
+def _literal_signature_with_substitution(
+	literal: LiftedLiteral,
+	substitution: Mapping[str, str],
+) -> str:
+	return _call(
+		literal.predicate,
+		tuple(substitution.get(argument, _var(argument)) for argument in literal.arguments),
+	)
+
+
+def _literal_variables(literal: str) -> frozenset[str]:
+	return frozenset(
+		argument
+		for argument in _context_literal_arguments(literal)
+		if _is_variable(argument)
+	)
+
+
 def _action_effect_rules(
 	action: object,
 	*,
@@ -2070,26 +2469,7 @@ def _binding_contexts_for_precondition(
 	contexts: list[tuple[str, ...]] = []
 	if precondition_variables.issubset(bound_variables):
 		contexts.append(tuple(literal.signature() for literal in binding_literals))
-	type_bound_variables = _positive_context_variables(type_context)
-	if (
-		precondition_variables.intersection(head_variables)
-		and (precondition_variables - head_variables).issubset(type_bound_variables)
-	):
-		contexts.append(())
 	return tuple(dict.fromkeys(contexts))
-
-
-def _positive_context_variables(contexts: Sequence[str]) -> frozenset[str]:
-	variables: set[str] = set()
-	for context in tuple(contexts or ()):
-		if str(context or "").strip().lower().startswith("not "):
-			continue
-		variables.update(
-			argument
-			for argument in _context_literal_arguments(context)
-			if _is_variable(argument)
-		)
-	return frozenset(variables)
 
 
 def _positive_signature(literal: LiftedLiteral) -> str:
@@ -2103,6 +2483,10 @@ def _required_capabilities(
 	training_goal_facts: Iterable[PDDLFact],
 ) -> tuple[str, ...]:
 	predicate_names = {predicate.name for predicate in predicates}
+	training_facts = tuple(training_goal_facts or ())
+	training_goal_predicates = frozenset(
+		fact.predicate for fact in training_facts if fact.is_positive
+	)
 	required: list[str] = []
 	for predicate in predicates:
 		required.append(f"compose_goal_{predicate.name}")
@@ -2120,8 +2504,14 @@ def _required_capabilities(
 			and not _is_schema_atomic_action_rule(rule)
 			and not _is_trace_macro_rule(rule)
 		):
+			if (
+				_is_causal_chain_rule(rule)
+				and training_goal_predicates
+				and rule.head.symbol not in training_goal_predicates
+			):
+				continue
 			required.extend(rule.capabilities)
-	for fact in training_goal_facts:
+	for fact in training_facts:
 		if not fact.is_positive:
 			raise ValueError(
 				"Goal-conditioned schema synthesis currently supports positive "
@@ -2136,6 +2526,10 @@ def _required_capabilities(
 
 def _is_ordering_capability(capability: str) -> bool:
 	return capability.startswith(("order_", "causal_order_", "delete_threat_order_"))
+
+
+def _is_causal_chain_rule(rule: LiftedPlanRule) -> bool:
+	return str(rule.rationale or "") == "schema_causal_chain_action_module"
 
 
 def atomic_action_strategy_required_rule_groups(

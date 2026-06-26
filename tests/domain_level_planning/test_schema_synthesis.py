@@ -242,6 +242,190 @@ def test_schema_synthesizer_keeps_duplicate_precondition_prepare_strategies(
 	assert result.steps == ("drive(truck, a, b)", "pick-up(truck, b, pkg)")
 
 
+def test_schema_synthesizer_learns_typed_carrier_delivery_chain(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain carrier-delivery-mini)
+		 (:requirements :strips :typing)
+		 (:types locatable place - object carrier package - locatable)
+		 (:predicates
+		  (at ?x - locatable ?l - place)
+		  (loaded ?p - package ?c - carrier)
+		  (road ?from - place ?to - place)
+		 )
+		 (:action move
+		  :parameters (?c - carrier ?from - place ?to - place)
+		  :precondition (and (at ?c ?from) (road ?from ?to))
+		  :effect (and (not (at ?c ?from)) (at ?c ?to))
+		 )
+		 (:action load
+		  :parameters (?c - carrier ?p - package ?from - place)
+		  :precondition (and (at ?c ?from) (at ?p ?from))
+		  :effect (and (not (at ?p ?from)) (loaded ?p ?c))
+		 )
+		 (:action unload
+		  :parameters (?c - carrier ?p - package ?to - place)
+		  :precondition (and (at ?c ?to) (loaded ?p ?c))
+		  :effect (and (not (loaded ?p ?c)) (at ?p ?to))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem carrier-delivery-p1)
+		 (:domain carrier-delivery-mini)
+		 (:objects truck - carrier parcel - package a b c d - place)
+		 (:init
+		  (at truck a)
+		  (at parcel b)
+		  (road a b)
+		  (road b d)
+		  (road d b)
+		  (road d c)
+		 )
+		 (:goal (and (at parcel c)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(plan_library)
+	result = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		max_steps=30,
+		max_depth=30,
+	)
+
+	assert "+!at(P, To) : type_carrier(C)" in asl
+	assert "\t!loaded(P, C);" in asl
+	assert "\t!at(C, To);" in asl
+	assert "\tunload(C, P, To)." in asl
+	assert result.solved is True
+	assert result.steps == (
+		"move(truck, a, b)",
+		"load(truck, parcel, b)",
+		"move(truck, b, d)",
+		"move(truck, d, c)",
+		"unload(truck, parcel, c)",
+	)
+
+
+def test_schema_synthesizer_uses_resource_bridge_without_resource_causal_chain(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain resource-delivery-mini)
+		 (:requirements :strips :typing)
+		 (:types locatable place capacity - object carrier package - locatable)
+		 (:predicates
+		  (at ?x - locatable ?l - place)
+		  (loaded ?p - package ?c - carrier)
+		  (road ?from - place ?to - place)
+		  (cap ?c - carrier ?s - capacity)
+		  (pred ?low - capacity ?high - capacity)
+		 )
+		 (:action move
+		  :parameters (?c - carrier ?from - place ?to - place)
+		  :precondition (and (at ?c ?from) (road ?from ?to))
+		  :effect (and (not (at ?c ?from)) (at ?c ?to))
+		 )
+		 (:action load
+		  :parameters (?c - carrier ?p - package ?from - place ?low ?high - capacity)
+		  :precondition (and
+		   (at ?c ?from)
+		   (at ?p ?from)
+		   (pred ?low ?high)
+		   (cap ?c ?high)
+		  )
+		  :effect (and
+		   (not (at ?p ?from))
+		   (loaded ?p ?c)
+		   (cap ?c ?low)
+		   (not (cap ?c ?high))
+		  )
+		 )
+		 (:action unload
+		  :parameters (?c - carrier ?p - package ?to - place ?low ?high - capacity)
+		  :precondition (and
+		   (at ?c ?to)
+		   (loaded ?p ?c)
+		   (pred ?low ?high)
+		   (cap ?c ?low)
+		  )
+		  :effect (and
+		   (not (loaded ?p ?c))
+		   (at ?p ?to)
+		   (cap ?c ?high)
+		   (not (cap ?c ?low))
+		  )
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem resource-delivery-p1)
+		 (:domain resource-delivery-mini)
+		 (:objects truck - carrier parcel - package a b c d - place low high - capacity)
+		 (:init
+		  (at truck a)
+		  (at parcel b)
+		  (cap truck high)
+		  (pred low high)
+		  (road a b)
+		  (road b d)
+		  (road d b)
+		  (road d c)
+		 )
+		 (:goal (and (at parcel c)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(plan_library)
+	result = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		max_steps=40,
+		max_depth=40,
+	)
+
+	assert "at_causal_chain" in asl
+	assert "cap_causal_chain" not in asl
+	at_chain = asl.split("plan=at_causal_chain", 1)[1].split("\n\n", 1)[0]
+	assert "\t!cap(" not in at_chain
+	assert result.solved is True
+	assert result.steps == (
+		"move(truck, a, b)",
+		"load(truck, parcel, b, low, high)",
+		"move(truck, b, d)",
+		"move(truck, d, c)",
+		"unload(truck, parcel, c, low, high)",
+	)
+
+
 def test_schema_synthesizer_rejects_action_rules_with_unbound_parameters(
 	tmp_path: Path,
 ) -> None:

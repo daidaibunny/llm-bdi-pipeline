@@ -67,9 +67,9 @@ destroyed, provided the selected rules still make progress toward the final
 conjunction inside the validation scope. Generic unsatisfied-goal dispatch rules
 are guarded by \texttt{ready\_$p$} contexts derived from the selected support
 agenda, so they cannot bypass a selected predecessor goal. This mechanism is a
-runtime agenda gate, not a complete goal-order learner by itself; larger
-Blocksworld tower failures remain outside the current positive claim until the
-composer learns the missing scalable structure.
+runtime agenda gate, not a complete goal-order learner by itself; unsupported
+goal mutexes and arbitrary reachable mid-state policies remain outside the
+current positive claim unless the report validates them explicitly.
 
 \subsection{Candidate Generation}
 
@@ -79,6 +79,19 @@ support a Layer B rule for $p$ when its typed parameters and preconditions can b
 bound safely. Missing positive preconditions may become calls to other predicate
 modules. Delete effects and producer-consumer precondition links contribute
 ordering evidence for Layer C.
+
+For typed-overloaded predicates, the generator also creates causal-chain module
+candidates. This case arises when the same \pddl{} predicate is produced for
+different typed argument partitions, such as a movement action producing
+\texttt{at(carrier, location)} and an unloading action producing
+\texttt{at(package, location)}. If a producer action can establish a
+target-action precondition, the candidate first calls the producer predicate
+module, then achieves the remaining producible target-action preconditions, and
+finally executes the target action. Shared static preconditions, such as a
+capacity predecessor relation, may bridge resource variables across the two
+actions; mutable resource predicates are not emitted as independent
+causal-chain goals. Same-predicate delegation across disjoint typed argument
+partitions is accepted only with an explicit type certificate.
 
 External sketch candidates come from verified policy-sketch backends, currently
 learner-sketches \cite{Drexler2022LearningSketches}. A learned sketch rule is

@@ -693,7 +693,8 @@ def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
 				not_claimed=(
 					"full arbitrary-domain module learning",
 					"unchecked trace replay as a lifted module",
-					"multi-resource logistics agendas beyond verified single-effect route movement",
+					"arbitrary multi-resource logistics policies beyond verified "
+					"route movement and typed-overloaded causal-chain delivery modules",
 				),
 		),
 		LayerPaperQualityContract(
@@ -772,7 +773,14 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 					"same-predicate recursion requires a missing-precondition or "
 					"bounded acyclic-relation descent certificate; single-effect "
 					"movement recursion may instead use a route_step shortest-path "
-					"distance-decrease context"
+					"distance-decrease context; same-predicate delegation across "
+					"typed argument partitions is allowed with an explicit type certificate"
+				),
+				"causal_chain_modules": (
+					"typed-overloaded effect predicates may use schema causal-chain "
+					"action modules when a producer action supplies a target-action "
+					"precondition, shared static preconditions bridge resource variables, "
+					"and resource predicates are not emitted as independent causal-chain goals"
 				),
 		},
 		composer_language={
@@ -820,8 +828,9 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"arbitrary PDDL domains",
 			"negative or disjunctive achievement goals",
 				"numeric fluents and action costs",
-				"derived predicates and conditional effects",
-				"multi-resource logistics/resource agendas beyond the current Layer C composer",
+			"derived predicates and conditional effects",
+				"arbitrary multi-resource logistics/resource agendas beyond the "
+				"typed-overloaded carrier/resource causal-chain fragment",
 				"runtime full-trace planning as the plan-library executor",
 			),
 	)

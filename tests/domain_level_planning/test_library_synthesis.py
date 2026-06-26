@@ -740,6 +740,13 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "matching schema arities" in hypothesis["module_language"]["body_calls"]
 	assert "every body variable" in hypothesis["module_language"]["body_calls"]
 	assert "route_step shortest-path" in hypothesis["module_language"]["recursion"]
+	assert "typed argument partitions" in hypothesis["module_language"]["recursion"]
+	assert "typed-overloaded effect predicates" in (
+		hypothesis["module_language"]["causal_chain_modules"]
+	)
+	assert "resource predicates are not emitted" in (
+		hypothesis["module_language"]["causal_chain_modules"]
+	)
 	assert "goal-conditioned +!g rules" in hypothesis["composer_language"]["rule_shape"]
 	assert "runtime support agenda" in hypothesis["composer_language"]["rule_shape"]
 	assert "selected support-agenda edges" in (
@@ -751,7 +758,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	)
 	assert "arbitrary PDDL domains" in hypothesis["exclusions"]
 	assert any(
-		"multi-resource logistics/resource agendas" in exclusion
+		"typed-overloaded carrier/resource" in exclusion
 		for exclusion in hypothesis["exclusions"]
 	)
 	assert "rejected object-specific, distance, or vocabulary-mismatched features" in (
