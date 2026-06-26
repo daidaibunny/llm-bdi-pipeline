@@ -98,8 +98,9 @@ Bonet2024GeneralPoliciesWidth}. We adapt this view to \asl{} by making the
 output modular. Atomic modules implement predicate goals such as
 \texttt{clear(X)} or \texttt{on(X,Y)}. A separate top-level composer orders
 conjunctive goals using read-only goal descriptors such as
-\texttt{goal\_on(X,Y)}. The descriptors specify the current problem goal, while
-the achievement-goal heads remain ordinary \pddl{} predicates.
+\texttt{goal\_on(X,Y)} and read-only ready contexts derived from the selected
+support agenda. The descriptors specify the current problem goal, while the
+achievement-goal heads remain ordinary \pddl{} predicates.
 
 The contribution claimed here is deliberately bounded. We do not claim universal
 generalized-planning completeness for arbitrary \pddl{} domains. We claim a

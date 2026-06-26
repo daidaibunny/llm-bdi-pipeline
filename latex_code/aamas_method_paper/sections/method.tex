@@ -19,18 +19,24 @@ declared primitive action or another declared predicate achievement goal.
 
 \subsection{Goal-Conditioned Representation}
 
-The library observes two kinds of facts. State facts are ordinary \pddl{}
-fluents. Goal facts are read-only descriptors derived from the current problem
-goal. For every predicate $p \in \mathcal{P}$, a goal literal
+The library observes three kinds of context facts. State facts are ordinary
+\pddl{} fluents. Goal facts are read-only descriptors derived from the current
+problem goal. For every predicate $p \in \mathcal{P}$, a goal literal
 $p(o_1,\ldots,o_k)$ is represented as $\goalpred{p}(o_1,\ldots,o_k)$. These
 facts are not actions, mutable beliefs, or achievement-goal heads. They are
 inputs that let a single domain-level library distinguish one problem goal from
-another.
+another. Ready facts are also read-only, but they are derived at run time from
+the selected Layer C support agenda, the current state, and the goal facts.
+A context atom \texttt{ready\_$p$(X)} means that no selected support-agenda
+predecessor for \texttt{goal\_$p$(X)} remains unsatisfied. Ready facts gate
+generic composer rules; they are not \pddl{} predicates, mutable beliefs,
+primitive actions, or achievement-goal heads.
 
 A context is a conjunction of state literals, negation-as-absence literals, type
-guards, equality or inequality tests, and read-only goal descriptors. The method
-uses only symbols declared by the \pddl{} domain, except for the systematic
-read-only prefix used for goal descriptors.
+guards, equality or inequality tests, read-only goal descriptors, and read-only
+ready facts. The method uses only symbols declared by the \pddl{} domain, except
+for the systematic read-only prefixes used for goal descriptors and ready
+contexts.
 
 \subsection{Hypothesis Class}
 
@@ -43,7 +49,12 @@ Layer B contains atomic predicate-goal modules. A rule has the form
 where $p \in \mathcal{P}$, $C$ is a safe lifted context, and each body item is
 either $a(\bar{Z})$ for some $a \in \mathcal{A}$ or $!q(\bar{Z})$ for some
 $q \in \mathcal{P}$. Variables in body calls must be bound by the head or by
-positive context literals.
+positive context literals. A selected Layer B rule must be justified by at
+least one admissible source: action-schema support, bounded transition evidence,
+external sketch binding, trace evidence used only offline, or counterexample
+repair evidence. The implementation reports these justifications as proof
+objects; schema-only rules may be candidates, but the paper profile treats
+unjustified schema action modules as blocking diagnostics.
 
 Layer C contains goal-composer rules. A rule has the form
 \[
@@ -53,7 +64,12 @@ where $C_g$ mentions read-only goal descriptors and current state facts. These
 rules decide which atomic goal should be pursued next for a conjunctive goal.
 They do not protect every achieved literal permanently. Temporary facts may be
 destroyed, provided the selected rules still make progress toward the final
-conjunction inside the validation scope.
+conjunction inside the validation scope. Generic unsatisfied-goal dispatch rules
+are guarded by \texttt{ready\_$p$} contexts derived from the selected support
+agenda, so they cannot bypass a selected predecessor goal. This mechanism is a
+runtime agenda gate, not a complete goal-order learner by itself; larger
+Blocksworld tower failures remain outside the current positive claim until the
+composer learns the missing scalable structure.
 
 \subsection{Candidate Generation}
 
@@ -61,7 +77,8 @@ Candidates are generated without domain-specific code. Primitive candidates come
 from \pddl{} action schemas: if an action adds a predicate $p$, the action can
 support a Layer B rule for $p$ when its typed parameters and preconditions can be
 bound safely. Missing positive preconditions may become calls to other predicate
-modules. Delete effects contribute ordering evidence for Layer C.
+modules. Delete effects and producer-consumer precondition links contribute
+ordering evidence for Layer C.
 
 External sketch candidates come from verified policy-sketch backends, currently
 learner-sketches \cite{Drexler2022LearningSketches}. A learned sketch rule is
@@ -109,12 +126,14 @@ $\mathcal{I}_{eval}$
 	\State generate Layer B candidates from action effects, safe external
 	sketches, traces, and repair evidence
 	\State generate Layer C candidates from goal descriptors, causal support,
-	delete threats, trace ordering, and counterexamples
+	delete threats, trace ordering, state coverage, and counterexamples
 	\State encode safety, coverage, progress, and optimization constraints
 	\State $S \gets$ solve the answer-set selection problem
 	\If{$S$ is unsatisfiable}
 		\State \Return diagnostics explaining the blocking constraints
 	\EndIf
+	\State derive the selected support agenda and ready-context semantics from
+	Layer C rules in $S$
 	\State $\mathcal{L} \gets \compile(S)$ into lifted \asl{} plan schemas
 	\State run bounded validation and held-out library execution
 	\If{all validation and evaluation checks pass}
@@ -130,11 +149,12 @@ $\mathcal{I}_{eval}$
 
 Compilation is conservative. A selected Layer B rule becomes an \asl{} plan
 whose trigger is the corresponding predicate achievement goal. A selected Layer
-C rule becomes a \texttt{+!g} plan. Context literals are rendered as an
-order-independent conjunction. Positive context literals bind variables before
-negated literals are checked. Primitive actions are executed by the same
-STRIPS-style precondition and effect semantics used to validate the originating
-\pddl{} domain.
+C rule becomes a \texttt{+!g} plan. The compiler also records the selected
+support agenda used to evaluate \texttt{ready\_$p$} contexts at run time.
+Context literals are rendered as an order-independent conjunction. Positive
+context literals bind variables before negated literals are checked. Primitive
+actions are executed by the same STRIPS-style precondition and effect semantics
+used to validate the originating \pddl{} domain.
 
 The compiler rejects any body action or subgoal whose variables are not bound by
 the plan head or by positive context literals. It also rejects synthetic

@@ -665,6 +665,8 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "runtime full-trace planning for each new problem" in contract["non_goals"]
 	assert "read-only goal descriptors" in contract["goal_fact_semantics"]
 	assert "not primitive actions" in contract["goal_fact_semantics"]
+	assert "ready_<predicate>" in contract["goal_fact_semantics"]
+	assert "derived at runtime" in contract["goal_fact_semantics"]
 	assert contract["paper_core_method"] == [
 		"goal-conditioned modular policy-sketch synthesis",
 		"Layer B lifted atomic predicate-goal modules",
@@ -691,8 +693,30 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "Layer C" in " ".join(method_summary)
 	assert "runtime full-trace planning" in " ".join(method_summary)
 	assert "negative or disjunctive achievement goals" in " ".join(method_summary)
+	assert "ready_<predicate>" in " ".join(method_summary)
+	assert "not claim complete held-out tower benchmark scaling" in " ".join(method_summary)
 	assert "Fast Downward" not in " ".join(method_summary)
 	assert "trace macro" not in " ".join(method_summary).lower()
+	layer_contracts = {
+		layer["layer"]: layer
+		for layer in contract["paper_layer_contracts"]
+	}
+	assert set(layer_contracts) == {"Layer B", "Layer C"}
+	layer_b_contract = layer_contracts["Layer B"]
+	assert layer_b_contract["target_artifact"] == (
+		"lifted atomic predicate-goal module set"
+	)
+	assert "PDDL action-effect schemas" in layer_b_contract["admissible_evidence"]
+	assert "external policy-sketch bindings" in layer_b_contract["admissible_evidence"]
+	assert "atomic_module_proofs" in layer_b_contract["required_reports"]
+	assert "full arbitrary-domain module learning" in layer_b_contract["not_claimed"]
+	layer_c_contract = layer_contracts["Layer C"]
+	assert layer_c_contract["target_artifact"] == (
+		"lifted conjunctive-goal composer plus runtime support agenda"
+	)
+	assert "ready_<predicate> derived contexts" in layer_c_contract["runtime_semantics"]
+	assert "composer_rule_proofs" in layer_c_contract["required_reports"]
+	assert "complete held-out tower benchmark scaling" in layer_c_contract["not_claimed"]
 	hypothesis = contract["hypothesis_class"]
 	assert hypothesis["name"] == "goal_conditioned_modular_sketch_asl"
 	assert any(
@@ -701,6 +725,10 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	)
 	assert any(
 		"goal_<predicate>" in item
+		for item in hypothesis["feature_language"]["goal_features"]
+	)
+	assert any(
+		"ready_<predicate>" in item
 		for item in hypothesis["feature_language"]["goal_features"]
 	)
 	assert hypothesis["module_language"]["heads"] == (
@@ -712,6 +740,10 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "matching schema arities" in hypothesis["module_language"]["body_calls"]
 	assert "every body variable" in hypothesis["module_language"]["body_calls"]
 	assert "goal-conditioned +!g rules" in hypothesis["composer_language"]["rule_shape"]
+	assert "runtime support agenda" in hypothesis["composer_language"]["rule_shape"]
+	assert "selected support-agenda edges" in (
+		hypothesis["composer_language"]["runtime_gate"]
+	)
 	assert "bounded reachable states" in hypothesis["progress_language"]["validation_scope"]
 	assert hypothesis["correctness_language"]["claim_scope"] == (
 		"bounded training/counterexample/held-out transition systems"

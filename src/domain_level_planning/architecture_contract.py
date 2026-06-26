@@ -73,6 +73,34 @@ class HypothesisClassContract:
 
 
 @dataclass(frozen=True)
+class LayerPaperQualityContract:
+	"""Paper-facing contract for one learned layer."""
+
+	layer: str
+	target_artifact: str
+	core_claim: str
+	admissible_evidence: tuple[str, ...]
+	selector_obligations: tuple[str, ...]
+	compiler_output: str
+	runtime_semantics: str
+	required_reports: tuple[str, ...]
+	not_claimed: tuple[str, ...]
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"layer": self.layer,
+			"target_artifact": self.target_artifact,
+			"core_claim": self.core_claim,
+			"admissible_evidence": list(self.admissible_evidence),
+			"selector_obligations": list(self.selector_obligations),
+			"compiler_output": self.compiler_output,
+			"runtime_semantics": self.runtime_semantics,
+			"required_reports": list(self.required_reports),
+			"not_claimed": list(self.not_claimed),
+		}
+
+
+@dataclass(frozen=True)
 class ArchitectureContract:
 	"""The bounded-class synthesis contract reported with each library."""
 
@@ -85,6 +113,7 @@ class ArchitectureContract:
 	layer_b_target: str
 	layer_c_target: str
 	goal_fact_semantics: str
+	paper_layer_contracts: tuple[LayerPaperQualityContract, ...]
 	hypothesis_class: HypothesisClassContract
 	decisions: tuple[ArchitectureDecision, ...]
 	gaps: tuple[ArchitectureGap, ...]
@@ -100,6 +129,10 @@ class ArchitectureContract:
 			"layer_b_target": self.layer_b_target,
 			"layer_c_target": self.layer_c_target,
 			"goal_fact_semantics": self.goal_fact_semantics,
+			"paper_layer_contracts": [
+				contract.to_dict()
+				for contract in self.paper_layer_contracts
+			],
 			"paper_method_summary": list(self.paper_method_summary()),
 			"hypothesis_class": self.hypothesis_class.to_dict(),
 			"decisions": [decision.to_dict() for decision in self.decisions],
@@ -139,7 +172,8 @@ class ArchitectureContract:
 				"Layer C learns the conjunctive-goal composer. "
 				f"{self.layer_c_target}; rules have the shape "
 				f"{hypothesis.composer_language['rule_shape']} and use ordering "
-				f"evidence from {_series(hypothesis.composer_language['ordering_evidence'])}."
+				f"evidence from {_series(hypothesis.composer_language['ordering_evidence'])}. "
+				f"At runtime, {hypothesis.composer_language['runtime_gate']}."
 			),
 			(
 				"Synthesis is offline and evidence-driven. The selector enforces "
@@ -159,6 +193,12 @@ class ArchitectureContract:
 				f"{exclusions}. Unsupported cases, including negative or disjunctive "
 				"achievement goals, must be rejected with diagnostics before ASL "
 				"compilation unless a separate semantics is added."
+			),
+			(
+				"The current Layer B and Layer C claims are intentionally bounded: "
+				"proof reports justify selected modules and composer rules, but we "
+				"do not claim complete held-out tower benchmark scaling or full arbitrary-domain "
+				"module learning."
 			),
 		)
 
@@ -223,13 +263,18 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 		),
 		layer_c_target=(
 			"learn lifted goal-conditioned composer rules that choose which atomic "
-			"goal module to call next for conjunctive goals with dependencies"
+			"goal module to call next for conjunctive goals with dependencies, "
+			"and expose selected support-agenda edges as runtime ready gates"
 		),
 		goal_fact_semantics=(
 			"goal_<predicate> atoms are read-only goal descriptors derived from "
 			"PDDL goals or future DFA requests; they are not primitive actions, "
-			"mutable beliefs, or synthetic achievement goals"
+			"mutable beliefs, or synthetic achievement goals. ready_<predicate> "
+			"atoms are read-only contexts derived at runtime from selected "
+			"Layer C support-agenda edges, current state facts, and goal descriptors; "
+			"they are not plan heads, body subgoals, primitive actions, or initial beliefs"
 		),
+		paper_layer_contracts=paper_layer_quality_contracts(),
 		hypothesis_class=bounded_hypothesis_class_contract(),
 		decisions=(
 			ArchitectureDecision(
@@ -605,6 +650,94 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 	)
 
 
+def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
+	"""Return final-paper contracts for Layer B and Layer C claims."""
+
+	return (
+		LayerPaperQualityContract(
+			layer="Layer B",
+			target_artifact="lifted atomic predicate-goal module set",
+			core_claim=(
+				"select reusable predicate-goal modules whose heads are declared "
+				"PDDL predicates and whose bodies are executable ASL calls over "
+				"declared primitive actions or predicate subgoals"
+			),
+			admissible_evidence=(
+				"PDDL action-effect schemas",
+				"validated bounded transition evidence",
+				"offline planner traces used only as synthesis evidence",
+				"external policy-sketch bindings",
+				"counterexample repair and atomic-progress constraints",
+			),
+			selector_obligations=(
+				"cover observed atomic goal-progress transitions",
+				"select at least one context-compatible primitive strategy when required",
+				"reject undeclared, wrong-arity, unbound-variable, or unsafe recursive rules",
+				"prefer trace/sketch/repair justified rules over unjustified schema-only rules",
+			),
+			compiler_output=(
+				"ASL plans headed by +!P(Args), with bodies containing only declared "
+				"PDDL primitive actions or declared predicate subgoal calls"
+			),
+			runtime_semantics=(
+				"atomic modules execute through deterministic first-applicable ASL "
+				"selection and STRIPS-style primitive action simulation"
+			),
+			required_reports=(
+				"atomic_module_proofs",
+				"atomic_action_strategy_group_reports",
+				"selected_rule_manifest",
+				"rule_manifest_audit",
+			),
+			not_claimed=(
+				"full arbitrary-domain module learning",
+				"unchecked trace replay as a lifted module",
+				"cyclic same-predicate recursion without a ranking or reachability certificate",
+			),
+		),
+		LayerPaperQualityContract(
+			layer="Layer C",
+			target_artifact="lifted conjunctive-goal composer plus runtime support agenda",
+			core_claim=(
+				"select goal-conditioned +!g rules that decide the next atomic "
+				"predicate goal for positive conjunctive achievement goals"
+			),
+			admissible_evidence=(
+				"PDDL causal precondition support",
+				"PDDL delete-threat interactions",
+				"last-achievement trace ordering",
+				"bounded state-coverage constraints",
+				"counterexample goal-ordering and state-coverage constraints",
+			),
+			selector_obligations=(
+				"cover bounded reachable non-goal states when bounded evidence exists",
+				"keep selected support-agenda edges acyclic",
+				"prioritize selected ordering rules before generic goal dispatch",
+				"reject undeclared or wrong-arity composer refinements before ASL generation",
+			),
+			compiler_output=(
+				"ASL +!g plans whose contexts mention state predicates, read-only "
+				"goal descriptors, and read-only ready contexts"
+			),
+			runtime_semantics=(
+				"ready_<predicate> derived contexts gate generic +!g dispatch using "
+				"selected support-agenda edges, current state facts, and goal descriptors"
+			),
+			required_reports=(
+				"composer_rule_proofs",
+				"goal_agenda",
+				"runtime_goal_agenda",
+				"output_composer_rule_evidence",
+			),
+			not_claimed=(
+				"complete held-out tower benchmark scaling",
+				"universal goal-order learning for arbitrary PDDL domains",
+				"permanent protection of all achieved facts",
+			),
+		),
+	)
+
+
 def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 	"""Return the exact bounded hypothesis class claimed by the implementation."""
 
@@ -618,6 +751,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 				),
 			"goal_features": (
 				"read-only goal_<predicate> descriptors",
+				"read-only ready_<predicate> derived contexts for runtime agenda gating",
 				"positive conjunctive achievement goals",
 			),
 			"external_features": (
@@ -639,11 +773,18 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			),
 		},
 		composer_language={
-			"rule_shape": "goal-conditioned +!g rules selecting one atomic module",
+			"rule_shape": (
+				"goal-conditioned +!g rules selecting one atomic module under a "
+				"runtime support agenda"
+			),
 			"ordering_evidence": (
 				"trace orderings",
 				"schema causal interference",
 				"counterexample goal ordering",
+			),
+			"runtime_gate": (
+				"selected support-agenda edges derive ready_<predicate> contexts "
+				"that block generic dispatch until predecessor goals are satisfied"
 			),
 			"goal_dependency_scope": "positive conjunctive achievement goals",
 		},
