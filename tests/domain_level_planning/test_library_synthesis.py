@@ -769,9 +769,9 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		hypothesis["feature_language"]["external_features"]
 	)
 	gap_summary = result.report["architecture_gap_summary"]
-	assert gap_summary["in_progress"] >= 1
+	assert gap_summary.get("in_progress", 0) == 0
 	assert gap_summary["partially_done"] >= 4
-	assert gap_summary["done_current_fragment"] == 1
+	assert gap_summary["done_current_fragment"] >= 5
 
 	decisions = {decision["id"]: decision for decision in contract["decisions"]}
 	assert decisions["D3"]["status"] == "accepted"
@@ -848,12 +848,12 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "selected by the Clingo synthesis step" in gaps["G6"]["current_state"]
 	assert "verified policy-to-ASL adapters" in gaps["G6"]["required_improvement"]
 	assert gaps["G7"]["layer"] == "ASL compiler"
-	assert gaps["G7"]["status"] == "partially_done"
+	assert gaps["G7"]["status"] == "done_current_fragment"
 	assert "deterministic first-applicable" in gaps["G7"]["current_state"]
 	assert "context execution is order-independent" in gaps["G7"]["current_state"]
 	assert "PDDL-to-ASL symbol mapping" in gaps["G7"]["current_state"]
 	assert "variable-binding safety" in gaps["G7"]["current_state"]
-	assert "primitive-action precondition handling" in gaps["G7"]["required_improvement"]
+	assert "more AgentSpeak constructs" in gaps["G7"]["required_improvement"]
 	assert gaps["G8"]["layer"] == "validation"
 	assert gaps["G8"]["status"] == "partially_done"
 	assert "library size and runtime metrics" in gaps["G8"]["current_state"]
@@ -875,7 +875,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "machine-readable diagnostics" in gaps["G10"]["current_state"]
 	assert "action-symbol collisions" in gaps["G10"]["current_state"]
 	assert gaps["G11"]["layer"] == "no-hardcoding"
-	assert gaps["G11"]["status"] == "partially_done"
+	assert gaps["G11"]["status"] == "done_current_fragment"
 	assert "rule manifest leakage" in gaps["G11"]["current_state"]
 	assert "domain-specific" in gaps["G11"]["required_improvement"]
 	assert gaps["G12"]["layer"] == "TEG"

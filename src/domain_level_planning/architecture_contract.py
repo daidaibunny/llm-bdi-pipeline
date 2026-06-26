@@ -341,9 +341,18 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				id="G1",
 				layer="theory",
 				gap="The bounded-class contract needs a formal paper definition.",
-				current_state="Reports expose the contract as implementation metadata.",
-				required_improvement="Define feature, module, composer, progress, and correctness languages.",
-				status="in_progress",
+				current_state=(
+					"Reports expose the contract as implementation metadata, and the "
+					"AAMAS method draft defines the feature, module, composer, "
+					"progress, compiler, and bounded-correctness languages for the "
+					"current positive-conjunctive achievement-goal fragment."
+				),
+				required_improvement=(
+					"Keep final evaluation claims and related-work positioning aligned "
+					"with this bounded contract; do not extend the claim to unsupported "
+					"PDDL fragments or temporal goals without a separate semantics."
+				),
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G2",
@@ -438,11 +447,16 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				current_state=(
 					"goal_<predicate> facts are used as read-only descriptors; the "
 					"library contract rejects them as initial beliefs, plan heads, "
-					"body calls, actions, or belief updates, and now reports every "
-					"context descriptor with its mapped PDDL predicate and read-only status."
+					"body calls, actions, or belief updates, and reports every "
+					"context descriptor with its mapped PDDL predicate and read-only "
+					"status. ready_<predicate> contexts are also read-only derived "
+					"agenda gates rather than mutable beliefs."
 				),
-				required_improvement="Define negative-goal representation before supporting it.",
-				status="partially_done",
+				required_improvement=(
+					"Define negative-goal or disjunctive-goal representation before "
+					"supporting those fragments."
+				),
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G5",
@@ -508,14 +522,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"variable-binding safety rejects body action or subgoal arguments not "
 					"bound by the plan head or positive context literals; "
 					"PDDL-to-ASL symbol mapping records sanitized primitive action "
-					"functors so rendered ASL can be traced back to original PDDL schemas."
+					"functors so rendered ASL can be traced back to original PDDL schemas. "
+					"The method draft mirrors these compiler and primitive-action "
+					"precondition semantics for the supported subset."
 				),
 				required_improvement=(
-					"Mirror primitive-action precondition handling in the paper method "
-					"section and extend the contract whenever more AgentSpeak constructs "
-					"are intentionally supported."
+					"Extend the contract whenever more AgentSpeak constructs are "
+					"intentionally supported."
 				),
-				status="partially_done",
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G8",
@@ -622,7 +637,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"artifacts are added so domain-specific production branches cannot "
 					"silently enter the library path."
 				),
-				status="partially_done",
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G12",
