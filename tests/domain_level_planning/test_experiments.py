@@ -144,6 +144,14 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 		"atomic_action_strategy_group_count"
 	] >= 1
 	assert report["learning_audit"]["layer_b_atomic_modules"][
+		"atomic_module_proof_count"
+	] >= report["learning_audit"]["layer_b_atomic_modules"][
+		"justified_atomic_module_proof_count"
+	]
+	assert report["learning_audit"]["layer_b_atomic_modules"][
+		"unjustified_atomic_module_proof_count"
+	] >= 1
+	assert report["learning_audit"]["layer_b_atomic_modules"][
 		"atomic_action_strategy_candidate_count"
 	] >= report["learning_audit"]["layer_b_atomic_modules"][
 		"selected_atomic_action_strategy_candidate_count"

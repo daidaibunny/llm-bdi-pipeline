@@ -336,6 +336,7 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 	layer_b = dict(matrix.get("layer_b_atomic_modules") or {})
 	layer_c = dict(matrix.get("layer_c_goal_composer") or {})
 	strategy_groups = tuple(layer_b.get("atomic_action_strategy_groups") or ())
+	atomic_module_proofs = tuple(layer_b.get("atomic_module_proofs") or ())
 	strategy_portfolio = dict(layer_b.get("atomic_strategy_portfolio") or {})
 	strategy_candidates = tuple(
 		candidate
@@ -345,6 +346,17 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 	composer_candidates = tuple(layer_c.get("composer_candidate_evidence") or ())
 	return {
 		"layer_b_atomic_modules": {
+			"atomic_module_proof_count": len(atomic_module_proofs),
+			"justified_atomic_module_proof_count": sum(
+				1
+				for proof in atomic_module_proofs
+				if dict(proof).get("proof_status") == "justified"
+			),
+			"unjustified_atomic_module_proof_count": sum(
+				1
+				for proof in atomic_module_proofs
+				if dict(proof).get("proof_status") != "justified"
+			),
 			"atomic_action_strategy_group_count": len(strategy_groups),
 			"atomic_action_strategy_candidate_count": len(strategy_candidates),
 			"selected_atomic_action_strategy_candidate_count": sum(

@@ -849,10 +849,33 @@ def test_unified_pipeline_reports_evidence_matrix_by_layer(
 		item["rule_name"]: item
 		for item in layer_b["selected_atomic_rule_evidence"]
 	}
+	proofs_by_rule = {
+		item["rule_name"]: item
+		for item in layer_b["atomic_module_proofs"]
+	}
 	assert evidence_by_rule["done_via_finish"]["verdict"] == "trace_justified"
 	assert evidence_by_rule["done_via_finish"]["trace_support_count"] == 1
 	assert evidence_by_rule["done_via_finish"]["source"] == "schema"
 	assert evidence_by_rule["done_already_true"]["verdict"] == "schema_no_action_body"
+	assert proofs_by_rule["done_via_finish"]["proof_status"] == "justified"
+	assert proofs_by_rule["done_via_finish"]["selector_reason"] in {
+		"selected_by_atomic_action_strategy_constraint",
+		"selected_by_trace_progress_evidence",
+	}
+	assert proofs_by_rule["done_via_finish"]["supporting_transitions"] == (
+		{
+			"problem_name": "p1",
+			"target_fact": "done(a)",
+			"action_signature": "finish(a)",
+			"step_index": 1,
+			"is_last_achiever": True,
+			"enabling_preconditions": ("ready(a)",),
+		},
+	)
+	assert proofs_by_rule["done_already_true"]["proof_status"] == "justified"
+	assert proofs_by_rule["done_already_true"]["selector_reason"] == (
+		"selected_as_non_action_atomic_module"
+	)
 	assert layer_b["recursion_descent"]["contract"] == (
 		"missing_positive_precondition_before_same_goal_recursion"
 	)
@@ -1291,6 +1314,24 @@ def test_layer_b_selects_one_evidence_backed_action_strategy_per_goal(
 			"trace_support_count": 1,
 			"rejected_candidate_count": 1,
 			"rejection_reasons": ("dominated_by_trace_supported_strategy",),
+		},
+	)
+	proofs = {
+		proof["rule_name"]: proof
+		for proof in layer_b["atomic_module_proofs"]
+	}
+	assert proofs["done_via_finish"]["selector_reason"] == (
+		"selected_by_atomic_action_strategy_constraint"
+	)
+	assert proofs["done_via_finish"]["selector_strategy_groups"] == (
+		strategy_groups[0]["group_name"],
+	)
+	assert proofs["done_via_finish"]["rejected_alternatives"] == (
+		{
+			"rule_name": "done_via_backup_finish",
+			"verdict": "schema_unobserved_action_body",
+			"rejection_reason": "dominated_by_trace_supported_strategy",
+			"cost": 4,
 		},
 	)
 

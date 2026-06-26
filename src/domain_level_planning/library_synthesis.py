@@ -35,6 +35,7 @@ from .pddl_support import assert_compilable_pddl_files
 from .pddl_types import declared_type_names, type_guard_symbol
 from .schema_synthesis import _candidate_rules_from_domain
 from .schema_synthesis import _required_capabilities
+from .schema_synthesis import _rule_covers_action_achievement
 from .schema_synthesis import _training_evidence
 from .schema_synthesis import _validate_selected_rules_against_transition_progress
 from .schema_synthesis import atomic_action_strategy_required_rule_groups
@@ -3025,6 +3026,13 @@ def _evidence_matrix(
 		selected_rules=selected_rules,
 		atomic_justifications=all_atomic_justifications,
 	)
+	atomic_support_records = _atomic_rule_support_records(
+		selected_rules=selected_rules,
+		transition_evidence=(
+			*tuple(training_transition_evidence or ()),
+			*tuple(counterexample_transition_evidence or ()),
+		),
+	)
 	return {
 		"layer_b_atomic_modules": {
 			"target": "PDDL predicate achievement-goal modules",
@@ -3125,6 +3133,12 @@ def _evidence_matrix(
 			"selected_atomic_rule_evidence": _selected_atomic_rule_evidence(
 				selected_rules=selected_rules,
 				atomic_justifications=atomic_justifications,
+			),
+			"atomic_module_proofs": _atomic_module_proofs(
+				selected_rules=selected_rules,
+				atomic_justifications=atomic_justifications,
+				atomic_support_records=atomic_support_records,
+				strategy_groups=atomic_strategy_groups,
 			),
 			"anti_unified_pattern_count": len(all_atomic_patterns),
 			"training_anti_unified_pattern_count": len(training_atomic_patterns),
@@ -3375,6 +3389,161 @@ def _selected_atomic_rule_evidence(
 		for rule in tuple(selected_rules or ())
 		if rule.layer == "atomic"
 	)
+
+
+def _atomic_rule_support_records(
+	*,
+	selected_rules: Sequence[LiftedPlanRule],
+	transition_evidence: Sequence[object],
+) -> dict[str, tuple[dict[str, object], ...]]:
+	"""Return compact trace-support records for selected atomic action modules."""
+
+	records: dict[str, list[dict[str, object]]] = {}
+	for rule in tuple(selected_rules or ()):
+		if rule.layer != "atomic":
+			continue
+		if not any(step.kind == "action" for step in tuple(rule.body or ())):
+			continue
+		for evidence in tuple(transition_evidence or ()):
+			for slice_ in tuple(getattr(evidence, "atomic_achievements", ()) or ()):
+				if not _rule_covers_action_achievement(
+					rule,
+					target_fact=slice_.target_fact,
+					action_name=slice_.action_name,
+					action_arguments=slice_.action_arguments,
+					before_state=frozenset(slice_.before_state),
+				):
+					continue
+				records.setdefault(rule.name, []).append(
+					{
+						"problem_name": str(getattr(evidence, "problem_name", "")),
+						"target_fact": slice_.target_fact.to_signature(),
+						"action_signature": slice_.action_signature,
+						"step_index": int(slice_.step_index),
+						"is_last_achiever": bool(slice_.is_last_achiever),
+						"enabling_preconditions": tuple(
+							_call(literal.predicate, literal.arguments)
+							for literal in tuple(slice_.enabling_preconditions or ())
+						),
+					},
+				)
+	return {
+		rule_name: tuple(items)
+		for rule_name, items in sorted(records.items())
+	}
+
+
+def _atomic_module_proofs(
+	*,
+	selected_rules: Sequence[LiftedPlanRule],
+	atomic_justifications: Mapping[str, tuple],
+	atomic_support_records: Mapping[str, tuple[dict[str, object], ...]],
+	strategy_groups: Sequence[Mapping[str, object]],
+) -> tuple[dict[str, object], ...]:
+	"""Build one proof object for each selected Layer B atomic module."""
+
+	strategy_index = _atomic_strategy_group_index(strategy_groups)
+	proofs: list[dict[str, object]] = []
+	for rule in tuple(selected_rules or ()):
+		if rule.layer != "atomic":
+			continue
+		evidence = _atomic_rule_evidence_record(
+			rule=rule,
+			supporting_slices=tuple(atomic_justifications.get(rule.name, ())),
+		)
+		group_records = tuple(strategy_index.get(rule.name, ()))
+		rejected_alternatives = tuple(
+			alternative
+			for group in group_records
+			for alternative in tuple(group["rejected_alternatives"])
+		)
+		proofs.append(
+			{
+				"rule_name": rule.name,
+				"head": _call(rule.head.symbol, rule.head.arguments),
+				"context": tuple(rule.context),
+				"body": tuple(
+					_call(step.symbol, step.arguments)
+					for step in tuple(rule.body or ())
+				),
+				"source": evidence["source"],
+				"rationale": evidence["rationale"],
+				"verdict": evidence["verdict"],
+				"proof_status": _atomic_proof_status(str(evidence["verdict"])),
+				"selector_reason": _atomic_selector_reason(
+					str(evidence["verdict"]),
+					group_records,
+				),
+				"trace_support_count": evidence["trace_support_count"],
+				"supporting_transitions": tuple(
+					atomic_support_records.get(rule.name, ()),
+				),
+				"selector_strategy_groups": tuple(
+					group["group_name"] for group in group_records
+				),
+				"rejected_alternatives": rejected_alternatives,
+				"capabilities": tuple(rule.capabilities),
+			},
+		)
+	return tuple(proofs)
+
+
+def _atomic_strategy_group_index(
+	strategy_groups: Sequence[Mapping[str, object]],
+) -> dict[str, tuple[dict[str, object], ...]]:
+	index: dict[str, list[dict[str, object]]] = {}
+	for group in tuple(strategy_groups or ()):
+		group_name = str(group.get("group_name") or "")
+		candidates = tuple(dict(candidate) for candidate in tuple(group.get("candidates") or ()))
+		rejected = tuple(
+			{
+				"rule_name": str(candidate.get("rule_name") or ""),
+				"verdict": str(candidate.get("verdict") or ""),
+				"rejection_reason": str(candidate.get("rejection_reason") or ""),
+				"cost": int(candidate.get("cost") or 0),
+			}
+			for candidate in candidates
+			if not bool(candidate.get("selected"))
+		)
+		for candidate in candidates:
+			if not bool(candidate.get("selected")):
+				continue
+			index.setdefault(str(candidate.get("rule_name") or ""), []).append(
+				{
+					"group_name": group_name,
+					"head": str(group.get("head") or ""),
+					"context": tuple(group.get("context") or ()),
+					"candidate_count": len(candidates),
+					"rejected_alternatives": rejected,
+				},
+			)
+	return {
+		rule_name: tuple(groups)
+		for rule_name, groups in sorted(index.items())
+	}
+
+
+def _atomic_proof_status(verdict: str) -> str:
+	if verdict == "schema_unobserved_action_body":
+		return "unsupported_selected_schema_action"
+	return "justified"
+
+
+def _atomic_selector_reason(
+	verdict: str,
+	strategy_groups: Sequence[Mapping[str, object]],
+) -> str:
+	if tuple(strategy_groups or ()):
+		return "selected_by_atomic_action_strategy_constraint"
+	if verdict == "trace_justified":
+		return "selected_by_trace_progress_evidence"
+	if verdict == "external_policy_bound":
+		return "selected_by_bound_external_policy_rule"
+	if verdict == "counterexample_repair_synthesized":
+		return "selected_by_counterexample_repair_constraint"
+	if verdict == "schema_no_action_body":
+		return "selected_as_non_action_atomic_module"
+	return "selected_by_selector_capability_coverage"
 
 
 def _atomic_action_strategy_group_reports(
