@@ -178,6 +178,12 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 	assert expanded_rows[
 		"blocksworld-bootstrap-train1-satisfiable-large"
 	]["eval_count"] == 10
+	assert (
+		expanded_rows[
+			"blocksworld-bootstrap-train1-satisfiable-large"
+		]["evaluation_timeout_seconds"]
+		== 30
+	)
 	assert expanded_rows[
 		"blocksworld-paper-external-on2-satisfiable-large"
 	]["eval_base"] == "src/domains/blocksworld/satisfiable-large"
@@ -207,6 +213,12 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 			"blocksworld-bootstrap-train1-satisfiable-mixed-large"
 		]["eval_base"]
 		== "src/domains/blocksworld/satisfiable-mixed-large"
+	)
+	assert (
+		expanded_rows[
+			"blocksworld-bootstrap-train1-satisfiable-mixed-large"
+		]["evaluation_timeout_seconds"]
+		== 30
 	)
 	assert (
 		expanded_rows[
