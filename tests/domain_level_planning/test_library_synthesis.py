@@ -77,6 +77,25 @@ def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None
 		and edge["later"] == "on(X, Y)"
 		for edge in agenda["edges"]
 	)
+	proofs = {
+		proof["rule_name"]: proof
+		for proof in layer_c["composer_rule_proofs"]
+	}
+	schema_order_proof = next(
+		proof
+		for proof in proofs.values()
+		if proof["ordering_kind"] == "schema_causal_precondition_support"
+		and proof["ordered_goals"] == {
+			"earlier": "on(Y, Z)",
+			"later": "on(X, Y)",
+		}
+	)
+	assert schema_order_proof["proof_status"] == "justified"
+	assert schema_order_proof["selector_reason"] == (
+		"selected_by_goal_dependency_ordering"
+	)
+	assert schema_order_proof["goal_agenda_edge"]["category"] == "support"
+	assert schema_order_proof["goal_agenda_edge"]["selected"] is True
 	assert all(
 		item["rejection_reason"] is None
 		or item["rejection_reason"]
@@ -1582,6 +1601,21 @@ def test_goal_ordering_refinement_constraint_synthesizes_composer_candidate(
 	assert "g_counterexample_order_base_before_top_1" in (
 		result.report["selected_rule_names"]
 	)
+	layer_c = result.report["evidence_matrix"]["layer_c_goal_composer"]
+	proof = next(
+		item
+		for item in layer_c["composer_rule_proofs"]
+		if item["rule_name"] == "g_counterexample_order_base_before_top_1"
+	)
+	assert proof["proof_status"] == "justified"
+	assert proof["selector_reason"] == (
+		"selected_by_counterexample_goal_ordering_constraint"
+	)
+	assert proof["ordering_kind"] == "counterexample_goal_ordering"
+	assert proof["ordered_goals"] == {
+		"earlier": "base(X)",
+		"later": "top(X)",
+	}
 
 	asl = render_plan_library_asl(result.plan_library)
 	assert "+!g : goal_base(X) & goal_top(X) & not base(X) <-" in asl

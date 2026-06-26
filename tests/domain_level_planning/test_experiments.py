@@ -166,6 +166,14 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 	] >= report["learning_audit"]["layer_c_goal_composer"][
 		"selected_composer_candidate_count"
 	]
+	assert report["learning_audit"]["layer_c_goal_composer"][
+		"composer_rule_proof_count"
+	] >= report["learning_audit"]["layer_c_goal_composer"][
+		"justified_composer_rule_proof_count"
+	]
+	assert report["learning_audit"]["layer_c_goal_composer"][
+		"unjustified_composer_rule_proof_count"
+	] == 0
 	assert "schema_goal_dispatch" in report["learning_audit"]["layer_c_goal_composer"][
 		"composer_candidate_verdict_counts"
 	]

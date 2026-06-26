@@ -343,6 +343,7 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 		for group in strategy_groups
 		for candidate in tuple(dict(group).get("candidates") or ())
 	)
+	composer_rule_proofs = tuple(layer_c.get("composer_rule_proofs") or ())
 	composer_candidates = tuple(layer_c.get("composer_candidate_evidence") or ())
 	return {
 		"layer_b_atomic_modules": {
@@ -394,6 +395,17 @@ def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
 			),
 		},
 		"layer_c_goal_composer": {
+			"composer_rule_proof_count": len(composer_rule_proofs),
+			"justified_composer_rule_proof_count": sum(
+				1
+				for proof in composer_rule_proofs
+				if dict(proof).get("proof_status") == "justified"
+			),
+			"unjustified_composer_rule_proof_count": sum(
+				1
+				for proof in composer_rule_proofs
+				if dict(proof).get("proof_status") != "justified"
+			),
 			"composer_candidate_count": len(composer_candidates),
 			"selected_composer_candidate_count": sum(
 				1 for candidate in composer_candidates if bool(candidate.get("selected"))

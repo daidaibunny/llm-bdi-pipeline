@@ -3033,6 +3033,14 @@ def _evidence_matrix(
 			*tuple(counterexample_transition_evidence or ()),
 		),
 	)
+	composer_candidate_evidence = _composer_candidate_evidence(
+		candidate_rules=candidate_rules,
+		selected_rules=selected_rules,
+	)
+	goal_agenda = _goal_agenda_report(
+		candidate_rules=candidate_rules,
+		selected_rules=selected_rules,
+	)
 	return {
 		"layer_b_atomic_modules": {
 			"target": "PDDL predicate achievement-goal modules",
@@ -3234,19 +3242,18 @@ def _evidence_matrix(
 				selected_rules,
 				"order_",
 			),
-			"composer_candidate_evidence": _composer_candidate_evidence(
-				candidate_rules=candidate_rules,
-				selected_rules=selected_rules,
-			),
-			"goal_agenda": _goal_agenda_report(
-				candidate_rules=candidate_rules,
-				selected_rules=selected_rules,
-			),
+			"composer_candidate_evidence": composer_candidate_evidence,
+			"goal_agenda": goal_agenda,
 			"selected_composer_rule_evidence": _selected_composer_rule_evidence(
 				selected_rules,
 			),
 			"output_composer_rule_evidence": _selected_composer_rule_evidence(
 				output_rules,
+			),
+			"composer_rule_proofs": _composer_rule_proofs(
+				selected_rules=selected_rules,
+				composer_candidate_evidence=composer_candidate_evidence,
+				goal_agenda=goal_agenda,
 			),
 		},
 		"sources": {
@@ -3762,6 +3769,117 @@ def _selected_composer_rule_evidence(
 		for rule in tuple(selected_rules or ())
 		if rule.layer == "composer"
 	)
+
+
+def _composer_rule_proofs(
+	*,
+	selected_rules: Sequence[LiftedPlanRule],
+	composer_candidate_evidence: Sequence[Mapping[str, object]],
+	goal_agenda: Mapping[str, object],
+) -> tuple[dict[str, object], ...]:
+	"""Build one proof object for each selected Layer C composer rule."""
+
+	candidate_index = {
+		str(candidate.get("rule_name") or ""): dict(candidate)
+		for candidate in tuple(composer_candidate_evidence or ())
+	}
+	agenda_edge_index = {
+		str(edge.get("rule_name") or ""): dict(edge)
+		for edge in tuple(dict(goal_agenda or {}).get("edges") or ())
+	}
+	rejected_by_ordering = _rejected_composer_alternatives_by_ordering(
+		composer_candidate_evidence,
+	)
+	proofs: list[dict[str, object]] = []
+	for rule in tuple(selected_rules or ()):
+		if rule.layer != "composer":
+			continue
+		evidence = candidate_index.get(rule.name) or _composer_candidate_evidence_record(
+			rule=rule,
+			selected=True,
+		)
+		ordering_key = _composer_ordering_key(evidence)
+		proofs.append(
+			{
+				"rule_name": rule.name,
+				"head": _call(rule.head.symbol, rule.head.arguments),
+				"context": tuple(rule.context),
+				"body": tuple(
+					_call(step.symbol, step.arguments)
+					for step in tuple(rule.body or ())
+				),
+				"source": evidence["source"],
+				"rationale": evidence["rationale"],
+				"verdict": evidence["verdict"],
+				"proof_status": _composer_proof_status(evidence),
+				"selector_reason": _composer_selector_reason(evidence),
+				"ordering_kind": evidence["ordering_kind"],
+				"ordered_goals": evidence["ordered_goals"],
+				"ordering_binding_contexts": evidence["ordering_binding_contexts"],
+				"ordering_binding_depth": evidence["ordering_binding_depth"],
+				"goal_agenda_edge": agenda_edge_index.get(rule.name),
+				"rejected_alternatives": tuple(
+					rejected_by_ordering.get(ordering_key, ()),
+				),
+				"capabilities": tuple(rule.capabilities),
+			},
+		)
+	return tuple(proofs)
+
+
+def _rejected_composer_alternatives_by_ordering(
+	composer_candidate_evidence: Sequence[Mapping[str, object]],
+) -> dict[tuple[object, ...], tuple[dict[str, object], ...]]:
+	index: dict[tuple[object, ...], list[dict[str, object]]] = {}
+	for candidate in tuple(composer_candidate_evidence or ()):
+		item = dict(candidate)
+		if bool(item.get("selected")):
+			continue
+		key = _composer_ordering_key(item)
+		index.setdefault(key, []).append(
+			{
+				"rule_name": str(item.get("rule_name") or ""),
+				"verdict": str(item.get("verdict") or ""),
+				"rejection_reason": str(item.get("rejection_reason") or ""),
+				"cost": int(item.get("cost") or 0),
+			},
+		)
+	return {
+		key: tuple(items)
+		for key, items in sorted(index.items(), key=lambda pair: repr(pair[0]))
+	}
+
+
+def _composer_ordering_key(candidate: Mapping[str, object]) -> tuple[object, ...]:
+	ordered_goals = dict(candidate.get("ordered_goals") or {})
+	return (
+		candidate.get("ordering_kind"),
+		ordered_goals.get("earlier"),
+		ordered_goals.get("later"),
+		tuple(candidate.get("ordering_binding_contexts") or ()),
+	)
+
+
+def _composer_proof_status(candidate: Mapping[str, object]) -> str:
+	if not candidate.get("verdict"):
+		return "missing_composer_evidence"
+	return "justified"
+
+
+def _composer_selector_reason(candidate: Mapping[str, object]) -> str:
+	source = str(candidate.get("source") or "")
+	verdict = str(candidate.get("verdict") or "")
+	if verdict == "schema_causal_ordering":
+		return "selected_by_goal_dependency_ordering"
+	if verdict == "trace_ordering":
+		return "selected_by_trace_goal_ordering"
+	if source == "counterexample_goal_ordering":
+		return "selected_by_counterexample_goal_ordering_constraint"
+	if source == "counterexample_state_coverage":
+		return "selected_by_counterexample_state_coverage_constraint"
+	if source == "external_sketch":
+		return "selected_by_bound_external_policy_rule"
+	return "selected_by_state_coverage_or_goal_dispatch"
 
 
 def _composer_candidate_evidence(
