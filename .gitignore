@@ -87,7 +87,10 @@ dmypy.json
 external/
 .external/
 dissertation/
-latex_code/
+latex_code/*
+!latex_code/aamas_method_paper/
+!latex_code/aamas_method_paper/**
+latex_code/aamas_method_paper/build/
 tests/logs/
 tmp/
 

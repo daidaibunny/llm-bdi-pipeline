@@ -1,0 +1,142 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% AAMAS-2026 paper skeleton for the domain-level lifted ASL method.
+%%% Template files are copied from the official AAMAS-2026 author kit.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[sigconf,anonymous]{aamas}
+
+\usepackage{balance}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\setcopyright{ifaamas}
+\acmConference[AAMAS '26]{Proc.\@ of the 25th International Conference
+on Autonomous Agents and Multiagent Systems (AAMAS 2026)}{May 25 -- 29, 2026}
+{Paphos, Cyprus}{C.~Amato, L.~Dennis, V.~Mascardi, J.~Thangarajah (eds.)}
+\copyrightyear{2026}
+\acmYear{2026}
+\acmDOI{}
+\acmPrice{}
+\acmISBN{}
+
+\acmSubmissionID{anonymous}
+
+\title[Goal-Conditioned Modular Policy Sketches]{Goal-Conditioned Modular
+Policy Sketches for Lifted AgentSpeak Plan Libraries}
+
+\author{Anonymous Authors}
+\affiliation{
+	\institution{Anonymous Institution}
+	\city{Anonymous City}
+	\country{Anonymous Country}}
+\email{anonymous@example.org}
+
+\begin{abstract}
+We study the automatic synthesis of domain-level lifted AgentSpeak(L) plan
+libraries from Planning Domain Definition Language domains and small sets of
+achievement-goal training problems. The generated library is not a trace for a
+single problem and is not tied to a query. Instead, its plan heads are lifted
+predicate achievement goals and its bodies call declared primitive actions or
+other predicate goals. The method combines goal-conditioned policy sketches,
+modular predicate-goal rules, an answer-set selection problem, and a conservative
+AgentSpeak(L) compiler. The current scope is positive conjunctive achievement
+goals; temporal goals are handled by a separate controller and are outside this
+paper core.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10010147.10010178.10010179.10003352</concept_id>
+<concept_desc>Computing methodologies~Planning and scheduling</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10010147.10010257.10010293.10010294</concept_id>
+<concept_desc>Computing methodologies~Multi-agent systems</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Planning and scheduling}
+\ccsdesc[300]{Computing methodologies~Multi-agent systems}
+
+\keywords{generalized planning, policy sketches, AgentSpeak(L), plan libraries,
+answer set programming, Planning Domain Definition Language}
+
+\newcommand{\pddl}{Planning Domain Definition Language}
+\newcommand{\asl}{AgentSpeak(L)}
+\newcommand{\goalpred}[1]{\ensuremath{\mathsf{goal}\_#1}}
+\newcommand{\select}{\ensuremath{\mathsf{select}}}
+\newcommand{\compile}{\ensuremath{\mathsf{compile}}}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhead{}
+
+\maketitle
+
+\section{Introduction}
+
+Classical planners can generate a plan for a concrete problem, but a
+Belief-Desire-Intention agent requires a reusable plan library. This paper
+targets the gap between generalized planning and executable agent programs:
+given a \pddl{} domain and a small set of training problems, synthesize a lifted
+\asl{} library that can solve new achievement-goal problems from the same
+domain without asking a planner for a full trace at run time.
+
+The method follows the view that many useful planning domains share a compact
+subgoal structure expressible by sketches and generalized policies
+\cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches,
+Bonet2024GeneralPoliciesWidth}. We adapt this view to \asl{} by making the
+output modular. Atomic modules implement predicate goals such as
+\texttt{clear(X)} or \texttt{on(X,Y)}. A separate top-level composer orders
+conjunctive goals using read-only goal descriptors such as
+\texttt{goal\_on(X,Y)}. The descriptors specify the current problem goal, while
+the achievement-goal heads remain ordinary \pddl{} predicates.
+
+The contribution claimed here is deliberately bounded. We do not claim universal
+generalized-planning completeness for arbitrary \pddl{} domains. We claim a
+bounded-class synthesis procedure for libraries expressible as
+goal-conditioned modular policy sketches with safe lifted feature bindings.
+Unsupported cases are rejected with diagnostics instead of being compiled into
+unsafe plans.
+
+\input{sections/method}
+
+\section{Evaluation Protocol}
+\label{sec:evaluation-protocol}
+
+The evaluation should report three classes of results.
+First, in-domain generalization measures whether one synthesized lifted library
+solves held-out problems with more objects or different initial states than the
+training set. Second, ablations remove external sketches, the top-level
+composer, counterexample refinement, or trace evidence to isolate their
+contribution. Third, diagnostic domains expose the boundary of the current
+hypothesis class, such as cyclic route domains that require a principled
+ranking or reachability feature.
+
+Runtime evaluation must execute the compiled \asl{} library. Classical planners
+may appear only as offline evidence providers, counterexample generators, or
+baseline systems. Each experiment should report coverage, library size,
+selected rule provenance, rejected-candidate diagnostics, validation scope, and
+whether a full-trace planner was used at run time. The expected run-time flag
+for the proposed method is always false.
+
+\section{Current Scope and Exclusions}
+\label{sec:scope}
+
+The current method supports positive conjunctive achievement goals. Negative
+goals, disjunctive goals, derived predicates, conditional effects, and numeric
+fluents require additional semantics before they can be part of the paper
+claim. Temporal extended goals are handled by a future deterministic finite
+automaton controller that calls the achievement-goal library; they are not part
+of the current algorithm.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

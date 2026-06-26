@@ -1,0 +1,156 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{Problem Setting}
+
+Let $D = \langle \mathcal{P}, \mathcal{A} \rangle$ be a typed \pddl{} domain
+with predicate schemas $\mathcal{P}$ and action schemas $\mathcal{A}$. A training
+set $\mathcal{I}_{train}$ contains small planning problems over $D$, each with an
+initial state and a positive conjunctive goal. A counterexample set
+$\mathcal{I}_{cex}$ is initially empty and grows when the current library fails
+on a held-out problem in a way that can be lifted.
+
+The target artifact is a finite set $\mathcal{L}$ of lifted \asl{} plan schemas.
+The library is domain-level: variables may appear in plan heads, contexts, and
+bodies, but concrete object names from training problems must not appear in plan
+heads. The only allowed achievement-goal heads are declared \pddl{} predicates
+and the distinguished composer goal \texttt{g}. The body of a plan may call a
+declared primitive action or another declared predicate achievement goal.
+
+\subsection{Goal-Conditioned Representation}
+
+The library observes two kinds of facts. State facts are ordinary \pddl{}
+fluents. Goal facts are read-only descriptors derived from the current problem
+goal. For every predicate $p \in \mathcal{P}$, a goal literal
+$p(o_1,\ldots,o_k)$ is represented as $\goalpred{p}(o_1,\ldots,o_k)$. These
+facts are not actions, mutable beliefs, or achievement-goal heads. They are
+inputs that let a single domain-level library distinguish one problem goal from
+another.
+
+A context is a conjunction of state literals, negation-as-absence literals, type
+guards, equality or inequality tests, and read-only goal descriptors. The method
+uses only symbols declared by the \pddl{} domain, except for the systematic
+read-only prefix used for goal descriptors.
+
+\subsection{Hypothesis Class}
+
+The search space contains two families of lifted rules.
+
+Layer B contains atomic predicate-goal modules. A rule has the form
+\[
+	+!p(\bar{X}) : C(\bar{X},\bar{Y}) \leftarrow B_1;\ldots;B_m
+\]
+where $p \in \mathcal{P}$, $C$ is a safe lifted context, and each body item is
+either $a(\bar{Z})$ for some $a \in \mathcal{A}$ or $!q(\bar{Z})$ for some
+$q \in \mathcal{P}$. Variables in body calls must be bound by the head or by
+positive context literals.
+
+Layer C contains goal-composer rules. A rule has the form
+\[
+	+!g : C_g \leftarrow !p(\bar{X}); !g
+\]
+where $C_g$ mentions read-only goal descriptors and current state facts. These
+rules decide which atomic goal should be pursued next for a conjunctive goal.
+They do not protect every achieved literal permanently. Temporary facts may be
+destroyed, provided the selected rules still make progress toward the final
+conjunction inside the validation scope.
+
+\subsection{Candidate Generation}
+
+Candidates are generated without domain-specific code. Primitive candidates come
+from \pddl{} action schemas: if an action adds a predicate $p$, the action can
+support a Layer B rule for $p$ when its typed parameters and preconditions can be
+bound safely. Missing positive preconditions may become calls to other predicate
+modules. Delete effects contribute ordering evidence for Layer C.
+
+External sketch candidates come from verified policy-sketch backends, currently
+learner-sketches \cite{Drexler2022LearningSketches}. A learned sketch rule is
+accepted only when every condition and qualitative effect has an explicit lifted
+binding to \pddl{} literals, primitive actions, predicate subgoals, or read-only
+goal descriptors. Object-specific, distance, and vocabulary-mismatched features
+are rejected unless a principled lifting adapter is provided.
+
+Trace candidates come from offline evidence only. A planner trace may be used to
+identify which action last achieved a target fact, to anti-unify repeated
+support patterns, or to explain a counterexample. Such traces are never emitted
+as run-time full-trace plans.
+
+\subsection{Selection Objective}
+
+Candidate selection is encoded as an answer-set optimization problem
+\cite{Gebser2018Clingo}. Hard constraints reject unsafe rules, undeclared
+symbols, wrong arities, unbound variables, cyclic composer support without a
+progress certificate, and candidates unsupported by the selected paper profile.
+Additional hard groups require coverage of observed goal-progress transitions
+and coverage of bounded reachable non-goal states by at least one applicable
+composer rule.
+
+The optimization objective prefers smaller libraries, fewer features, shorter
+contexts, fewer body calls, trace- or sketch-justified candidates over
+unjustified schema-only candidates, and rules with explicit progress evidence.
+The selector therefore chooses the best library within the declared hypothesis
+class, not the best possible generalized plan over all languages.
+
+\begin{algorithm}[t]
+\caption{Synthesize a domain-level lifted \asl{} library}
+\label{alg:synthesis}
+\begin{algorithmic}[1]
+\Require typed \pddl{} domain $D$, training problems $\mathcal{I}_{train}$,
+optional external sketches $\mathcal{E}$, held-out problems
+$\mathcal{I}_{eval}$
+\Ensure lifted \asl{} library $\mathcal{L}$ or structured diagnostics
+\State validate the supported \pddl{} fragment of $D$ and $\mathcal{I}_{train}$
+\State $\mathcal{I}_{cex} \gets \emptyset$
+\Repeat
+	\State build schema model from predicates, actions, types, preconditions,
+	add effects, and delete effects
+	\State collect bounded transition evidence or validated offline trace
+	evidence from $\mathcal{I}_{train} \cup \mathcal{I}_{cex}$
+	\State generate Layer B candidates from action effects, safe external
+	sketches, traces, and repair evidence
+	\State generate Layer C candidates from goal descriptors, causal support,
+	delete threats, trace ordering, and counterexamples
+	\State encode safety, coverage, progress, and optimization constraints
+	\State $S \gets$ solve the answer-set selection problem
+	\If{$S$ is unsatisfiable}
+		\State \Return diagnostics explaining the blocking constraints
+	\EndIf
+	\State $\mathcal{L} \gets \compile(S)$ into lifted \asl{} plan schemas
+	\State run bounded validation and held-out library execution
+	\If{all validation and evaluation checks pass}
+		\State \Return $\mathcal{L}$ and its provenance report
+	\EndIf
+	\State lift supported failures into $\mathcal{I}_{cex}$ constraints
+\Until{the failure is unsupported or no new constraint can be generated}
+\State \Return $\mathcal{L}$ with unsupported-failure diagnostics
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Compiler Semantics}
+
+Compilation is conservative. A selected Layer B rule becomes an \asl{} plan
+whose trigger is the corresponding predicate achievement goal. A selected Layer
+C rule becomes a \texttt{+!g} plan. Context literals are rendered as an
+order-independent conjunction. Positive context literals bind variables before
+negated literals are checked. Primitive actions are executed by the same
+STRIPS-style precondition and effect semantics used to validate the originating
+\pddl{} domain.
+
+The compiler rejects any body action or subgoal whose variables are not bound by
+the plan head or by positive context literals. It also rejects synthetic
+achievement names, grounded plan heads, mutable goal descriptors, undeclared
+predicates, and arity mismatches.
+
+\subsection{Guarantee}
+
+The method provides a bounded-class guarantee. If a problem class admits a
+solution expressible by the candidate language above, if the required candidates
+are generated from schema, sketch, trace, or counterexample evidence, and if the
+selector finds a satisfying model that passes bounded validation, the compiled
+library executes only declared \pddl{} actions and predicate subgoals and solves
+the validated problem set without run-time full-trace planning.
+
+This guarantee is intentionally conditional. Domains whose solution requires
+features outside the safe binding language, such as unbounded cyclic-route
+ranking without an accepted reachability feature, are reported as outside the
+current claim rather than being solved by unsafe trace replay.
