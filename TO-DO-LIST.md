@@ -94,6 +94,14 @@ policy: blocks_4_on_1
 strict paper profile with diagnostics: coverage=20/20 and bounded validation
   passed after rejecting rule 1 as no_goal_progress_evidence; ready=false only
   because the full external policy contains that unsafe aggregate rule
+policy: blocks_4_on_2, paper-profile all30 diagnostic
+coverage: 20/30 on `p01`-`p30`
+paper profile: ready=true, blocking_failure_count=0, selected external sketch=1
+plan library: 41 lifted plans, 152 ASL lines, no runtime full-trace planner
+diagnosis with 30s per-problem timeout: `p21` and `p22` fail with recursive
+  loop on `!g`; `p23`-`p30` still exceed the diagnostic timeout. This is not an
+  external-policy synthesis failure; it is the current larger-scale Layer C /
+  execution-policy gap for deeper Blocksworld towers.
 ```
 
 ## Stable Decisions
@@ -134,8 +142,8 @@ paper claim gets cleaner before adding harder learning machinery.
 | --- | --- | --- | --- | --- |
 | P1 | Paper/evaluation skeleton | Low risk and fixes the claim boundary before new code. | AAMAS draft has related work, backend positioning, experiment matrix, baseline protocol, ablation protocol, and failure-analysis protocol. | Done. |
 | P2 | External backend decision | Mostly already implemented; needs a paper-facing fixed role. | learner-sketches is the only synthesis-consumed backend; h-policy-learner and d2l are baseline/audit-only until verified adapters exist. | Done. |
-| P3 | Blocksworld expanded paper-profile run | Most direct positive evidence. | Strict paper-profile learner-sketches run on a fixed larger train/test split, not only first20 smoke. | Open. |
-| P4 | Baseline and ablation table generation | Needed for paper evaluation, independent of new learning power. | Comparison table includes classical planner, learner-sketches, MOOSE metadata, ASL library, and no-sketch/no-composer/no-refinement/no-trace ablations. | Open. |
+| P3 | Blocksworld expanded paper-profile run | Most direct positive evidence. | Strict paper-profile learner-sketches run on a fixed larger train/test split, not only first20 smoke. | Done: all30 diagnostic row is in the `paper-expanded-smoke` preset with 30s per-problem timeout; latest run is 20/30, paper_profile_ready=true, blocking_failure_count=0, plan_count=41. Failures identify Layer C/execution scaling rather than profile rejection. |
+| P4 | Baseline and ablation table generation | Needed for paper evaluation, independent of new learning power. | Comparison table includes classical planner, learner-sketches, MOOSE metadata, ASL library, and no-sketch/no-composer/no-refinement/no-trace ablations. | Next. |
 | P5 | Layer B evidence tightening | Turns current heuristic-looking modules into defensible learned modules. | Every selected atomic module has a compact proof object: source evidence, covered transitions, rejected alternatives, and selector reason. | Open. |
 | P6 | Layer C composer tightening | Main goal-dependency method gap. | Every selected composer rule has ordering evidence and failures can generate executable candidate rules when inside the supported class. | Open. |
 | P7 | Feature-binding expansion | Only after core paper claim is stable. | Add principled bindings only for features with verified lifted semantics; otherwise keep structured rejection. | Open. |

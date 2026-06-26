@@ -161,6 +161,7 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 	}.issubset(domain_files)
 	assert "blocksworld-paper-external-on2" in experiment_names
 	assert "blocksworld-bootstrap-train1-all30" in experiment_names
+	assert "blocksworld-paper-external-on2-all30" in experiment_names
 	assert "transport-bootstrap-train3-first10" in experiment_names
 	assert "satellite-bootstrap-train3-first10" in experiment_names
 	assert "marsrover-bootstrap-train3-first10" in experiment_names
@@ -171,6 +172,18 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 	}
 	assert expanded_rows["blocksworld-bootstrap-train1-all30"]["train_count"] == 1
 	assert expanded_rows["blocksworld-bootstrap-train1-all30"]["eval_count"] == 30
+	assert expanded_rows["blocksworld-paper-external-on2-all30"]["eval_count"] == 30
+	assert (
+		expanded_rows["blocksworld-paper-external-on2-all30"]["synthesis_profile"]
+		== "paper"
+	)
+	assert (
+		expanded_rows["blocksworld-paper-external-on2-all30"][
+			"evaluation_timeout_seconds"
+		]
+		== 30
+	)
+	assert expanded_rows["blocksworld-paper-external-on2-all30"]["timeout_seconds"] == 900
 	assert expanded_rows["transport-bootstrap-train3-first10"]["eval_count"] == 10
 	assert expanded_rows["satellite-bootstrap-train3-first10"]["eval_count"] == 10
 	assert expanded_rows["marsrover-bootstrap-train3-first10"]["eval_count"] == 10
