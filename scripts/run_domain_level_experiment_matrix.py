@@ -173,6 +173,10 @@ def _run_matrix_entry(
 		),
 		external_sketch_policies=external_policies,
 		synthesis_profile=str(entry.get("synthesis_profile") or "bootstrap"),
+		disabled_synthesis_mechanisms=tuple(
+			str(item)
+			for item in tuple(entry.get("disabled_synthesis_mechanisms") or ())
+		),
 		max_execution_steps=int(entry.get("max_steps") or 10000),
 		max_depth=int(entry.get("max_depth") or 1000),
 		evaluation_timeout_seconds=_optional_float(entry.get("evaluation_timeout_seconds")),
@@ -416,6 +420,9 @@ def _failure_protocol(entry: dict[str, object]) -> dict[str, object]:
 		"evaluation_source": "provided_pddl_evaluation_problems",
 		"synthesis_profile": str(entry.get("synthesis_profile") or "bootstrap"),
 		"external_policy_count": len(tuple(entry.get("external_sketch_policies") or ())),
+		"disabled_synthesis_mechanisms": list(
+			tuple(entry.get("disabled_synthesis_mechanisms") or ()),
+		),
 		"mechanism_status": mechanism_status,
 		"runtime_planner": "none",
 		"baselines": [],
@@ -429,6 +436,9 @@ def _failure_protocol(entry: dict[str, object]) -> dict[str, object]:
 				),
 				"use_synthesis_planner_traces": bool(
 					entry.get("use_synthesis_planner_traces", False),
+				),
+				"disabled_synthesis_mechanisms": list(
+					tuple(entry.get("disabled_synthesis_mechanisms") or ()),
 				),
 				"runtime_planner": "none",
 				"mechanism_status": mechanism_status,
@@ -459,6 +469,14 @@ def _entry_mechanism_status(entry: dict[str, object]) -> dict[str, str]:
 		"offline_synthesis_planner_traces": (
 			"enabled" if bool(entry.get("use_synthesis_planner_traces", False)) else "disabled"
 		),
+		"layer_c_ordering": (
+			"disabled"
+			if "layer_c_ordering" in set(
+				str(item)
+				for item in tuple(entry.get("disabled_synthesis_mechanisms") or ())
+			)
+			else "enabled"
+		),
 		"paper_profile_gate": (
 			"enabled"
 			if str(entry.get("synthesis_profile") or "bootstrap") == "paper"
@@ -475,6 +493,7 @@ def _mechanisms_by_status(
 		"external_sketch_evidence",
 		"counterexample_refinement",
 		"offline_synthesis_planner_traces",
+		"layer_c_ordering",
 		"paper_profile_gate",
 	)
 	return tuple(
@@ -505,6 +524,9 @@ def _matrix_entry_metadata(entry: dict[str, object], *, index: int) -> dict[str,
 		),
 		"use_synthesis_planner_traces": bool(
 			entry.get("use_synthesis_planner_traces", False),
+		),
+		"disabled_synthesis_mechanisms": list(
+			tuple(entry.get("disabled_synthesis_mechanisms") or ()),
 		),
 	}
 
@@ -570,6 +592,19 @@ def _preset_config(preset: str) -> dict[str, object]:
 			"eval_count": 20,
 			"synthesis_profile": "bootstrap",
 			"ablation_label": "bootstrap_schema_only",
+		},
+		{
+			"name": "blocksworld-no-layer-c-ordering-first20",
+			"domain_file": "src/domains/blocksworld/domain.pddl",
+			"train_base": "src/domains/blocksworld/problems",
+			"train_glob": "p*.pddl",
+			"train_count": 1,
+			"eval_base": "src/domains/blocksworld/problems",
+			"eval_glob": "p*.pddl",
+			"eval_count": 20,
+			"synthesis_profile": "bootstrap",
+			"disabled_synthesis_mechanisms": ["layer_c_ordering"],
+			"ablation_label": "no_layer_c_ordering",
 		},
 		{
 			"name": "labworkflow-counterexample-refinement",

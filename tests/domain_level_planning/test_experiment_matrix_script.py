@@ -90,6 +90,7 @@ def test_experiment_matrix_script_writes_success_failure_and_comparison_rows(
 	assert comparison["rows"][1]["coverage_ratio"] == 0.0
 	assert comparison["rows"][0]["enabled_mechanisms"] == [
 		"counterexample_refinement",
+		"layer_c_ordering",
 	]
 	assert comparison["rows"][1]["disabled_mechanisms"] == [
 		"external_sketch_evidence",
@@ -175,6 +176,7 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 		"src/domains/marsrover/domain.pddl",
 	}.issubset(domain_files)
 	assert "blocksworld-paper-external-on2" in experiment_names
+	assert "blocksworld-no-layer-c-ordering-first20" in experiment_names
 	assert "blocksworld-bootstrap-train1-satisfiable-large" in experiment_names
 	assert "blocksworld-paper-external-on2-satisfiable-large" in experiment_names
 	assert "blocksworld-bootstrap-train1-satisfiable-mixed-large" in experiment_names
@@ -190,6 +192,12 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 	assert expanded_rows[
 		"blocksworld-bootstrap-train1-satisfiable-large"
 	]["train_count"] == 1
+	assert expanded_rows[
+		"blocksworld-no-layer-c-ordering-first20"
+	]["disabled_synthesis_mechanisms"] == ["layer_c_ordering"]
+	assert expanded_rows[
+		"blocksworld-no-layer-c-ordering-first20"
+	]["ablation_label"] == "no_layer_c_ordering"
 	assert expanded_rows[
 		"blocksworld-bootstrap-train1-satisfiable-large"
 	]["eval_count"] == 10

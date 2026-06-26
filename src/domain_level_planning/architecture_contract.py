@@ -549,7 +549,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"counts and composer ordering-kind counts, optional explicit ablation metadata, "
 					"machine-readable ablation mechanism status for external sketch "
 					"evidence, counterexample refinement, offline synthesis traces, "
-					"and paper-profile gating, "
+					"Layer C ordering, and paper-profile gating, "
 					"optional already-completed external baseline metadata without running "
 					"hidden planners, a pure already-run report comparison table helper "
 					"and CLI "

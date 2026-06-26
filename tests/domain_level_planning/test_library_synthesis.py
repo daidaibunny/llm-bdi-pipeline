@@ -147,6 +147,26 @@ def test_unified_pipeline_can_use_offline_planner_trace_when_bounded_training_fa
 	assert result.report["runtime_full_trace_planner"] is False
 
 
+def test_layer_c_ordering_can_be_disabled_for_ablation() -> None:
+	result = synthesize_domain_level_asl_library(
+		domain_file=BLOCKS_DOMAIN,
+		training_problem_files=(BLOCKS_P01,),
+		disabled_synthesis_mechanisms=("layer_c_ordering",),
+	)
+	asl = render_plan_library_asl(result.plan_library)
+	layer_c = result.report["evidence_matrix"]["layer_c_goal_composer"]
+	filter_report = result.report["disabled_synthesis_mechanism_filter"]
+
+	assert result.report["disabled_synthesis_mechanisms"] == ("layer_c_ordering",)
+	assert filter_report["removed_rule_count_by_mechanism"]["layer_c_ordering"] > 0
+	assert layer_c["causal_interference_selected_count"] == 0
+	assert layer_c["delete_threat_ordering_selected_count"] == 0
+	assert layer_c["trace_ordering_selected_count"] == 0
+	assert "g_causal_order" not in asl
+	assert "g_delete_threat_order" not in asl
+	assert "+!g : goal_on(X, Y) & ready_on(X, Y) & not on(X, Y) <-" in asl
+
+
 def test_unified_pipeline_reports_multi_hop_schema_binding_ordering(
 	tmp_path: Path,
 ) -> None:

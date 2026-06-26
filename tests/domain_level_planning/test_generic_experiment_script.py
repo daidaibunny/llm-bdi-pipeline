@@ -64,10 +64,15 @@ def test_generic_domain_level_experiment_script_runs_any_pddl_split(
 			"mechanism_status": {
 				"counterexample_refinement": "enabled",
 				"external_sketch_evidence": "disabled",
+				"layer_c_ordering": "enabled",
 				"offline_synthesis_planner_traces": "disabled",
 				"paper_profile_gate": "disabled",
 			},
-			"enabled_mechanisms": ["counterexample_refinement"],
+			"disabled_synthesis_mechanisms": [],
+			"enabled_mechanisms": [
+				"counterexample_refinement",
+				"layer_c_ordering",
+			],
 			"disabled_mechanisms": [
 				"external_sketch_evidence",
 				"offline_synthesis_planner_traces",

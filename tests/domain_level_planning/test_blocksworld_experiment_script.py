@@ -52,10 +52,12 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 			"mechanism_status": {
 				"counterexample_refinement": "disabled",
 				"external_sketch_evidence": "disabled",
+				"layer_c_ordering": "enabled",
 				"offline_synthesis_planner_traces": "disabled",
 				"paper_profile_gate": "disabled",
 			},
-			"enabled_mechanisms": [],
+			"disabled_synthesis_mechanisms": [],
+			"enabled_mechanisms": ["layer_c_ordering"],
 			"disabled_mechanisms": [
 				"external_sketch_evidence",
 				"counterexample_refinement",

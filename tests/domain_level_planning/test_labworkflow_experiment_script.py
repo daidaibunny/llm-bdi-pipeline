@@ -43,10 +43,15 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 			"mechanism_status": {
 				"counterexample_refinement": "enabled",
 				"external_sketch_evidence": "disabled",
+				"layer_c_ordering": "enabled",
 				"offline_synthesis_planner_traces": "disabled",
 				"paper_profile_gate": "disabled",
 			},
-			"enabled_mechanisms": ["counterexample_refinement"],
+			"disabled_synthesis_mechanisms": [],
+			"enabled_mechanisms": [
+				"counterexample_refinement",
+				"layer_c_ordering",
+			],
 			"disabled_mechanisms": [
 				"external_sketch_evidence",
 				"offline_synthesis_planner_traces",
@@ -155,10 +160,15 @@ def test_labworkflow_dependency_script_accepts_explicit_ablation_label(
 			"mechanism_status": {
 				"counterexample_refinement": "enabled",
 				"external_sketch_evidence": "disabled",
+				"layer_c_ordering": "enabled",
 				"offline_synthesis_planner_traces": "disabled",
 				"paper_profile_gate": "disabled",
 			},
-			"enabled_mechanisms": ["counterexample_refinement"],
+			"disabled_synthesis_mechanisms": [],
+			"enabled_mechanisms": [
+				"counterexample_refinement",
+				"layer_c_ordering",
+			],
 			"disabled_mechanisms": [
 				"external_sketch_evidence",
 				"offline_synthesis_planner_traces",

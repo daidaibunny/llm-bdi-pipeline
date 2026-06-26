@@ -46,9 +46,11 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 		"evaluation_source": "provided_pddl_evaluation_problems",
 		"synthesis_profile": "bootstrap",
 		"external_policy_count": 0,
+		"disabled_synthesis_mechanisms": [],
 		"mechanism_status": {
 			"counterexample_refinement": "disabled",
 			"external_sketch_evidence": "disabled",
+			"layer_c_ordering": "enabled",
 			"offline_synthesis_planner_traces": "disabled",
 			"paper_profile_gate": "disabled",
 		},
@@ -433,10 +435,12 @@ def test_domain_level_experiment_records_explicit_ablation_metadata(
 			"mechanism_status": {
 				"counterexample_refinement": "disabled",
 				"external_sketch_evidence": "disabled",
+				"layer_c_ordering": "enabled",
 				"offline_synthesis_planner_traces": "disabled",
 				"paper_profile_gate": "disabled",
 			},
-			"enabled_mechanisms": [],
+			"disabled_synthesis_mechanisms": [],
+			"enabled_mechanisms": ["layer_c_ordering"],
 			"disabled_mechanisms": [
 				"external_sketch_evidence",
 				"counterexample_refinement",
@@ -528,7 +532,9 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	rows = {row["label"]: row for row in table["rows"]}
 	assert rows["bootstrap_schema_only"]["schema_only_bootstrap"] is True
 	assert rows["bootstrap_schema_only"]["runtime_planner"] == "none"
-	assert rows["bootstrap_schema_only"]["enabled_mechanisms"] == []
+	assert rows["bootstrap_schema_only"]["enabled_mechanisms"] == [
+		"layer_c_ordering",
+	]
 	assert rows["bootstrap_schema_only"]["disabled_mechanisms"] == [
 		"external_sketch_evidence",
 		"counterexample_refinement",
@@ -544,6 +550,7 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	assert rows["paper_external_sketch"]["selected_external_sketch_candidate_count"] == 1
 	assert rows["paper_external_sketch"]["enabled_mechanisms"] == [
 		"external_sketch_evidence",
+		"layer_c_ordering",
 		"paper_profile_gate",
 	]
 	assert rows["paper_external_sketch"]["plan_count"] == paper["plan_library"]["plan_count"]
@@ -558,10 +565,7 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 		"coverage_percent": 100.0,
 		"plan_count": bootstrap["plan_library"]["plan_count"],
 		"runtime_planner": "none",
-		"mechanism_summary": (
-			"disabled: external_sketch_evidence, counterexample_refinement, "
-			"offline_synthesis_planner_traces, paper_profile_gate"
-		),
+		"mechanism_summary": "enabled: layer_c_ordering",
 		"paper_profile_ready": False,
 		"coverage_delta_vs_best_library": 0.0,
 		"notes": "schema-only bootstrap",

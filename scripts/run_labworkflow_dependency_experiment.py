@@ -33,6 +33,16 @@ def main() -> None:
 		default=None,
 		help="Explicit ablation label for the experiment protocol.",
 	)
+	parser.add_argument(
+		"--disable-synthesis-mechanism",
+		action="append",
+		default=[],
+		choices=("layer_c_ordering",),
+		help=(
+			"Disable one synthesis mechanism for ablation. May be repeated. "
+			"Currently supported: layer_c_ordering."
+		),
+	)
 	args = parser.parse_args()
 
 	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
@@ -45,6 +55,9 @@ def main() -> None:
 			lab_root / "problems" / "p02.pddl",
 		),
 		use_counterexample_refinement=True,
+		disabled_synthesis_mechanisms=tuple(
+			args.disable_synthesis_mechanism or (),
+		),
 		max_refinement_rounds=1,
 		max_execution_steps=args.max_steps,
 		max_depth=args.max_depth,

@@ -105,6 +105,16 @@ def main() -> None:
 		help="Synthesis strictness profile passed to the unified learner.",
 	)
 	parser.add_argument(
+		"--disable-synthesis-mechanism",
+		action="append",
+		default=[],
+		choices=("layer_c_ordering",),
+		help=(
+			"Disable one synthesis mechanism for ablation. May be repeated. "
+			"Currently supported: layer_c_ordering."
+		),
+	)
+	parser.add_argument(
 		"--external-sketch-policy",
 		action="append",
 		default=[],
@@ -174,6 +184,9 @@ def main() -> None:
 		counterexample_problem_files=tuple(args.counterexample_problem or ()),
 		external_sketch_policies=external_policies,
 		synthesis_profile=args.synthesis_profile,
+		disabled_synthesis_mechanisms=tuple(
+			args.disable_synthesis_mechanism or (),
+		),
 		max_execution_steps=args.max_steps,
 		max_depth=args.max_depth,
 		evaluation_timeout_seconds=args.evaluation_timeout_seconds,

@@ -34,6 +34,7 @@ def run_domain_level_experiment(
 	max_execution_steps: int = 10000,
 	max_depth: int = 1000,
 	evaluation_timeout_seconds: float | None = None,
+	disabled_synthesis_mechanisms: Sequence[str] = (),
 	use_synthesis_planner_traces: bool = False,
 	synthesis_planner_executable: str | Path | None = None,
 	synthesis_planner_timeout_seconds: int = 60,
@@ -54,6 +55,7 @@ def run_domain_level_experiment(
 			counterexample_problem_files=counterexample_problem_files,
 			external_sketch_policies=external_sketch_policies,
 			synthesis_profile=synthesis_profile,
+			disabled_synthesis_mechanisms=disabled_synthesis_mechanisms,
 			use_synthesis_planner_traces=use_synthesis_planner_traces,
 			synthesis_planner_executable=synthesis_planner_executable,
 			synthesis_planner_timeout_seconds=synthesis_planner_timeout_seconds,
@@ -70,6 +72,7 @@ def run_domain_level_experiment(
 			counterexample_problem_files=counterexample_problem_files,
 			external_sketch_policies=external_sketch_policies,
 			synthesis_profile=synthesis_profile,
+			disabled_synthesis_mechanisms=disabled_synthesis_mechanisms,
 			use_synthesis_planner_traces=use_synthesis_planner_traces,
 			synthesis_planner_executable=synthesis_planner_executable,
 			synthesis_planner_timeout_seconds=synthesis_planner_timeout_seconds,
@@ -113,6 +116,7 @@ def run_domain_level_experiment(
 			external_sketch_policies=external_sketch_policies,
 			use_counterexample_refinement=use_counterexample_refinement,
 			use_synthesis_planner_traces=use_synthesis_planner_traces,
+			disabled_synthesis_mechanisms=disabled_synthesis_mechanisms,
 			ablation_label=ablation_label,
 			baselines=baselines,
 		),
@@ -266,6 +270,7 @@ def _experiment_protocol(
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
 	use_counterexample_refinement: bool,
 	use_synthesis_planner_traces: bool,
+	disabled_synthesis_mechanisms: Sequence[str],
 	ablation_label: str | None,
 	baselines: Sequence[dict[str, object]] = (),
 ) -> dict[str, object]:
@@ -274,6 +279,7 @@ def _experiment_protocol(
 		external_policy_count=len(tuple(external_sketch_policies or ())),
 		use_counterexample_refinement=use_counterexample_refinement,
 		use_synthesis_planner_traces=use_synthesis_planner_traces,
+		disabled_synthesis_mechanisms=disabled_synthesis_mechanisms,
 	)
 	ablation = _ablation_record(
 		label=ablation_label,
@@ -281,6 +287,7 @@ def _experiment_protocol(
 		external_sketch_policies=external_sketch_policies,
 		use_counterexample_refinement=use_counterexample_refinement,
 		use_synthesis_planner_traces=use_synthesis_planner_traces,
+		disabled_synthesis_mechanisms=disabled_synthesis_mechanisms,
 		mechanism_status=mechanism_status,
 	)
 	return {
@@ -289,6 +296,9 @@ def _experiment_protocol(
 		"evaluation_source": "provided_pddl_evaluation_problems",
 		"synthesis_profile": str(synthesis_profile or "bootstrap"),
 		"external_policy_count": len(tuple(external_sketch_policies or ())),
+		"disabled_synthesis_mechanisms": list(
+			tuple(disabled_synthesis_mechanisms or ()),
+		),
 		"mechanism_status": mechanism_status,
 		"runtime_planner": "none",
 		"baselines": _baseline_records(baselines),
@@ -328,6 +338,7 @@ def _ablation_record(
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
 	use_counterexample_refinement: bool,
 	use_synthesis_planner_traces: bool,
+	disabled_synthesis_mechanisms: Sequence[str],
 	mechanism_status: dict[str, str],
 ) -> dict[str, object] | None:
 	text = str(label or "").strip()
@@ -341,6 +352,9 @@ def _ablation_record(
 		"external_policy_count": len(tuple(external_sketch_policies or ())),
 		"counterexample_refinement": bool(use_counterexample_refinement),
 		"use_synthesis_planner_traces": bool(use_synthesis_planner_traces),
+		"disabled_synthesis_mechanisms": list(
+			tuple(disabled_synthesis_mechanisms or ()),
+		),
 		"runtime_planner": "none",
 		"mechanism_status": dict(mechanism_status),
 		"enabled_mechanisms": list(enabled),
@@ -354,6 +368,7 @@ def _ablation_mechanism_status(
 	external_policy_count: int,
 	use_counterexample_refinement: bool,
 	use_synthesis_planner_traces: bool,
+	disabled_synthesis_mechanisms: Sequence[str],
 ) -> dict[str, str]:
 	"""Return the mechanism switches actually used by one experiment row."""
 
@@ -366,6 +381,11 @@ def _ablation_mechanism_status(
 		),
 		"offline_synthesis_planner_traces": (
 			"enabled" if use_synthesis_planner_traces else "disabled"
+		),
+		"layer_c_ordering": (
+			"disabled"
+			if "layer_c_ordering" in set(disabled_synthesis_mechanisms or ())
+			else "enabled"
 		),
 		"paper_profile_gate": (
 			"enabled" if str(synthesis_profile or "bootstrap") == "paper" else "disabled"
@@ -381,6 +401,7 @@ def _mechanisms_by_status(
 		"external_sketch_evidence",
 		"counterexample_refinement",
 		"offline_synthesis_planner_traces",
+		"layer_c_ordering",
 		"paper_profile_gate",
 	)
 	return tuple(

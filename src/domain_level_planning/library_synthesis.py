@@ -249,6 +249,7 @@ def synthesize_domain_level_asl_library(
 	training_problem_files: Sequence[str | Path] = (),
 	counterexample_problem_files: Sequence[str | Path] = (),
 	refinement_constraints: Sequence[object] = (),
+	disabled_synthesis_mechanisms: Sequence[str] = (),
 	planner_trace_provider: Callable[..., Sequence[object]] | None = None,
 	use_synthesis_planner_traces: bool = False,
 	synthesis_planner_executable: str | Path | None = None,
@@ -262,6 +263,9 @@ def synthesize_domain_level_asl_library(
 	"""Synthesize one lifted domain-level ASL library through the unified path."""
 
 	profile = _normalize_synthesis_profile(synthesis_profile)
+	disabled_mechanisms = _normalize_disabled_synthesis_mechanisms(
+		disabled_synthesis_mechanisms,
+	)
 	training_problem_files = tuple(training_problem_files or ())
 	counterexample_problem_files = tuple(counterexample_problem_files or ())
 	pddl_support = assert_compilable_pddl_files(
@@ -347,6 +351,10 @@ def synthesize_domain_level_asl_library(
 		+ explicit_goal_ordering_candidates
 		+ state_coverage_synthesized_candidates,
 	)
+	raw_candidate_rules, disabled_filter_report = _filter_disabled_candidate_rules(
+		raw_candidate_rules,
+		disabled_mechanisms=disabled_mechanisms,
+	)
 	ranking_states, ranking_state_skips = _safe_recursion_ranking_states(
 		domain=domain,
 		problem_files=tuple(
@@ -421,13 +429,17 @@ def synthesize_domain_level_asl_library(
 		actions=domain.actions,
 		refinement_constraints=refinement_constraints,
 	)
-	goal_ordering_rule_groups, goal_ordering_binding_reports = (
-		_goal_ordering_required_rule_groups(
-			candidate_rules=candidate_rules,
-			predicates=domain.predicates,
-			refinement_constraints=refinement_constraints,
+	if "layer_c_ordering" in disabled_mechanisms:
+		goal_ordering_rule_groups = ()
+		goal_ordering_binding_reports = ()
+	else:
+		goal_ordering_rule_groups, goal_ordering_binding_reports = (
+			_goal_ordering_required_rule_groups(
+				candidate_rules=candidate_rules,
+				predicates=domain.predicates,
+				refinement_constraints=refinement_constraints,
+			)
 		)
-	)
 	explicit_state_coverage_rule_groups, state_coverage_binding_reports = (
 		_state_coverage_required_rule_groups(
 			candidate_rules=candidate_rules,
@@ -495,6 +507,7 @@ def synthesize_domain_level_asl_library(
 				"pddl_to_asl_symbol_map": _pddl_to_asl_symbol_map(domain),
 				"runtime_goal_agenda": runtime_goal_agenda,
 				"runtime_route_features": route_features,
+				"disabled_synthesis_mechanisms": disabled_mechanisms,
 			},
 		)
 	contract_report = audit_domain_level_library_contract(
@@ -557,6 +570,8 @@ def synthesize_domain_level_asl_library(
 			architecture_contract.gaps,
 		),
 		"runtime_goal_agenda": runtime_goal_agenda,
+		"disabled_synthesis_mechanisms": disabled_mechanisms,
+		"disabled_synthesis_mechanism_filter": disabled_filter_report,
 		"paper_quality_checks": (
 			"transition_progress",
 			"bounded_all_reachable_states",
@@ -754,6 +769,85 @@ def _normalize_synthesis_profile(profile: str) -> str:
 			f"received {profile!r}.",
 		)
 	return normalized
+
+
+def _normalize_disabled_synthesis_mechanisms(
+	mechanisms: Sequence[str],
+) -> tuple[str, ...]:
+	allowed = {"layer_c_ordering"}
+	normalized = tuple(
+		dict.fromkeys(
+			str(mechanism or "").strip()
+			for mechanism in tuple(mechanisms or ())
+			if str(mechanism or "").strip()
+		),
+	)
+	unknown = tuple(mechanism for mechanism in normalized if mechanism not in allowed)
+	if unknown:
+		raise ValueError(
+			"Unsupported disabled synthesis mechanism(s): "
+			+ ", ".join(unknown)
+			+ ". Supported mechanisms: "
+			+ ", ".join(sorted(allowed)),
+		)
+	return normalized
+
+
+def _filter_disabled_candidate_rules(
+	rules: Sequence[LiftedPlanRule],
+	*,
+	disabled_mechanisms: Sequence[str],
+) -> tuple[tuple[LiftedPlanRule, ...], dict[str, object]]:
+	disabled = frozenset(disabled_mechanisms or ())
+	kept: list[LiftedPlanRule] = []
+	removed_by_mechanism: dict[str, list[str]] = {
+		mechanism: [] for mechanism in sorted(disabled)
+	}
+	for rule in tuple(rules or ()):
+		mechanism = _disabled_mechanism_for_rule(rule, disabled)
+		if mechanism is None:
+			kept.append(rule)
+			continue
+		removed_by_mechanism.setdefault(mechanism, []).append(rule.name)
+	return tuple(kept), {
+		"disabled_mechanisms": tuple(sorted(disabled)),
+		"removed_rule_count": sum(
+			len(names) for names in removed_by_mechanism.values()
+		),
+		"removed_rule_count_by_mechanism": {
+			mechanism: len(names)
+			for mechanism, names in sorted(removed_by_mechanism.items())
+		},
+		"removed_rule_names_by_mechanism": {
+			mechanism: tuple(names)
+			for mechanism, names in sorted(removed_by_mechanism.items())
+		},
+	}
+
+
+def _disabled_mechanism_for_rule(
+	rule: LiftedPlanRule,
+	disabled_mechanisms: frozenset[str],
+) -> str | None:
+	if "layer_c_ordering" in disabled_mechanisms and _is_layer_c_ordering_rule(rule):
+		return "layer_c_ordering"
+	return None
+
+
+def _is_layer_c_ordering_rule(rule: LiftedPlanRule) -> bool:
+	if rule.layer != "composer":
+		return False
+	if str(rule.rationale or "") in {
+		"counterexample_goal_ordering",
+		"schema_current_resource_goal_priority",
+	}:
+		return True
+	return any(
+		str(capability).startswith(
+			("order_", "causal_order_", "delete_threat_order_", "resource_priority_"),
+		)
+		for capability in tuple(rule.capabilities or ())
+	)
 
 
 def _bounded_problem_files(
