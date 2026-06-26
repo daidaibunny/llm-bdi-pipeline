@@ -717,6 +717,10 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		"bounded training/counterexample/held-out transition systems"
 	)
 	assert "arbitrary PDDL domains" in hypothesis["exclusions"]
+	assert any(
+		"cyclic same-predicate route recursion" in exclusion
+		for exclusion in hypothesis["exclusions"]
+	)
 	assert "rejected object-specific, distance, or vocabulary-mismatched features" in (
 		hypothesis["feature_language"]["external_features"]
 	)

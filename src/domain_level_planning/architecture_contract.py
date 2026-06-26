@@ -277,6 +277,18 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"domain-level lifted-library claim."
 				),
 			),
+			ArchitectureDecision(
+				id="D8",
+				decision=(
+					"Exclude cyclic same-predicate route recursion until a verified "
+					"ranking or reachability feature exists."
+				),
+				status="accepted",
+				rationale=(
+					"Trace replay over cyclic route graphs would not be a safe lifted "
+					"domain-level plan library."
+				),
+			),
 		),
 		gaps=(
 			ArchitectureGap(
@@ -665,6 +677,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"negative or disjunctive achievement goals",
 			"numeric fluents and action costs",
 			"derived predicates and conditional effects",
+			"cyclic same-predicate route recursion without a ranking or reachability certificate",
 			"runtime full-trace planning as the plan-library executor",
 		),
 	)
