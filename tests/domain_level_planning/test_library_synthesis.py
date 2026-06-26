@@ -752,6 +752,10 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "selected support-agenda edges" in (
 		hypothesis["composer_language"]["runtime_gate"]
 	)
+	assert "current-resource priority" in (
+		hypothesis["composer_language"]["resource_priority"]
+	)
+	assert "already-held target object" in hypothesis["composer_language"]["resource_priority"]
 	assert "bounded reachable states" in hypothesis["progress_language"]["validation_scope"]
 	assert hypothesis["correctness_language"]["claim_scope"] == (
 		"bounded training/counterexample/held-out transition systems"

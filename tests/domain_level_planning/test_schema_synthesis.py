@@ -327,6 +327,7 @@ def test_schema_synthesizer_uses_resource_bridge_without_resource_causal_chain(
 ) -> None:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"
+	midstate_problem_file = tmp_path / "midstate-problem.pddl"
 	domain_file.write_text(
 		"""
 		(define (domain resource-delivery-mini)
@@ -398,6 +399,34 @@ def test_schema_synthesizer_uses_resource_bridge_without_resource_causal_chain(
 		""",
 		encoding="utf-8",
 	)
+	midstate_problem_file.write_text(
+		"""
+		(define (problem resource-delivery-midstate)
+		 (:domain resource-delivery-mini)
+		 (:objects
+		  truck - carrier
+		  parcel waiting - package
+		  a b c d - place
+		  low high - capacity
+		 )
+		 (:init
+		  (at truck b)
+		  (at waiting b)
+		  (loaded parcel truck)
+		  (cap truck low)
+		  (pred low high)
+		  (road b d)
+		  (road d b)
+		  (road b c)
+		 )
+		 (:goal (and
+		  (at waiting c)
+		  (at parcel d)
+		 ))
+		)
+		""",
+		encoding="utf-8",
+	)
 
 	plan_library = build_goal_conditioned_library_from_pddl(
 		domain_file=domain_file,
@@ -411,8 +440,16 @@ def test_schema_synthesizer_uses_resource_bridge_without_resource_causal_chain(
 		max_steps=40,
 		max_depth=40,
 	)
+	midstate_result = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=midstate_problem_file,
+		max_steps=40,
+		max_depth=40,
+	)
 
 	assert "at_causal_chain" in asl
+	assert "g_current_resource_at_via_loaded" in asl
 	assert "cap_causal_chain" not in asl
 	at_chain = asl.split("plan=at_causal_chain", 1)[1].split("\n\n", 1)[0]
 	assert "\t!cap(" not in at_chain
@@ -423,6 +460,15 @@ def test_schema_synthesizer_uses_resource_bridge_without_resource_causal_chain(
 		"move(truck, b, d)",
 		"move(truck, d, c)",
 		"unload(truck, parcel, c, low, high)",
+	)
+	assert midstate_result.solved is True
+	assert midstate_result.steps == (
+		"move(truck, b, d)",
+		"unload(truck, parcel, d, low, high)",
+		"move(truck, d, b)",
+		"load(truck, waiting, b, low, high)",
+		"move(truck, b, c)",
+		"unload(truck, waiting, c, low, high)",
 	)
 
 

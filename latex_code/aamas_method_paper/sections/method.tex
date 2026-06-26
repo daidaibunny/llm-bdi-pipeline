@@ -92,6 +92,11 @@ capacity predecessor relation, may bridge resource variables across the two
 actions; mutable resource predicates are not emitted as independent
 causal-chain goals. Same-predicate delegation across disjoint typed argument
 partitions is accepted only with an explicit type certificate.
+The same schema evidence also yields current-resource priority composer rules:
+if a target object is already held by a carrier relation used by the target
+action, the composer may deliver that object before selecting another goal that
+would consume the same carrier resource. This is a bounded resource-ordering
+rule, not a complete logistics policy for every reachable mid-state.
 
 External sketch candidates come from verified policy-sketch backends, currently
 learner-sketches \cite{Drexler2022LearningSketches}. A learned sketch rule is

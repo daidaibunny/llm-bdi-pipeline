@@ -167,6 +167,7 @@ def _candidate_rules_from_domain(
 	rules.extend(route_progress_candidate_rules(actions))
 	rules.extend(_causal_chain_action_rules(actions))
 	rules.extend(_causal_interference_ordering_rules(actions))
+	rules.extend(_current_resource_goal_priority_rules(actions))
 	for predicate in predicates:
 		rules.extend(_composer_rules(predicate))
 		rules.append(_already_true_rule(predicate))
@@ -1913,6 +1914,85 @@ def _causal_chain_action_rules(actions: Sequence[object]) -> tuple[LiftedPlanRul
 	return tuple(rules)
 
 
+def _current_resource_goal_priority_rules(
+	actions: Sequence[object],
+) -> tuple[LiftedPlanRule, ...]:
+	"""Prioritize goals whose target object is already held by a resource.
+
+	This is the Layer C companion to typed-overloaded causal-chain modules. When
+	a target action such as unload/drop achieves a typed-overloaded predicate and
+	requires a current carrying relation, a loaded target should be delivered
+	before the composer tries to load another target that may need the same
+	resource capacity.
+	"""
+
+	infos = tuple(_action_schema_info(action) for action in tuple(actions or ()))
+	type_ambiguous_predicates = _effect_type_ambiguous_predicates(actions)
+	rules: list[LiftedPlanRule] = []
+	seen: set[tuple[object, ...]] = set()
+	index = 0
+	for final in infos:
+		final_substitution = _schema_variable_substitution(final)
+		for target_effect in tuple(final["add_effects"]):
+			if (
+				not target_effect.arguments
+				or target_effect.predicate not in type_ambiguous_predicates
+			):
+				continue
+			target_arguments = tuple(
+				final_substitution.get(argument, _var(argument))
+				for argument in target_effect.arguments
+			)
+			target_argument_keys = set(tuple(target_effect.arguments))
+			for precondition in tuple(final["preconditions"]):
+				if (
+					not precondition.is_positive
+					or precondition.predicate == target_effect.predicate
+					or not set(precondition.arguments).intersection(target_argument_keys)
+				):
+					continue
+				precondition_arguments = tuple(
+					final_substitution.get(argument, _var(argument))
+					for argument in precondition.arguments
+				)
+				context = (
+					_call(f"goal_{target_effect.predicate}", target_arguments),
+					_call(precondition.predicate, precondition_arguments),
+					f"not {_call(target_effect.predicate, target_arguments)}",
+				)
+				body = (
+					_subgoal(target_effect.predicate, *target_arguments),
+					_subgoal("g"),
+				)
+				key = (context, body)
+				if key in seen:
+					continue
+				seen.add(key)
+				rules.append(
+					_rule(
+						(
+							f"g_current_resource_{target_effect.predicate}_via_"
+							f"{precondition.predicate}_{index}"
+						),
+						"g",
+						(),
+						context,
+						body,
+						layer="composer",
+						capabilities=(
+							(
+								f"resource_priority_{target_effect.predicate}_via_"
+								f"{precondition.predicate}_{index}"
+							),
+						),
+						rationale="schema_current_resource_goal_priority",
+						cost=1,
+					),
+				)
+				index += 1
+	return tuple(rules)
+
+
 def _action_schema_info(action: object) -> dict[str, object]:
 	return {
 		"action": action,
@@ -2511,6 +2591,9 @@ def _required_capabilities(
 			):
 				continue
 			required.extend(rule.capabilities)
+	for rule in candidate_rules:
+		if rule.layer == "composer" and _is_current_resource_priority_rule(rule):
+			required.extend(rule.capabilities)
 	for fact in training_facts:
 		if not fact.is_positive:
 			raise ValueError(
@@ -2530,6 +2613,10 @@ def _is_ordering_capability(capability: str) -> bool:
 
 def _is_causal_chain_rule(rule: LiftedPlanRule) -> bool:
 	return str(rule.rationale or "") == "schema_causal_chain_action_module"
+
+
+def _is_current_resource_priority_rule(rule: LiftedPlanRule) -> bool:
+	return str(rule.rationale or "") == "schema_current_resource_goal_priority"
 
 
 def atomic_action_strategy_required_rule_groups(

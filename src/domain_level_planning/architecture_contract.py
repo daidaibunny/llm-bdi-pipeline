@@ -797,6 +797,11 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 				"selected support-agenda edges derive ready_<predicate> contexts "
 				"that block generic dispatch until predecessor goals are satisfied"
 			),
+			"resource_priority": (
+				"typed-overloaded target actions may add current-resource priority "
+				"composer rules so an already-held target object is delivered before "
+				"another goal consumes the same carrier resource"
+			),
 			"goal_dependency_scope": "positive conjunctive achievement goals",
 		},
 		progress_language={
