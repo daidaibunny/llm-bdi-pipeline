@@ -160,8 +160,8 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 		"src/domains/marsrover/domain.pddl",
 	}.issubset(domain_files)
 	assert "blocksworld-paper-external-on2" in experiment_names
-	assert "blocksworld-bootstrap-train1-all30" in experiment_names
-	assert "blocksworld-paper-external-on2-all30" in experiment_names
+	assert "blocksworld-bootstrap-train1-satisfiable-large" in experiment_names
+	assert "blocksworld-paper-external-on2-satisfiable-large" in experiment_names
 	assert "transport-bootstrap-train3-first10" in experiment_names
 	assert "satellite-bootstrap-train3-first10" in experiment_names
 	assert "marsrover-bootstrap-train3-first10" in experiment_names
@@ -170,20 +170,36 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 	expanded_rows = {
 		str(item["name"]): item for item in experiments
 	}
-	assert expanded_rows["blocksworld-bootstrap-train1-all30"]["train_count"] == 1
-	assert expanded_rows["blocksworld-bootstrap-train1-all30"]["eval_count"] == 30
-	assert expanded_rows["blocksworld-paper-external-on2-all30"]["eval_count"] == 30
+	assert expanded_rows[
+		"blocksworld-bootstrap-train1-satisfiable-large"
+	]["train_count"] == 1
+	assert expanded_rows[
+		"blocksworld-bootstrap-train1-satisfiable-large"
+	]["eval_count"] == 10
+	assert expanded_rows[
+		"blocksworld-paper-external-on2-satisfiable-large"
+	]["eval_base"] == "src/domains/blocksworld/satisfiable-large"
+	assert expanded_rows[
+		"blocksworld-paper-external-on2-satisfiable-large"
+	]["eval_count"] == 10
 	assert (
-		expanded_rows["blocksworld-paper-external-on2-all30"]["synthesis_profile"]
+		expanded_rows[
+			"blocksworld-paper-external-on2-satisfiable-large"
+		]["synthesis_profile"]
 		== "paper"
 	)
 	assert (
-		expanded_rows["blocksworld-paper-external-on2-all30"][
+		expanded_rows["blocksworld-paper-external-on2-satisfiable-large"][
 			"evaluation_timeout_seconds"
 		]
 		== 30
 	)
-	assert expanded_rows["blocksworld-paper-external-on2-all30"]["timeout_seconds"] == 900
+	assert (
+		expanded_rows["blocksworld-paper-external-on2-satisfiable-large"][
+			"timeout_seconds"
+		]
+		== 900
+	)
 	assert expanded_rows["transport-bootstrap-train3-first10"]["eval_count"] == 10
 	assert expanded_rows["satellite-bootstrap-train3-first10"]["eval_count"] == 10
 	assert expanded_rows["marsrover-bootstrap-train3-first10"]["eval_count"] == 10

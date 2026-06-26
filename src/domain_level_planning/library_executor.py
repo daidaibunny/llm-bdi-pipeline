@@ -188,12 +188,17 @@ def _execute_subgoal(
 			current_decision_trace,
 			f"recursive loop on !{_call(symbol, arguments)}",
 		)
-	derived_context_facts = _derived_context_facts(
-		plan_library=plan_library,
-		state=state,
-		goal_facts=goal_facts,
+	candidate_plans = _candidate_plans(plan_library, symbol, arguments)
+	derived_context_facts = (
+		_derived_context_facts(
+			plan_library=plan_library,
+			state=state,
+			goal_facts=goal_facts,
+		)
+		if _plans_need_derived_context_facts(candidate_plans, goal_facts)
+		else ()
 	)
-	for plan in _candidate_plans(plan_library, symbol, arguments):
+	for plan in candidate_plans:
 		substitution = _match_arguments(plan.trigger.arguments, arguments)
 		if substitution is None:
 			continue
@@ -338,6 +343,28 @@ def _candidate_plans(
 		if plan.trigger.symbol == symbol
 		and len(plan.trigger.arguments) == len(arguments)
 	)
+
+
+def _plans_need_derived_context_facts(
+	plans: Sequence[AgentSpeakPlan],
+	goal_facts: tuple[str, ...],
+) -> bool:
+	return any(
+		_context_needs_derived_context_facts(context, goal_facts)
+		for plan in tuple(plans or ())
+		for context in tuple(plan.context or ())
+	)
+
+
+def _context_needs_derived_context_facts(
+	context: str,
+	goal_facts: tuple[str, ...],
+) -> bool:
+	text = str(context or "").strip()
+	if text.lower().startswith("not "):
+		text = text[4:].strip()
+	symbol, _arguments = _parse_atom(text)
+	return _is_ready_context_for_goal_symbol(symbol, goal_facts)
 
 
 def _match_arguments(
