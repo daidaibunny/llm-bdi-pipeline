@@ -14,6 +14,7 @@ from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
 from utils.pddl_parser import PDDLParser
 
 from .pddl_types import object_type_atoms
+from .goal_mutex import GoalMutexDiagnostic, schema_goal_mutexes
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,20 @@ def execute_library_from_state(
 	"""Execute a generated library from an arbitrary grounded STRIPS state."""
 
 	simulator = STRIPSStateSimulator(str(domain_file))
+	goal_mutexes = schema_goal_mutexes(
+		domain=simulator.domain,
+		goal_atoms=tuple(_state_atom_from_goal_fact(fact) for fact in goal_facts),
+	)
+	if goal_mutexes:
+		return LibraryExecutionResult(
+			problem_name=problem_name,
+			solved=False,
+			steps=(),
+			final_state=frozenset(initial_state),
+			state_trace=(frozenset(initial_state),),
+			decision_trace=(),
+			failure_reason=_goal_mutex_failure_reason(goal_mutexes),
+		)
 	state, steps, state_trace, decision_trace, failure = _execute_subgoal(
 		plan_library=plan_library,
 		simulator=simulator,
@@ -709,6 +724,21 @@ def _state_atom_from_goal_fact(goal_fact: str) -> str:
 	if text.startswith("goal_"):
 		return text[len("goal_") :]
 	return text
+
+
+def _goal_mutex_failure_reason(
+	diagnostics: Sequence[GoalMutexDiagnostic],
+) -> str:
+	first = tuple(diagnostics or ())[0]
+	return (
+		"goal mutex detected: "
+		f"{first.first_goal} conflicts with {first.second_goal}; "
+		"schema evidence: "
+		f"{first.first_producer_action} adds {first.first_goal} and deletes "
+		f"{first.first_add_deletes_second}, "
+		f"{first.second_producer_action} adds {first.second_goal} and deletes "
+		f"{first.second_add_deletes_first}"
+	)
 
 
 def _call(symbol: str, arguments: Iterable[str]) -> str:

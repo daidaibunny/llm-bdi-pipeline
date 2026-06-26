@@ -227,6 +227,9 @@ def test_domain_level_experiment_reports_failure_analysis(
 	assert report["coverage"]["solved_count"] == 1
 	assert report["coverage"]["failed_count"] == 1
 	assert report["failure_analysis"]["failed_problem_count"] == 1
+	assert report["failure_analysis"]["failure_kind_counts"] == {
+		"no_applicable_plan": 1,
+	}
 	assert report["failure_analysis"]["failure_reason_counts"] == {
 		"no applicable plan for !base(c)": 1,
 	}

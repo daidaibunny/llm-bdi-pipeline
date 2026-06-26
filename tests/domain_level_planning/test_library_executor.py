@@ -278,6 +278,52 @@ def test_executor_derives_ready_goal_contexts_from_selected_agenda_edges(
 	assert execution.steps == ("finish(a)", "finish(b)")
 
 
+def test_executor_reports_schema_goal_mutex_before_running_library(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_exclusive_slot_domain(tmp_path)
+	plan_library = PlanLibrary(
+		domain_name="exclusive-slot",
+		plans=(),
+	)
+
+	execution = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+	)
+
+	assert execution.solved is False
+	assert execution.steps == ()
+	assert execution.failure_reason is not None
+	assert "goal mutex" in execution.failure_reason
+	assert "placed(a, s)" in execution.failure_reason
+	assert "free(s)" in execution.failure_reason
+
+
+def test_executor_reports_blocksworld_goal_mutex_before_recursive_loop() -> None:
+	plan_library = PlanLibrary(
+		domain_name="blocks-empty",
+		plans=(),
+	)
+
+	execution = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=BLOCKS_DOMAIN,
+		problem_file=BLOCKS_PROBLEMS[20],
+		max_steps=10000,
+		max_depth=1000,
+	)
+
+	assert execution.problem_name == "p21"
+	assert execution.solved is False
+	assert execution.steps == ()
+	assert execution.failure_reason is not None
+	assert "goal mutex" in execution.failure_reason
+	assert "clear(b2)" in execution.failure_reason
+	assert "on(b17, b2)" in execution.failure_reason
+
+
 def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"
@@ -302,6 +348,46 @@ def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:objects)
 		 (:init (ready))
 		 (:goal (and (done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_exclusive_slot_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "exclusive-slot-domain.pddl"
+	problem_file = tmp_path / "exclusive-slot-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain exclusive-slot)
+		 (:requirements :strips)
+		 (:predicates
+		  (carrying ?x)
+		  (placed ?x ?slot)
+		  (free ?slot)
+		 )
+		 (:action place
+		  :parameters (?x ?slot)
+		  :precondition (and (carrying ?x) (free ?slot))
+		  :effect (and (placed ?x ?slot) (not (free ?slot)) (not (carrying ?x)))
+		 )
+		 (:action remove
+		  :parameters (?x ?slot)
+		  :precondition (placed ?x ?slot)
+		  :effect (and (carrying ?x) (free ?slot) (not (placed ?x ?slot)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem exclusive-slot-p1)
+		 (:domain exclusive-slot)
+		 (:objects a s)
+		 (:init (carrying a) (free s))
+		 (:goal (and (placed a s) (free s)))
 		)
 		""",
 		encoding="utf-8",

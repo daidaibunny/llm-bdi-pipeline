@@ -855,12 +855,16 @@ def _validation_scope(
 def _failure_analysis(evaluation_results: Sequence[dict[str, object]]) -> dict[str, object]:
 	failed = tuple(item for item in evaluation_results if not bool(item["solved"]))
 	reason_counts: dict[str, int] = {}
+	kind_counts: dict[str, int] = {}
 	for item in failed:
 		reason = str(item.get("failure_reason") or "unknown")
 		reason_counts[reason] = reason_counts.get(reason, 0) + 1
+		kind = _failure_kind(reason)
+		kind_counts[kind] = kind_counts.get(kind, 0) + 1
 	step_counts = tuple(int(item.get("step_count") or 0) for item in evaluation_results)
 	return {
 		"failed_problem_count": len(failed),
+		"failure_kind_counts": dict(sorted(kind_counts.items())),
 		"failure_reason_counts": dict(sorted(reason_counts.items())),
 		"failed_problems": [
 			{
@@ -873,6 +877,25 @@ def _failure_analysis(evaluation_results: Sequence[dict[str, object]]) -> dict[s
 		],
 		"step_count_summary": _numeric_summary(step_counts),
 	}
+
+
+def _failure_kind(reason: str) -> str:
+	text = str(reason or "").lower()
+	if "goal mutex" in text:
+		return "goal_mutex"
+	if "timeout" in text:
+		return "timeout"
+	if "recursive loop" in text:
+		return "recursive_loop"
+	if "step limit" in text:
+		return "step_limit"
+	if "no applicable plan" in text:
+		return "no_applicable_plan"
+	if "missing goals" in text:
+		return "missing_goals"
+	if "preconditions are not satisfied" in text:
+		return "primitive_precondition_failure"
+	return "unknown"
 
 
 def _refinement_analysis(refinement_trace: dict[str, object] | None) -> dict[str, object]:
