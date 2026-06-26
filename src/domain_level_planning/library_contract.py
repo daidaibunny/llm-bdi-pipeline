@@ -71,6 +71,7 @@ def audit_domain_level_library_contract(
 	plans = tuple(plan_library.plans or ())
 	predicate_arities = _declared_arities(declared_predicates)
 	action_arities = _declared_arities(declared_actions)
+	route_context_arities = _runtime_route_context_arities(plan_library)
 	no_initial_beliefs = not tuple(plan_library.initial_beliefs or ())
 	if not no_initial_beliefs:
 		violations.append("Domain-level libraries must not emit problem-specific initial beliefs.")
@@ -80,6 +81,7 @@ def audit_domain_level_library_contract(
 		plan_library,
 		violations,
 		declared_predicates=predicate_arities,
+		route_context_arities=route_context_arities,
 	)
 	plan_head_subset = _collect_plan_head_subset_violations(plans, violations)
 	lifted_heads = _collect_head_lifting_violations(plans, violations)
@@ -92,11 +94,13 @@ def audit_domain_level_library_contract(
 		plans,
 		declared_predicates=predicate_arities,
 		declared_actions=action_arities,
+		route_context_arities=route_context_arities,
 		violations=violations,
 	)
 	goal_descriptor_usage = _goal_descriptor_usage(
 		plan_library,
 		declared_predicates=predicate_arities,
+		route_context_arities=route_context_arities,
 	)
 	checked_layers = {
 		"no_initial_beliefs": no_initial_beliefs,
@@ -154,11 +158,16 @@ def _collect_goal_descriptor_violations(
 	violations: list[str],
 	*,
 	declared_predicates: Mapping[str, int | None] | None = None,
+	route_context_arities: Mapping[str, int | None] | None = None,
 ) -> bool:
 	passed = True
 	for belief in tuple(plan_library.initial_beliefs or ()):
 		symbol = _atom_symbol(belief)
-		if _is_read_only_context_symbol(symbol, declared_predicates=declared_predicates):
+		if _is_read_only_context_symbol(
+			symbol,
+			declared_predicates=declared_predicates,
+			route_context_arities=route_context_arities,
+		):
 			passed = False
 			violations.append(
 				f"Read-only {_read_only_context_label(symbol)} emitted as initial belief: {belief!r}.",
@@ -167,6 +176,7 @@ def _collect_goal_descriptor_violations(
 		if _is_read_only_context_symbol(
 			plan.trigger.symbol,
 			declared_predicates=declared_predicates,
+			route_context_arities=route_context_arities,
 		):
 			passed = False
 			violations.append(
@@ -177,6 +187,7 @@ def _collect_goal_descriptor_violations(
 			if _is_read_only_context_symbol(
 				step.symbol,
 				declared_predicates=declared_predicates,
+				route_context_arities=route_context_arities,
 			):
 				passed = False
 				violations.append(
@@ -192,6 +203,7 @@ def _goal_descriptor_usage(
 	plan_library: PlanLibrary,
 	*,
 	declared_predicates: Mapping[str, int | None] | None = None,
+	route_context_arities: Mapping[str, int | None] | None = None,
 ) -> dict[str, object]:
 	context_descriptors: list[dict[str, object]] = []
 	mutable_locations: list[dict[str, str]] = []
@@ -199,6 +211,7 @@ def _goal_descriptor_usage(
 		if _is_read_only_context_symbol(
 			_atom_symbol(belief),
 			declared_predicates=declared_predicates,
+			route_context_arities=route_context_arities,
 		):
 			mutable_locations.append(
 				{"location": "initial_belief", "descriptor": str(belief)},
@@ -207,6 +220,7 @@ def _goal_descriptor_usage(
 		if _is_read_only_context_symbol(
 			plan.trigger.symbol,
 			declared_predicates=declared_predicates,
+			route_context_arities=route_context_arities,
 		):
 			mutable_locations.append(
 				{"location": "plan_head", "descriptor": plan.trigger.symbol},
@@ -216,6 +230,7 @@ def _goal_descriptor_usage(
 				if not _is_read_only_context_symbol(
 					symbol,
 					declared_predicates=declared_predicates,
+					route_context_arities=route_context_arities,
 				):
 					continue
 				context_descriptors.append(
@@ -231,6 +246,7 @@ def _goal_descriptor_usage(
 			if _is_read_only_context_symbol(
 				step.symbol,
 				declared_predicates=declared_predicates,
+				route_context_arities=route_context_arities,
 			):
 				mutable_locations.append(
 					{"location": f"body_step:{step.kind}", "descriptor": step.symbol},
@@ -379,6 +395,7 @@ def _collect_declared_pddl_symbol_violations(
 	*,
 	declared_predicates: Mapping[str, int | None],
 	declared_actions: Mapping[str, int | None],
+	route_context_arities: Mapping[str, int | None],
 	violations: list[str],
 ) -> bool:
 	if not declared_predicates and not declared_actions:
@@ -415,7 +432,19 @@ def _collect_declared_pddl_symbol_violations(
 				elif _is_read_only_context_symbol(
 					symbol,
 					declared_predicates=declared_predicates,
+					route_context_arities=route_context_arities,
 				):
+					if symbol in route_context_arities:
+						if not _arity_matches(route_context_arities[symbol], len(arguments)):
+							passed = False
+							violations.append(
+								(
+									f"Plan {plan.plan_name!r} uses route context "
+									f"{_schema_signature(symbol, route_context_arities[symbol])} "
+									f"with wrong arity {len(arguments)} in context {context!r}."
+								),
+							)
+						continue
 					predicate = _read_only_context_pddl_predicate(symbol)
 				else:
 					predicate = symbol
@@ -490,8 +519,11 @@ def _is_read_only_context_symbol(
 	symbol: str,
 	*,
 	declared_predicates: Mapping[str, int | None] | None = None,
+	route_context_arities: Mapping[str, int | None] | None = None,
 ) -> bool:
 	text = str(symbol or "").strip()
+	if text in dict(route_context_arities or {}):
+		return True
 	if text.startswith("goal_"):
 		return True
 	if not text.startswith("ready_"):
@@ -506,6 +538,8 @@ def _is_read_only_context_symbol(
 
 def _read_only_context_label(symbol: str) -> str:
 	text = str(symbol or "").strip()
+	if text.startswith("route_step_"):
+		return "route-step context"
 	if text.startswith("ready_"):
 		return "ready context"
 	return "goal descriptor"
@@ -518,6 +552,18 @@ def _read_only_context_pddl_predicate(symbol: str) -> str:
 	if text.startswith("ready_"):
 		return text[len("ready_") :]
 	return text
+
+
+def _runtime_route_context_arities(plan_library: PlanLibrary) -> dict[str, int]:
+	arities: dict[str, int] = {}
+	for feature in tuple(plan_library.metadata.get("runtime_route_features") or ()):
+		if not isinstance(feature, Mapping):
+			continue
+		symbol = str(feature.get("symbol") or "").strip()
+		if not symbol:
+			continue
+		arities[symbol] = len(tuple(feature.get("context_arguments") or ()))
+	return arities
 
 
 def _library_strings(plan_library: PlanLibrary) -> Iterable[tuple[str, str]]:

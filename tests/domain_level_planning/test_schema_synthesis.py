@@ -6,6 +6,7 @@ from domain_level_planning import (
 	build_goal_conditioned_library_from_pddl,
 	goal_facts_from_problem,
 )
+from domain_level_planning.library_executor import evaluate_library_on_problem
 from domain_level_planning.schema_synthesis import _goal_ordering_rules_from_evidence
 from domain_level_planning.schema_synthesis import _candidate_rules_from_domain
 from domain_level_planning.schema_synthesis import _training_evidence as _collect_training_evidence
@@ -117,6 +118,128 @@ def test_atomic_achievement_trace_macros_cover_intermediate_predicates(
 		rule.name.startswith("pos_trace_macro_atomic")
 		for rule in candidate_rules
 	)
+
+
+def test_schema_synthesizer_learns_route_progress_for_cyclic_movement(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain route-mini)
+		 (:requirements :strips :typing)
+		 (:types item place - object)
+		 (:predicates
+		  (at ?x - item ?p - place)
+		  (road ?from - place ?to - place)
+		 )
+		 (:action move
+		  :parameters (?x - item ?from - place ?to - place)
+		  :precondition (and (at ?x ?from) (road ?from ?to))
+		  :effect (and (not (at ?x ?from)) (at ?x ?to))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem route-p1)
+		 (:domain route-mini)
+		 (:objects box - item a b c - place)
+		 (:init
+		  (at box a)
+		  (road a b)
+		  (road b a)
+		  (road b c)
+		 )
+		 (:goal (and (at box c)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(plan_library)
+	result = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		max_steps=20,
+		max_depth=20,
+	)
+
+	assert "route_step_at_move(X, From, Next, To)" in asl
+	assert "\tmove(X, From, Next);" in asl
+	assert "\t!at(X, To)." in asl
+	assert result.solved is True
+	assert result.steps == ("move(box, a, b)", "move(box, b, c)")
+
+
+def test_schema_synthesizer_keeps_duplicate_precondition_prepare_strategies(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain pickup-mini)
+		 (:requirements :strips :typing)
+		 (:types vehicle package location - object)
+		 (:predicates
+		  (at ?x - object ?l - location)
+		  (in ?p - package ?v - vehicle)
+		  (road ?from - location ?to - location)
+		 )
+		 (:action drive
+		  :parameters (?v - vehicle ?from ?to - location)
+		  :precondition (and (at ?v ?from) (road ?from ?to))
+		  :effect (and (not (at ?v ?from)) (at ?v ?to))
+		 )
+		 (:action pick-up
+		  :parameters (?v - vehicle ?l - location ?p - package)
+		  :precondition (and (at ?v ?l) (at ?p ?l))
+		  :effect (in ?p ?v)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem pickup-p1)
+		 (:domain pickup-mini)
+		 (:objects truck - vehicle pkg - package a b - location)
+		 (:init (at truck a) (at pkg b) (road a b))
+		 (:goal (and (in pkg truck)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(plan_library)
+	result = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		max_steps=20,
+		max_depth=20,
+	)
+
+	assert "not at(V, L)" in asl
+	assert "\t!at(V, L);" in asl
+	assert "not at(P, L)" in asl
+	assert "\t!at(P, L);" in asl
+	assert result.solved is True
+	assert result.steps == ("drive(truck, a, b)", "pick-up(truck, b, pkg)")
 
 
 def test_schema_synthesizer_rejects_action_rules_with_unbound_parameters(

@@ -14,6 +14,7 @@ from plan_library.models import (
 	AgentSpeakTrigger,
 	PlanLibrary,
 )
+from plan_library.rendering import sanitize_identifier
 from utils.pddl_parser import PDDLFact, PDDLParser, PDDLPredicate
 
 from .clingo_backend import ClingoRequiredRuleGroup, ClingoSketchRuleSelector
@@ -68,6 +69,7 @@ def build_schema_only_goal_conditioned_library_from_pddl(
 		domain.actions,
 		transition_evidence=transition_evidence,
 	)
+	route_features = route_progress_features_from_actions(domain.actions)
 	candidate_rules, recursion_audit = filter_rules_by_recursion_descent(
 		candidate_rules,
 		ranking_states=recursion_ranking_states_from_problem_files(
@@ -127,6 +129,7 @@ def build_schema_only_goal_conditioned_library_from_pddl(
 			"required_capabilities": tuple(required_capabilities),
 			"selected_rule_names": list(selection.selected_rule_names),
 			"selection_cost": selection.cost,
+			"runtime_route_features": route_features,
 			"recursion_descent_audit": recursion_audit,
 			"synthesis_report": report.to_dict(),
 		},
@@ -161,6 +164,7 @@ def _candidate_rules_from_domain(
 			used_parameters_by_action=_action_used_parameters_by_name(actions),
 		),
 	)
+	rules.extend(route_progress_candidate_rules(actions))
 	rules.extend(_causal_interference_ordering_rules(actions))
 	for predicate in predicates:
 		rules.extend(_composer_rules(predicate))
@@ -173,6 +177,265 @@ def _candidate_rules_from_domain(
 			),
 		)
 	return _weight_atomic_action_rules_by_evidence(rules, transition_evidence)
+
+
+def route_progress_candidate_rules(
+	actions: Sequence[object],
+) -> tuple[LiftedPlanRule, ...]:
+	"""Generate recursive movement rules guarded by route-distance progress."""
+
+	return tuple(
+		_route_progress_rule(feature)
+		for feature in route_progress_features_from_actions(actions)
+	)
+
+
+def route_progress_features_from_actions(
+	actions: Sequence[object],
+) -> tuple[dict[str, object], ...]:
+	"""Infer static-graph route progress features from PDDL movement schemas."""
+
+	features: list[dict[str, object]] = []
+	for action in tuple(actions or ()):
+		action_name = str(getattr(action, "name") or "").strip()
+		if not action_name:
+			continue
+		preconditions = tuple(
+			literal
+			for literal in parse_pddl_literals(str(getattr(action, "preconditions", "")))
+			if literal.is_positive
+		)
+		effects = parse_pddl_literals(str(getattr(action, "effects", "")))
+		add_effects = tuple(effect for effect in effects if effect.is_positive)
+		delete_effects = tuple(effect for effect in effects if not effect.is_positive)
+		if len(add_effects) != 1 or len(delete_effects) != 1:
+			continue
+		for add_effect in add_effects:
+			for delete_effect in delete_effects:
+				feature = _route_progress_feature(
+					action=action,
+					action_name=action_name,
+					add_effect=add_effect,
+					delete_effect=delete_effect,
+					preconditions=preconditions,
+				)
+				if feature is not None:
+					features.append(feature)
+	return tuple(_unique_route_features(features))
+
+
+def _route_progress_feature(
+	*,
+	action: object,
+	action_name: str,
+	add_effect: LiftedLiteral,
+	delete_effect: LiftedLiteral,
+	preconditions: Sequence[LiftedLiteral],
+) -> dict[str, object] | None:
+	if add_effect.predicate != delete_effect.predicate:
+		return None
+	add_arguments = tuple(add_effect.arguments or ())
+	delete_arguments = tuple(delete_effect.arguments or ())
+	if len(add_arguments) != len(delete_arguments):
+		return None
+	changed_positions = tuple(
+		index
+		for index, (add_argument, delete_argument) in enumerate(
+			zip(add_arguments, delete_arguments),
+		)
+		if add_argument != delete_argument
+	)
+	if len(changed_positions) != 1:
+		return None
+	changed_position = changed_positions[0]
+	source_argument = delete_arguments[changed_position]
+	target_argument = add_arguments[changed_position]
+	if not _has_positive_literal(preconditions, delete_effect):
+		return None
+	edge_preconditions = tuple(
+		literal
+		for literal in preconditions
+		if literal.predicate != add_effect.predicate
+		and source_argument in tuple(literal.arguments or ())
+		and target_argument in tuple(literal.arguments or ())
+	)
+	if not edge_preconditions:
+		return None
+	head_arguments = tuple(_var(argument) for argument in add_arguments)
+	source_variable = _var(source_argument)
+	target_variable = _var(target_argument)
+	next_variable = _fresh_route_variable(
+		"Next",
+		(
+			*head_arguments,
+			source_variable,
+			*parameter_variables(getattr(action, "parameters")),
+		),
+	)
+	context_arguments = (
+		*tuple(
+			argument
+			for index, argument in enumerate(head_arguments)
+			if index != changed_position
+		),
+		source_variable,
+		next_variable,
+		target_variable,
+	)
+	return {
+		"symbol": sanitize_identifier(f"route_step_{add_effect.predicate}_{action_name}"),
+		"target_predicate": add_effect.predicate,
+		"action": action_name,
+		"changed_position": changed_position,
+		"head_arguments": head_arguments,
+		"source_variable": source_variable,
+		"next_variable": next_variable,
+		"target_variable": target_variable,
+		"context_arguments": context_arguments,
+		"action_arguments": _route_action_arguments(
+			action,
+			target_argument=target_argument,
+			next_variable=next_variable,
+		),
+		"type_context": _route_type_context(
+			action,
+			target_argument=target_argument,
+			next_variable=next_variable,
+		),
+		"precondition_context": tuple(
+			_route_literal_signature(
+				literal,
+				target_argument=target_argument,
+				next_variable=next_variable,
+			)
+			for literal in preconditions
+		),
+		"edge_contexts": tuple(
+			_route_literal_signature(
+				literal,
+				target_argument=target_argument,
+				next_variable=next_variable,
+			)
+			for literal in edge_preconditions
+		),
+	}
+
+
+def _route_progress_rule(feature: Mapping[str, object]) -> LiftedPlanRule:
+	target_predicate = str(feature["target_predicate"])
+	action_name = str(feature["action"])
+	context = (
+		*tuple(str(item) for item in tuple(feature.get("type_context") or ())),
+		*tuple(str(item) for item in tuple(feature.get("precondition_context") or ())),
+		_call(
+			str(feature["symbol"]),
+			tuple(str(item) for item in tuple(feature["context_arguments"])),
+		),
+	)
+	head_arguments = tuple(str(item) for item in tuple(feature["head_arguments"]))
+	return _rule(
+		f"{target_predicate}_route_progress_via_{sanitize_identifier(action_name)}",
+		target_predicate,
+		head_arguments,
+		context,
+		(
+			_action(
+				action_name,
+				*tuple(str(item) for item in tuple(feature["action_arguments"])),
+			),
+			_subgoal(target_predicate, *head_arguments),
+		),
+		capabilities=(
+			f"module_{target_predicate}_route_progress_{sanitize_identifier(action_name)}",
+		),
+		rationale="route_progress_distance_descent",
+		cost=1,
+	)
+
+
+def _has_positive_literal(
+	literals: Sequence[LiftedLiteral],
+	target: LiftedLiteral,
+) -> bool:
+	target_signature = _positive_signature(target)
+	return any(_positive_signature(literal) == target_signature for literal in literals)
+
+
+def _route_literal_signature(
+	literal: LiftedLiteral,
+	*,
+	target_argument: str,
+	next_variable: str,
+) -> str:
+	arguments = tuple(
+		next_variable if argument == target_argument else _var(argument)
+		for argument in tuple(literal.arguments or ())
+	)
+	return _call(literal.predicate, arguments)
+
+
+def _route_action_arguments(
+	action: object,
+	*,
+	target_argument: str,
+	next_variable: str,
+) -> tuple[str, ...]:
+	target_variable = _var(target_argument)
+	return tuple(
+		next_variable if argument == target_variable else argument
+		for argument in parameter_variables(getattr(action, "parameters"))
+	)
+
+
+def _route_type_context(
+	action: object,
+	*,
+	target_argument: str,
+	next_variable: str,
+) -> tuple[str, ...]:
+	type_context = list(_action_type_contexts(action))
+	target_name = _pddl_parameter_key(target_argument)
+	for parameter in tuple(getattr(action, "parameters", ()) or ()):
+		if _pddl_parameter_key(parameter_name(str(parameter))) != target_name:
+			continue
+		type_name = parameter_type(str(parameter))
+		if type_name != "object":
+			type_context.append(_call(type_guard_symbol(type_name), (next_variable,)))
+		break
+	return tuple(dict.fromkeys(type_context))
+
+
+def _pddl_parameter_key(value: str) -> str:
+	return str(value or "").strip().lstrip("?")
+
+
+def _fresh_route_variable(
+	base: str,
+	used_variables: Sequence[str],
+) -> str:
+	used = set(tuple(used_variables or ()))
+	if base not in used:
+		return base
+	index = 1
+	while f"{base}{index}" in used:
+		index += 1
+	return f"{base}{index}"
+
+
+def _unique_route_features(
+	features: Sequence[dict[str, object]],
+) -> tuple[dict[str, object], ...]:
+	unique: dict[tuple[object, ...], dict[str, object]] = {}
+	for feature in tuple(features or ()):
+		key = (
+			feature.get("symbol"),
+			feature.get("target_predicate"),
+			feature.get("action"),
+			tuple(feature.get("head_arguments") or ()),
+			tuple(feature.get("context_arguments") or ()),
+		)
+		unique.setdefault(key, feature)
+	return tuple(unique.values())
 
 
 def filter_rules_by_recursion_descent(
@@ -268,6 +531,13 @@ def _recursive_rule_certificate(
 	recursive_indices = _recursive_body_indices(rule)
 	first_recursive_index = recursive_indices[0]
 	first_recursive_call = rule.body[first_recursive_index]
+	route_certificate = _route_step_recursion_certificate(
+		rule,
+		first_recursive_call,
+		recursive_call_index=first_recursive_index,
+	)
+	if route_certificate is not None:
+		return route_certificate
 	if first_recursive_call.symbol == rule.head.symbol and (
 		tuple(first_recursive_call.arguments or ()) != tuple(rule.head.arguments or ())
 	):
@@ -338,6 +608,38 @@ def _recursive_rule_certificate(
 		"missing_context": None,
 		"recursive_call_index": first_recursive_index,
 		"reason": "no missing positive precondition subgoal appears before recursion",
+	}
+
+
+def _route_step_recursion_certificate(
+	rule: LiftedPlanRule,
+	recursive_call: LiftedCall,
+	*,
+	recursive_call_index: int,
+) -> dict[str, object] | None:
+	if recursive_call.symbol != rule.head.symbol:
+		return None
+	if tuple(recursive_call.arguments or ()) != tuple(rule.head.arguments or ()):
+		return None
+	if not any(step.kind == "action" for step in rule.body[:recursive_call_index]):
+		return None
+	route_contexts = tuple(
+		context
+		for context in tuple(rule.context or ())
+		if _parse_atom(context)[0].startswith("route_step_")
+	)
+	if not route_contexts:
+		return None
+	return {
+		"rule_name": rule.name,
+		"head": _call(rule.head.symbol, rule.head.arguments),
+		"accepted": True,
+		"descent_subgoal": _call(recursive_call.symbol, recursive_call.arguments),
+		"missing_context": None,
+		"recursive_call_index": recursive_call_index,
+		"ranking_relation": _parse_atom(route_contexts[0])[0],
+		"ranking_edge": "static_shortest_path_distance_decreases",
+		"reason": "recursive action is guarded by a route-step distance-decrease context",
 	}
 
 
@@ -1499,22 +1801,44 @@ def _action_effect_rules(
 		for effect in parse_pddl_literals(str(getattr(action, "effects", "")))
 		if effect.is_positive
 	)
+	delete_effects = tuple(
+		effect
+		for effect in parse_pddl_literals(str(getattr(action, "effects", "")))
+		if not effect.is_positive
+	)
 	rules: list[LiftedPlanRule] = []
 	for effect in add_effects:
 		head_arguments = tuple(_var(argument) for argument in effect.arguments)
 		context = (*type_context, *(literal.signature() for literal in preconditions))
 		head_call = _subgoal(effect.predicate, *head_arguments)
-		for precondition in preconditions:
-			binding_context = _binding_context_for_precondition(
+		for precondition_index, precondition in enumerate(preconditions):
+			binding_contexts = _binding_contexts_for_precondition(
 				precondition,
 				head_arguments=head_arguments,
 				preconditions=preconditions,
 				producible_predicates=producible_predicates,
+				type_context=type_context,
 			)
-			if binding_context is not None:
+			if _action_deletes_precondition(
+				precondition,
+				delete_effects,
+			) and not _precondition_variables(precondition).issubset(set(head_arguments)):
+				binding_contexts = tuple(context for context in binding_contexts if context)
+			for binding_context_index, binding_context in enumerate(binding_contexts):
+				occurrence_suffix = _precondition_occurrence_suffix(
+					preconditions,
+					precondition_index,
+				)
+				alternative_suffix = _binding_context_alternative_suffix(
+					binding_contexts,
+					binding_context_index,
+				)
 				rules.append(
 					_rule(
-						f"{effect.predicate}_prepare_{precondition.predicate}_for_{action_name}",
+						(
+							f"{effect.predicate}_prepare_{precondition.predicate}"
+							f"{occurrence_suffix}{alternative_suffix}_for_{action_name}"
+						),
 						effect.predicate,
 						head_arguments,
 						(
@@ -1531,7 +1855,8 @@ def _action_effect_rules(
 						),
 						capabilities=(
 							f"module_{effect.predicate}_prepare_"
-							f"{precondition.predicate}_for_{action_name}"
+							f"{precondition.predicate}{occurrence_suffix}"
+							f"{alternative_suffix}_for_{action_name}"
 						,),
 						cost=2,
 					),
@@ -1552,6 +1877,45 @@ def _action_effect_rules(
 				),
 			)
 	return tuple(rules)
+
+
+def _action_deletes_precondition(
+	precondition: LiftedLiteral,
+	delete_effects: Sequence[LiftedLiteral],
+) -> bool:
+	precondition_signature = _positive_signature(precondition)
+	return any(
+		_positive_signature(delete_effect) == precondition_signature
+		for delete_effect in tuple(delete_effects or ())
+	)
+
+
+def _precondition_variables(precondition: LiftedLiteral) -> frozenset[str]:
+	return frozenset(_var(argument) for argument in tuple(precondition.arguments or ()))
+
+
+def _precondition_occurrence_suffix(
+	preconditions: Sequence[LiftedLiteral],
+	precondition_index: int,
+) -> str:
+	predicate = preconditions[precondition_index].predicate
+	matching_indices = tuple(
+		index
+		for index, precondition in enumerate(preconditions)
+		if precondition.predicate == predicate
+	)
+	if len(matching_indices) <= 1:
+		return ""
+	return f"_{matching_indices.index(precondition_index) + 1}"
+
+
+def _binding_context_alternative_suffix(
+	binding_contexts: Sequence[tuple[str, ...]],
+	binding_context_index: int,
+) -> str:
+	if len(tuple(binding_contexts or ())) <= 1:
+		return ""
+	return f"_alt{binding_context_index + 1}"
 
 
 def _action_type_contexts(action: object) -> tuple[str, ...]:
@@ -1654,14 +2018,32 @@ def _binding_context_for_precondition(
 	preconditions: tuple[LiftedLiteral, ...],
 	producible_predicates: frozenset[str],
 ) -> tuple[str, ...] | None:
+	contexts = _binding_contexts_for_precondition(
+		precondition,
+		head_arguments=head_arguments,
+		preconditions=preconditions,
+		producible_predicates=producible_predicates,
+		type_context=(),
+	)
+	return contexts[0] if contexts else None
+
+
+def _binding_contexts_for_precondition(
+	precondition: LiftedLiteral,
+	*,
+	head_arguments: tuple[str, ...],
+	preconditions: tuple[LiftedLiteral, ...],
+	producible_predicates: frozenset[str],
+	type_context: tuple[str, ...],
+) -> tuple[tuple[str, ...], ...]:
 	if not precondition.is_positive:
-		return None
+		return ()
 	if precondition.predicate not in producible_predicates:
-		return None
+		return ()
 	head_variables = set(head_arguments)
 	precondition_variables = {_var(argument) for argument in precondition.arguments}
 	if precondition_variables.issubset(head_variables):
-		return ()
+		return ((),)
 
 	bound_variables = set(head_variables)
 	binding_literals: list[LiftedLiteral] = []
@@ -1681,11 +2063,33 @@ def _binding_context_for_precondition(
 			next_literal = literal
 			break
 		if next_literal is None:
-			return None
+			break
 		remaining.remove(next_literal)
 		binding_literals.append(next_literal)
 		bound_variables.update(_var(argument) for argument in next_literal.arguments)
-	return tuple(literal.signature() for literal in binding_literals)
+	contexts: list[tuple[str, ...]] = []
+	if precondition_variables.issubset(bound_variables):
+		contexts.append(tuple(literal.signature() for literal in binding_literals))
+	type_bound_variables = _positive_context_variables(type_context)
+	if (
+		precondition_variables.intersection(head_variables)
+		and (precondition_variables - head_variables).issubset(type_bound_variables)
+	):
+		contexts.append(())
+	return tuple(dict.fromkeys(contexts))
+
+
+def _positive_context_variables(contexts: Sequence[str]) -> frozenset[str]:
+	variables: set[str] = set()
+	for context in tuple(contexts or ()):
+		if str(context or "").strip().lower().startswith("not "):
+			continue
+		variables.update(
+			argument
+			for argument in _context_literal_arguments(context)
+			if _is_variable(argument)
+		)
+	return frozenset(variables)
 
 
 def _positive_signature(literal: LiftedLiteral) -> str:

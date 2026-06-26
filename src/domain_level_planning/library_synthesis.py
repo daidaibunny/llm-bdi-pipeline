@@ -43,6 +43,7 @@ from .schema_synthesis import atomic_achievement_justifications
 from .schema_synthesis import composer_state_coverage_required_rule_groups
 from .schema_synthesis import filter_rules_by_recursion_descent
 from .schema_synthesis import recursion_ranking_states_from_problem_files
+from .schema_synthesis import route_progress_features_from_actions
 from .schema_synthesis import transition_progress_required_rule_groups
 from .transition_system import anti_unify_training_atomic_achievements
 
@@ -306,6 +307,7 @@ def synthesize_domain_level_asl_library(
 		domain.actions,
 		transition_evidence=all_transition_evidence,
 	)
+	route_features = route_progress_features_from_actions(domain.actions)
 	backend_run_results, learned_sources = _run_requested_learner_sketches(
 		backend=learner_sketches_backend,
 		run_configs=learner_sketches_runs,
@@ -490,10 +492,11 @@ def synthesize_domain_level_asl_library(
 				evidence.to_dict()
 				for evidence in counterexample_transition_evidence
 			),
-			"pddl_to_asl_symbol_map": _pddl_to_asl_symbol_map(domain),
-			"runtime_goal_agenda": runtime_goal_agenda,
-		},
-	)
+				"pddl_to_asl_symbol_map": _pddl_to_asl_symbol_map(domain),
+				"runtime_goal_agenda": runtime_goal_agenda,
+				"runtime_route_features": route_features,
+			},
+		)
 	contract_report = audit_domain_level_library_contract(
 		plan_library,
 		declared_predicates=_declared_predicate_arities_with_type_guards(domain),

@@ -322,18 +322,19 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"domain-level lifted-library claim."
 				),
 			),
-			ArchitectureDecision(
-				id="D8",
-				decision=(
-					"Exclude cyclic same-predicate route recursion until a verified "
-					"ranking or reachability feature exists."
+				ArchitectureDecision(
+					id="D8",
+					decision=(
+						"Allow cyclic same-predicate route recursion only when guarded "
+						"by a verified route-step shortest-path descent feature."
+					),
+					status="accepted",
+					rationale=(
+						"Static graph distance gives a domain-agnostic progress "
+						"certificate for single-effect movement schemas without "
+						"falling back to trace replay."
+					),
 				),
-				status="accepted",
-				rationale=(
-					"Trace replay over cyclic route graphs would not be a safe lifted "
-					"domain-level plan library."
-				),
-			),
 		),
 		gaps=(
 			ArchitectureGap(
@@ -689,11 +690,11 @@ def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
 				"selected_rule_manifest",
 				"rule_manifest_audit",
 			),
-			not_claimed=(
-				"full arbitrary-domain module learning",
-				"unchecked trace replay as a lifted module",
-				"cyclic same-predicate recursion without a ranking or reachability certificate",
-			),
+				not_claimed=(
+					"full arbitrary-domain module learning",
+					"unchecked trace replay as a lifted module",
+					"multi-resource logistics agendas beyond verified single-effect route movement",
+				),
 		),
 		LayerPaperQualityContract(
 			layer="Layer C",
@@ -767,10 +768,12 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 				"subgoal calls with matching schema arities; every body variable "
 				"must be bound by the plan head or positive context literals"
 			),
-			"recursion": (
-				"same-predicate recursion requires a missing-precondition or "
-				"bounded acyclic-relation descent certificate"
-			),
+				"recursion": (
+					"same-predicate recursion requires a missing-precondition or "
+					"bounded acyclic-relation descent certificate; single-effect "
+					"movement recursion may instead use a route_step shortest-path "
+					"distance-decrease context"
+				),
 		},
 		composer_language={
 			"rule_shape": (
@@ -816,11 +819,11 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 		exclusions=(
 			"arbitrary PDDL domains",
 			"negative or disjunctive achievement goals",
-			"numeric fluents and action costs",
-			"derived predicates and conditional effects",
-			"cyclic same-predicate route recursion without a ranking or reachability certificate",
-			"runtime full-trace planning as the plan-library executor",
-		),
+				"numeric fluents and action costs",
+				"derived predicates and conditional effects",
+				"multi-resource logistics/resource agendas beyond the current Layer C composer",
+				"runtime full-trace planning as the plan-library executor",
+			),
 	)
 
 

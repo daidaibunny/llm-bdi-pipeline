@@ -364,7 +364,10 @@ def _context_needs_derived_context_facts(
 	if text.lower().startswith("not "):
 		text = text[4:].strip()
 	symbol, _arguments = _parse_atom(text)
-	return _is_ready_context_for_goal_symbol(symbol, goal_facts)
+	return _is_ready_context_for_goal_symbol(
+		symbol,
+		goal_facts,
+	) or symbol.startswith("route_step_")
 
 
 def _match_arguments(
@@ -503,6 +506,8 @@ def _context_fact_source(
 		return goal_facts
 	if _is_ready_context_for_goal_symbol(symbol, goal_facts):
 		return derived_context_facts
+	if symbol in _derived_context_symbols(derived_context_facts):
+		return derived_context_facts
 	return state
 
 
@@ -518,8 +523,13 @@ def _derived_context_facts(
 	}
 	agenda = dict(plan_library.metadata.get("runtime_goal_agenda") or {})
 	support_edges = tuple(agenda.get("support_edges") or ())
+	route_facts = _route_step_context_facts(
+		plan_library=plan_library,
+		state=state,
+		goal_facts=goal_facts,
+	)
 	if not support_edges:
-		return tuple(sorted(ready_facts))
+		return tuple(sorted((*ready_facts, *route_facts)))
 	blocked = {
 		_ready_fact_from_goal_fact(goal_fact)
 		for goal_fact in tuple(goal_facts or ())
@@ -530,7 +540,131 @@ def _derived_context_facts(
 			support_edges=support_edges,
 		)
 	}
-	return tuple(sorted(ready_facts - blocked))
+	return tuple(sorted((ready_facts - blocked).union(route_facts)))
+
+
+def _derived_context_symbols(derived_context_facts: Sequence[str]) -> frozenset[str]:
+	return frozenset(
+		_parse_atom(fact)[0]
+		for fact in tuple(derived_context_facts or ())
+	)
+
+
+def _route_step_context_facts(
+	*,
+	plan_library: PlanLibrary,
+	state: frozenset[str],
+	goal_facts: tuple[str, ...],
+) -> frozenset[str]:
+	facts: set[str] = set()
+	for feature in tuple(plan_library.metadata.get("runtime_route_features") or ()):
+		if not isinstance(feature, Mapping):
+			continue
+		facts.update(
+			_route_step_context_facts_for_feature(
+				feature=feature,
+				state=state,
+				goal_facts=goal_facts,
+			),
+		)
+	return frozenset(facts)
+
+
+def _route_step_context_facts_for_feature(
+	*,
+	feature: Mapping[str, object],
+	state: frozenset[str],
+	goal_facts: tuple[str, ...],
+) -> tuple[str, ...]:
+	symbol = str(feature.get("symbol") or "").strip()
+	target_predicate = str(feature.get("target_predicate") or "").strip()
+	if not symbol or not target_predicate:
+		return ()
+	head_arguments = tuple(str(item) for item in tuple(feature.get("head_arguments") or ()))
+	context_arguments = tuple(
+		str(item) for item in tuple(feature.get("context_arguments") or ())
+	)
+	edge_contexts = tuple(str(item) for item in tuple(feature.get("edge_contexts") or ()))
+	source_variable = str(feature.get("source_variable") or "").strip()
+	next_variable = str(feature.get("next_variable") or "").strip()
+	target_variable = str(feature.get("target_variable") or "").strip()
+	changed_position = int(feature.get("changed_position") or 0)
+	if (
+		not head_arguments
+		or not context_arguments
+		or not edge_contexts
+		or not source_variable
+		or not next_variable
+		or not target_variable
+		or changed_position >= len(head_arguments)
+	):
+		return ()
+	head_pattern = _call(target_predicate, head_arguments)
+	source_arguments = list(head_arguments)
+	source_arguments[changed_position] = source_variable
+	source_pattern = _call(target_predicate, source_arguments)
+	route_facts: list[str] = []
+	for goal_fact in tuple(goal_facts or ()):
+		goal_atom = _state_atom_from_goal_fact(goal_fact)
+		goal_substitution = _match_atom(head_pattern, goal_atom, {})
+		if goal_substitution is None:
+			continue
+		target = goal_substitution.get(target_variable)
+		if target is None:
+			continue
+		edge_substitutions = _binding_context_substitutions(
+			contexts=edge_contexts,
+			substitution=goal_substitution,
+			state=state,
+		)
+		edges = {
+			(substitution[source_variable], substitution[next_variable])
+			for substitution in edge_substitutions
+			if source_variable in substitution and next_variable in substitution
+		}
+		distances = _shortest_distances_to_target(edges, target)
+		current_substitutions = _binding_context_substitutions(
+			contexts=(source_pattern,),
+			substitution=goal_substitution,
+			state=state,
+		)
+		for current in current_substitutions:
+			source = current.get(source_variable)
+			if source is None or source not in distances:
+				continue
+			for edge_source, edge_next in sorted(edges):
+				if edge_source != source:
+					continue
+				if distances.get(edge_next, len(edges) + 1) >= distances[source]:
+					continue
+				merged = dict(current)
+				merged[next_variable] = edge_next
+				if _contains_unbound_variables(
+					_call(symbol, context_arguments),
+					merged,
+				):
+					continue
+				route_facts.append(_call(symbol, tuple(merged[arg] for arg in context_arguments)))
+	return tuple(dict.fromkeys(route_facts))
+
+
+def _shortest_distances_to_target(
+	edges: set[tuple[str, str]],
+	target: str,
+) -> dict[str, int]:
+	reverse_graph: dict[str, set[str]] = {}
+	for source, next_node in edges:
+		reverse_graph.setdefault(next_node, set()).add(source)
+	distances = {target: 0}
+	frontier = [target]
+	while frontier:
+		node = frontier.pop(0)
+		for predecessor in sorted(reverse_graph.get(node, ())):
+			if predecessor in distances:
+				continue
+			distances[predecessor] = distances[node] + 1
+			frontier.append(predecessor)
+	return distances
 
 
 def _goal_blocked_by_support_agenda(
