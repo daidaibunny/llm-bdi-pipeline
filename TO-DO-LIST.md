@@ -179,6 +179,61 @@ paper claim gets cleaner before adding harder learning machinery.
 | P7 | Feature-binding expansion | Only after core paper claim is stable. | Add principled bindings only for features with verified lifted semantics; otherwise keep structured rejection. | Done for current paper scope: external backend reports now include a machine-readable `feature_binding_contract` and per-policy `feature_binding_summary` with bound feature kinds, unsupported rejection reason counts, and a check that every unsupported feature has a reason. No unprincipled object-specific/distance binding was added. |
 | P8 | Cyclic-route ranking/reachability and typed carrier/resource delivery | Hardest non-Blocksworld improvement. | Generic route progress solves single-effect movement recursion, and typed-overloaded causal-chain modules solve carrier/package delivery without trace replay or capacity subgoal pollution. | Done for the current fragment: schema synthesis infers `route_step_*` contexts from PDDL movement schemas, executor derives route progress for the current atomic subgoal target, recursion audit accepts route-step descent and typed partition delegation, causal-chain modules use shared static preconditions to bridge resource variables, and current-resource priority handles already-held target objects in a generic mid-state test. Transport train3 first10 solves 10/10 from initial states; arbitrary reachable mid-state logistics coverage remains open. |
 
+## Final Paper Data Plan
+
+The final data package must be stronger than the current
+`paper-expanded-smoke` diagnostic matrix. A final paper run is acceptable only
+when it produces a reproducible result directory, a comparison JSON with
+non-empty baseline rows, LaTeX result macros, and a clear split between main
+claims, ablations, baselines, and limitation diagnostics.
+
+### Final Claim Boundary
+
+| Claim class | Included in main claim? | Required evidence | Excluded or limitation evidence |
+| --- | --- | --- | --- |
+| Positive conjunctive achievement goals | Yes | Held-out execution of the compiled lifted ASL library. Runtime full-trace planner must be `none`. | Negative, disjunctive, quantified, and temporal goals stay outside the main experiment unless a tested semantics is added. |
+| Domain-level lifted library | Yes | No grounded plan heads, no synthetic `achieve_*`, `transition_*`, or `dfa_state` names, no object-specific training replay. | Per-problem planner traces may be baseline or synthesis evidence only. |
+| Goal dependency | Yes | At least one Blocksworld or equivalent split where Layer C evidence is necessary or where the no-Layer-C ablation has a meaningful failure/deterioration. | A split where no-Layer-C also solves 100% is not enough to support the Layer C contribution. |
+| External paper-code reuse | Yes | learner-sketches policy selected by the strict paper profile; h-policy-learner and d2l reported through verified adapter compatibility or explicit safe rejection. | Unsupported external feature dialects are diagnostics, not silent fallbacks. |
+| Broader PDDL applicability | Secondary | Transport/Satellite style rows may support engineering breadth only when their fragment limits are explicit. | Marsrover-scale state explosion is a limitation unless trace-evidence or external-backend synthesis succeeds under fixed resources. |
+| Temporal extended goals | No for current paper | DFA role may be described as future upper controller. | No TEG coverage table is required for this achievement-goal paper. |
+
+### Required Final Tables
+
+| Table | Purpose | Minimum rows | Acceptance criteria |
+| --- | --- | --- | --- |
+| Main results | Show the proposed lifted ASL library works as a domain-level artifact. | Blocksworld strict paper profile first20; Blocksworld satisfiable-large; Blocksworld satisfiable-mixed-large; Labworkflow refinement; optional Transport/Satellite secondary rows. | Main Blocksworld rows must be `paper_profile_ready=true`, coverage 100%, runtime planner `none`, selected external sketch count greater than 0 where labeled external. |
+| Baselines | Show how the method compares with existing planning/generalized-planning tools. | Classical planner per-problem trace baseline; raw learner-sketches policy baseline; MOOSE where assumptions apply; optional h-policy/d2l audit baseline. | `comparison.json` must have `baseline_count > 0`; each baseline record must state whether it is domain-level, per-problem, or audit-only. |
+| Ablations | Show each mechanism matters. | No external sketch; no Layer C ordering; no counterexample refinement; no offline synthesis trace evidence. | At least one ablation must produce a meaningful coverage drop or blocking diagnostic for the mechanism it removes. If a row remains 100%, the paper must explain why that split does not stress that mechanism. |
+| Goal-dependency stress | Specifically justify Layer C. | A hard Blocksworld dependency split or equivalent conjunctive-goal dependency domain, plus the no-Layer-C row on the same split. | Full method succeeds; no-Layer-C fails, times out, or reports missing/unsafe composer evidence. |
+| Failure analysis | Make limitations paper-useful instead of vague. | Marsrover scalability diagnostic; Transport reachable-mid-state diagnostic; unsupported feature-binding diagnostics. | Every failure row must have a precise reason, not just failed coverage. Diagnostic failures must not be mixed into the main success-count claim. |
+| Reproducibility | Let the final numbers be regenerated. | Commit hash, command lines, train/eval split files, resource limits, timeout settings, backend pins, and generated LaTeX macros. | A single documented command sequence regenerates the result directory and `latex_code/aamas_method_paper/generated/results.tex`. |
+
+### Final Experiment Protocol
+
+| Phase | Output directory | Required command or artifact | Notes |
+| --- | --- | --- | --- |
+| 1. Backend audit | `tmp/paper-final/backend-audit/` | `uv run python scripts/gp_backend_audit.py status` and learner-sketches summary commands. | Confirms pinned backends before result generation. External learners must keep memory guards at or below 16 GiB. |
+| 2. Library matrix | `tmp/paper-final/library-matrix/` | A fixed JSON config, not the development preset name, should run final library rows. | No unresolved failed rows in the main matrix. Marsrover belongs in a separate limitation matrix unless repaired. |
+| 3. Baseline generation | `tmp/paper-final/baselines/` | Generate completed baseline JSON records for classical planner, raw learner-sketches, and MOOSE/audit baselines. | Baselines are compared as baselines, not used as runtime execution for the proposed library. |
+| 4. Ablation matrix | `tmp/paper-final/ablations/` | Same splits as main rows, one mechanism disabled per row. | The Layer C ablation must include a split that actually stresses goal dependency. |
+| 5. Limitation matrix | `tmp/paper-final/limitations/` | Expected diagnostic rows for unsupported fragments and scalability boundaries. | These rows support honest scope, not the main positive coverage claim. |
+| 6. Comparison and macros | `tmp/paper-final/comparison.json` and `latex_code/aamas_method_paper/generated/results.tex` | `uv run python scripts/compare_domain_level_experiments.py ... --latex-macros-output ...` | The paper must import generated macros instead of manually transcribing final values. |
+| 7. Verification | root test output and LaTeX build output | `uv run pytest -q`; `latexmk -pdf latex_code/aamas_method_paper/main.tex` | Final data is not accepted if tests fail or the paper does not compile. |
+
+### Data Acceptance Checklist
+
+- `comparison.json` has `baseline_count > 0`.
+- Every main method row reports `runtime_planner = "none"`.
+- Every strict paper-profile main row reports `paper_profile_ready = true`.
+- Every generated ASL library passes no-synthetic-name and no-grounded-plan-head audits.
+- Every selected Layer B and Layer C rule has proof/provenance metadata.
+- Layer C is tested on at least one split where disabling it is informative.
+- All baseline records state whether they are per-problem planners, generalized-policy systems, or audit-only external artifacts.
+- Marsrover is either repaired under fixed resource limits or moved to a limitation table with a precise scalability diagnosis.
+- Final result macros are generated from JSON reports, not handwritten.
+- The final paper text only claims the supported bounded class and does not claim arbitrary-domain generalized planning completeness.
+
 ## Immediate Next Tasks
 
 | ID | Task | Gap | Acceptance check | Status |
@@ -203,6 +258,10 @@ paper claim gets cleaner before adding harder learning machinery.
 | N17 | Pull Layer B and Layer C architecture back to final-paper quality. | G1, G2, G3 | Architecture report and AAMAS method text expose the exact bounded Layer B/C claims: artifact, admissible evidence, selector obligations, compiler/runtime semantics, required proof reports, and explicit not-claimed boundaries. | Done for contract alignment: `architecture_contract` now marks Layer B and Layer C complete for the declared bounded hypothesis class and keeps universal arbitrary-domain generalized planning as a non-goal. Layer C contract includes `ready_<predicate>` runtime support agenda semantics; Layer B contract requires proof records, selector reasons, and safety audits. Evidence: focused architecture tests passed after the contract update. |
 | N18 | Diagnose and repair the Blocksworld all30 `p21` loop/timeout failure mode. | G3, G6 | Reproduce `p21`, explain the exact root cause, add a generic fix, and verify first20/no-hardcoding do not regress. | Done: `p21` was reproduced as `recursive loop on !g` after 236 actions, but the final missing goals revealed a contradictory goal set (`clear(b2)` with `on(b17,b2)`). Added domain-agnostic schema-level goal mutex diagnostics from symmetric PDDL add/delete effects. `p21` now fails in 0 steps with `goal mutex detected`; `p22`-`p30` are also classified as `goal_mutex`. Evidence: targeted executor tests passed, Blocksworld first20 still passed, no-hardcoding passed, all30 report has `failure_kind_counts={"goal_mutex": 10}`. |
 | N19 | Create and evaluate satisfiable larger Blocksworld held-out splits. | G3, G6 | Add reproducible splits, verify they have no schema goal mutexes, wire them into the expanded matrix, and run paper-profile evaluation. | Done: `scripts/generate_blocksworld_satisfiable_split.py` generates deterministic full-tower and mixed multi-tower problems. `src/domains/blocksworld/satisfiable-large` tracks the 50-140 block full-tower split; `src/domains/blocksworld/satisfiable-mixed-large` tracks the 20-110 block mixed split with nontrivial initial towers, multiple final towers, and mixed `ontable`/`on` goals. Reports in `tmp/domain-level-experiment-matrix/blocksworld-satisfiable-large/` and `tmp/domain-level-experiment-matrix/blocksworld-satisfiable-mixed-large/` show bootstrap 10/10 and paper external 10/10 for both splits; paper external rows are `paper_profile_ready=true` with no runtime full-trace planner. |
+| N21 | Build the final paper data package. | G6, G9 | Produce `tmp/paper-final/` with backend audit logs, main library reports, baseline JSON rows, ablation reports, limitation diagnostics, `comparison.json`, and generated LaTeX result macros. | New top priority. Current blocker: `paper-expanded-smoke-latest/comparison.json` has `baseline_count=0`, and the existing no-Layer-C first20 ablation still solves 20/20, so it is not enough to demonstrate Layer C necessity. |
+| N22 | Add or select a goal-dependency stress split for Layer C ablation. | G3, G6 | On the same split, the full method succeeds and the no-Layer-C variant either fails, times out, or emits a clear missing-composer/unsafe-composer diagnostic. | Pending. This should be domain-agnostic in the learner implementation; Blocksworld-specific data generation is acceptable only as benchmark construction. |
+| N23 | Generate final baseline records. | G9 | Completed baseline JSON contains at least classical per-problem planner, raw learner-sketches policy, and MOOSE or audit-only generalized-planning baseline rows with coverage and scope labels. | Pending. Existing matrix can consume baseline JSON, but no final baseline generation command has been fixed yet. |
+| N24 | Decide Marsrover final treatment. | G6, G10 | Either repair Marsrover synthesis under fixed resource limits using validated trace/external evidence, or move it to a limitation-only matrix with the state-explosion diagnosis. | Pending. Current diagnostic fails before library generation because bounded transition-system exploration exceeds 20000 states. |
 
 ## Commands To Use
 
