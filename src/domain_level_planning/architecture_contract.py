@@ -77,6 +77,8 @@ class ArchitectureContract:
 	"""The bounded-class synthesis contract reported with each library."""
 
 	guarantee: str
+	paper_core_method: tuple[str, ...]
+	implementation_safeguards: tuple[str, ...]
 	non_goals: tuple[str, ...]
 	supported_pddl_fragment: str
 	runtime_planner_policy: str
@@ -90,6 +92,8 @@ class ArchitectureContract:
 	def to_dict(self) -> dict[str, Any]:
 		return {
 			"guarantee": self.guarantee,
+			"paper_core_method": list(self.paper_core_method),
+			"implementation_safeguards": list(self.implementation_safeguards),
 			"non_goals": list(self.non_goals),
 			"supported_pddl_fragment": self.supported_pddl_fragment,
 			"runtime_planner_policy": self.runtime_planner_policy,
@@ -109,9 +113,14 @@ class ArchitectureContract:
 		exclusions = ", ".join(hypothesis.exclusions)
 		return (
 			(
+				"The core method is goal-conditioned modular policy-sketch "
+				"synthesis: from a PDDL domain and small training problems, the "
+				"system learns a lifted Layer B module library and a lifted Layer C "
+				"goal composer, then compiles the selected rules to AgentSpeak(L)."
+			),
+			(
 				"We use a bounded-class guarantee: the system synthesizes and "
-				"validates the best lifted AgentSpeak(L) plan library it can find "
-				"inside the current goal-conditioned modular sketch hypothesis "
+				"validates the best library it can find inside this hypothesis "
 				"class, and it does not claim universal PDDL generalized-planning "
 				"completeness."
 			),
@@ -173,6 +182,23 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"bounded-class guarantee: synthesize and validate the best library found "
 			"inside the current goal-conditioned modular sketch hypothesis class; "
 			"do not claim universal PDDL generalized-planning completeness"
+		),
+		paper_core_method=(
+			"goal-conditioned modular policy-sketch synthesis",
+			"Layer B lifted atomic predicate-goal modules",
+			"Layer C lifted conjunctive-goal composer",
+			"ASP-style selector over declared PDDL predicates, primitive actions, "
+			"subgoal calls, and read-only goal descriptors",
+			"AgentSpeak(L) compiler for the selected lifted rules",
+		),
+		implementation_safeguards=(
+			"offline planner traces may be used only as validated synthesis evidence",
+			"trace-supported macro rules are candidates, not the core method or "
+			"unchecked replay output",
+			"bounded validation, counterexample diagnostics, and no-hardcoding audits "
+			"guard the implementation claim",
+			"Fast Downward integration is a trace-evidence fallback and evaluation aid, "
+			"not the runtime library executor",
 		),
 		non_goals=(
 			"universal completeness for arbitrary PDDL domains",

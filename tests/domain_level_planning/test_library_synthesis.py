@@ -629,14 +629,34 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "runtime full-trace planning for each new problem" in contract["non_goals"]
 	assert "read-only goal descriptors" in contract["goal_fact_semantics"]
 	assert "not primitive actions" in contract["goal_fact_semantics"]
+	assert contract["paper_core_method"] == [
+		"goal-conditioned modular policy-sketch synthesis",
+		"Layer B lifted atomic predicate-goal modules",
+		"Layer C lifted conjunctive-goal composer",
+		(
+			"ASP-style selector over declared PDDL predicates, primitive actions, "
+			"subgoal calls, and read-only goal descriptors"
+		),
+		"AgentSpeak(L) compiler for the selected lifted rules",
+	]
+	safeguards = " ".join(contract["implementation_safeguards"])
+	assert "validated synthesis evidence" in safeguards
+	assert "trace-supported macro rules are candidates" in safeguards
+	assert "Fast Downward integration is a trace-evidence fallback" in safeguards
+	assert "not the runtime library executor" in safeguards
 	method_summary = contract["paper_method_summary"]
 	assert len(method_summary) >= 5
-	assert "bounded-class guarantee" in method_summary[0]
-	assert "universal PDDL generalized-planning completeness" in method_summary[0]
+	assert "core method is goal-conditioned modular policy-sketch synthesis" in (
+		method_summary[0]
+	)
+	assert "bounded-class guarantee" in method_summary[1]
+	assert "universal PDDL generalized-planning completeness" in method_summary[1]
 	assert "Layer B" in " ".join(method_summary)
 	assert "Layer C" in " ".join(method_summary)
 	assert "runtime full-trace planning" in " ".join(method_summary)
 	assert "negative or disjunctive achievement goals" in " ".join(method_summary)
+	assert "Fast Downward" not in " ".join(method_summary)
+	assert "trace macro" not in " ".join(method_summary).lower()
 	hypothesis = contract["hypothesis_class"]
 	assert hypothesis["name"] == "goal_conditioned_modular_sketch_asl"
 	assert any(

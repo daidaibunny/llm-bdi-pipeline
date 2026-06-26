@@ -15,7 +15,7 @@ Target pipeline:
 
 ```text
 PDDL domain + training/counterexample problems
-→ external generalized-planning learner / traces / sketches
+→ goal-conditioned modular policy-sketch synthesis
 → feature binding
 → Layer B atomic goal modules
 → Layer C goal dependency composer
@@ -24,6 +24,24 @@ PDDL domain + training/counterexample problems
 → counterexample-guided refinement
 → future DFA controller for temporal extended goals
 ```
+
+Paper core method:
+
+```text
+goal-conditioned modular policy sketches
++ lifted Layer B atomic modules
++ lifted Layer C goal composer
++ ASP-style selector
++ ASL compiler
+```
+
+Implementation safeguards, not the paper core:
+
+- Fast Downward or other planners as offline trace-evidence providers.
+- Trace-supported macro candidates.
+- Bounded validation, no-hardcoding audits, and diagnostic reports.
+- Counterexample failure classification unless it is used by the declared
+  learning algorithm.
 
 ## Current Implemented Baseline
 
@@ -88,6 +106,7 @@ strict paper profile with diagnostics: coverage=20/20 and bounded validation
 | D5 | Current scope is positive conjunctive achievement goals. | Accepted | Negative/disjunctive goals need a separate semantics design. |
 | D6 | Reject object-specific or distance DLPlan features unless principled lifting exists. | Accepted | Guessing those bindings would undermine the lifted-library claim. |
 | D7 | External paper code should be reused when verified. | Accepted | learner-sketches is the only backend currently allowed to drive synthesis; h-policy-learner and d2l remain audit-only. |
+| D8 | Separate paper core method from implementation safeguards. | Accepted | Trace macros, Fast Downward fallback, bounded validators, and audits can support engineering rigor, but they must not become the main contribution narrative. |
 
 ## Open Gaps
 
@@ -122,6 +141,7 @@ strict paper profile with diagnostics: coverage=20/20 and bounded validation
 | N11 | Fix generic typed/action-cost/equality PDDL support without domain hardcoding. | G2, G5, G6 | Equality contexts execute correctly, metric-only action costs are ignored as cost updates, hyphenated symbols render safely, typed action rules cannot bind objects of the wrong PDDL type, and the diagnostic matrix reaches 5/5 succeeded rows. | Done: added generic equality support in contract/executor/transition simulation/rendering; accepted metric-only `:action-costs`, `:functions`, `:metric`, and `increase` effects while preserving collision checks; added PDDL type guard facts and action-parameter type contexts; fixed Clingo rule-id collisions for hyphenated or duplicate rule names; added trace-supported macros for type-ambiguous effect predicates only. Evidence: `uv run pytest -q` -> `249 passed, 2 warnings`; `paper-diagnostic-smoke` matrix -> `succeeded=5 failed=0`; no-hardcoding test passed. |
 | N12 | Expand the matrix across all local PDDL domains and make long rows diagnostic-safe. | G6, G10, G11 | `paper-expanded-smoke` covers Blocksworld, Labworkflow, Transport, Satellite, and Marsrover; per-entry and per-problem timeouts prevent runaway rows; failures identify the next generic Layer B/C gaps. | Updated diagnostic scope: bounded failures now can fall back to synthesis planner traces when configured. Latest focused smoke results after trace-macro safety tightening: Transport train3 first10 = 0/10 because cyclic `at(...)` recursion is rejected without a ranking feature; Marsrover train3 first5 with Fast Downward synthesis traces = 0/5 but synthesis succeeds with `synthesis_planner_trace_evidence_count=1`, proving G10 while exposing G11. |
 | N13 | Design and implement a principled cyclic-route progress feature for same-predicate movement modules. | G2, G11 | A generic PDDL domain with cyclic route facts learns a lifted `P(entity, target)` module that reaches the target without trace replay, recursive loops, or runtime full-trace planning. Transport and Marsrover improve through the same generic mechanism. | Open. Current safe implementation rejects `at_prepare_at_for_drive` and `at_prepare_at_for_navigate` because no bounded acyclic ranking feature exists for cyclic route graphs. Candidate directions: bind external policy-sketch features that encode distance/reachability progress; synthesize a verified qualitative ranking feature from static predicates; or add a paper-backed route-composition backend whose output compiles to PDDL-predicate ASL contexts without synthetic achievement names. |
+| N14 | Rewrite the method plan around the simplified core contribution before adding more functionality. | G1, G2, G3 | The architecture contract and tests distinguish paper core method from implementation safeguards; the next implementation task can be justified by the core method, not by ad hoc failure patching. | In progress: architecture contract now exposes `paper_core_method` and `implementation_safeguards`; tests must ensure `paper_method_summary` excludes Fast Downward and trace macro wording. |
 
 ## Commands To Use
 
