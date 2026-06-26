@@ -162,6 +162,8 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 	assert "blocksworld-paper-external-on2" in experiment_names
 	assert "blocksworld-bootstrap-train1-satisfiable-large" in experiment_names
 	assert "blocksworld-paper-external-on2-satisfiable-large" in experiment_names
+	assert "blocksworld-bootstrap-train1-satisfiable-mixed-large" in experiment_names
+	assert "blocksworld-paper-external-on2-satisfiable-mixed-large" in experiment_names
 	assert "transport-bootstrap-train3-first10" in experiment_names
 	assert "satellite-bootstrap-train3-first10" in experiment_names
 	assert "marsrover-bootstrap-train3-first10" in experiment_names
@@ -199,6 +201,30 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 			"timeout_seconds"
 		]
 		== 900
+	)
+	assert (
+		expanded_rows[
+			"blocksworld-bootstrap-train1-satisfiable-mixed-large"
+		]["eval_base"]
+		== "src/domains/blocksworld/satisfiable-mixed-large"
+	)
+	assert (
+		expanded_rows[
+			"blocksworld-paper-external-on2-satisfiable-mixed-large"
+		]["eval_base"]
+		== "src/domains/blocksworld/satisfiable-mixed-large"
+	)
+	assert (
+		expanded_rows[
+			"blocksworld-paper-external-on2-satisfiable-mixed-large"
+		]["synthesis_profile"]
+		== "paper"
+	)
+	assert (
+		expanded_rows[
+			"blocksworld-paper-external-on2-satisfiable-mixed-large"
+		]["evaluation_timeout_seconds"]
+		== 60
 	)
 	assert expanded_rows["transport-bootstrap-train3-first10"]["eval_count"] == 10
 	assert expanded_rows["satellite-bootstrap-train3-first10"]["eval_count"] == 10

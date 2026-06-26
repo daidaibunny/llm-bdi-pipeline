@@ -4,6 +4,7 @@ from pathlib import Path
 
 from domain_level_planning.goal_mutex import schema_goal_mutexes
 from scripts.generate_blocksworld_satisfiable_split import generate_satisfiable_split
+from scripts.generate_blocksworld_satisfiable_split import generate_satisfiable_mixed_split
 from scripts.generate_blocksworld_satisfiable_split import parse_block_counts
 from utils.pddl_parser import PDDLParser
 
@@ -11,6 +12,9 @@ from utils.pddl_parser import PDDLParser
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
 DEFAULT_SPLIT = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "satisfiable-large"
+DEFAULT_MIXED_SPLIT = (
+	PROJECT_ROOT / "src" / "domains" / "blocksworld" / "satisfiable-mixed-large"
+)
 
 
 def test_satisfiable_split_generator_writes_full_tower_problems(
@@ -46,6 +50,52 @@ def test_tracked_satisfiable_large_split_contains_only_consistent_tower_goals() 
 		assert problem.domain_name == "BLOCKS"
 		assert len(problem.objects) >= 50
 		assert all(atom.startswith("on(") for atom in goal_atoms)
+		assert not schema_goal_mutexes(domain=domain, goal_atoms=goal_atoms)
+
+
+def test_mixed_split_generator_writes_nontrivial_multi_tower_problems(
+	tmp_path: Path,
+) -> None:
+	files = generate_satisfiable_mixed_split(
+		output_dir=tmp_path,
+		block_counts=(12, 18),
+		target_tower_count=3,
+	)
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+
+	assert [path.name for path in files] == ["p01.pddl", "p02.pddl"]
+	for expected_count, problem_file in zip((12, 18), files):
+		problem = PDDLParser.parse_problem(problem_file)
+		init_atoms = tuple(fact.to_signature() for fact in problem.init_facts)
+		goal_atoms = tuple(fact.to_signature() for fact in problem.goal_facts)
+		goal_ontable_atoms = tuple(
+			atom for atom in goal_atoms if atom.startswith("ontable(")
+		)
+		goal_on_atoms = tuple(atom for atom in goal_atoms if atom.startswith("on("))
+
+		assert problem.domain_name == "BLOCKS"
+		assert len(problem.objects) == expected_count
+		assert any(atom.startswith("on(") for atom in init_atoms)
+		assert len(goal_ontable_atoms) == 3
+		assert len(goal_on_atoms) == expected_count - 3
+		assert not schema_goal_mutexes(domain=domain, goal_atoms=goal_atoms)
+
+
+def test_tracked_satisfiable_mixed_large_split_contains_goal_dependency_cases() -> None:
+	domain = PDDLParser.parse_domain(BLOCKS_DOMAIN)
+	files = tuple(sorted(DEFAULT_MIXED_SPLIT.glob("p*.pddl")))
+
+	assert len(files) == 10
+	for problem_file in files:
+		problem = PDDLParser.parse_problem(problem_file)
+		init_atoms = tuple(fact.to_signature() for fact in problem.init_facts)
+		goal_atoms = tuple(fact.to_signature() for fact in problem.goal_facts)
+
+		assert problem.domain_name == "BLOCKS"
+		assert len(problem.objects) >= 20
+		assert any(atom.startswith("on(") for atom in init_atoms)
+		assert any(atom.startswith("ontable(") for atom in goal_atoms)
+		assert any(atom.startswith("on(") for atom in goal_atoms)
 		assert not schema_goal_mutexes(domain=domain, goal_atoms=goal_atoms)
 
 
