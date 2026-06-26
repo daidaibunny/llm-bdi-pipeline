@@ -532,6 +532,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"audit summaries, including schema causal and delete-threat ordering "
 					"candidate/selected counts plus trace-ordering candidate/selected "
 					"counts and composer ordering-kind counts, optional explicit ablation metadata, "
+					"machine-readable ablation mechanism status for external sketch "
+					"evidence, counterexample refinement, offline synthesis traces, "
+					"and paper-profile gating, "
 					"optional already-completed external baseline metadata without running "
 					"hidden planners, a pure already-run report comparison table helper "
 					"and CLI "
@@ -542,8 +545,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"top-level refinement analysis for convergence and constraint-type counts."
 				),
 				required_improvement=(
-					"Add broader experiment protocol with more domains, actual ablations "
-					"and externally comparable baseline tables, held-out scaling, and "
+					"Add broader experiment protocol with more domains, completed "
+					"ablation runs, externally comparable baseline tables, held-out scaling, and "
 					"deeper failure analysis."
 				),
 				status="partially_done",

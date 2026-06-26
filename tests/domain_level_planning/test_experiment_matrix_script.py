@@ -88,13 +88,28 @@ def test_experiment_matrix_script_writes_success_failure_and_comparison_rows(
 	]
 	assert comparison["rows"][0]["coverage_ratio"] == 1.0
 	assert comparison["rows"][1]["coverage_ratio"] == 0.0
+	assert comparison["rows"][0]["enabled_mechanisms"] == [
+		"counterexample_refinement",
+	]
+	assert comparison["rows"][1]["disabled_mechanisms"] == [
+		"external_sketch_evidence",
+		"counterexample_refinement",
+		"offline_synthesis_planner_traces",
+		"paper_profile_gate",
+	]
 
 	assert success_report["matrix_status"] == "succeeded"
 	assert success_report["coverage"]["solved_count"] == 2
 	assert success_report["refinement_analysis"]["converged"] is True
+	assert success_report["experiment_protocol"]["mechanism_status"][
+		"counterexample_refinement"
+	] == "enabled"
 	assert failure_report["matrix_status"] == "failed"
 	assert failure_report["coverage"]["failed_count"] == 1
 	assert failure_report["paper_quality_summary"]["blocking_failure_count"] == 1
+	assert failure_report["experiment_protocol"]["ablations"][0][
+		"mechanism_status"
+	]["external_sketch_evidence"] == "disabled"
 	assert failure_report["error"]["type"] == "ValueError"
 	assert "unsupported_negative_goal" in failure_report["error"]["message"] or (
 		"negative problem goals are not supported" in failure_report["error"]["message"]

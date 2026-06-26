@@ -46,6 +46,12 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 		"evaluation_source": "provided_pddl_evaluation_problems",
 		"synthesis_profile": "bootstrap",
 		"external_policy_count": 0,
+		"mechanism_status": {
+			"counterexample_refinement": "disabled",
+			"external_sketch_evidence": "disabled",
+			"offline_synthesis_planner_traces": "disabled",
+			"paper_profile_gate": "disabled",
+		},
 		"runtime_planner": "none",
 		"baselines": [],
 		"ablations": [],
@@ -422,7 +428,21 @@ def test_domain_level_experiment_records_explicit_ablation_metadata(
 			"synthesis_profile": "bootstrap",
 			"external_policy_count": 0,
 			"counterexample_refinement": False,
+			"use_synthesis_planner_traces": False,
 			"runtime_planner": "none",
+			"mechanism_status": {
+				"counterexample_refinement": "disabled",
+				"external_sketch_evidence": "disabled",
+				"offline_synthesis_planner_traces": "disabled",
+				"paper_profile_gate": "disabled",
+			},
+			"enabled_mechanisms": [],
+			"disabled_mechanisms": [
+				"external_sketch_evidence",
+				"counterexample_refinement",
+				"offline_synthesis_planner_traces",
+				"paper_profile_gate",
+			],
 		},
 	]
 
@@ -508,6 +528,13 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	rows = {row["label"]: row for row in table["rows"]}
 	assert rows["bootstrap_schema_only"]["schema_only_bootstrap"] is True
 	assert rows["bootstrap_schema_only"]["runtime_planner"] == "none"
+	assert rows["bootstrap_schema_only"]["enabled_mechanisms"] == []
+	assert rows["bootstrap_schema_only"]["disabled_mechanisms"] == [
+		"external_sketch_evidence",
+		"counterexample_refinement",
+		"offline_synthesis_planner_traces",
+		"paper_profile_gate",
+	]
 	assert rows["bootstrap_schema_only"]["evaluation_problem_count"] == 1
 	assert rows["bootstrap_schema_only"]["paper_blocking_failure_count"] == (
 		bootstrap["paper_quality_summary"]["blocking_failure_count"]
@@ -515,6 +542,10 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	assert rows["bootstrap_schema_only"]["coverage_delta_vs_best_library"] == 0.0
 	assert rows["paper_external_sketch"]["paper_profile_ready"] is True
 	assert rows["paper_external_sketch"]["selected_external_sketch_candidate_count"] == 1
+	assert rows["paper_external_sketch"]["enabled_mechanisms"] == [
+		"external_sketch_evidence",
+		"paper_profile_gate",
+	]
 	assert rows["paper_external_sketch"]["plan_count"] == paper["plan_library"]["plan_count"]
 	assert rows["paper_external_sketch"]["coverage_delta_vs_best_library"] == 0.0
 
@@ -527,6 +558,10 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 		"coverage_percent": 100.0,
 		"plan_count": bootstrap["plan_library"]["plan_count"],
 		"runtime_planner": "none",
+		"mechanism_summary": (
+			"disabled: external_sketch_evidence, counterexample_refinement, "
+			"offline_synthesis_planner_traces, paper_profile_gate"
+		),
 		"paper_profile_ready": False,
 		"coverage_delta_vs_best_library": 0.0,
 		"notes": "schema-only bootstrap",
@@ -535,6 +570,7 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	macros = format_comparison_latex_macros(table)
 	assert "\\ResultBootstrapSchemaOnlySolved}{1/1}" in macros
 	assert "\\ResultPaperExternalSketchCoveragePercent}{100.0\\%}" in macros
+	assert "\\ResultPaperExternalSketchMechanisms}" in macros
 
 
 def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
@@ -593,6 +629,7 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 		"coverage_percent": 100.0,
 		"plan_count": None,
 		"runtime_planner": "offline_baseline_only",
+		"mechanism_summary": "baseline",
 		"paper_profile_ready": None,
 		"coverage_delta_vs_library": 0.0,
 		"notes": "per-problem planner trace baseline",

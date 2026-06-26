@@ -112,6 +112,7 @@ def run_domain_level_experiment(
 			synthesis_profile=synthesis_profile,
 			external_sketch_policies=external_sketch_policies,
 			use_counterexample_refinement=use_counterexample_refinement,
+			use_synthesis_planner_traces=use_synthesis_planner_traces,
 			ablation_label=ablation_label,
 			baselines=baselines,
 		),
@@ -264,14 +265,23 @@ def _experiment_protocol(
 	synthesis_profile: str,
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
 	use_counterexample_refinement: bool,
+	use_synthesis_planner_traces: bool,
 	ablation_label: str | None,
 	baselines: Sequence[dict[str, object]] = (),
 ) -> dict[str, object]:
+	mechanism_status = _ablation_mechanism_status(
+		synthesis_profile=synthesis_profile,
+		external_policy_count=len(tuple(external_sketch_policies or ())),
+		use_counterexample_refinement=use_counterexample_refinement,
+		use_synthesis_planner_traces=use_synthesis_planner_traces,
+	)
 	ablation = _ablation_record(
 		label=ablation_label,
 		synthesis_profile=synthesis_profile,
 		external_sketch_policies=external_sketch_policies,
 		use_counterexample_refinement=use_counterexample_refinement,
+		use_synthesis_planner_traces=use_synthesis_planner_traces,
+		mechanism_status=mechanism_status,
 	)
 	return {
 		"scope": "bounded_domain_level_lifted_asl_evaluation",
@@ -279,6 +289,7 @@ def _experiment_protocol(
 		"evaluation_source": "provided_pddl_evaluation_problems",
 		"synthesis_profile": str(synthesis_profile or "bootstrap"),
 		"external_policy_count": len(tuple(external_sketch_policies or ())),
+		"mechanism_status": mechanism_status,
 		"runtime_planner": "none",
 		"baselines": _baseline_records(baselines),
 		"ablations": [] if ablation is None else [ablation],
@@ -316,17 +327,67 @@ def _ablation_record(
 	synthesis_profile: str,
 	external_sketch_policies: Sequence[ExternalSketchPolicySource],
 	use_counterexample_refinement: bool,
+	use_synthesis_planner_traces: bool,
+	mechanism_status: dict[str, str],
 ) -> dict[str, object] | None:
 	text = str(label or "").strip()
 	if not text:
 		return None
+	enabled = _mechanisms_by_status(mechanism_status, "enabled")
+	disabled = _mechanisms_by_status(mechanism_status, "disabled")
 	return {
 		"label": text,
 		"synthesis_profile": str(synthesis_profile or "bootstrap"),
 		"external_policy_count": len(tuple(external_sketch_policies or ())),
 		"counterexample_refinement": bool(use_counterexample_refinement),
+		"use_synthesis_planner_traces": bool(use_synthesis_planner_traces),
 		"runtime_planner": "none",
+		"mechanism_status": dict(mechanism_status),
+		"enabled_mechanisms": list(enabled),
+		"disabled_mechanisms": list(disabled),
 	}
+
+
+def _ablation_mechanism_status(
+	*,
+	synthesis_profile: str,
+	external_policy_count: int,
+	use_counterexample_refinement: bool,
+	use_synthesis_planner_traces: bool,
+) -> dict[str, str]:
+	"""Return the mechanism switches actually used by one experiment row."""
+
+	return {
+		"external_sketch_evidence": (
+			"enabled" if external_policy_count > 0 else "disabled"
+		),
+		"counterexample_refinement": (
+			"enabled" if use_counterexample_refinement else "disabled"
+		),
+		"offline_synthesis_planner_traces": (
+			"enabled" if use_synthesis_planner_traces else "disabled"
+		),
+		"paper_profile_gate": (
+			"enabled" if str(synthesis_profile or "bootstrap") == "paper" else "disabled"
+		),
+	}
+
+
+def _mechanisms_by_status(
+	mechanism_status: dict[str, str],
+	status: str,
+) -> tuple[str, ...]:
+	order = (
+		"external_sketch_evidence",
+		"counterexample_refinement",
+		"offline_synthesis_planner_traces",
+		"paper_profile_gate",
+	)
+	return tuple(
+		name
+		for name in order
+		if str(mechanism_status.get(name) or "") == status
+	)
 
 
 def _learning_audit(synthesis_report: dict[str, object]) -> dict[str, object]:
@@ -534,6 +595,12 @@ def _comparison_row(report: dict[str, object]) -> dict[str, object]:
 		"counterexample_refinement": bool(
 			ablation.get("counterexample_refinement", False),
 		),
+		"use_synthesis_planner_traces": bool(
+			ablation.get("use_synthesis_planner_traces", False),
+		),
+		"mechanism_status": dict(ablation.get("mechanism_status") or {}),
+		"enabled_mechanisms": list(ablation.get("enabled_mechanisms") or ()),
+		"disabled_mechanisms": list(ablation.get("disabled_mechanisms") or ()),
 		"runtime_planner": str(protocol.get("runtime_planner") or "none"),
 		"evaluation_problem_count": evaluation_problem_count,
 		"solved_count": int(coverage.get("solved_count") or 0),
@@ -635,6 +702,7 @@ def _paper_table_rows(
 				"coverage_percent": _coverage_percent(row),
 				"plan_count": int(row.get("plan_count") or 0),
 				"runtime_planner": str(row.get("runtime_planner") or "none"),
+				"mechanism_summary": _mechanism_summary(row),
 				"paper_profile_ready": bool(row.get("paper_profile_ready")),
 				"coverage_delta_vs_best_library": float(
 					row.get("coverage_delta_vs_best_library") or 0.0,
@@ -655,6 +723,7 @@ def _paper_table_rows(
 				"runtime_planner": str(
 					baseline.get("runtime_planner") or "offline_baseline_only",
 				),
+				"mechanism_summary": "baseline",
 				"paper_profile_ready": None,
 				"coverage_delta_vs_library": float(
 					baseline.get("coverage_delta_vs_library") or 0.0,
@@ -690,6 +759,16 @@ def _library_paper_note(row: dict[str, object]) -> str:
 	return ""
 
 
+def _mechanism_summary(row: dict[str, object]) -> str:
+	enabled = tuple(str(item) for item in tuple(row.get("enabled_mechanisms") or ()))
+	disabled = tuple(str(item) for item in tuple(row.get("disabled_mechanisms") or ()))
+	if enabled:
+		return "enabled: " + ", ".join(enabled)
+	if disabled:
+		return "disabled: " + ", ".join(disabled)
+	return ""
+
+
 def _primary_ablation(
 	protocol: dict[str, object],
 	report: dict[str, object],
@@ -700,6 +779,16 @@ def _primary_ablation(
 	return {
 		"label": report.get("experiment_name") or "",
 		"counterexample_refinement": False,
+		"use_synthesis_planner_traces": False,
+		"mechanism_status": dict(protocol.get("mechanism_status") or {}),
+		"enabled_mechanisms": _mechanisms_by_status(
+			dict(protocol.get("mechanism_status") or {}),
+			"enabled",
+		),
+		"disabled_mechanisms": _mechanisms_by_status(
+			dict(protocol.get("mechanism_status") or {}),
+			"disabled",
+		),
 	}
 
 
@@ -763,6 +852,7 @@ def format_comparison_latex_macros(comparison: dict[str, object]) -> str:
 					f"{{{float(item.get('coverage_percent') or 0.0):.1f}\\%}}"
 				),
 				f"\\newcommand{{\\Result{prefix}RuntimePlanner}}{{{item.get('runtime_planner', '')}}}",
+				f"\\newcommand{{\\Result{prefix}Mechanisms}}{{{_latex_escape(str(item.get('mechanism_summary') or ''))}}}",
 				f"\\newcommand{{\\Result{prefix}PlanCount}}{{{_latex_plan_count(item)}}}",
 				f"\\newcommand{{\\Result{prefix}Notes}}{{{_latex_escape(str(item.get('notes') or ''))}}}",
 			],

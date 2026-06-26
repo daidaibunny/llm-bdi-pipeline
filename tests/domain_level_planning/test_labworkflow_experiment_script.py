@@ -38,7 +38,20 @@ def test_labworkflow_dependency_script_reports_non_blocksworld_ordering(
 			"synthesis_profile": "bootstrap",
 			"external_policy_count": 0,
 			"counterexample_refinement": True,
+			"use_synthesis_planner_traces": False,
 			"runtime_planner": "none",
+			"mechanism_status": {
+				"counterexample_refinement": "enabled",
+				"external_sketch_evidence": "disabled",
+				"offline_synthesis_planner_traces": "disabled",
+				"paper_profile_gate": "disabled",
+			},
+			"enabled_mechanisms": ["counterexample_refinement"],
+			"disabled_mechanisms": [
+				"external_sketch_evidence",
+				"offline_synthesis_planner_traces",
+				"paper_profile_gate",
+			],
 		},
 	]
 	assert report["paper_quality_summary"][
@@ -137,6 +150,19 @@ def test_labworkflow_dependency_script_accepts_explicit_ablation_label(
 			"synthesis_profile": "bootstrap",
 			"external_policy_count": 0,
 			"counterexample_refinement": True,
+			"use_synthesis_planner_traces": False,
 			"runtime_planner": "none",
+			"mechanism_status": {
+				"counterexample_refinement": "enabled",
+				"external_sketch_evidence": "disabled",
+				"offline_synthesis_planner_traces": "disabled",
+				"paper_profile_gate": "disabled",
+			},
+			"enabled_mechanisms": ["counterexample_refinement"],
+			"disabled_mechanisms": [
+				"external_sketch_evidence",
+				"offline_synthesis_planner_traces",
+				"paper_profile_gate",
+			],
 		},
 	]

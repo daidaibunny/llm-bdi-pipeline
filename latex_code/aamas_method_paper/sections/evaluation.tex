@@ -10,6 +10,10 @@ diagnostics, validation scope, and whether a full-trace planner was used at run
 time. The expected run-time flag for \methodname{} is always false. Final
 tables should be imported from generated result macros, not transcribed by
 hand, using the comparison script over completed experiment reports.
+Each ablation row also reports a machine-readable mechanism status for external
+sketch evidence, counterexample refinement, offline synthesis traces, and
+paper-profile gating. This prevents an ablation from being justified only by a
+row label.
 
 \begin{table*}[t]
 	\caption{Planned non-temporal evaluation matrix. Results are filled only
@@ -74,7 +78,8 @@ the compiled lifted \asl{} library.
 Ablations remove one mechanism at a time: external sketch evidence, Layer C
 goal ordering, counterexample refinement, and trace evidence. These runs
 determine whether the proposed combination is doing more than replaying schema
-rules or planner traces.
+rules or planner traces. The comparison table is generated from completed
+reports and includes the mechanism status used for each row.
 
 \subsection{Failure Analysis}
 

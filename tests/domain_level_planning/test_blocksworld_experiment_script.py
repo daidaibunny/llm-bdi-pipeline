@@ -47,7 +47,21 @@ def test_blocksworld_first20_script_writes_reproducible_json_report(
 			"synthesis_profile": "bootstrap",
 			"external_policy_count": 0,
 			"counterexample_refinement": False,
+			"use_synthesis_planner_traces": False,
 			"runtime_planner": "none",
+			"mechanism_status": {
+				"counterexample_refinement": "disabled",
+				"external_sketch_evidence": "disabled",
+				"offline_synthesis_planner_traces": "disabled",
+				"paper_profile_gate": "disabled",
+			},
+			"enabled_mechanisms": [],
+			"disabled_mechanisms": [
+				"external_sketch_evidence",
+				"counterexample_refinement",
+				"offline_synthesis_planner_traces",
+				"paper_profile_gate",
+			],
 		},
 	]
 	assert report["paper_quality_summary"][

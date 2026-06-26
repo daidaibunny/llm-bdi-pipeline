@@ -59,7 +59,20 @@ def test_generic_domain_level_experiment_script_runs_any_pddl_split(
 			"synthesis_profile": "bootstrap",
 			"external_policy_count": 0,
 			"counterexample_refinement": True,
+			"use_synthesis_planner_traces": False,
 			"runtime_planner": "none",
+			"mechanism_status": {
+				"counterexample_refinement": "enabled",
+				"external_sketch_evidence": "disabled",
+				"offline_synthesis_planner_traces": "disabled",
+				"paper_profile_gate": "disabled",
+			},
+			"enabled_mechanisms": ["counterexample_refinement"],
+			"disabled_mechanisms": [
+				"external_sketch_evidence",
+				"offline_synthesis_planner_traces",
+				"paper_profile_gate",
+			],
 		},
 	]
 	assert report["validation_scope"]["evaluation_problem_count"] == 2

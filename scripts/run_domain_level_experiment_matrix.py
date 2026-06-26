@@ -409,12 +409,14 @@ def _matrix_summary(
 
 def _failure_protocol(entry: dict[str, object]) -> dict[str, object]:
 	label = str(entry.get("ablation_label") or entry.get("name") or "")
+	mechanism_status = _entry_mechanism_status(entry)
 	return {
 		"scope": "bounded_domain_level_lifted_asl_evaluation",
 		"training_source": "provided_pddl_training_problems",
 		"evaluation_source": "provided_pddl_evaluation_problems",
 		"synthesis_profile": str(entry.get("synthesis_profile") or "bootstrap"),
 		"external_policy_count": len(tuple(entry.get("external_sketch_policies") or ())),
+		"mechanism_status": mechanism_status,
 		"runtime_planner": "none",
 		"baselines": [],
 		"ablations": [
@@ -425,13 +427,61 @@ def _failure_protocol(entry: dict[str, object]) -> dict[str, object]:
 				"counterexample_refinement": bool(
 					entry.get("use_counterexample_refinement", False),
 				),
+				"use_synthesis_planner_traces": bool(
+					entry.get("use_synthesis_planner_traces", False),
+				),
 				"runtime_planner": "none",
+				"mechanism_status": mechanism_status,
+				"enabled_mechanisms": list(
+					_mechanisms_by_status(mechanism_status, "enabled"),
+				),
+				"disabled_mechanisms": list(
+					_mechanisms_by_status(mechanism_status, "disabled"),
+				),
 			},
 		] if label else [],
 		"limitations": [
 			"entry failed before a domain-level ASL library could be evaluated",
 		],
 	}
+
+
+def _entry_mechanism_status(entry: dict[str, object]) -> dict[str, str]:
+	return {
+		"external_sketch_evidence": (
+			"enabled"
+			if len(tuple(entry.get("external_sketch_policies") or ())) > 0
+			else "disabled"
+		),
+		"counterexample_refinement": (
+			"enabled" if bool(entry.get("use_counterexample_refinement", False)) else "disabled"
+		),
+		"offline_synthesis_planner_traces": (
+			"enabled" if bool(entry.get("use_synthesis_planner_traces", False)) else "disabled"
+		),
+		"paper_profile_gate": (
+			"enabled"
+			if str(entry.get("synthesis_profile") or "bootstrap") == "paper"
+			else "disabled"
+		),
+	}
+
+
+def _mechanisms_by_status(
+	mechanism_status: dict[str, str],
+	status: str,
+) -> tuple[str, ...]:
+	order = (
+		"external_sketch_evidence",
+		"counterexample_refinement",
+		"offline_synthesis_planner_traces",
+		"paper_profile_gate",
+	)
+	return tuple(
+		name
+		for name in order
+		if str(mechanism_status.get(name) or "") == status
+	)
 
 
 def _matrix_entry_metadata(entry: dict[str, object], *, index: int) -> dict[str, object]:
