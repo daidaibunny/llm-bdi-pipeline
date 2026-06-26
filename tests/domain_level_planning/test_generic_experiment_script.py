@@ -120,11 +120,13 @@ def test_generic_domain_level_experiment_script_accepts_completed_baseline_json(
 	assert report["experiment_protocol"]["baselines"] == [
 		{
 			"label": "offline-planner",
+			"domain_name": "",
 			"solver_family": "classical_planner",
 			"solved_count": 2,
 			"failed_count": 0,
 			"coverage_ratio": 1.0,
 			"runtime_planner": "offline_baseline_only",
+			"notes": "",
 		},
 	]
 

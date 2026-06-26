@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from pathlib import Path
+import re
 import signal
 from time import perf_counter
 from typing import Iterator, Sequence
@@ -297,11 +298,13 @@ def _baseline_records(
 		records.append(
 			{
 				"label": str(item.get("label") or ""),
+				"domain_name": str(item.get("domain_name") or ""),
 				"solver_family": str(item.get("solver_family") or "external_baseline"),
 				"solved_count": int(item.get("solved_count") or 0),
 				"failed_count": int(item.get("failed_count") or 0),
 				"coverage_ratio": float(item.get("coverage_ratio") or 0.0),
 				"runtime_planner": str(item.get("runtime_planner") or "offline_baseline_only"),
+				"notes": str(item.get("notes") or ""),
 			},
 		)
 	return records
@@ -464,7 +467,9 @@ def compare_domain_level_experiment_reports(
 ) -> dict[str, object]:
 	"""Build a compact comparison table from already-run experiment reports."""
 
-	rows = tuple(_comparison_row(report) for report in tuple(reports or ()))
+	rows = _comparison_rows_with_deltas(
+		tuple(_comparison_row(report) for report in tuple(reports or ())),
+	)
 	baselines = tuple(
 		_baseline_comparison_row(report, baseline)
 		for report in tuple(reports or ())
@@ -479,6 +484,7 @@ def compare_domain_level_experiment_reports(
 		"best_baseline_by_coverage": _best_baseline_by_coverage(baselines),
 		"best_baseline_delta_vs_library": _best_baseline_delta_vs_library(baselines),
 		"baselines": list(baselines),
+		"paper_table_rows": _paper_table_rows(rows=rows, baselines=baselines),
 		"rows": list(rows),
 	}
 
@@ -488,15 +494,24 @@ def _comparison_row(report: dict[str, object]) -> dict[str, object]:
 	coverage = dict(report.get("coverage") or {})
 	plan_library = dict(report.get("plan_library") or {})
 	paper_quality = dict(report.get("paper_quality_summary") or {})
+	learning_audit = dict(report.get("learning_audit") or {})
+	layer_b = dict(learning_audit.get("layer_b_atomic_modules") or {})
+	layer_c = dict(learning_audit.get("layer_c_goal_composer") or {})
+	runtime = dict(report.get("runtime_seconds") or {})
+	failure = dict(report.get("failure_analysis") or {})
 	ablation = _primary_ablation(protocol, report)
+	evaluation_problem_count = int(report.get("evaluation_problem_count") or 0)
 	return {
 		"label": str(ablation.get("label") or report.get("experiment_name") or ""),
 		"experiment_name": str(report.get("experiment_name") or ""),
+		"domain_name": str(plan_library.get("domain_name") or ""),
 		"synthesis_profile": str(protocol.get("synthesis_profile") or "bootstrap"),
 		"external_policy_count": int(protocol.get("external_policy_count") or 0),
 		"counterexample_refinement": bool(
 			ablation.get("counterexample_refinement", False),
 		),
+		"runtime_planner": str(protocol.get("runtime_planner") or "none"),
+		"evaluation_problem_count": evaluation_problem_count,
 		"solved_count": int(coverage.get("solved_count") or 0),
 		"failed_count": int(coverage.get("failed_count") or 0),
 		"coverage_ratio": float(coverage.get("coverage_ratio") or 0.0),
@@ -516,7 +531,37 @@ def _comparison_row(report: dict[str, object]) -> dict[str, object]:
 			plan_library.get("primitive_action_call_count") or 0,
 		),
 		"subgoal_call_count": int(plan_library.get("subgoal_call_count") or 0),
+		"asl_line_count": int(plan_library.get("asl_line_count") or 0),
+		"synthesis_runtime_seconds": float(runtime.get("synthesis") or 0.0),
+		"evaluation_runtime_seconds": float(runtime.get("evaluation_total") or 0.0),
+		"selected_atomic_action_strategy_candidate_count": int(
+			layer_b.get("selected_atomic_action_strategy_candidate_count") or 0,
+		),
+		"selected_composer_candidate_count": int(
+			layer_c.get("selected_composer_candidate_count") or 0,
+		),
+		"selected_goal_agenda_acyclic": bool(
+			layer_c.get("selected_goal_agenda_acyclic", True),
+		),
+		"failure_reason_counts": dict(failure.get("failure_reason_counts") or {}),
 	}
+
+
+def _comparison_rows_with_deltas(
+	rows: Sequence[dict[str, object]],
+) -> tuple[dict[str, object], ...]:
+	if not rows:
+		return ()
+	best = max(float(row.get("coverage_ratio") or 0.0) for row in rows)
+	return tuple(
+		{
+			**dict(row),
+			"coverage_delta_vs_best_library": (
+				float(row.get("coverage_ratio") or 0.0) - best
+			),
+		}
+		for row in rows
+	)
 
 
 def _baseline_comparison_row(
@@ -528,16 +573,97 @@ def _baseline_comparison_row(
 		dict(report.get("coverage") or {}).get("coverage_ratio") or 0.0,
 	)
 	baseline_coverage = float(item.get("coverage_ratio") or 0.0)
+	solved_count = int(item.get("solved_count") or 0)
+	failed_count = int(item.get("failed_count") or 0)
 	return {
 		"report_label": str(report.get("experiment_name") or ""),
 		"label": str(item.get("label") or ""),
+		"domain_name": str(
+			item.get("domain_name")
+			or dict(report.get("plan_library") or {}).get("domain_name")
+			or "",
+		),
 		"solver_family": str(item.get("solver_family") or "external_baseline"),
-		"solved_count": int(item.get("solved_count") or 0),
-		"failed_count": int(item.get("failed_count") or 0),
+		"solved_count": solved_count,
+		"failed_count": failed_count,
+		"evaluation_problem_count": solved_count + failed_count,
 		"coverage_ratio": baseline_coverage,
 		"library_coverage_ratio": library_coverage,
 		"coverage_delta_vs_library": baseline_coverage - library_coverage,
+		"runtime_planner": str(item.get("runtime_planner") or "offline_baseline_only"),
+		"notes": str(item.get("notes") or ""),
 	}
+
+
+def _paper_table_rows(
+	*,
+	rows: Sequence[dict[str, object]],
+	baselines: Sequence[dict[str, object]],
+) -> list[dict[str, object]]:
+	table_rows: list[dict[str, object]] = []
+	for row in tuple(rows or ()):
+		table_rows.append(
+			{
+				"row_type": "library",
+				"label": str(row.get("label") or ""),
+				"domain_name": str(row.get("domain_name") or ""),
+				"solved": _solved_text(row),
+				"coverage_percent": _coverage_percent(row),
+				"plan_count": int(row.get("plan_count") or 0),
+				"runtime_planner": str(row.get("runtime_planner") or "none"),
+				"paper_profile_ready": bool(row.get("paper_profile_ready")),
+				"coverage_delta_vs_best_library": float(
+					row.get("coverage_delta_vs_best_library") or 0.0,
+				),
+				"notes": _library_paper_note(row),
+			},
+		)
+	for baseline in tuple(baselines or ()):
+		table_rows.append(
+			{
+				"row_type": "baseline",
+				"label": str(baseline.get("label") or ""),
+				"domain_name": str(baseline.get("domain_name") or ""),
+				"solver_family": str(baseline.get("solver_family") or ""),
+				"solved": _solved_text(baseline),
+				"coverage_percent": _coverage_percent(baseline),
+				"plan_count": None,
+				"runtime_planner": str(
+					baseline.get("runtime_planner") or "offline_baseline_only",
+				),
+				"paper_profile_ready": None,
+				"coverage_delta_vs_library": float(
+					baseline.get("coverage_delta_vs_library") or 0.0,
+				),
+				"notes": str(baseline.get("notes") or ""),
+			},
+		)
+	return table_rows
+
+
+def _solved_text(row: dict[str, object]) -> str:
+	solved = int(row.get("solved_count") or 0)
+	total = int(row.get("evaluation_problem_count") or 0)
+	if total <= 0:
+		total = solved + int(row.get("failed_count") or 0)
+	return f"{solved}/{total}"
+
+
+def _coverage_percent(row: dict[str, object]) -> float:
+	return round(100.0 * float(row.get("coverage_ratio") or 0.0), 1)
+
+
+def _library_paper_note(row: dict[str, object]) -> str:
+	if not bool(row.get("selected_goal_agenda_acyclic", True)):
+		return "selected Layer C agenda is cyclic"
+	failures = dict(row.get("failure_reason_counts") or {})
+	if failures:
+		return "; ".join(f"{key}: {value}" for key, value in sorted(failures.items()))
+	if bool(row.get("schema_only_bootstrap")):
+		return "schema-only bootstrap"
+	if int(row.get("selected_external_sketch_candidate_count") or 0) > 0:
+		return "selected external sketch evidence"
+	return ""
 
 
 def _primary_ablation(
@@ -591,6 +717,58 @@ def _best_baseline_row(rows: Sequence[dict[str, object]]) -> dict[str, object]:
 			int(row.get("solved_count") or 0),
 			-int(row.get("failed_count") or 0),
 		),
+	)
+
+
+def format_comparison_latex_macros(comparison: dict[str, object]) -> str:
+	"""Render stable LaTeX result macros from a comparison dictionary."""
+
+	lines = [
+		"% Auto-generated by scripts/compare_domain_level_experiments.py.",
+		"% Re-run the comparison script after changing experiment reports.",
+	]
+	for row in tuple(comparison.get("paper_table_rows") or ()):
+		item = dict(row)
+		prefix = _latex_macro_prefix(str(item.get("label") or "row"))
+		lines.extend(
+			[
+				f"\\newcommand{{\\Result{prefix}Type}}{{{item.get('row_type', '')}}}",
+				f"\\newcommand{{\\Result{prefix}Solved}}{{{item.get('solved', '')}}}",
+				(
+					f"\\newcommand{{\\Result{prefix}CoveragePercent}}"
+					f"{{{float(item.get('coverage_percent') or 0.0):.1f}\\%}}"
+				),
+				f"\\newcommand{{\\Result{prefix}RuntimePlanner}}{{{item.get('runtime_planner', '')}}}",
+				f"\\newcommand{{\\Result{prefix}PlanCount}}{{{_latex_plan_count(item)}}}",
+				f"\\newcommand{{\\Result{prefix}Notes}}{{{_latex_escape(str(item.get('notes') or ''))}}}",
+			],
+		)
+	return "\n".join(lines) + "\n"
+
+
+def _latex_macro_prefix(label: str) -> str:
+	parts = tuple(part for part in re.split(r"[^A-Za-z0-9]+", label) if part)
+	prefix = "".join(part[:1].upper() + part[1:] for part in parts)
+	if not prefix or prefix[0].isdigit():
+		prefix = f"Row{prefix}"
+	return prefix
+
+
+def _latex_plan_count(row: dict[str, object]) -> str:
+	value = row.get("plan_count")
+	return "--" if value is None else str(value)
+
+
+def _latex_escape(value: str) -> str:
+	return (
+		value.replace("\\", "\\textbackslash{}")
+		.replace("&", "\\&")
+		.replace("%", "\\%")
+		.replace("$", "\\$")
+		.replace("#", "\\#")
+		.replace("_", "\\_")
+		.replace("{", "\\{")
+		.replace("}", "\\}")
 	)
 
 

@@ -15,6 +15,7 @@ def test_compare_experiment_reports_script_writes_reproducible_table(
 	bootstrap_report = tmp_path / "bootstrap.json"
 	paper_report = tmp_path / "paper.json"
 	output = tmp_path / "comparison.json"
+	macros_output = tmp_path / "results.tex"
 	_write_report(
 		bootstrap_report,
 		name="bootstrap-smoke",
@@ -44,18 +45,24 @@ def test_compare_experiment_reports_script_writes_reproducible_table(
 			str(paper_report),
 			"--output",
 			str(output),
+			"--latex-macros-output",
+			str(macros_output),
 		),
 		cwd=PROJECT_ROOT,
 		check=True,
 	)
 
 	table = json.loads(output.read_text(encoding="utf-8"))
+	macros = macros_output.read_text(encoding="utf-8")
 	assert table["report_count"] == 2
 	assert table["best_by_coverage"] == "paper_external_sketch"
 	assert table["rows"][0]["label"] == "bootstrap_schema_only"
 	assert table["rows"][0]["schema_only_bootstrap"] is True
 	assert table["rows"][1]["label"] == "paper_external_sketch"
 	assert table["rows"][1]["paper_profile_ready"] is True
+	assert table["paper_table_rows"][0]["solved"] == "1/2"
+	assert "\\ResultBootstrapSchemaOnlySolved}{1/2}" in macros
+	assert "\\ResultPaperExternalSketchCoveragePercent}{100.0\\%}" in macros
 
 
 def _write_report(

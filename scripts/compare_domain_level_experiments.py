@@ -15,6 +15,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from domain_level_planning.experiments import (  # noqa: E402
 	compare_domain_level_experiment_reports,
+	format_comparison_latex_macros,
 )
 
 
@@ -37,6 +38,12 @@ def main() -> None:
 		required=True,
 		help="Path where the comparison JSON should be written.",
 	)
+	parser.add_argument(
+		"--latex-macros-output",
+		type=Path,
+		default=None,
+		help="Optional path where LaTeX result-import macros should be written.",
+	)
 	args = parser.parse_args()
 
 	report_paths = tuple(args.report or ())
@@ -49,6 +56,12 @@ def main() -> None:
 		json.dumps(comparison, indent=2, sort_keys=True),
 		encoding="utf-8",
 	)
+	if args.latex_macros_output is not None:
+		args.latex_macros_output.parent.mkdir(parents=True, exist_ok=True)
+		args.latex_macros_output.write_text(
+			format_comparison_latex_macros(comparison),
+			encoding="utf-8",
+		)
 	print(
 		"wrote "
 		f"{args.output} "

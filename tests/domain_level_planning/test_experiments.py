@@ -6,8 +6,9 @@ import time
 import pytest
 
 from domain_level_planning import experiments as experiments_module
-from domain_level_planning.experiments import run_domain_level_experiment
 from domain_level_planning.experiments import compare_domain_level_experiment_reports
+from domain_level_planning.experiments import format_comparison_latex_macros
+from domain_level_planning.experiments import run_domain_level_experiment
 from domain_level_planning.experiments import _generated_output_audit
 from domain_level_planning.library_synthesis import ExternalSketchPolicySource
 from tests.domain_level_planning.test_library_synthesis import (
@@ -436,11 +437,13 @@ def test_domain_level_experiment_records_completed_baseline_metadata(
 	assert report["experiment_protocol"]["baselines"] == [
 		{
 			"label": "external-planner-offline",
+			"domain_name": "",
 			"solver_family": "classical_planner",
 			"solved_count": 1,
 			"failed_count": 0,
 			"coverage_ratio": 1.0,
 			"runtime_planner": "offline_baseline_only",
+			"notes": "",
 		},
 	]
 	assert report["experiment_protocol"]["runtime_planner"] == "none"
@@ -483,50 +486,36 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	assert table["report_count"] == 2
 	assert table["best_by_coverage"] in {"bootstrap_schema_only", "paper_external_sketch"}
 	assert table["baseline_count"] == 0
-	assert table["rows"] == [
-		{
-			"label": "bootstrap_schema_only",
-			"experiment_name": "bootstrap-ablation",
-			"synthesis_profile": "bootstrap",
-			"external_policy_count": 0,
-			"counterexample_refinement": False,
-			"solved_count": 1,
-			"failed_count": 0,
-			"coverage_ratio": 1.0,
-			"paper_profile_ready": False,
-			"schema_only_bootstrap": True,
-			"selected_external_sketch_candidate_count": 0,
-			"output_external_sketch_candidate_count": 0,
-			"paper_blocking_failure_count": bootstrap["paper_quality_summary"][
-				"blocking_failure_count"
-			],
-			"plan_count": bootstrap["plan_library"]["plan_count"],
-			"primitive_action_call_count": bootstrap["plan_library"][
-				"primitive_action_call_count"
-			],
-			"subgoal_call_count": bootstrap["plan_library"]["subgoal_call_count"],
-		},
-		{
-			"label": "paper_external_sketch",
-			"experiment_name": "paper-ablation",
-			"synthesis_profile": "paper",
-			"external_policy_count": 1,
-			"counterexample_refinement": False,
-			"solved_count": 1,
-			"failed_count": 0,
-			"coverage_ratio": 1.0,
-			"paper_profile_ready": True,
-			"schema_only_bootstrap": False,
-			"selected_external_sketch_candidate_count": 1,
-			"output_external_sketch_candidate_count": 1,
-			"paper_blocking_failure_count": 0,
-			"plan_count": paper["plan_library"]["plan_count"],
-			"primitive_action_call_count": paper["plan_library"][
-				"primitive_action_call_count"
-			],
-			"subgoal_call_count": paper["plan_library"]["subgoal_call_count"],
-		},
-	]
+	rows = {row["label"]: row for row in table["rows"]}
+	assert rows["bootstrap_schema_only"]["schema_only_bootstrap"] is True
+	assert rows["bootstrap_schema_only"]["runtime_planner"] == "none"
+	assert rows["bootstrap_schema_only"]["evaluation_problem_count"] == 1
+	assert rows["bootstrap_schema_only"]["paper_blocking_failure_count"] == (
+		bootstrap["paper_quality_summary"]["blocking_failure_count"]
+	)
+	assert rows["bootstrap_schema_only"]["coverage_delta_vs_best_library"] == 0.0
+	assert rows["paper_external_sketch"]["paper_profile_ready"] is True
+	assert rows["paper_external_sketch"]["selected_external_sketch_candidate_count"] == 1
+	assert rows["paper_external_sketch"]["plan_count"] == paper["plan_library"]["plan_count"]
+	assert rows["paper_external_sketch"]["coverage_delta_vs_best_library"] == 0.0
+
+	paper_rows = {row["label"]: row for row in table["paper_table_rows"]}
+	assert paper_rows["bootstrap_schema_only"] == {
+		"row_type": "library",
+		"label": "bootstrap_schema_only",
+		"domain_name": bootstrap["plan_library"]["domain_name"],
+		"solved": "1/1",
+		"coverage_percent": 100.0,
+		"plan_count": bootstrap["plan_library"]["plan_count"],
+		"runtime_planner": "none",
+		"paper_profile_ready": False,
+		"coverage_delta_vs_best_library": 0.0,
+		"notes": "schema-only bootstrap",
+	}
+
+	macros = format_comparison_latex_macros(table)
+	assert "\\ResultBootstrapSchemaOnlySolved}{1/1}" in macros
+	assert "\\ResultPaperExternalSketchCoveragePercent}{100.0\\%}" in macros
 
 
 def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
@@ -544,9 +533,11 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 			{
 				"label": "planner-offline",
 				"solver_family": "classical_planner",
+				"domain_name": "baseline-mini",
 				"coverage_ratio": 1.0,
 				"solved_count": 1,
 				"failed_count": 0,
+				"notes": "per-problem planner trace baseline",
 			},
 		),
 		max_execution_steps=100,
@@ -562,14 +553,31 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 		{
 			"report_label": "baseline-comparison",
 			"label": "planner-offline",
+			"domain_name": "baseline-mini",
 			"solver_family": "classical_planner",
 			"solved_count": 1,
 			"failed_count": 0,
+			"evaluation_problem_count": 1,
 			"coverage_ratio": 1.0,
 			"library_coverage_ratio": 1.0,
 			"coverage_delta_vs_library": 0.0,
+			"runtime_planner": "offline_baseline_only",
+			"notes": "per-problem planner trace baseline",
 		},
 	]
+	assert table["paper_table_rows"][-1] == {
+		"row_type": "baseline",
+		"label": "planner-offline",
+		"domain_name": "baseline-mini",
+		"solver_family": "classical_planner",
+		"solved": "1/1",
+		"coverage_percent": 100.0,
+		"plan_count": None,
+		"runtime_planner": "offline_baseline_only",
+		"paper_profile_ready": None,
+		"coverage_delta_vs_library": 0.0,
+		"notes": "per-problem planner trace baseline",
+	}
 
 
 def test_generated_output_audit_includes_plan_head_subset() -> None:
