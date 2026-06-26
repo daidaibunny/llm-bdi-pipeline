@@ -1466,6 +1466,7 @@ def _external_sketch_candidates(
 			source_name=source.name,
 			policy_file=source.policy_file,
 			domain=domain,
+			backend_name=source.backend_name,
 			vocabulary_map=_read_external_vocabulary_map(source.vocabulary_file),
 		)
 		audits.append(audit)

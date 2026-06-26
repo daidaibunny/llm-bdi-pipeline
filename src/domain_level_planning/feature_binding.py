@@ -79,12 +79,22 @@ class _GoalAlignedFeature:
 	predicate: str
 	arity: int
 	argument_order: tuple[int, ...] | None = None
+	source_filter_predicate: str | None = None
+	source_filter_positive: bool = True
 
 
 @dataclass(frozen=True)
 class _RoleFeature:
 	predicate: str
 	argument_order: tuple[int, int]
+
+
+@dataclass(frozen=True)
+class _FilteredRoleFeature:
+	predicate: str
+	argument_order: tuple[int, int]
+	source_filter_predicate: str
+	source_filter_positive: bool
 
 
 def bind_recoverable_dlplan_features(
@@ -364,6 +374,8 @@ def _unsupported_rejection_reason(
 	predicate_arities: Mapping[str, int],
 ) -> str | None:
 	text = _normalize_expression(expression)
+	if text.startswith("d2l_unsupported("):
+		return "unsupported_d2l_policy_feature_requires_principled_binding"
 	if "c_one_of(" in text or "r_one_of(" in text:
 		return "object_specific_dlplan_feature_requires_principled_lifting"
 	if "n_concept_distance(" in text:
@@ -403,6 +415,13 @@ def _uses_recoverable_shape_with_bad_vocabulary(
 	role_intersection = _goal_role_intersection_feature(text)
 	if role_intersection:
 		return predicate_arities.get(role_intersection.predicate) != 2
+
+	filtered_role = _goal_role_with_unary_filter_feature(text)
+	if filtered_role:
+		return (
+			predicate_arities.get(filtered_role.predicate) != 2
+			or predicate_arities.get(filtered_role.source_filter_predicate) != 1
+		)
 
 	concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
@@ -517,6 +536,23 @@ def _bind_feature_expression(
 			argument_order=goal_role_intersection.argument_order,
 		)
 
+	filtered_goal_role = _goal_role_with_unary_filter_feature(text)
+	if filtered_goal_role:
+		predicate = filtered_goal_role.predicate
+		if (
+			predicate_arities.get(predicate) != 2
+			or predicate_arities.get(filtered_goal_role.source_filter_predicate) != 1
+		):
+			return None
+		return _predicate_count_binding(
+			predicate,
+			predicate_arities,
+			goal_aligned=True,
+			argument_order=filtered_goal_role.argument_order,
+			source_filter_predicate=filtered_goal_role.source_filter_predicate,
+			source_filter_positive=filtered_goal_role.source_filter_positive,
+		)
+
 	goal_concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
@@ -587,6 +623,23 @@ def _feature_binding_kind(
 			if role_intersection.argument_order == (0, 1)
 			else "goal_aligned_reverse_role_intersection_count"
 		)
+	filtered_role = _goal_role_with_unary_filter_feature(text)
+	if filtered_role:
+		if (
+			predicate_arities.get(filtered_role.predicate) != 2
+			or predicate_arities.get(filtered_role.source_filter_predicate) != 1
+		):
+			return "unsupported"
+		prefix = (
+			"goal_aligned_role_count_with_positive_unary_filter"
+			if filtered_role.source_filter_positive
+			else "goal_aligned_role_count_with_negative_unary_filter"
+		)
+		return (
+			prefix
+			if filtered_role.argument_order == (0, 1)
+			else f"reverse_{prefix}"
+		)
 	concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
@@ -606,6 +659,8 @@ def _predicate_count_binding(
 	*,
 	goal_aligned: bool,
 	argument_order: tuple[int, ...] | None = None,
+	source_filter_predicate: str | None = None,
+	source_filter_positive: bool = True,
 ) -> SketchFeatureBinding | None:
 	arity = predicate_arities.get(predicate)
 	if arity is None:
@@ -619,6 +674,11 @@ def _predicate_count_binding(
 		atom_arguments = arguments
 	atom = _call(predicate, atom_arguments)
 	goal_atom = _call(f"goal_{predicate}", atom_arguments)
+	filter_contexts = _source_filter_contexts(
+		atom_arguments,
+		source_filter_predicate=source_filter_predicate,
+		source_filter_positive=source_filter_positive,
+	)
 	condition_contexts: dict[str, tuple[str, ...]] = {
 		"c_n_gt": (),
 		"c_n_eq": (),
@@ -626,12 +686,12 @@ def _predicate_count_binding(
 	effect_contexts: dict[str, tuple[str, ...]] = {}
 	effect_body: dict[str, tuple[AgentSpeakBodyStep, ...]] = {}
 	if goal_aligned:
-		effect_contexts["e_n_inc"] = (goal_atom, f"not {atom}")
+		effect_contexts["e_n_inc"] = (goal_atom, f"not {atom}", *filter_contexts)
 		effect_body["e_n_inc"] = (
 			AgentSpeakBodyStep("subgoal", predicate, atom_arguments),
 		)
 	else:
-		effect_contexts["e_n_inc"] = (f"not {atom}",)
+		effect_contexts["e_n_inc"] = (f"not {atom}", *filter_contexts)
 		effect_body["e_n_inc"] = (
 			AgentSpeakBodyStep("subgoal", predicate, atom_arguments),
 		)
@@ -642,6 +702,18 @@ def _predicate_count_binding(
 		effect_contexts=effect_contexts,
 		effect_body=effect_body,
 	)
+
+
+def _source_filter_contexts(
+	atom_arguments: tuple[str, ...],
+	*,
+	source_filter_predicate: str | None,
+	source_filter_positive: bool,
+) -> tuple[str, ...]:
+	if source_filter_predicate is None or not atom_arguments:
+		return ()
+	literal = _call(source_filter_predicate, (atom_arguments[0],))
+	return (literal if source_filter_positive else f"not {literal}",)
 
 
 def _action_effect_candidates(
@@ -894,6 +966,15 @@ def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:
 			arity=2,
 			argument_order=role_intersection.argument_order,
 		)
+	filtered_role = _goal_role_with_unary_filter_feature(text)
+	if filtered_role:
+		return _GoalAlignedFeature(
+			predicate=filtered_role.predicate,
+			arity=2,
+			argument_order=filtered_role.argument_order,
+			source_filter_predicate=filtered_role.source_filter_predicate,
+			source_filter_positive=filtered_role.source_filter_positive,
+		)
 	concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
@@ -951,6 +1032,64 @@ def _goal_role_intersection_feature(text: str) -> _RoleFeature | None:
 		predicate=match.group(1),
 		argument_order=(first, second),
 	)
+
+
+def _goal_role_with_unary_filter_feature(text: str) -> _FilteredRoleFeature | None:
+	inner = _single_function_argument(text, "n_count")
+	if inner is None:
+		return None
+	parts = _binary_function_arguments(inner, "c_and")
+	if parts is None:
+		return None
+	left, right = parts
+	for role_text, filter_text in ((left, right), (right, left)):
+		role = _goal_role_feature(f"n_count({role_text})")
+		filter_predicate, filter_positive = _unary_concept_filter(filter_text)
+		if role is None or filter_predicate is None:
+			continue
+		return _FilteredRoleFeature(
+			predicate=role.predicate,
+			argument_order=role.argument_order,
+			source_filter_predicate=filter_predicate,
+			source_filter_positive=filter_positive,
+		)
+	return None
+
+
+def _unary_concept_filter(text: str) -> tuple[str | None, bool]:
+	positive = re.fullmatch(r"c_primitive\(([^(),]+),0\)", text)
+	if positive:
+		return positive.group(1), True
+	negative = re.fullmatch(r"c_not\(c_primitive\(([^(),]+),0\)\)", text)
+	if negative:
+		return negative.group(1), False
+	return None, True
+
+
+def _single_function_argument(text: str, function_name: str) -> str | None:
+	prefix = f"{function_name}("
+	if not text.startswith(prefix) or not text.endswith(")"):
+		return None
+	return text[len(prefix) : -1]
+
+
+def _binary_function_arguments(
+	text: str,
+	function_name: str,
+) -> tuple[str, str] | None:
+	prefix = f"{function_name}("
+	if not text.startswith(prefix) or not text.endswith(")"):
+		return None
+	inner = text[len(prefix) : -1]
+	depth = 0
+	for index, character in enumerate(inner):
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+		elif character == "," and depth == 0:
+			return inner[:index], inner[index + 1 :]
+	return None
 
 
 def _rewrite_body_step(

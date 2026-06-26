@@ -21,6 +21,7 @@ from .feature_binding import FeatureBindingDiagnostic
 from .feature_binding import FeatureBindingReport
 from .feature_binding import goal_aligned_policy_feature_ids
 from .gp_backends import SketchPolicy
+from .gp_backends import parse_d2l_policy
 from .gp_backends import parse_dlplan_policy
 
 
@@ -39,6 +40,9 @@ class PaperPolicyAuditReport:
 	ready_for_executable_asl: bool
 	feature_binding_diagnostics: tuple[FeatureBindingDiagnostic, ...]
 	vocabulary_adapter: Mapping[str, str] = field(default_factory=dict)
+	backend_name: str = "learner-sketches"
+	policy_dialect: str = "dlplan_policy"
+	parse_diagnostics: tuple[Mapping[str, str], ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -56,6 +60,9 @@ class PaperPolicyAuditReport:
 				for diagnostic in self.feature_binding_diagnostics
 			),
 			"vocabulary_adapter": dict(self.vocabulary_adapter),
+			"backend_name": self.backend_name,
+			"policy_dialect": self.policy_dialect,
+			"parse_diagnostics": self.parse_diagnostics,
 		}
 
 
@@ -64,6 +71,7 @@ def audit_learned_policy_for_asl_binding(
 	source_name: str,
 	policy_file: str | Path,
 	domain: PDDLDomain,
+	backend_name: str = "learner-sketches",
 	vocabulary_map: Mapping[str, str] | None = None,
 ) -> tuple[PaperPolicyAuditReport, SketchPolicy, FeatureBindingReport]:
 	"""Parse and bind one learned DLPlan policy artifact."""
@@ -77,7 +85,11 @@ def audit_learned_policy_for_asl_binding(
 		path.read_text(encoding="utf-8"),
 		adapter,
 	)
-	policy = parse_dlplan_policy(policy_text)
+	policy, policy_dialect, parse_diagnostics = _parse_backend_policy(
+		policy_text,
+		backend_name=backend_name,
+		domain=domain,
+	)
 	base_report = bind_recoverable_dlplan_features(policy=policy, domain=domain)
 	if goal_aligned_policy_feature_ids(policy):
 		binding_report = bind_goal_aligned_action_effect_candidates(
@@ -113,8 +125,34 @@ def audit_learned_policy_for_asl_binding(
 			for feature_id in policy.features
 		),
 		vocabulary_adapter=adapter,
+		backend_name=backend_name,
+		policy_dialect=policy_dialect,
+		parse_diagnostics=tuple(
+			diagnostic.to_dict()
+			for diagnostic in parse_diagnostics
+		),
 	)
 	return report, policy, binding_report
+
+
+def _parse_backend_policy(
+	policy_text: str,
+	*,
+	backend_name: str,
+	domain: PDDLDomain,
+) -> tuple[SketchPolicy, str, tuple[object, ...]]:
+	normalized = str(backend_name or "").strip()
+	if normalized == "d2l" and "(:policy" not in policy_text:
+		predicate_arities = {
+			predicate.name: len(predicate.parameters)
+			for predicate in domain.predicates
+		}
+		policy, diagnostics = parse_d2l_policy(
+			policy_text,
+			predicate_arities=predicate_arities,
+		)
+		return policy, "d2l_text_policy", tuple(diagnostics)
+	return parse_dlplan_policy(policy_text), "dlplan_policy", ()
 
 
 def _validated_vocabulary_map(

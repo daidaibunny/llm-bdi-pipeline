@@ -77,7 +77,7 @@ BACKEND_RESEARCH_PROFILES = {
 	},
 	"h-policy-learner": {
 		"paper_role": "hierarchical policy learner for reusable generalized policies",
-		"preferred_use": "backend audit and representation baseline",
+		"preferred_use": "verified hierarchical sketch evidence when artifacts use the supported DLPlan policy dialect",
 		"input_artifacts": (
 			"PDDL-like benchmark tasks",
 			"paper experiment scripts",
@@ -89,6 +89,7 @@ BACKEND_RESEARCH_PROFILES = {
 		"reusable_evidence": (
 			"policy-reuse representation baseline",
 			"hierarchical policy language comparison",
+			"Layer B/C hierarchical sketch candidates when feature bindings are safe",
 		),
 		"known_failure_modes": (
 			"missing_backend",
@@ -101,16 +102,16 @@ BACKEND_RESEARCH_PROFILES = {
 			"guard_required": True,
 		},
 		"current_consumption_role": {
-			"drives_layer_b": False,
-			"drives_layer_c": False,
-			"consumed_by_synthesis": False,
-			"consumption_mode": "audit_only_representation_baseline",
-			"blocking_gap": "no_verified_policy_to_lifted_asl_adapter",
+			"drives_layer_b": True,
+			"drives_layer_c": True,
+			"consumed_by_synthesis": True,
+			"consumption_mode": "verified_hierarchical_dlplan_policy_rules",
+			"blocking_gap": None,
 		},
 	},
 	"d2l": {
 		"paper_role": "description-logic policy learner baseline",
-		"preferred_use": "feature-learning and generalized-policy baseline audit",
+		"preferred_use": "verified D2L transition-policy evidence when artifacts use the supported D2L text dialect",
 		"input_artifacts": (
 			"paper benchmark selector",
 			"Docker/apptainer-compatible environment",
@@ -122,6 +123,7 @@ BACKEND_RESEARCH_PROFILES = {
 		"reusable_evidence": (
 			"description-logic feature templates",
 			"generalized-policy baseline behavior",
+			"Layer B/C transition-policy candidates after safe DLPlan conversion",
 		),
 		"known_failure_modes": (
 			"pin_mismatch",
@@ -134,11 +136,11 @@ BACKEND_RESEARCH_PROFILES = {
 			"guard_required": True,
 		},
 		"current_consumption_role": {
-			"drives_layer_b": False,
-			"drives_layer_c": False,
-			"consumed_by_synthesis": False,
-			"consumption_mode": "audit_only_feature_policy_baseline",
-			"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+			"drives_layer_b": True,
+			"drives_layer_c": True,
+			"consumed_by_synthesis": True,
+			"consumption_mode": "verified_d2l_text_policy_rules",
+			"blocking_gap": None,
 		},
 	},
 }
@@ -199,6 +201,20 @@ class SketchPolicy:
 	boolean_features: Mapping[str, str] = field(default_factory=dict)
 	numerical_features: Mapping[str, str] = field(default_factory=dict)
 	parsed_rules: tuple[SketchRule, ...] = ()
+
+
+@dataclass(frozen=True)
+class D2LPolicyParseDiagnostic:
+	"""One non-fatal D2L policy conversion diagnostic."""
+
+	line: str
+	reason: str
+
+	def to_dict(self) -> dict[str, str]:
+		return {
+			"line": self.line,
+			"reason": self.reason,
+		}
 
 
 @dataclass(frozen=True)
@@ -559,6 +575,425 @@ def parse_dlplan_policy(policy_text: str) -> SketchPolicy:
 		numerical_features=numerical_features,
 		parsed_rules=tuple(_parse_rule(rule) for rule in rules),
 	)
+
+
+def parse_d2l_policy(
+	policy_text: str,
+	*,
+	predicate_arities: Mapping[str, int],
+) -> tuple[SketchPolicy, tuple[D2LPolicyParseDiagnostic, ...]]:
+	"""Parse the D2L text policy dialect into the internal sketch dialect.
+
+	D2L prints transition-classification policies as a feature list followed by
+	rules of the form ``state conditions -> {qualitative feature changes}``.
+	This adapter converts only the lifted feature subset whose PDDL meaning is
+	recoverable. Unsupported features remain in the policy with an unbindable
+	expression so the normal feature-binding audit can reject them precisely.
+	"""
+
+	if "(:policy" in policy_text:
+		return parse_dlplan_policy(policy_text), ()
+	feature_ids: dict[str, str] = {}
+	feature_expressions: dict[str, str] = {}
+	diagnostics: list[D2LPolicyParseDiagnostic] = []
+	for feature in _extract_d2l_header_features(policy_text):
+		_ensure_d2l_feature(
+			feature,
+			feature_ids=feature_ids,
+			feature_expressions=feature_expressions,
+			predicate_arities=predicate_arities,
+			diagnostics=diagnostics,
+		)
+	rules: list[str] = []
+	for line in _extract_d2l_policy_lines(policy_text):
+		parsed_rules = _parse_d2l_policy_line(
+			line,
+			feature_ids=feature_ids,
+			feature_expressions=feature_expressions,
+			predicate_arities=predicate_arities,
+			diagnostics=diagnostics,
+		)
+		rules.extend(parsed_rules)
+	numerical_features = {
+		feature_id: expression
+		for feature, feature_id in feature_ids.items()
+		if not feature_expressions[feature_id].startswith("b_nullary(")
+		for expression in (feature_expressions[feature_id],)
+	}
+	boolean_features = {
+		feature_id: expression
+		for feature, feature_id in feature_ids.items()
+		if feature_expressions[feature_id].startswith("b_nullary(")
+		for expression in (feature_expressions[feature_id],)
+	}
+	features = {
+		**boolean_features,
+		**numerical_features,
+	}
+	return (
+		SketchPolicy(
+			features=features,
+			rules=tuple(rules),
+			boolean_features=boolean_features,
+			numerical_features=numerical_features,
+			parsed_rules=tuple(_parse_rule(rule) for rule in rules),
+		),
+		tuple(diagnostics),
+	)
+
+
+def _extract_d2l_header_features(policy_text: str) -> tuple[str, ...]:
+	features: list[str] = []
+	for raw_line in policy_text.splitlines():
+		line = raw_line.strip()
+		if not line or line.startswith("Features") or line.startswith("Invariants"):
+			continue
+		if line.startswith("Policy:"):
+			break
+		match = re.fullmatch(r"(.+?)\s+\[k=\d+\]", line)
+		if match:
+			features.append(match.group(1).strip())
+	return tuple(dict.fromkeys(features))
+
+
+def _extract_d2l_policy_lines(policy_text: str) -> tuple[str, ...]:
+	lines: list[str] = []
+	in_policy = False
+	for raw_line in policy_text.splitlines():
+		line = raw_line.strip()
+		if line == "Policy:":
+			in_policy = True
+			continue
+		if not in_policy or not line:
+			continue
+		match = re.fullmatch(r"\d+\.\s*(.+)", line)
+		if match:
+			lines.append(match.group(1).strip())
+	return tuple(lines)
+
+
+def _parse_d2l_policy_line(
+	line: str,
+	*,
+	feature_ids: dict[str, str],
+	feature_expressions: dict[str, str],
+	predicate_arities: Mapping[str, int],
+	diagnostics: list[D2LPolicyParseDiagnostic],
+) -> tuple[str, ...]:
+	if "->" not in line:
+		diagnostics.append(
+			D2LPolicyParseDiagnostic(line=line, reason="missing_transition_arrow"),
+		)
+		return ()
+	raw_conditions, raw_effects = line.split("->", 1)
+	conditions = []
+	for atom in _split_d2l_conditions(raw_conditions):
+		parsed = _parse_d2l_feature_atom(
+			atom,
+			feature_ids=feature_ids,
+			feature_expressions=feature_expressions,
+			predicate_arities=predicate_arities,
+			diagnostics=diagnostics,
+			role="condition",
+		)
+		if parsed is not None:
+			conditions.append(parsed)
+	effect_sets = _extract_d2l_effect_sets(raw_effects)
+	if not effect_sets:
+		diagnostics.append(
+			D2LPolicyParseDiagnostic(line=line, reason="missing_effect_set"),
+		)
+		return ()
+	rules: list[str] = []
+	for effect_set in effect_sets:
+		effects = []
+		for atom in _split_d2l_effect_atoms(effect_set):
+			parsed = _parse_d2l_feature_atom(
+				atom,
+				feature_ids=feature_ids,
+				feature_expressions=feature_expressions,
+				predicate_arities=predicate_arities,
+				diagnostics=diagnostics,
+				role="effect",
+			)
+			if parsed is not None:
+				effects.append(parsed)
+		rules.append(_dlplan_rule_text(conditions=tuple(conditions), effects=tuple(effects)))
+	return tuple(rules)
+
+
+def _split_d2l_conditions(raw_conditions: str) -> tuple[str, ...]:
+	text = raw_conditions.strip()
+	if not text:
+		return ()
+	return tuple(
+		part.strip()
+		for part in re.split(r"\s+AND\s+", text)
+		if part.strip()
+	)
+
+
+def _extract_d2l_effect_sets(raw_effects: str) -> tuple[str, ...]:
+	effect_sets: list[str] = []
+	depth = 0
+	start: int | None = None
+	for index, character in enumerate(raw_effects):
+		if character == "{":
+			if depth == 0:
+				start = index + 1
+			depth += 1
+		elif character == "}":
+			depth -= 1
+			if depth == 0 and start is not None:
+				effect_sets.append(raw_effects[start:index].strip())
+				start = None
+	return tuple(effect_sets)
+
+
+def _split_d2l_effect_atoms(effect_set: str) -> tuple[str, ...]:
+	return tuple(
+		part.strip()
+		for part in _split_top_level(effect_set, ",")
+		if part.strip()
+	)
+
+
+def _split_top_level(text: str, separator: str) -> tuple[str, ...]:
+	parts: list[str] = []
+	depth = 0
+	start = 0
+	for index, character in enumerate(text):
+		if character in "([{":
+			depth += 1
+		elif character in ")]}":
+			depth -= 1
+		elif character == separator and depth == 0:
+			parts.append(text[start:index])
+			start = index + 1
+	parts.append(text[start:])
+	return tuple(parts)
+
+
+def _parse_d2l_feature_atom(
+	atom: str,
+	*,
+	feature_ids: dict[str, str],
+	feature_expressions: dict[str, str],
+	predicate_arities: Mapping[str, int],
+	diagnostics: list[D2LPolicyParseDiagnostic],
+	role: str,
+) -> tuple[str, str] | None:
+	text = atom.strip()
+	if not text:
+		return None
+	state_match = re.fullmatch(r"(.+?)(>0|=0)", text)
+	change_match = re.fullmatch(r"(.+?)\s+(INC|DEC|ADD|DEL|NIL)s?", text)
+	if state_match:
+		feature = state_match.group(1).strip()
+		value = state_match.group(2)
+		feature_id = _ensure_d2l_feature(
+			feature,
+			feature_ids=feature_ids,
+			feature_expressions=feature_expressions,
+			predicate_arities=predicate_arities,
+			diagnostics=diagnostics,
+		)
+		boolean_feature = feature_expressions[feature_id].startswith("b_nullary(")
+		if role == "effect":
+			diagnostics.append(
+				D2LPolicyParseDiagnostic(
+					line=atom,
+					reason="state_value_atom_inside_effect_set_is_not_executable",
+				),
+			)
+			return None
+		operator = (
+			"c_b_pos"
+			if boolean_feature and value == ">0"
+			else "c_b_neg"
+			if boolean_feature
+			else "c_n_gt"
+			if value == ">0"
+			else "c_n_eq"
+		)
+		return operator, feature_id
+	if change_match:
+		feature = change_match.group(1).strip()
+		change = change_match.group(2)
+		feature_id = _ensure_d2l_feature(
+			feature,
+			feature_ids=feature_ids,
+			feature_expressions=feature_expressions,
+			predicate_arities=predicate_arities,
+			diagnostics=diagnostics,
+		)
+		boolean_feature = feature_expressions[feature_id].startswith("b_nullary(")
+		if role == "condition":
+			diagnostics.append(
+				D2LPolicyParseDiagnostic(
+					line=atom,
+					reason="transition_change_atom_inside_condition_is_not_a_state_guard",
+				),
+			)
+			return None
+		if change == "NIL":
+			diagnostics.append(
+				D2LPolicyParseDiagnostic(
+					line=atom,
+					reason="nil_feature_change_has_no_executable_asl_body",
+				),
+			)
+			return None
+		operator = (
+			"e_b_pos"
+			if boolean_feature and change in {"INC", "ADD"}
+			else "e_b_neg"
+			if boolean_feature
+			else "e_n_inc"
+			if change in {"INC", "ADD"}
+			else "e_n_dec"
+		)
+		return operator, feature_id
+	diagnostics.append(
+		D2LPolicyParseDiagnostic(line=atom, reason="unrecognized_d2l_policy_atom"),
+	)
+	return None
+
+
+def _ensure_d2l_feature(
+	feature: str,
+	*,
+	feature_ids: dict[str, str],
+	feature_expressions: dict[str, str],
+	predicate_arities: Mapping[str, int],
+	diagnostics: list[D2LPolicyParseDiagnostic],
+) -> str:
+	if feature in feature_ids:
+		return feature_ids[feature]
+	feature_id = f"d2l_f{len(feature_ids) + 1}"
+	feature_ids[feature] = feature_id
+	expression, reason = _d2l_feature_to_dlplan_expression(
+		feature,
+		predicate_arities=predicate_arities,
+	)
+	feature_expressions[feature_id] = expression
+	if reason is not None:
+		diagnostics.append(D2LPolicyParseDiagnostic(line=feature, reason=reason))
+	return feature_id
+
+
+def _d2l_feature_to_dlplan_expression(
+	feature: str,
+	*,
+	predicate_arities: Mapping[str, int],
+) -> tuple[str, str | None]:
+	text = feature.strip()
+	match = re.fullmatch(r"(Atom|Bool|Num)\[(.+)\]", text)
+	if not match:
+		return (
+			f"d2l_unsupported({text})",
+			"unsupported_d2l_feature_wrapper",
+		)
+	kind = match.group(1)
+	concept = match.group(2).strip()
+	if kind == "Atom":
+		if predicate_arities.get(concept) == 0:
+			return f"b_nullary({concept})", None
+		return (
+			f"d2l_unsupported({text})",
+			"atom_feature_requires_declared_nullary_predicate",
+		)
+	converted = _d2l_concept_to_dlplan(concept, predicate_arities=predicate_arities)
+	if converted is None:
+		return (
+			f"d2l_unsupported({text})",
+			"unsupported_d2l_description_logic_feature",
+		)
+	return f"n_count({converted})", None
+
+
+def _d2l_concept_to_dlplan(
+	concept: str,
+	*,
+	predicate_arities: Mapping[str, int],
+) -> str | None:
+	text = concept.strip()
+	if predicate_arities.get(text) == 1:
+		return f"c_primitive({text},0)"
+	equal = re.fullmatch(r"Equal\(([^(),]+)_g,([^(),]+)\)", text)
+	if equal and equal.group(1) == equal.group(2):
+		predicate = equal.group(1)
+		arity = predicate_arities.get(predicate)
+		if arity == 1:
+			return (
+				f"c_equal(c_primitive({predicate},0),"
+				f"c_primitive({predicate}_g,0))"
+			)
+		if arity == 2:
+			return (
+				f"c_equal(r_primitive({predicate},0,1),"
+				f"r_primitive({predicate}_g,0,1))"
+			)
+	and_parts = _d2l_binary_concept_args(text, "And")
+	if and_parts is not None:
+		left = _d2l_concept_to_dlplan(
+			and_parts[0],
+			predicate_arities=predicate_arities,
+		)
+		right = _d2l_concept_to_dlplan(
+			and_parts[1],
+			predicate_arities=predicate_arities,
+		)
+		if left is not None and right is not None:
+			return f"c_and({left},{right})"
+	not_part = _d2l_unary_concept_arg(text, "Not")
+	if not_part is not None:
+		converted = _d2l_concept_to_dlplan(
+			not_part,
+			predicate_arities=predicate_arities,
+		)
+		if converted is not None:
+			return f"c_not({converted})"
+	return None
+
+
+def _d2l_unary_concept_arg(text: str, operator: str) -> str | None:
+	prefix = f"{operator}("
+	if not text.startswith(prefix) or not text.endswith(")"):
+		return None
+	return text[len(prefix) : -1]
+
+
+def _d2l_binary_concept_args(text: str, operator: str) -> tuple[str, str] | None:
+	prefix = f"{operator}("
+	if not text.startswith(prefix) or not text.endswith(")"):
+		return None
+	inner = text[len(prefix) : -1]
+	depth = 0
+	for index, character in enumerate(inner):
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+		elif character == "," and depth == 0:
+			return inner[:index].strip(), inner[index + 1 :].strip()
+	return None
+
+
+def _dlplan_rule_text(
+	*,
+	conditions: tuple[tuple[str, str], ...],
+	effects: tuple[tuple[str, str], ...],
+) -> str:
+	condition_text = " ".join(
+		f"(:{operator} {feature_id})"
+		for operator, feature_id in conditions
+	)
+	effect_text = " ".join(
+		f"(:{operator} {feature_id})"
+		for operator, feature_id in effects
+	)
+	return f"(:rule (:conditions {condition_text}) (:effects {effect_text}))"
 
 
 def _extract_features(policy_text: str, section_name: str) -> dict[str, str]:

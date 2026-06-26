@@ -36,6 +36,7 @@ from .gp_backends import (
 	backend_consumption_role,
 	discover_learner_sketches_policy_file,
 	discover_backend_manifest,
+	parse_d2l_policy,
 	parse_dlplan_policy,
 	run_learner_sketches,
 )

@@ -40,6 +40,9 @@ def test_audit_reports_learned_policy_binding_readiness(tmp_path: Path) -> None:
 	assert report.action_effect_candidate_count == 1
 	assert report.executable_effect_count >= 2
 	assert report.ready_for_executable_asl is True
+	assert report.backend_name == "learner-sketches"
+	assert report.policy_dialect == "dlplan_policy"
+	assert report.parse_diagnostics == ()
 	report_dict = report.to_dict()
 	assert report_dict["feature_binding_diagnostics"] == (
 		{
@@ -94,6 +97,80 @@ def test_audit_reports_learned_policy_binding_readiness(tmp_path: Path) -> None:
 	)
 	assert tuple(policy.features) == ("f_on", "f_holding")
 	assert tuple(binding_report.bindings) == ("f_on", "f_holding")
+
+
+def test_audit_accepts_h_policy_hierarchical_sketch_dialect(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_domain(tmp_path)
+	policy_file = tmp_path / "h-policy-sketch.txt"
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (576 "n_count(c_and(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)),c_not(c_primitive(holding,0))))")
+		)
+		(:rule (:conditions ) (:effects (:e_n_inc 576)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	report, policy, binding_report = audit_learned_policy_for_asl_binding(
+		source_name="h-policy:blocks",
+		policy_file=policy_file,
+		domain=PDDLParser.parse_domain(domain_file),
+		backend_name="h-policy-learner",
+	)
+
+	assert report.backend_name == "h-policy-learner"
+	assert report.policy_dialect == "dlplan_policy"
+	assert report.unsupported_features == {}
+	assert report.ready_for_executable_asl is True
+	assert policy.features == {
+		"576": (
+			"n_count(c_and(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)),"
+			"c_not(c_primitive(holding,0))))"
+		),
+	}
+	assert binding_report.feature_diagnostics["576"].binding_kind == (
+		"goal_aligned_role_count_with_negative_unary_filter"
+	)
+
+
+def test_audit_accepts_d2l_text_policy_safe_subset(tmp_path: Path) -> None:
+	domain_file = _write_domain(tmp_path)
+	policy_file = tmp_path / "d2l-policy.txt"
+	policy_file.write_text(
+		"""
+		Features (#: 2; total k: 2; max k = 1):
+		  Num[Equal(on_g,on)] [k=1]
+		  Atom[handempty] [k=1]
+		Invariants:
+		Policy:
+		  1. Atom[handempty]>0 -> {Num[Equal(on_g,on)] INCs}
+		""",
+		encoding="utf-8",
+	)
+
+	report, policy, binding_report = audit_learned_policy_for_asl_binding(
+		source_name="d2l:blocks",
+		policy_file=policy_file,
+		domain=PDDLParser.parse_domain(domain_file),
+		backend_name="d2l",
+	)
+
+	assert report.backend_name == "d2l"
+	assert report.policy_dialect == "d2l_text_policy"
+	assert report.parse_diagnostics == ()
+	assert report.unsupported_features == {}
+	assert report.ready_for_executable_asl is True
+	assert tuple(policy.features.values()) == (
+		"b_nullary(handempty)",
+		"n_count(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)))",
+	)
+	assert tuple(binding_report.bindings) == ("d2l_f2", "d2l_f1")
 
 
 def test_audit_rejects_unbound_paper_policy_as_not_executable(tmp_path: Path) -> None:

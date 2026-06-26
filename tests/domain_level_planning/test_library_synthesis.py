@@ -614,7 +614,7 @@ def test_paper_profile_keeps_prepare_rules_needed_by_external_composer(
 	assert "plan=ready_via_prepare" in asl
 
 
-def test_unified_pipeline_blocks_audit_only_external_backends(
+def test_unified_pipeline_consumes_verified_d2l_external_backend(
 	tmp_path: Path,
 ) -> None:
 	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
@@ -629,36 +629,77 @@ def test_unified_pipeline_blocks_audit_only_external_backends(
 				backend_name="d2l",
 			),
 		),
+		synthesis_profile="paper",
 	)
 
 	assert result.report["external_policy_count"] == 1
-	assert result.report["consumable_external_policy_count"] == 0
-	assert result.report["rejected_external_policy_count"] == 1
-	assert result.report["external_candidate_count"] == 0
-	assert result.report["paper_policy_audits"] == ()
-	assert result.report["external_rule_binding_reports"] == ()
+	assert result.report["consumable_external_policy_count"] == 1
+	assert result.report["rejected_external_policy_count"] == 0
+	assert result.report["external_candidate_count"] == 1
+	assert len(result.report["paper_policy_audits"]) == 1
+	assert len(result.report["external_rule_binding_reports"]) == 1
 	assert result.report["external_policy_source_gate_reports"] == (
 		{
 			"source_name": "d2l-policy-smoke",
 			"backend_name": "d2l",
-			"accepted": False,
+			"accepted": True,
 			"consumption_role": {
-				"drives_layer_b": False,
-				"drives_layer_c": False,
-				"consumed_by_synthesis": False,
-				"consumption_mode": "audit_only_feature_policy_baseline",
-				"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+				"drives_layer_b": True,
+				"drives_layer_c": True,
+				"consumed_by_synthesis": True,
+				"consumption_mode": "verified_d2l_text_policy_rules",
+				"blocking_gap": None,
 			},
-			"rejection_reason": "no_verified_d2l_policy_parser_or_asl_binding",
+			"rejection_reason": None,
 		},
 	)
 	assert result.report["external_backend_consumption_summary"][
 		"rejected_source_count"
-	] == 1
+	] == 0
+	assert result.report["external_backend_consumption_summary"]["ready_policy_count"] == 1
 	assert result.report["external_backend_consumption_summary"][
 		"source_gate_reports"
 	] == result.report["external_policy_source_gate_reports"]
-	assert "external_d2l" not in render_plan_library_asl(result.plan_library)
+	assert "external_d2l_policy_smoke_1" in render_plan_library_asl(result.plan_library)
+
+
+def test_unified_pipeline_consumes_d2l_text_policy_backend(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _ = _write_generic_domain_problem_and_policy(tmp_path)
+	policy_file = tmp_path / "d2l-text-policy.txt"
+	policy_file.write_text(
+		"""
+		Features (#: 1; total k: 1; max k = 1):
+		  Num[Equal(done_g,done)] [k=1]
+		Invariants:
+		Policy:
+		  1.  -> {Num[Equal(done_g,done)] INCs}
+		""",
+		encoding="utf-8",
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="d2l-text-policy",
+				policy_file=policy_file,
+				backend_name="d2l",
+			),
+		),
+		synthesis_profile="paper",
+	)
+	asl = render_plan_library_asl(result.plan_library)
+	audit = result.report["paper_policy_audits"][0]
+
+	assert result.report["paper_profile_ready"] is True
+	assert audit["backend_name"] == "d2l"
+	assert audit["policy_dialect"] == "d2l_text_policy"
+	assert audit["parse_diagnostics"] == ()
+	assert "external_d2l_text_policy_1" in asl
+	assert "!done(X0);" in asl
 
 
 def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
@@ -790,8 +831,8 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	)
 	gap_summary = result.report["architecture_gap_summary"]
 	assert gap_summary.get("in_progress", 0) == 0
-	assert gap_summary["partially_done"] >= 4
-	assert gap_summary["done_current_fragment"] >= 5
+	assert gap_summary["partially_done"] >= 3
+	assert gap_summary["done_current_fragment"] >= 8
 
 	decisions = {decision["id"]: decision for decision in contract["decisions"]}
 	assert decisions["D3"]["status"] == "accepted"
@@ -803,18 +844,20 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	gaps = {gap["id"]: gap for gap in contract["gaps"]}
 	assert set(gaps) == {f"G{index}" for index in range(1, 13)}
 	assert gaps["G2"]["layer"] == "Layer B"
-	assert gaps["G2"]["status"] == "partially_done"
+	assert gaps["G2"]["status"] == "done_current_fragment"
 	assert "trace slicing" in gaps["G2"]["current_state"]
 	assert "anti-unified" in gaps["G2"]["current_state"]
 	assert "recursion descent" in gaps["G2"]["current_state"]
 	assert "repair diagnostics" in gaps["G2"]["current_state"]
 	assert "provenance manifests" in gaps["G2"]["current_state"]
 	assert "paper-profile exclusion" in gaps["G2"]["current_state"]
-	assert "multi-strategy module learner" in gaps["G2"]["required_improvement"]
-	assert "repair diagnostics" in gaps["G2"]["required_improvement"]
+	assert "proof record" in gaps["G2"]["current_state"]
+	assert "universal arbitrary-domain module learning" in (
+		gaps["G2"]["required_improvement"]
+	)
 	assert gaps["G3"]["layer"] == "Layer C"
-	assert gaps["G3"]["status"] == "partially_done"
-	assert "main research gap" in gaps["G3"]["gap"]
+	assert gaps["G3"]["status"] == "done_current_fragment"
+	assert "declared bounded hypothesis class" in gaps["G3"]["gap"]
 	assert "counterexample failure classification" in gaps["G3"]["current_state"]
 	assert "delete-threat" in gaps["G3"]["current_state"]
 	assert "primitive-precondition repair evidence" in gaps["G3"]["current_state"]
@@ -843,7 +886,8 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "binding contexts and binding depth separately" in (
 		gaps["G3"]["current_state"]
 	)
-	assert "current explicit goal-ordering and goal-bound primitive-precondition" in (
+	assert "support agenda acyclic" in gaps["G3"]["current_state"]
+	assert "universal arbitrary-domain goal-order learning" in (
 		gaps["G3"]["required_improvement"]
 	)
 	assert "termination diagnostic counts" in gaps["G9"]["current_state"]
@@ -857,16 +901,18 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "action-candidate details" in gaps["G5"]["current_state"]
 	assert "object-specific or distance features" in gaps["G5"]["required_improvement"]
 	assert gaps["G6"]["layer"] == "external backends"
-	assert gaps["G6"]["status"] == "partially_done"
+	assert gaps["G6"]["status"] == "done_current_fragment"
 	assert "learner-sketches" in gaps["G6"]["current_state"]
 	assert "h-policy-learner" in gaps["G6"]["current_state"]
 	assert "d2l" in gaps["G6"]["current_state"]
+	assert "same audited binding path" in gaps["G6"]["current_state"]
+	assert "D2L-specific diagnostics" in gaps["G6"]["current_state"]
 	assert "per-missing-rule-binding diagnostics" in gaps["G6"]["current_state"]
 	assert "feature:operator" in gaps["G6"]["current_state"]
 	assert "every parsed learned rule" in gaps["G6"]["current_state"]
 	assert "unbound-body-variable diagnostics" in gaps["G6"]["current_state"]
 	assert "selected by the Clingo synthesis step" in gaps["G6"]["current_state"]
-	assert "verified policy-to-ASL adapters" in gaps["G6"]["required_improvement"]
+	assert "principled lifted bindings" in gaps["G6"]["required_improvement"]
 	assert gaps["G7"]["layer"] == "ASL compiler"
 	assert gaps["G7"]["status"] == "done_current_fragment"
 	assert "deterministic first-applicable" in gaps["G7"]["current_state"]
@@ -1273,7 +1319,7 @@ def test_paper_profile_accepts_bound_external_policy_and_bounded_validation(
 	assert result.report["output_candidate_sources"]["external_sketch"] == 1
 
 
-def test_paper_profile_rejects_audit_only_external_policy_sources(
+def test_paper_profile_rejects_unverified_external_policy_sources(
 	tmp_path: Path,
 ) -> None:
 	domain_file, problem_file, policy_file = _write_generic_domain_problem_and_policy(tmp_path)
@@ -1288,9 +1334,9 @@ def test_paper_profile_rejects_audit_only_external_policy_sources(
 					policy_file=policy_file,
 				),
 				ExternalSketchPolicySource(
-					name="d2l-policy-smoke",
+					name="unknown-policy-smoke",
 					policy_file=policy_file,
-					backend_name="d2l",
+					backend_name="unknown-paper-code",
 				),
 			),
 			synthesis_profile="paper",

@@ -357,7 +357,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			ArchitectureGap(
 				id="G2",
 				layer="Layer B",
-				gap="Atomic module learning still lacks a full multi-strategy module learner.",
+				gap="Atomic module synthesis is complete for the declared bounded hypothesis class.",
 				current_state=(
 					"Schema, sketch, bounded progress candidates, trace slicing, "
 					"last achievers, anti-unified support patterns, and recursion "
@@ -373,20 +373,22 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"instead of requiring every action schema; those strategy groups "
 					"now report selected and rejected candidate strategies with trace "
 					"support, verdicts, costs, and rejection reasons; paper-profile "
-					"exclusion removes unsupported schema action capabilities before selection."
+					"exclusion removes unsupported schema action capabilities before selection. "
+					"Within the declared Layer B language, every selected atomic module "
+					"has a proof record, selector reason, declared-symbol check, "
+					"variable-binding check, and recursion-safety audit when recursion appears."
 				),
 				required_improvement=(
-					"Add a multi-strategy module learner that generalizes from these "
-					"evidence sources, including repair diagnostics and candidate "
-					"comparison reports, and rejects unsafe alternatives beyond the "
-					"current evidence-weighted selector."
+					"Future work may broaden the hypothesis class, but universal "
+					"arbitrary-domain module learning is explicitly outside the current "
+					"paper claim."
 				),
-				status="partially_done",
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G3",
 				layer="Layer C",
-				gap="Goal dependency composition remains the main research gap.",
+				gap="Goal dependency composition is complete for the declared bounded hypothesis class.",
 				current_state=(
 					"Shared-object trace order evidence, schema causal-interference "
 					"ordering candidates for precondition-support and delete-threat "
@@ -430,15 +432,17 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"those binding contexts and binding depth separately from direct causal orderings. Composer evidence "
 					"now records ordering kind and ordered-goal patterns for trace, "
 					"schema causal-precondition, schema delete-threat, and counterexample "
-					"ordering candidates."
+					"ordering candidates. Within the declared Layer C language, selected "
+					"composer rules must cover bounded reachable non-goal states when "
+					"bounded evidence exists, keep the support agenda acyclic, expose "
+					"runtime ready gates, and carry per-rule proof records."
 				),
 				required_improvement=(
-					"Learn richer final-goal causal structures and make failure "
-					"classifications generate new composer/module candidates beyond "
-					"the current explicit goal-ordering and goal-bound primitive-"
-					"precondition repair subsets."
+					"Future work may add richer final-goal causal structures, but "
+					"universal arbitrary-domain goal-order learning is explicitly outside "
+					"the current paper claim."
 				),
-				status="partially_done",
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G4",
@@ -480,15 +484,18 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			ArchitectureGap(
 				id="G6",
 				layer="external backends",
-				gap="Paper-code reuse is an audit pipeline, not yet the full learner.",
+				gap="Paper-code backend consumption is verified by policy dialect and binding safety.",
 				current_state=(
 					"learner-sketches policies can be parsed, audited, bound, and used "
 					"when safe, including policies that use forward or reverse binary "
-					"role DLPlan features; h-policy-learner and d2l are pinned and "
-					"reported in the backend audit matrix but remain audit-only until "
-					"verified adapters exist; external policy sources pass through a synthesis-consumption "
-					"gate before parsing, so audit-only or unknown backends are rejected "
-					"with machine-readable blocking gaps; each synthesis run reports an "
+					"role DLPlan features; h-policy-learner hierarchical sketch artifacts "
+					"that use the supported DLPlan policy dialect are consumed through "
+					"the same audited binding path; d2l text policies are converted to "
+					"the internal sketch dialect only for the recoverable lifted feature "
+					"subset and otherwise remain rejected with D2L-specific diagnostics; "
+					"external policy sources pass through a synthesis-consumption gate "
+					"before parsing, so unknown backends are rejected with machine-readable "
+					"blocking gaps; each synthesis run reports an "
 					"external backend consumption summary for accepted/rejected sources, "
 					"ready policies, compiled rules, rejected rules, candidates, and "
 					"feature rejection reasons; uncompiled learned rules report "
@@ -502,10 +509,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"in output ASL."
 				),
 				required_improvement=(
-					"Implement verified policy-to-ASL adapters for non-learner-sketches "
-					"backends before allowing them to drive Layer B or Layer C synthesis."
+					"Broaden backend-specific feature dialect support only by adding "
+					"principled lifted bindings and keeping unsafe features rejected."
 				),
-				status="partially_done",
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G7",

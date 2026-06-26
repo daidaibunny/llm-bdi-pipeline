@@ -19,6 +19,7 @@ from domain_level_planning.gp_backends import (
 	discover_learner_sketches_policy_file,
 	discover_backend_manifest,
 	parse_dlplan_policy,
+	parse_d2l_policy,
 	run_learner_sketches,
 )
 
@@ -102,11 +103,11 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "missing_backend" in by_name["h-policy-learner"]["failure_modes"]
 	assert "hierarchical policy" in by_name["h-policy-learner"]["paper_role"]
 	assert by_name["h-policy-learner"]["current_consumption_role"] == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
-		"consumed_by_synthesis": False,
-		"consumption_mode": "audit_only_representation_baseline",
-		"blocking_gap": "no_verified_policy_to_lifted_asl_adapter",
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "verified_hierarchical_dlplan_policy_rules",
+		"blocking_gap": None,
 	}
 
 	assert by_name["d2l"]["present"] is True
@@ -114,29 +115,29 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "pin_mismatch" in by_name["d2l"]["failure_modes"]
 	assert "Docker" in by_name["d2l"]["resource_profile"]["execution_environment"]
 	assert by_name["d2l"]["current_consumption_role"] == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
-		"consumed_by_synthesis": False,
-		"consumption_mode": "audit_only_feature_policy_baseline",
-		"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "verified_d2l_text_policy_rules",
+		"blocking_gap": None,
 	}
 
 
-def test_backend_consumption_role_blocks_audit_only_backends() -> None:
+def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
 	assert backend_consumption_role("learner-sketches")["consumed_by_synthesis"] is True
 	assert backend_consumption_role("h-policy-learner") == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
-		"consumed_by_synthesis": False,
-		"consumption_mode": "audit_only_representation_baseline",
-		"blocking_gap": "no_verified_policy_to_lifted_asl_adapter",
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "verified_hierarchical_dlplan_policy_rules",
+		"blocking_gap": None,
 	}
 	assert backend_consumption_role("d2l") == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
-		"consumed_by_synthesis": False,
-		"consumption_mode": "audit_only_feature_policy_baseline",
-		"blocking_gap": "no_verified_d2l_policy_parser_or_asl_binding",
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "verified_d2l_text_policy_rules",
+		"blocking_gap": None,
 	}
 	assert backend_consumption_role("unknown-paper-code") == {
 		"drives_layer_b": False,
@@ -453,4 +454,55 @@ def test_parse_learner_sketches_symbolic_feature_ids() -> None:
 				"(:effects (:e_b_neg f114) (:e_n_dec f35)))"
 			),
 		),
+	)
+
+
+def test_parse_d2l_text_policy_converts_supported_features_to_sketch_rules() -> None:
+	policy, diagnostics = parse_d2l_policy(
+		"""
+		Features (#: 2; total k: 2; max k = 1):
+		  Num[Equal(on_g,on)] [k=1]
+		  Atom[handempty] [k=1]
+		Invariants:
+		Policy:
+		  1. Atom[handempty]>0 -> {Num[Equal(on_g,on)] INCs}
+		""",
+		predicate_arities={"on": 2, "handempty": 0},
+	)
+
+	assert diagnostics == ()
+	assert policy.numerical_features == {
+		"d2l_f1": "n_count(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)))",
+	}
+	assert policy.boolean_features == {"d2l_f2": "b_nullary(handempty)"}
+	assert policy.parsed_rules == (
+		SketchRule(
+			conditions=(SketchCondition(operator="c_b_pos", feature_id="d2l_f2"),),
+			effects=(SketchEffect(operator="e_n_inc", feature_id="d2l_f1"),),
+			raw=(
+				"(:rule (:conditions (:c_b_pos d2l_f2)) "
+				"(:effects (:e_n_inc d2l_f1)))"
+			),
+		),
+	)
+
+
+def test_parse_d2l_text_policy_keeps_unsupported_features_auditable() -> None:
+	policy, diagnostics = parse_d2l_policy(
+		"""
+		Features (#: 1; total k: 7; max k = 7):
+		  Num[Forall(Star(on),Equal(on_g,on))] [k=7]
+		Policy:
+		  1.  -> {Num[Forall(Star(on),Equal(on_g,on))] INCs}
+		""",
+		predicate_arities={"on": 2},
+	)
+
+	assert policy.features == {
+		"d2l_f1": (
+			"d2l_unsupported(Num[Forall(Star(on),Equal(on_g,on))])"
+		),
+	}
+	assert tuple(diagnostic.reason for diagnostic in diagnostics) == (
+		"unsupported_d2l_description_logic_feature",
 	)

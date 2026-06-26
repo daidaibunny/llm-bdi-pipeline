@@ -151,6 +151,43 @@ def test_bind_goal_aligned_concept_intersection_to_lifted_subgoal(
 	assert "\t!g." in asl
 
 
+def test_bind_goal_aligned_role_with_negative_unary_filter_to_context(
+	tmp_path: Path,
+) -> None:
+	domain = _write_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f1 "n_count(c_and(c_equal(r_primitive(on,0,1),r_primitive(on_g,0,1)),c_not(c_primitive(holding,0))))")
+		)
+		(:rule (:conditions ) (:effects (:e_n_inc f1)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+	plan_library = compile_bound_sketch_to_asl_library(
+		domain_name="generic-blocks",
+		policy=policy,
+		target=SketchCompilationTarget(symbol="g", recurse=True),
+		feature_bindings=report.bindings,
+	)
+	asl = render_plan_library_asl(plan_library)
+
+	assert report.unsupported_features == {}
+	assert report.feature_diagnostics["f1"].binding_kind == (
+		"goal_aligned_role_count_with_negative_unary_filter"
+	)
+	assert "+!g : goal_on(X0, X1) & not on(X0, X1) & not holding(X0) <-" in asl
+	assert "\t!on(X0, X1);" in asl
+	assert "\t!g." in asl
+
+
 def test_bind_primitive_role_count_to_lifted_subgoal(tmp_path: Path) -> None:
 	domain = _write_domain(tmp_path)
 	policy = parse_dlplan_policy(
