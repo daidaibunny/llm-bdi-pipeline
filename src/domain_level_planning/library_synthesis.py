@@ -467,6 +467,7 @@ def synthesize_domain_level_asl_library(
 		all_transition_evidence,
 	)
 	output_rules = _order_output_rules(_deduplicate_rules(selection.rules))
+	runtime_goal_agenda = _runtime_goal_agenda_metadata(output_rules)
 	plan_library = PlanLibrary(
 		domain_name=domain.name,
 		plans=tuple(_compile_rule_to_plan(rule) for rule in output_rules),
@@ -490,6 +491,7 @@ def synthesize_domain_level_asl_library(
 				for evidence in counterexample_transition_evidence
 			),
 			"pddl_to_asl_symbol_map": _pddl_to_asl_symbol_map(domain),
+			"runtime_goal_agenda": runtime_goal_agenda,
 		},
 	)
 	contract_report = audit_domain_level_library_contract(
@@ -551,6 +553,7 @@ def synthesize_domain_level_asl_library(
 		"architecture_gap_summary": architecture_gap_summary(
 			architecture_contract.gaps,
 		),
+		"runtime_goal_agenda": runtime_goal_agenda,
 		"paper_quality_checks": (
 			"transition_progress",
 			"bounded_all_reachable_states",
@@ -4139,6 +4142,27 @@ def _goal_agenda_edge(rule: LiftedPlanRule, *, selected: bool) -> dict[str, obje
 		"context": tuple(rule.context),
 		"body": tuple(_call(step.symbol, step.arguments) for step in tuple(rule.body or ())),
 		"capabilities": tuple(rule.capabilities),
+	}
+
+
+def _runtime_goal_agenda_metadata(rules: Sequence[LiftedPlanRule]) -> dict[str, object]:
+	"""Return selected support-ordering metadata used by `ready_*` contexts."""
+
+	agenda = _goal_agenda_report(candidate_rules=rules, selected_rules=rules)
+	support_edges = tuple(
+		edge
+		for edge in tuple(agenda.get("edges") or ())
+		if bool(edge.get("selected")) and edge.get("category") == "support"
+	)
+	return {
+		"semantics": (
+			"ready_<predicate>(args) is a read-only derived context. A goal is "
+			"ready iff no selected support-agenda predecessor goal that matches "
+			"the current state and goal descriptor remains unsatisfied."
+		),
+		"read_only_ready_contexts": True,
+		"support_edge_count": len(support_edges),
+		"support_edges": support_edges,
 	}
 
 

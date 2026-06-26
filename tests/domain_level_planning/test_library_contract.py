@@ -51,7 +51,10 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 			"order-independent implicit conjunction over supported context literals; "
 			"positive context atoms bind variables before negated context atoms are checked"
 		),
-		"negation_semantics": "negation-as-absence over the current state or goal descriptor set",
+		"negation_semantics": (
+			"negation-as-absence over the current state, goal descriptor set, "
+			"or derived ready-context set"
+		),
 		"goal_state_semantics": "fixed point: +!g has no applicable unsatisfied-goal plan",
 		"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
 		"primitive_precondition_semantics": (
@@ -81,7 +84,7 @@ def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 			AgentSpeakPlan(
 				plan_name="g_satisfy_goal_done",
 				trigger=AgentSpeakTrigger("achievement_goal", "g"),
-				context=("goal_done(X)", "not done(X)"),
+				context=("goal_done(X)", "ready_done(X)", "not done(X)"),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ("X",)),
 					AgentSpeakBodyStep("subgoal", "g"),
@@ -105,6 +108,54 @@ def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 	assert report.passed is True
 	assert report.checked_layers["declared_pddl_symbols"] is True
 	assert report.violations == ()
+
+
+def test_domain_level_library_contract_rejects_mutable_ready_contexts() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		initial_beliefs=("ready_done(X)",),
+		plans=(
+			AgentSpeakPlan(
+				plan_name="bad_ready_head",
+				trigger=AgentSpeakTrigger("achievement_goal", "ready_done", ("X",)),
+				context=(),
+				body=(AgentSpeakBodyStep("subgoal", "ready_done", ("X",)),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates=("done",),
+	)
+
+	assert report.passed is False
+	assert report.checked_layers["goal_descriptors_read_only"] is False
+	assert any("ready context" in violation for violation in report.violations)
+
+
+def test_domain_level_library_contract_respects_declared_ready_prefix_predicates() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="ready_done_via_prepare",
+				trigger=AgentSpeakTrigger("achievement_goal", "ready_done", ("X",)),
+				context=("ready_done(X)",),
+				body=(AgentSpeakBodyStep("action", "prepare", ("X",)),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates=("ready_done",),
+		declared_actions=("prepare",),
+	)
+
+	assert report.passed is True
+	assert report.checked_layers["goal_descriptors_read_only"] is True
+	assert report.checked_layers["declared_pddl_symbols"] is True
 
 
 def test_domain_level_library_contract_accepts_lifted_equality_contexts() -> None:

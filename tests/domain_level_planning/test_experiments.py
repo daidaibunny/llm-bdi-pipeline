@@ -190,7 +190,7 @@ def test_domain_level_experiment_reports_reproducible_coverage_and_asl(
 		item["duration_seconds"] >= 0
 		for item in report["runtime_seconds"]["evaluation_by_problem"]
 	)
-	assert "+!g : goal_base(X) & not base(X) <-" in report["asl"]
+	assert "+!g : goal_base(X) & ready_base(X) & not base(X) <-" in report["asl"]
 	assert "!achieve_" not in report["asl"]
 	assert "!transition_" not in report["asl"]
 	assert "dfa_state" not in report["asl"]

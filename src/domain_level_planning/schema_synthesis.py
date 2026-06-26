@@ -1458,13 +1458,14 @@ def _argument_positions(arguments: Sequence[str]) -> dict[str, int]:
 def _composer_rules(predicate: PDDLPredicate) -> tuple[LiftedPlanRule, ...]:
 	arguments = parameter_variables(predicate.parameters)
 	goal_context = _call(f"goal_{predicate.name}", arguments)
+	ready_context = _call(f"ready_{predicate.name}", arguments)
 	state_context = _call(predicate.name, arguments)
 	return (
 		_rule(
 			f"g_satisfy_goal_{predicate.name}",
 			"g",
 			(),
-			(goal_context, f"not {state_context}"),
+			(goal_context, ready_context, f"not {state_context}"),
 			(_subgoal(predicate.name, *arguments), _subgoal("g")),
 			layer="composer",
 			capabilities=(f"compose_goal_{predicate.name}",),
@@ -2178,17 +2179,61 @@ def _context_literal_substitutions(
 		atom = text[4:].strip()
 		if _contains_unbound_variables(atom, substitution):
 			return ()
+		facts = _coverage_context_fact_source(
+			atom,
+			state=state,
+			goal_facts=goal_facts,
+		)
 		return (
 			(dict(substitution),)
-			if _ground_context_atom(atom, substitution) not in state
+			if _ground_context_atom(atom, substitution) not in facts
 			else ()
 		)
-	facts = goal_facts if text.startswith("goal_") else tuple(state)
+	facts = _coverage_context_fact_source(
+		text,
+		state=state,
+		goal_facts=goal_facts,
+	)
 	return tuple(
 		merged
 		for fact in facts
 		if (merged := _match_atom(text, fact, substitution)) is not None
 	)
+
+
+def _coverage_context_fact_source(
+	context_atom: str,
+	*,
+	state: State,
+	goal_facts: tuple[str, ...],
+) -> tuple[str, ...] | State:
+	symbol, _arguments = _parse_atom(context_atom)
+	if symbol.startswith("goal_"):
+		return goal_facts
+	if _is_ready_context_for_goal_symbol(symbol, goal_facts):
+		return tuple(
+			_ready_context_from_goal_fact(goal_fact)
+			for goal_fact in tuple(goal_facts or ())
+		)
+	return state
+
+
+def _ready_context_from_goal_fact(goal_fact: str) -> str:
+	goal_atom = str(goal_fact or "").strip()
+	if goal_atom.startswith("goal_"):
+		goal_atom = goal_atom[len("goal_") :]
+	predicate, arguments = _parse_atom(goal_atom)
+	return _call(f"ready_{predicate}", arguments)
+
+
+def _is_ready_context_for_goal_symbol(symbol: str, goal_facts: tuple[str, ...]) -> bool:
+	text = str(symbol or "").strip()
+	if not text.startswith("ready_"):
+		return False
+	return text in {
+		_parse_atom(_ready_context_from_goal_fact(goal_fact))[0]
+		for goal_fact in tuple(goal_facts or ())
+	}
 
 
 def _match_atom(

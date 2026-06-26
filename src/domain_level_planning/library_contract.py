@@ -26,7 +26,10 @@ EXECUTION_SEMANTICS = {
 		"order-independent implicit conjunction over supported context literals; "
 		"positive context atoms bind variables before negated context atoms are checked"
 	),
-	"negation_semantics": "negation-as-absence over the current state or goal descriptor set",
+	"negation_semantics": (
+		"negation-as-absence over the current state, goal descriptor set, "
+		"or derived ready-context set"
+	),
 	"goal_state_semantics": "fixed point: +!g has no applicable unsatisfied-goal plan",
 	"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
 	"primitive_precondition_semantics": (
@@ -73,7 +76,11 @@ def audit_domain_level_library_contract(
 		violations.append("Domain-level libraries must not emit problem-specific initial beliefs.")
 
 	no_synthetic_names = _collect_synthetic_name_violations(plan_library, violations)
-	goal_descriptors_read_only = _collect_goal_descriptor_violations(plan_library, violations)
+	goal_descriptors_read_only = _collect_goal_descriptor_violations(
+		plan_library,
+		violations,
+		declared_predicates=predicate_arities,
+	)
 	plan_head_subset = _collect_plan_head_subset_violations(plans, violations)
 	lifted_heads = _collect_head_lifting_violations(plans, violations)
 	body_step_subset = _collect_body_step_subset_violations(plans, violations)
@@ -87,7 +94,10 @@ def audit_domain_level_library_contract(
 		declared_actions=action_arities,
 		violations=violations,
 	)
-	goal_descriptor_usage = _goal_descriptor_usage(plan_library)
+	goal_descriptor_usage = _goal_descriptor_usage(
+		plan_library,
+		declared_predicates=predicate_arities,
+	)
 	checked_layers = {
 		"no_initial_beliefs": no_initial_beliefs,
 		"no_synthetic_names": no_synthetic_names,
@@ -142,53 +152,86 @@ def _collect_synthetic_name_violations(
 def _collect_goal_descriptor_violations(
 	plan_library: PlanLibrary,
 	violations: list[str],
+	*,
+	declared_predicates: Mapping[str, int | None] | None = None,
 ) -> bool:
 	passed = True
 	for belief in tuple(plan_library.initial_beliefs or ()):
-		if _atom_symbol(belief).startswith("goal_"):
+		symbol = _atom_symbol(belief)
+		if _is_read_only_context_symbol(symbol, declared_predicates=declared_predicates):
 			passed = False
-			violations.append(f"Read-only goal descriptor emitted as initial belief: {belief!r}.")
+			violations.append(
+				f"Read-only {_read_only_context_label(symbol)} emitted as initial belief: {belief!r}.",
+			)
 	for plan in tuple(plan_library.plans or ()):
-		if plan.trigger.symbol.startswith("goal_"):
+		if _is_read_only_context_symbol(
+			plan.trigger.symbol,
+			declared_predicates=declared_predicates,
+		):
 			passed = False
-			violations.append(f"Read-only goal descriptor used as plan head: {plan.plan_name!r}.")
+			violations.append(
+				f"Read-only {_read_only_context_label(plan.trigger.symbol)} "
+				f"used as plan head: {plan.plan_name!r}.",
+			)
 		for step in tuple(plan.body or ()):
-			if step.symbol.startswith("goal_"):
+			if _is_read_only_context_symbol(
+				step.symbol,
+				declared_predicates=declared_predicates,
+			):
 				passed = False
 				violations.append(
-					f"Read-only goal descriptor used in body step of plan {plan.plan_name!r}.",
+					(
+						f"Read-only {_read_only_context_label(step.symbol)} "
+						f"used in body step of plan {plan.plan_name!r}."
+					),
 			)
 	return passed
 
 
-def _goal_descriptor_usage(plan_library: PlanLibrary) -> dict[str, object]:
+def _goal_descriptor_usage(
+	plan_library: PlanLibrary,
+	*,
+	declared_predicates: Mapping[str, int | None] | None = None,
+) -> dict[str, object]:
 	context_descriptors: list[dict[str, object]] = []
 	mutable_locations: list[dict[str, str]] = []
 	for belief in tuple(plan_library.initial_beliefs or ()):
-		if _atom_symbol(belief).startswith("goal_"):
+		if _is_read_only_context_symbol(
+			_atom_symbol(belief),
+			declared_predicates=declared_predicates,
+		):
 			mutable_locations.append(
 				{"location": "initial_belief", "descriptor": str(belief)},
 			)
 	for plan in tuple(plan_library.plans or ()):
-		if plan.trigger.symbol.startswith("goal_"):
+		if _is_read_only_context_symbol(
+			plan.trigger.symbol,
+			declared_predicates=declared_predicates,
+		):
 			mutable_locations.append(
 				{"location": "plan_head", "descriptor": plan.trigger.symbol},
 			)
 		for context in tuple(plan.context or ()):
 			for symbol, arguments in _context_atoms(context):
-				if not symbol.startswith("goal_"):
+				if not _is_read_only_context_symbol(
+					symbol,
+					declared_predicates=declared_predicates,
+				):
 					continue
 				context_descriptors.append(
 					{
 						"descriptor": _format_atom(symbol, arguments),
-						"pddl_predicate": symbol[len("goal_") :],
+						"pddl_predicate": _read_only_context_pddl_predicate(symbol),
 						"arguments": list(arguments),
 						"plan_name": plan.plan_name,
 						"negated": str(context or "").strip().lower().startswith("not "),
 					},
 				)
 		for step in tuple(plan.body or ()):
-			if step.symbol.startswith("goal_"):
+			if _is_read_only_context_symbol(
+				step.symbol,
+				declared_predicates=declared_predicates,
+			):
 				mutable_locations.append(
 					{"location": f"body_step:{step.kind}", "descriptor": step.symbol},
 				)
@@ -365,10 +408,15 @@ def _collect_declared_pddl_symbol_violations(
 			)
 		for context in tuple(plan.context or ()):
 			for symbol, arguments in _context_atoms(context):
-				if symbol.startswith("goal_"):
-					predicate = symbol[len("goal_") :]
-				elif symbol == "=":
+				if symbol == "=":
 					continue
+				if symbol in declared_predicates:
+					predicate = symbol
+				elif _is_read_only_context_symbol(
+					symbol,
+					declared_predicates=declared_predicates,
+				):
+					predicate = _read_only_context_pddl_predicate(symbol)
 				else:
 					predicate = symbol
 				if predicate not in declared_predicates:
@@ -436,6 +484,40 @@ def _collect_declared_pddl_symbol_violations(
 						),
 					)
 	return passed
+
+
+def _is_read_only_context_symbol(
+	symbol: str,
+	*,
+	declared_predicates: Mapping[str, int | None] | None = None,
+) -> bool:
+	text = str(symbol or "").strip()
+	if text.startswith("goal_"):
+		return True
+	if not text.startswith("ready_"):
+		return False
+	declared = dict(declared_predicates or {})
+	if text in declared:
+		return False
+	if not declared:
+		return True
+	return text[len("ready_") :] in declared
+
+
+def _read_only_context_label(symbol: str) -> str:
+	text = str(symbol or "").strip()
+	if text.startswith("ready_"):
+		return "ready context"
+	return "goal descriptor"
+
+
+def _read_only_context_pddl_predicate(symbol: str) -> str:
+	text = str(symbol or "").strip()
+	if text.startswith("goal_"):
+		return text[len("goal_") :]
+	if text.startswith("ready_"):
+		return text[len("ready_") :]
+	return text
 
 
 def _library_strings(plan_library: PlanLibrary) -> Iterable[tuple[str, str]]:

@@ -173,6 +173,11 @@ def _execute_subgoal(
 			current_decision_trace,
 			f"recursive loop on !{_call(symbol, arguments)}",
 		)
+	derived_context_facts = _derived_context_facts(
+		plan_library=plan_library,
+		state=state,
+		goal_facts=goal_facts,
+	)
 	for plan in _candidate_plans(plan_library, symbol, arguments):
 		substitution = _match_arguments(plan.trigger.arguments, arguments)
 		if substitution is None:
@@ -182,6 +187,7 @@ def _execute_subgoal(
 			substitution=substitution,
 			state=state,
 			goal_facts=goal_facts,
+			derived_context_facts=derived_context_facts,
 		):
 			next_state, next_steps, next_trace, next_decision_trace, failure = _execute_body(
 				plan_library=plan_library,
@@ -340,6 +346,7 @@ def _context_substitutions(
 	substitution: Mapping[str, str],
 	state: frozenset[str],
 	goal_facts: tuple[str, ...],
+	derived_context_facts: tuple[str, ...],
 ) -> tuple[dict[str, str], ...]:
 	substitutions = (dict(substitution),)
 	positive_contexts = tuple(
@@ -361,6 +368,7 @@ def _context_substitutions(
 					substitution=candidate,
 					state=state,
 					goal_facts=goal_facts,
+					derived_context_facts=derived_context_facts,
 				),
 			)
 		substitutions = tuple(next_substitutions)
@@ -375,6 +383,7 @@ def _context_substitutions(
 					substitution=candidate,
 					state=state,
 					goal_facts=goal_facts,
+					derived_context_facts=derived_context_facts,
 				),
 			)
 		substitutions = tuple(next_substitutions)
@@ -393,6 +402,157 @@ def _satisfying_substitutions_for_context(
 	substitution: Mapping[str, str],
 	state: frozenset[str],
 	goal_facts: tuple[str, ...],
+	derived_context_facts: tuple[str, ...],
+) -> tuple[dict[str, str], ...]:
+	text = str(context or "").strip()
+	if not text or text.lower() == "true":
+		return (dict(substitution),)
+	if text.lower().startswith("not "):
+		atom = text[4:].strip()
+		if _contains_unbound_variables(atom, substitution):
+			return ()
+		if _is_equality_atom(atom):
+			return (
+				(dict(substitution),)
+				if not _equality_atom_holds(atom, substitution)
+				else ()
+			)
+		facts = _context_fact_source(
+			atom,
+			state=state,
+			goal_facts=goal_facts,
+			derived_context_facts=derived_context_facts,
+		)
+		return (
+			(dict(substitution),)
+			if _ground_atom(atom, substitution) not in facts
+			else ()
+		)
+	if _is_equality_atom(text):
+		if _contains_unbound_variables(text, substitution):
+			return ()
+		return (
+			(dict(substitution),)
+			if _equality_atom_holds(text, substitution)
+			else ()
+		)
+	facts = _context_fact_source(
+		text,
+		state=state,
+		goal_facts=goal_facts,
+		derived_context_facts=derived_context_facts,
+	)
+	return tuple(
+		merged
+		for fact in facts
+		if (merged := _match_atom(text, fact, substitution)) is not None
+	)
+
+
+def _context_fact_source(
+	context_atom: str,
+	*,
+	state: frozenset[str],
+	goal_facts: tuple[str, ...],
+	derived_context_facts: tuple[str, ...],
+) -> tuple[str, ...] | frozenset[str]:
+	symbol, _arguments = _parse_atom(context_atom)
+	if symbol.startswith("goal_"):
+		return goal_facts
+	if _is_ready_context_for_goal_symbol(symbol, goal_facts):
+		return derived_context_facts
+	return state
+
+
+def _derived_context_facts(
+	*,
+	plan_library: PlanLibrary,
+	state: frozenset[str],
+	goal_facts: tuple[str, ...],
+) -> tuple[str, ...]:
+	ready_facts = {
+		_ready_fact_from_goal_fact(goal_fact)
+		for goal_fact in tuple(goal_facts or ())
+	}
+	agenda = dict(plan_library.metadata.get("runtime_goal_agenda") or {})
+	support_edges = tuple(agenda.get("support_edges") or ())
+	if not support_edges:
+		return tuple(sorted(ready_facts))
+	blocked = {
+		_ready_fact_from_goal_fact(goal_fact)
+		for goal_fact in tuple(goal_facts or ())
+		if _goal_blocked_by_support_agenda(
+			goal_fact=goal_fact,
+			goal_facts=goal_facts,
+			state=state,
+			support_edges=support_edges,
+		)
+	}
+	return tuple(sorted(ready_facts - blocked))
+
+
+def _goal_blocked_by_support_agenda(
+	*,
+	goal_fact: str,
+	goal_facts: tuple[str, ...],
+	state: frozenset[str],
+	support_edges: Sequence[Mapping[str, object]],
+) -> bool:
+	later_goal_atom = _state_atom_from_goal_fact(goal_fact)
+	for edge in tuple(support_edges or ()):
+		if not bool(edge.get("selected", True)) or edge.get("category") != "support":
+			continue
+		later_pattern = str(edge.get("later") or "").strip()
+		earlier_pattern = str(edge.get("earlier") or "").strip()
+		if not later_pattern or not earlier_pattern:
+			continue
+		later_substitution = _match_atom(later_pattern, later_goal_atom, {})
+		if later_substitution is None:
+			continue
+		for candidate in _binding_context_substitutions(
+			contexts=tuple(str(item) for item in tuple(edge.get("binding_contexts") or ())),
+			substitution=later_substitution,
+			state=state,
+		):
+			if _has_unsatisfied_predecessor_goal(
+				earlier_pattern=earlier_pattern,
+				later_pattern=later_pattern,
+				substitution=candidate,
+				goal_facts=goal_facts,
+				state=state,
+			):
+				return True
+	return False
+
+
+def _binding_context_substitutions(
+	*,
+	contexts: Sequence[str],
+	substitution: Mapping[str, str],
+	state: frozenset[str],
+) -> tuple[dict[str, str], ...]:
+	substitutions = (dict(substitution),)
+	for context in tuple(contexts or ()):
+		next_substitutions: list[dict[str, str]] = []
+		for candidate in substitutions:
+			next_substitutions.extend(
+				_satisfying_state_context_substitutions(
+					context=context,
+					substitution=candidate,
+					state=state,
+				),
+			)
+		substitutions = tuple(next_substitutions)
+		if not substitutions:
+			return ()
+	return substitutions
+
+
+def _satisfying_state_context_substitutions(
+	*,
+	context: str,
+	substitution: Mapping[str, str],
+	state: frozenset[str],
 ) -> tuple[dict[str, str], ...]:
 	text = str(context or "").strip()
 	if not text or text.lower() == "true":
@@ -420,12 +580,33 @@ def _satisfying_substitutions_for_context(
 			if _equality_atom_holds(text, substitution)
 			else ()
 		)
-	facts = goal_facts if text.startswith("goal_") else tuple(state)
 	return tuple(
 		merged
-		for fact in facts
+		for fact in state
 		if (merged := _match_atom(text, fact, substitution)) is not None
 	)
+
+
+def _has_unsatisfied_predecessor_goal(
+	*,
+	earlier_pattern: str,
+	later_pattern: str,
+	substitution: Mapping[str, str],
+	goal_facts: tuple[str, ...],
+	state: frozenset[str],
+) -> bool:
+	for earlier_goal_fact in tuple(goal_facts or ()):
+		earlier_goal_atom = _state_atom_from_goal_fact(earlier_goal_fact)
+		merged = _match_atom(earlier_pattern, earlier_goal_atom, substitution)
+		if merged is None:
+			continue
+		ground_earlier = _ground_atom(earlier_pattern, merged)
+		ground_later = _ground_atom(later_pattern, merged)
+		if ground_earlier == ground_later:
+			continue
+		if ground_earlier not in state:
+			return True
+	return False
 
 
 def _match_atom(
@@ -501,6 +682,22 @@ def _ground_term(term: str, substitution: Mapping[str, str]) -> str:
 
 def _goal_fact(predicate: str, arguments: Iterable[str]) -> str:
 	return _call(f"goal_{predicate}", tuple(arguments))
+
+
+def _ready_fact_from_goal_fact(goal_fact: str) -> str:
+	state_atom = _state_atom_from_goal_fact(goal_fact)
+	predicate, arguments = _parse_atom(state_atom)
+	return _call(f"ready_{predicate}", arguments)
+
+
+def _is_ready_context_for_goal_symbol(symbol: str, goal_facts: tuple[str, ...]) -> bool:
+	text = str(symbol or "").strip()
+	if not text.startswith("ready_"):
+		return False
+	return text in {
+		_parse_atom(_ready_fact_from_goal_fact(goal_fact))[0]
+		for goal_fact in tuple(goal_facts or ())
+	}
 
 
 def _all_goal_facts_satisfied(state: frozenset[str], goal_facts: tuple[str, ...]) -> bool:

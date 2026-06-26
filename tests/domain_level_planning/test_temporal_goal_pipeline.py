@@ -70,7 +70,7 @@ def test_temporal_goal_artifact_keeps_dfa_query_specific_and_library_domain_leve
 	assert set(artifact.dfa_metadata) == {"query_1"}
 	assert artifact.dfa_progress_requests["query_1"][0].goal_facts == ("goal_done",)
 	assert artifact.dfa_progress_requests["query_1"][0].body_steps[0].symbol == "done"
-	assert "+!g : goal_done & not done <-" in asl
+	assert "+!g : goal_done & ready_done & not done <-" in asl
 	assert "transition_" not in asl
 	assert "achieve_" not in asl
 	assert "dfa_state" not in asl

@@ -36,7 +36,7 @@ def test_lifted_blocksworld_library_from_one_training_problem_solves_first_20() 
 	binding_causal_plan = (
 		"+!g : goal_on(Y, Z) & goal_clear(X) & on(Y, X) & not on(Y, Z) <-"
 	)
-	generic_plan = "+!g : goal_on(X, Y) & not on(X, Y) <-"
+	generic_plan = "+!g : goal_on(X, Y) & ready_on(X, Y) & not on(X, Y) <-"
 	assert causal_plan in asl
 	assert binding_causal_plan in asl
 	assert asl.index(causal_plan) < asl.index(generic_plan)
@@ -223,6 +223,61 @@ def test_executor_evaluates_lifted_inequality_contexts_and_preconditions(
 	assert execution.steps == ("finish(a, b)",)
 
 
+def test_executor_derives_ready_goal_contexts_from_selected_agenda_edges(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_two_object_ordered_done_domain(tmp_path)
+	plan_library = PlanLibrary(
+		domain_name="ordered-done",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="g_satisfy_goal_done",
+				trigger=AgentSpeakTrigger("achievement_goal", "g"),
+				context=("goal_done(X)", "ready_done(X)", "not done(X)"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "done", ("X",)),
+					AgentSpeakBodyStep("subgoal", "g"),
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="done_already_true",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("done(X)",),
+				body=(),
+			),
+			AgentSpeakPlan(
+				plan_name="done_via_finish",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("ready(X)",),
+				body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
+			),
+		),
+		metadata={
+			"runtime_goal_agenda": {
+				"read_only_ready_contexts": True,
+				"support_edges": (
+					{
+						"category": "support",
+						"selected": True,
+						"earlier": "done(A)",
+						"later": "done(B)",
+						"binding_contexts": ("precedes(A, B)",),
+					},
+				),
+			},
+		},
+	)
+
+	execution = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+	)
+
+	assert execution.solved is True
+	assert execution.steps == ("finish(a)", "finish(b)")
+
+
 def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"
@@ -247,6 +302,37 @@ def _write_tiny_switch_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:objects)
 		 (:init (ready))
 		 (:goal (and (done)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_two_object_ordered_done_domain(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "ordered-done-domain.pddl"
+	problem_file = tmp_path / "ordered-done-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain ordered-done)
+		 (:requirements :strips)
+		 (:predicates (ready ?x) (done ?x) (precedes ?x ?y))
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem ordered-done-p1)
+		 (:domain ordered-done)
+		 (:objects a b)
+		 (:init (ready a) (ready b) (precedes a b))
+		 (:goal (and (done b) (done a)))
 		)
 		""",
 		encoding="utf-8",

@@ -1960,16 +1960,15 @@ def test_state_coverage_refinement_synthesizes_composer_candidate(
 	assert refinement["required_group_types"] == (
 		"counterexample_explicit_state_coverage",
 	)
-	assert refinement["explicit_state_coverage_required_groups"][0]["rule_names"] == (
-		"g_satisfy_goal_base",
-	)
+	required_rules = refinement["explicit_state_coverage_required_groups"][0]["rule_names"]
+	assert required_rules == ("g_counterexample_state_coverage_base_1",)
 	assert layer_c["state_coverage_synthesized_candidate_count"] == 1
 	assert layer_c["matched_explicit_state_coverage_constraint_count"] == 1
 	output_evidence = {
 		record["rule_name"]: record
 		for record in layer_c["output_composer_rule_evidence"]
 	}
-	assert output_evidence["g_satisfy_goal_base"]["verdict"] == (
+	assert output_evidence["g_counterexample_state_coverage_base_1"]["verdict"] == (
 		"counterexample_state_coverage_synthesized"
 	)
 

@@ -41,7 +41,7 @@ def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain() -> None
 	assert plan_library.domain_name == "logistics-mini"
 	assert plan_library.initial_beliefs == ()
 	assert plan_library.metadata["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
-	assert "+!g : goal_at(P, L) & not at(P, L) <-" in asl
+	assert "+!g : goal_at(P, L) & ready_at(P, L) & not at(P, L) <-" in asl
 	assert "\t!at(P, L);" in asl
 	assert "+!at(P, L) : at(P, L) <-" in asl
 	assert "+!at(P, To) : not at(P, From) <-" not in asl
@@ -173,7 +173,7 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 	)
 	asl = render_plan_library_asl(plan_library)
 
-	assert "+!g : goal_on(X, Y) & not on(X, Y) <-" in asl
+	assert "+!g : goal_on(X, Y) & ready_on(X, Y) & not on(X, Y) <-" in asl
 	assert "+!on(X, Y) : on(X, Y) <-" in asl
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not holding(X) <-" in asl
 	assert "\t!holding(X);" in asl
@@ -185,6 +185,10 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 	assert "goal_on(b4, b2)." not in asl
 	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
 	assert "+!g : goal_on(Z, W) & goal_on(X, Y) & not on(Z, W) <-" not in asl
+	runtime_agenda = plan_library.metadata["runtime_goal_agenda"]
+	assert runtime_agenda["read_only_ready_contexts"] is True
+	assert runtime_agenda["support_edge_count"] >= 1
+	assert all(edge["category"] == "support" for edge in runtime_agenda["support_edges"])
 	transition_systems = plan_library.metadata["transition_systems"]
 	assert transition_systems[0]["goal_facts"] == [
 		"goal_on(b4, b2)",
@@ -215,6 +219,7 @@ def test_synthesis_report_exposes_clingo_schema_contract() -> None:
 
 	assert report["theoretical_contract"] == "bounded_class_guarantee"
 	assert report["generation_mode"] == "unified_goal_conditioned_modular_synthesis"
+	assert report["runtime_goal_agenda"]["read_only_ready_contexts"] is True
 	assert report["external_policy_count"] == 0
 	assert report["selected_rule_count"] > 0
 	assert report["candidate_count"] >= report["selected_rule_count"]
@@ -488,7 +493,7 @@ def test_schema_synthesis_selects_schema_causal_ordering_without_traces() -> Non
 	report = plan_library.metadata["unified_synthesis_report"]
 
 	causal_plan = "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-"
-	generic_plan = "+!g : goal_on(X, Y) & not on(X, Y) <-"
+	generic_plan = "+!g : goal_on(X, Y) & ready_on(X, Y) & not on(X, Y) <-"
 	assert causal_plan in asl
 	assert asl.index(causal_plan) < asl.index(generic_plan)
 	assert (
