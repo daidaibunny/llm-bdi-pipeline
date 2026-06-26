@@ -257,6 +257,12 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 	assert consumption["compiled_rule_count"] == 1
 	assert consumption["rejected_rule_count"] == 0
 	assert consumption["candidate_count"] == result.report["external_candidate_count"]
+	assert consumption["feature_binding_contract"]["feature_count"] == 1
+	assert consumption["feature_binding_contract"]["bound_feature_count"] == 1
+	assert consumption["feature_binding_contract"]["unsupported_feature_count"] == 0
+	assert consumption["feature_binding_contract"]["bound_binding_kinds"] == (
+		"goal_aligned_concept_count",
+	)
 	assert result.report["output_candidate_sources"].get("external_sketch", 0) == (
 		result.report["selected_candidate_sources"].get("external_sketch", 0)
 	)
@@ -272,6 +278,17 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 			"compiled_rule_count": 1,
 			"rejected_rule_count": 0,
 			"candidate_count": result.report["external_candidate_count"],
+			"feature_binding_summary": {
+				"binding_policy": consumption["feature_binding_contract"][
+					"binding_policy"
+				],
+				"feature_count": 1,
+				"bound_feature_count": 1,
+				"unsupported_feature_count": 0,
+				"bound_binding_kinds": ("goal_aligned_concept_count",),
+				"unsupported_rejection_reason_counts": {},
+				"all_unsupported_features_have_rejection_reason": True,
+			},
 			"rejection_reasons": (),
 		},
 	)
@@ -1017,6 +1034,17 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 	assert consumption["rejected_rule_count"] == 1
 	assert consumption["candidate_count"] == 0
 	assert consumption["rejected_source_count"] == 0
+	assert consumption["feature_binding_contract"]["feature_count"] == 1
+	assert consumption["feature_binding_contract"]["bound_feature_count"] == 0
+	assert consumption["feature_binding_contract"]["unsupported_feature_count"] == 1
+	assert consumption["feature_binding_contract"][
+		"unsupported_rejection_reason_counts"
+	] == {
+		"object_specific_dlplan_feature_requires_principled_lifting": 1,
+	}
+	assert consumption["feature_binding_contract"][
+		"all_unsupported_features_have_rejection_reason"
+	] is True
 	assert consumption["policies"] == (
 		{
 			"source_name": "unsupported-sketch",
@@ -1028,6 +1056,19 @@ def test_unified_pipeline_reports_unsupported_external_features_without_guessing
 			"compiled_rule_count": 0,
 			"rejected_rule_count": 1,
 			"candidate_count": 0,
+			"feature_binding_summary": {
+				"binding_policy": consumption["feature_binding_contract"][
+					"binding_policy"
+				],
+				"feature_count": 1,
+				"bound_feature_count": 0,
+				"unsupported_feature_count": 1,
+				"bound_binding_kinds": (),
+				"unsupported_rejection_reason_counts": {
+					"object_specific_dlplan_feature_requires_principled_lifting": 1,
+				},
+				"all_unsupported_features_have_rejection_reason": True,
+			},
 			"rejection_reasons": (
 				"object_specific_dlplan_feature_requires_principled_lifting",
 			),

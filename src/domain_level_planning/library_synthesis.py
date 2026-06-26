@@ -1231,6 +1231,11 @@ def _external_backend_consumption_summary(
 		)
 		for audit in audits
 	)
+	feature_diagnostics = tuple(
+		diagnostic
+		for audit in audits
+		for diagnostic in tuple(audit.feature_binding_diagnostics or ())
+	)
 	return {
 		"policy_count": len(audits),
 		"ready_policy_count": sum(
@@ -1245,6 +1250,9 @@ def _external_backend_consumption_summary(
 		"candidate_count": len(candidates),
 		"source_gate_reports": tuple(report.to_dict() for report in gate_reports),
 		"rejected_source_count": sum(1 for report in gate_reports if not report.accepted),
+		"feature_binding_contract": _feature_binding_contract_summary(
+			feature_diagnostics,
+		),
 		"policies": policies,
 	}
 
@@ -1272,6 +1280,7 @@ def _external_policy_consumption(
 			if diagnostic.rejection_reason
 		),
 	)
+	feature_diagnostics = tuple(audit.feature_binding_diagnostics or ())
 	return {
 		"source_name": audit.source_name,
 		"ready_for_executable_asl": audit.ready_for_executable_asl,
@@ -1282,7 +1291,59 @@ def _external_policy_consumption(
 		"compiled_rule_count": sum(1 for report in source_reports if report.compiled),
 		"rejected_rule_count": sum(1 for report in source_reports if not report.compiled),
 		"candidate_count": source_candidate_count,
+		"feature_binding_summary": _feature_binding_contract_summary(
+			feature_diagnostics,
+		),
 		"rejection_reasons": rejection_reasons,
+	}
+
+
+def _feature_binding_contract_summary(
+	feature_diagnostics: Sequence[object],
+) -> dict[str, object]:
+	"""Summarize the conservative DLPlan feature-language contract."""
+
+	diagnostics = tuple(feature_diagnostics or ())
+	unsupported = tuple(
+		diagnostic
+		for diagnostic in diagnostics
+		if getattr(diagnostic, "status", "") == "unsupported"
+	)
+	bound = tuple(
+		diagnostic
+		for diagnostic in diagnostics
+		if getattr(diagnostic, "status", "") == "bound"
+	)
+	reasons: dict[str, int] = {}
+	for diagnostic in unsupported:
+		reason = str(
+			getattr(diagnostic, "rejection_reason", None)
+			or "missing_rejection_reason",
+		)
+		reasons[reason] = reasons.get(reason, 0) + 1
+	return {
+		"binding_policy": (
+			"bind only DLPlan features with recoverable lifted PDDL semantics; "
+			"reject object-specific, distance, and vocabulary-mismatched features "
+			"instead of guessing"
+		),
+		"feature_count": len(diagnostics),
+		"bound_feature_count": len(bound),
+		"unsupported_feature_count": len(unsupported),
+		"bound_binding_kinds": tuple(
+			sorted(
+				{
+					str(getattr(diagnostic, "binding_kind", ""))
+					for diagnostic in bound
+					if getattr(diagnostic, "binding_kind", "")
+				},
+			),
+		),
+		"unsupported_rejection_reason_counts": dict(sorted(reasons.items())),
+		"all_unsupported_features_have_rejection_reason": all(
+			bool(getattr(diagnostic, "rejection_reason", None))
+			for diagnostic in unsupported
+		),
 	}
 
 
