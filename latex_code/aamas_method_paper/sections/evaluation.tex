@@ -1,0 +1,85 @@
+\section{Evaluation Protocol}
+\label{sec:evaluation-protocol}
+
+The evaluation is designed to separate working claims, ablations, baselines,
+and limitations. Runtime evaluation executes the compiled \asl{} library.
+Classical planners may appear only as offline evidence providers,
+counterexample generators, or baseline systems. Each experiment reports
+coverage, library size, selected rule provenance, rejected-candidate
+diagnostics, validation scope, and whether a full-trace planner was used at run
+time. The expected run-time flag for \methodname{} is always false.
+
+\begin{table*}[t]
+	\caption{Planned non-temporal evaluation matrix. Results are filled only
+	after the corresponding reproducible run is fixed.}
+	\label{tab:evaluation-matrix}
+	\small
+	\begin{tabular}{
+		p{0.18\textwidth}
+		p{0.18\textwidth}
+		p{0.22\textwidth}
+		p{0.31\textwidth}}
+		\toprule
+		Question & Domains & Metrics & Required evidence \\
+		\midrule
+		In-domain generalization &
+		Blocksworld &
+		coverage, library size, run time &
+		fixed train/test split and selected-rule provenance \\
+		Goal dependency &
+		Blocksworld, Labworkflow &
+		coverage after ordering/refinement &
+		Layer C ordering source and counterexample log \\
+		Backend reuse &
+		Blocksworld &
+		selected external rules and rejected rules &
+		learner-sketches artifact, adapter, and audit report \\
+		Ablation &
+		Blocksworld, Labworkflow &
+		coverage delta and blocking failures &
+		no-sketch, no-composer, no-refinement variants \\
+		Diagnostic boundary &
+		Transport, Marsrover, Satellite &
+		failure class and unsupported feature &
+		ranking/reachability or unsupported-fragment diagnosis \\
+		\bottomrule
+	\end{tabular}
+\end{table*}
+
+\subsection{Main Experiments}
+
+The main domain is Blocksworld because it stresses goal dependency: a tower goal
+cannot be achieved in an arbitrary order. The paper-ready Blocksworld run must
+use a fixed training split, a fixed held-out split, the verified
+learner-sketches policy artifact, and the strict paper profile. The report must
+show that selected Layer B rules are justified by trace, sketch, or repair
+evidence, and that selected Layer C rules explain their ordering source.
+
+Labworkflow is used as a small non-Blocksworld counterexample-refinement test.
+It is not enough for a broad claim, but it checks whether a held-out failure can
+generate an executable composer candidate and then succeed in a subsequent
+round.
+
+\subsection{Baselines and Ablations}
+
+The baseline table should include four rows. First, a classical planner solves
+each test problem independently; this measures trace-solving coverage but is not
+a domain-level library. Second, raw learner-sketches reports sketch-policy
+coverage before compilation to \asl{}. Third, MOOSE reports generalized-plan
+coverage where its assumptions apply. Fourth, \methodname{} reports execution of
+the compiled lifted \asl{} library.
+
+Ablations remove one mechanism at a time: external sketch evidence, Layer C
+goal ordering, counterexample refinement, and trace evidence. These runs
+determine whether the proposed combination is doing more than replaying schema
+rules or planner traces.
+
+\subsection{Failure Analysis}
+
+Failures are part of the method claim. A failed run is paper-useful only if it
+is classified into a precise reason: unsupported \pddl{} fragment, unbound
+external feature, missing atomic module, missing composer rule,
+counterexample-refinement limit, or cyclic-route progress without a ranking
+feature. Transport and Marsrover currently belong to the last category. They
+should either remain diagnostic limitations or be addressed by a principled
+reachability/ranking feature before they are used as positive evidence.

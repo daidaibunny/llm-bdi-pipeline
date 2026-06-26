@@ -71,6 +71,7 @@ answer set programming, Planning Domain Definition Language}
 \newcommand{\goalpred}[1]{\ensuremath{\mathsf{goal}\_#1}}
 \newcommand{\select}{\ensuremath{\mathsf{select}}}
 \newcommand{\compile}{\ensuremath{\mathsf{compile}}}
+\newcommand{\methodname}{Goal-Conditioned Modular Policy Sketches}
 
 \begin{document}
 
@@ -82,11 +83,12 @@ answer set programming, Planning Domain Definition Language}
 \section{Introduction}
 
 Classical planners can generate a plan for a concrete problem, but a
-Belief-Desire-Intention agent requires a reusable plan library. This paper
-targets the gap between generalized planning and executable agent programs:
-given a \pddl{} domain and a small set of training problems, synthesize a lifted
-\asl{} library that can solve new achievement-goal problems from the same
-domain without asking a planner for a full trace at run time.
+Belief-Desire-Intention agent requires a reusable plan library. AgentSpeak(L)
+provides a logical language for such agents \cite{Rao1996AgentSpeak}. This
+paper targets the gap between generalized planning and executable agent
+programs: given a \pddl{} domain and a small set of training problems,
+synthesize a lifted \asl{} library that can solve new achievement-goal problems
+from the same domain without asking a planner for a full trace at run time.
 
 The method follows the view that many useful planning domains share a compact
 subgoal structure expressible by sketches and generalized policies
@@ -105,26 +107,11 @@ goal-conditioned modular policy sketches with safe lifted feature bindings.
 Unsupported cases are rejected with diagnostics instead of being compiled into
 unsafe plans.
 
+\input{sections/related_work}
+
 \input{sections/method}
 
-\section{Evaluation Protocol}
-\label{sec:evaluation-protocol}
-
-The evaluation should report three classes of results.
-First, in-domain generalization measures whether one synthesized lifted library
-solves held-out problems with more objects or different initial states than the
-training set. Second, ablations remove external sketches, the top-level
-composer, counterexample refinement, or trace evidence to isolate their
-contribution. Third, diagnostic domains expose the boundary of the current
-hypothesis class, such as cyclic route domains that require a principled
-ranking or reachability feature.
-
-Runtime evaluation must execute the compiled \asl{} library. Classical planners
-may appear only as offline evidence providers, counterexample generators, or
-baseline systems. Each experiment should report coverage, library size,
-selected rule provenance, rejected-candidate diagnostics, validation scope, and
-whether a full-trace planner was used at run time. The expected run-time flag
-for the proposed method is always false.
+\input{sections/evaluation}
 
 \section{Current Scope and Exclusions}
 \label{sec:scope}

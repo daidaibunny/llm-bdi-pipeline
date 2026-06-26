@@ -1,0 +1,33 @@
+\section{Related Work and Positioning}
+\label{sec:related-work}
+
+Policy sketches express domain-general subgoal structure as rules over
+qualitative feature changes \cite{Drexler2024SubgoalSketches}. The
+learner-sketches system learns such sketches automatically with an answer-set
+formulation \cite{Drexler2022LearningSketches}. Our method reuses this line as
+the primary external evidence source, but changes the output target: the final
+artifact is a lifted \asl{} library rather than a sketch-guided planner.
+
+Generalized-policy learning studies policies that solve many instances of a
+domain using learned features and abstract transitions
+\cite{Bonet2018Features,Frances2021LearningGeneralPolicies,
+Bonet2024GeneralPoliciesWidth}. Policy reuse extends this direction with
+policies that call other policies \cite{Bonet2024PolicyReuse}. This is close to
+our modular view: Layer B learns reusable predicate-goal modules and Layer C
+calls those modules to compose conjunctive goals. The difference is that our
+compiler commits to executable \asl{} plan schemas with declared primitive
+actions and predicate subgoal calls.
+
+MOOSE learns first-order condition-to-actions rules by goal regression from
+training plans \cite{Chen2026Moose}. It is a strong comparison point because it
+also targets domain-level generalized plans from training problems. We treat it
+as a baseline and source of evidence about goal regression, not as the final
+library generator, because our output must expose \asl{} predicate modules and a
+goal-conditioned composer.
+
+External code reuse is intentionally asymmetric. learner-sketches is currently
+consumed by synthesis because its feature-rule policies have a verified parser,
+feature-binding audit, and conservative \asl{} compiler path. h-policy-learner
+and d2l remain audit-only backends until their output languages have verified
+policy-to-\asl{} adapters. This avoids treating unrelated paper artifacts as if
+they were executable plan-library evidence.
