@@ -242,6 +242,239 @@ def test_schema_synthesizer_keeps_duplicate_precondition_prepare_strategies(
 	assert result.steps == ("drive(truck, a, b)", "pick-up(truck, b, pkg)")
 
 
+def test_schema_synthesizer_prepares_hidden_resource_precondition_from_producer_bindings(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "producer-resource-domain.pddl"
+	problem_file = tmp_path / "producer-resource-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain producer-resource-mini)
+		 (:requirements :strips :typing)
+		 (:types worker device item mode place base - object)
+		 (:predicates
+		  (at ?w - worker ?p - place)
+		  (base_at ?b - base ?p - place)
+		  (linked ?p - place ?q - place)
+		  (supports ?d - device ?m - mode)
+		  (on_board ?d - device ?w - worker)
+		  (tuned ?d - device ?w - worker)
+		  (equipped ?w - worker)
+		  (visible_from ?o - item ?p - place)
+		  (available ?w - worker)
+		  (channel_free ?b - base)
+		  (made ?w - worker ?o - item ?m - mode)
+		  (delivered ?o - item ?m - mode)
+		 )
+		 (:action tune
+		  :parameters (?w - worker ?d - device)
+		  :precondition (on_board ?d ?w)
+		  :effect (tuned ?d ?w)
+		 )
+		 (:action make
+		  :parameters (?w - worker ?p - place ?o - item ?d - device ?m - mode)
+		  :precondition (and
+		   (at ?w ?p)
+		   (tuned ?d ?w)
+		   (on_board ?d ?w)
+		   (equipped ?w)
+		   (supports ?d ?m)
+		   (visible_from ?o ?p)
+		  )
+		  :effect (made ?w ?o ?m)
+		 )
+		 (:action send
+		  :parameters (?w - worker ?b - base ?o - item ?m - mode ?p ?q - place)
+		  :precondition (and
+		   (at ?w ?p)
+		   (base_at ?b ?q)
+		   (linked ?p ?q)
+		   (made ?w ?o ?m)
+		   (available ?w)
+		   (channel_free ?b)
+		  )
+		  :effect (delivered ?o ?m)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem producer-resource-p1)
+		 (:domain producer-resource-mini)
+		 (:objects
+		  worker1 - worker
+		  camera0 camera1 - device
+		  objective1 - item
+		  high_res - mode
+		  waypoint1 lander_point - place
+		  lander1 - base
+		 )
+		 (:init
+		  (at worker1 waypoint1)
+		  (base_at lander1 lander_point)
+		  (linked waypoint1 lander_point)
+		  (supports camera1 high_res)
+		  (on_board camera0 worker1)
+		  (on_board camera1 worker1)
+		  (equipped worker1)
+		  (visible_from objective1 waypoint1)
+		  (available worker1)
+		  (channel_free lander1)
+		 )
+		 (:goal (and (delivered objective1 high_res)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(plan_library)
+	result = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		max_steps=20,
+		max_depth=20,
+	)
+
+	assert "delivered_prepare_made_for_send" in asl
+	assert "supports(D, M)" in asl
+	assert "on_board(D, W)" in asl
+	assert "equipped(W)" in asl
+	assert "visible_from(O, P)" in asl
+	assert "not made(W, O, M)" in asl
+	assert "\t!made(W, O, M);" in asl
+	tuned_prepare = asl.split("plan=made_prepare_tuned_for_make", 1)[1].split(
+		"\n\n",
+		1,
+	)[0]
+	assert "supports(D, M)" in tuned_prepare
+	assert "made_prepare_supports" not in asl
+	assert "made_prepare_visible_from" not in asl
+	assert result.solved is True
+	assert result.steps == (
+		"tune(worker1, camera1)",
+		"make(worker1, waypoint1, objective1, camera1, high_res)",
+		"send(worker1, lander1, objective1, high_res, waypoint1, lander_point)",
+	)
+
+
+def test_schema_synthesizer_prepares_hidden_resource_selected_by_static_capability(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "resource-selection-domain.pddl"
+	problem_file = tmp_path / "resource-selection-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain resource-selection-mini)
+		 (:requirements :strips :typing)
+		 (:types worker store place base - object target - place)
+		 (:predicates
+		  (at ?w - worker ?p - place)
+		  (can_move ?w - worker ?from - place ?to - place)
+		  (sample_at ?p - target)
+		  (capable ?w - worker)
+		  (store_of ?s - store ?w - worker)
+		  (empty ?s - store)
+		  (base_at ?b - base ?p - place)
+		  (data ?w - worker ?p - target)
+		  (sent ?p - target)
+		 )
+		 (:action move
+		  :parameters (?w - worker ?from ?to - place)
+		  :precondition (and (at ?w ?from) (can_move ?w ?from ?to))
+		  :effect (and (not (at ?w ?from)) (at ?w ?to))
+		 )
+		 (:action sample
+		  :parameters (?w - worker ?s - store ?p - target)
+		  :precondition (and
+		   (at ?w ?p)
+		   (sample_at ?p)
+		   (capable ?w)
+		   (store_of ?s ?w)
+		   (empty ?s)
+		  )
+		  :effect (data ?w ?p)
+		 )
+		 (:action transmit
+		  :parameters (?w - worker ?b - base ?p - target ?q - place)
+		  :precondition (and
+		   (data ?w ?p)
+		   (at ?w ?q)
+		   (base_at ?b ?q)
+		  )
+		  :effect (sent ?p)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem resource-selection-p1)
+		 (:domain resource-selection-mini)
+		 (:objects
+		  worker0 worker1 - worker
+		  store0 store1 - store
+		  sample1 - target
+		  depot - place
+		  base1 - base
+		 )
+		 (:init
+		  (at worker0 depot)
+		  (at worker1 depot)
+		  (can_move worker1 depot sample1)
+		  (can_move worker1 sample1 depot)
+		  (sample_at sample1)
+		  (capable worker0)
+		  (capable worker1)
+		  (store_of store0 worker0)
+		  (store_of store1 worker1)
+		  (empty store0)
+		  (empty store1)
+		  (base_at base1 depot)
+		 )
+		 (:goal (and (sent sample1)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	plan_library = build_goal_conditioned_library_from_pddl(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+	)
+	asl = render_plan_library_asl(plan_library)
+	result = evaluate_library_on_problem(
+		plan_library=plan_library,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		max_steps=20,
+		max_depth=20,
+	)
+
+	assert "sent_prepare_data_for_transmit" in asl
+	assert "sent_prepare_at_for_transmit" in asl
+	assert "sample_at(P)" in asl
+	assert "capable(W)" in asl
+	assert "store_of(S, W)" in asl
+	assert "can_move(W, " in asl
+	assert "not data(W, P)" in asl
+	assert "\t!data(W, P);" in asl
+	assert result.solved is True
+	assert result.steps == (
+		"move(worker1, depot, sample1)",
+		"sample(worker1, store1, sample1)",
+		"move(worker1, sample1, depot)",
+		"transmit(worker1, base1, sample1, depot)",
+	)
+
+
 def test_schema_synthesizer_learns_typed_carrier_delivery_chain(
 	tmp_path: Path,
 ) -> None:

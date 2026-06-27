@@ -3,7 +3,11 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
+from low_level_planning.models import LowLevelAction
+from scripts import generate_domain_level_baselines
+from scripts.generate_domain_level_baselines import generate_classical_planner_baseline
 from scripts.generate_domain_level_baselines import generate_moose_status_baseline
 from scripts.run_final_paper_data import write_final_paper_configs
 
@@ -31,6 +35,67 @@ def test_moose_status_baseline_imports_completed_reproduction_rows(
 	assert record["failed_count"] == 1
 	assert record["coverage_ratio"] == 0.5
 	assert record["validation"]["row_count"] == 2
+
+
+def test_classical_baseline_accepts_locally_valid_plan_after_planner_exit_warning(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain warning-plan)
+		 (:requirements :strips)
+		 (:predicates (ready ?x) (done ?x))
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (done ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem warning-plan-p1)
+		 (:domain warning-plan)
+		 (:objects a)
+		 (:init (ready a))
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	class FakePlanner:
+		def __init__(self, _config):
+			pass
+
+		def solve_transition_goal(self, **_kwargs):
+			return SimpleNamespace(
+				success=False,
+				actions=(LowLevelAction("finish", ("a",)),),
+				plan_file=str(tmp_path / "warning.plan"),
+				error="Fast Downward failed with exit code 36.",
+			)
+
+	monkeypatch.setattr(generate_domain_level_baselines, "FastDownwardPlanner", FakePlanner)
+
+	record = generate_classical_planner_baseline(
+		domain_file=domain_file,
+		problem_files=(problem_file,),
+		planner_executable="fake-fast-downward",
+		timeout_seconds=1,
+		work_dir=tmp_path / "work",
+	)
+	result = record["validation"]["problem_results"][0]
+
+	assert record["solved_count"] == 1
+	assert record["failed_count"] == 0
+	assert result["validation"] == "strips_simulator_valid"
+	assert result["planner_error"] == "Fast Downward failed with exit code 36."
 
 
 def test_final_paper_config_splits_main_ablation_and_limitations(
@@ -73,4 +138,13 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 
 	limitation_names = {row["name"] for row in limitation["experiments"]}
 	assert "transport-bootstrap-train3-first10-limitation" in limitation_names
-	assert "marsrover-bootstrap-train3-first10-scalability" in limitation_names
+	assert "marsrover-trace-evidence-train1-first10" in limitation_names
+	marsrover_row = next(
+		row
+		for row in limitation["experiments"]
+		if row["name"] == "marsrover-trace-evidence-train1-first10"
+	)
+	assert marsrover_row["train_count"] == 1
+	assert marsrover_row["evaluation_timeout_seconds"] == 15
+	assert marsrover_row["use_synthesis_planner_traces"] is True
+	assert marsrover_row["ablation_label"] == "marsrover_trace_evidence_fragment"

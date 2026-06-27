@@ -527,7 +527,7 @@ def _context_fact_source(
 		return derived_context_facts
 	if symbol in _derived_context_symbols(derived_context_facts):
 		return derived_context_facts
-	return state
+	return tuple(sorted(state))
 
 
 def _derived_context_facts(
@@ -777,7 +777,7 @@ def _satisfying_state_context_substitutions(
 		)
 	return tuple(
 		merged
-		for fact in state
+		for fact in sorted(state)
 		if (merged := _match_atom(text, fact, substitution)) is not None
 	)
 

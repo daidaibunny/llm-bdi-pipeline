@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from domain_level_planning.library_executor import _context_substitutions
 from domain_level_planning.library_executor import evaluate_library_on_problem
 from domain_level_planning.library_verifier import (
 	validate_library_on_bounded_transition_systems,
@@ -186,6 +187,18 @@ def test_executor_treats_context_literals_as_order_independent_conjunction(
 
 	assert execution.solved is True
 	assert execution.steps == ("finish(a)",)
+
+
+def test_context_substitutions_are_deterministic_for_unordered_state_facts() -> None:
+	substitutions = _context_substitutions(
+		contexts=("choice(X)",),
+		substitution={},
+		state=frozenset(("choice(b)", "choice(a)")),
+		goal_facts=(),
+		derived_context_facts=(),
+	)
+
+	assert tuple(substitution["X"] for substitution in substitutions) == ("a", "b")
 
 
 def test_executor_evaluates_lifted_inequality_contexts_and_preconditions(

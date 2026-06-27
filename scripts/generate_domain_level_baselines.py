@@ -178,7 +178,8 @@ def generate_classical_planner_baseline(
 		validation = "planner_failed"
 		solved = False
 		error = result.error
-		if result.success:
+		planner_error = None if result.success else result.error
+		if result.actions:
 			try:
 				final_state = simulator.apply_plan(
 					state=initial_state,
@@ -199,6 +200,7 @@ def generate_classical_planner_baseline(
 				"validation": validation,
 				"plan_file": result.plan_file,
 				"error": error,
+				"planner_error": planner_error,
 			},
 		)
 	solved_count = sum(1 for item in details if bool(item["solved"]))

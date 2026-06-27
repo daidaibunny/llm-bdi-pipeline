@@ -176,6 +176,7 @@ def _candidate_rules_from_domain(
 			_action_effect_rules(
 				action,
 				producible_predicates=producible_predicates,
+				producer_infos=tuple(_action_schema_info(item) for item in actions),
 			),
 		)
 	return _weight_atomic_action_rules_by_evidence(rules, transition_evidence)
@@ -2270,6 +2271,7 @@ def _action_effect_rules(
 	action: object,
 	*,
 	producible_predicates: frozenset[str],
+	producer_infos: Sequence[Mapping[str, object]] = (),
 ) -> tuple[LiftedPlanRule, ...]:
 	action_name = str(getattr(action, "name"))
 	action_arguments = parameter_variables(getattr(action, "parameters"))
@@ -2298,6 +2300,19 @@ def _action_effect_rules(
 				producible_predicates=producible_predicates,
 				type_context=type_context,
 			)
+			if not binding_contexts and precondition.predicate in producible_predicates:
+				binding_contexts = _disconnected_action_contexts_for_precondition(
+					precondition,
+					head_arguments=head_arguments,
+					preconditions=preconditions,
+				)
+			if not binding_contexts and precondition.predicate in producible_predicates:
+				binding_contexts = _producer_binding_contexts_for_precondition(
+					precondition,
+					head_arguments=head_arguments,
+					producer_infos=producer_infos,
+					producible_predicates=producible_predicates,
+				)
 			if _action_deletes_precondition(
 				precondition,
 				delete_effects,
@@ -2548,8 +2563,335 @@ def _binding_contexts_for_precondition(
 		bound_variables.update(_var(argument) for argument in next_literal.arguments)
 	contexts: list[tuple[str, ...]] = []
 	if precondition_variables.issubset(bound_variables):
+		for literal in tuple(remaining):
+			literal_variables = {_var(argument) for argument in literal.arguments}
+			if literal_variables and literal_variables.issubset(bound_variables):
+				binding_literals.append(literal)
 		contexts.append(tuple(literal.signature() for literal in binding_literals))
 	return tuple(dict.fromkeys(contexts))
+
+
+def _producer_binding_contexts_for_precondition(
+	precondition: LiftedLiteral,
+	*,
+	head_arguments: tuple[str, ...],
+	producer_infos: Sequence[Mapping[str, object]],
+	producible_predicates: frozenset[str],
+) -> tuple[tuple[str, ...], ...]:
+	if not precondition.is_positive:
+		return ()
+	if precondition.predicate not in producible_predicates:
+		return ()
+	head_variables = set(tuple(head_arguments or ()))
+	precondition_variables = {_var(argument) for argument in precondition.arguments}
+	if precondition_variables.issubset(head_variables):
+		return ()
+	contexts: list[tuple[str, ...]] = []
+	for producer in tuple(producer_infos or ()):
+		for producer_effect in tuple(producer["add_effects"]):
+			if producer_effect.predicate != precondition.predicate:
+				continue
+			if len(producer_effect.arguments) != len(precondition.arguments):
+				continue
+			producer_substitution = _producer_substitution_for_precondition(
+				precondition=precondition,
+				producer_effect=producer_effect,
+			)
+			if producer_substitution is None:
+				continue
+			context = _connected_producer_static_context(
+				precondition=precondition,
+				head_variables=head_variables,
+				producer=producer,
+				producer_infos=producer_infos,
+				producer_substitution=producer_substitution,
+				producible_predicates=producible_predicates,
+			)
+			if context:
+				contexts.append(context)
+	return tuple(dict.fromkeys(contexts))
+
+
+def _disconnected_action_contexts_for_precondition(
+	precondition: LiftedLiteral,
+	*,
+	head_arguments: tuple[str, ...],
+	preconditions: Sequence[LiftedLiteral],
+) -> tuple[tuple[str, ...], ...]:
+	if not precondition.is_positive:
+		return ()
+	head_variables = set(tuple(head_arguments or ()))
+	precondition_variables = {_var(argument) for argument in precondition.arguments}
+	hidden_variables = precondition_variables - head_variables
+	if not hidden_variables:
+		return ()
+	context = _resource_selection_static_context(
+		head_variables=head_variables,
+		hidden_variables=hidden_variables,
+		static_literals=tuple(
+			literal
+			for literal in tuple(preconditions or ())
+			if literal != precondition and literal.is_positive
+		),
+		producer_substitution={},
+	)
+	return (context,) if context else ()
+
+
+def _producer_substitution_for_precondition(
+	*,
+	precondition: LiftedLiteral,
+	producer_effect: LiftedLiteral,
+) -> dict[str, str] | None:
+	substitution: dict[str, str] = {}
+	for precondition_argument, producer_argument in zip(
+		precondition.arguments,
+		producer_effect.arguments,
+	):
+		value = _var(precondition_argument)
+		current = substitution.get(producer_argument)
+		if current is not None and current != value:
+			return None
+		substitution[producer_argument] = value
+	return substitution
+
+
+def _connected_producer_static_context(
+	*,
+	precondition: LiftedLiteral,
+	head_variables: set[str],
+	producer: Mapping[str, object],
+	producer_infos: Sequence[Mapping[str, object]],
+	producer_substitution: Mapping[str, str],
+	producible_predicates: frozenset[str],
+) -> tuple[str, ...]:
+	hidden_variables = {
+		_var(argument)
+		for argument in tuple(precondition.arguments or ())
+		if _var(argument) not in head_variables
+	}
+	if not hidden_variables:
+		return ()
+	static_literals = tuple(
+		literal
+		for literal in tuple(producer["preconditions"])
+		if literal.is_positive and literal.predicate not in producible_predicates
+	)
+	if not static_literals:
+		return ()
+	bound_variables = set(head_variables)
+	selected: list[LiftedLiteral] = []
+	remaining = list(static_literals)
+	while not hidden_variables.issubset(bound_variables):
+		next_literal = _next_connecting_literal(
+			remaining,
+			bound_variables=bound_variables,
+			substitution=producer_substitution,
+		)
+		if next_literal is None:
+			return _resource_selection_static_context(
+				head_variables=head_variables,
+				hidden_variables=hidden_variables,
+				static_literals=(
+					*static_literals,
+					*_nested_static_support_literals(
+						producer=producer,
+						producer_infos=producer_infos,
+						producer_substitution=producer_substitution,
+						producible_predicates=producible_predicates,
+					),
+				),
+				producer_substitution=producer_substitution,
+			)
+		remaining.remove(next_literal)
+		selected.append(next_literal)
+		bound_variables.update(
+			_literal_variables_with_substitution(next_literal, producer_substitution),
+		)
+	for literal in tuple(remaining):
+		literal_variables = _literal_variables_with_substitution(
+			literal,
+			producer_substitution,
+		)
+		if literal_variables and literal_variables.issubset(bound_variables):
+			selected.append(literal)
+	return tuple(
+		dict.fromkeys(
+			_literal_signature_with_substitution(literal, producer_substitution)
+			for literal in selected
+		),
+	)
+
+
+def _nested_static_support_literals(
+	*,
+	producer: Mapping[str, object],
+	producer_infos: Sequence[Mapping[str, object]],
+	producer_substitution: Mapping[str, str],
+	producible_predicates: frozenset[str],
+) -> tuple[LiftedLiteral, ...]:
+	literals: list[LiftedLiteral] = []
+	for precondition in tuple(producer["preconditions"]):
+		if (
+			not precondition.is_positive
+			or precondition.predicate not in producible_predicates
+		):
+			continue
+		for supporter in tuple(producer_infos or ()):
+			for effect in tuple(supporter["add_effects"]):
+				if not _supporter_is_route_like_for_effect(supporter, effect):
+					continue
+				support_substitution = _supporter_substitution_for_precondition(
+					precondition=precondition,
+					producer_effect=effect,
+					outer_substitution=producer_substitution,
+				)
+				if support_substitution is None:
+					continue
+				for support_precondition in tuple(supporter["preconditions"]):
+					if (
+						not support_precondition.is_positive
+						or support_precondition.predicate in producible_predicates
+					):
+						continue
+					literals.append(
+						LiftedLiteral(
+							support_precondition.predicate,
+							tuple(
+								support_substitution.get(argument, _var(argument))
+								for argument in support_precondition.arguments
+							),
+						),
+					)
+	return tuple(dict.fromkeys(literals))
+
+
+def _supporter_is_route_like_for_effect(
+	supporter: Mapping[str, object],
+	effect: LiftedLiteral,
+) -> bool:
+	if not effect.is_positive or not effect.arguments:
+		return False
+	effects = parse_pddl_literals(str(getattr(supporter["action"], "effects", "")))
+	for delete_effect in tuple(item for item in effects if not item.is_positive):
+		if delete_effect.predicate != effect.predicate:
+			continue
+		if len(delete_effect.arguments) != len(effect.arguments):
+			continue
+		changed_positions = tuple(
+			index
+			for index, (add_argument, delete_argument) in enumerate(
+				zip(effect.arguments, delete_effect.arguments),
+			)
+			if add_argument != delete_argument
+		)
+		if len(changed_positions) == 1:
+			return True
+	return False
+
+
+def _supporter_substitution_for_precondition(
+	*,
+	precondition: LiftedLiteral,
+	producer_effect: LiftedLiteral,
+	outer_substitution: Mapping[str, str],
+) -> dict[str, str] | None:
+	if producer_effect.predicate != precondition.predicate:
+		return None
+	if len(producer_effect.arguments) != len(precondition.arguments):
+		return None
+	substitution: dict[str, str] = {}
+	for precondition_argument, effect_argument in zip(
+		precondition.arguments,
+		producer_effect.arguments,
+	):
+		value = outer_substitution.get(precondition_argument, _var(precondition_argument))
+		current = substitution.get(effect_argument)
+		if current is not None and current != value:
+			return None
+		substitution[effect_argument] = value
+	return substitution
+
+
+def _resource_selection_static_context(
+	*,
+	head_variables: set[str],
+	hidden_variables: set[str],
+	static_literals: Sequence[LiftedLiteral],
+	producer_substitution: Mapping[str, str],
+) -> tuple[str, ...]:
+	relevant_variables = set(head_variables) | set(hidden_variables)
+	selected: list[LiftedLiteral] = []
+	changed = True
+	while changed:
+		changed = False
+		for literal in tuple(static_literals or ()):
+			if literal in selected:
+				continue
+			literal_variables = _literal_variables_with_substitution(
+				literal,
+				producer_substitution,
+			)
+			if not literal_variables.intersection(relevant_variables):
+				continue
+			selected.append(literal)
+			next_relevant = relevant_variables | set(literal_variables)
+			if next_relevant != relevant_variables:
+				relevant_variables = next_relevant
+				changed = True
+	if not selected:
+		return ()
+	if not hidden_variables.issubset(relevant_variables):
+		return ()
+	for hidden_variable in hidden_variables:
+		if not any(
+			hidden_variable
+			in _literal_variables_with_substitution(literal, producer_substitution)
+			for literal in selected
+		):
+			return ()
+	if head_variables and not any(
+		set(_literal_variables_with_substitution(literal, producer_substitution))
+		& head_variables
+		for literal in selected
+	):
+		return ()
+	return tuple(
+		dict.fromkeys(
+			_literal_signature_with_substitution(literal, producer_substitution)
+			for literal in selected
+		),
+	)
+
+
+def _next_connecting_literal(
+	literals: Sequence[LiftedLiteral],
+	*,
+	bound_variables: set[str],
+	substitution: Mapping[str, str],
+) -> LiftedLiteral | None:
+	for literal in tuple(literals or ()):
+		literal_variables = _literal_variables_with_substitution(literal, substitution)
+		if not literal_variables.intersection(bound_variables):
+			continue
+		if literal_variables.issubset(bound_variables):
+			continue
+		return literal
+	return None
+
+
+def _literal_variables_with_substitution(
+	literal: LiftedLiteral,
+	substitution: Mapping[str, str],
+) -> frozenset[str]:
+	return frozenset(
+		value
+		for value in (
+			substitution.get(argument, _var(argument))
+			for argument in tuple(literal.arguments or ())
+		)
+		if _is_variable(value)
+	)
 
 
 def _positive_signature(literal: LiftedLiteral) -> str:

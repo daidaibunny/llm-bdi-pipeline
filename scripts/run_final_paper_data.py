@@ -247,20 +247,26 @@ def _limitation_config(output_dir: Path) -> dict[str, object]:
 				"ablation_label": "transport_initial_state_fragment",
 			},
 			{
-				"name": "marsrover-bootstrap-train3-first10-scalability",
+				"name": "marsrover-trace-evidence-train1-first10",
 				"domain_file": "src/domains/marsrover/domain.pddl",
 				"train_base": "src/domains/marsrover/problems",
 				"train_glob": "pfile*.pddl",
-				"train_count": 3,
+				"train_count": 1,
 				"eval_base": "src/domains/marsrover/problems",
 				"eval_glob": "pfile*.pddl",
 				"eval_count": 10,
-				"max_steps": 20000,
-				"max_depth": 2000,
+				"max_steps": 1000,
+				"max_depth": 200,
 				"timeout_seconds": 180,
-				"evaluation_timeout_seconds": 5,
+				"evaluation_timeout_seconds": 15,
+				"use_synthesis_planner_traces": True,
+				"synthesis_planner_executable": (
+					".external/gp-backends/h-policy-learner/testing/planners/"
+					"lama/fast-downward/fast-downward.py"
+				),
+				"synthesis_planner_timeout_seconds": 60,
 				"synthesis_profile": "bootstrap",
-				"ablation_label": "marsrover_state_space_scalability_limit",
+				"ablation_label": "marsrover_trace_evidence_fragment",
 			},
 		],
 	}
