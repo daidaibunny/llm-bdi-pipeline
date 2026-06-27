@@ -13,7 +13,7 @@ from plan_library.rendering import render_plan_library_asl
 from utils.pddl_parser import PDDLParser
 
 
-def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
+def test_counterexample_refinement_learns_goal_ordering_without_problem_reexploration(
 	tmp_path: Path,
 ) -> None:
 	domain_file, single_goal_problem, dependent_problem = _write_ordering_domain(tmp_path)
@@ -34,14 +34,15 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 	assert summary["round_count"] == 2
 	assert summary["failed_heldout_evaluation_count"] == 1
 	assert summary["solved_heldout_evaluation_count"] == 1
-	assert summary["added_counterexample_problem_count"] == 1
+	assert summary["added_counterexample_problem_count"] == 0
+	assert summary["constraint_only_refinement_round_count"] == 1
 	assert summary["constraint_count"] == 1
 	assert summary["generative_constraint_count"] == 1
 	assert summary["diagnostic_constraint_count"] == 0
 	assert summary["constraints_by_failure_kind"] == {"goal_ordering_failure": 1}
 	assert summary["constraints_by_target_layer"] == {"layer_c_goal_composer": 1}
 	assert summary["constraints_by_type"] == {"counterexample_goal_ordering": 1}
-	assert summary["final_counterexample_problem_count"] == 1
+	assert summary["final_counterexample_problem_count"] == 0
 	assert refined.rounds[0].heldout_evaluations[0].solved is False
 	assert refined.rounds[0].heldout_evaluations[0].counterexample is not None
 	constraint = refined.rounds[0].heldout_evaluations[0].refinement_constraints[0]
@@ -61,19 +62,21 @@ def test_counterexample_refinement_adds_failed_problem_and_learns_goal_ordering(
 		refined.rounds[0].to_dict()["refinement_constraints"][0]["failure_kind"]
 		== "goal_ordering_failure"
 	)
-	assert refined.rounds[0].added_counterexample_problem_files == (
-		str(dependent_problem.resolve()),
-	)
+	assert refined.rounds[0].added_counterexample_problem_files == ()
 	assert refined.rounds[1].heldout_evaluations[0].solved is True
 	assert str(dependent_problem.resolve()) not in refined.rounds[1].training_problem_files
-	assert refined.rounds[1].counterexample_problem_files == (
-		str(dependent_problem.resolve()),
-	)
+	assert refined.rounds[1].counterexample_problem_files == ()
 	assert (
 		refined.rounds[1].synthesis_report[
-			"selector_counterexample_progress_constraint_count"
+			"selector_counterexample_goal_ordering_constraint_count"
 		]
 		> 0
+	)
+	assert (
+		refined.rounds[1].synthesis_report["selected_candidate_sources"][
+			"counterexample_goal_ordering"
+		]
+		== 1
 	)
 
 	asl = render_plan_library_asl(refined.final_result.plan_library)

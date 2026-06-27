@@ -44,3 +44,63 @@ def test_labworkflow_refinement_experiment_learns_goal_dependency() -> None:
 		"constraint_type"
 	] == "counterexample_goal_ordering"
 	assert "goal_reagent_logged(Y) & goal_analysis_done(X, Y)" in report["asl"]
+
+
+def test_labworkflow_refinement_generalizes_goal_dependency_stress() -> None:
+	stress_problems = tuple(
+		LAB_ROOT / "problems" / f"p{index:02d}.pddl"
+		for index in range(2, 7)
+	)
+
+	report = run_domain_level_experiment(
+		experiment_name="labworkflow-scalable-dependency",
+		domain_file=LAB_ROOT / "domain.pddl",
+		training_problem_files=(LAB_ROOT / "problems" / "p01.pddl",),
+		evaluation_problem_files=stress_problems,
+		use_counterexample_refinement=True,
+		max_refinement_rounds=1,
+		max_execution_steps=500,
+		max_depth=100,
+	)
+
+	assert report["coverage"]["solved_count"] == len(stress_problems)
+	assert report["coverage"]["failed_count"] == 0
+	assert report["refinement_analysis"]["converged"] is True
+	assert report["refinement_analysis"]["first_round_failed_heldout_count"] == len(
+		stress_problems,
+	)
+	assert report["refinement_analysis"]["final_round_failed_heldout_count"] == 0
+	assert report["refinement_analysis"]["constraints_by_type"][
+		"counterexample_goal_ordering"
+	] >= 1
+	assert "goal_reagent_logged(Y) & goal_analysis_done(X, Y)" in report["asl"]
+	assert "reagent_logged(r1)" not in report["asl"]
+
+
+def test_labworkflow_dependency_stress_fails_without_layer_c_ordering() -> None:
+	stress_problems = tuple(
+		LAB_ROOT / "problems" / f"p{index:02d}.pddl"
+		for index in range(2, 7)
+	)
+
+	report = run_domain_level_experiment(
+		experiment_name="labworkflow-scalable-dependency-no-layer-c",
+		domain_file=LAB_ROOT / "domain.pddl",
+		training_problem_files=(LAB_ROOT / "problems" / "p01.pddl",),
+		evaluation_problem_files=stress_problems,
+		use_counterexample_refinement=True,
+		disabled_synthesis_mechanisms=("layer_c_ordering",),
+		max_refinement_rounds=1,
+		max_execution_steps=500,
+		max_depth=100,
+	)
+
+	assert report["coverage"]["solved_count"] < len(stress_problems)
+	assert report["coverage"]["failed_count"] > 0
+	assert report["refinement_analysis"]["converged"] is False
+	assert report["experiment_protocol"]["mechanism_status"]["counterexample_refinement"] == (
+		"enabled"
+	)
+	assert report["experiment_protocol"]["mechanism_status"]["layer_c_ordering"] == (
+		"disabled"
+	)

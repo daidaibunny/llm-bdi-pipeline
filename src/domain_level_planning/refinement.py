@@ -205,9 +205,12 @@ def synthesize_with_counterexample_refinement(
 			if not evaluation.solved
 		)
 		added_files = tuple(
-			file_path
-			for file_path in failed_files
-			if file_path not in current_training
+			evaluation.problem_file
+			for evaluation in heldout_evaluations
+			if not evaluation.solved
+			and _requires_counterexample_problem_evidence(evaluation)
+			and evaluation.problem_file not in current_training
+			and evaluation.problem_file not in counterexample_constraints
 		)
 		round_constraints = tuple(
 			constraint
@@ -876,6 +879,20 @@ def _failure_kind(failure_reason: str) -> str:
 	if "step limit" in text:
 		return "nontermination"
 	return "execution_failure"
+
+
+def _requires_counterexample_problem_evidence(
+	evaluation: HeldoutProblemEvaluation,
+) -> bool:
+	"""Return whether a failed problem must be re-explored as bounded evidence."""
+
+	constraints = tuple(evaluation.refinement_constraints or ())
+	if not constraints:
+		return True
+	return any(
+		constraint.constraint_type != "counterexample_goal_ordering"
+		for constraint in constraints
+	)
 
 
 def _refinement_summary(

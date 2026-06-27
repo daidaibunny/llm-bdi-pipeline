@@ -226,7 +226,7 @@ $\mathcal{I}_{eval}$
 	\If{all validation and evaluation checks pass}
 		\State \Return $\mathcal{L}$ and its provenance report
 	\EndIf
-	\State lift supported failures into counterexample files and explicit constraints
+	\State lift supported failures into counterexample files or explicit constraints
 \Until{the failure is unsupported or no new constraint can be generated}
 \State \Return $\mathcal{L}$ with unsupported-failure diagnostics
 \end{algorithmic}

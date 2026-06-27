@@ -43,6 +43,14 @@ BLOCKS_VOCAB = (
 	"learner_sketches_blocksworld_blocks_4_on_2.json"
 )
 MOOSE_BLOCKS_STATUS = ".external/moose/exact-runs/blocksworld-paper-params-probe/train-status.csv"
+LABWORKFLOW_TRAIN_PROBLEMS = ["src/domains/labworkflow/problems/p01.pddl"]
+LABWORKFLOW_STRESS_PROBLEMS = [
+	"src/domains/labworkflow/problems/p02.pddl",
+	"src/domains/labworkflow/problems/p03.pddl",
+	"src/domains/labworkflow/problems/p04.pddl",
+	"src/domains/labworkflow/problems/p05.pddl",
+	"src/domains/labworkflow/problems/p06.pddl",
+]
 
 
 def main() -> None:
@@ -153,6 +161,36 @@ def validate_final_paper_package(
 	require(
 		any(float(row.get("coverage_percent") or 0.0) < 100.0 for row in library_rows),
 		"ablation rows include a coverage drop",
+	)
+	library_rows_by_label = {
+		str(row.get("label") or ""): row for row in library_rows
+	}
+	lab_stress = library_rows_by_label.get("labworkflow_counterexample_refinement_stress")
+	no_layer_c_stress = library_rows_by_label.get(
+		"no_layer_c_with_refinement_labworkflow_stress",
+	)
+	no_refinement_stress = library_rows_by_label.get(
+		"no_counterexample_refinement_labworkflow_stress",
+	)
+	require(lab_stress is not None, "Labworkflow Layer C stress row exists")
+	require(
+		str(lab_stress.get("solved") or "") == "5/5",
+		"Labworkflow Layer C stress row solves all five held-out problems",
+	)
+	require(no_layer_c_stress is not None, "No-Layer-C stress ablation row exists")
+	require(
+		float(no_layer_c_stress.get("coverage_percent") or 0.0)
+		< float(lab_stress.get("coverage_percent") or 0.0),
+		"No-Layer-C stress ablation drops coverage",
+	)
+	require(
+		no_refinement_stress is not None,
+		"No-counterexample-refinement stress ablation row exists",
+	)
+	require(
+		float(no_refinement_stress.get("coverage_percent") or 0.0)
+		< float(lab_stress.get("coverage_percent") or 0.0),
+		"No-counterexample-refinement stress ablation drops coverage",
 	)
 	require(
 		any(
@@ -332,22 +370,19 @@ def _main_library_config(output_dir: Path) -> dict[str, object]:
 				),
 			),
 			{
-				"name": "labworkflow-counterexample-refinement-final",
+				"name": "labworkflow-counterexample-refinement-stress",
 				"domain_file": "src/domains/labworkflow/domain.pddl",
-				"train_problems": ["src/domains/labworkflow/problems/p01.pddl"],
-				"eval_problems": [
-					"src/domains/labworkflow/problems/p01.pddl",
-					"src/domains/labworkflow/problems/p02.pddl",
-				],
+				"train_problems": LABWORKFLOW_TRAIN_PROBLEMS,
+				"eval_problems": LABWORKFLOW_STRESS_PROBLEMS,
 				"use_counterexample_refinement": True,
 				"max_refinement_rounds": 1,
-				"max_steps": 100,
-				"max_depth": 50,
+				"max_steps": 500,
+				"max_depth": 100,
 				"synthesis_profile": "bootstrap",
 				"baseline_json": [
 					str(output_dir / "baselines" / "labworkflow.json"),
 				],
-				"ablation_label": "labworkflow_counterexample_refinement",
+				"ablation_label": "labworkflow_counterexample_refinement_stress",
 			},
 		],
 	}
@@ -371,31 +406,27 @@ def _ablation_config(output_dir: Path) -> dict[str, object]:
 				"ablation_label": "no_external_sketch_first20",
 			},
 			{
-				"name": "labworkflow-no-layer-c-no-refinement",
+				"name": "labworkflow-no-layer-c-with-refinement-stress",
 				"domain_file": "src/domains/labworkflow/domain.pddl",
-				"train_problems": ["src/domains/labworkflow/problems/p01.pddl"],
-				"eval_problems": [
-					"src/domains/labworkflow/problems/p01.pddl",
-					"src/domains/labworkflow/problems/p02.pddl",
-				],
+				"train_problems": LABWORKFLOW_TRAIN_PROBLEMS,
+				"eval_problems": LABWORKFLOW_STRESS_PROBLEMS,
+				"use_counterexample_refinement": True,
+				"max_refinement_rounds": 1,
 				"disabled_synthesis_mechanisms": ["layer_c_ordering"],
-				"max_steps": 100,
-				"max_depth": 50,
+				"max_steps": 500,
+				"max_depth": 100,
 				"synthesis_profile": "bootstrap",
-				"ablation_label": "no_layer_c_no_refinement_labworkflow",
+				"ablation_label": "no_layer_c_with_refinement_labworkflow_stress",
 			},
 			{
-				"name": "labworkflow-no-counterexample-refinement",
+				"name": "labworkflow-no-counterexample-refinement-stress",
 				"domain_file": "src/domains/labworkflow/domain.pddl",
-				"train_problems": ["src/domains/labworkflow/problems/p01.pddl"],
-				"eval_problems": [
-					"src/domains/labworkflow/problems/p01.pddl",
-					"src/domains/labworkflow/problems/p02.pddl",
-				],
-				"max_steps": 100,
-				"max_depth": 50,
+				"train_problems": LABWORKFLOW_TRAIN_PROBLEMS,
+				"eval_problems": LABWORKFLOW_STRESS_PROBLEMS,
+				"max_steps": 500,
+				"max_depth": 100,
 				"synthesis_profile": "bootstrap",
-				"ablation_label": "no_counterexample_refinement_labworkflow",
+				"ablation_label": "no_counterexample_refinement_labworkflow_stress",
 			},
 			{
 				"name": "transport-no-offline-trace-evidence-first10",
@@ -531,10 +562,7 @@ def _generate_final_baselines(
 		planner_timeout_seconds=planner_timeout_seconds,
 		work_dir=output_dir / "baseline-work/blocksworld-satisfiable-mixed-large",
 	)
-	lab_problems = (
-		PROJECT_ROOT / "src/domains/labworkflow/problems/p01.pddl",
-		PROJECT_ROOT / "src/domains/labworkflow/problems/p02.pddl",
-	)
+	lab_problems = tuple(PROJECT_ROOT / path for path in LABWORKFLOW_STRESS_PROBLEMS)
 	_write_json(
 		baseline_dir / "labworkflow.json",
 		[

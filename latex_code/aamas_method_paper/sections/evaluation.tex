@@ -63,13 +63,13 @@ contains nontrivial initial towers and multiple final towers with both
 		Row & Solved & Diagnostic \\
 		\midrule
 		Full Labworkflow refinement &
-		\ResultLabworkflowCounterexampleRefinementSolved &
+		\ResultLabworkflowCounterexampleRefinementStressSolved &
 		refined composer \\
-		No Layer C/refinement, Labworkflow &
-		\ResultNoLayerCNoRefinementLabworkflowSolved &
+		No Layer C with refinement, Labworkflow &
+		\ResultNoLayerCWithRefinementLabworkflowStressSolved &
 		missing composer \\
 		No counterexample refinement, Labworkflow &
-		\ResultNoCounterexampleRefinementLabworkflowSolved &
+		\ResultNoCounterexampleRefinementLabworkflowStressSolved &
 		missing repair \\
 		No external sketch, Blocksworld &
 		\ResultNoExternalSketchFirstTwoZeroSolved &
@@ -83,9 +83,9 @@ contains nontrivial initial towers and multiple final towers with both
 
 Table~\ref{tab:mechanism-stress} is intentionally interpreted narrowly. The
 mechanism evidence for Layer C and counterexample refinement comes from
-Labworkflow: the full refinement row solves both problems, while removing either
-Layer C ordering or counterexample refinement leaves one of two problems
-unsolved; the report records a missing composer plan for the reagent-log goal.
+Labworkflow: the full refinement row solves five held-out dependent problems,
+while removing either Layer C ordering or counterexample refinement solves none
+of them; the reports record missing composer plans for the reagent-log goal.
 The Blocksworld no-sketch row remains at
 \ResultNoExternalSketchFirstTwoZeroCoveragePercent{} on first20, so it is not
 used as evidence that external sketches are necessary on that split. It shows
@@ -94,7 +94,10 @@ that schema-derived modules can already cover this small set.
 The refinement rows test the intended behavior of the counterexample loop:
 failures are not merely logged. Supported missing-module, state-coverage,
 goal-ordering, and repair failures become selector-consumable constraints in
-the next synthesis round. Termination failures remain diagnostics, but the
+the next synthesis round. Pure lifted goal-ordering failures are consumed as
+explicit Layer C constraints without forcing the failed held-out problem into
+bounded transition-system exploration. Termination failures remain diagnostics,
+but the
 implementation also emits atomic-progress or state-coverage companion
 constraints when the missing goal is inside the supported fragment.
 

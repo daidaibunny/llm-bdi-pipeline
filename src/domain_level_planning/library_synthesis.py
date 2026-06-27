@@ -672,6 +672,9 @@ def synthesize_domain_level_asl_library(
 		"selector_explicit_state_coverage_constraint_count": len(
 			explicit_state_coverage_rule_groups,
 		),
+		"selector_counterexample_goal_ordering_constraint_count": len(
+			goal_ordering_rule_groups,
+		),
 		"selector_atomic_progress_constraint_count": len(atomic_progress_rule_groups),
 		"selector_training_state_coverage_constraint_count": len(
 			training_state_coverage_rule_groups,

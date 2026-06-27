@@ -119,7 +119,14 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 	assert "blocksworld-paper-external-on2-first20" in main_rows
 	assert "blocksworld-paper-external-on2-satisfiable-large" in main_rows
 	assert "blocksworld-paper-external-on2-satisfiable-mixed-large" in main_rows
-	assert "labworkflow-counterexample-refinement-final" in main_rows
+	assert "labworkflow-counterexample-refinement-stress" in main_rows
+	assert main_rows["labworkflow-counterexample-refinement-stress"]["eval_problems"] == [
+		"src/domains/labworkflow/problems/p02.pddl",
+		"src/domains/labworkflow/problems/p03.pddl",
+		"src/domains/labworkflow/problems/p04.pddl",
+		"src/domains/labworkflow/problems/p05.pddl",
+		"src/domains/labworkflow/problems/p06.pddl",
+	]
 	assert main_rows["blocksworld-paper-external-on2-first20"]["synthesis_profile"] == (
 		"paper"
 	)
@@ -146,9 +153,16 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 
 	ablation_names = {row["name"] for row in ablation["experiments"]}
 	assert "blocksworld-no-external-sketch-first20" in ablation_names
-	assert "labworkflow-no-layer-c-no-refinement" in ablation_names
-	assert "labworkflow-no-counterexample-refinement" in ablation_names
+	assert "labworkflow-no-layer-c-with-refinement-stress" in ablation_names
+	assert "labworkflow-no-counterexample-refinement-stress" in ablation_names
 	assert "transport-no-offline-trace-evidence-first10" in ablation_names
+	no_layer_c_row = next(
+		row
+		for row in ablation["experiments"]
+		if row["name"] == "labworkflow-no-layer-c-with-refinement-stress"
+	)
+	assert no_layer_c_row["use_counterexample_refinement"] is True
+	assert no_layer_c_row["disabled_synthesis_mechanisms"] == ["layer_c_ordering"]
 
 	limitation_names = {row["name"] for row in limitation["experiments"]}
 	assert "transport-bootstrap-train3-first10-limitation" in limitation_names
@@ -184,14 +198,36 @@ def test_final_paper_package_validator_accepts_complete_package(
 			},
 			{
 				"row_type": "library",
-				"label": "no_layer_c_no_refinement_labworkflow",
-				"macro_id": "no_layer_c_no_refinement_labworkflow",
-				"solved": "1/2",
-				"coverage_percent": 50.0,
+				"label": "labworkflow_counterexample_refinement_stress",
+				"macro_id": "labworkflow_counterexample_refinement_stress",
+				"solved": "5/5",
+				"coverage_percent": 100.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 4,
+				"mechanism_summary": "enabled: counterexample_refinement",
+			},
+			{
+				"row_type": "library",
+				"label": "no_layer_c_with_refinement_labworkflow_stress",
+				"macro_id": "no_layer_c_with_refinement_labworkflow_stress",
+				"solved": "0/5",
+				"coverage_percent": 0.0,
 				"runtime_planner": "none",
 				"paper_profile_ready": False,
 				"plan_count": 3,
 				"mechanism_summary": "disabled: layer_c_ordering",
+			},
+			{
+				"row_type": "library",
+				"label": "no_counterexample_refinement_labworkflow_stress",
+				"macro_id": "no_counterexample_refinement_labworkflow_stress",
+				"solved": "0/5",
+				"coverage_percent": 0.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 3,
+				"mechanism_summary": "disabled: counterexample_refinement",
 			},
 			{
 				"row_type": "baseline",
@@ -291,14 +327,36 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			},
 			{
 				"row_type": "library",
-				"label": "no_layer_c_no_refinement_labworkflow",
-				"macro_id": "no_layer_c_no_refinement_labworkflow",
+				"label": "labworkflow_counterexample_refinement_stress",
+				"macro_id": "labworkflow_counterexample_refinement_stress",
+				"solved": "5/5",
+				"coverage_percent": 100.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 2,
+				"mechanism_summary": "enabled: counterexample_refinement",
+			},
+			{
+				"row_type": "library",
+				"label": "no_layer_c_with_refinement_labworkflow_stress",
+				"macro_id": "no_layer_c_with_refinement_labworkflow_stress",
 				"solved": "0/1",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
 				"paper_profile_ready": False,
 				"plan_count": 1,
 				"mechanism_summary": "disabled: layer_c_ordering",
+			},
+			{
+				"row_type": "library",
+				"label": "no_counterexample_refinement_labworkflow_stress",
+				"macro_id": "no_counterexample_refinement_labworkflow_stress",
+				"solved": "0/1",
+				"coverage_percent": 0.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 1,
+				"mechanism_summary": "disabled: counterexample_refinement",
 			},
 			{
 				"row_type": "baseline",
