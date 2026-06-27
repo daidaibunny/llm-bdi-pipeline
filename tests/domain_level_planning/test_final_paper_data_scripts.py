@@ -9,7 +9,9 @@ from low_level_planning.models import LowLevelAction
 from scripts import generate_domain_level_baselines
 from scripts.generate_domain_level_baselines import generate_classical_planner_baseline
 from scripts.generate_domain_level_baselines import generate_moose_status_baseline
+from scripts.run_final_paper_data import validate_final_paper_package
 from scripts.run_final_paper_data import write_final_paper_configs
+from domain_level_planning.experiments import format_comparison_latex_macros
 
 
 def test_moose_status_baseline_imports_completed_reproduction_rows(
@@ -148,3 +150,87 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 	assert marsrover_row["evaluation_timeout_seconds"] == 15
 	assert marsrover_row["use_synthesis_planner_traces"] is True
 	assert marsrover_row["ablation_label"] == "marsrover_trace_evidence_fragment"
+
+
+def test_final_paper_package_validator_accepts_complete_package(
+	tmp_path: Path,
+) -> None:
+	comparison = {
+		"report_count": 2,
+		"baseline_count": 2,
+		"paper_table_rows": [
+			{
+				"row_type": "library",
+				"label": "paper_external_sketch_first20",
+				"macro_id": "paper_external_sketch_first20",
+				"solved": "2/2",
+				"coverage_percent": 100.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": True,
+				"plan_count": 4,
+				"mechanism_summary": "enabled: external_sketch_evidence",
+			},
+			{
+				"row_type": "library",
+				"label": "no_layer_c_no_refinement_labworkflow",
+				"macro_id": "no_layer_c_no_refinement_labworkflow",
+				"solved": "1/2",
+				"coverage_percent": 50.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 3,
+				"mechanism_summary": "disabled: layer_c_ordering",
+			},
+			{
+				"row_type": "baseline",
+				"label": "fast_downward_lama_per_problem",
+				"macro_id": "first20_fast_downward_lama_per_problem",
+				"solved": "2/2",
+				"coverage_percent": 100.0,
+				"runtime_planner": "offline_baseline_only",
+				"plan_count": None,
+				"notes": "per_problem_trace_baseline; not a domain-level library",
+				"mechanism_summary": "baseline",
+			},
+			{
+				"row_type": "baseline",
+				"label": "raw_blocks_4_on_2_policy_audit",
+				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
+				"solved": "0/2",
+				"coverage_percent": 0.0,
+				"runtime_planner": "not_runtime_executed",
+				"plan_count": None,
+				"notes": "domain-level artifact audit",
+				"mechanism_summary": "baseline",
+			},
+		],
+	}
+	(tmp_path / "comparison.json").write_text(
+		json.dumps(comparison, indent=2),
+		encoding="utf-8",
+	)
+	for name in ("main", "ablation", "limitation"):
+		summary_dir = tmp_path / f"{name}-matrix"
+		summary_dir.mkdir(parents=True)
+		(summary_dir / "matrix-summary.json").write_text(
+			json.dumps(
+				{
+					"matrix_name": f"paper-final-{name}",
+					"experiment_count": 1,
+					"succeeded_count": 1,
+					"failed_count": 0,
+					"rows": [],
+				},
+			),
+			encoding="utf-8",
+		)
+	macro_file = tmp_path / "results.tex"
+	macro_file.write_text(
+		format_comparison_latex_macros(comparison),
+		encoding="utf-8",
+	)
+
+	validation = validate_final_paper_package(tmp_path, macro_file=macro_file)
+
+	assert validation["check_count"] >= 16
+	assert validation["comparison_file"] == str(tmp_path / "comparison.json")

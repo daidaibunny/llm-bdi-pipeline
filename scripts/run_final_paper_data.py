@@ -59,9 +59,22 @@ def main() -> None:
 		action="store_true",
 		help="Write final configs only; do not generate baselines or run matrices.",
 	)
+	parser.add_argument(
+		"--validate-only",
+		action="store_true",
+		help="Validate an existing final paper data package and exit.",
+	)
 	args = parser.parse_args()
 
 	output_dir = args.output_dir.expanduser().resolve()
+	if args.validate_only:
+		validation = validate_final_paper_package(output_dir)
+		print(
+			"validated final paper data package "
+			f"{output_dir} checks={validation['check_count']}",
+		)
+		return
+
 	package = write_final_paper_configs(output_dir)
 	if args.config_only:
 		print(f"wrote final paper configs under {output_dir}")
@@ -75,11 +88,115 @@ def main() -> None:
 	)
 	results = _run_final_matrices(output_dir=output_dir, package=package)
 	comparison = _write_final_comparison(output_dir=output_dir, matrix_results=results)
+	validate_final_paper_package(output_dir)
 	print(
 		"wrote final paper data package "
 		f"{output_dir} reports={comparison['report_count']} "
 		f"baselines={comparison['baseline_count']}",
 	)
+
+
+def validate_final_paper_package(
+	output_dir: Path,
+	*,
+	macro_file: Path | None = None,
+) -> dict[str, object]:
+	"""Validate the already-generated final paper data package."""
+
+	output_dir = output_dir.expanduser().resolve()
+	comparison_file = output_dir / "comparison.json"
+	if not comparison_file.exists():
+		raise FileNotFoundError(f"missing final comparison file: {comparison_file}")
+	comparison = json.loads(comparison_file.read_text(encoding="utf-8"))
+	rows = tuple(dict(row) for row in tuple(comparison.get("paper_table_rows") or ()))
+	library_rows = tuple(row for row in rows if row.get("row_type") == "library")
+	baseline_rows = tuple(row for row in rows if row.get("row_type") == "baseline")
+	checks: list[str] = []
+
+	def require(condition: bool, message: str) -> None:
+		if not condition:
+			raise ValueError(message)
+		checks.append(message)
+
+	require(int(comparison.get("report_count") or 0) > 0, "comparison has reports")
+	require(int(comparison.get("baseline_count") or 0) > 0, "comparison has baselines")
+	require(bool(library_rows), "comparison has library rows")
+	require(bool(baseline_rows), "comparison has baseline rows")
+	require(
+		all(str(row.get("runtime_planner") or "") == "none" for row in library_rows),
+		"library rows use no runtime full-trace planner",
+	)
+
+	strict_rows = tuple(
+		row
+		for row in library_rows
+		if str(row.get("label") or "").startswith("paper_external_sketch_")
+	)
+	require(bool(strict_rows), "strict paper-profile rows exist")
+	require(
+		all(bool(row.get("paper_profile_ready")) for row in strict_rows),
+		"strict rows are paper-profile ready",
+	)
+	require(
+		all(float(row.get("coverage_percent") or 0.0) == 100.0 for row in strict_rows),
+		"strict rows solve all evaluated problems",
+	)
+	require(
+		any(float(row.get("coverage_percent") or 0.0) < 100.0 for row in library_rows),
+		"ablation rows include a coverage drop",
+	)
+	require(
+		any(
+			str(row.get("runtime_planner") or "") == "offline_baseline_only"
+			for row in baseline_rows
+		),
+		"classical planner baseline is labelled offline only",
+	)
+	require(
+		any(
+			str(row.get("runtime_planner") or "") == "not_runtime_executed"
+			for row in baseline_rows
+		),
+		"raw external policy audit baseline is not runtime executed",
+	)
+	require(
+		any("domain-level" in str(row.get("notes") or "") for row in baseline_rows),
+		"baseline rows state domain-level or non-domain-level semantics",
+	)
+
+	for matrix_name in ("main", "ablation", "limitation"):
+		summary_file = output_dir / f"{matrix_name}-matrix" / "matrix-summary.json"
+		require(summary_file.exists(), f"{matrix_name} matrix summary exists")
+		summary = json.loads(summary_file.read_text(encoding="utf-8"))
+		require(
+			int(summary.get("experiment_count") or 0) > 0,
+			f"{matrix_name} matrix has experiments",
+		)
+		require(
+			int(summary.get("failed_count") or 0) == 0,
+			f"{matrix_name} matrix has no failed rows",
+		)
+		require(
+			int(summary.get("succeeded_count") or 0)
+			== int(summary.get("experiment_count") or 0),
+			f"{matrix_name} matrix all rows succeeded",
+		)
+
+	macro_file = (
+		macro_file.expanduser().resolve()
+		if macro_file is not None
+		else PROJECT_ROOT / "latex_code/aamas_method_paper/generated/results.tex"
+	)
+	require(macro_file.exists(), "LaTeX result macro file exists")
+	expected_macros = format_comparison_latex_macros(comparison)
+	actual_macros = macro_file.read_text(encoding="utf-8")
+	require(actual_macros == expected_macros, "LaTeX result macros match comparison")
+	return {
+		"check_count": len(checks),
+		"comparison_file": str(comparison_file),
+		"macro_file": str(macro_file),
+		"checks": checks,
+	}
 
 
 def write_final_paper_configs(output_dir: Path) -> dict[str, Path]:

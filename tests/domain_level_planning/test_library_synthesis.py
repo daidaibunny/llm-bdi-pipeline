@@ -755,7 +755,9 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "runtime full-trace planning" in " ".join(method_summary)
 	assert "negative or disjunctive achievement goals" in " ".join(method_summary)
 	assert "ready_<predicate>" in " ".join(method_summary)
-	assert "not claim complete held-out tower benchmark scaling" in " ".join(method_summary)
+	assert "universal arbitrary-domain module or goal-order learning" in (
+		" ".join(method_summary)
+	)
 	assert "Fast Downward" not in " ".join(method_summary)
 	assert "trace macro" not in " ".join(method_summary).lower()
 	layer_contracts = {
@@ -777,7 +779,12 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	)
 	assert "ready_<predicate> derived contexts" in layer_c_contract["runtime_semantics"]
 	assert "composer_rule_proofs" in layer_c_contract["required_reports"]
-	assert "complete held-out tower benchmark scaling" in layer_c_contract["not_claimed"]
+	assert "arbitrary reachable mid-state logistics policies" in (
+		layer_c_contract["not_claimed"]
+	)
+	assert "universal goal-order learning for arbitrary PDDL domains" in (
+		layer_c_contract["not_claimed"]
+	)
 	hypothesis = contract["hypothesis_class"]
 	assert hypothesis["name"] == "goal_conditioned_modular_sketch_asl"
 	assert any(
@@ -921,7 +928,7 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "variable-binding safety" in gaps["G7"]["current_state"]
 	assert "more AgentSpeak constructs" in gaps["G7"]["required_improvement"]
 	assert gaps["G8"]["layer"] == "validation"
-	assert gaps["G8"]["status"] == "partially_done"
+	assert gaps["G8"]["status"] == "done_current_fragment"
 	assert "library size and runtime metrics" in gaps["G8"]["current_state"]
 	assert "validation-scope summary" in gaps["G8"]["current_state"]
 	assert "composer ordering-kind counts" in gaps["G8"]["current_state"]
@@ -930,7 +937,11 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "report-comparison CLI" in gaps["G8"]["current_state"]
 	assert "validated generic-runner ingestion" in gaps["G8"]["current_state"]
 	assert "baseline JSON metadata" in gaps["G8"]["current_state"]
-	assert "completed ablation runs" in gaps["G8"]["required_improvement"]
+	assert "final paper data package" in gaps["G8"]["current_state"]
+	assert "generated LaTeX result macros" in gaps["G8"]["current_state"]
+	assert "main, ablation, baseline, boundary, and reproducibility rows" in (
+		gaps["G8"]["required_improvement"]
+	)
 	assert gaps["G9"]["layer"] == "counterexample refinement"
 	assert gaps["G9"]["status"] == "partially_done"
 	assert "negative precondition repairs" in gaps["G9"]["current_state"]

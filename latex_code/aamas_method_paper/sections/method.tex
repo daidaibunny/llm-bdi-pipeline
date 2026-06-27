@@ -80,18 +80,18 @@ bound safely. Missing positive preconditions may become calls to other predicate
 modules. Delete effects and producer-consumer precondition links contribute
 ordering evidence for Layer C.
 
-For typed-overloaded predicates, the generator also creates causal-chain module
+For typed-overloaded predicates, the generator creates causal-chain module
 candidates. This case arises when the same \pddl{} predicate is produced for
 different typed argument partitions, such as a movement action producing
 \texttt{at(carrier, location)} and an unloading action producing
 \texttt{at(package, location)}. If a producer action can establish a
 target-action precondition, the candidate first calls the producer predicate
-module, then achieves the remaining producible target-action preconditions, and
-finally executes the target action. Shared static preconditions, such as a
-capacity predecessor relation, may bridge resource variables across the two
-actions; mutable resource predicates are not emitted as independent
-causal-chain goals. Same-predicate delegation across disjoint typed argument
-partitions is accepted only with an explicit type certificate.
+module, then achieves the remaining producible preconditions, and finally
+executes the target action. Shared static preconditions, such as a capacity
+predecessor relation, may bridge resource variables across the two actions;
+mutable resource predicates are not emitted as independent causal-chain goals.
+Same-predicate delegation across disjoint typed argument partitions is accepted
+only with an explicit type certificate.
 The same schema evidence also yields current-resource priority composer rules:
 if a target object is already held by a carrier relation used by the target
 action, the composer may deliver that object before selecting another goal that
