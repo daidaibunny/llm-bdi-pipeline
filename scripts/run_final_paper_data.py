@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 from typing import Sequence
@@ -20,6 +21,10 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from domain_level_planning.experiments import (  # noqa: E402
 	compare_domain_level_experiment_reports,
 	format_comparison_latex_macros,
+)
+from domain_level_planning.architecture_contract import (  # noqa: E402
+	architecture_gap_summary,
+	domain_level_architecture_contract,
 )
 from scripts.generate_domain_level_baselines import (  # noqa: E402
 	generate_classical_planner_baseline,
@@ -75,6 +80,7 @@ def main() -> None:
 		)
 		return
 
+	_reset_managed_output(output_dir)
 	package = write_final_paper_configs(output_dir)
 	if args.config_only:
 		print(f"wrote final paper configs under {output_dir}")
@@ -164,6 +170,11 @@ def validate_final_paper_package(
 		"baseline rows state domain-level or non-domain-level semantics",
 	)
 
+	current_gap_summary = architecture_gap_summary(
+		domain_level_architecture_contract().gaps,
+	)
+	report_files: list[Path] = []
+	report_files_by_matrix: dict[str, set[Path]] = {}
 	for matrix_name in ("main", "ablation", "limitation"):
 		summary_file = output_dir / f"{matrix_name}-matrix" / "matrix-summary.json"
 		require(summary_file.exists(), f"{matrix_name} matrix summary exists")
@@ -181,6 +192,49 @@ def validate_final_paper_package(
 			== int(summary.get("experiment_count") or 0),
 			f"{matrix_name} matrix all rows succeeded",
 		)
+		for index, row in enumerate(tuple(summary.get("rows") or ()), start=1):
+			report_file = row.get("report_file")
+			require(
+				bool(report_file),
+				f"{matrix_name} matrix row {index} records report file",
+			)
+			report_path = Path(str(report_file)).expanduser()
+			if not report_path.is_absolute():
+				report_path = output_dir / f"{matrix_name}-matrix" / report_path
+			require(
+				report_path.exists(),
+				f"{matrix_name} matrix report exists: {report_path.name}",
+			)
+			resolved_report_path = report_path.resolve()
+			report_files.append(resolved_report_path)
+			report_files_by_matrix.setdefault(matrix_name, set()).add(resolved_report_path)
+		actual_report_files = {
+			path.resolve()
+			for path in (output_dir / f"{matrix_name}-matrix").glob("*.json")
+			if path.name not in {"comparison.json", "matrix-summary.json"}
+		}
+		require(
+			actual_report_files == report_files_by_matrix.get(matrix_name, set()),
+			f"{matrix_name} matrix has no stale report files",
+		)
+
+	require(bool(report_files), "matrix summaries expose report files")
+	for report_file in tuple(dict.fromkeys(report_files)):
+		report = json.loads(report_file.read_text(encoding="utf-8"))
+		synthesis_report = dict(report.get("synthesis_report") or {})
+		require(
+			synthesis_report.get("architecture_gap_summary") == current_gap_summary,
+			f"report architecture contract is current: {report_file.name}",
+		)
+		generated_output_audit = dict(report.get("generated_output_audit") or {})
+		require(
+			bool(generated_output_audit.get("passed")),
+			f"generated output audit passed: {report_file.name}",
+		)
+		require(
+			bool(dict(report.get("coverage") or {}).get("solved_count") is not None),
+			f"report records coverage: {report_file.name}",
+		)
 
 	macro_file = (
 		macro_file.expanduser().resolve()
@@ -197,6 +251,26 @@ def validate_final_paper_package(
 		"macro_file": str(macro_file),
 		"checks": checks,
 	}
+
+
+def _reset_managed_output(output_dir: Path) -> None:
+	"""Remove generated final-package paths before a fresh non-validate run."""
+
+	for relative_path in (
+		"backend-audit",
+		"baseline-work",
+		"baselines",
+		"configs",
+		"main-matrix",
+		"ablation-matrix",
+		"limitation-matrix",
+	):
+		path = output_dir / relative_path
+		if path.exists():
+			shutil.rmtree(path)
+	comparison_file = output_dir / "comparison.json"
+	if comparison_file.exists():
+		comparison_file.unlink()
 
 
 def write_final_paper_configs(output_dir: Path) -> dict[str, Path]:

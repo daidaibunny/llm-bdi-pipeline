@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import signal
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -72,11 +73,8 @@ class FastDownwardPlanner:
 			str(generated_problem),
 		]
 		try:
-			completed = subprocess.run(
+			completed = _run_command_with_process_group_timeout(
 				command,
-				check=False,
-				capture_output=True,
-				text=True,
 				timeout=self.config.timeout_seconds,
 			)
 		except subprocess.TimeoutExpired as exc:
@@ -123,6 +121,57 @@ class FastDownwardPlanner:
 			if found:
 				return found
 		return None
+
+
+def _run_command_with_process_group_timeout(
+	command: list[str],
+	*,
+	timeout: float | int,
+) -> subprocess.CompletedProcess[str]:
+	"""Run a planner command and terminate its process group on timeout."""
+
+	process = subprocess.Popen(
+		command,
+		stdout=subprocess.PIPE,
+		stderr=subprocess.PIPE,
+		text=True,
+		start_new_session=True,
+	)
+	try:
+		stdout, stderr = process.communicate(timeout=timeout)
+	except subprocess.TimeoutExpired as exc:
+		_terminate_process_group(process)
+		raise subprocess.TimeoutExpired(
+			cmd=command,
+			timeout=timeout,
+			output=exc.output or "",
+			stderr=exc.stderr or "",
+		) from exc
+	return subprocess.CompletedProcess(
+		args=command,
+		returncode=process.returncode,
+		stdout=stdout,
+		stderr=stderr,
+	)
+
+
+def _terminate_process_group(process: subprocess.Popen[str]) -> None:
+	"""Terminate a planner process group without leaving search subprocesses."""
+
+	if process.poll() is not None:
+		return
+	try:
+		os.killpg(process.pid, signal.SIGTERM)
+	except ProcessLookupError:
+		return
+	try:
+		process.wait(timeout=5)
+	except subprocess.TimeoutExpired:
+		try:
+			os.killpg(process.pid, signal.SIGKILL)
+		except ProcessLookupError:
+			return
+		process.wait(timeout=5)
 
 
 def _select_plan_file(plan_file: Path) -> Path | None:

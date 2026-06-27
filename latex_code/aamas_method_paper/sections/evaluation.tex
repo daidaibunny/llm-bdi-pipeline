@@ -13,13 +13,15 @@ The main claim is restricted to positive conjunctive achievement goals. A row is
 part of the strict paper profile only when an external learned sketch rule is
 parsed, feature-bound, selected by the answer-set program, compiled to a
 non-empty executable body, and validated without run-time full-trace planning.
-Rows that exercise trace evidence, resource movement, or larger unsupported
-fragments are reported as boundary rows rather than main coverage claims.
+Rows that test mechanism necessity without an external learned sketch are
+reported as mechanism-stress rows. Rows that exercise trace evidence, resource
+movement, or larger unsupported fragments are reported as boundary rows rather
+than main coverage claims.
 
 \begin{table}[t]
-	\caption{Main lifted-library results. The strict paper-profile rows require
-	a selected external sketch candidate, selected Layer C agenda evidence, and
-	no run-time full-trace planner.}
+	\caption{Strict paper-profile lifted-library results. Each row has a selected
+	external sketch candidate, selected Layer C agenda evidence, and no run-time
+	full-trace planner.}
 	\label{tab:main-results}
 	\small
 	\begin{tabular}{p{0.40\columnwidth}rcr}
@@ -38,42 +40,40 @@ fragments are reported as boundary rows rather than main coverage claims.
 		\ResultPaperExternalSketchSatisfiableMixedLargeSolved &
 		\ResultPaperExternalSketchSatisfiableMixedLargePlanCount &
 		\ResultPaperExternalSketchSatisfiableMixedLargeRuntimePlanner \\
-		Labworkflow refinement &
-		\ResultLabworkflowCounterexampleRefinementSolved &
-		\ResultLabworkflowCounterexampleRefinementPlanCount &
-		\ResultLabworkflowCounterexampleRefinementRuntimePlanner \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-Table~\ref{tab:main-results} shows the main positive evidence. The three
-Blocksworld rows use the verified \texttt{blocks\_4\_on\_2} learner-sketches
-artifact and the strict paper profile. The learned library solves the original
-first-20 split and two larger satisfiable held-out splits. The large-tower split
-contains towers from 50 to 140 blocks. The mixed split contains nontrivial
-initial towers and multiple final towers with both \texttt{ontable} and
-\texttt{on} goals. Labworkflow is smaller, but it exercises the
-counterexample-refinement path: a held-out failure is lifted into a new composer
-constraint and the next library solves both problems.
+Table~\ref{tab:main-results} shows the strict-profile positive evidence. The
+three Blocksworld rows use the verified \texttt{blocks\_4\_on\_2}
+learner-sketches artifact and the strict paper profile. The learned library
+solves the original first-20 split and two larger satisfiable held-out splits.
+The large-tower split contains towers from 50 to 140 blocks. The mixed split
+contains nontrivial initial towers and multiple final towers with both
+\texttt{ontable} and \texttt{on} goals.
 
 \begin{table}[t]
-	\caption{Mechanism ablations. Labworkflow isolates Layer C/refinement;
-	Blocksworld first20 does not isolate external-sketch necessity.}
-	\label{tab:ablations}
+	\caption{Mechanism-stress rows. Labworkflow isolates Layer C and
+	counterexample refinement; Blocksworld first20 does not isolate
+	external-sketch necessity.}
+	\label{tab:mechanism-stress}
 	\small
 	\begin{tabular}{p{0.45\columnwidth}rc}
 		\toprule
 		Row & Solved & Diagnostic \\
 		\midrule
-		No external sketch, Blocksworld &
-		\ResultNoExternalSketchFirstTwoZeroSolved &
-		bootstrap \\
+		Full Labworkflow refinement &
+		\ResultLabworkflowCounterexampleRefinementSolved &
+		refined composer \\
 		No Layer C/refinement, Labworkflow &
 		\ResultNoLayerCNoRefinementLabworkflowSolved &
 		missing composer \\
 		No counterexample refinement, Labworkflow &
 		\ResultNoCounterexampleRefinementLabworkflowSolved &
 		missing repair \\
+		No external sketch, Blocksworld &
+		\ResultNoExternalSketchFirstTwoZeroSolved &
+		bootstrap \\
 		No trace evidence, Transport &
 		\ResultNoOfflineTraceEvidenceTransportSolved &
 		initial-state only \\
@@ -81,14 +81,15 @@ constraint and the next library solves both problems.
 	\end{tabular}
 \end{table}
 
-The ablation table is intentionally interpreted narrowly. The Blocksworld
-no-sketch row remains at
-\ResultNoExternalSketchFirstTwoZeroCoveragePercent{} on first20, so it is not used
-as evidence that external sketches are necessary on that split. It shows that
-schema-derived modules can already cover this small set. The mechanism evidence
-for Layer C and counterexample refinement comes from Labworkflow, where removing
-either mechanism leaves one of two problems unsolved with the diagnostic
-\texttt{no applicable plan for !reagent\_logged(r1)}.
+Table~\ref{tab:mechanism-stress} is intentionally interpreted narrowly. The
+mechanism evidence for Layer C and counterexample refinement comes from
+Labworkflow: the full refinement row solves both problems, while removing either
+Layer C ordering or counterexample refinement leaves one of two problems
+unsolved; the report records a missing composer plan for the reagent-log goal.
+The Blocksworld no-sketch row remains at
+\ResultNoExternalSketchFirstTwoZeroCoveragePercent{} on first20, so it is not
+used as evidence that external sketches are necessary on that split. It shows
+that schema-derived modules can already cover this small set.
 
 The refinement rows test the intended behavior of the counterexample loop:
 failures are not merely logged. Supported missing-module, state-coverage,

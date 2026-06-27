@@ -11,6 +11,8 @@ from scripts.generate_domain_level_baselines import generate_classical_planner_b
 from scripts.generate_domain_level_baselines import generate_moose_status_baseline
 from scripts.run_final_paper_data import validate_final_paper_package
 from scripts.run_final_paper_data import write_final_paper_configs
+from domain_level_planning import architecture_gap_summary
+from domain_level_planning import domain_level_architecture_contract
 from domain_level_planning.experiments import format_comparison_latex_macros
 
 
@@ -209,9 +211,26 @@ def test_final_paper_package_validator_accepts_complete_package(
 		json.dumps(comparison, indent=2),
 		encoding="utf-8",
 	)
+	current_gap_summary = architecture_gap_summary(
+		domain_level_architecture_contract().gaps,
+	)
 	for name in ("main", "ablation", "limitation"):
 		summary_dir = tmp_path / f"{name}-matrix"
 		summary_dir.mkdir(parents=True)
+		report_file = summary_dir / f"{name}-report.json"
+		report_file.write_text(
+			json.dumps(
+				{
+					"coverage": {"solved_count": 1, "failed_count": 0},
+					"generated_output_audit": {"passed": True},
+					"synthesis_report": {
+						"architecture_gap_summary": current_gap_summary,
+					},
+				},
+				indent=2,
+			),
+			encoding="utf-8",
+		)
 		(summary_dir / "matrix-summary.json").write_text(
 			json.dumps(
 				{
@@ -219,7 +238,13 @@ def test_final_paper_package_validator_accepts_complete_package(
 					"experiment_count": 1,
 					"succeeded_count": 1,
 					"failed_count": 0,
-					"rows": [],
+					"rows": [
+						{
+							"experiment_name": f"{name}-report",
+							"report_file": str(report_file),
+							"status": "succeeded",
+						},
+					],
 				},
 			),
 			encoding="utf-8",
@@ -234,3 +259,106 @@ def test_final_paper_package_validator_accepts_complete_package(
 
 	assert validation["check_count"] >= 16
 	assert validation["comparison_file"] == str(tmp_path / "comparison.json")
+
+
+def test_final_paper_package_validator_rejects_stale_architecture_reports(
+	tmp_path: Path,
+) -> None:
+	comparison = {
+		"report_count": 1,
+		"baseline_count": 1,
+		"paper_table_rows": [
+			{
+				"row_type": "library",
+				"label": "paper_external_sketch_first20",
+				"macro_id": "paper_external_sketch_first20",
+				"solved": "1/1",
+				"coverage_percent": 100.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": True,
+				"plan_count": 2,
+				"mechanism_summary": "enabled: external_sketch_evidence",
+			},
+			{
+				"row_type": "library",
+				"label": "no_layer_c_no_refinement_labworkflow",
+				"macro_id": "no_layer_c_no_refinement_labworkflow",
+				"solved": "0/1",
+				"coverage_percent": 0.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 1,
+				"mechanism_summary": "disabled: layer_c_ordering",
+			},
+			{
+				"row_type": "baseline",
+				"label": "fast_downward_lama_per_problem",
+				"macro_id": "first20_fast_downward_lama_per_problem",
+				"solved": "1/1",
+				"coverage_percent": 100.0,
+				"runtime_planner": "offline_baseline_only",
+				"notes": "per_problem_trace_baseline; not a domain-level library",
+				"mechanism_summary": "baseline",
+			},
+			{
+				"row_type": "baseline",
+				"label": "raw_blocks_4_on_2_policy_audit",
+				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
+				"solved": "0/1",
+				"coverage_percent": 0.0,
+				"runtime_planner": "not_runtime_executed",
+				"notes": "domain-level artifact audit",
+				"mechanism_summary": "baseline",
+			},
+		],
+	}
+	(tmp_path / "comparison.json").write_text(
+		json.dumps(comparison, indent=2),
+		encoding="utf-8",
+	)
+	macro_file = tmp_path / "results.tex"
+	macro_file.write_text(
+		format_comparison_latex_macros(comparison),
+		encoding="utf-8",
+	)
+	for name in ("main", "ablation", "limitation"):
+		summary_dir = tmp_path / f"{name}-matrix"
+		summary_dir.mkdir(parents=True)
+		report_file = summary_dir / f"{name}-report.json"
+		report_file.write_text(
+			json.dumps(
+				{
+					"coverage": {"solved_count": 1, "failed_count": 0},
+					"generated_output_audit": {"passed": True},
+					"synthesis_report": {
+						"architecture_gap_summary": {"partially_done": 99},
+					},
+				},
+			),
+			encoding="utf-8",
+		)
+		(summary_dir / "matrix-summary.json").write_text(
+			json.dumps(
+				{
+					"matrix_name": f"paper-final-{name}",
+					"experiment_count": 1,
+					"succeeded_count": 1,
+					"failed_count": 0,
+					"rows": [
+						{
+							"experiment_name": f"{name}-report",
+							"report_file": str(report_file),
+							"status": "succeeded",
+						},
+					],
+				},
+			),
+			encoding="utf-8",
+		)
+
+	try:
+		validate_final_paper_package(tmp_path, macro_file=macro_file)
+	except ValueError as error:
+		assert "report architecture contract is current" in str(error)
+	else:
+		raise AssertionError("stale architecture report should be rejected")

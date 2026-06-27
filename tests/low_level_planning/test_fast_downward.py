@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
+import time
 
 from low_level_planning import FastDownwardPlanner, FastDownwardPlannerConfig
 from low_level_planning.pddl_goal import write_goal_problem_variant
@@ -108,3 +110,53 @@ def test_fast_downward_planner_records_missing_executable(tmp_path: Path) -> Non
 	assert result.success is False
 	assert "Fast Downward executable not found" in str(result.error)
 	assert result.generated_problem_file is not None
+
+
+def test_fast_downward_timeout_terminates_search_process_group(tmp_path: Path) -> None:
+	marker = tmp_path / "orphan-child-marker.txt"
+	driver = tmp_path / "slow-fast-downward.py"
+	driver.write_text(
+		f"""#!/usr/bin/env python3
+import subprocess
+import sys
+import time
+
+subprocess.Popen([
+	sys.executable,
+	"-c",
+	"import pathlib, time; time.sleep(0.8); pathlib.Path({str(marker)!r}).write_text('orphan', encoding='utf-8')",
+])
+time.sleep(10)
+""",
+		encoding="utf-8",
+	)
+	os.chmod(driver, 0o755)
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text("(define (domain BLOCKS))", encoding="utf-8")
+	base_problem = tmp_path / "problem.pddl"
+	base_problem.write_text(
+		"""
+		(define (problem p1)
+		 (:domain BLOCKS)
+		 (:objects b1 b2 - block)
+		 (:init (handempty))
+		 (:goal (and (handempty)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	result = FastDownwardPlanner(
+		FastDownwardPlannerConfig(executable=str(driver), timeout_seconds=0.2),
+	).solve_transition_goal(
+		domain_file=domain_file,
+		base_problem_file=base_problem,
+		goal_literals=("on(b1, b2)",),
+		work_dir=tmp_path / "work",
+		task_name="transition",
+	)
+	time.sleep(1.0)
+
+	assert result.success is False
+	assert "Fast Downward timed out after 0.2 seconds" in str(result.error)
+	assert not marker.exists()
