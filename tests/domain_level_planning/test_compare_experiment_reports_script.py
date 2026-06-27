@@ -65,6 +65,62 @@ def test_compare_experiment_reports_script_writes_reproducible_table(
 	assert "\\ResultPaperExternalSketchCoveragePercent}{100.0\\%}" in macros
 
 
+def test_compare_experiment_reports_preserves_baseline_scope_metadata(
+	tmp_path: Path,
+) -> None:
+	report = tmp_path / "paper.json"
+	output = tmp_path / "comparison.json"
+	_write_report(
+		report,
+		name="paper-smoke",
+		label="paper_external_sketch",
+		solved_count=2,
+		failed_count=0,
+		paper_profile_ready=True,
+		schema_only_bootstrap=False,
+		baselines=[
+			{
+				"label": "fast_downward_lama_per_problem",
+				"domain_name": "BLOCKS",
+				"solver_family": "classical_planner",
+				"solved_count": 2,
+				"failed_count": 0,
+				"coverage_ratio": 1.0,
+				"runtime_planner": "offline_baseline_only",
+				"comparison_scope": "per_problem_trace_baseline",
+				"domain_level_artifact": False,
+				"coverage_semantics": "executed_and_strips_validated",
+				"evidence_source": "Fast Downward",
+				"notes": "not a domain-level library",
+			},
+		],
+	)
+
+	subprocess.run(
+		(
+			sys.executable,
+			str(PROJECT_ROOT / "scripts" / "compare_domain_level_experiments.py"),
+			"--report",
+			str(report),
+			"--output",
+			str(output),
+		),
+		cwd=PROJECT_ROOT,
+		check=True,
+	)
+
+	table = json.loads(output.read_text(encoding="utf-8"))
+	assert table["baseline_count"] == 1
+	baseline = table["baselines"][0]
+	assert baseline["comparison_scope"] == "per_problem_trace_baseline"
+	assert baseline["coverage_semantics"] == "executed_and_strips_validated"
+	assert baseline["domain_level_artifact"] is False
+	assert table["paper_table_rows"][1]["notes"] == (
+		"per_problem_trace_baseline; executed_and_strips_validated; "
+		"not a domain-level library"
+	)
+
+
 def _write_report(
 	path: Path,
 	*,
@@ -74,6 +130,7 @@ def _write_report(
 	failed_count: int,
 	paper_profile_ready: bool,
 	schema_only_bootstrap: bool,
+	baselines: list[dict[str, object]] | None = None,
 ) -> None:
 	total = solved_count + failed_count
 	path.write_text(
@@ -89,7 +146,7 @@ def _write_report(
 							"counterexample_refinement": False,
 						},
 					],
-					"baselines": [],
+					"baselines": baselines or [],
 				},
 				"coverage": {
 					"solved_count": solved_count,

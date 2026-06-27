@@ -325,6 +325,15 @@ def _validate_baseline_record(
 	validated["solved_count"] = solved_count
 	validated["failed_count"] = failed_count
 	validated["coverage_ratio"] = coverage_ratio
+	for optional_field in (
+		"comparison_scope",
+		"domain_level_artifact",
+		"evidence_source",
+		"coverage_semantics",
+		"validation",
+	):
+		if optional_field in record:
+			validated[optional_field] = record[optional_field]
 	return validated
 
 

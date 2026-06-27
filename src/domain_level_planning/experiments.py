@@ -316,18 +316,26 @@ def _baseline_records(
 	records: list[dict[str, object]] = []
 	for baseline in tuple(baselines or ()):
 		item = dict(baseline or {})
-		records.append(
-			{
-				"label": str(item.get("label") or ""),
-				"domain_name": str(item.get("domain_name") or ""),
-				"solver_family": str(item.get("solver_family") or "external_baseline"),
-				"solved_count": int(item.get("solved_count") or 0),
-				"failed_count": int(item.get("failed_count") or 0),
-				"coverage_ratio": float(item.get("coverage_ratio") or 0.0),
-				"runtime_planner": str(item.get("runtime_planner") or "offline_baseline_only"),
-				"notes": str(item.get("notes") or ""),
-			},
-		)
+		normalized = {
+			"label": str(item.get("label") or ""),
+			"domain_name": str(item.get("domain_name") or ""),
+			"solver_family": str(item.get("solver_family") or "external_baseline"),
+			"solved_count": int(item.get("solved_count") or 0),
+			"failed_count": int(item.get("failed_count") or 0),
+			"coverage_ratio": float(item.get("coverage_ratio") or 0.0),
+			"runtime_planner": str(item.get("runtime_planner") or "offline_baseline_only"),
+			"notes": str(item.get("notes") or ""),
+		}
+		for optional_field in (
+			"comparison_scope",
+			"domain_level_artifact",
+			"evidence_source",
+			"coverage_semantics",
+			"validation",
+		):
+			if optional_field in item:
+				normalized[optional_field] = item[optional_field]
+		records.append(normalized)
 	return records
 
 
@@ -704,6 +712,11 @@ def _baseline_comparison_row(
 		"coverage_delta_vs_library": baseline_coverage - library_coverage,
 		"runtime_planner": str(item.get("runtime_planner") or "offline_baseline_only"),
 		"notes": str(item.get("notes") or ""),
+		"comparison_scope": str(item.get("comparison_scope") or "coverage_baseline"),
+		"domain_level_artifact": bool(item.get("domain_level_artifact", False)),
+		"evidence_source": str(item.get("evidence_source") or ""),
+		"coverage_semantics": str(item.get("coverage_semantics") or "executed"),
+		"validation": item.get("validation"),
 	}
 
 
@@ -749,7 +762,7 @@ def _paper_table_rows(
 				"coverage_delta_vs_library": float(
 					baseline.get("coverage_delta_vs_library") or 0.0,
 				),
-				"notes": str(baseline.get("notes") or ""),
+				"notes": _baseline_paper_note(baseline),
 			},
 		)
 	return table_rows
@@ -778,6 +791,22 @@ def _library_paper_note(row: dict[str, object]) -> str:
 	if int(row.get("selected_external_sketch_candidate_count") or 0) > 0:
 		return "selected external sketch evidence"
 	return ""
+
+
+def _baseline_paper_note(row: dict[str, object]) -> str:
+	parts = []
+	scope = str(row.get("comparison_scope") or "").strip()
+	semantics = str(row.get("coverage_semantics") or "").strip()
+	if scope and scope != "coverage_baseline":
+		parts.append(scope)
+	if semantics and semantics != "executed":
+		parts.append(semantics)
+	if bool(row.get("domain_level_artifact")):
+		parts.append("domain-level")
+	notes = str(row.get("notes") or "").strip()
+	if notes:
+		parts.append(notes)
+	return "; ".join(parts)
 
 
 def _mechanism_summary(row: dict[str, object]) -> str:

@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+import csv
+import json
+from pathlib import Path
+
+from scripts.generate_domain_level_baselines import generate_moose_status_baseline
+from scripts.run_final_paper_data import write_final_paper_configs
+
+
+def test_moose_status_baseline_imports_completed_reproduction_rows(
+	tmp_path: Path,
+) -> None:
+	status_file = tmp_path / "status.csv"
+	with status_file.open("w", encoding="utf-8", newline="") as handle:
+		writer = csv.DictWriter(handle, fieldnames=("seed", "problem", "status"))
+		writer.writeheader()
+		writer.writerow({"seed": "0", "problem": "p01", "status": "ok"})
+		writer.writerow({"seed": "0", "problem": "p02", "status": "fail"})
+
+	record = generate_moose_status_baseline(
+		label="blocksworld_moose_probe",
+		status_file=status_file,
+	)
+
+	assert record["label"] == "blocksworld_moose_probe"
+	assert record["solver_family"] == "moose_generalized_planner"
+	assert record["domain_level_artifact"] is True
+	assert record["comparison_scope"] == "generalized_planning_reproduction"
+	assert record["solved_count"] == 1
+	assert record["failed_count"] == 1
+	assert record["coverage_ratio"] == 0.5
+	assert record["validation"]["row_count"] == 2
+
+
+def test_final_paper_config_splits_main_ablation_and_limitations(
+	tmp_path: Path,
+) -> None:
+	configs = write_final_paper_configs(tmp_path / "paper-final")
+
+	main = json.loads(configs["main"].read_text(encoding="utf-8"))
+	ablation = json.loads(configs["ablation"].read_text(encoding="utf-8"))
+	limitation = json.loads(configs["limitation"].read_text(encoding="utf-8"))
+
+	assert main["matrix_name"] == "paper-final-main-library"
+	assert ablation["matrix_name"] == "paper-final-ablations"
+	assert limitation["matrix_name"] == "paper-final-limitations"
+
+	main_rows = {row["name"]: row for row in main["experiments"]}
+	assert "blocksworld-paper-external-on2-first20" in main_rows
+	assert "blocksworld-paper-external-on2-satisfiable-large" in main_rows
+	assert "blocksworld-paper-external-on2-satisfiable-mixed-large" in main_rows
+	assert "labworkflow-counterexample-refinement-final" in main_rows
+	assert main_rows["blocksworld-paper-external-on2-first20"]["synthesis_profile"] == (
+		"paper"
+	)
+	assert main_rows["blocksworld-paper-external-on2-first20"]["baseline_json"]
+	assert main_rows["blocksworld-paper-external-on2-first20"][
+		"external_sketch_policies"
+	] == [
+		(
+			"blocks_4_on_2=.external/gp-backends/learner-sketches/learning/"
+			"workspace-2024-09-24-tractable/blocks_4_on_2/output/"
+			"sketch_minimized_2.txt"
+		),
+	]
+
+	ablation_names = {row["name"] for row in ablation["experiments"]}
+	assert "blocksworld-no-external-sketch-first20" in ablation_names
+	assert "labworkflow-no-layer-c-no-refinement" in ablation_names
+	assert "labworkflow-no-counterexample-refinement" in ablation_names
+	assert "transport-no-offline-trace-evidence-first10" in ablation_names
+
+	limitation_names = {row["name"] for row in limitation["experiments"]}
+	assert "transport-bootstrap-train3-first10-limitation" in limitation_names
+	assert "marsrover-bootstrap-train3-first10-scalability" in limitation_names
