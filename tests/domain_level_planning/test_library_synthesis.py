@@ -404,6 +404,39 @@ def test_unified_pipeline_consumes_reverse_role_external_sketch(
 	assert "\t!link(X1, X0);" in asl
 
 
+def test_unified_pipeline_consumes_goal_distance_external_sketch(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, policy_file = _write_goal_distance_domain_problem_and_policy(
+		tmp_path,
+	)
+
+	result = synthesize_domain_level_asl_library(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		external_sketch_policies=(
+			ExternalSketchPolicySource(
+				name="distance-sketch",
+				policy_file=policy_file,
+			),
+		),
+		synthesis_profile="paper",
+	)
+	asl = render_plan_library_asl(result.plan_library)
+	consumption = result.report["external_backend_consumption_summary"]
+
+	assert result.report["paper_profile_ready"] is True
+	assert result.report["external_candidate_count"] == 1
+	assert result.report["selected_candidate_sources"]["external_sketch"] == 1
+	assert consumption["ready_policy_count"] == 1
+	assert consumption["feature_binding_contract"]["bound_binding_kinds"] == (
+		"goal_distance_to_unary_goal_count",
+	)
+	assert "plan=external_distance_sketch_1" in asl
+	assert "+!g : at(X0) & goal_at(X1) & not at(X1) <-" in asl
+	assert "\t!at(X1);" in asl
+
+
 def test_external_policy_rule_rejects_unbound_body_variables(
 	tmp_path: Path,
 ) -> None:
@@ -833,13 +866,20 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		"typed-overloaded carrier/resource" in exclusion
 		for exclusion in hypothesis["exclusions"]
 	)
-	assert "rejected object-specific, distance, or vocabulary-mismatched features" in (
+	assert any(
+		"object-free goal-distance features" in item
+		for item in hypothesis["feature_language"]["state_features"]
+	)
+	assert (
+		"rejected concrete object-specific, unsupported distance, or "
+		"vocabulary-mismatched features"
+	) in (
 		hypothesis["feature_language"]["external_features"]
 	)
 	gap_summary = result.report["architecture_gap_summary"]
 	assert gap_summary.get("in_progress", 0) == 0
-	assert gap_summary["partially_done"] >= 3
-	assert gap_summary["done_current_fragment"] >= 8
+	assert gap_summary["partially_done"] == 1
+	assert gap_summary["done_current_fragment"] == 11
 
 	decisions = {decision["id"]: decision for decision in contract["decisions"]}
 	assert decisions["D3"]["status"] == "accepted"
@@ -898,15 +938,17 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		gaps["G3"]["required_improvement"]
 	)
 	assert "termination diagnostic counts" in gaps["G9"]["current_state"]
+	assert "companion generative constraint counts" in gaps["G9"]["current_state"]
 	assert "diagnostic group types" in gaps["G9"]["current_state"]
-	assert gaps["G5"]["status"] == "partially_done"
+	assert gaps["G5"]["status"] == "done_current_fragment"
 	assert "object-specific" in gaps["G5"]["current_state"]
 	assert "distance" in gaps["G5"]["current_state"]
 	assert "vocabulary-mismatch" in gaps["G5"]["current_state"]
 	assert "goal-aligned concept/role intersection" in gaps["G5"]["current_state"]
 	assert "distinct rejection diagnostics" in gaps["G5"]["current_state"]
 	assert "action-candidate details" in gaps["G5"]["current_state"]
-	assert "object-specific or distance features" in gaps["G5"]["required_improvement"]
+	assert "Concrete object-specific" in gaps["G5"]["current_state"]
+	assert "Future feature-language expansion" in gaps["G5"]["required_improvement"]
 	assert gaps["G6"]["layer"] == "external backends"
 	assert gaps["G6"]["status"] == "done_current_fragment"
 	assert "learner-sketches" in gaps["G6"]["current_state"]
@@ -943,9 +985,12 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 		gaps["G8"]["required_improvement"]
 	)
 	assert gaps["G9"]["layer"] == "counterexample refinement"
-	assert gaps["G9"]["status"] == "partially_done"
+	assert gaps["G9"]["status"] == "done_current_fragment"
 	assert "negative precondition repairs" in gaps["G9"]["current_state"]
-	assert "failure classes" in gaps["G9"]["required_improvement"]
+	assert "companion atomic-progress" in gaps["G9"]["current_state"]
+	assert "selector-consumable Layer B or Layer C constraints" in (
+		gaps["G9"]["required_improvement"]
+	)
 	assert gaps["G10"]["layer"] == "PDDL scope"
 	assert gaps["G10"]["status"] == "done_current_fragment"
 	assert "STRIPS" in gaps["G10"]["current_state"]
@@ -3007,6 +3052,56 @@ def _write_multi_strategy_domain_and_problem(tmp_path: Path) -> tuple[Path, Path
 		encoding="utf-8",
 	)
 	return domain_file, problem_file
+
+
+def _write_goal_distance_domain_problem_and_policy(
+	tmp_path: Path,
+) -> tuple[Path, Path, Path]:
+	domain_file = tmp_path / "distance-domain.pddl"
+	problem_file = tmp_path / "distance-problem.pddl"
+	policy_file = tmp_path / "distance-policy.txt"
+	domain_file.write_text(
+		"""
+		(define (domain distance-mini)
+		 (:requirements :strips :typing)
+		 (:types location)
+		 (:predicates
+		  (at ?x - location)
+		  (link ?x - location ?y - location)
+		 )
+		 (:action arrive
+		  :parameters (?from - location ?to - location)
+		  :precondition (link ?from ?to)
+		  :effect (at ?to)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem distance-p1)
+		 (:domain distance-mini)
+		 (:objects a b - location)
+		 (:init (at a) (link a b))
+		 (:goal (and (at b)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	policy_file.write_text(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_dist "n_concept_distance(c_primitive(at,0),r_primitive(link,0,1),c_primitive(at_g,0))")
+		)
+		(:rule (:conditions (:c_n_gt f_dist)) (:effects (:e_n_dec f_dist)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file, policy_file
 
 
 def _write_fake_learner_sketches_backend(tmp_path: Path) -> BackendManifest:

@@ -47,6 +47,7 @@ from .feature_binding import (
 	bind_goal_aligned_action_effect_candidates,
 	bind_recoverable_dlplan_features,
 	bind_unique_action_effect_candidates,
+	goal_distance_policy_feature_ids,
 )
 from .dfa_adapter import (
 	DFAAchievementRequest,
@@ -171,6 +172,7 @@ __all__ = [
 	"bind_goal_aligned_action_effect_candidates",
 	"bind_recoverable_dlplan_features",
 	"bind_unique_action_effect_candidates",
+	"goal_distance_policy_feature_ids",
 	"build_domain_level_temporal_artifact",
 	"compile_bound_sketch_to_asl_library",
 	"compile_learner_sketch_policy_to_asl",

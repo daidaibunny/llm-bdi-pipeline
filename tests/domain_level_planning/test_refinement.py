@@ -394,20 +394,28 @@ def test_recursive_loop_failure_targets_recursive_atomic_module_diagnostics(
 		counterexample=counterexample,
 	)
 
-	assert len(constraints) == 1
-	constraint = constraints[0]
-	assert constraint.failure_kind == "recursive_loop"
-	assert constraint.target_layer == "layer_b_atomic_modules"
-	assert constraint.constraint_type == "counterexample_recursive_loop"
-	assert constraint.ground_missing_goals == ("z_base(b)",)
-	assert constraint.lifted_missing_goals == ("z_base(X)",)
-	assert constraint.required_rule_group_types == ("counterexample_recursion_descent",)
-	round_report = _refinement_summary_like((constraint,))
+	assert tuple(constraint.constraint_type for constraint in constraints) == (
+		"counterexample_recursive_loop",
+		"counterexample_atomic_progress",
+	)
+	diagnostic, companion = constraints
+	assert diagnostic.failure_kind == "recursive_loop"
+	assert diagnostic.target_layer == "layer_b_atomic_modules"
+	assert diagnostic.ground_missing_goals == ("z_base(b)",)
+	assert diagnostic.lifted_missing_goals == ("z_base(X)",)
+	assert diagnostic.required_rule_group_types == ("counterexample_recursion_descent",)
+	assert companion.failure_kind == "recursive_loop_atomic_progress"
+	assert companion.target_layer == "layer_b_atomic_modules"
+	assert companion.ground_missing_goals == ("z_base(b)",)
+	assert companion.lifted_missing_goals == ("z_base(X)",)
+	assert companion.required_rule_group_types == ("counterexample_atomic_progress",)
+	round_report = _refinement_summary_like(constraints)
 	assert round_report["recursive_loop_constraint_count"] == 1
-	assert round_report["generative_constraint_count"] == 0
+	assert round_report["atomic_progress_constraint_count"] == 1
+	assert round_report["generative_constraint_count"] == 1
 	assert round_report["diagnostic_constraint_count"] == 1
 	assert round_report["constraints_by_target_layer"] == {
-		"layer_b_atomic_modules": 1,
+		"layer_b_atomic_modules": 2,
 	}
 
 
@@ -434,20 +442,29 @@ def test_step_limit_failure_reports_nontermination_diagnostics(
 		counterexample=counterexample,
 	)
 
-	assert len(constraints) == 1
-	constraint = constraints[0]
-	assert constraint.failure_kind == "nontermination"
-	assert constraint.target_layer == "execution_semantics"
-	assert constraint.constraint_type == "counterexample_nontermination"
-	assert constraint.ground_missing_goals == ("a_top(a, b)",)
-	assert constraint.lifted_missing_goals == ("a_top(X, Y)",)
-	assert constraint.required_rule_group_types == ("counterexample_nontermination",)
-	round_report = _refinement_summary_like((constraint,))
+	assert tuple(constraint.constraint_type for constraint in constraints) == (
+		"counterexample_nontermination",
+		"counterexample_state_coverage",
+	)
+	diagnostic, companion = constraints
+	assert diagnostic.failure_kind == "nontermination"
+	assert diagnostic.target_layer == "execution_semantics"
+	assert diagnostic.ground_missing_goals == ("a_top(a, b)",)
+	assert diagnostic.lifted_missing_goals == ("a_top(X, Y)",)
+	assert diagnostic.required_rule_group_types == ("counterexample_nontermination",)
+	assert companion.failure_kind == "nontermination_state_coverage"
+	assert companion.target_layer == "layer_c_goal_composer"
+	assert companion.ground_missing_goals == ("a_top(a, b)",)
+	assert companion.lifted_missing_goals == ("a_top(X, Y)",)
+	assert companion.required_rule_group_types == ("counterexample_state_coverage",)
+	round_report = _refinement_summary_like(constraints)
 	assert round_report["nontermination_constraint_count"] == 1
-	assert round_report["generative_constraint_count"] == 0
+	assert round_report["state_coverage_constraint_count"] == 1
+	assert round_report["generative_constraint_count"] == 1
 	assert round_report["diagnostic_constraint_count"] == 1
 	assert round_report["constraints_by_type"] == {
 		"counterexample_nontermination": 1,
+		"counterexample_state_coverage": 1,
 	}
 
 

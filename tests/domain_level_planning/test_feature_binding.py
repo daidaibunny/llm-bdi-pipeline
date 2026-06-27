@@ -8,6 +8,7 @@ from domain_level_planning import (
 	bind_recoverable_dlplan_features,
 	bind_unique_action_effect_candidates,
 	compile_bound_sketch_to_asl_library,
+	goal_distance_policy_feature_ids,
 	parse_dlplan_policy,
 )
 from plan_library.rendering import render_plan_library_asl
@@ -500,6 +501,75 @@ def test_binding_distinguishes_distance_feature_rejections(tmp_path: Path) -> No
 	)
 
 
+def test_bind_goal_distance_feature_to_lifted_goal_subgoal(
+	tmp_path: Path,
+) -> None:
+	domain = _write_navigation_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_dist "n_concept_distance(c_primitive(at,0),r_primitive(link,0,1),c_primitive(at_g,0))")
+		)
+		(:rule (:conditions (:c_n_gt f_dist)) (:effects (:e_n_dec f_dist)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+	plan_library = compile_bound_sketch_to_asl_library(
+		domain_name="navigation-mini",
+		policy=policy,
+		target=SketchCompilationTarget(symbol="g", recurse=True),
+		feature_bindings=report.bindings,
+	)
+	asl = render_plan_library_asl(plan_library)
+
+	assert report.unsupported_features == {}
+	assert report.feature_diagnostics["f_dist"].binding_kind == (
+		"goal_distance_to_unary_goal_count"
+	)
+	assert report.feature_diagnostics["f_dist"].effect_operators == (
+		"e_n_bot",
+		"e_n_dec",
+	)
+	assert goal_distance_policy_feature_ids(policy) == ("f_dist",)
+	assert "+!g : at(X0) & goal_at(X1) & not at(X1) <-" in asl
+	assert "\t!at(X1);" in asl
+	assert "\t!g." in asl
+
+
+def test_bind_goal_distance_feature_rejects_bad_vocabulary(
+	tmp_path: Path,
+) -> None:
+	domain = _write_navigation_domain(tmp_path)
+	policy = parse_dlplan_policy(
+		"""
+		(:policy
+		(:booleans )
+		(:numericals
+		 (f_dist "n_concept_distance(c_primitive(at,0),r_primitive(missing_link,0,1),c_primitive(at_g,0))")
+		)
+		(:rule (:conditions (:c_n_gt f_dist)) (:effects (:e_n_dec f_dist)))
+		)
+		""",
+	)
+
+	report = bind_recoverable_dlplan_features(
+		policy=policy,
+		domain=PDDLParser.parse_domain(domain),
+	)
+
+	assert report.bindings == {}
+	assert report.feature_diagnostics["f_dist"].rejection_reason == (
+		"undeclared_or_wrong_arity_domain_vocabulary"
+	)
+
+
 def test_binding_distinguishes_domain_vocabulary_rejections(tmp_path: Path) -> None:
 	domain = _write_domain(tmp_path)
 	policy = parse_dlplan_policy(
@@ -932,6 +1002,29 @@ def _write_domain(tmp_path: Path, *, include_place: bool = True) -> Path:
 		  :effect (and (clear ?y) (not (on ?x ?y)))
 		 )
 		 {place_action}
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain
+
+
+def _write_navigation_domain(tmp_path: Path) -> Path:
+	domain = tmp_path / "navigation-domain.pddl"
+	domain.write_text(
+		"""
+		(define (domain navigation-mini)
+		 (:requirements :strips :typing)
+		 (:types location)
+		 (:predicates
+		  (at ?x - location)
+		  (link ?x - location ?y - location)
+		 )
+		 (:action move
+		  :parameters (?from - location ?to - location)
+		  :precondition (and (at ?from) (link ?from ?to))
+		  :effect (and (at ?to) (not (at ?from)))
+		 )
 		)
 		""",
 		encoding="utf-8",

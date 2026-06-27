@@ -322,19 +322,19 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"domain-level lifted-library claim."
 				),
 			),
-				ArchitectureDecision(
-					id="D8",
-					decision=(
-						"Allow cyclic same-predicate route recursion only when guarded "
-						"by a verified route-step shortest-path descent feature."
-					),
-					status="accepted",
-					rationale=(
-						"Static graph distance gives a domain-agnostic progress "
-						"certificate for single-effect movement schemas without "
-						"falling back to trace replay."
-					),
+			ArchitectureDecision(
+				id="D8",
+				decision=(
+					"Allow cyclic same-predicate route recursion only when guarded "
+					"by a verified route-step shortest-path descent feature."
 				),
+				status="accepted",
+				rationale=(
+					"Static graph distance gives a domain-agnostic progress "
+					"certificate for single-effect movement schemas without "
+					"falling back to trace replay."
+				),
+			),
 		),
 		gaps=(
 			ArchitectureGap(
@@ -416,8 +416,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"failures that name a concrete failed atomic subgoal are refined "
 					"into precise atomic-progress constraints for that subgoal; top-level "
 					"missing-composer failures are classified as Layer C state-coverage "
-					"refinements; recursive-loop and step-limit failures are reported "
-					"as non-generative termination diagnostics. Selected and "
+					"refinements; recursive-loop and step-limit failures keep their "
+					"termination diagnostics and also emit atomic-progress or "
+					"state-coverage companion constraints when the missing goal is "
+					"inside the supported positive-conjunctive fragment. Selected and "
 					"output composer rules are reported with lifted provenance manifests "
 					"and per-rule composer evidence verdicts; all composer candidates "
 					"now report selected/rejected status, costs, verdicts, and "
@@ -465,21 +467,29 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			ArchitectureGap(
 				id="G5",
 				layer="feature binding",
-				gap="DLPlan feature binding is intentionally conservative.",
+				gap="Feature binding is closed for the declared safe DLPlan fragment.",
 				current_state=(
-					"Recoverable lifted patterns bind; object-specific, distance, "
-					"and vocabulary-mismatch patterns are rejected with distinct "
-					"rejection diagnostics; concept, forward/reverse role, nullary, "
-					"and goal-aligned concept/role intersection DLPlan features must "
-					"match PDDL predicate arities before binding; feature diagnostics "
-					"now include action-candidate details for ambiguous primitive "
-					"effect bindings instead of only reporting candidate counts."
+					"Recoverable lifted patterns bind; concept, forward/reverse role, "
+					"nullary, goal-aligned concept/role intersection, filtered "
+					"goal-role, and lifted goal-distance DLPlan features must match "
+					"PDDL predicate arities before binding. The distance subset is "
+					"restricted to object-free expressions of the form distance from "
+					"a unary state predicate to its read-only goal predicate through "
+					"a declared binary role; its executable effect is a call to the "
+					"corresponding predicate goal, so no training object is copied "
+					"into ASL. Concrete object-specific, unsupported distance, and "
+					"vocabulary-mismatch patterns are rejected with distinct rejection "
+					"diagnostics. "
+					"Feature diagnostics include action-candidate details for ambiguous "
+					"primitive effect bindings instead of only reporting candidate counts."
 				),
 				required_improvement=(
-					"Expand only principled lifted bindings, especially for "
-					"object-specific or distance features, and report every rejection."
+					"Future feature-language expansion must add only principled lifted "
+					"bindings; concrete object-specific DLPlan features remain outside "
+					"the domain-level library claim unless a verified lifting semantics "
+					"is introduced."
 				),
-				status="partially_done",
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G6",
@@ -582,7 +592,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			ArchitectureGap(
 				id="G9",
 				layer="counterexample refinement",
-				gap="Refinement hooks exist but are not a full learning loop.",
+				gap="Counterexample refinement is generative for the declared failure classes.",
 				current_state=(
 					"Held-out failures are classified into lifted Layer B or Layer C "
 					"records; primitive repair, atomic-progress, explicit goal-ordering, "
@@ -591,7 +601,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"failures are narrowed to the named failed atomic subgoal when the "
 					"failure text identifies one, while `!g` failures are treated as "
 					"composer state-coverage failures; recursive-loop and nontermination "
-					"failures are separated from progress and ordering refinements; "
+					"failures keep explicit termination diagnostics and, when they still "
+					"name supported missing positive goals, emit companion atomic-progress "
+					"or state-coverage constraints consumed by the selector; "
 					"rejected atomic-progress diagnostics now include producer actions "
 					"from PDDL add effects for declared target predicates, so wrong-arity "
 					"and declared-but-unproducible failures are distinguishable; "
@@ -603,15 +615,16 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"explicit counterexample state-coverage failures can synthesize or "
 					"merge conservative goal-dispatch composer candidates and bind them "
 					"as selector hard groups; unified synthesis reports expose termination "
-					"diagnostic counts, diagnostic group types, explicit non-generative "
-					"markers, and non-generative reasons."
+					"diagnostic counts, companion generative constraint counts, diagnostic "
+					"group types, explicit non-generative markers, and non-generative reasons."
 				),
 				required_improvement=(
-					"Connect more failure classes to generated candidate rules and "
-					"synthesize missing candidates outside the current explicit "
-					"goal-ordering, state-coverage, and goal-bound repair subsets."
+					"Future work may add new unsupported failure classes, but the current "
+					"positive-conjunctive paper fragment maps supported held-out failures "
+					"to selector-consumable Layer B or Layer C constraints, or rejects "
+					"them with structured diagnostics."
 				),
-				status="partially_done",
+				status="done_current_fragment",
 			),
 			ArchitectureGap(
 				id="G10",
@@ -776,12 +789,13 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 
 	return HypothesisClassContract(
 		name="goal_conditioned_modular_sketch_asl",
-			feature_language={
-				"state_features": (
-					"PDDL predicates over lifted variables",
-					"negation-as-absence context literals",
-					"safe lifted DLPlan feature bindings, including forward/reverse binary roles",
-				),
+		feature_language={
+			"state_features": (
+				"PDDL predicates over lifted variables",
+				"negation-as-absence context literals",
+				"safe lifted DLPlan feature bindings, including forward/reverse "
+				"binary roles and object-free goal-distance features",
+			),
 			"goal_features": (
 				"read-only goal_<predicate> descriptors",
 				"read-only ready_<predicate> derived contexts for runtime agenda gating",
@@ -789,7 +803,8 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			),
 			"external_features": (
 				"accepted DLPlan features with explicit ASL bindings",
-				"rejected object-specific, distance, or vocabulary-mismatched features",
+				"rejected concrete object-specific, unsupported distance, or "
+				"vocabulary-mismatched features",
 			),
 		},
 		module_language={
@@ -800,19 +815,19 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 				"subgoal calls with matching schema arities; every body variable "
 				"must be bound by the plan head or positive context literals"
 			),
-				"recursion": (
-					"same-predicate recursion requires a missing-precondition or "
-					"bounded acyclic-relation descent certificate; single-effect "
-					"movement recursion may instead use a route_step shortest-path "
-					"distance-decrease context; same-predicate delegation across "
-					"typed argument partitions is allowed with an explicit type certificate"
-				),
-				"causal_chain_modules": (
-					"typed-overloaded effect predicates may use schema causal-chain "
-					"action modules when a producer action supplies a target-action "
-					"precondition, shared static preconditions bridge resource variables, "
-					"and resource predicates are not emitted as independent causal-chain goals"
-				),
+			"recursion": (
+				"same-predicate recursion requires a missing-precondition or "
+				"bounded acyclic-relation descent certificate; single-effect "
+				"movement recursion may instead use a route_step shortest-path "
+				"distance-decrease context; same-predicate delegation across "
+				"typed argument partitions is allowed with an explicit type certificate"
+			),
+			"causal_chain_modules": (
+				"typed-overloaded effect predicates may use schema causal-chain "
+				"action modules when a producer action supplies a target-action "
+				"precondition, shared static preconditions bridge resource variables, "
+				"and resource predicates are not emitted as independent causal-chain goals"
+			),
 		},
 		composer_language={
 			"rule_shape": (

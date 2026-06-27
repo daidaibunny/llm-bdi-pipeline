@@ -372,7 +372,7 @@ def classify_heldout_failure_for_refinement(
 	)
 	lifted_missing_goals = _lift_atom_group(missing_goals)
 	lifted_satisfied_goals = _lift_atom_group(satisfied_goals)
-	termination_constraint = _termination_failure_constraint(
+	termination_constraints = _termination_failure_constraints(
 		problem_file=problem_file,
 		problem_name=problem.name,
 		counterexample=counterexample,
@@ -382,8 +382,8 @@ def classify_heldout_failure_for_refinement(
 		lifted_satisfied_goals=lifted_satisfied_goals,
 		failed_subgoal=failed_subgoal,
 	)
-	if termination_constraint is not None:
-		return (termination_constraint,)
+	if termination_constraints:
+		return termination_constraints
 	if missing_goals and _is_top_level_composer_failure(counterexample.failure_reason):
 		constraints: list[RefinementConstraint] = []
 		if satisfied_goals and tuple(counterexample.steps):
@@ -504,7 +504,7 @@ def classify_heldout_failure_for_refinement(
 	)
 
 
-def _termination_failure_constraint(
+def _termination_failure_constraints(
 	*,
 	problem_file: str | Path,
 	problem_name: str,
@@ -514,10 +514,11 @@ def _termination_failure_constraint(
 	lifted_missing_goals: tuple[str, ...],
 	lifted_satisfied_goals: tuple[str, ...],
 	failed_subgoal: tuple[str, tuple[str, ...]] | None,
-) -> RefinementConstraint | None:
+) -> tuple[RefinementConstraint, ...]:
 	failure_kind = _failure_kind(counterexample.failure_reason)
+	problem_path = str(Path(problem_file).expanduser().resolve())
 	if failure_kind == "recursive_loop":
-		return RefinementConstraint(
+		diagnostic = RefinementConstraint(
 			failure_kind=failure_kind,
 			target_layer=(
 				"layer_c_goal_composer"
@@ -534,12 +535,24 @@ def _termination_failure_constraint(
 			lifted_satisfied_goals=lifted_satisfied_goals,
 			required_rule_group_types=("counterexample_recursion_descent",),
 		)
+		companion = _termination_progress_companion_constraint(
+			failure_kind=failure_kind,
+			problem_file=problem_path,
+			problem_name=problem_name,
+			failure_reason=counterexample.failure_reason,
+			missing_goals=missing_goals,
+			satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
+			failed_subgoal=failed_subgoal,
+		)
+		return (diagnostic,) if companion is None else (diagnostic, companion)
 	if failure_kind == "nontermination":
-		return RefinementConstraint(
+		diagnostic = RefinementConstraint(
 			failure_kind=failure_kind,
 			target_layer="execution_semantics",
 			constraint_type="counterexample_nontermination",
-			problem_file=str(Path(problem_file).expanduser().resolve()),
+			problem_file=problem_path,
 			problem_name=problem_name,
 			failure_reason=counterexample.failure_reason,
 			ground_missing_goals=missing_goals,
@@ -548,7 +561,62 @@ def _termination_failure_constraint(
 			lifted_satisfied_goals=lifted_satisfied_goals,
 			required_rule_group_types=("counterexample_nontermination",),
 		)
-	return None
+		companion = _termination_progress_companion_constraint(
+			failure_kind=failure_kind,
+			problem_file=problem_path,
+			problem_name=problem_name,
+			failure_reason=counterexample.failure_reason,
+			missing_goals=missing_goals,
+			satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
+			failed_subgoal=failed_subgoal,
+		)
+		return (diagnostic,) if companion is None else (diagnostic, companion)
+	return ()
+
+
+def _termination_progress_companion_constraint(
+	*,
+	failure_kind: str,
+	problem_file: str,
+	problem_name: str,
+	failure_reason: str,
+	missing_goals: tuple[str, ...],
+	satisfied_goals: tuple[str, ...],
+	lifted_missing_goals: tuple[str, ...],
+	lifted_satisfied_goals: tuple[str, ...],
+	failed_subgoal: tuple[str, tuple[str, ...]] | None,
+) -> RefinementConstraint | None:
+	if not missing_goals:
+		return None
+	if failed_subgoal is not None and failed_subgoal[0] != "g":
+		return RefinementConstraint(
+			failure_kind=f"{failure_kind}_atomic_progress",
+			target_layer="layer_b_atomic_modules",
+			constraint_type="counterexample_atomic_progress",
+			problem_file=problem_file,
+			problem_name=problem_name,
+			failure_reason=failure_reason,
+			ground_missing_goals=missing_goals,
+			ground_satisfied_goals=satisfied_goals,
+			lifted_missing_goals=lifted_missing_goals,
+			lifted_satisfied_goals=lifted_satisfied_goals,
+			required_rule_group_types=("counterexample_atomic_progress",),
+		)
+	return RefinementConstraint(
+		failure_kind=f"{failure_kind}_state_coverage",
+		target_layer="layer_c_goal_composer",
+		constraint_type="counterexample_state_coverage",
+		problem_file=problem_file,
+		problem_name=problem_name,
+		failure_reason=failure_reason,
+		ground_missing_goals=missing_goals,
+		ground_satisfied_goals=satisfied_goals,
+		lifted_missing_goals=lifted_missing_goals,
+		lifted_satisfied_goals=lifted_satisfied_goals,
+		required_rule_group_types=("counterexample_state_coverage",),
+	)
 
 
 def _primitive_precondition_repair_constraint(

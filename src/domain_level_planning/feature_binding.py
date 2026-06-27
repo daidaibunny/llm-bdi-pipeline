@@ -97,6 +97,13 @@ class _FilteredRoleFeature:
 	source_filter_positive: bool
 
 
+@dataclass(frozen=True)
+class _GoalDistanceFeature:
+	source_predicate: str
+	edge_predicate: str
+	edge_argument_order: tuple[int, int]
+
+
 def bind_recoverable_dlplan_features(
 	*,
 	policy: SketchPolicy,
@@ -246,7 +253,20 @@ def goal_aligned_policy_feature_ids(policy: SketchPolicy) -> tuple[str, ...]:
 	return tuple(
 		feature_id
 		for feature_id, expression in policy.features.items()
-		if _goal_aligned_feature(expression) is not None
+		if (
+			_goal_aligned_feature(expression) is not None
+			or _goal_distance_feature(_normalize_expression(expression)) is not None
+		)
+	)
+
+
+def goal_distance_policy_feature_ids(policy: SketchPolicy) -> tuple[str, ...]:
+	"""Return feature ids whose expression is a recoverable lifted distance feature."""
+
+	return tuple(
+		feature_id
+		for feature_id, expression in policy.features.items()
+		if _goal_distance_feature(_normalize_expression(expression)) is not None
 	)
 
 
@@ -379,6 +399,16 @@ def _unsupported_rejection_reason(
 	if "c_one_of(" in text or "r_one_of(" in text:
 		return "object_specific_dlplan_feature_requires_principled_lifting"
 	if "n_concept_distance(" in text:
+		goal_distance = _goal_distance_feature(text)
+		if goal_distance is not None:
+			if (
+				predicate_arities.get(goal_distance.source_predicate) == 1
+				and predicate_arities.get(goal_distance.edge_predicate) == 2
+			):
+				return None
+			return "undeclared_or_wrong_arity_domain_vocabulary"
+		if _uses_recoverable_shape_with_bad_vocabulary(text, predicate_arities):
+			return "undeclared_or_wrong_arity_domain_vocabulary"
 		return "distance_dlplan_feature_requires_principled_lifted_binding"
 	if _uses_recoverable_shape_with_bad_vocabulary(text, predicate_arities):
 		return "undeclared_or_wrong_arity_domain_vocabulary"
@@ -421,6 +451,13 @@ def _uses_recoverable_shape_with_bad_vocabulary(
 		return (
 			predicate_arities.get(filtered_role.predicate) != 2
 			or predicate_arities.get(filtered_role.source_filter_predicate) != 1
+		)
+
+	goal_distance = _goal_distance_feature(text)
+	if goal_distance:
+		return (
+			predicate_arities.get(goal_distance.source_predicate) != 1
+			or predicate_arities.get(goal_distance.edge_predicate) != 2
 		)
 
 	concept_intersection = re.fullmatch(
@@ -553,6 +590,15 @@ def _bind_feature_expression(
 			source_filter_positive=filtered_goal_role.source_filter_positive,
 		)
 
+	goal_distance = _goal_distance_feature(text)
+	if goal_distance:
+		if (
+			predicate_arities.get(goal_distance.source_predicate) != 1
+			or predicate_arities.get(goal_distance.edge_predicate) != 2
+		):
+			return None
+		return _goal_distance_binding(goal_distance)
+
 	goal_concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
@@ -640,6 +686,18 @@ def _feature_binding_kind(
 			if filtered_role.argument_order == (0, 1)
 			else f"reverse_{prefix}"
 		)
+	goal_distance = _goal_distance_feature(text)
+	if goal_distance:
+		if (
+			predicate_arities.get(goal_distance.source_predicate) != 1
+			or predicate_arities.get(goal_distance.edge_predicate) != 2
+		):
+			return "unsupported"
+		return (
+			"goal_distance_to_unary_goal_count"
+			if goal_distance.edge_argument_order == (0, 1)
+			else "goal_distance_to_unary_goal_count_reverse_role"
+		)
 	concept_intersection = re.fullmatch(
 		r"n_count\(c_and\(c_primitive\(([^(),]+),0\),c_primitive\(\1_g,0\)\)\)",
 		text,
@@ -701,6 +759,39 @@ def _predicate_count_binding(
 		condition_contexts=condition_contexts,
 		effect_contexts=effect_contexts,
 		effect_body=effect_body,
+	)
+
+
+def _goal_distance_binding(feature: _GoalDistanceFeature) -> SketchFeatureBinding:
+	current_argument = "X0"
+	goal_argument = "X1"
+	current_atom = _call(feature.source_predicate, (current_argument,))
+	goal_descriptor = _call(f"goal_{feature.source_predicate}", (goal_argument,))
+	goal_atom = _call(feature.source_predicate, (goal_argument,))
+	positive_distance_context = (
+		current_atom,
+		goal_descriptor,
+		f"not {goal_atom}",
+	)
+	return SketchFeatureBinding(
+		condition_contexts={
+			"c_n_gt": positive_distance_context,
+			"c_n_eq": (goal_descriptor, goal_atom),
+		},
+		effect_contexts={
+			"e_n_dec": positive_distance_context,
+			"e_n_bot": (),
+		},
+		effect_body={
+			"e_n_dec": (
+				AgentSpeakBodyStep(
+					"subgoal",
+					feature.source_predicate,
+					(goal_argument,),
+				),
+			),
+			"e_n_bot": (),
+		},
 	)
 
 
@@ -982,6 +1073,26 @@ def _goal_aligned_feature(expression: str) -> _GoalAlignedFeature | None:
 	if concept_intersection:
 		return _GoalAlignedFeature(predicate=concept_intersection.group(1), arity=1)
 	return None
+
+
+def _goal_distance_feature(text: str) -> _GoalDistanceFeature | None:
+	match = re.fullmatch(
+		r"n_concept_distance\(c_primitive\(([^(),]+),0\),"
+		r"r_primitive\(([^(),]+),([01]),([01])\),"
+		r"c_primitive\(\1_g,0\)\)",
+		text,
+	)
+	if not match:
+		return None
+	first = int(match.group(3))
+	second = int(match.group(4))
+	if first == second:
+		return None
+	return _GoalDistanceFeature(
+		source_predicate=match.group(1),
+		edge_predicate=match.group(2),
+		edge_argument_order=(first, second),
+	)
 
 
 def _primitive_role_feature(text: str) -> _RoleFeature | None:

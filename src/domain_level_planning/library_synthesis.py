@@ -20,6 +20,7 @@ from .architecture_contract import architecture_gap_summary
 from .architecture_contract import domain_level_architecture_contract
 from .clingo_backend import ClingoRequiredRuleGroup, ClingoSketchRuleSelector
 from .feature_binding import goal_aligned_policy_feature_ids
+from .feature_binding import goal_distance_policy_feature_ids
 from .gp_backends import BackendManifest, LearnerSketchesRunConfig, LearnerSketchesRunResult
 from .gp_backends import backend_audit_matrix
 from .gp_backends import backend_consumption_role
@@ -1424,8 +1425,9 @@ def _feature_binding_contract_summary(
 	return {
 		"binding_policy": (
 			"bind only DLPlan features with recoverable lifted PDDL semantics; "
-			"reject object-specific, distance, and vocabulary-mismatched features "
-			"instead of guessing"
+			"accept object-free goal-distance features and reject concrete "
+			"object-specific, unsupported distance, and vocabulary-mismatched "
+			"features instead of guessing"
 		),
 		"feature_count": len(diagnostics),
 		"bound_feature_count": len(bound),
@@ -1516,6 +1518,7 @@ def _bound_policy_rules_to_candidates(
 	candidates: list[LiftedPlanRule] = []
 	reports: list[ExternalRuleBindingReport] = []
 	goal_aligned_feature_ids = goal_aligned_policy_feature_ids(policy)
+	goal_distance_feature_ids = goal_distance_policy_feature_ids(policy)
 	for index, rule in enumerate(policy.parsed_rules, start=1):
 		context: list[str] = []
 		body: list[LiftedCall] = []
@@ -1527,6 +1530,7 @@ def _bound_policy_rules_to_candidates(
 			and not _external_rule_has_goal_progress_evidence(
 				rule=rule,
 				goal_aligned_feature_ids=goal_aligned_feature_ids,
+				goal_distance_feature_ids=goal_distance_feature_ids,
 			)
 		)
 		for condition in rule.conditions:
@@ -1617,11 +1621,17 @@ def _external_rule_has_goal_progress_evidence(
 	*,
 	rule,
 	goal_aligned_feature_ids: tuple[str, ...],
+	goal_distance_feature_ids: tuple[str, ...],
 ) -> bool:
 	goal_feature_set = set(goal_aligned_feature_ids)
+	goal_distance_feature_set = set(goal_distance_feature_ids)
 	return any(
 		effect.feature_id in goal_feature_set
 		and effect.operator in {"e_n_inc", "e_b_pos"}
+		for effect in tuple(rule.effects or ())
+	) or any(
+		effect.feature_id in goal_distance_feature_set
+		and effect.operator == "e_n_dec"
 		for effect in tuple(rule.effects or ())
 	) or any(
 		condition.feature_id in goal_feature_set

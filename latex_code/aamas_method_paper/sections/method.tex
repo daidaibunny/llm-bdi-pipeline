@@ -38,6 +38,34 @@ ready facts. The method uses only symbols declared by the \pddl{} domain, except
 for the systematic read-only prefixes used for goal descriptors and ready
 contexts.
 
+\subsection{Architecture Overview}
+
+The synthesis pipeline has three logical stages. First, the system constructs a
+schema model from \pddl{} predicates, actions, types, preconditions, add
+effects, and delete effects. Second, it generates candidate lifted rules for two
+learned layers. Layer B candidates implement atomic predicate goals. Layer C
+candidates compose conjunctive goals by calling Layer B modules under
+goal-conditioned contexts. Third, an answer-set selector chooses a safe and
+small subset of these candidates, and the compiler renders the selected rules as
+\asl{} plans.
+
+\begin{table}[t]
+	\caption{Main artifacts in the proposed architecture.}
+	\label{tab:architecture}
+	\small
+	\begin{tabular}{p{0.25\columnwidth}p{0.62\columnwidth}}
+		\toprule
+		Artifact & Role \\
+		\midrule
+		Goal facts & Read-only descriptors of the current problem goal. \\
+		Layer B & Lifted modules for atomic predicate achievement goals. \\
+		Layer C & Lifted composer rules that choose the next atomic goal. \\
+		Selector & Answer-set optimization over safe candidate rules. \\
+		Compiler & Translation from selected lifted rules to \asl{} plans. \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
 \subsection{Hypothesis Class}
 
 The search space contains two families of lifted rules.
@@ -102,13 +130,35 @@ External sketch candidates come from verified policy-sketch backends, currently
 learner-sketches \cite{Drexler2022LearningSketches}. A learned sketch rule is
 accepted only when every condition and qualitative effect has an explicit lifted
 binding to \pddl{} literals, primitive actions, predicate subgoals, or read-only
-goal descriptors. Object-specific, distance, and vocabulary-mismatched features
-are rejected unless a principled lifting adapter is provided.
+goal descriptors. Object-specific and vocabulary-mismatched features are
+rejected unless a principled lifting adapter is provided. The current safe
+distance fragment accepts object-free expressions that measure distance from a
+unary state predicate to the corresponding read-only goal predicate through a
+declared binary role. The compiled effect is a call to the unary predicate goal,
+not a replay of training objects.
 
 Trace candidates come from offline evidence only. A planner trace may be used to
 identify which action last achieved a target fact, to anti-unify repeated
 support patterns, or to explain a counterexample. Such traces are never emitted
 as run-time full-trace plans.
+
+\subsection{Feature Binding Contract}
+
+External policies are qualitative feature rules, not executable agent programs.
+Before such a rule can enter the selector, every feature condition and effect
+must be bound to one of the compiler's safe constructs. The accepted bindings
+include unary and binary primitive counts, forward and reverse role counts,
+goal-aligned concept and role counts, filtered goal-role counts, nullary
+Boolean predicates, and the object-free goal-distance fragment described above.
+Each binding records the supported condition operators, effect operators,
+required contexts, body calls, action-effect candidates, and rejection reason if
+the feature is unsupported.
+
+Concrete object-specific expressions such as \texttt{c\_one\_of(b1)} remain
+outside the domain-level claim. Compiling them would copy training objects into
+the library and break lifting. Unsupported distance expressions are also
+rejected unless their source concept, target goal concept, and binary role can
+be recovered as declared \pddl{} predicates with matching arities.
 
 \subsection{Selection Objective}
 
@@ -125,6 +175,25 @@ contexts, fewer body calls, trace- or sketch-justified candidates over
 unjustified schema-only candidates, and rules with explicit progress evidence.
 The selector therefore chooses the best library within the declared hypothesis
 class, not the best possible generalized plan over all languages.
+
+\subsection{Counterexample-Guided Refinement}
+
+Held-out failures are lifted into explicit constraints before the next synthesis
+round. A missing atomic module becomes a Layer B atomic-progress constraint when
+the failed subgoal is named. A missing \texttt{!g} plan becomes a Layer C
+state-coverage constraint. A primitive-action precondition failure becomes a
+Layer B repair constraint when the missing precondition is a positive,
+producible \pddl{} predicate. If a failure shows that one final goal was
+achieved before another causally related goal, it becomes a goal-ordering
+constraint for Layer C.
+
+Termination failures are not silently treated as success. Recursive-loop and
+step-limit failures keep explicit termination diagnostics, but when the failed
+state still contains supported missing positive goals, the system also emits a
+companion generative constraint: atomic progress for a named failed predicate
+subgoal, or state coverage for a top-level composer failure. Unsupported
+negative repairs, undeclared predicates, wrong arities, and unproducible targets
+remain structured diagnostics rather than synthesized plans.
 
 \begin{algorithm}[t]
 \caption{Synthesize a domain-level lifted \asl{} library}
@@ -157,7 +226,7 @@ $\mathcal{I}_{eval}$
 	\If{all validation and evaluation checks pass}
 		\State \Return $\mathcal{L}$ and its provenance report
 	\EndIf
-	\State lift supported failures into $\mathcal{I}_{cex}$ constraints
+	\State lift supported failures into counterexample files and explicit constraints
 \Until{the failure is unsupported or no new constraint can be generated}
 \State \Return $\mathcal{L}$ with unsupported-failure diagnostics
 \end{algorithmic}
@@ -189,6 +258,7 @@ library executes only declared \pddl{} actions and predicate subgoals and solves
 the validated problem set without run-time full-trace planning.
 
 This guarantee is intentionally conditional. Domains whose solution requires
-features outside the safe binding language, such as unbounded cyclic-route
-ranking without an accepted reachability feature, are reported as outside the
+features outside the safe binding language, concrete object-specific policy
+features, unsupported negative or disjunctive goals, or unbounded cyclic-route
+ranking without an accepted progress certificate are reported as outside the
 current claim rather than being solved by unsafe trace replay.

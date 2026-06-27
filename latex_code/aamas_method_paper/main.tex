@@ -94,23 +94,45 @@ programs: given a \pddl{} domain and a small set of training problems,
 synthesize a lifted \asl{} library that can solve new achievement-goal problems
 from the same domain without asking a planner for a full trace at run time.
 
-The method follows the view that many useful planning domains share a compact
-subgoal structure expressible by sketches and generalized policies
-\cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches,
-Bonet2024GeneralPoliciesWidth}. We adapt this view to \asl{} by making the
-output modular. Atomic modules implement predicate goals such as
-\texttt{clear(X)} or \texttt{on(X,Y)}. A separate top-level composer orders
-conjunctive goals using read-only goal descriptors such as
-\texttt{goal\_on(X,Y)} and read-only ready contexts derived from the selected
-support agenda. The descriptors specify the current problem goal, while the
-achievement-goal heads remain ordinary \pddl{} predicates.
+The central difficulty is goal dependence. A domain-level library cannot simply
+learn one trace per problem, nor can it assume that conjunctive goals are
+independent. In Blocksworld, for example, a tower goal must be built in a
+causally valid order; achieving a top block before its support can destroy the
+conditions needed later. The library must therefore contain both atomic
+predicate-goal modules and a composer that chooses which goal to pursue next.
 
-The contribution claimed here is deliberately bounded. We do not claim universal
+We build on the observation that many planning domains share compact subgoal
+structure expressible by policy sketches and generalized policies
+\cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches,
+Bonet2024GeneralPoliciesWidth}. Our contribution is to turn that structure into
+an executable \asl{} artifact. The output is not a per-problem plan and does not
+contain synthetic achievement names. Atomic modules implement declared \pddl{}
+predicates such as \texttt{clear} or \texttt{on}. A separate composer uses
+read-only goal descriptors such as \texttt{goal\_on} and derived
+\texttt{ready\_on} contexts to order conjunctive goals. The descriptors say what
+the current problem asks for; the achievement-goal heads remain ordinary
+\pddl{} predicates.
+
+The paper makes four contributions.
+\begin{enumerate}
+	\item We define a bounded hypothesis class for goal-conditioned modular
+	policy sketches that compile to lifted \asl{} plan schemas.
+	\item We give an answer-set selection procedure that chooses Layer B
+	atomic modules and Layer C composer rules from \pddl{} schemas, verified
+	external sketches, bounded transition evidence, and lifted counterexamples.
+	\item We provide a conservative feature-binding and compiler contract:
+	every external feature must map to declared predicates, primitive actions,
+	predicate subgoals, read-only goal descriptors, or a structured rejection.
+	\item We evaluate the resulting libraries on achievement-goal domains with
+	no run-time full-trace planner, including strict Blocksworld paper-profile
+	rows and diagnostic ablations for refinement and goal composition.
+\end{enumerate}
+
+The contribution is deliberately bounded. We do not claim universal
 generalized-planning completeness for arbitrary \pddl{} domains. We claim a
-bounded-class synthesis procedure for libraries expressible as
-goal-conditioned modular policy sketches with safe lifted feature bindings.
-Unsupported cases are rejected with diagnostics instead of being compiled into
-unsafe plans.
+synthesis procedure for libraries expressible inside the declared
+goal-conditioned modular sketch language. Unsupported cases are rejected with
+diagnostics rather than compiled into unsafe plans.
 
 \input{sections/related_work}
 
@@ -124,9 +146,22 @@ unsafe plans.
 The current method supports positive conjunctive achievement goals. Negative
 goals, disjunctive goals, derived predicates, conditional effects, and numeric
 fluents require additional semantics before they can be part of the paper
-claim. Temporal extended goals are handled by a future deterministic finite
-automaton controller that calls the achievement-goal library; they are not part
-of the current algorithm.
+claim. Unsupported cases are rejected before compilation so that the generated
+library never contains undeclared symbols, grounded training objects, or
+synthetic achievement names.
+
+The feature language is also bounded. The compiler accepts only external
+features with recoverable lifted semantics. Object-free goal-distance features
+are supported when they refer to a declared unary state predicate, the matching
+read-only goal predicate, and a declared binary role. Concrete object-specific
+features remain outside the claim because they would make the output depend on
+training-instance object names.
+
+Temporal extended goals are handled by a future deterministic finite automaton
+controller that calls the achievement-goal library; they are not part of the
+current algorithm. This separation is intentional: the deterministic finite
+automaton layer is query-specific, while the achievement-goal library remains
+domain-level.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}

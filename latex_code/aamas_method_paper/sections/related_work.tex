@@ -3,32 +3,48 @@
 
 Policy sketches express domain-general subgoal structure as rules over
 qualitative feature changes \cite{Drexler2024SubgoalSketches}. The
-learner-sketches system learns such sketches automatically with an answer-set
-formulation \cite{Drexler2022LearningSketches}. Our method reuses this line as
-the primary external evidence source, but changes the output target: the final
-artifact is a lifted \asl{} library rather than a sketch-guided planner.
+learner-sketches system learns such sketches automatically through an answer-set
+formulation \cite{Drexler2022LearningSketches}. This line provides the closest
+theoretical basis for our method because it studies subgoal serialization and
+bounded-width decompositions. The difference is the target artifact. A raw
+sketch normally guides a planner that fills in subproblems; our compiler instead
+turns selected sketch evidence into executable lifted \asl{} rules.
 
 Generalized-policy learning studies policies that solve many instances of a
 domain using learned features and abstract transitions
 \cite{Bonet2018Features,Frances2021LearningGeneralPolicies,
-Bonet2024GeneralPoliciesWidth}. Policy reuse extends this direction with
-policies that call other policies \cite{Bonet2024PolicyReuse}. This is close to
-our modular view: Layer B learns reusable predicate-goal modules and Layer C
-calls those modules to compose conjunctive goals. The difference is that our
-compiler commits to executable \asl{} plan schemas with declared primitive
-actions and predicate subgoal calls.
+Bonet2024GeneralPoliciesWidth}. These methods are attractive because they
+avoid per-problem trace replay. However, a flat policy is not already an agent
+plan library: it does not expose predicate-goal modules, reusable subgoal calls,
+or the top-level \texttt{+!g} composition structure expected by
+Belief-Desire-Intention agents. Policy reuse moves closer to our target by
+allowing policies to call other policies \cite{Bonet2024PolicyReuse}. We adopt
+that modular intuition, but make the interface concrete: Layer B produces
+predicate achievement modules, and Layer C calls those modules under
+goal-conditioned contexts.
 
-MOOSE learns first-order condition-to-actions rules by goal regression from
+MOOSE learns first-order condition-to-action rules by goal regression from
 training plans \cite{Chen2026Moose}. It is a strong comparison point because it
-also targets domain-level generalized plans from training problems. We treat it
-as a baseline and source of evidence about goal regression, not as the final
-library generator, because our output must expose \asl{} predicate modules and a
-goal-conditioned composer.
+also seeks domain-level generalized plans from training problems. Our local
+reproduction indicates that its assumptions are suitable for some domains, but
+less suitable as the final mechanism for strongly goal-dependent Blocksworld
+variants. We therefore use MOOSE as a baseline and source of contrast, not as
+the compiler target. Our output must be a lifted \asl{} library whose heads are
+declared predicates and whose body steps are declared primitive actions or
+predicate subgoals.
+
+Answer-set programming is used as an optimization and consistency mechanism,
+following the style of sketch learning with Clingo
+\cite{Gebser2018Clingo,Drexler2022LearningSketches}. The answer set does not
+invent arbitrary program text. It selects among candidates whose symbols have
+already been checked against the \pddl{} domain, the external feature-binding
+contract, and the compiler's variable-safety rules.
 
 External code reuse is intentionally conservative. The sketch learner is the
 primary consumed backend: its feature-rule policies have a verified parser,
 feature-binding audit, and conservative \asl{} compiler path. The h-policy and
 d2l artifacts are pinned and admitted only through verified safe dialect
-adapters; unsupported feature constructs remain diagnostics rather than
-executable plan-library evidence. This avoids treating unrelated paper artifacts
-as if they were safe \asl{} modules.
+adapters. Unsupported feature constructs remain diagnostics rather than
+executable plan-library evidence. This prevents a common failure mode in which a
+qualitative feature policy is treated as if it were already an executable agent
+program.
