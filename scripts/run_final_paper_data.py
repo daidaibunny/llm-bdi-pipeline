@@ -120,7 +120,7 @@ def _main_library_config(output_dir: Path) -> dict[str, object]:
 				max_steps=30000,
 				max_depth=3000,
 				timeout_seconds=900,
-				evaluation_timeout_seconds=30,
+				evaluation_timeout_seconds=120,
 				ablation_label="paper_external_sketch_satisfiable_large",
 				baseline_json=output_dir / "baselines" / "blocksworld-satisfiable-large.json",
 			),

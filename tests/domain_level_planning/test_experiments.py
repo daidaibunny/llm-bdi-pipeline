@@ -622,6 +622,11 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 			"coverage_delta_vs_library": 0.0,
 			"runtime_planner": "offline_baseline_only",
 			"notes": "per-problem planner trace baseline",
+			"comparison_scope": "coverage_baseline",
+			"domain_level_artifact": False,
+			"evidence_source": "",
+			"coverage_semantics": "executed",
+			"validation": None,
 		},
 	]
 	assert table["paper_table_rows"][-1] == {
