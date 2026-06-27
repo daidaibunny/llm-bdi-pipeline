@@ -1,0 +1,6 @@
+{
+  "predicate_map": {
+    "on-table": "ontable",
+    "arm-empty": "handempty"
+  }
+}

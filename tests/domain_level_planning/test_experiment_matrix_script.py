@@ -117,6 +117,83 @@ def test_experiment_matrix_script_writes_success_failure_and_comparison_rows(
 	)
 
 
+def test_experiment_matrix_removes_stale_generated_json(
+	tmp_path: Path,
+) -> None:
+	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	output_dir = tmp_path / "matrix-output"
+	output_dir.mkdir()
+	stale_report = output_dir / "old-development-probe.json"
+	stale_report.write_text('{"stale": true}', encoding="utf-8")
+
+	summary = run_experiment_matrix(
+		config={
+			"matrix_name": "stale-cleanup-matrix",
+			"experiments": [
+				{
+					"name": "labworkflow-refinement-matrix",
+					"domain_file": str(lab_root / "domain.pddl"),
+					"train_problems": [str(lab_root / "problems" / "p01.pddl")],
+					"eval_problems": [str(lab_root / "problems" / "p01.pddl")],
+					"max_steps": 100,
+					"max_depth": 50,
+				},
+			],
+		},
+		config_base=PROJECT_ROOT,
+		output_dir=output_dir,
+		continue_on_error=True,
+	)
+
+	assert summary["succeeded_count"] == 1
+	assert not stale_report.exists()
+	assert (output_dir / "labworkflow-refinement-matrix.json").exists()
+	assert (output_dir / "comparison.json").exists()
+	assert (output_dir / "matrix-summary.json").exists()
+
+
+def test_experiment_matrix_cleanup_preserves_config_file(
+	tmp_path: Path,
+) -> None:
+	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	output_dir = tmp_path / "matrix-output"
+	output_dir.mkdir()
+	config_file = output_dir / "config.json"
+	config_file.write_text(
+		json.dumps(
+			{
+				"matrix_name": "preserve-config-matrix",
+				"experiments": [
+					{
+						"name": "labworkflow-preserve-config",
+						"domain_file": str(lab_root / "domain.pddl"),
+						"train_problems": [str(lab_root / "problems" / "p01.pddl")],
+						"eval_problems": [str(lab_root / "problems" / "p01.pddl")],
+						"max_steps": 100,
+						"max_depth": 50,
+					},
+				],
+			},
+			indent=2,
+		),
+		encoding="utf-8",
+	)
+	stale_report = output_dir / "stale-report.json"
+	stale_report.write_text('{"stale": true}', encoding="utf-8")
+
+	summary = run_experiment_matrix(
+		config=json.loads(config_file.read_text(encoding="utf-8")),
+		config_base=PROJECT_ROOT,
+		output_dir=output_dir,
+		continue_on_error=True,
+		preserve_files=(config_file,),
+	)
+
+	assert summary["succeeded_count"] == 1
+	assert config_file.exists()
+	assert not stale_report.exists()
+
+
 def test_experiment_matrix_script_fail_fast_exits_on_first_error(
 	tmp_path: Path,
 ) -> None:
@@ -231,6 +308,11 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 		]
 		== 900
 	)
+	for row in expanded_rows.values():
+		for source in tuple(row.get("external_sketch_vocabularies") or ()):
+			_, raw_path = source.split("=", maxsplit=1)
+			assert not raw_path.startswith("tmp/")
+			assert (PROJECT_ROOT / raw_path).exists()
 	assert (
 		expanded_rows[
 			"blocksworld-bootstrap-train1-satisfiable-mixed-large"

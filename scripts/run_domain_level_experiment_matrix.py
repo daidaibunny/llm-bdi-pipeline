@@ -12,7 +12,7 @@ from pathlib import Path
 import signal
 from time import perf_counter
 import traceback
-from typing import Iterator, Sequence
+from typing import Iterable, Iterator, Sequence
 
 import sys
 
@@ -67,6 +67,7 @@ def main() -> None:
 		config_base=config_base,
 		output_dir=args.output_dir,
 		continue_on_error=not args.fail_fast,
+		preserve_files=(args.config,) if args.config is not None else (),
 	)
 	print(
 		"wrote "
@@ -83,6 +84,7 @@ def run_experiment_matrix(
 	config_base: Path,
 	output_dir: Path,
 	continue_on_error: bool = True,
+	preserve_files: Iterable[Path | str] = (),
 ) -> dict[str, object]:
 	"""Run each matrix entry and persist reports plus comparison artifacts."""
 
@@ -91,6 +93,7 @@ def run_experiment_matrix(
 	if not entries:
 		raise ValueError("Experiment matrix config requires a non-empty 'experiments' list.")
 	output_dir.mkdir(parents=True, exist_ok=True)
+	_reset_managed_matrix_output(output_dir, preserve_files=preserve_files)
 	reports: list[dict[str, object]] = []
 	report_files: list[Path] = []
 	started = perf_counter()
@@ -142,6 +145,23 @@ def run_experiment_matrix(
 		encoding="utf-8",
 	)
 	return summary
+
+
+def _reset_managed_matrix_output(
+	output_dir: Path,
+	*,
+	preserve_files: Iterable[Path | str],
+) -> None:
+	"""Remove stale JSON reports before writing a fresh matrix result."""
+
+	preserved = {
+		Path(path).expanduser().resolve()
+		for path in preserve_files
+		if str(path).strip()
+	}
+	for path in output_dir.glob("*.json"):
+		if path.resolve() not in preserved:
+			path.unlink()
 
 
 def _run_matrix_entry(
@@ -579,7 +599,10 @@ def _preset_config(preset: str) -> dict[str, object]:
 		".external/gp-backends/learner-sketches/learning/"
 		"workspace-2024-09-24-tractable/blocks_4_on_2/output/sketch_minimized_2.txt"
 	)
-	blocks_vocab = "tmp/blocksworld-first20-experiment/learner-sketches-blocksworld-vocab.json"
+	blocks_vocab = (
+		"src/benchmark_data/external_vocab/"
+		"learner_sketches_blocksworld_blocks_4_on_2.json"
+	)
 	experiments: list[dict[str, object]] = [
 		{
 			"name": "blocksworld-bootstrap-first20",

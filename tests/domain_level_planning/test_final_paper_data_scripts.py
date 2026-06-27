@@ -133,6 +133,16 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 			"sketch_minimized_2.txt"
 		),
 	]
+	vocab_sources = tuple(
+		source
+		for row in main["experiments"]
+		for source in tuple(row.get("external_sketch_vocabularies") or ())
+	)
+	assert vocab_sources
+	for source in vocab_sources:
+		_, raw_path = source.split("=", maxsplit=1)
+		assert not raw_path.startswith("tmp/")
+		assert (Path.cwd() / raw_path).exists()
 
 	ablation_names = {row["name"] for row in ablation["experiments"]}
 	assert "blocksworld-no-external-sketch-first20" in ablation_names

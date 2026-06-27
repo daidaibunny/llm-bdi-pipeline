@@ -30,8 +30,10 @@ BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
 BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "problems" / "p01.pddl"
 
 
-def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain() -> None:
-	domain_file, problem_file = _write_logistics_domain_and_problem()
+def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_logistics_domain_and_problem(tmp_path)
 
 	plan_library = build_goal_conditioned_library_from_pddl(
 		domain_file=domain_file,
@@ -798,8 +800,8 @@ def test_goal_facts_from_problem_are_read_only_problem_inputs() -> None:
 	)
 
 
-def test_synthesis_report_exposes_clingo_schema_contract() -> None:
-	domain_file, _ = _write_logistics_domain_and_problem()
+def test_synthesis_report_exposes_clingo_schema_contract(tmp_path: Path) -> None:
+	domain_file, _ = _write_logistics_domain_and_problem(tmp_path)
 	plan_library = build_goal_conditioned_library_from_pddl(domain_file=domain_file)
 	report = plan_library.metadata["unified_synthesis_report"]
 
@@ -1413,10 +1415,8 @@ def _goal_context_signature(
 	return (name, *args)
 
 
-def _write_logistics_domain_and_problem(
-	tmp_path: Path | None = None,
-) -> tuple[Path, Path]:
-	root = tmp_path or Path.cwd() / "tmp" / "schema-synthesis-tests"
+def _write_logistics_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:
+	root = tmp_path
 	root.mkdir(parents=True, exist_ok=True)
 	domain_file = root / "domain.pddl"
 	problem_file = root / "problem.pddl"

@@ -38,7 +38,10 @@ BLOCKS_POLICY = (
 	".external/gp-backends/learner-sketches/learning/"
 	"workspace-2024-09-24-tractable/blocks_4_on_2/output/sketch_minimized_2.txt"
 )
-BLOCKS_VOCAB = "tmp/blocksworld-first20-experiment/learner-sketches-blocksworld-vocab.json"
+BLOCKS_VOCAB = (
+	"src/benchmark_data/external_vocab/"
+	"learner_sketches_blocksworld_blocks_4_on_2.json"
+)
 MOOSE_BLOCKS_STATUS = ".external/moose/exact-runs/blocksworld-paper-params-probe/train-status.csv"
 
 
