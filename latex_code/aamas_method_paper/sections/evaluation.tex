@@ -1,95 +1,162 @@
-\section{Evaluation Protocol}
-\label{sec:evaluation-protocol}
+\section{Evaluation}
+\label{sec:evaluation}
 
-The evaluation is designed to separate working claims, ablations, baselines,
-and limitations. Runtime evaluation executes the compiled \asl{} library.
-Classical planners may appear only as offline evidence providers,
-counterexample generators, or baseline systems. Each experiment reports
-coverage, library size, selected rule provenance, rejected-candidate
-diagnostics, validation scope, and whether a full-trace planner was used at run
-time. The expected run-time flag for \methodname{} is always false. Final
-tables should be imported from generated result macros, not transcribed by
-hand, using the comparison script over completed experiment reports.
-Each ablation row also reports a machine-readable mechanism status for external
-sketch evidence, counterexample refinement, offline synthesis traces, and
-Layer C ordering, plus paper-profile gating. This prevents an ablation from
-being justified only by a row label.
+The evaluation separates three questions. First, can the selected library solve
+held-out achievement-goal problems without a run-time full-trace planner?
+Second, which synthesis mechanisms are necessary on diagnostic splits? Third,
+where does the current bounded hypothesis class stop? All reported library rows
+execute compiled lifted \asl{} plans with run-time planner flag
+\texttt{none}. Classical planners and generalized-planning systems appear only
+as offline baselines, evidence providers, or diagnostics.
 
-\begin{table*}[t]
-	\caption{Planned non-temporal evaluation matrix. Results are filled only
-	after the corresponding reproducible run is fixed.}
-	\label{tab:evaluation-matrix}
+\begin{table}[t]
+	\caption{Main lifted-library results. The strict paper-profile rows require
+	a selected external sketch candidate, selected Layer C agenda evidence, and
+	no run-time full-trace planner.}
+	\label{tab:main-results}
 	\small
-	\begin{tabular}{
-		p{0.18\textwidth}
-		p{0.18\textwidth}
-		p{0.22\textwidth}
-		p{0.31\textwidth}}
+	\begin{tabular}{p{0.40\columnwidth}rcr}
 		\toprule
-		Question & Domains & Metrics & Required evidence \\
+		Row & Solved & Plans & Planner \\
 		\midrule
-		In-domain generalization &
-		Blocksworld &
-		coverage, library size, run time &
-		fixed train/test split and selected-rule provenance \\
-		Goal dependency &
-		Blocksworld, Labworkflow &
-		coverage after ordering/refinement &
-		Layer C ordering source and counterexample log \\
-		Backend reuse &
-		Blocksworld &
-		selected external rules and rejected rules &
-		learner-sketches artifact, adapter, and audit report \\
-		Ablation &
-		Blocksworld, Labworkflow &
-		coverage delta and blocking failures &
-		no-sketch, no-composer, no-refinement variants \\
-		Diagnostic boundary &
-		Transport, Marsrover, Satellite &
-		failure class and unsupported feature &
-		ranking/reachability or unsupported-fragment diagnosis \\
+		Blocksworld first20 &
+		\ResultPaperExternalSketchFirstTwoZeroSolved &
+		\ResultPaperExternalSketchFirstTwoZeroPlanCount &
+		\ResultPaperExternalSketchFirstTwoZeroRuntimePlanner \\
+		Blocksworld large towers &
+		\ResultPaperExternalSketchSatisfiableLargeSolved &
+		\ResultPaperExternalSketchSatisfiableLargePlanCount &
+		\ResultPaperExternalSketchSatisfiableLargeRuntimePlanner \\
+		Blocksworld mixed towers &
+		\ResultPaperExternalSketchSatisfiableMixedLargeSolved &
+		\ResultPaperExternalSketchSatisfiableMixedLargePlanCount &
+		\ResultPaperExternalSketchSatisfiableMixedLargeRuntimePlanner \\
+		Labworkflow refinement &
+		\ResultLabworkflowCounterexampleRefinementSolved &
+		\ResultLabworkflowCounterexampleRefinementPlanCount &
+		\ResultLabworkflowCounterexampleRefinementRuntimePlanner \\
 		\bottomrule
 	\end{tabular}
-\end{table*}
+\end{table}
 
-\subsection{Main Experiments}
+Table~\ref{tab:main-results} shows the main positive evidence. The three
+Blocksworld rows use the verified \texttt{blocks\_4\_on\_2} learner-sketches
+artifact and the strict paper profile. The learned library solves the original
+first-20 split and two larger satisfiable held-out splits. The large-tower split
+contains towers from 50 to 140 blocks. The mixed split contains nontrivial
+initial towers and multiple final towers with both \texttt{ontable} and
+\texttt{on} goals. Labworkflow is smaller, but it exercises the
+counterexample-refinement path: a held-out failure is lifted into a new composer
+constraint and the next library solves both problems.
 
-The main domain is Blocksworld because it stresses goal dependency: a tower goal
-cannot be achieved in an arbitrary order. The paper-ready Blocksworld run must
-use a fixed training split, a fixed held-out split, the verified
-learner-sketches policy artifact, and the strict paper profile. The report must
-show that selected Layer B rules are justified by trace, sketch, or repair
-evidence, and that selected Layer C rules explain their ordering source.
+\begin{table}[t]
+	\caption{Mechanism ablations. Coverage drops on Labworkflow identify the
+	Layer C/refinement mechanism; the Blocksworld no-sketch row shows that the
+	first-20 split alone does not isolate external-sketch necessity.}
+	\label{tab:ablations}
+	\small
+	\begin{tabular}{p{0.45\columnwidth}rc}
+		\toprule
+		Row & Solved & Diagnostic \\
+		\midrule
+		No external sketch, Blocksworld &
+		\ResultNoExternalSketchFirstTwoZeroSolved &
+		bootstrap \\
+		No Layer C/refinement, Labworkflow &
+		\ResultNoLayerCNoRefinementLabworkflowSolved &
+		missing composer \\
+		No counterexample refinement, Labworkflow &
+		\ResultNoCounterexampleRefinementLabworkflowSolved &
+		missing repair \\
+		No trace evidence, Transport &
+		\ResultNoOfflineTraceEvidenceTransportSolved &
+		initial-state only \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
-Labworkflow is used as a small non-Blocksworld counterexample-refinement test.
-It is not enough for a broad claim, but it checks whether a held-out failure can
-generate an executable composer candidate and then succeed in a subsequent
-round.
+The ablation table is intentionally interpreted narrowly. The Blocksworld
+no-sketch row remains at
+\ResultNoExternalSketchFirstTwoZeroCoveragePercent{} on first20, so it is not used
+as evidence that external sketches are necessary on that split. It shows that
+schema-derived modules can already cover this small set. The mechanism evidence
+for Layer C and counterexample refinement comes from Labworkflow, where removing
+either mechanism leaves one of two problems unsolved with the diagnostic
+\texttt{no applicable plan for !reagent\_logged(r1)}.
 
-\subsection{Baselines and Ablations}
+\begin{table}[t]
+	\caption{Selected baselines and diagnostics. Baseline planners solve concrete
+	problems independently and are not domain-level libraries.}
+	\label{tab:baselines}
+	\small
+	\begin{tabular}{p{0.48\columnwidth}rc}
+		\toprule
+		Row & Solved & Semantics \\
+		\midrule
+		Fast Downward, first20 &
+		\ResultBlocksworldPaperExternalOnTwoFirstTwoZeroFastDownwardLamaPerProblemSolved &
+		per-problem \\
+		Raw learner-sketches audit, first20 &
+		\ResultBlocksworldPaperExternalOnTwoFirstTwoZeroRawBlocksFourOnTwoPolicyAuditSolved &
+		not executable \\
+		MOOSE Blocksworld probe &
+		\ResultBlocksworldPaperExternalOnTwoFirstTwoZeroBlocksworldMoosePaperParamsProbeSolved &
+		reproduction probe \\
+		Fast Downward, large towers &
+		\ResultBlocksworldPaperExternalOnTwoSatisfiableLargeFastDownwardLamaPerProblemSolved &
+		timeout-limited \\
+		Fast Downward, mixed towers &
+		\ResultBlocksworldPaperExternalOnTwoSatisfiableMixedLargeFastDownwardLamaPerProblemSolved &
+		timeout-limited \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
-The baseline table should include four rows. First, a classical planner solves
-each test problem independently; this measures trace-solving coverage but is not
-a domain-level library. Second, raw learner-sketches reports sketch-policy
-coverage before compilation to \asl{}. Third, MOOSE reports generalized-plan
-coverage where its assumptions apply. Fourth, \methodname{} reports execution of
-the compiled lifted \asl{} library.
+The raw learner-sketches row is an artifact audit, not an executable baseline:
+the policy is qualitative and becomes executable only through the binding,
+selection, and compilation steps of \methodname{}. The MOOSE probe records the
+paper-parameter Blocksworld attempt; it is included because MOOSE is a close
+goal-regression baseline, but the probe did not produce a successful
+Blocksworld generalized policy in the local artifact run. The Fast Downward rows
+measure per-problem trace solving under the fixed final-data timeout. These rows
+are useful for comparison, but they do not produce reusable \asl{} libraries.
 
-Ablations remove one mechanism at a time: external sketch evidence, Layer C
-goal ordering, counterexample refinement, and trace evidence. These runs
-determine whether the proposed combination is doing more than replaying schema
-rules or planner traces. The comparison table is generated from completed
-reports and includes the mechanism status used for each row.
+\begin{table}[t]
+	\caption{Boundary rows. These are not strict paper-profile claims; they mark
+	where the current implementation is evidence-backed but still outside the
+	main bounded-class result.}
+	\label{tab:boundaries}
+	\small
+	\begin{tabular}{p{0.48\columnwidth}rc}
+		\toprule
+		Row & Solved & Status \\
+		\midrule
+		Transport initial-state fragment &
+		\ResultTransportInitialStateFragmentSolved &
+		secondary \\
+		Marsrover trace-evidence fragment &
+		\ResultMarsroverTraceEvidenceFragmentSolved &
+		secondary \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
-\subsection{Failure Analysis}
+Transport and Marsrover demonstrate broader \pddl{} parsing, typed action
+binding, route/resource modules, and validated offline trace evidence. They are
+reported as boundary rows because their current reports are not strict
+paper-profile claims. In particular, they validate execution from problem
+initial states, while arbitrary reachable mid-state policies remain outside the
+main claim unless a future report validates that stronger setting.
 
-Failures are part of the method claim. A failed run is paper-useful only if it
-is classified into a precise reason: unsupported \pddl{} fragment, unbound
-external feature, missing atomic module, missing composer rule,
-counterexample-refinement limit, cyclic-route progress without a ranking
-feature, or a reachable mid-state outside the current policy fragment.
-Transport can be used as positive evidence for typed-overloaded
-carrier/resource delivery from problem initial states only when the report also
-states the remaining bounded mid-state validation counterexamples. Marsrover
-remains a training-scalability diagnostic until bounded exploration or trace
-evidence can be handled within the declared resource limits.
+\subsection{Reproducibility}
+
+The final data package is generated by \path{scripts/run_final_paper_data.py}.
+It writes fixed matrix configurations, backend-audit logs, completed baseline
+records, library reports, \path{comparison.json}, and the imported result macros
+in \path{latex_code/aamas_method_paper/generated/results.tex}. The fixed package
+used here is under \path{tmp/paper-final-latest}. Backend pins and resource
+limits are recorded in the project instructions; external generalized-planning
+learners must be run through a memory guard, and the final library evaluation
+itself uses no run-time full-trace planner. The verification commands are
+\path{uv run pytest -q} and \path{latexmk -pdf main.tex} from the paper
+directory.

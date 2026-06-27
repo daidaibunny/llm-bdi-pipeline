@@ -560,6 +560,7 @@ def test_compare_domain_level_experiment_reports_builds_ablation_table(
 	assert paper_rows["bootstrap_schema_only"] == {
 		"row_type": "library",
 		"label": "bootstrap_schema_only",
+		"macro_id": "bootstrap_schema_only",
 		"domain_name": bootstrap["plan_library"]["domain_name"],
 		"solved": "1/1",
 		"coverage_percent": 100.0,
@@ -632,6 +633,8 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 	assert table["paper_table_rows"][-1] == {
 		"row_type": "baseline",
 		"label": "planner-offline",
+		"macro_id": "baseline-comparison_planner-offline",
+		"report_label": "baseline-comparison",
 		"domain_name": "baseline-mini",
 		"solver_family": "classical_planner",
 		"solved": "1/1",
@@ -643,6 +646,53 @@ def test_compare_domain_level_experiment_reports_summarizes_completed_baselines(
 		"coverage_delta_vs_library": 0.0,
 		"notes": "per-problem planner trace baseline",
 	}
+
+
+def test_comparison_latex_macros_are_unique_for_repeated_baseline_labels(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file, _policy_file = _write_generic_domain_problem_and_policy(
+		tmp_path,
+	)
+	reports = []
+	for name, solved_count, failed_count in (
+		("split-2", 1, 0),
+		("split-10", 0, 1),
+	):
+		reports.append(
+			run_domain_level_experiment(
+				experiment_name=name,
+				domain_file=domain_file,
+				training_problem_files=(problem_file,),
+				evaluation_problem_files=(problem_file,),
+				baselines=(
+					{
+						"label": "fast_downward_lama_per_problem",
+						"solver_family": "classical_planner",
+						"domain_name": "baseline-mini",
+						"coverage_ratio": solved_count / (solved_count + failed_count),
+						"solved_count": solved_count,
+						"failed_count": failed_count,
+					},
+				),
+				max_execution_steps=100,
+				max_depth=50,
+			),
+		)
+
+	table = compare_domain_level_experiment_reports(tuple(reports))
+	baseline_rows = [
+		row for row in table["paper_table_rows"] if row["row_type"] == "baseline"
+	]
+	assert [row["macro_id"] for row in baseline_rows] == [
+		"split-2_fast_downward_lama_per_problem",
+		"split-10_fast_downward_lama_per_problem",
+	]
+
+	macros = format_comparison_latex_macros(table)
+	assert "\\ResultSplitTwoFastDownwardLamaPerProblemSolved}{1/1}" in macros
+	assert "\\ResultSplitOneZeroFastDownwardLamaPerProblemSolved}{0/1}" in macros
+	assert macros.count("\\ResultFastDownwardLamaPerProblemSolved") == 0
 
 
 def test_generated_output_audit_includes_plan_head_subset() -> None:

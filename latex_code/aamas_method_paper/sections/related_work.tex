@@ -25,9 +25,10 @@ as a baseline and source of evidence about goal regression, not as the final
 library generator, because our output must expose \asl{} predicate modules and a
 goal-conditioned composer.
 
-External code reuse is intentionally asymmetric. learner-sketches is currently
-consumed by synthesis because its feature-rule policies have a verified parser,
-feature-binding audit, and conservative \asl{} compiler path. h-policy-learner
-and d2l remain audit-only backends until their output languages have verified
-policy-to-\asl{} adapters. This avoids treating unrelated paper artifacts as if
-they were executable plan-library evidence.
+External code reuse is intentionally conservative. learner-sketches is the
+primary consumed backend because its feature-rule policies have a verified
+parser, feature-binding audit, and conservative \asl{} compiler path. The
+h-policy-learner and d2l artifacts are pinned and admitted only through verified
+safe dialect adapters; unsupported feature constructs remain diagnostics rather
+than executable plan-library evidence. This avoids treating unrelated paper
+artifacts as if they were safe \asl{} modules.
