@@ -176,6 +176,97 @@ def validate_temporal_specification_record(
 	)
 
 
+def build_domain_predicate_arity_map(domain: Any) -> Dict[str, int]:
+	"""Map each declared PDDL predicate name to its declared arity."""
+
+	arity_map: Dict[str, int] = {}
+	for predicate in getattr(domain, "predicates", ()) or ():
+		predicate_name = str(getattr(predicate, "name", "") or "").strip()
+		if predicate_name:
+			arity_map[predicate_name] = len(getattr(predicate, "parameters", ()) or ())
+	return arity_map
+
+
+def build_domain_action_name_set(domain: Any) -> set[str]:
+	"""Collect declared PDDL action names for fluent-vs-action atom rejection."""
+
+	action_names: set[str] = set()
+	for action in getattr(domain, "actions", ()) or ():
+		action_name = str(getattr(action, "name", "") or "").strip()
+		if action_name:
+			action_names.add(action_name)
+	return action_names
+
+
+def validate_predicate_grounded_temporal_specification(
+	record: TemporalSpecificationRecord,
+	*,
+	domain: Any,
+) -> TemporalSpecificationRecord:
+	"""Validate that every LTLf atom is a declared PDDL fluent, not an action.
+
+	This is the goal-specification contract from BDI.md: the domain-level ASL
+	library implements predicate achievement goals (``!on(X, Y)``), so generated
+	LTLf atoms must be domain predicates such as ``on(b4, b2)``, never action or
+	event names such as ``do_put_on(b4, b2)``.
+	"""
+
+	if not record.instruction_id:
+		raise ValueError("Temporal specification requires a non-empty instruction_id.")
+	if not record.source_text:
+		raise ValueError(f'Temporal specification "{record.instruction_id}" requires source_text.')
+	if not record.ltlf_formula:
+		raise ValueError(f'Temporal specification "{record.instruction_id}" requires ltlf_formula.')
+
+	predicate_arity_map = build_domain_predicate_arity_map(domain)
+	action_names = build_domain_action_name_set(domain)
+	referenced_events = referenced_events_from_formula(record.ltlf_formula)
+	if not referenced_events:
+		raise ValueError(
+			f'Temporal specification "{record.instruction_id}" does not reference any predicate atoms.',
+		)
+
+	validated_events: List[ReferencedEvent] = []
+	for event in referenced_events:
+		predicate_name = str(event.event or "").strip()
+		if not predicate_name:
+			continue
+		if predicate_name in action_names and predicate_name not in predicate_arity_map:
+			raise ValueError(
+				f'Temporal specification "{record.instruction_id}" uses action name '
+				f'"{predicate_name}" as an LTLf atom. Atoms must be PDDL fluents '
+				f"(predicates), not actions.",
+			)
+		if predicate_name not in predicate_arity_map:
+			raise ValueError(
+				f'Temporal specification "{record.instruction_id}" references unknown '
+				f'predicate "{predicate_name}".',
+			)
+		expected_arity = predicate_arity_map[predicate_name]
+		if len(event.arguments) != expected_arity:
+			raise ValueError(
+				f'Temporal specification "{record.instruction_id}" atom "{predicate_name}" '
+				f"uses {len(event.arguments)} arguments but predicate arity is {expected_arity}.",
+			)
+		validated_events.append(event)
+
+	diagnostics = tuple(
+		dict.fromkeys(
+			str(message).strip()
+			for message in record.diagnostics
+			if str(message).strip()
+		),
+	)
+	return TemporalSpecificationRecord(
+		instruction_id=record.instruction_id,
+		source_text=record.source_text,
+		ltlf_formula=record.ltlf_formula,
+		referenced_events=tuple(validated_events),
+		diagnostics=diagnostics,
+		problem_file=record.problem_file,
+	)
+
+
 def normalise_temporal_specification_payloads(
 	payloads: Sequence[Dict[str, Any]],
 	*,

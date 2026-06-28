@@ -90,6 +90,45 @@ uv run python src/main.py generate-library \
 
 The default output root is `artifacts/plan_library/<domain>`.
 
+## NL → LTLf Goal Specification
+
+LTLf is the single goal-specification surface (BDI.md §2, §3, §5, §6). For any
+supported domain and any goal, a SOTA language model converts one natural-language
+instruction into one LTLf formula whose atoms are **PDDL fluents** (predicates such
+as `on(b4, b2)`), never action or event names. A temporal extended goal (TEG) uses
+temporal operators, e.g. `F(on(b4, b2) & X(F(on(b1, b4))))`; a plain achievement
+goal degenerates to a pure conjunction with no temporal operators, e.g.
+`on(b4, b2) & on(b3, b1)`.
+
+The generator (`src/temporal_specification/nl_to_ltlf.py`) is domain-generic: it
+derives every legal atom from the parsed PDDL domain, so adding a supported domain
+needs no code change here.
+
+### Configure the model
+
+Copy `.env.example` to `.env` and set the API key. The default points at Aliyun
+DashScope's OpenAI-compatible endpoint; override `LANGUAGE_MODEL_*` /
+`LTLF_GENERATION_*` for any other OpenAI-compatible provider.
+
+### Train/test workflow
+
+Each domain's instances are split deterministically: the first ~2/3 train the plan
+library and the held-out ~1/3 supply the goals that test it.
+
+```bash
+# 1. Deterministic 2/3-train / 1/3-test split of the four supported domains.
+uv run python scripts/generate_domain_instance_split.py
+
+# 2. Generate fluent-grounded LTLf goals from the NL benchmark queries (needs the key).
+uv run python scripts/generate_ltlf_dataset.py --query-domain blocksworld
+
+# 3. Synthesize the library from the training split and evaluate the generated
+#    held-out goals (achievement and TEG) against it. No live LLM needed here.
+uv run python scripts/run_nl_to_ltlf_eval.py \
+  --query-domain blocksworld \
+  --split-file ./src/benchmark_data/instance_split.json
+```
+
 ## Development
 
 Run focused tests:
