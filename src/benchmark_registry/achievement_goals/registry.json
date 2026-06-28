@@ -1,32 +1,37 @@
 {
-	"schema_version": 1,
-	"goal_specification_layer": "achievement_goal_layer",
-	"future_goal_specification_layers": [
-		"temporal_extended_goal_layer"
-	],
-	"selected_domain_class_ids": [
-		"goal_separable_serialisable_achievement_classes",
-		"bounded_width_sketchable_subgoal_structure_classes",
-		"feature_definable_goal_dependent_construction_classes"
-	],
-	"matrix_names": {
-		"main": "paper-final-main-library",
-		"ablation": "paper-final-ablations",
-		"limitation": "paper-final-limitations"
-	},
-	"preset_includes": {
-		"current-minimum": [
-			"current-minimum"
-		],
-		"paper-diagnostic-smoke": [
-			"current-minimum",
-			"paper-diagnostic-smoke"
-		],
-		"paper-expanded-smoke": [
-			"current-minimum",
-			"paper-diagnostic-smoke",
-			"paper-expanded-smoke"
-		]
-	},
-	"scope": "positive_conjunctive_achievement_goals"
+  "benchmark_source": {
+    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+    "name": "AI-Planning/pddl-generators",
+    "url": "https://github.com/AI-Planning/pddl-generators"
+  },
+  "future_goal_specification_layers": [
+    "temporal_extended_goal_layer"
+  ],
+  "goal_specification_layer": "achievement_goal_layer",
+  "matrix_names": {
+    "ablation": "paper-final-ablations",
+    "limitation": "paper-final-limitations",
+    "main": "paper-final-main-library"
+  },
+  "preset_includes": {
+    "current-minimum": [
+      "current-minimum"
+    ],
+    "paper-diagnostic-smoke": [
+      "current-minimum",
+      "paper-diagnostic-smoke"
+    ],
+    "paper-expanded-smoke": [
+      "current-minimum",
+      "paper-diagnostic-smoke",
+      "paper-expanded-smoke"
+    ]
+  },
+  "schema_version": 1,
+  "scope": "positive_conjunctive_achievement_goals",
+  "selected_domain_class_ids": [
+    "goal_separable_serialisable_achievement_classes",
+    "bounded_width_sketchable_subgoal_structure_classes",
+    "feature_definable_goal_dependent_construction_classes"
+  ]
 }

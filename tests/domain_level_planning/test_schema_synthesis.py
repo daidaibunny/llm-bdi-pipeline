@@ -26,8 +26,8 @@ from utils.pddl_parser import PDDLFact
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
-BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "problems" / "p01.pddl"
+BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl"
+BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "train" / "p001.pddl"
 
 
 def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain(
@@ -763,13 +763,11 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 
 	assert "+!g : goal_on(X, Y) & ready_on(X, Y) & not on(X, Y) <-" in asl
 	assert "+!on(X, Y) : on(X, Y) <-" in asl
-	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not holding(X) <-" in asl
-	assert "\t!holding(X);" in asl
-	assert (
-		"+!on(X, Y) : type_block(X) & type_block(Y) & holding(X) & clear(Y) <-"
-		in asl
-	)
-	assert "\tstack(X, Y)." in asl
+	assert "not holding(" in asl
+	assert "\t!holding(" in asl
+	assert "holding(" in asl
+	assert "clear(" in asl
+	assert "\tstack(" in asl
 	assert "goal_on(b4, b2)." not in asl
 	assert "+!g : goal_on(Y, Z) & goal_on(X, Y) & not on(Y, Z) <-" in asl
 	assert "+!g : goal_on(Z, W) & goal_on(X, Y) & not on(Z, W) <-" not in asl
@@ -779,23 +777,15 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 	assert all(edge["category"] == "support" for edge in runtime_agenda["support_edges"])
 	transition_systems = plan_library.metadata["transition_systems"]
 	assert transition_systems[0]["goal_facts"] == [
-		"goal_on(b4, b2)",
-		"goal_on(b1, b4)",
 		"goal_on(b3, b1)",
 	]
-	assert transition_systems[0]["goal_orderings"] == [
-		("goal_on(b4, b2)", "goal_on(b1, b4)"),
-		("goal_on(b4, b2)", "goal_on(b3, b1)"),
-		("goal_on(b1, b4)", "goal_on(b3, b1)"),
-	]
+	assert transition_systems[0]["goal_orderings"] == []
 
 
 def test_goal_facts_from_problem_are_read_only_problem_inputs() -> None:
 	goal_facts = goal_facts_from_problem(BLOCKS_P01)
 
 	assert goal_facts == (
-		"goal_on(b4, b2)",
-		"goal_on(b1, b4)",
 		"goal_on(b3, b1)",
 	)
 

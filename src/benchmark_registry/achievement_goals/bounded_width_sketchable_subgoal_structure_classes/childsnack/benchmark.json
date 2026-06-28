@@ -1,26 +1,97 @@
 {
-	"schema_version": 1,
-	"goal_specification_layer": "achievement_goal_layer",
-	"benchmark_class_id": "bounded_width_sketchable_subgoal_structure_classes",
-	"domain_id": "childsnack",
-	"display_name": "Childsnack",
-	"domain_role": "planned_claim_target",
-	"support_level": "planned_claim_target",
-	"target_paper_domains": [
-		"childsnack"
-	],
-	"domain_file": null,
-	"problem_sets": {},
-	"baseline_groups": {},
-	"experiments": [],
-	"external_sources": [
-		{
-			"backend": "learner-sketches",
-			"source_path": ".external/gp-backends/learner-sketches/learning/benchmarks/tractable/childsnack"
-		},
-		{
-			"backend": "d2l",
-			"source_path": ".external/gp-backends/d2l/domains/childsnack-opt14-strips"
-		}
-	]
+  "baseline_groups": {},
+  "benchmark_class_id": "bounded_width_sketchable_subgoal_structure_classes",
+  "display_name": "Childsnack",
+  "domain_file": "src/domains/childsnack/domain.pddl",
+  "domain_id": "childsnack",
+  "domain_role": "main_claim",
+  "experiments": [
+    {
+      "ablation_label": "childsnack_source_split_smoke",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "preset",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "childsnack-source-split-smoke",
+      "order": 100,
+      "preset_tags": [
+        "paper-expanded-smoke"
+      ],
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 180,
+      "train_problem_set": "train"
+    },
+    {
+      "ablation_label": "childsnack_source_split_main",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "main",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "childsnack-source-split-main",
+      "order": 100,
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 180,
+      "train_problem_set": "train"
+    }
+  ],
+  "goal_specification_layer": "achievement_goal_layer",
+  "problem_sets": {
+    "all": {
+      "problems": [
+        "src/domains/childsnack/train/p001.pddl",
+        "src/domains/childsnack/train/p002.pddl",
+        "src/domains/childsnack/train/p003.pddl",
+        "src/domains/childsnack/train/p004.pddl",
+        "src/domains/childsnack/train/p005.pddl",
+        "src/domains/childsnack/train/p006.pddl",
+        "src/domains/childsnack/train/p007.pddl",
+        "src/domains/childsnack/train/p008.pddl",
+        "src/domains/childsnack/train/p009.pddl",
+        "src/domains/childsnack/train/p010.pddl",
+        "src/domains/childsnack/train/p011.pddl",
+        "src/domains/childsnack/train/p012.pddl",
+        "src/domains/childsnack/train/p013.pddl",
+        "src/domains/childsnack/train/p014.pddl",
+        "src/domains/childsnack/train/p015.pddl",
+        "src/domains/childsnack/train/p016.pddl",
+        "src/domains/childsnack/train/p017.pddl",
+        "src/domains/childsnack/train/p018.pddl",
+        "src/domains/childsnack/train/p019.pddl",
+        "src/domains/childsnack/train/p020.pddl",
+        "src/domains/childsnack/test/p021.pddl",
+        "src/domains/childsnack/test/p022.pddl",
+        "src/domains/childsnack/test/p023.pddl",
+        "src/domains/childsnack/test/p024.pddl",
+        "src/domains/childsnack/test/p025.pddl",
+        "src/domains/childsnack/test/p026.pddl",
+        "src/domains/childsnack/test/p027.pddl",
+        "src/domains/childsnack/test/p028.pddl",
+        "src/domains/childsnack/test/p029.pddl",
+        "src/domains/childsnack/test/p030.pddl"
+      ]
+    },
+    "goal_specification": {
+      "base": "src/domains/childsnack/test",
+      "glob": "*.pddl"
+    },
+    "train": {
+      "base": "src/domains/childsnack/train",
+      "glob": "*.pddl"
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+    "name": "AI-Planning/pddl-generators",
+    "problem_class": null,
+    "source_domain": "childsnack",
+    "source_domain_file": "domain.pddl",
+    "url": "https://github.com/AI-Planning/pddl-generators"
+  },
+  "support_level": "main_claim",
+  "target_paper_domains": [
+    "childsnack"
+  ]
 }

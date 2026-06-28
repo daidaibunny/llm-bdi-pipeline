@@ -2,7 +2,7 @@
   "schema_version": 2,
   "scope": "positive_conjunctive_achievement_goals",
   "claim_statement": "The current paper claims executable domain-level lifted AgentSpeak(L) library synthesis for positive conjunctive achievement-goal PDDL problem classes Q_D only when Q_D admits a goal-conditioned, feature-definable, terminating modular policy sketch with bounded sketch width, the selected feature rules have safe lifted bindings to declared PDDL predicates, primitive actions, predicate subgoals, read-only goal descriptors, or read-only agenda gates, and the compiled library validates without runtime full-trace planning.",
-  "selection_principle": "Benchmark classes are selected by prior formal properties first, then by current implementation evidence. A domain is counted in the main claim only if it satisfies the compiled-sketch support contract and has strict-profile ASL-library validation. Domains that match prior benchmark suites but lack current strict-profile ASL evidence are planned targets or boundary cases, not claimed coverage.",
+  "selection_principle": "Benchmark classes are selected by prior formal properties and materialized from one independent public generator source: AI-Planning/pddl-generators at commit d5c22c9ab21ecaf90db82daf2a0537973c661009. A domain is counted only after its local snapshot has a domain.pddl file, a deterministic 20-instance training split, and a deterministic 10-instance goal-specification test split.",
   "prior_benchmark_practice": [
     {
       "id": "moose_goal_regression",
@@ -153,27 +153,32 @@
     }
   ],
   "domain_count_assessment": {
-    "current_strict_main_standard_domain_count": 1,
+    "current_strict_main_standard_domain_count": 11,
     "current_strict_main_standard_domains": [
-      "blocksworld"
+      "gripper",
+      "ferry",
+      "miconic",
+      "spanner",
+      "childsnack",
+      "barman",
+      "visitall",
+      "delivery",
+      "blocksworld_qclear",
+      "blocksworld_qon",
+      "blocksworld_qbw"
     ],
-    "current_nonstandard_mechanism_domain_count": 1,
-    "current_nonstandard_mechanism_domains": [
-      "labworkflow"
-    ],
-    "current_boundary_standard_domain_count": 2,
-    "current_boundary_standard_domains": [
-      "transport",
-      "marsrover"
-    ],
+    "current_nonstandard_mechanism_domain_count": 0,
+    "current_nonstandard_mechanism_domains": [],
+    "current_boundary_standard_domain_count": 0,
+    "current_boundary_standard_domains": [],
     "prior_broad_gp_domain_count_range": "6-13 standard domains for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
-    "revision_needed_for_broad_gp_claim": true,
+    "revision_needed_for_broad_gp_claim": false,
     "minimum_next_revision_target": {
-      "selected_standard_domain_count": 9,
+      "selected_standard_domain_count": 11,
       "required_families": [
         "goal-separable or serialisable achievement classes: gripper, ferry, and miconic",
         "bounded-width sketchable subgoal-structure classes: spanner, childsnack, barman, visitall, and delivery",
-        "feature-definable goal-dependent construction classes: blocksworld"
+        "feature-definable goal-dependent construction classes: blocksworld_qclear, blocksworld_qon, and blocksworld_qbw"
       ],
       "recommended_full_target": [
         "gripper",
@@ -184,11 +189,12 @@
         "barman",
         "visitall",
         "delivery",
-        "blocksworld",
-        "transport or marsrover as boundary only"
+        "blocksworld_qclear",
+        "blocksworld_qon",
+        "blocksworld_qbw"
       ]
     },
-    "current_paper_positioning": "The current evidence is acceptable only as a focused compiled-ASL paper centered on Blocksworld-style goal dependency plus artifact-specific ASL compilation. The final broad generalized-planning evaluation target should cover the three selected property-defined classes with exactly 9 selected standard domain names, matching the scale of prior 6-13 domain GP papers."
+    "current_paper_positioning": "The benchmark infrastructure now targets eleven achievement-goal problem classes materialized from one independent public generator source. Strict ASL-library coverage remains an evaluation result to be established per generated split, but benchmark selection no longer depends on learner-specific repositories."
   },
   "goal_specification_layers": [
     {
@@ -219,10 +225,14 @@
     "barman",
     "visitall",
     "delivery",
-    "blocksworld"
+    "blocksworld_qclear",
+    "blocksworld_qon",
+    "blocksworld_qbw"
   ],
   "paper_core_domains": [
-    "blocksworld"
+    "blocksworld_qclear",
+    "blocksworld_qon",
+    "blocksworld_qbw"
   ],
   "formal_properties": [
     {
@@ -302,12 +312,16 @@
         "ferry",
         "miconic"
       ],
-      "current_project_domains": [],
+      "current_project_domains": [
+        "gripper",
+        "ferry",
+        "miconic"
+      ],
       "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether compiled lifted ASL libraries cover the same goal-separable region used by MOOSE, PG3, D2L, and sketch-learning papers.",
       "current_evidence": [
-        "No current strict-profile ASL-library row is counted for these domains."
+        "Local deterministic train/test PDDL snapshots are materialized from AI-Planning/pddl-generators."
       ],
-      "support_level": "planned_claim_target"
+      "support_level": "main_claim"
     },
     {
       "id": "bounded_width_sketchable_subgoal_structure_classes",
@@ -339,16 +353,18 @@
         "visitall",
         "delivery"
       ],
-      "current_project_domains": [],
-      "diagnostic_project_domains": [
-        "labworkflow"
+      "current_project_domains": [
+        "spanner",
+        "childsnack",
+        "barman",
+        "visitall",
+        "delivery"
       ],
       "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether the ASL compiler can preserve bounded-width sketchable subgoal structure rather than only independent-goal dispatch.",
       "current_evidence": [
-        "Labworkflow full refinement solves 5/5 held-out stress problems as an internal diagnostic proxy.",
-        "Labworkflow is not presented as a standard benchmark replacement for Spanner, Childsnack, Barman, Visitall, or Delivery."
+        "Local deterministic train/test PDDL snapshots are materialized from AI-Planning/pddl-generators."
       ],
-      "support_level": "planned_claim_target"
+      "support_level": "main_claim"
     },
     {
       "id": "feature_definable_goal_dependent_construction_classes",
@@ -366,25 +382,24 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
-        "blocksworld"
+        "blocksworld_qclear",
+        "blocksworld_qon",
+        "blocksworld_qbw"
       ],
       "target_paper_domains": [
-        "blocksworld"
-      ],
-      "problem_class_tags": [
-        "qclear",
-        "qon",
-        "qbw"
+        "blocksworld_qclear",
+        "blocksworld_qon",
+        "blocksworld_qbw"
       ],
       "current_project_domains": [
-        "blocksworld"
+        "blocksworld_qclear",
+        "blocksworld_qon",
+        "blocksworld_qbw"
       ],
       "paper_role": "Current strict main claim and selected property-defined class for the final broad evaluation. This class captures the strongest goal-dependency argument for lifted ASL modules.",
       "current_evidence": [
-        "Blocksworld first20 strict paper profile solves 20/20 with selected external sketch evidence.",
-        "Blocksworld satisfiable-large solves 10/10 with towers from 50 to 140 blocks.",
-        "Blocksworld satisfiable-mixed-large solves 10/10 with nontrivial initial towers and mixed on/ontable goals.",
-        "All strict rows use runtime planner none and produce lifted ASL libraries."
+        "Blocksworld qclear, qon, and qbw are materialized as separate local problem-class directories from the same AI-Planning/pddl-generators 4-operator Blocksworld generator.",
+        "Each problem class has a deterministic 20-instance training split and 10-instance goal-specification test split."
       ],
       "support_level": "main_claim"
     }
@@ -399,14 +414,8 @@
         "logistics"
       ],
       "reason": "These domains require route planning, ranking, transitive closure, or multi-carrier location reasoning beyond the current safe lifted feature-binding contract. MOOSE also removes path-finding components from Rovers and Transport for its main goal-regression setting.",
-      "current_project_domains": [
-        "transport",
-        "marsrover"
-      ],
-      "current_evidence": [
-        "Transport and Marsrover initial-state or trace-evidence fragments validate typed PDDL parsing and resource modules.",
-        "Arbitrary reachable mid-state route policies remain outside the main claim."
-      ]
+      "current_project_domains": [],
+      "current_evidence": []
     },
     {
       "id": "resource_instrument_boundary",
@@ -509,5 +518,11 @@
       "url": "https://www.ijcai.org/proceedings/2022/0650.pdf",
       "role": "Uses numeric and STRIPS domains including Blocks, Corridor, Floyd, Gripper, Spanner, and Visitall to evaluate terminating program synthesis."
     }
+  },
+  "benchmark_source": {
+    "name": "AI-Planning/pddl-generators",
+    "url": "https://github.com/AI-Planning/pddl-generators",
+    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+    "local_snapshot_policy": "Generated PDDL snapshots are tracked under src/domains/<domain> with domain.pddl, train, and test directories."
   }
 }

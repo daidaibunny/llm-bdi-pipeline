@@ -8,6 +8,9 @@ from pathlib import Path
 import pytest
 
 from scripts.run_domain_level_experiment import _read_baseline_records
+from tests.domain_level_planning.resource_dependency_fixture import (
+	write_resource_dependency_fixture,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -16,23 +19,23 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 def test_generic_domain_level_experiment_script_runs_any_pddl_split(
 	tmp_path: Path,
 ) -> None:
-	output = tmp_path / "generic-labworkflow.json"
-	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	output = tmp_path / "generic-resource-dependency.json"
+	fixture = write_resource_dependency_fixture(tmp_path / "resource-dependency")
 
 	subprocess.run(
 		(
 			sys.executable,
 			str(PROJECT_ROOT / "scripts" / "run_domain_level_experiment.py"),
 			"--experiment-name",
-			"generic-labworkflow-smoke",
+			"generic-resource-dependency-smoke",
 			"--domain-file",
-			str(lab_root / "domain.pddl"),
+			str(fixture.domain_file),
 			"--train-problem",
-			str(lab_root / "problems" / "p01.pddl"),
+			str(fixture.problems[0]),
 			"--eval-problem",
-			str(lab_root / "problems" / "p01.pddl"),
+			str(fixture.problems[0]),
 			"--eval-problem",
-			str(lab_root / "problems" / "p02.pddl"),
+			str(fixture.problems[1]),
 			"--use-counterexample-refinement",
 			"--max-refinement-rounds",
 			"1",
@@ -50,7 +53,7 @@ def test_generic_domain_level_experiment_script_runs_any_pddl_split(
 	)
 
 	report = json.loads(output.read_text(encoding="utf-8"))
-	assert report["experiment_name"] == "generic-labworkflow-smoke"
+	assert report["experiment_name"] == "generic-resource-dependency-smoke"
 	assert report["coverage"]["solved_count"] == 2
 	assert report["coverage"]["failed_count"] == 0
 	assert report["experiment_protocol"]["ablations"] == [
@@ -88,7 +91,7 @@ def test_generic_domain_level_experiment_script_runs_any_pddl_split(
 def test_generic_domain_level_experiment_script_accepts_completed_baseline_json(
 	tmp_path: Path,
 ) -> None:
-	output = tmp_path / "generic-labworkflow-baseline.json"
+	output = tmp_path / "generic-resource-dependency-baseline.json"
 	baseline_json = tmp_path / "baselines.json"
 	baseline_json.write_text(
 		json.dumps(
@@ -104,22 +107,22 @@ def test_generic_domain_level_experiment_script_accepts_completed_baseline_json(
 		),
 		encoding="utf-8",
 	)
-	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	fixture = write_resource_dependency_fixture(tmp_path / "resource-dependency")
 
 	subprocess.run(
 		(
 			sys.executable,
 			str(PROJECT_ROOT / "scripts" / "run_domain_level_experiment.py"),
 			"--experiment-name",
-			"generic-labworkflow-baseline-smoke",
+			"generic-resource-dependency-baseline-smoke",
 			"--domain-file",
-			str(lab_root / "domain.pddl"),
+			str(fixture.domain_file),
 			"--train-problem",
-			str(lab_root / "problems" / "p01.pddl"),
+			str(fixture.problems[0]),
 			"--eval-problem",
-			str(lab_root / "problems" / "p01.pddl"),
+			str(fixture.problems[0]),
 			"--eval-problem",
-			str(lab_root / "problems" / "p02.pddl"),
+			str(fixture.problems[1]),
 			"--baseline-json",
 			str(baseline_json),
 			"--max-steps",

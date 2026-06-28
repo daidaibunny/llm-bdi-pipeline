@@ -1,0 +1,98 @@
+{
+  "baseline_groups": {},
+  "benchmark_class_id": "feature_definable_goal_dependent_construction_classes",
+  "display_name": "Blocksworld Qon",
+  "domain_file": "src/domains/blocksworld_qon/domain.pddl",
+  "domain_id": "blocksworld_qon",
+  "domain_role": "main_claim",
+  "experiments": [
+    {
+      "ablation_label": "blocksworld_qon_source_split_smoke",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "preset",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "blocksworld_qon-source-split-smoke",
+      "order": 100,
+      "preset_tags": [
+        "paper-expanded-smoke"
+      ],
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 180,
+      "train_problem_set": "train"
+    },
+    {
+      "ablation_label": "blocksworld_qon_source_split_main",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "main",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "blocksworld_qon-source-split-main",
+      "order": 100,
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 180,
+      "train_problem_set": "train"
+    }
+  ],
+  "goal_specification_layer": "achievement_goal_layer",
+  "problem_class": "qon",
+  "problem_sets": {
+    "all": {
+      "problems": [
+        "src/domains/blocksworld_qon/train/p001.pddl",
+        "src/domains/blocksworld_qon/train/p002.pddl",
+        "src/domains/blocksworld_qon/train/p003.pddl",
+        "src/domains/blocksworld_qon/train/p004.pddl",
+        "src/domains/blocksworld_qon/train/p005.pddl",
+        "src/domains/blocksworld_qon/train/p006.pddl",
+        "src/domains/blocksworld_qon/train/p007.pddl",
+        "src/domains/blocksworld_qon/train/p008.pddl",
+        "src/domains/blocksworld_qon/train/p009.pddl",
+        "src/domains/blocksworld_qon/train/p010.pddl",
+        "src/domains/blocksworld_qon/train/p011.pddl",
+        "src/domains/blocksworld_qon/train/p012.pddl",
+        "src/domains/blocksworld_qon/train/p013.pddl",
+        "src/domains/blocksworld_qon/train/p014.pddl",
+        "src/domains/blocksworld_qon/train/p015.pddl",
+        "src/domains/blocksworld_qon/train/p016.pddl",
+        "src/domains/blocksworld_qon/train/p017.pddl",
+        "src/domains/blocksworld_qon/train/p018.pddl",
+        "src/domains/blocksworld_qon/train/p019.pddl",
+        "src/domains/blocksworld_qon/train/p020.pddl",
+        "src/domains/blocksworld_qon/test/p021.pddl",
+        "src/domains/blocksworld_qon/test/p022.pddl",
+        "src/domains/blocksworld_qon/test/p023.pddl",
+        "src/domains/blocksworld_qon/test/p024.pddl",
+        "src/domains/blocksworld_qon/test/p025.pddl",
+        "src/domains/blocksworld_qon/test/p026.pddl",
+        "src/domains/blocksworld_qon/test/p027.pddl",
+        "src/domains/blocksworld_qon/test/p028.pddl",
+        "src/domains/blocksworld_qon/test/p029.pddl",
+        "src/domains/blocksworld_qon/test/p030.pddl"
+      ]
+    },
+    "goal_specification": {
+      "base": "src/domains/blocksworld_qon/test",
+      "glob": "*.pddl"
+    },
+    "train": {
+      "base": "src/domains/blocksworld_qon/train",
+      "glob": "*.pddl"
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+    "name": "AI-Planning/pddl-generators",
+    "problem_class": "qon",
+    "source_domain": "blocksworld",
+    "source_domain_file": "4ops/domain.pddl",
+    "url": "https://github.com/AI-Planning/pddl-generators"
+  },
+  "support_level": "main_claim",
+  "target_paper_domains": [
+    "blocksworld_qon"
+  ]
+}

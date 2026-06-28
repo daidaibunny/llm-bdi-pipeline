@@ -81,6 +81,13 @@
         "commit": "3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4",
         "validate_head": true,
         "role": "plan validation utility for MOOSE reproduction"
+      },
+      {
+        "name": "pddl-generators",
+        "path": ".external/benchmark-sources/pddl-generators",
+        "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+        "validate_head": true,
+        "role": "single independent source for generated achievement-goal benchmark snapshots"
       }
     ]
   },
@@ -108,11 +115,6 @@
     {
       "path": "src/benchmark_registry/achievement_goals",
       "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/benchmark_data/external_vocab/learner_sketches_blocksworld_blocks_4_on_2.json",
-      "kind": "file",
       "tracked": true
     },
     {
@@ -161,251 +163,260 @@
       "tracked": true
     },
     {
-      "path": "src/domains/blocksworld/domain.pddl",
+      "path": "scripts/materialize_achievement_benchmarks.py",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/blocksworld/problems",
+      "path": "src/domains/gripper/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/gripper/train",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/blocksworld/satisfiable-large",
+      "path": "src/domains/gripper/test",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/blocksworld/satisfiable-mixed-large",
+      "path": "src/domains/gripper/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/ferry/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/ferry/train",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/labworkflow/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/labworkflow/problems/p01.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/labworkflow/problems/p02.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/labworkflow/problems/p03.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/labworkflow/problems/p04.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/labworkflow/problems/p05.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/labworkflow/problems/p06.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/transport/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/transport/problems",
+      "path": "src/domains/ferry/test",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/marsrover/domain.pddl",
+      "path": "src/domains/ferry/source.json",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/marsrover/problems",
+      "path": "src/domains/miconic/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/miconic/train",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": ".external/gp-backends/learner-sketches/learning/workspace-2024-09-24-tractable/blocks_4_on_2/output/sketch_minimized_2.txt",
-      "kind": "file",
-      "tracked": false,
-      "pin": "learner-sketches@7a7ea6a6356035afa16ed958b53d8edc86994e0a"
+      "path": "src/domains/miconic/test",
+      "kind": "directory",
+      "tracked": true
     },
     {
-      "path": ".external/moose/exact-runs/blocksworld-paper-params-probe/train-status.csv",
+      "path": "src/domains/miconic/source.json",
       "kind": "file",
-      "tracked": false,
-      "pin": "MOOSE reproduction status imported from local pinned artifact"
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/childsnack/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/childsnack/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/childsnack/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/childsnack/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/visitall/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/visitall/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/visitall/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/visitall/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/delivery/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/delivery/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/delivery/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/delivery/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qclear/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qclear/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qclear/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qclear/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qon/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qon/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qon/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qon/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qbw/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qbw/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qbw/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld_qbw/source.json",
+      "kind": "file",
+      "tracked": true
     }
   ],
   "matrix_configs": {
     "main": {
       "file": "configs/main-library-matrix.json",
       "matrix_name": "paper-final-main-library",
-      "experiments": [
-        "blocksworld-paper-external-on2-first20",
-        "blocksworld-paper-external-on2-satisfiable-large",
-        "blocksworld-paper-external-on2-satisfiable-mixed-large",
-        "labworkflow-counterexample-refinement-stress"
-      ]
+      "experiments": []
     },
     "ablation": {
       "file": "configs/ablation-matrix.json",
       "matrix_name": "paper-final-ablations",
-      "experiments": [
-        "blocksworld-no-external-sketch-first20",
-        "labworkflow-no-layer-c-with-refinement-stress",
-        "labworkflow-no-counterexample-refinement-stress",
-        "transport-no-offline-trace-evidence-first10"
-      ]
+      "experiments": []
     },
     "limitation": {
       "file": "configs/limitation-matrix.json",
       "matrix_name": "paper-final-limitations",
-      "experiments": [
-        "transport-bootstrap-train3-first10-limitation",
-        "marsrover-trace-evidence-train1-first10"
-      ]
+      "experiments": []
     }
   },
   "expected_package": {
-    "report_count": 10,
-    "baseline_count": 10,
-    "paper_table_row_count": 20,
+    "report_count": 0,
+    "baseline_count": 0,
+    "paper_table_row_count": 0,
     "latex_macro_file": "latex_code/aamas_method_paper/sections/result_macros.tex"
   },
-  "expected_library_rows": [
-    {
-      "label": "paper_external_sketch_first20",
-      "solved": "20/20",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": true
-    },
-    {
-      "label": "paper_external_sketch_satisfiable_large",
-      "solved": "10/10",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": true
-    },
-    {
-      "label": "paper_external_sketch_satisfiable_mixed_large",
-      "solved": "10/10",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": true
-    },
-    {
-      "label": "labworkflow_counterexample_refinement_stress",
-      "solved": "5/5",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": false
-    },
-    {
-      "label": "no_external_sketch_first20",
-      "solved": "20/20",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": false
-    },
-    {
-      "label": "no_layer_c_with_refinement_labworkflow_stress",
-      "solved": "0/5",
-      "coverage_percent": 0.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": false
-    },
-    {
-      "label": "no_counterexample_refinement_labworkflow_stress",
-      "solved": "0/5",
-      "coverage_percent": 0.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": false
-    },
-    {
-      "label": "no_offline_trace_evidence_transport",
-      "solved": "10/10",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": false
-    },
-    {
-      "label": "transport_initial_state_fragment",
-      "solved": "10/10",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": false
-    },
-    {
-      "label": "marsrover_trace_evidence_fragment",
-      "solved": "10/10",
-      "coverage_percent": 100.0,
-      "runtime_planner": "none",
-      "paper_profile_ready": false
-    }
-  ],
-  "expected_baseline_rows": [
-    {
-      "macro_id": "blocksworld-paper-external-on2-first20_fast_downward_lama_per_problem",
-      "solved": "20/20",
-      "runtime_planner": "offline_baseline_only"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-first20_raw_blocks_4_on_2_policy_audit",
-      "solved": "0/20",
-      "runtime_planner": "not_runtime_executed"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-first20_blocksworld_moose_paper_params_probe",
-      "solved": "0/5",
-      "runtime_planner": "moose_policy_execution_or_training_probe"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-satisfiable-large_fast_downward_lama_per_problem",
-      "solved": "0/10",
-      "runtime_planner": "offline_baseline_only"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-satisfiable-large_raw_blocks_4_on_2_policy_audit",
-      "solved": "0/10",
-      "runtime_planner": "not_runtime_executed"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-satisfiable-large_blocksworld_moose_paper_params_probe",
-      "solved": "0/5",
-      "runtime_planner": "moose_policy_execution_or_training_probe"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-satisfiable-mixed-large_fast_downward_lama_per_problem",
-      "solved": "7/10",
-      "runtime_planner": "offline_baseline_only"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-satisfiable-mixed-large_raw_blocks_4_on_2_policy_audit",
-      "solved": "0/10",
-      "runtime_planner": "not_runtime_executed"
-    },
-    {
-      "macro_id": "blocksworld-paper-external-on2-satisfiable-mixed-large_blocksworld_moose_paper_params_probe",
-      "solved": "0/5",
-      "runtime_planner": "moose_policy_execution_or_training_probe"
-    },
-    {
-      "macro_id": "labworkflow-counterexample-refinement-stress_fast_downward_lama_per_problem",
-      "solved": "5/5",
-      "runtime_planner": "offline_baseline_only"
-    }
-  ]
+  "expected_library_rows": [],
+  "expected_baseline_rows": [],
+  "benchmark_source": {
+    "name": "AI-Planning/pddl-generators",
+    "url": "https://github.com/AI-Planning/pddl-generators",
+    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+    "local_snapshot_policy": "Tracked PDDL snapshots under src/domains/<domain> with domain.pddl, train, and test."
+  }
 }

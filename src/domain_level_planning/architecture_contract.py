@@ -555,9 +555,10 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				gap="Validation is complete for the current bounded paper package.",
 				current_state=(
 					"Bounded all-reachable-state checks, first-applicable execution, "
-					"one IPC-style first-20 benchmark runner, one non-matching "
-					"synthetic goal-dependency benchmark runner, a generic PDDL split "
-					"experiment runner, and a report-comparison CLI exist; experiment "
+					"a registry-backed benchmark matrix runner, a blocks-domain QBW "
+					"source-snapshot smoke runner, temporary synthetic mechanism "
+					"fixtures, a generic PDDL split experiment runner, and a "
+					"report-comparison CLI exist; experiment "
 					"reports include coverage, generated ASL, generated-output audit, "
 					"library size and runtime metrics, including synthesis and "
 					"evaluation runtime metrics, compact Layer B and Layer C learning "
@@ -575,17 +576,16 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 					"completed baseline JSON metadata, a validation-scope summary that separates "
 					"synthesis-time bounded validation from evaluation coverage, plus "
 					"top-level refinement analysis for convergence and constraint-type counts. "
-					"The final paper data package now includes strict paper-profile "
-					"tower-domain first20, larger satisfiable tower, and mixed-tower "
-					"splits; a dependency-domain Layer C/refinement ablation; route "
-					"and resource boundary rows; completed baseline records; comparison "
-					"JSON; and generated LaTeX result macros."
+					"The final paper data package is now driven by the achievement "
+					"benchmark registry and its unified source snapshots. Final "
+					"library, ablation, baseline, and limitation rows must be "
+					"regenerated from the tracked manifest before they are cited."
 				),
 				required_improvement=(
 					"Future validation can broaden external backend baselines, add "
-					"more domains, or strengthen reachable-mid-state logistics claims, "
-					"but the current paper package has the required main, ablation, "
-					"baseline, boundary, and reproducibility rows."
+					"more domains, strengthen reachable-mid-state logistics claims, "
+					"or regenerate the final library, ablation, baseline, and "
+					"limitation rows from the tracked manifest."
 				),
 				status="done_current_fragment",
 			),

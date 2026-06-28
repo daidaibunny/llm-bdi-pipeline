@@ -21,6 +21,21 @@ from domain_level_planning.experiments import format_comparison_latex_macros
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SELECTED_BENCHMARK_DOMAINS = {
+	"gripper",
+	"ferry",
+	"miconic",
+	"spanner",
+	"childsnack",
+	"barman",
+	"visitall",
+	"delivery",
+	"blocksworld_qclear",
+	"blocksworld_qon",
+	"blocksworld_qbw",
+}
+BENCHMARK_SOURCE_COMMIT = "d5c22c9ab21ecaf90db82daf2a0537973c661009"
+BENCHMARK_SOURCE_URL = "https://github.com/AI-Planning/pddl-generators"
 
 
 def _minimal_artifact_manifest(
@@ -61,19 +76,19 @@ def _minimal_artifact_manifest(
 		},
 		"expected_library_rows": [
 			{
-				"label": "labworkflow_counterexample_refinement_stress",
+				"label": "resource_dependency_counterexample_refinement_stress",
 				"solved": "5/5",
 				"coverage_percent": 100.0,
 				"runtime_planner": "none",
 			},
 			{
-				"label": "no_layer_c_with_refinement_labworkflow_stress",
+				"label": "no_layer_c_with_refinement_resource_dependency_stress",
 				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
 			},
 			{
-				"label": "no_counterexample_refinement_labworkflow_stress",
+				"label": "no_counterexample_refinement_resource_dependency_stress",
 				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
@@ -81,12 +96,12 @@ def _minimal_artifact_manifest(
 		],
 		"expected_baseline_rows": [
 			{
-				"macro_id": "first20_fast_downward_lama_per_problem",
+				"macro_id": "blocksworld_qbw_train_fast_downward_lama_per_problem",
 				"solved": "2/2",
 				"runtime_planner": "offline_baseline_only",
 			},
 			{
-				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
+				"macro_id": "blocksworld_qbw_train_raw_policy_audit",
 				"solved": "0/2",
 				"runtime_planner": "not_runtime_executed",
 			},
@@ -111,8 +126,8 @@ def _write_minimal_validated_package(
 		"paper_table_rows": [
 			{
 				"row_type": "library",
-				"label": "paper_external_sketch_first20",
-				"macro_id": "paper_external_sketch_first20",
+				"label": "paper_external_sketch_blocksworld_qbw_train",
+				"macro_id": "paper_external_sketch_blocksworld_qbw_train",
 				"solved": "2/2",
 				"coverage_percent": 100.0,
 				"runtime_planner": "none",
@@ -122,8 +137,8 @@ def _write_minimal_validated_package(
 			},
 			{
 				"row_type": "library",
-				"label": "labworkflow_counterexample_refinement_stress",
-				"macro_id": "labworkflow_counterexample_refinement_stress",
+				"label": "resource_dependency_counterexample_refinement_stress",
+				"macro_id": "resource_dependency_counterexample_refinement_stress",
 				"solved": "5/5",
 				"coverage_percent": 100.0,
 				"runtime_planner": "none",
@@ -133,8 +148,8 @@ def _write_minimal_validated_package(
 			},
 			{
 				"row_type": "library",
-				"label": "no_layer_c_with_refinement_labworkflow_stress",
-				"macro_id": "no_layer_c_with_refinement_labworkflow_stress",
+				"label": "no_layer_c_with_refinement_resource_dependency_stress",
+				"macro_id": "no_layer_c_with_refinement_resource_dependency_stress",
 				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
@@ -144,8 +159,8 @@ def _write_minimal_validated_package(
 			},
 			{
 				"row_type": "library",
-				"label": "no_counterexample_refinement_labworkflow_stress",
-				"macro_id": "no_counterexample_refinement_labworkflow_stress",
+				"label": "no_counterexample_refinement_resource_dependency_stress",
+				"macro_id": "no_counterexample_refinement_resource_dependency_stress",
 				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
@@ -156,7 +171,7 @@ def _write_minimal_validated_package(
 			{
 				"row_type": "baseline",
 				"label": "fast_downward_lama_per_problem",
-				"macro_id": "first20_fast_downward_lama_per_problem",
+				"macro_id": "blocksworld_qbw_train_fast_downward_lama_per_problem",
 				"solved": "2/2",
 				"coverage_percent": 100.0,
 				"runtime_planner": "offline_baseline_only",
@@ -167,7 +182,7 @@ def _write_minimal_validated_package(
 			{
 				"row_type": "baseline",
 				"label": "raw_blocks_4_on_2_policy_audit",
-				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
+				"macro_id": "blocksworld_qbw_train_raw_policy_audit",
 				"solved": "0/2",
 				"coverage_percent": 0.0,
 				"runtime_planner": "not_runtime_executed",
@@ -345,32 +360,35 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	assert "feature-definable" in taxonomy["claim_statement"]
 	assert "bounded sketch width" in taxonomy["claim_statement"]
 	assert "runtime full-trace planning" in taxonomy["claim_statement"]
-	assert "prior formal properties" in taxonomy["selection_principle"]
-	assert taxonomy["paper_core_domains"] == ["blocksworld"]
+	assert "AI-Planning/pddl-generators" in taxonomy["selection_principle"]
+	assert taxonomy["paper_core_domains"] == [
+		"blocksworld_qclear",
+		"blocksworld_qon",
+		"blocksworld_qbw",
+	]
 	assert taxonomy["domain_count_assessment"][
 		"current_strict_main_standard_domain_count"
-	] == 1
+	] == 11
 	assert taxonomy["domain_count_assessment"][
 		"revision_needed_for_broad_gp_claim"
-	] is True
+	] is False
 	assert (
 		taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
 			"selected_standard_domain_count"
 		]
-		== 9
+		== 11
 	)
 	assert taxonomy["selected_domain_class_count"] == 3
 	assert taxonomy["selected_goal_specification_layer_count"] == 2
-	assert set(taxonomy["selected_standard_domain_targets"]) == {
-		"gripper",
-		"ferry",
-		"miconic",
-		"spanner",
-		"childsnack",
-		"barman",
-		"visitall",
-		"delivery",
-		"blocksworld",
+	assert set(taxonomy["selected_standard_domain_targets"]) == SELECTED_BENCHMARK_DOMAINS
+	assert taxonomy["benchmark_source"] == {
+		"name": "AI-Planning/pddl-generators",
+		"url": "https://github.com/AI-Planning/pddl-generators",
+		"commit": BENCHMARK_SOURCE_COMMIT,
+		"local_snapshot_policy": (
+			"Generated PDDL snapshots are tracked under src/domains/<domain> "
+			"with domain.pddl, train, and test directories."
+		),
 	}
 	goal_layers = {
 		layer["id"]: layer
@@ -483,17 +501,7 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"bounded_width_sketchable_subgoal_structure_classes",
 		"feature_definable_goal_dependent_construction_classes",
 	} == class_ids
-	assert {
-		"gripper",
-		"ferry",
-		"miconic",
-		"spanner",
-		"childsnack",
-		"barman",
-		"visitall",
-		"delivery",
-		"blocksworld",
-	} <= target_domains
+	assert SELECTED_BENCHMARK_DOMAINS <= target_domains
 
 	classes_by_id = {
 		benchmark_class["id"]: benchmark_class
@@ -506,25 +514,33 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"feature_definable_goal_dependent_construction_classes"
 	][
 		"current_project_domains"
-	] == ["blocksworld"]
+	] == ["blocksworld_qclear", "blocksworld_qon", "blocksworld_qbw"]
 	assert classes_by_id[
 		"feature_definable_goal_dependent_construction_classes"
-	]["problem_class_tags"] == ["qclear", "qon", "qbw"]
+	]["target_paper_domains"] == [
+		"blocksworld_qclear",
+		"blocksworld_qon",
+		"blocksworld_qbw",
+	]
 	assert classes_by_id[
 		"goal_separable_serialisable_achievement_classes"
-	]["current_project_domains"] == []
+	]["current_project_domains"] == ["gripper", "ferry", "miconic"]
 	assert classes_by_id[
 		"bounded_width_sketchable_subgoal_structure_classes"
-	]["diagnostic_project_domains"] == ["labworkflow"]
+	]["current_project_domains"] == [
+		"spanner",
+		"childsnack",
+		"barman",
+		"visitall",
+		"delivery",
+	]
 
 	boundary_records = {
 		record["id"]: record
 		for record in taxonomy["excluded_or_boundary_domains"]
 	}
 	assert "transport" in boundary_records["reachability_route_boundary"]["domains"]
-	assert "marsrover" in boundary_records["reachability_route_boundary"][
-		"current_project_domains"
-	]
+	assert boundary_records["reachability_route_boundary"]["current_project_domains"] == []
 	assert "numeric transport" in boundary_records["numeric_boundary"][
 		"domains"
 	]
@@ -553,10 +569,15 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 	assert registry.control["future_goal_specification_layers"] == [
 		"temporal_extended_goal_layer",
 	]
-	assert len(registry.selected_records()) == 9
+	assert len(registry.selected_records()) == 11
 	assert {
 		record.domain_id for record in registry.selected_records()
 	} == set(taxonomy["selected_standard_domain_targets"])
+	assert registry.control["benchmark_source"] == {
+		"name": "AI-Planning/pddl-generators",
+		"url": "https://github.com/AI-Planning/pddl-generators",
+		"commit": BENCHMARK_SOURCE_COMMIT,
+	}
 
 	class_to_domains: dict[str, set[str]] = {}
 	for record in registry.selected_records():
@@ -575,27 +596,30 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 			"delivery",
 		},
 		"feature_definable_goal_dependent_construction_classes": {
-			"blocksworld",
+			"blocksworld_qclear",
+			"blocksworld_qon",
+			"blocksworld_qbw",
 		},
 	}
 
-	blocksworld = next(
-		record for record in registry.selected_records() if record.domain_id == "blocksworld"
-	)
-	assert blocksworld.payload["target_paper_domains"] == ["blocksworld"]
-	assert blocksworld.payload["problem_class_tags"] == [
-		"qclear",
-		"qon",
-		"qbw",
-	]
-	assert all(
-		"qclear" not in record.domain_id and "qon" not in record.domain_id
-		for record in registry.selected_records()
-	)
 	assert all(
 		str(record.payload["goal_specification_layer"]) == "achievement_goal_layer"
 		for record in registry.records
 	)
+	for record in registry.selected_records():
+		domain_root = PROJECT_ROOT / "src" / "domains" / record.domain_id
+		assert (domain_root / "domain.pddl").is_file()
+		assert len(tuple((domain_root / "train").glob("*.pddl"))) == 20
+		assert len(tuple((domain_root / "test").glob("*.pddl"))) == 10
+		assert record.payload["source"]["name"] == "AI-Planning/pddl-generators"
+		assert record.payload["source"]["url"] == BENCHMARK_SOURCE_URL
+		assert record.payload["source"]["commit"] == BENCHMARK_SOURCE_COMMIT
+		source_snapshot = json.loads(
+			(domain_root / "source.json").read_text(encoding="utf-8"),
+		)
+		assert source_snapshot["source"] == "AI-Planning/pddl-generators"
+		assert source_snapshot["source_url"] == BENCHMARK_SOURCE_URL
+		assert source_snapshot["source_commit"] == BENCHMARK_SOURCE_COMMIT
 
 	manifest_inputs = {
 		str(record["path"])
@@ -624,67 +648,27 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 		(output_dir / "artifact-manifest.json").read_text(encoding="utf-8"),
 	) == manifest
 
-	main_rows = {row["name"]: row for row in main["experiments"]}
-	assert "blocksworld-paper-external-on2-first20" in main_rows
-	assert "blocksworld-paper-external-on2-satisfiable-large" in main_rows
-	assert "blocksworld-paper-external-on2-satisfiable-mixed-large" in main_rows
-	assert "labworkflow-counterexample-refinement-stress" in main_rows
-	assert main_rows["labworkflow-counterexample-refinement-stress"]["eval_problems"] == [
-		"src/domains/labworkflow/problems/p02.pddl",
-		"src/domains/labworkflow/problems/p03.pddl",
-		"src/domains/labworkflow/problems/p04.pddl",
-		"src/domains/labworkflow/problems/p05.pddl",
-		"src/domains/labworkflow/problems/p06.pddl",
-	]
-	assert main_rows["blocksworld-paper-external-on2-first20"]["synthesis_profile"] == (
-		"paper"
-	)
-	assert main_rows["blocksworld-paper-external-on2-first20"]["baseline_json"]
-	assert main_rows["blocksworld-paper-external-on2-first20"][
-		"external_sketch_policies"
-	] == [
-		(
-			"blocks_4_on_2=.external/gp-backends/learner-sketches/learning/"
-			"workspace-2024-09-24-tractable/blocks_4_on_2/output/"
-			"sketch_minimized_2.txt"
-		),
-	]
-	vocab_sources = tuple(
-		source
-		for row in main["experiments"]
-		for source in tuple(row.get("external_sketch_vocabularies") or ())
-	)
-	assert vocab_sources
-	for source in vocab_sources:
-		_, raw_path = source.split("=", maxsplit=1)
-		assert not raw_path.startswith("tmp/")
-		assert (Path.cwd() / raw_path).exists()
-
-	ablation_names = {row["name"] for row in ablation["experiments"]}
-	assert "blocksworld-no-external-sketch-first20" in ablation_names
-	assert "labworkflow-no-layer-c-with-refinement-stress" in ablation_names
-	assert "labworkflow-no-counterexample-refinement-stress" in ablation_names
-	assert "transport-no-offline-trace-evidence-first10" in ablation_names
-	no_layer_c_row = next(
-		row
-		for row in ablation["experiments"]
-		if row["name"] == "labworkflow-no-layer-c-with-refinement-stress"
-	)
-	assert no_layer_c_row["use_counterexample_refinement"] is True
-	assert no_layer_c_row["disabled_synthesis_mechanisms"] == ["layer_c_ordering"]
-
-	limitation_names = {row["name"] for row in limitation["experiments"]}
-	assert "transport-bootstrap-train3-first10-limitation" in limitation_names
-	assert "marsrover-trace-evidence-train1-first10" in limitation_names
-	marsrover_row = next(
-		row
-		for row in limitation["experiments"]
-		if row["name"] == "marsrover-trace-evidence-train1-first10"
-	)
-	assert marsrover_row["train_count"] == 1
-	assert marsrover_row["evaluation_timeout_seconds"] == 15
-	assert marsrover_row["use_synthesis_planner_traces"] is True
-	assert marsrover_row["ablation_label"] == "marsrover_trace_evidence_fragment"
+	main_experiments = tuple(main["experiments"])
+	assert {str(item["name"]) for item in main_experiments} == {
+		f"{domain_id}-source-split-main"
+		for domain_id in SELECTED_BENCHMARK_DOMAINS
+	}
+	assert {
+		str(item["domain_file"])
+		for item in main_experiments
+	} == {
+		f"src/domains/{domain_id}/domain.pddl"
+		for domain_id in SELECTED_BENCHMARK_DOMAINS
+	}
+	for experiment in main_experiments:
+		domain_id = str(experiment["name"]).removesuffix("-source-split-main")
+		assert experiment["train_base"] == f"src/domains/{domain_id}/train"
+		assert experiment["eval_base"] == f"src/domains/{domain_id}/test"
+		assert experiment["train_glob"] == "*.pddl"
+		assert experiment["eval_glob"] == "*.pddl"
+		assert experiment["synthesis_profile"] == "bootstrap"
+	assert ablation["experiments"] == []
+	assert limitation["experiments"] == []
 
 
 def test_final_paper_package_validator_accepts_complete_package(
@@ -775,8 +759,8 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 		"paper_table_rows": [
 			{
 				"row_type": "library",
-				"label": "paper_external_sketch_first20",
-				"macro_id": "paper_external_sketch_first20",
+				"label": "paper_external_sketch_blocksworld_qbw_train",
+				"macro_id": "paper_external_sketch_blocksworld_qbw_train",
 				"solved": "1/1",
 				"coverage_percent": 100.0,
 				"runtime_planner": "none",
@@ -786,8 +770,8 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			},
 			{
 				"row_type": "library",
-				"label": "labworkflow_counterexample_refinement_stress",
-				"macro_id": "labworkflow_counterexample_refinement_stress",
+				"label": "resource_dependency_counterexample_refinement_stress",
+				"macro_id": "resource_dependency_counterexample_refinement_stress",
 				"solved": "5/5",
 				"coverage_percent": 100.0,
 				"runtime_planner": "none",
@@ -797,8 +781,8 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			},
 			{
 				"row_type": "library",
-				"label": "no_layer_c_with_refinement_labworkflow_stress",
-				"macro_id": "no_layer_c_with_refinement_labworkflow_stress",
+				"label": "no_layer_c_with_refinement_resource_dependency_stress",
+				"macro_id": "no_layer_c_with_refinement_resource_dependency_stress",
 				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
@@ -808,8 +792,8 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			},
 			{
 				"row_type": "library",
-				"label": "no_counterexample_refinement_labworkflow_stress",
-				"macro_id": "no_counterexample_refinement_labworkflow_stress",
+				"label": "no_counterexample_refinement_resource_dependency_stress",
+				"macro_id": "no_counterexample_refinement_resource_dependency_stress",
 				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
@@ -820,7 +804,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			{
 				"row_type": "baseline",
 				"label": "fast_downward_lama_per_problem",
-				"macro_id": "first20_fast_downward_lama_per_problem",
+				"macro_id": "blocksworld_qbw_train_fast_downward_lama_per_problem",
 				"solved": "2/2",
 				"coverage_percent": 100.0,
 				"runtime_planner": "offline_baseline_only",
@@ -830,7 +814,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			{
 				"row_type": "baseline",
 				"label": "raw_blocks_4_on_2_policy_audit",
-				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
+				"macro_id": "blocksworld_qbw_train_raw_policy_audit",
 				"solved": "0/2",
 				"coverage_percent": 0.0,
 				"runtime_planner": "not_runtime_executed",

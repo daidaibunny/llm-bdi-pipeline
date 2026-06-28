@@ -23,9 +23,10 @@ from utils.pddl_parser import PDDLParser
 
 
 def test_query_sequence_loader_filters_domain_cases_in_numeric_order() -> None:
-	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl"
 	query_sequence, temporal_specifications = load_query_sequence_records(
 		domain_file=domain_file,
+		query_domain="blocksworld",
 	)
 
 	assert len(query_sequence) == len(temporal_specifications)
@@ -37,9 +38,10 @@ def test_query_sequence_loader_filters_domain_cases_in_numeric_order() -> None:
 
 
 def test_query_sequence_loader_filters_explicit_query_ids_in_requested_order() -> None:
-	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl"
 	query_sequence, temporal_specifications = load_query_sequence_records(
 		domain_file=domain_file,
+		query_domain="blocksworld",
 		query_ids=("query_3", "query_1", "query_3"),
 	)
 
@@ -48,10 +50,11 @@ def test_query_sequence_loader_filters_explicit_query_ids_in_requested_order() -
 
 
 def test_query_sequence_loader_rejects_unknown_explicit_query_ids() -> None:
-	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl"
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl"
 	with pytest.raises(ValueError, match='Unknown query ids for domain "blocksworld": query_missing'):
 		load_query_sequence_records(
 			domain_file=domain_file,
+			query_domain="blocksworld",
 			query_ids=("query_missing",),
 		)
 
@@ -106,4 +109,4 @@ def test_temporal_spec_validation_rejects_unknown_events() -> None:
 
 
 def _parse_blocks_domain():
-	return PDDLParser.parse_domain(PROJECT_ROOT / "src" / "domains" / "blocksworld" / "domain.pddl")
+	return PDDLParser.parse_domain(PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl")

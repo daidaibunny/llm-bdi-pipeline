@@ -179,10 +179,11 @@ goal-separable or serialisable class it may reduce to unsatisfied-goal
 dispatch; in bounded-width sketchable classes it must preserve the selected
 subgoal structure; and in Blocksworld-style construction classes it must encode
 the support agenda implicit in feature-definable construction policies, such as
-placing lower tower links before upper links. Blocksworld rows may be tagged by
-goal family, such as \texttt{qclear}, \texttt{qon}, or
-\texttt{qbw}, but these tags are not counted as separate
-domains. Transport, Rovers, Marsrover,
+placing lower tower links before upper links. The selected Blocksworld problem
+classes are materialized as \texttt{blocksworld\_qclear},
+\texttt{blocksworld\_qon}, and \texttt{blocksworld\_qbw}; they are counted as
+separate problem-class rows because each has its own fixed train/test snapshot
+and provenance record. Transport, Rovers, Marsrover,
 Logistics, Satellite, numeric domains, and unselected program-synthesis
 benchmarks are boundary or excluded cases unless their required route,
 transitive-closure, resource-instrument, or numeric semantics are safely bound.

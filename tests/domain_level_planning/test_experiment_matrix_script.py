@@ -8,9 +8,25 @@ from pathlib import Path
 
 from scripts.run_domain_level_experiment_matrix import _preset_config
 from scripts.run_domain_level_experiment_matrix import run_experiment_matrix
+from tests.domain_level_planning.resource_dependency_fixture import (
+	write_resource_dependency_fixture,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SELECTED_BENCHMARK_DOMAINS = {
+	"gripper",
+	"ferry",
+	"miconic",
+	"spanner",
+	"childsnack",
+	"barman",
+	"visitall",
+	"delivery",
+	"blocksworld_qclear",
+	"blocksworld_qon",
+	"blocksworld_qbw",
+}
 
 
 def test_experiment_matrix_script_writes_success_failure_and_comparison_rows(
@@ -19,19 +35,19 @@ def test_experiment_matrix_script_writes_success_failure_and_comparison_rows(
 	domain_file, problem_file = _write_negative_goal_case(tmp_path)
 	config = tmp_path / "matrix.json"
 	output_dir = tmp_path / "matrix-output"
-	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	fixture = write_resource_dependency_fixture(tmp_path / "resource-dependency")
 	config.write_text(
 		json.dumps(
 			{
 				"matrix_name": "test-paper-grade-matrix",
 				"experiments": [
 					{
-						"name": "labworkflow-refinement-matrix",
-						"domain_file": str(lab_root / "domain.pddl"),
-						"train_problems": [str(lab_root / "problems" / "p01.pddl")],
+						"name": "resource-dependency-refinement-matrix",
+						"domain_file": str(fixture.domain_file),
+						"train_problems": [str(fixture.problems[0])],
 						"eval_problems": [
-							str(lab_root / "problems" / "p01.pddl"),
-							str(lab_root / "problems" / "p02.pddl"),
+							str(fixture.problems[0]),
+							str(fixture.problems[1]),
 						],
 						"use_counterexample_refinement": True,
 						"max_refinement_rounds": 1,
@@ -68,7 +84,9 @@ def test_experiment_matrix_script_writes_success_failure_and_comparison_rows(
 	summary = json.loads((output_dir / "matrix-summary.json").read_text(encoding="utf-8"))
 	comparison = json.loads((output_dir / "comparison.json").read_text(encoding="utf-8"))
 	success_report = json.loads(
-		(output_dir / "labworkflow-refinement-matrix.json").read_text(encoding="utf-8"),
+		(output_dir / "resource-dependency-refinement-matrix.json").read_text(
+			encoding="utf-8",
+		),
 	)
 	failure_report = json.loads(
 		(output_dir / "negative-goal-diagnostic.json").read_text(encoding="utf-8"),
@@ -120,7 +138,7 @@ def test_experiment_matrix_script_writes_success_failure_and_comparison_rows(
 def test_experiment_matrix_removes_stale_generated_json(
 	tmp_path: Path,
 ) -> None:
-	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	fixture = write_resource_dependency_fixture(tmp_path / "resource-dependency")
 	output_dir = tmp_path / "matrix-output"
 	output_dir.mkdir()
 	stale_report = output_dir / "old-development-probe.json"
@@ -131,10 +149,10 @@ def test_experiment_matrix_removes_stale_generated_json(
 			"matrix_name": "stale-cleanup-matrix",
 			"experiments": [
 				{
-					"name": "labworkflow-refinement-matrix",
-					"domain_file": str(lab_root / "domain.pddl"),
-					"train_problems": [str(lab_root / "problems" / "p01.pddl")],
-					"eval_problems": [str(lab_root / "problems" / "p01.pddl")],
+					"name": "resource-dependency-refinement-matrix",
+					"domain_file": str(fixture.domain_file),
+					"train_problems": [str(fixture.problems[0])],
+					"eval_problems": [str(fixture.problems[0])],
 					"max_steps": 100,
 					"max_depth": 50,
 				},
@@ -147,7 +165,7 @@ def test_experiment_matrix_removes_stale_generated_json(
 
 	assert summary["succeeded_count"] == 1
 	assert not stale_report.exists()
-	assert (output_dir / "labworkflow-refinement-matrix.json").exists()
+	assert (output_dir / "resource-dependency-refinement-matrix.json").exists()
 	assert (output_dir / "comparison.json").exists()
 	assert (output_dir / "matrix-summary.json").exists()
 
@@ -155,7 +173,7 @@ def test_experiment_matrix_removes_stale_generated_json(
 def test_experiment_matrix_cleanup_preserves_config_file(
 	tmp_path: Path,
 ) -> None:
-	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	fixture = write_resource_dependency_fixture(tmp_path / "resource-dependency")
 	output_dir = tmp_path / "matrix-output"
 	output_dir.mkdir()
 	config_file = output_dir / "config.json"
@@ -165,10 +183,10 @@ def test_experiment_matrix_cleanup_preserves_config_file(
 				"matrix_name": "preserve-config-matrix",
 				"experiments": [
 					{
-						"name": "labworkflow-preserve-config",
-						"domain_file": str(lab_root / "domain.pddl"),
-						"train_problems": [str(lab_root / "problems" / "p01.pddl")],
-						"eval_problems": [str(lab_root / "problems" / "p01.pddl")],
+						"name": "resource-dependency-preserve-config",
+						"domain_file": str(fixture.domain_file),
+						"train_problems": [str(fixture.problems[0])],
+						"eval_problems": [str(fixture.problems[0])],
 						"max_steps": 100,
 						"max_depth": 50,
 					},
@@ -245,123 +263,44 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 	domain_files = {str(item["domain_file"]) for item in experiments}
 
 	assert config["matrix_name"] == "paper-expanded-smoke"
-	assert {
-		"src/domains/blocksworld/domain.pddl",
-		"src/domains/labworkflow/domain.pddl",
-		"src/domains/transport/domain.pddl",
-		"src/domains/satellite/domain.pddl",
-		"src/domains/marsrover/domain.pddl",
-	}.issubset(domain_files)
-	assert "blocksworld-paper-external-on2" in experiment_names
-	assert "blocksworld-no-layer-c-ordering-first20" in experiment_names
-	assert "blocksworld-bootstrap-train1-satisfiable-large" in experiment_names
-	assert "blocksworld-paper-external-on2-satisfiable-large" in experiment_names
-	assert "blocksworld-bootstrap-train1-satisfiable-mixed-large" in experiment_names
-	assert "blocksworld-paper-external-on2-satisfiable-mixed-large" in experiment_names
-	assert "transport-bootstrap-train3-first10" in experiment_names
-	assert "satellite-bootstrap-train3-first10" in experiment_names
-	assert "marsrover-bootstrap-train3-first10" in experiment_names
+	assert domain_files == {
+		f"src/domains/{domain_id}/domain.pddl"
+		for domain_id in SELECTED_BENCHMARK_DOMAINS
+	}
+	assert experiment_names == {
+		f"{domain_id}-source-split-smoke"
+		for domain_id in SELECTED_BENCHMARK_DOMAINS
+	}
 	assert all("achieve" not in name for name in experiment_names)
 
 	expanded_rows = {
 		str(item["name"]): item for item in experiments
 	}
-	assert expanded_rows[
-		"blocksworld-bootstrap-train1-satisfiable-large"
-	]["train_count"] == 1
-	assert expanded_rows[
-		"blocksworld-no-layer-c-ordering-first20"
-	]["disabled_synthesis_mechanisms"] == ["layer_c_ordering"]
-	assert expanded_rows[
-		"blocksworld-no-layer-c-ordering-first20"
-	]["ablation_label"] == "no_layer_c_ordering"
-	assert expanded_rows[
-		"blocksworld-bootstrap-train1-satisfiable-large"
-	]["eval_count"] == 10
-	assert (
-		expanded_rows[
-			"blocksworld-bootstrap-train1-satisfiable-large"
-		]["evaluation_timeout_seconds"]
-		== 30
-	)
-	assert expanded_rows[
-		"blocksworld-paper-external-on2-satisfiable-large"
-	]["eval_base"] == "src/domains/blocksworld/satisfiable-large"
-	assert expanded_rows[
-		"blocksworld-paper-external-on2-satisfiable-large"
-	]["eval_count"] == 10
-	assert (
-		expanded_rows[
-			"blocksworld-paper-external-on2-satisfiable-large"
-		]["synthesis_profile"]
-		== "paper"
-	)
-	assert (
-		expanded_rows["blocksworld-paper-external-on2-satisfiable-large"][
-			"evaluation_timeout_seconds"
-		]
-		== 30
-	)
-	assert (
-		expanded_rows["blocksworld-paper-external-on2-satisfiable-large"][
-			"timeout_seconds"
-		]
-		== 900
-	)
-	for row in expanded_rows.values():
-		for source in tuple(row.get("external_sketch_vocabularies") or ()):
-			_, raw_path = source.split("=", maxsplit=1)
-			assert not raw_path.startswith("tmp/")
-			assert (PROJECT_ROOT / raw_path).exists()
-	assert (
-		expanded_rows[
-			"blocksworld-bootstrap-train1-satisfiable-mixed-large"
-		]["eval_base"]
-		== "src/domains/blocksworld/satisfiable-mixed-large"
-	)
-	assert (
-		expanded_rows[
-			"blocksworld-bootstrap-train1-satisfiable-mixed-large"
-		]["evaluation_timeout_seconds"]
-		== 30
-	)
-	assert (
-		expanded_rows[
-			"blocksworld-paper-external-on2-satisfiable-mixed-large"
-		]["eval_base"]
-		== "src/domains/blocksworld/satisfiable-mixed-large"
-	)
-	assert (
-		expanded_rows[
-			"blocksworld-paper-external-on2-satisfiable-mixed-large"
-		]["synthesis_profile"]
-		== "paper"
-	)
-	assert (
-		expanded_rows[
-			"blocksworld-paper-external-on2-satisfiable-mixed-large"
-		]["evaluation_timeout_seconds"]
-		== 60
-	)
-	assert expanded_rows["transport-bootstrap-train3-first10"]["eval_count"] == 10
-	assert expanded_rows["satellite-bootstrap-train3-first10"]["eval_count"] == 10
-	assert expanded_rows["marsrover-bootstrap-train3-first10"]["eval_count"] == 10
+	for domain_id in SELECTED_BENCHMARK_DOMAINS:
+		row = expanded_rows[f"{domain_id}-source-split-smoke"]
+		assert row["domain_file"] == f"src/domains/{domain_id}/domain.pddl"
+		assert row["train_base"] == f"src/domains/{domain_id}/train"
+		assert row["eval_base"] == f"src/domains/{domain_id}/test"
+		assert row["train_glob"] == "*.pddl"
+		assert row["eval_glob"] == "*.pddl"
+		assert row["synthesis_profile"] == "bootstrap"
+		assert row["ablation_label"] == f"{domain_id}_source_split_smoke"
 
 
 def test_experiment_matrix_writes_diagnostic_row_when_entry_times_out(
 	tmp_path: Path,
 	monkeypatch,
 ) -> None:
-	lab_root = PROJECT_ROOT / "src" / "domains" / "labworkflow"
+	fixture = write_resource_dependency_fixture(tmp_path / "resource-dependency")
 	output_dir = tmp_path / "matrix-output"
 	config = {
 		"matrix_name": "timeout-matrix",
 		"experiments": [
 			{
 				"name": "slow-entry",
-				"domain_file": str(lab_root / "domain.pddl"),
-				"train_problems": [str(lab_root / "problems" / "p01.pddl")],
-				"eval_problems": [str(lab_root / "problems" / "p01.pddl")],
+				"domain_file": str(fixture.domain_file),
+				"train_problems": [str(fixture.problems[0])],
+				"eval_problems": [str(fixture.problems[0])],
 				"timeout_seconds": 0.01,
 			},
 		],

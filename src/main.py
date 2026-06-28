@@ -53,8 +53,8 @@ def build_argument_parser() -> argparse.ArgumentParser:
 		formatter_class=argparse.RawDescriptionHelpFormatter,
 		epilog="""
 Examples:
-  python src/main.py generate-library --domain-file ./src/domains/blocksworld/domain.pddl --query-id query_1
-  python src/main.py generate-library --domain-file ./src/domains/transport/domain.pddl --query-domain transport --output-root ./artifacts/plan_library/transport/query_1
+  python src/main.py generate-library --domain-file ./src/domains/blocksworld_qbw/domain.pddl --query-domain blocksworld --query-id query_1
+  python src/main.py synthesize-domain-library --domain-file ./src/domains/ferry/domain.pddl --training-problem ./src/domains/ferry/train/p001.pddl --output-file ./artifacts/domain_library/ferry.asl
 		""",
 	)
 	subparsers = parser.add_subparsers(dest="command")

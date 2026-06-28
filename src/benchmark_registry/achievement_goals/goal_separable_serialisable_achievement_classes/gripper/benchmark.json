@@ -1,26 +1,97 @@
 {
-	"schema_version": 1,
-	"goal_specification_layer": "achievement_goal_layer",
-	"benchmark_class_id": "goal_separable_serialisable_achievement_classes",
-	"domain_id": "gripper",
-	"display_name": "Gripper",
-	"domain_role": "planned_claim_target",
-	"support_level": "planned_claim_target",
-	"target_paper_domains": [
-		"gripper"
-	],
-	"domain_file": null,
-	"problem_sets": {},
-	"baseline_groups": {},
-	"experiments": [],
-	"external_sources": [
-		{
-			"backend": "learner-sketches",
-			"source_path": ".external/gp-backends/learner-sketches/learning/benchmarks/tractable/gripper"
-		},
-		{
-			"backend": "d2l",
-			"source_path": ".external/gp-backends/d2l/domains/gripper"
-		}
-	]
+  "baseline_groups": {},
+  "benchmark_class_id": "goal_separable_serialisable_achievement_classes",
+  "display_name": "Gripper",
+  "domain_file": "src/domains/gripper/domain.pddl",
+  "domain_id": "gripper",
+  "domain_role": "main_claim",
+  "experiments": [
+    {
+      "ablation_label": "gripper_source_split_smoke",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "preset",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "gripper-source-split-smoke",
+      "order": 100,
+      "preset_tags": [
+        "paper-expanded-smoke"
+      ],
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 180,
+      "train_problem_set": "train"
+    },
+    {
+      "ablation_label": "gripper_source_split_main",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "main",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "gripper-source-split-main",
+      "order": 100,
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 180,
+      "train_problem_set": "train"
+    }
+  ],
+  "goal_specification_layer": "achievement_goal_layer",
+  "problem_sets": {
+    "all": {
+      "problems": [
+        "src/domains/gripper/train/p001.pddl",
+        "src/domains/gripper/train/p002.pddl",
+        "src/domains/gripper/train/p003.pddl",
+        "src/domains/gripper/train/p004.pddl",
+        "src/domains/gripper/train/p005.pddl",
+        "src/domains/gripper/train/p006.pddl",
+        "src/domains/gripper/train/p007.pddl",
+        "src/domains/gripper/train/p008.pddl",
+        "src/domains/gripper/train/p009.pddl",
+        "src/domains/gripper/train/p010.pddl",
+        "src/domains/gripper/train/p011.pddl",
+        "src/domains/gripper/train/p012.pddl",
+        "src/domains/gripper/train/p013.pddl",
+        "src/domains/gripper/train/p014.pddl",
+        "src/domains/gripper/train/p015.pddl",
+        "src/domains/gripper/train/p016.pddl",
+        "src/domains/gripper/train/p017.pddl",
+        "src/domains/gripper/train/p018.pddl",
+        "src/domains/gripper/train/p019.pddl",
+        "src/domains/gripper/train/p020.pddl",
+        "src/domains/gripper/test/p021.pddl",
+        "src/domains/gripper/test/p022.pddl",
+        "src/domains/gripper/test/p023.pddl",
+        "src/domains/gripper/test/p024.pddl",
+        "src/domains/gripper/test/p025.pddl",
+        "src/domains/gripper/test/p026.pddl",
+        "src/domains/gripper/test/p027.pddl",
+        "src/domains/gripper/test/p028.pddl",
+        "src/domains/gripper/test/p029.pddl",
+        "src/domains/gripper/test/p030.pddl"
+      ]
+    },
+    "goal_specification": {
+      "base": "src/domains/gripper/test",
+      "glob": "*.pddl"
+    },
+    "train": {
+      "base": "src/domains/gripper/train",
+      "glob": "*.pddl"
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+    "name": "AI-Planning/pddl-generators",
+    "problem_class": null,
+    "source_domain": "gripper",
+    "source_domain_file": "domain.pddl",
+    "url": "https://github.com/AI-Planning/pddl-generators"
+  },
+  "support_level": "main_claim",
+  "target_paper_domains": [
+    "gripper"
+  ]
 }

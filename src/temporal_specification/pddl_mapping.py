@@ -14,13 +14,13 @@ EVENT_TO_FLUENT_BY_DOMAIN: Dict[str, Dict[str, str]] = {
 	"blocksworld": {
 		"do_put_on": "on",
 		"do_move": "on",
-		"do_on_table": "ontable",
+		"do_on_table": "on-table",
 		"do_clear": "clear",
 	},
 	"blocks": {
 		"do_put_on": "on",
 		"do_move": "on",
-		"do_on_table": "ontable",
+		"do_on_table": "on-table",
 		"do_clear": "clear",
 	},
 	"marsrover": {

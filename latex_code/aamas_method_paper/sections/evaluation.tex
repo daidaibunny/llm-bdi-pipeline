@@ -1,221 +1,78 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-The evaluation separates three questions. First, can the selected library solve
-held-out achievement-goal problems without a run-time full-trace planner?
-Second, which synthesis mechanisms are necessary on diagnostic splits? Third,
-where does the current bounded hypothesis class stop? All reported library rows
-execute compiled lifted \asl{} plans with run-time planner flag
-\texttt{none}. Classical planners and generalized-planning systems appear only
-as offline baselines, evidence providers, or diagnostics.
+The evaluation is organized around a fixed achievement-goal benchmark corpus,
+not around learner-specific examples or implementation-local domains. The
+current paper scope is positive conjunctive achievement goals. Temporal
+extended goals are treated as a later goal-specification layer that can call the
+same domain-level library, but they are not part of the core evaluation in this
+paper.
 
-The main claim is restricted to the first benchmark class in
-Table~\ref{tab:domain-families}: positive conjunctive achievement goals whose
-strategy is a compiled feature-definable modular sketch. A row is part of the
-strict paper profile only when an external learned sketch rule is parsed,
-feature-bound, selected by the answer-set program, compiled to a non-empty
-executable body, and validated without run-time full-trace planning. Rows that
-test mechanism necessity without an external learned sketch are mechanism-stress
-rows. Rows that exercise trace evidence, resource movement, route ranking, or
-unsupported fragments are boundary rows rather than main coverage claims.
+All selected benchmark snapshots are materialized from one independent public
+source: \texttt{AI-Planning/pddl-generators} at commit
+\texttt{d5c22c9ab21ecaf90db82daf2a0537973c661009}. For each selected problem
+class we track a local \texttt{domain.pddl}, twenty deterministic training
+instances, ten deterministic goal-specification test instances, and a
+\texttt{source.json} provenance record. The generated snapshots are committed
+under \texttt{src/domains/<domain>/}; the external generator repository remains
+an input, not a learner backend and not part of the synthesized library.
 
 \begin{table}[t]
-	\caption{Strict paper-profile lifted-library results. Each row has a selected
-	external sketch candidate, selected Layer C agenda evidence, and no run-time
-	full-trace planner.}
-	\label{tab:main-results}
+	\caption{Selected achievement-goal benchmark corpus. Every row is
+	materialized from the same independent generator source and has a fixed
+	20/10 train/test split.}
+	\label{tab:domain-families}
 	\small
-	\begin{tabular}{p{0.40\columnwidth}rcr}
+	\begin{tabular}{p{0.36\columnwidth}p{0.36\columnwidth}r}
 		\toprule
-		Row & Solved & Plans & Planner \\
+		Class & Problem classes & Count \\
 		\midrule
-		Blocksworld first20 &
-		\ResultPaperExternalSketchFirstTwoZeroSolved &
-		\ResultPaperExternalSketchFirstTwoZeroPlanCount &
-		\ResultPaperExternalSketchFirstTwoZeroRuntimePlanner \\
-		Blocksworld large towers &
-		\ResultPaperExternalSketchSatisfiableLargeSolved &
-		\ResultPaperExternalSketchSatisfiableLargePlanCount &
-		\ResultPaperExternalSketchSatisfiableLargeRuntimePlanner \\
-		Blocksworld mixed towers &
-		\ResultPaperExternalSketchSatisfiableMixedLargeSolved &
-		\ResultPaperExternalSketchSatisfiableMixedLargePlanCount &
-		\ResultPaperExternalSketchSatisfiableMixedLargeRuntimePlanner \\
+		Goal-separable and serialisable achievement classes &
+		Gripper, Ferry, Miconic & 3 \\
+		Bounded-width sketchable subgoal-structure classes &
+		Spanner, Childsnack, Barman, Visitall, Delivery & 5 \\
+		Feature-definable goal-dependent construction classes &
+		Blocksworld Qclear, Blocksworld Qon, Blocksworld QBW & 3 \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-Table~\ref{tab:main-results} shows the strict-profile positive evidence. The
-three Blocksworld rows use the verified \texttt{blocks\_4\_on\_2}
-learner-sketches artifact and the strict paper profile. The learned library
-solves the original first-20 split and two larger satisfiable held-out splits.
-The large-tower split contains towers from 50 to 140 blocks. The mixed split
-contains nontrivial initial towers and multiple final towers with both
-\texttt{ontable} and \texttt{on} goals.
-These rows are the current main claim because Blocksworld is the standard
-construction benchmark where prior work gives feature-definable policies for
-\texttt{clear}, \texttt{on}, and full goal configurations
-\cite{Frances2021LearningGeneralPolicies}. The result is therefore not a claim
-that every domain listed in Table~\ref{tab:domain-families} is already
-supported. To match the scale of prior generalized-planning papers, the final
-evaluation target is three property-defined classes with exactly nine selected
-standard domain names: Gripper, Ferry, and Miconic for the goal-separable
-or serialisable class; Spanner, Childsnack, Barman, Visitall, and Delivery for
-the bounded-width sketchable subgoal-structure class; and Blocksworld for the
-feature-definable construction class. Blocksworld evaluation may use qclear,
-qon, and qbw problem-family tags, but these tags are not counted
-as separate domain names. These domains become
-claimed coverage only after their own compiled \asl{} libraries pass the same
-strict protocol. LTLf temporal extended goals are evaluated as overlays on
-representatives of these classes, not as a fourth benchmark class.
+Table~\ref{tab:domain-families} follows the same style used by prior
+generalized-planning work: support is stated over problem classes $Q_D$ with
+recognized structural properties, rather than over arbitrary \pddl{} domains.
+The first class follows the goal-independence and serialisability distinction
+used by MOOSE \cite{Chen2026Moose}. The second class follows policy-sketch and
+subgoal-width evaluations, where a compact sketch decomposes large problems into
+bounded-width subproblems \cite{Drexler2022LearningSketches,
+Drexler2024SubgoalSketches,Bonet2024GeneralPoliciesWidth}. The third class
+follows feature-definable general-policy work, where Blocksworld variants expose
+goal-dependent construction behavior that cannot be handled by arbitrary
+singleton-goal ordering \cite{Frances2021LearningGeneralPolicies}.
 
-\begin{table}[t]
-	\caption{Mechanism-stress rows. Labworkflow isolates Layer C and
-	counterexample refinement; Blocksworld first20 does not isolate
-	external-sketch necessity.}
-	\label{tab:mechanism-stress}
-	\small
-	\begin{tabular}{p{0.45\columnwidth}rc}
-		\toprule
-		Row & Solved & Diagnostic \\
-		\midrule
-		Full Labworkflow refinement &
-		\ResultLabworkflowCounterexamplHashncinkmnmSolved &
-		refined composer \\
-		No Layer C with refinement, Labworkflow &
-		\ResultNoLayerCWithRefinementLabworkflowStressSolved &
-		missing composer \\
-		No counterexample refinement, Labworkflow &
-		\ResultNoCounterexampleRefinemeHashamkpcpajSolved &
-		missing repair \\
-		No external sketch, Blocksworld &
-		\ResultNoExternalSketchFirstTwoZeroSolved &
-		bootstrap \\
-		No trace evidence, Transport &
-		\ResultNoOfflineTraceEvidenceTransportSolved &
-		initial-state only \\
-		\bottomrule
-	\end{tabular}
-\end{table}
-
-Table~\ref{tab:mechanism-stress} is intentionally interpreted narrowly. The
-mechanism evidence for Layer C and counterexample refinement comes from
-Labworkflow: the full refinement row solves five held-out dependent problems,
-while removing either Layer C ordering or counterexample refinement solves none
-of them; the reports record missing composer plans for the reagent-log goal.
-The stress domain is constructed so that one goal consumes a resource needed by
-another final goal: an analysis action can consume a reagent, while the
-reagent-log goal still requires that reagent to be available. A valid composer
-must therefore learn to schedule the logging goal before the consuming analysis
-goal. This is the precise behavior tested by the full, no-Layer-C, and
-no-refinement rows.
-The Blocksworld no-sketch row remains at
-\ResultNoExternalSketchFirstTwoZeroCoveragePercent{} on first20, so it is not
-used as evidence that external sketches are necessary on that split. It shows
-that schema-derived modules can already cover this small set.
-
-The refinement rows test the intended behavior of the counterexample loop:
-failures are not merely logged. Supported missing-module, state-coverage,
-goal-ordering, and repair failures become selector-consumable constraints in
-the next synthesis round. Pure lifted goal-ordering failures are consumed as
-explicit Layer C constraints without forcing the failed held-out problem into
-bounded transition-system exploration. Termination failures remain diagnostics,
-but the
-implementation also emits atomic-progress or state-coverage companion
-constraints when the missing goal is inside the supported fragment.
-
-\begin{table}[t]
-	\caption{Selected baselines and diagnostics. Baseline planners solve concrete
-	problems independently and are not domain-level libraries.}
-	\label{tab:baselines}
-	\small
-	\begin{tabular}{p{0.48\columnwidth}rc}
-		\toprule
-		Row & Solved & Semantics \\
-		\midrule
-		Fast Downward, first20 &
-		\ResultBlocksworldPaperExternalHashjkajkcmaSolved &
-		per-problem \\
-		Raw learner-sketches audit, first20 &
-		\ResultBlocksworldPaperExternalHashkkicclnjSolved &
-		not executable \\
-		MOOSE Blocksworld probe &
-		\ResultBlocksworldPaperExternalHashldfkjnbdSolved &
-		reproduction probe \\
-		Fast Downward, large towers &
-		\ResultBlocksworldPaperExternalHashfcjedmihSolved &
-		timeout-limited \\
-		Fast Downward, mixed towers &
-		\ResultBlocksworldPaperExternalHashkgepfcfeSolved &
-		timeout-limited \\
-		\bottomrule
-	\end{tabular}
-\end{table}
-
-The raw learner-sketches row is an artifact audit, not an executable baseline:
-the policy is qualitative and becomes executable only through the binding,
-selection, and compilation steps of \methodname{}. The MOOSE probe records the
-paper-parameter Blocksworld attempt; it is included because MOOSE is a close
-goal-regression baseline, but the probe did not produce a successful
-Blocksworld generalized policy in the local artifact run. The Fast Downward rows
-measure per-problem trace solving under the fixed final-data timeout. These rows
-are useful for comparison, but they do not produce reusable \asl{} libraries.
-
-\begin{table}[t]
-	\caption{Boundary rows. These are not strict paper-profile claims; they mark
-	where the current implementation is evidence-backed but still outside the
-	main bounded-class result.}
-	\label{tab:boundaries}
-	\small
-	\begin{tabular}{p{0.48\columnwidth}rc}
-		\toprule
-		Row & Solved & Status \\
-		\midrule
-		Transport initial-state fragment &
-		\ResultTransportInitialStateFragmentSolved &
-		secondary \\
-		Marsrover trace-evidence fragment &
-		\ResultMarsroverTraceEvidenceFragmentSolved &
-		secondary \\
-		\bottomrule
-	\end{tabular}
-\end{table}
-
-Transport and Marsrover demonstrate broader \pddl{} parsing, typed action
-binding, route/resource modules, and validated offline trace evidence. They are
-reported as boundary rows because their current reports are not strict
-paper-profile claims. In particular, they validate execution from problem
-initial states, while arbitrary reachable mid-state policies remain outside the
-main claim unless a future report validates that stronger setting. This boundary
-matches the literature: route-heavy domains require distance, ranking, or
-transitive-closure features, and MOOSE similarly removes path-finding components
-from some benchmark families when testing goal-regression assumptions
-\cite{Chen2026Moose}.
-
-Feature-binding diagnostics are part of the evaluation artifact. Safe lifted
-features, including object-free goal-distance features, can enter the selector.
-Concrete object-specific features and unsupported distance expressions remain
-structured rejections. This distinction is important because the method's output
-is a lifted domain-level library; copying training objects into \asl{} would
-turn the result into a problem-specific artifact.
+The evaluation protocol has three checks. First, synthesis receives only the
+training split and must produce a lifted \asl{} library whose plan heads are
+declared \pddl{} predicate goals. Second, the generated library is executed on
+the held-out goal-specification split without a run-time full-trace planner.
+Third, the artifact validator checks that every reported row is reproducible
+from the tracked manifest, uses the declared benchmark source, and does not
+depend on obsolete implementation-local domains. Classical planners and
+external generalized-planning systems may appear as offline baselines or
+evidence providers, but they are not allowed to replace the run-time library.
 
 \subsection{Reproducibility}
 
-The reproducibility artifact is specified by the tracked final-paper manifest
-under \path{paper_artifacts/}. The manifest records the generation and
-validation commands, required repository and external inputs, matrix
-configurations, expected library and baseline rows, result counts, and resource
-policy. Generated data live under \path{tmp/paper-final-latest} and are treated
-as rebuildable outputs, not as the source of truth. Each generation run copies
-the manifest into the output directory; validation checks that this copy matches
-the tracked manifest, that all matrix configurations and table rows match the
-manifest contract, that result macros equal \path{comparison.json}, and that all
-library rows use no run-time full-trace planner. Backend pins and resource
-limits are part of the same machine-checked contract: validation checks the
-local commits for learner-sketches, h-policy-learner, d2l, MOOSE, the MOOSE
-benchmark submodule, and VAL when those repositories are declared as pinned
-inputs. External generalized-planning learners must be run through a memory
-guard, and the manifest records the preflight commands that print the guarded
-paper-configuration runs. The main verification commands are the manifest's
-generate/validate commands, \path{uv run pytest -q}, and
-\path{latexmk -pdf main.tex}.
+The reproducibility artifact is specified by
+\texttt{paper\_artifacts/final\_paper\_manifest.json}. The manifest records the
+benchmark source commit, required repository inputs, expected output policy,
+resource limits for external learners, and the commands for generation,
+validation, tests, and paper compilation. The achievement-goal registry under
+\texttt{src/benchmark\_registry/achievement\_goals} is the single source for
+matrix construction; experiment scripts consume registry rows instead of
+embedding benchmark-specific paths.
+
+Generated experiment outputs live under \texttt{tmp/paper-final-latest} and are
+treated as rebuildable artifacts. Before paper submission, the final package
+must be regenerated from the manifest, validated against the tracked benchmark
+registry, and synchronized with the LaTeX result macros. This prevents stale
+local runs, learner-specific benchmark copies, or deleted legacy domains from
+entering the paper tables.

@@ -1,0 +1,11 @@
+{
+  "instance_count": 30,
+  "problem_class": null,
+  "source": "AI-Planning/pddl-generators",
+  "source_commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
+  "source_domain": "barman",
+  "source_domain_file": "domain.pddl",
+  "source_url": "https://github.com/AI-Planning/pddl-generators",
+  "test_count": 10,
+  "train_count": 20
+}

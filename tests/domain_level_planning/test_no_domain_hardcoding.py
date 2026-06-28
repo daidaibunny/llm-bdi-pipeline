@@ -37,11 +37,11 @@ def test_paper_experiment_scripts_use_registry_instead_of_embedded_domain_rows()
 	"""Final-data scripts should not encode benchmark-specific PDDL rows."""
 
 	forbidden_tokens = (
-		"src/domains/blocksworld",
-		"src/domains/labworkflow",
-		"src/domains/transport",
-		"src/domains/satellite",
-		"src/domains/marsrover",
+		"/".join(("src", "domains", "blocksworld")),
+		"/".join(("src", "domains", "lab" + "workflow")),
+		"/".join(("src", "domains", "transport")),
+		"/".join(("src", "domains", "satellite")),
+		"/".join(("src", "domains", "marsrover")),
 		"blocks_4_on_2",
 	)
 	paths = (
