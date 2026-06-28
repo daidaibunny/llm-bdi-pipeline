@@ -147,7 +147,7 @@ paper external `blocks_4_on_2` result: 10/10, paper_profile_ready=true,
 | D8 | Separate paper core method from implementation safeguards. | Accepted | Trace macros, Fast Downward fallback, bounded validators, and audits can support engineering rigor, but they must not become the main contribution narrative. |
 | D9 | Use read-only `ready_<predicate>` contexts for runtime goal-agenda gating. | Accepted | `ready_` facts are derived from selected Layer C support edges plus current state and goal descriptors. They may appear only in ASL contexts, never as plan heads, body subgoals, actions, or initial beliefs. |
 | D10 | State Layer B/C paper claims as bounded layer contracts. | Accepted | Each learned layer reports target artifact, admissible evidence, selector obligations, compiler/runtime semantics, required proof reports, and not-claimed boundaries so the paper cannot overclaim current implementation strength. |
-| D11 | Use a property-first benchmark taxonomy, not an implementation-driven domain list. | Accepted | The tracked taxonomy is `paper_artifacts/domain_support_taxonomy.json`. It now follows prior GP papers: MOOSE-style goal independence for controls, bounded-width sketches for subgoal-structure domains, feature-definable general policies for Blocksworld construction, executable policy/program classes as related baselines, and safe ASL compilability as our artifact-specific gate. |
+| D11 | Use a property-first benchmark taxonomy, not an implementation-driven domain list. | Accepted | The tracked taxonomy is `paper_artifacts/domain_support_taxonomy.json`. It now fixes exactly three selected domain classes: goal-separable and serialisable achievement classes; bounded-width sketchable subgoal-structure classes; and feature-definable goal-dependent construction classes. It also fixes two goal-specification layers: positive conjunctive achievement goals and LTLf temporal extended goals. |
 
 ## Open Gaps
 
@@ -164,7 +164,7 @@ paper external `blocks_4_on_2` result: 10/10, paper_profile_ready=true,
 | G9 | Paper comparison | Done for the current final package. Baseline records include Fast Downward per-problem trace baselines, raw learner-sketches artifact audits, and MOOSE status-CSV probes, each marked with `comparison_scope`, `domain_level_artifact`, `coverage_semantics`, and `runtime_planner`. LaTeX result macros now use unique, digit-free command names so repeated baseline labels across splits cannot collide. | Future comparison work can add stronger executable h-policy/d2l rows, but the current paper no longer lacks baseline tables or result-import plumbing. | Done |
 | G10 | Training scalability | Done for the current safe fragment: when bounded transition-system exploration fails, synthesis can use a validated offline planner trace as evidence while preserving `runtime_full_trace_planner=false`. Marsrover now uses this path as a fixed-resource trace-evidence fragment rather than failing at transition-system explosion. | Future work can broaden this evidence path to more external learner artifacts and keep reports precise when no provider or invalid trace is available. | Done |
 | G11 | Resource/route modules | Boundary for the current paper: typed-overloaded logistics and Marsrover-style producer-resource fragments are supported from problem initial states. Layer B now learns generic route-step shortest-path descent for single-effect movement schemas, causal-chain modules for typed-overloaded effects, producer-backed hidden-resource prepare rules, disconnected final-action location binding, and saturated static filters after hidden variables are bound. Transport train3 first10 and Marsrover trace-evidence first10 both solve 10/10 from problem initial states with no runtime full-trace planner. Bounded all-reachable-state validation still reports mid-state counterexamples, so this is not claimed as a complete arbitrary reachable-state logistics policy. | Report Transport/Marsrover as boundary rows unless a future method strengthens reachable-mid-state repair/counterexample refinement. | Boundary |
-| G12 | Benchmark-class boundary | Done for current paper framing: the final paper now states support over problem classes `Q_D`, not loose domain buckets. The tracked taxonomy records how prior GP papers choose and count domains: MOOSE uses 8 classical ESHO domains plus 4 numeric domains and a 38-domain IPC goal-independence probe; learner-sketches uses 9 IPC-style domains; D2L uses 9 feature-definable problem classes; PG3 uses 6 PDDL domains; BFGP++ uses 13 program-synthesis domains. Main claimed coverage requires a compiled feature-definable modular sketch with bounded sketch width, safe lifted feature bindings, acyclic agenda support where needed, strict ASL validation, and runtime planner `none`. Current main strict evidence is Blocksworld only, so it must be positioned as a focused Blocksworld goal-dependency + ASL-compilation result, not a broad multi-domain GP coverage claim. | Next implementation expansion should target at least one standard goal-independent control class, such as Ferry, Gripper, or Miconic, and one standard ordered-resource/dead-end sketch stress class, such as Spanner or Childsnack, before broadening the claim. | Done |
+| G12 | Benchmark-class boundary | Done for current paper framing: the final paper now states support over problem classes `Q_D`, not loose domain buckets. The tracked taxonomy records how prior GP papers choose and count domains: MOOSE uses 8 classical ESHO domains plus 4 numeric domains and a 38-domain IPC goal-independence probe; learner-sketches uses 9 IPC-style domains; D2L uses 9 feature-definable problem classes; PG3 uses 6 PDDL domains; BFGP++ uses 13 program-synthesis domains. Our final target now follows that scale with three selected property-defined classes and 9 standard domains/problem classes: Gripper, Ferry, Miconic; Spanner, Childsnack, Barman, Visitall, Delivery; and Blocksworld Qclear/Qon/full Blocksworld. TEG is a cross-cutting goal-specification layer, not a fourth domain class. | Next implementation expansion should work through the selected 9-domain target under the same strict ASL-library protocol. | Done |
 
 ## Non-TEG Priority Queue
 
@@ -201,12 +201,12 @@ uv run python scripts/run_final_paper_data.py \
 | --- | --- | --- | --- |
 | Positive conjunctive achievement goals in the bounded modular-sketch family | Yes | Held-out execution of the compiled lifted ASL library. Runtime full-trace planner must be `none`. | Negative, disjunctive, quantified, and temporal goals stay outside the main experiment unless a tested semantics is added. |
 | Domain-level lifted library | Yes | No grounded plan heads, no synthetic `achieve_*`, `transition_*`, or `dfa_state` names, no object-specific training replay. | Per-problem planner traces may be baseline or synthesis evidence only. |
-| Compiled feature-definable modular-sketch classes | Yes | Strict paper-profile Blocksworld rows with selected external sketch evidence, safe feature binding, selected Layer C agenda evidence, and no runtime full-trace planner. | This is a property-first class: positive conjunctive AGs, safe finite features, terminating modular sketch, bounded sketch width, and compilable ASL modules. |
-| Goal-independent control classes | Candidate, not current main claim | Ferry/Gripper/Miconic should pass the same ASL-library protocol before being counted. | MOOSE/PG3 success on these domains is related-work/control evidence, not our method's coverage. |
-| Dead-end-aware ordered-resource sketch classes | Candidate/stress, not current main claim | Spanner or Childsnack should be added as standard benchmark stress after Labworkflow. | Labworkflow is useful mechanism isolation but should not be presented as a standard benchmark family. |
+| Goal-separable and serialisable achievement classes | Planned main target | Gripper, Ferry, and Miconic should pass the same ASL-library protocol before being counted. | MOOSE/PG3 success on these domains is related-work evidence, not our method's coverage. |
+| Bounded-width sketchable subgoal-structure classes | Planned main target | Spanner, Childsnack, Barman, Visitall, and Delivery should pass the same ASL-library protocol before being counted. | Labworkflow is useful mechanism isolation but should not be presented as a standard benchmark family. |
+| Feature-definable goal-dependent construction classes | Current main claim and planned main target | Strict paper-profile Blocksworld rows with selected external sketch evidence, safe feature binding, selected Layer C agenda evidence, and no runtime full-trace planner. | This class covers Blocksworld Qclear, Qon, and full/tower construction goals. |
 | External paper-code reuse | Yes | learner-sketches policy selected by the strict paper profile; h-policy-learner and d2l reported through verified adapter compatibility or explicit safe rejection. | Unsupported external feature dialects are diagnostics, not silent fallbacks. |
 | Route/resource broader PDDL applicability | Boundary | Transport/Marsrover rows may support engineering breadth only when their fragment limits are explicit. | Arbitrary reachable mid-state route policies, transitive closure without accepted feature binding, and numeric/object-specific fragments are outside the main claim. |
-| Temporal extended goals | No for current paper | DFA role may be described as future upper controller. | No TEG coverage table is required for this achievement-goal paper. |
+| Temporal extended goals | Cross-cutting goal-specification layer | DFA role may be described as the LTLf-to-DFA upper controller over the same domain-level achievement-goal library. | TEG is not a fourth domain class; PDDL3 trajectory constraints are partial related input semantics, while project TEGs remain stored LTLf formulas. |
 
 ### Benchmark Breadth Decision
 
@@ -221,12 +221,20 @@ a 38-domain IPC property probe.
 Our current strict main evidence has one standard family: Blocksworld. That is
 acceptable only for a focused claim about goal-dependent Blocksworld
 construction compiled into lifted ASL. To imitate prior work more closely before
-claiming broader GP coverage, the next benchmark revision must add:
+claiming broader GP coverage, the final benchmark revision must cover exactly
+three selected property-defined classes:
 
-- one standard goal-independent control family: Ferry, Gripper, or Miconic;
-- one standard ordered-resource/dead-end sketch family: Spanner or Childsnack;
-- Transport or Marsrover only as boundary rows until route/ranking feature
-  support is complete.
+- Goal-separable and serialisable achievement classes: Gripper, Ferry, Miconic.
+- Bounded-width sketchable subgoal-structure classes: Spanner, Childsnack,
+  Barman, Visitall, Delivery.
+- Feature-definable goal-dependent construction classes: Blocksworld Qclear,
+  Blocksworld Qon, and full Blocksworld or tower construction goals.
+
+Temporal extended goals are a second goal-specification layer over these same
+classes, not a fourth class. Transport, Rovers, Marsrover, Logistics, Satellite,
+numeric domains, Grid/Floortile/Schedule/TPP, and program-synthesis domains such
+as Fibonacci or Sorting remain boundary or related-work domains until their
+required semantics are safely bound.
 
 ### Required Final Tables
 

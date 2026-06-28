@@ -56,19 +56,16 @@ These rows are the current main claim because Blocksworld is the standard
 construction benchmark where prior work gives feature-definable policies for
 \texttt{clear}, \texttt{on}, and full goal configurations
 \cite{Frances2021LearningGeneralPolicies}. The result is therefore not a claim
-that every domain listed in Table~\ref{tab:domain-families} is supported. Ferry,
-Gripper, and Miconic are planned controls because of their goal-independence
-role in MOOSE and PG3; Spanner and Childsnack are planned ordered-resource
-stress tests because they appear in sketch and general-policy evaluations. They
-become claimed coverage only after their own compiled \asl{} libraries pass the
-same strict protocol.
-This also defines the immediate benchmark expansion target. To match the style
-of prior generalized-planning evaluations more closely, the next full version
-should add at least one standard goal-independent control family, such as Ferry,
-Gripper, or Miconic, and at least one standard ordered-resource or dead-end
-sketch family, such as Spanner or Childsnack. Until those rows pass the same
-strict protocol, the present evidence should be read as a focused Blocksworld
-goal-dependency result rather than as a broad multi-domain coverage claim.
+that every domain listed in Table~\ref{tab:domain-families} is already
+supported. To match the scale of prior generalized-planning papers, the final
+evaluation target is three property-defined classes with roughly nine standard
+domains or problem classes: Gripper, Ferry, and Miconic for the goal-separable
+or serialisable class; Spanner, Childsnack, Barman, Visitall, and Delivery for
+the bounded-width sketchable subgoal-structure class; and Qclear, Qon, and full
+Blocksworld for the feature-definable construction class. These domains become
+claimed coverage only after their own compiled \asl{} libraries pass the same
+strict protocol. LTLf temporal extended goals are evaluated as overlays on
+representatives of these classes, not as a fourth benchmark class.
 
 \begin{table}[t]
 	\caption{Mechanism-stress rows. Labworkflow isolates Layer C and

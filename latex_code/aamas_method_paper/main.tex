@@ -255,10 +255,10 @@ the current problem asks for; the achievement-goal heads remain ordinary
 
 The paper makes four contributions.
 \begin{enumerate}
-	\item We define a bounded hypothesis class for goal-conditioned modular
-	policy sketches that compile to lifted \asl{} plan schemas, together with a
-	property-based benchmark taxonomy and explicit exclusions for
-	unsupported \pddl{} fragments.
+\item We define a bounded hypothesis class for goal-conditioned modular
+	policy sketches that compile to lifted \asl{} plan schemas, together with
+	three property-defined domain classes, two goal-specification layers, and
+	explicit exclusions for unsupported \pddl{} fragments.
 	\item We give an answer-set selection procedure that chooses Layer B
 	atomic modules and Layer C composer rules from \pddl{} schemas, verified
 	external sketches, bounded transition evidence, and lifted counterexamples.
@@ -272,12 +272,14 @@ The paper makes four contributions.
 
 The contribution is deliberately bounded. We do not claim universal
 generalized-planning completeness for arbitrary \pddl{} domains. Like prior
-work, we choose benchmarks by formal properties: goal independence for controls,
-bounded-width sketches for subgoal-structure domains, feature-definable general
-policies for Blocksworld-style construction, and explicit boundary rows for
-reachability, numeric, or object-specific fragments. The current main claim is
-only the compiled-sketch Blocksworld class. Other families are controls, stress
-tests, or limitations until they pass the same ASL-library protocol.
+work, we choose benchmarks by formal properties. The three domain classes are:
+goal-separable and serialisable achievement classes, bounded-width sketchable
+subgoal-structure classes, and feature-definable construction classes with
+goal dependence. We also separate two goal layers: positive conjunctive
+achievement goals and LTLf temporal goals compiled to deterministic finite
+automata. The temporal layer is cross-cutting, not a fourth domain class.
+Reachability, numeric, resource-instrument, and object-specific fragments
+remain boundary cases until they pass the same \asl{} protocol.
 
 \input{sections/related_work}
 
@@ -305,11 +307,12 @@ read-only goal predicate, and a declared binary role. Concrete object-specific
 features remain outside the claim because they would make the output depend on
 training-instance object names.
 
-Temporal extended goals are handled by a future deterministic finite automaton
-controller that calls the achievement-goal library; they are not part of the
-current algorithm. This separation is intentional: the deterministic finite
-automaton layer is query-specific, while the achievement-goal library remains
-domain-level.
+Temporal extended goals are handled as a second goal layer by a deterministic
+finite automaton controller that calls the achievement-goal library. This
+separation is intentional: the automaton is query-specific, while the
+achievement-goal library remains domain-level. Ordinary classical \pddl{} goals
+define achievement goals; they do not define arbitrary temporal extended goals,
+although PDDL3 trajectory constraints can express part of that space.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}

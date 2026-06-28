@@ -2,7 +2,7 @@
   "schema_version": 2,
   "scope": "positive_conjunctive_achievement_goals",
   "claim_statement": "The current paper claims executable domain-level lifted AgentSpeak(L) library synthesis for positive conjunctive achievement-goal PDDL problem classes Q_D only when Q_D admits a goal-conditioned, feature-definable, terminating modular policy sketch with bounded sketch width, the selected feature rules have safe lifted bindings to declared PDDL predicates, primitive actions, predicate subgoals, read-only goal descriptors, or read-only agenda gates, and the compiled library validates without runtime full-trace planning.",
-  "selection_principle": "Benchmark classes are selected by prior formal properties first, then by current implementation evidence. A domain is counted in the main claim only if it satisfies the compiled-sketch support contract and has strict-profile ASL-library validation. Domains that match prior benchmark suites but lack current strict-profile ASL evidence are controls or next targets, not claimed coverage.",
+  "selection_principle": "Benchmark classes are selected by prior formal properties first, then by current implementation evidence. A domain is counted in the main claim only if it satisfies the compiled-sketch support contract and has strict-profile ASL-library validation. Domains that match prior benchmark suites but lack current strict-profile ASL evidence are planned targets or boundary cases, not claimed coverage.",
   "prior_benchmark_practice": [
     {
       "id": "moose_goal_regression",
@@ -30,7 +30,7 @@
         "numeric transport"
       ],
       "selection_style": "The paper first defines TGI, SGI, and OGI, then evaluates domains expected to fit or stress those assumptions. Rovers and Transport remove path-finding components for the main goal-regression setting.",
-      "implication_for_this_paper": "Use goal-independent domains as controls and MOOSE-style baselines. Do not treat them as the core novelty unless they pass the same compiled-ASL protocol."
+      "implication_for_this_paper": "Use goal-independent domains as the goal-separable and serialisable selected class and as MOOSE-style baselines. Do not treat them as covered unless they pass the same compiled-ASL protocol."
     },
     {
       "id": "learning_sketches_bounded_width",
@@ -169,23 +169,58 @@
     "prior_broad_gp_domain_count_range": "6-13 standard domains for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
     "revision_needed_for_broad_gp_claim": true,
     "minimum_next_revision_target": {
-      "strict_or_control_standard_domain_families": 3,
+      "selected_standard_domain_or_problem_class_count": 9,
       "required_families": [
-        "blocksworld as the feature-definable goal-dependency core",
-        "at least one goal-independent control such as ferry, gripper, or miconic",
-        "at least one standard ordered-resource or dead-end sketch domain such as spanner or childsnack"
+        "goal-separable or serialisable achievement classes: gripper, ferry, and miconic",
+        "bounded-width sketchable subgoal-structure classes: spanner, childsnack, barman, visitall, and delivery",
+        "feature-definable goal-dependent construction classes: blocksworld qclear, qon, and full blocksworld"
       ],
       "recommended_full_target": [
-        "blocksworld",
-        "gripper or ferry",
+        "gripper",
+        "ferry",
         "miconic",
         "spanner",
-        "childsnack if feature binding supports it",
+        "childsnack",
+        "barman",
+        "visitall",
+        "delivery",
+        "blocksworld with qclear, qon, and full tower subclasses",
         "transport or marsrover as boundary only"
       ]
     },
-    "current_paper_positioning": "The current evidence is acceptable only as a focused compiled-ASL paper centered on Blocksworld-style goal dependency plus artifact-specific ASL compilation. It is too narrow for a broad generalized-planning coverage claim unless at least one standard control family and one standard resource/sketch stress family are added under the same strict protocol."
+    "current_paper_positioning": "The current evidence is acceptable only as a focused compiled-ASL paper centered on Blocksworld-style goal dependency plus artifact-specific ASL compilation. The final broad generalized-planning evaluation target should cover the three selected property-defined classes with roughly 9 standard domains or problem classes, matching the scale of prior 6-13 domain GP papers."
   },
+  "goal_specification_layers": [
+    {
+      "id": "achievement_goal_layer",
+      "name": "Positive conjunctive achievement-goal layer",
+      "status": "current_primary_scope",
+      "definition": "The problem objective is a final-state PDDL goal formula in the positive conjunctive fragment. The learned output is a domain-level lifted AgentSpeak(L) library whose heads are declared PDDL predicate achievement goals and whose top-level composer is +!g.",
+      "pddl_relation": "Ordinary classical PDDL problem goals define this layer directly when they are positive conjunctive state formulas.",
+      "paper_use": "All three selected domain classes are first evaluated in this layer."
+    },
+    {
+      "id": "temporal_extended_goal_layer",
+      "name": "LTLf temporal-extended-goal layer",
+      "status": "future_cross_cutting_scope",
+      "definition": "The temporal objective is stored as an LTLf formula, compiled to a deterministic finite automaton, and executed above the same achievement-goal library. The DFA chooses the next fluent condition or conjunction to realize; it is query-specific while the achievement-goal library remains domain-level.",
+      "pddl_relation": "Classical PDDL :goal does not define arbitrary TEGs. PDDL3 trajectory constraints can encode some temporal constraints, but the project representation remains LTLf-to-DFA for the full temporal layer.",
+      "paper_use": "This is a goal-specification layer, not a fourth domain class. Later evaluation should overlay TEGs on representative domains from each selected domain class."
+    }
+  ],
+  "selected_domain_class_count": 3,
+  "selected_goal_specification_layer_count": 2,
+  "selected_standard_domain_targets": [
+    "gripper",
+    "ferry",
+    "miconic",
+    "spanner",
+    "childsnack",
+    "barman",
+    "visitall",
+    "delivery",
+    "blocksworld"
+  ],
   "paper_core_domains": [
     "blocksworld"
   ],
@@ -197,7 +232,7 @@
       "literature_basis": [
         "Chen2026Moose"
       ],
-      "paper_use": "Baseline/control property, not the core novelty. It explains why Ferry, Gripper, and Miconic are natural future sanity checks, and why Blocksworld goal dependence should not be treated as MOOSE-friendly."
+      "paper_use": "Selected-class and baseline property. It explains why Ferry, Gripper, and Miconic belong in the goal-separable and serialisable class, and why Blocksworld goal dependence should not be treated as MOOSE-friendly."
     },
     {
       "id": "bounded_width_sketch",
@@ -244,14 +279,85 @@
   ],
   "benchmark_classes": [
     {
-      "id": "core_compiled_sketch_blocksworld",
-      "name": "Core claimed class: feature-definable modular sketches compiled to ASL",
+      "id": "goal_separable_serialisable_achievement_classes",
+      "name": "Goal-separable and serialisable achievement classes",
       "formal_membership": [
         "positive conjunctive achievement goals",
-        "finite safe lifted feature set",
-        "terminating or acyclic modular sketch with bounded sketch width",
-        "atomic predicate-goal modules for relevant PDDL predicates",
-        "acyclic goal-conditioned composer or support agenda",
+        "goal atoms are true-goal-independent, serialisable-goal-independent, or weakly coupled in the MOOSE sense",
+        "single-goal progress can be composed without global construction-style goal dependency",
+        "compiled ASL validates without runtime full-trace planning"
+      ],
+      "prior_property_basis": [
+        "goal_independence",
+        "program_or_decision_list_gp",
+        "safe_asl_compilability"
+      ],
+      "domain_examples": [
+        "gripper",
+        "ferry",
+        "miconic"
+      ],
+      "target_paper_domains": [
+        "gripper",
+        "ferry",
+        "miconic"
+      ],
+      "current_project_domains": [],
+      "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether compiled lifted ASL libraries cover the same goal-separable region used by MOOSE, PG3, D2L, and sketch-learning papers.",
+      "current_evidence": [
+        "No current strict-profile ASL-library row is counted for these domains."
+      ],
+      "support_level": "planned_claim_target"
+    },
+    {
+      "id": "bounded_width_sketchable_subgoal_structure_classes",
+      "name": "Bounded-width sketchable subgoal-structure classes",
+      "formal_membership": [
+        "positive conjunctive achievement goals",
+        "well-formed or acyclic sketches over qualitative features",
+        "bounded sketch width or bounded effective subproblem width in prior sketch literature",
+        "resource, one-way movement, or repeated-subgoal decisions may require progress-preserving choices",
+        "compiled ASL validates without runtime full-trace planning"
+      ],
+      "prior_property_basis": [
+        "bounded_width_sketch",
+        "feature_definable_general_policy",
+        "program_or_decision_list_gp",
+        "safe_asl_compilability"
+      ],
+      "domain_examples": [
+        "spanner",
+        "childsnack",
+        "barman",
+        "visitall",
+        "delivery"
+      ],
+      "target_paper_domains": [
+        "spanner",
+        "childsnack",
+        "barman",
+        "visitall",
+        "delivery"
+      ],
+      "current_project_domains": [],
+      "diagnostic_project_domains": [
+        "labworkflow"
+      ],
+      "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether the ASL compiler can preserve bounded-width sketchable subgoal structure rather than only independent-goal dispatch.",
+      "current_evidence": [
+        "Labworkflow full refinement solves 5/5 held-out stress problems as an internal diagnostic proxy.",
+        "Labworkflow is not presented as a standard benchmark replacement for Spanner, Childsnack, Barman, Visitall, or Delivery."
+      ],
+      "support_level": "planned_claim_target"
+    },
+    {
+      "id": "feature_definable_goal_dependent_construction_classes",
+      "name": "Feature-definable goal-dependent construction classes",
+      "formal_membership": [
+        "positive conjunctive achievement goals",
+        "final goals can have strong causal dependency and cannot be achieved in arbitrary order",
+        "a finite lifted feature set defines a terminating general policy or modular sketch",
+        "predicate-goal modules and a goal-conditioned composer can express construction order",
         "compiled ASL validates without runtime full-trace planning"
       ],
       "prior_property_basis": [
@@ -260,15 +366,20 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
-        "blocks-clear",
-        "blocks-on",
-        "tower-style blocksworld",
-        "full blocksworld with feature-definable goal structure"
+        "blocksworld qclear",
+        "blocksworld qon",
+        "full blocksworld",
+        "tower-style blocksworld"
+      ],
+      "target_paper_domains": [
+        "blocksworld qclear",
+        "blocksworld qon",
+        "full blocksworld"
       ],
       "current_project_domains": [
         "blocksworld"
       ],
-      "paper_role": "Main positive claim.",
+      "paper_role": "Current strict main claim and selected property-defined class for the final broad evaluation. This class captures the strongest goal-dependency argument for lifted ASL modules.",
       "current_evidence": [
         "Blocksworld first20 strict paper profile solves 20/20 with selected external sketch evidence.",
         "Blocksworld satisfiable-large solves 10/10 with towers from 50 to 140 blocks.",
@@ -276,108 +387,76 @@
         "All strict rows use runtime planner none and produce lifted ASL libraries."
       ],
       "support_level": "main_claim"
-    },
+    }
+  ],
+  "excluded_or_boundary_domains": [
     {
-      "id": "goal_independent_controls",
-      "name": "Goal-independent or weakly coupled control domains",
-      "formal_membership": [
-        "positive conjunctive achievement goals",
-        "goal atoms are true-goal-independent or serialisable-goal-independent in the MOOSE sense",
-        "single-goal progress does not require global goal-structure reasoning beyond a valid goal order"
-      ],
-      "prior_property_basis": [
-        "goal_independence",
-        "program_or_decision_list_gp"
-      ],
-      "domain_examples": [
-        "ferry",
-        "gripper",
-        "simple miconic"
-      ],
-      "current_project_domains": [],
-      "paper_role": "Future control and sanity-check suite; not current claimed coverage.",
-      "current_evidence": [
-        "No current strict-profile ASL-library row is counted for these domains."
-      ],
-      "support_level": "candidate_control"
-    },
-    {
-      "id": "ordered_resource_sketch_stress",
-      "name": "Dead-end-aware ordered-resource sketch domains",
-      "formal_membership": [
-        "positive conjunctive achievement goals",
-        "bounded-width sketchable structure",
-        "resource or one-way movement decisions can create dead ends unless the policy encodes progress-preserving choices"
-      ],
-      "prior_property_basis": [
-        "bounded_width_sketch",
-        "feature_definable_general_policy",
-        "program_or_decision_list_gp"
-      ],
-      "domain_examples": [
-        "spanner",
-        "childsnack",
-        "barman",
-        "driverlog under accepted sketch features"
-      ],
-      "current_project_domains": [
-        "labworkflow"
-      ],
-      "paper_role": "Mechanism-stress suite. Labworkflow is a controlled local proxy for Layer C and counterexample refinement; standard IPC domains remain next targets before broadening the claim.",
-      "current_evidence": [
-        "Labworkflow full refinement solves 5/5 held-out stress problems.",
-        "No-Layer-C and no-refinement ablations solve 0/5 on the same stress split.",
-        "Labworkflow is not presented as a standard benchmark replacement for Spanner or Childsnack."
-      ],
-      "support_level": "mechanism_stress"
-    },
-    {
-      "id": "reachability_numeric_boundary",
-      "name": "Reachability, transitive-closure, numeric, and object-specific boundary domains",
-      "formal_membership": [
-        "requires path-finding, transitive closure, numeric accumulation, object-specific constants, or distance/ranking features not safely bound by the current compiler",
-        "current ASL library would need richer feature semantics before arbitrary reachable-state coverage can be claimed"
-      ],
-      "prior_property_basis": [
-        "goal_independence",
-        "bounded_width_sketch",
-        "program_or_decision_list_gp",
-        "safe_asl_compilability"
-      ],
-      "domain_examples": [
-        "transport with route planning",
-        "rovers path-finding",
+      "id": "reachability_route_boundary",
+      "domains": [
+        "transport",
+        "rovers",
         "marsrover",
-        "grid with transitive closure requirements",
+        "logistics"
+      ],
+      "reason": "These domains require route planning, ranking, transitive closure, or multi-carrier location reasoning beyond the current safe lifted feature-binding contract. MOOSE also removes path-finding components from Rovers and Transport for its main goal-regression setting.",
+      "current_project_domains": [
+        "transport",
+        "marsrover"
+      ],
+      "current_evidence": [
+        "Transport and Marsrover initial-state or trace-evidence fragments validate typed PDDL parsing and resource modules.",
+        "Arbitrary reachable mid-state route policies remain outside the main claim."
+      ]
+    },
+    {
+      "id": "resource_instrument_boundary",
+      "domains": [
+        "satellite"
+      ],
+      "reason": "Instrument calibration and resource coupling introduce dependencies that are not yet part of the selected three-class evaluation target."
+    },
+    {
+      "id": "numeric_boundary",
+      "domains": [
         "numeric ferry",
         "numeric miconic",
         "numeric minecraft",
         "numeric transport"
       ],
-      "current_project_domains": [
-        "transport",
-        "marsrover"
+      "reason": "The current paper scope is positive conjunctive achievement goals over predicate fluents, not numeric fluents or numeric optimization."
+    },
+    {
+      "id": "unselected_sketch_or_program_domains",
+      "domains": [
+        "grid",
+        "floortile",
+        "schedule",
+        "traveling purchaser problem",
+        "corridor",
+        "fibonacci",
+        "find",
+        "floyd",
+        "intrusion",
+        "reverse",
+        "select",
+        "sorting",
+        "triangular sum"
       ],
-      "paper_role": "Boundary and limitation suite, not main coverage.",
-      "current_evidence": [
-        "Transport and Marsrover initial-state or trace-evidence fragments validate typed PDDL parsing and resource modules.",
-        "Arbitrary reachable mid-state route policies remain outside the main claim."
-      ],
-      "support_level": "boundary_or_excluded"
+      "reason": "These are relevant prior-work benchmarks but are not selected for the final three-class ASL-library evaluation. Some require distance, quantified, numeric, or program-synthesis semantics outside the current claim."
     }
   ],
   "evaluation_policy": {
     "main_claim_requires": [
-      "support_level is main_claim",
+      "support_level is main_claim or planned_claim_target with strict ASL-library validation",
       "strict paper-profile ASL-library validation exists",
       "runtime_full_trace_planner is false",
       "selected external or feature-policy evidence is safely bound and selected",
       "generated ASL has no grounded plan heads and no synthetic achievement names"
     ],
     "not_counted_as_main_claim": [
-      "candidate controls without current strict-profile ASL validation",
+      "planned target domains without current strict-profile ASL validation",
       "local mechanism-stress domains that are not standard IPC benchmarks",
-      "boundary fragments requiring unsupported reachability, numeric, or object-specific feature semantics",
+      "boundary fragments requiring unsupported reachability, numeric, resource-instrument, or object-specific feature semantics",
       "per-problem planner traces and raw qualitative policies without ASL compilation"
     ]
   },

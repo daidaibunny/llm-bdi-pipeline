@@ -354,10 +354,43 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	] is True
 	assert (
 		taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
-			"strict_or_control_standard_domain_families"
+			"selected_standard_domain_or_problem_class_count"
 		]
-		>= 3
+		== 9
 	)
+	assert taxonomy["selected_domain_class_count"] == 3
+	assert taxonomy["selected_goal_specification_layer_count"] == 2
+	assert set(taxonomy["selected_standard_domain_targets"]) == {
+		"gripper",
+		"ferry",
+		"miconic",
+		"spanner",
+		"childsnack",
+		"barman",
+		"visitall",
+		"delivery",
+		"blocksworld",
+	}
+	goal_layers = {
+		layer["id"]: layer
+		for layer in taxonomy["goal_specification_layers"]
+	}
+	assert set(goal_layers) == {
+		"achievement_goal_layer",
+		"temporal_extended_goal_layer",
+	}
+	assert goal_layers["achievement_goal_layer"]["status"] == (
+		"current_primary_scope"
+	)
+	assert "PDDL problem goals" in goal_layers["achievement_goal_layer"][
+		"pddl_relation"
+	]
+	assert goal_layers["temporal_extended_goal_layer"]["status"] == (
+		"future_cross_cutting_scope"
+	)
+	assert "not a fourth domain class" in goal_layers[
+		"temporal_extended_goal_layer"
+	]["paper_use"]
 
 	literature = taxonomy["literature"]
 	assert literature
@@ -425,54 +458,80 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 			assert literature_key in literature
 
 	support_levels = {
-		"boundary_or_excluded",
-		"candidate_control",
 		"main_claim",
-		"mechanism_stress",
+		"planned_claim_target",
 	}
 	class_ids = set()
+	target_domains = set()
 	for benchmark_class in taxonomy["benchmark_classes"]:
 		class_ids.add(benchmark_class["id"])
 		assert benchmark_class["name"]
 		assert benchmark_class["formal_membership"]
 		assert benchmark_class["prior_property_basis"]
 		assert benchmark_class["domain_examples"]
+		assert benchmark_class["target_paper_domains"]
 		assert benchmark_class["paper_role"]
 		assert benchmark_class["current_evidence"]
 		assert benchmark_class["support_level"] in support_levels
+		target_domains.update(benchmark_class["target_paper_domains"])
 		for property_key in benchmark_class["prior_property_basis"]:
 			assert property_key in property_ids
 
 	assert {
-		"core_compiled_sketch_blocksworld",
-		"goal_independent_controls",
-		"ordered_resource_sketch_stress",
-		"reachability_numeric_boundary",
-	} <= class_ids
+		"goal_separable_serialisable_achievement_classes",
+		"bounded_width_sketchable_subgoal_structure_classes",
+		"feature_definable_goal_dependent_construction_classes",
+	} == class_ids
+	assert {
+		"gripper",
+		"ferry",
+		"miconic",
+		"spanner",
+		"childsnack",
+		"barman",
+		"visitall",
+		"delivery",
+		"blocksworld qclear",
+		"blocksworld qon",
+		"full blocksworld",
+	} <= target_domains
 
 	classes_by_id = {
 		benchmark_class["id"]: benchmark_class
 		for benchmark_class in taxonomy["benchmark_classes"]
 	}
-	assert classes_by_id["core_compiled_sketch_blocksworld"]["support_level"] == (
-		"main_claim"
-	)
-	assert classes_by_id["core_compiled_sketch_blocksworld"][
+	assert classes_by_id[
+		"feature_definable_goal_dependent_construction_classes"
+	]["support_level"] == "main_claim"
+	assert classes_by_id[
+		"feature_definable_goal_dependent_construction_classes"
+	][
 		"current_project_domains"
 	] == ["blocksworld"]
-	assert classes_by_id["goal_independent_controls"]["current_project_domains"] == []
-	assert classes_by_id["ordered_resource_sketch_stress"][
-		"current_project_domains"
-	] == ["labworkflow"]
-	assert "transport" in classes_by_id["reachability_numeric_boundary"][
+	assert classes_by_id[
+		"goal_separable_serialisable_achievement_classes"
+	]["current_project_domains"] == []
+	assert classes_by_id[
+		"bounded_width_sketchable_subgoal_structure_classes"
+	]["diagnostic_project_domains"] == ["labworkflow"]
+
+	boundary_records = {
+		record["id"]: record
+		for record in taxonomy["excluded_or_boundary_domains"]
+	}
+	assert "transport" in boundary_records["reachability_route_boundary"]["domains"]
+	assert "marsrover" in boundary_records["reachability_route_boundary"][
 		"current_project_domains"
 	]
-	assert "numeric transport" in classes_by_id["reachability_numeric_boundary"][
-		"domain_examples"
+	assert "numeric transport" in boundary_records["numeric_boundary"][
+		"domains"
 	]
 
 	evaluation_policy = taxonomy["evaluation_policy"]
-	assert "support_level is main_claim" in evaluation_policy["main_claim_requires"]
+	assert (
+		"support_level is main_claim or planned_claim_target with strict "
+		"ASL-library validation"
+	) in evaluation_policy["main_claim_requires"]
 	assert any(
 		"local mechanism-stress domains" in item
 		for item in evaluation_policy["not_counted_as_main_claim"]

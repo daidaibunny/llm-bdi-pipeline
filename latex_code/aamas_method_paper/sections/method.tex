@@ -17,6 +17,22 @@ heads. The only allowed achievement-goal heads are declared \pddl{} predicates
 and the distinguished composer goal \texttt{g}. The body of a plan may call a
 declared primitive action or another declared predicate achievement goal.
 
+\subsection{Goal-Specification Layers}
+
+We separate properties of planning domains from the language used to state the
+goal. The current synthesis algorithm targets positive conjunctive achievement
+goals: a classical \pddl{} problem goal is converted into read-only goal
+descriptors, and the learned library achieves those descriptors through
+predicate-goal modules. Temporal extended goals are a second, cross-cutting goal
+specification layer, not a fourth domain class. A temporal objective is kept as
+an LTLf formula, compiled into a deterministic finite automaton, and executed as
+a query-specific controller above the same domain-level achievement-goal
+library. Classical \pddl{} goals do not express arbitrary temporal extended
+goals; PDDL3 trajectory constraints cover only part of this space. For this
+reason, the paper first fixes the achievement-goal layer and treats the
+temporal layer as an orthogonal extension over representative domains from the
+same three domain classes.
+
 \subsection{Goal-Conditioned Representation}
 
 The library observes three kinds of context facts. State facts are ordinary
@@ -136,43 +152,37 @@ class plus the additional requirement that the learned policy evidence compile
 into a lifted \asl{} library.
 
 \begin{table}[t]
-	\caption{Benchmark classes used to state the support boundary.}
+	\caption{Selected property-defined benchmark classes.}
 	\label{tab:domain-families}
 	\small
-	\begin{tabular}{p{0.34\columnwidth}p{0.49\columnwidth}}
+	\begin{tabular}{p{0.36\columnwidth}p{0.47\columnwidth}}
 		\toprule
-		Class & Paper status \\
+		Class & Selected domains or problem classes \\
 		\midrule
-		Compiled feature-definable modular sketches &
-		Main claim. Current evidence is Blocksworld construction goals, where
-		prior work gives feature policies for \texttt{clear}, \texttt{on}, and
-		full Blocksworld. This is a focused one-family claim, not yet a broad
-		multi-domain generalized-planning suite. \\
-		Goal-independent control classes &
-		Control candidates only. MOOSE-style TGI/SGI/OGI domains such as Ferry,
-		Gripper, and Miconic are not counted until compiled ASL rows pass the
-		same protocol \cite{Chen2026Moose,Yang2022PG3}. \\
-		Dead-end-aware ordered-resource sketches &
-		Stress candidates. Spanner, Childsnack, and Barman match sketch and
-		general-policy benchmarks, while Labworkflow is only a local mechanism
-		probe. \\
-		Reachability, numeric, and object-specific fragments &
-		Boundary. Transport, Rovers, Marsrover, Grid variants, and numeric
-		domains need accepted distance, transitive-closure, ranking, or numeric
-		bindings before main-claim use. \\
+		Goal-separable and serialisable achievement classes &
+		Gripper, Ferry, and Miconic, following MOOSE's TGI/SGI/OGI distinction
+		and executable-policy benchmarks in PG3 and D2L. \\
+		Bounded-width sketchable subgoal-structure classes &
+		Spanner, Childsnack, Barman, Visitall, and Delivery, following
+		learned-sketch and subgoal-structure evaluations of well-formed sketches
+		with small sketch width. \\
+		Feature-definable goal-dependent construction classes &
+		Blocksworld-Qclear, Blocksworld-Qon, and full Blocksworld tower
+		construction, following D2L and modular policy-reuse examples. \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
 Thus Layer C should not be read as an ad hoc goal-order patch. It is the
 compiled form of the selected goal-conditioned sketch composer. In a
-goal-independent control class it may reduce to unsatisfied-goal dispatch; in
-the current claimed Blocksworld class it must encode the support agenda
-implicit in feature-definable construction policies, such as placing lower
-tower links before upper links. If a candidate domain needs graph reachability,
-transitive closure, numeric accumulation, or object-specific constants and no
-accepted feature binding is available, the report must classify it as boundary
-or excluded.
+goal-separable or serialisable class it may reduce to unsatisfied-goal
+dispatch; in bounded-width sketchable classes it must preserve the selected
+subgoal structure; and in Blocksworld-style construction classes it must encode
+the support agenda implicit in feature-definable construction policies, such as
+placing lower tower links before upper links. Transport, Rovers, Marsrover,
+Logistics, Satellite, numeric domains, and unselected program-synthesis
+benchmarks are boundary or excluded cases unless their required route,
+transitive-closure, resource-instrument, or numeric semantics are safely bound.
 
 \subsection{Candidate Generation}
 
