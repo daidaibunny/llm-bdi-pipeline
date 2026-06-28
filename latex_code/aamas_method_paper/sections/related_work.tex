@@ -33,6 +33,15 @@ the compiler target. Our output must be a lifted \asl{} library whose heads are
 declared predicates and whose body steps are declared primitive actions or
 predicate subgoals.
 
+Lifted decision-list policies and program-synthesis approaches provide useful
+alternative hypothesis classes. PG3 searches over goal-conditioned lifted
+decision lists and uses policy-guided planning as the score
+\cite{Yang2022PG3}. BFGP++ searches over terminating C++-style generalized
+programs with loops \cite{SegoviaAguas2022BFGPpp}. These representations are
+more directly executable than raw sketches, but they do not target the
+Belief-Desire-Intention plan-library interface: predicate achievement modules,
+subgoal calls, and a reusable \texttt{+!g} composer.
+
 Answer-set programming is used as an optimization and consistency mechanism,
 following the style of sketch learning with Clingo
 \cite{Gebser2018Clingo,Drexler2022LearningSketches}. The answer set does not

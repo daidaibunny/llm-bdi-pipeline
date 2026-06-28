@@ -9,14 +9,15 @@ execute compiled lifted \asl{} plans with run-time planner flag
 \texttt{none}. Classical planners and generalized-planning systems appear only
 as offline baselines, evidence providers, or diagnostics.
 
-The main claim is restricted to positive conjunctive achievement goals. A row is
-part of the strict paper profile only when an external learned sketch rule is
-parsed, feature-bound, selected by the answer-set program, compiled to a
+The main claim is restricted to positive conjunctive achievement goals in the
+goal-dependent feature-definable family of Table~\ref{tab:domain-families}. A
+row is part of the strict paper profile only when an external learned sketch
+rule is parsed, feature-bound, selected by the answer-set program, compiled to a
 non-empty executable body, and validated without run-time full-trace planning.
 Rows that test mechanism necessity without an external learned sketch are
 reported as mechanism-stress rows. Rows that exercise trace evidence, resource
-movement, or larger unsupported fragments are reported as boundary rows rather
-than main coverage claims.
+movement, route ranking, or unsupported fragments are reported as boundary rows
+rather than main coverage claims.
 
 \begin{table}[t]
 	\caption{Strict paper-profile lifted-library results. Each row has a selected
@@ -51,6 +52,13 @@ solves the original first-20 split and two larger satisfiable held-out splits.
 The large-tower split contains towers from 50 to 140 blocks. The mixed split
 contains nontrivial initial towers and multiple final towers with both
 \texttt{ontable} and \texttt{on} goals.
+These rows are the current main claim because Blocksworld is the standard
+goal-dependent construction family with feature-definable strategies in the
+general-policy literature \cite{Frances2021LearningGeneralPolicies}. Ferry and
+Gripper are retained as planned control candidates, while Spanner and Childsnack
+are retained as planned ordered-resource stress candidates; they are not counted
+as current strict-profile evidence until their own \asl{} libraries pass the
+same protocol.
 
 \begin{table}[t]
 	\caption{Mechanism-stress rows. Labworkflow isolates Layer C and
@@ -169,7 +177,11 @@ binding, route/resource modules, and validated offline trace evidence. They are
 reported as boundary rows because their current reports are not strict
 paper-profile claims. In particular, they validate execution from problem
 initial states, while arbitrary reachable mid-state policies remain outside the
-main claim unless a future report validates that stronger setting.
+main claim unless a future report validates that stronger setting. This boundary
+matches the literature: route-heavy domains require distance, ranking, or
+transitive-closure features, and MOOSE similarly removes path-finding components
+from some benchmark families when testing goal-regression assumptions
+\cite{Chen2026Moose}.
 
 Feature-binding diagnostics are part of the evaluation artifact. Safe lifted
 features, including object-free goal-distance features, can enter the selector.

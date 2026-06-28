@@ -19,6 +19,9 @@ from domain_level_planning import domain_level_architecture_contract
 from domain_level_planning.experiments import format_comparison_latex_macros
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
 def _minimal_artifact_manifest(
 	*,
 	report_count: int,
@@ -329,6 +332,68 @@ def test_classical_baseline_accepts_locally_valid_plan_after_planner_exit_warnin
 	assert record["failed_count"] == 0
 	assert result["validation"] == "strips_simulator_valid"
 	assert result["planner_error"] == "Fast Downward failed with exit code 36."
+
+
+def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
+	taxonomy_path = PROJECT_ROOT / "paper_artifacts/domain_support_taxonomy.json"
+	taxonomy = json.loads(taxonomy_path.read_text(encoding="utf-8"))
+	manifest = load_final_paper_manifest()
+
+	assert taxonomy["schema_version"] == 1
+	assert taxonomy["scope"] == "positive_conjunctive_achievement_goals"
+	assert "feature-definable" in taxonomy["claim_statement"]
+	assert "bounded sketch width" in taxonomy["claim_statement"]
+	assert taxonomy["paper_core_domains"] == ["blocksworld"]
+
+	literature = taxonomy["literature"]
+	assert literature
+	manifest_inputs = {
+		str(record["path"])
+		for record in manifest["required_repository_inputs"]
+		if bool(record.get("tracked"))
+	}
+	assert str(taxonomy_path.relative_to(PROJECT_ROOT)) in manifest_inputs
+
+	for key, record in literature.items():
+		assert key
+		assert record["title"]
+		assert record["url"].startswith("https://")
+		local_pdf = PROJECT_ROOT / record["local_pdf"]
+		assert local_pdf.is_file()
+		assert local_pdf.read_bytes().startswith(b"%PDF-")
+		assert str(local_pdf.relative_to(PROJECT_ROOT)) in manifest_inputs
+
+	support_levels = {
+		"boundary",
+		"candidate_next",
+		"excluded",
+		"main_claim",
+		"mechanism_stress",
+		"theory_supported",
+	}
+	family_ids = set()
+	for family in taxonomy["domain_families"]:
+		family_ids.add(family["id"])
+		assert family["name"]
+		assert family["literature_basis"]
+		assert family["domain_examples"]
+		assert family["paper_role"]
+		assert family["implementation_status"]
+		assert family["support_level"] in support_levels
+		for literature_key in family["literature_basis"]:
+			assert literature_key in literature
+
+	assert {
+		"bounded_width_sketchable",
+		"goal_dependent_feature_definable",
+		"goal_independence_control",
+		"ordered_resource_stress",
+		"out_of_scope_numeric_and_object_specific",
+		"reachability_boundary",
+	} <= family_ids
+	assert taxonomy["evaluation_roles"]["main_positive_evidence"] == ["blocksworld"]
+	assert "transport" in taxonomy["evaluation_roles"]["boundary_rows"]
+	assert "numeric domains" in taxonomy["evaluation_roles"]["out_of_core"]
 
 
 def test_final_paper_config_splits_main_ablation_and_limitations(

@@ -106,6 +106,51 @@
       "tracked": true
     },
     {
+      "path": "paper_artifacts/domain_support_taxonomy.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/Chen2026_Generalised-Planning-Goal-Regression.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/Drexler2022_Learning-Sketches-Bounded-Width.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/Drexler2024_Subgoal-Structure-Sketches.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/Bonet2024_General-Policies-Subgoal-Structure-Planning-Width.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/Bonet2024_Policy-Reuse-General-Policies.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/Frances2021_Learning-General-Policies-Small-Examples.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/Yang2022_PG3-Policy-Guided-Planning.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "paper_artifacts/literature/SegoviaAguas2022_BFGPpp-Cpp-Generalized-Planning.pdf",
+      "kind": "file",
+      "tracked": true
+    },
+    {
       "path": "src/domains/blocksworld/domain.pddl",
       "kind": "file",
       "tracked": true
