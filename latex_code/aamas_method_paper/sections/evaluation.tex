@@ -63,13 +63,13 @@ contains nontrivial initial towers and multiple final towers with both
 		Row & Solved & Diagnostic \\
 		\midrule
 		Full Labworkflow refinement &
-		\ResultLabworkflowCounterexampleRefinementStressSolved &
+		\ResultLabworkflowCounterexamplHashncinkmnmSolved &
 		refined composer \\
 		No Layer C with refinement, Labworkflow &
 		\ResultNoLayerCWithRefinementLabworkflowStressSolved &
 		missing composer \\
 		No counterexample refinement, Labworkflow &
-		\ResultNoCounterexampleRefinementLabworkflowStressSolved &
+		\ResultNoCounterexampleRefinemeHashamkpcpajSolved &
 		missing repair \\
 		No external sketch, Blocksworld &
 		\ResultNoExternalSketchFirstTwoZeroSolved &
@@ -86,6 +86,12 @@ mechanism evidence for Layer C and counterexample refinement comes from
 Labworkflow: the full refinement row solves five held-out dependent problems,
 while removing either Layer C ordering or counterexample refinement solves none
 of them; the reports record missing composer plans for the reagent-log goal.
+The stress domain is constructed so that one goal consumes a resource needed by
+another final goal: an analysis action can consume a reagent, while the
+reagent-log goal still requires that reagent to be available. A valid composer
+must therefore learn to schedule the logging goal before the consuming analysis
+goal. This is the precise behavior tested by the full, no-Layer-C, and
+no-refinement rows.
 The Blocksworld no-sketch row remains at
 \ResultNoExternalSketchFirstTwoZeroCoveragePercent{} on first20, so it is not
 used as evidence that external sketches are necessary on that split. It shows
@@ -111,19 +117,19 @@ constraints when the missing goal is inside the supported fragment.
 		Row & Solved & Semantics \\
 		\midrule
 		Fast Downward, first20 &
-		\ResultBlocksworldPaperExternalOnTwoFirstTwoZeroFastDownwardLamaPerProblemSolved &
+		\ResultBlocksworldPaperExternalHashjkajkcmaSolved &
 		per-problem \\
 		Raw learner-sketches audit, first20 &
-		\ResultBlocksworldPaperExternalOnTwoFirstTwoZeroRawBlocksFourOnTwoPolicyAuditSolved &
+		\ResultBlocksworldPaperExternalHashkkicclnjSolved &
 		not executable \\
 		MOOSE Blocksworld probe &
-		\ResultBlocksworldPaperExternalOnTwoFirstTwoZeroBlocksworldMoosePaperParamsProbeSolved &
+		\ResultBlocksworldPaperExternalHashldfkjnbdSolved &
 		reproduction probe \\
 		Fast Downward, large towers &
-		\ResultBlocksworldPaperExternalOnTwoSatisfiableLargeFastDownwardLamaPerProblemSolved &
+		\ResultBlocksworldPaperExternalHashfcjedmihSolved &
 		timeout-limited \\
 		Fast Downward, mixed towers &
-		\ResultBlocksworldPaperExternalOnTwoSatisfiableMixedLargeFastDownwardLamaPerProblemSolved &
+		\ResultBlocksworldPaperExternalHashkgepfcfeSolved &
 		timeout-limited \\
 		\bottomrule
 	\end{tabular}
@@ -184,7 +190,11 @@ the manifest into the output directory; validation checks that this copy matches
 the tracked manifest, that all matrix configurations and table rows match the
 manifest contract, that result macros equal \path{comparison.json}, and that all
 library rows use no run-time full-trace planner. Backend pins and resource
-limits are part of the manifest and project instructions; external
-generalized-planning learners must be run through a memory guard. The main
-verification commands are the manifest's generate/validate commands,
-\path{uv run pytest -q}, and \path{latexmk -pdf main.tex}.
+limits are part of the same machine-checked contract: validation checks the
+local commits for learner-sketches, h-policy-learner, d2l, MOOSE, the MOOSE
+benchmark submodule, and VAL when those repositories are declared as pinned
+inputs. External generalized-planning learners must be run through a memory
+guard, and the manifest records the preflight commands that print the guarded
+paper-configuration runs. The main verification commands are the manifest's
+generate/validate commands, \path{uv run pytest -q}, and
+\path{latexmk -pdf main.tex}.

@@ -4,7 +4,7 @@
   "paper_scope": "positive_conjunctive_achievement_goals",
   "generated_output_policy": {
     "tracked_contract": "paper_artifacts/final_paper_manifest.json",
-    "tracked_result_macros": "latex_code/aamas_method_paper/generated/results.tex",
+    "tracked_result_macros": "latex_code/aamas_method_paper/sections/result_macros.tex",
     "default_output_dir": "tmp/paper-final-latest",
     "snapshot_policy": "regenerate_outputs_from_tracked_manifest_and_scripts",
     "do_not_track_generated_dirs": [
@@ -28,6 +28,61 @@
     "external_generalized_planning_requires_resource_guard": true,
     "library_runtime_full_trace_planner": false,
     "classical_planner_baselines_are_offline_only": true
+  },
+  "external_setup": {
+    "commands": {
+      "backend_status": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py status",
+      "learner_sketches_commands": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment all",
+      "learner_sketches_summary": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-summary --experiment all",
+      "d2l_docker_commands": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py d2l-docker-commands"
+    },
+    "resource_guarded_command_generators": [
+      "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment all | grep resource_guard.py"
+    ],
+    "pinned_repositories": [
+      {
+        "name": "learner-sketches",
+        "path": ".external/gp-backends/learner-sketches",
+        "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+        "validate_head": true,
+        "role": "consumed external sketch backend"
+      },
+      {
+        "name": "h-policy-learner",
+        "path": ".external/gp-backends/h-policy-learner",
+        "commit": "03e345537208ab804c1f4958bf183b65d4863a62",
+        "validate_head": true,
+        "role": "verified adapter and related baseline backend"
+      },
+      {
+        "name": "d2l",
+        "path": ".external/gp-backends/d2l",
+        "commit": "0620e169c894d79b3c84f435dba1462996f7c270",
+        "validate_head": true,
+        "role": "verified adapter and related baseline backend"
+      },
+      {
+        "name": "moose",
+        "path": ".external/moose",
+        "commit": "ce1e99bc12e9c839c5e8e870aac878fd5d31cf9e",
+        "validate_head": true,
+        "role": "generalized-planning reproduction baseline"
+      },
+      {
+        "name": "moose-benchmarks",
+        "path": ".external/moose/benchmarks",
+        "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+        "validate_head": true,
+        "role": "MOOSE benchmark submodule"
+      },
+      {
+        "name": "VAL",
+        "path": ".external/VAL",
+        "commit": "3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4",
+        "validate_head": true,
+        "role": "plan validation utility for MOOSE reproduction"
+      }
+    ]
   },
   "required_repository_inputs": [
     {
@@ -172,7 +227,7 @@
     "report_count": 10,
     "baseline_count": 10,
     "paper_table_row_count": 20,
-    "latex_macro_file": "latex_code/aamas_method_paper/generated/results.tex"
+    "latex_macro_file": "latex_code/aamas_method_paper/sections/result_macros.tex"
   },
   "expected_library_rows": [
     {

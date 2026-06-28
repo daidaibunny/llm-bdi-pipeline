@@ -3,10 +3,12 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
+import subprocess
 from types import SimpleNamespace
 
 from low_level_planning.models import LowLevelAction
 from scripts import generate_domain_level_baselines
+from scripts import run_final_paper_data as final_paper_data
 from scripts.generate_domain_level_baselines import generate_classical_planner_baseline
 from scripts.generate_domain_level_baselines import generate_moose_status_baseline
 from scripts.run_final_paper_data import load_final_paper_manifest
@@ -36,6 +38,17 @@ def _minimal_artifact_manifest(
 			"external_generalized_planning_memory_limit_gib": 16,
 			"external_generalized_planning_requires_resource_guard": True,
 			"library_runtime_full_trace_planner": False,
+		},
+		"external_setup": {
+			"commands": {
+				"backend_status": "status",
+				"learner_sketches_commands": "commands",
+				"learner_sketches_summary": "summary",
+			},
+			"resource_guarded_command_generators": [
+				"uv run python scripts/resource_guard.py ...",
+			],
+			"pinned_repositories": [],
 		},
 		"expected_package": {
 			"report_count": report_count,
@@ -82,6 +95,154 @@ def _write_artifact_manifest_copy(output_dir: Path, manifest: dict[str, object])
 		json.dumps(manifest, indent=2, sort_keys=True),
 		encoding="utf-8",
 	)
+
+
+def _write_minimal_validated_package(
+	output_dir: Path,
+	manifest: dict[str, object],
+) -> Path:
+	comparison = {
+		"report_count": 2,
+		"baseline_count": 2,
+		"paper_table_rows": [
+			{
+				"row_type": "library",
+				"label": "paper_external_sketch_first20",
+				"macro_id": "paper_external_sketch_first20",
+				"solved": "2/2",
+				"coverage_percent": 100.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": True,
+				"plan_count": 4,
+				"mechanism_summary": "enabled: external_sketch_evidence",
+			},
+			{
+				"row_type": "library",
+				"label": "labworkflow_counterexample_refinement_stress",
+				"macro_id": "labworkflow_counterexample_refinement_stress",
+				"solved": "5/5",
+				"coverage_percent": 100.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 4,
+				"mechanism_summary": "enabled: counterexample_refinement",
+			},
+			{
+				"row_type": "library",
+				"label": "no_layer_c_with_refinement_labworkflow_stress",
+				"macro_id": "no_layer_c_with_refinement_labworkflow_stress",
+				"solved": "0/5",
+				"coverage_percent": 0.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 3,
+				"mechanism_summary": "disabled: layer_c_ordering",
+			},
+			{
+				"row_type": "library",
+				"label": "no_counterexample_refinement_labworkflow_stress",
+				"macro_id": "no_counterexample_refinement_labworkflow_stress",
+				"solved": "0/5",
+				"coverage_percent": 0.0,
+				"runtime_planner": "none",
+				"paper_profile_ready": False,
+				"plan_count": 3,
+				"mechanism_summary": "disabled: counterexample_refinement",
+			},
+			{
+				"row_type": "baseline",
+				"label": "fast_downward_lama_per_problem",
+				"macro_id": "first20_fast_downward_lama_per_problem",
+				"solved": "2/2",
+				"coverage_percent": 100.0,
+				"runtime_planner": "offline_baseline_only",
+				"plan_count": None,
+				"notes": "per_problem_trace_baseline; not a domain-level library",
+				"mechanism_summary": "baseline",
+			},
+			{
+				"row_type": "baseline",
+				"label": "raw_blocks_4_on_2_policy_audit",
+				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
+				"solved": "0/2",
+				"coverage_percent": 0.0,
+				"runtime_planner": "not_runtime_executed",
+				"plan_count": None,
+				"notes": "domain-level artifact audit",
+				"mechanism_summary": "baseline",
+			},
+		],
+	}
+	(output_dir / "comparison.json").write_text(
+		json.dumps(comparison, indent=2),
+		encoding="utf-8",
+	)
+	_write_artifact_manifest_copy(output_dir, manifest)
+	current_gap_summary = architecture_gap_summary(
+		domain_level_architecture_contract().gaps,
+	)
+	for name in ("main", "ablation", "limitation"):
+		summary_dir = output_dir / f"{name}-matrix"
+		summary_dir.mkdir(parents=True)
+		report_file = summary_dir / f"{name}-report.json"
+		report_file.write_text(
+			json.dumps(
+				{
+					"coverage": {"solved_count": 1, "failed_count": 0},
+					"generated_output_audit": {"passed": True},
+					"synthesis_report": {
+						"architecture_gap_summary": current_gap_summary,
+					},
+				},
+				indent=2,
+			),
+			encoding="utf-8",
+		)
+		(summary_dir / "matrix-summary.json").write_text(
+			json.dumps(
+				{
+					"matrix_name": f"paper-final-{name}",
+					"experiment_count": 1,
+					"succeeded_count": 1,
+					"failed_count": 0,
+					"rows": [
+						{
+							"experiment_name": f"{name}-report",
+							"report_file": str(report_file),
+							"status": "succeeded",
+						},
+					],
+				},
+			),
+			encoding="utf-8",
+		)
+	macro_file = output_dir / "results.tex"
+	macro_file.write_text(
+		format_comparison_latex_macros(comparison),
+		encoding="utf-8",
+	)
+	return macro_file
+
+
+def _write_latex_main_with_embedded_macros(
+	tmp_path: Path,
+	macro_file: Path,
+	monkeypatch,
+) -> None:
+	macro_block = macro_file.read_text(encoding="utf-8").rstrip()
+	main_file = tmp_path / "main.tex"
+	main_file.write_text(
+		"\n".join(
+			(
+				final_paper_data.RESULT_MACRO_START,
+				macro_block,
+				final_paper_data.RESULT_MACRO_END,
+				"",
+			),
+		),
+		encoding="utf-8",
+	)
+	monkeypatch.setattr(final_paper_data, "FINAL_PAPER_MAIN", main_file)
 
 
 def test_moose_status_baseline_imports_completed_reproduction_rows(
@@ -253,132 +414,15 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 
 def test_final_paper_package_validator_accepts_complete_package(
 	tmp_path: Path,
+	monkeypatch,
 ) -> None:
 	manifest = _minimal_artifact_manifest(
 		report_count=2,
 		baseline_count=2,
 		paper_table_row_count=6,
 	)
-	comparison = {
-		"report_count": 2,
-		"baseline_count": 2,
-		"paper_table_rows": [
-			{
-				"row_type": "library",
-				"label": "paper_external_sketch_first20",
-				"macro_id": "paper_external_sketch_first20",
-				"solved": "2/2",
-				"coverage_percent": 100.0,
-				"runtime_planner": "none",
-				"paper_profile_ready": True,
-				"plan_count": 4,
-				"mechanism_summary": "enabled: external_sketch_evidence",
-			},
-			{
-				"row_type": "library",
-				"label": "labworkflow_counterexample_refinement_stress",
-				"macro_id": "labworkflow_counterexample_refinement_stress",
-				"solved": "5/5",
-				"coverage_percent": 100.0,
-				"runtime_planner": "none",
-				"paper_profile_ready": False,
-				"plan_count": 4,
-				"mechanism_summary": "enabled: counterexample_refinement",
-			},
-			{
-				"row_type": "library",
-				"label": "no_layer_c_with_refinement_labworkflow_stress",
-				"macro_id": "no_layer_c_with_refinement_labworkflow_stress",
-				"solved": "0/5",
-				"coverage_percent": 0.0,
-				"runtime_planner": "none",
-				"paper_profile_ready": False,
-				"plan_count": 3,
-				"mechanism_summary": "disabled: layer_c_ordering",
-			},
-			{
-				"row_type": "library",
-				"label": "no_counterexample_refinement_labworkflow_stress",
-				"macro_id": "no_counterexample_refinement_labworkflow_stress",
-				"solved": "0/5",
-				"coverage_percent": 0.0,
-				"runtime_planner": "none",
-				"paper_profile_ready": False,
-				"plan_count": 3,
-				"mechanism_summary": "disabled: counterexample_refinement",
-			},
-			{
-				"row_type": "baseline",
-				"label": "fast_downward_lama_per_problem",
-				"macro_id": "first20_fast_downward_lama_per_problem",
-				"solved": "2/2",
-				"coverage_percent": 100.0,
-				"runtime_planner": "offline_baseline_only",
-				"plan_count": None,
-				"notes": "per_problem_trace_baseline; not a domain-level library",
-				"mechanism_summary": "baseline",
-			},
-			{
-				"row_type": "baseline",
-				"label": "raw_blocks_4_on_2_policy_audit",
-				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
-				"solved": "0/2",
-				"coverage_percent": 0.0,
-				"runtime_planner": "not_runtime_executed",
-				"plan_count": None,
-				"notes": "domain-level artifact audit",
-				"mechanism_summary": "baseline",
-			},
-		],
-	}
-	(tmp_path / "comparison.json").write_text(
-		json.dumps(comparison, indent=2),
-		encoding="utf-8",
-	)
-	_write_artifact_manifest_copy(tmp_path, manifest)
-	current_gap_summary = architecture_gap_summary(
-		domain_level_architecture_contract().gaps,
-	)
-	for name in ("main", "ablation", "limitation"):
-		summary_dir = tmp_path / f"{name}-matrix"
-		summary_dir.mkdir(parents=True)
-		report_file = summary_dir / f"{name}-report.json"
-		report_file.write_text(
-			json.dumps(
-				{
-					"coverage": {"solved_count": 1, "failed_count": 0},
-					"generated_output_audit": {"passed": True},
-					"synthesis_report": {
-						"architecture_gap_summary": current_gap_summary,
-					},
-				},
-				indent=2,
-			),
-			encoding="utf-8",
-		)
-		(summary_dir / "matrix-summary.json").write_text(
-			json.dumps(
-				{
-					"matrix_name": f"paper-final-{name}",
-					"experiment_count": 1,
-					"succeeded_count": 1,
-					"failed_count": 0,
-					"rows": [
-						{
-							"experiment_name": f"{name}-report",
-							"report_file": str(report_file),
-							"status": "succeeded",
-						},
-					],
-				},
-			),
-			encoding="utf-8",
-		)
-	macro_file = tmp_path / "results.tex"
-	macro_file.write_text(
-		format_comparison_latex_macros(comparison),
-		encoding="utf-8",
-	)
+	macro_file = _write_minimal_validated_package(tmp_path, manifest)
+	_write_latex_main_with_embedded_macros(tmp_path, macro_file, monkeypatch)
 
 	validation = validate_final_paper_package(
 		tmp_path,
@@ -388,6 +432,58 @@ def test_final_paper_package_validator_accepts_complete_package(
 
 	assert validation["check_count"] >= 16
 	assert validation["comparison_file"] == str(tmp_path / "comparison.json")
+
+
+def test_final_paper_package_validator_rejects_external_pin_mismatch(
+	tmp_path: Path,
+) -> None:
+	manifest = _minimal_artifact_manifest(
+		report_count=2,
+		baseline_count=2,
+		paper_table_row_count=6,
+	)
+	pinned_repo = tmp_path / "pinned-backend"
+	pinned_repo.mkdir()
+	subprocess.run(("git", "init"), cwd=pinned_repo, check=True, stdout=subprocess.DEVNULL)
+	subprocess.run(
+		("git", "config", "user.email", "test@example.org"),
+		cwd=pinned_repo,
+		check=True,
+	)
+	subprocess.run(
+		("git", "config", "user.name", "Test User"),
+		cwd=pinned_repo,
+		check=True,
+	)
+	(pinned_repo / "README").write_text("backend\n", encoding="utf-8")
+	subprocess.run(("git", "add", "README"), cwd=pinned_repo, check=True)
+	subprocess.run(
+		("git", "commit", "-m", "init"),
+		cwd=pinned_repo,
+		check=True,
+		stdout=subprocess.DEVNULL,
+		stderr=subprocess.DEVNULL,
+	)
+	manifest["external_setup"]["pinned_repositories"] = [
+		{
+			"name": "test-backend",
+			"path": str(pinned_repo),
+			"commit": "0" * 40,
+			"validate_head": True,
+		},
+	]
+	macro_file = _write_minimal_validated_package(tmp_path, manifest)
+
+	try:
+		validate_final_paper_package(
+			tmp_path,
+			macro_file=macro_file,
+			manifest=manifest,
+		)
+	except ValueError as error:
+		assert "external pinned repository head matches manifest" in str(error)
+	else:
+		raise AssertionError("external pin mismatch should be rejected")
 
 
 def test_final_paper_package_validator_rejects_stale_architecture_reports(

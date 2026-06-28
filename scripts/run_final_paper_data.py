@@ -44,6 +44,10 @@ BLOCKS_VOCAB = (
 )
 MOOSE_BLOCKS_STATUS = ".external/moose/exact-runs/blocksworld-paper-params-probe/train-status.csv"
 FINAL_PAPER_MANIFEST = PROJECT_ROOT / "paper_artifacts/final_paper_manifest.json"
+FINAL_RESULT_MACROS = PROJECT_ROOT / "latex_code/aamas_method_paper/sections/result_macros.tex"
+FINAL_PAPER_MAIN = PROJECT_ROOT / "latex_code/aamas_method_paper/main.tex"
+RESULT_MACRO_START = "% BEGIN GENERATED RESULT MACROS"
+RESULT_MACRO_END = "% END GENERATED RESULT MACROS"
 LABWORKFLOW_TRAIN_PROBLEMS = ["src/domains/labworkflow/problems/p01.pddl"]
 LABWORKFLOW_STRESS_PROBLEMS = [
 	"src/domains/labworkflow/problems/p02.pddl",
@@ -321,12 +325,20 @@ def validate_final_paper_package(
 	macro_file = (
 		macro_file.expanduser().resolve()
 		if macro_file is not None
-		else PROJECT_ROOT / "latex_code/aamas_method_paper/generated/results.tex"
+		else FINAL_RESULT_MACROS
 	)
 	require(macro_file.exists(), "LaTeX result macro file exists")
 	expected_macros = format_comparison_latex_macros(comparison)
 	actual_macros = macro_file.read_text(encoding="utf-8")
 	require(actual_macros == expected_macros, "LaTeX result macros match comparison")
+	require(FINAL_PAPER_MAIN.exists(), "LaTeX main file exists")
+	main_macro_block = _extract_result_macro_block(
+		FINAL_PAPER_MAIN.read_text(encoding="utf-8"),
+	)
+	require(
+		main_macro_block == expected_macros,
+		"LaTeX main generated result macro block matches comparison",
+	)
 	return {
 		"check_count": len(checks),
 		"comparison_file": str(comparison_file),
@@ -374,6 +386,7 @@ def _validate_manifest_contract(
 			<= 16.0,
 			"artifact manifest keeps external learner memory limit at or below 16GiB",
 		)
+	_validate_manifest_external_setup(manifest=manifest, require=require)
 
 	output_policy = dict(manifest.get("generated_output_policy") or {})
 	tracked_contract = str(output_policy.get("tracked_contract") or "").strip()
@@ -385,6 +398,18 @@ def _validate_manifest_contract(
 		require(
 			(PROJECT_ROOT / tracked_contract).exists(),
 			"tracked artifact contract file exists",
+		)
+	tracked_result_macros = str(
+		output_policy.get("tracked_result_macros") or "",
+	).strip()
+	if tracked_result_macros:
+		require(
+			not tracked_result_macros.startswith("tmp/"),
+			"artifact result macros are tracked outside tmp",
+		)
+		require(
+			(PROJECT_ROOT / tracked_result_macros).exists(),
+			"tracked artifact result macro file exists",
 		)
 	for generated_path in tuple(output_policy.get("do_not_track_generated_dirs") or ()):
 		require(
@@ -445,6 +470,65 @@ def _validate_manifest_contract(
 		baseline_rows=baseline_rows,
 		require=require,
 	)
+
+
+def _validate_manifest_external_setup(
+	*,
+	manifest: dict[str, object],
+	require,
+) -> None:
+	"""Validate the reproducibility contract for external paper artifacts."""
+
+	external_setup = dict(manifest.get("external_setup") or {})
+	require(bool(external_setup), "artifact manifest records external setup")
+	commands = dict(external_setup.get("commands") or {})
+	for command_name in (
+		"backend_status",
+		"learner_sketches_commands",
+		"learner_sketches_summary",
+	):
+		require(
+			bool(str(commands.get(command_name) or "").strip()),
+			f"artifact manifest records external setup command: {command_name}",
+		)
+	resource_guarded_commands = tuple(
+		str(command)
+		for command in tuple(external_setup.get("resource_guarded_command_generators") or ())
+	)
+	require(
+		any("resource_guard.py" in command for command in resource_guarded_commands),
+		"artifact manifest records guarded external learner command generator",
+	)
+
+	for pin_record in tuple(external_setup.get("pinned_repositories") or ()):
+		record = dict(pin_record)
+		name = str(record.get("name") or "").strip()
+		raw_path = str(record.get("path") or "").strip()
+		expected_commit = str(record.get("commit") or "").strip()
+		require(bool(name), "external setup pin records backend name")
+		require(bool(raw_path), f"external setup pin records path: {name}")
+		require(bool(expected_commit), f"external setup pin records commit: {name}")
+		if not bool(record.get("validate_head", True)):
+			continue
+		repository_path = Path(raw_path).expanduser()
+		if not repository_path.is_absolute():
+			repository_path = PROJECT_ROOT / repository_path
+		require(
+			repository_path.is_dir(),
+			f"external pinned repository exists: {name}",
+		)
+		try:
+			current_commit = subprocess.check_output(
+				("git", "-C", str(repository_path), "rev-parse", "HEAD"),
+				text=True,
+				stderr=subprocess.DEVNULL,
+			).strip()
+		except (OSError, subprocess.CalledProcessError) as error:
+			raise ValueError(f"cannot read external pin {name}: {error}") from error
+		require(
+			current_commit == expected_commit,
+			f"external pinned repository head matches manifest: {name}",
+		)
 
 
 def _validate_manifest_matrix_configs(
@@ -534,6 +618,36 @@ def _actual_row_matches_expected(
 				actual_value == expected_value,
 				f"artifact row {row_name} field {key} matches manifest",
 			)
+
+
+def _extract_result_macro_block(main_tex: str) -> str:
+	"""Extract generated result macros embedded in the paper source."""
+
+	start_index = main_tex.find(RESULT_MACRO_START)
+	end_index = main_tex.find(RESULT_MACRO_END)
+	if start_index < 0 or end_index < 0 or end_index <= start_index:
+		raise ValueError("missing generated result macro block in LaTeX main file")
+	block_start = start_index + len(RESULT_MACRO_START)
+	return main_tex[block_start:end_index].strip() + "\n"
+
+
+def _replace_result_macro_block(main_tex: str, macros: str) -> str:
+	"""Replace the generated result macro block in the paper source."""
+
+	start_index = main_tex.find(RESULT_MACRO_START)
+	end_index = main_tex.find(RESULT_MACRO_END)
+	if start_index < 0 or end_index < 0 or end_index <= start_index:
+		raise ValueError("missing generated result macro block in LaTeX main file")
+	replacement = (
+		f"{RESULT_MACRO_START}\n"
+		f"{macros.rstrip()}\n"
+		f"{RESULT_MACRO_END}"
+	)
+	return (
+		main_tex[:start_index]
+		+ replacement
+		+ main_tex[end_index + len(RESULT_MACRO_END):]
+	)
 
 
 def _reset_managed_output(output_dir: Path) -> None:
@@ -921,9 +1035,14 @@ def _write_final_comparison(
 	comparison = compare_domain_level_experiment_reports(reports)
 	_write_json(output_dir / "comparison.json", comparison)
 	macros = format_comparison_latex_macros(comparison)
-	macro_file = PROJECT_ROOT / "latex_code/aamas_method_paper/generated/results.tex"
+	macro_file = FINAL_RESULT_MACROS
 	macro_file.parent.mkdir(parents=True, exist_ok=True)
 	macro_file.write_text(macros, encoding="utf-8")
+	main_tex = FINAL_PAPER_MAIN.read_text(encoding="utf-8")
+	FINAL_PAPER_MAIN.write_text(
+		_replace_result_macro_block(main_tex, macros),
+		encoding="utf-8",
+	)
 	return comparison
 
 

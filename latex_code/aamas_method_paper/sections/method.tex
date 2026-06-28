@@ -48,6 +48,12 @@ candidates compose conjunctive goals by calling Layer B modules under
 goal-conditioned contexts. Third, an answer-set selector chooses a safe and
 small subset of these candidates, and the compiler renders the selected rules as
 \asl{} plans.
+This separation is part of the method rather than an implementation detail:
+Layer B answers ``how can a declared predicate goal be achieved?'', whereas
+Layer C answers ``which declared predicate goal should be pursued next for this
+conjunctive goal?'' Goal facts are the input interface between the concrete
+problem and the lifted library; they do not add new achievement predicates to
+the output language.
 
 \begin{table}[t]
 	\caption{Main artifacts in the proposed architecture.}
@@ -169,6 +175,12 @@ progress certificate, and candidates unsupported by the selected paper profile.
 Additional hard groups require coverage of observed goal-progress transitions
 and coverage of bounded reachable non-goal states by at least one applicable
 composer rule.
+The selected answer set is therefore a certificate for the finite evidence
+available to the synthesis run. For each selected rule, the report records the
+source candidate, symbol-safety check, variable-safety check, applicable hard
+group, selector reason, and any rejected alternatives in the same strategy
+group. These proof records connect the learned \asl{} plan schemas back to
+policy-sketch, schema, trace, or counterexample evidence.
 
 The optimization objective prefers smaller libraries, fewer features, shorter
 contexts, fewer body calls, trace- or sketch-justified candidates over

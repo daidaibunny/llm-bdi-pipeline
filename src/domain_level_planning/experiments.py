@@ -5,6 +5,7 @@ Reproducible domain-level lifted-library experiment reporting.
 from __future__ import annotations
 
 from contextlib import contextmanager
+import hashlib
 from pathlib import Path
 import re
 import signal
@@ -945,6 +946,9 @@ def _latex_macro_prefix(label: str) -> str:
 	prefix = "".join(_latex_macro_part(part) for part in parts)
 	if not prefix or prefix[0].isdigit():
 		prefix = f"Row{prefix}"
+	if len(prefix) > 40:
+		digest = _latex_digest_suffix(label)
+		prefix = f"{prefix[:24]}Hash{digest}"
 	return prefix
 
 
@@ -953,6 +957,14 @@ def _latex_macro_part(part: str) -> str:
 
 	converted = "".join(_latex_digit_word(character) for character in part)
 	return converted[:1].upper() + converted[1:] if converted else ""
+
+
+def _latex_digest_suffix(label: str) -> str:
+	"""Return a short all-letter digest accepted inside a LaTeX command name."""
+
+	alphabet = "abcdefghijklmnop"
+	hex_digest = hashlib.sha1(label.encode("utf-8")).hexdigest()[:8]
+	return "".join(alphabet[int(character, 16)] for character in hex_digest)
 
 
 def _latex_digit_word(character: str) -> str:
