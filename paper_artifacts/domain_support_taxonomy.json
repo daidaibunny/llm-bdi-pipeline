@@ -3,6 +3,189 @@
   "scope": "positive_conjunctive_achievement_goals",
   "claim_statement": "The current paper claims executable domain-level lifted AgentSpeak(L) library synthesis for positive conjunctive achievement-goal PDDL problem classes Q_D only when Q_D admits a goal-conditioned, feature-definable, terminating modular policy sketch with bounded sketch width, the selected feature rules have safe lifted bindings to declared PDDL predicates, primitive actions, predicate subgoals, read-only goal descriptors, or read-only agenda gates, and the compiled library validates without runtime full-trace planning.",
   "selection_principle": "Benchmark classes are selected by prior formal properties first, then by current implementation evidence. A domain is counted in the main claim only if it satisfies the compiled-sketch support contract and has strict-profile ASL-library validation. Domains that match prior benchmark suites but lack current strict-profile ASL evidence are controls or next targets, not claimed coverage.",
+  "prior_benchmark_practice": [
+    {
+      "id": "moose_goal_regression",
+      "literature_basis": [
+        "Chen2026Moose"
+      ],
+      "property_axis": "goal independence and Easy-to-Solve Hard-to-Optimise structure",
+      "evaluated_domain_count": {
+        "main_classical_domains": 8,
+        "numeric_domains": 4,
+        "ipc_property_probe_domains": 38
+      },
+      "domains": [
+        "barman",
+        "ferry",
+        "gripper",
+        "logistics",
+        "miconic",
+        "rovers",
+        "satellite",
+        "transport",
+        "numeric ferry",
+        "numeric miconic",
+        "numeric minecraft",
+        "numeric transport"
+      ],
+      "selection_style": "The paper first defines TGI, SGI, and OGI, then evaluates domains expected to fit or stress those assumptions. Rovers and Transport remove path-finding components for the main goal-regression setting.",
+      "implication_for_this_paper": "Use goal-independent domains as controls and MOOSE-style baselines. Do not treat them as the core novelty unless they pass the same compiled-ASL protocol."
+    },
+    {
+      "id": "learning_sketches_bounded_width",
+      "literature_basis": [
+        "Drexler2022LearningSketches"
+      ],
+      "property_axis": "learned well-formed sketches with bounded sketch width",
+      "evaluated_domain_count": {
+        "learning_domains": 9,
+        "test_instances_per_domain": 30
+      },
+      "domains": [
+        "blocks-clear",
+        "blocks-on",
+        "childsnack",
+        "delivery",
+        "gripper",
+        "miconic",
+        "reward",
+        "spanner",
+        "visitall"
+      ],
+      "selection_style": "The paper chooses tractable IPC-style classes where small training instances can be fully explored and a learned sketch can be checked by SIWR on larger held-out instances.",
+      "implication_for_this_paper": "Use bounded sketch width as the main property basis. A credible broad evaluation should include more than one standard sketchable family."
+    },
+    {
+      "id": "subgoal_structure_handcrafted_sketches",
+      "literature_basis": [
+        "Drexler2024SubgoalSketches",
+        "Bonet2024GeneralPoliciesWidth"
+      ],
+      "property_axis": "handcrafted sketches, subgoal structure, and bounded effective width",
+      "evaluated_domain_count": {
+        "ipc_domains": 8,
+        "autoscale_domains": 7
+      },
+      "domains": [
+        "barman",
+        "childsnack",
+        "driverlog",
+        "floortile",
+        "grid",
+        "grid variants",
+        "schedule",
+        "traveling purchaser problem"
+      ],
+      "selection_style": "The papers analyze problem classes Q_D, prove or test sketch well-formedness and small width, and use standard benchmark suites where the sketch property is expected to matter.",
+      "implication_for_this_paper": "State support over problem classes Q_D and explicit properties, not over arbitrary domains. Use unsupported route or numeric fragments as boundary rows."
+    },
+    {
+      "id": "d2l_feature_definable_policies",
+      "literature_basis": [
+        "Frances2021LearningGeneralPolicies"
+      ],
+      "property_axis": "feature-definable terminating general policies learned from small examples",
+      "evaluated_domain_count": {
+        "problem_classes": 9,
+        "blocksworld_test_instances": 100
+      },
+      "domains": [
+        "qclear",
+        "qon",
+        "qgrip",
+        "qreward",
+        "qdelivery",
+        "qvisitall",
+        "qspanner",
+        "qmiconic",
+        "qblocksworld"
+      ],
+      "selection_style": "The paper evaluates problem classes where a finite description-logic feature pool can separate good transitions and defines a terminating policy, including full Blocksworld with goal-dependent construction.",
+      "implication_for_this_paper": "Blocksworld is the right core goal-dependency domain, but one standard family is narrower than this precedent."
+    },
+    {
+      "id": "pg3_lifted_decision_lists",
+      "literature_basis": [
+        "Yang2022PG3"
+      ],
+      "property_axis": "goal-conditioned lifted decision-list policies executed directly on held-out problems",
+      "evaluated_domain_count": {
+        "domains": 6
+      },
+      "domains": [
+        "forest",
+        "delivery",
+        "gripper",
+        "miconic",
+        "ferry",
+        "spanner"
+      ],
+      "selection_style": "The paper evaluates policy execution on held-out problems with more objects than training, across domains suited to the lifted decision-list language.",
+      "implication_for_this_paper": "A broad executable-policy claim should include several standard domains; Ferry, Gripper, Miconic, and Spanner are natural comparators."
+    },
+    {
+      "id": "bfgp_program_synthesis",
+      "literature_basis": [
+        "SegoviaAguas2022BFGPpp"
+      ],
+      "property_axis": "terminating generalized programs with loops and validation on large instances",
+      "evaluated_domain_count": {
+        "domains": 13
+      },
+      "domains": [
+        "blocks",
+        "corridor",
+        "fibonacci",
+        "find",
+        "floyd",
+        "gripper",
+        "intrusion",
+        "reverse",
+        "select",
+        "sorting",
+        "spanner",
+        "triangular sum",
+        "visitall"
+      ],
+      "selection_style": "The paper groups domains by whether compact loop programs can solve all input instances and then validates the synthesized programs on larger instances.",
+      "implication_for_this_paper": "Program-synthesis papers support larger benchmark breadth; our narrower artifact-specific claim must be explicit unless we add more compiled-ASL domains."
+    }
+  ],
+  "domain_count_assessment": {
+    "current_strict_main_standard_domain_count": 1,
+    "current_strict_main_standard_domains": [
+      "blocksworld"
+    ],
+    "current_nonstandard_mechanism_domain_count": 1,
+    "current_nonstandard_mechanism_domains": [
+      "labworkflow"
+    ],
+    "current_boundary_standard_domain_count": 2,
+    "current_boundary_standard_domains": [
+      "transport",
+      "marsrover"
+    ],
+    "prior_broad_gp_domain_count_range": "6-13 standard domains for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
+    "revision_needed_for_broad_gp_claim": true,
+    "minimum_next_revision_target": {
+      "strict_or_control_standard_domain_families": 3,
+      "required_families": [
+        "blocksworld as the feature-definable goal-dependency core",
+        "at least one goal-independent control such as ferry, gripper, or miconic",
+        "at least one standard ordered-resource or dead-end sketch domain such as spanner or childsnack"
+      ],
+      "recommended_full_target": [
+        "blocksworld",
+        "gripper or ferry",
+        "miconic",
+        "spanner",
+        "childsnack if feature binding supports it",
+        "transport or marsrover as boundary only"
+      ]
+    },
+    "current_paper_positioning": "The current evidence is acceptable only as a focused compiled-ASL paper centered on Blocksworld-style goal dependency plus artifact-specific ASL compilation. It is too narrow for a broad generalized-planning coverage claim unless at least one standard control family and one standard resource/sketch stress family are added under the same strict protocol."
+  },
   "paper_core_domains": [
     "blocksworld"
   ],

@@ -164,7 +164,7 @@ paper external `blocks_4_on_2` result: 10/10, paper_profile_ready=true,
 | G9 | Paper comparison | Done for the current final package. Baseline records include Fast Downward per-problem trace baselines, raw learner-sketches artifact audits, and MOOSE status-CSV probes, each marked with `comparison_scope`, `domain_level_artifact`, `coverage_semantics`, and `runtime_planner`. LaTeX result macros now use unique, digit-free command names so repeated baseline labels across splits cannot collide. | Future comparison work can add stronger executable h-policy/d2l rows, but the current paper no longer lacks baseline tables or result-import plumbing. | Done |
 | G10 | Training scalability | Done for the current safe fragment: when bounded transition-system exploration fails, synthesis can use a validated offline planner trace as evidence while preserving `runtime_full_trace_planner=false`. Marsrover now uses this path as a fixed-resource trace-evidence fragment rather than failing at transition-system explosion. | Future work can broaden this evidence path to more external learner artifacts and keep reports precise when no provider or invalid trace is available. | Done |
 | G11 | Resource/route modules | Boundary for the current paper: typed-overloaded logistics and Marsrover-style producer-resource fragments are supported from problem initial states. Layer B now learns generic route-step shortest-path descent for single-effect movement schemas, causal-chain modules for typed-overloaded effects, producer-backed hidden-resource prepare rules, disconnected final-action location binding, and saturated static filters after hidden variables are bound. Transport train3 first10 and Marsrover trace-evidence first10 both solve 10/10 from problem initial states with no runtime full-trace planner. Bounded all-reachable-state validation still reports mid-state counterexamples, so this is not claimed as a complete arbitrary reachable-state logistics policy. | Report Transport/Marsrover as boundary rows unless a future method strengthens reachable-mid-state repair/counterexample refinement. | Boundary |
-| G12 | Benchmark-class boundary | Done for current paper framing: the final paper now states support over problem classes `Q_D`, not loose domain buckets. Main claimed coverage requires a compiled feature-definable modular sketch with bounded sketch width, safe lifted feature bindings, acyclic agenda support where needed, strict ASL validation, and runtime planner `none`. Current main strict evidence is Blocksworld only; Ferry/Gripper/Miconic are controls, Spanner/Childsnack are next stress targets, Labworkflow is a local mechanism probe, and Transport/Marsrover/numeric/path-finding fragments remain boundary rows. | Next implementation expansion should target one control class and one standard ordered-resource stress class before broadening claims. | Done |
+| G12 | Benchmark-class boundary | Done for current paper framing: the final paper now states support over problem classes `Q_D`, not loose domain buckets. The tracked taxonomy records how prior GP papers choose and count domains: MOOSE uses 8 classical ESHO domains plus 4 numeric domains and a 38-domain IPC goal-independence probe; learner-sketches uses 9 IPC-style domains; D2L uses 9 feature-definable problem classes; PG3 uses 6 PDDL domains; BFGP++ uses 13 program-synthesis domains. Main claimed coverage requires a compiled feature-definable modular sketch with bounded sketch width, safe lifted feature bindings, acyclic agenda support where needed, strict ASL validation, and runtime planner `none`. Current main strict evidence is Blocksworld only, so it must be positioned as a focused Blocksworld goal-dependency + ASL-compilation result, not a broad multi-domain GP coverage claim. | Next implementation expansion should target at least one standard goal-independent control class, such as Ferry, Gripper, or Miconic, and one standard ordered-resource/dead-end sketch stress class, such as Spanner or Childsnack, before broadening the claim. | Done |
 
 ## Non-TEG Priority Queue
 
@@ -207,6 +207,26 @@ uv run python scripts/run_final_paper_data.py \
 | External paper-code reuse | Yes | learner-sketches policy selected by the strict paper profile; h-policy-learner and d2l reported through verified adapter compatibility or explicit safe rejection. | Unsupported external feature dialects are diagnostics, not silent fallbacks. |
 | Route/resource broader PDDL applicability | Boundary | Transport/Marsrover rows may support engineering breadth only when their fragment limits are explicit. | Arbitrary reachable mid-state route policies, transitive closure without accepted feature binding, and numeric/object-specific fragments are outside the main claim. |
 | Temporal extended goals | No for current paper | DFA role may be described as future upper controller. | No TEG coverage table is required for this achievement-goal paper. |
+
+### Benchmark Breadth Decision
+
+Prior generalized-planning papers justify benchmark choice by the properties
+their method assumes, then validate on multiple standard families: MOOSE uses
+goal independence and ESHO structure, learner-sketches uses bounded sketch
+width, D2L uses feature-definable terminating policies, PG3 uses lifted
+decision-list policies, and BFGP++ uses loop-program synthesis. Their broad
+method papers typically evaluate 6-13 standard domains, with MOOSE also running
+a 38-domain IPC property probe.
+
+Our current strict main evidence has one standard family: Blocksworld. That is
+acceptable only for a focused claim about goal-dependent Blocksworld
+construction compiled into lifted ASL. To imitate prior work more closely before
+claiming broader GP coverage, the next benchmark revision must add:
+
+- one standard goal-independent control family: Ferry, Gripper, or Miconic;
+- one standard ordered-resource/dead-end sketch family: Spanner or Childsnack;
+- Transport or Marsrover only as boundary rows until route/ranking feature
+  support is complete.
 
 ### Required Final Tables
 

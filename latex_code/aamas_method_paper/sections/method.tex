@@ -121,6 +121,19 @@ policy sketches, subgoal-structure width, feature-based general policies, and
 modular policy reuse \cite{Drexler2022LearningSketches,
 Drexler2024SubgoalSketches,Frances2021LearningGeneralPolicies,
 Bonet2024GeneralPoliciesWidth,Bonet2024PolicyReuse}.
+We also mirror how these papers choose benchmarks. MOOSE first defines
+goal-independence properties and then evaluates eight classical ESHO domains,
+four numeric variants, and a 38-domain IPC probe \cite{Chen2026Moose}.
+The learned-sketches paper reports nine IPC-style domains with 30 held-out
+instances each \cite{Drexler2022LearningSketches}; D2L reports nine
+feature-definable problem classes, including full Blocksworld
+\cite{Frances2021LearningGeneralPolicies}; PG3 uses six PDDL domains
+\cite{Yang2022PG3}; and BFGP++ uses 13 program-synthesis domains
+\cite{SegoviaAguas2022BFGPpp}. Thus a broad generalized-planning claim should
+normally cover several standard domain families. Our current strict claim is
+narrower by design: it centers on the feature-definable Blocksworld construction
+class plus the additional requirement that the learned policy evidence compile
+into a lifted \asl{} library.
 
 \begin{table}[t]
 	\caption{Benchmark classes used to state the support boundary.}
@@ -133,7 +146,8 @@ Bonet2024GeneralPoliciesWidth,Bonet2024PolicyReuse}.
 		Compiled feature-definable modular sketches &
 		Main claim. Current evidence is Blocksworld construction goals, where
 		prior work gives feature policies for \texttt{clear}, \texttt{on}, and
-		full Blocksworld. \\
+		full Blocksworld. This is a focused one-family claim, not yet a broad
+		multi-domain generalized-planning suite. \\
 		Goal-independent control classes &
 		Control candidates only. MOOSE-style TGI/SGI/OGI domains such as Ferry,
 		Gripper, and Miconic are not counted until compiled ASL rows pass the

@@ -346,6 +346,18 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	assert "runtime full-trace planning" in taxonomy["claim_statement"]
 	assert "prior formal properties" in taxonomy["selection_principle"]
 	assert taxonomy["paper_core_domains"] == ["blocksworld"]
+	assert taxonomy["domain_count_assessment"][
+		"current_strict_main_standard_domain_count"
+	] == 1
+	assert taxonomy["domain_count_assessment"][
+		"revision_needed_for_broad_gp_claim"
+	] is True
+	assert (
+		taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
+			"strict_or_control_standard_domain_families"
+		]
+		>= 3
+	)
 
 	literature = taxonomy["literature"]
 	assert literature
@@ -382,6 +394,35 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"program_or_decision_list_gp",
 		"safe_asl_compilability",
 	} <= property_ids
+
+	prior_practice = taxonomy["prior_benchmark_practice"]
+	assert len(prior_practice) >= 5
+	practice_by_id = {record["id"]: record for record in prior_practice}
+	assert practice_by_id["moose_goal_regression"]["evaluated_domain_count"][
+		"main_classical_domains"
+	] == 8
+	assert practice_by_id["moose_goal_regression"]["evaluated_domain_count"][
+		"ipc_property_probe_domains"
+	] == 38
+	assert practice_by_id["learning_sketches_bounded_width"][
+		"evaluated_domain_count"
+	]["learning_domains"] == 9
+	assert practice_by_id["d2l_feature_definable_policies"][
+		"evaluated_domain_count"
+	]["problem_classes"] == 9
+	assert practice_by_id["pg3_lifted_decision_lists"]["evaluated_domain_count"][
+		"domains"
+	] == 6
+	assert practice_by_id["bfgp_program_synthesis"]["evaluated_domain_count"][
+		"domains"
+	] == 13
+	for record in prior_practice:
+		assert record["property_axis"]
+		assert record["domains"]
+		assert record["selection_style"]
+		assert record["implication_for_this_paper"]
+		for literature_key in record["literature_basis"]:
+			assert literature_key in literature
 
 	support_levels = {
 		"boundary_or_excluded",
