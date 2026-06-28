@@ -167,8 +167,8 @@ into a lifted \asl{} library.
 		learned-sketch and subgoal-structure evaluations of well-formed sketches
 		with small sketch width. \\
 		Feature-definable goal-dependent construction classes &
-		Blocksworld-Qclear, Blocksworld-Qon, and full Blocksworld tower
-		construction, following D2L and modular policy-reuse examples. \\
+		Blocksworld, following D2L and modular policy-reuse examples for
+		feature-definable construction goals. \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -179,7 +179,10 @@ goal-separable or serialisable class it may reduce to unsatisfied-goal
 dispatch; in bounded-width sketchable classes it must preserve the selected
 subgoal structure; and in Blocksworld-style construction classes it must encode
 the support agenda implicit in feature-definable construction policies, such as
-placing lower tower links before upper links. Transport, Rovers, Marsrover,
+placing lower tower links before upper links. Blocksworld rows may be tagged by
+goal family, such as \texttt{qclear}, \texttt{qon}, or
+\texttt{qbw}, but these tags are not counted as separate
+domains. Transport, Rovers, Marsrover,
 Logistics, Satellite, numeric domains, and unselected program-synthesis
 benchmarks are boundary or excluded cases unless their required route,
 transitive-closure, resource-instrument, or numeric semantics are safely bound.

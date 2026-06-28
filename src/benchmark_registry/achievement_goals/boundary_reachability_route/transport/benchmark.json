@@ -1,0 +1,92 @@
+{
+	"schema_version": 1,
+	"goal_specification_layer": "achievement_goal_layer",
+	"benchmark_class_id": "boundary_reachability_route",
+	"domain_id": "transport",
+	"display_name": "Transport",
+	"domain_role": "boundary",
+	"support_level": "boundary",
+	"target_paper_domains": [],
+	"domain_file": "src/domains/transport/domain.pddl",
+	"problem_sets": {
+		"train3": {
+			"base": "src/domains/transport/problems",
+			"glob": "pfile*.pddl",
+			"count": 3
+		},
+		"first10": {
+			"base": "src/domains/transport/problems",
+			"glob": "pfile*.pddl",
+			"count": 10
+		},
+		"pfile01": {
+			"problems": [
+				"src/domains/transport/problems/pfile01.pddl"
+			]
+		}
+	},
+	"baseline_groups": {},
+	"experiments": [
+		{
+			"name": "transport-no-offline-trace-evidence-first10",
+			"order": 40,
+			"matrix": "ablation",
+			"train_problem_set": "train3",
+			"eval_problem_set": "first10",
+			"max_steps": 20000,
+			"max_depth": 2000,
+			"timeout_seconds": 180,
+			"evaluation_timeout_seconds": 5,
+			"synthesis_profile": "bootstrap",
+			"ablation_label": "no_offline_trace_evidence_transport"
+		},
+		{
+			"name": "transport-bootstrap-train3-first10-limitation",
+			"order": 10,
+			"matrix": "limitation",
+			"train_problem_set": "train3",
+			"eval_problem_set": "first10",
+			"max_steps": 20000,
+			"max_depth": 2000,
+			"timeout_seconds": 180,
+			"evaluation_timeout_seconds": 5,
+			"use_synthesis_planner_traces": true,
+			"synthesis_planner_executable": "fast-downward/fast-downward.py",
+			"synthesis_planner_timeout_seconds": 60,
+			"synthesis_profile": "bootstrap",
+			"ablation_label": "transport_initial_state_fragment"
+		},
+		{
+			"name": "transport-fragment-diagnostic",
+			"order": 50,
+			"matrix": "preset",
+			"preset_tags": [
+				"paper-diagnostic-smoke",
+				"paper-expanded-smoke"
+			],
+			"train_problem_set": "pfile01",
+			"eval_problem_set": "pfile01",
+			"synthesis_profile": "bootstrap",
+			"ablation_label": "unsupported_fragment_diagnostic"
+		},
+		{
+			"name": "transport-bootstrap-train3-first10",
+			"order": 110,
+			"matrix": "preset",
+			"preset_tags": [
+				"paper-expanded-smoke"
+			],
+			"train_problem_set": "train3",
+			"eval_problem_set": "first10",
+			"max_steps": 20000,
+			"max_depth": 2000,
+			"timeout_seconds": 180,
+			"evaluation_timeout_seconds": 5,
+			"use_synthesis_planner_traces": true,
+			"synthesis_planner_executable": "fast-downward/fast-downward.py",
+			"synthesis_planner_timeout_seconds": 60,
+			"synthesis_profile": "bootstrap",
+			"ablation_label": "bootstrap_train3_first10"
+		}
+	]
+}

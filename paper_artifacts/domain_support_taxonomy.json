@@ -169,11 +169,11 @@
     "prior_broad_gp_domain_count_range": "6-13 standard domains for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
     "revision_needed_for_broad_gp_claim": true,
     "minimum_next_revision_target": {
-      "selected_standard_domain_or_problem_class_count": 9,
+      "selected_standard_domain_count": 9,
       "required_families": [
         "goal-separable or serialisable achievement classes: gripper, ferry, and miconic",
         "bounded-width sketchable subgoal-structure classes: spanner, childsnack, barman, visitall, and delivery",
-        "feature-definable goal-dependent construction classes: blocksworld qclear, qon, and full blocksworld"
+        "feature-definable goal-dependent construction classes: blocksworld"
       ],
       "recommended_full_target": [
         "gripper",
@@ -184,11 +184,11 @@
         "barman",
         "visitall",
         "delivery",
-        "blocksworld with qclear, qon, and full tower subclasses",
+        "blocksworld",
         "transport or marsrover as boundary only"
       ]
     },
-    "current_paper_positioning": "The current evidence is acceptable only as a focused compiled-ASL paper centered on Blocksworld-style goal dependency plus artifact-specific ASL compilation. The final broad generalized-planning evaluation target should cover the three selected property-defined classes with roughly 9 standard domains or problem classes, matching the scale of prior 6-13 domain GP papers."
+    "current_paper_positioning": "The current evidence is acceptable only as a focused compiled-ASL paper centered on Blocksworld-style goal dependency plus artifact-specific ASL compilation. The final broad generalized-planning evaluation target should cover the three selected property-defined classes with exactly 9 selected standard domain names, matching the scale of prior 6-13 domain GP papers."
   },
   "goal_specification_layers": [
     {
@@ -366,15 +366,15 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
-        "blocksworld qclear",
-        "blocksworld qon",
-        "full blocksworld",
-        "tower-style blocksworld"
+        "blocksworld"
       ],
       "target_paper_domains": [
-        "blocksworld qclear",
-        "blocksworld qon",
-        "full blocksworld"
+        "blocksworld"
+      ],
+      "problem_class_tags": [
+        "qclear",
+        "qon",
+        "qbw"
       ],
       "current_project_domains": [
         "blocksworld"

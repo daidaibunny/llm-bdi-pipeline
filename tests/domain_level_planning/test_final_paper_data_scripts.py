@@ -16,6 +16,7 @@ from scripts.run_final_paper_data import validate_final_paper_package
 from scripts.run_final_paper_data import write_final_paper_configs
 from domain_level_planning import architecture_gap_summary
 from domain_level_planning import domain_level_architecture_contract
+from domain_level_planning.benchmark_registry import load_achievement_benchmark_registry
 from domain_level_planning.experiments import format_comparison_latex_macros
 
 
@@ -354,7 +355,7 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	] is True
 	assert (
 		taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
-			"selected_standard_domain_or_problem_class_count"
+			"selected_standard_domain_count"
 		]
 		== 9
 	)
@@ -491,9 +492,7 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"barman",
 		"visitall",
 		"delivery",
-		"blocksworld qclear",
-		"blocksworld qon",
-		"full blocksworld",
+		"blocksworld",
 	} <= target_domains
 
 	classes_by_id = {
@@ -508,6 +507,9 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	][
 		"current_project_domains"
 	] == ["blocksworld"]
+	assert classes_by_id[
+		"feature_definable_goal_dependent_construction_classes"
+	]["problem_class_tags"] == ["qclear", "qon", "qbw"]
 	assert classes_by_id[
 		"goal_separable_serialisable_achievement_classes"
 	]["current_project_domains"] == []
@@ -536,6 +538,72 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"local mechanism-stress domains" in item
 		for item in evaluation_policy["not_counted_as_main_claim"]
 	)
+
+
+def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> None:
+	taxonomy = json.loads(
+		(PROJECT_ROOT / "paper_artifacts/domain_support_taxonomy.json").read_text(
+			encoding="utf-8",
+		),
+	)
+	manifest = load_final_paper_manifest()
+	registry = load_achievement_benchmark_registry()
+
+	assert registry.control["goal_specification_layer"] == "achievement_goal_layer"
+	assert registry.control["future_goal_specification_layers"] == [
+		"temporal_extended_goal_layer",
+	]
+	assert len(registry.selected_records()) == 9
+	assert {
+		record.domain_id for record in registry.selected_records()
+	} == set(taxonomy["selected_standard_domain_targets"])
+
+	class_to_domains: dict[str, set[str]] = {}
+	for record in registry.selected_records():
+		class_to_domains.setdefault(record.benchmark_class_id, set()).add(record.domain_id)
+	assert class_to_domains == {
+		"goal_separable_serialisable_achievement_classes": {
+			"gripper",
+			"ferry",
+			"miconic",
+		},
+		"bounded_width_sketchable_subgoal_structure_classes": {
+			"spanner",
+			"childsnack",
+			"barman",
+			"visitall",
+			"delivery",
+		},
+		"feature_definable_goal_dependent_construction_classes": {
+			"blocksworld",
+		},
+	}
+
+	blocksworld = next(
+		record for record in registry.selected_records() if record.domain_id == "blocksworld"
+	)
+	assert blocksworld.payload["target_paper_domains"] == ["blocksworld"]
+	assert blocksworld.payload["problem_class_tags"] == [
+		"qclear",
+		"qon",
+		"qbw",
+	]
+	assert all(
+		"qclear" not in record.domain_id and "qon" not in record.domain_id
+		for record in registry.selected_records()
+	)
+	assert all(
+		str(record.payload["goal_specification_layer"]) == "achievement_goal_layer"
+		for record in registry.records
+	)
+
+	manifest_inputs = {
+		str(record["path"])
+		for record in manifest["required_repository_inputs"]
+		if bool(record.get("tracked"))
+	}
+	assert "src/domain_level_planning/benchmark_registry.py" in manifest_inputs
+	assert "src/benchmark_registry/achievement_goals" in manifest_inputs
 
 
 def test_final_paper_config_splits_main_ablation_and_limitations(

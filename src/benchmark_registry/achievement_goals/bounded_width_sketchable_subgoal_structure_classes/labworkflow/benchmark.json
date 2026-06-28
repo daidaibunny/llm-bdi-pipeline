@@ -1,0 +1,108 @@
+{
+	"schema_version": 1,
+	"goal_specification_layer": "achievement_goal_layer",
+	"benchmark_class_id": "bounded_width_sketchable_subgoal_structure_classes",
+	"domain_id": "labworkflow",
+	"display_name": "Labworkflow",
+	"domain_role": "diagnostic_project_domain",
+	"support_level": "diagnostic",
+	"target_paper_domains": [],
+	"domain_file": "src/domains/labworkflow/domain.pddl",
+	"problem_sets": {
+		"train_p01": {
+			"problems": [
+				"src/domains/labworkflow/problems/p01.pddl"
+			]
+		},
+		"stress_p02_p06": {
+			"problems": [
+				"src/domains/labworkflow/problems/p02.pddl",
+				"src/domains/labworkflow/problems/p03.pddl",
+				"src/domains/labworkflow/problems/p04.pddl",
+				"src/domains/labworkflow/problems/p05.pddl",
+				"src/domains/labworkflow/problems/p06.pddl"
+			]
+		},
+		"smoke_p01_p02": {
+			"problems": [
+				"src/domains/labworkflow/problems/p01.pddl",
+				"src/domains/labworkflow/problems/p02.pddl"
+			]
+		}
+	},
+	"baseline_groups": {
+		"labworkflow-stress": {
+			"output_file": "labworkflow.json",
+			"records": [
+				{
+					"kind": "classical_planner",
+					"problem_set": "stress_p02_p06",
+					"work_subdir": "labworkflow"
+				}
+			]
+		}
+	},
+	"experiments": [
+		{
+			"name": "labworkflow-counterexample-refinement-stress",
+			"order": 40,
+			"matrix": "main",
+			"preset_tags": [
+				"paper-diagnostic-smoke",
+				"paper-expanded-smoke"
+			],
+			"train_problem_set": "train_p01",
+			"eval_problem_set": "stress_p02_p06",
+			"use_counterexample_refinement": true,
+			"max_refinement_rounds": 1,
+			"max_steps": 500,
+			"max_depth": 100,
+			"synthesis_profile": "bootstrap",
+			"baseline_group": "labworkflow-stress",
+			"ablation_label": "labworkflow_counterexample_refinement_stress"
+		},
+		{
+			"name": "labworkflow-counterexample-refinement",
+			"order": 30,
+			"matrix": "preset",
+			"preset_tags": [
+				"current-minimum"
+			],
+			"train_problem_set": "train_p01",
+			"eval_problem_set": "smoke_p01_p02",
+			"use_counterexample_refinement": true,
+			"max_refinement_rounds": 1,
+			"max_steps": 100,
+			"max_depth": 50,
+			"synthesis_profile": "bootstrap",
+			"ablation_label": "bootstrap_counterexample_refinement"
+		},
+		{
+			"name": "labworkflow-no-layer-c-with-refinement-stress",
+			"order": 20,
+			"matrix": "ablation",
+			"train_problem_set": "train_p01",
+			"eval_problem_set": "stress_p02_p06",
+			"use_counterexample_refinement": true,
+			"max_refinement_rounds": 1,
+			"disabled_synthesis_mechanisms": [
+				"layer_c_ordering"
+			],
+			"max_steps": 500,
+			"max_depth": 100,
+			"synthesis_profile": "bootstrap",
+			"ablation_label": "no_layer_c_with_refinement_labworkflow_stress"
+		},
+		{
+			"name": "labworkflow-no-counterexample-refinement-stress",
+			"order": 30,
+			"matrix": "ablation",
+			"train_problem_set": "train_p01",
+			"eval_problem_set": "stress_p02_p06",
+			"max_steps": 500,
+			"max_depth": 100,
+			"synthesis_profile": "bootstrap",
+			"ablation_label": "no_counterexample_refinement_labworkflow_stress"
+		}
+	]
+}

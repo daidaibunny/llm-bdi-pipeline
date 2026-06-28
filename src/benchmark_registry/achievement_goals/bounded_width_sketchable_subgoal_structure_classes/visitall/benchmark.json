@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"goal_specification_layer": "achievement_goal_layer",
+	"benchmark_class_id": "bounded_width_sketchable_subgoal_structure_classes",
+	"domain_id": "visitall",
+	"display_name": "Visitall",
+	"domain_role": "planned_claim_target",
+	"support_level": "planned_claim_target",
+	"target_paper_domains": [
+		"visitall"
+	],
+	"domain_file": null,
+	"problem_sets": {},
+	"baseline_groups": {},
+	"experiments": [],
+	"external_sources": [
+		{
+			"backend": "learner-sketches",
+			"source_path": ".external/gp-backends/learner-sketches/learning/benchmarks/tractable/visitall"
+		},
+		{
+			"backend": "d2l",
+			"source_path": ".external/gp-backends/d2l/domains/visitall-opt11-strips"
+		}
+	]
+}

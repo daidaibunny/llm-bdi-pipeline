@@ -50,6 +50,7 @@ Agent.md
 output/
 logs/
 artifacts/
+output.sas
 tests/generated/
 tests/method_library/generated/
 

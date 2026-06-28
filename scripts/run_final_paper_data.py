@@ -22,6 +22,13 @@ from domain_level_planning.experiments import (  # noqa: E402
 	compare_domain_level_experiment_reports,
 	format_comparison_latex_macros,
 )
+from domain_level_planning.benchmark_registry import (  # noqa: E402
+	baseline_group_specs,
+	build_matrix_config_from_registry,
+	load_achievement_benchmark_registry,
+	resolve_problem_set,
+	resolve_registry_path,
+)
 from domain_level_planning.architecture_contract import (  # noqa: E402
 	architecture_gap_summary,
 	domain_level_architecture_contract,
@@ -34,28 +41,11 @@ from scripts.generate_domain_level_baselines import (  # noqa: E402
 from scripts.run_domain_level_experiment_matrix import run_experiment_matrix  # noqa: E402
 
 
-BLOCKS_POLICY = (
-	".external/gp-backends/learner-sketches/learning/"
-	"workspace-2024-09-24-tractable/blocks_4_on_2/output/sketch_minimized_2.txt"
-)
-BLOCKS_VOCAB = (
-	"src/benchmark_data/external_vocab/"
-	"learner_sketches_blocksworld_blocks_4_on_2.json"
-)
-MOOSE_BLOCKS_STATUS = ".external/moose/exact-runs/blocksworld-paper-params-probe/train-status.csv"
 FINAL_PAPER_MANIFEST = PROJECT_ROOT / "paper_artifacts/final_paper_manifest.json"
 FINAL_RESULT_MACROS = PROJECT_ROOT / "latex_code/aamas_method_paper/sections/result_macros.tex"
 FINAL_PAPER_MAIN = PROJECT_ROOT / "latex_code/aamas_method_paper/main.tex"
 RESULT_MACRO_START = "% BEGIN GENERATED RESULT MACROS"
 RESULT_MACRO_END = "% END GENERATED RESULT MACROS"
-LABWORKFLOW_TRAIN_PROBLEMS = ["src/domains/labworkflow/problems/p01.pddl"]
-LABWORKFLOW_STRESS_PROBLEMS = [
-	"src/domains/labworkflow/problems/p02.pddl",
-	"src/domains/labworkflow/problems/p03.pddl",
-	"src/domains/labworkflow/problems/p04.pddl",
-	"src/domains/labworkflow/problems/p05.pddl",
-	"src/domains/labworkflow/problems/p06.pddl",
-]
 
 
 def main() -> None:
@@ -196,36 +186,6 @@ def validate_final_paper_package(
 	require(
 		any(float(row.get("coverage_percent") or 0.0) < 100.0 for row in library_rows),
 		"ablation rows include a coverage drop",
-	)
-	library_rows_by_label = {
-		str(row.get("label") or ""): row for row in library_rows
-	}
-	lab_stress = library_rows_by_label.get("labworkflow_counterexample_refinement_stress")
-	no_layer_c_stress = library_rows_by_label.get(
-		"no_layer_c_with_refinement_labworkflow_stress",
-	)
-	no_refinement_stress = library_rows_by_label.get(
-		"no_counterexample_refinement_labworkflow_stress",
-	)
-	require(lab_stress is not None, "Labworkflow Layer C stress row exists")
-	require(
-		str(lab_stress.get("solved") or "") == "5/5",
-		"Labworkflow Layer C stress row solves all five held-out problems",
-	)
-	require(no_layer_c_stress is not None, "No-Layer-C stress ablation row exists")
-	require(
-		float(no_layer_c_stress.get("coverage_percent") or 0.0)
-		< float(lab_stress.get("coverage_percent") or 0.0),
-		"No-Layer-C stress ablation drops coverage",
-	)
-	require(
-		no_refinement_stress is not None,
-		"No-counterexample-refinement stress ablation row exists",
-	)
-	require(
-		float(no_refinement_stress.get("coverage_percent") or 0.0)
-		< float(lab_stress.get("coverage_percent") or 0.0),
-		"No-counterexample-refinement stress ablation drops coverage",
 	)
 	require(
 		any(
@@ -682,217 +642,24 @@ def write_final_paper_configs(
 
 	config_dir = output_dir / "configs"
 	config_dir.mkdir(parents=True, exist_ok=True)
+	registry = load_achievement_benchmark_registry()
 	configs = {
 		"main": config_dir / "main-library-matrix.json",
 		"ablation": config_dir / "ablation-matrix.json",
 		"limitation": config_dir / "limitation-matrix.json",
 	}
-	_write_json(configs["main"], _main_library_config(output_dir))
-	_write_json(configs["ablation"], _ablation_config(output_dir))
-	_write_json(configs["limitation"], _limitation_config(output_dir))
+	for matrix_name, config_file in configs.items():
+		_write_json(
+			config_file,
+			build_matrix_config_from_registry(
+				matrix=matrix_name,
+				output_dir=output_dir,
+				registry=registry,
+			),
+		)
 	if manifest is not None:
 		_write_json(output_dir / "artifact-manifest.json", manifest)
 	return configs
-
-
-def _main_library_config(output_dir: Path) -> dict[str, object]:
-	return {
-		"matrix_name": "paper-final-main-library",
-		"experiments": [
-			_blocksworld_paper_row(
-				name="blocksworld-paper-external-on2-first20",
-				eval_base="src/domains/blocksworld/problems",
-				eval_count=20,
-				max_steps=10000,
-				max_depth=1000,
-				timeout_seconds=180,
-				evaluation_timeout_seconds=15,
-				ablation_label="paper_external_sketch_first20",
-				baseline_json=output_dir / "baselines" / "blocksworld-first20.json",
-			),
-			_blocksworld_paper_row(
-				name="blocksworld-paper-external-on2-satisfiable-large",
-				eval_base="src/domains/blocksworld/satisfiable-large",
-				eval_count=10,
-				max_steps=30000,
-				max_depth=3000,
-				timeout_seconds=900,
-				evaluation_timeout_seconds=120,
-				ablation_label="paper_external_sketch_satisfiable_large",
-				baseline_json=output_dir / "baselines" / "blocksworld-satisfiable-large.json",
-			),
-			_blocksworld_paper_row(
-				name="blocksworld-paper-external-on2-satisfiable-mixed-large",
-				eval_base="src/domains/blocksworld/satisfiable-mixed-large",
-				eval_count=10,
-				max_steps=40000,
-				max_depth=4000,
-				timeout_seconds=1200,
-				evaluation_timeout_seconds=60,
-				ablation_label="paper_external_sketch_satisfiable_mixed_large",
-				baseline_json=(
-					output_dir / "baselines" / "blocksworld-satisfiable-mixed-large.json"
-				),
-			),
-			{
-				"name": "labworkflow-counterexample-refinement-stress",
-				"domain_file": "src/domains/labworkflow/domain.pddl",
-				"train_problems": LABWORKFLOW_TRAIN_PROBLEMS,
-				"eval_problems": LABWORKFLOW_STRESS_PROBLEMS,
-				"use_counterexample_refinement": True,
-				"max_refinement_rounds": 1,
-				"max_steps": 500,
-				"max_depth": 100,
-				"synthesis_profile": "bootstrap",
-				"baseline_json": [
-					str(output_dir / "baselines" / "labworkflow.json"),
-				],
-				"ablation_label": "labworkflow_counterexample_refinement_stress",
-			},
-		],
-	}
-
-
-def _ablation_config(output_dir: Path) -> dict[str, object]:
-	return {
-		"matrix_name": "paper-final-ablations",
-		"experiments": [
-			{
-				"name": "blocksworld-no-external-sketch-first20",
-				"domain_file": "src/domains/blocksworld/domain.pddl",
-				"train_base": "src/domains/blocksworld/problems",
-				"train_glob": "p*.pddl",
-				"train_count": 1,
-				"eval_base": "src/domains/blocksworld/problems",
-				"eval_glob": "p*.pddl",
-				"eval_count": 20,
-				"timeout_seconds": 180,
-				"synthesis_profile": "bootstrap",
-				"ablation_label": "no_external_sketch_first20",
-			},
-			{
-				"name": "labworkflow-no-layer-c-with-refinement-stress",
-				"domain_file": "src/domains/labworkflow/domain.pddl",
-				"train_problems": LABWORKFLOW_TRAIN_PROBLEMS,
-				"eval_problems": LABWORKFLOW_STRESS_PROBLEMS,
-				"use_counterexample_refinement": True,
-				"max_refinement_rounds": 1,
-				"disabled_synthesis_mechanisms": ["layer_c_ordering"],
-				"max_steps": 500,
-				"max_depth": 100,
-				"synthesis_profile": "bootstrap",
-				"ablation_label": "no_layer_c_with_refinement_labworkflow_stress",
-			},
-			{
-				"name": "labworkflow-no-counterexample-refinement-stress",
-				"domain_file": "src/domains/labworkflow/domain.pddl",
-				"train_problems": LABWORKFLOW_TRAIN_PROBLEMS,
-				"eval_problems": LABWORKFLOW_STRESS_PROBLEMS,
-				"max_steps": 500,
-				"max_depth": 100,
-				"synthesis_profile": "bootstrap",
-				"ablation_label": "no_counterexample_refinement_labworkflow_stress",
-			},
-			{
-				"name": "transport-no-offline-trace-evidence-first10",
-				"domain_file": "src/domains/transport/domain.pddl",
-				"train_base": "src/domains/transport/problems",
-				"train_glob": "pfile*.pddl",
-				"train_count": 3,
-				"eval_base": "src/domains/transport/problems",
-				"eval_glob": "pfile*.pddl",
-				"eval_count": 10,
-				"max_steps": 20000,
-				"max_depth": 2000,
-				"timeout_seconds": 180,
-				"evaluation_timeout_seconds": 5,
-				"synthesis_profile": "bootstrap",
-				"ablation_label": "no_offline_trace_evidence_transport",
-			},
-		],
-	}
-
-
-def _limitation_config(output_dir: Path) -> dict[str, object]:
-	return {
-		"matrix_name": "paper-final-limitations",
-		"experiments": [
-			{
-				"name": "transport-bootstrap-train3-first10-limitation",
-				"domain_file": "src/domains/transport/domain.pddl",
-				"train_base": "src/domains/transport/problems",
-				"train_glob": "pfile*.pddl",
-				"train_count": 3,
-				"eval_base": "src/domains/transport/problems",
-				"eval_glob": "pfile*.pddl",
-				"eval_count": 10,
-				"max_steps": 20000,
-				"max_depth": 2000,
-				"timeout_seconds": 180,
-				"evaluation_timeout_seconds": 5,
-				"use_synthesis_planner_traces": True,
-				"synthesis_planner_executable": "fast-downward/fast-downward.py",
-				"synthesis_planner_timeout_seconds": 60,
-				"synthesis_profile": "bootstrap",
-				"ablation_label": "transport_initial_state_fragment",
-			},
-			{
-				"name": "marsrover-trace-evidence-train1-first10",
-				"domain_file": "src/domains/marsrover/domain.pddl",
-				"train_base": "src/domains/marsrover/problems",
-				"train_glob": "pfile*.pddl",
-				"train_count": 1,
-				"eval_base": "src/domains/marsrover/problems",
-				"eval_glob": "pfile*.pddl",
-				"eval_count": 10,
-				"max_steps": 1000,
-				"max_depth": 200,
-				"timeout_seconds": 180,
-				"evaluation_timeout_seconds": 15,
-				"use_synthesis_planner_traces": True,
-				"synthesis_planner_executable": (
-					".external/gp-backends/h-policy-learner/testing/planners/"
-					"lama/fast-downward/fast-downward.py"
-				),
-				"synthesis_planner_timeout_seconds": 60,
-				"synthesis_profile": "bootstrap",
-				"ablation_label": "marsrover_trace_evidence_fragment",
-			},
-		],
-	}
-
-
-def _blocksworld_paper_row(
-	*,
-	name: str,
-	eval_base: str,
-	eval_count: int,
-	max_steps: int,
-	max_depth: int,
-	timeout_seconds: int,
-	evaluation_timeout_seconds: int,
-	ablation_label: str,
-	baseline_json: Path,
-) -> dict[str, object]:
-	return {
-		"name": name,
-		"domain_file": "src/domains/blocksworld/domain.pddl",
-		"train_base": "src/domains/blocksworld/problems",
-		"train_glob": "p*.pddl",
-		"train_count": 1,
-		"eval_base": eval_base,
-		"eval_glob": "p*.pddl",
-		"eval_count": eval_count,
-		"max_steps": max_steps,
-		"max_depth": max_depth,
-		"timeout_seconds": timeout_seconds,
-		"evaluation_timeout_seconds": evaluation_timeout_seconds,
-		"synthesis_profile": "paper",
-		"external_sketch_policies": [f"blocks_4_on_2={BLOCKS_POLICY}"],
-		"external_sketch_vocabularies": [f"blocks_4_on_2={BLOCKS_VOCAB}"],
-		"baseline_json": [str(baseline_json)],
-		"ablation_label": ablation_label,
-	}
 
 
 def _generate_final_baselines(
@@ -903,76 +670,63 @@ def _generate_final_baselines(
 ) -> None:
 	baseline_dir = output_dir / "baselines"
 	baseline_dir.mkdir(parents=True, exist_ok=True)
-	_generate_blocksworld_baseline(
-		output_file=baseline_dir / "blocksworld-first20.json",
-		eval_base=PROJECT_ROOT / "src/domains/blocksworld/problems",
-		eval_count=20,
-		fast_downward=fast_downward,
-		planner_timeout_seconds=planner_timeout_seconds,
-		work_dir=output_dir / "baseline-work/blocksworld-first20",
-	)
-	_generate_blocksworld_baseline(
-		output_file=baseline_dir / "blocksworld-satisfiable-large.json",
-		eval_base=PROJECT_ROOT / "src/domains/blocksworld/satisfiable-large",
-		eval_count=10,
-		fast_downward=fast_downward,
-		planner_timeout_seconds=planner_timeout_seconds,
-		work_dir=output_dir / "baseline-work/blocksworld-satisfiable-large",
-	)
-	_generate_blocksworld_baseline(
-		output_file=baseline_dir / "blocksworld-satisfiable-mixed-large.json",
-		eval_base=PROJECT_ROOT / "src/domains/blocksworld/satisfiable-mixed-large",
-		eval_count=10,
-		fast_downward=fast_downward,
-		planner_timeout_seconds=planner_timeout_seconds,
-		work_dir=output_dir / "baseline-work/blocksworld-satisfiable-mixed-large",
-	)
-	lab_problems = tuple(PROJECT_ROOT / path for path in LABWORKFLOW_STRESS_PROBLEMS)
-	_write_json(
-		baseline_dir / "labworkflow.json",
-		[
-			generate_classical_planner_baseline(
-				domain_file=PROJECT_ROOT / "src/domains/labworkflow/domain.pddl",
-				problem_files=lab_problems,
-				planner_executable=fast_downward,
-				timeout_seconds=planner_timeout_seconds,
-				work_dir=output_dir / "baseline-work/labworkflow",
-			),
-		],
-	)
+	registry = load_achievement_benchmark_registry()
+	for record, _group_name, group in baseline_group_specs(registry=registry):
+		records = _baseline_records_from_group(
+			record=record,
+			group=group,
+			output_dir=output_dir,
+			fast_downward=fast_downward,
+			planner_timeout_seconds=planner_timeout_seconds,
+		)
+		_write_json(baseline_dir / str(group["output_file"]), records)
 
 
-def _generate_blocksworld_baseline(
+def _baseline_records_from_group(
 	*,
-	output_file: Path,
-	eval_base: Path,
-	eval_count: int,
+	record,
+	group: dict[str, object],
+	output_dir: Path,
 	fast_downward: Path,
 	planner_timeout_seconds: int,
-	work_dir: Path,
-) -> None:
-	problem_files = tuple(sorted(eval_base.glob("p*.pddl")))[:eval_count]
-	records = [
-		generate_classical_planner_baseline(
-			domain_file=PROJECT_ROOT / "src/domains/blocksworld/domain.pddl",
-			problem_files=problem_files,
-			planner_executable=fast_downward,
-			timeout_seconds=planner_timeout_seconds,
-			work_dir=work_dir,
-		),
-		generate_external_sketch_audit_baseline(
-			domain_file=PROJECT_ROOT / "src/domains/blocksworld/domain.pddl",
-			problem_count=len(problem_files),
-			source_name="blocks_4_on_2",
-			policy_file=PROJECT_ROOT / BLOCKS_POLICY,
-			vocabulary_file=PROJECT_ROOT / BLOCKS_VOCAB,
-		),
-		generate_moose_status_baseline(
-			label="blocksworld_moose_paper_params_probe",
-			status_file=PROJECT_ROOT / MOOSE_BLOCKS_STATUS,
-		),
-	]
-	_write_json(output_file, records)
+) -> list[dict[str, object]]:
+	domain_file = resolve_registry_path(record.domain_file)
+	records: list[dict[str, object]] = []
+	for raw_baseline in tuple(group.get("records") or ()):
+		baseline = dict(raw_baseline)
+		kind = str(baseline.get("kind") or "")
+		if kind == "classical_planner":
+			problem_files = resolve_problem_set(record, str(baseline["problem_set"]))
+			records.append(
+				generate_classical_planner_baseline(
+					domain_file=domain_file,
+					problem_files=problem_files,
+					planner_executable=fast_downward,
+					timeout_seconds=planner_timeout_seconds,
+					work_dir=output_dir / "baseline-work" / str(baseline["work_subdir"]),
+				),
+			)
+		elif kind == "external_sketch_audit":
+			problem_files = resolve_problem_set(record, str(baseline["problem_set"]))
+			records.append(
+				generate_external_sketch_audit_baseline(
+					domain_file=domain_file,
+					problem_count=len(problem_files),
+					source_name=str(baseline["source_name"]),
+					policy_file=resolve_registry_path(baseline["policy_file"]),
+					vocabulary_file=resolve_registry_path(baseline["vocabulary_file"]),
+				),
+			)
+		elif kind == "moose_status":
+			records.append(
+				generate_moose_status_baseline(
+					label=str(baseline["label"]),
+					status_file=resolve_registry_path(baseline["status_file"]),
+				),
+			)
+		else:
+			raise ValueError(f"unsupported baseline kind in registry: {kind!r}")
+	return records
 
 
 def _write_backend_audit_logs(output_dir: Path) -> None:

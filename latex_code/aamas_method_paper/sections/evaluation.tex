@@ -58,11 +58,13 @@ construction benchmark where prior work gives feature-definable policies for
 \cite{Frances2021LearningGeneralPolicies}. The result is therefore not a claim
 that every domain listed in Table~\ref{tab:domain-families} is already
 supported. To match the scale of prior generalized-planning papers, the final
-evaluation target is three property-defined classes with roughly nine standard
-domains or problem classes: Gripper, Ferry, and Miconic for the goal-separable
+evaluation target is three property-defined classes with exactly nine selected
+standard domain names: Gripper, Ferry, and Miconic for the goal-separable
 or serialisable class; Spanner, Childsnack, Barman, Visitall, and Delivery for
-the bounded-width sketchable subgoal-structure class; and Qclear, Qon, and full
-Blocksworld for the feature-definable construction class. These domains become
+the bounded-width sketchable subgoal-structure class; and Blocksworld for the
+feature-definable construction class. Blocksworld evaluation may use qclear,
+qon, and qbw problem-family tags, but these tags are not counted
+as separate domain names. These domains become
 claimed coverage only after their own compiled \asl{} libraries pass the same
 strict protocol. LTLf temporal extended goals are evaluated as overlays on
 representatives of these classes, not as a fourth benchmark class.

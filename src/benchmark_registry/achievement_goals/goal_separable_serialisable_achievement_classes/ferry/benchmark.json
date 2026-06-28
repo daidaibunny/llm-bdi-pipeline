@@ -1,0 +1,26 @@
+{
+	"schema_version": 1,
+	"goal_specification_layer": "achievement_goal_layer",
+	"benchmark_class_id": "goal_separable_serialisable_achievement_classes",
+	"domain_id": "ferry",
+	"display_name": "Ferry",
+	"domain_role": "planned_claim_target",
+	"support_level": "planned_claim_target",
+	"target_paper_domains": [
+		"ferry"
+	],
+	"domain_file": null,
+	"problem_sets": {},
+	"baseline_groups": {},
+	"experiments": [],
+	"external_sources": [
+		{
+			"backend": "learner-sketches",
+			"source_path": ".external/gp-backends/learner-sketches/learning/benchmarks/tractable/ferry"
+		},
+		{
+			"backend": "moose",
+			"source_path": ".external/moose/benchmarks/ferry"
+		}
+	]
+}

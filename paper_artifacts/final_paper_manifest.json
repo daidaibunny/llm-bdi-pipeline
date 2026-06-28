@@ -101,6 +101,16 @@
       "tracked": true
     },
     {
+      "path": "src/domain_level_planning/benchmark_registry.py",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/benchmark_registry/achievement_goals",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
       "path": "src/benchmark_data/external_vocab/learner_sketches_blocksworld_blocks_4_on_2.json",
       "kind": "file",
       "tracked": true
