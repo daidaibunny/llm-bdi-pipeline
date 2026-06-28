@@ -339,10 +339,12 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	taxonomy = json.loads(taxonomy_path.read_text(encoding="utf-8"))
 	manifest = load_final_paper_manifest()
 
-	assert taxonomy["schema_version"] == 1
+	assert taxonomy["schema_version"] == 2
 	assert taxonomy["scope"] == "positive_conjunctive_achievement_goals"
 	assert "feature-definable" in taxonomy["claim_statement"]
 	assert "bounded sketch width" in taxonomy["claim_statement"]
+	assert "runtime full-trace planning" in taxonomy["claim_statement"]
+	assert "prior formal properties" in taxonomy["selection_principle"]
 	assert taxonomy["paper_core_domains"] == ["blocksworld"]
 
 	literature = taxonomy["literature"]
@@ -363,37 +365,77 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		assert local_pdf.read_bytes().startswith(b"%PDF-")
 		assert str(local_pdf.relative_to(PROJECT_ROOT)) in manifest_inputs
 
-	support_levels = {
-		"boundary",
-		"candidate_next",
-		"excluded",
-		"main_claim",
-		"mechanism_stress",
-		"theory_supported",
-	}
-	family_ids = set()
-	for family in taxonomy["domain_families"]:
-		family_ids.add(family["id"])
-		assert family["name"]
-		assert family["literature_basis"]
-		assert family["domain_examples"]
-		assert family["paper_role"]
-		assert family["implementation_status"]
-		assert family["support_level"] in support_levels
-		for literature_key in family["literature_basis"]:
+	property_ids = set()
+	for formal_property in taxonomy["formal_properties"]:
+		property_ids.add(formal_property["id"])
+		assert formal_property["name"]
+		assert formal_property["definition"]
+		assert formal_property["paper_use"]
+		assert formal_property["literature_basis"]
+		for literature_key in formal_property["literature_basis"]:
 			assert literature_key in literature
 
 	assert {
-		"bounded_width_sketchable",
-		"goal_dependent_feature_definable",
-		"goal_independence_control",
-		"ordered_resource_stress",
-		"out_of_scope_numeric_and_object_specific",
-		"reachability_boundary",
-	} <= family_ids
-	assert taxonomy["evaluation_roles"]["main_positive_evidence"] == ["blocksworld"]
-	assert "transport" in taxonomy["evaluation_roles"]["boundary_rows"]
-	assert "numeric domains" in taxonomy["evaluation_roles"]["out_of_core"]
+		"bounded_width_sketch",
+		"feature_definable_general_policy",
+		"goal_independence",
+		"program_or_decision_list_gp",
+		"safe_asl_compilability",
+	} <= property_ids
+
+	support_levels = {
+		"boundary_or_excluded",
+		"candidate_control",
+		"main_claim",
+		"mechanism_stress",
+	}
+	class_ids = set()
+	for benchmark_class in taxonomy["benchmark_classes"]:
+		class_ids.add(benchmark_class["id"])
+		assert benchmark_class["name"]
+		assert benchmark_class["formal_membership"]
+		assert benchmark_class["prior_property_basis"]
+		assert benchmark_class["domain_examples"]
+		assert benchmark_class["paper_role"]
+		assert benchmark_class["current_evidence"]
+		assert benchmark_class["support_level"] in support_levels
+		for property_key in benchmark_class["prior_property_basis"]:
+			assert property_key in property_ids
+
+	assert {
+		"core_compiled_sketch_blocksworld",
+		"goal_independent_controls",
+		"ordered_resource_sketch_stress",
+		"reachability_numeric_boundary",
+	} <= class_ids
+
+	classes_by_id = {
+		benchmark_class["id"]: benchmark_class
+		for benchmark_class in taxonomy["benchmark_classes"]
+	}
+	assert classes_by_id["core_compiled_sketch_blocksworld"]["support_level"] == (
+		"main_claim"
+	)
+	assert classes_by_id["core_compiled_sketch_blocksworld"][
+		"current_project_domains"
+	] == ["blocksworld"]
+	assert classes_by_id["goal_independent_controls"]["current_project_domains"] == []
+	assert classes_by_id["ordered_resource_sketch_stress"][
+		"current_project_domains"
+	] == ["labworkflow"]
+	assert "transport" in classes_by_id["reachability_numeric_boundary"][
+		"current_project_domains"
+	]
+	assert "numeric transport" in classes_by_id["reachability_numeric_boundary"][
+		"domain_examples"
+	]
+
+	evaluation_policy = taxonomy["evaluation_policy"]
+	assert "support_level is main_claim" in evaluation_policy["main_claim_requires"]
+	assert any(
+		"local mechanism-stress domains" in item
+		for item in evaluation_policy["not_counted_as_main_claim"]
+	)
 
 
 def test_final_paper_config_splits_main_ablation_and_limitations(

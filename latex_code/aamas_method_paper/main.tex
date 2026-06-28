@@ -42,11 +42,11 @@ single problem and is not tied to a query. Instead, its plan heads are lifted
 predicate achievement goals and its bodies call declared primitive actions or
 other predicate goals. The method combines goal-conditioned policy sketches,
 modular predicate-goal rules, an answer-set selection problem, and a conservative
-AgentSpeak(L) compiler. The claim is bounded to domains whose reusable strategy
-is expressible as a goal-conditioned, feature-definable, terminating modular
-policy sketch with safely bindable features. The current scope is positive
-conjunctive achievement goals; temporal goals are handled by a separate
-controller and are outside this paper core.
+AgentSpeak(L) compiler. The claim is bounded to problem classes whose reusable
+strategy is expressible as a goal-conditioned, feature-definable, terminating
+modular policy sketch with bounded sketch width and safely bindable features.
+The current scope is positive conjunctive achievement goals; temporal goals are
+handled by a separate controller and are outside this paper core.
 \end{abstract}
 
 \ccsdesc[500]{Computing methodologies~Planning and scheduling}
@@ -257,7 +257,7 @@ The paper makes four contributions.
 \begin{enumerate}
 	\item We define a bounded hypothesis class for goal-conditioned modular
 	policy sketches that compile to lifted \asl{} plan schemas, together with a
-	literature-backed domain-support taxonomy and explicit exclusions for
+	property-based benchmark taxonomy and explicit exclusions for
 	unsupported \pddl{} fragments.
 	\item We give an answer-set selection procedure that chooses Layer B
 	atomic modules and Layer C composer rules from \pddl{} schemas, verified
@@ -271,13 +271,13 @@ The paper makes four contributions.
 \end{enumerate}
 
 The contribution is deliberately bounded. We do not claim universal
-generalized-planning completeness for arbitrary \pddl{} domains. The main
-positive family in this paper is goal-dependent, feature-definable
-Blocksworld-style achievement goals. Ferry and Gripper are natural control
-candidates; Spanner and Childsnack are the next ordered-resource stress
-candidates. Transport and Marsrover remain boundary rows until richer route and
-ranking features are accepted. Unsupported cases are rejected with diagnostics
-rather than compiled into unsafe plans.
+generalized-planning completeness for arbitrary \pddl{} domains. Like prior
+work, we choose benchmarks by formal properties: goal independence for controls,
+bounded-width sketches for subgoal-structure domains, feature-definable general
+policies for Blocksworld-style construction, and explicit boundary rows for
+reachability, numeric, or object-specific fragments. The current main claim is
+only the compiled-sketch Blocksworld class. Other families are controls, stress
+tests, or limitations until they pass the same ASL-library protocol.
 
 \input{sections/related_work}
 

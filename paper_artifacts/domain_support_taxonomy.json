@@ -1,227 +1,251 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "scope": "positive_conjunctive_achievement_goals",
-  "claim_statement": "The paper claims domain-level lifted AgentSpeak(L) library synthesis for positive conjunctive achievement-goal domains whose reusable strategy is expressible as a goal-conditioned, feature-definable, terminating modular policy sketch with bounded sketch width and whose selected features can be safely bound to declared PDDL predicates, primitive actions, predicate subgoals, read-only goal descriptors, or read-only agenda gates.",
+  "claim_statement": "The current paper claims executable domain-level lifted AgentSpeak(L) library synthesis for positive conjunctive achievement-goal PDDL problem classes Q_D only when Q_D admits a goal-conditioned, feature-definable, terminating modular policy sketch with bounded sketch width, the selected feature rules have safe lifted bindings to declared PDDL predicates, primitive actions, predicate subgoals, read-only goal descriptors, or read-only agenda gates, and the compiled library validates without runtime full-trace planning.",
+  "selection_principle": "Benchmark classes are selected by prior formal properties first, then by current implementation evidence. A domain is counted in the main claim only if it satisfies the compiled-sketch support contract and has strict-profile ASL-library validation. Domains that match prior benchmark suites but lack current strict-profile ASL evidence are controls or next targets, not claimed coverage.",
   "paper_core_domains": [
     "blocksworld"
   ],
-  "evaluation_roles": {
-    "main_positive_evidence": [
-      "blocksworld"
-    ],
-    "mechanism_stress": [
-      "labworkflow"
-    ],
-    "control_candidates_next": [
-      "ferry",
-      "gripper"
-    ],
-    "ordered_resource_candidates_next": [
-      "spanner",
-      "childsnack"
-    ],
-    "boundary_rows": [
-      "transport",
-      "marsrover"
-    ],
-    "out_of_core": [
-      "numeric domains",
-      "arbitrary path-finding domains without accepted distance or ranking features",
-      "domains requiring concrete object-specific policies"
-    ]
-  },
-  "domain_families": [
+  "formal_properties": [
     {
-      "id": "goal_independence_control",
-      "name": "Goal-independent or weakly ordered transport/control domains",
+      "id": "goal_independence",
+      "name": "Goal independence and goal-regression suitability",
+      "definition": "MOOSE defines True Goal Independence, Serialisable Goal Independence, and Optimal Goal Independence over conjunctive goals. These properties justify greedy singleton-goal regression when the goal atoms can be achieved independently or in a valid serial order.",
       "literature_basis": [
-        "Chen2026Moose",
-        "Yang2022PG3"
+        "Chen2026Moose"
       ],
-      "formal_terms": [
-        "true goal independence",
-        "serialisable goal independence",
-        "lifted decision-list policy"
+      "paper_use": "Baseline/control property, not the core novelty. It explains why Ferry, Gripper, and Miconic are natural future sanity checks, and why Blocksworld goal dependence should not be treated as MOOSE-friendly."
+    },
+    {
+      "id": "bounded_width_sketch",
+      "name": "Well-formed terminating policy sketches with bounded sketch width",
+      "definition": "Sketch papers choose domains where a policy sketch over qualitative features is well-formed or acyclic and yields bounded-width subproblems for SIWR-style search.",
+      "literature_basis": [
+        "Drexler2022LearningSketches",
+        "Drexler2024SubgoalSketches",
+        "Bonet2024GeneralPoliciesWidth"
+      ],
+      "paper_use": "Primary theoretical inclusion property for our hypothesis class. Our ASL output replaces planner-guided subproblem solving with compiled predicate-goal modules."
+    },
+    {
+      "id": "feature_definable_general_policy",
+      "name": "Feature-definable general policies",
+      "definition": "A class Q_D is suitable when a finite feature pool over the PDDL predicates contains features that separate good and bad transitions and define a terminating general policy for all instances in the class.",
+      "literature_basis": [
+        "Frances2021LearningGeneralPolicies",
+        "Bonet2024GeneralPoliciesWidth"
+      ],
+      "paper_use": "Main Blocksworld justification. Prior work explicitly learns feature policies for clear(x), on(x,y), and full Blocksworld using features such as blocks above a target and well-placed blocks."
+    },
+    {
+      "id": "program_or_decision_list_gp",
+      "name": "Executable generalized-policy hypothesis classes",
+      "definition": "PG3 evaluates lifted decision-list policies over PDDL domains, while BFGP++ synthesizes terminating C++-style generalized programs with loops.",
+      "literature_basis": [
+        "Yang2022PG3",
+        "SegoviaAguas2022BFGPpp"
+      ],
+      "paper_use": "Related executable baselines. They motivate our executable-output requirement but do not target predicate-goal AgentSpeak(L) modules."
+    },
+    {
+      "id": "safe_asl_compilability",
+      "name": "Safe lifted AgentSpeak(L) compilability",
+      "definition": "Every selected rule must compile to lifted ASL using only declared PDDL primitive actions, declared predicate achievement subgoals, read-only goal descriptors, or read-only agenda gates. Object-specific features, undeclared vocabulary, unbound variables, and unsupported distance or numeric semantics are rejected.",
+      "literature_basis": [
+        "Drexler2022LearningSketches",
+        "Frances2021LearningGeneralPolicies",
+        "Bonet2024PolicyReuse"
+      ],
+      "paper_use": "Our additional artifact-specific property. It is the reason a qualitative sketch or policy is evidence, not automatically an executable ASL library."
+    }
+  ],
+  "benchmark_classes": [
+    {
+      "id": "core_compiled_sketch_blocksworld",
+      "name": "Core claimed class: feature-definable modular sketches compiled to ASL",
+      "formal_membership": [
+        "positive conjunctive achievement goals",
+        "finite safe lifted feature set",
+        "terminating or acyclic modular sketch with bounded sketch width",
+        "atomic predicate-goal modules for relevant PDDL predicates",
+        "acyclic goal-conditioned composer or support agenda",
+        "compiled ASL validates without runtime full-trace planning"
+      ],
+      "prior_property_basis": [
+        "bounded_width_sketch",
+        "feature_definable_general_policy",
+        "safe_asl_compilability"
+      ],
+      "domain_examples": [
+        "blocks-clear",
+        "blocks-on",
+        "tower-style blocksworld",
+        "full blocksworld with feature-definable goal structure"
+      ],
+      "current_project_domains": [
+        "blocksworld"
+      ],
+      "paper_role": "Main positive claim.",
+      "current_evidence": [
+        "Blocksworld first20 strict paper profile solves 20/20 with selected external sketch evidence.",
+        "Blocksworld satisfiable-large solves 10/10 with towers from 50 to 140 blocks.",
+        "Blocksworld satisfiable-mixed-large solves 10/10 with nontrivial initial towers and mixed on/ontable goals.",
+        "All strict rows use runtime planner none and produce lifted ASL libraries."
+      ],
+      "support_level": "main_claim"
+    },
+    {
+      "id": "goal_independent_controls",
+      "name": "Goal-independent or weakly coupled control domains",
+      "formal_membership": [
+        "positive conjunctive achievement goals",
+        "goal atoms are true-goal-independent or serialisable-goal-independent in the MOOSE sense",
+        "single-goal progress does not require global goal-structure reasoning beyond a valid goal order"
+      ],
+      "prior_property_basis": [
+        "goal_independence",
+        "program_or_decision_list_gp"
       ],
       "domain_examples": [
         "ferry",
         "gripper",
         "simple miconic"
       ],
-      "paper_role": "Control and baseline candidate family, not the core novelty.",
-      "implementation_status": "Not claimed as strict paper evidence until the ASL library is generated and validated under the same no-runtime-planner protocol.",
-      "support_level": "candidate_next",
-      "why_it_matters": "These domains show whether the ASL compiler can cover MOOSE-friendly and PG3-friendly generalized-planning cases without overclaiming goal dependency."
+      "current_project_domains": [],
+      "paper_role": "Future control and sanity-check suite; not current claimed coverage.",
+      "current_evidence": [
+        "No current strict-profile ASL-library row is counted for these domains."
+      ],
+      "support_level": "candidate_control"
     },
     {
-      "id": "bounded_width_sketchable",
-      "name": "Bounded-width sketchable subgoal-structure domains",
-      "literature_basis": [
-        "Drexler2022LearningSketches",
-        "Drexler2024SubgoalSketches",
-        "Bonet2024GeneralPoliciesWidth"
+      "id": "ordered_resource_sketch_stress",
+      "name": "Dead-end-aware ordered-resource sketch domains",
+      "formal_membership": [
+        "positive conjunctive achievement goals",
+        "bounded-width sketchable structure",
+        "resource or one-way movement decisions can create dead ends unless the policy encodes progress-preserving choices"
       ],
-      "formal_terms": [
-        "policy sketch",
-        "terminating sketch",
-        "acyclic sketch",
-        "bounded sketch width",
-        "goal serialization"
-      ],
-      "domain_examples": [
-        "blocks-clear",
-        "blocks-on",
-        "delivery",
-        "visitall",
-        "miconic",
-        "spanner",
-        "childsnack"
-      ],
-      "paper_role": "Main theoretical superclass for our representation and feature-binding contract.",
-      "implementation_status": "Current strict evidence consumes learner-sketches Blocksworld blocks-on evidence; broader family members are classified as next evaluation targets unless separately validated.",
-      "support_level": "theory_supported"
-    },
-    {
-      "id": "goal_dependent_feature_definable",
-      "name": "Goal-dependent but feature-definable construction domains",
-      "literature_basis": [
-        "Frances2021LearningGeneralPolicies",
-        "Bonet2024GeneralPoliciesWidth",
-        "Bonet2024PolicyReuse"
-      ],
-      "formal_terms": [
-        "feature-definable general policy",
-        "goal-conditioned policy",
-        "well-placed feature",
-        "modular policy call"
-      ],
-      "domain_examples": [
-        "full blocksworld",
-        "tower-building blocksworld",
-        "blocks-on"
-      ],
-      "paper_role": "Core positive claim and primary achievement-goal benchmark family.",
-      "implementation_status": "Strict paper-profile Blocksworld rows solve first20, satisfiable-large, and satisfiable-mixed-large with selected external sketch evidence and no runtime full-trace planner.",
-      "support_level": "main_claim"
-    },
-    {
-      "id": "ordered_resource_stress",
-      "name": "Ordered-resource and dead-end-avoidance domains",
-      "literature_basis": [
-        "Drexler2022LearningSketches",
-        "Drexler2024SubgoalSketches",
-        "Bonet2024GeneralPoliciesWidth"
-      ],
-      "formal_terms": [
-        "dead-end avoidance",
-        "subgoal ordering",
-        "bounded-width decomposition"
+      "prior_property_basis": [
+        "bounded_width_sketch",
+        "feature_definable_general_policy",
+        "program_or_decision_list_gp"
       ],
       "domain_examples": [
         "spanner",
         "childsnack",
+        "barman",
+        "driverlog under accepted sketch features"
+      ],
+      "current_project_domains": [
         "labworkflow"
       ],
-      "paper_role": "Mechanism stress family for Layer C and counterexample refinement.",
-      "implementation_status": "Current final package uses Labworkflow as a controlled stress domain. Spanner and Childsnack are preferred next standard benchmark targets.",
+      "paper_role": "Mechanism-stress suite. Labworkflow is a controlled local proxy for Layer C and counterexample refinement; standard IPC domains remain next targets before broadening the claim.",
+      "current_evidence": [
+        "Labworkflow full refinement solves 5/5 held-out stress problems.",
+        "No-Layer-C and no-refinement ablations solve 0/5 on the same stress split.",
+        "Labworkflow is not presented as a standard benchmark replacement for Spanner or Childsnack."
+      ],
       "support_level": "mechanism_stress"
     },
     {
-      "id": "reachability_boundary",
-      "name": "Route, transitive-closure, and resource-delivery boundary domains",
-      "literature_basis": [
-        "Drexler2022LearningSketches",
-        "Chen2026Moose"
+      "id": "reachability_numeric_boundary",
+      "name": "Reachability, transitive-closure, numeric, and object-specific boundary domains",
+      "formal_membership": [
+        "requires path-finding, transitive closure, numeric accumulation, object-specific constants, or distance/ranking features not safely bound by the current compiler",
+        "current ASL library would need richer feature semantics before arbitrary reachable-state coverage can be claimed"
       ],
-      "formal_terms": [
-        "distance feature",
-        "transitive closure",
-        "ranking feature",
-        "path-finding component"
+      "prior_property_basis": [
+        "goal_independence",
+        "bounded_width_sketch",
+        "program_or_decision_list_gp",
+        "safe_asl_compilability"
       ],
       "domain_examples": [
-        "transport",
-        "rovers",
+        "transport with route planning",
+        "rovers path-finding",
         "marsrover",
-        "logistics",
-        "driverlog"
+        "grid with transitive closure requirements",
+        "numeric ferry",
+        "numeric miconic",
+        "numeric minecraft",
+        "numeric transport"
       ],
-      "paper_role": "Boundary and limitation family unless a principled lifted distance/ranking binding is selected and validated.",
-      "implementation_status": "Transport and Marsrover are reported only as initial-state or trace-evidence boundary rows; arbitrary reachable mid-state logistics policies are not part of the main claim.",
-      "support_level": "boundary"
-    },
-    {
-      "id": "out_of_scope_numeric_and_object_specific",
-      "name": "Numeric, object-specific, and unsupported temporal fragments",
-      "literature_basis": [
-        "Chen2026Moose",
-        "Bonet2024GeneralPoliciesWidth"
+      "current_project_domains": [
+        "transport",
+        "marsrover"
       ],
-      "formal_terms": [
-        "numeric planning",
-        "object-specific feature",
-        "unsupported temporal goal"
+      "paper_role": "Boundary and limitation suite, not main coverage.",
+      "current_evidence": [
+        "Transport and Marsrover initial-state or trace-evidence fragments validate typed PDDL parsing and resource modules.",
+        "Arbitrary reachable mid-state route policies remain outside the main claim."
       ],
-      "domain_examples": [
-        "numeric-ferry",
-        "numeric-miconic",
-        "numeric-minecraft",
-        "numeric-transport",
-        "barman with unbound resource policy features"
-      ],
-      "paper_role": "Explicit exclusion for the current achievement-goal paper.",
-      "implementation_status": "Rejected or deferred unless the missing semantics are implemented and validated.",
-      "support_level": "excluded"
+      "support_level": "boundary_or_excluded"
     }
   ],
+  "evaluation_policy": {
+    "main_claim_requires": [
+      "support_level is main_claim",
+      "strict paper-profile ASL-library validation exists",
+      "runtime_full_trace_planner is false",
+      "selected external or feature-policy evidence is safely bound and selected",
+      "generated ASL has no grounded plan heads and no synthetic achievement names"
+    ],
+    "not_counted_as_main_claim": [
+      "candidate controls without current strict-profile ASL validation",
+      "local mechanism-stress domains that are not standard IPC benchmarks",
+      "boundary fragments requiring unsupported reachability, numeric, or object-specific feature semantics",
+      "per-problem planner traces and raw qualitative policies without ASL compilation"
+    ]
+  },
   "literature": {
     "Chen2026Moose": {
       "title": "Satisficing and Optimal Generalised Planning via Goal Regression",
       "local_pdf": "paper_artifacts/literature/Chen2026_Generalised-Planning-Goal-Regression.pdf",
       "url": "https://ojs.aaai.org/index.php/AAAI/article/download/40938/44899",
-      "role": "Goal independence taxonomy and MOOSE baseline boundary."
+      "role": "Defines TGI, SGI, OGI and uses ESHO domains such as Barman, Ferry, Gripper, Logistics, Miconic, Rovers, Satellite, and Transport, with path-finding components removed from some domains."
     },
     "Drexler2022LearningSketches": {
       "title": "Learning Sketches for Decomposing Planning Problems into Subproblems of Bounded Width",
       "local_pdf": "paper_artifacts/literature/Drexler2022_Learning-Sketches-Bounded-Width.pdf",
       "url": "https://ojs.aaai.org/index.php/ICAPS/article/download/19786/19545",
-      "role": "Automatic sketch learning, answer-set formulation, and bounded sketch width."
+      "role": "Learns sketches with ASP over IPC-style domains such as Blocks-clear, Blocks-on, Childsnack, Delivery, Gripper, Miconic, Reward, Spanner, and Visitall."
     },
     "Drexler2024SubgoalSketches": {
       "title": "Expressing and Exploiting Subgoal Structure in Classical Planning Using Sketches",
       "local_pdf": "paper_artifacts/literature/Drexler2024_Subgoal-Structure-Sketches.pdf",
       "url": "https://www.jair.org/index.php/jair/article/download/15821/27036",
-      "role": "Sketches as explicit subgoal structure and bounded-width decomposition."
+      "role": "Uses handcrafted sketches for IPC domains with provable well-formedness and small sketch width, including Barman, Childsnack, Driverlog, Floortile, Grid variants, Schedule, and Traveling Purchaser Problem."
     },
     "Bonet2024GeneralPoliciesWidth": {
       "title": "General Policies, Subgoal Structure, and Planning Width",
       "local_pdf": "paper_artifacts/literature/Bonet2024_General-Policies-Subgoal-Structure-Planning-Width.pdf",
       "url": "https://www.jair.org/index.php/jair/article/download/15581/27045",
-      "role": "Planning-width and subgoal-structure theory behind the supported class."
+      "role": "Provides the planning-width and sketch-theoretic basis for bounded serialized subgoal structure."
     },
     "Bonet2024PolicyReuse": {
       "title": "On Policy Reuse: An Expressive Language for Representing and Executing General Policies that Call Other Policies",
       "local_pdf": "paper_artifacts/literature/Bonet2024_Policy-Reuse-General-Policies.pdf",
       "url": "https://ojs.aaai.org/index.php/ICAPS/article/download/31458/33618",
-      "role": "Modular policy-call representation closest to ASL modules."
+      "role": "Motivates reusable policy modules and calls, the closest prior representation to predicate-goal ASL modules."
     },
     "Frances2021LearningGeneralPolicies": {
       "title": "Learning General Planning Policies from Small Examples Without Supervision",
       "local_pdf": "paper_artifacts/literature/Frances2021_Learning-General-Policies-Small-Examples.pdf",
       "url": "https://ojs.aaai.org/index.php/AAAI/article/download/17402/17209",
-      "role": "Feature-definable general policies and full Blocksworld support via well-placed features."
+      "role": "Learns feature-definable policies for Qclear, Qon, full Blocksworld, Gripper, Spanner, Miconic, Visitall, and Delivery; provides the strongest Blocksworld support precedent."
     },
     "Yang2022PG3": {
       "title": "PG3: Policy-Guided Planning for Generalized Policy Generation",
       "local_pdf": "paper_artifacts/literature/Yang2022_PG3-Policy-Guided-Planning.pdf",
       "url": "https://www.ijcai.org/proceedings/2022/0637.pdf",
-      "role": "Lifted decision-list policy baseline and goal-conditioned policy-search comparison."
+      "role": "Uses six PDDL domains: Forest, Delivery, Miconic, Gripper, Ferry, and Spanner, and evaluates learned lifted decision-list policies directly on held-out problems."
     },
     "SegoviaAguas2022BFGPpp": {
       "title": "Representation and Synthesis of C++ Programs for Generalized Planning",
       "local_pdf": "paper_artifacts/literature/SegoviaAguas2022_BFGPpp-Cpp-Generalized-Planning.pdf",
       "url": "https://www.ijcai.org/proceedings/2022/0650.pdf",
-      "role": "Program-synthesis alternative for generalized plans; useful baseline but not the ASL target representation."
+      "role": "Uses numeric and STRIPS domains including Blocks, Corridor, Floyd, Gripper, Spanner, and Visitall to evaluate terminating program synthesis."
     }
   }
 }

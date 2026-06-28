@@ -9,15 +9,15 @@ execute compiled lifted \asl{} plans with run-time planner flag
 \texttt{none}. Classical planners and generalized-planning systems appear only
 as offline baselines, evidence providers, or diagnostics.
 
-The main claim is restricted to positive conjunctive achievement goals in the
-goal-dependent feature-definable family of Table~\ref{tab:domain-families}. A
-row is part of the strict paper profile only when an external learned sketch
-rule is parsed, feature-bound, selected by the answer-set program, compiled to a
-non-empty executable body, and validated without run-time full-trace planning.
-Rows that test mechanism necessity without an external learned sketch are
-reported as mechanism-stress rows. Rows that exercise trace evidence, resource
-movement, route ranking, or unsupported fragments are reported as boundary rows
-rather than main coverage claims.
+The main claim is restricted to the first benchmark class in
+Table~\ref{tab:domain-families}: positive conjunctive achievement goals whose
+strategy is a compiled feature-definable modular sketch. A row is part of the
+strict paper profile only when an external learned sketch rule is parsed,
+feature-bound, selected by the answer-set program, compiled to a non-empty
+executable body, and validated without run-time full-trace planning. Rows that
+test mechanism necessity without an external learned sketch are mechanism-stress
+rows. Rows that exercise trace evidence, resource movement, route ranking, or
+unsupported fragments are boundary rows rather than main coverage claims.
 
 \begin{table}[t]
 	\caption{Strict paper-profile lifted-library results. Each row has a selected
@@ -53,12 +53,15 @@ The large-tower split contains towers from 50 to 140 blocks. The mixed split
 contains nontrivial initial towers and multiple final towers with both
 \texttt{ontable} and \texttt{on} goals.
 These rows are the current main claim because Blocksworld is the standard
-goal-dependent construction family with feature-definable strategies in the
-general-policy literature \cite{Frances2021LearningGeneralPolicies}. Ferry and
-Gripper are retained as planned control candidates, while Spanner and Childsnack
-are retained as planned ordered-resource stress candidates; they are not counted
-as current strict-profile evidence until their own \asl{} libraries pass the
-same protocol.
+construction benchmark where prior work gives feature-definable policies for
+\texttt{clear}, \texttt{on}, and full goal configurations
+\cite{Frances2021LearningGeneralPolicies}. The result is therefore not a claim
+that every domain listed in Table~\ref{tab:domain-families} is supported. Ferry,
+Gripper, and Miconic are planned controls because of their goal-independence
+role in MOOSE and PG3; Spanner and Childsnack are planned ordered-resource
+stress tests because they appear in sketch and general-policy evaluations. They
+become claimed coverage only after their own compiled \asl{} libraries pass the
+same strict protocol.
 
 \begin{table}[t]
 	\caption{Mechanism-stress rows. Labworkflow isolates Layer C and

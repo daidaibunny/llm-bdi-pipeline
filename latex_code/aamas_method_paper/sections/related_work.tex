@@ -9,6 +9,9 @@ theoretical basis for our method because it studies subgoal serialization and
 bounded-width decompositions. The difference is the target artifact. A raw
 sketch normally guides a planner that fills in subproblems; our compiler instead
 turns selected sketch evidence into executable lifted \asl{} rules.
+The benchmark choice in this line is property-driven: the evaluated domains are
+tractable planning classes where sketches are well-formed, often acyclic, and
+have small sketch width.
 
 Generalized-policy learning studies policies that solve many instances of a
 domain using learned features and abstract transitions
@@ -32,6 +35,10 @@ variants. We therefore use MOOSE as a baseline and source of contrast, not as
 the compiler target. Our output must be a lifted \asl{} library whose heads are
 declared predicates and whose body steps are declared primitive actions or
 predicate subgoals.
+MOOSE also illustrates the right way to state a benchmark boundary: its domain
+choice is tied to goal-independence assumptions and Easy-to-Solve,
+Hard-to-Optimise domains, with path-finding components removed from some
+benchmarks.
 
 Lifted decision-list policies and program-synthesis approaches provide useful
 alternative hypothesis classes. PG3 searches over goal-conditioned lifted
@@ -41,6 +48,9 @@ programs with loops \cite{SegoviaAguas2022BFGPpp}. These representations are
 more directly executable than raw sketches, but they do not target the
 Belief-Desire-Intention plan-library interface: predicate achievement modules,
 subgoal calls, and a reusable \texttt{+!g} composer.
+Their benchmark domains are likewise chosen to fit the policy language being
+tested, such as lifted decision lists in PG3 or terminating loop programs in
+BFGP++.
 
 Answer-set programming is used as an optimization and consistency mechanism,
 following the style of sketch learning with Clingo

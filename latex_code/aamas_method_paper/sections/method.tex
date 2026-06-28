@@ -105,50 +105,57 @@ runtime agenda gate, not a complete goal-order learner by itself; unsupported
 goal mutexes and arbitrary reachable mid-state policies remain outside the
 current positive claim unless the report validates them explicitly.
 
-\subsection{Supported Domain Boundary}
+\subsection{Benchmark-Class Boundary}
 
-The hypothesis class is intentionally defined by prior generalized-planning
-structure rather than by the current implementation's success cases. A domain
-family is inside the main claim only when its reusable strategy can be expressed
-as a goal-conditioned, feature-definable, terminating modular sketch whose
-features bind safely to declared \pddl{} predicates, primitive actions,
-predicate subgoals, read-only goal descriptors, or read-only agenda gates. This
-places the method in the same theoretical region as policy sketches,
-subgoal-structure width, feature-based general policies, and modular policy
-reuse \cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches,
-Frances2021LearningGeneralPolicies,Bonet2024GeneralPoliciesWidth,
-Bonet2024PolicyReuse}.
+Following generalized-planning evaluation practice, we state support by
+properties of problem classes $Q_D$ rather than by an open-ended list of
+domains. A class can enter the main claim only if it has the prior structure
+used in the literature and the additional artifact property needed here:
+its reusable strategy must be expressible as a goal-conditioned,
+feature-definable, terminating modular sketch with bounded sketch width; every
+selected feature rule must bind safely to declared \pddl{} predicates,
+primitive actions, predicate subgoals, read-only goal descriptors, or read-only
+agenda gates; and the compiled \asl{} library must validate without run-time
+full-trace planning. This puts the method in the same theoretical region as
+policy sketches, subgoal-structure width, feature-based general policies, and
+modular policy reuse \cite{Drexler2022LearningSketches,
+Drexler2024SubgoalSketches,Frances2021LearningGeneralPolicies,
+Bonet2024GeneralPoliciesWidth,Bonet2024PolicyReuse}.
 
 \begin{table}[t]
-	\caption{Domain families used to state the support boundary.}
+	\caption{Benchmark classes used to state the support boundary.}
 	\label{tab:domain-families}
 	\small
 	\begin{tabular}{p{0.34\columnwidth}p{0.49\columnwidth}}
 		\toprule
-		Family & Paper status \\
+		Class & Paper status \\
 		\midrule
-		Goal-independent transport/control domains such as Ferry and Gripper &
-		Control candidates, useful for comparison with goal-regression and
-		decision-list policies \cite{Chen2026Moose,Yang2022PG3}. \\
-		Bounded-width sketchable domains such as Blocks-on, Delivery, Miconic,
-		Spanner, Visitall, and Childsnack &
-		Theory-supported superclass for the sketch and feature-binding
-		contract. \\
-		Goal-dependent feature-definable construction domains such as full
-		Blocksworld and tower goals &
-		Main positive claim in the current evaluation. \\
-		Route, transitive-closure, numeric, and object-specific fragments &
-		Boundary or exclusion unless a safe lifted distance, ranking, or
-		numeric semantics is selected and validated. \\
+		Compiled feature-definable modular sketches &
+		Main claim. Current evidence is Blocksworld construction goals, where
+		prior work gives feature policies for \texttt{clear}, \texttt{on}, and
+		full Blocksworld. \\
+		Goal-independent control classes &
+		Control candidates only. MOOSE-style TGI/SGI/OGI domains such as Ferry,
+		Gripper, and Miconic are not counted until compiled ASL rows pass the
+		same protocol \cite{Chen2026Moose,Yang2022PG3}. \\
+		Dead-end-aware ordered-resource sketches &
+		Stress candidates. Spanner, Childsnack, and Barman match sketch and
+		general-policy benchmarks, while Labworkflow is only a local mechanism
+		probe. \\
+		Reachability, numeric, and object-specific fragments &
+		Boundary. Transport, Rovers, Marsrover, Grid variants, and numeric
+		domains need accepted distance, transitive-closure, ranking, or numeric
+		bindings before main-claim use. \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
 Thus Layer C should not be read as an ad hoc goal-order patch. It is the
-compiled form of the selected goal-conditioned sketch composer. In simple
-families it may reduce to unsatisfied-goal dispatch; in goal-dependent
-families it must encode support-agenda constraints such as building lower
-Blocksworld tower links before upper links. If a domain needs graph reachability,
+compiled form of the selected goal-conditioned sketch composer. In a
+goal-independent control class it may reduce to unsatisfied-goal dispatch; in
+the current claimed Blocksworld class it must encode the support agenda
+implicit in feature-definable construction policies, such as placing lower
+tower links before upper links. If a candidate domain needs graph reachability,
 transitive closure, numeric accumulation, or object-specific constants and no
 accepted feature binding is available, the report must classify it as boundary
 or excluded.
