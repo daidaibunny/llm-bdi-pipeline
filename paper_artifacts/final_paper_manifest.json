@@ -1,0 +1,301 @@
+{
+  "artifact_id": "aamas2026-domain-level-lifted-asl-final-data",
+  "schema_version": 1,
+  "paper_scope": "positive_conjunctive_achievement_goals",
+  "generated_output_policy": {
+    "tracked_contract": "paper_artifacts/final_paper_manifest.json",
+    "tracked_result_macros": "latex_code/aamas_method_paper/generated/results.tex",
+    "default_output_dir": "tmp/paper-final-latest",
+    "snapshot_policy": "regenerate_outputs_from_tracked_manifest_and_scripts",
+    "do_not_track_generated_dirs": [
+      "tmp/paper-final-latest/backend-audit",
+      "tmp/paper-final-latest/baseline-work",
+      "tmp/paper-final-latest/baselines",
+      "tmp/paper-final-latest/configs",
+      "tmp/paper-final-latest/main-matrix",
+      "tmp/paper-final-latest/ablation-matrix",
+      "tmp/paper-final-latest/limitation-matrix"
+    ]
+  },
+  "commands": {
+    "generate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --planner-timeout-seconds 5",
+    "validate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only",
+    "tests": "PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q",
+    "paper": "cd latex_code/aamas_method_paper && latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build main.tex"
+  },
+  "resource_policy": {
+    "external_generalized_planning_memory_limit_gib": 16,
+    "external_generalized_planning_requires_resource_guard": true,
+    "library_runtime_full_trace_planner": false,
+    "classical_planner_baselines_are_offline_only": true
+  },
+  "required_repository_inputs": [
+    {
+      "path": "scripts/run_final_paper_data.py",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "scripts/run_domain_level_experiment_matrix.py",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "scripts/generate_domain_level_baselines.py",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/benchmark_data/external_vocab/learner_sketches_blocksworld_blocks_4_on_2.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld/problems",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld/satisfiable-large",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/blocksworld/satisfiable-mixed-large",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/labworkflow/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/labworkflow/problems/p01.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/labworkflow/problems/p02.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/labworkflow/problems/p03.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/labworkflow/problems/p04.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/labworkflow/problems/p05.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/labworkflow/problems/p06.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/transport/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/transport/problems",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/marsrover/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/marsrover/problems",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": ".external/gp-backends/learner-sketches/learning/workspace-2024-09-24-tractable/blocks_4_on_2/output/sketch_minimized_2.txt",
+      "kind": "file",
+      "tracked": false,
+      "pin": "learner-sketches@7a7ea6a6356035afa16ed958b53d8edc86994e0a"
+    },
+    {
+      "path": ".external/moose/exact-runs/blocksworld-paper-params-probe/train-status.csv",
+      "kind": "file",
+      "tracked": false,
+      "pin": "MOOSE reproduction status imported from local pinned artifact"
+    }
+  ],
+  "matrix_configs": {
+    "main": {
+      "file": "configs/main-library-matrix.json",
+      "matrix_name": "paper-final-main-library",
+      "experiments": [
+        "blocksworld-paper-external-on2-first20",
+        "blocksworld-paper-external-on2-satisfiable-large",
+        "blocksworld-paper-external-on2-satisfiable-mixed-large",
+        "labworkflow-counterexample-refinement-stress"
+      ]
+    },
+    "ablation": {
+      "file": "configs/ablation-matrix.json",
+      "matrix_name": "paper-final-ablations",
+      "experiments": [
+        "blocksworld-no-external-sketch-first20",
+        "labworkflow-no-layer-c-with-refinement-stress",
+        "labworkflow-no-counterexample-refinement-stress",
+        "transport-no-offline-trace-evidence-first10"
+      ]
+    },
+    "limitation": {
+      "file": "configs/limitation-matrix.json",
+      "matrix_name": "paper-final-limitations",
+      "experiments": [
+        "transport-bootstrap-train3-first10-limitation",
+        "marsrover-trace-evidence-train1-first10"
+      ]
+    }
+  },
+  "expected_package": {
+    "report_count": 10,
+    "baseline_count": 10,
+    "paper_table_row_count": 20,
+    "latex_macro_file": "latex_code/aamas_method_paper/generated/results.tex"
+  },
+  "expected_library_rows": [
+    {
+      "label": "paper_external_sketch_first20",
+      "solved": "20/20",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": true
+    },
+    {
+      "label": "paper_external_sketch_satisfiable_large",
+      "solved": "10/10",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": true
+    },
+    {
+      "label": "paper_external_sketch_satisfiable_mixed_large",
+      "solved": "10/10",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": true
+    },
+    {
+      "label": "labworkflow_counterexample_refinement_stress",
+      "solved": "5/5",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": false
+    },
+    {
+      "label": "no_external_sketch_first20",
+      "solved": "20/20",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": false
+    },
+    {
+      "label": "no_layer_c_with_refinement_labworkflow_stress",
+      "solved": "0/5",
+      "coverage_percent": 0.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": false
+    },
+    {
+      "label": "no_counterexample_refinement_labworkflow_stress",
+      "solved": "0/5",
+      "coverage_percent": 0.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": false
+    },
+    {
+      "label": "no_offline_trace_evidence_transport",
+      "solved": "10/10",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": false
+    },
+    {
+      "label": "transport_initial_state_fragment",
+      "solved": "10/10",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": false
+    },
+    {
+      "label": "marsrover_trace_evidence_fragment",
+      "solved": "10/10",
+      "coverage_percent": 100.0,
+      "runtime_planner": "none",
+      "paper_profile_ready": false
+    }
+  ],
+  "expected_baseline_rows": [
+    {
+      "macro_id": "blocksworld-paper-external-on2-first20_fast_downward_lama_per_problem",
+      "solved": "20/20",
+      "runtime_planner": "offline_baseline_only"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-first20_raw_blocks_4_on_2_policy_audit",
+      "solved": "0/20",
+      "runtime_planner": "not_runtime_executed"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-first20_blocksworld_moose_paper_params_probe",
+      "solved": "0/5",
+      "runtime_planner": "moose_policy_execution_or_training_probe"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-satisfiable-large_fast_downward_lama_per_problem",
+      "solved": "0/10",
+      "runtime_planner": "offline_baseline_only"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-satisfiable-large_raw_blocks_4_on_2_policy_audit",
+      "solved": "0/10",
+      "runtime_planner": "not_runtime_executed"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-satisfiable-large_blocksworld_moose_paper_params_probe",
+      "solved": "0/5",
+      "runtime_planner": "moose_policy_execution_or_training_probe"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-satisfiable-mixed-large_fast_downward_lama_per_problem",
+      "solved": "7/10",
+      "runtime_planner": "offline_baseline_only"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-satisfiable-mixed-large_raw_blocks_4_on_2_policy_audit",
+      "solved": "0/10",
+      "runtime_planner": "not_runtime_executed"
+    },
+    {
+      "macro_id": "blocksworld-paper-external-on2-satisfiable-mixed-large_blocksworld_moose_paper_params_probe",
+      "solved": "0/5",
+      "runtime_planner": "moose_policy_execution_or_training_probe"
+    },
+    {
+      "macro_id": "labworkflow-counterexample-refinement-stress_fast_downward_lama_per_problem",
+      "solved": "5/5",
+      "runtime_planner": "offline_baseline_only"
+    }
+  ]
+}

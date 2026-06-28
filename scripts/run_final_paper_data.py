@@ -43,6 +43,7 @@ BLOCKS_VOCAB = (
 	"learner_sketches_blocksworld_blocks_4_on_2.json"
 )
 MOOSE_BLOCKS_STATUS = ".external/moose/exact-runs/blocksworld-paper-params-probe/train-status.csv"
+FINAL_PAPER_MANIFEST = PROJECT_ROOT / "paper_artifacts/final_paper_manifest.json"
 LABWORKFLOW_TRAIN_PROBLEMS = ["src/domains/labworkflow/problems/p01.pddl"]
 LABWORKFLOW_STRESS_PROBLEMS = [
 	"src/domains/labworkflow/problems/p02.pddl",
@@ -71,6 +72,12 @@ def main() -> None:
 	)
 	parser.add_argument("--planner-timeout-seconds", type=int, default=60)
 	parser.add_argument(
+		"--manifest",
+		type=Path,
+		default=FINAL_PAPER_MANIFEST,
+		help="Tracked final-paper artifact manifest to enforce during validation.",
+	)
+	parser.add_argument(
 		"--config-only",
 		action="store_true",
 		help="Write final configs only; do not generate baselines or run matrices.",
@@ -83,8 +90,9 @@ def main() -> None:
 	args = parser.parse_args()
 
 	output_dir = args.output_dir.expanduser().resolve()
+	manifest = load_final_paper_manifest(args.manifest)
 	if args.validate_only:
-		validation = validate_final_paper_package(output_dir)
+		validation = validate_final_paper_package(output_dir, manifest=manifest)
 		print(
 			"validated final paper data package "
 			f"{output_dir} checks={validation['check_count']}",
@@ -92,7 +100,7 @@ def main() -> None:
 		return
 
 	_reset_managed_output(output_dir)
-	package = write_final_paper_configs(output_dir)
+	package = write_final_paper_configs(output_dir, manifest=manifest)
 	if args.config_only:
 		print(f"wrote final paper configs under {output_dir}")
 		return
@@ -105,7 +113,7 @@ def main() -> None:
 	)
 	results = _run_final_matrices(output_dir=output_dir, package=package)
 	comparison = _write_final_comparison(output_dir=output_dir, matrix_results=results)
-	validate_final_paper_package(output_dir)
+	validate_final_paper_package(output_dir, manifest=manifest)
 	print(
 		"wrote final paper data package "
 		f"{output_dir} reports={comparison['report_count']} "
@@ -113,14 +121,37 @@ def main() -> None:
 	)
 
 
+def load_final_paper_manifest(
+	manifest_file: str | Path = FINAL_PAPER_MANIFEST,
+) -> dict[str, object]:
+	"""Load the tracked final-paper artifact contract."""
+
+	manifest_path = Path(manifest_file).expanduser()
+	if not manifest_path.is_absolute():
+		manifest_path = PROJECT_ROOT / manifest_path
+	if not manifest_path.exists():
+		raise FileNotFoundError(f"missing final paper artifact manifest: {manifest_path}")
+	manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+	if int(manifest.get("schema_version") or 0) != 1:
+		raise ValueError(
+			"unsupported final paper artifact manifest schema_version: "
+			f"{manifest.get('schema_version')!r}",
+		)
+	return dict(manifest)
+
+
 def validate_final_paper_package(
 	output_dir: Path,
 	*,
 	macro_file: Path | None = None,
+	manifest: dict[str, object] | None = None,
+	manifest_file: str | Path | None = FINAL_PAPER_MANIFEST,
 ) -> dict[str, object]:
 	"""Validate the already-generated final paper data package."""
 
 	output_dir = output_dir.expanduser().resolve()
+	if manifest is None and manifest_file is not None:
+		manifest = load_final_paper_manifest(manifest_file)
 	comparison_file = output_dir / "comparison.json"
 	if not comparison_file.exists():
 		raise FileNotFoundError(f"missing final comparison file: {comparison_file}")
@@ -210,6 +241,16 @@ def validate_final_paper_package(
 		any("domain-level" in str(row.get("notes") or "") for row in baseline_rows),
 		"baseline rows state domain-level or non-domain-level semantics",
 	)
+	if manifest is not None:
+		_validate_manifest_contract(
+			manifest=manifest,
+			output_dir=output_dir,
+			comparison=comparison,
+			rows=rows,
+			library_rows=library_rows,
+			baseline_rows=baseline_rows,
+			require=require,
+		)
 
 	current_gap_summary = architecture_gap_summary(
 		domain_level_architecture_contract().gaps,
@@ -294,6 +335,207 @@ def validate_final_paper_package(
 	}
 
 
+def _validate_manifest_contract(
+	*,
+	manifest: dict[str, object],
+	output_dir: Path,
+	comparison: dict[str, object],
+	rows: tuple[dict[str, object], ...],
+	library_rows: tuple[dict[str, object], ...],
+	baseline_rows: tuple[dict[str, object], ...],
+	require,
+) -> None:
+	"""Validate generated artifacts against the tracked paper manifest."""
+
+	require(bool(manifest.get("artifact_id")), "artifact manifest has an id")
+	require(
+		int(manifest.get("schema_version") or 0) == 1,
+		"artifact manifest schema is supported",
+	)
+	commands = dict(manifest.get("commands") or {})
+	for command_name in ("generate", "validate", "tests", "paper"):
+		require(
+			bool(str(commands.get(command_name) or "").strip()),
+			f"artifact manifest records {command_name} command",
+		)
+	resource_policy = dict(manifest.get("resource_policy") or {})
+	require(
+		resource_policy.get("library_runtime_full_trace_planner") is False,
+		"artifact manifest forbids library runtime full-trace planning",
+	)
+	require(
+		resource_policy.get("external_generalized_planning_requires_resource_guard")
+		is True,
+		"artifact manifest requires guarded external learner runs",
+	)
+	if "external_generalized_planning_memory_limit_gib" in resource_policy:
+		require(
+			float(resource_policy["external_generalized_planning_memory_limit_gib"])
+			<= 16.0,
+			"artifact manifest keeps external learner memory limit at or below 16GiB",
+		)
+
+	output_policy = dict(manifest.get("generated_output_policy") or {})
+	tracked_contract = str(output_policy.get("tracked_contract") or "").strip()
+	if tracked_contract:
+		require(
+			not tracked_contract.startswith("tmp/"),
+			"artifact contract is tracked outside tmp",
+		)
+		require(
+			(PROJECT_ROOT / tracked_contract).exists(),
+			"tracked artifact contract file exists",
+		)
+	for generated_path in tuple(output_policy.get("do_not_track_generated_dirs") or ()):
+		require(
+			str(generated_path).startswith("tmp/"),
+			f"generated output remains under tmp: {generated_path}",
+		)
+
+	artifact_manifest_copy = output_dir / "artifact-manifest.json"
+	require(
+		artifact_manifest_copy.exists(),
+		"generated package includes artifact manifest copy",
+	)
+	require(
+		json.loads(artifact_manifest_copy.read_text(encoding="utf-8")) == manifest,
+		"generated artifact manifest copy matches tracked manifest",
+	)
+
+	for input_record in tuple(manifest.get("required_repository_inputs") or ()):
+		record = dict(input_record)
+		raw_path = str(record.get("path") or "")
+		require(bool(raw_path), "artifact manifest input records have paths")
+		resolved = PROJECT_ROOT / raw_path
+		if str(record.get("kind") or "file") == "directory":
+			require(resolved.is_dir(), f"artifact input directory exists: {raw_path}")
+		else:
+			require(resolved.is_file(), f"artifact input file exists: {raw_path}")
+		if bool(record.get("tracked")):
+			require(
+				not raw_path.startswith(("tmp/", ".external/")),
+				f"tracked artifact input is not generated/external: {raw_path}",
+			)
+
+	expected_package = dict(manifest.get("expected_package") or {})
+	if expected_package:
+		require(
+			int(comparison.get("report_count") or 0)
+			== int(expected_package.get("report_count") or 0),
+			"artifact manifest report count matches comparison",
+		)
+		require(
+			int(comparison.get("baseline_count") or 0)
+			== int(expected_package.get("baseline_count") or 0),
+			"artifact manifest baseline count matches comparison",
+		)
+		require(
+			len(rows) == int(expected_package.get("paper_table_row_count") or 0),
+			"artifact manifest paper-table row count matches comparison",
+		)
+
+	_validate_manifest_matrix_configs(
+		manifest=manifest,
+		output_dir=output_dir,
+		require=require,
+	)
+	_validate_manifest_expected_rows(
+		manifest=manifest,
+		library_rows=library_rows,
+		baseline_rows=baseline_rows,
+		require=require,
+	)
+
+
+def _validate_manifest_matrix_configs(
+	*,
+	manifest: dict[str, object],
+	output_dir: Path,
+	require,
+) -> None:
+	matrix_configs = dict(manifest.get("matrix_configs") or {})
+	for matrix_key, matrix_contract in matrix_configs.items():
+		contract = dict(matrix_contract)
+		config_file = output_dir / str(contract.get("file") or "")
+		require(
+			config_file.exists(),
+			f"artifact matrix config exists: {matrix_key}",
+		)
+		config = json.loads(config_file.read_text(encoding="utf-8"))
+		require(
+			config.get("matrix_name") == contract.get("matrix_name"),
+			f"artifact matrix name matches manifest: {matrix_key}",
+		)
+		expected_experiments = tuple(str(name) for name in contract.get("experiments") or ())
+		actual_experiments = tuple(
+			str(row.get("name") or "")
+			for row in tuple(config.get("experiments") or ())
+		)
+		require(
+			actual_experiments == expected_experiments,
+			f"artifact matrix experiment order matches manifest: {matrix_key}",
+		)
+
+
+def _validate_manifest_expected_rows(
+	*,
+	manifest: dict[str, object],
+	library_rows: tuple[dict[str, object], ...],
+	baseline_rows: tuple[dict[str, object], ...],
+	require,
+) -> None:
+	library_by_label = {
+		str(row.get("label") or ""): row for row in library_rows
+	}
+	for expected_row in tuple(manifest.get("expected_library_rows") or ()):
+		expected = dict(expected_row)
+		label = str(expected.get("label") or "")
+		require(label in library_by_label, f"expected library row exists: {label}")
+		_actual_row_matches_expected(
+			actual=library_by_label[label],
+			expected=expected,
+			row_name=label,
+			require=require,
+		)
+
+	baseline_by_macro = {
+		str(row.get("macro_id") or ""): row for row in baseline_rows
+	}
+	for expected_row in tuple(manifest.get("expected_baseline_rows") or ()):
+		expected = dict(expected_row)
+		macro_id = str(expected.get("macro_id") or "")
+		require(macro_id in baseline_by_macro, f"expected baseline row exists: {macro_id}")
+		_actual_row_matches_expected(
+			actual=baseline_by_macro[macro_id],
+			expected=expected,
+			row_name=macro_id,
+			require=require,
+		)
+
+
+def _actual_row_matches_expected(
+	*,
+	actual: dict[str, object],
+	expected: dict[str, object],
+	row_name: str,
+	require,
+) -> None:
+	for key, expected_value in expected.items():
+		if key in {"label", "macro_id"}:
+			continue
+		actual_value = actual.get(key)
+		if isinstance(expected_value, float):
+			require(
+				abs(float(actual_value or 0.0) - expected_value) < 0.0001,
+				f"artifact row {row_name} field {key} matches manifest",
+			)
+		else:
+			require(
+				actual_value == expected_value,
+				f"artifact row {row_name} field {key} matches manifest",
+			)
+
+
 def _reset_managed_output(output_dir: Path) -> None:
 	"""Remove generated final-package paths before a fresh non-validate run."""
 
@@ -312,9 +554,16 @@ def _reset_managed_output(output_dir: Path) -> None:
 	comparison_file = output_dir / "comparison.json"
 	if comparison_file.exists():
 		comparison_file.unlink()
+	manifest_file = output_dir / "artifact-manifest.json"
+	if manifest_file.exists():
+		manifest_file.unlink()
 
 
-def write_final_paper_configs(output_dir: Path) -> dict[str, Path]:
+def write_final_paper_configs(
+	output_dir: Path,
+	*,
+	manifest: dict[str, object] | None = None,
+) -> dict[str, Path]:
 	"""Write fixed final matrix configs and return their paths."""
 
 	config_dir = output_dir / "configs"
@@ -327,6 +576,8 @@ def write_final_paper_configs(output_dir: Path) -> dict[str, Path]:
 	_write_json(configs["main"], _main_library_config(output_dir))
 	_write_json(configs["ablation"], _ablation_config(output_dir))
 	_write_json(configs["limitation"], _limitation_config(output_dir))
+	if manifest is not None:
+		_write_json(output_dir / "artifact-manifest.json", manifest)
 	return configs
 
 

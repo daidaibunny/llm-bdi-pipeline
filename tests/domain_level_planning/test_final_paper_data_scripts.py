@@ -9,11 +9,79 @@ from low_level_planning.models import LowLevelAction
 from scripts import generate_domain_level_baselines
 from scripts.generate_domain_level_baselines import generate_classical_planner_baseline
 from scripts.generate_domain_level_baselines import generate_moose_status_baseline
+from scripts.run_final_paper_data import load_final_paper_manifest
 from scripts.run_final_paper_data import validate_final_paper_package
 from scripts.run_final_paper_data import write_final_paper_configs
 from domain_level_planning import architecture_gap_summary
 from domain_level_planning import domain_level_architecture_contract
 from domain_level_planning.experiments import format_comparison_latex_macros
+
+
+def _minimal_artifact_manifest(
+	*,
+	report_count: int,
+	baseline_count: int,
+	paper_table_row_count: int,
+) -> dict[str, object]:
+	return {
+		"artifact_id": "unit-test-artifact",
+		"schema_version": 1,
+		"commands": {
+			"generate": "generate",
+			"validate": "validate",
+			"tests": "tests",
+			"paper": "paper",
+		},
+		"resource_policy": {
+			"external_generalized_planning_memory_limit_gib": 16,
+			"external_generalized_planning_requires_resource_guard": True,
+			"library_runtime_full_trace_planner": False,
+		},
+		"expected_package": {
+			"report_count": report_count,
+			"baseline_count": baseline_count,
+			"paper_table_row_count": paper_table_row_count,
+		},
+		"expected_library_rows": [
+			{
+				"label": "labworkflow_counterexample_refinement_stress",
+				"solved": "5/5",
+				"coverage_percent": 100.0,
+				"runtime_planner": "none",
+			},
+			{
+				"label": "no_layer_c_with_refinement_labworkflow_stress",
+				"solved": "0/5",
+				"coverage_percent": 0.0,
+				"runtime_planner": "none",
+			},
+			{
+				"label": "no_counterexample_refinement_labworkflow_stress",
+				"solved": "0/5",
+				"coverage_percent": 0.0,
+				"runtime_planner": "none",
+			},
+		],
+		"expected_baseline_rows": [
+			{
+				"macro_id": "first20_fast_downward_lama_per_problem",
+				"solved": "2/2",
+				"runtime_planner": "offline_baseline_only",
+			},
+			{
+				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
+				"solved": "0/2",
+				"runtime_planner": "not_runtime_executed",
+			},
+		],
+	}
+
+
+def _write_artifact_manifest_copy(output_dir: Path, manifest: dict[str, object]) -> None:
+	(output_dir / "artifact-manifest.json").write_text(
+		json.dumps(manifest, indent=2, sort_keys=True),
+		encoding="utf-8",
+	)
 
 
 def test_moose_status_baseline_imports_completed_reproduction_rows(
@@ -105,7 +173,9 @@ def test_classical_baseline_accepts_locally_valid_plan_after_planner_exit_warnin
 def test_final_paper_config_splits_main_ablation_and_limitations(
 	tmp_path: Path,
 ) -> None:
-	configs = write_final_paper_configs(tmp_path / "paper-final")
+	manifest = load_final_paper_manifest()
+	output_dir = tmp_path / "paper-final"
+	configs = write_final_paper_configs(output_dir, manifest=manifest)
 
 	main = json.loads(configs["main"].read_text(encoding="utf-8"))
 	ablation = json.loads(configs["ablation"].read_text(encoding="utf-8"))
@@ -114,6 +184,9 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 	assert main["matrix_name"] == "paper-final-main-library"
 	assert ablation["matrix_name"] == "paper-final-ablations"
 	assert limitation["matrix_name"] == "paper-final-limitations"
+	assert json.loads(
+		(output_dir / "artifact-manifest.json").read_text(encoding="utf-8"),
+	) == manifest
 
 	main_rows = {row["name"]: row for row in main["experiments"]}
 	assert "blocksworld-paper-external-on2-first20" in main_rows
@@ -181,6 +254,11 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 def test_final_paper_package_validator_accepts_complete_package(
 	tmp_path: Path,
 ) -> None:
+	manifest = _minimal_artifact_manifest(
+		report_count=2,
+		baseline_count=2,
+		paper_table_row_count=6,
+	)
 	comparison = {
 		"report_count": 2,
 		"baseline_count": 2,
@@ -257,6 +335,7 @@ def test_final_paper_package_validator_accepts_complete_package(
 		json.dumps(comparison, indent=2),
 		encoding="utf-8",
 	)
+	_write_artifact_manifest_copy(tmp_path, manifest)
 	current_gap_summary = architecture_gap_summary(
 		domain_level_architecture_contract().gaps,
 	)
@@ -301,7 +380,11 @@ def test_final_paper_package_validator_accepts_complete_package(
 		encoding="utf-8",
 	)
 
-	validation = validate_final_paper_package(tmp_path, macro_file=macro_file)
+	validation = validate_final_paper_package(
+		tmp_path,
+		macro_file=macro_file,
+		manifest=manifest,
+	)
 
 	assert validation["check_count"] >= 16
 	assert validation["comparison_file"] == str(tmp_path / "comparison.json")
@@ -310,6 +393,11 @@ def test_final_paper_package_validator_accepts_complete_package(
 def test_final_paper_package_validator_rejects_stale_architecture_reports(
 	tmp_path: Path,
 ) -> None:
+	manifest = _minimal_artifact_manifest(
+		report_count=1,
+		baseline_count=1,
+		paper_table_row_count=6,
+	)
 	comparison = {
 		"report_count": 1,
 		"baseline_count": 1,
@@ -340,7 +428,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 				"row_type": "library",
 				"label": "no_layer_c_with_refinement_labworkflow_stress",
 				"macro_id": "no_layer_c_with_refinement_labworkflow_stress",
-				"solved": "0/1",
+				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
 				"paper_profile_ready": False,
@@ -351,7 +439,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 				"row_type": "library",
 				"label": "no_counterexample_refinement_labworkflow_stress",
 				"macro_id": "no_counterexample_refinement_labworkflow_stress",
-				"solved": "0/1",
+				"solved": "0/5",
 				"coverage_percent": 0.0,
 				"runtime_planner": "none",
 				"paper_profile_ready": False,
@@ -362,7 +450,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 				"row_type": "baseline",
 				"label": "fast_downward_lama_per_problem",
 				"macro_id": "first20_fast_downward_lama_per_problem",
-				"solved": "1/1",
+				"solved": "2/2",
 				"coverage_percent": 100.0,
 				"runtime_planner": "offline_baseline_only",
 				"notes": "per_problem_trace_baseline; not a domain-level library",
@@ -372,7 +460,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 				"row_type": "baseline",
 				"label": "raw_blocks_4_on_2_policy_audit",
 				"macro_id": "first20_raw_blocks_4_on_2_policy_audit",
-				"solved": "0/1",
+				"solved": "0/2",
 				"coverage_percent": 0.0,
 				"runtime_planner": "not_runtime_executed",
 				"notes": "domain-level artifact audit",
@@ -389,6 +477,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 		format_comparison_latex_macros(comparison),
 		encoding="utf-8",
 	)
+	_write_artifact_manifest_copy(tmp_path, manifest)
 	for name in ("main", "ablation", "limitation"):
 		summary_dir = tmp_path / f"{name}-matrix"
 		summary_dir.mkdir(parents=True)
@@ -425,7 +514,11 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 		)
 
 	try:
-		validate_final_paper_package(tmp_path, macro_file=macro_file)
+		validate_final_paper_package(
+			tmp_path,
+			macro_file=macro_file,
+			manifest=manifest,
+		)
 	except ValueError as error:
 		assert "report architecture contract is current" in str(error)
 	else:
