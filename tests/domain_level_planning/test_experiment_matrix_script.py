@@ -17,10 +17,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SELECTED_BENCHMARK_DOMAINS = {
 	"gripper",
 	"miconic",
+	"logistics",
 	"childsnack",
 	"barman",
 	"visitall",
 	"blocks",
+	"depots",
 }
 
 

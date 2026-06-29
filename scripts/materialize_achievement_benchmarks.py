@@ -92,6 +92,14 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 			"elevator-strips-simple-typed",
 		),
 		DomainSpec(
+			"logistics",
+			"ipc-2000/domains/logistics-strips-typed",
+			"goal_separable_serialisable_achievement_classes",
+			"Logistics",
+			"2000",
+			"logistics-strips-typed",
+		),
+		DomainSpec(
 			"barman",
 			"ipc-2011/domains/barman-sequential-satisficing",
 			"bounded_width_sketchable_subgoal_structure_classes",
@@ -122,6 +130,14 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 			"Blocks",
 			"2000",
 			"blocks-strips-typed",
+		),
+		DomainSpec(
+			"depots",
+			"ipc-2002/domains/depots-strips-hand-coded",
+			"feature_definable_goal_dependent_construction_classes",
+			"Depots",
+			"2002",
+			"depots-strips-hand-coded",
 		),
 	)
 

@@ -286,6 +286,46 @@
       "path": "src/domains/blocks/source.json",
       "kind": "file",
       "tracked": true
+    },
+    {
+      "path": "src/domains/logistics/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/logistics/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/logistics/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/logistics/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/depots/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/depots/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/depots/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/depots/source.json",
+      "kind": "file",
+      "tracked": true
     }
   ],
   "matrix_configs": {

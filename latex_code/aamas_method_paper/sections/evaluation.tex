@@ -29,11 +29,11 @@ not a learner backend and not part of the synthesized library.
 		Class & Problem classes & Count \\
 		\midrule
 		Goal-separable and serialisable achievement classes &
-		Gripper, Miconic & 2 \\
+		Gripper, Miconic, Logistics & 3 \\
 		Bounded-width sketchable subgoal-structure classes &
 		Barman, Childsnack, Visitall & 3 \\
 		Feature-definable goal-dependent construction classes &
-		Blocks & 1 \\
+		Blocks, Depots & 2 \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -48,7 +48,9 @@ bounded-width subproblems \cite{Drexler2022LearningSketches,
 Drexler2024SubgoalSketches,Bonet2024GeneralPoliciesWidth}. The third class
 follows feature-definable general-policy work, where Blocksworld variants expose
 goal-dependent construction behavior that cannot be handled by arbitrary
-singleton-goal ordering \cite{Frances2021LearningGeneralPolicies}.
+singleton-goal ordering \cite{Frances2021LearningGeneralPolicies}; Depots adds
+an official IPC construction benchmark where transport goals interact with
+Blocksworld-style crate stacking.
 
 The evaluation protocol has three checks. First, synthesis receives only the
 training split and must produce a lifted \asl{} library whose plan heads are

@@ -146,10 +146,10 @@ feature-definable problem classes, including full Blocksworld
 \cite{Frances2021LearningGeneralPolicies}; PG3 uses six PDDL domains
 \cite{Yang2022PG3}; and BFGP++ uses 13 program-synthesis domains
 \cite{SegoviaAguas2022BFGPpp}. Thus a broad generalized-planning claim should
-normally cover several standard domain families. Our current strict claim is
-narrower by design: it centers on the feature-definable Blocksworld construction
-class plus the additional requirement that the learned policy evidence compile
-into a lifted \asl{} library.
+normally cover several standard domain families. Our current strict claim uses
+eight complete IPC \pddl{} domains organized into three property-defined
+families, with the additional requirement that the learned policy evidence
+compile into a lifted \asl{} library.
 
 \begin{table}[t]
 	\caption{Selected property-defined benchmark classes.}
@@ -160,15 +160,15 @@ into a lifted \asl{} library.
 		Class & Selected domains or problem classes \\
 		\midrule
 		Goal-separable and serialisable achievement classes &
-		Gripper and Miconic, following MOOSE's TGI/SGI/OGI distinction
+		Gripper, Miconic, and Logistics, following MOOSE's TGI/SGI/OGI distinction
 		and executable-policy benchmarks in PG3 and D2L. \\
 		Bounded-width sketchable subgoal-structure classes &
 		Barman, Childsnack, and Visitall, following
 		learned-sketch and subgoal-structure evaluations of well-formed sketches
 		with small sketch width. \\
 		Feature-definable goal-dependent construction classes &
-		Blocksworld, following D2L and modular policy-reuse examples for
-		feature-definable construction goals. \\
+		Blocks and Depots, following feature-definable Blocksworld policies and
+		IPC construction domains that combine transport goals with stacking goals. \\
 		\bottomrule
 	\end{tabular}
 \end{table}
@@ -179,13 +179,13 @@ goal-separable or serialisable class it may reduce to unsatisfied-goal
 dispatch; in bounded-width sketchable classes it must preserve the selected
 subgoal structure; and in Blocksworld-style construction classes it must encode
 the support agenda implicit in feature-definable construction policies, such as
-placing lower tower links before upper links. The selected Blocksworld
-construction benchmark is materialized as the complete IPC \texttt{blocks}
-directory from the unified benchmark source, with its deterministic
-\(\lfloor 2N/3 \rfloor\) train split and held-out goal-specification split.
-Transport, Rovers, Marsrover,
-Logistics, Satellite, numeric domains, and unselected program-synthesis
-benchmarks are boundary or excluded cases unless their required route,
+placing lower tower links before upper links or moving crates only after the
+required depot support structure is available. The selected construction
+benchmarks are materialized as the complete IPC \texttt{blocks} and
+\texttt{depots} directories from the unified benchmark source, with deterministic
+\(\lfloor 2N/3 \rfloor\) train splits and held-out goal-specification splits.
+Transport, Rovers, Marsrover, Satellite, numeric domains, and unselected
+program-synthesis benchmarks are boundary or excluded cases unless their required route,
 transitive-closure, resource-instrument, or numeric semantics are safely bound.
 
 \subsection{Candidate Generation}

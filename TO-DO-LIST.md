@@ -54,13 +54,13 @@ remaining instances form the held-out goal-specification `test` split.
 
 | Class | Domains |
 | --- | --- |
-| Goal-separable and serialisable achievement classes | `gripper`, `miconic` |
+| Goal-separable and serialisable achievement classes | `gripper`, `miconic`, `logistics` |
 | Bounded-width sketchable subgoal-structure classes | `barman`, `childsnack`, `visitall` |
-| Feature-definable goal-dependent construction classes | `blocks` |
+| Feature-definable goal-dependent construction classes | `blocks`, `depots` |
 
-Total selected IPC domains: 6. Instance counts are domain-specific:
-`gripper` 20, `miconic` 150, `barman` 20, `childsnack` 20, `visitall` 20,
-and `blocks` 102.
+Total selected IPC domains: 8. Instance counts are domain-specific:
+`gripper` 20, `miconic` 150, `logistics` 84, `barman` 20,
+`childsnack` 20, `visitall` 20, `blocks` 102, and `depots` 22.
 
 ## Active Requirements
 
@@ -69,7 +69,7 @@ and `blocks` 102.
 | R1 | Materialize all selected domains from the unified source. | Implemented | `scripts/materialize_achievement_benchmarks.py`; complete IPC snapshots under `src/domains`. |
 | R2 | Remove obsolete formal benchmark domains and generated-variant references. | Implemented | Generated-only formal domains are no longer in `src/domains`, the achievement registry, or current paper taxonomy rows. Deleted the unreferenced old external vocabulary adapter and the Blocks-only experiment wrapper in favor of the generic registry/script path. |
 | R3 | Keep mechanism tests independent of formal benchmark data. | Implemented | Resource-dependency tests now write temporary PDDL fixtures under `tmp_path`. |
-| R4 | Update registry, taxonomy, manifest, and AAMAS text to the 6-domain complete IPC corpus. | Implemented | `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, `paper_artifacts/final_paper_manifest.json`, and `latex_code/aamas_method_paper/sections/method.tex` / `evaluation.tex`. |
+| R4 | Update registry, taxonomy, manifest, and AAMAS text to the 8-domain complete IPC corpus. | Implemented | `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, `paper_artifacts/final_paper_manifest.json`, and `latex_code/aamas_method_paper/sections/method.tex` / `evaluation.tex`. |
 | R5 | Remove obsolete generated-result dependencies from the paper draft. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
 | R6 | Run tests and final config validation. | Implemented | `git diff --check` passes. Targeted paper/registry/generic-script tests pass with 13 tests. `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q` passes with 290 tests. `run_final_paper_data.py --config-only` renders the new registry configs. `--validate-only` still requires a regenerated `tmp/paper-final-latest/comparison.json`, which is outside this data migration. |
 | R7 | Commit and push the benchmark migration cleanup. | Implemented | Final legacy audit, tests, config validation, commit, and push are complete for the cleanup milestone. |

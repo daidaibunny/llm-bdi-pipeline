@@ -153,14 +153,16 @@
     }
   ],
   "domain_count_assessment": {
-    "current_strict_main_standard_domain_count": 6,
+    "current_strict_main_standard_domain_count": 8,
     "current_strict_main_standard_domains": [
       "gripper",
       "miconic",
+      "logistics",
       "barman",
       "childsnack",
       "visitall",
-      "blocks"
+      "blocks",
+      "depots"
     ],
     "current_nonstandard_mechanism_domain_count": 0,
     "current_nonstandard_mechanism_domains": [],
@@ -169,22 +171,24 @@
     "prior_broad_gp_domain_count_range": "6-13 standard domains for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
     "revision_needed_for_broad_gp_claim": false,
     "minimum_next_revision_target": {
-      "selected_standard_domain_count": 6,
+      "selected_standard_domain_count": 8,
       "required_families": [
-        "goal-separable or serialisable achievement classes: gripper and miconic",
+        "goal-separable or serialisable achievement classes: gripper, miconic, and logistics",
         "bounded-width sketchable subgoal-structure classes: barman, childsnack, and visitall",
-        "feature-definable goal-dependent construction classes: blocks"
+        "feature-definable goal-dependent construction classes: blocks and depots"
       ],
       "recommended_full_target": [
         "gripper",
         "miconic",
+        "logistics",
         "barman",
         "childsnack",
         "visitall",
-        "blocks"
+        "blocks",
+        "depots"
       ]
     },
-    "current_paper_positioning": "The benchmark infrastructure now targets six achievement-goal IPC domains materialized from complete official IPC directories. Strict ASL-library coverage remains an evaluation result to be established per split, but benchmark selection no longer depends on generated problem snapshots."
+    "current_paper_positioning": "The benchmark infrastructure now targets eight achievement-goal IPC domains materialized from complete official IPC directories. Strict ASL-library coverage remains an evaluation result to be established per split, but benchmark selection no longer depends on generated problem snapshots."
   },
   "goal_specification_layers": [
     {
@@ -209,13 +213,16 @@
   "selected_standard_domain_targets": [
     "gripper",
     "miconic",
+    "logistics",
     "barman",
     "childsnack",
     "visitall",
-    "blocks"
+    "blocks",
+    "depots"
   ],
   "paper_core_domains": [
-    "blocks"
+    "blocks",
+    "depots"
   ],
   "formal_properties": [
     {
@@ -225,7 +232,7 @@
       "literature_basis": [
         "Chen2026Moose"
       ],
-      "paper_use": "Selected-class and baseline property. It explains why Ferry, Gripper, and Miconic belong in the goal-separable and serialisable class, and why Blocksworld goal dependence should not be treated as MOOSE-friendly."
+      "paper_use": "Selected-class and baseline property. It explains why Ferry, Gripper, Miconic, and Logistics belong in the goal-separable and serialisable class, and why Blocksworld-style goal dependence should not be treated as MOOSE-friendly."
     },
     {
       "id": "bounded_width_sketch",
@@ -246,7 +253,7 @@
         "Frances2021LearningGeneralPolicies",
         "Bonet2024GeneralPoliciesWidth"
       ],
-      "paper_use": "Main Blocksworld justification. Prior work explicitly learns feature policies for clear(x), on(x,y), and full Blocksworld using features such as blocks above a target and well-placed blocks."
+      "paper_use": "Main construction-class justification. Prior work explicitly learns feature policies for clear(x), on(x,y), and full Blocksworld using features such as blocks above a target and well-placed blocks; Depots is selected as an IPC construction benchmark that combines transport-style location goals with Blocksworld-style crate stacking."
     },
     {
       "id": "program_or_decision_list_gp",
@@ -287,19 +294,22 @@
       ],
       "domain_examples": [
         "gripper",
-        "miconic"
+        "miconic",
+        "logistics"
       ],
       "target_paper_domains": [
         "gripper",
-        "miconic"
+        "miconic",
+        "logistics"
       ],
       "current_project_domains": [
         "gripper",
-        "miconic"
+        "miconic",
+        "logistics"
       ],
-      "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether compiled lifted ASL libraries cover the same goal-separable region used by MOOSE, PG3, D2L, and sketch-learning papers.",
+      "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether compiled lifted ASL libraries cover the same goal-separable or serialisable region used by MOOSE, PG3, D2L, and sketch-learning papers.",
       "current_evidence": [
-        "Complete IPC Gripper and Miconic directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits."
+        "Complete IPC Gripper, Miconic, and Logistics directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits."
       ],
       "support_level": "main_claim"
     },
@@ -342,7 +352,7 @@
     },
     {
       "id": "feature_definable_goal_dependent_construction_classes",
-      "name": "Feature-definable goal-dependent construction classes",
+      "name": "Feature-definable goal-dependent stacking and construction classes",
       "formal_membership": [
         "positive conjunctive achievement goals",
         "final goals can have strong causal dependency and cannot be achieved in arbitrary order",
@@ -356,17 +366,21 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
-        "blocks"
+        "blocks",
+        "depots"
       ],
       "target_paper_domains": [
-        "blocks"
+        "blocks",
+        "depots"
       ],
       "current_project_domains": [
-        "blocks"
+        "blocks",
+        "depots"
       ],
-      "paper_role": "Current strict main claim and selected property-defined class for the final broad evaluation. This class captures the strongest goal-dependency argument for lifted ASL modules.",
+      "paper_role": "Selected property-defined class for the final broad evaluation. This class captures the strongest goal-dependency argument for lifted ASL modules: construction goals where support, stacking, or carrier-resource structure constrains the order of atomic goals.",
       "current_evidence": [
-        "The complete IPC Blocks directory is materialized from potassco/pddl-instances as the goal-dependent construction domain."
+        "Complete IPC Blocks and Depots directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits.",
+        "Blocks supplies the canonical feature-definable Blocksworld construction class; Depots supplies an IPC construction benchmark combining transport goals with Blocksworld-style crate stacking."
       ],
       "support_level": "main_claim"
     }
@@ -377,8 +391,7 @@
       "domains": [
         "transport",
         "rovers",
-        "marsrover",
-        "logistics"
+        "marsrover"
       ],
       "reason": "These domains require route planning, ranking, transitive closure, or multi-carrier location reasoning beyond the current safe lifted feature-binding contract. MOOSE also removes path-finding components from Rovers and Transport for its main goal-regression setting.",
       "current_project_domains": [],

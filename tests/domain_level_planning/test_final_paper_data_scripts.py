@@ -24,10 +24,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SELECTED_BENCHMARK_DOMAINS = {
 	"gripper",
 	"miconic",
+	"logistics",
 	"childsnack",
 	"barman",
 	"visitall",
 	"blocks",
+	"depots",
 }
 BENCHMARK_SOURCE_COMMIT = "cf19edf7c53d1540ddbb396c642595e0926ee552"
 BENCHMARK_SOURCE_URL = "https://github.com/potassco/pddl-instances"
@@ -357,10 +359,10 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	assert "runtime full-trace planning" in taxonomy["claim_statement"]
 	assert "potassco/pddl-instances" in taxonomy["selection_principle"]
 	assert "floor(2/3 * N)" in taxonomy["selection_principle"]
-	assert taxonomy["paper_core_domains"] == ["blocks"]
+	assert taxonomy["paper_core_domains"] == ["blocks", "depots"]
 	assert taxonomy["domain_count_assessment"][
 		"current_strict_main_standard_domain_count"
-	] == 6
+	] == 8
 	assert taxonomy["domain_count_assessment"][
 		"revision_needed_for_broad_gp_claim"
 	] is False
@@ -368,7 +370,7 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
 			"selected_standard_domain_count"
 		]
-		== 6
+		== 8
 	)
 	assert taxonomy["selected_domain_class_count"] == 3
 	assert taxonomy["selected_goal_specification_layer_count"] == 2
@@ -507,13 +509,13 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"feature_definable_goal_dependent_construction_classes"
 	][
 		"current_project_domains"
-	] == ["blocks"]
+	] == ["blocks", "depots"]
 	assert classes_by_id[
 		"feature_definable_goal_dependent_construction_classes"
-	]["target_paper_domains"] == ["blocks"]
+	]["target_paper_domains"] == ["blocks", "depots"]
 	assert classes_by_id[
 		"goal_separable_serialisable_achievement_classes"
-	]["current_project_domains"] == ["gripper", "miconic"]
+	]["current_project_domains"] == ["gripper", "miconic", "logistics"]
 	assert classes_by_id[
 		"bounded_width_sketchable_subgoal_structure_classes"
 	]["current_project_domains"] == ["barman", "childsnack", "visitall"]
@@ -552,7 +554,7 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 	assert registry.control["future_goal_specification_layers"] == [
 		"temporal_extended_goal_layer",
 	]
-	assert len(registry.selected_records()) == 6
+	assert len(registry.selected_records()) == 8
 	assert {
 		record.domain_id for record in registry.selected_records()
 	} == set(taxonomy["selected_standard_domain_targets"])
@@ -570,6 +572,7 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 		"goal_separable_serialisable_achievement_classes": {
 			"gripper",
 			"miconic",
+			"logistics",
 		},
 		"bounded_width_sketchable_subgoal_structure_classes": {
 			"childsnack",
@@ -578,6 +581,7 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 		},
 		"feature_definable_goal_dependent_construction_classes": {
 			"blocks",
+			"depots",
 		},
 	}
 
