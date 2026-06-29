@@ -174,6 +174,7 @@ def collect_training_transition_evidence(
 ) -> TrainingTransitionEvidence:
 	"""Explore a small grounded transition system and extract goal-order evidence."""
 
+	problem = problem_with_domain_constants(problem, domain)
 	ground_actions = ground_actions_for_problem(
 		domain.actions,
 		problem,
@@ -257,6 +258,7 @@ def collect_training_transition_evidence_from_plan(
 	state, so stale or invalid planner output cannot silently justify ASL rules.
 	"""
 
+	problem = problem_with_domain_constants(problem, domain)
 	ground_actions = ground_actions_for_problem(
 		domain.actions,
 		problem,
@@ -372,6 +374,7 @@ def reachable_states_for_problem(
 ) -> frozenset[State]:
 	"""Enumerate the bounded reachable STRIPS states for one grounded problem."""
 
+	problem = problem_with_domain_constants(problem, domain)
 	ground_actions = ground_actions_for_problem(
 		domain.actions,
 		problem,
@@ -396,6 +399,34 @@ def reachable_states_for_problem(
 				)
 			queue.append(next_state)
 	return frozenset(visited)
+
+
+def problem_with_domain_constants(
+	problem: PDDLProblem,
+	domain: PDDLDomain,
+) -> PDDLProblem:
+	"""Return a problem object universe augmented with PDDL domain constants."""
+
+	constants = tuple(getattr(domain, "constants", ()) or ())
+	if not constants:
+		return problem
+	objects = list(problem.objects)
+	object_types = dict(problem.object_types)
+	for constant in constants:
+		if constant not in objects:
+			objects.append(constant)
+		if constant not in object_types:
+			object_types[constant] = str(
+				getattr(domain, "constant_types", {}).get(constant, "object"),
+			)
+	return PDDLProblem(
+		name=problem.name,
+		domain_name=problem.domain_name,
+		objects=objects,
+		object_types=object_types,
+		init_facts=problem.init_facts,
+		goal_facts=problem.goal_facts,
+	)
 
 
 def satisfies_atoms(state: State, atoms: tuple[str, ...]) -> bool:

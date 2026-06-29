@@ -658,6 +658,9 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 		assert experiment["train_glob"] == "*.pddl"
 		assert experiment["eval_glob"] == "*.pddl"
 		assert experiment["synthesis_profile"] == "bootstrap"
+		assert experiment["use_synthesis_planner_traces"] is True
+		assert experiment["synthesis_planner_executable"] == "fast-downward/fast-downward.py"
+		assert experiment["synthesis_planner_timeout_seconds"] == 60
 	assert ablation["experiments"] == []
 	assert limitation["experiments"] == []
 

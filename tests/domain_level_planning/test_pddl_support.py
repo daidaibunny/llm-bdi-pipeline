@@ -52,6 +52,20 @@ def test_pddl_support_report_accepts_metric_only_action_costs(tmp_path: Path) ->
 	assert ":action-costs" in serialized["supported_requirement_set"]
 
 
+def test_pddl_support_accepts_forward_referenced_type_parents(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_forward_referenced_type_domain_and_problem(
+		tmp_path,
+	)
+
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+
+	assert serialized["is_compilable"] is True
+	assert serialized["unsupported_reasons"] == []
+
+
 def test_compilable_pddl_support_rejects_conditional_effects(tmp_path: Path) -> None:
 	domain_file, problem_file = _write_minimal_strips_domain_and_problem(
 		tmp_path,
@@ -262,6 +276,43 @@ def _write_hyphenated_symbol_domain_and_problem(tmp_path: Path) -> tuple[Path, P
 		 (:objects a)
 		 (:init (needs-ready a))
 		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_forward_referenced_type_domain_and_problem(
+	tmp_path: Path,
+) -> tuple[Path, Path]:
+	domain_file = tmp_path / "forward-type-domain.pddl"
+	problem_file = tmp_path / "forward-type-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain forward-types)
+		 (:requirements :strips :typing)
+		 (:types truck airplane - vehicle package vehicle - physobj physobj - object)
+		 (:predicates
+		  (at ?x - physobj)
+		  (loaded ?p - package ?v - vehicle)
+		 )
+		 (:action load
+		  :parameters (?p - package ?v - vehicle)
+		  :precondition (at ?p)
+		  :effect (loaded ?p ?v)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p1)
+		 (:domain forward-types)
+		 (:objects p0 - package t0 - truck)
+		 (:init (at p0) (at t0))
+		 (:goal (and (loaded p0 t0)))
 		)
 		""",
 		encoding="utf-8",

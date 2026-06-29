@@ -207,6 +207,28 @@ def test_training_evidence_can_be_built_from_offline_planner_trace() -> None:
 	assert evidence.to_dict()["evidence_source"] == "offline_planner_trace"
 
 
+def test_offline_planner_trace_can_use_domain_constants(tmp_path: Path) -> None:
+	domain_file, problem_file = _write_domain_with_constant_location(tmp_path)
+	domain = PDDLParser.parse_domain(domain_file)
+	problem = PDDLParser.parse_problem(problem_file)
+
+	evidence = collect_training_transition_evidence_from_plan(
+		domain,
+		problem,
+		(
+			LowLevelAction("move", ("tray1", "kitchen", "table1")),
+		),
+		evidence_source="offline_planner_trace",
+	)
+
+	assert evidence.evidence_source == "offline_planner_trace"
+	assert evidence.plan_actions[0].signature() == "move(tray1, kitchen, table1)"
+	assert any(
+		literal.predicate == "at" and literal.arguments == ("tray1", "table1")
+		for literal in evidence.plan_actions[0].add_effects
+	)
+
+
 def test_transition_system_evaluates_equality_preconditions_and_ignores_numeric_effects(
 	tmp_path: Path,
 ) -> None:
@@ -274,6 +296,42 @@ def _write_distinct_metric_domain(tmp_path: Path) -> tuple[Path, Path]:
 		 (:init (ready a) (ready b) (= (total-cost) 0))
 		 (:goal (and (done a b)))
 		 (:metric minimize (total-cost))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_domain_with_constant_location(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "constant-location-domain.pddl"
+	problem_file = tmp_path / "constant-location-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain constant-location)
+		 (:requirements :strips :typing)
+		 (:types tray place)
+		 (:constants kitchen - place)
+		 (:predicates
+		  (at ?t - tray ?p - place)
+		  (served ?t - tray)
+		 )
+		 (:action move
+		  :parameters (?t - tray ?from ?to - place)
+		  :precondition (at ?t ?from)
+		  :effect (and (not (at ?t ?from)) (at ?t ?to))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem constant-location-p1)
+		 (:domain constant-location)
+		 (:objects tray1 - tray table1 - place)
+		 (:init (at tray1 kitchen))
+		 (:goal (and (at tray1 table1)))
 		)
 		""",
 		encoding="utf-8",

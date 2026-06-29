@@ -18,9 +18,12 @@
       "preset_tags": [
         "paper-expanded-smoke"
       ],
+      "synthesis_planner_executable": "fast-downward/fast-downward.py",
+      "synthesis_planner_timeout_seconds": 60,
       "synthesis_profile": "bootstrap",
-      "timeout_seconds": 180,
-      "train_problem_set": "train"
+      "timeout_seconds": 1800,
+      "train_problem_set": "train",
+      "use_synthesis_planner_traces": true
     },
     {
       "ablation_label": "miconic_ipc_full_main",
@@ -31,9 +34,12 @@
       "max_steps": 10000,
       "name": "miconic-ipc-full-main",
       "order": 100,
+      "synthesis_planner_executable": "fast-downward/fast-downward.py",
+      "synthesis_planner_timeout_seconds": 60,
       "synthesis_profile": "bootstrap",
-      "timeout_seconds": 180,
-      "train_problem_set": "train"
+      "timeout_seconds": 1800,
+      "train_problem_set": "train",
+      "use_synthesis_planner_traces": true
     }
   ],
   "goal_specification_layer": "achievement_goal_layer",

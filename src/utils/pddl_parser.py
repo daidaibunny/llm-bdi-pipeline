@@ -48,6 +48,8 @@ class PDDLDomain:
 	name: str
 	requirements: List[str]
 	types: List[str]
+	constants: List[str]
+	constant_types: Dict[str, str]
 	predicates: List[PDDLPredicate]
 	actions: List[PDDLAction]
 
@@ -74,10 +76,13 @@ class PDDLParser:
 		domain_name = _canonical_symbol(
 			domain_name_match.group(1) if domain_name_match else "unknown",
 		)
+		constants, constant_types = _extract_domain_constants(content)
 		return PDDLDomain(
 			name=domain_name,
 			requirements=_extract_simple_list_block(content, "requirements"),
 			types=_extract_simple_list_block(content, "types"),
+			constants=constants,
+			constant_types=constant_types,
 			predicates=_extract_predicates(content),
 			actions=_extract_actions(content),
 		)
@@ -194,11 +199,22 @@ def _extract_keyword_expression(block: str, keyword: str) -> str:
 
 
 def _extract_problem_objects(content: str) -> tuple[List[str], Dict[str, str]]:
-	start = _find_block_start(content, "objects")
+	return _extract_typed_name_block(content, "objects")
+
+
+def _extract_domain_constants(content: str) -> tuple[List[str], Dict[str, str]]:
+	return _extract_typed_name_block(content, "constants")
+
+
+def _extract_typed_name_block(
+	content: str,
+	block_name: str,
+) -> tuple[List[str], Dict[str, str]]:
+	start = _find_block_start(content, block_name)
 	if start == -1:
 		return [], {}
 	end = _find_matching_paren(content, start)
-	tokens = content[start + len("(:objects") : end].split()
+	tokens = content[start + len(f"(:{block_name}") : end].split()
 	objects: List[str] = []
 	object_types: Dict[str, str] = {}
 	pending: List[str] = []
@@ -251,7 +267,7 @@ def _parse_fact_expressions(expressions: List[str]) -> List[PDDLFact]:
 		text = expression.strip()
 		if not text or not text.startswith("("):
 			continue
-		if text.lower().startswith("(not"):
+		if _is_negated_fact_expression(text):
 			inner_start = text.find("(", 1)
 			inner_end = _find_matching_paren(text, inner_start)
 			parsed = _parse_positive_fact(text[inner_start:inner_end + 1])
@@ -273,6 +289,11 @@ def _parse_positive_fact(expression: str) -> PDDLFact | None:
 		args=[_canonical_symbol(token) for token in tokens[1:]],
 		is_positive=True,
 	)
+
+
+def _is_negated_fact_expression(expression: str) -> bool:
+	tokens = expression.strip("() \n\t").split(maxsplit=1)
+	return bool(tokens) and _canonical_symbol(tokens[0]) == "not"
 
 
 def _top_level_expressions(text: str) -> List[str]:

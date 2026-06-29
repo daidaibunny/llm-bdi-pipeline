@@ -70,9 +70,28 @@ Total selected IPC domains: 8. Instance counts are domain-specific:
 | R2 | Remove obsolete formal benchmark domains and generated-variant references. | Implemented | Generated-only formal domains are no longer in `src/domains`, the achievement registry, or current paper taxonomy rows. Deleted the unreferenced old external vocabulary adapter and the Blocks-only experiment wrapper in favor of the generic registry/script path. |
 | R3 | Keep mechanism tests independent of formal benchmark data. | Implemented | Resource-dependency tests now write temporary PDDL fixtures under `tmp_path`. |
 | R4 | Update registry, taxonomy, manifest, and AAMAS text to the 8-domain complete IPC corpus. | Implemented | `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, `paper_artifacts/final_paper_manifest.json`, and `latex_code/aamas_method_paper/sections/method.tex` / `evaluation.tex`. |
-| R5 | Remove obsolete generated-result dependencies from the paper draft. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
-| R6 | Run tests and final config validation. | Implemented | `git diff --check` passes. Targeted paper/registry/generic-script tests pass with 13 tests. `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q` passes with 290 tests. `run_final_paper_data.py --config-only` renders the new registry configs. `--validate-only` still requires a regenerated `tmp/paper-final-latest/comparison.json`, which is outside this data migration. |
-| R7 | Commit and push the benchmark migration cleanup. | Implemented | Final legacy audit, tests, config validation, commit, and push are complete for the cleanup milestone. |
+| R5 | Use full IPC splits without bounded-state explosion in synthesis setup. | Implemented | Main and expanded-smoke registry rows now enable synthesis-time Fast Downward trace fallback with `runtime_full_trace_planner=false`. `run_final_paper_data.py --config-only` renders 8 main rows with `use_synthesis_planner_traces=true`. |
+| R6 | Support IPC parser constructs exposed by the 8-domain corpus. | Implemented | Added generic support for PDDL predicates whose names start with `not`, forward-referenced typed parent declarations during Tarski validation, and domain `:constants`. All 8 selected domains pass lightweight parser/support sweep. |
+| R7 | Remove obsolete generated-result dependencies from the paper draft. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
+| R8 | Run tests and final config validation. | Implemented | Targeted regressions pass. `run_final_paper_data.py --config-only` renders the new registry configs. `--validate-only` still requires a regenerated `tmp/paper-final-latest/comparison.json`, which is outside this data migration. |
+| R9 | Commit and push the benchmark infrastructure cleanup. | Implemented | Full pytest, config render, representative smoke, commit, and push are complete for this milestone. |
+
+## Current Evidence Snapshot
+
+Latest lightweight checks:
+
+| Check | Result |
+| --- | --- |
+| 8-domain parser/support sweep | All selected domains compile under the supported PDDL fragment for the first training problem. |
+| Final config render | 8 main experiments generated; each uses offline synthesis planner traces and the project Fast Downward executable. |
+| Representative trace smoke | `gripper` 1/1, `blocks` 0/1 due held-out execution timeout, `childsnack` 0/1 due missing `served` strategy; all three rows now synthesize a library without matrix failure. |
+
+Interpretation:
+
+- The latest fixes close infrastructure-level PDDL and benchmark-profile blockers.
+- Remaining failures are now learning/execution coverage gaps: stronger Layer B
+  modules for resource-production domains such as Childsnack, and stronger
+  Layer C/execution scaling for larger held-out Blocks instances.
 
 ## Commands
 

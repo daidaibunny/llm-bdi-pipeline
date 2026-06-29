@@ -15,6 +15,7 @@ from utils.pddl_parser import PDDLParser
 
 from .pddl_types import object_type_atoms
 from .goal_mutex import GoalMutexDiagnostic, schema_goal_mutexes
+from .transition_system import problem_with_domain_constants
 
 
 @dataclass(frozen=True)
@@ -43,14 +44,15 @@ def evaluate_library_on_problem(
 
 	problem = PDDLParser.parse_problem(problem_file)
 	simulator = STRIPSStateSimulator(str(domain_file))
+	problem_with_constants = problem_with_domain_constants(problem, simulator.domain)
 	initial_state = frozenset(
 		(
 			*(
 				fact_to_signature(fact)
-				for fact in problem.init_facts
+				for fact in problem_with_constants.init_facts
 				if fact.is_positive
 			),
-			*object_type_atoms(problem, simulator.domain.types),
+			*object_type_atoms(problem_with_constants, simulator.domain.types),
 		),
 	)
 	goal_beliefs = tuple(

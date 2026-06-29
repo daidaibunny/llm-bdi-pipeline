@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 from plan_library.rendering import sanitize_identifier
 from tarski.io import PDDLReader
@@ -264,9 +264,8 @@ def inspect_pddl_support(
 
 def _validate_with_tarski(domain_file: Path, problem_files: tuple[Path, ...]) -> None:
 	try:
-		domain_text = _normalize_definition_name_for_tarski(
+		domain_text = _normalize_domain_for_tarski(
 			_strip_comments(domain_file.read_text(encoding="utf-8")),
-			kind="domain",
 		)
 		if problem_files:
 			for problem_file in problem_files:
@@ -283,6 +282,14 @@ def _validate_with_tarski(domain_file: Path, problem_files: tuple[Path, ...]) ->
 			reader.parse_domain_string(domain_text)
 	except Exception as error:
 		raise ValueError(f"PDDL syntax validation failed: {error}") from error
+
+
+def _normalize_domain_for_tarski(text: str) -> str:
+	"""Normalize IPC syntax variants that are valid PDDL but strict Tarski rejects."""
+
+	return _normalize_type_declaration_order_for_tarski(
+		_normalize_definition_name_for_tarski(text, kind="domain"),
+	)
 
 
 def _normalize_definition_name_for_tarski(text: str, *, kind: str) -> str:
@@ -304,6 +311,85 @@ def _normalize_definition_name_for_tarski(text: str, *, kind: str) -> str:
 		count=1,
 		flags=re.IGNORECASE,
 	)
+
+
+def _normalize_type_declaration_order_for_tarski(text: str) -> str:
+	"""Declare parent types before child types for strict Tarski validation.
+
+	Some IPC domains use a compact typed list where a type is referenced as a
+	parent before that parent appears later in the same `:types` block. PDDL
+	allows this declaration style, but Tarski validates the block sequentially.
+	The rewrite is used only for syntax validation; the repository snapshot and
+	project parser keep the original PDDL text.
+	"""
+
+	block = _keyword_block(text, "types")
+	if block is None:
+		return text
+	tokens = block[len("(:types") : -1].split()
+	groups = _type_declaration_groups(tokens)
+	if not groups:
+		return text
+	parent_by_type = {
+		child: parent
+		for children, parent in groups
+		for child in children
+		if child != "object"
+	}
+	children_by_parent: dict[str, list[str]] = {}
+	for children, parent in groups:
+		bucket = children_by_parent.setdefault(parent, [])
+		for child in children:
+			if child == "object" or child in bucket:
+				continue
+			bucket.append(child)
+	ordered_parents = sorted(
+		children_by_parent,
+		key=lambda parent: (_type_depth(parent, parent_by_type), parent),
+	)
+	parts: list[str] = []
+	for parent in ordered_parents:
+		children = children_by_parent[parent]
+		if not children:
+			continue
+		parts.append(f"{' '.join(children)} - {parent}")
+	normalized_block = f"(:types {' '.join(parts)})"
+	return text.replace(block, normalized_block, 1)
+
+
+def _type_declaration_groups(tokens: Sequence[str]) -> tuple[tuple[tuple[str, ...], str], ...]:
+	groups: list[tuple[tuple[str, ...], str]] = []
+	pending: list[str] = []
+	index = 0
+	while index < len(tokens):
+		token = tokens[index].lower()
+		if token == "-" and index + 1 < len(tokens):
+			parent = tokens[index + 1].lower()
+			if pending:
+				groups.append((tuple(dict.fromkeys(pending)), parent))
+			pending = []
+			index += 2
+			continue
+		pending.append(token)
+		index += 1
+	if pending:
+		groups.append((tuple(dict.fromkeys(pending)), "object"))
+	return tuple(groups)
+
+
+def _type_depth(type_name: str, parent_by_type: Mapping[str, str]) -> int:
+	if type_name == "object":
+		return 0
+	depth = 1
+	current = type_name
+	seen: set[str] = set()
+	while current in parent_by_type and current not in seen:
+		seen.add(current)
+		current = parent_by_type[current]
+		if current == "object":
+			return depth
+		depth += 1
+	return depth
 
 
 def _requirements(domain_text: str) -> tuple[str, ...]:
