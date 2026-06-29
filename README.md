@@ -1,104 +1,77 @@
 # LLM BDI Pipeline
 
-This project generates high-level AgentSpeak(L) plan libraries from persisted LTLf
-temporal specifications and PDDL benchmark domains.
+This project studies domain-level lifted AgentSpeak(L) plan-library synthesis
+from PDDL achievement-goal benchmark domains, with a future temporal layer where
+persisted LTLf specifications compile to DFA controllers above the learned
+achievement-goal library.
 
-The current architecture has two explicit levels:
+The current architecture has two research-facing levels:
 
-- High level: use the stored LTLf formula for each benchmark query, compile it to
-  a DFA with `ltlf2dfa`, analyze which outgoing transitions can still reach an
-  accepting state, and render those progress transitions as context-selected
-  `+!g` AgentSpeak(L) plans.
-- Low level: each generated transition target is compiled into a PDDL goal
-  problem. Fast Downward finds the primitive action trace, and those actions are
-  rendered directly in the AgentSpeak(L) plan body when the driver is available.
+- Achievement-goal library synthesis: parse a PDDL domain and training
+  problems, generate lifted Layer B predicate-goal modules and Layer C
+  conjunctive-goal composition rules, compile them into AgentSpeak(L), and
+  validate on held-out problems without runtime full-trace planning.
+- Temporal extended-goal control: use stored LTLf formulas from
+  `src/benchmark_data/queries_LTLf.json`, compile them to DFA controllers, and
+  dispatch each DFA transition guard to the achievement-goal library. This layer
+  is not the current formal benchmark scope.
 
 ## Core Flow
 
-1. Load a PDDL domain from `src/domains/<domain>/domain.pddl`.
-2. Load stored query records from `src/benchmark_data/queries_LTLf.json`.
-3. Compile each stored LTLf formula into a DFA.
-4. Convert transition labels to AgentSpeak(L) plan contexts without exposing
-   internal `dfa_state(...)` beliefs.
-5. Compile each transition target context into a PDDL goal problem and ask Fast
-   Downward for a low-level trace.
-6. Persist:
-   - `plan_library.json`
-   - `plan_library.asl`
-   - `dfa_metadata.json`
-   - `generation_summary.json`
-   - `library_validation.json`
+1. Load the achievement-goal benchmark registry from
+   `src/benchmark_registry/achievement_goals`.
+2. Load a selected IPC PDDL domain from `src/domains/<domain>/domain.pddl`.
+3. Use the domain's `train` split for synthesis evidence and the `test` split
+   as held-out goal-specification problems.
+4. Compile selected lifted rules into an AgentSpeak(L) library whose plan heads
+   are PDDL predicate goals such as `+!clear(X)` or `+!on(X,Y)`.
+5. Validate generated libraries without runtime full-trace planning.
 
-All generated high-level plans use `!g` as the entrypoint. Transition plans run
-their primitive action trace and recurse to `!g`; accepting-context plans
-terminate.
+Generated domain-level libraries use `!g` as the top-level composer entry point
+and must not emit synthetic achievement names such as `achieve_*`,
+`transition_*`, or exposed `dfa_state(...)` beliefs.
 
-## Low-Level Planning
+## Planner Use
 
-Fast Downward is invoked through its `fast-downward.py` driver. The default
-configuration uses `--alias lama-first`; pass `--fast-downward` to point at a
-local driver explicitly.
-
-```bash
-uv run python src/main.py generate-library \
-  --domain-file ./src/domains/blocksworld/domain.pddl \
-  --query-domain blocksworld \
-  --query-id query_1 \
-  --fast-downward /path/to/fast-downward.py
-```
-
-For debugging or for environments without Fast Downward installed, use:
-
-```bash
-uv run python src/main.py generate-library \
-  --domain-file ./src/domains/blocksworld/domain.pddl \
-  --query-domain blocksworld \
-  --query-id query_1 \
-  --disable-low-level-planning
-```
-
-Fast Downward's official usage documentation is at
-https://www.fast-downward.org/latest/documentation/planner-usage/. Its landmark
-factory documentation, including HPS, RHW, and Zhu/Givan landmarks, is at
-https://www.fast-downward.org/latest/documentation/search/LandmarkFactory/.
+Classical planners are allowed during offline synthesis, trace-evidence
+generation, counterexample analysis, and baseline evaluation. They are not the
+runtime low-level method for the final domain-level library claim.
 
 ## Benchmarks
 
-Benchmark files are PDDL:
+Formal achievement-goal benchmarks are complete IPC PDDL directories
+materialized from `potassco/pddl-instances` at commit
+`cf19edf7c53d1540ddbb396c642595e0926ee552`.
 
-- `src/domains/blocksworld`
-- `src/domains/marsrover`
-- `src/domains/satellite`
-- `src/domains/transport`
+Selected domains:
 
-The stored LTLf formulas are not regenerated during plan-library generation.
-Stored benchmark temporal atoms are mapped to PDDL fluents, for example:
+- `barman`
+- `blocks`
+- `childsnack`
+- `gripper`
+- `miconic`
+- `visitall`
 
-- `do_put_on(x, y)` -> `on(x, y)`
-- `get_soil_data(w)` -> `communicated_soil_data(w)`
-- `do_observation(d, m)` -> `have_image(d, m)`
-- `deliver(p, l)` -> `at(p, l)`
+Each selected domain has `domain.pddl`, `train`, `test`, and `source.json`
+under `src/domains/<domain>`. The train split is `floor(2/3 * N)` instances and
+the remaining instances are held out.
 
 ## Usage
 
 ```bash
-uv run python src/main.py generate-library \
-  --domain-file ./src/domains/blocksworld/domain.pddl \
-  --query-domain blocksworld \
-  --query-id query_1
+uv run python scripts/run_final_paper_data.py \
+  --output-dir tmp/paper-final-latest \
+  --config-only
 ```
-
-The default output root is `artifacts/plan_library/<domain>`.
 
 ## Development
 
 Run focused tests:
 
 ```bash
-uv run pytest \
-  tests/utils/test_pddl_parser.py \
-  tests/temporal_specification/test_pddl_mapping.py \
-  tests/temporal_specification/test_validation.py \
-  tests/low_level_planning \
-  tests/plan_library
+PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q
+
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py \
+  --output-dir tmp/paper-final-latest \
+  --config-only
 ```

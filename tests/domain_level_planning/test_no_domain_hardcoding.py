@@ -57,3 +57,51 @@ def test_paper_experiment_scripts_use_registry_instead_of_embedded_domain_rows()
 				violations.append(f"{path.name}:{token}")
 
 	assert violations == []
+
+
+def test_obsolete_generated_benchmark_implementation_names_are_absent() -> None:
+	"""Deprecated generated benchmark artifacts should not re-enter current code."""
+
+	forbidden_tokens = (
+		"blocksworld_qclear",
+		"blocksworld_qon",
+		"blocksworld_qbw",
+		"run_blocks_train_experiment",
+		"learner_sketches_blocksworld_blocks_4_on_2",
+		"/".join(("src", "domains", "blocksworld")),
+		"/".join(("src", "domains", "marsrover")),
+		"/".join(("src", "domains", "satellite")),
+		"/".join(("src", "domains", "transport")),
+		"fixed train/test snapshot",
+	)
+	scan_roots = (
+		PROJECT_ROOT / "README.md",
+		PROJECT_ROOT / "TO-DO-LIST.md",
+		PROJECT_ROOT / "scripts",
+		PROJECT_ROOT / "src",
+		PROJECT_ROOT / "tests",
+		PROJECT_ROOT / "latex_code" / "aamas_method_paper" / "sections",
+		PROJECT_ROOT / "paper_artifacts",
+	)
+	suffixes = {".bib", ".json", ".md", ".py", ".tex", ".txt"}
+
+	paths: list[Path] = []
+	for root in scan_roots:
+		if root.is_file():
+			paths.append(root)
+		else:
+			paths.extend(path for path in root.rglob("*") if path.is_file())
+
+	violations: list[str] = []
+	for path in paths:
+		if path == Path(__file__).resolve():
+			continue
+		if path.suffix and path.suffix.lower() not in suffixes:
+			continue
+		relative = path.relative_to(PROJECT_ROOT)
+		text = path.read_text(encoding="utf-8", errors="ignore")
+		for token in forbidden_tokens:
+			if token in text or token in str(relative):
+				violations.append(f"{relative}:{token}")
+
+	assert violations == []

@@ -366,27 +366,12 @@
       ],
       "paper_role": "Current strict main claim and selected property-defined class for the final broad evaluation. This class captures the strongest goal-dependency argument for lifted ASL modules.",
       "current_evidence": [
-        "The complete IPC Blocks directory is materialized from potassco/pddl-instances as the goal-dependent construction domain.",
-        "Blocksworld qclear, qon, and qbw remain prior-work problem-family tags, not separate formal IPC domain directories in this corpus."
+        "The complete IPC Blocks directory is materialized from potassco/pddl-instances as the goal-dependent construction domain."
       ],
       "support_level": "main_claim"
     }
   ],
   "excluded_or_boundary_domains": [
-    {
-      "id": "generated_variant_source_boundary",
-      "domains": [
-        "ferry",
-        "spanner",
-        "delivery",
-        "blocksworld_qclear",
-        "blocksworld_qon",
-        "blocksworld_qbw"
-      ],
-      "reason": "These were useful prior generated or problem-family variants, but they are not counted in the strict complete-IPC corpus because the current data policy requires one complete IPC directory per selected domain from potassco/pddl-instances.",
-      "current_project_domains": [],
-      "current_evidence": []
-    },
     {
       "id": "reachability_route_boundary",
       "domains": [

@@ -96,7 +96,7 @@ def _minimal_artifact_manifest(
 				"runtime_planner": "offline_baseline_only",
 			},
 			{
-				"macro_id": "blocks_train_raw_policy_audit",
+				"macro_id": "blocks_external_policy_audit",
 				"solved": "0/2",
 				"runtime_planner": "not_runtime_executed",
 			},
@@ -176,8 +176,8 @@ def _write_minimal_validated_package(
 			},
 			{
 				"row_type": "baseline",
-				"label": "raw_blocks_4_on_2_policy_audit",
-				"macro_id": "blocks_train_raw_policy_audit",
+				"label": "raw_external_policy_audit",
+				"macro_id": "blocks_external_policy_audit",
 				"solved": "0/2",
 				"coverage_percent": 0.0,
 				"runtime_planner": "not_runtime_executed",
@@ -800,8 +800,8 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			},
 			{
 				"row_type": "baseline",
-				"label": "raw_blocks_4_on_2_policy_audit",
-				"macro_id": "blocks_train_raw_policy_audit",
+				"label": "raw_external_policy_audit",
+				"macro_id": "blocks_external_policy_audit",
 				"solved": "0/2",
 				"coverage_percent": 0.0,
 				"runtime_planner": "not_runtime_executed",

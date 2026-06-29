@@ -160,10 +160,10 @@ into a lifted \asl{} library.
 		Class & Selected domains or problem classes \\
 		\midrule
 		Goal-separable and serialisable achievement classes &
-		Gripper, Ferry, and Miconic, following MOOSE's TGI/SGI/OGI distinction
+		Gripper and Miconic, following MOOSE's TGI/SGI/OGI distinction
 		and executable-policy benchmarks in PG3 and D2L. \\
 		Bounded-width sketchable subgoal-structure classes &
-		Spanner, Childsnack, Barman, Visitall, and Delivery, following
+		Barman, Childsnack, and Visitall, following
 		learned-sketch and subgoal-structure evaluations of well-formed sketches
 		with small sketch width. \\
 		Feature-definable goal-dependent construction classes &
@@ -179,11 +179,11 @@ goal-separable or serialisable class it may reduce to unsatisfied-goal
 dispatch; in bounded-width sketchable classes it must preserve the selected
 subgoal structure; and in Blocksworld-style construction classes it must encode
 the support agenda implicit in feature-definable construction policies, such as
-placing lower tower links before upper links. The selected Blocksworld problem
-classes are materialized as \texttt{blocksworld\_qclear},
-\texttt{blocksworld\_qon}, and \texttt{blocksworld\_qbw}; they are counted as
-separate problem-class rows because each has its own fixed train/test snapshot
-and provenance record. Transport, Rovers, Marsrover,
+placing lower tower links before upper links. The selected Blocksworld
+construction benchmark is materialized as the complete IPC \texttt{blocks}
+directory from the unified benchmark source, with its deterministic
+\(\lfloor 2N/3 \rfloor\) train split and held-out goal-specification split.
+Transport, Rovers, Marsrover,
 Logistics, Satellite, numeric domains, and unselected program-synthesis
 benchmarks are boundary or excluded cases unless their required route,
 transitive-closure, resource-instrument, or numeric semantics are safely bound.
