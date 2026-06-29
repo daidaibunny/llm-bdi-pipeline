@@ -43,14 +43,14 @@ Formal achievement-goal benchmarks are complete IPC PDDL directories
 materialized from `potassco/pddl-instances` at commit
 `cf19edf7c53d1540ddbb396c642595e0926ee552`.
 
-Selected domains:
+The current benchmark taxonomy has three property-defined classes and eight
+selected IPC domains:
 
-- `barman`
-- `blocks`
-- `childsnack`
-- `gripper`
-- `miconic`
-- `visitall`
+| Class | Domains | Purpose |
+| --- | --- | --- |
+| Goal-separable and serialisable achievement classes | `gripper`, `miconic`, `logistics` | Aligns with MOOSE-style goal independence and serialisable goal achievement. |
+| Bounded-width sketchable subgoal-structure classes | `barman`, `childsnack`, `visitall` | Aligns with policy-sketch and bounded sketch-width subgoal decomposition work. |
+| Feature-definable goal-dependent construction classes | `blocks`, `depots` | Tests goal dependency where atomic goals cannot be achieved in arbitrary order. |
 
 Each selected domain has `domain.pddl`, `train`, `test`, and `source.json`
 under `src/domains/<domain>`. The train split is `floor(2/3 * N)` instances and
