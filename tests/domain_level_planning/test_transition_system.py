@@ -18,8 +18,8 @@ from utils.pddl_parser import PDDLParser
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl"
-BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "train" / "p001.pddl"
+BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocks" / "train" / "instance-1.pddl"
 
 
 def test_training_evidence_slices_non_goal_atomic_achievements() -> None:

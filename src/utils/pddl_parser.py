@@ -71,7 +71,9 @@ class PDDLParser:
 	def parse_domain(file_path: str | Path) -> PDDLDomain:
 		content = _strip_comments(Path(file_path).read_text(encoding="utf-8"))
 		domain_name_match = re.search(r"\(define\s+\(domain\s+([^\s)]+)\)", content, re.IGNORECASE)
-		domain_name = domain_name_match.group(1) if domain_name_match else "unknown"
+		domain_name = _canonical_symbol(
+			domain_name_match.group(1) if domain_name_match else "unknown",
+		)
 		return PDDLDomain(
 			name=domain_name,
 			requirements=_extract_simple_list_block(content, "requirements"),
@@ -87,8 +89,16 @@ class PDDLParser:
 		domain_name_match = re.search(r"\(:domain\s+([^\s)]+)\)", content, re.IGNORECASE)
 		objects, object_types = _extract_problem_objects(content)
 		return PDDLProblem(
-			name=problem_name_match.group(1) if problem_name_match else "unknown_problem",
-			domain_name=domain_name_match.group(1) if domain_name_match else "unknown_domain",
+			name=_canonical_symbol(
+				problem_name_match.group(1)
+				if problem_name_match
+				else "unknown_problem",
+			),
+			domain_name=_canonical_symbol(
+				domain_name_match.group(1)
+				if domain_name_match
+				else "unknown_domain",
+			),
 			objects=objects,
 			object_types=object_types,
 			init_facts=_extract_problem_facts(content, "init"),
@@ -100,13 +110,17 @@ def _strip_comments(content: str) -> str:
 	return re.sub(r";.*$", "", content, flags=re.MULTILINE)
 
 
+def _canonical_symbol(symbol: str) -> str:
+	return str(symbol).lower()
+
+
 def _extract_simple_list_block(content: str, block_name: str) -> List[str]:
 	start = _find_block_start(content, block_name)
 	if start == -1:
 		return []
 	end = _find_matching_paren(content, start)
 	inner = content[start + len(f"(:{block_name}") : end].strip()
-	return [token for token in re.split(r"\s+", inner) if token]
+	return [_canonical_symbol(token) for token in re.split(r"\s+", inner) if token]
 
 
 def _extract_predicates(content: str) -> List[PDDLPredicate]:
@@ -120,7 +134,7 @@ def _extract_predicates(content: str) -> List[PDDLPredicate]:
 		tokens = expression.strip("() \n\t").split()
 		if not tokens:
 			continue
-		name = tokens[0]
+		name = _canonical_symbol(tokens[0])
 		parameters = _group_typed_parameters(tokens[1:])
 		predicates.append(PDDLPredicate(name=name, parameters=parameters))
 	return predicates
@@ -141,7 +155,7 @@ def _extract_actions(content: str) -> List[PDDLAction]:
 			continue
 		actions.append(
 			PDDLAction(
-				name=header_match.group(1),
+				name=_canonical_symbol(header_match.group(1)),
 				parameters=_extract_action_parameters(block),
 				preconditions=_extract_keyword_expression(block, "precondition"),
 				effects=_extract_keyword_expression(block, "effect"),
@@ -192,18 +206,20 @@ def _extract_problem_objects(content: str) -> tuple[List[str], Dict[str, str]]:
 	while index < len(tokens):
 		token = tokens[index]
 		if token == "-" and index + 1 < len(tokens):
-			type_name = tokens[index + 1]
+			type_name = _canonical_symbol(tokens[index + 1])
 			for name in pending:
-				objects.append(name)
-				object_types[name] = type_name
+				object_name = _canonical_symbol(name)
+				objects.append(object_name)
+				object_types[object_name] = type_name
 			pending = []
 			index += 2
 			continue
 		pending.append(token)
 		index += 1
 	for name in pending:
-		objects.append(name)
-		object_types[name] = "object"
+		object_name = _canonical_symbol(name)
+		objects.append(object_name)
+		object_types[object_name] = "object"
 	return objects, object_types
 
 
@@ -252,7 +268,11 @@ def _parse_positive_fact(expression: str) -> PDDLFact | None:
 	tokens = expression.strip("() \n\t").split()
 	if not tokens or tokens[0] == "=":
 		return None
-	return PDDLFact(predicate=tokens[0], args=tokens[1:], is_positive=True)
+	return PDDLFact(
+		predicate=_canonical_symbol(tokens[0]),
+		args=[_canonical_symbol(token) for token in tokens[1:]],
+		is_positive=True,
+	)
 
 
 def _top_level_expressions(text: str) -> List[str]:
@@ -277,9 +297,9 @@ def _group_typed_parameters(tokens: List[str]) -> List[str]:
 	pending: List[str] = []
 	index = 0
 	while index < len(tokens):
-		token = tokens[index]
+		token = _canonical_symbol(tokens[index])
 		if token == "-" and index + 1 < len(tokens):
-			type_name = tokens[index + 1]
+			type_name = _canonical_symbol(tokens[index + 1])
 			for name in pending:
 				parameters.append(f"{name} - {type_name}")
 			pending = []

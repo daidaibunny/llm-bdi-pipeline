@@ -17,6 +17,13 @@ def test_flattened_blocks_event_maps_to_on_fluent() -> None:
 	) == "on(b4, b2)"
 
 
+def test_blocks_on_table_event_maps_to_official_ontable_fluent() -> None:
+	assert map_event_atom_to_pddl_fluent(
+		"do_on_table(b4)",
+		domain_key="blocksworld",
+	) == "ontable(b4)"
+
+
 def test_negated_event_mapping_preserves_agent_speak_negation() -> None:
 	assert map_event_atom_to_pddl_fluent(
 		"~get_soil_data(waypoint2)",

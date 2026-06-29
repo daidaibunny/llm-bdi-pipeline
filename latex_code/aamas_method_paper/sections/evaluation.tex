@@ -8,19 +8,20 @@ extended goals are treated as a later goal-specification layer that can call the
 same domain-level library, but they are not part of the core evaluation in this
 paper.
 
-All selected benchmark snapshots are materialized from one independent public
-source: \texttt{AI-Planning/pddl-generators} at commit
-\texttt{d5c22c9ab21ecaf90db82daf2a0537973c661009}. For each selected problem
-class we track a local \texttt{domain.pddl}, twenty deterministic training
-instances, ten deterministic goal-specification test instances, and a
-\texttt{source.json} provenance record. The generated snapshots are committed
-under \texttt{src/domains/<domain>/}; the external generator repository remains
-an input, not a learner backend and not part of the synthesized library.
+All selected benchmark snapshots are materialized from complete IPC PDDL
+directories in one independent public source: \texttt{potassco/pddl-instances}
+at commit \texttt{cf19edf7c53d1540ddbb396c642595e0926ee552}. For each selected
+domain we track a local \texttt{domain.pddl}, all official instances from the
+selected IPC directory, a deterministic $\lfloor 2N/3 \rfloor$ training split,
+the remaining goal-specification test instances, and a \texttt{source.json}
+provenance record. The snapshots are committed under
+\texttt{src/domains/<domain>/}; the external IPC repository remains an input,
+not a learner backend and not part of the synthesized library.
 
 \begin{table}[t]
 	\caption{Selected achievement-goal benchmark corpus. Every row is
-	materialized from the same independent generator source and has a fixed
-	20/10 train/test split.}
+	materialized from complete IPC directories in the same independent source;
+	the training split is $\lfloor 2N/3 \rfloor$ and the remainder is held out.}
 	\label{tab:domain-families}
 	\small
 	\begin{tabular}{p{0.36\columnwidth}p{0.36\columnwidth}r}
@@ -28,11 +29,11 @@ an input, not a learner backend and not part of the synthesized library.
 		Class & Problem classes & Count \\
 		\midrule
 		Goal-separable and serialisable achievement classes &
-		Gripper, Ferry, Miconic & 3 \\
+		Gripper, Miconic & 2 \\
 		Bounded-width sketchable subgoal-structure classes &
-		Spanner, Childsnack, Barman, Visitall, Delivery & 5 \\
+		Barman, Childsnack, Visitall & 3 \\
 		Feature-definable goal-dependent construction classes &
-		Blocksworld Qclear, Blocksworld Qon, Blocksworld QBW & 3 \\
+		Blocks & 1 \\
 		\bottomrule
 	\end{tabular}
 \end{table}

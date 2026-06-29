@@ -1,8 +1,9 @@
 {
   "benchmark_source": {
-    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
-    "name": "AI-Planning/pddl-generators",
-    "url": "https://github.com/AI-Planning/pddl-generators"
+    "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+    "coverage": "IPC 1998-2014 complete collection",
+    "name": "potassco/pddl-instances",
+    "url": "https://github.com/potassco/pddl-instances"
   },
   "future_goal_specification_layers": [
     "temporal_extended_goal_layer"

@@ -1,11 +1,13 @@
 {
-  "instance_count": 30,
-  "problem_class": null,
-  "source": "AI-Planning/pddl-generators",
-  "source_commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
-  "source_domain": "childsnack",
-  "source_domain_file": "domain.pddl",
-  "source_url": "https://github.com/AI-Planning/pddl-generators",
-  "test_count": 10,
-  "train_count": 20
+  "instance_count": 20,
+  "ipc_variant": "child-snack-sequential-satisficing",
+  "ipc_year": "2014",
+  "source": "potassco/pddl-instances",
+  "source_commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+  "source_domain_file": "ipc-2014/domains/child-snack-sequential-satisficing/domain.pddl",
+  "source_path": "ipc-2014/domains/child-snack-sequential-satisficing",
+  "source_url": "https://github.com/potassco/pddl-instances",
+  "split_policy": "floor(2/3 * instance_count) train, remaining test",
+  "test_count": 7,
+  "train_count": 13
 }

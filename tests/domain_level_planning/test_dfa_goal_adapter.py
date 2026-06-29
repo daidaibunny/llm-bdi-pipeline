@@ -11,7 +11,7 @@ from plan_library.models import AgentSpeakBodyStep
 from utils.pddl_parser import PDDLParser
 
 
-BLOCKS_DOMAIN = "src/domains/blocksworld_qbw/domain.pddl"
+BLOCKS_DOMAIN = "src/domains/blocks/domain.pddl"
 
 
 def test_dfa_guard_conjunction_becomes_goal_facts_and_subgoal_calls() -> None:
@@ -81,15 +81,15 @@ def test_dfa_guard_adapter_ignores_true_guard() -> None:
 
 def test_dfa_guard_adapter_accepts_domain_file_for_schema_validation() -> None:
 	request = adapt_dfa_guard_to_achievement_request(
-		"do_put_on_b1_b2 & arm-empty",
+		"do_put_on_b1_b2 & handempty",
 		domain_key="blocksworld",
 		domain_file=BLOCKS_DOMAIN,
 	)
 
-	assert request.goal_facts == ("goal_on(b1, b2)", "goal_arm-empty")
+	assert request.goal_facts == ("goal_on(b1, b2)", "goal_handempty")
 	assert request.body_steps == (
 		AgentSpeakBodyStep("subgoal", "on", ("b1", "b2")),
-		AgentSpeakBodyStep("subgoal", "arm-empty", ()),
+		AgentSpeakBodyStep("subgoal", "handempty", ()),
 	)
 
 

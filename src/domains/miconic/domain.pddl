@@ -1,10 +1,10 @@
 (define (domain miconic)
-  (:requirements :strips :typing)
+  (:requirements :strips)
   (:types passenger - object
           floor - object
          )
 
-(:predicates 
+(:predicates
 (origin ?person - passenger ?floor - floor)
 ;; entry of ?person is ?floor
 ;; inertia
@@ -43,9 +43,9 @@
 (:action depart
   :parameters (?f - floor ?p - passenger)
   :precondition (and (lift-at ?f) (destin ?p ?f)
-		     (boarded ?p))
+         (boarded ?p))
   :effect (and (not (boarded ?p))
-	       (served ?p)))
+         (served ?p)))
 ;;drive up
 
 (:action up
@@ -61,6 +61,3 @@
   :precondition (and (lift-at ?f1) (above ?f2 ?f1))
   :effect (and (lift-at ?f2) (not (lift-at ?f1))))
 )
-
-
-

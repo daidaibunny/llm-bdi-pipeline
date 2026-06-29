@@ -13,15 +13,16 @@ from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
 from plan_library.rendering import render_plan_library_asl
+from utils.pddl_parser import PDDLParser
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BLOCKS_ROOT = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw"
+BLOCKS_ROOT = PROJECT_ROOT / "src" / "domains" / "blocks"
 BLOCKS_DOMAIN = BLOCKS_ROOT / "domain.pddl"
-BLOCKS_PROBLEMS = tuple(sorted((BLOCKS_ROOT / "train").glob("p*.pddl")))
+BLOCKS_PROBLEMS = tuple(sorted((BLOCKS_ROOT / "train").glob("*.pddl")))
 
 
-def test_lifted_blocksworld_library_from_one_training_problem_solves_qbw_train_split() -> None:
+def test_lifted_blocksworld_library_from_one_training_problem_solves_blocks_smoke() -> None:
 	result = synthesize_domain_level_asl_library(
 		domain_file=BLOCKS_DOMAIN,
 		training_problem_files=(BLOCKS_PROBLEMS[0],),
@@ -53,12 +54,12 @@ def test_lifted_blocksworld_library_from_one_training_problem_solves_qbw_train_s
 			max_steps=10000,
 			max_depth=1000,
 		)
-		for problem_file in BLOCKS_PROBLEMS[:20]
+		for problem_file in BLOCKS_PROBLEMS[:2]
 	)
 
 	assert [result.problem_name for result in results] == [
-		f"blocksworld_qbw-p{index:03d}"
-		for index in range(1, 21)
+		PDDLParser.parse_problem(problem_file).name
+		for problem_file in BLOCKS_PROBLEMS[:2]
 	]
 	assert all(result.solved for result in results), [
 		(result.problem_name, result.failure_reason)

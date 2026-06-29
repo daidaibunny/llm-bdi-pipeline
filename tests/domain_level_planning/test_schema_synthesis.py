@@ -26,8 +26,8 @@ from utils.pddl_parser import PDDLFact
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl"
-BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "train" / "p001.pddl"
+BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocks" / "train" / "instance-1.pddl"
 
 
 def test_schema_synthesizer_builds_lifted_modules_from_any_pddl_domain(
@@ -777,16 +777,21 @@ def test_schema_synthesizer_also_handles_blocksworld_without_domain_specific_cod
 	assert all(edge["category"] == "support" for edge in runtime_agenda["support_edges"])
 	transition_systems = plan_library.metadata["transition_systems"]
 	assert transition_systems[0]["goal_facts"] == [
-		"goal_on(b3, b1)",
+		"goal_on(d, c)",
+		"goal_on(c, b)",
+		"goal_on(b, a)",
 	]
-	assert transition_systems[0]["goal_orderings"] == []
+	assert ("goal_on(c, b)", "goal_on(d, c)") in transition_systems[0]["goal_orderings"]
+	assert ("goal_on(b, a)", "goal_on(c, b)") in transition_systems[0]["goal_orderings"]
 
 
 def test_goal_facts_from_problem_are_read_only_problem_inputs() -> None:
 	goal_facts = goal_facts_from_problem(BLOCKS_P01)
 
 	assert goal_facts == (
-		"goal_on(b3, b1)",
+		"goal_on(d, c)",
+		"goal_on(c, b)",
+		"goal_on(b, a)",
 	)
 
 

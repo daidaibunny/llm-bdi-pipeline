@@ -1,11 +1,13 @@
 {
-  "instance_count": 30,
-  "problem_class": null,
-  "source": "AI-Planning/pddl-generators",
-  "source_commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
-  "source_domain": "gripper",
-  "source_domain_file": "domain.pddl",
-  "source_url": "https://github.com/AI-Planning/pddl-generators",
-  "test_count": 10,
-  "train_count": 20
+  "instance_count": 20,
+  "ipc_variant": "gripper-round-1-strips",
+  "ipc_year": "1998",
+  "source": "potassco/pddl-instances",
+  "source_commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+  "source_domain_file": "ipc-1998/domains/gripper-round-1-strips/domain.pddl",
+  "source_path": "ipc-1998/domains/gripper-round-1-strips",
+  "source_url": "https://github.com/potassco/pddl-instances",
+  "split_policy": "floor(2/3 * instance_count) train, remaining test",
+  "test_count": 7,
+  "train_count": 13
 }

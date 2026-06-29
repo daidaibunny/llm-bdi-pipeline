@@ -2,7 +2,7 @@
   "schema_version": 2,
   "scope": "positive_conjunctive_achievement_goals",
   "claim_statement": "The current paper claims executable domain-level lifted AgentSpeak(L) library synthesis for positive conjunctive achievement-goal PDDL problem classes Q_D only when Q_D admits a goal-conditioned, feature-definable, terminating modular policy sketch with bounded sketch width, the selected feature rules have safe lifted bindings to declared PDDL predicates, primitive actions, predicate subgoals, read-only goal descriptors, or read-only agenda gates, and the compiled library validates without runtime full-trace planning.",
-  "selection_principle": "Benchmark classes are selected by prior formal properties and materialized from one independent public generator source: AI-Planning/pddl-generators at commit d5c22c9ab21ecaf90db82daf2a0537973c661009. A domain is counted only after its local snapshot has a domain.pddl file, a deterministic 20-instance training split, and a deterministic 10-instance goal-specification test split.",
+  "selection_principle": "Benchmark classes are selected by prior formal properties and materialized from complete IPC PDDL directories in potassco/pddl-instances at commit cf19edf7c53d1540ddbb396c642595e0926ee552. A domain is counted only after its local snapshot has a domain.pddl file, all official instances from the selected IPC directory, a deterministic floor(2/3 * N) training split, and a remaining held-out goal-specification split.",
   "prior_benchmark_practice": [
     {
       "id": "moose_goal_regression",
@@ -153,19 +153,14 @@
     }
   ],
   "domain_count_assessment": {
-    "current_strict_main_standard_domain_count": 11,
+    "current_strict_main_standard_domain_count": 6,
     "current_strict_main_standard_domains": [
       "gripper",
-      "ferry",
       "miconic",
-      "spanner",
-      "childsnack",
       "barman",
+      "childsnack",
       "visitall",
-      "delivery",
-      "blocksworld_qclear",
-      "blocksworld_qon",
-      "blocksworld_qbw"
+      "blocks"
     ],
     "current_nonstandard_mechanism_domain_count": 0,
     "current_nonstandard_mechanism_domains": [],
@@ -174,27 +169,22 @@
     "prior_broad_gp_domain_count_range": "6-13 standard domains for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
     "revision_needed_for_broad_gp_claim": false,
     "minimum_next_revision_target": {
-      "selected_standard_domain_count": 11,
+      "selected_standard_domain_count": 6,
       "required_families": [
-        "goal-separable or serialisable achievement classes: gripper, ferry, and miconic",
-        "bounded-width sketchable subgoal-structure classes: spanner, childsnack, barman, visitall, and delivery",
-        "feature-definable goal-dependent construction classes: blocksworld_qclear, blocksworld_qon, and blocksworld_qbw"
+        "goal-separable or serialisable achievement classes: gripper and miconic",
+        "bounded-width sketchable subgoal-structure classes: barman, childsnack, and visitall",
+        "feature-definable goal-dependent construction classes: blocks"
       ],
       "recommended_full_target": [
         "gripper",
-        "ferry",
         "miconic",
-        "spanner",
-        "childsnack",
         "barman",
+        "childsnack",
         "visitall",
-        "delivery",
-        "blocksworld_qclear",
-        "blocksworld_qon",
-        "blocksworld_qbw"
+        "blocks"
       ]
     },
-    "current_paper_positioning": "The benchmark infrastructure now targets eleven achievement-goal problem classes materialized from one independent public generator source. Strict ASL-library coverage remains an evaluation result to be established per generated split, but benchmark selection no longer depends on learner-specific repositories."
+    "current_paper_positioning": "The benchmark infrastructure now targets six achievement-goal IPC domains materialized from complete official IPC directories. Strict ASL-library coverage remains an evaluation result to be established per split, but benchmark selection no longer depends on generated problem snapshots."
   },
   "goal_specification_layers": [
     {
@@ -218,21 +208,14 @@
   "selected_goal_specification_layer_count": 2,
   "selected_standard_domain_targets": [
     "gripper",
-    "ferry",
     "miconic",
-    "spanner",
-    "childsnack",
     "barman",
+    "childsnack",
     "visitall",
-    "delivery",
-    "blocksworld_qclear",
-    "blocksworld_qon",
-    "blocksworld_qbw"
+    "blocks"
   ],
   "paper_core_domains": [
-    "blocksworld_qclear",
-    "blocksworld_qon",
-    "blocksworld_qbw"
+    "blocks"
   ],
   "formal_properties": [
     {
@@ -304,22 +287,19 @@
       ],
       "domain_examples": [
         "gripper",
-        "ferry",
         "miconic"
       ],
       "target_paper_domains": [
         "gripper",
-        "ferry",
         "miconic"
       ],
       "current_project_domains": [
         "gripper",
-        "ferry",
         "miconic"
       ],
       "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether compiled lifted ASL libraries cover the same goal-separable region used by MOOSE, PG3, D2L, and sketch-learning papers.",
       "current_evidence": [
-        "Local deterministic train/test PDDL snapshots are materialized from AI-Planning/pddl-generators."
+        "Complete IPC Gripper and Miconic directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits."
       ],
       "support_level": "main_claim"
     },
@@ -340,29 +320,23 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
-        "spanner",
-        "childsnack",
         "barman",
-        "visitall",
-        "delivery"
+        "childsnack",
+        "visitall"
       ],
       "target_paper_domains": [
-        "spanner",
-        "childsnack",
         "barman",
-        "visitall",
-        "delivery"
+        "childsnack",
+        "visitall"
       ],
       "current_project_domains": [
-        "spanner",
-        "childsnack",
         "barman",
-        "visitall",
-        "delivery"
+        "childsnack",
+        "visitall"
       ],
       "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether the ASL compiler can preserve bounded-width sketchable subgoal structure rather than only independent-goal dispatch.",
       "current_evidence": [
-        "Local deterministic train/test PDDL snapshots are materialized from AI-Planning/pddl-generators."
+        "Complete IPC Barman, Childsnack, and Visitall directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits."
       ],
       "support_level": "main_claim"
     },
@@ -382,29 +356,37 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
-        "blocksworld_qclear",
-        "blocksworld_qon",
-        "blocksworld_qbw"
+        "blocks"
       ],
       "target_paper_domains": [
-        "blocksworld_qclear",
-        "blocksworld_qon",
-        "blocksworld_qbw"
+        "blocks"
       ],
       "current_project_domains": [
-        "blocksworld_qclear",
-        "blocksworld_qon",
-        "blocksworld_qbw"
+        "blocks"
       ],
       "paper_role": "Current strict main claim and selected property-defined class for the final broad evaluation. This class captures the strongest goal-dependency argument for lifted ASL modules.",
       "current_evidence": [
-        "Blocksworld qclear, qon, and qbw are materialized as separate local problem-class directories from the same AI-Planning/pddl-generators 4-operator Blocksworld generator.",
-        "Each problem class has a deterministic 20-instance training split and 10-instance goal-specification test split."
+        "The complete IPC Blocks directory is materialized from potassco/pddl-instances as the goal-dependent construction domain.",
+        "Blocksworld qclear, qon, and qbw remain prior-work problem-family tags, not separate formal IPC domain directories in this corpus."
       ],
       "support_level": "main_claim"
     }
   ],
   "excluded_or_boundary_domains": [
+    {
+      "id": "generated_variant_source_boundary",
+      "domains": [
+        "ferry",
+        "spanner",
+        "delivery",
+        "blocksworld_qclear",
+        "blocksworld_qon",
+        "blocksworld_qbw"
+      ],
+      "reason": "These were useful prior generated or problem-family variants, but they are not counted in the strict complete-IPC corpus because the current data policy requires one complete IPC directory per selected domain from potassco/pddl-instances.",
+      "current_project_domains": [],
+      "current_evidence": []
+    },
     {
       "id": "reachability_route_boundary",
       "domains": [
@@ -520,9 +502,9 @@
     }
   },
   "benchmark_source": {
-    "name": "AI-Planning/pddl-generators",
-    "url": "https://github.com/AI-Planning/pddl-generators",
-    "commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
-    "local_snapshot_policy": "Generated PDDL snapshots are tracked under src/domains/<domain> with domain.pddl, train, and test directories."
+    "name": "potassco/pddl-instances",
+    "url": "https://github.com/potassco/pddl-instances",
+    "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+    "local_snapshot_policy": "Complete IPC PDDL directories are tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification."
   }
 }

@@ -33,44 +33,46 @@ fixtures.
 Selected source:
 
 ```text
-AI-Planning/pddl-generators
-commit d5c22c9ab21ecaf90db82daf2a0537973c661009
+potassco/pddl-instances
+commit cf19edf7c53d1540ddbb396c642595e0926ee552
 ```
 
 Tracked layout:
 
 ```text
 src/domains/<domain>/domain.pddl
-src/domains/<domain>/train/p001.pddl ... p020.pddl
-src/domains/<domain>/test/p021.pddl ... p030.pddl
+src/domains/<domain>/train/*.pddl
+src/domains/<domain>/test/*.pddl
 src/domains/<domain>/source.json
 ```
 
-The `test` split is the held-out goal-specification split for current
-achievement-goal evaluation.
+Each selected domain contains all official instances from its selected IPC
+directory. The `train` split size is `floor(2/3 * instance_count)`; the
+remaining instances form the held-out goal-specification `test` split.
 
 ## Selected Domain Classes
 
 | Class | Domains |
 | --- | --- |
-| Goal-separable and serialisable achievement classes | `gripper`, `ferry`, `miconic` |
-| Bounded-width sketchable subgoal-structure classes | `spanner`, `childsnack`, `barman`, `visitall`, `delivery` |
-| Feature-definable goal-dependent construction classes | `blocksworld_qclear`, `blocksworld_qon`, `blocksworld_qbw` |
+| Goal-separable and serialisable achievement classes | `gripper`, `miconic` |
+| Bounded-width sketchable subgoal-structure classes | `barman`, `childsnack`, `visitall` |
+| Feature-definable goal-dependent construction classes | `blocks` |
 
-Total selected problem classes: 11. Each has 20 training instances and 10
-held-out goal-specification instances.
+Total selected IPC domains: 6. Instance counts are domain-specific:
+`gripper` 20, `miconic` 150, `barman` 20, `childsnack` 20, `visitall` 20,
+and `blocks` 102.
 
 ## Active Requirements
 
 | ID | Requirement | Status | Evidence / Next Step |
 | --- | --- | --- | --- |
-| R1 | Materialize all selected domains from the unified source. | Implemented, validating | `scripts/materialize_achievement_benchmarks.py`; generated snapshots under `src/domains`. |
-| R2 | Remove obsolete formal benchmark domains. | Implemented, validating | Old `blocksworld`, `labworkflow`, `transport`, `satellite`, and `marsrover` snapshots are deleted from `src/domains`. |
+| R1 | Materialize all selected domains from the unified source. | Implemented, validating | `scripts/materialize_achievement_benchmarks.py`; complete IPC snapshots under `src/domains`. |
+| R2 | Remove obsolete formal benchmark domains. | Implemented, validating | Generated-only formal domains such as `ferry`, `spanner`, `delivery`, and Blocksworld query variants are no longer in `src/domains`. |
 | R3 | Keep mechanism tests independent of formal benchmark data. | Implemented, validating | Resource-dependency tests now write temporary PDDL fixtures under `tmp_path`. |
-| R4 | Update registry, taxonomy, manifest, and AAMAS text to the 11-domain corpus. | Implemented, validating | `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, `paper_artifacts/final_paper_manifest.json`, and `latex_code/aamas_method_paper/sections/evaluation.tex`. |
+| R4 | Update registry, taxonomy, manifest, and AAMAS text to the 6-domain complete IPC corpus. | Implemented, validating | `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, `paper_artifacts/final_paper_manifest.json`, and `latex_code/aamas_method_paper/sections/evaluation.tex`. |
 | R5 | Remove obsolete generated-result dependencies from the paper draft. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
-| R6 | Run tests and final config validation. | Pending | Run targeted tests, then full `uv run pytest -p no:cacheprovider -q`, then final-paper config validation. |
-| R7 | Commit and push the benchmark migration. | Pending | Commit after tests pass and push `main`. |
+| R6 | Run tests and final config validation. | Implemented | `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q` passes with 293 tests. `run_final_paper_data.py --config-only` renders the new registry configs. `--validate-only` still requires a regenerated `tmp/paper-final-latest/comparison.json`, which is outside this data migration. |
+| R7 | Commit and push the benchmark migration. | Pending | Commit after final git inspection and push `main`. |
 
 ## Commands
 

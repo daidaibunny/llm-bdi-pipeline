@@ -16,16 +16,11 @@ from tests.domain_level_planning.resource_dependency_fixture import (
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SELECTED_BENCHMARK_DOMAINS = {
 	"gripper",
-	"ferry",
 	"miconic",
-	"spanner",
 	"childsnack",
 	"barman",
 	"visitall",
-	"delivery",
-	"blocksworld_qclear",
-	"blocksworld_qon",
-	"blocksworld_qbw",
+	"blocks",
 }
 
 
@@ -268,7 +263,7 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 		for domain_id in SELECTED_BENCHMARK_DOMAINS
 	}
 	assert experiment_names == {
-		f"{domain_id}-source-split-smoke"
+		f"{domain_id}-ipc-full-smoke"
 		for domain_id in SELECTED_BENCHMARK_DOMAINS
 	}
 	assert all("achieve" not in name for name in experiment_names)
@@ -277,14 +272,14 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 		str(item["name"]): item for item in experiments
 	}
 	for domain_id in SELECTED_BENCHMARK_DOMAINS:
-		row = expanded_rows[f"{domain_id}-source-split-smoke"]
+		row = expanded_rows[f"{domain_id}-ipc-full-smoke"]
 		assert row["domain_file"] == f"src/domains/{domain_id}/domain.pddl"
 		assert row["train_base"] == f"src/domains/{domain_id}/train"
 		assert row["eval_base"] == f"src/domains/{domain_id}/test"
 		assert row["train_glob"] == "*.pddl"
 		assert row["eval_glob"] == "*.pddl"
 		assert row["synthesis_profile"] == "bootstrap"
-		assert row["ablation_label"] == f"{domain_id}_source_split_smoke"
+		assert row["ablation_label"] == f"{domain_id}_ipc_full_smoke"
 
 
 def test_experiment_matrix_writes_diagnostic_row_when_entry_times_out(

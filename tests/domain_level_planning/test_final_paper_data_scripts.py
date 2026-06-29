@@ -23,19 +23,14 @@ from domain_level_planning.experiments import format_comparison_latex_macros
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SELECTED_BENCHMARK_DOMAINS = {
 	"gripper",
-	"ferry",
 	"miconic",
-	"spanner",
 	"childsnack",
 	"barman",
 	"visitall",
-	"delivery",
-	"blocksworld_qclear",
-	"blocksworld_qon",
-	"blocksworld_qbw",
+	"blocks",
 }
-BENCHMARK_SOURCE_COMMIT = "d5c22c9ab21ecaf90db82daf2a0537973c661009"
-BENCHMARK_SOURCE_URL = "https://github.com/AI-Planning/pddl-generators"
+BENCHMARK_SOURCE_COMMIT = "cf19edf7c53d1540ddbb396c642595e0926ee552"
+BENCHMARK_SOURCE_URL = "https://github.com/potassco/pddl-instances"
 
 
 def _minimal_artifact_manifest(
@@ -96,12 +91,12 @@ def _minimal_artifact_manifest(
 		],
 		"expected_baseline_rows": [
 			{
-				"macro_id": "blocksworld_qbw_train_fast_downward_lama_per_problem",
+				"macro_id": "blocks_train_fast_downward_lama_per_problem",
 				"solved": "2/2",
 				"runtime_planner": "offline_baseline_only",
 			},
 			{
-				"macro_id": "blocksworld_qbw_train_raw_policy_audit",
+				"macro_id": "blocks_train_raw_policy_audit",
 				"solved": "0/2",
 				"runtime_planner": "not_runtime_executed",
 			},
@@ -126,8 +121,8 @@ def _write_minimal_validated_package(
 		"paper_table_rows": [
 			{
 				"row_type": "library",
-				"label": "paper_external_sketch_blocksworld_qbw_train",
-				"macro_id": "paper_external_sketch_blocksworld_qbw_train",
+				"label": "paper_external_sketch_blocks_train",
+				"macro_id": "paper_external_sketch_blocks_train",
 				"solved": "2/2",
 				"coverage_percent": 100.0,
 				"runtime_planner": "none",
@@ -171,7 +166,7 @@ def _write_minimal_validated_package(
 			{
 				"row_type": "baseline",
 				"label": "fast_downward_lama_per_problem",
-				"macro_id": "blocksworld_qbw_train_fast_downward_lama_per_problem",
+				"macro_id": "blocks_train_fast_downward_lama_per_problem",
 				"solved": "2/2",
 				"coverage_percent": 100.0,
 				"runtime_planner": "offline_baseline_only",
@@ -182,7 +177,7 @@ def _write_minimal_validated_package(
 			{
 				"row_type": "baseline",
 				"label": "raw_blocks_4_on_2_policy_audit",
-				"macro_id": "blocksworld_qbw_train_raw_policy_audit",
+				"macro_id": "blocks_train_raw_policy_audit",
 				"solved": "0/2",
 				"coverage_percent": 0.0,
 				"runtime_planner": "not_runtime_executed",
@@ -360,15 +355,12 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	assert "feature-definable" in taxonomy["claim_statement"]
 	assert "bounded sketch width" in taxonomy["claim_statement"]
 	assert "runtime full-trace planning" in taxonomy["claim_statement"]
-	assert "AI-Planning/pddl-generators" in taxonomy["selection_principle"]
-	assert taxonomy["paper_core_domains"] == [
-		"blocksworld_qclear",
-		"blocksworld_qon",
-		"blocksworld_qbw",
-	]
+	assert "potassco/pddl-instances" in taxonomy["selection_principle"]
+	assert "floor(2/3 * N)" in taxonomy["selection_principle"]
+	assert taxonomy["paper_core_domains"] == ["blocks"]
 	assert taxonomy["domain_count_assessment"][
 		"current_strict_main_standard_domain_count"
-	] == 11
+	] == 6
 	assert taxonomy["domain_count_assessment"][
 		"revision_needed_for_broad_gp_claim"
 	] is False
@@ -376,18 +368,19 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
 			"selected_standard_domain_count"
 		]
-		== 11
+		== 6
 	)
 	assert taxonomy["selected_domain_class_count"] == 3
 	assert taxonomy["selected_goal_specification_layer_count"] == 2
 	assert set(taxonomy["selected_standard_domain_targets"]) == SELECTED_BENCHMARK_DOMAINS
 	assert taxonomy["benchmark_source"] == {
-		"name": "AI-Planning/pddl-generators",
-		"url": "https://github.com/AI-Planning/pddl-generators",
+		"name": "potassco/pddl-instances",
+		"url": "https://github.com/potassco/pddl-instances",
 		"commit": BENCHMARK_SOURCE_COMMIT,
 		"local_snapshot_policy": (
-			"Generated PDDL snapshots are tracked under src/domains/<domain> "
-			"with domain.pddl, train, and test directories."
+			"Complete IPC PDDL directories are tracked under src/domains/<domain> "
+			"with domain.pddl, train, test, and source.json. The train split uses "
+			"floor(2/3 * instance_count); the remainder is held out for goal specification."
 		),
 	}
 	goal_layers = {
@@ -514,26 +507,16 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"feature_definable_goal_dependent_construction_classes"
 	][
 		"current_project_domains"
-	] == ["blocksworld_qclear", "blocksworld_qon", "blocksworld_qbw"]
+	] == ["blocks"]
 	assert classes_by_id[
 		"feature_definable_goal_dependent_construction_classes"
-	]["target_paper_domains"] == [
-		"blocksworld_qclear",
-		"blocksworld_qon",
-		"blocksworld_qbw",
-	]
+	]["target_paper_domains"] == ["blocks"]
 	assert classes_by_id[
 		"goal_separable_serialisable_achievement_classes"
-	]["current_project_domains"] == ["gripper", "ferry", "miconic"]
+	]["current_project_domains"] == ["gripper", "miconic"]
 	assert classes_by_id[
 		"bounded_width_sketchable_subgoal_structure_classes"
-	]["current_project_domains"] == [
-		"spanner",
-		"childsnack",
-		"barman",
-		"visitall",
-		"delivery",
-	]
+	]["current_project_domains"] == ["barman", "childsnack", "visitall"]
 
 	boundary_records = {
 		record["id"]: record
@@ -569,14 +552,15 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 	assert registry.control["future_goal_specification_layers"] == [
 		"temporal_extended_goal_layer",
 	]
-	assert len(registry.selected_records()) == 11
+	assert len(registry.selected_records()) == 6
 	assert {
 		record.domain_id for record in registry.selected_records()
 	} == set(taxonomy["selected_standard_domain_targets"])
 	assert registry.control["benchmark_source"] == {
-		"name": "AI-Planning/pddl-generators",
-		"url": "https://github.com/AI-Planning/pddl-generators",
+		"name": "potassco/pddl-instances",
+		"url": "https://github.com/potassco/pddl-instances",
 		"commit": BENCHMARK_SOURCE_COMMIT,
+		"coverage": "IPC 1998-2014 complete collection",
 	}
 
 	class_to_domains: dict[str, set[str]] = {}
@@ -585,20 +569,15 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 	assert class_to_domains == {
 		"goal_separable_serialisable_achievement_classes": {
 			"gripper",
-			"ferry",
 			"miconic",
 		},
 		"bounded_width_sketchable_subgoal_structure_classes": {
-			"spanner",
 			"childsnack",
 			"barman",
 			"visitall",
-			"delivery",
 		},
 		"feature_definable_goal_dependent_construction_classes": {
-			"blocksworld_qclear",
-			"blocksworld_qon",
-			"blocksworld_qbw",
+			"blocks",
 		},
 	}
 
@@ -609,15 +588,23 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 	for record in registry.selected_records():
 		domain_root = PROJECT_ROOT / "src" / "domains" / record.domain_id
 		assert (domain_root / "domain.pddl").is_file()
-		assert len(tuple((domain_root / "train").glob("*.pddl"))) == 20
-		assert len(tuple((domain_root / "test").glob("*.pddl"))) == 10
-		assert record.payload["source"]["name"] == "AI-Planning/pddl-generators"
-		assert record.payload["source"]["url"] == BENCHMARK_SOURCE_URL
-		assert record.payload["source"]["commit"] == BENCHMARK_SOURCE_COMMIT
 		source_snapshot = json.loads(
 			(domain_root / "source.json").read_text(encoding="utf-8"),
 		)
-		assert source_snapshot["source"] == "AI-Planning/pddl-generators"
+		assert len(tuple((domain_root / "train").glob("*.pddl"))) == source_snapshot[
+			"train_count"
+		]
+		assert len(tuple((domain_root / "test").glob("*.pddl"))) == source_snapshot[
+			"test_count"
+		]
+		assert source_snapshot["train_count"] == int(source_snapshot["instance_count"] * (2 / 3))
+		assert source_snapshot["test_count"] == (
+			source_snapshot["instance_count"] - source_snapshot["train_count"]
+		)
+		assert record.payload["source"]["name"] == "potassco/pddl-instances"
+		assert record.payload["source"]["url"] == BENCHMARK_SOURCE_URL
+		assert record.payload["source"]["commit"] == BENCHMARK_SOURCE_COMMIT
+		assert source_snapshot["source"] == "potassco/pddl-instances"
 		assert source_snapshot["source_url"] == BENCHMARK_SOURCE_URL
 		assert source_snapshot["source_commit"] == BENCHMARK_SOURCE_COMMIT
 
@@ -650,7 +637,7 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 
 	main_experiments = tuple(main["experiments"])
 	assert {str(item["name"]) for item in main_experiments} == {
-		f"{domain_id}-source-split-main"
+		f"{domain_id}-ipc-full-main"
 		for domain_id in SELECTED_BENCHMARK_DOMAINS
 	}
 	assert {
@@ -661,7 +648,7 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 		for domain_id in SELECTED_BENCHMARK_DOMAINS
 	}
 	for experiment in main_experiments:
-		domain_id = str(experiment["name"]).removesuffix("-source-split-main")
+		domain_id = str(experiment["name"]).removesuffix("-ipc-full-main")
 		assert experiment["train_base"] == f"src/domains/{domain_id}/train"
 		assert experiment["eval_base"] == f"src/domains/{domain_id}/test"
 		assert experiment["train_glob"] == "*.pddl"
@@ -759,8 +746,8 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 		"paper_table_rows": [
 			{
 				"row_type": "library",
-				"label": "paper_external_sketch_blocksworld_qbw_train",
-				"macro_id": "paper_external_sketch_blocksworld_qbw_train",
+				"label": "paper_external_sketch_blocks_train",
+				"macro_id": "paper_external_sketch_blocks_train",
 				"solved": "1/1",
 				"coverage_percent": 100.0,
 				"runtime_planner": "none",
@@ -804,7 +791,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			{
 				"row_type": "baseline",
 				"label": "fast_downward_lama_per_problem",
-				"macro_id": "blocksworld_qbw_train_fast_downward_lama_per_problem",
+				"macro_id": "blocks_train_fast_downward_lama_per_problem",
 				"solved": "2/2",
 				"coverage_percent": 100.0,
 				"runtime_planner": "offline_baseline_only",
@@ -814,7 +801,7 @@ def test_final_paper_package_validator_rejects_stale_architecture_reports(
 			{
 				"row_type": "baseline",
 				"label": "raw_blocks_4_on_2_policy_audit",
-				"macro_id": "blocksworld_qbw_train_raw_policy_audit",
+				"macro_id": "blocks_train_raw_policy_audit",
 				"solved": "0/2",
 				"coverage_percent": 0.0,
 				"runtime_planner": "not_runtime_executed",

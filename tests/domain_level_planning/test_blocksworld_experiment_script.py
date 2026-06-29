@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripts.run_blocksworld_qbw_train_experiment import (
+from scripts.run_blocks_train_experiment import (
 	_default_ablation_label,
 	_parse_external_sketch_policies,
 )
@@ -14,15 +14,15 @@ from scripts.run_blocksworld_qbw_train_experiment import (
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_blocksworld_qbw_train_script_writes_reproducible_json_report(
+def test_blocks_train_script_writes_reproducible_json_report(
 	tmp_path: Path,
 ) -> None:
-	output = tmp_path / "blocksworld-qbw-smoke.json"
+	output = tmp_path / "blocks-ipc-smoke.json"
 
 	subprocess.run(
 		(
 			sys.executable,
-			str(PROJECT_ROOT / "scripts" / "run_blocksworld_qbw_train_experiment.py"),
+			str(PROJECT_ROOT / "scripts" / "run_blocks_train_experiment.py"),
 			"--output",
 			str(output),
 			"--train-count",
@@ -35,7 +35,7 @@ def test_blocksworld_qbw_train_script_writes_reproducible_json_report(
 	)
 
 	report = json.loads(output.read_text(encoding="utf-8"))
-	assert report["experiment_name"] == "blocksworld-qbw-train20"
+	assert report["experiment_name"] == "blocks-ipc-train20"
 	assert report["experiment_protocol"]["scope"] == (
 		"bounded_domain_level_lifted_asl_evaluation"
 	)
@@ -79,7 +79,7 @@ def test_blocksworld_qbw_train_script_writes_reproducible_json_report(
 	assert report["validation_scope"] == {
 		"bounded_validation_problem_count": 1,
 		"bounded_validation_source": "training_and_counterexample_problem_files",
-		"bounded_validation_problem_names": ["blocksworld_qbw-p001"],
+		"bounded_validation_problem_names": ["blocks-4-0"],
 		"evaluation_problem_count": 2,
 		"evaluation_source": "evaluation_problem_files",
 		"coverage_is_heldout_runtime_execution": True,
@@ -182,7 +182,7 @@ def test_blocksworld_script_parses_external_policy_arguments(tmp_path: Path) -> 
 	) == "custom"
 
 
-def test_blocksworld_qbw_train_script_accepts_external_policy_cli_argument(
+def test_blocks_train_script_accepts_external_policy_cli_argument(
 	tmp_path: Path,
 ) -> None:
 	output = tmp_path / "blocksworld-external-policy.json"
@@ -201,7 +201,7 @@ def test_blocksworld_qbw_train_script_accepts_external_policy_cli_argument(
 	subprocess.run(
 		(
 			sys.executable,
-			str(PROJECT_ROOT / "scripts" / "run_blocksworld_qbw_train_experiment.py"),
+			str(PROJECT_ROOT / "scripts" / "run_blocks_train_experiment.py"),
 			"--output",
 			str(output),
 			"--train-count",

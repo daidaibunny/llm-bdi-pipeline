@@ -16,8 +16,8 @@ import pytest
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "domain.pddl"
-BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocksworld_qbw" / "train" / "p001.pddl"
+BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+BLOCKS_P01 = PROJECT_ROOT / "src" / "domains" / "blocks" / "train" / "instance-1.pddl"
 
 
 def test_unified_pipeline_reports_schema_causal_interference_orderings() -> None:

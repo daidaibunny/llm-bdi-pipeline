@@ -1,11 +1,13 @@
 {
-  "instance_count": 30,
-  "problem_class": null,
-  "source": "AI-Planning/pddl-generators",
-  "source_commit": "d5c22c9ab21ecaf90db82daf2a0537973c661009",
-  "source_domain": "miconic",
-  "source_domain_file": "domain.pddl",
-  "source_url": "https://github.com/AI-Planning/pddl-generators",
-  "test_count": 10,
-  "train_count": 20
+  "instance_count": 150,
+  "ipc_variant": "elevator-strips-simple-typed",
+  "ipc_year": "2000",
+  "source": "potassco/pddl-instances",
+  "source_commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+  "source_domain_file": "ipc-2000/domains/elevator-strips-simple-typed/domain.pddl",
+  "source_path": "ipc-2000/domains/elevator-strips-simple-typed",
+  "source_url": "https://github.com/potassco/pddl-instances",
+  "split_policy": "floor(2/3 * instance_count) train, remaining test",
+  "test_count": 50,
+  "train_count": 100
 }
