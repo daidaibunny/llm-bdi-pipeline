@@ -9,6 +9,7 @@ import pytest
 from domain_level_planning.gp_backends import (
 	BackendManifest,
 	GPBackendRunner,
+	LearningGeneralPoliciesRunConfig,
 	LearnerSketchesRunConfig,
 	SketchCondition,
 	SketchEffect,
@@ -17,9 +18,11 @@ from domain_level_planning.gp_backends import (
 	backend_audit_matrix,
 	backend_consumption_role,
 	discover_learner_sketches_policy_file,
+	discover_learning_general_policies_policy_file,
 	discover_backend_manifest,
 	parse_dlplan_policy,
 	parse_d2l_policy,
+	run_learning_general_policies,
 	run_learner_sketches,
 )
 
@@ -73,11 +76,23 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	d2l.mkdir()
 	(d2l / ".git").mkdir()
 	(d2l / ".git" / "HEAD").write_text("wrong-commit\n", encoding="utf-8")
+	policy_examples = tmp_path / "learner-policies-from-examples"
+	policy_examples.mkdir()
+	(policy_examples / ".git").mkdir()
+	(policy_examples / ".git" / "HEAD").write_text(
+		"9991926f7655c4b6c8dc2f0404123639e42056f2\n",
+		encoding="utf-8",
+	)
 
 	matrix = backend_audit_matrix(root=tmp_path)
 	by_name = {entry["name"]: entry for entry in matrix}
 
-	assert set(by_name) == {"learner-sketches", "h-policy-learner", "d2l"}
+	assert set(by_name) == {
+		"learner-sketches",
+		"h-policy-learner",
+		"d2l",
+		"learner-policies-from-examples",
+	}
 	assert by_name["learner-sketches"]["present"] is True
 	assert by_name["learner-sketches"]["pin_status"] == "ok"
 	assert by_name["learner-sketches"]["paper_role"] == (
@@ -121,6 +136,30 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumption_mode": "verified_d2l_text_policy_rules",
 		"blocking_gap": None,
 	}
+	assert by_name["learner-policies-from-examples"]["pin_status"] == "ok"
+	assert "KR 2025" in by_name["learner-policies-from-examples"]["paper_role"]
+	assert by_name["learner-policies-from-examples"]["preferred_use"] == (
+		"primary policy-first backend for learned LiftedPolicyProgram artifacts"
+	)
+	assert (
+		"Docker linux/amd64"
+		in by_name["learner-policies-from-examples"]["resource_profile"][
+			"execution_environment"
+		]
+	)
+	assert (
+		"native macOS is unsupported"
+		in by_name["learner-policies-from-examples"]["resource_profile"][
+			"execution_environment"
+		]
+	)
+	assert by_name["learner-policies-from-examples"]["current_consumption_role"] == {
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "policy_first_lifted_program",
+		"blocking_gap": None,
+	}
 
 
 def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
@@ -137,6 +176,13 @@ def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
 		"drives_layer_c": True,
 		"consumed_by_synthesis": True,
 		"consumption_mode": "verified_d2l_text_policy_rules",
+		"blocking_gap": None,
+	}
+	assert backend_consumption_role("learner-policies-from-examples") == {
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "policy_first_lifted_program",
 		"blocking_gap": None,
 	}
 	assert backend_consumption_role("unknown-paper-code") == {
@@ -167,6 +213,122 @@ def test_backend_audit_status_cli_prints_matrix_entries(tmp_path: Path) -> None:
 	assert "learner-sketches: missing; observed=unknown; pinned=missing" in result.stdout
 	assert "h-policy-learner: missing; observed=unknown; pinned=missing" in result.stdout
 	assert "d2l: missing; observed=unknown; pinned=missing" in result.stdout
+	assert (
+		"learner-policies-from-examples: missing; observed=unknown; pinned=missing"
+		in result.stdout
+	)
+
+
+def test_learning_general_policies_audit_cli_prints_guarded_command(
+	tmp_path: Path,
+) -> None:
+	script = Path(__file__).resolve().parents[2] / "scripts" / "gp_backend_audit.py"
+	backend = tmp_path / "learner-policies-from-examples"
+	backend.mkdir()
+
+	result = subprocess.run(
+		(
+			sys.executable,
+			str(script),
+			"learning-general-policies-command",
+			"--backend-root",
+			str(tmp_path),
+			"--experiment",
+			"blocks_4_clear_0",
+			"--timeout-seconds",
+			"7",
+			"--max-num-instances",
+			"1",
+		),
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+
+	assert "# blocks_4_clear_0" in result.stdout
+	assert "resource_guard.py" in result.stdout
+	assert "learner-policies-from-examples:blocks_4_clear_0" in result.stdout
+	assert "learning/main.py" in result.stdout
+	assert "--planner bfws" in result.stdout
+	assert "--width 0" in result.stdout
+	assert "--max_num_instances 1" in result.stdout
+
+
+def test_learning_general_policies_docker_build_cli_prints_proxy_args(
+	tmp_path: Path,
+) -> None:
+	script = Path(__file__).resolve().parents[2] / "scripts" / "gp_backend_audit.py"
+	backend = tmp_path / "learner-policies-from-examples"
+	backend.mkdir()
+
+	result = subprocess.run(
+		(
+			sys.executable,
+			str(script),
+			"learning-general-policies-docker-build-command",
+			"--backend-root",
+			str(tmp_path),
+			"--proxy",
+			"http://host.docker.internal:10808",
+		),
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+
+	assert "docker build" in result.stdout
+	assert "--build-arg http_proxy=http://host.docker.internal:10808" in result.stdout
+	assert "--build-arg https_proxy=http://host.docker.internal:10808" in result.stdout
+	assert "docker/learning-general-policies/Dockerfile" in result.stdout
+
+
+def test_learning_general_policies_summary_cli_reports_policy_program(
+	tmp_path: Path,
+) -> None:
+	script = Path(__file__).resolve().parents[2] / "scripts" / "gp_backend_audit.py"
+	backend = tmp_path / "learner-policies-from-examples"
+	output = (
+		tmp_path
+		/ "gp-backend-audit"
+		/ "learner-policies-from-examples"
+		/ "blocks_4_clear_0"
+		/ "output.uuid123"
+	)
+	backend.mkdir()
+	output.mkdir(parents=True)
+	(output / "sketch_minimized_0.txt").write_text(
+		"""
+		(:policy
+		(:booleans (b_empty "b_nullary(handempty)"))
+		(:numericals (n_on "n_count(c_primitive(clear,0))"))
+		(:rule (:conditions (:c_b_pos b_empty)) (:effects (:e_n_inc n_on)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	result = subprocess.run(
+		(
+			sys.executable,
+			str(script),
+			"learning-general-policies-summary",
+			"--backend-root",
+			str(tmp_path),
+			"--audit-output-root",
+			str(tmp_path / "gp-backend-audit"),
+			"--experiment",
+			"blocks_4_clear_0",
+		),
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+
+	assert "blocks_4_clear_0: present; width=0" in result.stdout
+	assert "policy_program=ok" in result.stdout
+	assert "backend=learner-policies-from-examples" in result.stdout
+	assert "features=2" in result.stdout
+	assert "rules=1" in result.stdout
 
 
 def test_learner_sketches_command_is_reproducible(tmp_path: Path) -> None:
@@ -390,6 +552,224 @@ def test_d2l_commands_are_reproducible(tmp_path: Path) -> None:
 		f"{workspace}:/workspace/d2l/workspace",
 		"d2l-official-env:local",
 		"blocks:clear",
+	)
+
+
+def test_learning_general_policies_command_is_reproducible(tmp_path: Path) -> None:
+	backend = tmp_path / "learner-policies-from-examples"
+	backend.mkdir()
+	domain = tmp_path / "domain.pddl"
+	problems = tmp_path / "problems"
+	workspace = tmp_path / "workspace"
+	manifest = BackendManifest(
+		name="learner-policies-from-examples",
+		path=backend,
+		url="https://github.com/bonetblai/learner-policies-from-examples.git",
+		expected_commit="9991926",
+		present=True,
+	)
+	runner = GPBackendRunner(manifest)
+
+	command = runner.learning_general_policies_command(
+		domain_file=domain,
+		problems_directory=problems,
+		workspace=workspace,
+		python_executable=backend / ".venv" / "bin" / "python",
+		width=0,
+		planner="bfws",
+		max_num_instances=1,
+		max_states_per_instance=250,
+		max_time_per_instance=20,
+		complexity_limit=5,
+		feature_limit=1000,
+		max_features=6,
+		cost_bound=20,
+	)
+
+	assert command == (
+		str(backend / ".venv" / "bin" / "python"),
+		str(backend / "learning" / "main.py"),
+		"--domain_filepath",
+		str(domain),
+		"--problems_directory",
+		str(problems),
+		"--workspace",
+		str(workspace),
+		"--width",
+		"0",
+		"--planner",
+		"bfws",
+		"--max_num_states_per_instance",
+		"250",
+		"--max_time_per_instance",
+		"20",
+		"--feature_limit",
+		"1000",
+		"--max_features",
+		"6",
+		"--cost_bound",
+		"20",
+		"--max_num_instances",
+		"1",
+		"--complexity_limit",
+		"5",
+	)
+
+
+def test_learning_general_policies_docker_commands_are_reproducible(
+	tmp_path: Path,
+) -> None:
+	backend = tmp_path / "learner-policies-from-examples"
+	backend.mkdir()
+	domain = tmp_path / "domain.pddl"
+	problems = tmp_path / "problems"
+	workspace = tmp_path / "workspace"
+	manifest = BackendManifest(
+		name="learner-policies-from-examples",
+		path=backend,
+		url="https://github.com/bonetblai/learner-policies-from-examples.git",
+		expected_commit="9991926",
+		present=True,
+	)
+	runner = GPBackendRunner(manifest)
+
+	build_command = runner.learning_general_policies_docker_build_command()
+	proxied_build_command = runner.learning_general_policies_docker_build_command(
+		build_args={
+			"http_proxy": "http://host.docker.internal:10808",
+			"https_proxy": "http://host.docker.internal:10808",
+		},
+	)
+	run_command = runner.learning_general_policies_docker_run_command(
+		domain_file=domain,
+		problems_directory=problems,
+		workspace=workspace,
+		width=0,
+		planner="bfws",
+		max_num_instances=1,
+		max_rss_gb=16.0,
+		timeout_seconds=120,
+		complexity_limit=5,
+	)
+
+	assert build_command[:5] == (
+		"docker",
+		"build",
+		"--platform",
+		"linux/amd64",
+		"-t",
+	)
+	assert any(
+		"docker/learning-general-policies/Dockerfile" in item
+		for item in build_command
+	)
+	assert "--build-arg" in proxied_build_command
+	assert (
+		"http_proxy=http://host.docker.internal:10808"
+		in proxied_build_command
+	)
+	assert (
+		"https_proxy=http://host.docker.internal:10808"
+		in proxied_build_command
+	)
+	assert run_command[:6] == (
+		"docker",
+		"run",
+		"--rm",
+		"--platform",
+		"linux/amd64",
+		"--memory",
+	)
+	assert "16g" in run_command
+	assert "learner-policies-from-examples-env:local" in run_command
+	assert "--timeout-seconds 120" in " ".join(run_command)
+	assert "--max_num_instances 1" in " ".join(run_command)
+	assert "--complexity_limit 5" in " ".join(run_command)
+	assert str(backend / "learning" / "main.py") in " ".join(run_command)
+
+
+def test_learning_general_policies_dockerfile_pins_required_dlplan_api() -> None:
+	dockerfile = (
+		Path(__file__).resolve().parents[2]
+		/ "docker"
+		/ "learning-general-policies"
+		/ "Dockerfile"
+	)
+	contents = dockerfile.read_text(encoding="utf-8")
+
+	assert "dlplan==0.3.29" in contents
+	assert "pymimir==0.9.62" in contents
+
+
+def test_run_learning_general_policies_discovers_uuid_output_policy(
+	tmp_path: Path,
+) -> None:
+	backend = tmp_path / "learner-policies-from-examples"
+	learning = backend / "learning"
+	learning.mkdir(parents=True)
+	main = learning / "main.py"
+	main.write_text(
+		"""
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--domain_filepath")
+parser.add_argument("--problems_directory")
+parser.add_argument("--workspace")
+parser.add_argument("--width", type=int)
+parser.add_argument("--planner")
+parser.add_argument("--max_num_states_per_instance")
+parser.add_argument("--max_time_per_instance")
+parser.add_argument("--feature_limit")
+parser.add_argument("--max_features")
+parser.add_argument("--cost_bound")
+parser.add_argument("--complexity_limit", default=None)
+args = parser.parse_args()
+output = Path(args.workspace) / "output.uuid123"
+output.mkdir(parents=True, exist_ok=True)
+(output / f"sketch_minimized_{args.width}.txt").write_text(
+	'(:policy (:booleans ) (:numericals (f1 "n_count(c_primitive(done,0))")) '
+	'(:rule (:conditions ) (:effects (:e_n_inc f1))))',
+	encoding="utf-8",
+)
+(output / f"sketch_{args.width}.txt").write_text("raw", encoding="utf-8")
+print("learned policy-first program")
+		""",
+		encoding="utf-8",
+	)
+	manifest = BackendManifest(
+		name="learner-policies-from-examples",
+		path=backend,
+		url="https://github.com/bonetblai/learner-policies-from-examples.git",
+		expected_commit="9991926",
+		present=True,
+	)
+	workspace = tmp_path / "workspace"
+
+	result = run_learning_general_policies(
+		manifest=manifest,
+		config=LearningGeneralPoliciesRunConfig(
+			domain_file=tmp_path / "domain.pddl",
+			problems_directory=tmp_path / "problems",
+			workspace=workspace,
+			width=0,
+			python_executable="python3",
+			complexity_limit=3,
+			use_resource_guard=False,
+		),
+	)
+
+	assert result.succeeded is True
+	assert result.policy_file == workspace / "output.uuid123" / "sketch_minimized_0.txt"
+	assert result.raw_policy_file == workspace / "output.uuid123" / "sketch_0.txt"
+	assert result.to_dict()["succeeded"] is True
+	assert "policy-first" in result.stdout
+	assert (
+		discover_learning_general_policies_policy_file(workspace, width=0)
+		== result.policy_file
 	)
 
 

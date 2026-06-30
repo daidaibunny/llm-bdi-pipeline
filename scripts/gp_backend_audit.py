@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -16,31 +17,18 @@ from typing import Iterable
 from domain_level_planning.gp_backends import (
 	DEFAULT_BACKEND_ROOT,
 	GPBackendRunner,
+	PINNED_BACKENDS,
 	backend_audit_matrix,
 	discover_backend_manifest,
+	discover_learning_general_policies_policy_file,
 	parse_dlplan_policy,
 )
+from domain_level_planning.policy_program import policy_program_from_sketch_policy
 from domain_level_planning.sketch_pipeline import compile_learner_sketch_policy_to_asl
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-BACKENDS = (
-	{
-		"name": "learner-sketches",
-		"url": "https://github.com/bonetblai/learner-sketches.git",
-		"commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
-	},
-	{
-		"name": "h-policy-learner",
-		"url": "https://github.com/drexlerd/h-policy-learner.git",
-		"commit": "03e345537208ab804c1f4958bf183b65d4863a62",
-	},
-	{
-		"name": "d2l",
-		"url": "https://github.com/rleap-project/d2l.git",
-		"commit": "0620e169c894d79b3c84f435dba1462996f7c270",
-	},
-)
+BACKENDS = tuple(PINNED_BACKENDS)
 
 
 @dataclass(frozen=True)
@@ -62,6 +50,18 @@ class LearnerSketchesExperiment:
 	workspace: Path
 
 
+@dataclass(frozen=True)
+class LearningGeneralPoliciesExperiment:
+	name: str
+	benchmark_family: str
+	domain_name: str
+	width: int
+	domain_file: Path
+	problems_directory: Path
+	workspace: Path
+	planner: str = "bfws"
+
+
 def main() -> int:
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument(
@@ -74,6 +74,10 @@ def main() -> int:
 			"learner-sketches-command",
 			"learner-sketches-compile-asl",
 			"learner-sketches-summary",
+			"learning-general-policies-command",
+			"learning-general-policies-docker-build-command",
+			"learning-general-policies-docker-command",
+			"learning-general-policies-summary",
 			"d2l-docker-commands",
 			"parse-policy",
 		),
@@ -83,6 +87,12 @@ def main() -> int:
 		type=Path,
 		default=DEFAULT_BACKEND_ROOT,
 		help="Directory for external backend repositories.",
+	)
+	parser.add_argument(
+		"--audit-output-root",
+		type=Path,
+		default=PROJECT_ROOT / "tmp" / "gp-backend-audit",
+		help="Root directory for backend audit workspaces and summaries.",
 	)
 	parser.add_argument(
 		"--policy-file",
@@ -101,6 +111,12 @@ def main() -> int:
 			"blocks_4_0",
 			"blocks_4_1",
 			"blocks_4_2",
+			"gripper_0",
+			"miconic_0",
+			"logistics_0",
+			"childsnack_0",
+			"visitall_0",
+			"ferry_0",
 			"all",
 		),
 		default="all",
@@ -117,6 +133,14 @@ def main() -> int:
 		"--timeout-seconds",
 		type=int,
 		help="Optional wall-clock guard for printed external learner commands.",
+	)
+	parser.add_argument(
+		"--max-num-instances",
+		type=int,
+		help=(
+			"Optional KR 2025 backend instance cap for smoke runs. "
+			"Omit for paper-profile commands."
+		),
 	)
 	parser.add_argument(
 		"--unsafe-direct",
@@ -148,6 +172,7 @@ def main() -> int:
 			experiment=args.experiment,
 			max_rss_gb=args.max_rss_gb,
 			timeout_seconds=args.timeout_seconds,
+			max_num_instances=args.max_num_instances,
 			unsafe_direct=args.unsafe_direct,
 		)
 		return 0
@@ -156,6 +181,40 @@ def main() -> int:
 		return 0
 	if args.command == "learner-sketches-summary":
 		print_learner_sketches_summary(args.backend_root, experiment=args.experiment)
+		return 0
+	if args.command == "learning-general-policies-command":
+		print_learning_general_policies_commands(
+			args.backend_root,
+			audit_output_root=args.audit_output_root,
+			experiment=args.experiment,
+			max_rss_gb=args.max_rss_gb,
+			timeout_seconds=args.timeout_seconds,
+			max_num_instances=args.max_num_instances,
+			unsafe_direct=args.unsafe_direct,
+		)
+		return 0
+	if args.command == "learning-general-policies-docker-build-command":
+		print_learning_general_policies_docker_build_command(
+			args.backend_root,
+			proxy=args.proxy,
+		)
+		return 0
+	if args.command == "learning-general-policies-docker-command":
+		print_learning_general_policies_docker_commands(
+			args.backend_root,
+			audit_output_root=args.audit_output_root,
+			experiment=args.experiment,
+			max_rss_gb=args.max_rss_gb,
+			timeout_seconds=args.timeout_seconds,
+			max_num_instances=args.max_num_instances,
+		)
+		return 0
+	if args.command == "learning-general-policies-summary":
+		print_learning_general_policies_summary(
+			args.backend_root,
+			audit_output_root=args.audit_output_root,
+			experiment=args.experiment,
+		)
 		return 0
 	if args.command == "d2l-docker-commands":
 		print_d2l_docker_commands(args.backend_root)
@@ -204,6 +263,21 @@ def install_backend_dependencies(root: Path) -> None:
 		check=True,
 		env=env,
 	)
+	subprocess.run(
+		(
+			"uv",
+			"pip",
+			"install",
+			"--python",
+			str(venv / "bin" / "python"),
+			"intbitset",
+			"bloom-filter2",
+			"tqdm",
+			"tarski",
+		),
+		check=True,
+		env=env,
+	)
 
 
 def print_backend_status(root: Path) -> None:
@@ -224,7 +298,7 @@ def print_blocksworld_smoke_command(
 	timeout_seconds: int | None,
 	unsafe_direct: bool,
 ) -> None:
-	backend = BACKENDS[0]
+	backend = _backend_definition("learner-sketches")
 	manifest = discover_backend_manifest(
 		root=root,
 		name=backend["name"],
@@ -249,7 +323,7 @@ def print_blocksworld_smoke_command(
 			max_rss_gb=max_rss_gb,
 			timeout_seconds=timeout_seconds,
 		)
-	print(" ".join(command))
+	print(shlex.join(command))
 
 
 def print_learner_sketches_commands(
@@ -267,7 +341,7 @@ def print_learner_sketches_commands(
 			domain_file=config.domain_file,
 			problems_directory=config.problems_directory,
 			workspace=config.workspace,
-			python_executable="uv run python",
+			python_executable=root / ".venv" / "bin" / "python",
 			width=config.width,
 		)
 		if not unsafe_direct:
@@ -282,7 +356,94 @@ def print_learner_sketches_commands(
 			f"SKETCH_LEARNER_DIR={manifest.path}"
 		)
 		print(f"# {config.name}")
-		print(env_prefix, " ".join(command))
+		print(env_prefix, shlex.join(command))
+
+
+def print_learning_general_policies_commands(
+	root: Path,
+	*,
+	audit_output_root: Path,
+	experiment: str,
+	max_rss_gb: float,
+	timeout_seconds: int | None,
+	max_num_instances: int | None,
+	unsafe_direct: bool,
+) -> None:
+	manifest = _learning_general_policies_manifest(root)
+	runner = GPBackendRunner(manifest)
+	for config in _selected_learning_general_policies_experiments(
+		root,
+		audit_output_root,
+		experiment,
+	):
+		command = runner.learning_general_policies_command(
+			domain_file=config.domain_file,
+			problems_directory=config.problems_directory,
+			workspace=config.workspace,
+			python_executable=root / ".venv" / "bin" / "python",
+			width=config.width,
+			planner=config.planner,
+			max_num_instances=max_num_instances,
+		)
+		if not unsafe_direct:
+			command = runner.guarded_command(
+				command,
+				label=f"learner-policies-from-examples:{config.name}",
+				max_rss_gb=max_rss_gb,
+				timeout_seconds=timeout_seconds,
+			)
+		env_prefix = (
+			f"PYTHONPATH={manifest.path / 'learning'} "
+			f"LEARNER_POLICIES_FROM_EXAMPLES_DIR={manifest.path}"
+		)
+		print(f"# {config.name}")
+		print(env_prefix, shlex.join(command))
+
+
+def print_learning_general_policies_docker_build_command(
+	root: Path,
+	*,
+	proxy: str | None = None,
+) -> None:
+	manifest = _learning_general_policies_manifest(root)
+	runner = GPBackendRunner(manifest)
+	print(
+		shlex.join(
+			runner.learning_general_policies_docker_build_command(
+				build_args=_docker_proxy_build_args(proxy),
+			),
+		),
+	)
+
+
+def print_learning_general_policies_docker_commands(
+	root: Path,
+	*,
+	audit_output_root: Path,
+	experiment: str,
+	max_rss_gb: float,
+	timeout_seconds: int | None,
+	max_num_instances: int | None,
+) -> None:
+	manifest = _learning_general_policies_manifest(root)
+	runner = GPBackendRunner(manifest)
+	for config in _selected_learning_general_policies_experiments(
+		root,
+		audit_output_root,
+		experiment,
+	):
+		command = runner.learning_general_policies_docker_run_command(
+			domain_file=config.domain_file,
+			problems_directory=config.problems_directory,
+			workspace=config.workspace,
+			width=config.width,
+			planner=config.planner,
+			max_num_instances=max_num_instances,
+			max_rss_gb=max_rss_gb,
+			timeout_seconds=timeout_seconds,
+		)
+		print(f"# {config.name}")
+		print(shlex.join(command))
 
 
 def print_learner_sketches_summary(root: Path, *, experiment: str) -> None:
@@ -322,6 +483,64 @@ def print_learner_sketches_summary(root: Path, *, experiment: str) -> None:
 			print(f"  rule {index}: if {conditions} then {effects}")
 
 
+def print_learning_general_policies_summary(
+	root: Path,
+	*,
+	audit_output_root: Path,
+	experiment: str,
+) -> None:
+	for config in _selected_learning_general_policies_experiments(
+		root,
+		audit_output_root,
+		experiment,
+	):
+		policy_file = discover_learning_general_policies_policy_file(
+			config.workspace,
+			width=config.width,
+		)
+		raw_policy_file = discover_learning_general_policies_policy_file(
+			config.workspace,
+			width=config.width,
+			minimized=False,
+		)
+		if policy_file is None:
+			expected = config.workspace / f"output.<uuid>/sketch_minimized_{config.width}.txt"
+			print(f"{config.name}: missing; expected={expected}")
+			continue
+		policy = parse_dlplan_policy(policy_file.read_text(encoding="utf-8"))
+		raw_policy = (
+			parse_dlplan_policy(raw_policy_file.read_text(encoding="utf-8"))
+			if raw_policy_file is not None
+			else None
+		)
+		program = policy_program_from_sketch_policy(
+			policy=policy,
+			domain_name=config.domain_name,
+			source_name=config.name,
+			backend_name="learner-policies-from-examples",
+			policy_file=policy_file,
+		)
+		print(
+			f"{config.name}: present; width={config.width}; "
+			f"features={len(policy.features)}; rules={len(policy.parsed_rules)}; "
+			f"raw_rules={len(raw_policy.parsed_rules) if raw_policy else 'unknown'}; "
+			f"policy={policy_file}; policy_program=ok; "
+			f"backend={program.backend_name}; representation={program.representation}",
+		)
+		for feature in program.features:
+			print(f"  feature {feature.identifier} [{feature.kind}]: {feature.expression}")
+		for rule in program.rules:
+			conditions = ", ".join(
+				f"{operator} {feature_id}"
+				for feature_id, operator in rule.conditions
+			) or "true"
+			effects = ", ".join(
+				f"{operator} {feature_id}"
+				for feature_id, operator in rule.effects
+			) or "none"
+			print(f"  rule {rule.name}: if {conditions} then {effects}")
+
+
 def compile_learner_sketches_asl(root: Path, *, experiment: str) -> None:
 	for config in _selected_learner_sketches_experiments(root, experiment):
 		policy_file = config.workspace / "output" / f"sketch_minimized_{config.width}.txt"
@@ -346,7 +565,7 @@ def compile_learner_sketches_asl(root: Path, *, experiment: str) -> None:
 
 
 def print_d2l_docker_commands(root: Path) -> None:
-	backend = BACKENDS[2]
+	backend = _backend_definition("d2l")
 	manifest = discover_backend_manifest(
 		root=root,
 		name=backend["name"],
@@ -366,10 +585,10 @@ def print_d2l_docker_commands(root: Path) -> None:
 		str(manifest.path / "containers" / "Dockerfile"),
 		str(manifest.path),
 	)
-	print(" ".join(build_command))
+	print(shlex.join(build_command))
 	for experiment in ("blocks:clear", "blocks:on", "blocks:all_at_5"):
 		print(
-			" ".join(
+			shlex.join(
 				runner.d2l_docker_run_command(
 					experiment=experiment,
 					workspace=workspace,
@@ -411,7 +630,17 @@ def _blocksworld_smoke_config() -> SmokeConfig:
 
 
 def _learner_sketches_manifest(root: Path):
-	backend = BACKENDS[0]
+	backend = _backend_definition("learner-sketches")
+	return discover_backend_manifest(
+		root=root,
+		name=backend["name"],
+		url=backend["url"],
+		commit=backend["commit"],
+	)
+
+
+def _learning_general_policies_manifest(root: Path):
+	backend = _backend_definition("learner-policies-from-examples")
 	return discover_backend_manifest(
 		root=root,
 		name=backend["name"],
@@ -425,6 +654,17 @@ def _selected_learner_sketches_experiments(
 	experiment: str,
 ) -> tuple[LearnerSketchesExperiment, ...]:
 	experiments = tuple(_learner_sketches_blocksworld_experiments(root))
+	if experiment == "all":
+		return experiments
+	return tuple(config for config in experiments if config.name == experiment)
+
+
+def _selected_learning_general_policies_experiments(
+	root: Path,
+	audit_output_root: Path,
+	experiment: str,
+) -> tuple[LearningGeneralPoliciesExperiment, ...]:
+	experiments = tuple(_learning_general_policies_experiments(root, audit_output_root))
 	if experiment == "all":
 		return experiments
 	return tuple(config for config in experiments if config.name == experiment)
@@ -452,6 +692,67 @@ def _learner_sketches_blocksworld_experiments(
 				problems_directory=benchmarks / family / domain_name / "training" / "easy",
 				workspace=audit_root / f"{domain_name}_{width}",
 			)
+
+
+def _learning_general_policies_experiments(
+	root: Path,
+	audit_output_root: Path,
+) -> Iterable[LearningGeneralPoliciesExperiment]:
+	backend_path = root / "learner-policies-from-examples"
+	benchmarks = backend_path / "learning" / "benchmarks"
+	audit_root = audit_output_root / "learner-policies-from-examples"
+	experiment_specs = (
+		("other", "blocks_4_clear", (0,)),
+		("other", "blocks_4_on", (0,)),
+		("tractable", "blocks_4", (0,)),
+		("tractable", "gripper", (0,)),
+		("tractable", "miconic", (0,)),
+		("tractable", "logistics", (0,)),
+		("tractable", "childsnack", (0,)),
+		("tractable", "visitall", (0,)),
+		("tractable", "ferry", (0,)),
+	)
+	for family, domain_name, widths in experiment_specs:
+		for width in widths:
+			yield LearningGeneralPoliciesExperiment(
+				name=f"{domain_name}_{width}",
+				benchmark_family=family,
+				domain_name=domain_name,
+				width=width,
+				domain_file=benchmarks / family / domain_name / "domain.pddl",
+				problems_directory=benchmarks / family / domain_name / "training" / "easy",
+				workspace=audit_root / f"{domain_name}_{width}",
+			)
+
+
+def _backend_definition(name: str) -> dict[str, str]:
+	for backend in BACKENDS:
+		if backend["name"] == name:
+			return backend
+	raise KeyError(f"Unknown pinned backend: {name}")
+
+
+def _docker_proxy_build_args(proxy: str | None) -> dict[str, str]:
+	if proxy:
+		return {
+			"HTTP_PROXY": proxy,
+			"HTTPS_PROXY": proxy,
+			"http_proxy": proxy,
+			"https_proxy": proxy,
+		}
+	build_args: dict[str, str] = {}
+	for name in (
+		"http_proxy",
+		"https_proxy",
+		"HTTP_PROXY",
+		"HTTPS_PROXY",
+		"no_proxy",
+		"NO_PROXY",
+	):
+		value = os.environ.get(name)
+		if value:
+			build_args[name] = value
+	return build_args
 
 
 def _run_git(args: tuple[str, ...], *, proxy: str | None = None) -> None:

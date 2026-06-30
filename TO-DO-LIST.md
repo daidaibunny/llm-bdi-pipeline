@@ -14,7 +14,8 @@ Target pipeline:
 
 ```text
 PDDL domain + training/counterexample problems
-→ goal-conditioned modular policy-sketch synthesis
+→ external generalized-policy learner
+→ LiftedPolicyProgram
 → feature binding
 → Layer B atomic goal modules
 → Layer C goal dependency composer
@@ -75,6 +76,9 @@ Total selected IPC domains: 8. Instance counts are domain-specific:
 | R7 | Remove obsolete generated-result dependencies from the paper draft. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
 | R8 | Run tests and final config validation. | Implemented | Targeted regressions pass. `run_final_paper_data.py --config-only` renders the new registry configs. `--validate-only` still requires a regenerated `tmp/paper-final-latest/comparison.json`, which is outside this data migration. |
 | R9 | Commit and push the benchmark infrastructure cleanup. | Implemented | Full pytest, config render, representative smoke, commit, and push are complete for this milestone. |
+| R10 | Make prior paper-code reuse the main Layer B/C route rather than hand-built schema heuristics. | In progress | Added policy-first `LiftedPolicyProgram` IR and KR 2025 `learner-policies-from-examples` backend adapter. Existing schema synthesis remains a baseline adapter, not the main method. |
+| R11 | Stabilize KR 2025 backend execution without native macOS planner failures. | Implemented | `docker/learning-general-policies/Dockerfile` builds an Ubuntu 22.04 linux/amd64 image with Boost.Python 1.82.0, Python 3.10, `pymimir==0.9.62`, and `dlplan==0.3.29`; BFWS dynamic libraries resolve inside Docker. Actual KR runs should use `learning-general-policies-docker-*` commands. |
+| R12 | Validate a non-degenerate KR learner run that emits a policy artifact. | Open | Environment smoke now reaches feature generation and solver construction. One-problem Blocks smoke is too small and fails inside KR policy construction; next use a paper-style small training subset directory rather than `--max_num_instances` over a large folder. |
 
 ## Current Evidence Snapshot
 
@@ -85,6 +89,7 @@ Latest lightweight checks:
 | 8-domain parser/support sweep | All selected domains compile under the supported PDDL fragment for the first training problem. |
 | Final config render | 8 main experiments generated; each uses offline synthesis planner traces and the project Fast Downward executable. |
 | Representative trace smoke | `gripper` 1/1, `blocks` 0/1 due held-out execution timeout, `childsnack` 0/1 due missing `served` strategy; all three rows now synthesize a library without matrix failure. |
+| KR 2025 Docker environment smoke | Docker image builds; `dlplan 0.3.29` exposes `set_generate_til_c_role`; `libbfws.so` resolves Boost.Python 1.82.0 and Python 3.10. |
 
 Interpretation:
 
@@ -92,6 +97,9 @@ Interpretation:
 - Remaining failures are now learning/execution coverage gaps: stronger Layer B
   modules for resource-production domains such as Childsnack, and stronger
   Layer C/execution scaling for larger held-out Blocks instances.
+- The architecture is being pulled back toward paper-code reuse: KR 2025 is the
+  current policy-first backend candidate; schema-derived rules are baseline
+  evidence, not the final claimed learning method.
 
 ## Commands
 
@@ -100,6 +108,8 @@ Core checks:
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q
 PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --config-only
+uv run python scripts/gp_backend_audit.py learning-general-policies-docker-build-command
+uv run python scripts/gp_backend_audit.py learning-general-policies-docker-command --experiment blocks_4_clear_0 --timeout-seconds 120 --max-num-instances 1
 ```
 
 Targeted benchmark checks:

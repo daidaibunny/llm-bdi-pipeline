@@ -8,6 +8,7 @@ pipeline reproducible commands and parseable sketch outputs.
 from __future__ import annotations
 
 import re
+import shlex
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -35,6 +36,11 @@ PINNED_BACKENDS = (
 		"name": "d2l",
 		"url": "https://github.com/rleap-project/d2l.git",
 		"commit": "0620e169c894d79b3c84f435dba1462996f7c270",
+	},
+	{
+		"name": "learner-policies-from-examples",
+		"url": "https://github.com/bonetblai/learner-policies-from-examples.git",
+		"commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
 	},
 )
 
@@ -141,6 +147,54 @@ BACKEND_RESEARCH_PROFILES = {
 			"consumed_by_synthesis": True,
 			"consumption_mode": "verified_d2l_text_policy_rules",
 			"blocking_gap": None,
+			},
+		},
+	"learner-policies-from-examples": {
+		"paper_role": (
+			"KR 2025 generalized-policy learner from examples with feature-pool "
+			"generation and structural termination checks"
+		),
+		"preferred_use": (
+			"primary policy-first backend for learned LiftedPolicyProgram artifacts"
+		),
+		"input_artifacts": (
+			"PDDL domain",
+			"training PDDL problems",
+			"planner traces from preprocessing",
+			"feature-complexity limits",
+		),
+		"output_artifacts": (
+			"dlplan_policy",
+			"minimized_policy",
+			"feature_pool",
+			"verification_log",
+		),
+		"reusable_evidence": (
+			"domain-independent feature generation",
+			"hitting-set-style policy selection",
+			"structural termination evidence",
+			"policy-first artifact before ASL compilation",
+		),
+		"known_failure_modes": (
+			"unsupported_dlplan_feature_binding",
+			"missing_policy_artifact",
+			"no_policy_learned",
+			"resource_limit_exceeded",
+		),
+		"resource_profile": {
+			"execution_environment": (
+				"Docker linux/amd64 with resource_guard.py; native macOS is "
+				"unsupported because bundled planner libraries are Linux ELF"
+			),
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"current_consumption_role": {
+			"drives_layer_b": True,
+			"drives_layer_c": True,
+			"consumed_by_synthesis": True,
+			"consumption_mode": "policy_first_lifted_program",
+			"blocking_gap": None,
 		},
 	},
 }
@@ -239,6 +293,62 @@ class LearnerSketchesRunConfig:
 @dataclass(frozen=True)
 class LearnerSketchesRunResult:
 	"""Result of one learner-sketches training run and discovered policies."""
+
+	command: tuple[str, ...]
+	workspace: Path
+	returncode: int
+	policy_file: Path | None
+	raw_policy_file: Path | None
+	stdout: str
+	stderr: str
+
+	@property
+	def succeeded(self) -> bool:
+		return self.returncode == 0 and self.policy_file is not None
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"command": list(self.command),
+			"workspace": str(self.workspace),
+			"returncode": self.returncode,
+			"policy_file": str(self.policy_file) if self.policy_file is not None else None,
+			"raw_policy_file": (
+				str(self.raw_policy_file)
+				if self.raw_policy_file is not None
+				else None
+			),
+			"stdout": self.stdout,
+			"stderr": self.stderr,
+			"succeeded": self.succeeded,
+			}
+
+
+@dataclass(frozen=True)
+class LearningGeneralPoliciesRunConfig:
+	"""Configuration for the KR 2025 learner-policies-from-examples backend."""
+
+	domain_file: str | Path
+	problems_directory: str | Path
+	workspace: str | Path
+	width: int = 0
+	python_executable: str | Path | None = None
+	planner: str = "bfws"
+	max_num_instances: int | None = None
+	max_states_per_instance: int = 10000
+	max_time_per_instance: int = 10000
+	complexity_limit: int | None = None
+	feature_limit: int = 1000000
+	max_features: int = 15
+	cost_bound: int = 100
+	max_rss_gb: float = DEFAULT_MAX_RSS_GB
+	poll_seconds: float = DEFAULT_POLL_SECONDS
+	timeout_seconds: int | None = None
+	use_resource_guard: bool = True
+
+
+@dataclass(frozen=True)
+class LearningGeneralPoliciesRunResult:
+	"""Result of one policy-first generalized-policy learner run."""
 
 	command: tuple[str, ...]
 	workspace: Path
@@ -451,6 +561,164 @@ class GPBackendRunner:
 		command.extend(str(step) for step in steps)
 		return tuple(command)
 
+	def learning_general_policies_command(
+		self,
+		*,
+		domain_file: str | Path,
+		problems_directory: str | Path,
+		workspace: str | Path,
+		python_executable: str | Path = "python3",
+		width: int = 0,
+		planner: str = "bfws",
+		max_num_instances: int | None = None,
+		max_states_per_instance: int = 10000,
+		max_time_per_instance: int = 10000,
+		complexity_limit: int | None = None,
+		feature_limit: int = 1000000,
+		max_features: int = 15,
+		cost_bound: int = 100,
+	) -> tuple[str, ...]:
+		"""Command for the KR 2025 learner-policies-from-examples backend."""
+
+		self._require_backend()
+		command: list[str] = [
+			str(python_executable),
+			str(self.manifest.path / "learning" / "main.py"),
+			"--domain_filepath",
+			str(Path(domain_file)),
+			"--problems_directory",
+			str(Path(problems_directory)),
+			"--workspace",
+			str(Path(workspace)),
+			"--width",
+			str(width),
+			"--planner",
+			planner,
+			"--max_num_states_per_instance",
+			str(max_states_per_instance),
+			"--max_time_per_instance",
+			str(max_time_per_instance),
+			"--feature_limit",
+			str(feature_limit),
+			"--max_features",
+			str(max_features),
+			"--cost_bound",
+			str(cost_bound),
+		]
+		if max_num_instances is not None:
+			command.extend(("--max_num_instances", str(max_num_instances)))
+		if complexity_limit is not None:
+			command.extend(("--complexity_limit", str(complexity_limit)))
+		return tuple(command)
+
+	def learning_general_policies_docker_build_command(
+		self,
+		*,
+		image: str = "learner-policies-from-examples-env:local",
+		platform: str = "linux/amd64",
+		build_args: Mapping[str, str] | None = None,
+	) -> tuple[str, ...]:
+		"""Docker build command for the KR 2025 Linux planner environment."""
+
+		self._require_backend()
+		command: list[str] = [
+			"docker",
+			"build",
+			"--platform",
+			platform,
+		]
+		for name, value in sorted((build_args or {}).items()):
+			if value:
+				command.extend(("--build-arg", f"{name}={value}"))
+		command.extend(
+			(
+				"-t",
+				image,
+				"-f",
+				str(PROJECT_ROOT / "docker" / "learning-general-policies" / "Dockerfile"),
+				str(PROJECT_ROOT),
+			),
+		)
+		return (
+			*command,
+		)
+
+	def learning_general_policies_docker_run_command(
+		self,
+		*,
+		domain_file: str | Path,
+		problems_directory: str | Path,
+		workspace: str | Path,
+		image: str = "learner-policies-from-examples-env:local",
+		platform: str = "linux/amd64",
+		width: int = 0,
+		planner: str = "bfws",
+		max_num_instances: int | None = None,
+		max_states_per_instance: int = 10000,
+		max_time_per_instance: int = 10000,
+		complexity_limit: int | None = None,
+		feature_limit: int = 1000000,
+		max_features: int = 15,
+		cost_bound: int = 100,
+		max_rss_gb: float = DEFAULT_MAX_RSS_GB,
+		poll_seconds: float = DEFAULT_POLL_SECONDS,
+		timeout_seconds: int | None = None,
+	) -> tuple[str, ...]:
+		"""Docker invocation for KR 2025 code with Linux-only planner libraries."""
+
+		self._require_backend()
+		inner_command = [
+			"python",
+			str(PROJECT_ROOT / "scripts" / "resource_guard.py"),
+			"--max-rss-gb",
+			str(max_rss_gb),
+			"--poll-seconds",
+			str(poll_seconds),
+			"--label",
+			f"learner-policies-from-examples:{Path(workspace).name}",
+		]
+		if timeout_seconds is not None:
+			inner_command.extend(("--timeout-seconds", str(timeout_seconds)))
+		inner_command.append("--")
+		inner_command.extend(
+			self.learning_general_policies_command(
+				domain_file=domain_file,
+				problems_directory=problems_directory,
+				workspace=workspace,
+				python_executable="python",
+				width=width,
+				planner=planner,
+				max_num_instances=max_num_instances,
+				max_states_per_instance=max_states_per_instance,
+				max_time_per_instance=max_time_per_instance,
+				complexity_limit=complexity_limit,
+				feature_limit=feature_limit,
+				max_features=max_features,
+				cost_bound=cost_bound,
+			),
+		)
+		inner = (
+			f"export PYTHONPATH={shlex.quote(str(self.manifest.path / 'learning'))}; "
+			+ " ".join(shlex.quote(item) for item in inner_command)
+		)
+		return (
+			"docker",
+			"run",
+			"--rm",
+			"--platform",
+			platform,
+			"--memory",
+			f"{max_rss_gb:g}g",
+			"-v",
+			f"{PROJECT_ROOT}:{PROJECT_ROOT}",
+			"-w",
+			str(PROJECT_ROOT),
+			image,
+			"bash",
+			"-lc",
+			inner,
+		)
+
 	def d2l_docker_run_command(
 		self,
 		*,
@@ -544,6 +812,72 @@ def run_learner_sketches(
 	)
 
 
+def run_learning_general_policies(
+	*,
+	manifest: BackendManifest,
+	config: LearningGeneralPoliciesRunConfig,
+	env: Mapping[str, str] | None = None,
+) -> LearningGeneralPoliciesRunResult:
+	"""Run the KR 2025 generalized-policy learner and discover policy artifacts."""
+
+	runner = GPBackendRunner(manifest)
+	workspace = Path(config.workspace)
+	workspace.mkdir(parents=True, exist_ok=True)
+	python_executable = (
+		config.python_executable
+		if config.python_executable is not None
+		else _default_backend_python(manifest)
+	)
+	command = runner.learning_general_policies_command(
+		domain_file=config.domain_file,
+		problems_directory=config.problems_directory,
+		workspace=workspace,
+		python_executable=python_executable,
+		width=config.width,
+		planner=config.planner,
+		max_num_instances=config.max_num_instances,
+		max_states_per_instance=config.max_states_per_instance,
+		max_time_per_instance=config.max_time_per_instance,
+		complexity_limit=config.complexity_limit,
+		feature_limit=config.feature_limit,
+		max_features=config.max_features,
+		cost_bound=config.cost_bound,
+	)
+	if config.use_resource_guard:
+		command = runner.guarded_command(
+			command,
+			label=f"learner-policies-from-examples:{workspace.name}",
+			max_rss_gb=config.max_rss_gb,
+			poll_seconds=config.poll_seconds,
+			timeout_seconds=config.timeout_seconds,
+		)
+	process = subprocess.run(
+		command,
+		check=False,
+		capture_output=True,
+		text=True,
+		env=dict(env) if env is not None else None,
+	)
+	policy_file = discover_learning_general_policies_policy_file(
+		workspace,
+		width=config.width,
+	)
+	raw_policy_file = discover_learning_general_policies_policy_file(
+		workspace,
+		width=config.width,
+		minimized=False,
+	)
+	return LearningGeneralPoliciesRunResult(
+		command=command,
+		workspace=workspace,
+		returncode=process.returncode,
+		policy_file=policy_file,
+		raw_policy_file=raw_policy_file,
+		stdout=process.stdout,
+		stderr=process.stderr,
+	)
+
+
 def discover_learner_sketches_policy_file(
 	workspace: str | Path,
 	*,
@@ -556,6 +890,31 @@ def discover_learner_sketches_policy_file(
 	name = f"sketch_minimized_{width}.txt" if minimized else f"sketch_{width}.txt"
 	path = output_dir / name
 	return path if path.exists() else None
+
+
+def discover_learning_general_policies_policy_file(
+	workspace: str | Path,
+	*,
+	width: int,
+	minimized: bool = True,
+) -> Path | None:
+	"""Return the KR 2025 learner policy artifact from `output.<uuid>` folders."""
+
+	workspace_path = Path(workspace)
+	name = f"sketch_minimized_{width}.txt" if minimized else f"sketch_{width}.txt"
+	candidates = tuple(
+		sorted(
+			(
+				workspace_path / "output" / name,
+				*workspace_path.glob(f"output.*/{name}"),
+			),
+			key=lambda path: str(path),
+		),
+	)
+	for path in candidates:
+		if path.exists():
+			return path
+	return None
 
 
 def parse_dlplan_policy(policy_text: str) -> SketchPolicy:

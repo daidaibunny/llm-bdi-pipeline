@@ -25,6 +25,8 @@ from .architecture_contract import (
 from .gp_backends import (
 	BackendManifest,
 	GPBackendRunner,
+	LearningGeneralPoliciesRunConfig,
+	LearningGeneralPoliciesRunResult,
 	LearnerSketchesRunConfig,
 	LearnerSketchesRunResult,
 	SketchCondition,
@@ -35,9 +37,11 @@ from .gp_backends import (
 	backend_audit_matrix,
 	backend_consumption_role,
 	discover_learner_sketches_policy_file,
+	discover_learning_general_policies_policy_file,
 	discover_backend_manifest,
 	parse_d2l_policy,
 	parse_dlplan_policy,
+	run_learning_general_policies,
 	run_learner_sketches,
 )
 from .feature_binding import (
@@ -74,6 +78,14 @@ from .models import (
 from .paper_backend_audit import (
 	PaperPolicyAuditReport,
 	audit_learned_policy_for_asl_binding,
+)
+from .policy_program import (
+	LearnedPolicyRule,
+	LiftedPolicyProgram,
+	PolicyFeature,
+	PolicyModule,
+	policy_program_from_lifted_rules,
+	policy_program_from_sketch_policy,
 )
 from .library_synthesis import (
 	ExternalBackendSourceGateReport,
@@ -144,6 +156,8 @@ __all__ = [
 	"BackendManifest",
 	"ExternalSketchPolicySource",
 	"GPBackendRunner",
+	"LearningGeneralPoliciesRunConfig",
+	"LearningGeneralPoliciesRunResult",
 	"LearnerSketchesRunConfig",
 	"LearnerSketchesRunResult",
 	"SketchCondition",
@@ -156,6 +170,10 @@ __all__ = [
 	"SketchRule",
 	"SketchSynthesisReport",
 	"PaperPolicyAuditReport",
+	"LiftedPolicyProgram",
+	"LearnedPolicyRule",
+	"PolicyFeature",
+	"PolicyModule",
 	"UnifiedSynthesisResult",
 	"DomainLevelLibraryContractReport",
 	"DomainLevelTemporalArtifact",
@@ -179,6 +197,7 @@ __all__ = [
 	"classify_heldout_failure_for_refinement",
 	"backend_audit_matrix",
 	"discover_learner_sketches_policy_file",
+	"discover_learning_general_policies_policy_file",
 	"discover_backend_manifest",
 	"goal_facts_from_problem",
 	"assert_compilable_pddl_files",
@@ -196,8 +215,11 @@ __all__ = [
 	"inspect_pddl_support",
 	"parse_dlplan_policy",
 	"persist_domain_level_temporal_artifact",
+	"policy_program_from_lifted_rules",
+	"policy_program_from_sketch_policy",
 	"progress_requests_from_dfa_state",
 	"progress_transitions_from_dfa_state",
+	"run_learning_general_policies",
 	"run_learner_sketches",
 	"run_domain_level_experiment",
 	"synthesize_domain_level_asl_library",
