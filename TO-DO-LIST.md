@@ -10,11 +10,16 @@ Current scope: positive conjunctive achievement goals. Temporal extended goals
 remain a future overlay where an LTLf-to-DFA controller calls the achievement
 goal library.
 
+Current strategic pivot, confirmed on 2026-07-01: do not build a universal
+generalized planner. The project should route domains to existing
+state-of-the-art generalized-planning backends, normalize their generalized
+policy or sketch outputs, and compile those outputs into lifted AgentSpeak(L).
+
 Target pipeline:
 
 ```text
 PDDL domain + training/counterexample problems
-→ external generalized-policy learner
+→ routed external generalized-planning backend
 → LiftedPolicyProgram
 → feature binding
 → Layer B atomic goal modules
@@ -27,11 +32,12 @@ PDDL domain + training/counterexample problems
 
 ## Current Benchmark Decision
 
-All formal achievement-goal benchmark domains must come from one independent,
-paper-quality source, not from learner repositories or implementation-local
-fixtures.
+The previous implementation milestone materialized an 8-domain IPC corpus from
+one independent source. That corpus remains useful as infrastructure evidence,
+but it is no longer the final paper taxonomy after the 2026-07-01 research
+pivot.
 
-Selected source:
+Current materialized source:
 
 ```text
 potassco/pddl-instances
@@ -51,17 +57,23 @@ Each selected domain contains all official instances from its selected IPC
 directory. The `train` split size is `floor(2/3 * instance_count)`; the
 remaining instances form the held-out goal-specification `test` split.
 
-## Selected Domain Classes
+New paper direction: use paper-quality official or reputable benchmark sources
+matched to the selected generalized-planning backend. Prefer official IPC PDDL
+when the exact domain variant exists there. Use the original paper repository
+when a backend paper defines a restricted or synthetic generalized-planning
+variant that is not an IPC domain.
+
+## Selected Routing Domain Classes
 
 | Class | Domains |
 | --- | --- |
-| Goal-separable and serialisable achievement classes | `gripper`, `miconic`, `logistics` |
-| Bounded-width sketchable subgoal-structure classes | `barman`, `childsnack`, `visitall` |
-| Feature-definable goal-dependent construction classes | `blocks`, `depots` |
+| Goal-regression and serialisable-goal domains | `ferry`, `gripper`, `miconic`, `logistics` |
+| Bounded-width sketchable subgoal-structure domains | `delivery`, `spanner`, `visitall`, `childsnack`, `barman` |
+| Feature-definable structural and goal-dependent domains | `blocks`, `8puzzle-1tile`, `sokoban-1stone` |
 
-Total selected IPC domains: 8. Instance counts are domain-specific:
-`gripper` 20, `miconic` 150, `logistics` 84, `barman` 20,
-`childsnack` 20, `visitall` 20, `blocks` 102, and `depots` 22.
+Total selected routing domains: 12. `depots` is demoted to a boundary or
+failure-analysis domain because the KR 2025 learner reports Depot in its C5
+failure group.
 
 ## Active Requirements
 
@@ -79,6 +91,10 @@ Total selected IPC domains: 8. Instance counts are domain-specific:
 | R10 | Make prior paper-code reuse the main Layer B/C route rather than hand-built schema heuristics. | In progress | Added policy-first `LiftedPolicyProgram` IR and KR 2025 `learner-policies-from-examples` backend adapter. Existing schema synthesis remains a baseline adapter, not the main method. |
 | R11 | Stabilize KR 2025 backend execution without native macOS planner failures. | Implemented | `docker/learning-general-policies/Dockerfile` builds an Ubuntu 22.04 linux/amd64 image with Boost.Python 1.82.0, Python 3.10, `pymimir==0.9.62`, and `dlplan==0.3.29`; BFWS dynamic libraries resolve inside Docker. Actual KR runs should use `learning-general-policies-docker-*` commands. |
 | R12 | Validate a non-degenerate KR learner run that emits a policy artifact. | Open | Environment smoke now reaches feature generation and solver construction. One-problem Blocks smoke is too small and fails inside KR policy construction; next use a paper-style small training subset directory rather than `--max_num_instances` over a large folder. |
+| R13 | Replace the old domain taxonomy with a backend-routing taxonomy based on prior GP tracks. | Implemented as design document | `docs/gp_backend_routing_taxonomy.md` now records track-specific backend choices for MOOSE, KR 2025, D2L, learner-sketches, h-policy/Vanir, PG3, planning-program backends, policy reuse, graph-neural policies, IPC learning-track systems, and LLM GP baselines. |
+| R14 | Materialize the new routing benchmark set. | Open | Add or reclassify `ferry`, `delivery`, `spanner`, `8puzzle-1tile`, and `sokoban-1stone`; demote `depots` to boundary unless a routed backend solves it. |
+| R15 | Implement route-specific backend adapters instead of extending the hand-built GP learner. | Open | First targets: MOOSE policy parser for Class A, h-policy/learner-sketches parser for Class B, and KR/D2L policy parser for Class C. All routes must normalize into `LiftedPolicyProgram` before ASL compilation. |
+| R16 | Add backend-probe and acceptance gates. | Open | A backend route is accepted only if it emits a generalized artifact and the artifact passes parser, feature-binding, ASL compilation, and held-out validation gates under resource guards. |
 
 ## Current Evidence Snapshot
 
