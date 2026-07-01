@@ -87,12 +87,23 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	matrix = backend_audit_matrix(root=tmp_path)
 	by_name = {entry["name"]: entry for entry in matrix}
 
-	assert set(by_name) == {
+	assert {
 		"learner-sketches",
 		"h-policy-learner",
 		"d2l",
 		"learner-policies-from-examples",
-	}
+		"pg3",
+		"mimir-rgnn",
+		"best-first-generalized-planning",
+		"bfgp-pp",
+		"pgp-landmarks",
+		"sltp",
+		"up-bfgp",
+		"llm-genplan",
+		"state-centric-gen-planning",
+		"ipc-learning-huzar",
+		"ipc-learning-pgp-baseline",
+	}.issubset(set(by_name))
 	assert by_name["learner-sketches"]["present"] is True
 	assert by_name["learner-sketches"]["pin_status"] == "ok"
 	assert by_name["learner-sketches"]["paper_role"] == (
@@ -160,6 +171,21 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumption_mode": "policy_first_lifted_program",
 		"blocking_gap": None,
 	}
+	assert by_name["pg3"]["current_consumption_role"] == {
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"consumed_by_synthesis": False,
+		"consumption_mode": "audit_or_baseline_only",
+		"blocking_gap": "no_verified_lifted_policy_program_adapter",
+	}
+	assert "./run.sh" in by_name["pg3"]["usage_entrypoints"]
+	assert by_name["bfgp-pp"]["current_consumption_role"]["consumed_by_synthesis"] is False
+	assert "structured generalized planning program synthesis" in by_name["bfgp-pp"][
+		"paper_role"
+	]
+	assert by_name["state-centric-gen-planning"]["current_consumption_role"][
+		"consumed_by_synthesis"
+	] is False
 
 
 def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
@@ -184,6 +210,13 @@ def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
 		"consumed_by_synthesis": True,
 		"consumption_mode": "policy_first_lifted_program",
 		"blocking_gap": None,
+	}
+	assert backend_consumption_role("pg3") == {
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"consumed_by_synthesis": False,
+		"consumption_mode": "audit_or_baseline_only",
+		"blocking_gap": "no_verified_lifted_policy_program_adapter",
 	}
 	assert backend_consumption_role("unknown-paper-code") == {
 		"drives_layer_b": False,
@@ -217,6 +250,31 @@ def test_backend_audit_status_cli_prints_matrix_entries(tmp_path: Path) -> None:
 		"learner-policies-from-examples: missing; observed=unknown; pinned=missing"
 		in result.stdout
 	)
+	assert "pg3: missing; observed=unknown; pinned=missing" in result.stdout
+
+
+def test_backend_audit_usage_cli_prints_how_to_run_backends(tmp_path: Path) -> None:
+	script = Path(__file__).resolve().parents[2] / "scripts" / "gp_backend_audit.py"
+
+	result = subprocess.run(
+		(
+			sys.executable,
+			str(script),
+			"usage",
+			"--backend-root",
+			str(tmp_path),
+		),
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+
+	assert "pg3:" in result.stdout
+	assert "./run.sh" in result.stdout
+	assert "bfgp-pp:" in result.stdout
+	assert "./scripts/compile.sh" in result.stdout
+	assert "state-centric-gen-planning:" in result.stdout
+	assert "python -m code.modeling.train_lstm" in result.stdout
 
 
 def test_learning_general_policies_audit_cli_prints_guarded_command(

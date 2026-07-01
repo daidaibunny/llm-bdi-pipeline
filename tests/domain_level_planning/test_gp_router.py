@@ -38,9 +38,17 @@ def test_router_prefers_external_policy_backend_for_serialisable_class(
 def test_router_falls_back_to_schema_lift_only_as_baseline(
 	tmp_path: Path,
 ) -> None:
+	pg3 = tmp_path / "pg3"
+	pg3.mkdir()
+	(pg3 / ".git").mkdir()
+	(pg3 / ".git" / "HEAD").write_text(
+		"61496456c89ebccc66ba83679ba0e363232f6ac0\n",
+		encoding="utf-8",
+	)
+
 	decision = route_generalized_planner(
-		domain_id="blocks",
-		benchmark_class_id="feature_definable_structural_goal_dependent_domains",
+		domain_id="ferry",
+		benchmark_class_id="goal_regression_serialisable_goal_domains",
 		backend_root=tmp_path,
 		allow_baseline_schema_lift=True,
 	)
@@ -51,21 +59,21 @@ def test_router_falls_back_to_schema_lift_only_as_baseline(
 	assert decision.is_baseline is True
 	assert decision.blocking_gap == "no_trusted_external_gp_backend_available"
 	assert decision.candidate_backends == (
+		"moose",
+		"pg3",
 		"learner-policies-from-examples",
-		"d2l",
-		"h-policy-learner",
 	)
 	assert decision.rejected_backends == (
 		{
+			"backend": "moose",
+			"reason": "missing_backend",
+		},
+		{
+			"backend": "pg3",
+			"reason": "no_verified_lifted_policy_program_adapter",
+		},
+		{
 			"backend": "learner-policies-from-examples",
-			"reason": "missing_backend",
-		},
-		{
-			"backend": "d2l",
-			"reason": "missing_backend",
-		},
-		{
-			"backend": "h-policy-learner",
 			"reason": "missing_backend",
 		},
 	)

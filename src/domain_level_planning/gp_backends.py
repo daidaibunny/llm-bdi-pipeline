@@ -42,7 +42,70 @@ PINNED_BACKENDS = (
 		"url": "https://github.com/bonetblai/learner-policies-from-examples.git",
 		"commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
 	},
+	{
+		"name": "pg3",
+		"url": "https://github.com/ryangpeixu/pg3.git",
+		"commit": "61496456c89ebccc66ba83679ba0e363232f6ac0",
+	},
+	{
+		"name": "mimir-rgnn",
+		"url": "https://github.com/simon-stahlberg/mimir-rgnn.git",
+		"commit": "ea3089713c18ab1d7faf1a7f5ecddb4f5acdcbab",
+	},
+	{
+		"name": "best-first-generalized-planning",
+		"url": "https://github.com/rleap-project/best-first-generalized-planning.git",
+		"commit": "7641bc46670c180f70cb3aca035a0459fc117554",
+	},
+	{
+		"name": "bfgp-pp",
+		"url": "https://github.com/jsego/bfgp-pp.git",
+		"commit": "e913a3455030fac623c38df016fb3ce36999440c",
+	},
+	{
+		"name": "pgp-landmarks",
+		"url": "https://github.com/aig-upf/pgp-landmarks.git",
+		"commit": "33e45fb647d1fde5a0e6c33a0935bf4cca2bc5ed",
+	},
+	{
+		"name": "sltp",
+		"url": "https://github.com/aig-upf/sltp.git",
+		"commit": "f66d82cb684f02ff72600f07b4f3423716bc671f",
+	},
+	{
+		"name": "up-bfgp",
+		"url": "https://github.com/aiplan4eu/up-bfgp.git",
+		"commit": "704fffb5da8d62fdcaca34606dca30497b5ef63f",
+	},
+	{
+		"name": "llm-genplan",
+		"url": "https://github.com/tomsilver/llm-genplan.git",
+		"commit": "a2b8baa7153d5a8f2df51fbc72c51def80ddc169",
+	},
+	{
+		"name": "state-centric-gen-planning",
+		"url": "https://github.com/ai4society/state-centric-gen-planning.git",
+		"commit": "03a61f587ea5a2745192225a1d0be19ca045a774",
+	},
+	{
+		"name": "ipc-learning-huzar",
+		"url": "https://github.com/ipc2023-learning/repo01.git",
+		"commit": "29c09b57364721a8444fa9fabd22ecd0f3eae1ff",
+	},
+	{
+		"name": "ipc-learning-pgp-baseline",
+		"url": "https://github.com/ipc2023-learning/baseline02.git",
+		"commit": "95a2d734f06ca58b6edfc6fad756519c67311445",
+	},
 )
+
+AUDIT_ONLY_CONSUMPTION_ROLE = {
+	"drives_layer_b": False,
+	"drives_layer_c": False,
+	"consumed_by_synthesis": False,
+	"consumption_mode": "audit_or_baseline_only",
+	"blocking_gap": "no_verified_lifted_policy_program_adapter",
+}
 
 BACKEND_RESEARCH_PROFILES = {
 	"learner-sketches": {
@@ -196,6 +259,357 @@ BACKEND_RESEARCH_PROFILES = {
 			"consumption_mode": "policy_first_lifted_program",
 			"blocking_gap": None,
 		},
+	},
+	"pg3": {
+		"paper_role": "IJCAI 2022 policy-guided generalized policy generation",
+		"preferred_use": "candidate lifted decision-list policy backend after parser support",
+		"input_artifacts": (
+			"configured PDDL learning environment",
+			"training and testing tasks",
+		),
+		"output_artifacts": (
+			"lifted decision-list policy",
+			"training and evaluation logs",
+		),
+		"reusable_evidence": (
+			"direct lifted action-selection policy baseline",
+			"planner-guided policy search behavior",
+		),
+		"known_failure_modes": (
+			"no_lifted_policy_program_adapter",
+			"environment_specific_experiment_config",
+		),
+		"resource_profile": {
+			"execution_environment": "Python 3.6+ via requirements.txt and run.sh",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"pip install -r requirements.txt",
+			"./run.sh",
+			"edit ENV in run.sh to switch domains",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"mimir-rgnn": {
+		"paper_role": "KR 2022 relational graph-neural generalized policy library",
+		"preferred_use": "neural policy baseline or feature-discovery reference",
+		"input_artifacts": (
+			"PDDL domain and problems through Mimir",
+			"state/action/goal encoders",
+			"training data for neural policy or value learning",
+		),
+		"output_artifacts": (
+			"PyTorch R-GNN model",
+			"action or object readouts",
+		),
+		"reusable_evidence": (
+			"relational neural baseline",
+			"PDDL-to-graph encoding strategy",
+		),
+		"known_failure_modes": (
+			"neural_policy_not_symbolic_asl",
+			"no_distillation_or_certification_adapter",
+		),
+		"resource_profile": {
+			"execution_environment": "Python 3.11+; pip install pymimir-rgnn",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"pip install pymimir-rgnn",
+			"import pymimir_rgnn and build RelationalGraphNeuralNetwork",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"best-first-generalized-planning": {
+		"paper_role": "ICAPS 2021 best-first search over planning programs",
+		"preferred_use": "planning-program baseline for loop/pointer domains",
+		"input_artifacts": (
+			"generated synthesis instances",
+			"generated validation instances",
+			"program line bound",
+		),
+		"output_artifacts": (
+			"assembly-like planning program",
+			"validator report",
+		),
+		"reusable_evidence": (
+			"generalized program synthesis baseline",
+			"loop and pointer strategy examples",
+		),
+		"known_failure_modes": (
+			"planning_program_not_asl_module",
+			"requires_program_to_asl_adapter",
+		),
+		"resource_profile": {
+			"execution_environment": "C++ binaries built by scripts/compile_all.sh",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"./scripts/compile_all.sh",
+			"./main.bin 8 domain/heuristics/fibo/",
+			"./validator.bin programs/fibo.prog domain/validation/fibo/",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"bfgp-pp": {
+		"paper_role": "BFGP++ structured generalized planning program synthesis",
+		"preferred_use": "planning-program baseline and possible future ASL program adapter",
+		"input_artifacts": (
+			"PDDL preprocessing environment",
+			"synthesis instance folder",
+			"program language and line bound",
+		),
+		"output_artifacts": (
+			"structured planning program",
+			"validation logs",
+		),
+		"reusable_evidence": (
+			"loop-structured generalized programs",
+			"repair-mode program synthesis",
+		),
+		"known_failure_modes": (
+			"planning_program_not_symbolic_predicate_modules",
+			"requires_program_to_asl_adapter",
+		),
+		"resource_profile": {
+			"execution_environment": "Python venv plus C++ build via scripts/compile.sh",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"pip install -r requirements.txt && pip install -e .",
+			"./scripts/compile.sh",
+			"./main.bin -m synthesis -l 8 -f domains/gripper/synthesis/ -o gripper -pgp True",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"pgp-landmarks": {
+		"paper_role": "SoCS 2022 progressive generalized planning with landmarks",
+		"preferred_use": "landmark-guided planning-program baseline",
+		"input_artifacts": (
+			"generated synthesis instances",
+			"generated validation instances",
+			"program line bound",
+		),
+		"output_artifacts": (
+			"planning program",
+			"landmark graph files",
+			"validation report",
+		),
+		"reusable_evidence": (
+			"landmark-guided generalized planning baseline",
+			"progressive planning program output",
+		),
+		"known_failure_modes": (
+			"planning_program_not_asl_module",
+			"requires_program_to_asl_adapter",
+		),
+		"resource_profile": {
+			"execution_environment": "C++ binaries built by scripts/compile_all.sh",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"./scripts/compile_all.sh",
+			"./main.bin PGP 7 domain/synthesis/visitall/",
+			"./validator.bin experiments/synthesis/visitall_PGP_7_landmarks.prog domain/validation/visitall/",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"sltp": {
+		"paper_role": "Sample, Learn, Transform and Plan generalized planning framework",
+		"preferred_use": "feature-policy predecessor and theory/reference backend",
+		"input_artifacts": (
+			"experiment configuration",
+			"sampled transition systems",
+			"feature generator and MaxSAT solver",
+		),
+		"output_artifacts": (
+			"sample files",
+			"feature matrices",
+			"learned feature policy artifacts",
+		),
+		"reusable_evidence": (
+			"description-logic feature generation",
+			"transition-sample learning pipeline",
+		),
+		"known_failure_modes": (
+			"requires_FS_private_or_Docker",
+			"legacy_environment",
+		),
+		"resource_profile": {
+			"execution_environment": "Python 3, FS planner, OpenWBO, or Docker image",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"pip install -e .",
+			"./run.py blocks:aaai_clear_x_simple_hybrid",
+			"docker run ... gfrancesm/sltp sltp gripper:aaai_prob01",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"up-bfgp": {
+		"paper_role": "Unified Planning interface for BFGP++",
+		"preferred_use": "future interface route for BFGP++ if program-to-ASL adapter exists",
+		"input_artifacts": (
+			"Unified Planning problem",
+			"BFGP++ installation",
+		),
+		"output_artifacts": (
+			"Unified Planning engine result",
+			"BFGP++ planning program artifacts",
+		),
+		"reusable_evidence": (
+			"Unified Planning integration pattern",
+			"BFGP++ API wrapper",
+		),
+		"known_failure_modes": (
+			"depends_on_custom_unified_planning_checkout",
+			"no_program_to_asl_adapter",
+		),
+		"resource_profile": {
+			"execution_environment": "Ubuntu 22.04 Python package plus BFGP++ build",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"pip install unified-planning/",
+			"pip install -r requirements.txt && pip install -e .",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"llm-genplan": {
+		"paper_role": "AAAI 2024 LLM-generated generalized planning programs",
+		"preferred_use": "LLM baseline or related-work comparator, not deterministic route",
+		"input_artifacts": (
+			"PDDL domains and example tasks",
+			"cached or live LLM interactions",
+		),
+		"output_artifacts": (
+			"Python generalized planning programs",
+			"cached chat logs",
+			"coverage results",
+		),
+		"reusable_evidence": (
+			"LLM generalized-program baseline",
+			"PG3 comparison domains",
+		),
+		"known_failure_modes": (
+			"nondeterministic_or_cache_dependent",
+			"python_program_not_asl_policy",
+		),
+		"resource_profile": {
+			"execution_environment": "Python 3.11+ package; cached reproduction scripts",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"pip install -e '.[develop]'",
+			"./run_ci_checks.sh",
+			"./scripts/run_all.sh",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"state-centric-gen-planning": {
+		"paper_role": "ICAPS 2026 learned transition-model generalized planning",
+		"preferred_use": "neural transition-model baseline and future route candidate",
+		"input_artifacts": (
+			"PDDL domains and generated plans",
+			"state trajectories",
+			"WL graph or factored encodings",
+		),
+		"output_artifacts": (
+			"LSTM or XGBoost transition model",
+			"inference logs",
+			"coverage tables",
+		),
+		"reusable_evidence": (
+			"state-centric OOD generalized planning baseline",
+			"symbolically valid successor decoding",
+		),
+		"known_failure_modes": (
+			"neural_transition_model_not_symbolic_asl",
+			"requires_checkpoint_or_training_pipeline",
+		),
+		"resource_profile": {
+			"execution_environment": "uv or pip with Fast Downward, VAL, Pyperplan, WLPlan",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"uv sync",
+			"python -m code.data-processing.generate_plans --workers 8",
+			"python -m code.modeling.train_lstm --domain blocks --delta",
+			"python -m code.modeling.inference_lstm --domain blocks --delta",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"ipc-learning-huzar": {
+		"paper_role": "IPC 2023 learning-track HUZAR domain-knowledge system",
+		"preferred_use": "learning-track comparator for planner domain knowledge",
+		"input_artifacts": (
+			"IPC training tasks",
+			"relaxed plans and simple landmarks from Scorpion/Fast Downward",
+		),
+		"output_artifacts": (
+			"GNN preprocessor model",
+			"planner-domain knowledge artifacts",
+		),
+		"reusable_evidence": (
+			"IPC learning-track comparison",
+			"learned planner preprocessor route",
+		),
+		"known_failure_modes": (
+			"domain_knowledge_not_generalized_policy",
+			"no_asl_compiler_adapter",
+		),
+		"resource_profile": {
+			"execution_environment": "Python plus Scorpion/Fast Downward toolchain",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"./scorpion/fast-downward.py --alias lama-first --find-simple-landmarks --find-relaxed-plan ...",
+			"python src/graph_data_generation.py <data> <output> --relaxed-plan --simple-landmarks",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
+	},
+	"ipc-learning-pgp-baseline": {
+		"paper_role": "IPC 2023 PGP learning-track baseline",
+		"preferred_use": "competition-compatible Progressive Generalized Planner baseline",
+		"input_artifacts": (
+			"PDDL domain",
+			"training problems for learning image",
+			"testing problem for planning image",
+		),
+		"output_artifacts": (
+			"planning program",
+			"competition plan output",
+		),
+		"reusable_evidence": (
+			"IPC learning-track PGP baseline",
+			"Apptainer packaging pattern",
+		),
+		"known_failure_modes": (
+			"planning_program_not_asl_module",
+			"requires_apptainer",
+		),
+		"resource_profile": {
+			"execution_environment": "Apptainer learn and plan images",
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"apptainer build learn.img Apptainer.pgp.learn",
+			"./learn.img dck.prog domains/gripper/domain.pddl domains/gripper/p-2-0.pddl ...",
+			"apptainer build plan.img Apptainer.pgp.plan",
+			"./plan.img dck.prog domains/gripper/domain.pddl domains/gripper/p-10-0.pddl plan.10",
+		),
+		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 }
 
@@ -432,6 +846,7 @@ def backend_audit_matrix(
 				"input_artifacts": list(profile["input_artifacts"]),
 				"output_artifacts": list(profile["output_artifacts"]),
 				"reusable_evidence": list(profile["reusable_evidence"]),
+				"usage_entrypoints": list(profile.get("usage_entrypoints") or ()),
 				"failure_modes": failures,
 				"known_failure_modes": list(profile["known_failure_modes"]),
 				"resource_profile": dict(profile["resource_profile"]),

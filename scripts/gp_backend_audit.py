@@ -68,6 +68,7 @@ def main() -> int:
 		"command",
 		choices=(
 			"status",
+			"usage",
 			"install",
 			"install-deps",
 			"blocksworld-smoke-command",
@@ -157,6 +158,9 @@ def main() -> int:
 		return 0
 	if args.command == "status":
 		print_backend_status(args.backend_root)
+		return 0
+	if args.command == "usage":
+		print_backend_usage(args.backend_root)
 		return 0
 	if args.command == "blocksworld-smoke-command":
 		print_blocksworld_smoke_command(
@@ -289,6 +293,26 @@ def print_backend_status(root: Path) -> None:
 			f"{entry['name']}: {state}; observed={observed}; "
 			f"pinned={pinned}; path={entry['path']}"
 		)
+
+
+def print_backend_usage(root: Path) -> None:
+	for entry in backend_audit_matrix(root=root):
+		print(f"{entry['name']}:")
+		print(f"  path: {entry['path']}")
+		print(f"  role: {entry['paper_role']}")
+		print(f"  preferred_use: {entry['preferred_use']}")
+		print(
+			"  consumption: "
+			f"{entry['current_consumption_role']['consumption_mode']}; "
+			f"consumed={entry['current_consumption_role']['consumed_by_synthesis']}"
+		)
+		usage = tuple(str(item) for item in entry.get("usage_entrypoints") or ())
+		if usage:
+			print("  usage:")
+			for item in usage:
+				print(f"    - {item}")
+		else:
+			print("  usage: see backend README or existing command-specific audit helper")
 
 
 def print_blocksworld_smoke_command(

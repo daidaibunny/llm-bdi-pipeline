@@ -158,8 +158,6 @@ def _normalize_class_id(benchmark_class_id: str) -> str:
 
 
 def _backend_rejection_reason(backend_name: str, *, root: Path) -> str | None:
-	if backend_name in {"pg3"}:
-		return "backend_not_pinned_or_not_installed"
 	if backend_name == "moose":
 		return None if _moose_backend_present(root) else "missing_backend"
 	backend_def = _pinned_backend_definition(backend_name)
@@ -187,11 +185,9 @@ def _pinned_backend_definition(backend_name: str) -> Mapping[str, object] | None
 
 
 def _moose_backend_present(root: Path) -> bool:
-	candidates = (
-		root / "moose",
-		root.parent / "moose",
-		PROJECT_EXTERNAL_ROOT / "moose",
-	)
+	candidates = [root / "moose", root.parent / "moose"]
+	if root.expanduser().resolve() == DEFAULT_BACKEND_ROOT.expanduser().resolve():
+		candidates.append(PROJECT_EXTERNAL_ROOT / "moose")
 	return any(
 		(candidate / ".git").exists() or candidate.exists()
 		for candidate in candidates

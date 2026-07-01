@@ -96,6 +96,7 @@ failure group.
 | R15 | Implement route-specific backend adapters instead of extending the hand-built GP learner. | In progress | Router and route metadata are implemented. Next targets: MOOSE policy parser for Class A, h-policy/learner-sketches parser for Class B, and KR/D2L policy parser for Class C. All routes must normalize into `LiftedPolicyProgram` before ASL compilation. |
 | R16 | Add backend-probe and acceptance gates. | In progress | Router now rejects unavailable or unsupported backend routes and marks schema synthesis as baseline fallback only. Still needed: artifact-level acceptance gates for emitted backend policies/sketches/programs. |
 | R17 | Physically remove old GP-main-path code references after routing migration. | In progress | README and machine-readable architecture contract now describe route-then-compile as the core method. Remaining physical cleanup: migrate registry/manifest/tests from the previous 8-domain taxonomy to the new 12-domain routing taxonomy, then remove `depots` from formal supported corpus. |
+| R18 | Download and pin all relevant generalized-planning codebases. | Implemented | `.external/gp-backends` now contains pinned copies of learner-sketches, h-policy-learner, d2l, learner-policies-from-examples, PG3, mimir-rgnn, best-first-generalized-planning, BFGP++, PGP-landmarks, SLTP, UP-BFGP, LLM-GenPlan, state-centric generalized planning, IPC HUZAR, and IPC PGP baseline. `gp_backend_audit.py status` verifies all pins and `gp_backend_audit.py usage` prints the known usage entrypoints. |
 
 ## Current Evidence Snapshot
 
@@ -107,6 +108,7 @@ Latest lightweight checks:
 | Final config render | 8 main experiments generated; each uses offline synthesis planner traces and the project Fast Downward executable. |
 | Representative trace smoke | `gripper` 1/1, `blocks` 0/1 due held-out execution timeout, `childsnack` 0/1 due missing `served` strategy; all three rows now synthesize a library without matrix failure. |
 | KR 2025 Docker environment smoke | Docker image builds; `dlplan 0.3.29` exposes `set_generate_til_c_role`; `libbfws.so` resolves Boost.Python 1.82.0 and Python 3.10. |
+| GP backend code inventory | All 15 pinned `.external/gp-backends` repositories are present at expected commits. Current synthesis-consumable routes are learner-sketches, h-policy-learner, d2l, and learner-policies-from-examples; PG3, planning-program, neural, LLM, and IPC learning-track systems are audit/baseline-only until adapters exist. |
 
 Interpretation:
 
@@ -127,6 +129,8 @@ PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q
 PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --config-only
 uv run python scripts/gp_backend_audit.py learning-general-policies-docker-build-command
 uv run python scripts/gp_backend_audit.py learning-general-policies-docker-command --experiment blocks_4_clear_0 --timeout-seconds 120 --max-num-instances 1
+uv run python scripts/gp_backend_audit.py status
+uv run python scripts/gp_backend_audit.py usage
 ```
 
 Targeted benchmark checks:
