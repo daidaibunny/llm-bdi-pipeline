@@ -125,6 +125,8 @@ class AchievementBenchmarkRegistry:
 		rendered: dict[str, object] = {
 			"name": str(experiment.pop("name")),
 			"domain_file": record.domain_file,
+			"benchmark_class_id": record.benchmark_class_id,
+			"domain_id": record.domain_id,
 		}
 		_apply_problem_set(
 			rendered,

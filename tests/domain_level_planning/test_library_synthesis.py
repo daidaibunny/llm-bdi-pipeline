@@ -762,25 +762,25 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert "ready_<predicate>" in contract["goal_fact_semantics"]
 	assert "derived at runtime" in contract["goal_fact_semantics"]
 	assert contract["paper_core_method"] == [
-		"goal-conditioned modular policy-sketch synthesis",
-		"Layer B lifted atomic predicate-goal modules",
-		"Layer C lifted conjunctive-goal composer",
-		(
-			"ASP-style selector over declared PDDL predicates, primitive actions, "
-			"subgoal calls, and read-only goal descriptors"
-		),
-		"AgentSpeak(L) compiler for the selected lifted rules",
+		"generalized-planning backend router",
+		"backend-specific learned policy, sketch, or program artifact",
+		"LiftedPolicyProgram normalizer",
+		"safe feature/action/subgoal binding gates",
+		"AgentSpeak(L) compiler for bound lifted policy rules",
 	]
 	safeguards = " ".join(contract["implementation_safeguards"])
+	assert "baseline_schema_lift adapter" in safeguards
 	assert "validated synthesis evidence" in safeguards
 	assert "trace-supported macro rules are candidates" in safeguards
 	assert "Fast Downward integration is a trace-evidence fallback" in safeguards
 	assert "not the runtime library executor" in safeguards
 	method_summary = contract["paper_method_summary"]
 	assert len(method_summary) >= 5
-	assert "core method is goal-conditioned modular policy-sketch synthesis" in (
+	assert "core method is route-then-compile generalized planning" in (
 		method_summary[0]
 	)
+	assert "trusted external generalized-planning backend" in method_summary[0]
+	assert "LiftedPolicyProgram" in method_summary[0]
 	assert "bounded-class guarantee" in method_summary[1]
 	assert "universal PDDL generalized-planning completeness" in method_summary[1]
 	assert "Layer B" in " ".join(method_summary)

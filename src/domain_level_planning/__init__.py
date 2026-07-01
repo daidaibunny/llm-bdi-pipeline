@@ -75,6 +75,11 @@ from .models import (
 	LiftedPlanRule,
 	SketchSynthesisReport,
 )
+from .gp_router import (
+	GPBackendRoute,
+	GPRouteDecision,
+	route_generalized_planner,
+)
 from .paper_backend_audit import (
 	PaperPolicyAuditReport,
 	audit_learned_policy_for_asl_binding,
@@ -154,6 +159,8 @@ __all__ = [
 	"FeatureBindingDiagnostic",
 	"FeatureBindingReport",
 	"BackendManifest",
+	"GPBackendRoute",
+	"GPRouteDecision",
 	"ExternalSketchPolicySource",
 	"GPBackendRunner",
 	"LearningGeneralPoliciesRunConfig",
@@ -194,6 +201,7 @@ __all__ = [
 	"build_domain_level_temporal_artifact",
 	"compile_bound_sketch_to_asl_library",
 	"compile_learner_sketch_policy_to_asl",
+	"route_generalized_planner",
 	"classify_heldout_failure_for_refinement",
 	"backend_audit_matrix",
 	"discover_learner_sketches_policy_file",

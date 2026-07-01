@@ -146,10 +146,11 @@ class ArchitectureContract:
 		exclusions = ", ".join(hypothesis.exclusions)
 		return (
 			(
-				"The core method is goal-conditioned modular policy-sketch "
-				"synthesis: from a PDDL domain and small training problems, the "
-				"system learns a lifted Layer B module library and a lifted Layer C "
-				"goal composer, then compiles the selected rules to AgentSpeak(L)."
+				"The core method is route-then-compile generalized planning: from "
+				"a PDDL domain and small training problems, the system routes to a "
+				"trusted external generalized-planning backend, normalizes the "
+				"learned artifact into a LiftedPolicyProgram, and compiles the "
+				"bound rules to AgentSpeak(L)."
 			),
 			(
 				"We use a bounded-class guarantee: the system synthesizes and "
@@ -164,12 +165,12 @@ class ArchitectureContract:
 				f"{self.goal_fact_semantics}."
 			),
 			(
-				"Layer B learns atomic predicate-goal modules. "
+				"Layer B is the compiled atomic predicate-goal module layer. "
 				f"{self.layer_b_target}; bodies may use "
 				f"{hypothesis.module_language['body_calls']}."
 			),
 			(
-				"Layer C learns the conjunctive-goal composer. "
+				"Layer C is the compiled conjunctive-goal composer. "
 				f"{self.layer_c_target}; rules have the shape "
 				f"{hypothesis.composer_language['rule_shape']} and use ordering "
 				f"evidence from {_series(hypothesis.composer_language['ordering_evidence'])}. "
@@ -219,19 +220,21 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 
 	return ArchitectureContract(
 		guarantee=(
-			"bounded-class guarantee: synthesize and validate the best library found "
-			"inside the current goal-conditioned modular sketch hypothesis class; "
-			"do not claim universal PDDL generalized-planning completeness"
+			"routed-backend bounded guarantee: select a trusted generalized-planning "
+			"backend for the declared domain class, normalize its artifact when it "
+			"passes binding and validation gates, and do not claim universal PDDL "
+			"generalized-planning completeness"
 		),
 		paper_core_method=(
-			"goal-conditioned modular policy-sketch synthesis",
-			"Layer B lifted atomic predicate-goal modules",
-			"Layer C lifted conjunctive-goal composer",
-			"ASP-style selector over declared PDDL predicates, primitive actions, "
-			"subgoal calls, and read-only goal descriptors",
-			"AgentSpeak(L) compiler for the selected lifted rules",
+			"generalized-planning backend router",
+			"backend-specific learned policy, sketch, or program artifact",
+			"LiftedPolicyProgram normalizer",
+			"safe feature/action/subgoal binding gates",
+			"AgentSpeak(L) compiler for bound lifted policy rules",
 		),
 		implementation_safeguards=(
+			"schema-derived Layer B/C synthesis is retained only as an explicit "
+			"baseline_schema_lift adapter",
 			"offline planner traces may be used only as validated synthesis evidence",
 			"trace-supported macro rules are candidates, not the core method or "
 			"unchecked replay output",
@@ -285,9 +288,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			),
 			ArchitectureDecision(
 				id="D2",
-				decision="Use goal-conditioned modular policy sketches as the main method family.",
+				decision=(
+					"Use routed external generalized-planning backends as the main "
+					"method family."
+				),
 				status="accepted",
-				rationale="They align subgoal decomposition with reusable ASL modules.",
+				rationale=(
+					"This avoids claiming a new universal GP learner and lets each "
+					"domain class use the strongest matching prior backend."
+				),
 			),
 			ArchitectureDecision(
 				id="D3",

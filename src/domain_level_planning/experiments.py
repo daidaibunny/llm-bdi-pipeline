@@ -21,6 +21,8 @@ from .library_synthesis import ExternalSketchPolicySource
 from .library_synthesis import synthesize_domain_level_asl_library
 from .pddl_types import declared_type_names, type_guard_symbol
 from .refinement import synthesize_with_counterexample_refinement
+from .gp_router import GPRouteDecision
+from .gp_router import route_generalized_planner
 
 
 def run_domain_level_experiment(
@@ -29,6 +31,8 @@ def run_domain_level_experiment(
 	domain_file: str | Path,
 	training_problem_files: Sequence[str | Path],
 	evaluation_problem_files: Sequence[str | Path],
+	domain_id: str | None = None,
+	benchmark_class_id: str | None = None,
 	counterexample_problem_files: Sequence[str | Path] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
 	synthesis_profile: str = "bootstrap",
@@ -47,6 +51,11 @@ def run_domain_level_experiment(
 ) -> dict[str, object]:
 	"""Run one reproducible domain-level library experiment."""
 
+	route_decision = _route_decision(
+		domain_file=domain_file,
+		domain_id=domain_id,
+		benchmark_class_id=benchmark_class_id,
+	)
 	synthesis_started = perf_counter()
 	if use_counterexample_refinement:
 		refined = synthesize_with_counterexample_refinement(
@@ -112,6 +121,11 @@ def run_domain_level_experiment(
 		"experiment_name": experiment_name,
 		"domain_file": _resolved(domain_file),
 		"generation_mode": result.report["generation_mode"],
+		"gp_route_decision": (
+			route_decision.to_dict()
+			if route_decision is not None
+			else None
+		),
 		"experiment_protocol": _experiment_protocol(
 			synthesis_profile=synthesis_profile,
 			external_sketch_policies=external_sketch_policies,
@@ -183,6 +197,21 @@ def run_domain_level_experiment(
 		"refinement_trace": refinement_trace,
 		"asl": asl,
 	}
+
+
+def _route_decision(
+	*,
+	domain_file: str | Path,
+	domain_id: str | None,
+	benchmark_class_id: str | None,
+) -> GPRouteDecision | None:
+	if not benchmark_class_id:
+		return None
+	return route_generalized_planner(
+		domain_id=domain_id or Path(domain_file).stem,
+		benchmark_class_id=benchmark_class_id,
+		allow_baseline_schema_lift=True,
+	)
 
 
 def _paper_quality_summary(synthesis_report: dict[str, object]) -> dict[str, object]:
