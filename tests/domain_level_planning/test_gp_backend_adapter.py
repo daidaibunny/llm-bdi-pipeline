@@ -114,6 +114,9 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumption_mode": "goal_regression_decision_list_policy",
 		"blocking_gap": None,
 	}
+	assert by_name["moose"]["paper_code_capability"]["status"] == (
+		"confirmed_exact_reproduction_ready"
+	)
 	assert "./moose.sif train benchmarks/<domain>/domain.pddl" in by_name["moose"][
 		"usage_entrypoints"
 	]
@@ -136,6 +139,9 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumption_mode": "parsed_bound_policy_rules",
 		"blocking_gap": None,
 	}
+	assert by_name["learner-sketches"]["paper_code_capability"]["status"] == (
+		"confirmed_paper_source_complete"
+	)
 	assert any(
 		"learner-sketches-command" in entry
 		for entry in by_name["learner-sketches"]["usage_entrypoints"]
@@ -164,6 +170,9 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumption_mode": "verified_d2l_text_policy_rules",
 		"blocking_gap": None,
 	}
+	assert by_name["d2l"]["paper_code_capability"]["status"] == (
+		"confirmed_source_complete_needs_paper_environment"
+	)
 	assert by_name["learner-policies-from-examples"]["pin_status"] == "ok"
 	assert "KR 2025" in by_name["learner-policies-from-examples"]["paper_role"]
 	assert by_name["learner-policies-from-examples"]["preferred_use"] == (
@@ -199,6 +208,11 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumption_mode": "audit_or_baseline_only",
 		"blocking_gap": "no_verified_lifted_policy_program_adapter",
 	}
+	assert {
+		entry["name"]
+		for entry in matrix
+		if "paper_code_capability" in entry
+	} == set(by_name)
 	assert "./run.sh" in by_name["pg3"]["usage_entrypoints"]
 	assert by_name["bfgp-pp"]["current_consumption_role"]["consumed_by_synthesis"] is False
 	assert "structured generalized planning program synthesis" in by_name["bfgp-pp"][
@@ -307,6 +321,34 @@ def test_backend_audit_usage_cli_prints_how_to_run_backends(tmp_path: Path) -> N
 	assert "./scripts/compile.sh" in result.stdout
 	assert "state-centric-gen-planning:" in result.stdout
 	assert "python -m code.modeling.train_lstm" in result.stdout
+
+
+def test_backend_audit_capability_cli_prints_paper_code_status(
+	tmp_path: Path,
+) -> None:
+	script = Path(__file__).resolve().parents[2] / "scripts" / "gp_backend_audit.py"
+
+	result = subprocess.run(
+		(
+			sys.executable,
+			str(script),
+			"capability",
+			"--backend-root",
+			str(tmp_path),
+		),
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+
+	assert "moose:" in result.stdout
+	assert "status: confirmed_exact_reproduction_ready" in result.stdout
+	assert "learner-sketches:" in result.stdout
+	assert "status: confirmed_paper_source_complete" in result.stdout
+	assert "d2l:" in result.stdout
+	assert "status: confirmed_source_complete_needs_paper_environment" in result.stdout
+	assert "ipc-learning-huzar:" in result.stdout
+	assert "status: confirmed_competition_artifact_only" in result.stdout
 
 
 def test_install_moose_backend_uses_configured_backend_root(

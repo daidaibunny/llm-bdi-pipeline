@@ -71,6 +71,42 @@ one representation.
 | IPC learning-track domain-knowledge systems | IPC 2023 learning track systems such as HUZAR and Vanir, reported in "The 2023 International Planning Competition". | Learned domain knowledge for classical planners, not necessarily standalone generalized plans. | The IPC report compares systems on many planning domains. Vanir specifically targets polynomial domains and generated high-quality knowledge on a smaller set; HUZAR won the learning track overall. | Useful comparator for "learned domain knowledge improves planning"; not a direct route to lifted ASL unless the emitted knowledge has a parseable symbolic policy form. | Downloaded and pinned `ipc-learning-huzar` and `ipc-learning-pgp-baseline`. Audit/baseline-only. |
 | LLM-generated generalized planning programs | Silver et al., "Generalized Planning in PDDL Domains with Pretrained Large Language Models", AAAI 2024. | Python programs synthesized from PDDL and example tasks. | Paper evaluates seven domains: `Delivery`, `Forest`, `Gripper`, `Miconic`, `Ferry`, `Spanner`, and `Heavy`. GPT-4 is strong on Delivery, Forest, Gripper, Ferry, Heavy, weak on Miconic and Spanner; PG3 remains a strong baseline. | Baseline or auxiliary heuristic, not a default paper-quality route. It is not a stable, deterministic GP backend. | Downloaded and pinned in `.external/gp-backends/llm-genplan` at `a2b8baa7153d5a8f2df51fbc72c51def80ddc169`. Audit-only. |
 
+## Paper-Code Capability Confirmation
+
+The confirmation below distinguishes source-code completeness from full local
+paper-result reproduction. A backend marked source-complete has the official or
+trusted paper code, the declared entrypoints, and the expected benchmark or
+experiment structure. It does not mean that the full paper table has been
+re-run locally under the original resource limits. That full reproduction is a
+separate experiment task.
+
+Machine-readable status is exposed by:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py capability
+```
+
+| Backend or paper line | Capability confirmation | What is confirmed | Remaining reproduction or routing gap |
+| --- | --- | --- | --- |
+| MOOSE | `confirmed_exact_reproduction_ready` | Official repo, local image, dataset, VAL integration, and prior Ferry reproduction are present. | Full synthesis under the original 32GB and 12h budget is not re-run by the lightweight audit. |
+| learner-sketches | `confirmed_paper_source_complete` | Official source, learning entrypoint, benchmark folders, and learning/testing scripts are present. | Full ICAPS tables are not re-run; ASL compilation must preserve sketch subproblem semantics. |
+| h-policy-learner / Vanir-style hierarchy | `confirmed_paper_source_complete` | Official source, hierarchy-learning scripts, testing scripts, and reported benchmark folders are present. | Exact cluster-scale experiments are not re-run; generated hierarchy artifacts still need verified ASL binding. |
+| D2L | `confirmed_source_complete_needs_paper_environment` | Official source, Dockerfile, experiment runner, and paper experiment names are present. | Full AAAI table reproduction depends on the original planner and MaxSAT stack. |
+| learner-policies-from-examples | `confirmed_source_complete_needs_paper_environment` | Official KR source, final-paper commit note, learning entrypoint, and benchmark folders are present. | Linux planner libraries require Docker; full KR matrix is not part of the lightweight audit. |
+| PG3 | `confirmed_paper_source_complete` | Official source, main Python entrypoint, run script, and README reproduction guidance are present. | Full training budget is not re-run; decision-list policy to ASL adapter is not implemented. |
+| best-first-generalized-planning | `confirmed_paper_source_complete` | Official source, generators, synthesis command, validator, and ICAPS experiment script are present. | C++ build and full experiments are not re-run; planning-program to ASL adapter is missing. |
+| BFGP++ | `confirmed_paper_source_complete` | Official source, compile script, synthesis, validation, and repair modes are present. | Structured program to ASL adapter is missing. |
+| PGP-landmarks | `confirmed_paper_source_complete` | Official source, landmark-guided PGP entrypoints, paper scripts, generators, and validator are present. | SoCS experiment script is not re-run; planning-program to ASL adapter is missing. |
+| SLTP | `confirmed_source_complete_needs_paper_environment` | Official source, sampling, feature generation, learning pipeline, and Docker usage are documented. | Legacy FS/OpenWBO dependencies are required; no direct ASL compiler route. |
+| UP-BFGP | `confirmed_library_or_interface_only` | Official interface source for BFGP++ inside Unified Planning is present. | It is not a standalone generalized-planning paper artifact. |
+| Policy reuse and modular policies | Reference-only | This is a representation paper for modular policies and policy calls. | No standalone learner backend is used; it informs the ASL compiler target language. |
+| JAIR sketch / width theory | Reference-only | This line provides accepted theory and benchmark framing for sketch width and subgoal structure. | No separate runnable backend beyond learner-sketches / h-policy is claimed. |
+| mimir-rgnn | `confirmed_library_or_interface_only` | Official R-GNN planning library and PDDL integration are present. | Full experiment pipeline/checkpoints are not bundled as a direct symbolic GP backend; no ASL distillation. |
+| state-centric transition models | `confirmed_source_complete_needs_paper_environment` | Official implementation, data generation, training, inference, and aggregation entrypoints are present. | Checkpoints are external release artifacts; output is a neural transition model, not lifted ASL. |
+| IPC HUZAR | `confirmed_competition_artifact_only` | IPC learning-track repository, Apptainer recipes, symbolic planner, and graph-neural components are present. | Emits planner domain knowledge, not a standalone generalized policy. |
+| IPC PGP baseline | `confirmed_competition_artifact_only` | IPC baseline repository and learn/plan Apptainer flow are present. | It is a competition flow; planning-program to ASL adapter is missing. |
+| LLM-GenPlan | `confirmed_paper_source_complete` | Official source, CI, cached-log reproduction script, and cached chat-log directory are present. | Full cached reproduction is long-running; Python program output is not directly ASL. |
+
 ## Paper Domain Classifications Worth Reusing
 
 We should reuse prior classifications rather than invent informal labels.

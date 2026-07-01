@@ -115,6 +115,14 @@ AUDIT_ONLY_CONSUMPTION_ROLE = {
 	"blocking_gap": "no_verified_lifted_policy_program_adapter",
 }
 
+CAPABILITY_EXACT_REPRODUCTION_READY = "confirmed_exact_reproduction_ready"
+CAPABILITY_PAPER_SOURCE_COMPLETE = "confirmed_paper_source_complete"
+CAPABILITY_SOURCE_COMPLETE_NEEDS_ENVIRONMENT = (
+	"confirmed_source_complete_needs_paper_environment"
+)
+CAPABILITY_LIBRARY_OR_INTERFACE_ONLY = "confirmed_library_or_interface_only"
+CAPABILITY_COMPETITION_ARTIFACT_ONLY = "confirmed_competition_artifact_only"
+
 BACKEND_RESEARCH_PROFILES = {
 	"moose": {
 		"paper_role": "AAAI 2026 goal-regression generalized planner",
@@ -156,6 +164,18 @@ BACKEND_RESEARCH_PROFILES = {
 			"./moose.sif plan <domain>.model benchmarks/<domain>/domain.pddl benchmarks/<domain>/testing/<problem>.pddl --search symk",
 			"use the Docker/Apptainer pattern in AGENTS.md for local reproducibility",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_EXACT_REPRODUCTION_READY,
+			"basis": (
+				"official repository is pinned",
+				"local Apptainer image, dataset, and VAL integration are present",
+				"Ferry paper reproduction has already been VAL-validated locally",
+			),
+			"reproduction_gap": (
+				"full-paper synthesis under the original 32GB and 12h budget is "
+				"not re-run by the lightweight audit command",
+			),
+		},
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -198,6 +218,18 @@ BACKEND_RESEARCH_PROFILES = {
 			"uv run python scripts/gp_backend_audit.py learner-sketches-summary --experiment <experiment>",
 			"uv run python scripts/gp_backend_audit.py learner-sketches-compile-asl --experiment <experiment>",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
+			"basis": (
+				"official repository is pinned",
+				"learning entrypoint and benchmark folders are present",
+				"README provides learning and testing experiment scripts",
+			),
+			"reproduction_gap": (
+				"full ICAPS learning and testing tables have not been re-run in "
+				"this lightweight audit",
+			),
+		},
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -238,6 +270,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"bash <second-experiment>.sh",
 			"parse generated sketch_str.txt only through the verified DLPlan policy adapter",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
+			"basis": (
+				"official repository is pinned",
+				"learning and testing experiment scripts are present",
+				"benchmark folders for the reported hierarchical-policy suite are present",
+			),
+			"reproduction_gap": (
+				"exact cluster-scale hierarchical-policy experiments are not re-run "
+				"by the audit command",
+				"artifact-to-ASL parser validation remains a project-side adapter task",
+			),
+		},
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -277,6 +322,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"docker build --platform linux/amd64 -t d2l-official-env:local -f .external/gp-backends/d2l/containers/Dockerfile .external/gp-backends/d2l",
 			"docker run --rm --platform linux/amd64 -v .external/gp-backends/d2l:/workspace/d2l d2l-official-env:local blocks:clear",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_SOURCE_COMPLETE_NEEDS_ENVIRONMENT,
+			"basis": (
+				"official repository is pinned",
+				"Dockerfile and experiment runner are present",
+				"README lists the concrete paper experiments and Docker invocation",
+			),
+			"reproduction_gap": (
+				"AAAI table reproduction depends on the original planner and MaxSAT "
+				"toolchain inside the paper environment",
+				"full table has not been re-run by this lightweight audit",
+			),
+		},
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -330,6 +388,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"uv run python scripts/gp_backend_audit.py learning-general-policies-docker-command --experiment <experiment> --timeout-seconds 1800 --max-num-instances 1",
 			"uv run python scripts/gp_backend_audit.py learning-general-policies-summary --experiment <experiment>",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_SOURCE_COMPLETE_NEEDS_ENVIRONMENT,
+			"basis": (
+				"official repository is pinned",
+				"README identifies the final-paper commit and implemented algorithm",
+				"learning entrypoint and paper benchmark folders are present",
+			),
+			"reproduction_gap": (
+				"native macOS cannot run the bundled Linux planner libraries",
+				"full KR experiment matrix must use the project Docker wrapper and "
+				"is not part of the lightweight audit",
+			),
+		},
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -367,6 +438,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"./run.sh",
 			"edit ENV in run.sh to switch domains",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
+			"basis": (
+				"official repository is pinned",
+				"README states that it implements the main IJCAI approach",
+				"run script and Python entrypoint are present",
+			),
+			"reproduction_gap": (
+				"policy training to the reported iteration budget is not re-run by "
+				"this lightweight audit",
+				"lifted decision-list to ASL adapter is not implemented yet",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"mimir-rgnn": {
@@ -398,6 +482,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"pip install pymimir-rgnn",
 			"import pymimir_rgnn and build RelationalGraphNeuralNetwork",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_LIBRARY_OR_INTERFACE_ONLY,
+			"basis": (
+				"official repository is pinned",
+				"README documents the R-GNN planning library and PDDL integration",
+				"library API implements the neural representation used by the paper line",
+			),
+			"reproduction_gap": (
+				"repository is a reusable library rather than a full paper "
+				"experiment artifact with all training scripts and checkpoints",
+				"neural policy distillation to symbolic ASL is not available",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"best-first-generalized-planning": {
@@ -430,6 +527,20 @@ BACKEND_RESEARCH_PROFILES = {
 			"./main.bin 8 domain/heuristics/fibo/",
 			"./validator.bin programs/fibo.prog domain/validation/fibo/",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
+			"basis": (
+				"official repository is pinned",
+				"README includes generator, synthesis, validation, and paper "
+				"experiment scripts",
+				"program examples and validator entrypoints are present",
+			),
+			"reproduction_gap": (
+				"C++ binaries and full ICAPS experiment scripts are not built or "
+				"run by the lightweight audit",
+				"planning-program to ASL adapter is not implemented yet",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"bfgp-pp": {
@@ -462,6 +573,18 @@ BACKEND_RESEARCH_PROFILES = {
 			"./scripts/compile.sh",
 			"./main.bin -m synthesis -l 8 -f domains/gripper/synthesis/ -o gripper -pgp True",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
+			"basis": (
+				"official repository is pinned",
+				"README documents synthesis, validation, and repair modes",
+				"structured program source, domains, and compile scripts are present",
+			),
+			"reproduction_gap": (
+				"full structured-program experiment suite is not re-run by this audit",
+				"structured program to ASL adapter is not implemented yet",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"pgp-landmarks": {
@@ -495,6 +618,18 @@ BACKEND_RESEARCH_PROFILES = {
 			"./main.bin PGP 7 domain/synthesis/visitall/",
 			"./validator.bin experiments/synthesis/visitall_PGP_7_landmarks.prog domain/validation/visitall/",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
+			"basis": (
+				"official repository is pinned",
+				"README identifies Progressive Generalized Planning with landmarks",
+				"paper reproduction scripts, generators, and validators are present",
+			),
+			"reproduction_gap": (
+				"SoCS experiment script is not run by the lightweight audit",
+				"planning-program to ASL adapter is not implemented yet",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"sltp": {
@@ -528,6 +663,18 @@ BACKEND_RESEARCH_PROFILES = {
 			"./run.py blocks:aaai_clear_x_simple_hybrid",
 			"docker run ... gfrancesm/sltp sltp gripper:aaai_prob01",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_SOURCE_COMPLETE_NEEDS_ENVIRONMENT,
+			"basis": (
+				"official repository is pinned",
+				"README documents the sample-learn-transform-plan pipeline",
+				"feature generation, sampling, and Docker usage are documented",
+			),
+			"reproduction_gap": (
+				"legacy external planner and MaxSAT dependencies are required",
+				"full pipeline and paper results are not re-run by this audit",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"up-bfgp": {
@@ -558,6 +705,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"pip install unified-planning/",
 			"pip install -r requirements.txt && pip install -e .",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_LIBRARY_OR_INTERFACE_ONLY,
+			"basis": (
+				"official repository is pinned",
+				"README states that this is a Unified Planning interface for BFGP++",
+				"installation path for the interface is documented",
+			),
+			"reproduction_gap": (
+				"it is an integration interface, not a standalone paper experiment "
+				"artifact",
+				"depends on a custom Unified Planning checkout and BFGP++ installation",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"llm-genplan": {
@@ -590,6 +750,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"./run_ci_checks.sh",
 			"./scripts/run_all.sh",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
+			"basis": (
+				"official repository is pinned",
+				"README identifies the AAAI paper and cached-log reproduction path",
+				"CI, run-all script, and cached chat-log directory are present",
+			),
+			"reproduction_gap": (
+				"full cached reproduction is long-running and not part of the "
+				"lightweight audit",
+				"output is Python program code, not directly a symbolic ASL policy",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"state-centric-gen-planning": {
@@ -624,6 +797,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"python -m code.modeling.train_lstm --domain blocks --delta",
 			"python -m code.modeling.inference_lstm --domain blocks --delta",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_SOURCE_COMPLETE_NEEDS_ENVIRONMENT,
+			"basis": (
+				"official repository is pinned",
+				"README states that it is the official implementation",
+				"data generation, training, inference, and aggregation entrypoints "
+				"are documented",
+			),
+			"reproduction_gap": (
+				"pretrained checkpoints are external release artifacts",
+				"neural transition model is not a direct lifted ASL plan library",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"ipc-learning-huzar": {
@@ -654,6 +840,20 @@ BACKEND_RESEARCH_PROFILES = {
 			"./scorpion/fast-downward.py --alias lama-first --find-simple-landmarks --find-relaxed-plan ...",
 			"python src/graph_data_generation.py <data> <output> --relaxed-plan --simple-landmarks",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_COMPETITION_ARTIFACT_ONLY,
+			"basis": (
+				"competition repository is pinned",
+				"learning and planning Apptainer recipes are present",
+				"Scorpion, symbolic planner, and graph-neural learning components "
+				"are present",
+			),
+			"reproduction_gap": (
+				"artifact emits planner domain knowledge rather than a standalone "
+				"generalized policy",
+				"not a direct route to ASL without a separate domain-knowledge adapter",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 	"ipc-learning-pgp-baseline": {
@@ -687,6 +887,19 @@ BACKEND_RESEARCH_PROFILES = {
 			"apptainer build plan.img Apptainer.pgp.plan",
 			"./plan.img dck.prog domains/gripper/domain.pddl domains/gripper/p-10-0.pddl plan.10",
 		),
+		"paper_code_capability": {
+			"status": CAPABILITY_COMPETITION_ARTIFACT_ONLY,
+			"basis": (
+				"competition repository is pinned",
+				"README states that it is a refactored Progressive Generalized "
+				"Planner baseline",
+				"learning and planning Apptainer recipes are present",
+			),
+			"reproduction_gap": (
+				"competition image flow is not run by the lightweight audit",
+				"planning-program to ASL adapter is not implemented yet",
+			),
+		},
 		"current_consumption_role": AUDIT_ONLY_CONSUMPTION_ROLE,
 	},
 }
@@ -950,6 +1163,7 @@ def _backend_matrix_entry(manifest: BackendManifest) -> dict[str, object]:
 		"output_artifacts": list(profile["output_artifacts"]),
 		"reusable_evidence": list(profile["reusable_evidence"]),
 		"usage_entrypoints": list(profile.get("usage_entrypoints") or ()),
+		"paper_code_capability": dict(profile["paper_code_capability"]),
 		"failure_modes": failures,
 		"known_failure_modes": list(profile["known_failure_modes"]),
 		"resource_profile": dict(profile["resource_profile"]),

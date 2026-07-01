@@ -70,6 +70,7 @@ def main() -> int:
 		choices=(
 			"status",
 			"usage",
+			"capability",
 			"install",
 			"install-deps",
 			"blocksworld-smoke-command",
@@ -162,6 +163,9 @@ def main() -> int:
 		return 0
 	if args.command == "usage":
 		print_backend_usage(args.backend_root)
+		return 0
+	if args.command == "capability":
+		print_backend_capabilities(args.backend_root)
 		return 0
 	if args.command == "blocksworld-smoke-command":
 		print_blocksworld_smoke_command(
@@ -340,6 +344,23 @@ def print_backend_usage(root: Path) -> None:
 				print(f"    - {item}")
 		else:
 			print("  usage: see backend README or existing command-specific audit helper")
+
+
+def print_backend_capabilities(root: Path) -> None:
+	for entry in backend_audit_matrix(root=root):
+		capability = dict(entry["paper_code_capability"])
+		print(f"{entry['name']}:")
+		print(f"  status: {capability['status']}")
+		print(f"  pinned: {entry['pin_status']}")
+		print(f"  present: {entry['present']}")
+		print("  basis:")
+		for item in tuple(str(value) for value in capability.get("basis") or ()):
+			print(f"    - {item}")
+		gaps = tuple(str(value) for value in capability.get("reproduction_gap") or ())
+		if gaps:
+			print("  reproduction_gap:")
+			for item in gaps:
+				print(f"    - {item}")
 
 
 def print_blocksworld_smoke_command(
