@@ -46,14 +46,13 @@ runtime low-level method for the final domain-level library claim.
 
 ## Benchmarks
 
-Formal achievement-goal benchmarks are complete IPC PDDL directories
-materialized from `potassco/pddl-instances` at commit
-`cf19edf7c53d1540ddbb396c642595e0926ee552`.
+Formal achievement-goal benchmarks are materialized from pinned reputable
+generalized-planning benchmark sources: `potassco/pddl-instances`,
+`DillonZChen/moose-dataset`, `bonetblai/learner-sketches`, and
+`bonetblai/learner-policies-from-examples`.
 
-The current materialized benchmark corpus still contains the previous eight IPC
-domains. The paper direction is now the routed-backend taxonomy described in
-`docs/gp_backend_routing_taxonomy.md`; the materialized corpus should be
-migrated to that taxonomy before final experiments.
+The materialized benchmark corpus is the routed-backend taxonomy described in
+`docs/gp_backend_routing_taxonomy.md`.
 
 | Routing class | Target domains | Primary route |
 | --- | --- | --- |

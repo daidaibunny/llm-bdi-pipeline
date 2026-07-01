@@ -1,43 +1,85 @@
 #!/usr/bin/env python3
-"""Materialize the achievement-goal benchmark corpus from IPC instances."""
+"""Materialize the routed achievement-goal benchmark corpus."""
 
 from __future__ import annotations
 
 import json
 import math
-import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
-import time
+from fnmatch import fnmatch
 from typing import NamedTuple
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SOURCE_ROOT = PROJECT_ROOT / ".external" / "benchmark-sources" / "pddl-instances"
-SOURCE_CACHE_ROOT = PROJECT_ROOT / ".external" / "benchmark-sources" / "pddl-instances-cache"
 DOMAINS_ROOT = PROJECT_ROOT / "src" / "domains"
 REGISTRY_ROOT = PROJECT_ROOT / "src" / "benchmark_registry" / "achievement_goals"
-SOURCE_NAME = "potassco/pddl-instances"
-SOURCE_URL = "https://github.com/potassco/pddl-instances"
-SOURCE_RAW_URL = "https://raw.githubusercontent.com/potassco/pddl-instances"
-SOURCE_COMMIT = "cf19edf7c53d1540ddbb396c642595e0926ee552"
+PDDL_INSTANCE_CACHE_ROOT = (
+	PROJECT_ROOT / ".external" / "benchmark-sources" / "pddl-instances-cache"
+)
 TRAIN_RATIO = 2 / 3
-DOWNLOAD_ATTEMPTS = 5
-GIT_BLOB_TIMEOUT_SECONDS = 120
+
+
+class SourceSpec(NamedTuple):
+	source_id: str
+	name: str
+	url: str
+	local_root: Path
+	commit: str
+	coverage: str
 
 
 class DomainSpec(NamedTuple):
 	domain_id: str
+	source_id: str
 	source_path: str
 	benchmark_class_id: str
 	display_name: str
 	ipc_year: str
 	ipc_variant: str
-	problem_layout: str = "instances"
+	problem_globs: tuple[str, ...]
+	source_domain_file: str = "domain.pddl"
+
+
+SOURCES: dict[str, SourceSpec] = {
+	"pddl_instances": SourceSpec(
+		"pddl_instances",
+		"potassco/pddl-instances",
+		"https://github.com/potassco/pddl-instances",
+		PROJECT_ROOT / ".external" / "benchmark-sources" / "pddl-instances",
+		"cf19edf7c53d1540ddbb396c642595e0926ee552",
+		"IPC benchmark directories used for standard classical PDDL domains",
+	),
+	"moose_dataset": SourceSpec(
+		"moose_dataset",
+		"DillonZChen/moose-dataset",
+		"https://github.com/DillonZChen/moose-dataset",
+		PROJECT_ROOT / ".external" / "moose-dataset",
+		"e00970516154e9042b783a4613a1ed7286c9beee",
+		"MOOSE goal-regression benchmark families",
+	),
+	"learner_sketches": SourceSpec(
+		"learner_sketches",
+		"bonetblai/learner-sketches",
+		"https://github.com/bonetblai/learner-sketches",
+		PROJECT_ROOT / ".external" / "gp-backends" / "learner-sketches",
+		"7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+		"learned-sketch benchmark and testing families",
+	),
+	"kr2025_policies": SourceSpec(
+		"kr2025_policies",
+		"bonetblai/learner-policies-from-examples",
+		"https://github.com/bonetblai/learner-policies-from-examples",
+		PROJECT_ROOT
+		/ ".external"
+		/ "gp-backends"
+		/ "learner-policies-from-examples",
+		"9991926f7655c4b6c8dc2f0404123639e42056f2",
+		"KR 2025 feature-policy benchmark families",
+	),
+}
 
 
 def main() -> None:
@@ -49,22 +91,23 @@ def main() -> None:
 	for spec in specs:
 		_materialize_domain(spec)
 	_write_registry(specs)
-	print(f"materialized {len(specs)} IPC achievement benchmark domains")
+	print(f"materialized {len(specs)} routed achievement benchmark domains")
 
 
 def _validate_source() -> None:
-	if not SOURCE_ROOT.exists():
-		raise FileNotFoundError(
-			f"missing IPC benchmark source {SOURCE_ROOT}; clone potassco/pddl-instances first",
-		)
-	head = subprocess.check_output(
-		("git", "-C", str(SOURCE_ROOT), "rev-parse", "HEAD"),
-		text=True,
-	).strip()
-	if head != SOURCE_COMMIT:
-		raise RuntimeError(
-			f"unexpected pddl-instances commit {head}; expected {SOURCE_COMMIT}",
-		)
+	for source in SOURCES.values():
+		if not source.local_root.exists():
+			raise FileNotFoundError(
+				f"missing benchmark source {source.local_root}; clone {source.name} first",
+			)
+		head = subprocess.check_output(
+			("git", "-C", str(source.local_root), "rev-parse", "HEAD"),
+			text=True,
+		).strip()
+		if head != source.commit:
+			raise RuntimeError(
+				f"unexpected {source.name} commit {head}; expected {source.commit}",
+			)
 
 
 def _reset_directory(path: Path) -> None:
@@ -77,67 +120,123 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 	return (
 		DomainSpec(
 			"gripper",
+			"pddl_instances",
 			"ipc-1998/domains/gripper-round-1-strips",
 			"goal_separable_serialisable_achievement_classes",
 			"Gripper",
 			"1998",
 			"gripper-round-1-strips",
+			("instances/*.pddl",),
+		),
+		DomainSpec(
+			"ferry",
+			"moose_dataset",
+			"ferry",
+			"goal_separable_serialisable_achievement_classes",
+			"Ferry",
+			"MOOSE 2026",
+			"ferry",
+			("training/*.pddl", "testing/*.pddl"),
 		),
 		DomainSpec(
 			"miconic",
+			"pddl_instances",
 			"ipc-2000/domains/elevator-strips-simple-typed",
 			"goal_separable_serialisable_achievement_classes",
 			"Miconic",
 			"2000",
 			"elevator-strips-simple-typed",
+			("instances/*.pddl",),
 		),
 		DomainSpec(
 			"logistics",
+			"pddl_instances",
 			"ipc-2000/domains/logistics-strips-typed",
 			"goal_separable_serialisable_achievement_classes",
 			"Logistics",
 			"2000",
 			"logistics-strips-typed",
+			("instances/*.pddl",),
 		),
 		DomainSpec(
 			"barman",
+			"pddl_instances",
 			"ipc-2011/domains/barman-sequential-satisficing",
 			"bounded_width_sketchable_subgoal_structure_classes",
 			"Barman",
 			"2011",
 			"barman-sequential-satisficing",
+			("instances/*.pddl",),
 		),
 		DomainSpec(
 			"childsnack",
+			"pddl_instances",
 			"ipc-2014/domains/child-snack-sequential-satisficing",
 			"bounded_width_sketchable_subgoal_structure_classes",
 			"Childsnack",
 			"2014",
 			"child-snack-sequential-satisficing",
+			("instances/*.pddl",),
 		),
 		DomainSpec(
 			"visitall",
+			"pddl_instances",
 			"ipc-2011/domains/visit-all-sequential-satisficing",
 			"bounded_width_sketchable_subgoal_structure_classes",
 			"Visitall",
 			"2011",
 			"visit-all-sequential-satisficing",
+			("instances/*.pddl",),
+		),
+		DomainSpec(
+			"delivery",
+			"learner_sketches",
+			"testing/benchmarks/delivery",
+			"bounded_width_sketchable_subgoal_structure_classes",
+			"Delivery",
+			"learner-sketches",
+			"delivery-testing-benchmark",
+			("*.pddl",),
+		),
+		DomainSpec(
+			"spanner",
+			"learner_sketches",
+			"testing/benchmarks/spanner",
+			"bounded_width_sketchable_subgoal_structure_classes",
+			"Spanner",
+			"learner-sketches",
+			"spanner-testing-benchmark",
+			("*.pddl",),
 		),
 		DomainSpec(
 			"blocks",
+			"pddl_instances",
 			"ipc-2000/domains/blocks-strips-typed",
 			"feature_definable_goal_dependent_construction_classes",
 			"Blocks",
 			"2000",
 			"blocks-strips-typed",
+			("instances/*.pddl",),
 		),
 		DomainSpec(
-			"depots",
-			"ipc-2002/domains/depots-strips-hand-coded",
+			"8puzzle-1tile",
+			"kr2025_policies",
+			"learning/benchmarks/tractable/8puzzle-1tile",
 			"feature_definable_goal_dependent_construction_classes",
-			"Depots",
-			"2002",
-			"depots-strips-hand-coded",
+			"8puzzle-1tile",
+			"KR 2025",
+			"8puzzle-1tile",
+			("training/easy/*.pddl",),
+		),
+		DomainSpec(
+			"sokoban-1stone",
+			"kr2025_policies",
+			"learning/benchmarks/tractable/sokoban-1stone-v3-7x7",
+			"feature_definable_goal_dependent_construction_classes",
+			"Sokoban-1stone",
+			"KR 2025",
+			"sokoban-1stone-v3-7x7",
+			("training/easy/*.pddl",),
 		),
 	)
 
@@ -150,18 +249,23 @@ def _materialize_domain(spec: DomainSpec) -> None:
 	test_root.mkdir(parents=True)
 	problem_paths = _source_problem_paths(spec)
 	if not problem_paths:
-		raise RuntimeError(f"{spec.domain_id} has no IPC instances in {spec.source_path}")
+		raise RuntimeError(
+			f"{spec.domain_id} has no benchmark instances in {spec.source_path}",
+		)
 	split = math.floor(len(problem_paths) * TRAIN_RATIO)
-	_copy_source_file(f"{spec.source_path}/domain.pddl", domain_root / "domain.pddl")
+	_copy_source_file(spec, spec.source_domain_file, domain_root / "domain.pddl")
 	for index, source_problem in enumerate(problem_paths, start=1):
 		target_root = train_root if index <= split else test_root
-		_copy_source_file(source_problem, target_root / Path(source_problem).name)
+		_copy_source_file(spec, source_problem, target_root / Path(source_problem).name)
+	source = SOURCES[spec.source_id]
 	source_record = {
-		"source": SOURCE_NAME,
-		"source_url": SOURCE_URL,
-		"source_commit": SOURCE_COMMIT,
+		"source": source.name,
+		"source_id": source.source_id,
+		"source_url": source.url,
+		"source_commit": source.commit,
 		"source_path": spec.source_path,
-		"source_domain_file": f"{spec.source_path}/domain.pddl",
+		"source_domain_file": f"{spec.source_path}/{spec.source_domain_file}",
+		"source_problem_globs": list(spec.problem_globs),
 		"ipc_year": spec.ipc_year,
 		"ipc_variant": spec.ipc_variant,
 		"instance_count": len(problem_paths),
@@ -180,35 +284,55 @@ def _source_problem_paths(spec: DomainSpec) -> tuple[str, ...]:
 		(
 			"git",
 			"-C",
-			str(SOURCE_ROOT),
+			str(SOURCES[spec.source_id].local_root),
 			"ls-tree",
 			"-r",
 			"--name-only",
-			f"HEAD:{spec.source_path}/{spec.problem_layout}",
+			f"HEAD:{spec.source_path}",
 		),
 		text=True,
 	)
-	return tuple(
-		f"{spec.source_path}/{spec.problem_layout}/{path}"
-		for path in sorted(
-			(line for line in output.splitlines() if line.endswith(".pddl")),
-			key=_instance_sort_key,
-		)
+	paths: list[Path] = []
+	source_paths = tuple(
+		line
+		for line in output.splitlines()
+		if line.endswith(".pddl") and Path(line).name != spec.source_domain_file
 	)
+	for glob_text in spec.problem_globs:
+		paths.extend(
+			Path(path)
+			for path in source_paths
+			if fnmatch(path, glob_text)
+		)
+	return tuple(str(path) for path in sorted(paths, key=_instance_sort_key))
 
 
-def _instance_sort_key(path: str) -> tuple[int, str]:
-	match = re.search(r"instance-(\d+)\.pddl$", path)
-	if match:
-		return (int(match.group(1)), path)
-	return (10**9, path)
+def _instance_sort_key(path: str | Path) -> tuple[tuple[int, ...], str]:
+	text = str(path)
+	numbers = tuple(int(item) for item in re.findall(r"\d+", text))
+	return (numbers or (10**9,), text)
 
 
-def _copy_source_file(source_path: str, target_path: Path) -> None:
-	cache_path = SOURCE_CACHE_ROOT / SOURCE_COMMIT / source_path
-	if not cache_path.exists():
-		_download_source_file(source_path, cache_path)
-	_write_pddl_snapshot(cache_path.read_bytes(), target_path)
+def _copy_source_file(spec: DomainSpec, relative_path: str, target_path: Path) -> None:
+	content = _read_source_file(spec, relative_path)
+	_write_pddl_snapshot(content, target_path)
+
+
+def _read_source_file(spec: DomainSpec, relative_path: str) -> bytes:
+	source = SOURCES[spec.source_id]
+	full_path = f"{spec.source_path}/{relative_path}"
+	cache_path = PDDL_INSTANCE_CACHE_ROOT / source.commit / full_path
+	if source.source_id == "pddl_instances" and cache_path.exists():
+		return cache_path.read_bytes()
+	return subprocess.check_output(
+		(
+			"git",
+			"-C",
+			str(source.local_root),
+			"show",
+			f"HEAD:{full_path}",
+		),
+	)
 
 
 def _write_pddl_snapshot(content: bytes, target_path: Path) -> None:
@@ -220,76 +344,17 @@ def _write_pddl_snapshot(content: bytes, target_path: Path) -> None:
 	target_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
 
-def _download_source_file(source_path: str, target_path: Path) -> None:
-	target_path.parent.mkdir(parents=True, exist_ok=True)
-	last_error: Exception | None = None
-	for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
-		try:
-			content = _read_source_file_content(source_path)
-			if not content.strip():
-				raise RuntimeError(f"empty PDDL source file at {source_path}")
-			target_path.write_bytes(content)
-			return
-		except (HTTPError, OSError, RuntimeError, URLError) as error:
-			last_error = error
-			if attempt < DOWNLOAD_ATTEMPTS:
-				time.sleep(attempt)
-	raise RuntimeError(f"failed to download {source_path}") from last_error
-
-
-def _read_source_file_content(source_path: str) -> bytes:
-	blob_sha = _source_blob_sha(source_path)
-	try:
-		return _read_blob_with_git(blob_sha)
-	except (OSError, RuntimeError, subprocess.SubprocessError):
-		return _download_blob_with_github_api(blob_sha)
-
-
-def _source_blob_sha(source_path: str) -> str:
-	output = subprocess.check_output(
-		(
-			"git",
-			"-C",
-			str(SOURCE_ROOT),
-			"ls-tree",
-			"HEAD",
-			source_path,
-		),
-		text=True,
+def _benchmark_sources_payload() -> tuple[dict[str, str], ...]:
+	return tuple(
+		{
+			"id": source.source_id,
+			"name": source.name,
+			"url": source.url,
+			"commit": source.commit,
+			"coverage": source.coverage,
+		}
+		for source in SOURCES.values()
 	)
-	parts = output.strip().split()
-	if len(parts) < 3 or parts[1] != "blob":
-		raise RuntimeError(f"cannot locate source blob for {source_path}")
-	return parts[2]
-
-
-def _read_blob_with_git(blob_sha: str) -> bytes:
-	env = os.environ.copy()
-	env["GIT_TERMINAL_PROMPT"] = "0"
-	result = subprocess.run(
-		("git", "-C", str(SOURCE_ROOT), "cat-file", "-p", blob_sha),
-		check=False,
-		capture_output=True,
-		env=env,
-		timeout=GIT_BLOB_TIMEOUT_SECONDS,
-	)
-	if result.returncode != 0:
-		stderr = result.stderr.decode("utf-8", errors="replace")
-		raise RuntimeError(f"git cat-file failed for {blob_sha}: {stderr}")
-	return result.stdout
-
-
-def _download_blob_with_github_api(blob_sha: str) -> bytes:
-	url = f"https://api.github.com/repos/{SOURCE_NAME}/git/blobs/{blob_sha}"
-	request = Request(
-		url,
-		headers={
-			"Accept": "application/vnd.github.raw",
-			"User-Agent": "llm-bdi-pipeline-ipc-materializer",
-		},
-	)
-	with urlopen(request, timeout=60) as response:
-		return response.read()
 
 
 def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
@@ -324,11 +389,10 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				},
 				"scope": "positive_conjunctive_achievement_goals",
 				"benchmark_source": {
-					"name": SOURCE_NAME,
-					"url": SOURCE_URL,
-					"commit": SOURCE_COMMIT,
-					"coverage": "IPC 1998-2014 complete collection",
+					"name": "selected reputable generalized-planning benchmark sources",
+					"coverage": "12 routed achievement-goal planning families",
 				},
+				"benchmark_sources": _benchmark_sources_payload(),
 			},
 			indent=2,
 			sort_keys=True,
@@ -366,11 +430,13 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				},
 			},
 			"source": {
-				"name": SOURCE_NAME,
-				"url": SOURCE_URL,
-				"commit": SOURCE_COMMIT,
+				"name": SOURCES[spec.source_id].name,
+				"id": SOURCES[spec.source_id].source_id,
+				"url": SOURCES[spec.source_id].url,
+				"commit": SOURCES[spec.source_id].commit,
 				"source_path": spec.source_path,
-				"source_domain_file": f"{spec.source_path}/domain.pddl",
+				"source_domain_file": f"{spec.source_path}/{spec.source_domain_file}",
+				"source_problem_globs": list(spec.problem_globs),
 				"ipc_year": spec.ipc_year,
 				"ipc_variant": spec.ipc_variant,
 				"instance_count": len(problem_paths),

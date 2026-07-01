@@ -1,0 +1,112 @@
+{
+  "baseline_groups": {},
+  "benchmark_class_id": "bounded_width_sketchable_subgoal_structure_classes",
+  "display_name": "Spanner",
+  "domain_file": "src/domains/spanner/domain.pddl",
+  "domain_id": "spanner",
+  "domain_role": "main_claim",
+  "experiments": [
+    {
+      "ablation_label": "spanner_ipc_full_smoke",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "preset",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "spanner-ipc-full-smoke",
+      "order": 100,
+      "preset_tags": [
+        "paper-expanded-smoke"
+      ],
+      "synthesis_planner_executable": "fast-downward/fast-downward.py",
+      "synthesis_planner_timeout_seconds": 60,
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 1800,
+      "train_problem_set": "train",
+      "use_synthesis_planner_traces": true
+    },
+    {
+      "ablation_label": "spanner_ipc_full_main",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "main",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "spanner-ipc-full-main",
+      "order": 100,
+      "synthesis_planner_executable": "fast-downward/fast-downward.py",
+      "synthesis_planner_timeout_seconds": 60,
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 1800,
+      "train_problem_set": "train",
+      "use_synthesis_planner_traces": true
+    }
+  ],
+  "goal_specification_layer": "achievement_goal_layer",
+  "problem_sets": {
+    "all": {
+      "problems": [
+        "src/domains/spanner/train/pfile01-001.pddl",
+        "src/domains/spanner/train/pfile01-002.pddl",
+        "src/domains/spanner/train/pfile01-003.pddl",
+        "src/domains/spanner/train/pfile01-004.pddl",
+        "src/domains/spanner/train/pfile01-005.pddl",
+        "src/domains/spanner/train/pfile02-006.pddl",
+        "src/domains/spanner/train/pfile02-007.pddl",
+        "src/domains/spanner/train/pfile02-008.pddl",
+        "src/domains/spanner/train/pfile02-009.pddl",
+        "src/domains/spanner/train/pfile02-010.pddl",
+        "src/domains/spanner/train/pfile03-011.pddl",
+        "src/domains/spanner/train/pfile03-012.pddl",
+        "src/domains/spanner/train/pfile03-013.pddl",
+        "src/domains/spanner/train/pfile03-014.pddl",
+        "src/domains/spanner/train/pfile03-015.pddl",
+        "src/domains/spanner/train/pfile04-016.pddl",
+        "src/domains/spanner/train/pfile04-017.pddl",
+        "src/domains/spanner/train/pfile04-018.pddl",
+        "src/domains/spanner/train/pfile04-019.pddl",
+        "src/domains/spanner/train/pfile04-020.pddl",
+        "src/domains/spanner/test/pfile05-021.pddl",
+        "src/domains/spanner/test/pfile05-022.pddl",
+        "src/domains/spanner/test/pfile05-023.pddl",
+        "src/domains/spanner/test/pfile05-024.pddl",
+        "src/domains/spanner/test/pfile05-025.pddl",
+        "src/domains/spanner/test/pfile06-026.pddl",
+        "src/domains/spanner/test/pfile06-027.pddl",
+        "src/domains/spanner/test/pfile06-028.pddl",
+        "src/domains/spanner/test/pfile06-029.pddl",
+        "src/domains/spanner/test/pfile06-030.pddl"
+      ]
+    },
+    "goal_specification": {
+      "base": "src/domains/spanner/test",
+      "glob": "*.pddl"
+    },
+    "train": {
+      "base": "src/domains/spanner/train",
+      "glob": "*.pddl"
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+    "id": "learner_sketches",
+    "instance_count": 30,
+    "ipc_variant": "spanner-testing-benchmark",
+    "ipc_year": "learner-sketches",
+    "name": "bonetblai/learner-sketches",
+    "source_domain_file": "testing/benchmarks/spanner/domain.pddl",
+    "source_path": "testing/benchmarks/spanner",
+    "source_problem_globs": [
+      "*.pddl"
+    ],
+    "split_policy": "floor(2/3 * instance_count) train, remaining test",
+    "test_count": 10,
+    "train_count": 20,
+    "url": "https://github.com/bonetblai/learner-sketches"
+  },
+  "support_level": "main_claim",
+  "target_paper_domains": [
+    "spanner"
+  ]
+}

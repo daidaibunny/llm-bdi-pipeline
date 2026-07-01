@@ -2,7 +2,7 @@
   "schema_version": 2,
   "scope": "positive_conjunctive_achievement_goals",
   "claim_statement": "The current paper claims executable domain-level lifted AgentSpeak(L) library synthesis for positive conjunctive achievement-goal PDDL problem classes Q_D only when Q_D admits a goal-conditioned, feature-definable, terminating modular policy sketch with bounded sketch width, the selected feature rules have safe lifted bindings to declared PDDL predicates, primitive actions, predicate subgoals, read-only goal descriptors, or read-only agenda gates, and the compiled library validates without runtime full-trace planning.",
-  "selection_principle": "Benchmark classes are selected by prior formal properties and materialized from complete IPC PDDL directories in potassco/pddl-instances at commit cf19edf7c53d1540ddbb396c642595e0926ee552. A domain is counted only after its local snapshot has a domain.pddl file, all official instances from the selected IPC directory, a deterministic floor(2/3 * N) training split, and a remaining held-out goal-specification split.",
+  "selection_principle": "Benchmark classes are selected by prior formal generalized-planning properties and materialized from pinned reputable benchmark sources: potassco/pddl-instances, DillonZChen/moose-dataset, bonetblai/learner-sketches, and bonetblai/learner-policies-from-examples. A planning family is counted only after its local snapshot has a domain.pddl file, all selected source instances, a deterministic floor(2/3 * N) training split, and a remaining held-out goal-specification split.",
   "prior_benchmark_practice": [
     {
       "id": "moose_goal_regression",
@@ -153,42 +153,52 @@
     }
   ],
   "domain_count_assessment": {
-    "current_strict_main_standard_domain_count": 8,
+    "current_strict_main_standard_domain_count": 12,
     "current_strict_main_standard_domains": [
+      "ferry",
       "gripper",
       "miconic",
       "logistics",
-      "barman",
-      "childsnack",
+      "delivery",
+      "spanner",
       "visitall",
+      "childsnack",
+      "barman",
       "blocks",
-      "depots"
+      "8puzzle-1tile",
+      "sokoban-1stone"
     ],
     "current_nonstandard_mechanism_domain_count": 0,
     "current_nonstandard_mechanism_domains": [],
-    "current_boundary_standard_domain_count": 0,
-    "current_boundary_standard_domains": [],
-    "prior_broad_gp_domain_count_range": "6-13 standard domains for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
+    "current_boundary_standard_domain_count": 1,
+    "current_boundary_standard_domains": [
+      "depots"
+    ],
+    "prior_broad_gp_domain_count_range": "6-13 standard or paper-defined planning families for broad generalized-planning method papers, with MOOSE additionally probing 38 IPC domains for goal-independence behavior.",
     "revision_needed_for_broad_gp_claim": false,
     "minimum_next_revision_target": {
-      "selected_standard_domain_count": 8,
+      "selected_standard_domain_count": 12,
       "required_families": [
-        "goal-separable or serialisable achievement classes: gripper, miconic, and logistics",
-        "bounded-width sketchable subgoal-structure classes: barman, childsnack, and visitall",
-        "feature-definable goal-dependent construction classes: blocks and depots"
+        "goal-regression-decomposable domain-goal families: ferry, gripper, miconic, and logistics",
+        "bounded-width sketchable subgoal-structure families: delivery, spanner, visitall, childsnack, and barman",
+        "feature-definable structural and goal-dependent families: blocks, 8puzzle-1tile, and sokoban-1stone"
       ],
       "recommended_full_target": [
+        "ferry",
         "gripper",
         "miconic",
         "logistics",
-        "barman",
-        "childsnack",
+        "delivery",
+        "spanner",
         "visitall",
+        "childsnack",
+        "barman",
         "blocks",
-        "depots"
+        "8puzzle-1tile",
+        "sokoban-1stone"
       ]
     },
-    "current_paper_positioning": "The benchmark infrastructure now targets eight achievement-goal IPC domains materialized from complete official IPC directories. Strict ASL-library coverage remains an evaluation result to be established per split, but benchmark selection no longer depends on generated problem snapshots."
+    "current_paper_positioning": "The benchmark infrastructure now targets 12 routed achievement-goal planning families materialized from pinned IPC or paper benchmark sources. Strict ASL-library coverage remains an evaluation result to be established per split, and benchmark selection follows backend-routing evidence rather than the earlier single-source IPC corpus."
   },
   "goal_specification_layers": [
     {
@@ -211,18 +221,23 @@
   "selected_domain_class_count": 3,
   "selected_goal_specification_layer_count": 2,
   "selected_standard_domain_targets": [
+    "ferry",
     "gripper",
     "miconic",
     "logistics",
-    "barman",
-    "childsnack",
+    "delivery",
+    "spanner",
     "visitall",
+    "childsnack",
+    "barman",
     "blocks",
-    "depots"
+    "8puzzle-1tile",
+    "sokoban-1stone"
   ],
   "paper_core_domains": [
     "blocks",
-    "depots"
+    "8puzzle-1tile",
+    "sokoban-1stone"
   ],
   "formal_properties": [
     {
@@ -232,7 +247,7 @@
       "literature_basis": [
         "Chen2026Moose"
       ],
-      "paper_use": "Selected-class and baseline property. It explains why Ferry, Gripper, Miconic, and Logistics belong in the goal-separable and serialisable class, and why Blocksworld-style goal dependence should not be treated as MOOSE-friendly."
+      "paper_use": "Selected-class and baseline property. It explains why Ferry, Gripper, Miconic, and Logistics belong in the goal-regression-decomposable class, and why Blocksworld-style goal dependence should not be treated as MOOSE-friendly."
     },
     {
       "id": "bounded_width_sketch",
@@ -253,7 +268,7 @@
         "Frances2021LearningGeneralPolicies",
         "Bonet2024GeneralPoliciesWidth"
       ],
-      "paper_use": "Main construction-class justification. Prior work explicitly learns feature policies for clear(x), on(x,y), and full Blocksworld using features such as blocks above a target and well-placed blocks; Depots is selected as an IPC construction benchmark that combines transport-style location goals with Blocksworld-style crate stacking."
+      "paper_use": "Main construction-class justification. Prior work explicitly learns feature policies for clear(x), on(x,y), and full Blocksworld using features such as blocks above a target and well-placed blocks; KR 2025 also motivates structural one-tile 8-puzzle and one-stone Sokoban families as feature-policy targets."
     },
     {
       "id": "program_or_decision_list_gp",
@@ -293,23 +308,26 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
+        "ferry",
         "gripper",
         "miconic",
         "logistics"
       ],
       "target_paper_domains": [
+        "ferry",
         "gripper",
         "miconic",
         "logistics"
       ],
       "current_project_domains": [
+        "ferry",
         "gripper",
         "miconic",
         "logistics"
       ],
-      "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether compiled lifted ASL libraries cover the same goal-separable or serialisable region used by MOOSE, PG3, D2L, and sketch-learning papers.",
+      "paper_role": "Selected property-defined class for the final routing evaluation. These families test whether compiled lifted ASL libraries cover the same goal-separable or serialisable region used by MOOSE, PG3, D2L, and sketch-learning papers.",
       "current_evidence": [
-        "Complete IPC Gripper, Miconic, and Logistics directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits."
+        "Ferry is materialized from the pinned MOOSE dataset; Gripper, Miconic, and Logistics are materialized from potassco/pddl-instances. All use floor(2/3) train/test splits."
       ],
       "support_level": "main_claim"
     },
@@ -330,29 +348,35 @@
         "safe_asl_compilability"
       ],
       "domain_examples": [
-        "barman",
+        "delivery",
+        "spanner",
+        "visitall",
         "childsnack",
-        "visitall"
+        "barman"
       ],
       "target_paper_domains": [
-        "barman",
+        "delivery",
+        "spanner",
+        "visitall",
         "childsnack",
-        "visitall"
+        "barman"
       ],
       "current_project_domains": [
-        "barman",
+        "delivery",
+        "spanner",
+        "visitall",
         "childsnack",
-        "visitall"
+        "barman"
       ],
-      "paper_role": "Selected property-defined class for the final broad evaluation. These domains test whether the ASL compiler can preserve bounded-width sketchable subgoal structure rather than only independent-goal dispatch.",
+      "paper_role": "Selected property-defined class for the final routing evaluation. These families test whether the ASL compiler can preserve bounded-width sketchable subgoal structure rather than only independent-goal dispatch.",
       "current_evidence": [
-        "Complete IPC Barman, Childsnack, and Visitall directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits."
+        "Delivery and Spanner are materialized from learner-sketches testing benchmarks; Barman, Childsnack, and Visitall are materialized from potassco/pddl-instances. All use floor(2/3) train/test splits."
       ],
       "support_level": "main_claim"
     },
     {
       "id": "feature_definable_goal_dependent_construction_classes",
-      "name": "Feature-definable goal-dependent stacking and construction classes",
+      "name": "Feature-definable structural and goal-dependent families",
       "formal_membership": [
         "positive conjunctive achievement goals",
         "final goals can have strong causal dependency and cannot be achieved in arbitrary order",
@@ -367,20 +391,23 @@
       ],
       "domain_examples": [
         "blocks",
-        "depots"
+        "8puzzle-1tile",
+        "sokoban-1stone"
       ],
       "target_paper_domains": [
         "blocks",
-        "depots"
+        "8puzzle-1tile",
+        "sokoban-1stone"
       ],
       "current_project_domains": [
         "blocks",
-        "depots"
+        "8puzzle-1tile",
+        "sokoban-1stone"
       ],
-      "paper_role": "Selected property-defined class for the final broad evaluation. This class captures the strongest goal-dependency argument for lifted ASL modules: construction goals where support, stacking, or carrier-resource structure constrains the order of atomic goals.",
+      "paper_role": "Selected property-defined class for the final routing evaluation. This class captures goal-dependent structural policies where support, position, or pushing structure constrains the order of atomic goals.",
       "current_evidence": [
-        "Complete IPC Blocks and Depots directories are materialized from potassco/pddl-instances with floor(2/3) train/test splits.",
-        "Blocks supplies the canonical feature-definable Blocksworld construction class; Depots supplies an IPC construction benchmark combining transport goals with Blocksworld-style crate stacking."
+        "Blocks is materialized from potassco/pddl-instances; 8puzzle-1tile and Sokoban-1stone are materialized from the KR 2025 learner-policies-from-examples benchmark source. All use floor(2/3) train/test splits.",
+        "Depots is not a selected main-claim family because KR 2025 reports Depot in C5; it remains a boundary case until a trusted backend solves it and the resulting artifact passes ASL compilation and held-out validation."
       ],
       "support_level": "main_claim"
     }
@@ -391,9 +418,10 @@
       "domains": [
         "transport",
         "rovers",
-        "marsrover"
+        "marsrover",
+        "depots"
       ],
-      "reason": "These domains require route planning, ranking, transitive closure, or multi-carrier location reasoning beyond the current safe lifted feature-binding contract. MOOSE also removes path-finding components from Rovers and Transport for its main goal-regression setting.",
+      "reason": "These domains require route planning, ranking, transitive closure, multi-carrier location reasoning, or richer feature-pool edges beyond the current safe lifted feature-binding contract. MOOSE also removes path-finding components from Rovers and Transport for its main goal-regression setting, and KR 2025 reports Depot in C5.",
       "current_project_domains": [],
       "current_evidence": []
     },
@@ -500,9 +528,38 @@
     }
   },
   "benchmark_source": {
-    "name": "potassco/pddl-instances",
-    "url": "https://github.com/potassco/pddl-instances",
-    "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
-    "local_snapshot_policy": "Complete IPC PDDL directories are tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification."
-  }
+    "name": "selected reputable generalized-planning benchmark sources",
+    "coverage": "12 routed achievement-goal planning families",
+    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification."
+  },
+  "benchmark_sources": [
+    {
+      "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+      "coverage": "IPC benchmark directories used for standard classical PDDL domains",
+      "id": "pddl_instances",
+      "name": "potassco/pddl-instances",
+      "url": "https://github.com/potassco/pddl-instances"
+    },
+    {
+      "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+      "coverage": "MOOSE goal-regression benchmark families",
+      "id": "moose_dataset",
+      "name": "DillonZChen/moose-dataset",
+      "url": "https://github.com/DillonZChen/moose-dataset"
+    },
+    {
+      "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+      "coverage": "learned-sketch benchmark and testing families",
+      "id": "learner_sketches",
+      "name": "bonetblai/learner-sketches",
+      "url": "https://github.com/bonetblai/learner-sketches"
+    },
+    {
+      "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+      "coverage": "KR 2025 feature-policy benchmark families",
+      "id": "kr2025_policies",
+      "name": "bonetblai/learner-policies-from-examples",
+      "url": "https://github.com/bonetblai/learner-policies-from-examples"
+    }
+  ]
 }

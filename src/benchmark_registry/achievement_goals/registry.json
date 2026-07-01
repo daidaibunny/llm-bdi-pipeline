@@ -1,10 +1,38 @@
 {
   "benchmark_source": {
-    "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
-    "coverage": "IPC 1998-2014 complete collection",
-    "name": "potassco/pddl-instances",
-    "url": "https://github.com/potassco/pddl-instances"
+    "coverage": "12 routed achievement-goal planning families",
+    "name": "selected reputable generalized-planning benchmark sources"
   },
+  "benchmark_sources": [
+    {
+      "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+      "coverage": "IPC benchmark directories used for standard classical PDDL domains",
+      "id": "pddl_instances",
+      "name": "potassco/pddl-instances",
+      "url": "https://github.com/potassco/pddl-instances"
+    },
+    {
+      "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+      "coverage": "MOOSE goal-regression benchmark families",
+      "id": "moose_dataset",
+      "name": "DillonZChen/moose-dataset",
+      "url": "https://github.com/DillonZChen/moose-dataset"
+    },
+    {
+      "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+      "coverage": "learned-sketch benchmark and testing families",
+      "id": "learner_sketches",
+      "name": "bonetblai/learner-sketches",
+      "url": "https://github.com/bonetblai/learner-sketches"
+    },
+    {
+      "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+      "coverage": "KR 2025 feature-policy benchmark families",
+      "id": "kr2025_policies",
+      "name": "bonetblai/learner-policies-from-examples",
+      "url": "https://github.com/bonetblai/learner-policies-from-examples"
+    }
+  ],
   "future_goal_specification_layers": [
     "temporal_extended_goal_layer"
   ],

@@ -1,0 +1,92 @@
+{
+  "baseline_groups": {},
+  "benchmark_class_id": "feature_definable_goal_dependent_construction_classes",
+  "display_name": "Sokoban-1stone",
+  "domain_file": "src/domains/sokoban-1stone/domain.pddl",
+  "domain_id": "sokoban-1stone",
+  "domain_role": "main_claim",
+  "experiments": [
+    {
+      "ablation_label": "sokoban-1stone_ipc_full_smoke",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "preset",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "sokoban-1stone-ipc-full-smoke",
+      "order": 100,
+      "preset_tags": [
+        "paper-expanded-smoke"
+      ],
+      "synthesis_planner_executable": "fast-downward/fast-downward.py",
+      "synthesis_planner_timeout_seconds": 60,
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 1800,
+      "train_problem_set": "train",
+      "use_synthesis_planner_traces": true
+    },
+    {
+      "ablation_label": "sokoban-1stone_ipc_full_main",
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "main",
+      "max_depth": 1000,
+      "max_steps": 10000,
+      "name": "sokoban-1stone-ipc-full-main",
+      "order": 100,
+      "synthesis_planner_executable": "fast-downward/fast-downward.py",
+      "synthesis_planner_timeout_seconds": 60,
+      "synthesis_profile": "bootstrap",
+      "timeout_seconds": 1800,
+      "train_problem_set": "train",
+      "use_synthesis_planner_traces": true
+    }
+  ],
+  "goal_specification_layer": "achievement_goal_layer",
+  "problem_sets": {
+    "all": {
+      "problems": [
+        "src/domains/sokoban-1stone/train/p-7-7-0.pddl",
+        "src/domains/sokoban-1stone/train/p-7-7-1.pddl",
+        "src/domains/sokoban-1stone/train/p-7-7-2.pddl",
+        "src/domains/sokoban-1stone/train/p-7-7-3.pddl",
+        "src/domains/sokoban-1stone/train/p-7-7-4.pddl",
+        "src/domains/sokoban-1stone/train/p-7-7-5.pddl",
+        "src/domains/sokoban-1stone/test/p-7-7-6.pddl",
+        "src/domains/sokoban-1stone/test/p-7-7-7.pddl",
+        "src/domains/sokoban-1stone/test/p-7-7-8.pddl",
+        "src/domains/sokoban-1stone/test/p-7-7-9.pddl"
+      ]
+    },
+    "goal_specification": {
+      "base": "src/domains/sokoban-1stone/test",
+      "glob": "*.pddl"
+    },
+    "train": {
+      "base": "src/domains/sokoban-1stone/train",
+      "glob": "*.pddl"
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+    "id": "kr2025_policies",
+    "instance_count": 10,
+    "ipc_variant": "sokoban-1stone-v3-7x7",
+    "ipc_year": "KR 2025",
+    "name": "bonetblai/learner-policies-from-examples",
+    "source_domain_file": "learning/benchmarks/tractable/sokoban-1stone-v3-7x7/domain.pddl",
+    "source_path": "learning/benchmarks/tractable/sokoban-1stone-v3-7x7",
+    "source_problem_globs": [
+      "training/easy/*.pddl"
+    ],
+    "split_policy": "floor(2/3 * instance_count) train, remaining test",
+    "test_count": 4,
+    "train_count": 6,
+    "url": "https://github.com/bonetblai/learner-policies-from-examples"
+  },
+  "support_level": "main_claim",
+  "target_paper_domains": [
+    "sokoban-1stone"
+  ]
+}

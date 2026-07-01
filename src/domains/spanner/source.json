@@ -1,0 +1,17 @@
+{
+  "instance_count": 30,
+  "ipc_variant": "spanner-testing-benchmark",
+  "ipc_year": "learner-sketches",
+  "source": "bonetblai/learner-sketches",
+  "source_commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+  "source_domain_file": "testing/benchmarks/spanner/domain.pddl",
+  "source_id": "learner_sketches",
+  "source_path": "testing/benchmarks/spanner",
+  "source_problem_globs": [
+    "*.pddl"
+  ],
+  "source_url": "https://github.com/bonetblai/learner-sketches",
+  "split_policy": "floor(2/3 * instance_count) train, remaining test",
+  "test_count": 10,
+  "train_count": 20
+}

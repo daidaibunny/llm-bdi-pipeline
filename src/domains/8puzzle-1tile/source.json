@@ -1,0 +1,17 @@
+{
+  "instance_count": 20,
+  "ipc_variant": "8puzzle-1tile",
+  "ipc_year": "KR 2025",
+  "source": "bonetblai/learner-policies-from-examples",
+  "source_commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+  "source_domain_file": "learning/benchmarks/tractable/8puzzle-1tile/domain.pddl",
+  "source_id": "kr2025_policies",
+  "source_path": "learning/benchmarks/tractable/8puzzle-1tile",
+  "source_problem_globs": [
+    "training/easy/*.pddl"
+  ],
+  "source_url": "https://github.com/bonetblai/learner-policies-from-examples",
+  "split_policy": "floor(2/3 * instance_count) train, remaining test",
+  "test_count": 7,
+  "train_count": 13
+}

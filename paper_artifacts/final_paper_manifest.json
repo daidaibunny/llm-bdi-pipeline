@@ -45,7 +45,7 @@
         "path": ".external/gp-backends/learner-sketches",
         "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
         "validate_head": true,
-        "role": "consumed external sketch backend"
+        "role": "benchmark source: learned-sketch benchmark and testing families"
       },
       {
         "name": "h-policy-learner",
@@ -87,7 +87,21 @@
         "path": ".external/benchmark-sources/pddl-instances",
         "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
         "validate_head": true,
-        "role": "single independent source for complete IPC achievement-goal benchmark snapshots"
+        "role": "benchmark source: IPC benchmark directories used for standard classical PDDL domains"
+      },
+      {
+        "name": "moose-dataset",
+        "path": ".external/moose-dataset",
+        "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+        "validate_head": true,
+        "role": "benchmark source: MOOSE goal-regression benchmark families"
+      },
+      {
+        "name": "learner-policies-from-examples",
+        "path": ".external/gp-backends/learner-policies-from-examples",
+        "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+        "validate_head": true,
+        "role": "benchmark source: KR 2025 feature-policy benchmark families"
       }
     ]
   },
@@ -168,6 +182,26 @@
       "tracked": true
     },
     {
+      "path": "src/domains/ferry/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/ferry/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/ferry/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/ferry/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
       "path": "src/domains/gripper/domain.pddl",
       "kind": "file",
       "tracked": true
@@ -208,42 +242,62 @@
       "tracked": true
     },
     {
-      "path": "src/domains/barman/domain.pddl",
+      "path": "src/domains/logistics/domain.pddl",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/barman/train",
+      "path": "src/domains/logistics/train",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/barman/test",
+      "path": "src/domains/logistics/test",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/barman/source.json",
+      "path": "src/domains/logistics/source.json",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/childsnack/domain.pddl",
+      "path": "src/domains/delivery/domain.pddl",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/childsnack/train",
+      "path": "src/domains/delivery/train",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/childsnack/test",
+      "path": "src/domains/delivery/test",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/childsnack/source.json",
+      "path": "src/domains/delivery/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/spanner/source.json",
       "kind": "file",
       "tracked": true
     },
@@ -268,6 +322,46 @@
       "tracked": true
     },
     {
+      "path": "src/domains/childsnack/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/childsnack/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/childsnack/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/childsnack/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/domain.pddl",
+      "kind": "file",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/train",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/test",
+      "kind": "directory",
+      "tracked": true
+    },
+    {
+      "path": "src/domains/barman/source.json",
+      "kind": "file",
+      "tracked": true
+    },
+    {
       "path": "src/domains/blocks/domain.pddl",
       "kind": "file",
       "tracked": true
@@ -288,42 +382,42 @@
       "tracked": true
     },
     {
-      "path": "src/domains/logistics/domain.pddl",
+      "path": "src/domains/8puzzle-1tile/domain.pddl",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/logistics/train",
+      "path": "src/domains/8puzzle-1tile/train",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/logistics/test",
+      "path": "src/domains/8puzzle-1tile/test",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/logistics/source.json",
+      "path": "src/domains/8puzzle-1tile/source.json",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/depots/domain.pddl",
+      "path": "src/domains/sokoban-1stone/domain.pddl",
       "kind": "file",
       "tracked": true
     },
     {
-      "path": "src/domains/depots/train",
+      "path": "src/domains/sokoban-1stone/train",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/depots/test",
+      "path": "src/domains/sokoban-1stone/test",
       "kind": "directory",
       "tracked": true
     },
     {
-      "path": "src/domains/depots/source.json",
+      "path": "src/domains/sokoban-1stone/source.json",
       "kind": "file",
       "tracked": true
     }
@@ -354,9 +448,38 @@
   "expected_library_rows": [],
   "expected_baseline_rows": [],
   "benchmark_source": {
-    "name": "potassco/pddl-instances",
-    "url": "https://github.com/potassco/pddl-instances",
-    "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
-    "local_snapshot_policy": "Complete IPC PDDL directories are tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification."
-  }
+    "name": "selected reputable generalized-planning benchmark sources",
+    "coverage": "12 routed achievement-goal planning families",
+    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification."
+  },
+  "benchmark_sources": [
+    {
+      "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+      "coverage": "IPC benchmark directories used for standard classical PDDL domains",
+      "id": "pddl_instances",
+      "name": "potassco/pddl-instances",
+      "url": "https://github.com/potassco/pddl-instances"
+    },
+    {
+      "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+      "coverage": "MOOSE goal-regression benchmark families",
+      "id": "moose_dataset",
+      "name": "DillonZChen/moose-dataset",
+      "url": "https://github.com/DillonZChen/moose-dataset"
+    },
+    {
+      "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+      "coverage": "learned-sketch benchmark and testing families",
+      "id": "learner_sketches",
+      "name": "bonetblai/learner-sketches",
+      "url": "https://github.com/bonetblai/learner-sketches"
+    },
+    {
+      "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+      "coverage": "KR 2025 feature-policy benchmark families",
+      "id": "kr2025_policies",
+      "name": "bonetblai/learner-policies-from-examples",
+      "url": "https://github.com/bonetblai/learner-policies-from-examples"
+    }
+  ]
 }

@@ -22,17 +22,25 @@ from domain_level_planning.experiments import format_comparison_latex_macros
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SELECTED_BENCHMARK_DOMAINS = {
+	"ferry",
 	"gripper",
 	"miconic",
 	"logistics",
+	"delivery",
+	"spanner",
 	"childsnack",
 	"barman",
 	"visitall",
 	"blocks",
-	"depots",
+	"8puzzle-1tile",
+	"sokoban-1stone",
 }
-BENCHMARK_SOURCE_COMMIT = "cf19edf7c53d1540ddbb396c642595e0926ee552"
-BENCHMARK_SOURCE_URL = "https://github.com/potassco/pddl-instances"
+EXPECTED_BENCHMARK_SOURCE_NAMES = {
+	"potassco/pddl-instances",
+	"DillonZChen/moose-dataset",
+	"bonetblai/learner-sketches",
+	"bonetblai/learner-policies-from-examples",
+}
 
 
 def _minimal_artifact_manifest(
@@ -358,33 +366,37 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	assert "bounded sketch width" in taxonomy["claim_statement"]
 	assert "runtime full-trace planning" in taxonomy["claim_statement"]
 	assert "potassco/pddl-instances" in taxonomy["selection_principle"]
+	assert "moose-dataset" in taxonomy["selection_principle"]
+	assert "learner-sketches" in taxonomy["selection_principle"]
+	assert "learner-policies-from-examples" in taxonomy["selection_principle"]
 	assert "floor(2/3 * N)" in taxonomy["selection_principle"]
-	assert taxonomy["paper_core_domains"] == ["blocks", "depots"]
+	assert taxonomy["paper_core_domains"] == [
+		"blocks",
+		"8puzzle-1tile",
+		"sokoban-1stone",
+	]
 	assert taxonomy["domain_count_assessment"][
 		"current_strict_main_standard_domain_count"
-	] == 8
+	] == 12
 	assert taxonomy["domain_count_assessment"][
 		"revision_needed_for_broad_gp_claim"
 	] is False
 	assert (
-		taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
-			"selected_standard_domain_count"
-		]
-		== 8
+			taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
+				"selected_standard_domain_count"
+			]
+			== 12
 	)
 	assert taxonomy["selected_domain_class_count"] == 3
 	assert taxonomy["selected_goal_specification_layer_count"] == 2
 	assert set(taxonomy["selected_standard_domain_targets"]) == SELECTED_BENCHMARK_DOMAINS
-	assert taxonomy["benchmark_source"] == {
-		"name": "potassco/pddl-instances",
-		"url": "https://github.com/potassco/pddl-instances",
-		"commit": BENCHMARK_SOURCE_COMMIT,
-		"local_snapshot_policy": (
-			"Complete IPC PDDL directories are tracked under src/domains/<domain> "
-			"with domain.pddl, train, test, and source.json. The train split uses "
-			"floor(2/3 * instance_count); the remainder is held out for goal specification."
-		),
-	}
+	assert taxonomy["benchmark_source"]["name"] == (
+		"selected reputable generalized-planning benchmark sources"
+	)
+	assert set(
+		record["name"]
+		for record in taxonomy["benchmark_sources"]
+	) == EXPECTED_BENCHMARK_SOURCE_NAMES
 	goal_layers = {
 		layer["id"]: layer
 		for layer in taxonomy["goal_specification_layers"]
@@ -509,22 +521,33 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"feature_definable_goal_dependent_construction_classes"
 	][
 		"current_project_domains"
-	] == ["blocks", "depots"]
+	] == ["blocks", "8puzzle-1tile", "sokoban-1stone"]
 	assert classes_by_id[
 		"feature_definable_goal_dependent_construction_classes"
-	]["target_paper_domains"] == ["blocks", "depots"]
+	]["target_paper_domains"] == [
+		"blocks",
+		"8puzzle-1tile",
+		"sokoban-1stone",
+	]
 	assert classes_by_id[
 		"goal_separable_serialisable_achievement_classes"
-	]["current_project_domains"] == ["gripper", "miconic", "logistics"]
+	]["current_project_domains"] == ["ferry", "gripper", "miconic", "logistics"]
 	assert classes_by_id[
 		"bounded_width_sketchable_subgoal_structure_classes"
-	]["current_project_domains"] == ["barman", "childsnack", "visitall"]
+	]["current_project_domains"] == [
+		"delivery",
+		"spanner",
+		"visitall",
+		"childsnack",
+		"barman",
+	]
 
 	boundary_records = {
 		record["id"]: record
 		for record in taxonomy["excluded_or_boundary_domains"]
 	}
 	assert "transport" in boundary_records["reachability_route_boundary"]["domains"]
+	assert "depots" in boundary_records["reachability_route_boundary"]["domains"]
 	assert boundary_records["reachability_route_boundary"]["current_project_domains"] == []
 	assert "numeric transport" in boundary_records["numeric_boundary"][
 		"domains"
@@ -554,36 +577,41 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 	assert registry.control["future_goal_specification_layers"] == [
 		"temporal_extended_goal_layer",
 	]
-	assert len(registry.selected_records()) == 8
+	assert len(registry.selected_records()) == 12
 	assert {
 		record.domain_id for record in registry.selected_records()
 	} == set(taxonomy["selected_standard_domain_targets"])
-	assert registry.control["benchmark_source"] == {
-		"name": "potassco/pddl-instances",
-		"url": "https://github.com/potassco/pddl-instances",
-		"commit": BENCHMARK_SOURCE_COMMIT,
-		"coverage": "IPC 1998-2014 complete collection",
-	}
+	assert registry.control["benchmark_source"]["name"] == (
+		"selected reputable generalized-planning benchmark sources"
+	)
+	assert set(
+		record["name"]
+		for record in registry.control["benchmark_sources"]
+	) == EXPECTED_BENCHMARK_SOURCE_NAMES
 
 	class_to_domains: dict[str, set[str]] = {}
 	for record in registry.selected_records():
 		class_to_domains.setdefault(record.benchmark_class_id, set()).add(record.domain_id)
 	assert class_to_domains == {
-		"goal_separable_serialisable_achievement_classes": {
-			"gripper",
-			"miconic",
-			"logistics",
-		},
-		"bounded_width_sketchable_subgoal_structure_classes": {
-			"childsnack",
-			"barman",
-			"visitall",
-		},
-		"feature_definable_goal_dependent_construction_classes": {
-			"blocks",
-			"depots",
-		},
-	}
+			"goal_separable_serialisable_achievement_classes": {
+				"ferry",
+				"gripper",
+				"miconic",
+				"logistics",
+			},
+			"bounded_width_sketchable_subgoal_structure_classes": {
+				"delivery",
+				"spanner",
+				"childsnack",
+				"barman",
+				"visitall",
+			},
+			"feature_definable_goal_dependent_construction_classes": {
+				"blocks",
+				"8puzzle-1tile",
+				"sokoban-1stone",
+			},
+		}
 
 	assert all(
 		str(record.payload["goal_specification_layer"]) == "achievement_goal_layer"
@@ -605,12 +633,12 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 		assert source_snapshot["test_count"] == (
 			source_snapshot["instance_count"] - source_snapshot["train_count"]
 		)
-		assert record.payload["source"]["name"] == "potassco/pddl-instances"
-		assert record.payload["source"]["url"] == BENCHMARK_SOURCE_URL
-		assert record.payload["source"]["commit"] == BENCHMARK_SOURCE_COMMIT
-		assert source_snapshot["source"] == "potassco/pddl-instances"
-		assert source_snapshot["source_url"] == BENCHMARK_SOURCE_URL
-		assert source_snapshot["source_commit"] == BENCHMARK_SOURCE_COMMIT
+		assert record.payload["source"]["name"] in EXPECTED_BENCHMARK_SOURCE_NAMES
+		assert record.payload["source"]["url"].startswith("https://")
+		assert record.payload["source"]["commit"]
+		assert source_snapshot["source"] == record.payload["source"]["name"]
+		assert source_snapshot["source_url"] == record.payload["source"]["url"]
+		assert source_snapshot["source_commit"] == record.payload["source"]["commit"]
 
 	manifest_inputs = {
 		str(record["path"])

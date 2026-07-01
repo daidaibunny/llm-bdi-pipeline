@@ -337,9 +337,9 @@ For the next paper-quality routing evaluation, use 12 primary domains:
 | Class B: bounded-width sketchable subgoal-structure families | `delivery`, `spanner`, `visitall`, `childsnack`, `barman` | learner-sketches, then KR 2025/D2L fallback |
 | Class C: feature-definable structural and goal-dependent families | `blocks`, `8puzzle-1tile`, `sokoban-1stone` | KR 2025, then D2L fallback |
 
-This set is deliberately different from the previous 8-domain taxonomy. The new
-set is selected for backend-routing evidence, not for our earlier hand-built
-Layer B/C architecture.
+This set is the formal routing corpus. It is selected for backend-routing
+evidence and ASL compilability, not for the earlier hand-built Layer B/C
+architecture.
 
 Keep `depots`, `rovers`, `satellite`, `transport`, `driverlog`, and full
 `zenotravel` as boundary domains.
@@ -397,19 +397,17 @@ Boundary/program domains:
 
 ## Implications for the Current Repository
 
-1. The previous hand-built generalized planner becomes a baseline, not the
-   main method.
-2. The current 8-domain taxonomy is replaced or supplemented by the
-   12-domain-goal-family routing taxonomy above.
-3. `depots` should move from "supported feature-definable construction" to
-   "boundary/failure-analysis" unless a backend actually solves it.
-4. Add `ferry`, `delivery`, `spanner`, `8puzzle-1tile`, and `sokoban-1stone`
-   benchmark folders from the reputable sources above.
-5. The main implementation work is backend adapters and ASL compilers:
+1. The previous hand-built generalized planner is a baseline, not the main
+   method.
+2. The formal achievement-goal corpus is the 12-domain-goal-family routing
+   taxonomy above.
+3. `depots` remains boundary/failure-analysis unless a backend actually solves
+   it and the result passes ASL compilation plus held-out validation.
+4. The main implementation work is backend adapters and ASL compilers:
    MOOSE policy -> `LiftedPolicyProgram`, KR/D2L DLPlan policy ->
    `LiftedPolicyProgram`, learner-sketches sketch -> `LiftedPolicyProgram`
    with explicit subproblem semantics, then ASL.
-6. h-policy/Vanir is the next backend-adapter target because its hierarchical
+5. h-policy/Vanir is the next backend-adapter target because its hierarchical
    policy output has explicit policy calls. It requires artifact parsing and
    validation before becoming a claimed route.
 

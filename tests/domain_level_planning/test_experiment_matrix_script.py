@@ -15,14 +15,18 @@ from tests.domain_level_planning.resource_dependency_fixture import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SELECTED_BENCHMARK_DOMAINS = {
+	"ferry",
 	"gripper",
 	"miconic",
 	"logistics",
+	"delivery",
+	"spanner",
 	"childsnack",
 	"barman",
 	"visitall",
 	"blocks",
-	"depots",
+	"8puzzle-1tile",
+	"sokoban-1stone",
 }
 
 

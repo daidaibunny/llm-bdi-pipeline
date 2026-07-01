@@ -80,12 +80,16 @@
   "schema_version": 1,
   "source": {
     "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+    "id": "pddl_instances",
     "instance_count": 20,
     "ipc_variant": "child-snack-sequential-satisficing",
     "ipc_year": "2014",
     "name": "potassco/pddl-instances",
     "source_domain_file": "ipc-2014/domains/child-snack-sequential-satisficing/domain.pddl",
     "source_path": "ipc-2014/domains/child-snack-sequential-satisficing",
+    "source_problem_globs": [
+      "instances/*.pddl"
+    ],
     "split_policy": "floor(2/3 * instance_count) train, remaining test",
     "test_count": 7,
     "train_count": 13,

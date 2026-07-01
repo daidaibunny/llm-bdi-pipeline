@@ -5,7 +5,11 @@
   "source": "potassco/pddl-instances",
   "source_commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
   "source_domain_file": "ipc-2011/domains/visit-all-sequential-satisficing/domain.pddl",
+  "source_id": "pddl_instances",
   "source_path": "ipc-2011/domains/visit-all-sequential-satisficing",
+  "source_problem_globs": [
+    "instances/*.pddl"
+  ],
   "source_url": "https://github.com/potassco/pddl-instances",
   "split_policy": "floor(2/3 * instance_count) train, remaining test",
   "test_count": 7,
