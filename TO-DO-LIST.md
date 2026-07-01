@@ -33,7 +33,7 @@ PDDL domain + training/counterexample problems
 ## Current Benchmark Decision
 
 The previous implementation milestone materialized an 8-domain IPC corpus from
-one independent source. That corpus remains useful as infrastructure evidence,
+one independent source. That corpus remains available as infrastructure evidence,
 but it is no longer the final paper taxonomy after the 2026-07-01 research
 pivot.
 
@@ -63,17 +63,18 @@ when the exact domain variant exists there. Use the original paper repository
 when a backend paper defines a restricted or synthetic generalized-planning
 variant that is not an IPC domain.
 
-## Selected Routing Domain Classes
+## Selected Routing Planning-Family Classes
 
-| Class | Domains |
+| Class | Domain shorthand |
 | --- | --- |
-| Goal-regression and serialisable-goal domains | `ferry`, `gripper`, `miconic`, `logistics` |
-| Bounded-width sketchable subgoal-structure domains | `delivery`, `spanner`, `visitall`, `childsnack`, `barman` |
-| Feature-definable structural and goal-dependent domains | `blocks`, `8puzzle-1tile`, `sokoban-1stone` |
+| Goal-regression-decomposable domain-goal families | `ferry`, `gripper`, `miconic`, `logistics` |
+| Bounded-width sketchable subgoal-structure families | `delivery`, `spanner`, `visitall`, `childsnack`, `barman` |
+| Feature-definable structural and goal-dependent families | `blocks`, `8puzzle-1tile`, `sokoban-1stone` |
 
-Total selected routing domains: 12. `depots` is demoted to a boundary or
-failure-analysis domain because the KR 2025 learner reports Depot in its C5
-failure group.
+Total selected routing families: 12. Domain names are shorthand for selected
+domain-goal families, not claims that a bare PDDL domain has one fixed
+generalized-planning type. `depots` is demoted to a boundary or failure-analysis
+family because the KR 2025 learner reports Depot in its C5 failure group.
 
 ## Active Requirements
 
@@ -85,13 +86,13 @@ failure group.
 | R4 | Update registry, taxonomy, manifest, and AAMAS text to the 8-domain complete IPC corpus. | Implemented | `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, `paper_artifacts/final_paper_manifest.json`, and `latex_code/aamas_method_paper/sections/method.tex` / `evaluation.tex`. |
 | R5 | Use full IPC splits without bounded-state explosion in synthesis setup. | Implemented | Main and expanded-smoke registry rows now enable synthesis-time Fast Downward trace fallback with `runtime_full_trace_planner=false`. `run_final_paper_data.py --config-only` renders 8 main rows with `use_synthesis_planner_traces=true`. |
 | R6 | Support IPC parser constructs exposed by the 8-domain corpus. | Implemented | Added generic support for PDDL predicates whose names start with `not`, forward-referenced typed parent declarations during Tarski validation, and domain `:constants`. All 8 selected domains pass lightweight parser/support sweep. |
-| R7 | Remove obsolete generated-result dependencies from the paper draft. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
+| R7 | Remove obsolete generated-result dependencies from the paper manuscript. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
 | R8 | Run tests and final config validation. | Implemented | Targeted regressions pass. `run_final_paper_data.py --config-only` renders the new registry configs. `--validate-only` still requires a regenerated `tmp/paper-final-latest/comparison.json`, which is outside this data migration. |
 | R9 | Commit and push the benchmark infrastructure cleanup. | Implemented | Full pytest, config render, representative smoke, commit, and push are complete for this milestone. |
 | R10 | Make prior paper-code reuse the main Layer B/C route rather than hand-built schema heuristics. | Implemented as router boundary | Added policy-first `LiftedPolicyProgram` IR, KR 2025 `learner-policies-from-examples` backend adapter, and `gp_router.py`. Existing schema synthesis is now exposed only as `baseline_schema_lift` fallback route metadata, not the main method. |
 | R11 | Stabilize KR 2025 backend execution without native macOS planner failures. | Implemented | `docker/learning-general-policies/Dockerfile` builds an Ubuntu 22.04 linux/amd64 image with Boost.Python 1.82.0, Python 3.10, `pymimir==0.9.62`, and `dlplan==0.3.29`; BFWS dynamic libraries resolve inside Docker. Actual KR runs should use `learning-general-policies-docker-*` commands. |
 | R12 | Validate a non-degenerate KR learner run that emits a policy artifact. | Open | Environment smoke now reaches feature generation and solver construction. One-problem Blocks smoke is too small and fails inside KR policy construction; next use a paper-style small training subset directory rather than `--max_num_instances` over a large folder. |
-| R13 | Replace the old domain taxonomy with a backend-routing taxonomy based on prior GP tracks. | Implemented as design document | `docs/gp_backend_routing_taxonomy.md` now records track-specific backend choices for MOOSE, KR 2025, D2L, learner-sketches, h-policy/Vanir, PG3, planning-program backends, policy reuse, graph-neural policies, IPC learning-track systems, and LLM GP baselines. |
+| R13 | Replace the old domain taxonomy with a backend-routing planning-family taxonomy based on prior GP tracks. | Implemented as design document | `docs/gp_backend_routing_taxonomy.md` now defines the classification unit as `(PDDL domain, goal family, instance distribution)` and records track-specific backend choices for MOOSE, KR 2025, D2L, learner-sketches, h-policy/Vanir, PG3, planning-program backends, policy reuse, graph-neural policies, IPC learning-track systems, and LLM GP baselines. |
 | R14 | Materialize the new routing benchmark set. | Open | Add or reclassify `ferry`, `delivery`, `spanner`, `8puzzle-1tile`, and `sokoban-1stone`; demote `depots` to boundary unless a routed backend solves it. |
 | R15 | Implement route-specific backend adapters instead of extending the hand-built GP learner. | In progress | Router and route metadata are implemented. Next targets: MOOSE policy parser for Class A, h-policy/learner-sketches parser for Class B, and KR/D2L policy parser for Class C. All routes must normalize into `LiftedPolicyProgram` before ASL compilation. |
 | R16 | Add backend-probe and acceptance gates. | In progress | Router now rejects unavailable or unsupported backend routes and marks schema synthesis as baseline fallback only. Still needed: artifact-level acceptance gates for emitted backend policies/sketches/programs. |
@@ -114,8 +115,8 @@ Latest lightweight checks:
 Interpretation:
 
 - The latest fixes close infrastructure-level PDDL and benchmark-profile blockers.
-- Remaining failures are now learning/execution coverage gaps: stronger Layer B
-  modules for resource-production domains such as Childsnack, and stronger
+- Remaining failures are now learning/execution coverage gaps: additional Layer
+  B modules for resource-production domains such as Childsnack, and additional
   Layer C/execution scaling for larger held-out Blocks instances.
 - The architecture is now explicitly router-first: external GP backends produce
   learned artifacts, those artifacts normalize into `LiftedPolicyProgram`, and

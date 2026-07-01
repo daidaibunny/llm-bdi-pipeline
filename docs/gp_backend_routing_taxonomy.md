@@ -1,12 +1,59 @@
 # Generalized Planner Routing Taxonomy
 
 This document records the project pivot agreed on 2026-07-01:
-we should not invent a universal generalized planner. The project should become a
-caller, router, and AgentSpeak(L) compiler for existing state-of-the-art
-generalized-planning backends. The research contribution should be in choosing the
-right generalized planner for the right domain class, normalizing its output, and
-compiling the resulting domain-level generalized policy into lifted AgentSpeak(L)
-plan libraries.
+the project does not implement a universal generalized planner. It acts as a
+caller, router, and AgentSpeak(L) compiler for existing generalized-planning
+backends. The research contribution is the backend-selection criterion for a
+selected planning family, the normalization of backend output, and the
+compilation of the resulting generalized policy into lifted AgentSpeak(L) plan
+libraries.
+
+## Classification Unit and Terminology
+
+The unit of analysis in this document is not a bare PDDL domain. It is a
+planning family:
+
+```text
+planning family = (PDDL domain, goal family, instance distribution)
+```
+
+Papers report results by domain name, for example Ferry or Blocks, because
+benchmarks are organized by domain directories. However, the assumptions used by
+generalized planners are about the problem family induced by a domain and a
+goal distribution. The same domain can induce different goal-interaction
+structures. For example, Blocks with goal `clear(a)` differs from Blocks with
+tower-construction goals such as `on(a,b) & on(b,c)`. Therefore, this document
+uses domain names as shorthand for the selected domain-goal family, not as a
+claim that the bare domain has a fixed generalized-planning type.
+
+Current terminology:
+
+- Atomic goal item: one ground PDDL fluent required by the problem goal, such
+  as `at(ball1,room_b)`, `served(passenger3)`, `clear(a)`, or `on(a,b)`.
+  These are state predicates, not actions, trace steps, or synthetic subgoals.
+- Positive conjunctive achievement goal: a finite conjunction
+  `G = g1 & g2 & ... & gn`, where each `gi` is an atomic goal item. The
+  conjunction is over required final-state fluents.
+- Goal family: the schema-level pattern that generates those atomic goal items
+  across instances, for example "all balls are at the destination room",
+  "all passengers are served", or "a tower relation over blocks is achieved".
+- Goal interaction: a relation between two atomic goal items caused by PDDL
+  action preconditions, add effects, delete effects, mutex facts, resources, or
+  structural support relations.
+- Ordering constraint: a partial order over atomic goal achievements or module
+  calls. For example, with `on(a,b) & on(b,c)`, a Blocks tower family can require
+  achieving `on(b,c)` before `on(a,b)` because `on(b,c)` provides structural
+  support for the upper relation.
+- Routing criterion: the router should use the planning-family structure
+  together with backend output compatibility. It does not decide from the PDDL
+  domain name alone.
+
+MOOSE illustrates this distinction. Its theoretical assumptions, such as goal
+independence and serialisable goal independence, concern how the atomic goal
+items in a conjunctive goal can be regressed and achieved. Its experiments are
+reported by domain because the benchmark families are stored by domain. In this
+document, a MOOSE-routed Ferry family means the Ferry domain with the Ferry goal
+family used by the MOOSE benchmark, not every possible Ferry problem.
 
 ## Scope
 
@@ -17,7 +64,7 @@ needed next, and the routed domain-level library will realize that condition.
 The target artifact remains:
 
 ```text
-PDDL domain + training instances
+PDDL domain + goal-family training instances
 -> routed generalized-planning backend
 -> backend-specific generalized plan or policy
 -> normalized LiftedPolicyProgram
@@ -25,30 +72,30 @@ PDDL domain + training instances
 -> lifted AgentSpeak(L) domain-level plan library
 ```
 
-The router should not claim completeness for arbitrary PDDL. It should make an
-explicit backend choice based on the domain class and report when no trusted
+The router does not claim completeness for arbitrary PDDL. It makes an explicit
+backend choice based on the planning-family class and reports when no trusted
 backend applies.
 
 ## Meaning of "State of the Art"
 
-Generalized planning does not have one universal state-of-the-art solver. The
-strongest work is split by output language and domain assumptions:
+Generalized planning does not have one universal state-of-the-art solver.
+Existing approaches differ by output language and planning-family assumptions:
 
-- Goal-regression decision-list policies: strong for goal-separable or
-  serialisable domains.
-- Feature-definable general policies: strong when a compact qualitative feature
-  policy exists.
-- Bounded-width sketches: strong when the domain has reusable subgoal structure
-  and SIWR can fill the low-width subproblems.
-- Hierarchical width-reduction policies: strong when a sketch can be refined
-  into nested lower-width policies or zero-width executable rules.
-- Lifted decision-list policy search: strong when direct action-selection
-  policies can guide planning.
-- Planning-program synthesis: strong when the solution is naturally a loop or
-  pointer/index program, but its output is less directly aligned with ASL.
-- Neural relational generalized policies: useful as a strong learning baseline
-  or feature-discovery reference, but less suitable as a deterministic ASL
-  compiler source unless the neural policy is distilled into symbolic rules.
+- Goal-regression decision-list policies target planning families whose atomic
+  goal items are goal-separable or serialisable.
+- Feature-definable general policies target families that admit a compact
+  qualitative feature policy.
+- Bounded-width sketches target families with a reusable subgoal decomposition
+  whose generated subproblems have bounded width.
+- Hierarchical width-reduction policies target families where a sketch can be
+  refined into nested lower-width policies or zero-width executable rules.
+- Lifted decision-list policy search targets families where a direct lifted
+  action-selection policy can guide planning.
+- Planning-program synthesis targets families whose solution can be represented
+  as a bounded program with loops, jumps, pointers, or registers.
+- Neural relational generalized policies provide learned relational baselines
+  or feature-discovery signals; they are not deterministic ASL compiler sources
+  unless distilled into symbolic rules.
 
 The project should route across these tracks rather than force every domain into
 one representation.
@@ -57,19 +104,19 @@ one representation.
 
 | Backend track | Representative paper and citation | Output form | Paper domain evidence | Best routing target | Local status |
 | --- | --- | --- | --- | --- | --- |
-| Goal regression via MOOSE | Chen, Hofmann, Klassen, and McIlraith, "Satisficing and Optimal Generalised Planning via Goal Regression", AAAI 2026. Code: <https://github.com/DillonZChen/moose>. Dataset: <https://github.com/DillonZChen/moose-dataset>. | First-order condition-to-action decision lists, executable as policy or used for search pruning. | Paper explicitly studies ESHO classical domains `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport`, and numeric `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport`. It also defines goal-independence style assumptions such as true goal independence, serialisable goal independence, and optimal goal independence. | Domains whose conjunctive goals can be decomposed into singleton goals without severe interaction, or whose goal order can be serialised by regression. | `.external/moose` pinned at `ce1e99b`; `.external/moose-dataset` pinned at `e009705`. Ferry reproduction already succeeded locally. |
-| Learning general policies from examples | Bonet, Drexler, and Geffner, "Learning General Policies from Examples", KR 2025. Code: <https://github.com/bonetblai/learner-policies-from-examples>. | DLPlan feature policies with structural termination certificates. | Paper evaluates 34 domains and divides them into C1-C5. C1-C4 are 20 solved domains: `Blocks4ops-clear`, `Delivery-1pkg`, `Gripper`, `Reward`, `Visitall`, `Childsnack`, `Spanner-1nut`, `Logistics-1truck`, `Barman-1cocktail-1shot`, `Blocks4ops-on`, `Spanner`, `Delivery`, `Ferry`, `Miconic`, `8puzzle-1tile-fixed`, `8puzzle-1tile`, `Blocks4ops`, `Sokoban-1stone-7x7`, `Logistics-1pkg`, `Zenotravel-1plane`. C5 failed domains include `Rovers`, `Depot`, `Satellite`, `Driverlog`, full `Logistics`, and others due to missing feature expressivity or timeout. | Primary candidate for feature-definable terminating policies, especially when we need an honest failure reason. Good route for Blocks variants, Delivery, Visitall, Spanner, Ferry, Miconic, restricted Logistics, and restricted Barman. | `.external/gp-backends/learner-policies-from-examples` pinned at `9991926`; local execution must use Docker because bundled planner libraries are Linux ELF. |
-| D2L generalized policy learner | Frances, Bonet, and Geffner, "Learning General Policies from Small Examples Without Supervision", AAAI 2021. Code: <https://github.com/rleap-project/d2l>. | Feature-selected qualitative general policies learned by MaxSAT. | Paper domains include `Qclear`, `Qon`, `Qgrip`, `Qrew`, `Qdeliv`, `Qvisit`, `Qspan`, `Qmicon`, and `Qbw`. The paper explicitly handles Blocksworld variants, Spanner dead ends, Visitall distance features, Miconic, Delivery, and Gripper. | Feature-definable domains where a compact policy over DLPlan-style features exists. Strong reference for Blocks and other goal-dependent structural policies. | `.external/gp-backends/d2l` pinned at `0620e16`; Docker path exists. Treat as backend or baseline after parser/binding adapter verification. |
-| Learned policy sketches | Drexler, Seipp, and Geffner, "Learning Sketches for Decomposing Planning Problems into Subproblems of Bounded Width", ICAPS 2022 extended version. Code: <https://github.com/bonetblai/learner-sketches>. Data DOI in paper: <https://doi.org/10.5281/zenodo.6381592>. | Sketch rules `C -> E` over qualitative features; execution requires SIWR/IW search to fill each subproblem. | Paper reports learning over nine domains: `Blocks-clear`, `Blocks-on`, `Childsnack`, `Delivery`, `Gripper`, `Miconic`, `Reward`, `Spanner`, `Visitall`. Testing tables use 30 instances per domain and show width-bounded SIWR behavior. | Domains with bounded sketch width and reusable subgoal structure, especially where direct one-step policy is too restrictive but subproblems are low width. | `.external/gp-backends/learner-sketches` pinned at `7a7ea6a`. Parser exists. ASL compilation must preserve that sketches are subgoal controllers, not primitive action policies. |
-| Hierarchical policy learning / Vanir | Drexler, Seipp, and Geffner, "Learning Hierarchical Policies by Iteratively Reducing the Width of Sketch Rules", KR 2023. Software entry: <https://ml.rwth-aachen.de/software/>. IPC 2023 report describes Vanir as a width-based hierarchical-policy learner. | Hierarchical sketches/policies obtained by repeatedly reducing sketch width until executable zero-width rules are reached. | The local h-policy repository contains learners for `delivery`, `blocks_4_on`, `blocks_4_clear`, `miconic`, `gripper`, `visitall`, `spanner`, and `reward`. The IPC 2023 learning-track report says Vanir produced fewer domain-knowledge files than some competitors but with high quality, including best quality in `Ferry`, `Rovers`, and `Satellite`. | Strong candidate for ASL because hierarchy and policy calls are closer to BDI modules than flat sketches. Best as a route for bounded-width or modular domains after the backend artifact parser is verified. | `.external/gp-backends/h-policy-learner` pinned at `03e3455`. Currently audit-only; should be promoted only after `sketch_str.txt` artifacts pass parser, feature binding, and held-out validation. |
+| Goal regression via MOOSE | Chen, Hofmann, Klassen, and McIlraith, "Satisficing and Optimal Generalised Planning via Goal Regression", AAAI 2026. Code: <https://github.com/DillonZChen/moose>. Dataset: <https://github.com/DillonZChen/moose-dataset>. | First-order condition-to-action decision lists, executable as policy or used for search pruning. | Paper explicitly studies ESHO classical domains `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport`, and numeric `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport`. It also defines goal-independence style assumptions such as true goal independence, serialisable goal independence, and optimal goal independence. | Planning families whose conjunctive goals can be decomposed into singleton atomic goal items and regressed independently or in a serialisable order. | `.external/moose` pinned at `ce1e99b`; `.external/moose-dataset` pinned at `e009705`. Ferry reproduction already succeeded locally. |
+| Learning general policies from examples | Bonet, Drexler, and Geffner, "Learning General Policies from Examples", KR 2025. Code: <https://github.com/bonetblai/learner-policies-from-examples>. | DLPlan feature policies with structural termination certificates. | Paper evaluates 34 domains and divides them into C1-C5. C1-C4 are 20 solved domains: `Blocks4ops-clear`, `Delivery-1pkg`, `Gripper`, `Reward`, `Visitall`, `Childsnack`, `Spanner-1nut`, `Logistics-1truck`, `Barman-1cocktail-1shot`, `Blocks4ops-on`, `Spanner`, `Delivery`, `Ferry`, `Miconic`, `8puzzle-1tile-fixed`, `8puzzle-1tile`, `Blocks4ops`, `Sokoban-1stone-7x7`, `Logistics-1pkg`, `Zenotravel-1plane`. C5 failed domains include `Rovers`, `Depot`, `Satellite`, `Driverlog`, full `Logistics`, and others due to missing feature expressivity or timeout. | Route for planning families where a terminating DLPlan feature policy is learned and verified. The paper's C1-C5 classes provide a failure taxonomy. | `.external/gp-backends/learner-policies-from-examples` pinned at `9991926`; local execution must use Docker because bundled planner libraries are Linux ELF. |
+| D2L generalized policy learner | Frances, Bonet, and Geffner, "Learning General Policies from Small Examples Without Supervision", AAAI 2021. Code: <https://github.com/rleap-project/d2l>. | Feature-selected qualitative general policies learned by MaxSAT. | Paper domains include `Qclear`, `Qon`, `Qgrip`, `Qrew`, `Qdeliv`, `Qvisit`, `Qspan`, `Qmicon`, and `Qbw`. The paper explicitly handles Blocksworld variants, Spanner dead ends, Visitall distance features, Miconic, Delivery, and Gripper. | Planning families where a compact policy over DLPlan-style features captures the required goal-interaction structure. Strong reference for Blocks and other goal-dependent structural policies. | `.external/gp-backends/d2l` pinned at `0620e16`; Docker path exists. Treat as backend or baseline after parser/binding adapter verification. |
+| Learned policy sketches | Drexler, Seipp, and Geffner, "Learning Sketches for Decomposing Planning Problems into Subproblems of Bounded Width", ICAPS 2022 extended version. Code: <https://github.com/bonetblai/learner-sketches>. Data DOI in paper: <https://doi.org/10.5281/zenodo.6381592>. | Sketch rules `C -> E` over qualitative features; execution requires SIWR/IW search to fill each subproblem. | Paper reports learning over nine domains: `Blocks-clear`, `Blocks-on`, `Childsnack`, `Delivery`, `Gripper`, `Miconic`, `Reward`, `Spanner`, `Visitall`. Testing tables use 30 instances per domain and show width-bounded SIWR behavior. | Planning families with bounded sketch width and reusable subgoal structure, especially where direct one-step policy is too restrictive but subproblems are low width. | `.external/gp-backends/learner-sketches` pinned at `7a7ea6a`. Parser exists. ASL compilation must preserve that sketches are subgoal controllers, not primitive action policies. |
+| Hierarchical policy learning / Vanir | Drexler, Seipp, and Geffner, "Learning Hierarchical Policies by Iteratively Reducing the Width of Sketch Rules", KR 2023. Software entry: <https://ml.rwth-aachen.de/software/>. IPC 2023 report describes Vanir as a width-based hierarchical-policy learner. | Hierarchical sketches/policies obtained by repeatedly reducing sketch width until executable zero-width rules are reached. | The local h-policy repository contains learners for `delivery`, `blocks_4_on`, `blocks_4_clear`, `miconic`, `gripper`, `visitall`, `spanner`, and `reward`. The IPC 2023 learning-track report evaluates Vanir as a domain-knowledge generator for a subset of IPC learning-track domains. | Route for families where the learned artifact is hierarchical and can be parsed as module calls. Promotion requires artifact parsing, feature binding, and held-out validation. | `.external/gp-backends/h-policy-learner` pinned at `03e3455`. Currently audit-only; promotion requires `sketch_str.txt` artifacts to pass parser, feature binding, and held-out validation. |
 | Handcrafted and learned subgoal-structure sketches | Drexler, Seipp, and Geffner, "Expressing and Exploiting the Common Subgoal Structure of Classical Planning Domains Using Sketches", JAIR 2024; Bonet and Geffner, "General Policies, Subgoal Structure, and Planning Width", JAIR 2024. | Sketches and serializations of bounded width. | JAIR sketch paper studies seven IPC-style domains: `Floortile`, `TPP`, `Barman`, `Grid`, `Childsnack`, `Driverlog`, `Schedule`, plus IPC and Autoscale tests. The JAIR width paper gives the formal basis for bounded width, serialized width, and sketches. | Theory and benchmark guidance for selecting domains that should go to a sketch backend. | Literature only. Use to justify routing classes and to define fallback when learner-sketches cannot produce a safe executable policy. |
-| PG3 policy-guided generalized policy search | Yang, Silver, Curtis, Lozano-Perez, and Kaelbling, "PG3: Policy-Guided Planning for Generalized Policy Generation", IJCAI 2022. Code: <https://github.com/ryangpeixu/pg3>. | Goal-conditioned lifted decision-list policies. | Paper evaluates six PDDL domains: `Delivery`, `Gripper`, `Miconic`, `Ferry`, `Spanner`, and `Forest`. Table results show PG3 solving all six in the reported evaluation. | Candidate router for domains where a direct lifted decision-list action policy is expected and where planner-guided policy search is useful. | Downloaded and pinned in `.external/gp-backends/pg3` at `61496456c89ebccc66ba83679ba0e363232f6ac0`. Audit-only until a lifted decision-list to `LiftedPolicyProgram` adapter exists. |
-| Planning-program synthesis: BFGP, PGP(v), lifted helpful actions | Segovia-Aguas, Jimenez, and Jonsson, "Generalized Planning as Heuristic Search", 2021; Segovia-Aguas et al., "Computing Programs for Generalized Planning as Heuristic Search", 2022; Lei, Lipovetzky, and Ehinger, "Novelty and Lifted Helpful Actions in Generalized Planning", 2023; Gomez and Segovia-Aguas, "Parallel Strategies for Best-First Generalized Planning", 2024. | Planning programs with loops, jumps, pointers, and RAM-like operations. | Reported domains include STRIPS program-synthesis benchmarks such as `Corridor`, `Gripper`, `Lock`, `Ontable`, `Spanner`, `Visitall`, and numeric/program domains such as `Fibo`, `Find`, `Reverse`, `Select`, `Sorting`, and `Triangular Sum`. Lei et al. describe PGP guided by landmark heuristics as the then state of the art and improve it with novelty and lifted helpful actions. | Loop-heavy or pointer/indexable tasks where a program is natural. Not the first ASL route because translating RAM-like programs into predicate-goal ASL modules is nontrivial. | Downloaded and pinned: `best-first-generalized-planning`, `bfgp-pp`, `pgp-landmarks`, and `up-bfgp`. Audit/baseline-only until a planning-program-to-ASL adapter exists. |
+| PG3 policy-guided generalized policy search | Yang, Silver, Curtis, Lozano-Perez, and Kaelbling, "PG3: Policy-Guided Planning for Generalized Policy Generation", IJCAI 2022. Code: <https://github.com/ryangpeixu/pg3>. | Goal-conditioned lifted decision-list policies. | Paper evaluates six PDDL domains: `Delivery`, `Gripper`, `Miconic`, `Ferry`, `Spanner`, and `Forest`. Table results show PG3 solving all six in the reported evaluation. | Route for planning families where a direct lifted decision-list action policy is the accepted backend artifact. | Downloaded and pinned in `.external/gp-backends/pg3` at `61496456c89ebccc66ba83679ba0e363232f6ac0`. Audit-only until a lifted decision-list to `LiftedPolicyProgram` adapter exists. |
+| Planning-program synthesis: BFGP, PGP(v), lifted helpful actions | Segovia-Aguas, Jimenez, and Jonsson, "Generalized Planning as Heuristic Search", 2021; Segovia-Aguas et al., "Computing Programs for Generalized Planning as Heuristic Search", 2022; Lei, Lipovetzky, and Ehinger, "Novelty and Lifted Helpful Actions in Generalized Planning", 2023; Gomez and Segovia-Aguas, "Parallel Strategies for Best-First Generalized Planning", 2024. | Planning programs with loops, jumps, pointers, and RAM-like operations. | Reported domains include STRIPS program-synthesis benchmarks such as `Corridor`, `Gripper`, `Lock`, `Ontable`, `Spanner`, `Visitall`, and numeric/program domains such as `Fibo`, `Find`, `Reverse`, `Select`, `Sorting`, and `Triangular Sum`. Lei et al. describe PGP guided by landmark heuristics as the then state of the art and improve it with novelty and lifted helpful actions. | Route for loop, pointer, register, or indexable program families. ASL use requires a planning-program-to-ASL adapter. | Downloaded and pinned: `best-first-generalized-planning`, `bfgp-pp`, `pgp-landmarks`, and `up-bfgp`. Audit/baseline-only until a planning-program-to-ASL adapter exists. |
 | Policy reuse and modular policies | Bonet, Drexler, and Geffner, "On Policy Reuse: An Expressive Language for Representing and Executing General Policies that Call Other Policies", ICAPS 2024. Data DOI in paper: <https://doi.org/10.5281/zenodo.10814690>. | Module language where policies/sketches call other policies/sketches with parameters, memory states, and indexical features. | Paper examples focus on reusable modules such as Blocksworld `on(X,Y)`, `tower(O,X)`, and `blocks(O)`. It is representation work, not a full learner. | Best theoretical match to ASL module calls, especially for Blocksworld tower construction. Use as compiler target inspiration, not as a standalone learner route. | Literature only. Should inform `LiftedPolicyProgram -> ASL` compiler design. |
-| Relational graph-neural general policies | Stahlberg, Bonet, and Geffner, "Learning General Optimal Policies with Graph Neural Networks: Expressive Power, Transparency, and Limits", KR 2022. Code: <https://github.com/simon-stahlberg/mimir-rgnn>. Follow-up work includes "Learning More Expressive General Policies for Classical Planning Domains", AAAI 2025. | Neural relational value or policy functions over PDDL states, sometimes analyzed or distilled into symbolic structure. | KR 2022 studies tractable generalized-planning domains and focuses on expressive limits of relational graph neural networks. The AAAI 2025 follow-up reports R-GNN[t] and Edge Transformer experiments on domains such as `Blocks`, `Grid`, `Gripper`, `Logistics`, `Miconic`, `Rovers`, `Vacuum`, and `Visitall`. | Strong learning baseline and possible feature-discovery route. It should not be a primary ASL compiler backend until the neural policy can be certified or distilled into symbolic action/subgoal rules. | Downloaded and pinned in `.external/gp-backends/mimir-rgnn` at `ea3089713c18ab1d7faf1a7f5ecddb4f5acdcbab`. Audit-only. |
-| State-centric learned transition models | Gupta, Pallagani, Aydin, and Srivastava, "On Sample-Efficient Generalized Planning via Learned Transition Models", ICAPS 2026. Code: <https://github.com/ai4society/state-centric-gen-planning>. | Learned transition models that roll out symbolic state trajectories and decode valid successors. | Repository reports domains such as Blocks and provides Fast Downward, VAL, Pyperplan, and WLPlan based data-generation and evaluation scripts. | Neural baseline and future route candidate for domains where explicit transition dynamics generalize better than action-sequence prediction. It is not a direct ASL compiler backend. | Downloaded and pinned in `.external/gp-backends/state-centric-gen-planning` at `03a61f587ea5a2745192225a1d0be19ca045a774`. Audit-only. |
-| IPC learning-track domain-knowledge systems | IPC 2023 learning track systems such as HUZAR and Vanir, reported in "The 2023 International Planning Competition". | Learned domain knowledge for classical planners, not necessarily standalone generalized plans. | The IPC report compares systems on many planning domains. Vanir specifically targets polynomial domains and generated high-quality knowledge on a smaller set; HUZAR won the learning track overall. | Useful comparator for "learned domain knowledge improves planning"; not a direct route to lifted ASL unless the emitted knowledge has a parseable symbolic policy form. | Downloaded and pinned `ipc-learning-huzar` and `ipc-learning-pgp-baseline`. Audit/baseline-only. |
-| LLM-generated generalized planning programs | Silver et al., "Generalized Planning in PDDL Domains with Pretrained Large Language Models", AAAI 2024. | Python programs synthesized from PDDL and example tasks. | Paper evaluates seven domains: `Delivery`, `Forest`, `Gripper`, `Miconic`, `Ferry`, `Spanner`, and `Heavy`. GPT-4 is strong on Delivery, Forest, Gripper, Ferry, Heavy, weak on Miconic and Spanner; PG3 remains a strong baseline. | Baseline or auxiliary heuristic, not a default paper-quality route. It is not a stable, deterministic GP backend. | Downloaded and pinned in `.external/gp-backends/llm-genplan` at `a2b8baa7153d5a8f2df51fbc72c51def80ddc169`. Audit-only. |
+| Relational graph-neural general policies | Stahlberg, Bonet, and Geffner, "Learning General Optimal Policies with Graph Neural Networks: Expressive Power, Transparency, and Limits", KR 2022. Code: <https://github.com/simon-stahlberg/mimir-rgnn>. Follow-up work includes "Learning More Expressive General Policies for Classical Planning Domains", AAAI 2025. | Neural relational value or policy functions over PDDL states, sometimes analyzed or distilled into symbolic structure. | KR 2022 studies tractable generalized-planning domains and focuses on expressive limits of relational graph neural networks. The AAAI 2025 follow-up reports R-GNN[t] and Edge Transformer experiments on domains such as `Blocks`, `Grid`, `Gripper`, `Logistics`, `Miconic`, `Rovers`, `Vacuum`, and `Visitall`. | Neural baseline and feature-discovery reference. ASL compilation requires symbolic certification or distillation. | Downloaded and pinned in `.external/gp-backends/mimir-rgnn` at `ea3089713c18ab1d7faf1a7f5ecddb4f5acdcbab`. Audit-only. |
+| State-centric learned transition models | Gupta, Pallagani, Aydin, and Srivastava, "On Sample-Efficient Generalized Planning via Learned Transition Models", ICAPS 2026. Code: <https://github.com/ai4society/state-centric-gen-planning>. | Learned transition models that roll out symbolic state trajectories and decode valid successors. | Repository reports domains such as Blocks and provides Fast Downward, VAL, Pyperplan, and WLPlan based data-generation and evaluation scripts. | Neural baseline for planning-family generalization through learned transition dynamics. It is not a direct ASL compiler backend. | Downloaded and pinned in `.external/gp-backends/state-centric-gen-planning` at `03a61f587ea5a2745192225a1d0be19ca045a774`. Audit-only. |
+| IPC learning-track domain-knowledge systems | IPC 2023 learning track systems such as HUZAR and Vanir, reported in "The 2023 International Planning Competition". | Learned domain knowledge for classical planners; output is not always a standalone generalized plan. | The IPC report compares systems on many planning domains. Vanir targets polynomial domains; HUZAR won the learning track overall. | Comparator for learned planner-domain knowledge. ASL use requires emitted knowledge with a parseable symbolic policy form. | Downloaded and pinned `ipc-learning-huzar` and `ipc-learning-pgp-baseline`. Audit/baseline-only. |
+| LLM-generated generalized planning programs | Silver et al., "Generalized Planning in PDDL Domains with Pretrained Large Language Models", AAAI 2024. | Python programs synthesized from PDDL and example tasks. | Paper evaluates seven domains: `Delivery`, `Forest`, `Gripper`, `Miconic`, `Ferry`, `Spanner`, and `Heavy`. GPT-4 solves Delivery, Forest, Gripper, Ferry, and Heavy in the reported setting, but not Miconic and Spanner; PG3 remains the symbolic comparator. | Baseline for code-generation approaches. It is not a deterministic GP backend for ASL compilation. | Downloaded and pinned in `.external/gp-backends/llm-genplan` at `a2b8baa7153d5a8f2df51fbc72c51def80ddc169`. Audit-only. |
 
 ## Paper-Code Capability Confirmation
 
@@ -107,27 +154,30 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py capability
 | IPC PGP baseline | `confirmed_competition_artifact_only` | IPC baseline repository and learn/plan Apptainer flow are present. | It is a competition flow; planning-program to ASL adapter is missing. |
 | LLM-GenPlan | `confirmed_paper_source_complete` | Official source, CI, cached-log reproduction script, and cached chat-log directory are present. | Full cached reproduction is long-running; Python program output is not directly ASL. |
 
-## Paper Domain Classifications Worth Reusing
+## Paper Planning-Family Classifications Worth Reusing
 
 We should reuse prior classifications rather than invent informal labels.
 
 ### MOOSE classes
 
-MOOSE uses goal-independence assumptions to explain when goal regression works:
+MOOSE reports experiments by benchmark domain, but its goal-independence
+assumptions explain when goal regression works for a planning family:
 
 - True goal independence.
 - Serialisable goal independence.
 - Optimal goal independence.
-- Easy-to-solve, hard-to-optimise domains.
+- ESHO benchmark families, using the paper's term for families where satisficing
+  plans are available but optimality remains computationally demanding.
 
-Routing implication: try MOOSE when the domain looks goal-regression friendly,
-especially if goals can be solved as singleton atoms in a stable order. Do not
-force MOOSE onto Sussman-anomaly-style domains such as unrestricted
-Blocksworld.
+Routing implication: try MOOSE when the selected goal family is
+goal-regression decomposable: the atomic goal items can be solved as singleton
+goals in an independent or serialisable order. Do not route MOOSE to
+Sussman-anomaly-style goal families such as unrestricted Blocksworld tower
+construction.
 
 ### KR 2025 policy-learning classes
 
-KR 2025 gives a useful empirical classification:
+KR 2025 gives an empirical classification:
 
 - C1: one call to the learner, first plan sufficient, no extra transitions.
 - C2: first plan sufficient, but extra good or bad transitions are needed.
@@ -135,9 +185,10 @@ KR 2025 gives a useful empirical classification:
 - C4: requires second wrapper strategy over more than one example path.
 - C5: no general policy found, due to feature-pool edge failures or timeout.
 
-Routing implication: KR 2025 is valuable because it can both solve and diagnose.
-If a domain falls into C5 in the paper, we should not claim support without new
-feature expressivity.
+Routing implication: KR 2025 can be used either as a policy backend or as a
+diagnostic backend. If a planning family falls into C5 in the paper, support
+requires a new feature language, a different backend, or a documented
+out-of-scope decision.
 
 ### Sketch and width classes
 
@@ -149,20 +200,20 @@ The sketch literature uses:
 - Sketch width.
 - Terminating or acyclic sketches.
 
-Routing implication: if a domain is known to have a compact bounded-width sketch,
-route to learner-sketches or a sketch executor. The output is not necessarily a
-primitive-action policy; it is a subgoal decomposition that needs low-width
-search or a subgoal executor.
+Routing implication: if a planning family is known to have a compact
+bounded-width sketch, route to learner-sketches or a sketch executor. The output
+is a subgoal decomposition; execution requires low-width search or a subgoal
+executor.
 
 ### Feature-definable policy classes
 
 D2L and KR 2025 use DLPlan-style concepts, roles, counts, distances, and goal
-predicates. They are best for domains where the right abstraction can be
-expressed by a small set of lifted qualitative features.
+predicates. They apply when the required abstraction is expressible by a finite
+set of lifted qualitative features generated by the backend.
 
-Routing implication: route Blocks, Visitall, Spanner, Delivery, restricted
-Logistics, and similar domains to D2L or KR 2025 before trying ad hoc schema
-synthesis.
+Routing implication: route planning families such as Blocks, Visitall, Spanner,
+Delivery, and restricted Logistics to D2L or KR 2025 when their goal-interaction
+structure is feature-definable.
 
 ### Planning-program classes
 
@@ -172,20 +223,25 @@ numeric/list-style benchmarks.
 
 Routing implication: keep as a separate future route. It is not the primary
 route for domain-level ASL predicate-goal libraries because its output language
-does not naturally look like `+!on(X,Y)` or `+!clear(X)` modules.
+does not match AgentSpeak(L) predicate-goal module syntax such as `+!on(X,Y)` or
+`+!clear(X)`.
 
-## Proposed Project Routing Classes
+## Proposed Project Planning-Family Routing Classes
 
 The following classes are route-oriented, not claims about universal domain
-complexity. Each class has a primary backend and fallback backends.
+complexity. Each class refers to a selected domain-goal family, not to every
+possible problem over a bare PDDL domain. Each class has a primary backend and
+fallback backends.
 
-### Class A: Goal-regression and serialisable-goal domains
+### Class A: Goal-regression-decomposable domain-goal families
 
 Property:
 
-- Positive conjunctive goals decompose into singleton goals with limited harmful
-  interactions.
-- Goal order can often be random, static, or learned by regression.
+- Positive conjunctive goals decompose into singleton atomic goal items.
+- There exists an independent or serialisable order in which singleton goal
+  regressions remain valid for the selected family.
+- The route may use a fixed, learned, or regression-derived order over atomic
+  goal items.
 - This aligns with MOOSE true/serialisable/optimal goal independence.
 
 Primary backend:
@@ -201,16 +257,17 @@ Recommended project domains:
 
 | Domain | Source | Reason |
 | --- | --- | --- |
-| `ferry` | MOOSE dataset or IPC/PDDL source | MOOSE paper and local reproduction are strongest here. |
-| `gripper` | IPC 1998 via `potassco/pddl-instances` | Appears in MOOSE, PG3, D2L, learner-sketches, KR 2025. Good cross-backend sanity domain. |
-| `miconic` | IPC 2000 elevator simple typed via `potassco/pddl-instances` | Appears in MOOSE, PG3, D2L, learner-sketches, KR 2025. Good serialisable transport domain. |
-| `logistics` | IPC 2000 logistics typed via `potassco/pddl-instances` | MOOSE studies full Logistics; KR 2025 solves restricted `Logistics-1pkg` and `Logistics-1truck` but marks full Logistics as C5. Good boundary inside this class. |
+| `ferry` | MOOSE dataset or IPC/PDDL source | Selected family: cars-at-destinations goals. MOOSE paper and local reproduction provide direct backend evidence. |
+| `gripper` | IPC 1998 via `potassco/pddl-instances` | Selected family: balls-at-destination-room goals. Appears in MOOSE, PG3, D2L, learner-sketches, KR 2025. |
+| `miconic` | IPC 2000 elevator simple typed via `potassco/pddl-instances` | Selected family: passenger-served goals. Appears in MOOSE, PG3, D2L, learner-sketches, KR 2025. |
+| `logistics` | IPC 2000 logistics typed via `potassco/pddl-instances` | Selected family: packages-at-destinations goals. MOOSE studies full Logistics; KR 2025 solves restricted variants and marks full Logistics as C5. |
 
-### Class B: Bounded-width sketchable subgoal-structure domains
+### Class B: Bounded-width sketchable subgoal-structure families
 
 Property:
 
-- A compact sketch can decompose the problem into subproblems of bounded width.
+- A compact sketch can decompose the selected goal family into subproblems of
+  bounded width.
 - The backend may need SIWR/IW to fill holes.
 - The learned artifact may be a sketch rather than a direct one-step policy.
 
@@ -227,17 +284,18 @@ Recommended project domains:
 
 | Domain | Source | Reason |
 | --- | --- | --- |
-| `delivery` | learner-sketches/D2L/PG3 benchmark source or AI-Planning generator | Central example in sketch and feature-policy theory; also in PG3. |
-| `spanner` | IPC 2011 or learner-sketches/D2L source | Appears in D2L, learner-sketches, PG3, KR 2025. Includes dead-end/resource structure. |
-| `visitall` | IPC 2011 via `potassco/pddl-instances` | Appears in D2L, learner-sketches, KR 2025, BFGP/PGP. Strong feature/sketch benchmark. |
-| `childsnack` | IPC 2014 via `potassco/pddl-instances` | Sketch literature proves a width-1 sketch; KR 2025 learns a policy but has weaker large-instance coverage. Good stress test. |
-| `barman` | IPC 2011 via `potassco/pddl-instances` | JAIR sketch work gives a Barman sketch; KR 2025 solves restricted Barman variants and fails on a harder Barman variant. Good boundary domain. |
+| `delivery` | learner-sketches/D2L/PG3 benchmark source or AI-Planning generator | Selected family: package-delivery goals. Central example in sketch and feature-policy theory; also in PG3. |
+| `spanner` | IPC 2011 or learner-sketches/D2L source | Selected family: nut-tightening goals under tool/resource constraints. Appears in D2L, learner-sketches, PG3, KR 2025. |
+| `visitall` | IPC 2011 via `potassco/pddl-instances` | Selected family: all-cells-visited goals. Appears in D2L, learner-sketches, KR 2025, BFGP/PGP. |
+| `childsnack` | IPC 2014 via `potassco/pddl-instances` | Selected family: children-served goals. Sketch literature proves a width-1 sketch; KR 2025 learns a policy but has weaker large-instance coverage. |
+| `barman` | IPC 2011 via `potassco/pddl-instances` | Selected family: drink-preparation goals. JAIR sketch work gives a Barman sketch; KR 2025 solves restricted variants and reports failure on broader variants. |
 
-### Class C: Feature-definable structural and goal-dependent domains
+### Class C: Feature-definable structural and goal-dependent families
 
 Property:
 
-- Goal order matters or the domain has strong structural dependencies.
+- At least one atomic goal item supports, threatens, or orders another atomic
+  goal item in the selected family.
 - A compact policy exists only with goal-aware features, indexical concepts,
   distance/count features, or reusable modules.
 - This is where Blocks-style goal dependency belongs.
@@ -257,15 +315,15 @@ Recommended project domains:
 
 | Domain | Source | Reason |
 | --- | --- | --- |
-| `blocks` | IPC 2000 typed Blocks via `potassco/pddl-instances`; Blocks variants also in D2L and KR 2025 | Canonical goal-dependent construction domain. D2L handles `Qclear`, `Qon`, and `Qbw`; KR 2025 solves `Blocks4ops-clear`, `Blocks4ops-on`, and `Blocks4ops`. |
-| `8puzzle-1tile` | KR 2025 benchmark source | KR 2025 solves both fixed and non-fixed variants; useful structural rearrangement domain. |
-| `sokoban-1stone` | KR 2025 benchmark source and Sokoban IPC variants | KR 2025 solves `Sokoban-1stone-7x7` but with high cost and overfitting risk. Good hard structural benchmark. |
+| `blocks` | IPC 2000 typed Blocks via `potassco/pddl-instances`; Blocks variants also in D2L and KR 2025 | Selected family: clear/on/tower-construction goals. D2L handles `Qclear`, `Qon`, and `Qbw`; KR 2025 solves `Blocks4ops-clear`, `Blocks4ops-on`, and `Blocks4ops`. |
+| `8puzzle-1tile` | KR 2025 benchmark source | Selected family: tile-position goals. KR 2025 solves both fixed and non-fixed variants; the family tests structural rearrangement. |
+| `sokoban-1stone` | KR 2025 benchmark source and Sokoban IPC variants | Selected family: one-stone-at-target goals. KR 2025 solves `Sokoban-1stone-7x7` but with high cost and overfitting risk. |
 
 Domains to demote from primary support:
 
 | Domain | Reason |
 | --- | --- |
-| `depots` | KR 2025 reports `Depot` in C5 with feature-pool edge failure. It should be a boundary/failure-analysis domain, not a claimed supported class, unless we add a new backend or new features. |
+| `depots` | KR 2025 reports `Depot` in C5 with feature-pool edge failure. It is a boundary/failure-analysis family unless a backend or feature language supports it. |
 | `rovers`, `satellite`, full `transport` | MOOSE studies these, but KR 2025 C5 and our previous route/reachability issues suggest they require richer route, instrument, resource, or transitive-closure reasoning. Treat as boundary domains. |
 | full `logistics` | MOOSE supports it, but KR 2025 reports full `Logistics` in C5 while solving restricted variants. Keep it in Class A as a MOOSE route, but mark it as a cross-backend boundary. |
 
@@ -275,9 +333,9 @@ For the next paper-quality routing evaluation, use 12 primary domains:
 
 | Class | Domains | Primary route |
 | --- | --- | --- |
-| Class A: goal-regression and serialisable-goal | `ferry`, `gripper`, `miconic`, `logistics` | MOOSE |
-| Class B: bounded-width sketchable subgoal structure | `delivery`, `spanner`, `visitall`, `childsnack`, `barman` | learner-sketches, then KR 2025/D2L fallback |
-| Class C: feature-definable structural and goal-dependent | `blocks`, `8puzzle-1tile`, `sokoban-1stone` | KR 2025, then D2L fallback |
+| Class A: goal-regression-decomposable domain-goal families | `ferry`, `gripper`, `miconic`, `logistics` | MOOSE |
+| Class B: bounded-width sketchable subgoal-structure families | `delivery`, `spanner`, `visitall`, `childsnack`, `barman` | learner-sketches, then KR 2025/D2L fallback |
+| Class C: feature-definable structural and goal-dependent families | `blocks`, `8puzzle-1tile`, `sokoban-1stone` | KR 2025, then D2L fallback |
 
 This set is deliberately different from the previous 8-domain taxonomy. The new
 set is selected for backend-routing evidence, not for our earlier hand-built
@@ -305,12 +363,12 @@ IPC generator.
 
 ## Router Design
 
-The router should be evidence-driven and conservative.
+The router is evidence-driven and conservative.
 
 1. Read domain metadata from the benchmark registry. Initially, use explicit
-   domain-to-class annotations rather than pretending that static PDDL analysis
-   can perfectly infer the right generalized planner.
-2. Run a cheap backend probe on a small training subset under hard memory and
+   planning-family annotations rather than pretending that static PDDL analysis
+   of a bare domain can perfectly infer the selected generalized planner.
+2. Run a bounded backend probe on a small training subset under memory and
    time limits.
 3. Accept a backend only if it emits a generalized artifact and the artifact
    passes our parser, feature-binding, and held-out validation gates.
@@ -339,21 +397,20 @@ Boundary/program domains:
 
 ## Implications for the Current Repository
 
-1. The previous hand-built generalized planner should become a baseline, not the
+1. The previous hand-built generalized planner becomes a baseline, not the
    main method.
-2. The current 8-domain taxonomy should be replaced or supplemented by the
-   12-domain routing taxonomy above.
+2. The current 8-domain taxonomy is replaced or supplemented by the
+   12-domain-goal-family routing taxonomy above.
 3. `depots` should move from "supported feature-definable construction" to
    "boundary/failure-analysis" unless a backend actually solves it.
 4. Add `ferry`, `delivery`, `spanner`, `8puzzle-1tile`, and `sokoban-1stone`
    benchmark folders from the reputable sources above.
-5. The main implementation work should be backend adapters and ASL compilers:
+5. The main implementation work is backend adapters and ASL compilers:
    MOOSE policy -> `LiftedPolicyProgram`, KR/D2L DLPlan policy ->
    `LiftedPolicyProgram`, learner-sketches sketch -> `LiftedPolicyProgram`
    with explicit subproblem semantics, then ASL.
-6. h-policy/Vanir should be treated as the next backend-adapter candidate
-   because its hierarchical policy output is more directly compatible with ASL
-   modules than flat sketches, but it still requires artifact parsing and
+6. h-policy/Vanir is the next backend-adapter target because its hierarchical
+   policy output has explicit policy calls. It requires artifact parsing and
    validation before becoming a claimed route.
 
 ## Citation List
