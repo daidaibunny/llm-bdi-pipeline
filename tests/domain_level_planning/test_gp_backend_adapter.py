@@ -88,6 +88,7 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	by_name = {entry["name"]: entry for entry in matrix}
 
 	assert {
+		"moose",
 		"learner-sketches",
 		"h-policy-learner",
 		"d2l",
@@ -104,6 +105,18 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"ipc-learning-huzar",
 		"ipc-learning-pgp-baseline",
 	}.issubset(set(by_name))
+	assert by_name["moose"]["present"] is False
+	assert by_name["moose"]["pin_status"] == "missing"
+	assert by_name["moose"]["current_consumption_role"] == {
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "goal_regression_decision_list_policy",
+		"blocking_gap": None,
+	}
+	assert "./moose.sif train benchmarks/<domain>/domain.pddl" in by_name["moose"][
+		"usage_entrypoints"
+	]
 	assert by_name["learner-sketches"]["present"] is True
 	assert by_name["learner-sketches"]["pin_status"] == "ok"
 	assert by_name["learner-sketches"]["paper_role"] == (
@@ -123,6 +136,10 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"consumption_mode": "parsed_bound_policy_rules",
 		"blocking_gap": None,
 	}
+	assert any(
+		"learner-sketches-command" in entry
+		for entry in by_name["learner-sketches"]["usage_entrypoints"]
+	)
 
 	assert by_name["h-policy-learner"]["present"] is False
 	assert by_name["h-policy-learner"]["pin_status"] == "missing"
@@ -164,6 +181,10 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 			"execution_environment"
 		]
 	)
+	assert any(
+		"learning-general-policies-docker-command" in entry
+		for entry in by_name["learner-policies-from-examples"]["usage_entrypoints"]
+	)
 	assert by_name["learner-policies-from-examples"]["current_consumption_role"] == {
 		"drives_layer_b": True,
 		"drives_layer_c": True,
@@ -189,6 +210,13 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 
 
 def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
+	assert backend_consumption_role("moose") == {
+		"drives_layer_b": True,
+		"drives_layer_c": True,
+		"consumed_by_synthesis": True,
+		"consumption_mode": "goal_regression_decision_list_policy",
+		"blocking_gap": None,
+	}
 	assert backend_consumption_role("learner-sketches")["consumed_by_synthesis"] is True
 	assert backend_consumption_role("h-policy-learner") == {
 		"drives_layer_b": True,
@@ -244,6 +272,7 @@ def test_backend_audit_status_cli_prints_matrix_entries(tmp_path: Path) -> None:
 	)
 
 	assert "learner-sketches: missing; observed=unknown; pinned=missing" in result.stdout
+	assert "moose: missing; observed=unknown; pinned=missing" in result.stdout
 	assert "h-policy-learner: missing; observed=unknown; pinned=missing" in result.stdout
 	assert "d2l: missing; observed=unknown; pinned=missing" in result.stdout
 	assert (
@@ -270,11 +299,45 @@ def test_backend_audit_usage_cli_prints_how_to_run_backends(tmp_path: Path) -> N
 	)
 
 	assert "pg3:" in result.stdout
+	assert "moose:" in result.stdout
+	assert "./moose.sif train benchmarks/<domain>/domain.pddl" in result.stdout
+	assert "learner-sketches-command" in result.stdout
 	assert "./run.sh" in result.stdout
 	assert "bfgp-pp:" in result.stdout
 	assert "./scripts/compile.sh" in result.stdout
 	assert "state-centric-gen-planning:" in result.stdout
 	assert "python -m code.modeling.train_lstm" in result.stdout
+
+
+def test_install_moose_backend_uses_configured_backend_root(
+	tmp_path: Path,
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	from scripts import gp_backend_audit
+
+	calls: list[tuple[str, ...]] = []
+
+	def fake_run_git(args: tuple[str, ...], *, proxy: str | None = None) -> None:
+		calls.append(args)
+
+	monkeypatch.setattr(gp_backend_audit, "_run_git", fake_run_git)
+
+	gp_backend_audit.install_moose_backend(tmp_path, proxy="http://127.0.0.1:10808")
+
+	assert calls[0] == (
+		"clone",
+		"https://github.com/DillonZChen/moose.git",
+		str(tmp_path / "moose"),
+	)
+	assert calls[1][:6] == (
+		"-C",
+		str(tmp_path / "moose"),
+		"fetch",
+		"--depth",
+		"1",
+		"origin",
+	)
+	assert calls[2][:3] == ("-C", str(tmp_path / "moose"), "checkout")
 
 
 def test_learning_general_policies_audit_cli_prints_guarded_command(

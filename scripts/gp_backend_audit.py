@@ -17,6 +17,7 @@ from typing import Iterable
 from domain_level_planning.gp_backends import (
 	DEFAULT_BACKEND_ROOT,
 	GPBackendRunner,
+	MOOSE_BACKEND,
 	PINNED_BACKENDS,
 	backend_audit_matrix,
 	discover_backend_manifest,
@@ -233,6 +234,7 @@ def main() -> int:
 
 def install_backends(root: Path, *, proxy: str | None = None) -> None:
 	root.mkdir(parents=True, exist_ok=True)
+	install_moose_backend(root, proxy=proxy)
 	for backend in BACKENDS:
 		manifest = discover_backend_manifest(
 			root=root,
@@ -244,6 +246,31 @@ def install_backends(root: Path, *, proxy: str | None = None) -> None:
 			_run_git(("clone", backend["url"], str(manifest.path)), proxy=proxy)
 		_run_git(("-C", str(manifest.path), "fetch", "--depth", "1", "origin", backend["commit"]), proxy=proxy)
 		_run_git(("-C", str(manifest.path), "checkout", "--detach", backend["commit"]), proxy=proxy)
+
+
+def install_moose_backend(root: Path, *, proxy: str | None = None) -> None:
+	default_root = DEFAULT_BACKEND_ROOT.expanduser().resolve()
+	target = (
+		Path(MOOSE_BACKEND["path"])
+		if root.expanduser().resolve() == default_root
+		else root / "moose"
+	)
+	if not target.exists():
+		target.parent.mkdir(parents=True, exist_ok=True)
+		_run_git(("clone", str(MOOSE_BACKEND["url"]), str(target)), proxy=proxy)
+	_run_git(
+		(
+			"-C",
+			str(target),
+			"fetch",
+			"--depth",
+			"1",
+			"origin",
+			str(MOOSE_BACKEND["commit"]),
+		),
+		proxy=proxy,
+	)
+	_run_git(("-C", str(target), "checkout", "--detach", str(MOOSE_BACKEND["commit"])), proxy=proxy)
 
 
 def install_backend_dependencies(root: Path) -> None:

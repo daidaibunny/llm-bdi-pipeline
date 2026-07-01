@@ -18,8 +18,16 @@ from typing import Mapping, Sequence
 
 DEFAULT_BACKEND_ROOT = Path(__file__).resolve().parents[2] / ".external" / "gp-backends"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_EXTERNAL_ROOT = PROJECT_ROOT / ".external"
 DEFAULT_MAX_RSS_GB = 16.0
 DEFAULT_POLL_SECONDS = 5.0
+
+MOOSE_BACKEND = {
+	"name": "moose",
+	"url": "https://github.com/DillonZChen/moose.git",
+	"commit": "ce1e99bc12e9c839c5e8e870aac878fd5d31cf9e",
+	"path": PROJECT_EXTERNAL_ROOT / "moose",
+}
 
 PINNED_BACKENDS = (
 	{
@@ -108,6 +116,54 @@ AUDIT_ONLY_CONSUMPTION_ROLE = {
 }
 
 BACKEND_RESEARCH_PROFILES = {
+	"moose": {
+		"paper_role": "AAAI 2026 goal-regression generalized planner",
+		"preferred_use": (
+			"primary goal-regression route for goal-separable and serialisable "
+			"achievement domains"
+		),
+		"input_artifacts": (
+			"PDDL domain",
+			"training PDDL problems from the benchmark directory",
+			"optional planner/search configuration",
+		),
+		"output_artifacts": (
+			"first_order_decision_list_model",
+			"policy_execution_plans",
+			"optional_search_pruned_plans",
+		),
+		"reusable_evidence": (
+			"goal-regression policy",
+			"goal independence diagnostics",
+			"validated policy-execution coverage",
+		),
+		"known_failure_modes": (
+			"missing_backend",
+			"missing_apptainer_image",
+			"goal_dependency_not_goal_regression_friendly",
+		),
+		"resource_profile": {
+			"execution_environment": (
+				"Docker linux/amd64 wrapper plus Apptainer image; use VAL for "
+				"policy-execution plan validation"
+			),
+			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
+			"guard_required": True,
+		},
+		"usage_entrypoints": (
+			"./moose.sif train benchmarks/<domain>/domain.pddl",
+			"./moose.sif plan <domain>.model benchmarks/<domain>/domain.pddl benchmarks/<domain>/testing/<problem>.pddl",
+			"./moose.sif plan <domain>.model benchmarks/<domain>/domain.pddl benchmarks/<domain>/testing/<problem>.pddl --search symk",
+			"use the Docker/Apptainer pattern in AGENTS.md for local reproducibility",
+		),
+		"current_consumption_role": {
+			"drives_layer_b": True,
+			"drives_layer_c": True,
+			"consumed_by_synthesis": True,
+			"consumption_mode": "goal_regression_decision_list_policy",
+			"blocking_gap": None,
+		},
+	},
 	"learner-sketches": {
 		"paper_role": "serialized-width sketch learner for qualitative DLPlan policies",
 		"preferred_use": "external learned sketch evidence for conservative feature binding",
@@ -136,6 +192,12 @@ BACKEND_RESEARCH_PROFILES = {
 			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
 			"guard_required": True,
 		},
+		"usage_entrypoints": (
+			"uv run python scripts/gp_backend_audit.py install-deps",
+			"uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment <experiment> --timeout-seconds 1800",
+			"uv run python scripts/gp_backend_audit.py learner-sketches-summary --experiment <experiment>",
+			"uv run python scripts/gp_backend_audit.py learner-sketches-compile-asl --experiment <experiment>",
+		),
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -170,6 +232,12 @@ BACKEND_RESEARCH_PROFILES = {
 			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
 			"guard_required": True,
 		},
+		"usage_entrypoints": (
+			"cd .external/gp-backends/h-policy-learner/learning/experiments/scripts",
+			"bash <experiment>.sh",
+			"bash <second-experiment>.sh",
+			"parse generated sketch_str.txt only through the verified DLPlan policy adapter",
+		),
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -204,6 +272,11 @@ BACKEND_RESEARCH_PROFILES = {
 			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
 			"guard_required": True,
 		},
+		"usage_entrypoints": (
+			"uv run python scripts/gp_backend_audit.py d2l-docker-commands",
+			"docker build --platform linux/amd64 -t d2l-official-env:local -f .external/gp-backends/d2l/containers/Dockerfile .external/gp-backends/d2l",
+			"docker run --rm --platform linux/amd64 -v .external/gp-backends/d2l:/workspace/d2l d2l-official-env:local blocks:clear",
+		),
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -252,6 +325,11 @@ BACKEND_RESEARCH_PROFILES = {
 			"default_max_rss_gb": DEFAULT_MAX_RSS_GB,
 			"guard_required": True,
 		},
+		"usage_entrypoints": (
+			"uv run python scripts/gp_backend_audit.py learning-general-policies-docker-build-command",
+			"uv run python scripts/gp_backend_audit.py learning-general-policies-docker-command --experiment <experiment> --timeout-seconds 1800 --max-num-instances 1",
+			"uv run python scripts/gp_backend_audit.py learning-general-policies-summary --experiment <experiment>",
+		),
 		"current_consumption_role": {
 			"drives_layer_b": True,
 			"drives_layer_c": True,
@@ -822,6 +900,7 @@ def backend_audit_matrix(
 	"""Return paper-backend audit evidence without running external learners."""
 
 	entries: list[dict[str, object]] = []
+	entries.append(_backend_matrix_entry(_discover_moose_manifest(root)))
 	for backend in PINNED_BACKENDS:
 		manifest = discover_backend_manifest(
 			root=root,
@@ -829,31 +908,53 @@ def backend_audit_matrix(
 			url=backend["url"],
 			commit=backend["commit"],
 		)
-		profile = BACKEND_RESEARCH_PROFILES[manifest.name]
-		pin_status = _pin_status(manifest)
-		failures = _backend_failure_modes(manifest=manifest, pin_status=pin_status)
-		entries.append(
-			{
-				"name": manifest.name,
-				"url": manifest.url,
-				"path": str(manifest.path),
-				"expected_commit": manifest.expected_commit,
-				"observed_commit": manifest.observed_commit,
-				"present": manifest.present,
-				"pin_status": pin_status,
-				"paper_role": profile["paper_role"],
-				"preferred_use": profile["preferred_use"],
-				"input_artifacts": list(profile["input_artifacts"]),
-				"output_artifacts": list(profile["output_artifacts"]),
-				"reusable_evidence": list(profile["reusable_evidence"]),
-				"usage_entrypoints": list(profile.get("usage_entrypoints") or ()),
-				"failure_modes": failures,
-				"known_failure_modes": list(profile["known_failure_modes"]),
-				"resource_profile": dict(profile["resource_profile"]),
-				"current_consumption_role": dict(profile["current_consumption_role"]),
-			},
-		)
+		entries.append(_backend_matrix_entry(manifest))
 	return tuple(entries)
+
+
+def _discover_moose_manifest(root: str | Path = DEFAULT_BACKEND_ROOT) -> BackendManifest:
+	root_path = Path(root)
+	candidates: tuple[Path, ...] = (
+		root_path / "moose",
+		root_path.parent / "moose",
+	)
+	if root_path.expanduser().resolve() == DEFAULT_BACKEND_ROOT.expanduser().resolve():
+		candidates = (*candidates, Path(MOOSE_BACKEND["path"]))
+	backend_path = next((path for path in candidates if path.exists()), candidates[0])
+	observed_commit = _observed_git_commit(backend_path)
+	return BackendManifest(
+		name=str(MOOSE_BACKEND["name"]),
+		path=backend_path,
+		url=str(MOOSE_BACKEND["url"]),
+		expected_commit=str(MOOSE_BACKEND["commit"]),
+		present=backend_path.exists(),
+		observed_commit=observed_commit,
+	)
+
+
+def _backend_matrix_entry(manifest: BackendManifest) -> dict[str, object]:
+	profile = BACKEND_RESEARCH_PROFILES[manifest.name]
+	pin_status = _pin_status(manifest)
+	failures = _backend_failure_modes(manifest=manifest, pin_status=pin_status)
+	return {
+		"name": manifest.name,
+		"url": manifest.url,
+		"path": str(manifest.path),
+		"expected_commit": manifest.expected_commit,
+		"observed_commit": manifest.observed_commit,
+		"present": manifest.present,
+		"pin_status": pin_status,
+		"paper_role": profile["paper_role"],
+		"preferred_use": profile["preferred_use"],
+		"input_artifacts": list(profile["input_artifacts"]),
+		"output_artifacts": list(profile["output_artifacts"]),
+		"reusable_evidence": list(profile["reusable_evidence"]),
+		"usage_entrypoints": list(profile.get("usage_entrypoints") or ()),
+		"failure_modes": failures,
+		"known_failure_modes": list(profile["known_failure_modes"]),
+		"resource_profile": dict(profile["resource_profile"]),
+		"current_consumption_role": dict(profile["current_consumption_role"]),
+	}
 
 
 def backend_consumption_role(name: str) -> dict[str, object]:
