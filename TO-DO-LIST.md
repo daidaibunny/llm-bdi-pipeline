@@ -49,12 +49,13 @@ literal semantics.
 | A8 | Remove stale 12-family routing language and old self-synthesis implementation from current path, tests, registry, and paper text. | Implemented | `scripts/materialize_achievement_benchmarks.py`, `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, focused tests, and backend consumption roles now use six selected domains and goal-property groups. Historical schema-derived synthesis, sketch-to-`+!g` compilation, planner-trace transition modules, DFA-to-`goal_` adapter code, and old `goal_` descriptor semantics are no longer retained as diagnostic code in `src`. |
 | A9 | Materialize the six selected domains with deterministic splits. | Implemented | `uv run python scripts/materialize_achievement_benchmarks.py` rebuilt `src/domains` with `ferry`, `miconic`, `gripper`, `logistics`, `blocks`, and `8puzzle-1tile`; each uses `floor(2/3 * N)` train and remaining test. |
 | A10 | Preserve current PDDL-only and no synthetic achievement-name constraints. | Implemented for generated current artifacts | New atomic and temporal append code emits no `achieve_*`, `transition_*`, or `dfa_state` names. It appends `g_query` names by design as query-specific top-level temporal wrappers. |
+| A11 | Maintain exactly one appendable domain ASL library per domain. | Implemented and regression-tested | `append_temporal_goal_to_library` now preserves `temporal_goal_append_history` and rejects duplicate temporal goal names with `duplicate_temporal_goal`. CLI regression test appends two queries sequentially by feeding the first output `plan_library.json` into the second append and verifies both top-level goals remain in the same ASL library. |
 
 ## Current Evidence Snapshot
 
 | Check | Result |
 | --- | --- |
-| Full Python test suite | `94 passed, 2 warnings` with `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q`. |
+| Full Python test suite | `98 passed, 2 warnings` with `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q`. |
 | Final artifact validation | `checks=26` with `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only`. |
 | Atomic selector tests | Included in full suite; selector only chooses MOOSE as implemented atomic ASL compiler and refuses unverified fallback compilers. |
 | Temporal appender tests | Included in full suite; validates lifted atom restoration, singleton transition guards, negative waiting guards, and negative progress rejection. |
@@ -63,6 +64,7 @@ literal semantics.
 | MOOSE readable policy adapter tests | `4 passed` with `uv run pytest tests/domain_level_planning/test_moose_policy_adapter.py`. |
 | MOOSE readable artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry` reports `rules=5`, `modules=5`, `asl_plans=5`. |
 | MOOSE atomic ASL artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-dir tmp/moose-atomic/ferry-library` writes a domain-level atomic `plan_library.json` and `plan_library.asl`. |
+| MOOSE Blocks atomic-plus-temporal end-to-end smoke | Guarded MOOSE Blocks probe first4 training under `16GiB/900s` learned `72` singleton rules and compiled `72` atomic ASL plans. Appending the first two probe instances as LTLf tower goals produced one maintained domain library with `83` plans. Snapshots are under `snapshots/moose_blocks_e2e/`. A first20 interactive attempt reached `6/20` before manual interruption; no memory guard violation occurred. |
 | MOOSE paper audit | Local paper text confirms MOOSE decomposes training problems into singleton goal conditions and applies goal regression, making it suitable for atomic positive predicate templates. |
 
 ## Commands

@@ -1,0 +1,6976 @@
+{
+  "domain_name": "blocks",
+  "initial_beliefs": [],
+  "metadata": {
+    "atomic_template_backend": "moose",
+    "compiled_singleton_rule_count": 72,
+    "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+    "raw_rule_count": 72,
+    "source_name": "blocks-probe-first4"
+  },
+  "plans": [
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 1, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_1",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 2, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block1)",
+        "handempty",
+        "ontable(Block0)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 2, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_3",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block2)",
+        "holding(Block0)",
+        "ontable(Block1)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_4",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "ontable(Block1)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_5",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block0"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_6",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "on(Block1, Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_7",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block0"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "ontable(Block1)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_8",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block0"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_9",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block0"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block2, Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_10",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "ontable(Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_11",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "ontable(Block1)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_12",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block3)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_13",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "ontable(Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_14",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block4)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_15",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "ontable(Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_16",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "ontable(Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_17",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block2)",
+        "holding(Block0)",
+        "on(Block2, Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_18",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_19",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block4)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_20",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block3)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "ontable(Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_21",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block3)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_22",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block2, Block3)",
+        "ontable(Block1)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_23",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_24",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "ontable(Block2)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_25",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block3)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "ontable(Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_26",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block4)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block4, Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_27",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block4",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block4)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "ontable(Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_28",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "ontable(Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_29",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_30",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block0"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block2)",
+        "holding(Block0)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_31",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "ontable(Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_32",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block4)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block4, Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_33",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block4",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block4)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "ontable(Block3)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_34",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_35",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block3",
+          "Block0"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block3)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_36",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "ontable(Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_37",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block4",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 9, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_38",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 9, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "ontable(Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_39",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block4",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 9, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "ontable(Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_40",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block5",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 9, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block5)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "ontable(Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_41",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block4",
+          "Block5"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 9, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block2)",
+        "holding(Block0)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_42",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block5"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block5)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "ontable(Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_43",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block4",
+          "Block5"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_44",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block0",
+          "Block5"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block3)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "ontable(Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_45",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block5",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "ontable(Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_46",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block5",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_47",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "ontable(Block4)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_48",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block4",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 11, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block6)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "ontable(Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_49",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block5",
+          "Block6"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 11, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "ontable(Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_50",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block6",
+          "Block2"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 11, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_51",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block5"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 11, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block4)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "ontable(Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_52",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block6",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 11, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_53",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block6"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 12, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block3)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_54",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block1",
+          "Block6"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 12, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block6)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "ontable(Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_55",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block5",
+          "Block6"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 12, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block4)",
+        "on(Block2, Block3)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "ontable(Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_56",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block6",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 12, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_57",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block5"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 12, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block4)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "ontable(Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_58",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block6",
+          "Block3"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 13, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block5)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "ontable(Block7)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_59",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block7",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 13, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block7)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "ontable(Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_60",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block6",
+          "Block7"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 13, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block4)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block5)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_61",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block7"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 13, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block5)",
+        "on(Block3, Block4)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "ontable(Block7)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_62",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block7",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 14, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block4)",
+        "on(Block2, Block3)",
+        "on(Block3, Block5)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "ontable(Block7)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_63",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block7",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 14, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block4)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block5)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_64",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block2",
+          "Block7"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 14, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block7)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "ontable(Block6)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_65",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block6",
+          "Block7"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 14, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block5)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "ontable(Block7)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_66",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block7",
+          "Block4"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 15, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block8)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "ontable(Block7)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_67",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block7",
+          "Block8"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 15, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block8",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block6)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block6, Block7)",
+        "on(Block7, Block8)",
+        "ontable(Block8)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_68",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block8",
+          "Block5"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 16, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block8",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block7)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "on(Block7, Block8)",
+        "ontable(Block8)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_69",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block8",
+          "Block6"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 16, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block7",
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block8",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block2, Block3)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "on(Block7, Block8)",
+        "ontable(Block8)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_70",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block8",
+          "Block1"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 17, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block8",
+            "Block9"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block9"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block9",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block1)",
+        "clear(Block3)",
+        "holding(Block0)",
+        "on(Block1, Block2)",
+        "on(Block2, Block8)",
+        "on(Block3, Block4)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "on(Block8, Block9)",
+        "ontable(Block9)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_71",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block9",
+          "Block7"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "moose_goal_regression_policy",
+          "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "precedence": "(1, 18, 0, 0)",
+          "source_backend": "moose",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Block0",
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block0"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block2",
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block2"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block1",
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block1"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block4",
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block4"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block5",
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block5"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block6",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block6"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block3",
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block3"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block8",
+            "Block9"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Block8"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        },
+        {
+          "arguments": [
+            "Block9"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "Block9",
+            "Block7"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Block0)",
+        "clear(Block2)",
+        "handempty",
+        "on(Block0, Block1)",
+        "on(Block1, Block4)",
+        "on(Block2, Block3)",
+        "on(Block3, Block8)",
+        "on(Block4, Block5)",
+        "on(Block5, Block6)",
+        "on(Block6, Block7)",
+        "on(Block8, Block9)",
+        "ontable(Block9)"
+      ],
+      "plan_name": "moose_blocks_probe_first4_rule_72",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "Block9",
+          "Block7"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    }
+  ]
+}

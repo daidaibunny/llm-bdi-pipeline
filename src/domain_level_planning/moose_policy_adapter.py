@@ -62,10 +62,12 @@ def parse_moose_readable_policy(text: str) -> tuple[MooseReadableRule, ...]:
 		for block in re.split(r"\n\s*\n", str(text or "").strip())
 		if block.strip()
 	)
-	return tuple(
-		_parse_rule_block(block, index=index)
-		for index, block in enumerate(blocks, start=1)
-	)
+	rules: list[MooseReadableRule] = []
+	for index, block in enumerate(blocks, start=1):
+		rule = _parse_optional_rule_block(block, index=index)
+		if rule is not None:
+			rules.append(rule)
+	return tuple(rules)
 
 
 def load_moose_readable_policy(path: str | Path) -> tuple[MooseReadableRule, ...]:
@@ -198,7 +200,7 @@ def compile_moose_readable_policy_to_asl_library(
 	)
 
 
-def _parse_rule_block(block: str, *, index: int) -> MooseReadableRule:
+def _parse_optional_rule_block(block: str, *, index: int) -> MooseReadableRule | None:
 	lines = tuple(line.rstrip() for line in block.splitlines() if line.strip())
 	fields: dict[str, str] = {}
 	for line in lines:
@@ -208,6 +210,8 @@ def _parse_rule_block(block: str, *, index: int) -> MooseReadableRule:
 		fields[key.strip()] = value.strip()
 	required = ("precedence", "vars", "s_cond", "g_cond", "actions")
 	missing = tuple(key for key in required if key not in fields)
+	if len(missing) == len(required):
+		return None
 	if missing:
 		raise ValueError(
 			f"MOOSE readable policy rule {index} is missing fields: {', '.join(missing)}",

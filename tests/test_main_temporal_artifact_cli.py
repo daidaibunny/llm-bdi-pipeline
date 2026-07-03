@@ -97,6 +97,105 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert "dfa_state" not in asl
 
 
+def test_main_can_append_multiple_queries_to_same_domain_library(
+	tmp_path: Path,
+) -> None:
+	domain_file, _ = _write_tiny_domain_and_problem(tmp_path)
+	library_file = _write_atomic_library_json(tmp_path)
+	goal_json = tmp_path / "lifted_ltlf_goals.json"
+	goal_json.write_text(
+		json.dumps(
+			{
+				"schema_version": 1,
+				"goal_specification_kind": "temporal_extended_goal",
+				"temporal_logic": "LTLf",
+				"domain": "tiny",
+				"cases": {
+					"query_1": {
+						"goal_name": "g_query_1",
+						"problem_file": "problem.pddl",
+						"source_text": "Eventually finish.",
+						"ltlf_formula": "F(done)",
+						"atoms": ["done"],
+						"bindings": {},
+						"atom_vocabulary": "pddl_fluents",
+						"status": "supported",
+					},
+					"query_2": {
+						"goal_name": "g_query_2",
+						"problem_file": "problem.pddl",
+						"source_text": "Eventually be ready.",
+						"ltlf_formula": "F(ready)",
+						"atoms": ["ready"],
+						"bindings": {},
+						"atom_vocabulary": "pddl_fluents",
+						"status": "supported",
+					},
+				},
+			},
+		),
+		encoding="utf-8",
+	)
+	output_root = tmp_path / "domain-library"
+
+	first = subprocess.run(
+		[
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"append-lifted-temporal-goal",
+			"--domain-file",
+			str(domain_file),
+			"--plan-library-file",
+			str(library_file),
+			"--ltlf-goal-json",
+			str(goal_json),
+			"--query-id",
+			"query_1",
+			"--output-root",
+			str(output_root),
+		],
+		cwd=PROJECT_ROOT,
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+	first_result = json.loads(first.stdout)
+	second = subprocess.run(
+		[
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"append-lifted-temporal-goal",
+			"--domain-file",
+			str(domain_file),
+			"--plan-library-file",
+			first_result["artifact_paths"]["plan_library"],
+			"--ltlf-goal-json",
+			str(goal_json),
+			"--query-id",
+			"query_2",
+			"--output-root",
+			str(output_root),
+		],
+		cwd=PROJECT_ROOT,
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+	second_result = json.loads(second.stdout)
+	library_json = json.loads(
+		Path(second_result["artifact_paths"]["plan_library"]).read_text(encoding="utf-8"),
+	)
+	asl = Path(second_result["artifact_paths"]["plan_library_asl"]).read_text(encoding="utf-8")
+
+	assert "+!g_query_1 : not done <-" in asl
+	assert "+!g_query_2 : not ready <-" in asl
+	assert [
+		record["goal_name"]
+		for record in library_json["metadata"]["temporal_goal_append_history"]
+	] == ["g_query_1", "g_query_2"]
+	assert second_result["plan_count"] == 5
+
+
 def _write_tiny_domain_and_problem(tmp_path: Path) -> tuple[Path, Path]:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"

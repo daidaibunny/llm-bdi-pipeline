@@ -389,6 +389,8 @@ def _finish_successful_temporal_append_log(
 
 def _temporal_append_error_type(error: Exception) -> str:
 	message = str(error)
+	if "duplicate_temporal_goal" in message:
+		return "duplicate_temporal_goal"
 	if "singleton-literal transition contract" in message:
 		return "dfa_singleton_literal_validation_failed"
 	if "Failed to convert LTLf to DFA" in message:

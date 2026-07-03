@@ -112,6 +112,74 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 	)
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
 	assert updated.metadata["temporal_goal_append"]["requires_external_dfa_state"] is True
+	assert [
+		record["goal_name"]
+		for record in updated.metadata["temporal_goal_append_history"]
+	] == ["g_query_1"]
+
+
+def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -> None:
+	domain_file = _write_domain(tmp_path)
+	library = PlanLibrary(domain_name="tiny", plans=())
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "done(X)"},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	after_first = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	after_second = append_temporal_goal_to_library(
+		plan_library=after_first,
+		goal_name="g_query_2",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+
+	assert [plan.trigger.symbol for plan in after_second.plans] == [
+		"g_query_1",
+		"g_query_1",
+		"g_query_2",
+		"g_query_2",
+	]
+	assert [
+		record["goal_name"]
+		for record in after_second.metadata["temporal_goal_append_history"]
+	] == ["g_query_1", "g_query_2"]
+
+
+def test_append_temporal_goal_rejects_duplicate_goal_name(tmp_path: Path) -> None:
+	domain_file = _write_domain(tmp_path)
+	library = PlanLibrary(domain_name="tiny", plans=())
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "done(X)"},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+
+	with pytest.raises(ValueError, match="duplicate_temporal_goal"):
+		append_temporal_goal_to_library(
+			plan_library=updated,
+			goal_name="g_query_1",
+			dfa_payload=dfa_payload,
+			domain_file=domain_file,
+		)
 
 
 def test_append_temporal_goal_allows_negative_waiting_self_loop(

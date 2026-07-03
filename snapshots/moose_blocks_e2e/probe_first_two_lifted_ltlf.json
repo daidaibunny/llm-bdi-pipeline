@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "goal_specification_kind": "temporal_extended_goal",
+  "temporal_logic": "LTLf",
+  "domain": "blocks",
+  "cases": {
+    "query_1": {
+      "goal_name": "g_probe_p01_tower",
+      "problem_file": ".external/moose/benchmarks/blocksworld-probe/training/p01.pddl",
+      "source_text": "Build the p01 tower bottom-up: b4 on b2, then b1 on b4, then b3 on b1.",
+      "ltlf_formula": "F(on_b4_b2 & X(F(on_b1_b4 & X(F(on_b3_b1)))))",
+      "atoms": [
+        {
+          "symbol": "on_b4_b2",
+          "predicate": "on",
+          "args": ["b4", "b2"]
+        },
+        {
+          "symbol": "on_b1_b4",
+          "predicate": "on",
+          "args": ["b1", "b4"]
+        },
+        {
+          "symbol": "on_b3_b1",
+          "predicate": "on",
+          "args": ["b3", "b1"]
+        }
+      ],
+      "bindings": {},
+      "atom_vocabulary": "pddl_fluents",
+      "status": "supported"
+    },
+    "query_2": {
+      "goal_name": "g_probe_p02_tower",
+      "problem_file": ".external/moose/benchmarks/blocksworld-probe/training/p02.pddl",
+      "source_text": "Build the p02 tower bottom-up: b3 on b5, then b6 on b3, then b1 on b6, then b2 on b1, then b4 on b2, then b7 on b4.",
+      "ltlf_formula": "F(on_b3_b5 & X(F(on_b6_b3 & X(F(on_b1_b6 & X(F(on_b2_b1 & X(F(on_b4_b2 & X(F(on_b7_b4)))))))))))",
+      "atoms": [
+        {
+          "symbol": "on_b3_b5",
+          "predicate": "on",
+          "args": ["b3", "b5"]
+        },
+        {
+          "symbol": "on_b6_b3",
+          "predicate": "on",
+          "args": ["b6", "b3"]
+        },
+        {
+          "symbol": "on_b1_b6",
+          "predicate": "on",
+          "args": ["b1", "b6"]
+        },
+        {
+          "symbol": "on_b2_b1",
+          "predicate": "on",
+          "args": ["b2", "b1"]
+        },
+        {
+          "symbol": "on_b4_b2",
+          "predicate": "on",
+          "args": ["b4", "b2"]
+        },
+        {
+          "symbol": "on_b7_b4",
+          "predicate": "on",
+          "args": ["b7", "b4"]
+        }
+      ],
+      "bindings": {},
+      "atom_vocabulary": "pddl_fluents",
+      "status": "supported"
+    }
+  }
+}

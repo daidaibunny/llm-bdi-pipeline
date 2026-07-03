@@ -180,6 +180,11 @@ def append_temporal_goal_to_library(
 ) -> PlanLibrary:
 	"""Append one query-specific temporal goal wrapper to an atomic ASL library."""
 
+	if _has_existing_goal_trigger(plan_library, goal_name):
+		raise ValueError(
+			"duplicate_temporal_goal: Plan library already contains an "
+			f"achievement-goal entry for {goal_name!r}."
+		)
 	declared_arities = {
 		str(predicate.name): len(tuple(predicate.parameters or ()))
 		for predicate in PDDLParser.parse_domain(domain_file).predicates
@@ -196,12 +201,19 @@ def append_temporal_goal_to_library(
 			"DFA payload does not satisfy the singleton-literal transition contract: "
 			f"{first_error['error_type']}: {first_error['message']}"
 		)
+	append_record: dict[str, Any] = {
+		"goal_name": goal_name,
+		"dfa_initial_state": dfa_payload.get("initial_state"),
+		"dfa_accepting_states": list(dfa_payload.get("accepting_states") or ()),
+		"requires_external_dfa_state": True,
+	}
 	plans = list(plan_library.plans)
 	progress_plans = _temporal_progress_plans(
 		goal_name=goal_name,
 		dfa_payload=dfa_payload,
 		declared_arities=declared_arities,
 	)
+	append_record["progress_plan_count"] = len(progress_plans)
 	plans.extend(progress_plans)
 	plans.append(
 		AgentSpeakPlan(
@@ -227,13 +239,11 @@ def append_temporal_goal_to_library(
 		initial_beliefs=plan_library.initial_beliefs,
 		metadata={
 			**dict(plan_library.metadata or {}),
-			"temporal_goal_append": {
-				"goal_name": goal_name,
-				"dfa_initial_state": dfa_payload.get("initial_state"),
-				"dfa_accepting_states": list(dfa_payload.get("accepting_states") or ()),
-				"progress_plan_count": len(progress_plans),
-				"requires_external_dfa_state": True,
-			},
+			"temporal_goal_append": append_record,
+			"temporal_goal_append_history": _append_history(
+				plan_library.metadata,
+				append_record,
+			),
 		},
 	)
 
@@ -258,6 +268,36 @@ def append_lifted_temporal_goal_case_to_library(
 		domain_file=domain_file,
 	)
 	return updated, dfa_payload
+
+
+def _has_existing_goal_trigger(plan_library: PlanLibrary, goal_name: str) -> bool:
+	goal = str(goal_name or "").strip()
+	return any(
+		plan.trigger.event_type == "achievement_goal"
+		and plan.trigger.symbol == goal
+		for plan in plan_library.plans
+	)
+
+
+def _append_history(
+	metadata: Mapping[str, Any],
+	append_record: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+	history_payload = metadata.get("temporal_goal_append_history")
+	if isinstance(history_payload, Sequence) and not isinstance(
+		history_payload,
+		(str, bytes),
+	):
+		history = [
+			dict(item)
+			for item in history_payload
+			if isinstance(item, Mapping)
+		]
+	else:
+		legacy_record = metadata.get("temporal_goal_append")
+		history = [dict(legacy_record)] if isinstance(legacy_record, Mapping) else []
+	history.append(dict(append_record))
+	return history
 
 
 def _rewrite_dfa_payload_labels_from_lifted_atoms(

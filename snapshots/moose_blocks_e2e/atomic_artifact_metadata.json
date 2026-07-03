@@ -1,0 +1,8 @@
+{
+  "artifact_kind": "moose_atomic_library",
+  "backend": "moose",
+  "domain_name": "blocks",
+  "plan_count": 72,
+  "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+  "source_name": "blocks-probe-first4"
+}

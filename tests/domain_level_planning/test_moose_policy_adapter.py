@@ -42,6 +42,26 @@ def test_parse_moose_readable_policy_extracts_lifted_rules() -> None:
 	assert rules[1].actions[-1].arguments == ("car0", "location1")
 
 
+def test_parse_moose_readable_policy_ignores_dump_logs() -> None:
+	rules = parse_moose_readable_policy(
+		"""
+		[INFO t=1.2573s] PLAN OPTIONS:
+		model_file          blocks.model
+		dump_policy         True
+		precedence : (1, 1, 0, 0)
+		      vars : block0 block1
+		    s_cond : (clear block1) (holding block0)
+		    g_cond : (on block0 block1)
+		   actions : (stack block0 block1)
+
+		len(policy)=1
+		""",
+	)
+
+	assert len(rules) == 1
+	assert rules[0].goal_conditions[0].predicate == "on"
+
+
 def test_moose_readable_policy_becomes_lifted_policy_program() -> None:
 	program = policy_program_from_moose_readable_policy(
 		FERRY_READABLE_POLICY,
