@@ -1,9 +1,6 @@
 {
   "domain_name": "blocks",
-  "initial_beliefs": [
-    "teg_state(g_probe_p01_tower, state_1)",
-    "teg_state(g_probe_p02_tower, state_1)"
-  ],
+  "initial_beliefs": [],
   "metadata": {
     "atomic_template_backend": "moose",
     "compiled_singleton_rule_count": 72,
@@ -30,7 +27,6 @@
     "raw_rule_count": 72,
     "source_name": "blocks-probe-first4",
     "temporal_goal_append": {
-      "controller_state_belief": "teg_state(g_probe_p02_tower, state_1)",
       "dfa_accepting_states": [
         "7"
       ],
@@ -230,11 +226,11 @@
           "supported": true,
           "target_state": "7"
         }
-      ]
+      ],
+      "wrapper_mode": "context_driven_prefix"
     },
     "temporal_goal_append_history": [
       {
-        "controller_state_belief": "teg_state(g_probe_p01_tower, state_1)",
         "dfa_accepting_states": [
           "4"
         ],
@@ -338,10 +334,10 @@
             "supported": true,
             "target_state": "4"
           }
-        ]
+        ],
+        "wrapper_mode": "context_driven_prefix"
       },
       {
-        "controller_state_belief": "teg_state(g_probe_p02_tower, state_1)",
         "dfa_accepting_states": [
           "7"
         ],
@@ -541,7 +537,8 @@
             "supported": true,
             "target_state": "7"
           }
-        ]
+        ],
+        "wrapper_mode": "context_driven_prefix"
       }
     ]
   },
@@ -7513,9 +7510,17 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "not on(b4, b2)"
+          ],
           "raw_label": "on(b4, b2)",
+          "source_context": [],
           "source_state": "1",
-          "target_state": "2"
+          "target_context": [
+            "on(b4, b2)"
+          ],
+          "target_state": "2",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7528,29 +7533,12 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p01_tower",
-            "state_1"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p01_tower",
-            "state_2"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p01_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p01_tower, state_1)",
         "not on(b4, b2)"
       ],
       "plan_name": "g_probe_p01_tower_progress_1",
@@ -7565,9 +7553,20 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b4, b2)",
+            "not on(b1, b4)"
+          ],
           "raw_label": "on(b1, b4)",
+          "source_context": [
+            "on(b4, b2)"
+          ],
           "source_state": "2",
-          "target_state": "3"
+          "target_context": [
+            "on(b1, b4)"
+          ],
+          "target_state": "3",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7580,29 +7579,13 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p01_tower",
-            "state_2"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p01_tower",
-            "state_3"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p01_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p01_tower, state_2)",
+        "on(b4, b2)",
         "not on(b1, b4)"
       ],
       "plan_name": "g_probe_p01_tower_progress_2",
@@ -7617,9 +7600,22 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b4, b2)",
+            "on(b1, b4)",
+            "not on(b3, b1)"
+          ],
           "raw_label": "on(b3, b1)",
+          "source_context": [
+            "on(b4, b2)",
+            "on(b1, b4)"
+          ],
           "source_state": "3",
-          "target_state": "4"
+          "target_context": [
+            "on(b3, b1)"
+          ],
+          "target_state": "4",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7632,29 +7628,14 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p01_tower",
-            "state_3"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p01_tower",
-            "state_4"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p01_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p01_tower, state_3)",
+        "on(b4, b2)",
+        "on(b1, b4)",
         "not on(b3, b1)"
       ],
       "plan_name": "g_probe_p01_tower_progress_3",
@@ -7670,12 +7651,20 @@
         {
           "accepting_state": "4",
           "artifact_family": "temporal_goal_dfa_append",
-          "role": "accepting_state"
+          "context": [
+            "on(b4, b2)",
+            "on(b1, b4)",
+            "on(b3, b1)"
+          ],
+          "role": "accepting_state",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [],
       "context": [
-        "teg_state(g_probe_p01_tower, state_4)"
+        "on(b4, b2)",
+        "on(b1, b4)",
+        "on(b3, b1)"
       ],
       "plan_name": "g_probe_p01_tower_accepting_1",
       "source_instruction_ids": [],
@@ -7689,9 +7678,17 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "not on(b3, b5)"
+          ],
           "raw_label": "on(b3, b5)",
+          "source_context": [],
           "source_state": "1",
-          "target_state": "2"
+          "target_context": [
+            "on(b3, b5)"
+          ],
+          "target_state": "2",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7704,29 +7701,12 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_1"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_2"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p02_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p02_tower, state_1)",
         "not on(b3, b5)"
       ],
       "plan_name": "g_probe_p02_tower_progress_1",
@@ -7741,9 +7721,20 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "not on(b6, b3)"
+          ],
           "raw_label": "on(b6, b3)",
+          "source_context": [
+            "on(b3, b5)"
+          ],
           "source_state": "2",
-          "target_state": "3"
+          "target_context": [
+            "on(b6, b3)"
+          ],
+          "target_state": "3",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7756,29 +7747,13 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_2"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_3"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p02_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p02_tower, state_2)",
+        "on(b3, b5)",
         "not on(b6, b3)"
       ],
       "plan_name": "g_probe_p02_tower_progress_2",
@@ -7793,9 +7768,22 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "not on(b1, b6)"
+          ],
           "raw_label": "on(b1, b6)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)"
+          ],
           "source_state": "3",
-          "target_state": "4"
+          "target_context": [
+            "on(b1, b6)"
+          ],
+          "target_state": "4",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7808,29 +7796,14 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_3"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_4"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p02_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p02_tower, state_3)",
+        "on(b3, b5)",
+        "on(b6, b3)",
         "not on(b1, b6)"
       ],
       "plan_name": "g_probe_p02_tower_progress_3",
@@ -7845,9 +7818,24 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "not on(b2, b1)"
+          ],
           "raw_label": "on(b2, b1)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)"
+          ],
           "source_state": "4",
-          "target_state": "5"
+          "target_context": [
+            "on(b2, b1)"
+          ],
+          "target_state": "5",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7860,29 +7848,15 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_4"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_5"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p02_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p02_tower, state_4)",
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
         "not on(b2, b1)"
       ],
       "plan_name": "g_probe_p02_tower_progress_4",
@@ -7897,9 +7871,26 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "not on(b4, b2)"
+          ],
           "raw_label": "on(b4, b2)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)"
+          ],
           "source_state": "5",
-          "target_state": "6"
+          "target_context": [
+            "on(b4, b2)"
+          ],
+          "target_state": "6",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7912,29 +7903,16 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_5"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_6"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p02_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p02_tower, state_5)",
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
+        "on(b2, b1)",
         "not on(b4, b2)"
       ],
       "plan_name": "g_probe_p02_tower_progress_5",
@@ -7949,9 +7927,28 @@
       "binding_certificate": [
         {
           "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "on(b4, b2)",
+            "not on(b7, b4)"
+          ],
           "raw_label": "on(b7, b4)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "on(b4, b2)"
+          ],
           "source_state": "6",
-          "target_state": "7"
+          "target_context": [
+            "on(b7, b4)"
+          ],
+          "target_state": "7",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [
@@ -7964,29 +7961,17 @@
           "symbol": "on"
         },
         {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_6"
-          ],
-          "kind": "belief_deletion",
-          "symbol": "teg_state"
-        },
-        {
-          "arguments": [
-            "g_probe_p02_tower",
-            "state_7"
-          ],
-          "kind": "belief_addition",
-          "symbol": "teg_state"
-        },
-        {
           "arguments": [],
           "kind": "subgoal",
           "symbol": "g_probe_p02_tower"
         }
       ],
       "context": [
-        "teg_state(g_probe_p02_tower, state_6)",
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
+        "on(b2, b1)",
+        "on(b4, b2)",
         "not on(b7, b4)"
       ],
       "plan_name": "g_probe_p02_tower_progress_6",
@@ -8002,12 +7987,26 @@
         {
           "accepting_state": "7",
           "artifact_family": "temporal_goal_dfa_append",
-          "role": "accepting_state"
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "on(b4, b2)",
+            "on(b7, b4)"
+          ],
+          "role": "accepting_state",
+          "wrapper_mode": "context_driven_prefix"
         }
       ],
       "body": [],
       "context": [
-        "teg_state(g_probe_p02_tower, state_7)"
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
+        "on(b2, b1)",
+        "on(b4, b2)",
+        "on(b7, b4)"
       ],
       "plan_name": "g_probe_p02_tower_accepting_1",
       "source_instruction_ids": [],

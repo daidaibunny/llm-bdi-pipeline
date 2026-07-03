@@ -203,7 +203,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"external learners must run under resource guards",
 			"backend artifacts must pass parser, binding, compiler, and validation gates",
 			"negative progress literals fail unless a validated negative template exists",
-			"TEG wrapper state is maintained explicitly as query-scoped teg_state beliefs",
+			"DFA wrapper progress is encoded through validated prefix-literal contexts",
 		),
 		non_goals=(
 			"universal completeness for arbitrary PDDL domains",
@@ -233,8 +233,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"lifted LTLf atoms and DFA metadata are external Input artifacts, not "
 			"mutable beliefs, primitive actions, or synthetic achievement goals. "
 			"The current ASL output may contain query-specific g_query wrappers "
-			"and query-scoped teg_state controller beliefs, but not legacy "
-			"unscoped dfa_state beliefs."
+			"whose contexts are validated DFA prefix/progress literals, but not "
+			"legacy unscoped dfa_state beliefs."
 		),
 		paper_layer_contracts=paper_layer_quality_contracts(),
 		hypothesis_class=bounded_hypothesis_class_contract(),
@@ -437,7 +437,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 				"DFA progress distance to accepting states",
 				"singleton transition literal validation",
 			),
-			"runtime_gate": "external DFA state when context-only ASL is ambiguous",
+			"runtime_gate": "validated prefix-literal context; external DFA state is reserved for ambiguous future cases",
 			"goal_dependency_scope": "temporal ordering expressed by lifted LTLf and DFA",
 		},
 		progress_language={

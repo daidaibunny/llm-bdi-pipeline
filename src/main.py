@@ -14,13 +14,13 @@ _src_dir = str(Path(__file__).parent)
 if _src_dir not in sys.path:
 	sys.path.insert(0, _src_dir)
 
-from domain_level_planning import (
+from domain_level_planning import (  # noqa: E402
 	append_lifted_temporal_goal_case_to_library,
 	compile_moose_readable_policy_to_asl_library,
 	load_lifted_ltlf_goal_dataset,
 )
-from plan_library.models import PlanLibrary
-from plan_library.rendering import render_plan_library_asl
+from plan_library.models import PlanLibrary  # noqa: E402
+from plan_library.rendering import render_plan_library_asl  # noqa: E402
 
 
 def _absolute_path(path_text: str | None) -> str | None:

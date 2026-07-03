@@ -99,8 +99,8 @@
       "num_states": 4,
       "num_transitions": 7,
       "timing_profile": {
-        "convert_seconds": 0.028896124997118022,
-        "total_seconds": 0.028918584001075942
+        "convert_seconds": 0.026337958996009547,
+        "total_seconds": 0.02636375000292901
       }
     },
     "query_2": {
@@ -267,8 +267,8 @@
       "num_states": 7,
       "num_transitions": 13,
       "timing_profile": {
-        "convert_seconds": 0.02419295900472207,
-        "total_seconds": 0.024221083003794774
+        "convert_seconds": 0.025564084004145116,
+        "total_seconds": 0.025586792005924508
       }
     }
   },
