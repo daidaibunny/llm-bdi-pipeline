@@ -175,7 +175,15 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 		if getattr(args, "minimal_modules", False)
 		else _absolute_path(args.domain_file)
 	)
-	domain_name = str(args.domain_name).strip()
+	pddl_domain_name = (
+		PDDLParser.parse_domain(domain_file).name
+		if domain_file is not None
+		else str(args.domain_name).strip()
+	)
+	domain_name = _canonical_domain_key_for_domain_file(
+		domain_file,
+		fallback_domain_name=str(args.domain_name).strip(),
+	)
 	output_root = _canonical_domain_library_dir(
 		library_root=args.library_root,
 		domain_name=domain_name,
@@ -209,6 +217,7 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 			),
 			"backend": "moose",
 			"domain_file": domain_file,
+			"pddl_domain_name": pddl_domain_name,
 			"minimal_modules": bool(getattr(args, "minimal_modules", False)),
 			"policy_file": policy_file,
 			"source_name": source_name,
@@ -226,9 +235,13 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 	domain_file = _require_existing_path(args.domain_file, label="Domain File")
 	domain = PDDLParser.parse_domain(domain_file)
+	domain_key = _canonical_domain_key_for_domain_file(
+		domain_file,
+		fallback_domain_name=domain.name,
+	)
 	output_root = _canonical_domain_library_dir(
 		library_root=args.library_root,
-		domain_name=domain.name,
+		domain_name=domain_key,
 		output_root=args.output_root,
 	)
 	canonical_plan_library_file = str(Path(output_root) / "plan_library.json")
@@ -249,10 +262,11 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 	library = PlanLibrary.from_dict(
 		json.loads(Path(plan_library_file).read_text(encoding="utf-8")),
 	)
-	if library.domain_name != domain.name:
+	if library.domain_name not in {domain_key, domain.name}:
 		raise ValueError(
 			"domain_library_mismatch: loaded plan library domain "
-			f"{library.domain_name!r} does not match PDDL domain {domain.name!r}.",
+			f"{library.domain_name!r} does not match canonical domain key "
+			f"{domain_key!r} or PDDL domain {domain.name!r}.",
 		)
 	dataset = load_lifted_ltlf_goal_dataset(ltlf_goal_json)
 	selected_query_ids = {
@@ -316,6 +330,7 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 			"artifact_kind": "domain_library_with_temporal_append",
 			"source_plan_library_file": plan_library_file,
 			"ltlf_goal_json": ltlf_goal_json,
+			"pddl_domain_name": domain.name,
 			"query_ids": [case.query_id for case in selected_cases],
 			"dfa_payloads": dfa_payloads,
 		},
@@ -363,6 +378,19 @@ def _canonical_domain_library_dir(
 				f"{canonical_dir}, not {resolved_output_root}.",
 			)
 	return str(canonical_dir)
+
+
+def _canonical_domain_key_for_domain_file(
+	domain_file: str | Path | None,
+	*,
+	fallback_domain_name: str,
+) -> str:
+	if domain_file is None:
+		return _domain_library_key(fallback_domain_name)
+	path = Path(domain_file).expanduser().resolve()
+	if path.parent.parent.name == "domains" and path.name == "domain.pddl":
+		return _domain_library_key(path.parent.name)
+	return _domain_library_key(fallback_domain_name)
 
 
 def _domain_library_key(domain_name: str) -> str:

@@ -20,6 +20,9 @@ from utils.pddl_parser import PDDLAction
 from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLParser
 
+from .pddl_types import type_closure
+from .pddl_types import type_guard_symbol
+
 
 @dataclass(frozen=True)
 class PDDLLiteralSchema:
@@ -147,6 +150,7 @@ def synthesize_atomic_minimal_literal_module_library(
 class _ParsedAction:
 	name: str
 	parameters: tuple[str, ...]
+	parameter_types: Mapping[str, str]
 	preconditions: tuple[PDDLLiteralSchema, ...]
 	add_effects: tuple[PDDLLiteralSchema, ...]
 	delete_effects: tuple[PDDLLiteralSchema, ...]
@@ -157,6 +161,10 @@ class _ParsedAction:
 		return cls(
 			name=action.name,
 			parameters=tuple(_parameter_name(parameter) for parameter in action.parameters),
+			parameter_types={
+				_parameter_name(parameter): _parameter_type(parameter)
+				for parameter in action.parameters
+			},
 			preconditions=tuple(_parse_pddl_literals(action.preconditions)),
 			add_effects=tuple(literal for literal in effects if literal.is_positive),
 			delete_effects=tuple(literal for literal in effects if not literal.is_positive),
@@ -227,6 +235,7 @@ def _candidate_module_plans(
 		)
 		for sequence in _producer_action_sequences(
 			actions=actions,
+			type_tokens=domain.types,
 			target_predicate=predicate.name,
 			module_predicates=module_set,
 		):
@@ -254,17 +263,28 @@ class _ProducerSequence:
 	target_predicate: str
 	target_arguments: tuple[str, ...]
 	context_literals: tuple[PDDLLiteralSchema, ...]
+	type_contexts: tuple[str, ...]
 	body_actions: tuple[_ActionCall, ...]
 	producer_action_names: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _FunctionalPredicateGroup:
+	predicate: str
+	key_positions: tuple[int, ...]
+	value_positions: tuple[int, ...]
+	key_types: tuple[str, ...]
 
 
 def _producer_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
 	target_predicate: str,
 	module_predicates: set[str],
 ) -> tuple[_ProducerSequence, ...]:
 	sequences: list[_ProducerSequence] = []
+	functional_groups = _functional_predicate_groups(actions, type_tokens)
 	for final_action, effect in _producer_effects(actions, target_predicate):
 		head_arguments, variable_map = _head_variable_map(effect)
 		variable_map = _complete_variable_map(final_action.parameters, variable_map)
@@ -284,6 +304,8 @@ def _producer_action_sequences(
 		if not transient_preconditions:
 			sequence = _finalize_sequence(
 				actions=actions,
+				type_tokens=type_tokens,
+				functional_groups=functional_groups,
 				target_effect=mapped_effect,
 				target_arguments=head_arguments,
 				context_literals=tuple(
@@ -309,7 +331,7 @@ def _producer_action_sequences(
 				support_map = _complete_variable_map(
 					support_action.parameters,
 					support_map,
-					avoid_variables=set(head_arguments) - set(support_map.values()),
+					avoid_variables=set(variable_map.values()) - set(support_map.values()),
 				)
 				support_effect_mapped = support_effect.mapped(support_map)
 				if not _same_literal(support_effect_mapped, transient):
@@ -321,7 +343,7 @@ def _producer_action_sequences(
 					target_arguments=head_arguments,
 				):
 					continue
-				context_literals = tuple(
+				base_context_literals = tuple(
 					precondition.mapped(support_map)
 					for precondition in support_action.preconditions
 				) + tuple(
@@ -329,20 +351,131 @@ def _producer_action_sequences(
 					for precondition in final_action.preconditions
 					if not _same_literal(precondition.mapped(variable_map), transient)
 				)
+				base_body_actions = (
+					_action_call(support_action, support_map),
+					_action_call(final_action, variable_map),
+				)
 				sequence = _finalize_sequence(
 					actions=actions,
+					type_tokens=type_tokens,
+					functional_groups=functional_groups,
 					target_effect=mapped_effect,
 					target_arguments=head_arguments,
-					context_literals=context_literals,
-					body_actions=(
-						_action_call(support_action, support_map),
-						_action_call(final_action, variable_map),
-					),
+					context_literals=base_context_literals,
+					body_actions=base_body_actions,
 					producer_action_names=(support_action.name, final_action.name),
 				)
 				if sequence is not None:
 					sequences.append(sequence)
+				for bridge in _bridge_action_sequences(
+					actions=actions,
+					type_tokens=type_tokens,
+					support_action=support_action,
+					support_map=support_map,
+					final_action=final_action,
+					final_map=variable_map,
+					transient=transient,
+				):
+					sequence = _finalize_sequence(
+						actions=actions,
+						type_tokens=type_tokens,
+						functional_groups=functional_groups,
+						target_effect=mapped_effect,
+						target_arguments=head_arguments,
+						context_literals=bridge.context_literals,
+						body_actions=bridge.body_actions,
+						producer_action_names=bridge.producer_action_names,
+					)
+					if sequence is not None:
+						sequences.append(sequence)
 	return tuple(_deduplicate_sequences(sequences))
+
+
+@dataclass(frozen=True)
+class _BridgeCandidate:
+	context_literals: tuple[PDDLLiteralSchema, ...]
+	body_actions: tuple[_ActionCall, ...]
+	producer_action_names: tuple[str, ...]
+
+
+def _bridge_action_sequences(
+	*,
+	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
+	support_action: _ParsedAction,
+	support_map: Mapping[str, str],
+	final_action: _ParsedAction,
+	final_map: Mapping[str, str],
+	transient: PDDLLiteralSchema,
+) -> tuple[_BridgeCandidate, ...]:
+	support_contexts = tuple(
+		precondition.mapped(support_map)
+		for precondition in support_action.preconditions
+	)
+	support_adds = tuple(effect.mapped(support_map) for effect in support_action.add_effects)
+	available_after_support = support_contexts + support_adds
+	final_preconditions = tuple(
+		precondition.mapped(final_map)
+		for precondition in final_action.preconditions
+		if not _same_literal(precondition.mapped(final_map), transient)
+	)
+	missing_final_preconditions = tuple(
+		literal
+		for literal in final_preconditions
+		if literal.is_positive
+		and not _literal_in(literal, available_after_support)
+	)
+	candidates: list[_BridgeCandidate] = []
+	for missing in missing_final_preconditions:
+		for bridge_action, bridge_effect in _producer_effects(actions, missing.predicate):
+			if bridge_action.name in {support_action.name, final_action.name}:
+				continue
+			bridge_map = {
+				raw_argument: mapped_argument
+				for raw_argument, mapped_argument in zip(
+					bridge_effect.arguments,
+					missing.arguments,
+				)
+			}
+			bridge_map = _complete_variable_map(
+				bridge_action.parameters,
+				bridge_map,
+				avoid_variables=set(final_map.values()) - set(bridge_map.values()),
+			)
+			if not _same_literal(bridge_effect.mapped(bridge_map), missing):
+				continue
+			bridge_preconditions = tuple(
+				precondition.mapped(bridge_map)
+				for precondition in bridge_action.preconditions
+			)
+			if not any(_literal_in(precondition, available_after_support) for precondition in bridge_preconditions):
+				continue
+			bridge_adds = tuple(effect.mapped(bridge_map) for effect in bridge_action.add_effects)
+			context_literals = tuple(
+				literal
+				for literal in support_contexts + bridge_preconditions + final_preconditions
+				if not _literal_in(literal, support_adds)
+				and not _literal_in(literal, bridge_adds)
+			)
+			body_actions = (
+				_action_call(support_action, support_map),
+				_action_call(bridge_action, bridge_map),
+				_action_call(final_action, final_map),
+			)
+			if not _action_calls_have_compatible_types(body_actions, type_tokens):
+				continue
+			candidates.append(
+				_BridgeCandidate(
+					context_literals=_deduplicate_literals(context_literals),
+					body_actions=body_actions,
+					producer_action_names=(
+						support_action.name,
+						bridge_action.name,
+						final_action.name,
+					),
+				),
+			)
+	return tuple(candidates)
 
 
 def _recursive_support_predicates(
@@ -410,13 +543,15 @@ def _transient_preconditions(
 		if mapped.is_positive
 		and mapped.arguments
 		and mapped.predicate not in module_predicates
-		and any(_same_literal(mapped, deleted_literal) for deleted_literal in deleted)
+		and any(_same_atom(mapped, deleted_literal) for deleted_literal in deleted)
 	)
 
 
 def _finalize_sequence(
 	*,
 	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
+	functional_groups: Sequence[_FunctionalPredicateGroup],
 	target_effect: PDDLLiteralSchema,
 	target_arguments: tuple[str, ...],
 	context_literals: Sequence[PDDLLiteralSchema],
@@ -426,19 +561,42 @@ def _finalize_sequence(
 	if any(_same_literal(target_effect, literal) for literal in context_literals):
 		return None
 	sequence_body = tuple(body_actions)
+	if not _action_calls_have_compatible_types(sequence_body, type_tokens):
+		return None
 	cleanup_actions = _cleanup_action_calls(
 		actions=actions,
+		type_tokens=type_tokens,
 		target_effect=target_effect,
 		target_arguments=target_arguments,
 		body_actions=sequence_body,
 	)
 	if cleanup_actions:
 		sequence_body += cleanup_actions
+		if not _action_calls_have_compatible_types(sequence_body, type_tokens):
+			return None
 		producer_action_names += tuple(action.action.name for action in cleanup_actions)
+	type_contexts = _type_contexts_for_action_calls(sequence_body, type_tokens)
+	if type_contexts is None:
+		return None
+	deduplicated_contexts = _deduplicate_literals(tuple(context_literals))
+	if _has_functional_context_conflict(
+		context_literals=deduplicated_contexts,
+		body_actions=sequence_body,
+		type_tokens=type_tokens,
+		functional_groups=functional_groups,
+	):
+		return None
+	if not _symbolic_sequence_is_executable(
+		target_effect=target_effect,
+		context_literals=deduplicated_contexts,
+		body_actions=sequence_body,
+	):
+		return None
 	return _ProducerSequence(
 		target_predicate=target_effect.predicate,
 		target_arguments=target_arguments,
-		context_literals=_deduplicate_literals(tuple(context_literals)),
+		context_literals=deduplicated_contexts,
+		type_contexts=type_contexts,
 		body_actions=sequence_body,
 		producer_action_names=producer_action_names,
 	)
@@ -447,6 +605,7 @@ def _finalize_sequence(
 def _cleanup_action_calls(
 	*,
 	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
 	target_effect: PDDLLiteralSchema,
 	target_arguments: tuple[str, ...],
 	body_actions: tuple[_ActionCall, ...],
@@ -485,10 +644,10 @@ def _cleanup_action_calls(
 			effect.mapped(cleanup_map)
 			for effect in cleanup_action.delete_effects
 		)
-		if any(_same_literal(target_effect, deleted_literal) for deleted_literal in mapped_deletes):
+		if any(_same_atom(target_effect, deleted_literal) for deleted_literal in mapped_deletes):
 			continue
 		if not any(
-			any(_same_literal(add_literal, deleted_literal) for deleted_literal in deleted)
+			any(_same_atom(add_literal, deleted_literal) for deleted_literal in deleted)
 			for add_literal in mapped_adds
 		):
 			continue
@@ -499,7 +658,10 @@ def _cleanup_action_calls(
 			target_arguments=target_arguments,
 		):
 			continue
-		return (_action_call(cleanup_action, cleanup_map),)
+		cleanup_call = _action_call(cleanup_action, cleanup_map)
+		if not _action_calls_have_compatible_types((*body_actions, cleanup_call), type_tokens):
+			continue
+		return (cleanup_call,)
 	return ()
 
 
@@ -525,6 +687,284 @@ def _cleanup_variable_map(
 			}
 			return _complete_variable_map(cleanup_action.parameters, variable_map)
 	return None
+
+
+def _literal_in(
+	literal: PDDLLiteralSchema,
+	candidates: Sequence[PDDLLiteralSchema],
+) -> bool:
+	return any(_same_literal(literal, candidate) for candidate in candidates)
+
+
+def _action_calls_have_compatible_types(
+	body_actions: Sequence[_ActionCall],
+	type_tokens: Sequence[str],
+) -> bool:
+	return _type_contexts_for_action_calls(body_actions, type_tokens) is not None
+
+
+def _type_contexts_for_action_calls(
+	body_actions: Sequence[_ActionCall],
+	type_tokens: Sequence[str],
+) -> tuple[str, ...] | None:
+	types_by_argument: dict[str, set[str]] = {}
+	for call in body_actions:
+		for parameter, argument in zip(call.action.parameters, call.arguments):
+			argument_type = call.action.parameter_types.get(parameter, "object")
+			if not argument_type or argument_type == "object":
+				continue
+			types_by_argument.setdefault(argument, set()).add(argument_type)
+	contexts: list[str] = []
+	for argument, type_names in sorted(types_by_argument.items()):
+		most_specific = _most_specific_compatible_types(type_names, type_tokens)
+		if most_specific is None:
+			return None
+		for type_name in most_specific:
+			if type_name == "object":
+				continue
+			contexts.append(_call(type_guard_symbol(type_name), (argument,)))
+	return tuple(dict.fromkeys(contexts))
+
+
+def _most_specific_compatible_types(
+	type_names: set[str],
+	type_tokens: Sequence[str],
+) -> tuple[str, ...] | None:
+	normalized = tuple(dict.fromkeys(_canonical_type_name(item) for item in type_names))
+	non_object = tuple(type_name for type_name in normalized if type_name != "object")
+	if not non_object:
+		return ()
+	for left in non_object:
+		for right in non_object:
+			if left == right:
+				continue
+			if not _types_are_compatible(left, right, type_tokens):
+				return None
+	most_specific = tuple(
+		type_name
+		for type_name in non_object
+		if not any(
+			type_name != other
+			and _is_subtype(other, type_name, type_tokens)
+			for other in non_object
+		)
+	)
+	return tuple(dict.fromkeys(most_specific))
+
+
+def _types_are_compatible(left: str, right: str, type_tokens: Sequence[str]) -> bool:
+	if left == "object" or right == "object":
+		return True
+	return _is_subtype(left, right, type_tokens) or _is_subtype(right, left, type_tokens)
+
+
+def _is_subtype(child: str, parent: str, type_tokens: Sequence[str]) -> bool:
+	return _canonical_type_name(parent) in type_closure(_canonical_type_name(child), type_tokens)
+
+
+def _canonical_type_name(type_name: str) -> str:
+	return str(type_name or "").strip().lower() or "object"
+
+
+def _symbolic_sequence_is_executable(
+	*,
+	target_effect: PDDLLiteralSchema,
+	context_literals: Sequence[PDDLLiteralSchema],
+	body_actions: Sequence[_ActionCall],
+) -> bool:
+	state: dict[tuple[str, tuple[str, ...]], bool] = {}
+	for literal in context_literals:
+		key = _atom_key(literal)
+		value = literal.is_positive
+		if key in state and state[key] != value:
+			return False
+		state[key] = value
+	for call in body_actions:
+		variable_map = {
+			parameter: argument
+			for parameter, argument in zip(call.action.parameters, call.arguments)
+		}
+		for precondition in call.action.preconditions:
+			mapped = precondition.mapped(variable_map)
+			current_value = state.get(_atom_key(mapped))
+			if mapped.is_positive and current_value is not True:
+				return False
+			if not mapped.is_positive and current_value is not False:
+				return False
+		for effect in call.action.delete_effects:
+			state[_atom_key(effect.mapped(variable_map))] = False
+		for effect in call.action.add_effects:
+			state[_atom_key(effect.mapped(variable_map))] = True
+	return state.get(_atom_key(target_effect)) is True
+
+
+def _atom_key(literal: PDDLLiteralSchema) -> tuple[str, tuple[str, ...]]:
+	return (literal.predicate, literal.arguments)
+
+
+def _functional_predicate_groups(
+	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
+) -> tuple[_FunctionalPredicateGroup, ...]:
+	candidates: list[_FunctionalPredicateGroup] = []
+	for action in actions:
+		for add_effect in action.add_effects:
+			for delete_effect in action.delete_effects:
+				if add_effect.predicate != delete_effect.predicate:
+					continue
+				if len(add_effect.arguments) != len(delete_effect.arguments):
+					continue
+				value_positions = tuple(
+					index
+					for index, (add_arg, delete_arg) in enumerate(
+						zip(add_effect.arguments, delete_effect.arguments),
+					)
+					if add_arg != delete_arg
+				)
+				if not value_positions:
+					continue
+				key_positions = tuple(
+					index
+					for index in range(len(add_effect.arguments))
+					if index not in value_positions
+				)
+				key_types = tuple(
+					_literal_argument_type(action, add_effect.arguments[index])
+					for index in key_positions
+				)
+				candidate = _FunctionalPredicateGroup(
+					predicate=add_effect.predicate,
+					key_positions=key_positions,
+					value_positions=value_positions,
+					key_types=key_types,
+				)
+				if candidate not in candidates:
+					candidates.append(candidate)
+	return tuple(
+		candidate
+		for candidate in candidates
+		if _functional_group_is_not_invalidated(candidate, actions, type_tokens)
+	)
+
+
+def _functional_group_is_not_invalidated(
+	group: _FunctionalPredicateGroup,
+	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
+) -> bool:
+	for action in actions:
+		for add_effect in action.add_effects:
+			if add_effect.predicate != group.predicate:
+				continue
+			if not _effect_key_types_compatible(group, action, add_effect, type_tokens):
+				continue
+			if not any(
+				delete_effect.predicate == group.predicate
+				and len(delete_effect.arguments) == len(add_effect.arguments)
+				and all(
+					delete_effect.arguments[position] == add_effect.arguments[position]
+					for position in group.key_positions
+				)
+				and any(
+					delete_effect.arguments[position] != add_effect.arguments[position]
+					for position in group.value_positions
+				)
+				for delete_effect in action.delete_effects
+			):
+				return False
+	return True
+
+
+def _effect_key_types_compatible(
+	group: _FunctionalPredicateGroup,
+	action: _ParsedAction,
+	effect: PDDLLiteralSchema,
+	type_tokens: Sequence[str],
+) -> bool:
+	return all(
+		_types_are_compatible(
+			group_type,
+			_literal_argument_type(action, effect.arguments[position]),
+			type_tokens,
+		)
+		for group_type, position in zip(group.key_types, group.key_positions)
+	)
+
+
+def _literal_argument_type(action: _ParsedAction, argument: str) -> str:
+	return _canonical_type_name(action.parameter_types.get(argument, "object"))
+
+
+def _has_functional_context_conflict(
+	*,
+	context_literals: Sequence[PDDLLiteralSchema],
+	body_actions: Sequence[_ActionCall],
+	type_tokens: Sequence[str],
+	functional_groups: Sequence[_FunctionalPredicateGroup],
+) -> bool:
+	argument_types = _argument_required_types(body_actions)
+	positive_contexts = tuple(literal for literal in context_literals if literal.is_positive)
+	for group in functional_groups:
+		relevant = tuple(
+			literal
+			for literal in positive_contexts
+			if literal.predicate == group.predicate
+			and _literal_matches_group_key_types(
+				literal=literal,
+				group=group,
+				argument_types=argument_types,
+				type_tokens=type_tokens,
+			)
+		)
+		for index, left in enumerate(relevant):
+			for right in relevant[index + 1:]:
+				if _functional_context_literals_conflict(left, right, group):
+					return True
+	return False
+
+
+def _argument_required_types(body_actions: Sequence[_ActionCall]) -> dict[str, set[str]]:
+	types_by_argument: dict[str, set[str]] = {}
+	for call in body_actions:
+		for parameter, argument in zip(call.action.parameters, call.arguments):
+			argument_type = call.action.parameter_types.get(parameter, "object")
+			if argument_type and argument_type != "object":
+				types_by_argument.setdefault(argument, set()).add(argument_type)
+	return types_by_argument
+
+
+def _literal_matches_group_key_types(
+	*,
+	literal: PDDLLiteralSchema,
+	group: _FunctionalPredicateGroup,
+	argument_types: Mapping[str, set[str]],
+	type_tokens: Sequence[str],
+) -> bool:
+	for group_type, position in zip(group.key_types, group.key_positions):
+		argument = literal.arguments[position]
+		required_types = argument_types.get(argument)
+		if not required_types:
+			continue
+		if not any(
+			_types_are_compatible(group_type, required_type, type_tokens)
+			for required_type in required_types
+		):
+			return False
+	return True
+
+
+def _functional_context_literals_conflict(
+	left: PDDLLiteralSchema,
+	right: PDDLLiteralSchema,
+	group: _FunctionalPredicateGroup,
+) -> bool:
+	left_key = tuple(left.arguments[position] for position in group.key_positions)
+	right_key = tuple(right.arguments[position] for position in group.key_positions)
+	if left_key != right_key:
+		return False
+	left_value = tuple(left.arguments[position] for position in group.value_positions)
+	right_value = tuple(right.arguments[position] for position in group.value_positions)
+	return left_value != right_value
 
 
 def _has_arbitrary_extra_target_relation(
@@ -644,7 +1084,12 @@ def _final_action_sequence_plan(
 			symbol=sequence.target_predicate,
 			arguments=sequence.target_arguments,
 		),
-		context=tuple(_deduplicate(literal.to_context() for literal in sequence.context_literals)),
+		context=tuple(
+			_deduplicate(
+				sequence.type_contexts
+				+ tuple(literal.to_context() for literal in sequence.context_literals),
+			),
+		),
 		body=tuple(
 			AgentSpeakBodyStep("action", call.action.name, call.arguments)
 			for call in sequence.body_actions
@@ -681,7 +1126,13 @@ def _prepare_precondition_plan(
 			head_arguments=sequence.target_arguments,
 		)
 	)
-	context = tuple(_deduplicate(binding_contexts + (f"not {precondition.to_call()}",)))
+	context = tuple(
+		_deduplicate(
+			sequence.type_contexts
+			+ binding_contexts
+			+ (f"not {precondition.to_call()}",),
+		),
+	)
 	return AgentSpeakPlan(
 		plan_name=(
 			f"{sequence.target_predicate}_prepare_{precondition.predicate}_"
@@ -791,6 +1242,8 @@ def _plan_subsumes(candidate: AgentSpeakPlan, other: AgentSpeakPlan) -> bool:
 		return False
 	if not candidate.body or not other.body:
 		return False
+	if tuple(candidate.body) == tuple(other.body):
+		return set(candidate.context) <= set(other.context)
 	if candidate.body[-1].kind != "action" or other.body[-1].kind != "action":
 		return False
 	if (
@@ -965,6 +1418,13 @@ def _parameter_name(parameter: str) -> str:
 	return text
 
 
+def _parameter_type(parameter: str) -> str:
+	text = str(parameter or "").strip().lower()
+	if " - " not in text:
+		return "object"
+	return text.split(" - ", 1)[1].strip() or "object"
+
+
 def _var(parameter: str) -> str:
 	text = _parameter_name(parameter).lstrip("?")
 	if not text:
@@ -985,6 +1445,10 @@ def _call(predicate: str, arguments: Sequence[str]) -> str:
 
 
 def _same_literal(left: PDDLLiteralSchema, right: PDDLLiteralSchema) -> bool:
+	return left.is_positive == right.is_positive and _same_atom(left, right)
+
+
+def _same_atom(left: PDDLLiteralSchema, right: PDDLLiteralSchema) -> bool:
 	return _same_signature(left.predicate, left.arguments, right.predicate, right.arguments)
 
 

@@ -102,8 +102,8 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	assert metadata["artifact_kind"] == "moose_seeded_atomic_minimal_literal_module_library"
 	assert metadata["canonical_domain_library"] is True
 	assert metadata["minimal_modules"] is True
-	assert "+!on(X, Y) : not clear(X)" in asl
-	assert "+!clear(X) : on(Y, X) & not clear(Y)" in asl
+	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
+	assert "on(Y, X) & not clear(Y)" in asl
 	assert "!holding" not in asl
 	assert "block0" not in asl
 
@@ -288,6 +288,57 @@ def test_main_rejects_noncanonical_output_root(tmp_path: Path) -> None:
 
 	assert completed.returncode != 0
 	assert "noncanonical_domain_library" in completed.stderr
+
+
+def test_main_uses_benchmark_folder_key_when_pddl_domain_name_differs(
+	tmp_path: Path,
+) -> None:
+	domain_dir = tmp_path / "src" / "domains" / "folder-key"
+	domain_dir.mkdir(parents=True)
+	domain_file = domain_dir / "domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain internal-name)
+		 (:requirements :strips)
+		 (:predicates (ready) (done))
+		 (:action finish
+		  :parameters ()
+		  :precondition (ready)
+		  :effect (and (not (ready)) (done))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library_root = tmp_path / "domain_libraries"
+	_write_atomic_library_json(library_root, domain_name="folder-key")
+	goal_json = _write_lifted_ltlf_goal_json(tmp_path)
+
+	completed = subprocess.run(
+		[
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"append-lifted-temporal-goal",
+			"--domain-file",
+			str(domain_file),
+			"--ltlf-goal-json",
+			str(goal_json),
+			"--query-id",
+			"query_1",
+			"--library-root",
+			str(library_root),
+		],
+		cwd=PROJECT_ROOT,
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+	result = json.loads(completed.stdout)
+
+	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == (
+		library_root / "folder-key"
+	)
+	assert not (library_root / "internal-name" / "plan_library.asl").exists()
 
 
 def test_main_rejects_noncanonical_append_library_file(tmp_path: Path) -> None:
