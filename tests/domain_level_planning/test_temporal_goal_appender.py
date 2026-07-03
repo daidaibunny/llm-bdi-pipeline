@@ -113,6 +113,37 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 	assert updated.metadata["temporal_goal_append"]["requires_external_dfa_state"] is True
 
 
+def test_append_temporal_goal_allows_negative_waiting_self_loop(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_domain(tmp_path)
+	library = PlanLibrary(domain_name="tiny", plans=())
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q0", "raw_label": "not done(X)"},
+			{"source_state": "q0", "target_state": "q1", "raw_label": "done(X)"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+
+	assert [plan.plan_name for plan in updated.plans] == [
+		"g_query_1_progress_1",
+		"g_query_1_accepting",
+	]
+	assert updated.plans[0].body == (
+		AgentSpeakBodyStep("subgoal", "done", ("X",)),
+		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
+	)
+
+
 def test_append_temporal_goal_rejects_negative_progress_literal(tmp_path: Path) -> None:
 	domain_file = _write_domain(tmp_path)
 	library = PlanLibrary(domain_name="tiny", plans=())

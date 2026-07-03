@@ -1,5 +1,5 @@
 """
-Machine-readable architecture contract for domain-level library synthesis.
+Machine-readable architecture contract for the current plan-library framework.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from typing import Any, Iterable
 
 @dataclass(frozen=True)
 class ArchitectureDecision:
-	"""A stable design decision that constrains synthesis claims."""
+	"""A stable design decision that constrains paper claims."""
 
 	id: str
 	decision: str
@@ -28,7 +28,7 @@ class ArchitectureDecision:
 
 @dataclass(frozen=True)
 class ArchitectureGap:
-	"""A known gap between current implementation and the paper-quality target."""
+	"""A known gap between current implementation and the target artifact."""
 
 	id: str
 	layer: str
@@ -50,7 +50,7 @@ class ArchitectureGap:
 
 @dataclass(frozen=True)
 class HypothesisClassContract:
-	"""Machine-readable bounded hypothesis class for paper claims."""
+	"""Machine-readable bounded claim for the current framework."""
 
 	name: str
 	feature_language: dict[str, object]
@@ -74,7 +74,7 @@ class HypothesisClassContract:
 
 @dataclass(frozen=True)
 class LayerPaperQualityContract:
-	"""Paper-facing contract for one learned layer."""
+	"""Paper-facing contract for one current framework layer."""
 
 	layer: str
 	target_artifact: str
@@ -102,7 +102,7 @@ class LayerPaperQualityContract:
 
 @dataclass(frozen=True)
 class ArchitectureContract:
-	"""The bounded-class synthesis contract reported with each library."""
+	"""The current paper claim reported with generated artifacts."""
 
 	guarantee: str
 	paper_core_method: tuple[str, ...]
@@ -140,759 +140,335 @@ class ArchitectureContract:
 		}
 
 	def paper_method_summary(self) -> tuple[str, ...]:
-		"""Return paper-ready prose derived from the machine-readable contract."""
+		"""Return paper-ready prose derived from the contract."""
 
 		hypothesis = self.hypothesis_class
-		exclusions = ", ".join(hypothesis.exclusions)
 		return (
 			(
-				"The core method is route-then-compile generalized planning: from "
-				"a PDDL domain and small training problems, the system routes to a "
-				"trusted external generalized-planning backend, normalizes the "
-				"learned artifact into a LiftedPolicyProgram, and compiles the "
-				"bound rules to AgentSpeak(L)."
+				"The core method is atomic-template import plus temporal-goal "
+				"append: the system extracts singleton predicate or literal "
+				"targets from a PDDL training split, consumes a verified external "
+				"generalized-planning artifact, normalizes it as a "
+				"LiftedPolicyProgram, and compiles lifted atomic AgentSpeak(L) "
+				"plans."
 			),
 			(
-				"We use a bounded-class guarantee: the system synthesizes and "
-				"validates the best library it can find inside this hypothesis "
-				"class, and it does not claim universal PDDL generalized-planning "
-				"completeness."
+				"The framework does not route whole domains by prior paper classes "
+				"and does not claim a new universal generalized planner. Backend "
+				"choice is driven by the required atomic templates and by artifact "
+				"parser, binding, compiler, and validation gates."
 			),
 			(
-				"The representation is domain-level and lifted. State features are "
-				f"{_series(hypothesis.feature_language['state_features'])}; goal "
-				f"features are {_series(hypothesis.feature_language['goal_features'])}. "
-				f"{self.goal_fact_semantics}."
+				"MOOSE is the first candidate for positive singleton predicate "
+				"templates because its learned readable policies are goal-regression "
+				"rules over singleton goal conditions."
 			),
 			(
-				"Layer B is the compiled atomic predicate-goal module layer. "
-				f"{self.layer_b_target}; bodies may use "
-				f"{hypothesis.module_language['body_calls']}."
+				"The temporal layer consumes lifted LTLf JSON, compiles it to a "
+				"DFA, validates singleton-literal transition guards, and appends "
+				"query-specific +!g_query wrappers to the same domain library."
 			),
 			(
-				"Layer C is the compiled conjunctive-goal composer. "
-				f"{self.layer_c_target}; rules have the shape "
-				f"{hypothesis.composer_language['rule_shape']} and use ordering "
-				f"evidence from {_series(hypothesis.composer_language['ordering_evidence'])}. "
-				f"At runtime, {hypothesis.composer_language['runtime_gate']}."
+				"Negative waiting guards may appear in the DFA as no-op structure, "
+				"but negative progress literals are rejected until a negative "
+				"atomic-template backend is validated."
 			),
 			(
-				"Synthesis is offline and evidence-driven. The selector enforces "
-				f"{_series(hypothesis.progress_language['selection_constraints'])}, "
-				f"and validation is scoped to "
-				f"{hypothesis.progress_language['validation_scope']}."
-			),
-			(
-				"Correctness is claimed only for "
-				f"{hypothesis.correctness_language['claim_scope']}, with success "
-				f"defined as {hypothesis.correctness_language['success_condition']}. "
-				f"{self.runtime_planner_policy}; runtime full-trace planning is not "
-				"the library executor."
-			),
-			(
-				"The current exclusions are: "
-				f"{exclusions}. Unsupported cases, including negative or disjunctive "
-				"achievement goals, must be rejected with diagnostics before ASL "
-				"compilation unless a separate semantics is added."
-			),
-			(
-				"The current Layer B and Layer C claims are intentionally bounded: "
-				"proof reports justify selected modules and composer rules, but we "
-				"do not claim universal arbitrary-domain module or goal-order "
-				"learning."
+				f"The current bounded claim is {hypothesis.correctness_language['claim_scope']}; "
+				f"excluded cases are {_series(hypothesis.exclusions)}."
 			),
 		)
 
 
-def _series(items: object) -> str:
-	if isinstance(items, str):
-		return items
-	values = tuple(str(item) for item in tuple(items or ()))
-	if not values:
-		return ""
-	if len(values) == 1:
-		return values[0]
-	return ", ".join(values[:-1]) + f", and {values[-1]}"
-
-
 def domain_level_architecture_contract() -> ArchitectureContract:
-	"""Return the current research contract for lifted ASL synthesis."""
+	"""Return the current research contract for lifted ASL artifacts."""
 
 	return ArchitectureContract(
 		guarantee=(
-			"routed-backend bounded guarantee: select a trusted generalized-planning "
-			"backend for the declared domain class, normalize its artifact when it "
-			"passes binding and validation gates, and do not claim universal PDDL "
-			"generalized-planning completeness"
+			"bounded atomic-template guarantee: import or learn lifted singleton "
+			"predicate/literal plan templates from verified external generalized-"
+			"planning artifacts, append only singleton-literal DFA temporal wrappers, "
+			"and do not claim universal PDDL generalized-planning completeness"
 		),
 		paper_core_method=(
-			"generalized-planning backend router",
-			"backend-specific learned policy, sketch, or program artifact",
+			"atomic goal-template extraction",
+			"verified external generalized-planning artifact consumption",
 			"LiftedPolicyProgram normalizer",
-			"safe feature/action/subgoal binding gates",
-			"AgentSpeak(L) compiler for bound lifted policy rules",
+			"AgentSpeak(L) compiler for lifted atomic plans",
+			"lifted LTLf-to-DFA temporal goal append",
+			"singleton-literal DFA validator",
 		),
 		implementation_safeguards=(
-			"schema-derived Layer B/C synthesis is retained only as an explicit "
-			"baseline_schema_lift adapter",
-			"offline planner traces may be used only as validated synthesis evidence",
-			"trace-supported macro rules are candidates, not the core method or "
-			"unchecked replay output",
-			"bounded validation, counterexample diagnostics, and no-hardcoding audits "
-			"guard the implementation claim",
-			"Fast Downward integration is a trace-evidence fallback and evaluation aid, "
-			"not the runtime library executor",
+			"legacy schema-derived synthesis is not the current main method",
+			"external learners must run under resource guards",
+			"backend artifacts must pass parser, binding, compiler, and validation gates",
+			"negative progress literals fail unless a validated negative template exists",
+			"DFA state may be maintained by an external temporal controller",
 		),
 		non_goals=(
 			"universal completeness for arbitrary PDDL domains",
+			"routing a whole domain by a paper taxonomy class",
 			"runtime full-trace planning for each new problem",
-			"query-specific or problem-specific ASL libraries as the main artifact",
+			"query-specific or problem-specific atomic libraries as the main artifact",
 			"synthetic achievement names such as achieve_*, transition_*, or dfa_state",
-			"guessing vocabulary equivalence for external learner artifacts",
+			"reimplementing the external natural-language Input component",
 		),
 		supported_pddl_fragment=(
-			"classical STRIPS-style achievement goals over the project-supported "
-			"PDDL subset; unsupported requirements must fail before compilation"
+			"classical PDDL predicate and literal goals whose required atomic "
+			"templates are accepted by a verified backend artifact"
 		),
 		runtime_planner_policy=(
-			"classical planners may provide synthesis evidence, traces, "
-			"counterexamples, and validation, but not final runtime full traces"
+			"classical planners may support external backend training or validation, "
+			"but the generated library is not a runtime full-trace planner"
 		),
 		layer_b_target=(
-			"learn lifted atomic predicate-goal modules whose heads are declared "
-			"PDDL achievement predicates and whose bodies contain declared PDDL "
-			"primitive actions or declared PDDL predicate subgoals with matching "
-			"schema arities"
+			"current atomic-template layer: lifted +!P(Args) modules compiled from "
+			"verified external singleton-goal artifacts"
 		),
 		layer_c_target=(
-			"learn lifted goal-conditioned composer rules that choose which atomic "
-			"goal module to call next for conjunctive goals with dependencies, "
-			"and expose selected support-agenda edges as runtime ready gates"
+			"current temporal append layer: query-specific +!g_query wrappers from "
+			"singleton-literal DFA progress transitions"
 		),
 		goal_fact_semantics=(
-			"goal_<predicate> atoms are read-only goal descriptors derived from "
-			"PDDL goals or future DFA requests; they are not primitive actions, "
-			"mutable beliefs, or synthetic achievement goals. ready_<predicate> "
-			"atoms are read-only contexts derived at runtime from selected "
-			"Layer C support-agenda edges, current state facts, and goal descriptors; "
-			"they are not plan heads, body subgoals, primitive actions, or initial beliefs"
+			"goal descriptors are external Input and DFA metadata, not mutable "
+			"beliefs, primitive actions, or synthetic achievement goals. The current "
+			"ASL output may contain query-specific g_query wrappers but not dfa_state "
+			"beliefs; when DFA state is required, it belongs to the controller."
 		),
 		paper_layer_contracts=paper_layer_quality_contracts(),
 		hypothesis_class=bounded_hypothesis_class_contract(),
 		decisions=(
 			ArchitectureDecision(
 				id="D1",
-				decision="Use bounded-class guarantee instead of universal PDDL completeness.",
+				decision="Do not build a universal generalized planner in this repository.",
 				status="accepted",
-				rationale="Arbitrary-domain generalized planning is too strong a claim.",
+				rationale="The project should call verified SOTA GP backends, not invent a broad GP algorithm.",
 			),
 			ArchitectureDecision(
 				id="D2",
-				decision=(
-					"Use routed external generalized-planning backends as the main "
-					"method family."
-				),
+				decision="Select backends by atomic template needs, not by domain taxonomy.",
 				status="accepted",
-				rationale=(
-					"This avoids claiming a new universal GP learner and lets each "
-					"domain class use the strongest matching prior backend."
-				),
+				rationale="The same domain can provide different goal items; backend suitability is artifact-level.",
 			),
 			ArchitectureDecision(
 				id="D3",
-				decision="Keep read-only goal_<predicate> descriptors.",
+				decision="Use MOOSE first for positive singleton predicate templates.",
 				status="accepted",
-				rationale="A domain-level library needs the current problem goal as input.",
+				rationale="MOOSE explicitly learns goal-regression rules from singleton goal conditions.",
 			),
 			ArchitectureDecision(
 				id="D4",
-				decision="Use planners only for synthesis evidence and validation.",
+				decision="Keep lifted LTLf/DFA as the temporal layer above the atomic library.",
 				status="accepted",
-				rationale="Runtime full-trace planning would erase the plan-library contribution.",
+				rationale="Temporal extended goals are query-specific while the atomic library remains domain-level.",
 			),
 			ArchitectureDecision(
 				id="D5",
-				decision="Keep DFA as the future TEG controller above the AG library.",
+				decision="Reject unsupported negative progress literals with structured diagnostics.",
 				status="accepted",
-				rationale="Temporal goals are query-specific; the achievement library is domain-level.",
-			),
-			ArchitectureDecision(
-				id="D6",
-				decision="Do not silently support negative or disjunctive goals.",
-				status="open",
-				rationale="Current Layer B/C semantics are positive conjunctive achievement-goal based.",
-			),
-			ArchitectureDecision(
-				id="D7",
-				decision="Reject object-specific DLPlan features unless principled lifting exists.",
-				status="accepted",
-				rationale=(
-					"Guessing bindings for object-specific features would break the "
-					"domain-level lifted-library claim."
-				),
-			),
-			ArchitectureDecision(
-				id="D8",
-				decision=(
-					"Allow cyclic same-predicate route recursion only when guarded "
-					"by a verified route-step shortest-path descent feature."
-				),
-				status="accepted",
-				rationale=(
-					"Static graph distance gives a domain-agnostic progress "
-					"certificate for single-effect movement schemas without "
-					"falling back to trace replay."
-				),
+				rationale="Negative waiting guards are DFA structure; negative achievement requires a separate backend contract.",
 			),
 		),
 		gaps=(
 			ArchitectureGap(
 				id="G1",
-				layer="theory",
-				gap="The bounded-class contract needs a formal paper definition.",
+				layer="atomic template backend",
+				gap="Selected-domain MOOSE training has not been run end to end in this turn.",
 				current_state=(
-					"Reports expose the contract as implementation metadata, and the "
-					"AAMAS method draft defines the feature, module, composer, "
-					"progress, compiler, and bounded-correctness languages for the "
-					"current positive-conjunctive achievement-goal fragment."
+					"The repository can print resource-guarded MOOSE train/dump "
+					"commands and can compile readable MOOSE policy artifacts into "
+					"domain-level atomic ASL libraries."
 				),
 				required_improvement=(
-					"Keep final evaluation claims and related-work positioning aligned "
-					"with this bounded contract; do not extend the claim to unsupported "
-					"PDDL fragments or temporal goals without a separate semantics."
+					"Run explicit-budget MOOSE training or provide readable policy "
+					"artifacts for each selected domain before claiming coverage."
 				),
-				status="done_current_fragment",
+				status="open",
 			),
 			ArchitectureGap(
 				id="G2",
-				layer="Layer B",
-				gap="Atomic module synthesis is complete for the declared bounded hypothesis class.",
+				layer="temporal append",
+				gap="DFA wrapper execution requires a controller when ASL context cannot infer DFA state.",
 				current_state=(
-					"Schema, sketch, bounded progress candidates, trace slicing, "
-					"last achievers, anti-unified support patterns, and recursion "
-					"descent audits are reported; repair diagnostics from "
-					"counterexample precondition failures are included in the "
-					"Layer B evidence matrix; selected and output rules are reported "
-					"with lifted provenance manifests; selected atomic rules now "
-					"receive per-rule evidence verdicts such as trace-justified, "
-					"schema-no-action-body, external-policy-bound, or "
-					"counterexample-repair-synthesized; trace-supported primitive "
-					"action strategies receive lower selector cost, and context-compatible "
-					"primitive action alternatives are selected through strategy groups "
-					"instead of requiring every action schema; those strategy groups "
-					"now report selected and rejected candidate strategies with trace "
-					"support, verdicts, costs, and rejection reasons; paper-profile "
-					"exclusion removes unsupported schema action capabilities before selection. "
-					"Within the declared Layer B language, every selected atomic module "
-					"has a proof record, selector reason, declared-symbol check, "
-					"variable-binding check, and recursion-safety audit when recursion appears."
+					"The appender validates singleton-literal DFA transitions, allows "
+					"negative waiting guards, rejects negative progress literals, and "
+					"records when external DFA state is required."
 				),
 				required_improvement=(
-					"Future work may broaden the hypothesis class, but universal "
-					"arbitrary-domain module learning is explicitly outside the current "
-					"paper claim."
+					"Define the external DFA state runtime controller protocol in "
+					"experiments whenever state inference from ASL contexts alone is "
+					"ambiguous."
 				),
-				status="done_current_fragment",
+				status="bounded_current_path",
 			),
 			ArchitectureGap(
 				id="G3",
-				layer="Layer C",
-				gap="Goal dependency composition is complete for the declared bounded hypothesis class.",
+				layer="Input handoff",
+				gap="Natural-language prompt generation is external to this repository.",
 				current_state=(
-					"Shared-object trace order evidence, schema causal-interference "
-					"ordering candidates for precondition-support and delete-threat "
-					"relations, bounded state-coverage constraints, and "
-					"counterexample failure classification exist; primitive-precondition "
-					"repair evidence is lifted into Layer B constraints and consumed "
-					"as selector hard groups when matching prepare rules exist. "
-					"Atomic-progress refinement constraints are consumed as selector "
-					"hard groups when matching atomic action rules exist. "
-					"Goal-bound primitive-precondition failures can synthesize new "
-					"safe Layer B prepare candidates when read-only goal facts bind "
-					"all extra variables; undeclared or wrong-arity repair failing "
-					"actions are rejected before binding. Explicit counterexample goal-ordering "
-					"constraints synthesize Layer C composer candidates and selector "
-					"hard groups, with rejected binding diagnostics when the lifted "
-					"ordering or repair evidence is not executable or references "
-					"undeclared predicates or wrong predicate arities; wrong-arity "
-					"atomic-progress diagnostics identify the offending predicates, "
-					"report which PDDL actions can produce the declared target predicates, "
-					"and distinguish declared-but-unproducible targets from selector "
-					"mismatches; invalid or negative lifted atomic-progress goals are "
-					"rejected before they can bind selector groups. "
-					"Negative precondition repairs are rejected explicitly instead "
-					"of being misread as positive achievement modules. Missing-module "
-					"failures that name a concrete failed atomic subgoal are refined "
-					"into precise atomic-progress constraints for that subgoal; top-level "
-					"missing-composer failures are classified as Layer C state-coverage "
-					"refinements; recursive-loop and step-limit failures keep their "
-					"termination diagnostics and also emit atomic-progress or "
-					"state-coverage companion constraints when the missing goal is "
-					"inside the supported positive-conjunctive fragment. Selected and "
-					"output composer rules are reported with lifted provenance manifests "
-					"and per-rule composer evidence verdicts; all composer candidates "
-					"now report selected/rejected status, costs, verdicts, and "
-					"rejection reasons. Schema-derived causal and delete-threat "
-					"ordering capabilities are selector requirements and deterministic "
-					"ASL output prioritizes them before generic goal dispatch, so "
-					"bottom-up composer rules can be emitted from PDDL schema structure "
-					"without training traces or domain-specific code; schema causal "
-					"ordering also supports bounded positive-precondition binding "
-					"closures for hidden producer goal arguments when the producer "
-					"and consumer goal predicates differ, and composer evidence reports "
-					"those binding contexts and binding depth separately from direct causal orderings. Composer evidence "
-					"now records ordering kind and ordered-goal patterns for trace, "
-					"schema causal-precondition, schema delete-threat, and counterexample "
-					"ordering candidates. Within the declared Layer C language, selected "
-					"composer rules must cover bounded reachable non-goal states when "
-					"bounded evidence exists, keep the support agenda acyclic, expose "
-					"runtime ready gates, and carry per-rule proof records."
+					"The repository consumes lifted LTLf JSON with atoms and bindings, "
+					"but it does not call the language model or implement retry prompts."
 				),
 				required_improvement=(
-					"Future work may add richer final-goal causal structures, but "
-					"universal arbitrary-domain goal-order learning is explicitly outside "
-					"the current paper claim."
+					"Coordinate the JSON schema and validator diagnostics with the "
+					"separate Input component."
 				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G4",
-				layer="goal representation",
-				gap="Goal-fact semantics need stronger validation and documentation.",
-				current_state=(
-					"goal_<predicate> facts are used as read-only descriptors; the "
-					"library contract rejects them as initial beliefs, plan heads, "
-					"body calls, actions, or belief updates, and reports every "
-					"context descriptor with its mapped PDDL predicate and read-only "
-					"status. ready_<predicate> contexts are also read-only derived "
-					"agenda gates rather than mutable beliefs."
-				),
-				required_improvement=(
-					"Define negative-goal or disjunctive-goal representation before "
-					"supporting those fragments."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G5",
-				layer="feature binding",
-				gap="Feature binding is closed for the declared safe DLPlan fragment.",
-				current_state=(
-					"Recoverable lifted patterns bind; concept, forward/reverse role, "
-					"nullary, goal-aligned concept/role intersection, filtered "
-					"goal-role, and lifted goal-distance DLPlan features must match "
-					"PDDL predicate arities before binding. The distance subset is "
-					"restricted to object-free expressions of the form distance from "
-					"a unary state predicate to its read-only goal predicate through "
-					"a declared binary role; its executable effect is a call to the "
-					"corresponding predicate goal, so no training object is copied "
-					"into ASL. Concrete object-specific, unsupported distance, and "
-					"vocabulary-mismatch patterns are rejected with distinct rejection "
-					"diagnostics. "
-					"Feature diagnostics include action-candidate details for ambiguous "
-					"primitive effect bindings instead of only reporting candidate counts."
-				),
-				required_improvement=(
-					"Future feature-language expansion must add only principled lifted "
-					"bindings; concrete object-specific DLPlan features remain outside "
-					"the domain-level library claim unless a verified lifting semantics "
-					"is introduced."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G6",
-				layer="external backends",
-				gap="Paper-code backend consumption is verified by policy dialect and binding safety.",
-				current_state=(
-					"learner-sketches policies can be parsed, audited, bound, and used "
-					"when safe, including policies that use forward or reverse binary "
-					"role DLPlan features; h-policy-learner hierarchical sketch artifacts "
-					"that use the supported DLPlan policy dialect are consumed through "
-					"the same audited binding path; d2l text policies are converted to "
-					"the internal sketch dialect only for the recoverable lifted feature "
-					"subset and otherwise remain rejected with D2L-specific diagnostics; "
-					"external policy sources pass through a synthesis-consumption gate "
-					"before parsing, so unknown backends are rejected with machine-readable "
-					"blocking gaps; each synthesis run reports an "
-					"external backend consumption summary for accepted/rejected sources, "
-					"ready policies, compiled rules, rejected rules, candidates, and "
-					"feature rejection reasons; uncompiled learned rules report "
-					"per-missing-rule-binding diagnostics and unbound-body-variable "
-					"diagnostics, and strict paper-profile failures include compact "
-					"feature:operator binding reasons plus unbound body variables; "
-					"paper policy audit readiness requires every parsed learned rule "
-					"to have bound conditions, bound effects, variable-binding-safe "
-					"body calls, and a non-empty executable body; external learned sketch candidates "
-					"must be selected by the Clingo synthesis step before they appear "
-					"in output ASL."
-				),
-				required_improvement=(
-					"Broaden backend-specific feature dialect support only by adding "
-					"principled lifted bindings and keeping unsafe features rejected."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G7",
-				layer="ASL compiler",
-				gap="Compiler subset needs a full paper-level semantics contract.",
-				current_state=(
-					"Generated heads, contexts, primitive actions, and subgoal calls are "
-					"schema-checked; deterministic first-applicable execution and the "
-					"currently supported ASL subset are reported with the library; "
-					"context execution is order-independent over implicit conjunctions, "
-					"with positive literals binding variables before negated literals; "
-					"primitive actions are applied by the PDDL STRIPS simulator and "
-					"precondition violations become primitive-precondition counterexamples; "
-					"variable-binding safety rejects body action or subgoal arguments not "
-					"bound by the plan head or positive context literals; "
-					"PDDL-to-ASL symbol mapping records sanitized primitive action "
-					"functors so rendered ASL can be traced back to original PDDL schemas. "
-					"The method draft mirrors these compiler and primitive-action "
-					"precondition semantics for the supported subset."
-				),
-				required_improvement=(
-					"Extend the contract whenever more AgentSpeak constructs are "
-					"intentionally supported."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G8",
-				layer="validation",
-				gap="Validation is complete for the current bounded paper package.",
-				current_state=(
-					"Bounded all-reachable-state checks, first-applicable execution, "
-					"a registry-backed benchmark matrix runner, a blocks-domain QBW "
-					"source-snapshot smoke runner, temporary synthetic mechanism "
-					"fixtures, a generic PDDL split experiment runner, and a "
-					"report-comparison CLI exist; experiment "
-					"reports include coverage, generated ASL, generated-output audit, "
-					"library size and runtime metrics, including synthesis and "
-					"evaluation runtime metrics, compact Layer B and Layer C learning "
-					"audit summaries, including schema causal and delete-threat ordering "
-					"candidate/selected counts plus trace-ordering candidate/selected "
-					"counts and composer ordering-kind counts, optional explicit ablation metadata, "
-					"machine-readable ablation mechanism status for external sketch "
-					"evidence, counterexample refinement, offline synthesis traces, "
-					"Layer C ordering, and paper-profile gating, "
-					"optional already-completed external baseline metadata without running "
-					"hidden planners, a pure already-run report comparison table helper "
-					"and CLI "
-					"with baseline rows, best-baseline summaries, and coverage deltas "
-					"against the ASL library, validated generic-runner ingestion of "
-					"completed baseline JSON metadata, a validation-scope summary that separates "
-					"synthesis-time bounded validation from evaluation coverage, plus "
-					"top-level refinement analysis for convergence and constraint-type counts. "
-					"The final paper data package is now driven by the achievement "
-					"benchmark registry and its unified source snapshots. Final "
-					"library, ablation, baseline, and limitation rows must be "
-					"regenerated from the tracked manifest before they are cited."
-				),
-				required_improvement=(
-					"Future validation can broaden external backend baselines, add "
-					"more domains, strengthen reachable-mid-state logistics claims, "
-					"or regenerate the final library, ablation, baseline, and "
-					"limitation rows from the tracked manifest."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G9",
-				layer="counterexample refinement",
-				gap="Counterexample refinement is generative for the declared failure classes.",
-				current_state=(
-					"Held-out failures are classified into lifted Layer B or Layer C "
-					"records; primitive repair, atomic-progress, explicit goal-ordering, "
-					"wrong-arity, undeclared-symbol, and negative precondition repairs "
-					"produce machine-readable matched or rejected diagnostics; missing-module "
-					"failures are narrowed to the named failed atomic subgoal when the "
-					"failure text identifies one, while `!g` failures are treated as "
-					"composer state-coverage failures; recursive-loop and nontermination "
-					"failures keep explicit termination diagnostics and, when they still "
-					"name supported missing positive goals, emit companion atomic-progress "
-					"or state-coverage constraints consumed by the selector; "
-					"rejected atomic-progress diagnostics now include producer actions "
-					"from PDDL add effects for declared target predicates, so wrong-arity "
-					"and declared-but-unproducible failures are distinguishable; "
-					"invalid or negative lifted atomic-progress goals are rejected "
-					"as non-generative input errors before selector binding; "
-					"the refinement loop can continue on newly classified lifted constraints "
-					"even when the failed problem file was already present in the counterexample "
-					"set; "
-					"explicit counterexample state-coverage failures can synthesize or "
-					"merge conservative goal-dispatch composer candidates and bind them "
-					"as selector hard groups; unified synthesis reports expose termination "
-					"diagnostic counts, companion generative constraint counts, diagnostic "
-					"group types, explicit non-generative markers, and non-generative reasons."
-				),
-				required_improvement=(
-					"Future work may add new unsupported failure classes, but the current "
-					"positive-conjunctive paper fragment maps supported held-out failures "
-					"to selector-consumable Layer B or Layer C constraints, or rejects "
-					"them with structured diagnostics."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G10",
-				layer="PDDL scope",
-				gap="Supported PDDL fragment must stay explicit and machine-readable.",
-				current_state=(
-					"STRIPS-style positive conjunctive achievement goals serialize "
-					"cleanly; unsupported requirements, unsupported expression operators, "
-					"PDDL predicate symbols outside the current AgentSpeak atom "
-					"identifier subset, negative goals, numeric fragments, and "
-					"action-cost fragments are rejected with structured reasons and "
-					"machine-readable diagnostics before compilation proceeds; "
-					"action-symbol collisions after AgentSpeak sanitization are also "
-					"rejected before ASL generation."
-				),
-				required_improvement=(
-					"Keep the report aligned with future fragment expansions, especially "
-					"negative goals, disjunctive goals, derived predicates, conditional "
-					"effects, quantifiers, or numeric fluents."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G11",
-				layer="no-hardcoding",
-				gap="No-hardcoding audit must remain enforced as implementation grows.",
-				current_state=(
-					"Tests scan domain-level production code and generated libraries for "
-					"synthetic names, grounded terms, mutable goal descriptors, "
-					"undeclared symbols, wrong arities, selected/output rule manifest "
-					"leakage, goal-descriptor usage summaries, learning-audit summaries, "
-					"and known domain-specific tokens."
-				),
-				required_improvement=(
-					"Keep extending these checks whenever new modules or generated "
-					"artifacts are added so domain-specific production branches cannot "
-					"silently enter the library path."
-				),
-				status="done_current_fragment",
-			),
-			ArchitectureGap(
-				id="G12",
-				layer="TEG",
-				gap="DFA-to-library interface is not yet fully integrated.",
-				current_state=(
-					"Positive conjunctive DFA guards can be translated into "
-					"schema-validated goal facts and PDDL predicate subgoal calls; "
-					"a runtime controller can select DFA progress transitions and "
-					"execute them through the same domain-level lifted ASL library; "
-					"a temporal artifact pipeline persists the domain-level ASL "
-					"library separately from query-specific DFA metadata and "
-					"progress requests; the runtime controller can execute repeated "
-					"progress steps until an accepting DFA state; "
-					"the artifact pipeline records structured accepted/rejected DFA "
-					"guard diagnostics with distinct negative, false, and disjunctive "
-					"rejection reasons, and raw disjunctions are rejected before "
-					"event-to-PDDL mapping can partially accept one branch; the "
-					"supported ASL subset and execution "
-					"semantics are reported with each domain-level contract."
-				),
-				required_improvement=(
-					"Define unsupported negative/disjunctive guard semantics and "
-					"run broader temporal-goal evaluation beyond smoke tests."
-				),
-				status="partially_done",
+				status="external_dependency",
 			),
 		),
 	)
 
 
 def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
-	"""Return final-paper contracts for Layer B and Layer C claims."""
+	"""Return paper-facing contracts for the current two-layer framework."""
 
 	return (
 		LayerPaperQualityContract(
-			layer="Layer B",
-			target_artifact="lifted atomic predicate-goal module set",
+			layer="Atomic Template Layer",
+			target_artifact="domain-level lifted atomic AgentSpeak(L) library",
 			core_claim=(
-				"select reusable predicate-goal modules whose heads are declared "
-				"PDDL predicates and whose bodies are executable ASL calls over "
-				"declared primitive actions or predicate subgoals"
+				"compile verified singleton predicate/literal generalized-planning "
+				"artifacts into reusable +!P(Args) ASL plans"
 			),
 			admissible_evidence=(
-				"PDDL action-effect schemas",
-				"validated bounded transition evidence",
-				"offline planner traces used only as synthesis evidence",
-				"external policy-sketch bindings",
-				"counterexample repair and atomic-progress constraints",
+				"MOOSE readable policy artifacts",
+				"other backend artifacts after parser and binding gates",
+				"PDDL domain predicate and action declarations",
+				"held-out validation without runtime full-trace planning",
 			),
 			selector_obligations=(
-				"cover observed atomic goal-progress transitions",
-				"select at least one context-compatible primitive strategy when required",
-				"reject undeclared, wrong-arity, unbound-variable, or unsafe recursive rules",
-				"prefer trace/sketch/repair justified rules over unjustified schema-only rules",
+				"derive required atomic templates from the train split",
+				"prefer MOOSE for positive singleton predicate templates",
+				"reject unsupported negative templates",
+				"reject undeclared predicates, wrong arities, and grounded plan heads",
 			),
 			compiler_output=(
-				"ASL plans headed by +!P(Args), with bodies containing only declared "
-				"PDDL primitive actions or declared predicate subgoal calls"
+				"ASL plans headed by declared PDDL predicate achievement goals with "
+				"primitive PDDL action bodies"
 			),
 			runtime_semantics=(
-				"atomic modules execute through deterministic first-applicable ASL "
-				"selection and STRIPS-style primitive action simulation"
+				"the domain library executes atomic predicate goals without asking a "
+				"classical planner for a complete trace at runtime"
 			),
 			required_reports=(
-				"atomic_module_proofs",
-				"atomic_action_strategy_group_reports",
-				"selected_rule_manifest",
-				"rule_manifest_audit",
-			),
-				not_claimed=(
-					"full arbitrary-domain module learning",
-					"unchecked trace replay as a lifted module",
-					"arbitrary multi-resource logistics policies beyond verified "
-					"route movement and typed-overloaded causal-chain delivery modules",
-				),
-		),
-		LayerPaperQualityContract(
-			layer="Layer C",
-			target_artifact="lifted conjunctive-goal composer plus runtime support agenda",
-			core_claim=(
-				"select goal-conditioned +!g rules that decide the next atomic "
-				"predicate goal for positive conjunctive achievement goals"
-			),
-			admissible_evidence=(
-				"PDDL causal precondition support",
-				"PDDL delete-threat interactions",
-				"last-achievement trace ordering",
-				"bounded state-coverage constraints",
-				"counterexample goal-ordering and state-coverage constraints",
-			),
-			selector_obligations=(
-				"cover bounded reachable non-goal states when bounded evidence exists",
-				"keep selected support-agenda edges acyclic",
-				"prioritize selected ordering rules before generic goal dispatch",
-				"reject undeclared or wrong-arity composer refinements before ASL generation",
-			),
-			compiler_output=(
-				"ASL +!g plans whose contexts mention state predicates, read-only "
-				"goal descriptors, and read-only ready contexts"
-			),
-			runtime_semantics=(
-				"ready_<predicate> derived contexts gate generic +!g dispatch using "
-				"selected support-agenda edges, current state facts, and goal descriptors"
-			),
-			required_reports=(
-				"composer_rule_proofs",
-				"goal_agenda",
-				"runtime_goal_agenda",
-				"output_composer_rule_evidence",
+				"atomic_backend_decision",
+				"policy_program_summary",
+				"plan_library.json",
+				"plan_library.asl",
 			),
 			not_claimed=(
-				"arbitrary reachable mid-state logistics policies",
-				"universal goal-order learning for arbitrary PDDL domains",
-				"permanent protection of all achieved facts",
+				"universal arbitrary-domain generalized planning",
+				"interacting conjunctive-goal solving by MOOSE directly",
+				"negative literal achievement without a validated backend",
+			),
+		),
+		LayerPaperQualityContract(
+			layer="Temporal Goal Append Layer",
+			target_artifact="query-specific +!g_query wrappers over the domain library",
+			core_claim=(
+				"compile lifted LTLf goals to DFA metadata and append wrapper plans "
+				"only when DFA progress transitions expose singleton literals"
+			),
+			admissible_evidence=(
+				"lifted LTLf JSON from the external Input component",
+				"ltlf2dfa DFA payloads",
+				"singleton-literal DFA validator diagnostics",
+				"PDDL predicate arity checks",
+			),
+			selector_obligations=(
+				"reject compound transition guards",
+				"allow negative waiting guards as DFA structure",
+				"reject negative progress literals",
+				"record whether external DFA state is required",
+			),
+			compiler_output=(
+				"ASL +!g_query plans whose bodies call existing atomic predicate "
+				"subgoals and then recurse to +!g_query"
+			),
+			runtime_semantics=(
+				"an external DFA or reward-machine controller owns temporal state "
+				"whenever world-state contexts alone do not identify the current "
+				"DFA state"
+			),
+			required_reports=(
+				"dfa_payload",
+				"singleton_literal_dfa_diagnostic",
+				"temporal_append_metadata",
+				"updated plan_library.asl",
+			),
+			not_claimed=(
+				"pure context-only ASL correctness for every DFA",
+				"arbitrary Boolean DFA guard compilation",
+				"language-model prompt generation inside this repository",
 			),
 		),
 	)
 
 
 def bounded_hypothesis_class_contract() -> HypothesisClassContract:
-	"""Return the exact bounded hypothesis class claimed by the implementation."""
+	"""Return the exact bounded hypothesis class claimed now."""
 
 	return HypothesisClassContract(
-		name="goal_conditioned_modular_sketch_asl",
+		name="atomic_template_with_singleton_literal_temporal_append",
 		feature_language={
 			"state_features": (
-				"PDDL predicates over lifted variables",
-				"negation-as-absence context literals",
-				"safe lifted DLPlan feature bindings, including forward/reverse "
-				"binary roles and object-free goal-distance features",
+				"PDDL predicate literals over lifted variables",
+				"negative literals used as DFA waiting guards",
 			),
 			"goal_features": (
-				"read-only goal_<predicate> descriptors",
-				"read-only ready_<predicate> derived contexts for runtime agenda gating",
-				"positive conjunctive achievement goals",
+				"positive singleton predicate templates",
+				"query-specific lifted LTLf goal names",
 			),
 			"external_features": (
-				"accepted DLPlan features with explicit ASL bindings",
-				"rejected concrete object-specific, unsupported distance, or "
-				"vocabulary-mismatched features",
+				"verified MOOSE readable singleton-goal rules",
+				"fallback backend artifacts only after parser and binding gates",
 			),
 		},
 		module_language={
-			"heads": "declared PDDL predicate achievement goals and zero-argument +!g",
-			"contexts": "implicit conjunction of supported state and goal literals",
-			"body_calls": (
-				"declared PDDL primitive action calls and declared PDDL predicate "
-				"subgoal calls with matching schema arities; every body variable "
-				"must be bound by the plan head or positive context literals"
-			),
-			"recursion": (
-				"same-predicate recursion requires a missing-precondition or "
-				"bounded acyclic-relation descent certificate; single-effect "
-				"movement recursion may instead use a route_step shortest-path "
-				"distance-decrease context; same-predicate delegation across "
-				"typed argument partitions is allowed with an explicit type certificate"
-			),
-			"causal_chain_modules": (
-				"typed-overloaded effect predicates may use schema causal-chain "
-				"action modules when a producer action supplies a target-action "
-				"precondition, shared static preconditions bridge resource variables, "
-				"and resource predicates are not emitted as independent causal-chain goals"
-			),
+			"heads": "declared PDDL predicate achievement goals and query-specific +!g_query",
+			"contexts": "PDDL state literals and validated singleton DFA progress contexts",
+			"body_calls": "declared PDDL primitive actions or declared PDDL predicate subgoals",
+			"recursion": "temporal wrappers may recurse to +!g_query after one atomic subgoal call",
 		},
 		composer_language={
-			"rule_shape": (
-				"goal-conditioned +!g rules selecting one atomic module under a "
-				"runtime support agenda"
-			),
+			"rule_shape": "+!g_query context rules generated from DFA progress transitions",
 			"ordering_evidence": (
-				"trace orderings",
-				"schema causal interference",
-				"counterexample goal ordering",
+				"DFA progress distance to accepting states",
+				"singleton transition literal validation",
 			),
-			"runtime_gate": (
-				"selected support-agenda edges derive ready_<predicate> contexts "
-				"that block generic dispatch until predecessor goals are satisfied"
-			),
-			"resource_priority": (
-				"typed-overloaded target actions may add current-resource priority "
-				"composer rules so an already-held target object is delivered before "
-				"another goal consumes the same carrier resource"
-			),
-			"goal_dependency_scope": "positive conjunctive achievement goals",
+			"runtime_gate": "external DFA state when context-only ASL is ambiguous",
+			"goal_dependency_scope": "temporal ordering expressed by lifted LTLf and DFA",
 		},
 		progress_language={
 			"selection_constraints": (
-				"capability coverage",
-				"transition-progress required groups",
-				"bounded state-coverage required groups",
+				"backend artifact parser success",
+				"declared predicate and arity checks",
+				"singleton-literal DFA transition validation",
 			),
-			"validation_scope": "bounded reachable states from training and counterexample problems",
+			"validation_scope": "selected PDDL train/test splits and supplied lifted LTLf cases",
 			"termination_checks": (
-				"recursion descent audit",
-				"bounded execution step limit",
-				"acyclic high-level decision trace validation",
+				"DFA progress transitions must reduce distance to acceptance",
+				"negative progress literals are rejected",
 			),
 		},
 		correctness_language={
-			"claim_scope": "bounded training/counterexample/held-out transition systems",
-			"success_condition": "all positive goal atoms satisfied at fixed point",
+			"claim_scope": "verified atomic libraries plus singleton-literal DFA wrappers",
+			"success_condition": "atomic subgoals are delegated to domain-level lifted ASL plans",
 			"runtime_planning": "no full-trace planner call during library execution",
 			"evidence": (
-				"synthesis report",
-				"architecture contract",
-				"domain-level contract",
-				"bounded validation report",
-				"experiment report",
+				"MOOSE readable compile report",
+				"plan_library.asl",
+				"DFA validation diagnostics",
+				"unit and CLI tests",
 			),
 		},
 		exclusions=(
 			"arbitrary PDDL domains",
-			"negative or disjunctive achievement goals",
-				"numeric fluents and action costs",
-			"derived predicates and conditional effects",
-				"arbitrary multi-resource logistics/resource agendas beyond the "
-				"typed-overloaded carrier/resource causal-chain fragment",
-				"runtime full-trace planning as the plan-library executor",
-			),
+			"compound DFA transition guards",
+			"negative progress literals without a validated backend",
+			"numeric fluents and action costs",
+			"runtime full-trace planning as the library executor",
+		),
 	)
 
 
@@ -903,3 +479,12 @@ def architecture_gap_summary(gaps: Iterable[ArchitectureGap]) -> dict[str, int]:
 	for gap in gaps:
 		counts[gap.status] = counts.get(gap.status, 0) + 1
 	return counts
+
+
+def _series(items: Iterable[object]) -> str:
+	values = tuple(str(item) for item in tuple(items or ()))
+	if not values:
+		return ""
+	if len(values) == 1:
+		return values[0]
+	return ", ".join(values[:-1]) + f", and {values[-1]}"

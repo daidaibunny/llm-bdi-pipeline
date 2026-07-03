@@ -6,6 +6,7 @@ Install and inspect external generalized-planning learner backends.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shlex
 import subprocess
@@ -31,6 +32,7 @@ from domain_level_planning.moose_policy_adapter import (
 )
 from domain_level_planning.policy_program import policy_program_from_sketch_policy
 from domain_level_planning.sketch_pipeline import compile_learner_sketch_policy_to_asl
+from plan_library.rendering import render_plan_library_asl
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -81,6 +83,7 @@ def main() -> int:
 			"blocksworld-smoke-command",
 			"moose-atomic-command",
 			"moose-readable-summary",
+			"moose-readable-compile-asl",
 			"learner-sketches-command",
 			"learner-sketches-compile-asl",
 			"learner-sketches-summary",
@@ -123,6 +126,11 @@ def main() -> int:
 		"--save-file",
 		type=Path,
 		help="Output MOOSE model file for moose-atomic-command.",
+	)
+	parser.add_argument(
+		"--output-dir",
+		type=Path,
+		help="Output directory for commands that materialize project artifacts.",
 	)
 	parser.add_argument("--random-seed", type=int, default=0)
 	parser.add_argument("--num-permutations", type=int, default=3)
@@ -221,6 +229,13 @@ def main() -> int:
 		print_moose_readable_summary(
 			policy_file=_required_path(args.policy_file, "--policy-file"),
 			domain_name=args.domain_name,
+		)
+		return 0
+	if args.command == "moose-readable-compile-asl":
+		compile_moose_readable_atomic_library(
+			policy_file=_required_path(args.policy_file, "--policy-file"),
+			domain_name=args.domain_name,
+			output_dir=_required_path(args.output_dir, "--output-dir"),
 		)
 		return 0
 	if args.command == "learner-sketches-command":
@@ -541,6 +556,66 @@ def print_moose_readable_summary(*, policy_file: Path, domain_name: str) -> None
 	)
 	for rule in program.rules:
 		print(f"  rule {rule.name}: conditions={len(rule.conditions)} effects={len(rule.effects)}")
+
+
+def compile_moose_readable_atomic_library(
+	*,
+	policy_file: Path,
+	domain_name: str,
+	output_dir: Path,
+) -> None:
+	"""Materialize a domain-level atomic ASL library from a MOOSE readable policy."""
+
+	text = policy_file.read_text(encoding="utf-8")
+	source_name = policy_file.stem.replace(".model", "")
+	library = compile_moose_readable_policy_to_asl_library(
+		text,
+		domain_name=domain_name,
+		source_name=source_name,
+		policy_file=policy_file,
+	)
+	program = policy_program_from_moose_readable_policy(
+		text,
+		domain_name=domain_name,
+		source_name=source_name,
+		policy_file=policy_file,
+	)
+	output_dir.mkdir(parents=True, exist_ok=True)
+	library_json = output_dir / "plan_library.json"
+	library_asl = output_dir / "plan_library.asl"
+	metadata_file = output_dir / "atomic_library_metadata.json"
+	library_json.write_text(
+		json.dumps(library.to_dict(), indent=2, sort_keys=True) + "\n",
+		encoding="utf-8",
+	)
+	library_asl.write_text(render_plan_library_asl(library), encoding="utf-8")
+	metadata_file.write_text(
+		json.dumps(
+			{
+				"backend": "moose",
+				"domain_name": domain_name,
+				"policy_file": str(policy_file),
+				"source_name": source_name,
+				"raw_rule_count": int(library.metadata.get("raw_rule_count") or 0),
+				"compiled_singleton_rule_count": len(library.plans),
+				"policy_program_rule_count": len(program.rules),
+				"policy_program_module_count": len(program.modules),
+				"artifact_contract": (
+					"domain-level lifted atomic AgentSpeak(L) library generated "
+					"from MOOSE readable singleton-goal rules"
+				),
+			},
+			indent=2,
+			sort_keys=True,
+		)
+		+ "\n",
+		encoding="utf-8",
+	)
+	print(
+		f"{policy_file}: wrote atomic ASL library; "
+		f"plans={len(library.plans)}; json={library_json}; asl={library_asl}; "
+		f"metadata={metadata_file}"
+	)
 
 
 def print_learner_sketches_commands(

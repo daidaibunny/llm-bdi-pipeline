@@ -14,13 +14,17 @@ if _src_dir not in sys.path:
 	sys.path.insert(0, _src_dir)
 
 from plan_library import PlanLibraryGenerationPipeline
+from plan_library.models import PlanLibrary
 from domain_level_planning import (
 	discover_backend_manifest,
 	ExternalSketchPolicySource,
 	LearnerSketchesRunConfig,
 	SketchCompilationTarget,
+	append_lifted_temporal_goal_case_to_library,
 	build_domain_level_temporal_artifact,
 	compile_learner_sketch_policy_to_asl,
+	compile_moose_readable_policy_to_asl_library,
+	load_lifted_ltlf_goal_dataset,
 	persist_domain_level_temporal_artifact,
 	synthesize_domain_level_asl_library,
 )
@@ -124,6 +128,47 @@ Examples:
 		"--no-recurse",
 		action="store_true",
 		help="Do not append a recursive call to the target goal.",
+	)
+
+	moose_parser = subparsers.add_parser(
+		"compile-moose-atomic-library",
+		help="Compile a MOOSE readable singleton-goal policy into a domain atomic ASL library.",
+	)
+	moose_parser.add_argument("--policy-file", required=True, help="MOOSE readable policy file.")
+	moose_parser.add_argument("--domain-name", required=True, help="PDDL domain name for the output library.")
+	moose_parser.add_argument(
+		"--output-root",
+		required=True,
+		help="Output root for plan_library.json, plan_library.asl, and metadata.",
+	)
+
+	append_temporal_parser = subparsers.add_parser(
+		"append-lifted-temporal-goal",
+		help=(
+			"Append lifted LTLf/DFA query wrappers to an existing domain atomic "
+			"ASL library."
+		),
+	)
+	append_temporal_parser.add_argument("--domain-file", required=True, help="Path to the PDDL domain file.")
+	append_temporal_parser.add_argument(
+		"--plan-library-file",
+		required=True,
+		help="Existing domain-level plan_library.json file.",
+	)
+	append_temporal_parser.add_argument(
+		"--ltlf-goal-json",
+		required=True,
+		help="Lifted LTLf goal JSON produced by the external Input component.",
+	)
+	append_temporal_parser.add_argument(
+		"--query-id",
+		action="append",
+		help="Query id to append. Repeat for multiple queries. Defaults to all cases.",
+	)
+	append_temporal_parser.add_argument(
+		"--output-root",
+		required=True,
+		help="Output root for the updated library and DFA metadata.",
 	)
 
 	domain_level_parser = subparsers.add_parser(
@@ -273,6 +318,107 @@ def main() -> None:
 			"unsupported_features": dict(result.unsupported_features),
 			"output_file": _absolute_path(args.output_file),
 		}
+	elif args.command == "compile-moose-atomic-library":
+		policy_file = _require_existing_path(args.policy_file, label="MOOSE Policy File")
+		output_root = _require_output_root(args.output_root)
+		policy_text = Path(policy_file).read_text(encoding="utf-8")
+		source_name = Path(policy_file).stem.replace(".model", "")
+		library = compile_moose_readable_policy_to_asl_library(
+			policy_text,
+			domain_name=str(args.domain_name).strip(),
+			source_name=source_name,
+			policy_file=policy_file,
+		)
+		artifact_paths = _persist_current_plan_library(
+			plan_library=library,
+			output_root=output_root,
+			metadata={
+				"artifact_kind": "moose_atomic_library",
+				"backend": "moose",
+				"policy_file": policy_file,
+				"source_name": source_name,
+			},
+		)
+		results = {
+			"success": True,
+			"domain_name": library.domain_name,
+			"plan_count": len(library.plans),
+			"artifact_paths": artifact_paths,
+		}
+	elif args.command == "append-lifted-temporal-goal":
+		domain_file = _require_existing_path(args.domain_file, label="Domain File")
+		plan_library_file = _require_existing_path(
+			args.plan_library_file,
+			label="Plan Library File",
+		)
+		ltlf_goal_json = _require_existing_path(
+			args.ltlf_goal_json,
+			label="Lifted LTLf Goal JSON",
+		)
+		output_root = _require_output_root(args.output_root)
+		library = PlanLibrary.from_dict(
+			json.loads(Path(plan_library_file).read_text(encoding="utf-8")),
+		)
+		dataset = load_lifted_ltlf_goal_dataset(ltlf_goal_json)
+		selected_query_ids = {
+			str(query_id).strip()
+			for query_id in tuple(args.query_id or ())
+			if str(query_id).strip()
+		}
+		selected_cases = tuple(
+			case
+			for case in dataset.cases
+			if not selected_query_ids or case.query_id in selected_query_ids
+		)
+		if selected_query_ids and len(selected_cases) != len(selected_query_ids):
+			found = {case.query_id for case in selected_cases}
+			missing = sorted(selected_query_ids - found)
+			raise ValueError(f"Unknown lifted LTLf query ids: {', '.join(missing)}")
+		from evaluation.temporal_compilation import DFABuilder
+
+		dfa_builder = DFABuilder()
+		dfa_payloads: dict[str, object] = {}
+		updated_library = library
+		errors: list[dict[str, object]] = []
+		for case in selected_cases:
+			try:
+				updated_library, dfa_payload = append_lifted_temporal_goal_case_to_library(
+					plan_library=updated_library,
+					goal_case=case,
+					domain_file=domain_file,
+					dfa_builder=dfa_builder,
+				)
+				dfa_payloads[case.query_id] = dict(dfa_payload)
+			except Exception as error:  # noqa: BLE001 - returned as validator feedback.
+				errors.append(
+					{
+						"query_id": case.query_id,
+						"goal_name": case.goal_name,
+						"error_type": _temporal_append_error_type(error),
+						"message": str(error),
+					},
+				)
+		if errors:
+			results = {"success": False, "errors": errors}
+		else:
+			artifact_paths = _persist_current_plan_library(
+				plan_library=updated_library,
+				output_root=output_root,
+				metadata={
+					"artifact_kind": "domain_library_with_temporal_append",
+					"source_plan_library_file": plan_library_file,
+					"ltlf_goal_json": ltlf_goal_json,
+					"query_ids": [case.query_id for case in selected_cases],
+					"dfa_payloads": dfa_payloads,
+				},
+			)
+			results = {
+				"success": True,
+				"domain_name": updated_library.domain_name,
+				"appended_query_count": len(selected_cases),
+				"plan_count": len(updated_library.plans),
+				"artifact_paths": artifact_paths,
+			}
 	elif args.command == "synthesize-domain-library":
 		domain_file = _require_existing_path(args.domain_file, label="Domain File")
 		training_problems = tuple(
@@ -401,6 +547,58 @@ def _require_output_root(path_text: str | None) -> str:
 		print("=" * 80)
 		sys.exit(1)
 	return resolved_path
+
+
+def _persist_current_plan_library(
+	*,
+	plan_library: PlanLibrary,
+	output_root: str,
+	metadata: dict[str, object],
+) -> dict[str, str]:
+	root = Path(output_root).expanduser().resolve()
+	root.mkdir(parents=True, exist_ok=True)
+	library_json = root / "plan_library.json"
+	library_asl = root / "plan_library.asl"
+	metadata_file = root / "artifact_metadata.json"
+	library_json.write_text(
+		json.dumps(plan_library.to_dict(), indent=2, sort_keys=True) + "\n",
+		encoding="utf-8",
+	)
+	library_asl.write_text(render_plan_library_asl(plan_library), encoding="utf-8")
+	metadata_file.write_text(
+		json.dumps(
+			{
+				**dict(metadata),
+				"domain_name": plan_library.domain_name,
+				"plan_count": len(plan_library.plans),
+			},
+			indent=2,
+			sort_keys=True,
+			default=str,
+		)
+		+ "\n",
+		encoding="utf-8",
+	)
+	return {
+		"plan_library": str(library_json),
+		"plan_library_asl": str(library_asl),
+		"artifact_metadata": str(metadata_file),
+	}
+
+
+def _temporal_append_error_type(error: Exception) -> str:
+	message = str(error)
+	if "singleton-literal transition contract" in message:
+		return "dfa_singleton_literal_validation_failed"
+	if "Failed to convert LTLf to DFA" in message:
+		return "ltlf_to_dfa_execution_failure"
+	if "negative_literal_template_not_supported" in message:
+		return "negative_literal_template_not_supported"
+	if "undeclared PDDL predicate" in message:
+		return "unsupported_predicate"
+	if "wrong arity" in message:
+		return "wrong_arity"
+	return type(error).__name__
 
 
 if __name__ == "__main__":

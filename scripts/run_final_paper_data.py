@@ -33,12 +33,16 @@ from domain_level_planning.architecture_contract import (  # noqa: E402
 	architecture_gap_summary,
 	domain_level_architecture_contract,
 )
+from domain_level_planning.moose_policy_adapter import (  # noqa: E402
+	compile_moose_readable_policy_to_asl_library,
+)
 from scripts.generate_domain_level_baselines import (  # noqa: E402
 	generate_classical_planner_baseline,
 	generate_external_sketch_audit_baseline,
 	generate_moose_status_baseline,
 )
 from scripts.run_domain_level_experiment_matrix import run_experiment_matrix  # noqa: E402
+from plan_library.rendering import render_plan_library_asl  # noqa: E402
 
 
 FINAL_PAPER_MANIFEST = PROJECT_ROOT / "paper_artifacts/final_paper_manifest.json"
@@ -100,6 +104,18 @@ def main() -> None:
 		return
 
 	_write_backend_audit_logs(output_dir / "backend-audit")
+	if _artifact_only_manifest(manifest):
+		comparison = _write_current_artifact_only_package(
+			output_dir=output_dir,
+			manifest=manifest,
+		)
+		validate_final_paper_package(output_dir, manifest=manifest)
+		print(
+			"wrote artifact-only final paper data package "
+			f"{output_dir} reports={comparison['report_count']} "
+			f"baselines={comparison['baseline_count']}",
+		)
+		return
 	_generate_final_baselines(
 		output_dir=output_dir,
 		fast_downward=args.fast_downward,
@@ -159,6 +175,26 @@ def validate_final_paper_package(
 		if not condition:
 			raise ValueError(message)
 		checks.append(message)
+
+	if _artifact_only_manifest(manifest):
+		_validate_artifact_only_package(
+			manifest=manifest,
+			output_dir=output_dir,
+			comparison=comparison,
+			rows=rows,
+			require=require,
+		)
+		_validate_result_macros(comparison=comparison, macro_file=macro_file, require=require)
+		return {
+			"check_count": len(checks),
+			"comparison_file": str(comparison_file),
+			"macro_file": str(
+				macro_file.expanduser().resolve()
+				if macro_file is not None
+				else FINAL_RESULT_MACROS
+			),
+			"checks": checks,
+		}
 
 	require(int(comparison.get("report_count") or 0) > 0, "comparison has reports")
 	require(int(comparison.get("baseline_count") or 0) > 0, "comparison has baselines")
@@ -282,27 +318,15 @@ def validate_final_paper_package(
 			f"report records coverage: {report_file.name}",
 		)
 
-	macro_file = (
-		macro_file.expanduser().resolve()
-		if macro_file is not None
-		else FINAL_RESULT_MACROS
-	)
-	require(macro_file.exists(), "LaTeX result macro file exists")
-	expected_macros = format_comparison_latex_macros(comparison)
-	actual_macros = macro_file.read_text(encoding="utf-8")
-	require(actual_macros == expected_macros, "LaTeX result macros match comparison")
-	require(FINAL_PAPER_MAIN.exists(), "LaTeX main file exists")
-	main_macro_block = _extract_result_macro_block(
-		FINAL_PAPER_MAIN.read_text(encoding="utf-8"),
-	)
-	require(
-		main_macro_block == expected_macros,
-		"LaTeX main generated result macro block matches comparison",
-	)
+	_validate_result_macros(comparison=comparison, macro_file=macro_file, require=require)
 	return {
 		"check_count": len(checks),
 		"comparison_file": str(comparison_file),
-		"macro_file": str(macro_file),
+		"macro_file": str(
+			macro_file.expanduser().resolve()
+			if macro_file is not None
+			else FINAL_RESULT_MACROS
+		),
 		"checks": checks,
 	}
 
@@ -429,6 +453,230 @@ def _validate_manifest_contract(
 		library_rows=library_rows,
 		baseline_rows=baseline_rows,
 		require=require,
+	)
+
+
+def _artifact_only_manifest(manifest: dict[str, object] | None) -> bool:
+	"""Return true when the manifest declares the current zero-row artifact path."""
+
+	if manifest is None:
+		return False
+	expected_package = dict(manifest.get("expected_package") or {})
+	return (
+		str(manifest.get("paper_scope") or "")
+		== "achievement_goal_atomic_templates_with_temporal_extended_goal_wrappers"
+		and int(expected_package.get("report_count") or 0) == 0
+		and int(expected_package.get("baseline_count") or 0) == 0
+		and int(expected_package.get("paper_table_row_count") or 0) == 0
+	)
+
+
+def _manifest_matrix_name(*, manifest: dict[str, object], matrix_name: str) -> str:
+	matrix_configs = dict(manifest.get("matrix_configs") or {})
+	matrix_contract = dict(matrix_configs.get(matrix_name) or {})
+	return str(matrix_contract.get("matrix_name") or f"paper-final-{matrix_name}")
+
+
+def _resolve_manifest_path(path_text: str, *, label: str) -> Path:
+	if not str(path_text or "").strip():
+		raise ValueError(f"{label} must be non-empty")
+	path = Path(path_text).expanduser()
+	if not path.is_absolute():
+		path = PROJECT_ROOT / path
+	return path
+
+
+def _matrix_config_filename(matrix_name: str) -> str:
+	if matrix_name == "main":
+		return "main-library-matrix.json"
+	return f"{matrix_name}-matrix.json"
+
+
+def _write_result_macros(comparison: dict[str, object]) -> None:
+	macros = format_comparison_latex_macros(comparison)
+	FINAL_RESULT_MACROS.parent.mkdir(parents=True, exist_ok=True)
+	FINAL_RESULT_MACROS.write_text(macros, encoding="utf-8")
+	main_tex = FINAL_PAPER_MAIN.read_text(encoding="utf-8")
+	FINAL_PAPER_MAIN.write_text(
+		_replace_result_macro_block(main_tex, macros),
+		encoding="utf-8",
+	)
+
+
+def _write_current_artifact_only_package(
+	*,
+	output_dir: Path,
+	manifest: dict[str, object],
+) -> dict[str, object]:
+	"""Write the current pivot artifact package without old synthesis matrices."""
+
+	smoke = dict(manifest.get("atomic_artifact_smoke") or {})
+	domain_name = str(smoke.get("domain_name") or "unknown").strip()
+	if not domain_name:
+		raise ValueError("atomic_artifact_smoke.domain_name must be non-empty")
+	backend_name = str(smoke.get("backend") or "unknown").strip()
+	readable_policy = _resolve_manifest_path(
+		str(smoke.get("readable_policy") or ""),
+		label="atomic_artifact_smoke.readable_policy",
+	)
+	source_name = str(smoke.get("source_name") or readable_policy.stem).replace(".model", "")
+	artifact_dir = output_dir / "atomic-artifacts" / domain_name
+	artifact_dir.mkdir(parents=True, exist_ok=True)
+	atomic_status: dict[str, object]
+	if backend_name == "moose" and readable_policy.exists():
+		library = compile_moose_readable_policy_to_asl_library(
+			readable_policy.read_text(encoding="utf-8"),
+			domain_name=domain_name,
+			source_name=source_name,
+			policy_file=readable_policy,
+		)
+		(artifact_dir / "plan_library.json").write_text(
+			json.dumps(library.to_dict(), indent=2, sort_keys=True) + "\n",
+			encoding="utf-8",
+		)
+		(artifact_dir / "plan_library.asl").write_text(
+			render_plan_library_asl(library),
+			encoding="utf-8",
+		)
+		atomic_status = {
+			"backend": backend_name,
+			"domain_name": domain_name,
+			"policy_file": str(readable_policy),
+			"compiled_singleton_rule_count": len(library.plans),
+			"status": "compiled",
+		}
+	else:
+		atomic_status = {
+			"backend": backend_name,
+			"domain_name": domain_name,
+			"policy_file": str(readable_policy),
+			"compiled_singleton_rule_count": 0,
+			"status": (
+				"missing_readable_policy"
+				if backend_name == "moose"
+				else "unsupported_atomic_smoke_backend"
+			),
+		}
+	(artifact_dir / "atomic_library_metadata.json").write_text(
+		json.dumps(atomic_status, indent=2, sort_keys=True) + "\n",
+		encoding="utf-8",
+	)
+
+	contract = domain_level_architecture_contract()
+	_write_json(
+		output_dir / "artifact-summary.json",
+		{
+			"artifact_mode": "atomic_template_temporal_append",
+			"architecture_gap_summary": architecture_gap_summary(contract.gaps),
+			"atomic_artifact": atomic_status,
+			"claim_boundary": contract.guarantee,
+			"manifest_artifact_id": manifest.get("artifact_id"),
+			"runtime_full_trace_planner": False,
+		},
+	)
+	comparison = {
+		"report_count": 0,
+		"baseline_count": 0,
+		"paper_table_rows": [],
+		"artifact_mode": "atomic_template_temporal_append",
+	}
+	_write_json(output_dir / "comparison.json", comparison)
+	_write_result_macros(comparison)
+	return comparison
+
+
+def _validate_artifact_only_package(
+	*,
+	manifest: dict[str, object] | None,
+	output_dir: Path,
+	comparison: dict[str, object],
+	rows: tuple[dict[str, object], ...],
+	require,
+) -> None:
+	"""Validate the current pivot package without old experiment matrices."""
+
+	require(int(comparison.get("report_count") or 0) == 0, "artifact-only comparison has no reports")
+	require(
+		int(comparison.get("baseline_count") or 0) == 0,
+		"artifact-only comparison has no baselines",
+	)
+	require(len(rows) == 0, "artifact-only comparison has no paper table rows")
+	if manifest is not None:
+		_validate_manifest_contract(
+			manifest=manifest,
+			output_dir=output_dir,
+			comparison=comparison,
+			rows=rows,
+			library_rows=(),
+			baseline_rows=(),
+			require=require,
+		)
+	for matrix_name in ("main", "ablation", "limitation"):
+		config_file = output_dir / "configs" / _matrix_config_filename(matrix_name)
+		require(config_file.exists(), f"artifact-only matrix config exists: {matrix_name}")
+		config = json.loads(config_file.read_text(encoding="utf-8"))
+		require(
+			tuple(config.get("experiments") or ()) == (),
+			f"artifact-only matrix config is empty: {matrix_name}",
+		)
+	require(
+		(output_dir / "backend-audit" / "gp-backend-status.txt").exists(),
+		"backend status audit exists",
+	)
+	require(
+		(output_dir / "backend-audit" / "learner-sketches-summary.txt").exists(),
+		"learner-sketches audit summary exists",
+	)
+	summary_file = output_dir / "artifact-summary.json"
+	require(summary_file.exists(), "artifact summary exists")
+	summary = json.loads(summary_file.read_text(encoding="utf-8"))
+	require(
+		summary.get("architecture_gap_summary")
+		== architecture_gap_summary(domain_level_architecture_contract().gaps),
+		"artifact summary architecture contract is current",
+	)
+	smoke = dict((manifest or {}).get("atomic_artifact_smoke") or {})
+	domain_name = str(smoke.get("domain_name") or "unknown").strip()
+	metadata_file = (
+		output_dir / "atomic-artifacts" / domain_name / "atomic_library_metadata.json"
+	)
+	require(metadata_file.exists(), "MOOSE atomic metadata exists")
+	metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
+	require(metadata.get("backend") == smoke.get("backend"), "MOOSE atomic metadata names backend")
+	require(
+		int(metadata.get("compiled_singleton_rule_count") or 0) >= 0,
+		"MOOSE atomic metadata records compiled singleton count",
+	)
+	asl_file = output_dir / "atomic-artifacts" / domain_name / "plan_library.asl"
+	if asl_file.exists():
+		asl = asl_file.read_text(encoding="utf-8")
+		require("achieve_" not in asl, "MOOSE atomic ASL contains no achieve_* names")
+		require("transition_" not in asl, "MOOSE atomic ASL contains no transition_* names")
+		require("dfa_state" not in asl, "MOOSE atomic ASL contains no dfa_state beliefs")
+
+
+def _validate_result_macros(
+	*,
+	comparison: dict[str, object],
+	macro_file: Path | None,
+	require,
+) -> None:
+	macro_path = (
+		macro_file.expanduser().resolve()
+		if macro_file is not None
+		else FINAL_RESULT_MACROS
+	)
+	require(macro_path.exists(), "LaTeX result macro file exists")
+	expected_macros = format_comparison_latex_macros(comparison)
+	actual_macros = macro_path.read_text(encoding="utf-8")
+	require(actual_macros == expected_macros, "LaTeX result macros match comparison")
+	require(FINAL_PAPER_MAIN.exists(), "LaTeX main file exists")
+	main_macro_block = _extract_result_macro_block(
+		FINAL_PAPER_MAIN.read_text(encoding="utf-8"),
+	)
+	require(
+		main_macro_block == expected_macros,
+		"LaTeX main generated result macro block matches comparison",
 	)
 
 
@@ -614,6 +862,7 @@ def _reset_managed_output(output_dir: Path) -> None:
 	"""Remove generated final-package paths before a fresh non-validate run."""
 
 	for relative_path in (
+		"atomic-artifacts",
 		"backend-audit",
 		"baseline-work",
 		"baselines",
@@ -628,6 +877,9 @@ def _reset_managed_output(output_dir: Path) -> None:
 	comparison_file = output_dir / "comparison.json"
 	if comparison_file.exists():
 		comparison_file.unlink()
+	summary_file = output_dir / "artifact-summary.json"
+	if summary_file.exists():
+		summary_file.unlink()
 	manifest_file = output_dir / "artifact-manifest.json"
 	if manifest_file.exists():
 		manifest_file.unlink()
@@ -649,14 +901,26 @@ def write_final_paper_configs(
 		"limitation": config_dir / "limitation-matrix.json",
 	}
 	for matrix_name, config_file in configs.items():
-		_write_json(
-			config_file,
-			build_matrix_config_from_registry(
-				matrix=matrix_name,
-				output_dir=output_dir,
-				registry=registry,
-			),
-		)
+		if _artifact_only_manifest(manifest):
+			_write_json(
+				config_file,
+				{
+					"matrix_name": _manifest_matrix_name(
+						manifest=manifest,
+						matrix_name=matrix_name,
+					),
+					"experiments": [],
+				},
+			)
+		else:
+			_write_json(
+				config_file,
+				build_matrix_config_from_registry(
+					matrix=matrix_name,
+					output_dir=output_dir,
+					registry=registry,
+				),
+			)
 	if manifest is not None:
 		_write_json(output_dir / "artifact-manifest.json", manifest)
 	return configs
@@ -788,15 +1052,7 @@ def _write_final_comparison(
 				reports.append(json.loads(Path(str(report_file)).read_text(encoding="utf-8")))
 	comparison = compare_domain_level_experiment_reports(reports)
 	_write_json(output_dir / "comparison.json", comparison)
-	macros = format_comparison_latex_macros(comparison)
-	macro_file = FINAL_RESULT_MACROS
-	macro_file.parent.mkdir(parents=True, exist_ok=True)
-	macro_file.write_text(macros, encoding="utf-8")
-	main_tex = FINAL_PAPER_MAIN.read_text(encoding="utf-8")
-	FINAL_PAPER_MAIN.write_text(
-		_replace_result_macro_block(main_tex, macros),
-		encoding="utf-8",
-	)
+	_write_result_macros(comparison)
 	return comparison
 
 

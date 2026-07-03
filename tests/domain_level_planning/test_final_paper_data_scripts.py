@@ -634,29 +634,14 @@ def test_final_paper_config_splits_main_ablation_and_limitations(
 	) == manifest
 
 	main_experiments = tuple(main["experiments"])
-	assert {str(item["name"]) for item in main_experiments} == {
-		f"{domain_id}-ipc-full-main"
-		for domain_id in SELECTED_BENCHMARK_DOMAINS
-	}
-	assert {
-		str(item["domain_file"])
-		for item in main_experiments
-	} == {
-		f"src/domains/{domain_id}/domain.pddl"
-		for domain_id in SELECTED_BENCHMARK_DOMAINS
-	}
-	for experiment in main_experiments:
-		domain_id = str(experiment["name"]).removesuffix("-ipc-full-main")
-		assert experiment["train_base"] == f"src/domains/{domain_id}/train"
-		assert experiment["eval_base"] == f"src/domains/{domain_id}/test"
-		assert experiment["train_glob"] == "*.pddl"
-		assert experiment["eval_glob"] == "*.pddl"
-		assert experiment["synthesis_profile"] == "bootstrap"
-		assert experiment["use_synthesis_planner_traces"] is True
-		assert experiment["synthesis_planner_executable"] == "fast-downward/fast-downward.py"
-		assert experiment["synthesis_planner_timeout_seconds"] == 60
+	assert main_experiments == ()
 	assert ablation["experiments"] == []
 	assert limitation["experiments"] == []
+	registry = load_achievement_benchmark_registry()
+	assert {
+		record.domain_id
+		for record in registry.selected_records()
+	} == SELECTED_BENCHMARK_DOMAINS
 
 
 def test_final_paper_package_validator_accepts_complete_package(

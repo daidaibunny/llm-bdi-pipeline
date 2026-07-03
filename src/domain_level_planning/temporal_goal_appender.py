@@ -186,6 +186,7 @@ def append_temporal_goal_to_library(
 		dfa_payload,
 		allow_true_accepting_self_loops=allow_true_accepting_self_loops,
 		declared_arities=declared_arities,
+		allow_negative_literals=True,
 	)
 	if not diagnostic.valid:
 		first_error = diagnostic.errors[0]
@@ -282,8 +283,9 @@ def _temporal_progress_plans(
 		_validate_declared_literal(literal, declared_arities=declared_arities)
 		if literal.polarity == "negative":
 			raise ValueError(
-				"Cannot compile negative DFA progress literal into an atomic "
-				f"achievement subgoal yet: {transition['raw_label']!r}."
+				"negative_literal_template_not_supported: Cannot compile negative "
+				"DFA progress literal into an atomic achievement subgoal yet: "
+				f"{transition['raw_label']!r}."
 			)
 		plans.append(
 			AgentSpeakPlan(

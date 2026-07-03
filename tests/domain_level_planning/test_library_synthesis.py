@@ -269,7 +269,10 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 		"serialized-width sketch learner for qualitative DLPlan policies"
 	)
 	assert backend_matrix["learner-sketches"]["resource_profile"]["guard_required"] is True
-	assert "Layer B/C sketch evidence" in backend_matrix["learner-sketches"]["reusable_evidence"]
+	assert (
+		"atomic-template sketch evidence after safe binding"
+		in backend_matrix["learner-sketches"]["reusable_evidence"]
+	)
 	assert "description-logic policy learner baseline" in backend_matrix["d2l"]["paper_role"]
 	consumption = result.report["external_backend_consumption_summary"]
 	assert consumption["policy_count"] == 1
@@ -318,10 +321,10 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 			"backend_name": "learner-sketches",
 			"accepted": True,
 			"consumption_role": {
-				"drives_layer_b": True,
-				"drives_layer_c": True,
+				"drives_atomic_templates": True,
+				"drives_temporal_wrapper": False,
 				"consumed_by_synthesis": True,
-				"consumption_mode": "parsed_bound_policy_rules",
+				"consumption_mode": "parsed_bound_policy_rules_for_atomic_templates",
 				"blocking_gap": None,
 			},
 			"rejection_reason": None,
@@ -333,10 +336,10 @@ def test_unified_pipeline_combines_external_sketch_and_schema_candidates(
 			"backend_name": "learner-sketches",
 			"accepted": True,
 			"consumption_role": {
-				"drives_layer_b": True,
-				"drives_layer_c": True,
+				"drives_atomic_templates": True,
+				"drives_temporal_wrapper": False,
 				"consumed_by_synthesis": True,
-				"consumption_mode": "parsed_bound_policy_rules",
+				"consumption_mode": "parsed_bound_policy_rules_for_atomic_templates",
 				"blocking_gap": None,
 			},
 			"rejection_reason": None,
@@ -677,10 +680,10 @@ def test_unified_pipeline_consumes_verified_d2l_external_backend(
 			"backend_name": "d2l",
 			"accepted": True,
 			"consumption_role": {
-				"drives_layer_b": True,
-				"drives_layer_c": True,
+				"drives_atomic_templates": True,
+				"drives_temporal_wrapper": False,
 				"consumed_by_synthesis": True,
-				"consumption_mode": "verified_d2l_text_policy_rules",
+				"consumption_mode": "verified_d2l_atomic_text_policy_rules",
 				"blocking_gap": None,
 			},
 			"rejection_reason": None,
@@ -756,260 +759,118 @@ def test_unified_pipeline_reports_architecture_contract_and_current_gaps(
 	assert result.report["theoretical_contract"] == "bounded_class_guarantee"
 	assert "universal PDDL generalized-planning completeness" in contract["guarantee"]
 	assert "universal completeness for arbitrary PDDL domains" in contract["non_goals"]
+	assert "routing a whole domain by a paper taxonomy class" in contract["non_goals"]
 	assert "runtime full-trace planning for each new problem" in contract["non_goals"]
-	assert "read-only goal descriptors" in contract["goal_fact_semantics"]
-	assert "not primitive actions" in contract["goal_fact_semantics"]
-	assert "ready_<predicate>" in contract["goal_fact_semantics"]
-	assert "derived at runtime" in contract["goal_fact_semantics"]
+	assert "DFA metadata" in contract["goal_fact_semantics"]
+	assert "not mutable beliefs" in contract["goal_fact_semantics"]
+	assert "not dfa_state beliefs" in contract["goal_fact_semantics"]
 	assert contract["paper_core_method"] == [
-		"generalized-planning backend router",
-		"backend-specific learned policy, sketch, or program artifact",
+		"atomic goal-template extraction",
+		"verified external generalized-planning artifact consumption",
 		"LiftedPolicyProgram normalizer",
-		"safe feature/action/subgoal binding gates",
-		"AgentSpeak(L) compiler for bound lifted policy rules",
+		"AgentSpeak(L) compiler for lifted atomic plans",
+		"lifted LTLf-to-DFA temporal goal append",
+		"singleton-literal DFA validator",
 	]
 	safeguards = " ".join(contract["implementation_safeguards"])
-	assert "baseline_schema_lift adapter" in safeguards
-	assert "validated synthesis evidence" in safeguards
-	assert "trace-supported macro rules are candidates" in safeguards
-	assert "Fast Downward integration is a trace-evidence fallback" in safeguards
-	assert "not the runtime library executor" in safeguards
+	assert "legacy schema-derived synthesis is not the current main method" in safeguards
+	assert "external learners must run under resource guards" in safeguards
+	assert "negative progress literals fail unless a validated negative template exists" in safeguards
 	method_summary = contract["paper_method_summary"]
-	assert len(method_summary) >= 5
-	assert "core method is route-then-compile generalized planning" in (
-		method_summary[0]
-	)
-	assert "trusted external generalized-planning backend" in method_summary[0]
+	assert len(method_summary) == 6
+	assert "atomic-template import plus temporal-goal append" in method_summary[0]
 	assert "LiftedPolicyProgram" in method_summary[0]
-	assert "bounded-class guarantee" in method_summary[1]
-	assert "universal PDDL generalized-planning completeness" in method_summary[1]
-	assert "Layer B" in " ".join(method_summary)
-	assert "Layer C" in " ".join(method_summary)
-	assert "runtime full-trace planning" in " ".join(method_summary)
-	assert "negative or disjunctive achievement goals" in " ".join(method_summary)
-	assert "ready_<predicate>" in " ".join(method_summary)
-	assert "universal arbitrary-domain module or goal-order learning" in (
-		" ".join(method_summary)
-	)
+	assert "does not route whole domains by prior paper classes" in method_summary[1]
+	assert "MOOSE is the first candidate" in method_summary[2]
+	assert "singleton-literal transition guards" in method_summary[3]
+	assert "Negative waiting guards" in method_summary[4]
+	assert "verified atomic libraries plus singleton-literal DFA wrappers" in method_summary[5]
 	assert "Fast Downward" not in " ".join(method_summary)
 	assert "trace macro" not in " ".join(method_summary).lower()
 	layer_contracts = {
 		layer["layer"]: layer
 		for layer in contract["paper_layer_contracts"]
 	}
-	assert set(layer_contracts) == {"Layer B", "Layer C"}
-	layer_b_contract = layer_contracts["Layer B"]
-	assert layer_b_contract["target_artifact"] == (
-		"lifted atomic predicate-goal module set"
+	assert set(layer_contracts) == {
+		"Atomic Template Layer",
+		"Temporal Goal Append Layer",
+	}
+	atomic_contract = layer_contracts["Atomic Template Layer"]
+	assert atomic_contract["target_artifact"] == (
+		"domain-level lifted atomic AgentSpeak(L) library"
 	)
-	assert "PDDL action-effect schemas" in layer_b_contract["admissible_evidence"]
-	assert "external policy-sketch bindings" in layer_b_contract["admissible_evidence"]
-	assert "atomic_module_proofs" in layer_b_contract["required_reports"]
-	assert "full arbitrary-domain module learning" in layer_b_contract["not_claimed"]
-	layer_c_contract = layer_contracts["Layer C"]
-	assert layer_c_contract["target_artifact"] == (
-		"lifted conjunctive-goal composer plus runtime support agenda"
-	)
-	assert "ready_<predicate> derived contexts" in layer_c_contract["runtime_semantics"]
-	assert "composer_rule_proofs" in layer_c_contract["required_reports"]
-	assert "arbitrary reachable mid-state logistics policies" in (
-		layer_c_contract["not_claimed"]
-	)
-	assert "universal goal-order learning for arbitrary PDDL domains" in (
-		layer_c_contract["not_claimed"]
-	)
-	hypothesis = contract["hypothesis_class"]
-	assert hypothesis["name"] == "goal_conditioned_modular_sketch_asl"
-	assert any(
-		"PDDL predicates" in item
-		for item in hypothesis["feature_language"]["state_features"]
-	)
-	assert any(
-		"goal_<predicate>" in item
-		for item in hypothesis["feature_language"]["goal_features"]
-	)
-	assert any(
-		"ready_<predicate>" in item
-		for item in hypothesis["feature_language"]["goal_features"]
-	)
-	assert hypothesis["module_language"]["heads"] == (
-		"declared PDDL predicate achievement goals and zero-argument +!g"
-	)
-	assert "declared PDDL primitive action" in (
-		hypothesis["module_language"]["body_calls"]
-	)
-	assert "matching schema arities" in hypothesis["module_language"]["body_calls"]
-	assert "every body variable" in hypothesis["module_language"]["body_calls"]
-	assert "route_step shortest-path" in hypothesis["module_language"]["recursion"]
-	assert "typed argument partitions" in hypothesis["module_language"]["recursion"]
-	assert "typed-overloaded effect predicates" in (
-		hypothesis["module_language"]["causal_chain_modules"]
-	)
-	assert "resource predicates are not emitted" in (
-		hypothesis["module_language"]["causal_chain_modules"]
-	)
-	assert "goal-conditioned +!g rules" in hypothesis["composer_language"]["rule_shape"]
-	assert "runtime support agenda" in hypothesis["composer_language"]["rule_shape"]
-	assert "selected support-agenda edges" in (
-		hypothesis["composer_language"]["runtime_gate"]
-	)
-	assert "current-resource priority" in (
-		hypothesis["composer_language"]["resource_priority"]
-	)
-	assert "already-held target object" in hypothesis["composer_language"]["resource_priority"]
-	assert "bounded reachable states" in hypothesis["progress_language"]["validation_scope"]
-	assert hypothesis["correctness_language"]["claim_scope"] == (
-		"bounded training/counterexample/held-out transition systems"
-	)
-	assert "arbitrary PDDL domains" in hypothesis["exclusions"]
-	assert any(
-		"typed-overloaded carrier/resource" in exclusion
-		for exclusion in hypothesis["exclusions"]
-	)
-	assert any(
-		"object-free goal-distance features" in item
-		for item in hypothesis["feature_language"]["state_features"]
+	assert "MOOSE readable policy artifacts" in atomic_contract["admissible_evidence"]
+	assert "plan_library.asl" in atomic_contract["required_reports"]
+	assert "universal arbitrary-domain generalized planning" in atomic_contract["not_claimed"]
+	temporal_contract = layer_contracts["Temporal Goal Append Layer"]
+	assert temporal_contract["target_artifact"] == (
+		"query-specific +!g_query wrappers over the domain library"
 	)
 	assert (
-		"rejected concrete object-specific, unsupported distance, or "
-		"vocabulary-mismatched features"
-	) in (
-		hypothesis["feature_language"]["external_features"]
+		"singleton-literal DFA validator diagnostics"
+		in temporal_contract["admissible_evidence"]
 	)
-	gap_summary = result.report["architecture_gap_summary"]
-	assert gap_summary.get("in_progress", 0) == 0
-	assert gap_summary["partially_done"] == 1
-	assert gap_summary["done_current_fragment"] == 11
+	assert "external DFA or reward-machine controller" in temporal_contract["runtime_semantics"]
+	assert "arbitrary Boolean DFA guard compilation" in temporal_contract["not_claimed"]
+	hypothesis = contract["hypothesis_class"]
+	assert hypothesis["name"] == "atomic_template_with_singleton_literal_temporal_append"
+	assert any(
+		"PDDL predicate literals" in item
+		for item in hypothesis["feature_language"]["state_features"]
+	)
+	assert any(
+		"positive singleton predicate templates" in item
+		for item in hypothesis["feature_language"]["goal_features"]
+	)
+	assert any(
+		"verified MOOSE readable singleton-goal rules" in item
+		for item in hypothesis["feature_language"]["external_features"]
+	)
+	assert hypothesis["module_language"]["heads"] == (
+		"declared PDDL predicate achievement goals and query-specific +!g_query"
+	)
+	assert "declared PDDL primitive actions" in (
+		hypothesis["module_language"]["body_calls"]
+	)
+	assert "+!g_query" in hypothesis["module_language"]["recursion"]
+	assert hypothesis["composer_language"]["rule_shape"] == (
+		"+!g_query context rules generated from DFA progress transitions"
+	)
+	assert "external DFA state" in hypothesis["composer_language"]["runtime_gate"]
+	assert hypothesis["correctness_language"]["claim_scope"] == (
+		"verified atomic libraries plus singleton-literal DFA wrappers"
+	)
+	assert "compound DFA transition guards" in hypothesis["exclusions"]
+	assert "negative progress literals without a validated backend" in hypothesis["exclusions"]
+	assert result.report["architecture_gap_summary"] == {
+		"open": 1,
+		"bounded_current_path": 1,
+		"external_dependency": 1,
+	}
 
 	decisions = {decision["id"]: decision for decision in contract["decisions"]}
-	assert decisions["D3"]["status"] == "accepted"
-	assert "goal_<predicate>" in decisions["D3"]["decision"]
-	assert decisions["D6"]["status"] == "open"
-	assert decisions["D7"]["status"] == "accepted"
-	assert "object-specific DLPlan features" in decisions["D7"]["decision"]
+	assert set(decisions) == {"D1", "D2", "D3", "D4", "D5"}
+	assert decisions["D1"]["decision"] == (
+		"Do not build a universal generalized planner in this repository."
+	)
+	assert "atomic template needs" in decisions["D2"]["decision"]
+	assert "MOOSE first" in decisions["D3"]["decision"]
+	assert "LTLf/DFA" in decisions["D4"]["decision"]
+	assert "negative progress literals" in decisions["D5"]["decision"]
 
 	gaps = {gap["id"]: gap for gap in contract["gaps"]}
-	assert set(gaps) == {f"G{index}" for index in range(1, 13)}
-	assert gaps["G2"]["layer"] == "Layer B"
-	assert gaps["G2"]["status"] == "done_current_fragment"
-	assert "trace slicing" in gaps["G2"]["current_state"]
-	assert "anti-unified" in gaps["G2"]["current_state"]
-	assert "recursion descent" in gaps["G2"]["current_state"]
-	assert "repair diagnostics" in gaps["G2"]["current_state"]
-	assert "provenance manifests" in gaps["G2"]["current_state"]
-	assert "paper-profile exclusion" in gaps["G2"]["current_state"]
-	assert "proof record" in gaps["G2"]["current_state"]
-	assert "universal arbitrary-domain module learning" in (
-		gaps["G2"]["required_improvement"]
-	)
-	assert gaps["G3"]["layer"] == "Layer C"
-	assert gaps["G3"]["status"] == "done_current_fragment"
-	assert "declared bounded hypothesis class" in gaps["G3"]["gap"]
-	assert "counterexample failure classification" in gaps["G3"]["current_state"]
-	assert "delete-threat" in gaps["G3"]["current_state"]
-	assert "primitive-precondition repair evidence" in gaps["G3"]["current_state"]
-	assert "selector hard groups" in gaps["G3"]["current_state"]
-	assert "Atomic-progress refinement constraints" in gaps["G3"]["current_state"]
-	assert "Goal-bound primitive-precondition failures" in gaps["G3"]["current_state"]
-	assert "Explicit counterexample goal-ordering constraints" in (
-		gaps["G3"]["current_state"]
-	)
-	assert "rejected binding diagnostics" in gaps["G3"]["current_state"]
-	assert "undeclared predicates" in gaps["G3"]["current_state"]
-	assert "repair evidence" in gaps["G3"]["current_state"]
-	assert "wrong predicate arities" in gaps["G3"]["current_state"]
-	assert "wrong-arity repair failing actions" in gaps["G3"]["current_state"]
-	assert "wrong-arity atomic-progress diagnostics" in gaps["G3"]["current_state"]
-	assert "Negative precondition repairs are rejected explicitly" in (
-		gaps["G3"]["current_state"]
-	)
-	assert "provenance manifests" in gaps["G3"]["current_state"]
-	assert "per-rule composer evidence verdicts" in gaps["G3"]["current_state"]
-	assert "ordered-goal patterns" in gaps["G3"]["current_state"]
-	assert "bounded positive-precondition binding closures" in (
-		gaps["G3"]["current_state"]
-	)
-	assert "hidden producer goal arguments" in gaps["G3"]["current_state"]
-	assert "binding contexts and binding depth separately" in (
-		gaps["G3"]["current_state"]
-	)
-	assert "support agenda acyclic" in gaps["G3"]["current_state"]
-	assert "universal arbitrary-domain goal-order learning" in (
-		gaps["G3"]["required_improvement"]
-	)
-	assert "termination diagnostic counts" in gaps["G9"]["current_state"]
-	assert "companion generative constraint counts" in gaps["G9"]["current_state"]
-	assert "diagnostic group types" in gaps["G9"]["current_state"]
-	assert gaps["G5"]["status"] == "done_current_fragment"
-	assert "object-specific" in gaps["G5"]["current_state"]
-	assert "distance" in gaps["G5"]["current_state"]
-	assert "vocabulary-mismatch" in gaps["G5"]["current_state"]
-	assert "goal-aligned concept/role intersection" in gaps["G5"]["current_state"]
-	assert "distinct rejection diagnostics" in gaps["G5"]["current_state"]
-	assert "action-candidate details" in gaps["G5"]["current_state"]
-	assert "Concrete object-specific" in gaps["G5"]["current_state"]
-	assert "Future feature-language expansion" in gaps["G5"]["required_improvement"]
-	assert gaps["G6"]["layer"] == "external backends"
-	assert gaps["G6"]["status"] == "done_current_fragment"
-	assert "learner-sketches" in gaps["G6"]["current_state"]
-	assert "h-policy-learner" in gaps["G6"]["current_state"]
-	assert "d2l" in gaps["G6"]["current_state"]
-	assert "same audited binding path" in gaps["G6"]["current_state"]
-	assert "D2L-specific diagnostics" in gaps["G6"]["current_state"]
-	assert "per-missing-rule-binding diagnostics" in gaps["G6"]["current_state"]
-	assert "feature:operator" in gaps["G6"]["current_state"]
-	assert "every parsed learned rule" in gaps["G6"]["current_state"]
-	assert "unbound-body-variable diagnostics" in gaps["G6"]["current_state"]
-	assert "selected by the Clingo synthesis step" in gaps["G6"]["current_state"]
-	assert "principled lifted bindings" in gaps["G6"]["required_improvement"]
-	assert gaps["G7"]["layer"] == "ASL compiler"
-	assert gaps["G7"]["status"] == "done_current_fragment"
-	assert "deterministic first-applicable" in gaps["G7"]["current_state"]
-	assert "context execution is order-independent" in gaps["G7"]["current_state"]
-	assert "PDDL-to-ASL symbol mapping" in gaps["G7"]["current_state"]
-	assert "variable-binding safety" in gaps["G7"]["current_state"]
-	assert "more AgentSpeak constructs" in gaps["G7"]["required_improvement"]
-	assert gaps["G8"]["layer"] == "validation"
-	assert gaps["G8"]["status"] == "done_current_fragment"
-	assert "library size and runtime metrics" in gaps["G8"]["current_state"]
-	assert "validation-scope summary" in gaps["G8"]["current_state"]
-	assert "composer ordering-kind counts" in gaps["G8"]["current_state"]
-	assert "machine-readable ablation mechanism status" in gaps["G8"]["current_state"]
-	assert "generic PDDL split experiment runner" in gaps["G8"]["current_state"]
-	assert "report-comparison CLI" in gaps["G8"]["current_state"]
-	assert "validated generic-runner ingestion" in gaps["G8"]["current_state"]
-	assert "baseline JSON metadata" in gaps["G8"]["current_state"]
-	assert "final paper data package" in gaps["G8"]["current_state"]
-	assert "regenerated from the tracked manifest" in gaps["G8"]["current_state"]
-	assert "library, ablation, baseline, and limitation rows" in (
-		gaps["G8"]["required_improvement"]
-	)
-	assert gaps["G9"]["layer"] == "counterexample refinement"
-	assert gaps["G9"]["status"] == "done_current_fragment"
-	assert "negative precondition repairs" in gaps["G9"]["current_state"]
-	assert "companion atomic-progress" in gaps["G9"]["current_state"]
-	assert "selector-consumable Layer B or Layer C constraints" in (
-		gaps["G9"]["required_improvement"]
-	)
-	assert gaps["G10"]["layer"] == "PDDL scope"
-	assert gaps["G10"]["status"] == "done_current_fragment"
-	assert "STRIPS" in gaps["G10"]["current_state"]
-	assert "machine-readable diagnostics" in gaps["G10"]["current_state"]
-	assert "action-symbol collisions" in gaps["G10"]["current_state"]
-	assert gaps["G11"]["layer"] == "no-hardcoding"
-	assert gaps["G11"]["status"] == "done_current_fragment"
-	assert "rule manifest leakage" in gaps["G11"]["current_state"]
-	assert "domain-specific" in gaps["G11"]["required_improvement"]
-	assert gaps["G12"]["layer"] == "TEG"
-	assert gaps["G12"]["status"] == "partially_done"
-	assert "DFA guards can be translated" in gaps["G12"]["current_state"]
-	assert "runtime controller" in gaps["G12"]["current_state"]
-	assert "temporal artifact pipeline" in gaps["G12"]["current_state"]
-	assert "repeated progress steps" in gaps["G12"]["current_state"]
-	assert "accepted/rejected DFA guard diagnostics" in gaps["G12"]["current_state"]
-	assert "negative/disjunctive guard semantics" in gaps["G12"]["required_improvement"]
-	assert "beyond smoke tests" in gaps["G12"]["required_improvement"]
-
+	assert set(gaps) == {"G1", "G2", "G3"}
+	assert gaps["G1"]["layer"] == "atomic template backend"
+	assert gaps["G1"]["status"] == "open"
+	assert "MOOSE training" in gaps["G1"]["gap"]
+	assert "compile readable MOOSE policy artifacts" in gaps["G1"]["current_state"]
+	assert "each selected domain" in gaps["G1"]["required_improvement"]
+	assert gaps["G2"]["layer"] == "temporal append"
+	assert gaps["G2"]["status"] == "bounded_current_path"
+	assert "external DFA state" in gaps["G2"]["required_improvement"]
+	assert gaps["G3"]["layer"] == "Input handoff"
+	assert gaps["G3"]["status"] == "external_dependency"
+	assert "lifted LTLf JSON" in gaps["G3"]["current_state"]
 
 def test_unified_pipeline_reports_evidence_matrix_by_layer(
 	tmp_path: Path,

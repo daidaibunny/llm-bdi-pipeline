@@ -1,8 +1,7 @@
 # Generalized Planning Backend Strategy
 
 This document is the project reference for the current architecture after the
-2026-07-03 pivot. The filename is historical; this document no longer defines
-a domain-to-backend routing taxonomy.
+2026-07-03 pivot.
 
 ## Core Decision
 
@@ -89,10 +88,11 @@ lifted LTLf JSON -> LTLf formula string -> DFA payload
 ```
 
 The DFA payload must satisfy the singleton-literal transition contract before it
-can append ASL plans. Each relevant transition guard must be one literal, not a
-conjunction, disjunction, implication, or arbitrary Boolean formula. Accepting
-self-loops labelled `true` are allowed as implementation plumbing and are not
-compiled into atomic subgoals.
+can append ASL plans. Each transition guard must be one literal, not a
+conjunction, disjunction, implication, or arbitrary Boolean formula. Negative
+waiting guards such as `not done` are valid DFA structure and are not compiled
+into atomic subgoals unless they are progress transitions. Accepting self-loops
+labelled `true` are also allowed as implementation plumbing.
 
 For a positive literal transition `on(X,Y)`, the appended ASL shape is:
 
@@ -157,11 +157,36 @@ uv run python scripts/gp_backend_audit.py moose-atomic-command \
 uv run python scripts/gp_backend_audit.py moose-readable-summary \
   --policy-file tmp/moose-atomic/ferry.model.readable \
   --domain-name ferry
+
+uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
+  --policy-file tmp/moose-atomic/ferry.model.readable \
+  --domain-name ferry \
+  --output-dir tmp/moose-atomic/ferry-library
+
+uv run python src/main.py compile-moose-atomic-library \
+  --policy-file tmp/moose-atomic/ferry.model.readable \
+  --domain-name ferry \
+  --output-root artifacts/domain_libraries/ferry
 ```
 
 The first command prints a resource-guarded Docker/Apptainer train-and-dump
 command. The second verifies that the dumped readable policy can be parsed into
-`LiftedPolicyProgram` and compiled into atomic ASL plans.
+`LiftedPolicyProgram` and compiled in memory. The third materializes the current
+paper artifact shape: `plan_library.json`, `plan_library.asl`, and metadata for
+one domain-level atomic library. The fourth exposes the same materialization
+through the main framework command-line interface.
+
+After the external Input component produces lifted LTLf JSON, the main temporal
+append command is:
+
+```bash
+uv run python src/main.py append-lifted-temporal-goal \
+  --domain-file src/domains/blocks/domain.pddl \
+  --plan-library-file artifacts/domain_libraries/blocks/plan_library.json \
+  --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
+  --query-id query_1 \
+  --output-root artifacts/domain_libraries/blocks
+```
 
 ## Current Implementation Requirements
 
@@ -177,5 +202,5 @@ command. The second verifies that the dumped readable policy can be parsed into
    split for every selected domain.
 6. Add validator diagnostics that can be returned to the external Input module:
    malformed LTLf JSON, unsupported predicate, wrong arity, DFA parser failure,
-   non-singleton transition guard, negative literal without backend support, and
-   LTLf-to-DFA execution failure.
+   non-singleton transition guard, negative progress literal without backend
+   support, and LTLf-to-DFA execution failure.

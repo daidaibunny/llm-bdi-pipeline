@@ -1,5 +1,11 @@
 {
   "artifact_id": "aamas2026-domain-level-lifted-asl-final-data",
+  "atomic_artifact_smoke": {
+    "backend": "moose",
+    "domain_name": "ferry",
+    "readable_policy": ".external/moose/exact-runs/ferry-seed0.model.readable",
+    "source_name": "ferry-seed0"
+  },
   "benchmark_source": {
     "coverage": "six selected achievement-goal planning domains",
     "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification.",
@@ -56,6 +62,8 @@
       "learner_sketches_commands": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment all",
       "learner_sketches_summary": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-summary --experiment all",
       "moose_atomic_command": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-atomic-command --domain-file src/domains/ferry/domain.pddl --training-dir src/domains/ferry/train --save-file tmp/moose-atomic/ferry.model --timeout-seconds 1800",
+      "moose_atomic_library_main_cli": "PYTHONDONTWRITEBYTECODE=1 uv run python src/main.py compile-moose-atomic-library --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-root tmp/moose-atomic/ferry-library-main",
+      "moose_readable_compile_asl": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-dir tmp/moose-atomic/ferry-library",
       "moose_readable_summary": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry"
     },
     "pinned_repositories": [
@@ -131,6 +139,7 @@
   "generated_output_policy": {
     "default_output_dir": "tmp/paper-final-latest",
     "do_not_track_generated_dirs": [
+      "tmp/paper-final-latest/atomic-artifacts",
       "tmp/paper-final-latest/backend-audit",
       "tmp/paper-final-latest/baseline-work",
       "tmp/paper-final-latest/baselines",
@@ -190,6 +199,11 @@
     {
       "kind": "file",
       "path": "paper_artifacts/domain_support_taxonomy.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "docs/gp_backend_strategy.md",
       "tracked": true
     },
     {

@@ -108,8 +108,8 @@ PINNED_BACKENDS = (
 )
 
 AUDIT_ONLY_CONSUMPTION_ROLE = {
-	"drives_layer_b": False,
-	"drives_layer_c": False,
+	"drives_atomic_templates": False,
+	"drives_temporal_wrapper": False,
 	"consumed_by_synthesis": False,
 	"consumption_mode": "audit_or_baseline_only",
 	"blocking_gap": "no_verified_lifted_policy_program_adapter",
@@ -179,8 +179,6 @@ BACKEND_RESEARCH_PROFILES = {
 			),
 		},
 		"current_consumption_role": {
-			"drives_layer_b": False,
-			"drives_layer_c": False,
 			"drives_atomic_templates": True,
 			"drives_temporal_wrapper": False,
 			"consumed_by_synthesis": True,
@@ -202,7 +200,7 @@ BACKEND_RESEARCH_PROFILES = {
 			"minimized_policy",
 		),
 		"reusable_evidence": (
-			"Layer B/C sketch evidence",
+			"atomic-template sketch evidence after safe binding",
 			"DLPlan feature vocabulary",
 			"qualitative feature conditions and effects",
 		),
@@ -235,10 +233,10 @@ BACKEND_RESEARCH_PROFILES = {
 			),
 		},
 		"current_consumption_role": {
-			"drives_layer_b": True,
-			"drives_layer_c": True,
+			"drives_atomic_templates": True,
+			"drives_temporal_wrapper": False,
 			"consumed_by_synthesis": True,
-			"consumption_mode": "parsed_bound_policy_rules",
+			"consumption_mode": "parsed_bound_policy_rules_for_atomic_templates",
 			"blocking_gap": None,
 		},
 	},
@@ -256,7 +254,7 @@ BACKEND_RESEARCH_PROFILES = {
 		"reusable_evidence": (
 			"policy-reuse representation baseline",
 			"hierarchical policy language comparison",
-			"Layer B/C hierarchical sketch candidates when feature bindings are safe",
+			"hierarchical atomic-template candidates when feature bindings are safe",
 		),
 		"known_failure_modes": (
 			"missing_backend",
@@ -288,10 +286,10 @@ BACKEND_RESEARCH_PROFILES = {
 			),
 		},
 		"current_consumption_role": {
-			"drives_layer_b": True,
-			"drives_layer_c": True,
+			"drives_atomic_templates": True,
+			"drives_temporal_wrapper": False,
 			"consumed_by_synthesis": True,
-			"consumption_mode": "verified_hierarchical_dlplan_policy_rules",
+			"consumption_mode": "verified_hierarchical_atomic_policy_rules",
 			"blocking_gap": None,
 		},
 	},
@@ -309,7 +307,7 @@ BACKEND_RESEARCH_PROFILES = {
 		"reusable_evidence": (
 			"description-logic feature templates",
 			"generalized-policy baseline behavior",
-			"Layer B/C transition-policy candidates after safe DLPlan conversion",
+			"atomic transition-policy candidates after safe DLPlan conversion",
 		),
 		"known_failure_modes": (
 			"pin_mismatch",
@@ -340,10 +338,10 @@ BACKEND_RESEARCH_PROFILES = {
 			),
 		},
 		"current_consumption_role": {
-			"drives_layer_b": True,
-			"drives_layer_c": True,
+			"drives_atomic_templates": True,
+			"drives_temporal_wrapper": False,
 			"consumed_by_synthesis": True,
-			"consumption_mode": "verified_d2l_text_policy_rules",
+			"consumption_mode": "verified_d2l_atomic_text_policy_rules",
 			"blocking_gap": None,
 			},
 		},
@@ -406,10 +404,10 @@ BACKEND_RESEARCH_PROFILES = {
 			),
 		},
 		"current_consumption_role": {
-			"drives_layer_b": True,
-			"drives_layer_c": True,
+			"drives_atomic_templates": True,
+			"drives_temporal_wrapper": False,
 			"consumed_by_synthesis": True,
-			"consumption_mode": "policy_first_lifted_program",
+			"consumption_mode": "policy_first_atomic_lifted_program",
 			"blocking_gap": None,
 		},
 	},
@@ -1181,8 +1179,8 @@ def backend_consumption_role(name: str) -> dict[str, object]:
 	profile = BACKEND_RESEARCH_PROFILES.get(str(name or "").strip())
 	if profile is None:
 		return {
-			"drives_layer_b": False,
-			"drives_layer_c": False,
+			"drives_atomic_templates": False,
+			"drives_temporal_wrapper": False,
 			"consumed_by_synthesis": False,
 			"consumption_mode": "unknown_backend_audit_only",
 			"blocking_gap": "no_pinned_backend_profile_or_verified_adapter",

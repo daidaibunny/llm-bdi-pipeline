@@ -108,8 +108,6 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert by_name["moose"]["present"] is False
 	assert by_name["moose"]["pin_status"] == "missing"
 	assert by_name["moose"]["current_consumption_role"] == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
 		"drives_atomic_templates": True,
 		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
@@ -131,14 +129,17 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"external learned sketch evidence for conservative feature binding"
 	)
 	assert "feature_rule_policy" in by_name["learner-sketches"]["output_artifacts"]
-	assert "Layer B/C sketch evidence" in by_name["learner-sketches"]["reusable_evidence"]
+	assert (
+		"atomic-template sketch evidence after safe binding"
+		in by_name["learner-sketches"]["reusable_evidence"]
+	)
 	assert by_name["learner-sketches"]["resource_profile"]["default_max_rss_gb"] == 16.0
 	assert by_name["learner-sketches"]["resource_profile"]["guard_required"] is True
 	assert by_name["learner-sketches"]["current_consumption_role"] == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "parsed_bound_policy_rules",
+		"consumption_mode": "parsed_bound_policy_rules_for_atomic_templates",
 		"blocking_gap": None,
 	}
 	assert by_name["learner-sketches"]["paper_code_capability"]["status"] == (
@@ -154,10 +155,10 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "missing_backend" in by_name["h-policy-learner"]["failure_modes"]
 	assert "hierarchical policy" in by_name["h-policy-learner"]["paper_role"]
 	assert by_name["h-policy-learner"]["current_consumption_role"] == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_hierarchical_dlplan_policy_rules",
+		"consumption_mode": "verified_hierarchical_atomic_policy_rules",
 		"blocking_gap": None,
 	}
 
@@ -166,10 +167,10 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "pin_mismatch" in by_name["d2l"]["failure_modes"]
 	assert "Docker" in by_name["d2l"]["resource_profile"]["execution_environment"]
 	assert by_name["d2l"]["current_consumption_role"] == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_d2l_text_policy_rules",
+		"consumption_mode": "verified_d2l_atomic_text_policy_rules",
 		"blocking_gap": None,
 	}
 	assert by_name["d2l"]["paper_code_capability"]["status"] == (
@@ -197,15 +198,15 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		for entry in by_name["learner-policies-from-examples"]["usage_entrypoints"]
 	)
 	assert by_name["learner-policies-from-examples"]["current_consumption_role"] == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "policy_first_lifted_program",
+		"consumption_mode": "policy_first_atomic_lifted_program",
 		"blocking_gap": None,
 	}
 	assert by_name["pg3"]["current_consumption_role"] == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
+		"drives_atomic_templates": False,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": False,
 		"consumption_mode": "audit_or_baseline_only",
 		"blocking_gap": "no_verified_lifted_policy_program_adapter",
@@ -227,8 +228,6 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 
 def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
 	assert backend_consumption_role("moose") == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
 		"drives_atomic_templates": True,
 		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
@@ -237,36 +236,36 @@ def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
 	}
 	assert backend_consumption_role("learner-sketches")["consumed_by_synthesis"] is True
 	assert backend_consumption_role("h-policy-learner") == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_hierarchical_dlplan_policy_rules",
+		"consumption_mode": "verified_hierarchical_atomic_policy_rules",
 		"blocking_gap": None,
 	}
 	assert backend_consumption_role("d2l") == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_d2l_text_policy_rules",
+		"consumption_mode": "verified_d2l_atomic_text_policy_rules",
 		"blocking_gap": None,
 	}
 	assert backend_consumption_role("learner-policies-from-examples") == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "policy_first_lifted_program",
+		"consumption_mode": "policy_first_atomic_lifted_program",
 		"blocking_gap": None,
 	}
 	assert backend_consumption_role("pg3") == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
+		"drives_atomic_templates": False,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": False,
 		"consumption_mode": "audit_or_baseline_only",
 		"blocking_gap": "no_verified_lifted_policy_program_adapter",
 	}
 	assert backend_consumption_role("unknown-paper-code") == {
-		"drives_layer_b": False,
-		"drives_layer_c": False,
+		"drives_atomic_templates": False,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": False,
 		"consumption_mode": "unknown_backend_audit_only",
 		"blocking_gap": "no_pinned_backend_profile_or_verified_adapter",
