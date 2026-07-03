@@ -91,6 +91,7 @@ dissertation/
 latex_code/*
 !latex_code/aamas_method_paper/
 !latex_code/aamas_method_paper/**
+latex_code/aamas_method_paper/.DS_Store
 latex_code/aamas_method_paper/build/
 tests/logs/
 tmp/
