@@ -22,6 +22,10 @@ from .atomic_backend_selector import (
 	AtomicTemplateBackendDecision,
 	select_atomic_template_backend,
 )
+from .atomic_module_synthesis import (
+	AtomicModuleSynthesisReport,
+	synthesize_atomic_minimal_literal_module_library,
+)
 from .benchmark_registry import (
 	AchievementBenchmarkRegistry,
 	BenchmarkRecord,
@@ -77,6 +81,7 @@ from .moose_policy_adapter import (
 	MooseAtom,
 	MooseReadableRule,
 	audit_moose_atomic_library_quality,
+	compile_moose_readable_policy_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_asl_library,
 	load_moose_readable_policy,
 	parse_moose_readable_policy,
@@ -107,6 +112,7 @@ __all__ = [
 	"ArchitectureDecision",
 	"ArchitectureGap",
 	"AtomicGoalTemplate",
+	"AtomicModuleSynthesisReport",
 	"AtomicTemplateBackendDecision",
 	"BackendManifest",
 	"BenchmarkRecord",
@@ -148,6 +154,7 @@ __all__ = [
 	"backend_consumption_role",
 	"bounded_hypothesis_class_contract",
 	"compile_moose_readable_policy_to_asl_library",
+	"compile_moose_readable_policy_to_minimal_module_asl_library",
 	"discover_backend_manifest",
 	"discover_learner_sketches_policy_file",
 	"discover_learning_general_policies_policy_file",
@@ -169,5 +176,6 @@ __all__ = [
 	"run_learner_sketches",
 	"run_learning_general_policies",
 	"select_atomic_template_backend",
+	"synthesize_atomic_minimal_literal_module_library",
 	"validate_singleton_literal_dfa",
 ]

@@ -666,11 +666,11 @@ def test_converter():
         try:
             dfa_dot, metadata = converter.convert(spec)
 
-            print(f"✓ Conversion successful")
+            print("✓ Conversion successful")
             print(f"  Original: {metadata['original_formula']}")
             print(f"  Propositional: {metadata['propositional_formula']}")
             print(f"  Mappings: {metadata['predicate_to_prop_mapping']}")
-            print(f"\n  COMPLETE DFA (DOT format):")
+            print("\n  COMPLETE DFA (DOT format):")
             print("  " + "~" * 76)
             for line in dfa_dot.split('\n'):
                 print(f"  {line}")

@@ -22,6 +22,7 @@ from plan_library.models import PlanLibrary
 from .policy_program import LearnedPolicyRule
 from .policy_program import LiftedPolicyProgram
 from .policy_program import PolicyModule
+from .atomic_module_synthesis import synthesize_atomic_minimal_literal_module_library
 
 
 @dataclass(frozen=True)
@@ -232,6 +233,43 @@ def compile_moose_readable_policy_to_asl_library(
 			"raw_rule_count": len(rules),
 			"compiled_singleton_rule_count": len(plans),
 			"library_quality": quality_report.to_dict(),
+		},
+	)
+
+
+def compile_moose_readable_policy_to_minimal_module_asl_library(
+	text: str,
+	*,
+	domain_file: str | Path,
+	domain_name: str,
+	source_name: str,
+	policy_file: str | Path | None = None,
+) -> PlanLibrary:
+	"""Compress MOOSE singleton evidence into compact recursive atomic modules."""
+
+	rules = parse_moose_readable_policy(text)
+	seed_predicates = tuple(
+		dict.fromkeys(
+			rule.goal_conditions[0].predicate
+			for rule in rules
+			if rule.is_singleton_goal_rule
+		),
+	)
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=seed_predicates,
+		source_backend="moose_schema_minimal_modules",
+		source_name=source_name,
+		policy_file=policy_file,
+	)
+	return PlanLibrary(
+		domain_name=domain_name or library.domain_name,
+		plans=library.plans,
+		initial_beliefs=library.initial_beliefs,
+		metadata={
+			**dict(library.metadata),
+			"source_raw_rule_count": len(rules),
+			"source_seed_predicates": list(seed_predicates),
 		},
 	)
 

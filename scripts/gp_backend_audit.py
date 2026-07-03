@@ -28,6 +28,7 @@ from domain_level_planning.gp_backends import (
 )
 from domain_level_planning.moose_policy_adapter import (
 	compile_moose_readable_policy_to_asl_library,
+	compile_moose_readable_policy_to_minimal_module_asl_library,
 	policy_program_from_moose_readable_policy,
 )
 from domain_level_planning.policy_program import policy_program_from_sketch_policy
@@ -113,7 +114,7 @@ def main() -> int:
 	parser.add_argument(
 		"--domain-file",
 		type=Path,
-		help="PDDL domain file for MOOSE atomic command generation.",
+		help="PDDL domain file for MOOSE command generation or minimal module synthesis.",
 	)
 	parser.add_argument(
 		"--training-dir",
@@ -168,6 +169,11 @@ def main() -> int:
 		action="store_true",
 		help="Print raw paper backend commands without the resource guard.",
 	)
+	parser.add_argument(
+		"--minimal-modules",
+		action="store_true",
+		help="Compile MOOSE singleton evidence into compact recursive atomic modules.",
+	)
 	args = parser.parse_args()
 
 	if args.command == "install":
@@ -215,7 +221,9 @@ def main() -> int:
 		compile_moose_readable_atomic_library(
 			policy_file=_required_path(args.policy_file, "--policy-file"),
 			domain_name=args.domain_name,
+			domain_file=args.domain_file,
 			output_dir=_required_path(args.output_dir, "--output-dir"),
+			minimal_modules=args.minimal_modules,
 		)
 		return 0
 	if args.command == "learner-sketches-command":
@@ -540,18 +548,31 @@ def compile_moose_readable_atomic_library(
 	*,
 	policy_file: Path,
 	domain_name: str,
+	domain_file: Path | None,
 	output_dir: Path,
+	minimal_modules: bool = False,
 ) -> None:
 	"""Materialize a domain-level atomic ASL library from a MOOSE readable policy."""
 
 	text = policy_file.read_text(encoding="utf-8")
 	source_name = policy_file.stem.replace(".model", "")
-	library = compile_moose_readable_policy_to_asl_library(
-		text,
-		domain_name=domain_name,
-		source_name=source_name,
-		policy_file=policy_file,
-	)
+	if minimal_modules:
+		if domain_file is None:
+			raise ValueError("--domain-file is required with --minimal-modules.")
+		library = compile_moose_readable_policy_to_minimal_module_asl_library(
+			text,
+			domain_file=domain_file,
+			domain_name=domain_name,
+			source_name=source_name,
+			policy_file=policy_file,
+		)
+	else:
+		library = compile_moose_readable_policy_to_asl_library(
+			text,
+			domain_name=domain_name,
+			source_name=source_name,
+			policy_file=policy_file,
+		)
 	program = policy_program_from_moose_readable_policy(
 		text,
 		domain_name=domain_name,
@@ -572,10 +593,29 @@ def compile_moose_readable_atomic_library(
 			{
 				"backend": "moose",
 				"domain_name": domain_name,
+				"domain_file": str(domain_file) if domain_file is not None else None,
 				"policy_file": str(policy_file),
 				"source_name": source_name,
-				"raw_rule_count": int(library.metadata.get("raw_rule_count") or 0),
-				"compiled_singleton_rule_count": len(library.plans),
+				"minimal_modules": minimal_modules,
+				"raw_rule_count": int(
+					library.metadata.get("raw_rule_count")
+					or library.metadata.get("source_raw_rule_count")
+					or 0,
+				),
+				"source_raw_rule_count": int(
+					library.metadata.get("source_raw_rule_count")
+					or library.metadata.get("raw_rule_count")
+					or 0,
+				),
+				"source_seed_predicates": list(
+					library.metadata.get("source_seed_predicates") or (),
+				),
+				"compiled_plan_count": len(library.plans),
+				"compiled_singleton_rule_count": (
+					int(library.metadata.get("compiled_singleton_rule_count") or 0)
+					if not minimal_modules
+					else 0
+				),
 				"policy_program_rule_count": len(program.rules),
 				"policy_program_module_count": len(program.modules),
 				"library_quality": dict(library.metadata.get("library_quality") or {}),

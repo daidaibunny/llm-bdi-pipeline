@@ -6,13 +6,13 @@ universal generalized planner: it imports or learns atomic predicate/literal
 templates from external generalized-planning backends, then appends
 query-specific temporal wrappers from validated lifted LTLf goals.
 
-The current architecture has two research-facing layers:
+The current architecture has two research-facing components:
 
-- Atomic template layer: parse a PDDL domain and training split, select a
-  backend by the required atomic templates, normalize a verified backend
-  artifact into `LiftedPolicyProgram`, compile lifted `+!P(Args)` plans, and
-  validate without runtime full-trace planning.
-- Temporal append layer: consume lifted LTLf JSON from the external Input
+- Atomic minimal literal module generation: parse a PDDL domain and training
+  split, use a verified generalized-planning artifact as evidence for required
+  atomic predicates, synthesize compact lifted recursive modules from PDDL
+  action schemas, and validate without runtime full-trace planning.
+- Temporal append: consume lifted LTLf JSON from the external Input
   component, compile it to a DFA, validate singleton-literal transition guards,
   and append query-specific `+!g_query` wrappers to the same domain library.
 
@@ -25,9 +25,11 @@ The current architecture has two research-facing layers:
    and the `test` split as held-out goal-specification cases.
 4. Select an external generalized-planning backend by atomic template needs, not
    by assigning the whole domain to a routing class.
-5. Normalize the backend artifact into `LiftedPolicyProgram`.
-6. Compile accepted lifted atomic rules into an AgentSpeak(L) library whose plan
-   heads are PDDL predicate goals such as `+!clear(X)` or `+!on(X,Y)`.
+5. Normalize the backend artifact into `LiftedPolicyProgram` or use it as
+   target-predicate evidence for atomic minimal literal module synthesis.
+6. Compile accepted lifted atomic rules or synthesized minimal modules into an
+   AgentSpeak(L) library whose plan heads are PDDL predicate goals such as
+   `+!clear(X)` or `+!on(X,Y)`.
 7. Append lifted LTLf/DFA query wrappers only when each relevant DFA transition
    guard is a singleton literal over the PDDL vocabulary.
 
@@ -36,9 +38,10 @@ wrappers may introduce top-level names such as `g_query_17`, but generated ASL
 must not emit synthetic names such as `achieve_*`, `transition_*`, or exposed
 `dfa_state(...)` beliefs.
 
-The older in-repository schema-derived synthesizer and conjunctive-goal
-ordering path have been removed from the current code path. Atomic templates
-must come from verified external generalized-planning artifacts.
+The older in-repository generalized-planning synthesizer and conjunctive-goal
+ordering path have been removed from the current code path. The current schema
+logic is narrower: it compresses verified singleton-goal backend evidence into
+atomic minimal literal modules; it is not a universal generalized planner.
 
 ## Planner Use
 

@@ -16,6 +16,7 @@ if _src_dir not in sys.path:
 
 from domain_level_planning import (  # noqa: E402
 	append_lifted_temporal_goal_case_to_library,
+	compile_moose_readable_policy_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_asl_library,
 	load_lifted_ltlf_goal_dataset,
 )
@@ -51,6 +52,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
 		epilog="""
 Examples:
   python src/main.py compile-moose-atomic-library --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-root artifacts/domain_libraries/ferry
+  python src/main.py compile-moose-atomic-library --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules --output-root artifacts/domain_libraries/blocks
   python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocks/domain.pddl --plan-library-file artifacts/domain_libraries/blocks/plan_library.json --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json --query-id query_1 --output-root artifacts/domain_libraries/blocks
 		""",
 	)
@@ -62,6 +64,18 @@ Examples:
 	)
 	moose_parser.add_argument("--policy-file", required=True, help="MOOSE readable policy file.")
 	moose_parser.add_argument("--domain-name", required=True, help="PDDL domain name for the output library.")
+	moose_parser.add_argument(
+		"--domain-file",
+		help="PDDL domain file. Required when --minimal-modules is set.",
+	)
+	moose_parser.add_argument(
+		"--minimal-modules",
+		action="store_true",
+		help=(
+			"Use MOOSE singleton evidence as seeds for compact recursive atomic "
+			"literal module synthesis."
+		),
+	)
 	moose_parser.add_argument(
 		"--output-root",
 		required=True,
@@ -124,21 +138,41 @@ def main() -> None:
 
 def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	policy_file = _require_existing_path(args.policy_file, label="MOOSE Policy File")
+	domain_file = (
+		_require_existing_path(args.domain_file, label="Domain File")
+		if getattr(args, "minimal_modules", False)
+		else _absolute_path(args.domain_file)
+	)
 	output_root = _require_output_root(args.output_root)
 	policy_text = Path(policy_file).read_text(encoding="utf-8")
 	source_name = Path(policy_file).stem.replace(".model", "")
-	library = compile_moose_readable_policy_to_asl_library(
-		policy_text,
-		domain_name=str(args.domain_name).strip(),
-		source_name=source_name,
-		policy_file=policy_file,
-	)
+	if getattr(args, "minimal_modules", False):
+		library = compile_moose_readable_policy_to_minimal_module_asl_library(
+			policy_text,
+			domain_file=str(domain_file),
+			domain_name=str(args.domain_name).strip(),
+			source_name=source_name,
+			policy_file=policy_file,
+		)
+	else:
+		library = compile_moose_readable_policy_to_asl_library(
+			policy_text,
+			domain_name=str(args.domain_name).strip(),
+			source_name=source_name,
+			policy_file=policy_file,
+		)
 	artifact_paths = _persist_current_plan_library(
 		plan_library=library,
 		output_root=output_root,
 		metadata={
-			"artifact_kind": "moose_atomic_library",
+			"artifact_kind": (
+				"moose_seeded_atomic_minimal_literal_module_library"
+				if getattr(args, "minimal_modules", False)
+				else "moose_atomic_library"
+			),
 			"backend": "moose",
+			"domain_file": domain_file,
+			"minimal_modules": bool(getattr(args, "minimal_modules", False)),
 			"policy_file": policy_file,
 			"source_name": source_name,
 		},

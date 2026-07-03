@@ -1,0 +1,289 @@
+{
+  "artifact_kind": "domain_library_with_temporal_append",
+  "dfa_payloads": {
+    "query_1": {
+      "accepting_states": [
+        "4"
+      ],
+      "alphabet": [],
+      "construction": "generic_ltlf2dfa",
+      "dfa_dot": "digraph MONA_DFA {\n rankdir = LR;\n center = true;\n size = \"7.5,10.5\";\n edge [fontname = Courier];\n node [height = .5, width = .5];\n node [shape = doublecircle]; 4;\n node [shape = circle]; 1;\n init [shape = plaintext, label = \"\"];\n init -> 1;\n 1 -> 1 [label=\"~on_b4_b2\"];\n 1 -> 2 [label=\"on_b4_b2\"];\n 2 -> 2 [label=\"~on_b1_b4\"];\n 2 -> 3 [label=\"on_b1_b4\"];\n 3 -> 3 [label=\"~on_b3_b1\"];\n 3 -> 4 [label=\"on_b3_b1\"];\n 4 -> 4 [label=\"true\"];\n}",
+      "dfa_path": "dfa.dot",
+      "formula": "F(on_b4_b2 & X(F(on_b1_b4 & X(F(on_b3_b1)))))",
+      "free_variables": [
+        "on_b4_b2",
+        "on_b1_b4",
+        "on_b3_b1"
+      ],
+      "guarded_transitions": [
+        {
+          "guards": [
+            "0XX"
+          ],
+          "original_raw_label": "~on_b4_b2",
+          "raw_label": "not on(b4, b2)",
+          "source_state": "1",
+          "target_state": "1"
+        },
+        {
+          "guards": [
+            "1XX"
+          ],
+          "original_raw_label": "on_b4_b2",
+          "raw_label": "on(b4, b2)",
+          "source_state": "1",
+          "target_state": "2"
+        },
+        {
+          "guards": [
+            "X0X"
+          ],
+          "original_raw_label": "~on_b1_b4",
+          "raw_label": "not on(b1, b4)",
+          "source_state": "2",
+          "target_state": "2"
+        },
+        {
+          "guards": [
+            "X1X"
+          ],
+          "original_raw_label": "on_b1_b4",
+          "raw_label": "on(b1, b4)",
+          "source_state": "2",
+          "target_state": "3"
+        },
+        {
+          "guards": [
+            "XX0"
+          ],
+          "original_raw_label": "~on_b3_b1",
+          "raw_label": "not on(b3, b1)",
+          "source_state": "3",
+          "target_state": "3"
+        },
+        {
+          "guards": [
+            "XX1"
+          ],
+          "original_raw_label": "on_b3_b1",
+          "raw_label": "on(b3, b1)",
+          "source_state": "3",
+          "target_state": "4"
+        },
+        {
+          "guards": [
+            "XXX"
+          ],
+          "original_raw_label": null,
+          "raw_label": "true",
+          "source_state": "4",
+          "target_state": "4"
+        }
+      ],
+      "initial_state": "1",
+      "lifted_atom_binding": {
+        "atom_count": 3,
+        "rewritten_transition_count": 6,
+        "symbols": [
+          "on(b1, b4)",
+          "on(b1,b4)",
+          "on(b3, b1)",
+          "on(b3,b1)",
+          "on(b4, b2)",
+          "on(b4,b2)",
+          "on_b1_b4",
+          "on_b3_b1",
+          "on_b4_b2"
+        ]
+      },
+      "num_states": 4,
+      "num_transitions": 7,
+      "timing_profile": {
+        "convert_seconds": 0.02069679200212704,
+        "total_seconds": 0.020715125006972812
+      }
+    },
+    "query_2": {
+      "accepting_states": [
+        "7"
+      ],
+      "alphabet": [],
+      "construction": "generic_ltlf2dfa",
+      "dfa_dot": "digraph MONA_DFA {\n rankdir = LR;\n center = true;\n size = \"7.5,10.5\";\n edge [fontname = Courier];\n node [height = .5, width = .5];\n node [shape = doublecircle]; 7;\n node [shape = circle]; 1;\n init [shape = plaintext, label = \"\"];\n init -> 1;\n 1 -> 1 [label=\"~on_b3_b5\"];\n 1 -> 2 [label=\"on_b3_b5\"];\n 2 -> 2 [label=\"~on_b6_b3\"];\n 2 -> 3 [label=\"on_b6_b3\"];\n 3 -> 3 [label=\"~on_b1_b6\"];\n 3 -> 4 [label=\"on_b1_b6\"];\n 4 -> 4 [label=\"~on_b2_b1\"];\n 4 -> 5 [label=\"on_b2_b1\"];\n 5 -> 5 [label=\"~on_b4_b2\"];\n 5 -> 6 [label=\"on_b4_b2\"];\n 6 -> 6 [label=\"~on_b7_b4\"];\n 6 -> 7 [label=\"on_b7_b4\"];\n 7 -> 7 [label=\"true\"];\n}",
+      "dfa_path": "dfa.dot",
+      "formula": "F(on_b3_b5 & X(F(on_b6_b3 & X(F(on_b1_b6 & X(F(on_b2_b1 & X(F(on_b4_b2 & X(F(on_b7_b4)))))))))))",
+      "free_variables": [
+        "on_b3_b5",
+        "on_b6_b3",
+        "on_b1_b6",
+        "on_b2_b1",
+        "on_b4_b2",
+        "on_b7_b4"
+      ],
+      "guarded_transitions": [
+        {
+          "guards": [
+            "0XXXXX"
+          ],
+          "original_raw_label": "~on_b3_b5",
+          "raw_label": "not on(b3, b5)",
+          "source_state": "1",
+          "target_state": "1"
+        },
+        {
+          "guards": [
+            "1XXXXX"
+          ],
+          "original_raw_label": "on_b3_b5",
+          "raw_label": "on(b3, b5)",
+          "source_state": "1",
+          "target_state": "2"
+        },
+        {
+          "guards": [
+            "X0XXXX"
+          ],
+          "original_raw_label": "~on_b6_b3",
+          "raw_label": "not on(b6, b3)",
+          "source_state": "2",
+          "target_state": "2"
+        },
+        {
+          "guards": [
+            "X1XXXX"
+          ],
+          "original_raw_label": "on_b6_b3",
+          "raw_label": "on(b6, b3)",
+          "source_state": "2",
+          "target_state": "3"
+        },
+        {
+          "guards": [
+            "XX0XXX"
+          ],
+          "original_raw_label": "~on_b1_b6",
+          "raw_label": "not on(b1, b6)",
+          "source_state": "3",
+          "target_state": "3"
+        },
+        {
+          "guards": [
+            "XX1XXX"
+          ],
+          "original_raw_label": "on_b1_b6",
+          "raw_label": "on(b1, b6)",
+          "source_state": "3",
+          "target_state": "4"
+        },
+        {
+          "guards": [
+            "XXX0XX"
+          ],
+          "original_raw_label": "~on_b2_b1",
+          "raw_label": "not on(b2, b1)",
+          "source_state": "4",
+          "target_state": "4"
+        },
+        {
+          "guards": [
+            "XXX1XX"
+          ],
+          "original_raw_label": "on_b2_b1",
+          "raw_label": "on(b2, b1)",
+          "source_state": "4",
+          "target_state": "5"
+        },
+        {
+          "guards": [
+            "XXXX0X"
+          ],
+          "original_raw_label": "~on_b4_b2",
+          "raw_label": "not on(b4, b2)",
+          "source_state": "5",
+          "target_state": "5"
+        },
+        {
+          "guards": [
+            "XXXX1X"
+          ],
+          "original_raw_label": "on_b4_b2",
+          "raw_label": "on(b4, b2)",
+          "source_state": "5",
+          "target_state": "6"
+        },
+        {
+          "guards": [
+            "XXXXX0"
+          ],
+          "original_raw_label": "~on_b7_b4",
+          "raw_label": "not on(b7, b4)",
+          "source_state": "6",
+          "target_state": "6"
+        },
+        {
+          "guards": [
+            "XXXXX1"
+          ],
+          "original_raw_label": "on_b7_b4",
+          "raw_label": "on(b7, b4)",
+          "source_state": "6",
+          "target_state": "7"
+        },
+        {
+          "guards": [
+            "XXXXXX"
+          ],
+          "original_raw_label": null,
+          "raw_label": "true",
+          "source_state": "7",
+          "target_state": "7"
+        }
+      ],
+      "initial_state": "1",
+      "lifted_atom_binding": {
+        "atom_count": 6,
+        "rewritten_transition_count": 12,
+        "symbols": [
+          "on(b1, b6)",
+          "on(b1,b6)",
+          "on(b2, b1)",
+          "on(b2,b1)",
+          "on(b3, b5)",
+          "on(b3,b5)",
+          "on(b4, b2)",
+          "on(b4,b2)",
+          "on(b6, b3)",
+          "on(b6,b3)",
+          "on(b7, b4)",
+          "on(b7,b4)",
+          "on_b1_b6",
+          "on_b2_b1",
+          "on_b3_b5",
+          "on_b4_b2",
+          "on_b6_b3",
+          "on_b7_b4"
+        ]
+      },
+      "num_states": 7,
+      "num_transitions": 13,
+      "timing_profile": {
+        "convert_seconds": 0.01909545899980003,
+        "total_seconds": 0.01911466699675657
+      }
+    }
+  },
+  "domain_name": "blocks",
+  "library_quality": {
+    "artifact_classification": "compact_recursive_atomic_module_library",
+    "compact_recursive_module_ready": true,
+    "plan_count": 8,
+    "subgoal_step_count": 6
+  },
+  "ltlf_goal_json": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/snapshots/moose_blocks_e2e/probe_first_two_lifted_ltlf.json",
+  "plan_count": 19,
+  "query_ids": [
+    "query_1",
+    "query_2"
+  ],
+  "source_plan_library_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/snapshots/moose_blocks_minimal_modules/plan_library.json"
+}

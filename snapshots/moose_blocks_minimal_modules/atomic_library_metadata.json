@@ -1,0 +1,24 @@
+{
+  "artifact_contract": "domain-level lifted atomic AgentSpeak(L) library generated from MOOSE readable singleton-goal rules",
+  "backend": "moose",
+  "compiled_plan_count": 8,
+  "compiled_singleton_rule_count": 0,
+  "domain_file": "src/domains/blocks/domain.pddl",
+  "domain_name": "blocks",
+  "library_quality": {
+    "artifact_classification": "compact_recursive_atomic_module_library",
+    "compact_recursive_module_ready": true,
+    "plan_count": 8,
+    "subgoal_step_count": 6
+  },
+  "minimal_modules": true,
+  "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+  "policy_program_module_count": 72,
+  "policy_program_rule_count": 72,
+  "raw_rule_count": 72,
+  "source_name": "blocks-probe-first4",
+  "source_raw_rule_count": 72,
+  "source_seed_predicates": [
+    "on"
+  ]
+}

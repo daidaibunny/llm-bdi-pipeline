@@ -51,6 +51,56 @@ def test_main_compiles_moose_atomic_library(tmp_path: Path) -> None:
 	assert "dfa_state" not in asl
 
 
+def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> None:
+	policy_file = tmp_path / "blocks-seed0.model.readable"
+	output_root = tmp_path / "blocks-minimal-library"
+	policy_file.write_text(
+		"""
+		precedence : (1, 1, 0, 0)
+		      vars : block0 block1
+		    s_cond : (clear block0) (ontable block0) (handempty) (clear block1)
+		    g_cond : (on block0 block1)
+		   actions : (pick-up block0) (stack block0 block1)
+		""",
+		encoding="utf-8",
+	)
+
+	completed = subprocess.run(
+		[
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"compile-moose-atomic-library",
+			"--policy-file",
+			str(policy_file),
+			"--domain-file",
+			str(PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"),
+			"--domain-name",
+			"blocks",
+			"--minimal-modules",
+			"--output-root",
+			str(output_root),
+		],
+		cwd=PROJECT_ROOT,
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+	result = json.loads(completed.stdout)
+	asl = Path(result["artifact_paths"]["plan_library_asl"]).read_text(encoding="utf-8")
+	metadata = json.loads(
+		Path(result["artifact_paths"]["artifact_metadata"]).read_text(encoding="utf-8"),
+	)
+
+	assert result["success"] is True
+	assert result["plan_count"] == 8
+	assert metadata["artifact_kind"] == "moose_seeded_atomic_minimal_literal_module_library"
+	assert metadata["minimal_modules"] is True
+	assert "+!on(X, Y) : not clear(X)" in asl
+	assert "+!clear(X) : on(Y, X) & not clear(Y)" in asl
+	assert "!holding" not in asl
+	assert "block0" not in asl
+
+
 def test_main_appends_lifted_temporal_goal_to_existing_library(
 	tmp_path: Path,
 ) -> None:

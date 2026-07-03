@@ -12,7 +12,7 @@ _src_dir = str(Path(__file__).parent.parent.parent / "src")
 if _src_dir not in sys.path:
     sys.path.insert(0, _src_dir)
 
-from utils.symbol_normalizer import SymbolNormalizer
+from utils.symbol_normalizer import SymbolNormalizer  # noqa: E402
 
 
 def convert_formula_to_propositional_symbols(

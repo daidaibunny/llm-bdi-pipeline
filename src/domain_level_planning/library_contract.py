@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from typing import Iterable, Mapping, Sequence
 
-from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, PlanLibrary
+from plan_library.models import AgentSpeakPlan, PlanLibrary
 
 SUPPORTED_ASL_SUBSET = {
 	"plan_heads": "PDDL predicate achievement goals or query-specific +!g_* temporal wrappers",

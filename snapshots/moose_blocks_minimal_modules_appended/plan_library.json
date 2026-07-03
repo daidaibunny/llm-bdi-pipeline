@@ -1,0 +1,1397 @@
+{
+  "domain_name": "blocks",
+  "initial_beliefs": [],
+  "metadata": {
+    "atomic_module_synthesis": {
+      "branch_count_by_predicate": {
+        "clear": 3,
+        "on": 5
+      },
+      "module_predicates": [
+        "clear",
+        "on"
+      ],
+      "plan_count": 8,
+      "producer_actions_by_predicate": {
+        "clear": [
+          "put-down",
+          "stack",
+          "unstack"
+        ],
+        "on": [
+          "stack"
+        ]
+      },
+      "pruned_candidate_count": 0,
+      "recursive_predicates": [
+        "clear",
+        "on"
+      ],
+      "seed_predicates": [
+        "on"
+      ],
+      "theoretical_basis": [
+        "MOOSE singleton-goal regression supplies lifted target-predicate evidence",
+        "PDDL action schemas supply primitive producer/precondition structure",
+        "policy-reuse style predicate modules allow subgoal calls between atomic literals",
+        "minimal sibling branches are selected by schema subsumption over contexts and subgoals"
+      ]
+    },
+    "atomic_template_backend": "moose_schema_minimal_modules",
+    "generation_mode": "atomic_minimal_literal_module_library",
+    "library_quality": {
+      "artifact_classification": "compact_recursive_atomic_module_library",
+      "compact_recursive_module_ready": true,
+      "plan_count": 8,
+      "subgoal_step_count": 6
+    },
+    "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+    "source_name": "blocks-probe-first4",
+    "source_raw_rule_count": 72,
+    "source_seed_predicates": [
+      "on"
+    ],
+    "temporal_goal_append": {
+      "dfa_accepting_states": [
+        "7"
+      ],
+      "dfa_initial_state": "1",
+      "goal_name": "g_probe_p02_tower",
+      "progress_plan_count": 6,
+      "progress_request_diagnostics": [
+        {
+          "message": null,
+          "raw_guard": "on(b3, b5)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b3",
+                  "b5"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b3, b5)"
+            ],
+            "raw_guard": "on(b3, b5)",
+            "source_state": null,
+            "state_literals": [
+              "on(b3, b5)"
+            ],
+            "target_state": null
+          },
+          "source_state": "1",
+          "state_literals": [
+            "on(b3, b5)"
+          ],
+          "supported": true,
+          "target_state": "2"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b6, b3)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b6",
+                  "b3"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b6, b3)"
+            ],
+            "raw_guard": "on(b6, b3)",
+            "source_state": null,
+            "state_literals": [
+              "on(b6, b3)"
+            ],
+            "target_state": null
+          },
+          "source_state": "2",
+          "state_literals": [
+            "on(b6, b3)"
+          ],
+          "supported": true,
+          "target_state": "3"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b1, b6)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b1",
+                  "b6"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b1, b6)"
+            ],
+            "raw_guard": "on(b1, b6)",
+            "source_state": null,
+            "state_literals": [
+              "on(b1, b6)"
+            ],
+            "target_state": null
+          },
+          "source_state": "3",
+          "state_literals": [
+            "on(b1, b6)"
+          ],
+          "supported": true,
+          "target_state": "4"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b2, b1)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b2",
+                  "b1"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b2, b1)"
+            ],
+            "raw_guard": "on(b2, b1)",
+            "source_state": null,
+            "state_literals": [
+              "on(b2, b1)"
+            ],
+            "target_state": null
+          },
+          "source_state": "4",
+          "state_literals": [
+            "on(b2, b1)"
+          ],
+          "supported": true,
+          "target_state": "5"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b4, b2)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b4",
+                  "b2"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b4, b2)"
+            ],
+            "raw_guard": "on(b4, b2)",
+            "source_state": null,
+            "state_literals": [
+              "on(b4, b2)"
+            ],
+            "target_state": null
+          },
+          "source_state": "5",
+          "state_literals": [
+            "on(b4, b2)"
+          ],
+          "supported": true,
+          "target_state": "6"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b7, b4)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b7",
+                  "b4"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b7, b4)"
+            ],
+            "raw_guard": "on(b7, b4)",
+            "source_state": null,
+            "state_literals": [
+              "on(b7, b4)"
+            ],
+            "target_state": null
+          },
+          "source_state": "6",
+          "state_literals": [
+            "on(b7, b4)"
+          ],
+          "supported": true,
+          "target_state": "7"
+        }
+      ],
+      "wrapper_mode": "context_driven_prefix"
+    },
+    "temporal_goal_append_history": [
+      {
+        "dfa_accepting_states": [
+          "4"
+        ],
+        "dfa_initial_state": "1",
+        "goal_name": "g_probe_p01_tower",
+        "progress_plan_count": 3,
+        "progress_request_diagnostics": [
+          {
+            "message": null,
+            "raw_guard": "on(b4, b2)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b4",
+                    "b2"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b4, b2)"
+              ],
+              "raw_guard": "on(b4, b2)",
+              "source_state": null,
+              "state_literals": [
+                "on(b4, b2)"
+              ],
+              "target_state": null
+            },
+            "source_state": "1",
+            "state_literals": [
+              "on(b4, b2)"
+            ],
+            "supported": true,
+            "target_state": "2"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b1, b4)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b1",
+                    "b4"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b1, b4)"
+              ],
+              "raw_guard": "on(b1, b4)",
+              "source_state": null,
+              "state_literals": [
+                "on(b1, b4)"
+              ],
+              "target_state": null
+            },
+            "source_state": "2",
+            "state_literals": [
+              "on(b1, b4)"
+            ],
+            "supported": true,
+            "target_state": "3"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b3, b1)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b3",
+                    "b1"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b3, b1)"
+              ],
+              "raw_guard": "on(b3, b1)",
+              "source_state": null,
+              "state_literals": [
+                "on(b3, b1)"
+              ],
+              "target_state": null
+            },
+            "source_state": "3",
+            "state_literals": [
+              "on(b3, b1)"
+            ],
+            "supported": true,
+            "target_state": "4"
+          }
+        ],
+        "wrapper_mode": "context_driven_prefix"
+      },
+      {
+        "dfa_accepting_states": [
+          "7"
+        ],
+        "dfa_initial_state": "1",
+        "goal_name": "g_probe_p02_tower",
+        "progress_plan_count": 6,
+        "progress_request_diagnostics": [
+          {
+            "message": null,
+            "raw_guard": "on(b3, b5)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b3",
+                    "b5"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b3, b5)"
+              ],
+              "raw_guard": "on(b3, b5)",
+              "source_state": null,
+              "state_literals": [
+                "on(b3, b5)"
+              ],
+              "target_state": null
+            },
+            "source_state": "1",
+            "state_literals": [
+              "on(b3, b5)"
+            ],
+            "supported": true,
+            "target_state": "2"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b6, b3)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b6",
+                    "b3"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b6, b3)"
+              ],
+              "raw_guard": "on(b6, b3)",
+              "source_state": null,
+              "state_literals": [
+                "on(b6, b3)"
+              ],
+              "target_state": null
+            },
+            "source_state": "2",
+            "state_literals": [
+              "on(b6, b3)"
+            ],
+            "supported": true,
+            "target_state": "3"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b1, b6)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b1",
+                    "b6"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b1, b6)"
+              ],
+              "raw_guard": "on(b1, b6)",
+              "source_state": null,
+              "state_literals": [
+                "on(b1, b6)"
+              ],
+              "target_state": null
+            },
+            "source_state": "3",
+            "state_literals": [
+              "on(b1, b6)"
+            ],
+            "supported": true,
+            "target_state": "4"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b2, b1)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b2",
+                    "b1"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b2, b1)"
+              ],
+              "raw_guard": "on(b2, b1)",
+              "source_state": null,
+              "state_literals": [
+                "on(b2, b1)"
+              ],
+              "target_state": null
+            },
+            "source_state": "4",
+            "state_literals": [
+              "on(b2, b1)"
+            ],
+            "supported": true,
+            "target_state": "5"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b4, b2)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b4",
+                    "b2"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b4, b2)"
+              ],
+              "raw_guard": "on(b4, b2)",
+              "source_state": null,
+              "state_literals": [
+                "on(b4, b2)"
+              ],
+              "target_state": null
+            },
+            "source_state": "5",
+            "state_literals": [
+              "on(b4, b2)"
+            ],
+            "supported": true,
+            "target_state": "6"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b7, b4)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b7",
+                    "b4"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b7, b4)"
+              ],
+              "raw_guard": "on(b7, b4)",
+              "source_state": null,
+              "state_literals": [
+                "on(b7, b4)"
+              ],
+              "target_state": null
+            },
+            "source_state": "6",
+            "state_literals": [
+              "on(b7, b4)"
+            ],
+            "supported": true,
+            "target_state": "7"
+          }
+        ],
+        "wrapper_mode": "context_driven_prefix"
+      }
+    ]
+  },
+  "plans": [
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [],
+      "context": [
+        "on(X, Y)"
+      ],
+      "plan_name": "on_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "producer_actions": [
+            "pick-up",
+            "stack"
+          ],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "ontable(X)",
+        "handempty",
+        "clear(Y)"
+      ],
+      "plan_name": "on_via_pick-up_then_stack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "prepared_predicate": "clear",
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on_prepare_clear_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "prepared_predicate": "clear",
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(Y)"
+      ],
+      "plan_name": "on_prepare_clear_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "producer_actions": [
+            "unstack",
+            "stack"
+          ],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "on(X, Z)",
+        "clear(X)",
+        "handempty",
+        "clear(Y)"
+      ],
+      "plan_name": "on_via_unstack_then_stack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [],
+      "context": [
+        "clear(X)"
+      ],
+      "plan_name": "clear_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "producer_actions": [
+            "unstack",
+            "put-down"
+          ],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        }
+      ],
+      "context": [
+        "on(Y, X)",
+        "clear(Y)",
+        "handempty"
+      ],
+      "plan_name": "clear_via_unstack_then_put-down",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "prepared_predicate": "clear",
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "on(Y, X)",
+        "not clear(Y)"
+      ],
+      "plan_name": "clear_prepare_clear_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "not on(b4, b2)"
+          ],
+          "raw_label": "on(b4, b2)",
+          "source_context": [],
+          "source_state": "1",
+          "target_context": [
+            "on(b4, b2)"
+          ],
+          "target_state": "2",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b4",
+            "b2"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p01_tower"
+        }
+      ],
+      "context": [
+        "not on(b4, b2)"
+      ],
+      "plan_name": "g_probe_p01_tower_progress_1",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p01_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b4, b2)",
+            "not on(b1, b4)"
+          ],
+          "raw_label": "on(b1, b4)",
+          "source_context": [
+            "on(b4, b2)"
+          ],
+          "source_state": "2",
+          "target_context": [
+            "on(b1, b4)"
+          ],
+          "target_state": "3",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b1",
+            "b4"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p01_tower"
+        }
+      ],
+      "context": [
+        "on(b4, b2)",
+        "not on(b1, b4)"
+      ],
+      "plan_name": "g_probe_p01_tower_progress_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p01_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b4, b2)",
+            "on(b1, b4)",
+            "not on(b3, b1)"
+          ],
+          "raw_label": "on(b3, b1)",
+          "source_context": [
+            "on(b4, b2)",
+            "on(b1, b4)"
+          ],
+          "source_state": "3",
+          "target_context": [
+            "on(b3, b1)"
+          ],
+          "target_state": "4",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b3",
+            "b1"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p01_tower"
+        }
+      ],
+      "context": [
+        "on(b4, b2)",
+        "on(b1, b4)",
+        "not on(b3, b1)"
+      ],
+      "plan_name": "g_probe_p01_tower_progress_3",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p01_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "accepting_state": "4",
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b4, b2)",
+            "on(b1, b4)",
+            "on(b3, b1)"
+          ],
+          "role": "accepting_state",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [],
+      "context": [
+        "on(b4, b2)",
+        "on(b1, b4)",
+        "on(b3, b1)"
+      ],
+      "plan_name": "g_probe_p01_tower_accepting_1",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p01_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "not on(b3, b5)"
+          ],
+          "raw_label": "on(b3, b5)",
+          "source_context": [],
+          "source_state": "1",
+          "target_context": [
+            "on(b3, b5)"
+          ],
+          "target_state": "2",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b3",
+            "b5"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p02_tower"
+        }
+      ],
+      "context": [
+        "not on(b3, b5)"
+      ],
+      "plan_name": "g_probe_p02_tower_progress_1",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p02_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "not on(b6, b3)"
+          ],
+          "raw_label": "on(b6, b3)",
+          "source_context": [
+            "on(b3, b5)"
+          ],
+          "source_state": "2",
+          "target_context": [
+            "on(b6, b3)"
+          ],
+          "target_state": "3",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b6",
+            "b3"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p02_tower"
+        }
+      ],
+      "context": [
+        "on(b3, b5)",
+        "not on(b6, b3)"
+      ],
+      "plan_name": "g_probe_p02_tower_progress_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p02_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "not on(b1, b6)"
+          ],
+          "raw_label": "on(b1, b6)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)"
+          ],
+          "source_state": "3",
+          "target_context": [
+            "on(b1, b6)"
+          ],
+          "target_state": "4",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b1",
+            "b6"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p02_tower"
+        }
+      ],
+      "context": [
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "not on(b1, b6)"
+      ],
+      "plan_name": "g_probe_p02_tower_progress_3",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p02_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "not on(b2, b1)"
+          ],
+          "raw_label": "on(b2, b1)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)"
+          ],
+          "source_state": "4",
+          "target_context": [
+            "on(b2, b1)"
+          ],
+          "target_state": "5",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b2",
+            "b1"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p02_tower"
+        }
+      ],
+      "context": [
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
+        "not on(b2, b1)"
+      ],
+      "plan_name": "g_probe_p02_tower_progress_4",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p02_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "not on(b4, b2)"
+          ],
+          "raw_label": "on(b4, b2)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)"
+          ],
+          "source_state": "5",
+          "target_context": [
+            "on(b4, b2)"
+          ],
+          "target_state": "6",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b4",
+            "b2"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p02_tower"
+        }
+      ],
+      "context": [
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
+        "on(b2, b1)",
+        "not on(b4, b2)"
+      ],
+      "plan_name": "g_probe_p02_tower_progress_5",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p02_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "on(b4, b2)",
+            "not on(b7, b4)"
+          ],
+          "raw_label": "on(b7, b4)",
+          "source_context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "on(b4, b2)"
+          ],
+          "source_state": "6",
+          "target_context": [
+            "on(b7, b4)"
+          ],
+          "target_state": "7",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "b7",
+            "b4"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        },
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "g_probe_p02_tower"
+        }
+      ],
+      "context": [
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
+        "on(b2, b1)",
+        "on(b4, b2)",
+        "not on(b7, b4)"
+      ],
+      "plan_name": "g_probe_p02_tower_progress_6",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p02_tower"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "accepting_state": "7",
+          "artifact_family": "temporal_goal_dfa_append",
+          "context": [
+            "on(b3, b5)",
+            "on(b6, b3)",
+            "on(b1, b6)",
+            "on(b2, b1)",
+            "on(b4, b2)",
+            "on(b7, b4)"
+          ],
+          "role": "accepting_state",
+          "wrapper_mode": "context_driven_prefix"
+        }
+      ],
+      "body": [],
+      "context": [
+        "on(b3, b5)",
+        "on(b6, b3)",
+        "on(b1, b6)",
+        "on(b2, b1)",
+        "on(b4, b2)",
+        "on(b7, b4)"
+      ],
+      "plan_name": "g_probe_p02_tower_accepting_1",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "g_probe_p02_tower"
+      }
+    }
+  ]
+}

@@ -50,7 +50,8 @@ literal semantics.
 | A9 | Materialize the six selected domains with deterministic splits. | Implemented | `uv run python scripts/materialize_achievement_benchmarks.py` rebuilt `src/domains` with `ferry`, `miconic`, `gripper`, `logistics`, `blocks`, and `8puzzle-1tile`; each uses `floor(2/3 * N)` train and remaining test. |
 | A10 | Preserve current PDDL-only and no synthetic achievement-name constraints. | Implemented for generated current artifacts | New atomic and temporal append code emits no `achieve_*`, `transition_*`, or `dfa_state` names. It appends `g_query` names by design as query-specific top-level temporal wrappers. |
 | A11 | Maintain exactly one appendable domain ASL library per domain. | Implemented and regression-tested | `append_temporal_goal_to_library` now preserves `temporal_goal_append_history` and rejects duplicate temporal goal names with `duplicate_temporal_goal`. CLI regression test appends two queries sequentially by feeding the first output `plan_library.json` into the second append and verifies both top-level goals remain in the same ASL library. |
-| A12 | Replace raw MOOSE macro dump with compact recursive atomic modules when claiming final domain-level ASL quality. | Open with quality gate | The current MOOSE Blocks snapshot is lifted but not compact: it compiles the raw MOOSE decision list into 72 `+!on(...)` macro rules. `audit_moose_atomic_library_quality` now marks direct MOOSE outputs as compact singleton macro, compact recursive module, or raw non-compact macro policy in artifact metadata. This prevents overclaiming, but the final compact recursive library still needs a validated policy/module backend or a principled compression layer. |
+| A12 | Replace raw MOOSE macro dump with compact recursive atomic minimal literal modules when claiming final domain-level ASL quality. | Implemented for positive PDDL predicate seeds | `src/domain_level_planning/atomic_module_synthesis.py` uses MOOSE singleton predicates as evidence, then synthesizes compact recursive modules from PDDL action schemas. Blocks now compiles from the 72-rule MOOSE readable artifact into 8 lifted plans over `+!on(X,Y)` and `+!clear(X)` only. It uses schema-level producer composition, recursive support predicates, cleanup actions, and prepare branches such as `not clear(X) -> !clear(X); !on(X,Y)`. It does not expose `!holding` or `!handempty`, and it emits no grounded block names. Snapshot: `snapshots/moose_blocks_minimal_modules/`. |
+| A13 | Keep the temporal append path compatible with the new compact atomic library. | Implemented smoke | Using the compact Blocks library as input, `src/main.py append-lifted-temporal-goal` appended `query_1` and `query_2` into one maintained domain library with 19 total plans. Snapshot: `snapshots/moose_blocks_minimal_modules_appended/`. The wrapper remains query-specific and calls atomic predicate subgoals directly. |
 
 ## Current Evidence Snapshot
 
@@ -67,7 +68,9 @@ literal semantics.
 | MOOSE readable policy adapter tests | Included in DFA/MOOSE focused suite; verifies readable-policy parsing, ASL compilation, CLI materialization, and quality metadata. |
 | MOOSE readable artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry` reports `rules=5`, `modules=5`, `asl_plans=5`. |
 | MOOSE atomic ASL artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-dir tmp/moose-atomic/ferry-library` writes a domain-level atomic `plan_library.json` and `plan_library.asl`. |
-| MOOSE Blocks atomic-plus-temporal end-to-end smoke | Guarded MOOSE Blocks probe first4 training under `16GiB/900s` learned `72` singleton rules and compiled `72` raw MOOSE atomic ASL plans. Appending the first two probe instances as LTLf tower goals produced one maintained context-driven temporal library with `83` plans and no `teg_state` or `dfa_state` beliefs. Snapshots are under `snapshots/moose_blocks_e2e/`. A first20 interactive attempt reached `6/20` before manual interruption; no memory guard violation occurred. This is a pipeline smoke, not final compact recursive Blocksworld library quality. |
+| MOOSE Blocks raw atomic-plus-temporal smoke | Guarded MOOSE Blocks probe first4 training under `16GiB/900s` learned `72` singleton rules and compiled `72` raw MOOSE atomic ASL plans. Appending the first two probe instances as LTLf tower goals produced one maintained context-driven temporal library with `83` plans and no `teg_state` or `dfa_state` beliefs. Snapshots are under `snapshots/moose_blocks_e2e/`. This remains backend evidence, not final compact library quality. |
+| MOOSE-seeded Blocks compact module smoke | `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules --output-dir snapshots/moose_blocks_minimal_modules` writes 8 compact lifted atomic plans. |
+| Compact Blocks atomic-plus-temporal smoke | `PYTHONDONTWRITEBYTECODE=1 uv run python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocks/domain.pddl --plan-library-file snapshots/moose_blocks_minimal_modules/plan_library.json --ltlf-goal-json snapshots/moose_blocks_e2e/probe_first_two_lifted_ltlf.json --query-id query_1 --query-id query_2 --output-root snapshots/moose_blocks_minimal_modules_appended` writes one maintained 19-plan library. |
 | MOOSE paper audit | Local paper text confirms MOOSE decomposes training problems into singleton goal conditions and applies goal regression, making it suitable for atomic positive predicate templates. |
 
 ## Commands
@@ -98,10 +101,24 @@ uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
   --domain-name ferry \
   --output-dir tmp/moose-atomic/ferry-library
 
+uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
+  --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
+  --domain-file src/domains/blocks/domain.pddl \
+  --domain-name blocks \
+  --minimal-modules \
+  --output-dir snapshots/moose_blocks_minimal_modules
+
 uv run python src/main.py compile-moose-atomic-library \
   --policy-file .external/moose/exact-runs/ferry-seed0.model.readable \
   --domain-name ferry \
   --output-root tmp/moose-atomic/ferry-library-main
+
+uv run python src/main.py compile-moose-atomic-library \
+  --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
+  --domain-file src/domains/blocks/domain.pddl \
+  --domain-name blocks \
+  --minimal-modules \
+  --output-root snapshots/moose_blocks_minimal_modules
 
 uv run python src/main.py append-lifted-temporal-goal \
   --domain-file src/domains/blocks/domain.pddl \

@@ -1,0 +1,372 @@
+{
+  "domain_name": "blocks",
+  "initial_beliefs": [],
+  "metadata": {
+    "atomic_module_synthesis": {
+      "branch_count_by_predicate": {
+        "clear": 3,
+        "on": 5
+      },
+      "module_predicates": [
+        "clear",
+        "on"
+      ],
+      "plan_count": 8,
+      "producer_actions_by_predicate": {
+        "clear": [
+          "put-down",
+          "stack",
+          "unstack"
+        ],
+        "on": [
+          "stack"
+        ]
+      },
+      "pruned_candidate_count": 0,
+      "recursive_predicates": [
+        "clear",
+        "on"
+      ],
+      "seed_predicates": [
+        "on"
+      ],
+      "theoretical_basis": [
+        "MOOSE singleton-goal regression supplies lifted target-predicate evidence",
+        "PDDL action schemas supply primitive producer/precondition structure",
+        "policy-reuse style predicate modules allow subgoal calls between atomic literals",
+        "minimal sibling branches are selected by schema subsumption over contexts and subgoals"
+      ]
+    },
+    "atomic_template_backend": "moose_schema_minimal_modules",
+    "generation_mode": "atomic_minimal_literal_module_library",
+    "library_quality": {
+      "artifact_classification": "compact_recursive_atomic_module_library",
+      "compact_recursive_module_ready": true,
+      "plan_count": 8,
+      "subgoal_step_count": 6
+    },
+    "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+    "source_name": "blocks-probe-first4",
+    "source_raw_rule_count": 72,
+    "source_seed_predicates": [
+      "on"
+    ]
+  },
+  "plans": [
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [],
+      "context": [
+        "on(X, Y)"
+      ],
+      "plan_name": "on_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "producer_actions": [
+            "pick-up",
+            "stack"
+          ],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "ontable(X)",
+        "handempty",
+        "clear(Y)"
+      ],
+      "plan_name": "on_via_pick-up_then_stack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "prepared_predicate": "clear",
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on_prepare_clear_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "prepared_predicate": "clear",
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(Y)"
+      ],
+      "plan_name": "on_prepare_clear_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "producer_actions": [
+            "unstack",
+            "stack"
+          ],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "on(X, Z)",
+        "clear(X)",
+        "handempty",
+        "clear(Y)"
+      ],
+      "plan_name": "on_via_unstack_then_stack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [],
+      "context": [
+        "clear(X)"
+      ],
+      "plan_name": "clear_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "producer_actions": [
+            "unstack",
+            "put-down"
+          ],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "put-down"
+        }
+      ],
+      "context": [
+        "on(Y, X)",
+        "clear(Y)",
+        "handempty"
+      ],
+      "plan_name": "clear_via_unstack_then_put-down",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "policy_file": "tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
+          "prepared_predicate": "clear",
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_schema_minimal_modules",
+          "source_name": "blocks-probe-first4"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "on(Y, X)",
+        "not clear(Y)"
+      ],
+      "plan_name": "clear_prepare_clear_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    }
+  ]
+}
