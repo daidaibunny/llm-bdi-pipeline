@@ -89,8 +89,11 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert result["success"] is True
 	assert result["appended_query_count"] == 1
 	assert metadata["query_ids"] == ["query_1"]
-	assert "+!g_query_1 : not done <-" in asl
+	assert "teg_state(g_query_1, state_1)." in asl
+	assert "+!g_query_1 : teg_state(g_query_1, state_1) & not done <-" in asl
 	assert "\t!done;" in asl
+	assert "\t-teg_state(g_query_1, state_1);" in asl
+	assert "\t+teg_state(g_query_1, state_2);" in asl
 	assert "\t!g_query_1." in asl
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
@@ -187,8 +190,10 @@ def test_main_can_append_multiple_queries_to_same_domain_library(
 	)
 	asl = Path(second_result["artifact_paths"]["plan_library_asl"]).read_text(encoding="utf-8")
 
-	assert "+!g_query_1 : not done <-" in asl
-	assert "+!g_query_2 : not ready <-" in asl
+	assert "teg_state(g_query_1, state_1)." in asl
+	assert "teg_state(g_query_2, state_1)." in asl
+	assert "+!g_query_1 : teg_state(g_query_1, state_1) & not done <-" in asl
+	assert "+!g_query_2 : teg_state(g_query_2, state_1) & not ready <-" in asl
 	assert [
 		record["goal_name"]
 		for record in library_json["metadata"]["temporal_goal_append_history"]

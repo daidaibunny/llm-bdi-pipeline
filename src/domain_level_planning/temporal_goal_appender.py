@@ -205,7 +205,10 @@ def append_temporal_goal_to_library(
 		"goal_name": goal_name,
 		"dfa_initial_state": dfa_payload.get("initial_state"),
 		"dfa_accepting_states": list(dfa_payload.get("accepting_states") or ()),
-		"requires_external_dfa_state": True,
+		"controller_state_belief": _controller_state_belief(
+			goal_name,
+			str(dfa_payload.get("initial_state") or "").strip(),
+		),
 	}
 	plans = list(plan_library.plans)
 	progress_plans = _temporal_progress_plans(
@@ -215,28 +218,19 @@ def append_temporal_goal_to_library(
 	)
 	append_record["progress_plan_count"] = len(progress_plans)
 	plans.extend(progress_plans)
-	plans.append(
-		AgentSpeakPlan(
-			plan_name=f"{goal_name}_accepting",
-			trigger=AgentSpeakTrigger(
-				event_type="achievement_goal",
-				symbol=goal_name,
-				arguments=(),
-			),
-			context=("true",),
-			body=(),
-			binding_certificate=(
-				{
-					"artifact_family": "temporal_goal_dfa_append",
-					"role": "accepting_fallback",
-				},
-			),
-		),
+	accepting_plans = _temporal_accepting_plans(
+		goal_name=goal_name,
+		dfa_payload=dfa_payload,
 	)
+	plans.extend(accepting_plans)
 	return PlanLibrary(
 		domain_name=plan_library.domain_name,
 		plans=tuple(plans),
-		initial_beliefs=plan_library.initial_beliefs,
+		initial_beliefs=_append_initial_controller_state_belief(
+			plan_library.initial_beliefs,
+			goal_name=goal_name,
+			initial_state=str(dfa_payload.get("initial_state") or "").strip(),
+		),
 		metadata={
 			**dict(plan_library.metadata or {}),
 			"temporal_goal_append": append_record,
@@ -298,6 +292,35 @@ def _append_history(
 		history = [dict(legacy_record)] if isinstance(legacy_record, Mapping) else []
 	history.append(dict(append_record))
 	return history
+
+
+def _append_initial_controller_state_belief(
+	initial_beliefs: Sequence[str],
+	*,
+	goal_name: str,
+	initial_state: str,
+) -> tuple[str, ...]:
+	state_belief = _controller_state_belief(goal_name, initial_state)
+	if not state_belief:
+		return tuple(initial_beliefs or ())
+	return tuple(dict.fromkeys(tuple(initial_beliefs or ()) + (state_belief,)))
+
+
+def _controller_state_belief(goal_name: str, state: str) -> str:
+	goal = str(goal_name or "").strip()
+	state_term = _state_term(state)
+	if not goal or not state_term:
+		return ""
+	return _call("teg_state", (goal, state_term))
+
+
+def _state_term(state: str) -> str:
+	text = str(state or "").strip()
+	if not text:
+		return ""
+	if re.fullmatch(r"[0-9]+", text):
+		return f"state_{text}"
+	return text
 
 
 def _rewrite_dfa_payload_labels_from_lifted_atoms(
@@ -463,9 +486,22 @@ def _temporal_progress_plans(
 					symbol=goal_name,
 					arguments=(),
 				),
-				context=(f"not {literal.atom}",),
+				context=(
+					_controller_state_belief(goal_name, transition["source_state"]),
+					f"not {literal.atom}",
+				),
 				body=(
 					AgentSpeakBodyStep("subgoal", literal.predicate, literal.arguments),
+					AgentSpeakBodyStep(
+						"belief_deletion",
+						"teg_state",
+						(goal_name, _state_term(transition["source_state"])),
+					),
+					AgentSpeakBodyStep(
+						"belief_addition",
+						"teg_state",
+						(goal_name, _state_term(transition["target_state"])),
+					),
 					AgentSpeakBodyStep("subgoal", goal_name, ()),
 				),
 				binding_certificate=(
@@ -479,6 +515,38 @@ def _temporal_progress_plans(
 			),
 		)
 	return tuple(plans)
+
+
+def _temporal_accepting_plans(
+	*,
+	goal_name: str,
+	dfa_payload: Mapping[str, Any],
+) -> tuple[AgentSpeakPlan, ...]:
+	accepting_states = tuple(
+		str(state).strip()
+		for state in tuple(dfa_payload.get("accepting_states") or ())
+		if str(state).strip()
+	)
+	return tuple(
+		AgentSpeakPlan(
+			plan_name=f"{goal_name}_accepting_{index}",
+			trigger=AgentSpeakTrigger(
+				event_type="achievement_goal",
+				symbol=goal_name,
+				arguments=(),
+			),
+			context=(_controller_state_belief(goal_name, state),),
+			body=(),
+			binding_certificate=(
+				{
+					"artifact_family": "temporal_goal_dfa_append",
+					"role": "accepting_state",
+					"accepting_state": state,
+				},
+			),
+		)
+		for index, state in enumerate(accepting_states, start=1)
+	)
 
 
 def _required_progress_literal(raw_label: str) -> DFALiteral:

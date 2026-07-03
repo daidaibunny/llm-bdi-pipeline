@@ -97,21 +97,30 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		"done_via_finish",
 		"g_query_1_progress_1",
 		"g_query_1_progress_2",
-		"g_query_1_accepting",
+		"g_query_1_accepting_1",
 	]
 	assert updated.plans[1].trigger.symbol == "g_query_1"
-	assert updated.plans[1].context == ("not done(X)",)
+	assert updated.plans[1].context == ("teg_state(g_query_1, q0)", "not done(X)")
 	assert updated.plans[1].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
+		AgentSpeakBodyStep("belief_deletion", "teg_state", ("g_query_1", "q0")),
+		AgentSpeakBodyStep("belief_addition", "teg_state", ("g_query_1", "q1")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
-	assert updated.plans[2].context == ("not ready(Y)",)
+	assert updated.plans[2].context == ("teg_state(g_query_1, q1)", "not ready(Y)")
 	assert updated.plans[2].body == (
 		AgentSpeakBodyStep("subgoal", "ready", ("Y",)),
+		AgentSpeakBodyStep("belief_deletion", "teg_state", ("g_query_1", "q1")),
+		AgentSpeakBodyStep("belief_addition", "teg_state", ("g_query_1", "q2")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
+	assert updated.plans[3].context == ("teg_state(g_query_1, q2)",)
+	assert updated.initial_beliefs == ("teg_state(g_query_1, q0)",)
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
-	assert updated.metadata["temporal_goal_append"]["requires_external_dfa_state"] is True
+	assert (
+		updated.metadata["temporal_goal_append"]["controller_state_belief"]
+		== "teg_state(g_query_1, q0)"
+	)
 	assert [
 		record["goal_name"]
 		for record in updated.metadata["temporal_goal_append_history"]
@@ -153,6 +162,10 @@ def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -
 		record["goal_name"]
 		for record in after_second.metadata["temporal_goal_append_history"]
 	] == ["g_query_1", "g_query_2"]
+	assert after_second.initial_beliefs == (
+		"teg_state(g_query_1, q0)",
+		"teg_state(g_query_2, q0)",
+	)
 
 
 def test_append_temporal_goal_rejects_duplicate_goal_name(tmp_path: Path) -> None:
@@ -205,10 +218,12 @@ def test_append_temporal_goal_allows_negative_waiting_self_loop(
 
 	assert [plan.plan_name for plan in updated.plans] == [
 		"g_query_1_progress_1",
-		"g_query_1_accepting",
+		"g_query_1_accepting_1",
 	]
 	assert updated.plans[0].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
+		AgentSpeakBodyStep("belief_deletion", "teg_state", ("g_query_1", "q0")),
+		AgentSpeakBodyStep("belief_addition", "teg_state", ("g_query_1", "q1")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
 
@@ -286,9 +301,11 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 
 	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "on(X, Y)"
 	assert dfa_payload["guarded_transitions"][0]["original_raw_label"] == "on_x_y"
-	assert updated.plans[0].context == ("not on(X, Y)",)
+	assert updated.plans[0].context == ("teg_state(g_query_1, q0)", "not on(X, Y)")
 	assert updated.plans[0].body == (
 		AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+		AgentSpeakBodyStep("belief_deletion", "teg_state", ("g_query_1", "q0")),
+		AgentSpeakBodyStep("belief_addition", "teg_state", ("g_query_1", "q1")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
 

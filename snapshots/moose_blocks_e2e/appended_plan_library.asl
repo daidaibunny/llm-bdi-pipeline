@@ -1,6 +1,9 @@
 /* Generated AgentSpeak(L) Plan Library */
 /* Domain: blocks */
 
+teg_state(g_probe_p01_tower, state_1).
+teg_state(g_probe_p02_tower, state_1).
+
 /* plan=moose_blocks_probe_first4_rule_1 | source_instruction_ids=none */
 +!on(Block0, Block1) : clear(Block1) & holding(Block0) <-
 	stack(Block0, Block1).
@@ -839,54 +842,72 @@
 	stack(Block9, Block7).
 
 /* plan=g_probe_p01_tower_progress_1 | source_instruction_ids=none */
-+!g_probe_p01_tower : not on(b4, b2) <-
++!g_probe_p01_tower : teg_state(g_probe_p01_tower, state_1) & not on(b4, b2) <-
 	!on(b4, b2);
+	-teg_state(g_probe_p01_tower, state_1);
+	+teg_state(g_probe_p01_tower, state_2);
 	!g_probe_p01_tower.
 
 /* plan=g_probe_p01_tower_progress_2 | source_instruction_ids=none */
-+!g_probe_p01_tower : not on(b1, b4) <-
++!g_probe_p01_tower : teg_state(g_probe_p01_tower, state_2) & not on(b1, b4) <-
 	!on(b1, b4);
+	-teg_state(g_probe_p01_tower, state_2);
+	+teg_state(g_probe_p01_tower, state_3);
 	!g_probe_p01_tower.
 
 /* plan=g_probe_p01_tower_progress_3 | source_instruction_ids=none */
-+!g_probe_p01_tower : not on(b3, b1) <-
++!g_probe_p01_tower : teg_state(g_probe_p01_tower, state_3) & not on(b3, b1) <-
 	!on(b3, b1);
+	-teg_state(g_probe_p01_tower, state_3);
+	+teg_state(g_probe_p01_tower, state_4);
 	!g_probe_p01_tower.
 
-/* plan=g_probe_p01_tower_accepting | source_instruction_ids=none */
-+!g_probe_p01_tower : true <-
+/* plan=g_probe_p01_tower_accepting_1 | source_instruction_ids=none */
++!g_probe_p01_tower : teg_state(g_probe_p01_tower, state_4) <-
 	true.
 
 /* plan=g_probe_p02_tower_progress_1 | source_instruction_ids=none */
-+!g_probe_p02_tower : not on(b3, b5) <-
++!g_probe_p02_tower : teg_state(g_probe_p02_tower, state_1) & not on(b3, b5) <-
 	!on(b3, b5);
+	-teg_state(g_probe_p02_tower, state_1);
+	+teg_state(g_probe_p02_tower, state_2);
 	!g_probe_p02_tower.
 
 /* plan=g_probe_p02_tower_progress_2 | source_instruction_ids=none */
-+!g_probe_p02_tower : not on(b6, b3) <-
++!g_probe_p02_tower : teg_state(g_probe_p02_tower, state_2) & not on(b6, b3) <-
 	!on(b6, b3);
+	-teg_state(g_probe_p02_tower, state_2);
+	+teg_state(g_probe_p02_tower, state_3);
 	!g_probe_p02_tower.
 
 /* plan=g_probe_p02_tower_progress_3 | source_instruction_ids=none */
-+!g_probe_p02_tower : not on(b1, b6) <-
++!g_probe_p02_tower : teg_state(g_probe_p02_tower, state_3) & not on(b1, b6) <-
 	!on(b1, b6);
+	-teg_state(g_probe_p02_tower, state_3);
+	+teg_state(g_probe_p02_tower, state_4);
 	!g_probe_p02_tower.
 
 /* plan=g_probe_p02_tower_progress_4 | source_instruction_ids=none */
-+!g_probe_p02_tower : not on(b2, b1) <-
++!g_probe_p02_tower : teg_state(g_probe_p02_tower, state_4) & not on(b2, b1) <-
 	!on(b2, b1);
+	-teg_state(g_probe_p02_tower, state_4);
+	+teg_state(g_probe_p02_tower, state_5);
 	!g_probe_p02_tower.
 
 /* plan=g_probe_p02_tower_progress_5 | source_instruction_ids=none */
-+!g_probe_p02_tower : not on(b4, b2) <-
++!g_probe_p02_tower : teg_state(g_probe_p02_tower, state_5) & not on(b4, b2) <-
 	!on(b4, b2);
+	-teg_state(g_probe_p02_tower, state_5);
+	+teg_state(g_probe_p02_tower, state_6);
 	!g_probe_p02_tower.
 
 /* plan=g_probe_p02_tower_progress_6 | source_instruction_ids=none */
-+!g_probe_p02_tower : not on(b7, b4) <-
++!g_probe_p02_tower : teg_state(g_probe_p02_tower, state_6) & not on(b7, b4) <-
 	!on(b7, b4);
+	-teg_state(g_probe_p02_tower, state_6);
+	+teg_state(g_probe_p02_tower, state_7);
 	!g_probe_p02_tower.
 
-/* plan=g_probe_p02_tower_accepting | source_instruction_ids=none */
-+!g_probe_p02_tower : true <-
+/* plan=g_probe_p02_tower_accepting_1 | source_instruction_ids=none */
++!g_probe_p02_tower : teg_state(g_probe_p02_tower, state_7) <-
 	true.

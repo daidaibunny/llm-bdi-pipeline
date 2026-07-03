@@ -203,7 +203,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"external learners must run under resource guards",
 			"backend artifacts must pass parser, binding, compiler, and validation gates",
 			"negative progress literals fail unless a validated negative template exists",
-			"DFA state may be maintained by an external temporal controller",
+			"TEG wrapper state is maintained explicitly as query-scoped teg_state beliefs",
 		),
 		non_goals=(
 			"universal completeness for arbitrary PDDL domains",
@@ -233,8 +233,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"lifted LTLf atoms and DFA metadata are external Input artifacts, not "
 			"mutable beliefs, primitive actions, or synthetic achievement goals. "
 			"The current ASL output may contain query-specific g_query wrappers "
-			"but not dfa_state beliefs; when DFA state is required, it belongs "
-			"to the controller."
+			"and query-scoped teg_state controller beliefs, but not legacy "
+			"unscoped dfa_state beliefs."
 		),
 		paper_layer_contracts=paper_layer_quality_contracts(),
 		hypothesis_class=bounded_hypothesis_class_contract(),
