@@ -578,6 +578,7 @@ def compile_moose_readable_atomic_library(
 				"compiled_singleton_rule_count": len(library.plans),
 				"policy_program_rule_count": len(program.rules),
 				"policy_program_module_count": len(program.modules),
+				"library_quality": dict(library.metadata.get("library_quality") or {}),
 				"artifact_contract": (
 					"domain-level lifted atomic AgentSpeak(L) library generated "
 					"from MOOSE readable singleton-goal rules"

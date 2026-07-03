@@ -1,6 +1,108 @@
 {
   "artifact_kind": "domain_library_with_temporal_append",
   "dfa_payloads": {
+    "query_1": {
+      "accepting_states": [
+        "4"
+      ],
+      "alphabet": [],
+      "construction": "generic_ltlf2dfa",
+      "dfa_dot": "digraph MONA_DFA {\n rankdir = LR;\n center = true;\n size = \"7.5,10.5\";\n edge [fontname = Courier];\n node [height = .5, width = .5];\n node [shape = doublecircle]; 4;\n node [shape = circle]; 1;\n init [shape = plaintext, label = \"\"];\n init -> 1;\n 1 -> 1 [label=\"~on_b4_b2\"];\n 1 -> 2 [label=\"on_b4_b2\"];\n 2 -> 2 [label=\"~on_b1_b4\"];\n 2 -> 3 [label=\"on_b1_b4\"];\n 3 -> 3 [label=\"~on_b3_b1\"];\n 3 -> 4 [label=\"on_b3_b1\"];\n 4 -> 4 [label=\"true\"];\n}",
+      "dfa_path": "dfa.dot",
+      "formula": "F(on_b4_b2 & X(F(on_b1_b4 & X(F(on_b3_b1)))))",
+      "free_variables": [
+        "on_b4_b2",
+        "on_b1_b4",
+        "on_b3_b1"
+      ],
+      "guarded_transitions": [
+        {
+          "guards": [
+            "0XX"
+          ],
+          "original_raw_label": "~on_b4_b2",
+          "raw_label": "not on(b4, b2)",
+          "source_state": "1",
+          "target_state": "1"
+        },
+        {
+          "guards": [
+            "1XX"
+          ],
+          "original_raw_label": "on_b4_b2",
+          "raw_label": "on(b4, b2)",
+          "source_state": "1",
+          "target_state": "2"
+        },
+        {
+          "guards": [
+            "X0X"
+          ],
+          "original_raw_label": "~on_b1_b4",
+          "raw_label": "not on(b1, b4)",
+          "source_state": "2",
+          "target_state": "2"
+        },
+        {
+          "guards": [
+            "X1X"
+          ],
+          "original_raw_label": "on_b1_b4",
+          "raw_label": "on(b1, b4)",
+          "source_state": "2",
+          "target_state": "3"
+        },
+        {
+          "guards": [
+            "XX0"
+          ],
+          "original_raw_label": "~on_b3_b1",
+          "raw_label": "not on(b3, b1)",
+          "source_state": "3",
+          "target_state": "3"
+        },
+        {
+          "guards": [
+            "XX1"
+          ],
+          "original_raw_label": "on_b3_b1",
+          "raw_label": "on(b3, b1)",
+          "source_state": "3",
+          "target_state": "4"
+        },
+        {
+          "guards": [
+            "XXX"
+          ],
+          "original_raw_label": null,
+          "raw_label": "true",
+          "source_state": "4",
+          "target_state": "4"
+        }
+      ],
+      "initial_state": "1",
+      "lifted_atom_binding": {
+        "atom_count": 3,
+        "rewritten_transition_count": 6,
+        "symbols": [
+          "on(b1, b4)",
+          "on(b1,b4)",
+          "on(b3, b1)",
+          "on(b3,b1)",
+          "on(b4, b2)",
+          "on(b4,b2)",
+          "on_b1_b4",
+          "on_b3_b1",
+          "on_b4_b2"
+        ]
+      },
+      "num_states": 4,
+      "num_transitions": 7,
+      "timing_profile": {
+        "convert_seconds": 0.028896124997118022,
+        "total_seconds": 0.028918584001075942
+      }
+    },
     "query_2": {
       "accepting_states": [
         "7"
@@ -165,16 +267,36 @@
       "num_states": 7,
       "num_transitions": 13,
       "timing_profile": {
-        "convert_seconds": 0.03417241699935403,
-        "total_seconds": 0.03421741700003622
+        "convert_seconds": 0.02419295900472207,
+        "total_seconds": 0.024221083003794774
       }
     }
   },
   "domain_name": "blocks",
+  "library_quality": {
+    "artifact_classification": "raw_lifted_singleton_macro_policy_not_compact",
+    "compact_recursive_module_ready": false,
+    "goal_symbol_count": 1,
+    "goal_symbols": [
+      "on"
+    ],
+    "max_body_step_count": 18,
+    "max_plans_per_goal_symbol": 72,
+    "plan_count": 72,
+    "primitive_action_step_count": 621,
+    "singleton_macro_library_ready": false,
+    "subgoal_step_count": 0,
+    "warnings": [
+      "Direct MOOSE output contains primitive macro actions but no recursive atomic subgoal calls; do not claim compact module-level quality when the domain requires recursive decomposition.",
+      "Plan count exceeds the compact-library threshold; this artifact is backend evidence or a smoke output, not the final compact library.",
+      "At least one plan body exceeds the compact macro threshold; inspect whether raw trace replay leaked into the library."
+    ]
+  },
   "ltlf_goal_json": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/snapshots/moose_blocks_e2e/probe_first_two_lifted_ltlf.json",
   "plan_count": 83,
   "query_ids": [
+    "query_1",
     "query_2"
   ],
-  "source_plan_library_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/domain-library-maintained-stateful/plan_library.json"
+  "source_plan_library_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e-regenerated/atomic/plan_library.json"
 }

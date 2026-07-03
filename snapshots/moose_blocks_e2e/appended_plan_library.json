@@ -7,6 +7,25 @@
   "metadata": {
     "atomic_template_backend": "moose",
     "compiled_singleton_rule_count": 72,
+    "library_quality": {
+      "artifact_classification": "raw_lifted_singleton_macro_policy_not_compact",
+      "compact_recursive_module_ready": false,
+      "goal_symbol_count": 1,
+      "goal_symbols": [
+        "on"
+      ],
+      "max_body_step_count": 18,
+      "max_plans_per_goal_symbol": 72,
+      "plan_count": 72,
+      "primitive_action_step_count": 621,
+      "singleton_macro_library_ready": false,
+      "subgoal_step_count": 0,
+      "warnings": [
+        "Direct MOOSE output contains primitive macro actions but no recursive atomic subgoal calls; do not claim compact module-level quality when the domain requires recursive decomposition.",
+        "Plan count exceeds the compact-library threshold; this artifact is backend evidence or a smoke output, not the final compact library.",
+        "At least one plan body exceeds the compact macro threshold; inspect whether raw trace replay leaked into the library."
+      ]
+    },
     "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
     "raw_rule_count": 72,
     "source_name": "blocks-probe-first4",
@@ -17,7 +36,201 @@
       ],
       "dfa_initial_state": "1",
       "goal_name": "g_probe_p02_tower",
-      "progress_plan_count": 6
+      "progress_plan_count": 6,
+      "progress_request_diagnostics": [
+        {
+          "message": null,
+          "raw_guard": "on(b3, b5)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b3",
+                  "b5"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b3, b5)"
+            ],
+            "raw_guard": "on(b3, b5)",
+            "source_state": null,
+            "state_literals": [
+              "on(b3, b5)"
+            ],
+            "target_state": null
+          },
+          "source_state": "1",
+          "state_literals": [
+            "on(b3, b5)"
+          ],
+          "supported": true,
+          "target_state": "2"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b6, b3)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b6",
+                  "b3"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b6, b3)"
+            ],
+            "raw_guard": "on(b6, b3)",
+            "source_state": null,
+            "state_literals": [
+              "on(b6, b3)"
+            ],
+            "target_state": null
+          },
+          "source_state": "2",
+          "state_literals": [
+            "on(b6, b3)"
+          ],
+          "supported": true,
+          "target_state": "3"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b1, b6)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b1",
+                  "b6"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b1, b6)"
+            ],
+            "raw_guard": "on(b1, b6)",
+            "source_state": null,
+            "state_literals": [
+              "on(b1, b6)"
+            ],
+            "target_state": null
+          },
+          "source_state": "3",
+          "state_literals": [
+            "on(b1, b6)"
+          ],
+          "supported": true,
+          "target_state": "4"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b2, b1)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b2",
+                  "b1"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b2, b1)"
+            ],
+            "raw_guard": "on(b2, b1)",
+            "source_state": null,
+            "state_literals": [
+              "on(b2, b1)"
+            ],
+            "target_state": null
+          },
+          "source_state": "4",
+          "state_literals": [
+            "on(b2, b1)"
+          ],
+          "supported": true,
+          "target_state": "5"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b4, b2)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b4",
+                  "b2"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b4, b2)"
+            ],
+            "raw_guard": "on(b4, b2)",
+            "source_state": null,
+            "state_literals": [
+              "on(b4, b2)"
+            ],
+            "target_state": null
+          },
+          "source_state": "5",
+          "state_literals": [
+            "on(b4, b2)"
+          ],
+          "supported": true,
+          "target_state": "6"
+        },
+        {
+          "message": null,
+          "raw_guard": "on(b7, b4)",
+          "rejection_reason": null,
+          "request": {
+            "achievement_subgoals": [
+              {
+                "arguments": [
+                  "b7",
+                  "b4"
+                ],
+                "kind": "subgoal",
+                "symbol": "on"
+              }
+            ],
+            "goal_facts": [
+              "goal_on(b7, b4)"
+            ],
+            "raw_guard": "on(b7, b4)",
+            "source_state": null,
+            "state_literals": [
+              "on(b7, b4)"
+            ],
+            "target_state": null
+          },
+          "source_state": "6",
+          "state_literals": [
+            "on(b7, b4)"
+          ],
+          "supported": true,
+          "target_state": "7"
+        }
+      ]
     },
     "temporal_goal_append_history": [
       {
@@ -27,7 +240,105 @@
         ],
         "dfa_initial_state": "1",
         "goal_name": "g_probe_p01_tower",
-        "progress_plan_count": 3
+        "progress_plan_count": 3,
+        "progress_request_diagnostics": [
+          {
+            "message": null,
+            "raw_guard": "on(b4, b2)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b4",
+                    "b2"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b4, b2)"
+              ],
+              "raw_guard": "on(b4, b2)",
+              "source_state": null,
+              "state_literals": [
+                "on(b4, b2)"
+              ],
+              "target_state": null
+            },
+            "source_state": "1",
+            "state_literals": [
+              "on(b4, b2)"
+            ],
+            "supported": true,
+            "target_state": "2"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b1, b4)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b1",
+                    "b4"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b1, b4)"
+              ],
+              "raw_guard": "on(b1, b4)",
+              "source_state": null,
+              "state_literals": [
+                "on(b1, b4)"
+              ],
+              "target_state": null
+            },
+            "source_state": "2",
+            "state_literals": [
+              "on(b1, b4)"
+            ],
+            "supported": true,
+            "target_state": "3"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b3, b1)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b3",
+                    "b1"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b3, b1)"
+              ],
+              "raw_guard": "on(b3, b1)",
+              "source_state": null,
+              "state_literals": [
+                "on(b3, b1)"
+              ],
+              "target_state": null
+            },
+            "source_state": "3",
+            "state_literals": [
+              "on(b3, b1)"
+            ],
+            "supported": true,
+            "target_state": "4"
+          }
+        ]
       },
       {
         "controller_state_belief": "teg_state(g_probe_p02_tower, state_1)",
@@ -36,7 +347,201 @@
         ],
         "dfa_initial_state": "1",
         "goal_name": "g_probe_p02_tower",
-        "progress_plan_count": 6
+        "progress_plan_count": 6,
+        "progress_request_diagnostics": [
+          {
+            "message": null,
+            "raw_guard": "on(b3, b5)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b3",
+                    "b5"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b3, b5)"
+              ],
+              "raw_guard": "on(b3, b5)",
+              "source_state": null,
+              "state_literals": [
+                "on(b3, b5)"
+              ],
+              "target_state": null
+            },
+            "source_state": "1",
+            "state_literals": [
+              "on(b3, b5)"
+            ],
+            "supported": true,
+            "target_state": "2"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b6, b3)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b6",
+                    "b3"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b6, b3)"
+              ],
+              "raw_guard": "on(b6, b3)",
+              "source_state": null,
+              "state_literals": [
+                "on(b6, b3)"
+              ],
+              "target_state": null
+            },
+            "source_state": "2",
+            "state_literals": [
+              "on(b6, b3)"
+            ],
+            "supported": true,
+            "target_state": "3"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b1, b6)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b1",
+                    "b6"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b1, b6)"
+              ],
+              "raw_guard": "on(b1, b6)",
+              "source_state": null,
+              "state_literals": [
+                "on(b1, b6)"
+              ],
+              "target_state": null
+            },
+            "source_state": "3",
+            "state_literals": [
+              "on(b1, b6)"
+            ],
+            "supported": true,
+            "target_state": "4"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b2, b1)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b2",
+                    "b1"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b2, b1)"
+              ],
+              "raw_guard": "on(b2, b1)",
+              "source_state": null,
+              "state_literals": [
+                "on(b2, b1)"
+              ],
+              "target_state": null
+            },
+            "source_state": "4",
+            "state_literals": [
+              "on(b2, b1)"
+            ],
+            "supported": true,
+            "target_state": "5"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b4, b2)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b4",
+                    "b2"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b4, b2)"
+              ],
+              "raw_guard": "on(b4, b2)",
+              "source_state": null,
+              "state_literals": [
+                "on(b4, b2)"
+              ],
+              "target_state": null
+            },
+            "source_state": "5",
+            "state_literals": [
+              "on(b4, b2)"
+            ],
+            "supported": true,
+            "target_state": "6"
+          },
+          {
+            "message": null,
+            "raw_guard": "on(b7, b4)",
+            "rejection_reason": null,
+            "request": {
+              "achievement_subgoals": [
+                {
+                  "arguments": [
+                    "b7",
+                    "b4"
+                  ],
+                  "kind": "subgoal",
+                  "symbol": "on"
+                }
+              ],
+              "goal_facts": [
+                "goal_on(b7, b4)"
+              ],
+              "raw_guard": "on(b7, b4)",
+              "source_state": null,
+              "state_literals": [
+                "on(b7, b4)"
+              ],
+              "target_state": null
+            },
+            "source_state": "6",
+            "state_literals": [
+              "on(b7, b4)"
+            ],
+            "supported": true,
+            "target_state": "7"
+          }
+        ]
       }
     ]
   },

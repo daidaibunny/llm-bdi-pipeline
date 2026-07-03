@@ -287,6 +287,7 @@ def _persist_current_plan_library(
 				**dict(metadata),
 				"domain_name": plan_library.domain_name,
 				"plan_count": len(plan_library.plans),
+				"library_quality": dict(plan_library.metadata.get("library_quality") or {}),
 			},
 			indent=2,
 			sort_keys=True,

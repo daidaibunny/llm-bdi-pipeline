@@ -4,6 +4,25 @@
   "metadata": {
     "atomic_template_backend": "moose",
     "compiled_singleton_rule_count": 72,
+    "library_quality": {
+      "artifact_classification": "raw_lifted_singleton_macro_policy_not_compact",
+      "compact_recursive_module_ready": false,
+      "goal_symbol_count": 1,
+      "goal_symbols": [
+        "on"
+      ],
+      "max_body_step_count": 18,
+      "max_plans_per_goal_symbol": 72,
+      "plan_count": 72,
+      "primitive_action_step_count": 621,
+      "singleton_macro_library_ready": false,
+      "subgoal_step_count": 0,
+      "warnings": [
+        "Direct MOOSE output contains primitive macro actions but no recursive atomic subgoal calls; do not claim compact module-level quality when the domain requires recursive decomposition.",
+        "Plan count exceeds the compact-library threshold; this artifact is backend evidence or a smoke output, not the final compact library.",
+        "At least one plan body exceeds the compact macro threshold; inspect whether raw trace replay leaked into the library."
+      ]
+    },
     "policy_file": "/Users/lyw/Desktop/FYP/llm-bdi-pipeline-dev/tmp/moose-blocks-e2e/blocks-probe-first4.model.readable",
     "raw_rule_count": 72,
     "source_name": "blocks-probe-first4"

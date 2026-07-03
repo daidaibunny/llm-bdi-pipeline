@@ -21,6 +21,7 @@ from utils.symbol_normalizer import SymbolNormalizer
 from utils.pddl_parser import PDDLParser
 
 from .lifted_ltlf_goal_schema import LTLfAtomSpec
+from .dfa_controller import inspect_progress_requests_from_dfa_state
 from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 
@@ -185,9 +186,10 @@ def append_temporal_goal_to_library(
 			"duplicate_temporal_goal: Plan library already contains an "
 			f"achievement-goal entry for {goal_name!r}."
 		)
+	domain = PDDLParser.parse_domain(domain_file)
 	declared_arities = {
 		str(predicate.name): len(tuple(predicate.parameters or ()))
-		for predicate in PDDLParser.parse_domain(domain_file).predicates
+		for predicate in domain.predicates
 	}
 	diagnostic = validate_singleton_literal_dfa(
 		dfa_payload,
@@ -208,6 +210,12 @@ def append_temporal_goal_to_library(
 		"controller_state_belief": _controller_state_belief(
 			goal_name,
 			str(dfa_payload.get("initial_state") or "").strip(),
+		),
+		"progress_request_diagnostics": _progress_request_diagnostics(
+			dfa_payload=dfa_payload,
+			domain_key=domain.name,
+			domain_file=domain_file,
+			declared_arities=declared_arities,
 		),
 	}
 	plans = list(plan_library.plans)
@@ -292,6 +300,38 @@ def _append_history(
 		history = [dict(legacy_record)] if isinstance(legacy_record, Mapping) else []
 	history.append(dict(append_record))
 	return history
+
+
+def _progress_request_diagnostics(
+	*,
+	dfa_payload: Mapping[str, Any],
+	domain_key: str,
+	domain_file: str | Path,
+	declared_arities: Mapping[str, int],
+) -> list[dict[str, object]]:
+	diagnostics: list[dict[str, object]] = []
+	for source_state in _source_states(dfa_payload):
+		diagnostics.extend(
+			inspect_progress_requests_from_dfa_state(
+				dfa_payload=dfa_payload,
+				current_dfa_state=source_state,
+				domain_key=domain_key,
+				domain_file=domain_file,
+				declared_predicates=declared_arities,
+			),
+		)
+	return diagnostics
+
+
+def _source_states(dfa_payload: Mapping[str, Any]) -> tuple[str, ...]:
+	return tuple(
+		dict.fromkeys(
+			str(transition.get("source_state") or "").strip()
+			for transition in tuple(dfa_payload.get("guarded_transitions") or ())
+			if isinstance(transition, Mapping)
+			and str(transition.get("source_state") or "").strip()
+		),
+	)
 
 
 def _append_initial_controller_state_belief(
@@ -452,16 +492,8 @@ def _temporal_progress_plans(
 	dfa_payload: Mapping[str, Any],
 	declared_arities: Mapping[str, int],
 ) -> tuple[AgentSpeakPlan, ...]:
-	source_states = tuple(
-		dict.fromkeys(
-			str(transition.get("source_state") or "").strip()
-			for transition in tuple(dfa_payload.get("guarded_transitions") or ())
-			if isinstance(transition, Mapping)
-			and str(transition.get("source_state") or "").strip()
-		),
-	)
 	progress_transitions: list[dict[str, str]] = []
-	for source_state in source_states:
+	for source_state in _source_states(dfa_payload):
 		progress_transitions.extend(
 			progress_transitions_from_dfa_state(
 				dfa_payload=dfa_payload,

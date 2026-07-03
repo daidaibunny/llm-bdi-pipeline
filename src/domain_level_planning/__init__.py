@@ -27,7 +27,16 @@ from .benchmark_registry import (
 	BenchmarkRecord,
 	load_achievement_benchmark_registry,
 )
+from .dfa_adapter import (
+	DFAAchievementRequest,
+	DFAGuardAdaptationDiagnostic,
+	adapt_dfa_guard_to_achievement_request,
+	adapt_dfa_guarded_transition_to_achievement_request,
+	inspect_dfa_guard_to_achievement_request,
+)
 from .dfa_controller import (
+	inspect_progress_requests_from_dfa_state,
+	progress_requests_from_dfa_state,
 	progress_transitions_from_dfa_state,
 )
 from .gp_backends import (
@@ -64,8 +73,10 @@ from .lifted_ltlf_goal_schema import (
 	parse_lifted_ltlf_goal_dataset,
 )
 from .moose_policy_adapter import (
+	MooseAtomicLibraryQualityReport,
 	MooseAtom,
 	MooseReadableRule,
+	audit_moose_atomic_library_quality,
 	compile_moose_readable_policy_to_asl_library,
 	load_moose_readable_policy,
 	parse_moose_readable_policy,
@@ -99,6 +110,8 @@ __all__ = [
 	"AtomicTemplateBackendDecision",
 	"BackendManifest",
 	"BenchmarkRecord",
+	"DFAAchievementRequest",
+	"DFAGuardAdaptationDiagnostic",
 	"DomainLevelLibraryContractReport",
 	"GPBackendRunner",
 	"HypothesisClassContract",
@@ -112,6 +125,7 @@ __all__ = [
 	"LiftedLTLfGoalDataset",
 	"LiftedPolicyProgram",
 	"MooseAtom",
+	"MooseAtomicLibraryQualityReport",
 	"MooseReadableRule",
 	"PDDLSupportReport",
 	"PolicyFeature",
@@ -124,9 +138,12 @@ __all__ = [
 	"SketchRule",
 	"append_lifted_temporal_goal_case_to_library",
 	"append_temporal_goal_to_library",
+	"adapt_dfa_guard_to_achievement_request",
+	"adapt_dfa_guarded_transition_to_achievement_request",
 	"architecture_gap_summary",
 	"assert_compilable_pddl_files",
 	"audit_domain_level_library_contract",
+	"audit_moose_atomic_library_quality",
 	"backend_audit_matrix",
 	"backend_consumption_role",
 	"bounded_hypothesis_class_contract",
@@ -135,7 +152,9 @@ __all__ = [
 	"discover_learner_sketches_policy_file",
 	"discover_learning_general_policies_policy_file",
 	"domain_level_architecture_contract",
+	"inspect_dfa_guard_to_achievement_request",
 	"inspect_pddl_support",
+	"inspect_progress_requests_from_dfa_state",
 	"load_achievement_benchmark_registry",
 	"load_lifted_ltlf_goal_dataset",
 	"load_moose_readable_policy",
@@ -145,6 +164,7 @@ __all__ = [
 	"parse_moose_readable_policy",
 	"policy_program_from_moose_readable_policy",
 	"policy_program_from_sketch_policy",
+	"progress_requests_from_dfa_state",
 	"progress_transitions_from_dfa_state",
 	"run_learner_sketches",
 	"run_learning_general_policies",

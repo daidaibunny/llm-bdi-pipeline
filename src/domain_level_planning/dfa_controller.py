@@ -10,7 +10,63 @@ planner or full-trace simulator.
 from __future__ import annotations
 
 from collections import deque
-from typing import Any, Mapping
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+from .dfa_adapter import DFAAchievementRequest
+from .dfa_adapter import adapt_dfa_guarded_transition_to_achievement_request
+from .dfa_adapter import inspect_dfa_guard_to_achievement_request
+
+
+def progress_requests_from_dfa_state(
+	*,
+	dfa_payload: Mapping[str, Any],
+	current_dfa_state: str,
+	domain_key: str,
+	domain_file: str | Path | None = None,
+	declared_predicates: Sequence[object] | Mapping[str, int | None] = (),
+) -> tuple[DFAAchievementRequest, ...]:
+	"""Return schema-valid achievement requests for accepting-progress edges."""
+
+	return tuple(
+		adapt_dfa_guarded_transition_to_achievement_request(
+			transition,
+			domain_key=domain_key,
+			domain_file=domain_file,
+			declared_predicates=declared_predicates,
+		)
+		for transition in progress_transitions_from_dfa_state(
+			dfa_payload=dfa_payload,
+			current_dfa_state=current_dfa_state,
+		)
+	)
+
+
+def inspect_progress_requests_from_dfa_state(
+	*,
+	dfa_payload: Mapping[str, Any],
+	current_dfa_state: str,
+	domain_key: str,
+	domain_file: str | Path | None = None,
+	declared_predicates: Sequence[object] | Mapping[str, int | None] = (),
+) -> tuple[dict[str, object], ...]:
+	"""Return support diagnostics for accepting-progress DFA transitions."""
+
+	diagnostics: list[dict[str, object]] = []
+	for transition in progress_transitions_from_dfa_state(
+		dfa_payload=dfa_payload,
+		current_dfa_state=current_dfa_state,
+	):
+		diagnostic = inspect_dfa_guard_to_achievement_request(
+			transition["raw_label"],
+			domain_key=domain_key,
+			domain_file=domain_file,
+			declared_predicates=declared_predicates,
+		).to_dict()
+		diagnostic["source_state"] = transition["source_state"]
+		diagnostic["target_state"] = transition["target_state"]
+		diagnostics.append(diagnostic)
+	return tuple(diagnostics)
 
 
 def progress_transitions_from_dfa_state(

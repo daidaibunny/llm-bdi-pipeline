@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 from domain_level_planning.moose_policy_adapter import (
+	audit_moose_atomic_library_quality,
 	compile_moose_readable_policy_to_asl_library,
 	parse_moose_readable_policy,
 	policy_program_from_moose_readable_policy,
@@ -101,6 +102,26 @@ def test_moose_readable_policy_compiles_to_atomic_asl_library() -> None:
 	assert "\tboard(Car0, Location0);" in asl
 	assert "\tsail(Location0, Location1);" in asl
 	assert "\tdebark(Car0, Location1)." in asl
+	assert library.metadata["library_quality"]["artifact_classification"] == (
+		"compact_lifted_singleton_macro_library"
+	)
+	assert library.metadata["library_quality"]["compact_recursive_module_ready"] is False
+
+
+def test_moose_quality_audit_flags_large_raw_macro_policies() -> None:
+	library = compile_moose_readable_policy_to_asl_library(
+		"\n\n".join(FERRY_READABLE_POLICY.strip() for _ in range(6)),
+		domain_name="ferry",
+		source_name="oversized",
+	)
+
+	report = audit_moose_atomic_library_quality(plans=library.plans)
+
+	assert report.plan_count == 12
+	assert report.singleton_macro_library_ready is False
+	assert report.compact_recursive_module_ready is False
+	assert report.artifact_classification == "raw_lifted_singleton_macro_policy_not_compact"
+	assert any("Plan count exceeds" in warning for warning in report.warnings)
 
 
 def test_moose_readable_compile_asl_cli_materializes_atomic_library(
@@ -140,6 +161,9 @@ def test_moose_readable_compile_asl_cli_materializes_atomic_library(
 	assert len(library_json["plans"]) == 2
 	assert metadata["backend"] == "moose"
 	assert metadata["compiled_singleton_rule_count"] == 2
+	assert metadata["library_quality"]["artifact_classification"] == (
+		"compact_lifted_singleton_macro_library"
+	)
 	assert "+!at(Car0, Location1)" in asl
 	assert "achieve_" not in asl
 	assert "transition_" not in asl

@@ -122,6 +122,10 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		== "teg_state(g_query_1, q0)"
 	)
 	assert [
+		diagnostic["request"]["achievement_subgoals"][0]["symbol"]
+		for diagnostic in updated.metadata["temporal_goal_append"]["progress_request_diagnostics"]
+	] == ["done", "ready"]
+	assert [
 		record["goal_name"]
 		for record in updated.metadata["temporal_goal_append_history"]
 	] == ["g_query_1"]
@@ -307,6 +311,11 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 		AgentSpeakBodyStep("belief_deletion", "teg_state", ("g_query_1", "q0")),
 		AgentSpeakBodyStep("belief_addition", "teg_state", ("g_query_1", "q1")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
+	)
+	assert (
+		updated.metadata["temporal_goal_append"]["progress_request_diagnostics"][0]
+		["request"]["achievement_subgoals"]
+		== [{"kind": "subgoal", "symbol": "on", "arguments": ["X", "Y"]}]
 	)
 
 
