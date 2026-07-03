@@ -26,19 +26,12 @@ SELECTED_BENCHMARK_DOMAINS = {
 	"gripper",
 	"miconic",
 	"logistics",
-	"delivery",
-	"spanner",
-	"childsnack",
-	"barman",
-	"visitall",
 	"blocks",
 	"8puzzle-1tile",
-	"sokoban-1stone",
 }
 EXPECTED_BENCHMARK_SOURCE_NAMES = {
 	"potassco/pddl-instances",
 	"DillonZChen/moose-dataset",
-	"bonetblai/learner-sketches",
 	"bonetblai/learner-policies-from-examples",
 }
 
@@ -360,34 +353,28 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	taxonomy = json.loads(taxonomy_path.read_text(encoding="utf-8"))
 	manifest = load_final_paper_manifest()
 
-	assert taxonomy["schema_version"] == 2
-	assert taxonomy["scope"] == "positive_conjunctive_achievement_goals"
-	assert "feature-definable" in taxonomy["claim_statement"]
-	assert "bounded sketch width" in taxonomy["claim_statement"]
-	assert "runtime full-trace planning" in taxonomy["claim_statement"]
+	assert taxonomy["schema_version"] == 3
+	assert taxonomy["scope"] == (
+		"achievement_goal_atomic_templates_with_temporal_extended_goal_wrappers"
+	)
+	assert "does not claim a new universal generalized planner" in taxonomy["claim_statement"]
+	assert "singleton literals" in taxonomy["claim_statement"]
 	assert "potassco/pddl-instances" in taxonomy["selection_principle"]
 	assert "moose-dataset" in taxonomy["selection_principle"]
-	assert "learner-sketches" in taxonomy["selection_principle"]
 	assert "learner-policies-from-examples" in taxonomy["selection_principle"]
 	assert "floor(2/3 * N)" in taxonomy["selection_principle"]
 	assert taxonomy["paper_core_domains"] == [
 		"blocks",
 		"8puzzle-1tile",
-		"sokoban-1stone",
 	]
 	assert taxonomy["domain_count_assessment"][
 		"current_strict_main_standard_domain_count"
-	] == 12
+	] == 6
 	assert taxonomy["domain_count_assessment"][
 		"revision_needed_for_broad_gp_claim"
 	] is False
-	assert (
-			taxonomy["domain_count_assessment"]["minimum_next_revision_target"][
-				"selected_standard_domain_count"
-			]
-			== 12
-	)
-	assert taxonomy["selected_domain_class_count"] == 3
+	assert taxonomy["domain_count_assessment"]["broad_universal_gp_claim"] is False
+	assert taxonomy["selected_goal_property_group_count"] == 3
 	assert taxonomy["selected_goal_specification_layer_count"] == 2
 	assert set(taxonomy["selected_standard_domain_targets"]) == SELECTED_BENCHMARK_DOMAINS
 	assert taxonomy["benchmark_source"]["name"] == (
@@ -411,10 +398,8 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 	assert "PDDL problem goals" in goal_layers["achievement_goal_layer"][
 		"pddl_relation"
 	]
-	assert goal_layers["temporal_extended_goal_layer"]["status"] == (
-		"future_cross_cutting_scope"
-	)
-	assert "not a fourth domain class" in goal_layers[
+	assert goal_layers["temporal_extended_goal_layer"]["status"] == "query_specific_scope"
+	assert "not a domain class" in goal_layers[
 		"temporal_extended_goal_layer"
 	]["paper_use"]
 
@@ -447,11 +432,10 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 			assert literature_key in literature
 
 	assert {
-		"bounded_width_sketch",
-		"feature_definable_general_policy",
-		"goal_independence",
-		"program_or_decision_list_gp",
+		"multi_object_template_composition",
 		"safe_asl_compilability",
+		"singleton_goal_regression_suitability",
+		"structural_temporalization_need",
 	} <= property_ids
 
 	prior_practice = taxonomy["prior_benchmark_practice"]
@@ -487,79 +471,67 @@ def test_domain_support_taxonomy_is_complete_and_manifested() -> None:
 		"main_claim",
 		"planned_claim_target",
 	}
-	class_ids = set()
+	group_ids = set()
 	target_domains = set()
-	for benchmark_class in taxonomy["benchmark_classes"]:
-		class_ids.add(benchmark_class["id"])
-		assert benchmark_class["name"]
-		assert benchmark_class["formal_membership"]
-		assert benchmark_class["prior_property_basis"]
-		assert benchmark_class["domain_examples"]
-		assert benchmark_class["target_paper_domains"]
-		assert benchmark_class["paper_role"]
-		assert benchmark_class["current_evidence"]
-		assert benchmark_class["support_level"] in support_levels
-		target_domains.update(benchmark_class["target_paper_domains"])
-		for property_key in benchmark_class["prior_property_basis"]:
+	for goal_property_group in taxonomy["goal_property_groups"]:
+		group_ids.add(goal_property_group["id"])
+		assert goal_property_group["name"]
+		assert goal_property_group["formal_membership"]
+		assert goal_property_group["prior_property_basis"]
+		assert goal_property_group["domain_examples"]
+		assert goal_property_group["target_paper_domains"]
+		assert goal_property_group["paper_role"]
+		assert goal_property_group["current_evidence"]
+		assert goal_property_group["support_level"] in support_levels
+		assert goal_property_group["backend_route"].startswith("not_by_group")
+		target_domains.update(goal_property_group["target_paper_domains"])
+		for property_key in goal_property_group["prior_property_basis"]:
 			assert property_key in property_ids
 
 	assert {
-		"goal_separable_serialisable_achievement_classes",
-		"bounded_width_sketchable_subgoal_structure_classes",
-		"feature_definable_goal_dependent_construction_classes",
-	} == class_ids
+		"singleton_regression_friendly_classical_goals",
+		"multi_object_classical_achievement_goals",
+		"structural_temporalized_achievement_goals",
+	} == group_ids
 	assert SELECTED_BENCHMARK_DOMAINS <= target_domains
 
-	classes_by_id = {
-		benchmark_class["id"]: benchmark_class
-		for benchmark_class in taxonomy["benchmark_classes"]
+	groups_by_id = {
+		goal_property_group["id"]: goal_property_group
+		for goal_property_group in taxonomy["goal_property_groups"]
 	}
-	assert classes_by_id[
-		"feature_definable_goal_dependent_construction_classes"
+	assert groups_by_id[
+		"structural_temporalized_achievement_goals"
 	]["support_level"] == "main_claim"
-	assert classes_by_id[
-		"feature_definable_goal_dependent_construction_classes"
-	][
-		"current_project_domains"
-	] == ["blocks", "8puzzle-1tile", "sokoban-1stone"]
-	assert classes_by_id[
-		"feature_definable_goal_dependent_construction_classes"
+	assert groups_by_id[
+		"structural_temporalized_achievement_goals"
 	]["target_paper_domains"] == [
 		"blocks",
 		"8puzzle-1tile",
-		"sokoban-1stone",
 	]
-	assert classes_by_id[
-		"goal_separable_serialisable_achievement_classes"
-	]["current_project_domains"] == ["ferry", "gripper", "miconic", "logistics"]
-	assert classes_by_id[
-		"bounded_width_sketchable_subgoal_structure_classes"
-	]["current_project_domains"] == [
-		"delivery",
-		"spanner",
-		"visitall",
-		"childsnack",
-		"barman",
-	]
+	assert groups_by_id[
+		"singleton_regression_friendly_classical_goals"
+	]["target_paper_domains"] == ["ferry", "miconic"]
+	assert groups_by_id[
+		"multi_object_classical_achievement_goals"
+	]["target_paper_domains"] == ["gripper", "logistics"]
 
 	boundary_records = {
 		record["id"]: record
 		for record in taxonomy["excluded_or_boundary_domains"]
 	}
-	assert "transport" in boundary_records["reachability_route_boundary"]["domains"]
-	assert "depots" in boundary_records["reachability_route_boundary"]["domains"]
-	assert boundary_records["reachability_route_boundary"]["current_project_domains"] == []
-	assert "numeric transport" in boundary_records["numeric_boundary"][
+	assert "transport" in boundary_records["route_or_resource_boundary"]["domains"]
+	assert "depots" in boundary_records["route_or_resource_boundary"]["domains"]
+	assert boundary_records["route_or_resource_boundary"]["current_project_domains"] == []
+	assert "numeric transport" in boundary_records["numeric_goal_boundary"][
 		"domains"
 	]
 
 	evaluation_policy = taxonomy["evaluation_policy"]
 	assert (
-		"support_level is main_claim or planned_claim_target with strict "
-		"ASL-library validation"
+		"without runtime full-trace planning"
 	) in evaluation_policy["main_claim_requires"]
 	assert any(
-		"local mechanism-stress domains" in item
+		"Raw external GP policies" in item
 		for item in evaluation_policy["not_counted_as_main_claim"]
 	)
 
@@ -577,7 +549,7 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 	assert registry.control["future_goal_specification_layers"] == [
 		"temporal_extended_goal_layer",
 	]
-	assert len(registry.selected_records()) == 12
+	assert len(registry.selected_records()) == 6
 	assert {
 		record.domain_id for record in registry.selected_records()
 	} == set(taxonomy["selected_standard_domain_targets"])
@@ -589,27 +561,21 @@ def test_achievement_benchmark_registry_matches_selected_domain_taxonomy() -> No
 		for record in registry.control["benchmark_sources"]
 	) == EXPECTED_BENCHMARK_SOURCE_NAMES
 
-	class_to_domains: dict[str, set[str]] = {}
+	group_to_domains: dict[str, set[str]] = {}
 	for record in registry.selected_records():
-		class_to_domains.setdefault(record.benchmark_class_id, set()).add(record.domain_id)
-	assert class_to_domains == {
-			"goal_separable_serialisable_achievement_classes": {
+		group_to_domains.setdefault(record.goal_property_group_id, set()).add(record.domain_id)
+	assert group_to_domains == {
+			"singleton_regression_friendly_classical_goals": {
 				"ferry",
-				"gripper",
 				"miconic",
+			},
+			"multi_object_classical_achievement_goals": {
+				"gripper",
 				"logistics",
 			},
-			"bounded_width_sketchable_subgoal_structure_classes": {
-				"delivery",
-				"spanner",
-				"childsnack",
-				"barman",
-				"visitall",
-			},
-			"feature_definable_goal_dependent_construction_classes": {
+			"structural_temporalized_achievement_goals": {
 				"blocks",
 				"8puzzle-1tile",
-				"sokoban-1stone",
 			},
 		}
 

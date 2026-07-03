@@ -1,456 +1,9 @@
 {
   "artifact_id": "aamas2026-domain-level-lifted-asl-final-data",
-  "schema_version": 1,
-  "paper_scope": "positive_conjunctive_achievement_goals",
-  "generated_output_policy": {
-    "tracked_contract": "paper_artifacts/final_paper_manifest.json",
-    "tracked_result_macros": "latex_code/aamas_method_paper/sections/result_macros.tex",
-    "default_output_dir": "tmp/paper-final-latest",
-    "snapshot_policy": "regenerate_outputs_from_tracked_manifest_and_scripts",
-    "do_not_track_generated_dirs": [
-      "tmp/paper-final-latest/backend-audit",
-      "tmp/paper-final-latest/baseline-work",
-      "tmp/paper-final-latest/baselines",
-      "tmp/paper-final-latest/configs",
-      "tmp/paper-final-latest/main-matrix",
-      "tmp/paper-final-latest/ablation-matrix",
-      "tmp/paper-final-latest/limitation-matrix"
-    ]
-  },
-  "commands": {
-    "generate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --planner-timeout-seconds 5",
-    "validate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only",
-    "tests": "PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q",
-    "paper": "cd latex_code/aamas_method_paper && latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build main.tex"
-  },
-  "resource_policy": {
-    "external_generalized_planning_memory_limit_gib": 16,
-    "external_generalized_planning_requires_resource_guard": true,
-    "library_runtime_full_trace_planner": false,
-    "classical_planner_baselines_are_offline_only": true
-  },
-  "external_setup": {
-    "commands": {
-      "backend_status": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py status",
-      "learner_sketches_commands": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment all",
-      "learner_sketches_summary": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-summary --experiment all",
-      "d2l_docker_commands": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py d2l-docker-commands"
-    },
-    "resource_guarded_command_generators": [
-      "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment all | grep resource_guard.py"
-    ],
-    "pinned_repositories": [
-      {
-        "name": "learner-sketches",
-        "path": ".external/gp-backends/learner-sketches",
-        "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
-        "validate_head": true,
-        "role": "benchmark source: learned-sketch benchmark and testing families"
-      },
-      {
-        "name": "h-policy-learner",
-        "path": ".external/gp-backends/h-policy-learner",
-        "commit": "03e345537208ab804c1f4958bf183b65d4863a62",
-        "validate_head": true,
-        "role": "verified adapter and related baseline backend"
-      },
-      {
-        "name": "d2l",
-        "path": ".external/gp-backends/d2l",
-        "commit": "0620e169c894d79b3c84f435dba1462996f7c270",
-        "validate_head": true,
-        "role": "verified adapter and related baseline backend"
-      },
-      {
-        "name": "moose",
-        "path": ".external/moose",
-        "commit": "ce1e99bc12e9c839c5e8e870aac878fd5d31cf9e",
-        "validate_head": true,
-        "role": "generalized-planning reproduction baseline"
-      },
-      {
-        "name": "moose-benchmarks",
-        "path": ".external/moose/benchmarks",
-        "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
-        "validate_head": true,
-        "role": "MOOSE benchmark submodule"
-      },
-      {
-        "name": "VAL",
-        "path": ".external/VAL",
-        "commit": "3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4",
-        "validate_head": true,
-        "role": "plan validation utility for MOOSE reproduction"
-      },
-      {
-        "name": "pddl-instances",
-        "path": ".external/benchmark-sources/pddl-instances",
-        "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
-        "validate_head": true,
-        "role": "benchmark source: IPC benchmark directories used for standard classical PDDL domains"
-      },
-      {
-        "name": "moose-dataset",
-        "path": ".external/moose-dataset",
-        "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
-        "validate_head": true,
-        "role": "benchmark source: MOOSE goal-regression benchmark families"
-      },
-      {
-        "name": "learner-policies-from-examples",
-        "path": ".external/gp-backends/learner-policies-from-examples",
-        "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
-        "validate_head": true,
-        "role": "benchmark source: KR 2025 feature-policy benchmark families"
-      }
-    ]
-  },
-  "required_repository_inputs": [
-    {
-      "path": "scripts/run_final_paper_data.py",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "scripts/run_domain_level_experiment_matrix.py",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "scripts/generate_domain_level_baselines.py",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domain_level_planning/benchmark_registry.py",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/benchmark_registry/achievement_goals",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/domain_support_taxonomy.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/Chen2026_Generalised-Planning-Goal-Regression.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/Drexler2022_Learning-Sketches-Bounded-Width.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/Drexler2024_Subgoal-Structure-Sketches.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/Bonet2024_General-Policies-Subgoal-Structure-Planning-Width.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/Bonet2024_Policy-Reuse-General-Policies.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/Frances2021_Learning-General-Policies-Small-Examples.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/Yang2022_PG3-Policy-Guided-Planning.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "paper_artifacts/literature/SegoviaAguas2022_BFGPpp-Cpp-Generalized-Planning.pdf",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "scripts/materialize_achievement_benchmarks.py",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/ferry/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/ferry/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/ferry/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/ferry/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/gripper/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/gripper/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/gripper/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/gripper/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/miconic/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/miconic/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/miconic/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/miconic/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/logistics/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/logistics/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/logistics/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/logistics/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/delivery/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/delivery/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/delivery/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/delivery/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/spanner/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/spanner/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/spanner/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/spanner/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/visitall/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/visitall/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/visitall/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/visitall/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/childsnack/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/childsnack/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/childsnack/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/childsnack/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/barman/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/barman/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/barman/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/barman/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/blocks/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/blocks/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/blocks/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/blocks/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/8puzzle-1tile/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/8puzzle-1tile/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/8puzzle-1tile/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/8puzzle-1tile/source.json",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/sokoban-1stone/domain.pddl",
-      "kind": "file",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/sokoban-1stone/train",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/sokoban-1stone/test",
-      "kind": "directory",
-      "tracked": true
-    },
-    {
-      "path": "src/domains/sokoban-1stone/source.json",
-      "kind": "file",
-      "tracked": true
-    }
-  ],
-  "matrix_configs": {
-    "main": {
-      "file": "configs/main-library-matrix.json",
-      "matrix_name": "paper-final-main-library",
-      "experiments": []
-    },
-    "ablation": {
-      "file": "configs/ablation-matrix.json",
-      "matrix_name": "paper-final-ablations",
-      "experiments": []
-    },
-    "limitation": {
-      "file": "configs/limitation-matrix.json",
-      "matrix_name": "paper-final-limitations",
-      "experiments": []
-    }
-  },
-  "expected_package": {
-    "report_count": 0,
-    "baseline_count": 0,
-    "paper_table_row_count": 0,
-    "latex_macro_file": "latex_code/aamas_method_paper/sections/result_macros.tex"
-  },
-  "expected_library_rows": [],
-  "expected_baseline_rows": [],
   "benchmark_source": {
-    "name": "selected reputable generalized-planning benchmark sources",
-    "coverage": "12 routed achievement-goal planning families",
-    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification."
+    "coverage": "six selected achievement-goal planning domains",
+    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification.",
+    "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
     {
@@ -481,5 +34,335 @@
       "name": "bonetblai/learner-policies-from-examples",
       "url": "https://github.com/bonetblai/learner-policies-from-examples"
     }
-  ]
+  ],
+  "commands": {
+    "generate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --planner-timeout-seconds 5",
+    "paper": "cd latex_code/aamas_method_paper && latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build main.tex",
+    "tests": "PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q",
+    "validate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only"
+  },
+  "expected_baseline_rows": [],
+  "expected_library_rows": [],
+  "expected_package": {
+    "baseline_count": 0,
+    "latex_macro_file": "latex_code/aamas_method_paper/sections/result_macros.tex",
+    "paper_table_row_count": 0,
+    "report_count": 0
+  },
+  "external_setup": {
+    "commands": {
+      "backend_status": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py status",
+      "d2l_docker_commands": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py d2l-docker-commands",
+      "learner_sketches_commands": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment all",
+      "learner_sketches_summary": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-summary --experiment all",
+      "moose_atomic_command": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-atomic-command --domain-file src/domains/ferry/domain.pddl --training-dir src/domains/ferry/train --save-file tmp/moose-atomic/ferry.model --timeout-seconds 1800",
+      "moose_readable_summary": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry"
+    },
+    "pinned_repositories": [
+      {
+        "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
+        "name": "learner-sketches",
+        "path": ".external/gp-backends/learner-sketches",
+        "role": "benchmark source: learned-sketch benchmark and testing families",
+        "validate_head": true
+      },
+      {
+        "commit": "03e345537208ab804c1f4958bf183b65d4863a62",
+        "name": "h-policy-learner",
+        "path": ".external/gp-backends/h-policy-learner",
+        "role": "verified adapter and related baseline backend",
+        "validate_head": true
+      },
+      {
+        "commit": "0620e169c894d79b3c84f435dba1462996f7c270",
+        "name": "d2l",
+        "path": ".external/gp-backends/d2l",
+        "role": "verified adapter and related baseline backend",
+        "validate_head": true
+      },
+      {
+        "commit": "ce1e99bc12e9c839c5e8e870aac878fd5d31cf9e",
+        "name": "moose",
+        "path": ".external/moose",
+        "role": "generalized-planning reproduction baseline",
+        "validate_head": true
+      },
+      {
+        "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+        "name": "moose-benchmarks",
+        "path": ".external/moose/benchmarks",
+        "role": "MOOSE benchmark submodule",
+        "validate_head": true
+      },
+      {
+        "commit": "3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4",
+        "name": "VAL",
+        "path": ".external/VAL",
+        "role": "plan validation utility for MOOSE reproduction",
+        "validate_head": true
+      },
+      {
+        "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
+        "name": "pddl-instances",
+        "path": ".external/benchmark-sources/pddl-instances",
+        "role": "benchmark source: IPC benchmark directories used for standard classical PDDL domains",
+        "validate_head": true
+      },
+      {
+        "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+        "name": "moose-dataset",
+        "path": ".external/moose-dataset",
+        "role": "benchmark source: MOOSE goal-regression benchmark families",
+        "validate_head": true
+      },
+      {
+        "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+        "name": "learner-policies-from-examples",
+        "path": ".external/gp-backends/learner-policies-from-examples",
+        "role": "benchmark source: KR 2025 feature-policy benchmark families",
+        "validate_head": true
+      }
+    ],
+    "resource_guarded_command_generators": [
+      "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment all | grep resource_guard.py",
+      "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-atomic-command --domain-file src/domains/ferry/domain.pddl --training-dir src/domains/ferry/train --save-file tmp/moose-atomic/ferry.model --timeout-seconds 1800 | grep resource_guard.py"
+    ]
+  },
+  "generated_output_policy": {
+    "default_output_dir": "tmp/paper-final-latest",
+    "do_not_track_generated_dirs": [
+      "tmp/paper-final-latest/backend-audit",
+      "tmp/paper-final-latest/baseline-work",
+      "tmp/paper-final-latest/baselines",
+      "tmp/paper-final-latest/configs",
+      "tmp/paper-final-latest/main-matrix",
+      "tmp/paper-final-latest/ablation-matrix",
+      "tmp/paper-final-latest/limitation-matrix"
+    ],
+    "snapshot_policy": "regenerate_outputs_from_tracked_manifest_and_scripts",
+    "tracked_contract": "paper_artifacts/final_paper_manifest.json",
+    "tracked_result_macros": "latex_code/aamas_method_paper/sections/result_macros.tex"
+  },
+  "matrix_configs": {
+    "ablation": {
+      "experiments": [],
+      "file": "configs/ablation-matrix.json",
+      "matrix_name": "paper-final-ablations"
+    },
+    "limitation": {
+      "experiments": [],
+      "file": "configs/limitation-matrix.json",
+      "matrix_name": "paper-final-limitations"
+    },
+    "main": {
+      "experiments": [],
+      "file": "configs/main-library-matrix.json",
+      "matrix_name": "paper-final-main-library"
+    }
+  },
+  "paper_scope": "achievement_goal_atomic_templates_with_temporal_extended_goal_wrappers",
+  "required_repository_inputs": [
+    {
+      "kind": "file",
+      "path": "scripts/run_final_paper_data.py",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "scripts/run_domain_level_experiment_matrix.py",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "scripts/generate_domain_level_baselines.py",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domain_level_planning/benchmark_registry.py",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/benchmark_registry/achievement_goals",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/domain_support_taxonomy.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/Chen2026_Generalised-Planning-Goal-Regression.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/Drexler2022_Learning-Sketches-Bounded-Width.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/Drexler2024_Subgoal-Structure-Sketches.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/Bonet2024_General-Policies-Subgoal-Structure-Planning-Width.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/Bonet2024_Policy-Reuse-General-Policies.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/Frances2021_Learning-General-Policies-Small-Examples.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/Yang2022_PG3-Policy-Guided-Planning.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "paper_artifacts/literature/SegoviaAguas2022_BFGPpp-Cpp-Generalized-Planning.pdf",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "scripts/materialize_achievement_benchmarks.py",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/ferry/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/ferry/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/ferry/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/ferry/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/gripper/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/gripper/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/gripper/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/gripper/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/miconic/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/miconic/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/miconic/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/miconic/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/logistics/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/logistics/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/logistics/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/logistics/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/blocks/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/blocks/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/blocks/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/blocks/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/8puzzle-1tile/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/8puzzle-1tile/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/8puzzle-1tile/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/8puzzle-1tile/source.json",
+      "tracked": true
+    }
+  ],
+  "resource_policy": {
+    "classical_planner_baselines_are_offline_only": true,
+    "external_generalized_planning_memory_limit_gib": 16,
+    "external_generalized_planning_requires_resource_guard": true,
+    "library_runtime_full_trace_planner": false
+  },
+  "schema_version": 1
 }

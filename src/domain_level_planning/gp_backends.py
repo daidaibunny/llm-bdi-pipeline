@@ -127,8 +127,8 @@ BACKEND_RESEARCH_PROFILES = {
 	"moose": {
 		"paper_role": "AAAI 2026 goal-regression generalized planner",
 		"preferred_use": (
-			"primary goal-regression route for goal-separable and serialisable "
-			"achievement domains"
+			"primary backend candidate for positive singleton atomic predicate "
+			"template generation"
 		),
 		"input_artifacts": (
 			"PDDL domain",
@@ -137,11 +137,13 @@ BACKEND_RESEARCH_PROFILES = {
 		),
 		"output_artifacts": (
 			"first_order_decision_list_model",
+			"readable_decision_list_policy",
 			"policy_execution_plans",
 			"optional_search_pruned_plans",
 		),
 		"reusable_evidence": (
-			"goal-regression policy",
+			"atomic singleton-goal regression policy",
+			"readable MOOSE policy adapter to LiftedPolicyProgram",
 			"goal independence diagnostics",
 			"validated policy-execution coverage",
 		),
@@ -177,10 +179,12 @@ BACKEND_RESEARCH_PROFILES = {
 			),
 		},
 		"current_consumption_role": {
-			"drives_layer_b": True,
-			"drives_layer_c": True,
+			"drives_layer_b": False,
+			"drives_layer_c": False,
+			"drives_atomic_templates": True,
+			"drives_temporal_wrapper": False,
 			"consumed_by_synthesis": True,
-			"consumption_mode": "goal_regression_decision_list_policy",
+			"consumption_mode": "moose_readable_policy_atomic_templates",
 			"blocking_gap": None,
 		},
 	},

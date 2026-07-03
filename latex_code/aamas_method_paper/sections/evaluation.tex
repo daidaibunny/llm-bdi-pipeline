@@ -1,81 +1,52 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-The evaluation is organized around a fixed achievement-goal benchmark corpus,
-not around learner-specific examples or implementation-local domains. The
-current paper scope is positive conjunctive achievement goals. Temporal
-extended goals are treated as a later goal-specification layer that can call the
-same domain-level library, but they are not part of the core evaluation in this
-paper.
+The evaluation has two goals. First, it tests whether external generalized
+planners can produce lifted atomic templates that compile into a domain-level
+\asl{} library. Second, it tests whether lifted LTLf queries can append
+top-level temporal wrapper goals that call that atomic library.
 
-All selected benchmark snapshots are materialized from complete IPC PDDL
-directories in one independent public source: \texttt{potassco/pddl-instances}
-at commit \texttt{cf19edf7c53d1540ddbb396c642595e0926ee552}. For each selected
-domain we track a local \texttt{domain.pddl}, all official instances from the
-selected IPC directory, a deterministic $\lfloor 2N/3 \rfloor$ training split,
-the remaining goal-specification test instances, and a \texttt{source.json}
-provenance record. The snapshots are committed under
-\texttt{src/domains/<domain>/}; the external IPC repository remains an input,
-not a learner backend and not part of the synthesized library.
+The current formal corpus contains six domains, organized by the goal-property
+coverage in Table~\ref{tab:six-domain-scope}. Each local snapshot contains:
 
-\begin{table}[t]
-	\caption{Selected achievement-goal benchmark corpus. Every row is
-	materialized from complete IPC directories in the same independent source;
-	the training split is $\lfloor 2N/3 \rfloor$ and the remainder is held out.}
-	\label{tab:domain-families}
-	\small
-	\begin{tabular}{p{0.36\columnwidth}p{0.36\columnwidth}r}
-		\toprule
-		Class & Problem classes & Count \\
-		\midrule
-		Goal-separable and serialisable achievement classes &
-		Gripper, Miconic, Logistics & 3 \\
-		Bounded-width sketchable subgoal-structure classes &
-		Barman, Childsnack, Visitall & 3 \\
-		Feature-definable goal-dependent construction classes &
-		Blocks, Depots & 2 \\
-		\bottomrule
-	\end{tabular}
-\end{table}
+\begin{verbatim}
+src/domains/<domain>/domain.pddl
+src/domains/<domain>/train/*.pddl
+src/domains/<domain>/test/*.pddl
+src/domains/<domain>/source.json
+\end{verbatim}
 
-Table~\ref{tab:domain-families} follows the same style used by prior
-generalized-planning work: support is stated over problem classes $Q_D$ with
-recognized structural properties, rather than over arbitrary \pddl{} domains.
-The first class follows the goal-independence and serialisability distinction
-used by MOOSE \cite{Chen2026Moose}. The second class follows policy-sketch and
-subgoal-width evaluations, where a compact sketch decomposes large problems into
-bounded-width subproblems \cite{Drexler2022LearningSketches,
-Drexler2024SubgoalSketches,Bonet2024GeneralPoliciesWidth}. The third class
-follows feature-definable general-policy work, where Blocksworld variants expose
-goal-dependent construction behavior that cannot be handled by arbitrary
-singleton-goal ordering \cite{Frances2021LearningGeneralPolicies}; Depots adds
-an official IPC construction benchmark where transport goals interact with
-Blocksworld-style crate stacking.
+The split is deterministic: $\lfloor 2N/3 \rfloor$ training instances and the
+remaining instances as held-out goal-specification cases. The same split is
+used by the atomic-template backend selector and by the query-generation layer.
 
-The evaluation protocol has three checks. First, synthesis receives only the
-training split and must produce a lifted \asl{} library whose plan heads are
-declared \pddl{} predicate goals. Second, the generated library is executed on
-the held-out goal-specification split without a run-time full-trace planner.
-Third, the artifact validator checks that every reported row is reproducible
-from the tracked manifest, uses the declared benchmark source, and does not
-depend on obsolete implementation-local domains. Classical planners and
-external generalized-planning systems may appear as offline baselines or
-evidence providers, but they are not allowed to replace the run-time library.
+\subsection{Checks}
+
+Each domain is evaluated through four checks.
+
+\begin{enumerate}
+\item Atomic template extraction: the system extracts predicate, arity, and
+	polarity templates from the training split.
+\item Backend artifact acceptance: the selected backend artifact must parse,
+	bind to declared \pddl{} vocabulary, compile to \asl{}, and validate on held
+	out instances.
+\item Temporal append validation: generated LTLf JSON cases must compile to DFA
+	payloads whose relevant transitions are singleton literals.
+\item Library maintenance: each accepted query appends one new top-level
+	\texttt{g\_query} goal to the same domain library without introducing
+	\texttt{achieve\_*}, \texttt{transition\_*}, or \texttt{dfa\_state} plan
+	names.
+\end{enumerate}
+
+Classical planners and external generalized-planning systems may be used during
+offline synthesis, backend learning, and validation. They are not allowed to
+replace the maintained \asl{} library during execution.
 
 \subsection{Reproducibility}
 
 The reproducibility artifact is specified by
-\texttt{paper\_artifacts/final\_paper\_manifest.json}. The manifest records the
-benchmark source commit, required repository inputs, expected output policy,
-resource limits for external learners, and the commands for generation,
-validation, tests, and paper compilation. The achievement-goal registry under
-\texttt{src/benchmark\_registry/achievement\_goals} is the single source for
-matrix construction; experiment scripts consume registry rows instead of
-embedding benchmark-specific paths.
-
+\texttt{paper\_artifacts/final\_paper\_manifest.json}. Before submission, the
+six-domain registry, generated ASL libraries, LTLf JSON cases, DFA validation
+diagnostics, and LaTeX result macros must be regenerated from tracked commands.
 Generated experiment outputs live under \texttt{tmp/paper-final-latest} and are
-treated as rebuildable artifacts. Before paper submission, the final package
-must be regenerated from the manifest, validated against the tracked benchmark
-registry, and synchronized with the LaTeX result macros. This prevents stale
-local runs, learner-specific benchmark copies, or deleted legacy domains from
-entering the paper tables.
+treated as rebuildable artifacts.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Materialize the routed achievement-goal benchmark corpus."""
+"""Materialize the selected achievement-goal benchmark corpus."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class DomainSpec(NamedTuple):
 	domain_id: str
 	source_id: str
 	source_path: str
-	benchmark_class_id: str
+	goal_property_group_id: str
 	display_name: str
 	ipc_year: str
 	ipc_variant: str
@@ -60,14 +60,6 @@ SOURCES: dict[str, SourceSpec] = {
 		"e00970516154e9042b783a4613a1ed7286c9beee",
 		"MOOSE goal-regression benchmark families",
 	),
-	"learner_sketches": SourceSpec(
-		"learner_sketches",
-		"bonetblai/learner-sketches",
-		"https://github.com/bonetblai/learner-sketches",
-		PROJECT_ROOT / ".external" / "gp-backends" / "learner-sketches",
-		"7a7ea6a6356035afa16ed958b53d8edc86994e0a",
-		"learned-sketch benchmark and testing families",
-	),
 	"kr2025_policies": SourceSpec(
 		"kr2025_policies",
 		"bonetblai/learner-policies-from-examples",
@@ -91,7 +83,7 @@ def main() -> None:
 	for spec in specs:
 		_materialize_domain(spec)
 	_write_registry(specs)
-	print(f"materialized {len(specs)} routed achievement benchmark domains")
+	print(f"materialized {len(specs)} selected achievement benchmark domains")
 
 
 def _validate_source() -> None:
@@ -119,20 +111,10 @@ def _reset_directory(path: Path) -> None:
 def _domain_specs() -> tuple[DomainSpec, ...]:
 	return (
 		DomainSpec(
-			"gripper",
-			"pddl_instances",
-			"ipc-1998/domains/gripper-round-1-strips",
-			"goal_separable_serialisable_achievement_classes",
-			"Gripper",
-			"1998",
-			"gripper-round-1-strips",
-			("instances/*.pddl",),
-		),
-		DomainSpec(
 			"ferry",
 			"moose_dataset",
 			"ferry",
-			"goal_separable_serialisable_achievement_classes",
+			"singleton_regression_friendly_classical_goals",
 			"Ferry",
 			"MOOSE 2026",
 			"ferry",
@@ -142,77 +124,37 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 			"miconic",
 			"pddl_instances",
 			"ipc-2000/domains/elevator-strips-simple-typed",
-			"goal_separable_serialisable_achievement_classes",
+			"singleton_regression_friendly_classical_goals",
 			"Miconic",
 			"2000",
 			"elevator-strips-simple-typed",
 			("instances/*.pddl",),
 		),
 		DomainSpec(
+			"gripper",
+			"pddl_instances",
+			"ipc-1998/domains/gripper-round-1-strips",
+			"multi_object_classical_achievement_goals",
+			"Gripper",
+			"1998",
+			"gripper-round-1-strips",
+			("instances/*.pddl",),
+		),
+		DomainSpec(
 			"logistics",
 			"pddl_instances",
 			"ipc-2000/domains/logistics-strips-typed",
-			"goal_separable_serialisable_achievement_classes",
+			"multi_object_classical_achievement_goals",
 			"Logistics",
 			"2000",
 			"logistics-strips-typed",
 			("instances/*.pddl",),
 		),
 		DomainSpec(
-			"barman",
-			"pddl_instances",
-			"ipc-2011/domains/barman-sequential-satisficing",
-			"bounded_width_sketchable_subgoal_structure_classes",
-			"Barman",
-			"2011",
-			"barman-sequential-satisficing",
-			("instances/*.pddl",),
-		),
-		DomainSpec(
-			"childsnack",
-			"pddl_instances",
-			"ipc-2014/domains/child-snack-sequential-satisficing",
-			"bounded_width_sketchable_subgoal_structure_classes",
-			"Childsnack",
-			"2014",
-			"child-snack-sequential-satisficing",
-			("instances/*.pddl",),
-		),
-		DomainSpec(
-			"visitall",
-			"pddl_instances",
-			"ipc-2011/domains/visit-all-sequential-satisficing",
-			"bounded_width_sketchable_subgoal_structure_classes",
-			"Visitall",
-			"2011",
-			"visit-all-sequential-satisficing",
-			("instances/*.pddl",),
-		),
-		DomainSpec(
-			"delivery",
-			"learner_sketches",
-			"testing/benchmarks/delivery",
-			"bounded_width_sketchable_subgoal_structure_classes",
-			"Delivery",
-			"learner-sketches",
-			"delivery-testing-benchmark",
-			("*.pddl",),
-		),
-		DomainSpec(
-			"spanner",
-			"learner_sketches",
-			"testing/benchmarks/spanner",
-			"bounded_width_sketchable_subgoal_structure_classes",
-			"Spanner",
-			"learner-sketches",
-			"spanner-testing-benchmark",
-			("*.pddl",),
-		),
-		DomainSpec(
 			"blocks",
 			"pddl_instances",
 			"ipc-2000/domains/blocks-strips-typed",
-			"feature_definable_goal_dependent_construction_classes",
+			"structural_temporalized_achievement_goals",
 			"Blocks",
 			"2000",
 			"blocks-strips-typed",
@@ -222,20 +164,10 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 			"8puzzle-1tile",
 			"kr2025_policies",
 			"learning/benchmarks/tractable/8puzzle-1tile",
-			"feature_definable_goal_dependent_construction_classes",
+			"structural_temporalized_achievement_goals",
 			"8puzzle-1tile",
 			"KR 2025",
 			"8puzzle-1tile",
-			("training/easy/*.pddl",),
-		),
-		DomainSpec(
-			"sokoban-1stone",
-			"kr2025_policies",
-			"learning/benchmarks/tractable/sokoban-1stone-v3-7x7",
-			"feature_definable_goal_dependent_construction_classes",
-			"Sokoban-1stone",
-			"KR 2025",
-			"sokoban-1stone-v3-7x7",
 			("training/easy/*.pddl",),
 		),
 	)
@@ -365,10 +297,11 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				"schema_version": 1,
 				"goal_specification_layer": "achievement_goal_layer",
 				"future_goal_specification_layers": ["temporal_extended_goal_layer"],
-				"selected_domain_class_ids": [
-					"goal_separable_serialisable_achievement_classes",
-					"bounded_width_sketchable_subgoal_structure_classes",
-					"feature_definable_goal_dependent_construction_classes",
+				"selected_domain_ids": [spec.domain_id for spec in specs],
+				"selected_goal_property_group_ids": [
+					"singleton_regression_friendly_classical_goals",
+					"multi_object_classical_achievement_goals",
+					"structural_temporalized_achievement_goals",
 				],
 				"matrix_names": {
 					"main": "paper-final-main-library",
@@ -390,7 +323,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				"scope": "positive_conjunctive_achievement_goals",
 				"benchmark_source": {
 					"name": "selected reputable generalized-planning benchmark sources",
-					"coverage": "12 routed achievement-goal planning families",
+					"coverage": "six selected achievement-goal planning domains",
 				},
 				"benchmark_sources": _benchmark_sources_payload(),
 			},
@@ -401,7 +334,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 		encoding="utf-8",
 	)
 	for spec in specs:
-		record_dir = REGISTRY_ROOT / spec.benchmark_class_id / spec.domain_id
+		record_dir = REGISTRY_ROOT / spec.goal_property_group_id / spec.domain_id
 		record_dir.mkdir(parents=True)
 		problem_paths = _local_problem_paths(spec.domain_id)
 		train_paths = tuple(path for path in problem_paths if "/train/" in path)
@@ -409,7 +342,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 		payload = {
 			"schema_version": 1,
 			"goal_specification_layer": "achievement_goal_layer",
-			"benchmark_class_id": spec.benchmark_class_id,
+			"goal_property_group_id": spec.goal_property_group_id,
 			"domain_id": spec.domain_id,
 			"display_name": spec.display_name,
 			"domain_role": "main_claim",

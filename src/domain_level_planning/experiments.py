@@ -21,8 +21,8 @@ from .library_synthesis import ExternalSketchPolicySource
 from .library_synthesis import synthesize_domain_level_asl_library
 from .pddl_types import declared_type_names, type_guard_symbol
 from .refinement import synthesize_with_counterexample_refinement
-from .gp_router import GPRouteDecision
-from .gp_router import route_generalized_planner
+from .atomic_backend_selector import AtomicTemplateBackendDecision
+from .atomic_backend_selector import select_atomic_template_backend
 
 
 def run_domain_level_experiment(
@@ -32,7 +32,7 @@ def run_domain_level_experiment(
 	training_problem_files: Sequence[str | Path],
 	evaluation_problem_files: Sequence[str | Path],
 	domain_id: str | None = None,
-	benchmark_class_id: str | None = None,
+	goal_property_group_id: str | None = None,
 	counterexample_problem_files: Sequence[str | Path] = (),
 	external_sketch_policies: Sequence[ExternalSketchPolicySource] = (),
 	synthesis_profile: str = "bootstrap",
@@ -51,10 +51,9 @@ def run_domain_level_experiment(
 ) -> dict[str, object]:
 	"""Run one reproducible domain-level library experiment."""
 
-	route_decision = _route_decision(
+	atomic_backend_decision = _atomic_backend_decision(
 		domain_file=domain_file,
-		domain_id=domain_id,
-		benchmark_class_id=benchmark_class_id,
+		training_problem_files=training_problem_files,
 	)
 	synthesis_started = perf_counter()
 	if use_counterexample_refinement:
@@ -121,11 +120,8 @@ def run_domain_level_experiment(
 		"experiment_name": experiment_name,
 		"domain_file": _resolved(domain_file),
 		"generation_mode": result.report["generation_mode"],
-		"gp_route_decision": (
-			route_decision.to_dict()
-			if route_decision is not None
-			else None
-		),
+		"atomic_template_backend_decision": atomic_backend_decision.to_dict(),
+		"goal_property_group_id": goal_property_group_id,
 		"experiment_protocol": _experiment_protocol(
 			synthesis_profile=synthesis_profile,
 			external_sketch_policies=external_sketch_policies,
@@ -199,18 +195,14 @@ def run_domain_level_experiment(
 	}
 
 
-def _route_decision(
+def _atomic_backend_decision(
 	*,
 	domain_file: str | Path,
-	domain_id: str | None,
-	benchmark_class_id: str | None,
-) -> GPRouteDecision | None:
-	if not benchmark_class_id:
-		return None
-	return route_generalized_planner(
-		domain_id=domain_id or Path(domain_file).stem,
-		benchmark_class_id=benchmark_class_id,
-		allow_baseline_schema_lift=True,
+	training_problem_files: Sequence[str | Path],
+) -> AtomicTemplateBackendDecision:
+	return select_atomic_template_backend(
+		domain_file=domain_file,
+		training_problem_files=training_problem_files,
 	)
 
 

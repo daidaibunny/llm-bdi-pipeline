@@ -4,376 +4,123 @@
 \subsection{Problem Setting}
 
 Let $D = \langle \mathcal{P}, \mathcal{A} \rangle$ be a typed \pddl{} domain
-with predicate schemas $\mathcal{P}$ and action schemas $\mathcal{A}$. A training
-set $\mathcal{I}_{train}$ contains small planning problems over $D$, each with an
-initial state and a positive conjunctive goal. A counterexample set
-$\mathcal{I}_{cex}$ is initially empty and grows when the current library fails
-on a held-out problem in a way that can be lifted.
+with predicate schemas $\mathcal{P}$ and action schemas $\mathcal{A}$. A
+training split $\mathcal{I}_{train}$ contains planning problems over $D$. The
+goal of the first layer is to obtain a lifted atomic \asl{} library
+$\mathcal{L}_D$ whose plan heads are declared predicate or literal goals, such
+as \texttt{+!on(X,Y)} or \texttt{+!served(P)}. The library is domain-level:
+training-object names must not appear in plan heads, and the library is reused
+across future queries for the same domain.
 
-The target artifact is a finite set $\mathcal{L}$ of lifted \asl{} plan schemas.
-The library is domain-level: variables may appear in plan heads, contexts, and
-bodies, but concrete object names from training problems must not appear in plan
-heads. The only allowed achievement-goal heads are declared \pddl{} predicates
-and the distinguished composer goal \texttt{g}. The body of a plan may call a
-declared primitive action or another declared predicate achievement goal.
+A user query is handled by a second layer. The Input component produces a
+lifted LTLf JSON object. We parse that object, compile the LTLf formula into a
+deterministic finite automaton, validate that relevant transition guards are
+singleton literals, and append a query-specific top-level \asl{} goal such as
+\texttt{+!g\_query\_17}. The appended wrapper calls the atomic library; it does
+not replace the atomic library.
 
-\subsection{Goal-Specification Layers}
+\subsection{Atomic Template Extraction}
 
-We separate properties of planning domains from the language used to state the
-goal. The current synthesis algorithm targets positive conjunctive achievement
-goals: a classical \pddl{} problem goal is converted into read-only goal
-descriptors, and the learned library achieves those descriptors through
-predicate-goal modules. Temporal extended goals are a second, cross-cutting goal
-specification layer, not a fourth domain class. A temporal objective is kept as
-an LTLf formula, compiled into a deterministic finite automaton, and executed as
-a query-specific controller above the same domain-level achievement-goal
-library. Classical \pddl{} goals do not express arbitrary temporal extended
-goals; PDDL3 trajectory constraints cover only part of this space. For this
-reason, the paper first fixes the achievement-goal layer and treats the
-temporal layer as an orthogonal extension over representative domains from the
-same three domain classes.
+From the training split we extract the set of atomic goal templates:
+\[
+	T_D = \{(p,k,\sigma) \mid p(o_1,\ldots,o_k) \text{ or }
+	\neg p(o_1,\ldots,o_k) \text{ appears as a training goal item}\},
+\]
+where $\sigma$ records positive or negative polarity. These templates are the
+interface to external generalized-planning backends. The project does not first
+classify the domain into a backend-specific taxonomy. Instead, it asks which
+backend can produce reusable lifted artifacts for the required atomic
+templates.
 
-\subsection{Goal-Conditioned Representation}
+MOOSE is the first candidate for positive singleton predicate templates because
+its synthesis algorithm decomposes training problems into singleton goal
+conditions and uses goal regression to learn lifted rules
+\cite{Chen2026Moose}. This directly matches our atomic-template interface.
+Feature-policy learners such as KR 2025 learner-policies-from-examples and D2L,
+and sketch learners such as learner-sketches and h-policy-learner, are kept as
+audited alternatives when their artifacts pass the same compiler gates.
 
-The library observes three kinds of context facts. State facts are ordinary
-\pddl{} fluents. Goal facts are read-only descriptors derived from the current
-problem goal. For every predicate $p \in \mathcal{P}$, a goal literal
-$p(o_1,\ldots,o_k)$ is represented as $\goalpred{p}(o_1,\ldots,o_k)$. These
-facts are not actions, mutable beliefs, or achievement-goal heads. They are
-inputs that let a single domain-level library distinguish one problem goal from
-another. Ready facts are also read-only, but they are derived at run time from
-the selected Layer C support agenda, the current state, and the goal facts.
-A context atom \texttt{ready\_$p$(X)} means that no selected support-agenda
-predecessor for \texttt{goal\_$p$(X)} remains unsatisfied. Ready facts gate
-generic composer rules; they are not \pddl{} predicates, mutable beliefs,
-primitive actions, or achievement-goal heads.
+Negative literal templates are not part of the current positive claim. If a
+training split requires them, the selector reports
+\texttt{negative\_literal\_template\_not\_supported} unless a backend artifact
+supplies a validated lifted implementation.
 
-A context is a conjunction of state literals, negation-as-absence literals, type
-guards, equality or inequality tests, read-only goal descriptors, and read-only
-ready facts. The method uses only symbols declared by the \pddl{} domain, except
-for the systematic read-only prefixes used for goal descriptors and ready
-contexts.
+\subsection{Backend Artifact Gate}
 
-\subsection{Architecture Overview}
+Every consumed backend artifact must pass the same pipeline:
+\[
+\text{parse} \rightarrow \text{LiftedPolicyProgram} \rightarrow
+\text{feature/action binding} \rightarrow \text{\asl{} compilation} \rightarrow
+\text{held-out validation}.
+\]
+Artifacts that do not pass these gates remain diagnostic evidence or baselines.
+This prevents a qualitative sketch, a decision list, or a planning program from
+being treated as executable agent code merely because it performs well inside
+its original system.
 
-The synthesis pipeline has three logical stages. First, the system constructs a
-schema model from \pddl{} predicates, actions, types, preconditions, add
-effects, and delete effects. Second, it generates candidate lifted rules for two
-learned layers. Layer B candidates implement atomic predicate goals. Layer C
-candidates compose conjunctive goals by calling Layer B modules under
-goal-conditioned contexts. Third, an answer-set selector chooses a safe and
-small subset of these candidates, and the compiler renders the selected rules as
-\asl{} plans.
-This separation is part of the method rather than an implementation detail:
-Layer B answers ``how can a declared predicate goal be achieved?'', whereas
-Layer C answers ``which declared predicate goal should be pursued next for this
-conjunctive goal?'' Goal facts are the input interface between the concrete
-problem and the lifted library; they do not add new achievement predicates to
-the output language.
+The compiler rejects undeclared predicates, wrong arities, grounded training
+objects in plan heads, object-specific features without a lifting proof, and
+synthetic achievement names such as \texttt{achieve\_*} or
+\texttt{transition\_*}. The only query-specific symbols allowed in final \asl{}
+are top-level temporal wrappers such as \texttt{g\_query\_17}.
+
+\subsection{Temporal Goal Append}
+
+The temporal layer consumes a lifted LTLf goal case:
+\[
+	\langle q, g_q, \varphi_q, A_q, B_q \rangle,
+\]
+where $q$ is a query identifier, $g_q$ is the top-level \asl{} goal name,
+$\varphi_q$ is an LTLf formula, $A_q$ lists declared atoms, and $B_q$ is an
+optional variable-to-object binding map used by the external Input component.
+
+The LTLf formula is compiled to a deterministic finite automaton. Before any
+\asl{} plan is appended, the automaton must satisfy the singleton-literal
+transition contract: every relevant transition guard is exactly one literal
+over declared \pddl{} vocabulary. Guards such as \texttt{on(X,Y) \& clear(X)}
+or disjunctions are rejected and returned to the Input component as validation
+errors. Accepting self-loops labelled \texttt{true} are allowed as automaton
+plumbing and are not compiled into atomic subgoals.
+
+For a positive transition literal $p(\bar{X})$, the appended wrapper plan has
+the form:
+\[
+	\texttt{+!}g_q \texttt{ : not } p(\bar{X})
+	\texttt{ <- !}p(\bar{X})\texttt{; !}g_q\texttt{.}
+\]
+This plan calls the existing atomic module for $p$. For a negative progress
+literal, the current implementation reports an unsupported-literal diagnostic
+unless a negative atomic template has been validated.
+
+\subsection{Controller State}
+
+A pure context-only \asl{} wrapper is not sufficient for every deterministic
+finite automaton. If two automaton states expose the same literal or if temporal
+progress cannot be inferred from the current world state, an external
+reward-machine state must be maintained by the temporal controller. The wrapper
+therefore records whether external DFA state is required. This is a correctness
+boundary, not an implementation detail.
+
+\subsection{Selected Evaluation Scope}
+
+The six-domain scope is used to evaluate coverage of goal properties, not to
+route backends by class:
 
 \begin{table}[t]
-	\caption{Main artifacts in the proposed architecture.}
-	\label{tab:architecture}
+	\caption{Focused six-domain evaluation scope.}
+	\label{tab:six-domain-scope}
 	\small
-	\begin{tabular}{p{0.25\columnwidth}p{0.62\columnwidth}}
+	\begin{tabular}{p{0.33\columnwidth}p{0.43\columnwidth}}
 		\toprule
-		Artifact & Role \\
+		Group & Domains \\
 		\midrule
-		Goal facts & Read-only descriptors of the current problem goal. \\
-		Layer B & Lifted modules for atomic predicate achievement goals. \\
-		Layer C & Lifted composer rules that choose the next atomic goal. \\
-		Selector & Answer-set optimization over safe candidate rules. \\
-		Compiler & Translation from selected lifted rules to \asl{} plans. \\
+		Singleton regression-friendly classical goals & Ferry and Miconic \\
+		Multi-object classical achievement goals & Gripper and Logistics \\
+		Structural or temporalized achievement goals & Blocks and 8puzzle-1tile \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-\subsection{Hypothesis Class}
-
-The search space contains two families of lifted rules.
-
-Layer B contains atomic predicate-goal modules. A rule has the form
-\[
-	+!p(\bar{X}) : C(\bar{X},\bar{Y}) \leftarrow B_1;\ldots;B_m
-\]
-where $p \in \mathcal{P}$, $C$ is a safe lifted context, and each body item is
-either $a(\bar{Z})$ for some $a \in \mathcal{A}$ or $!q(\bar{Z})$ for some
-$q \in \mathcal{P}$. Variables in body calls must be bound by the head or by
-positive context literals. A selected Layer B rule must be justified by at
-least one admissible source: action-schema support, bounded transition evidence,
-external sketch binding, trace evidence used only offline, or counterexample
-repair evidence. The implementation reports these justifications as proof
-objects; schema-only rules may be candidates, but the paper profile treats
-unjustified schema action modules as blocking diagnostics.
-
-Layer C contains goal-composer rules. A rule has the form
-\[
-	+!g : C_g \leftarrow !p(\bar{X}); !g
-\]
-where $C_g$ mentions read-only goal descriptors and current state facts. These
-rules decide which atomic goal should be pursued next for a conjunctive goal.
-They do not protect every achieved literal permanently. Temporary facts may be
-destroyed, provided the selected rules still make progress toward the final
-conjunction inside the validation scope. Generic unsatisfied-goal dispatch rules
-are guarded by \texttt{ready\_$p$} contexts derived from the selected support
-agenda, so they cannot bypass a selected predecessor goal. This mechanism is a
-runtime agenda gate, not a complete goal-order learner by itself; unsupported
-goal mutexes and arbitrary reachable mid-state policies remain outside the
-current positive claim unless the report validates them explicitly.
-
-\subsection{Benchmark-Class Boundary}
-
-Following generalized-planning evaluation practice, we state support by
-properties of problem classes $Q_D$ rather than by an open-ended list of
-domains. A class can enter the main claim only if it has the prior structure
-used in the literature and the additional artifact property needed here:
-its reusable strategy must be expressible as a goal-conditioned,
-feature-definable, terminating modular sketch with bounded sketch width; every
-selected feature rule must bind safely to declared \pddl{} predicates,
-primitive actions, predicate subgoals, read-only goal descriptors, or read-only
-agenda gates; and the compiled \asl{} library must validate without run-time
-full-trace planning. This puts the method in the same theoretical region as
-policy sketches, subgoal-structure width, feature-based general policies, and
-modular policy reuse \cite{Drexler2022LearningSketches,
-Drexler2024SubgoalSketches,Frances2021LearningGeneralPolicies,
-Bonet2024GeneralPoliciesWidth,Bonet2024PolicyReuse}.
-We also mirror how these papers choose benchmarks. MOOSE first defines
-goal-independence properties and then evaluates eight classical ESHO domains,
-four numeric variants, and a 38-domain IPC probe \cite{Chen2026Moose}.
-The learned-sketches paper reports nine IPC-style domains with 30 held-out
-instances each \cite{Drexler2022LearningSketches}; D2L reports nine
-feature-definable problem classes, including full Blocksworld
-\cite{Frances2021LearningGeneralPolicies}; PG3 uses six PDDL domains
-\cite{Yang2022PG3}; and BFGP++ uses 13 program-synthesis domains
-\cite{SegoviaAguas2022BFGPpp}. Thus a broad generalized-planning claim should
-normally cover several standard domain families. Our current strict claim uses
-12 routed achievement-goal planning families organized into three
-property-defined families, with the additional requirement that the learned
-policy evidence compile into a lifted \asl{} library.
-
-\begin{table}[t]
-	\caption{Selected property-defined benchmark classes.}
-	\label{tab:domain-families}
-	\small
-	\begin{tabular}{p{0.36\columnwidth}p{0.47\columnwidth}}
-		\toprule
-		Class & Selected domains or problem classes \\
-		\midrule
-		Goal-separable and serialisable achievement classes &
-		Ferry, Gripper, Miconic, and Logistics, following MOOSE's
-		TGI/SGI/OGI distinction and executable-policy benchmarks in PG3 and D2L. \\
-		Bounded-width sketchable subgoal-structure classes &
-		Delivery, Spanner, Visitall, Childsnack, and Barman, following
-		learned-sketch and subgoal-structure evaluations of well-formed sketches
-		with small sketch width. \\
-		Feature-definable goal-dependent construction classes &
-		Blocks, 8puzzle-1tile, and Sokoban-1stone, following
-		feature-definable structural policies for construction, rearrangement, and
-		push-to-target families. \\
-		\bottomrule
-	\end{tabular}
-\end{table}
-
-Thus Layer C should not be read as an ad hoc goal-order patch. It is the
-compiled form of the selected goal-conditioned sketch composer. In a
-goal-separable or serialisable class it may reduce to unsatisfied-goal
-dispatch; in bounded-width sketchable classes it must preserve the selected
-subgoal structure; and in Blocksworld-style construction classes it must encode
-the support agenda implicit in feature-definable construction policies, such as
-placing lower tower links before upper links. The selected benchmark families
-are materialized from pinned reputable benchmark sources, including
-\texttt{potassco/pddl-instances}, \texttt{moose-dataset},
-\texttt{learner-sketches}, and \texttt{learner-policies-from-examples}, with
-deterministic \(\lfloor 2N/3 \rfloor\) train splits and held-out
-goal-specification splits. Depots, Transport, Rovers, Marsrover, Satellite,
-numeric domains, and unselected program-synthesis benchmarks are boundary or
-excluded cases unless their required route, transitive-closure,
-resource-instrument, numeric, or feature-pool semantics are safely bound.
-
-\subsection{Candidate Generation}
-
-Candidates are generated without domain-specific code. Primitive candidates come
-from \pddl{} action schemas: if an action adds a predicate $p$, the action can
-support a Layer B rule for $p$ when its typed parameters and preconditions can be
-bound safely. Missing positive preconditions may become calls to other predicate
-modules. Delete effects and producer-consumer precondition links contribute
-ordering evidence for Layer C.
-
-For typed-overloaded predicates, the generator creates causal-chain module
-candidates. This case arises when the same \pddl{} predicate is produced for
-different typed argument partitions, such as a movement action producing
-\texttt{at(carrier, location)} and an unloading action producing
-\texttt{at(package, location)}. If a producer action can establish a
-target-action precondition, the candidate first calls the producer predicate
-module, then achieves the remaining producible preconditions, and finally
-executes the target action. Shared static preconditions, such as a capacity
-predecessor relation, may bridge resource variables across the two actions;
-mutable resource predicates are not emitted as independent causal-chain goals.
-Same-predicate delegation across disjoint typed argument partitions is accepted
-only with an explicit type certificate.
-The same schema evidence also yields current-resource priority composer rules:
-if a target object is already held by a carrier relation used by the target
-action, the composer may deliver that object before selecting another goal that
-would consume the same carrier resource. This is a bounded resource-ordering
-rule, not a complete logistics policy for every reachable mid-state.
-
-External sketch candidates come from verified policy-sketch backends, currently
-learner-sketches \cite{Drexler2022LearningSketches}. A learned sketch rule is
-accepted only when every condition and qualitative effect has an explicit lifted
-binding to \pddl{} literals, primitive actions, predicate subgoals, or read-only
-goal descriptors. Object-specific and vocabulary-mismatched features are
-rejected unless a principled lifting adapter is provided. The current safe
-distance fragment accepts object-free expressions that measure distance from a
-unary state predicate to the corresponding read-only goal predicate through a
-declared binary role. The compiled effect is a call to the unary predicate goal,
-not a replay of training objects.
-
-Trace candidates come from offline evidence only. A planner trace may be used to
-identify which action last achieved a target fact, to anti-unify repeated
-support patterns, or to explain a counterexample. Such traces are never emitted
-as run-time full-trace plans.
-
-\subsection{Feature Binding Contract}
-
-External policies are qualitative feature rules, not executable agent programs.
-Before such a rule can enter the selector, every feature condition and effect
-must be bound to one of the compiler's safe constructs. The accepted bindings
-include unary and binary primitive counts, forward and reverse role counts,
-goal-aligned concept and role counts, filtered goal-role counts, nullary
-Boolean predicates, and the object-free goal-distance fragment described above.
-Each binding records the supported condition operators, effect operators,
-required contexts, body calls, action-effect candidates, and rejection reason if
-the feature is unsupported.
-
-Concrete object-specific expressions such as \texttt{c\_one\_of(b1)} remain
-outside the domain-level claim. Compiling them would copy training objects into
-the library and break lifting. Unsupported distance expressions are also
-rejected unless their source concept, target goal concept, and binary role can
-be recovered as declared \pddl{} predicates with matching arities.
-
-\subsection{Selection Objective}
-
-Candidate selection is encoded as an answer-set optimization problem
-\cite{Gebser2018Clingo}. Hard constraints reject unsafe rules, undeclared
-symbols, wrong arities, unbound variables, cyclic composer support without a
-progress certificate, and candidates unsupported by the selected paper profile.
-Additional hard groups require coverage of observed goal-progress transitions
-and coverage of bounded reachable non-goal states by at least one applicable
-composer rule.
-The selected answer set is therefore a certificate for the finite evidence
-available to the synthesis run. For each selected rule, the report records the
-source candidate, symbol-safety check, variable-safety check, applicable hard
-group, selector reason, and any rejected alternatives in the same strategy
-group. These proof records connect the learned \asl{} plan schemas back to
-policy-sketch, schema, trace, or counterexample evidence.
-
-The optimization objective prefers smaller libraries, fewer features, shorter
-contexts, fewer body calls, trace- or sketch-justified candidates over
-unjustified schema-only candidates, and rules with explicit progress evidence.
-The selector therefore chooses the best library within the declared hypothesis
-class, not the best possible generalized plan over all languages.
-
-\subsection{Counterexample-Guided Refinement}
-
-Held-out failures are lifted into explicit constraints before the next synthesis
-round. A missing atomic module becomes a Layer B atomic-progress constraint when
-the failed subgoal is named. A missing \texttt{!g} plan becomes a Layer C
-state-coverage constraint. A primitive-action precondition failure becomes a
-Layer B repair constraint when the missing precondition is a positive,
-producible \pddl{} predicate. If a failure shows that one final goal was
-achieved before another causally related goal, it becomes a goal-ordering
-constraint for Layer C.
-
-Termination failures are not silently treated as success. Recursive-loop and
-step-limit failures keep explicit termination diagnostics, but when the failed
-state still contains supported missing positive goals, the system also emits a
-companion generative constraint: atomic progress for a named failed predicate
-subgoal, or state coverage for a top-level composer failure. Unsupported
-negative repairs, undeclared predicates, wrong arities, and unproducible targets
-remain structured diagnostics rather than synthesized plans.
-
-\begin{algorithm}[t]
-\caption{Synthesize a domain-level lifted \asl{} library}
-\label{alg:synthesis}
-\begin{algorithmic}[1]
-\Require typed \pddl{} domain $D$, training problems $\mathcal{I}_{train}$,
-optional external sketches $\mathcal{E}$, held-out problems
-$\mathcal{I}_{eval}$
-\Ensure lifted \asl{} library $\mathcal{L}$ or structured diagnostics
-\State validate the supported \pddl{} fragment of $D$ and $\mathcal{I}_{train}$
-\State $\mathcal{I}_{cex} \gets \emptyset$
-\Repeat
-	\State build schema model from predicates, actions, types, preconditions,
-	add effects, and delete effects
-	\State collect bounded transition evidence or validated offline trace
-	evidence from $\mathcal{I}_{train} \cup \mathcal{I}_{cex}$
-	\State generate Layer B candidates from action effects, safe external
-	sketches, traces, and repair evidence
-	\State generate Layer C candidates from goal descriptors, causal support,
-	delete threats, trace ordering, state coverage, and counterexamples
-	\State encode safety, coverage, progress, and optimization constraints
-	\State $S \gets$ solve the answer-set selection problem
-	\If{$S$ is unsatisfiable}
-		\State \Return diagnostics explaining the blocking constraints
-	\EndIf
-	\State derive the selected support agenda and ready-context semantics from
-	Layer C rules in $S$
-	\State $\mathcal{L} \gets \compile(S)$ into lifted \asl{} plan schemas
-	\State run bounded validation and held-out library execution
-	\If{all validation and evaluation checks pass}
-		\State \Return $\mathcal{L}$ and its provenance report
-	\EndIf
-	\State lift supported failures into counterexample files or explicit constraints
-\Until{the failure is unsupported or no new constraint can be generated}
-\State \Return $\mathcal{L}$ with unsupported-failure diagnostics
-\end{algorithmic}
-\end{algorithm}
-
-\subsection{Compiler Semantics}
-
-Compilation is conservative. A selected Layer B rule becomes an \asl{} plan
-whose trigger is the corresponding predicate achievement goal. A selected Layer
-C rule becomes a \texttt{+!g} plan. The compiler also records the selected
-support agenda used to evaluate \texttt{ready\_$p$} contexts at run time.
-Context literals are rendered as an order-independent conjunction. Positive
-context literals bind variables before negated literals are checked. Primitive
-actions are executed by the same STRIPS-style precondition and effect semantics
-used to validate the originating \pddl{} domain.
-
-The compiler rejects any body action or subgoal whose variables are not bound by
-the plan head or by positive context literals. It also rejects synthetic
-achievement names, grounded plan heads, mutable goal descriptors, undeclared
-predicates, and arity mismatches.
-
-\subsection{Guarantee}
-
-\paragraph{\textbf{Proposition 1 (Bounded-Class Soundness).}}
-Consider a typed \pddl{} domain and a finite training, counterexample, and
-held-out evaluation set inside the supported positive conjunctive fragment.
-Assume that every selected Layer B and Layer C rule is generated by the
-candidate language above, passes the declared safety checks, and is selected by
-the answer-set program under its hard coverage and progress constraints. Assume
-also that the compiled library passes bounded validation and held-out execution
-under the reported step and depth limits. Then every successful execution trace
-reported for the library consists only of declared \pddl{} primitive actions and
-declared predicate subgoal calls, contains no run-time full-trace planner call,
-and terminates in a state satisfying all positive goal atoms of the evaluated
-problem.
-
-\paragraph{\textbf{Proof Sketch.}}
-The selector can choose only candidates whose symbols, arities, variables,
-goal-descriptor uses, and ready-context uses pass the compiler contract.
-Compilation preserves this selected structure: Layer B rules become predicate
-achievement plans, and Layer C rules become \texttt{+!g} composer plans over the
-recorded support agenda. The executor interprets primitive actions with the same
-STRIPS-style precondition and effect semantics used in validation, and
-\texttt{ready\_$p$} facts are derived read-only from the selected agenda rather
-than asserted as mutable beliefs. Bounded validation and held-out execution then
-check the finite set of reported runs directly. Therefore a reported success is
-sound for the validated bounded instance set and execution limits.
-
-This guarantee is intentionally conditional. Domains whose solution requires
-features outside the safe binding language, concrete object-specific policy
-features, unsupported negative or disjunctive goals, or unbounded cyclic-route
-ranking without an accepted progress certificate are reported as outside the
-current claim rather than being solved by unsafe trace replay.
+Numeric MOOSE domains are excluded from the current scope because the target
+artifact is an \asl{} library over PDDL predicates and literals. Numeric
+fluents need a separate semantic contract before they can be compiled safely.

@@ -190,7 +190,7 @@ def _run_matrix_entry(
 		training_problem_files=training_problems,
 		evaluation_problem_files=evaluation_problems,
 		domain_id=str(entry.get("domain_id") or ""),
-		benchmark_class_id=str(entry.get("benchmark_class_id") or ""),
+		goal_property_group_id=str(entry.get("goal_property_group_id") or ""),
 		counterexample_problem_files=_problem_files(
 			entry,
 			key="counterexample",

@@ -1,6 +1,6 @@
 {
   "benchmark_source": {
-    "coverage": "12 routed achievement-goal planning families",
+    "coverage": "six selected achievement-goal planning domains",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
@@ -17,13 +17,6 @@
       "id": "moose_dataset",
       "name": "DillonZChen/moose-dataset",
       "url": "https://github.com/DillonZChen/moose-dataset"
-    },
-    {
-      "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
-      "coverage": "learned-sketch benchmark and testing families",
-      "id": "learner_sketches",
-      "name": "bonetblai/learner-sketches",
-      "url": "https://github.com/bonetblai/learner-sketches"
     },
     {
       "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
@@ -58,9 +51,17 @@
   },
   "schema_version": 1,
   "scope": "positive_conjunctive_achievement_goals",
-  "selected_domain_class_ids": [
-    "goal_separable_serialisable_achievement_classes",
-    "bounded_width_sketchable_subgoal_structure_classes",
-    "feature_definable_goal_dependent_construction_classes"
+  "selected_domain_ids": [
+    "ferry",
+    "miconic",
+    "gripper",
+    "logistics",
+    "blocks",
+    "8puzzle-1tile"
+  ],
+  "selected_goal_property_group_ids": [
+    "singleton_regression_friendly_classical_goals",
+    "multi_object_classical_achievement_goals",
+    "structural_temporalized_achievement_goals"
   ]
 }

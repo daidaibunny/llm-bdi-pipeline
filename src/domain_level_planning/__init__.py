@@ -22,6 +22,11 @@ from .architecture_contract import (
 	bounded_hypothesis_class_contract,
 	domain_level_architecture_contract,
 )
+from .atomic_backend_selector import (
+	AtomicGoalTemplate,
+	AtomicTemplateBackendDecision,
+	select_atomic_template_backend,
+)
 from .gp_backends import (
 	BackendManifest,
 	GPBackendRunner,
@@ -75,10 +80,13 @@ from .models import (
 	LiftedPlanRule,
 	SketchSynthesisReport,
 )
-from .gp_router import (
-	GPBackendRoute,
-	GPRouteDecision,
-	route_generalized_planner,
+from .moose_policy_adapter import (
+	MooseAtom,
+	MooseReadableRule,
+	compile_moose_readable_policy_to_asl_library,
+	load_moose_readable_policy,
+	parse_moose_readable_policy,
+	policy_program_from_moose_readable_policy,
 )
 from .paper_backend_audit import (
 	PaperPolicyAuditReport,
@@ -97,6 +105,13 @@ from .library_synthesis import (
 	ExternalSketchPolicySource,
 	UnifiedSynthesisResult,
 	synthesize_domain_level_asl_library,
+)
+from .lifted_ltlf_goal_schema import (
+	LTLfAtomSpec,
+	LiftedLTLfGoalCase,
+	LiftedLTLfGoalDataset,
+	load_lifted_ltlf_goal_dataset,
+	parse_lifted_ltlf_goal_dataset,
 )
 from .library_contract import (
 	DomainLevelLibraryContractReport,
@@ -140,6 +155,12 @@ from .temporal_goal_pipeline import (
 	build_domain_level_temporal_artifact,
 	persist_domain_level_temporal_artifact,
 )
+from .temporal_goal_appender import (
+	SingletonLiteralDFADiagnostic,
+	append_lifted_temporal_goal_case_to_library,
+	append_temporal_goal_to_library,
+	validate_singleton_literal_dfa,
+)
 
 __all__ = [
 	"LiftedCall",
@@ -148,6 +169,8 @@ __all__ = [
 	"ArchitectureDecision",
 	"ArchitectureGap",
 	"HypothesisClassContract",
+	"AtomicGoalTemplate",
+	"AtomicTemplateBackendDecision",
 	"ClingoRequiredRuleGroup",
 	"ClingoSelectionResult",
 	"ClingoSketchRuleSelector",
@@ -159,8 +182,6 @@ __all__ = [
 	"FeatureBindingDiagnostic",
 	"FeatureBindingReport",
 	"BackendManifest",
-	"GPBackendRoute",
-	"GPRouteDecision",
 	"ExternalSketchPolicySource",
 	"GPBackendRunner",
 	"LearningGeneralPoliciesRunConfig",
@@ -179,11 +200,17 @@ __all__ = [
 	"PaperPolicyAuditReport",
 	"LiftedPolicyProgram",
 	"LearnedPolicyRule",
+	"MooseAtom",
+	"MooseReadableRule",
 	"PolicyFeature",
 	"PolicyModule",
 	"UnifiedSynthesisResult",
+	"LTLfAtomSpec",
+	"LiftedLTLfGoalCase",
+	"LiftedLTLfGoalDataset",
 	"DomainLevelLibraryContractReport",
 	"DomainLevelTemporalArtifact",
+	"SingletonLiteralDFADiagnostic",
 	"BoundedLibraryValidationReport",
 	"BoundedProblemValidation",
 	"LibraryCounterexample",
@@ -199,9 +226,12 @@ __all__ = [
 	"bind_unique_action_effect_candidates",
 	"goal_distance_policy_feature_ids",
 	"build_domain_level_temporal_artifact",
+	"append_lifted_temporal_goal_case_to_library",
+	"append_temporal_goal_to_library",
+	"validate_singleton_literal_dfa",
 	"compile_bound_sketch_to_asl_library",
+	"compile_moose_readable_policy_to_asl_library",
 	"compile_learner_sketch_policy_to_asl",
-	"route_generalized_planner",
 	"classify_heldout_failure_for_refinement",
 	"backend_audit_matrix",
 	"discover_learner_sketches_policy_file",
@@ -212,6 +242,7 @@ __all__ = [
 	"audit_learned_policy_for_asl_binding",
 	"audit_domain_level_library_contract",
 	"architecture_gap_summary",
+	"select_atomic_template_backend",
 	"bounded_hypothesis_class_contract",
 	"domain_level_architecture_contract",
 	"adapt_dfa_guard_to_achievement_request",
@@ -231,6 +262,11 @@ __all__ = [
 	"run_learner_sketches",
 	"run_domain_level_experiment",
 	"synthesize_domain_level_asl_library",
+	"load_lifted_ltlf_goal_dataset",
+	"load_moose_readable_policy",
+	"parse_moose_readable_policy",
+	"parse_lifted_ltlf_goal_dataset",
+	"policy_program_from_moose_readable_policy",
 	"synthesize_with_counterexample_refinement",
 	"validate_library_on_bounded_transition_systems",
 ]

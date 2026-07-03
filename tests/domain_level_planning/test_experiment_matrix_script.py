@@ -19,14 +19,8 @@ SELECTED_BENCHMARK_DOMAINS = {
 	"gripper",
 	"miconic",
 	"logistics",
-	"delivery",
-	"spanner",
-	"childsnack",
-	"barman",
-	"visitall",
 	"blocks",
 	"8puzzle-1tile",
-	"sokoban-1stone",
 }
 
 
@@ -285,7 +279,7 @@ def test_paper_expanded_smoke_preset_covers_available_pddl_domains() -> None:
 		assert row["train_glob"] == "*.pddl"
 		assert row["eval_glob"] == "*.pddl"
 		assert row["domain_id"] == domain_id
-		assert row["benchmark_class_id"]
+		assert row["goal_property_group_id"]
 		assert row["synthesis_profile"] == "bootstrap"
 		assert row["ablation_label"] == f"{domain_id}_ipc_full_smoke"
 

@@ -2,96 +2,102 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from domain_level_planning.gp_router import GPRouteDecision
-from domain_level_planning.gp_router import route_generalized_planner
+from domain_level_planning.atomic_backend_selector import select_atomic_template_backend
 
 
-def test_router_prefers_external_policy_backend_for_serialisable_class(
+def test_atomic_backend_selection_does_not_depend_on_legacy_class_labels(
 	tmp_path: Path,
 ) -> None:
+	"""Regression guard for the 2026-07-03 architecture pivot."""
+
 	root = tmp_path / "backends"
 	moose = root / "moose"
 	moose.mkdir(parents=True)
 	(moose / ".git").mkdir()
-	(moose / ".git" / "HEAD").write_text("ce1e99b\n", encoding="utf-8")
 
-	decision = route_generalized_planner(
-		domain_id="ferry",
-		benchmark_class_id="goal_regression_serialisable_goal_domains",
+	domain_file, problem_file = _write_singleton_goal_case(tmp_path)
+	decision = select_atomic_template_backend(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
 		backend_root=root,
-		allow_baseline_schema_lift=True,
 	)
 
-	assert decision == GPRouteDecision(
-		domain_id="ferry",
-		benchmark_class_id="goal_regression_serialisable_goal_domains",
-		selected_backend="moose",
-		selected_route="goal_regression_policy",
-		route_kind="external_gp_backend",
-		candidate_backends=("moose", "pg3", "learner-policies-from-examples"),
-		rejected_backends=(),
-		is_baseline=False,
-		blocking_gap=None,
-	)
+	assert decision.selected_backend == "moose"
+	assert decision.selection_basis == "atomic_singleton_goal_regression"
+	assert decision.required_goal_templates[0].predicate == "done"
+	assert decision.required_goal_templates[0].arity == 1
 
 
-def test_router_falls_back_to_schema_lift_only_as_baseline(
-	tmp_path: Path,
-) -> None:
-	pg3 = tmp_path / "pg3"
-	pg3.mkdir()
-	(pg3 / ".git").mkdir()
-	(pg3 / ".git" / "HEAD").write_text(
-		"61496456c89ebccc66ba83679ba0e363232f6ac0\n",
-		encoding="utf-8",
-	)
+def test_atomic_backend_selection_reports_negative_literal_gap(tmp_path: Path) -> None:
+	root = tmp_path / "backends"
+	(root / "moose" / ".git").mkdir(parents=True)
+	domain_file, problem_file = _write_negative_goal_case(tmp_path)
 
-	decision = route_generalized_planner(
-		domain_id="ferry",
-		benchmark_class_id="goal_regression_serialisable_goal_domains",
-		backend_root=tmp_path,
-		allow_baseline_schema_lift=True,
-	)
-
-	assert decision.selected_backend == "baseline_schema_lift"
-	assert decision.selected_route == "schema_lift_baseline"
-	assert decision.route_kind == "baseline_adapter"
-	assert decision.is_baseline is True
-	assert decision.blocking_gap == "no_trusted_external_gp_backend_available"
-	assert decision.candidate_backends == (
-		"moose",
-		"pg3",
-		"learner-policies-from-examples",
-	)
-	assert decision.rejected_backends == (
-		{
-			"backend": "moose",
-			"reason": "missing_backend",
-		},
-		{
-			"backend": "pg3",
-			"reason": "no_verified_lifted_policy_program_adapter",
-		},
-		{
-			"backend": "learner-policies-from-examples",
-			"reason": "missing_backend",
-		},
-	)
-
-
-def test_router_rejects_unknown_class_without_silent_schema_path(
-	tmp_path: Path,
-) -> None:
-	decision = route_generalized_planner(
-		domain_id="unknown",
-		benchmark_class_id="unknown_class",
-		backend_root=tmp_path,
-		allow_baseline_schema_lift=False,
+	decision = select_atomic_template_backend(
+		domain_file=domain_file,
+		training_problem_files=(problem_file,),
+		backend_root=root,
 	)
 
 	assert decision.selected_backend is None
-	assert decision.selected_route == "unsupported"
-	assert decision.route_kind == "unsupported"
-	assert decision.is_baseline is False
-	assert decision.candidate_backends == ()
-	assert decision.blocking_gap == "no_route_for_benchmark_class"
+	assert decision.blocking_gap == "negative_literal_template_not_supported"
+
+
+def _write_singleton_goal_case(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain singleton-template-mini)
+		 (:requirements :strips)
+		 (:predicates (done ?x))
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (and)
+		  :effect (done ?x))
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem singleton-template-p1)
+		 (:domain singleton-template-mini)
+		 (:objects a)
+		 (:init)
+		 (:goal (and (done a)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_negative_goal_case(tmp_path: Path) -> tuple[Path, Path]:
+	domain_file = tmp_path / "negative-domain.pddl"
+	problem_file = tmp_path / "negative-problem.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain negative-template-mini)
+		 (:requirements :strips)
+		 (:predicates (done ?x))
+		 (:action clear
+		  :parameters (?x)
+		  :precondition (done ?x)
+		  :effect (not (done ?x)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem negative-template-p1)
+		 (:domain negative-template-mini)
+		 (:objects a)
+		 (:init (done a))
+		 (:goal (and (not (done a))))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file

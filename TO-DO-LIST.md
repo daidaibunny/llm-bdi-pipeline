@@ -1,147 +1,98 @@
 # To Do List
 
-This is the active progress tracker for the domain-level lifted AgentSpeak(L)
-library research line. Keep it focused on current decisions, open gaps, and
-verification evidence.
+This tracker reflects the 2026-07-03 pivot. Keep it focused on the current
+atomic-template library plus temporal-goal append architecture.
 
-## Current Research Target
+## Current Target
 
-Current scope: positive conjunctive achievement goals. Temporal extended goals
-remain a future overlay where an LTLf-to-DFA controller calls the achievement
-goal library.
-
-Current strategic pivot, confirmed on 2026-07-01: do not build a universal
-generalized planner. The project should route domains to existing
-state-of-the-art generalized-planning backends, normalize their generalized
-policy or sketch outputs, and compile those outputs into lifted AgentSpeak(L).
-
-Target pipeline:
+We do not build a universal generalized planner and do not route domains by
+prior paper taxonomy classes. The project now has two layers:
 
 ```text
-PDDL domain + routed training instances
-→ routed external generalized-planning backend
-→ backend artifact
-→ LiftedPolicyProgram
-→ conservative binding to PDDL vocabulary
-→ lifted AgentSpeak(L) domain-level plan library
-→ held-out validation without runtime full-trace planning
-→ future DFA controller for temporal extended goals
+PDDL domain + train split
+-> atomic predicate/literal template backend
+-> domain-level lifted AgentSpeak(L) atomic library
+
+validated lifted LTLf JSON
+-> LTLf-to-DFA
+-> singleton-literal DFA validator
+-> append +!g_query temporal wrapper to the same domain library
 ```
 
-## Current Benchmark Decision
+There is one maintained ASL library per domain. New user queries append new
+top-level goals to that domain library.
 
-The formal achievement-goal corpus is the 12-family generalized-planner routing
-taxonomy. It supersedes the earlier IPC-only corpus as the single selected
-benchmark framework.
+## Selected Six-Domain Scope
 
-Current pinned materialization sources:
+The domain groups are for evaluation coverage only, not for backend routing.
 
-```text
-potassco/pddl-instances
-DillonZChen/moose-dataset
-bonetblai/learner-sketches
-bonetblai/learner-policies-from-examples
-```
+| Group | Domains | Current rationale |
+| --- | --- | --- |
+| Singleton regression-friendly classical goals | `ferry`, `miconic` | MOOSE paper domains; strong fit for singleton-goal regression templates. |
+| Multi-object classical achievement goals | `gripper`, `logistics` | Tests whether atomic templates compose over many objects without grounding. |
+| Structural or temporalized achievement goals | `blocks`, `8puzzle-1tile` | Tests Blocks-style goal interaction and compact rearrangement families. |
 
-Tracked layout:
-
-```text
-src/domains/<domain>/domain.pddl
-src/domains/<domain>/train/*.pddl
-src/domains/<domain>/test/*.pddl
-src/domains/<domain>/source.json
-```
-
-Each selected domain contains all selected source instances for its planning
-family. The `train` split size is `floor(2/3 * instance_count)`; the remaining
-instances form the held-out goal-specification `test` split.
-
-## Selected Routing Planning-Family Classes
-
-| Class | Domain shorthand |
-| --- | --- |
-| Goal-regression-decomposable domain-goal families | `ferry`, `gripper`, `miconic`, `logistics` |
-| Bounded-width sketchable subgoal-structure families | `delivery`, `spanner`, `visitall`, `childsnack`, `barman` |
-| Feature-definable structural and goal-dependent families | `blocks`, `8puzzle-1tile`, `sokoban-1stone` |
-
-Total selected routing families: 12. Domain names are shorthand for selected
-domain-goal families, not claims that a bare PDDL domain has one fixed
-generalized-planning type. `depots` is demoted to a boundary or failure-analysis
-family because the KR 2025 learner reports Depot in its C5 failure group.
+Numeric MOOSE domains remain out of scope until numeric fluents have a safe ASL
+literal semantics.
 
 ## Active Requirements
 
 | ID | Requirement | Status | Evidence / Next Step |
 | --- | --- | --- | --- |
-| R1 | Materialize all selected domains from the pinned reputable benchmark sources. | Implemented | `scripts/materialize_achievement_benchmarks.py`; 12 selected snapshots under `src/domains`: `ferry`, `gripper`, `miconic`, `logistics`, `delivery`, `spanner`, `visitall`, `childsnack`, `barman`, `blocks`, `8puzzle-1tile`, and `sokoban-1stone`. |
-| R2 | Remove obsolete formal benchmark domains and generated-variant references. | Implemented | Generated-only formal domains are no longer in `src/domains`, the achievement registry, or current paper taxonomy rows. Deleted the unreferenced old external vocabulary adapter and the Blocks-only experiment wrapper in favor of the generic registry/script path. |
-| R3 | Keep mechanism tests independent of formal benchmark data. | Implemented | Resource-dependency tests now write temporary PDDL fixtures under `tmp_path`. |
-| R4 | Update registry, taxonomy, manifest, and AAMAS text to the 12-family routing corpus. | Implemented | `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, `paper_artifacts/final_paper_manifest.json`, and `latex_code/aamas_method_paper/sections/method.tex` / `evaluation.tex`. |
-| R5 | Use deterministic train/test splits without bounded-state explosion in synthesis setup. | Implemented | Main and expanded-smoke registry rows enable synthesis-time Fast Downward trace fallback with `runtime_full_trace_planner=false`. Config rendering produces one main row per selected routing family. |
-| R6 | Support PDDL parser constructs exposed by the selected corpus. | Implemented | Added generic support for PDDL predicates whose names start with `not`, forward-referenced typed parent declarations during Tarski validation, and domain `:constants`. Keep this row current as newly materialized paper-source domains are parsed. |
-| R7 | Remove obsolete generated-result dependencies from the paper manuscript. | Implemented, validating | AAMAS result macro files are cleared until final regenerated results exist. |
-| R8 | Run tests and final config validation. | Implemented | Targeted regressions pass. `run_final_paper_data.py --config-only` renders the new registry configs. `--validate-only` still requires a regenerated `tmp/paper-final-latest/comparison.json`, which is outside this data migration. |
-| R9 | Commit and push the benchmark infrastructure cleanup. | Implemented | Full pytest, config render, representative smoke, commit, and push are complete for this milestone. |
-| R10 | Make prior paper-code reuse the main generalized-planning route rather than hand-built schema heuristics. | Implemented as router boundary | Added policy-first `LiftedPolicyProgram` IR, KR 2025 `learner-policies-from-examples` backend adapter, and `gp_router.py`. Existing schema synthesis is now exposed only as `baseline_schema_lift` fallback route metadata, not the main method. |
-| R11 | Stabilize KR 2025 backend execution without native macOS planner failures. | Implemented | `docker/learning-general-policies/Dockerfile` builds an Ubuntu 22.04 linux/amd64 image with Boost.Python 1.82.0, Python 3.10, `pymimir==0.9.62`, and `dlplan==0.3.29`; BFWS dynamic libraries resolve inside Docker. Actual KR runs should use `learning-general-policies-docker-*` commands. |
-| R12 | Validate a non-degenerate KR learner run that emits a policy artifact. | Open | Environment smoke now reaches feature generation and solver construction. One-problem Blocks smoke is too small and fails inside KR policy construction; next use a paper-style small training subset directory rather than `--max_num_instances` over a large folder. |
-| R13 | Replace the old domain taxonomy with a backend-routing planning-family taxonomy based on prior GP tracks. | Implemented as design document | `docs/gp_backend_routing_taxonomy.md` now defines the classification unit as `(PDDL domain, goal family, instance distribution)`, gives explicit definitions for positive conjunctive achievement goals, atomic goal items, goal interaction, ordering constraints, sketches, feature binding, backend artifacts, and held-out validation, and records the 12-family split plus route choices for MOOSE, KR 2025, D2L, learner-sketches, h-policy/Vanir, PG3, program-synthesis, neural, IPC learning-track, and LLM baselines. |
-| R14 | Materialize the new routing benchmark set. | Implemented | `ferry`, `delivery`, `spanner`, `8puzzle-1tile`, and `sokoban-1stone` are now tracked under `src/domains`; `depots` is removed from the formal selected corpus and remains a boundary case only. |
-| R15 | Implement route-specific backend adapters instead of extending the hand-built GP learner. | In progress | Router and route metadata are implemented. Next targets: MOOSE policy parser for Class A, h-policy/learner-sketches parser for Class B, and KR/D2L policy parser for Class C. All routes must normalize into `LiftedPolicyProgram` before ASL compilation. |
-| R16 | Add backend-probe and acceptance gates. | In progress | Router now rejects unavailable or unsupported backend routes and marks schema synthesis as baseline fallback only. Still needed: artifact-level acceptance gates for emitted backend policies/sketches/programs. |
-| R17 | Physically remove old GP-main-path code references after routing migration. | Implemented, monitoring | Registry, manifest, taxonomy, tests, and paper text now target the 12-family routing taxonomy. Continue checking that no stale formal-support wording is reintroduced; `depots` may appear only as boundary/failure-analysis context. |
-| R18 | Download, pin, and document how to invoke all relevant generalized-planning codebases. | Implemented | Unified audit now covers MOOSE plus the pinned `.external/gp-backends` inventory: learner-sketches, h-policy-learner, d2l, learner-policies-from-examples, PG3, mimir-rgnn, best-first-generalized-planning, BFGP++, PGP-landmarks, SLTP, UP-BFGP, LLM-GenPlan, state-centric generalized planning, IPC HUZAR, and IPC PGP baseline. `gp_backend_audit.py install` can restore the code inventory, `status` verifies pins, `usage` prints runnable entrypoints, and `capability` reports whether each backend is paper-source-complete, environment-dependent, interface-only, or competition-artifact-only. |
+| A1 | Replace class-based backend routing on the main path with atomic template backend selection. | Implemented first pass | `src/domain_level_planning/atomic_backend_selector.py` selects from training goal templates, not benchmark class ids. `run_domain_level_experiment` now reports `atomic_template_backend_decision`; registry rows use `goal_property_group_id` only for evaluation coverage. |
+| A2 | Use MOOSE as the first positive singleton-goal backend candidate. | Implemented first pass | Selector chooses MOOSE first when present. `src/domain_level_planning/moose_policy_adapter.py` parses official `policy --dump-policy` readable artifacts into `LiftedPolicyProgram` and lifted ASL atomic plans. `scripts/gp_backend_audit.py moose-atomic-command` prints a guarded train+dump command. Next: run selected-domain MOOSE smoke jobs when we decide the exact runtime budget. |
+| A3 | Do not claim negative literal template support without evidence. | Implemented at selector boundary | Negative goal facts return `negative_literal_template_not_supported`. Next: audit whether any backend can safely learn negative literal modules. |
+| A4 | Add singleton-literal DFA validation for the Input handoff. | Implemented first pass | `validate_singleton_literal_dfa` rejects conjunctive/disjunctive guards, undeclared predicates, wrong arities, unsupported negative literals, malformed transition records, and allows accepting `true` self-loops. Next: wire logger events around LTLf-to-DFA execution failures. |
+| A5 | Append query-specific temporal goals to a domain ASL library. | In progress | `append_temporal_goal_to_library` appends `+!g_query` plans for positive progress literals. `append_lifted_temporal_goal_case_to_library` connects lifted LTLf cases to a DFA builder. It records `requires_external_dfa_state=true`. |
+| A6 | Restore/refactor historical logger into the new pipeline. | Implemented first pass | `src/execution_logging/execution_logger.py` restores structured JSON, human log, and payload externalization without HTN/HDDL imports. Tests: `tests/evaluation/test_execution_logger.py`. |
+| A7 | Restore/refactor historical LTLf JSON schema and prompts only as Input interface references. | In progress | `src/domain_level_planning/lifted_ltlf_goal_schema.py` parses lifted LTLf JSON with atoms and bindings. LLM prompts remain external Input responsibility. |
+| A8 | Remove stale 12-family routing language from current path, tests, registry, and paper text. | In progress | `scripts/materialize_achievement_benchmarks.py`, `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, and focused tests now use six selected domains and goal-property groups. Next: decide whether to delete or quarantine old Layer B/C synthesis internals. |
+| A9 | Materialize the six selected domains with deterministic splits. | Implemented | `uv run python scripts/materialize_achievement_benchmarks.py` rebuilt `src/domains` with `ferry`, `miconic`, `gripper`, `logistics`, `blocks`, and `8puzzle-1tile`; each uses `floor(2/3 * N)` train and remaining test. |
+| A10 | Preserve current PDDL-only and no synthetic achievement-name constraints. | In progress | New code emits no `achieve_*`, `transition_*`, or `dfa_state` names. It does append `g_query` names by design. |
 
 ## Current Evidence Snapshot
 
-Latest lightweight checks:
-
 | Check | Result |
 | --- | --- |
-| 12-family data materialization | All selected routing families have `domain.pddl`, `train`, `test`, and `source.json`; split sizes match `floor(2/3 * instance_count)`. |
-| Final config render | One main experiment is generated per selected routing family; each uses offline synthesis planner traces and the project Fast Downward executable. |
-| Representative trace smoke | `gripper` 1/1, `blocks` 0/1 due held-out execution timeout, `childsnack` 0/1 due missing `served` strategy; all three rows now synthesize a library without matrix failure. |
-| KR 2025 Docker environment smoke | Docker image builds; `dlplan 0.3.29` exposes `set_generate_til_c_role`; `libbfws.so` resolves Boost.Python 1.82.0 and Python 3.10. |
-| GP backend code inventory | MOOSE plus all 15 pinned `.external/gp-backends` repositories are present at expected commits. Current synthesis-consumable routes are MOOSE, learner-sketches, h-policy-learner, d2l, and learner-policies-from-examples; PG3, planning-program, neural, LLM, and IPC learning-track systems are audit/baseline-only until adapters exist. |
-| GP paper-code capability audit | `scripts/gp_backend_audit.py capability` now records the paper-code capability status for every GP line in `docs/gp_backend_routing_taxonomy.md`. The audit distinguishes exact-reproduction-ready, paper-source-complete, source-complete-but-environment-dependent, library/interface-only, and competition-artifact-only backends. |
-
-Interpretation:
-
-- The latest fixes close infrastructure-level PDDL and benchmark-profile blockers.
-- Remaining work is now backend-route completion: parse backend artifacts,
-  bind them conservatively to declared PDDL vocabulary, compile accepted
-  artifacts into lifted AgentSpeak(L), and validate without runtime
-  full-trace planning.
-- The architecture is explicitly router-first: external GP backends produce
-  learned artifacts, those artifacts normalize into `LiftedPolicyProgram`, and
-  schema-derived rules are baseline fallback evidence only.
+| Atomic selector tests | `3 passed` with `uv run pytest tests/domain_level_planning/test_atomic_backend_selector.py`. |
+| Temporal appender tests | `4 passed` with `uv run pytest tests/domain_level_planning/test_temporal_goal_appender.py`. |
+| Lifted LTLf schema tests | `2 passed` with `uv run pytest tests/domain_level_planning/test_lifted_ltlf_goal_schema.py`. |
+| Logger tests | `2 passed` with `uv run pytest tests/evaluation/test_execution_logger.py`. |
+| MOOSE readable policy adapter tests | `3 passed` with `uv run pytest tests/domain_level_planning/test_moose_policy_adapter.py`. |
+| MOOSE readable artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry` reports `rules=5`, `modules=5`, `asl_plans=5`. |
+| MOOSE paper audit | Local paper text confirms MOOSE decomposes training problems into singleton goal conditions and applies goal regression, making it suitable for atomic positive predicate templates. |
 
 ## Commands
 
-Core checks:
-
-```bash
-PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q
-PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --config-only
-uv run python scripts/gp_backend_audit.py learning-general-policies-docker-build-command
-uv run python scripts/gp_backend_audit.py learning-general-policies-docker-command --experiment blocks_4_clear_0 --timeout-seconds 120 --max-num-instances 1
-uv run python scripts/gp_backend_audit.py status
-uv run python scripts/gp_backend_audit.py usage
-```
-
-Targeted benchmark checks:
-
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q \
-  tests/domain_level_planning/test_final_paper_data_scripts.py::test_domain_support_taxonomy_is_complete_and_manifested \
-  tests/domain_level_planning/test_final_paper_data_scripts.py::test_achievement_benchmark_registry_matches_selected_domain_taxonomy \
-  tests/domain_level_planning/test_experiment_matrix_script.py::test_paper_expanded_smoke_preset_covers_available_pddl_domains \
-  tests/domain_level_planning/test_no_domain_hardcoding.py
+  tests/domain_level_planning/test_atomic_backend_selector.py \
+  tests/domain_level_planning/test_temporal_goal_appender.py \
+  tests/domain_level_planning/test_lifted_ltlf_goal_schema.py \
+  tests/evaluation/test_execution_logger.py
 ```
 
-Regenerate benchmark snapshots only when intentionally refreshing tracked
-PDDL data:
+MOOSE atomic backend helper commands:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run python scripts/materialize_achievement_benchmarks.py
+uv run python scripts/gp_backend_audit.py moose-atomic-command \
+  --domain-file src/domains/ferry/domain.pddl \
+  --training-dir src/domains/ferry/train \
+  --save-file tmp/moose-atomic/ferry.model \
+  --timeout-seconds 1800
+
+uv run python scripts/gp_backend_audit.py moose-readable-summary \
+  --policy-file .external/moose/exact-runs/ferry-seed0.model.readable \
+  --domain-name ferry
+```
+
+Historical assets to inspect while restoring temporal/logging support:
+
+```bash
+git show f6a5d00:src/execution_logging/execution_logger.py
+git show f6a5d00:src/execution_logging/artifacts.py
+git show f6a5d00:src/temporal_specification/ltlf_dataset_generation.py
+git show f6a5d00:src/evaluation/goal_grounding/prompts.py
+git show fcc9011:src/evaluation/temporal_compilation/ltlf_to_dfa.py
+git show fcc9011:src/evaluation/temporal_compilation/dfa_builder.py
 ```

@@ -13,8 +13,8 @@
 \@ACM@balancefalse
 \makeatother
 
-\title[Goal-Conditioned Modular Policy Sketches]{Goal-Conditioned Modular
-Policy Sketches for Lifted AgentSpeak Plan Libraries}
+\title[Atomic GP Templates for Temporal Agent Goals]{Atomic Generalized
+Planning Templates for Temporal AgentSpeak Plan Libraries}
 
 \author{Anonymous Authors}
 \affiliation{
@@ -35,32 +35,34 @@ on Autonomous Agents and Multiagent Systems (AAMAS 2026)}{May 25 -- 29, 2026}
 \acmSubmissionID{anonymous}
 
 \begin{abstract}
-We study the automatic synthesis of domain-level lifted AgentSpeak(L) plan
-libraries from Planning Domain Definition Language domains and small sets of
-achievement-goal training problems. The generated library is not a trace for a
-single problem and is not tied to a query. Instead, its plan heads are lifted
-predicate achievement goals and its bodies call declared primitive actions or
-other predicate goals. The method combines goal-conditioned policy sketches,
-modular predicate-goal rules, an answer-set selection problem, and a conservative
-AgentSpeak(L) compiler. The claim is bounded to problem classes whose reusable
-strategy is expressible as a goal-conditioned, feature-definable, terminating
-modular policy sketch with bounded sketch width and safely bindable features.
-The current scope is positive conjunctive achievement goals; temporal goals are
-handled by a separate controller and are outside this paper core.
+We study how to turn generalized-planning artifacts into maintained
+AgentSpeak(L) plan libraries. The method separates two tasks that are often
+conflated. First, an external generalized planner learns lifted templates for
+atomic predicate or literal goals from a Planning Domain Definition Language
+domain and its training split. Second, each user temporal goal is represented as
+a lifted LTLf formula, compiled into a deterministic finite automaton, validated
+under a singleton-literal transition contract, and appended as a query-specific
+top-level AgentSpeak(L) goal that calls the atomic library. The resulting
+artifact is one domain-level library that grows with user queries, rather than
+one plan per problem or one planner call per execution. We use MOOSE as the
+primary positive singleton-goal backend candidate and keep feature-policy and
+sketch learners as audited fallbacks. The current claim is limited to PDDL
+predicate and literal goals; numeric fluents and unsupported negative literal
+templates are rejected with diagnostics.
 \end{abstract}
 
 \ccsdesc[500]{Computing methodologies~Planning and scheduling}
 \ccsdesc[300]{Computing methodologies~Multi-agent systems}
 
-\keywords{generalized planning, policy sketches, AgentSpeak(L), plan libraries,
-answer set programming, Planning Domain Definition Language}
+\keywords{generalized planning, AgentSpeak(L), temporal goals, deterministic
+finite automata, Planning Domain Definition Language}
 
 \newcommand{\pddl}{Planning Domain Definition Language}
 \newcommand{\asl}{AgentSpeak(L)}
 \newcommand{\goalpred}[1]{\ensuremath{\mathsf{goal}\_#1}}
 \newcommand{\select}{\ensuremath{\mathsf{select}}}
 \newcommand{\compile}{\ensuremath{\mathsf{compile}}}
-\newcommand{\methodname}{Goal-Conditioned Modular Policy Sketches}
+\newcommand{\methodname}{Atomic GP Templates for Temporal AgentSpeak Libraries}
 % BEGIN GENERATED RESULT MACROS
 % Result macros are generated from the final paper artifact manifest.
 % The current benchmark-infrastructure snapshot has no finalized result rows.
@@ -79,67 +81,42 @@ Classical planners can generate a plan for a concrete problem, but a
 Belief-Desire-Intention agent requires a reusable plan library. AgentSpeak(L)
 provides a logical language for such agents \cite{Rao1996AgentSpeak}. This
 paper targets the gap between generalized planning and executable agent
-programs: given a \pddl{} domain and a small set of training problems,
-synthesize a lifted \asl{} library that can solve new achievement-goal problems
-from the same domain without asking a planner for a full trace at run time.
-The resulting artifact is ordinary agent code: a finite set of lifted plan
-schemas whose triggers, contexts, and bodies can be inspected independently of
-any particular test instance.
+programs: given a \pddl{} domain and a small set of training problems, produce a
+lifted \asl{} library whose atomic predicate-goal templates can be reused by
+future user queries. The resulting artifact is ordinary agent code: a finite set
+of lifted plan schemas whose triggers, contexts, and bodies can be inspected
+independently of any particular test instance.
 
-The central difficulty is goal dependence. A domain-level library cannot simply
-learn one trace per problem, nor can it assume that conjunctive goals are
-independent. MOOSE formalizes useful goal-independence assumptions
-\cite{Chen2026Moose}, and sketches formalize goal serialization and
-bounded-width subgoal structure \cite{Drexler2024SubgoalSketches,
-Bonet2024GeneralPoliciesWidth}. We use these established boundaries rather
-than introducing a new domain class. In Blocksworld, for example, a tower goal
-must be built in a causally valid order; achieving a top block before its
-support can destroy the conditions needed later. The library must therefore
-contain both atomic predicate-goal modules and a composer that chooses which
-goal to pursue next.
-
-We build on the observation that many planning domains share compact subgoal
-structure expressible by policy sketches and generalized policies
-\cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches,
-Bonet2024GeneralPoliciesWidth}. Our contribution is to turn that structure into
-an executable \asl{} artifact rather than a planner wrapper. External sketches
-provide qualitative evidence, \pddl{} schemas and traces provide lifted support
-evidence, and an answer-set selector chooses only rules that the compiler can
-render safely. The output is not a per-problem plan and does not contain
-synthetic achievement names. Atomic modules implement declared \pddl{}
-predicates such as \texttt{clear} or \texttt{on}. A separate composer uses
-read-only goal descriptors such as \texttt{goal\_on} and derived
-\texttt{ready\_on} contexts to order conjunctive goals. The descriptors say what
-the current problem asks for; the achievement-goal heads remain ordinary
-\pddl{} predicates.
+The central difficulty is the interface between reusable atomic behavior and
+query-specific temporal structure. MOOSE formalizes useful goal-independence
+assumptions and, crucially for our purpose, synthesizes rules by decomposing
+training problems into singleton goal conditions \cite{Chen2026Moose}. This
+makes it a natural backend for atomic templates such as \texttt{on(X,Y)} or
+\texttt{served(P)}. It is not a complete answer for interacting multi-literal
+goals. In Blocksworld, for example, \texttt{on(X,Y)} can be a useful atomic
+template, while a tower request such as \texttt{on(X,Y)} followed by
+\texttt{on(Y,Z)} needs explicit temporal or structural control. We place that
+control in a query-specific LTLf-to-DFA layer above the atomic library.
 
 The paper makes four contributions.
 \begin{enumerate}
-\item We define a bounded hypothesis class for goal-conditioned modular
-	policy sketches that compile to lifted \asl{} plan schemas, together with
-	three property-defined domain classes, two goal-specification layers, and
-	explicit exclusions for unsupported \pddl{} fragments.
-	\item We give an answer-set selection procedure that chooses Layer B
-	atomic modules and Layer C composer rules from \pddl{} schemas, verified
-	external sketches, bounded transition evidence, and lifted counterexamples.
-	\item We provide a conservative feature-binding and compiler contract:
-	every external feature must map to declared predicates, primitive actions,
-	predicate subgoals, read-only goal descriptors, or a structured rejection.
-	\item We evaluate the resulting libraries on achievement-goal domains with
-	no run-time full-trace planner, including strict Blocksworld paper-profile
-	rows and diagnostic ablations for refinement and goal composition.
+\item We define an architecture that separates atomic lifted template learning
+	from query-specific temporal goal appending.
+\item We give a backend-selection interface for atomic predicate and literal
+	templates, with MOOSE as the primary positive singleton-goal candidate and
+	feature-policy or sketch learners as audited alternatives.
+\item We restore an LTLf-to-DFA temporal layer with a singleton-literal
+	transition contract, producing \asl{} wrapper goals that call only atomic
+	predicate modules.
+\item We define a focused six-domain evaluation scope covering singleton
+	regression, multi-object achievement, and temporalized structural goals.
 \end{enumerate}
 
-The contribution is deliberately bounded. We do not claim universal
-generalized-planning completeness for arbitrary \pddl{} domains. Like prior
-work, we choose benchmarks by formal properties. The three domain classes are:
-goal-separable and serialisable achievement classes, bounded-width sketchable
-subgoal-structure classes, and feature-definable construction classes with
-goal dependence. We also separate two goal layers: positive conjunctive
-achievement goals and LTLf temporal goals compiled to deterministic finite
-automata. The temporal layer is cross-cutting, not a fourth domain class.
-Reachability, numeric, resource-instrument, and object-specific fragments
-remain boundary cases until they pass the same \asl{} protocol.
+The contribution is deliberately bounded. We do not claim that one backend is
+state of the art for every planning problem, nor that context-only \asl{} can
+encode every temporal automaton without controller state. Numeric fluents,
+unsupported negative literal templates, and DFA transitions with compound
+Boolean guards remain outside the current claim.
 
 \input{sections/related_work}
 
@@ -150,29 +127,20 @@ remain boundary cases until they pass the same \asl{} protocol.
 \section{Current Scope and Exclusions}
 \label{sec:scope}
 
-The current method supports positive conjunctive achievement goals only for the
-bounded domain family defined in Section~\ref{sec:method}: the reusable strategy
-must be expressible as a goal-conditioned, feature-definable, terminating
-modular sketch with safe lifted feature bindings. Negative goals, disjunctive
-goals, derived predicates, conditional effects, and numeric fluents require
-additional semantics before they can be part of the paper claim. Unsupported
-cases are rejected before compilation so that the generated library never
-contains undeclared symbols, grounded training objects, or synthetic
-achievement names.
+The current method supports PDDL predicate and literal goals with validated
+lifted atomic templates. Unsupported negative literal templates, disjunctive
+goals, numeric fluents, derived predicates, and conditional effects require
+additional semantics before they can enter the claim. Unsupported cases are
+rejected before compilation so that the generated library never contains
+undeclared symbols, grounded training objects, or synthetic achievement names.
 
-The feature language is also bounded. The compiler accepts only external
-features with recoverable lifted semantics. Object-free goal-distance features
-are supported when they refer to a declared unary state predicate, the matching
-read-only goal predicate, and a declared binary role. Concrete object-specific
-features remain outside the claim because they would make the output depend on
-training-instance object names.
-
-Temporal extended goals are handled as a second goal layer by a deterministic
-finite automaton controller that calls the achievement-goal library. This
-separation is intentional: the automaton is query-specific, while the
-achievement-goal library remains domain-level. Ordinary classical \pddl{} goals
-define achievement goals; they do not define arbitrary temporal extended goals,
-although PDDL3 trajectory constraints can express part of that space.
+Temporal goals are compiled from LTLf into deterministic finite automata. Only
+DFA transitions that validate as singleton literals can be compiled into
+query-specific \asl{} wrapper plans. A general DFA still requires an external
+reward-machine state unless the world state uniquely determines temporal
+progress. Ordinary classical \pddl{} goals define achievement goals; they do
+not define arbitrary temporal extended goals, although PDDL3 trajectory
+constraints can express part of that space.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}

@@ -19,10 +19,15 @@ from domain_level_planning.gp_backends import (
 	GPBackendRunner,
 	MOOSE_BACKEND,
 	PINNED_BACKENDS,
+	PROJECT_EXTERNAL_ROOT,
 	backend_audit_matrix,
 	discover_backend_manifest,
 	discover_learning_general_policies_policy_file,
 	parse_dlplan_policy,
+)
+from domain_level_planning.moose_policy_adapter import (
+	compile_moose_readable_policy_to_asl_library,
+	policy_program_from_moose_readable_policy,
 )
 from domain_level_planning.policy_program import policy_program_from_sketch_policy
 from domain_level_planning.sketch_pipeline import compile_learner_sketch_policy_to_asl
@@ -74,6 +79,8 @@ def main() -> int:
 			"install",
 			"install-deps",
 			"blocksworld-smoke-command",
+			"moose-atomic-command",
+			"moose-readable-summary",
 			"learner-sketches-command",
 			"learner-sketches-compile-asl",
 			"learner-sketches-summary",
@@ -100,7 +107,30 @@ def main() -> int:
 	parser.add_argument(
 		"--policy-file",
 		type=Path,
-		help="DLPlan policy file to parse for the parse-policy command.",
+		help="Policy file to parse for parse-policy or moose-readable-summary.",
+	)
+	parser.add_argument(
+		"--domain-file",
+		type=Path,
+		help="PDDL domain file for MOOSE atomic command generation.",
+	)
+	parser.add_argument(
+		"--training-dir",
+		type=Path,
+		help="Training problem directory for MOOSE atomic command generation.",
+	)
+	parser.add_argument(
+		"--save-file",
+		type=Path,
+		help="Output MOOSE model file for moose-atomic-command.",
+	)
+	parser.add_argument("--random-seed", type=int, default=0)
+	parser.add_argument("--num-permutations", type=int, default=3)
+	parser.add_argument("--goal-max-size", type=int, default=1)
+	parser.add_argument(
+		"--domain-name",
+		default="unknown",
+		help="Domain name for readable-policy summaries.",
 	)
 	parser.add_argument(
 		"--experiment",
@@ -173,6 +203,24 @@ def main() -> int:
 			max_rss_gb=args.max_rss_gb,
 			timeout_seconds=args.timeout_seconds,
 			unsafe_direct=args.unsafe_direct,
+		)
+		return 0
+	if args.command == "moose-atomic-command":
+		print_moose_atomic_command(
+			domain_file=_required_path(args.domain_file, "--domain-file"),
+			training_dir=_required_path(args.training_dir, "--training-dir"),
+			save_file=_required_path(args.save_file, "--save-file"),
+			random_seed=args.random_seed,
+			num_permutations=args.num_permutations,
+			goal_max_size=args.goal_max_size,
+			max_rss_gb=args.max_rss_gb,
+			timeout_seconds=args.timeout_seconds,
+		)
+		return 0
+	if args.command == "moose-readable-summary":
+		print_moose_readable_summary(
+			policy_file=_required_path(args.policy_file, "--policy-file"),
+			domain_name=args.domain_name,
 		)
 		return 0
 	if args.command == "learner-sketches-command":
@@ -396,6 +444,103 @@ def print_blocksworld_smoke_command(
 			timeout_seconds=timeout_seconds,
 		)
 	print(shlex.join(command))
+
+
+def print_moose_atomic_command(
+	*,
+	domain_file: Path,
+	training_dir: Path,
+	save_file: Path,
+	random_seed: int,
+	num_permutations: int,
+	goal_max_size: int,
+	max_rss_gb: float,
+	timeout_seconds: int | None,
+) -> None:
+	"""Print the guarded MOOSE train plus readable-policy dump command."""
+
+	domain_project_path = _project_container_path(domain_file)
+	training_project_path = _project_container_path(training_dir)
+	save_project_path = _project_container_path(save_file)
+	readable_project_path = f"{save_project_path}.readable"
+	inner_script = "\n".join(
+		(
+			"set -euo pipefail",
+			"mkdir -p " + shlex.quote(str(Path(save_project_path).parent)),
+			"apptainer run --bind /work --bind /project /work/moose.sif "
+			+ shlex.join(
+				(
+					"train",
+					domain_project_path,
+					training_project_path,
+					"--save-file",
+					save_project_path,
+					"--random-seed",
+					str(random_seed),
+					"--num-permutations",
+					str(num_permutations),
+					"--goal-max-size",
+					str(goal_max_size),
+				),
+			),
+			"apptainer run --bind /work --bind /project /work/moose.sif "
+			+ shlex.join(("policy", save_project_path, "--dump-policy"))
+			+ " > "
+			+ shlex.quote(readable_project_path),
+		),
+	)
+	docker_command = (
+		"docker",
+		"run",
+		"--rm",
+		"--platform",
+		"linux/amd64",
+		f"--memory={int(max_rss_gb)}g",
+		"--privileged",
+		"-v",
+		f"{PROJECT_EXTERNAL_ROOT / 'moose'}:/work",
+		"-v",
+		f"{PROJECT_ROOT}:/project",
+		"-w",
+		"/work",
+		"moose-exact-ubuntu22:local",
+		"bash",
+		"-lc",
+		inner_script,
+	)
+	command = _guarded_command(
+		docker_command,
+		label="moose:atomic-template-train-dump",
+		max_rss_gb=max_rss_gb,
+		timeout_seconds=timeout_seconds,
+	)
+	print(shlex.join(command))
+
+
+def print_moose_readable_summary(*, policy_file: Path, domain_name: str) -> None:
+	"""Print adapter status for a MOOSE readable policy artifact."""
+
+	text = policy_file.read_text(encoding="utf-8")
+	source_name = policy_file.stem.replace(".model", "")
+	program = policy_program_from_moose_readable_policy(
+		text,
+		domain_name=domain_name,
+		source_name=source_name,
+		policy_file=policy_file,
+	)
+	library = compile_moose_readable_policy_to_asl_library(
+		text,
+		domain_name=domain_name,
+		source_name=source_name,
+		policy_file=policy_file,
+	)
+	print(
+		f"{policy_file}: policy_program=ok; backend=moose; "
+		f"rules={len(program.rules)}; modules={len(program.modules)}; "
+		f"asl_plans={len(library.plans)}",
+	)
+	for rule in program.rules:
+		print(f"  rule {rule.name}: conditions={len(rule.conditions)} effects={len(rule.effects)}")
 
 
 def print_learner_sketches_commands(
@@ -825,6 +970,45 @@ def _docker_proxy_build_args(proxy: str | None) -> dict[str, str]:
 		if value:
 			build_args[name] = value
 	return build_args
+
+
+def _required_path(value: Path | None, flag: str) -> Path:
+	if value is None:
+		raise SystemExit(f"{flag} is required for this command")
+	return value
+
+
+def _project_container_path(path: Path) -> str:
+	resolved = path.expanduser().resolve()
+	try:
+		relative = resolved.relative_to(PROJECT_ROOT)
+	except ValueError as error:
+		raise SystemExit(
+			f"MOOSE command paths must live under the project root: {resolved}",
+		) from error
+	return f"/project/{relative.as_posix()}"
+
+
+def _guarded_command(
+	command: tuple[str, ...],
+	*,
+	label: str,
+	max_rss_gb: float,
+	timeout_seconds: int | None,
+) -> tuple[str, ...]:
+	guarded = [
+		sys.executable,
+		str(PROJECT_ROOT / "scripts" / "resource_guard.py"),
+		"--max-rss-gb",
+		str(max_rss_gb),
+		"--label",
+		label,
+	]
+	if timeout_seconds is not None:
+		guarded.extend(("--timeout-seconds", str(timeout_seconds)))
+	guarded.append("--")
+	guarded.extend(command)
+	return tuple(guarded)
 
 
 def _run_git(args: tuple[str, ...], *, proxy: str | None = None) -> None:

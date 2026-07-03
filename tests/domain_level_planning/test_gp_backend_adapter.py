@@ -108,10 +108,12 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert by_name["moose"]["present"] is False
 	assert by_name["moose"]["pin_status"] == "missing"
 	assert by_name["moose"]["current_consumption_role"] == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "goal_regression_decision_list_policy",
+		"consumption_mode": "moose_readable_policy_atomic_templates",
 		"blocking_gap": None,
 	}
 	assert by_name["moose"]["paper_code_capability"]["status"] == (
@@ -225,10 +227,12 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 
 def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
 	assert backend_consumption_role("moose") == {
-		"drives_layer_b": True,
-		"drives_layer_c": True,
+		"drives_layer_b": False,
+		"drives_layer_c": False,
+		"drives_atomic_templates": True,
+		"drives_temporal_wrapper": False,
 		"consumed_by_synthesis": True,
-		"consumption_mode": "goal_regression_decision_list_policy",
+		"consumption_mode": "moose_readable_policy_atomic_templates",
 		"blocking_gap": None,
 	}
 	assert backend_consumption_role("learner-sketches")["consumed_by_synthesis"] is True

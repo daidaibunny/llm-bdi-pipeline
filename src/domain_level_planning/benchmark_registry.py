@@ -1,4 +1,4 @@
-"""Class-based benchmark registry for achievement-goal experiments."""
+"""Benchmark registry for achievement-goal experiments."""
 
 from __future__ import annotations
 
@@ -22,8 +22,8 @@ class BenchmarkRecord:
 	payload: dict[str, object]
 
 	@property
-	def benchmark_class_id(self) -> str:
-		return str(self.payload.get("benchmark_class_id") or "")
+	def goal_property_group_id(self) -> str:
+		return str(self.payload.get("goal_property_group_id") or "")
 
 	@property
 	def domain_id(self) -> str:
@@ -47,16 +47,29 @@ class AchievementBenchmarkRegistry:
 	records: tuple[BenchmarkRecord, ...]
 
 	def selected_records(self) -> tuple[BenchmarkRecord, ...]:
-		"""Return records that belong to one of the selected paper classes."""
+		"""Return selected paper benchmark records."""
 
-		selected_class_ids = set(
+		selected_domain_ids = set(
 			str(item)
-			for item in tuple(self.control.get("selected_domain_class_ids") or ())
+			for item in tuple(self.control.get("selected_domain_ids") or ())
+		)
+		selected_group_ids = set(
+			str(item)
+			for item in tuple(
+				self.control.get("selected_goal_property_group_ids")
+				or ()
+			)
 		)
 		return tuple(
 			record
 			for record in self.records
-			if record.benchmark_class_id in selected_class_ids
+			if (
+				record.domain_id in selected_domain_ids
+				or (
+					not selected_domain_ids
+					and record.goal_property_group_id in selected_group_ids
+				)
+			)
 			and str(record.payload.get("support_level") or "") in {
 				"main_claim",
 				"planned_claim_target",
@@ -125,7 +138,7 @@ class AchievementBenchmarkRegistry:
 		rendered: dict[str, object] = {
 			"name": str(experiment.pop("name")),
 			"domain_file": record.domain_file,
-			"benchmark_class_id": record.benchmark_class_id,
+			"goal_property_group_id": record.goal_property_group_id,
 			"domain_id": record.domain_id,
 		}
 		_apply_problem_set(
@@ -168,7 +181,7 @@ class AchievementBenchmarkRegistry:
 def load_achievement_benchmark_registry(
 	root: Path = DEFAULT_ACHIEVEMENT_REGISTRY,
 ) -> AchievementBenchmarkRegistry:
-	"""Load the class-based achievement-goal benchmark registry."""
+	"""Load the achievement-goal benchmark registry."""
 
 	root = root.expanduser().resolve()
 	control_file = root / "registry.json"
@@ -276,9 +289,12 @@ def _validate_registry(
 		raise ValueError("unsupported achievement benchmark registry schema_version")
 	if str(control.get("goal_specification_layer") or "") != "achievement_goal_layer":
 		raise ValueError("achievement registry must declare achievement_goal_layer")
-	selected_class_ids = tuple(control.get("selected_domain_class_ids") or ())
-	if not selected_class_ids:
-		raise ValueError("achievement registry must declare selected domain classes")
+	selected_domain_ids = tuple(control.get("selected_domain_ids") or ())
+	selected_group_ids = tuple(
+		control.get("selected_goal_property_group_ids") or (),
+	)
+	if not selected_domain_ids and not selected_group_ids:
+		raise ValueError("achievement registry must declare selected domains")
 	seen_domain_ids: set[str] = set()
 	for record in records:
 		if int(record.payload.get("schema_version") or 0) != 1:
@@ -287,8 +303,8 @@ def _validate_registry(
 			"achievement_goal_layer"
 		):
 			raise ValueError(f"benchmark must use achievement_goal_layer: {record.path}")
-		if not record.benchmark_class_id:
-			raise ValueError(f"benchmark missing class id: {record.path}")
+		if not record.goal_property_group_id:
+			raise ValueError(f"benchmark missing goal property group id: {record.path}")
 		if not record.domain_id:
 			raise ValueError(f"benchmark missing domain id: {record.path}")
 		if record.domain_id in seen_domain_ids:
