@@ -189,7 +189,7 @@ def _backend_rejection_reason(backend_name: str, *, root: Path) -> str | None:
 	if not manifest.present:
 		return "missing_backend"
 	role = backend_consumption_role(backend_name)
-	if not bool(role.get("consumed_by_synthesis")):
+	if not bool(role.get("consumed_by_atomic_library")):
 		return str(role.get("blocking_gap") or "backend_not_consumable")
 	return None
 

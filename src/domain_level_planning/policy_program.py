@@ -3,8 +3,7 @@ Policy-first intermediate representation for generalized planning backends.
 
 The paper method should learn a lifted policy program before compiling anything
 to AgentSpeak(L). This module is the seam between external generalized-planning
-learners and the ASL compiler. Schema-derived ASL rules can still pass through
-this seam, but only as an explicit baseline adapter.
+learners and the ASL compiler.
 """
 
 from __future__ import annotations
@@ -15,7 +14,6 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from .gp_backends import SketchPolicy
-from .models import LiftedCall, LiftedPlanRule
 
 
 @dataclass(frozen=True)
@@ -163,55 +161,6 @@ def policy_program_from_sketch_policy(
 	)
 
 
-def policy_program_from_lifted_rules(
-	*,
-	domain_name: str,
-	rules: Sequence[LiftedPlanRule],
-	source_name: str,
-) -> LiftedPolicyProgram:
-	"""Wrap existing schema-derived ASL rules as an explicit baseline program."""
-
-	baseline_rules = tuple(
-		LearnedPolicyRule(
-			name=rule.name,
-			conditions=tuple((context, "holds") for context in tuple(rule.context or ())),
-			effects=tuple((_call_effect(step), "call") for step in tuple(rule.body or ())),
-			source_rule=_source_rule_text(rule),
-		)
-		for rule in tuple(rules or ())
-	)
-	return LiftedPolicyProgram(
-		domain_name=domain_name,
-		backend_name="baseline_schema_lift",
-		source_name=source_name,
-		representation="lifted_asl_rule_baseline",
-		features=(),
-		rules=baseline_rules,
-		modules=tuple(
-			PolicyModule(
-				name=f"module_{rule.head.symbol}",
-				parameters=tuple(rule.head.arguments or ()),
-				rule_names=(rule.name,),
-				goal_symbol=rule.head.symbol,
-			)
-			for rule in tuple(rules or ())
-			if rule.layer == "atomic"
-		),
-		progress_certificate={
-			"termination_basis": "not_a_learned_policy_program",
-			"rule_count": len(baseline_rules),
-		},
-		provenance={
-			"paper_basis": "schema-lift baseline, not the main generalized-policy learner",
-			"note": (
-				"baseline adapter for existing PDDL schema candidates; this is not "
-				"evidence that a generalized policy was learned"
-			),
-		},
-		is_learned_policy=False,
-	)
-
-
 def _feature_kind(
 	feature_id: str,
 	*,
@@ -223,17 +172,6 @@ def _feature_kind(
 	if feature_id in numerical_features:
 		return "numerical"
 	return "unknown"
-
-
-def _call_effect(step: LiftedCall) -> str:
-	prefix = "action" if step.kind == "action" else "subgoal"
-	return f"{prefix}:{_call(step.symbol, step.arguments)}"
-
-
-def _source_rule_text(rule: LiftedPlanRule) -> str:
-	context = " & ".join(rule.context) if rule.context else "true"
-	body = "; ".join(_call(step.symbol, step.arguments) for step in rule.body)
-	return f"{_call(rule.head.symbol, rule.head.arguments)} <- {context} / {body}"
 
 
 def _call(symbol: str, arguments: Sequence[str]) -> str:

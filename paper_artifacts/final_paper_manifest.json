@@ -42,7 +42,7 @@
     }
   ],
   "commands": {
-    "generate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --planner-timeout-seconds 5",
+    "generate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest",
     "paper": "cd latex_code/aamas_method_paper && latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build main.tex",
     "tests": "PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q",
     "validate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only"
@@ -174,16 +174,6 @@
     {
       "kind": "file",
       "path": "scripts/run_final_paper_data.py",
-      "tracked": true
-    },
-    {
-      "kind": "file",
-      "path": "scripts/run_domain_level_experiment_matrix.py",
-      "tracked": true
-    },
-    {
-      "kind": "file",
-      "path": "scripts/generate_domain_level_baselines.py",
       "tracked": true
     },
     {

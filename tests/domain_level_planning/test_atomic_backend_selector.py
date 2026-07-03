@@ -50,7 +50,7 @@ def test_atomic_backend_selector_rejects_negative_goals_without_claiming_support
 	)
 
 
-def test_atomic_backend_selector_can_fall_back_when_moose_is_absent(
+def test_atomic_backend_selector_does_not_fall_back_to_unverified_compiler(
 	tmp_path: Path,
 ) -> None:
 	domain_file = _write_domain(tmp_path)
@@ -64,9 +64,17 @@ def test_atomic_backend_selector_can_fall_back_when_moose_is_absent(
 		backend_root=backend_root,
 	)
 
-	assert decision.selected_backend == "learner-policies-from-examples"
+	assert decision.selected_backend is None
+	assert decision.blocking_gap == "no_atomic_template_backend_available"
 	assert decision.rejected_backends == (
 		{"backend": "moose", "reason": "missing_backend"},
+		{
+			"backend": "learner-policies-from-examples",
+			"reason": "no_verified_atomic_literal_asl_compiler_for_this_backend",
+		},
+		{"backend": "d2l", "reason": "missing_backend"},
+		{"backend": "learner-sketches", "reason": "missing_backend"},
+		{"backend": "h-policy-learner", "reason": "missing_backend"},
 	)
 
 

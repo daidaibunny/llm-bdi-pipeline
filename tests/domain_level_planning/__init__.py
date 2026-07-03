@@ -1,1 +1,1 @@
-"""Tests for domain-level lifted plan-library synthesis."""
+"""Tests for current domain-level atomic-library and temporal-append code."""

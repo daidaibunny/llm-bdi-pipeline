@@ -38,9 +38,10 @@ Each domain is evaluated through four checks.
 	names.
 \end{enumerate}
 
-Classical planners and external generalized-planning systems may be used during
-offline synthesis, backend learning, and validation. They are not allowed to
-replace the maintained \asl{} library during execution.
+Classical planners may be used inside external generalized-planning systems,
+paper-artifact reproduction, and validation. They are not allowed to replace
+the maintained \asl{} library during execution, and the current implementation
+does not include an in-repository planner-trace synthesis path.
 
 \subsection{Reproducibility}
 

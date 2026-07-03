@@ -215,7 +215,7 @@ def append_temporal_goal_to_library(
 			body=(),
 			binding_certificate=(
 				{
-					"synthesis_family": "temporal_goal_dfa_append",
+					"artifact_family": "temporal_goal_dfa_append",
 					"role": "accepting_fallback",
 				},
 			),
@@ -430,7 +430,7 @@ def _temporal_progress_plans(
 				),
 				binding_certificate=(
 					{
-						"synthesis_family": "temporal_goal_dfa_append",
+						"artifact_family": "temporal_goal_dfa_append",
 						"source_state": transition["source_state"],
 						"target_state": transition["target_state"],
 						"raw_label": transition["raw_label"],

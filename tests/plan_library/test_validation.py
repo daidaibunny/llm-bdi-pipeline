@@ -10,23 +10,28 @@ from plan_library import (
 from plan_library.validation import build_library_validation_record
 
 
-def test_library_validation_accepts_context_driven_contract() -> None:
+def test_library_validation_accepts_current_atomic_and_temporal_contract() -> None:
 	plan_library = PlanLibrary(
 		domain_name="blocks",
 		initial_beliefs=(),
 		plans=(
 			AgentSpeakPlan(
-				plan_name="accept",
-				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g"),
-				context=("on(b1, b2)",),
+				plan_name="on_via_stack",
+				trigger=AgentSpeakTrigger(
+					event_type="achievement_goal",
+					symbol="on",
+					arguments=("X", "Y"),
+				),
+				context=("holding(X)", "clear(Y)"),
+				body=(AgentSpeakBodyStep("action", "stack", ("X", "Y")),),
 			),
 			AgentSpeakPlan(
-				plan_name="transition",
-				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g"),
-				context=("not on(b1, b2)",),
+				plan_name="g_query_1_progress",
+				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g_query_1"),
+				context=("not on(X,Y)",),
 				body=(
-					AgentSpeakBodyStep("action", "stack", ("b1", "b2")),
-					AgentSpeakBodyStep("subgoal", "g"),
+					AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+					AgentSpeakBodyStep("subgoal", "g_query_1"),
 				),
 			),
 		),
@@ -55,7 +60,7 @@ def test_library_validation_rejects_exposed_dfa_state_belief() -> None:
 		plans=(
 			AgentSpeakPlan(
 				plan_name="accept",
-				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g"),
+				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g_query_1"),
 				context=("on(b1, b2)",),
 			),
 		),

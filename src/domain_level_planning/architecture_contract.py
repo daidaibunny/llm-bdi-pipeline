@@ -55,7 +55,7 @@ class HypothesisClassContract:
 	name: str
 	feature_language: dict[str, object]
 	module_language: dict[str, object]
-	composer_language: dict[str, object]
+	temporal_wrapper_language: dict[str, object]
 	progress_language: dict[str, object]
 	correctness_language: dict[str, object]
 	exclusions: tuple[str, ...]
@@ -65,7 +65,7 @@ class HypothesisClassContract:
 			"name": self.name,
 			"feature_language": dict(self.feature_language),
 			"module_language": dict(self.module_language),
-			"composer_language": dict(self.composer_language),
+			"temporal_wrapper_language": dict(self.temporal_wrapper_language),
 			"progress_language": dict(self.progress_language),
 			"correctness_language": dict(self.correctness_language),
 			"exclusions": list(self.exclusions),
@@ -110,9 +110,9 @@ class ArchitectureContract:
 	non_goals: tuple[str, ...]
 	supported_pddl_fragment: str
 	runtime_planner_policy: str
-	layer_b_target: str
-	layer_c_target: str
-	goal_fact_semantics: str
+	atomic_template_target: str
+	temporal_append_target: str
+	temporal_descriptor_semantics: str
 	paper_layer_contracts: tuple[LayerPaperQualityContract, ...]
 	hypothesis_class: HypothesisClassContract
 	decisions: tuple[ArchitectureDecision, ...]
@@ -126,9 +126,9 @@ class ArchitectureContract:
 			"non_goals": list(self.non_goals),
 			"supported_pddl_fragment": self.supported_pddl_fragment,
 			"runtime_planner_policy": self.runtime_planner_policy,
-			"layer_b_target": self.layer_b_target,
-			"layer_c_target": self.layer_c_target,
-			"goal_fact_semantics": self.goal_fact_semantics,
+			"atomic_template_target": self.atomic_template_target,
+			"temporal_append_target": self.temporal_append_target,
+			"temporal_descriptor_semantics": self.temporal_descriptor_semantics,
 			"paper_layer_contracts": [
 				contract.to_dict()
 				for contract in self.paper_layer_contracts
@@ -199,7 +199,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"singleton-literal DFA validator",
 		),
 		implementation_safeguards=(
-			"legacy schema-derived synthesis is not the current main method",
+			"old in-repository GP synthesis and conjunctive-goal ordering code is not part of the current method",
 			"external learners must run under resource guards",
 			"backend artifacts must pass parser, binding, compiler, and validation gates",
 			"negative progress literals fail unless a validated negative template exists",
@@ -221,19 +221,20 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"classical planners may support external backend training or validation, "
 			"but the generated library is not a runtime full-trace planner"
 		),
-		layer_b_target=(
-			"current atomic-template layer: lifted +!P(Args) modules compiled from "
+		atomic_template_target=(
+			"lifted +!P(Args) atomic modules compiled from "
 			"verified external singleton-goal artifacts"
 		),
-		layer_c_target=(
-			"current temporal append layer: query-specific +!g_query wrappers from "
+		temporal_append_target=(
+			"query-specific +!g_query wrappers from "
 			"singleton-literal DFA progress transitions"
 		),
-		goal_fact_semantics=(
-			"goal descriptors are external Input and DFA metadata, not mutable "
-			"beliefs, primitive actions, or synthetic achievement goals. The current "
-			"ASL output may contain query-specific g_query wrappers but not dfa_state "
-			"beliefs; when DFA state is required, it belongs to the controller."
+		temporal_descriptor_semantics=(
+			"lifted LTLf atoms and DFA metadata are external Input artifacts, not "
+			"mutable beliefs, primitive actions, or synthetic achievement goals. "
+			"The current ASL output may contain query-specific g_query wrappers "
+			"but not dfa_state beliefs; when DFA state is required, it belongs "
+			"to the controller."
 		),
 		paper_layer_contracts=paper_layer_quality_contracts(),
 		hypothesis_class=bounded_hypothesis_class_contract(),
@@ -430,7 +431,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"body_calls": "declared PDDL primitive actions or declared PDDL predicate subgoals",
 			"recursion": "temporal wrappers may recurse to +!g_query after one atomic subgoal call",
 		},
-		composer_language={
+		temporal_wrapper_language={
 			"rule_shape": "+!g_query context rules generated from DFA progress transitions",
 			"ordering_evidence": (
 				"DFA progress distance to accepting states",

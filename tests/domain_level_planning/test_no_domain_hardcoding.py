@@ -46,7 +46,8 @@ def test_paper_experiment_scripts_use_registry_instead_of_embedded_domain_rows()
 	)
 	paths = (
 		PROJECT_ROOT / "scripts" / "run_final_paper_data.py",
-		PROJECT_ROOT / "scripts" / "run_domain_level_experiment_matrix.py",
+		PROJECT_ROOT / "scripts" / "gp_backend_audit.py",
+		PROJECT_ROOT / "scripts" / "materialize_achievement_benchmarks.py",
 	)
 
 	violations: list[str] = []

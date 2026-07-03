@@ -110,7 +110,7 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert by_name["moose"]["current_consumption_role"] == {
 		"drives_atomic_templates": True,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
+		"consumed_by_atomic_library": True,
 		"consumption_mode": "moose_readable_policy_atomic_templates",
 		"blocking_gap": None,
 	}
@@ -126,21 +126,22 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		"serialized-width sketch learner for qualitative DLPlan policies"
 	)
 	assert by_name["learner-sketches"]["preferred_use"] == (
-		"external learned sketch evidence for conservative feature binding"
+		"candidate external sketch backend; current repository parses and "
+		"summarizes policies but does not compile them into atomic ASL"
 	)
 	assert "feature_rule_policy" in by_name["learner-sketches"]["output_artifacts"]
 	assert (
-		"atomic-template sketch evidence after safe binding"
+		"qualitative sketch-policy artifact"
 		in by_name["learner-sketches"]["reusable_evidence"]
 	)
 	assert by_name["learner-sketches"]["resource_profile"]["default_max_rss_gb"] == 16.0
 	assert by_name["learner-sketches"]["resource_profile"]["guard_required"] is True
 	assert by_name["learner-sketches"]["current_consumption_role"] == {
-		"drives_atomic_templates": True,
+		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
-		"consumption_mode": "parsed_bound_policy_rules_for_atomic_templates",
-		"blocking_gap": None,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 	}
 	assert by_name["learner-sketches"]["paper_code_capability"]["status"] == (
 		"confirmed_paper_source_complete"
@@ -155,11 +156,11 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "missing_backend" in by_name["h-policy-learner"]["failure_modes"]
 	assert "hierarchical policy" in by_name["h-policy-learner"]["paper_role"]
 	assert by_name["h-policy-learner"]["current_consumption_role"] == {
-		"drives_atomic_templates": True,
+		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_hierarchical_atomic_policy_rules",
-		"blocking_gap": None,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 	}
 
 	assert by_name["d2l"]["present"] is True
@@ -167,11 +168,11 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "pin_mismatch" in by_name["d2l"]["failure_modes"]
 	assert "Docker" in by_name["d2l"]["resource_profile"]["execution_environment"]
 	assert by_name["d2l"]["current_consumption_role"] == {
-		"drives_atomic_templates": True,
+		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_d2l_atomic_text_policy_rules",
-		"blocking_gap": None,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 	}
 	assert by_name["d2l"]["paper_code_capability"]["status"] == (
 		"confirmed_source_complete_needs_paper_environment"
@@ -179,7 +180,8 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert by_name["learner-policies-from-examples"]["pin_status"] == "ok"
 	assert "KR 2025" in by_name["learner-policies-from-examples"]["paper_role"]
 	assert by_name["learner-policies-from-examples"]["preferred_use"] == (
-		"primary policy-first backend for learned LiftedPolicyProgram artifacts"
+		"candidate policy-first backend for learned LiftedPolicyProgram "
+		"artifacts; ASL compilation remains a verified-adapter gap"
 	)
 	assert (
 		"Docker linux/amd64"
@@ -198,16 +200,16 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		for entry in by_name["learner-policies-from-examples"]["usage_entrypoints"]
 	)
 	assert by_name["learner-policies-from-examples"]["current_consumption_role"] == {
-		"drives_atomic_templates": True,
+		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
-		"consumption_mode": "policy_first_atomic_lifted_program",
-		"blocking_gap": None,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 	}
 	assert by_name["pg3"]["current_consumption_role"] == {
 		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": False,
+		"consumed_by_atomic_library": False,
 		"consumption_mode": "audit_or_baseline_only",
 		"blocking_gap": "no_verified_lifted_policy_program_adapter",
 	}
@@ -217,12 +219,12 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 		if "paper_code_capability" in entry
 	} == set(by_name)
 	assert "./run.sh" in by_name["pg3"]["usage_entrypoints"]
-	assert by_name["bfgp-pp"]["current_consumption_role"]["consumed_by_synthesis"] is False
+	assert by_name["bfgp-pp"]["current_consumption_role"]["consumed_by_atomic_library"] is False
 	assert "structured generalized planning program synthesis" in by_name["bfgp-pp"][
 		"paper_role"
 	]
 	assert by_name["state-centric-gen-planning"]["current_consumption_role"][
-		"consumed_by_synthesis"
+		"consumed_by_atomic_library"
 	] is False
 
 
@@ -230,43 +232,49 @@ def test_backend_consumption_role_accepts_verified_backend_dialects() -> None:
 	assert backend_consumption_role("moose") == {
 		"drives_atomic_templates": True,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
+		"consumed_by_atomic_library": True,
 		"consumption_mode": "moose_readable_policy_atomic_templates",
 		"blocking_gap": None,
 	}
-	assert backend_consumption_role("learner-sketches")["consumed_by_synthesis"] is True
-	assert backend_consumption_role("h-policy-learner") == {
-		"drives_atomic_templates": True,
+	assert backend_consumption_role("learner-sketches") == {
+		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_hierarchical_atomic_policy_rules",
-		"blocking_gap": None,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
+	}
+	assert backend_consumption_role("h-policy-learner") == {
+		"drives_atomic_templates": False,
+		"drives_temporal_wrapper": False,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 	}
 	assert backend_consumption_role("d2l") == {
-		"drives_atomic_templates": True,
+		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
-		"consumption_mode": "verified_d2l_atomic_text_policy_rules",
-		"blocking_gap": None,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 	}
 	assert backend_consumption_role("learner-policies-from-examples") == {
-		"drives_atomic_templates": True,
+		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": True,
-		"consumption_mode": "policy_first_atomic_lifted_program",
-		"blocking_gap": None,
+		"consumed_by_atomic_library": False,
+		"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+		"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 	}
 	assert backend_consumption_role("pg3") == {
 		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": False,
+		"consumed_by_atomic_library": False,
 		"consumption_mode": "audit_or_baseline_only",
 		"blocking_gap": "no_verified_lifted_policy_program_adapter",
 	}
 	assert backend_consumption_role("unknown-paper-code") == {
 		"drives_atomic_templates": False,
 		"drives_temporal_wrapper": False,
-		"consumed_by_synthesis": False,
+		"consumed_by_atomic_library": False,
 		"consumption_mode": "unknown_backend_audit_only",
 		"blocking_gap": "no_pinned_backend_profile_or_verified_adapter",
 	}

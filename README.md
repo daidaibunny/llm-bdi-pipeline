@@ -36,15 +36,16 @@ wrappers may introduce top-level names such as `g_query_17`, but generated ASL
 must not emit synthetic names such as `achieve_*`, `transition_*`, or exposed
 `dfa_state(...)` beliefs.
 
-The older schema-derived synthesizer is retained only as an explicit
-`baseline_schema_lift` diagnostic adapter. It should not be presented as the
-main generalized-planning method.
+The older in-repository schema-derived synthesizer and conjunctive-goal
+ordering path have been removed from the current code path. Atomic templates
+must come from verified external generalized-planning artifacts.
 
 ## Planner Use
 
-Classical planners are allowed during offline synthesis, trace-evidence
-generation, counterexample analysis, and baseline evaluation. They are not the
-runtime low-level method for the final domain-level library claim.
+Classical planners may be used inside external generalized-planning backends,
+artifact reproduction, and validation. They are not the runtime low-level method
+for the final domain-level library claim, and this repository no longer carries
+an in-repository planner-trace synthesis path.
 
 ## Benchmarks
 

@@ -3,11 +3,12 @@
 The active test suite covers:
 
 - PDDL parsing
-- stored LTLf event extraction and PDDL fluent mapping
-- DFA-driven high-level AgentSpeak(L) plan generation
-- Fast Downward low-level planning adapter
-- plan-library artifact persistence
-- structural validation of context-driven `!g` plans
+- lifted LTLf JSON schema validation
+- LTLf-to-DFA conversion
+- singleton-literal DFA validation
+- MOOSE readable-policy to atomic AgentSpeak(L) compilation
+- temporal goal append wrappers
+- external generalized-planning backend audit helpers
 
 Run the focused suite with:
 
@@ -15,9 +16,9 @@ Run the focused suite with:
 uv run pytest \
   tests/utils/test_pddl_parser.py \
   tests/utils/test_symbol_normalizer.py \
-  tests/utils/test_negation_mode_resolver.py \
   tests/utils/test_config.py \
-  tests/temporal_specification \
-  tests/low_level_planning \
-  tests/plan_library
+  tests/evaluation/temporal_compilation/test_ltlf_to_dfa.py \
+  tests/domain_level_planning/test_lifted_ltlf_goal_schema.py \
+  tests/domain_level_planning/test_temporal_goal_appender.py \
+  tests/domain_level_planning/test_moose_policy_adapter.py
 ```

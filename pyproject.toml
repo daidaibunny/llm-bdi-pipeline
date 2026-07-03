@@ -7,9 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "dd>=0.6.0",
     "lark>=1.1.9",
-    "openai>=2.6.0",
     "ltlf2dfa>=1.0.2",
-    "clingo>=5.7.1",
     "tarski>=0.8.2",
     "bitarray>=3.8.1",
     "natsort>=7.0.1",
@@ -31,12 +29,8 @@ include-package-data = true
 where = ["src"]
 include = [
     "domain_level_planning*",
-    "domain_model*",
     "evaluation*",
-    "language_model*",
-    "low_level_planning*",
     "plan_library*",
-    "temporal_specification*",
     "utils*",
 ]
 

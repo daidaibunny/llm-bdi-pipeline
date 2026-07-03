@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from domain_level_planning.models import LiftedCall, LiftedPlanRule
 from domain_level_planning.gp_backends import parse_dlplan_policy
 from domain_level_planning.policy_program import (
 	LearnedPolicyRule,
 	LiftedPolicyProgram,
-	policy_program_from_lifted_rules,
 	policy_program_from_sketch_policy,
 )
 
@@ -58,40 +56,6 @@ def test_dlplan_sketch_policy_becomes_policy_first_program() -> None:
 		"external_backend_policy_verification"
 	)
 	assert program.provenance["policy_file"] == "tmp/sketch_minimized_0.txt"
-
-
-def test_schema_rules_are_wrapped_as_baseline_policy_program() -> None:
-	rule = LiftedPlanRule(
-		name="on_via_stack",
-		head=LiftedCall("subgoal", "on", ("X", "Y")),
-		context=("holding(X)", "clear(Y)"),
-		body=(LiftedCall("action", "stack", ("X", "Y")),),
-		layer="atomic",
-		rationale="schema action add effect",
-		capabilities=("module_on_action_stack",),
-	)
-
-	program = policy_program_from_lifted_rules(
-		domain_name="blocks",
-		rules=(rule,),
-		source_name="schema-baseline",
-	)
-
-	assert program.backend_name == "baseline_schema_lift"
-	assert program.is_learned_policy is False
-	assert program.representation == "lifted_asl_rule_baseline"
-	assert program.rules == (
-		LearnedPolicyRule(
-			name="on_via_stack",
-			conditions=(("holding(X)", "holds"), ("clear(Y)", "holds")),
-			effects=(("action:stack(X, Y)", "call"),),
-			source_rule="on(X, Y) <- holding(X) & clear(Y) / stack(X, Y)",
-		),
-	)
-	assert program.progress_certificate["termination_basis"] == (
-		"not_a_learned_policy_program"
-	)
-	assert "baseline adapter" in program.provenance["note"]
 
 
 def test_policy_program_dict_is_stable_for_artifact_reports() -> None:

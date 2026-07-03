@@ -176,7 +176,7 @@ def compile_moose_readable_policy_to_asl_library(
 				),
 				binding_certificate=(
 					{
-						"synthesis_family": "moose_goal_regression_policy",
+						"artifact_family": "moose_goal_regression_policy",
 						"source_backend": "moose",
 						"source_name": source_name,
 						"policy_file": str(policy_file) if policy_file is not None else None,

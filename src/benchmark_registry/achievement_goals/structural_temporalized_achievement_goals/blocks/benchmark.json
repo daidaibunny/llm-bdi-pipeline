@@ -6,39 +6,45 @@
   "domain_role": "main_claim",
   "experiments": [
     {
-      "ablation_label": "blocks_ipc_full_smoke",
+      "ablation_label": "blocks_atomic_backend_smoke",
+      "artifact_kind": "atomic_template_library_candidate",
+      "backend_artifact_gate": [
+        "parse",
+        "LiftedPolicyProgram",
+        "atomic_asl_compile",
+        "held_out_validation"
+      ],
       "eval_problem_set": "goal_specification",
       "evaluation_timeout_seconds": 15,
       "matrix": "preset",
-      "max_depth": 1000,
-      "max_steps": 10000,
-      "name": "blocks-ipc-full-smoke",
+      "name": "blocks-atomic-backend-smoke",
       "order": 100,
       "preset_tags": [
         "paper-expanded-smoke"
       ],
-      "synthesis_planner_executable": "fast-downward/fast-downward.py",
-      "synthesis_planner_timeout_seconds": 60,
-      "synthesis_profile": "bootstrap",
+      "primary_atomic_backend": "moose",
+      "runtime_full_trace_planner": false,
       "timeout_seconds": 1800,
-      "train_problem_set": "train",
-      "use_synthesis_planner_traces": true
+      "train_problem_set": "train"
     },
     {
-      "ablation_label": "blocks_ipc_full_main",
+      "ablation_label": "blocks_atomic_backend_main",
+      "artifact_kind": "atomic_template_library_candidate",
+      "backend_artifact_gate": [
+        "parse",
+        "LiftedPolicyProgram",
+        "atomic_asl_compile",
+        "held_out_validation"
+      ],
       "eval_problem_set": "goal_specification",
       "evaluation_timeout_seconds": 15,
       "matrix": "main",
-      "max_depth": 1000,
-      "max_steps": 10000,
-      "name": "blocks-ipc-full-main",
+      "name": "blocks-atomic-backend-main",
       "order": 100,
-      "synthesis_planner_executable": "fast-downward/fast-downward.py",
-      "synthesis_planner_timeout_seconds": 60,
-      "synthesis_profile": "bootstrap",
+      "primary_atomic_backend": "moose",
+      "runtime_full_trace_planner": false,
       "timeout_seconds": 1800,
-      "train_problem_set": "train",
-      "use_synthesis_planner_traces": true
+      "train_problem_set": "train"
     }
   ],
   "goal_property_group_id": "structural_temporalized_achievement_goals",

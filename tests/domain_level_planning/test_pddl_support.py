@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from domain_level_planning import build_goal_conditioned_library_from_pddl
 from domain_level_planning.pddl_support import assert_compilable_pddl_files
 from domain_level_planning.pddl_support import inspect_pddl_support
 
@@ -77,20 +76,15 @@ def test_compilable_pddl_support_rejects_conditional_effects(tmp_path: Path) -> 
 		assert_compilable_pddl_files(domain_file=domain_file, problem_files=(problem_file,))
 
 
-def test_schema_synthesis_rejects_disjunctive_problem_goals(tmp_path: Path) -> None:
+def test_pddl_support_report_rejects_disjunctive_problem_goals(tmp_path: Path) -> None:
 	domain_file, problem_file = _write_minimal_strips_domain_and_problem(
 		tmp_path,
 		goal="(or (done a) (ready a))",
 	)
 
-	with pytest.raises(ValueError, match="Unsupported PDDL expression operator 'or'"):
-		build_goal_conditioned_library_from_pddl(
-			domain_file=domain_file,
-			training_problem_files=(problem_file,),
-		)
-
 	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
 	serialized = report.to_dict()
+	assert serialized["is_compilable"] is False
 	assert {
 		"kind": "unsupported_disjunctive_goal",
 		"location": str(problem_file),

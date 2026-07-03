@@ -12,12 +12,12 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 		domain_name="generic",
 		plans=(
 			AgentSpeakPlan(
-				plan_name="g_satisfy_goal_done",
-				trigger=AgentSpeakTrigger("achievement_goal", "g"),
-				context=("goal_done(X)", "not done(X)"),
+				plan_name="g_query_1_progress_1",
+				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
+				context=("not done(X)",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ("X",)),
-					AgentSpeakBodyStep("subgoal", "g"),
+					AgentSpeakBodyStep("subgoal", "g_query_1"),
 				),
 			),
 			AgentSpeakPlan(
@@ -36,7 +36,7 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 	assert report.violations == ()
 	serialized = report.to_dict()
 	assert serialized["supported_asl_subset"]["plan_heads"] == (
-		"PDDL predicate achievement goals or zero-argument +!g only"
+		"PDDL predicate achievement goals or query-specific +!g_* temporal wrappers"
 	)
 	assert serialized["supported_asl_subset"]["body_steps"] == (
 		"PDDL primitive action calls and PDDL predicate subgoal calls only"
@@ -51,29 +51,13 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 			"order-independent implicit conjunction over supported context literals; "
 			"positive context atoms bind variables before negated context atoms are checked"
 		),
-		"negation_semantics": (
-			"negation-as-absence over the current state, goal descriptor set, "
-			"or derived ready-context set"
-		),
-		"goal_state_semantics": "fixed point: +!g has no applicable unsatisfied-goal plan",
+		"negation_semantics": "negation-as-absence over the current state",
+		"temporal_state_semantics": "general temporal progress is maintained by an external DFA controller",
 		"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
 		"primitive_precondition_semantics": (
 			"primitive action preconditions are checked at execution time; "
-			"violations produce primitive-precondition counterexamples"
+			"violations produce validation diagnostics"
 		),
-	}
-	assert serialized["goal_descriptor_usage"] == {
-		"context_descriptors": [
-			{
-				"descriptor": "goal_done(X)",
-				"pddl_predicate": "done",
-				"arguments": ["X"],
-				"plan_name": "g_satisfy_goal_done",
-				"negated": False,
-			},
-		],
-		"mutable_locations": [],
-		"read_only": True,
 	}
 
 
@@ -82,12 +66,12 @@ def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 		domain_name="generic",
 		plans=(
 			AgentSpeakPlan(
-				plan_name="g_satisfy_goal_done",
-				trigger=AgentSpeakTrigger("achievement_goal", "g"),
-				context=("goal_done(X)", "ready_done(X)", "not done(X)"),
+				plan_name="g_query_1_progress_1",
+				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
+				context=("ready(X)", "not done(X)"),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ("X",)),
-					AgentSpeakBodyStep("subgoal", "g"),
+					AgentSpeakBodyStep("subgoal", "g_query_1"),
 				),
 			),
 			AgentSpeakPlan(
@@ -110,16 +94,16 @@ def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 	assert report.violations == ()
 
 
-def test_domain_level_library_contract_rejects_mutable_ready_contexts() -> None:
+def test_domain_level_library_contract_rejects_undeclared_goal_descriptor_convention() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
-		initial_beliefs=("ready_done(X)",),
+		initial_beliefs=("goal_done(X)",),
 		plans=(
 			AgentSpeakPlan(
-				plan_name="bad_ready_head",
-				trigger=AgentSpeakTrigger("achievement_goal", "ready_done", ("X",)),
+				plan_name="bad_goal_head",
+				trigger=AgentSpeakTrigger("achievement_goal", "goal_done", ("X",)),
 				context=(),
-				body=(AgentSpeakBodyStep("subgoal", "ready_done", ("X",)),),
+				body=(AgentSpeakBodyStep("subgoal", "goal_done", ("X",)),),
 			),
 		),
 	)
@@ -130,18 +114,18 @@ def test_domain_level_library_contract_rejects_mutable_ready_contexts() -> None:
 	)
 
 	assert report.passed is False
-	assert report.checked_layers["goal_descriptors_read_only"] is False
-	assert any("ready context" in violation for violation in report.violations)
+	assert report.checked_layers["declared_pddl_symbols"] is False
+	assert any("goal_done" in violation for violation in report.violations)
 
 
-def test_domain_level_library_contract_respects_declared_ready_prefix_predicates() -> None:
+def test_domain_level_library_contract_accepts_declared_predicate_with_status_name() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
 		plans=(
 			AgentSpeakPlan(
-				plan_name="ready_done_via_prepare",
-				trigger=AgentSpeakTrigger("achievement_goal", "ready_done", ("X",)),
-				context=("ready_done(X)",),
+				plan_name="prepared_via_prepare",
+				trigger=AgentSpeakTrigger("achievement_goal", "prepared", ("X",)),
+				context=("prepared(X)",),
 				body=(AgentSpeakBodyStep("action", "prepare", ("X",)),),
 			),
 		),
@@ -149,12 +133,11 @@ def test_domain_level_library_contract_respects_declared_ready_prefix_predicates
 
 	report = audit_domain_level_library_contract(
 		plan_library,
-		declared_predicates=("ready_done",),
+		declared_predicates=("prepared",),
 		declared_actions=("prepare",),
 	)
 
 	assert report.passed is True
-	assert report.checked_layers["goal_descriptors_read_only"] is True
 	assert report.checked_layers["declared_pddl_symbols"] is True
 
 
@@ -190,7 +173,7 @@ def test_domain_level_library_contract_rejects_undeclared_pddl_symbols() -> None
 			AgentSpeakPlan(
 				plan_name="bad_head",
 				trigger=AgentSpeakTrigger("achievement_goal", "unknown_head", ("X",)),
-				context=("goal_done(X)", "not unknown_context(X)"),
+				context=("not unknown_context(X)",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "unknown_subgoal", ("X",)),
 					AgentSpeakBodyStep("action", "unknown_action", ("X",)),
@@ -222,7 +205,7 @@ def test_domain_level_library_contract_rejects_wrong_pddl_arities() -> None:
 			AgentSpeakPlan(
 				plan_name="bad_arities",
 				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X", "Y")),
-				context=("goal_done(X, Y)", "ready"),
+				context=("done(X, Y)", "ready"),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ()),
 					AgentSpeakBodyStep("action", "finish", ("X", "Y")),
@@ -294,7 +277,6 @@ def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() ->
 	assert report.passed is False
 	assert report.checked_layers["no_initial_beliefs"] is False
 	assert report.checked_layers["no_synthetic_names"] is False
-	assert report.checked_layers["goal_descriptors_read_only"] is False
 	assert report.checked_layers["lifted_plan_heads"] is False
 	assert report.checked_layers["lifted_body_calls"] is False
 	assert report.checked_layers["lifted_contexts"] is False
@@ -302,7 +284,6 @@ def test_domain_level_library_contract_rejects_synthetic_or_grounded_output() ->
 	assert report.checked_layers["context_subset"] is False
 	assert any("Synthetic name" in violation for violation in report.violations)
 	assert any("grounded argument" in violation for violation in report.violations)
-	assert any("goal descriptor" in violation for violation in report.violations)
 	assert any("unsupported body step kind" in violation for violation in report.violations)
 	assert any("unsupported context expression" in violation for violation in report.violations)
 

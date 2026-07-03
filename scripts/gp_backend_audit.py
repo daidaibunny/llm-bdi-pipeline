@@ -31,7 +31,6 @@ from domain_level_planning.moose_policy_adapter import (
 	policy_program_from_moose_readable_policy,
 )
 from domain_level_planning.policy_program import policy_program_from_sketch_policy
-from domain_level_planning.sketch_pipeline import compile_learner_sketch_policy_to_asl
 from plan_library.rendering import render_plan_library_asl
 
 
@@ -85,7 +84,6 @@ def main() -> int:
 			"moose-readable-summary",
 			"moose-readable-compile-asl",
 			"learner-sketches-command",
-			"learner-sketches-compile-asl",
 			"learner-sketches-summary",
 			"learning-general-policies-command",
 			"learning-general-policies-docker-build-command",
@@ -142,26 +140,8 @@ def main() -> int:
 	)
 	parser.add_argument(
 		"--experiment",
-		choices=(
-			"blocks_4_clear_0",
-			"blocks_4_clear_1",
-			"blocks_4_clear_2",
-			"blocks_4_on_0",
-			"blocks_4_on_1",
-			"blocks_4_on_2",
-			"blocks_4_0",
-			"blocks_4_1",
-			"blocks_4_2",
-			"gripper_0",
-			"miconic_0",
-			"logistics_0",
-			"childsnack_0",
-			"visitall_0",
-			"ferry_0",
-			"all",
-		),
 		default="all",
-		help="Official learner-sketches Blocksworld experiment to print or summarize.",
+		help="Backend experiment name to print or summarize, or 'all'.",
 	)
 	parser.add_argument("--proxy", help="Optional HTTP/HTTPS proxy for GitHub access.")
 	parser.add_argument(
@@ -247,9 +227,6 @@ def main() -> int:
 			max_num_instances=args.max_num_instances,
 			unsafe_direct=args.unsafe_direct,
 		)
-		return 0
-	if args.command == "learner-sketches-compile-asl":
-		compile_learner_sketches_asl(args.backend_root, experiment=args.experiment)
 		return 0
 	if args.command == "learner-sketches-summary":
 		print_learner_sketches_summary(args.backend_root, experiment=args.experiment)
@@ -398,7 +375,8 @@ def print_backend_usage(root: Path) -> None:
 		print(
 			"  consumption: "
 			f"{entry['current_consumption_role']['consumption_mode']}; "
-			f"consumed={entry['current_consumption_role']['consumed_by_synthesis']}"
+			"atomic_library="
+			f"{entry['current_consumption_role']['consumed_by_atomic_library']}"
 		)
 		usage = tuple(str(item) for item in entry.get("usage_entrypoints") or ())
 		if usage:
@@ -751,15 +729,20 @@ def print_learner_sketches_summary(root: Path, *, experiment: str) -> None:
 			if raw_policy_file.exists()
 			else None
 		)
-		binding_status = _learner_sketches_binding_status(
-			domain_file=config.domain_file,
+		program = policy_program_from_sketch_policy(
+			policy=policy,
+			domain_name=config.domain_name,
+			source_name=config.name,
+			backend_name="learner-sketches",
 			policy_file=policy_file,
 		)
 		print(
 			f"{config.name}: present; width={config.width}; "
 			f"features={len(policy.features)}; rules={len(policy.parsed_rules)}; "
 			f"raw_rules={len(raw_policy.parsed_rules) if raw_policy else 'unknown'}; "
-			f"policy={policy_file}; {binding_status}",
+			f"policy={policy_file}; policy_program=ok; "
+			f"backend={program.backend_name}; "
+			"atomic_asl_compiler=pending_verified_adapter",
 		)
 		for feature_id, feature_repr in policy.features.items():
 			print(f"  feature {feature_id}: {feature_repr}")
@@ -833,29 +816,6 @@ def print_learning_general_policies_summary(
 			print(f"  rule {rule.name}: if {conditions} then {effects}")
 
 
-def compile_learner_sketches_asl(root: Path, *, experiment: str) -> None:
-	for config in _selected_learner_sketches_experiments(root, experiment):
-		policy_file = config.workspace / "output" / f"sketch_minimized_{config.width}.txt"
-		if not policy_file.exists():
-			print(f"{config.name}: missing; expected={policy_file}")
-			continue
-		output_file = config.workspace / "output" / f"sketch_minimized_{config.width}.asl"
-		result = compile_learner_sketch_policy_to_asl(
-			domain_file=config.domain_file,
-			policy_file=policy_file,
-		)
-		from plan_library.rendering import render_plan_library_asl
-
-		output_file.write_text(
-			render_plan_library_asl(result.plan_library),
-			encoding="utf-8",
-		)
-		print(
-			f"{config.name}: compiled; plans={len(result.plan_library.plans)}; "
-			f"output={output_file}",
-		)
-
-
 def print_d2l_docker_commands(root: Path) -> None:
 	backend = _backend_definition("d2l")
 	manifest = discover_backend_manifest(
@@ -897,20 +857,6 @@ def print_policy_summary(policy_file: Path) -> None:
 		print(f"feature {feature_id}: {feature_repr}")
 	for rule in policy.rules:
 		print(rule)
-
-
-def _learner_sketches_binding_status(*, domain_file: Path, policy_file: Path) -> str:
-	try:
-		result = compile_learner_sketch_policy_to_asl(
-			domain_file=domain_file,
-			policy_file=policy_file,
-		)
-	except Exception as error:
-		return f"binding=blocked ({error})"
-	return (
-		f"binding=ok; plans={len(result.plan_library.plans)}; "
-		f"unsupported_features={len(result.unsupported_features)}"
-	)
 
 
 def _blocksworld_smoke_config() -> SmokeConfig:

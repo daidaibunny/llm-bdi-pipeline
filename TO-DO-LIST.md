@@ -39,14 +39,14 @@ literal semantics.
 
 | ID | Requirement | Status | Evidence / Next Step |
 | --- | --- | --- | --- |
-| A1 | Replace class-based backend routing on the main path with atomic template backend selection. | Implemented first pass | `src/domain_level_planning/atomic_backend_selector.py` selects from training goal templates, not benchmark class ids. `run_domain_level_experiment` now reports `atomic_template_backend_decision`; registry rows use `goal_property_group_id` only for evaluation coverage. |
+| A1 | Replace class-based backend routing and old in-repo generalized-planning synthesis on the main path with atomic template backend selection. | Implemented | `src/domain_level_planning/atomic_backend_selector.py` selects from training goal templates, not benchmark class ids. Old schema synthesis, conjunctive-goal ordering/refinement, experiment matrix runner, Fast Downward transition planning, and language-model Input helpers have been removed from public code. Registry rows use goal-property groups only for evaluation coverage. |
 | A2 | Use MOOSE as the first positive singleton-goal backend candidate. | Implemented for artifact path | Selector chooses MOOSE first when present. `src/domain_level_planning/moose_policy_adapter.py` parses official `policy --dump-policy` readable artifacts into `LiftedPolicyProgram` and lifted ASL atomic plans. `scripts/gp_backend_audit.py moose-atomic-command` prints a guarded train+dump command, and `moose-readable-compile-asl` materializes `plan_library.json`, `plan_library.asl`, and metadata from the readable artifact. Next: run selected-domain MOOSE smoke jobs only under an explicit runtime budget. |
-| A3 | Do not claim negative literal template support without evidence. | Implemented at selector and progress-boundary | Negative goal facts return `negative_literal_template_not_supported`. Negative DFA waiting guards are allowed as automaton structure; negative progress literals still fail unless a backend later supplies a validated negative atomic template. |
+| A3 | Do not claim negative literal template support without evidence. | Implemented at selector and progress-boundary | Negative training goal items return `negative_literal_template_not_supported`. Negative DFA waiting guards are allowed as automaton structure; negative progress literals still fail unless a backend later supplies a validated negative atomic template. |
 | A4 | Add singleton-literal DFA validation for the Input handoff. | Implemented first pass | `validate_singleton_literal_dfa` rejects conjunctive/disjunctive guards, undeclared predicates, wrong arities, malformed transition records, and optionally unsupported negative literals. Temporal appending allows negative waiting guards but rejects negative progress literals. Next: wire logger events around LTLf-to-DFA execution failures. |
 | A5 | Append query-specific temporal goals to a domain ASL library. | Implemented with explicit controller boundary | `append_temporal_goal_to_library` appends `+!g_query` plans for positive progress literals. `append_lifted_temporal_goal_case_to_library` connects lifted LTLf cases to a DFA builder. It records `requires_external_dfa_state=true` so the paper does not claim pure ASL context selection is sufficient for arbitrary DFA state. |
 | A6 | Restore/refactor historical logger into the new pipeline. | Implemented first pass | `src/execution_logging/execution_logger.py` restores structured JSON, human log, and payload externalization without HTN/HDDL imports. Tests: `tests/evaluation/test_execution_logger.py`. |
 | A7 | Restore/refactor historical LTLf JSON schema and prompts only as Input interface references. | Implemented at handoff boundary | `src/domain_level_planning/lifted_ltlf_goal_schema.py` parses lifted LTLf JSON with atoms and bindings. Historical prompt generation stays outside this repository because the Input component is owned separately. |
-| A8 | Remove stale 12-family routing language from current path, tests, registry, and paper text. | Implemented for current path | `scripts/materialize_achievement_benchmarks.py`, `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, focused tests, and backend consumption roles now use six selected domains and goal-property groups. Historical schema-derived synthesis modules remain only as legacy diagnostic code; current paper artifacts must not cite them as the main method. |
+| A8 | Remove stale 12-family routing language and old self-synthesis implementation from current path, tests, registry, and paper text. | Implemented | `scripts/materialize_achievement_benchmarks.py`, `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, focused tests, and backend consumption roles now use six selected domains and goal-property groups. Historical schema-derived synthesis, sketch-to-`+!g` compilation, planner-trace transition modules, DFA-to-`goal_` adapter code, and old `goal_` descriptor semantics are no longer retained as diagnostic code in `src`. |
 | A9 | Materialize the six selected domains with deterministic splits. | Implemented | `uv run python scripts/materialize_achievement_benchmarks.py` rebuilt `src/domains` with `ferry`, `miconic`, `gripper`, `logistics`, `blocks`, and `8puzzle-1tile`; each uses `floor(2/3 * N)` train and remaining test. |
 | A10 | Preserve current PDDL-only and no synthetic achievement-name constraints. | Implemented for generated current artifacts | New atomic and temporal append code emits no `achieve_*`, `transition_*`, or `dfa_state` names. It appends `g_query` names by design as query-specific top-level temporal wrappers. |
 
@@ -54,9 +54,11 @@ literal semantics.
 
 | Check | Result |
 | --- | --- |
-| Atomic selector tests | `3 passed` with `uv run pytest tests/domain_level_planning/test_atomic_backend_selector.py`. |
-| Temporal appender tests | `5 passed` with `uv run pytest tests/domain_level_planning/test_temporal_goal_appender.py`. |
-| Lifted LTLf schema tests | `2 passed` with `uv run pytest tests/domain_level_planning/test_lifted_ltlf_goal_schema.py`. |
+| Full Python test suite | `94 passed, 2 warnings` with `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q`. |
+| Final artifact validation | `checks=26` with `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only`. |
+| Atomic selector tests | Included in full suite; selector only chooses MOOSE as implemented atomic ASL compiler and refuses unverified fallback compilers. |
+| Temporal appender tests | Included in full suite; validates lifted atom restoration, singleton transition guards, negative waiting guards, and negative progress rejection. |
+| Lifted LTLf schema tests | Included in full suite; validates lifted atom/binding JSON handoff. |
 | Logger tests | `2 passed` with `uv run pytest tests/evaluation/test_execution_logger.py`. |
 | MOOSE readable policy adapter tests | `4 passed` with `uv run pytest tests/domain_level_planning/test_moose_policy_adapter.py`. |
 | MOOSE readable artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry` reports `rules=5`, `modules=5`, `asl_plans=5`. |
@@ -104,13 +106,6 @@ uv run python src/main.py append-lifted-temporal-goal \
   --output-root artifacts/domain_libraries/blocks
 ```
 
-Historical assets to inspect while restoring temporal/logging support:
-
-```bash
-git show f6a5d00:src/execution_logging/execution_logger.py
-git show f6a5d00:src/execution_logging/artifacts.py
-git show f6a5d00:src/temporal_specification/ltlf_dataset_generation.py
-git show f6a5d00:src/evaluation/goal_grounding/prompts.py
-git show fcc9011:src/evaluation/temporal_compilation/ltlf_to_dfa.py
-git show fcc9011:src/evaluation/temporal_compilation/dfa_builder.py
-```
+Historical restoration references are no longer part of the active task list.
+Current temporal input is the validated lifted LTLf JSON interface in
+`src/domain_level_planning/lifted_ltlf_goal_schema.py`.

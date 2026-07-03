@@ -155,13 +155,6 @@ class AchievementBenchmarkRegistry:
 			source_key="eval_problem_set",
 			target_prefix="eval",
 		)
-		_apply_problem_set(
-			rendered,
-			record=record,
-			experiment=experiment,
-			source_key="counterexample_problem_set",
-			target_prefix="counterexample",
-		)
 		_apply_external_sketch_sources(rendered, record=record, experiment=experiment)
 		baseline_group = str(experiment.pop("baseline_group", "") or "")
 		if baseline_group:
@@ -326,7 +319,7 @@ def _validate_experiment(
 		raise ValueError(
 			f"planned benchmark {record.domain_id!r} cannot declare experiments.",
 		)
-	for key in ("train_problem_set", "eval_problem_set", "counterexample_problem_set"):
+	for key in ("train_problem_set", "eval_problem_set"):
 		if key in raw_experiment:
 			problem_set = str(raw_experiment[key])
 			problem_sets = dict(record.payload.get("problem_sets") or {})

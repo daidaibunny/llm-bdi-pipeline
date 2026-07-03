@@ -16,37 +16,15 @@ __all__ = [
 	"LibraryValidationRecord",
 	"PlanGenerationSummary",
 	"PlanLibrary",
-	"PlanLibraryArtifactBundle",
-	"PlanLibraryGenerationPipeline",
 	"PlanLibrarySetResult",
-	"build_high_level_plan_library",
-	"build_high_level_plan_library_from_dfa",
 	"build_library_validation_record",
 	"deduplicate_plan_library",
-	"load_plan_library_artifact_bundle",
-	"persist_plan_library_artifact_bundle",
 	"plan_fingerprint",
 	"render_plan_library_asl",
 ]
 
 
 def __getattr__(name: str) -> Any:
-	if name in {
-		"PlanLibraryArtifactBundle",
-		"load_plan_library_artifact_bundle",
-		"persist_plan_library_artifact_bundle",
-	}:
-		from .artifacts import (
-			PlanLibraryArtifactBundle,
-			load_plan_library_artifact_bundle,
-			persist_plan_library_artifact_bundle,
-		)
-
-		return {
-			"PlanLibraryArtifactBundle": PlanLibraryArtifactBundle,
-			"load_plan_library_artifact_bundle": load_plan_library_artifact_bundle,
-			"persist_plan_library_artifact_bundle": persist_plan_library_artifact_bundle,
-		}[name]
 	if name in {
 		"AgentSpeakBodyStep",
 		"AgentSpeakPlan",
@@ -71,20 +49,6 @@ def __getattr__(name: str) -> Any:
 			"LibraryValidationRecord": LibraryValidationRecord,
 			"PlanGenerationSummary": PlanGenerationSummary,
 			"PlanLibrary": PlanLibrary,
-		}[name]
-	if name == "PlanLibraryGenerationPipeline":
-		from .pipeline import PlanLibraryGenerationPipeline
-
-		return PlanLibraryGenerationPipeline
-	if name in {"build_high_level_plan_library", "build_high_level_plan_library_from_dfa"}:
-		from .dfa_high_level import (
-			build_high_level_plan_library,
-			build_high_level_plan_library_from_dfa,
-		)
-
-		return {
-			"build_high_level_plan_library": build_high_level_plan_library,
-			"build_high_level_plan_library_from_dfa": build_high_level_plan_library_from_dfa,
 		}[name]
 	if name == "render_plan_library_asl":
 		from .rendering import render_plan_library_asl

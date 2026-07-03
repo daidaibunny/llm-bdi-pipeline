@@ -309,16 +309,8 @@ def validate_generated_asl_library(plan_library: PlanLibrary) -> None:
 	"""Validate the AgentSpeak(L) subset emitted by this renderer."""
 
 	for belief in plan_library.initial_beliefs:
-		_reject_goal_descriptor_in_mutable_position(
-			symbol=_atom_symbol(belief),
-			position=f"initial belief {belief!r}",
-		)
 		_render_atom(belief)
 	for plan in plan_library.plans:
-		_reject_goal_descriptor_in_mutable_position(
-			symbol=plan.trigger.symbol,
-			position=f"plan trigger {plan.plan_name!r}",
-		)
 		_call(plan.trigger.symbol, tuple(_raw_argument(argument) for argument in plan.trigger.arguments))
 		for context in plan.context:
 			_render_context_expression(context)
@@ -333,34 +325,4 @@ def validate_generated_asl_library(plan_library: PlanLibrary) -> None:
 				raise ValueError(
 					f"Invalid AgentSpeak body step kind {step.kind!r} in plan {plan.plan_name!r}.",
 				)
-			_reject_goal_descriptor_body_step(plan.plan_name, step)
 			_call(step.symbol, step.arguments)
-
-
-def _reject_goal_descriptor_body_step(plan_name: str, step: AgentSpeakBodyStep) -> None:
-	if not _is_goal_descriptor_symbol(step.symbol):
-		return
-	_reject_goal_descriptor_in_mutable_position(
-		symbol=step.symbol,
-		position=f"{step.kind} body step in plan {plan_name!r}",
-	)
-
-
-def _reject_goal_descriptor_in_mutable_position(*, symbol: str, position: str) -> None:
-	if not _is_goal_descriptor_symbol(symbol):
-		return
-	raise ValueError(
-		"Read-only goal descriptor atoms may appear only in AgentSpeak contexts; "
-		f"found goal descriptor {symbol!r} in {position}.",
-	)
-
-
-def _is_goal_descriptor_symbol(symbol: str) -> bool:
-	return str(symbol or "").strip().startswith("goal_")
-
-
-def _atom_symbol(atom: str) -> str:
-	text = str(atom or "").strip()
-	if "(" not in text:
-		return text
-	return text.split("(", 1)[0].strip()

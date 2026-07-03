@@ -110,9 +110,17 @@ PINNED_BACKENDS = (
 AUDIT_ONLY_CONSUMPTION_ROLE = {
 	"drives_atomic_templates": False,
 	"drives_temporal_wrapper": False,
-	"consumed_by_synthesis": False,
+	"consumed_by_atomic_library": False,
 	"consumption_mode": "audit_or_baseline_only",
 	"blocking_gap": "no_verified_lifted_policy_program_adapter",
+}
+
+ATOMIC_COMPILER_PENDING_CONSUMPTION_ROLE = {
+	"drives_atomic_templates": False,
+	"drives_temporal_wrapper": False,
+	"consumed_by_atomic_library": False,
+	"consumption_mode": "candidate_policy_artifact_pending_atomic_asl_compiler",
+	"blocking_gap": "no_verified_atomic_literal_asl_compiler_for_this_backend",
 }
 
 CAPABILITY_EXACT_REPRODUCTION_READY = "confirmed_exact_reproduction_ready"
@@ -181,14 +189,17 @@ BACKEND_RESEARCH_PROFILES = {
 		"current_consumption_role": {
 			"drives_atomic_templates": True,
 			"drives_temporal_wrapper": False,
-			"consumed_by_synthesis": True,
+			"consumed_by_atomic_library": True,
 			"consumption_mode": "moose_readable_policy_atomic_templates",
 			"blocking_gap": None,
 		},
 	},
 	"learner-sketches": {
 		"paper_role": "serialized-width sketch learner for qualitative DLPlan policies",
-		"preferred_use": "external learned sketch evidence for conservative feature binding",
+		"preferred_use": (
+			"candidate external sketch backend; current repository parses and "
+			"summarizes policies but does not compile them into atomic ASL"
+		),
 		"input_artifacts": (
 			"PDDL domain",
 			"training PDDL problems",
@@ -200,12 +211,12 @@ BACKEND_RESEARCH_PROFILES = {
 			"minimized_policy",
 		),
 		"reusable_evidence": (
-			"atomic-template sketch evidence after safe binding",
+			"qualitative sketch-policy artifact",
 			"DLPlan feature vocabulary",
 			"qualitative feature conditions and effects",
 		),
 		"known_failure_modes": (
-			"unsupported_dlplan_feature_binding",
+			"no_verified_atomic_literal_asl_compiler",
 			"vocabulary_mismatch",
 			"missing_policy_artifact",
 		),
@@ -218,7 +229,6 @@ BACKEND_RESEARCH_PROFILES = {
 			"uv run python scripts/gp_backend_audit.py install-deps",
 			"uv run python scripts/gp_backend_audit.py learner-sketches-command --experiment <experiment> --timeout-seconds 1800",
 			"uv run python scripts/gp_backend_audit.py learner-sketches-summary --experiment <experiment>",
-			"uv run python scripts/gp_backend_audit.py learner-sketches-compile-asl --experiment <experiment>",
 		),
 		"paper_code_capability": {
 			"status": CAPABILITY_PAPER_SOURCE_COMPLETE,
@@ -232,17 +242,14 @@ BACKEND_RESEARCH_PROFILES = {
 				"this lightweight audit",
 			),
 		},
-		"current_consumption_role": {
-			"drives_atomic_templates": True,
-			"drives_temporal_wrapper": False,
-			"consumed_by_synthesis": True,
-			"consumption_mode": "parsed_bound_policy_rules_for_atomic_templates",
-			"blocking_gap": None,
-		},
+		"current_consumption_role": ATOMIC_COMPILER_PENDING_CONSUMPTION_ROLE,
 	},
 	"h-policy-learner": {
 		"paper_role": "hierarchical policy learner for reusable generalized policies",
-		"preferred_use": "verified hierarchical sketch evidence when artifacts use the supported DLPlan policy dialect",
+		"preferred_use": (
+			"candidate hierarchical-policy backend; current repository audits "
+			"paper code but has no verified atomic ASL compiler"
+		),
 		"input_artifacts": (
 			"PDDL-like benchmark tasks",
 			"paper experiment scripts",
@@ -254,7 +261,7 @@ BACKEND_RESEARCH_PROFILES = {
 		"reusable_evidence": (
 			"policy-reuse representation baseline",
 			"hierarchical policy language comparison",
-			"hierarchical atomic-template candidates when feature bindings are safe",
+			"hierarchical atomic-template candidates after a future compiler adapter",
 		),
 		"known_failure_modes": (
 			"missing_backend",
@@ -285,17 +292,14 @@ BACKEND_RESEARCH_PROFILES = {
 				"artifact-to-ASL parser validation remains a project-side adapter task",
 			),
 		},
-		"current_consumption_role": {
-			"drives_atomic_templates": True,
-			"drives_temporal_wrapper": False,
-			"consumed_by_synthesis": True,
-			"consumption_mode": "verified_hierarchical_atomic_policy_rules",
-			"blocking_gap": None,
-		},
+		"current_consumption_role": ATOMIC_COMPILER_PENDING_CONSUMPTION_ROLE,
 	},
 	"d2l": {
 		"paper_role": "description-logic policy learner baseline",
-		"preferred_use": "verified D2L transition-policy evidence when artifacts use the supported D2L text dialect",
+		"preferred_use": (
+			"candidate description-logic policy backend; current repository parses "
+			"safe text-policy subsets but has no verified atomic ASL compiler"
+		),
 		"input_artifacts": (
 			"paper benchmark selector",
 			"Docker/apptainer-compatible environment",
@@ -307,7 +311,7 @@ BACKEND_RESEARCH_PROFILES = {
 		"reusable_evidence": (
 			"description-logic feature templates",
 			"generalized-policy baseline behavior",
-			"atomic transition-policy candidates after safe DLPlan conversion",
+			"atomic transition-policy candidates after a future compiler adapter",
 		),
 		"known_failure_modes": (
 			"pin_mismatch",
@@ -337,21 +341,16 @@ BACKEND_RESEARCH_PROFILES = {
 				"full table has not been re-run by this lightweight audit",
 			),
 		},
-		"current_consumption_role": {
-			"drives_atomic_templates": True,
-			"drives_temporal_wrapper": False,
-			"consumed_by_synthesis": True,
-			"consumption_mode": "verified_d2l_atomic_text_policy_rules",
-			"blocking_gap": None,
-			},
-		},
+		"current_consumption_role": ATOMIC_COMPILER_PENDING_CONSUMPTION_ROLE,
+	},
 	"learner-policies-from-examples": {
 		"paper_role": (
 			"KR 2025 generalized-policy learner from examples with feature-pool "
 			"generation and structural termination checks"
 		),
 		"preferred_use": (
-			"primary policy-first backend for learned LiftedPolicyProgram artifacts"
+			"candidate policy-first backend for learned LiftedPolicyProgram "
+			"artifacts; ASL compilation remains a verified-adapter gap"
 		),
 		"input_artifacts": (
 			"PDDL domain",
@@ -369,10 +368,10 @@ BACKEND_RESEARCH_PROFILES = {
 			"domain-independent feature generation",
 			"hitting-set-style policy selection",
 			"structural termination evidence",
-			"policy-first artifact before ASL compilation",
+			"policy-first artifact before atomic ASL compilation",
 		),
 		"known_failure_modes": (
-			"unsupported_dlplan_feature_binding",
+			"no_verified_atomic_literal_asl_compiler",
 			"missing_policy_artifact",
 			"no_policy_learned",
 			"resource_limit_exceeded",
@@ -403,13 +402,7 @@ BACKEND_RESEARCH_PROFILES = {
 				"is not part of the lightweight audit",
 			),
 		},
-		"current_consumption_role": {
-			"drives_atomic_templates": True,
-			"drives_temporal_wrapper": False,
-			"consumed_by_synthesis": True,
-			"consumption_mode": "policy_first_atomic_lifted_program",
-			"blocking_gap": None,
-		},
+		"current_consumption_role": ATOMIC_COMPILER_PENDING_CONSUMPTION_ROLE,
 	},
 	"pg3": {
 		"paper_role": "IJCAI 2022 policy-guided generalized policy generation",
@@ -1174,14 +1167,14 @@ def _backend_matrix_entry(manifest: BackendManifest) -> dict[str, object]:
 
 
 def backend_consumption_role(name: str) -> dict[str, object]:
-	"""Return whether a paper backend may currently drive synthesis."""
+	"""Return whether a backend may currently drive atomic ASL library generation."""
 
 	profile = BACKEND_RESEARCH_PROFILES.get(str(name or "").strip())
 	if profile is None:
 		return {
 			"drives_atomic_templates": False,
 			"drives_temporal_wrapper": False,
-			"consumed_by_synthesis": False,
+			"consumed_by_atomic_library": False,
 			"consumption_mode": "unknown_backend_audit_only",
 			"blocking_gap": "no_pinned_backend_profile_or_verified_adapter",
 		}
