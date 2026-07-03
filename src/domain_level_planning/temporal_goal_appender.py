@@ -17,8 +17,10 @@ from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
+from utils.symbol_normalizer import SymbolNormalizer
 from utils.pddl_parser import PDDLParser
 
+from .lifted_ltlf_goal_schema import LTLfAtomSpec
 from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 
@@ -245,7 +247,10 @@ def append_lifted_temporal_goal_case_to_library(
 ) -> tuple[PlanLibrary, Mapping[str, Any]]:
 	"""Compile one lifted LTLf goal case to DFA and append it to a library."""
 
-	dfa_payload = dfa_builder.build(goal_case.ltlf_formula)
+	dfa_payload = _rewrite_dfa_payload_labels_from_lifted_atoms(
+		dfa_builder.build(goal_case.ltlf_formula),
+		goal_case=goal_case,
+	)
 	updated = append_temporal_goal_to_library(
 		plan_library=plan_library,
 		goal_name=goal_case.goal_name,
@@ -253,6 +258,129 @@ def append_lifted_temporal_goal_case_to_library(
 		domain_file=domain_file,
 	)
 	return updated, dfa_payload
+
+
+def _rewrite_dfa_payload_labels_from_lifted_atoms(
+	dfa_payload: Mapping[str, Any],
+	*,
+	goal_case: LiftedLTLfGoalCase,
+) -> dict[str, Any]:
+	"""Restore LTLf propositional labels into lifted PDDL literal labels."""
+
+	symbol_map = _lifted_atom_symbol_map(goal_case.atoms)
+	if not symbol_map:
+		return dict(dfa_payload)
+	rewritten_transitions: list[dict[str, Any]] = []
+	rewrite_count = 0
+	for transition in tuple(dfa_payload.get("guarded_transitions") or ()):
+		if not isinstance(transition, Mapping):
+			rewritten_transitions.append(dict(transition) if isinstance(transition, dict) else transition)
+			continue
+		raw_label = str(transition.get("raw_label") or "true").strip() or "true"
+		rewritten_label = _rewrite_guard_label(raw_label, symbol_map=symbol_map)
+		rewrite_count += int(rewritten_label != raw_label)
+		rewritten_transitions.append(
+			{
+				**dict(transition),
+				"raw_label": rewritten_label,
+				"original_raw_label": raw_label if rewritten_label != raw_label else transition.get("original_raw_label"),
+			},
+		)
+	payload = dict(dfa_payload)
+	payload["guarded_transitions"] = rewritten_transitions
+	payload["lifted_atom_binding"] = {
+		"atom_count": len(goal_case.atoms),
+		"rewritten_transition_count": rewrite_count,
+		"symbols": sorted(
+			{
+				key
+				for key in symbol_map
+				if key and not key.startswith("not ")
+			},
+		),
+	}
+	return payload
+
+
+def _lifted_atom_symbol_map(atoms: Sequence[LTLfAtomSpec]) -> dict[str, str]:
+	normalizer = SymbolNormalizer()
+	symbol_map: dict[str, str] = {}
+	for atom in tuple(atoms or ()):
+		predicate = str(atom.predicate or "").strip()
+		arguments = tuple(str(argument).strip() for argument in tuple(atom.args or ()) if str(argument).strip())
+		if not predicate:
+			continue
+		pddl_atom = _call(predicate, arguments)
+		candidates = {
+			str(atom.symbol or "").strip(),
+			_symbol_for(predicate, arguments),
+			pddl_atom,
+			pddl_atom.replace(" ", ""),
+		}
+		if arguments:
+			candidates.add(normalizer.create_propositional_symbol(predicate, arguments))
+		for candidate in tuple(candidates):
+			_register_symbol_mapping(symbol_map, candidate, pddl_atom)
+	return symbol_map
+
+
+def _register_symbol_mapping(symbol_map: dict[str, str], symbol: str, pddl_atom: str) -> None:
+	key = str(symbol or "").strip()
+	if not key:
+		return
+	symbol_map[key] = pddl_atom
+	symbol_map[key.lower()] = pddl_atom
+
+
+def _rewrite_guard_label(raw_label: str, *, symbol_map: Mapping[str, str]) -> str:
+	text = str(raw_label or "").strip() or "true"
+	if text.lower() in {"true", "false"}:
+		return text
+	parts = _split_top_level_conjunction(text)
+	if len(parts) <= 1:
+		return _rewrite_literal_text(text, symbol_map=symbol_map)
+	return " & ".join(
+		_rewrite_literal_text(part, symbol_map=symbol_map)
+		for part in parts
+	)
+
+
+def _rewrite_literal_text(raw_literal: str, *, symbol_map: Mapping[str, str]) -> str:
+	text = _strip_balanced_parentheses(str(raw_literal or "").strip())
+	if not text:
+		return text
+	polarity = ""
+	for prefix in ("not ", "!", "~"):
+		if text.lower().startswith(prefix):
+			polarity = "not "
+			text = text[len(prefix) :].strip()
+			break
+	atom_text = _strip_balanced_parentheses(text)
+	mapped_atom = symbol_map.get(atom_text) or symbol_map.get(atom_text.lower())
+	if mapped_atom is None:
+		return f"{polarity}{atom_text}" if polarity else atom_text
+	return f"{polarity}{mapped_atom}" if polarity else mapped_atom
+
+
+def _split_top_level_conjunction(label: str) -> tuple[str, ...]:
+	parts: list[str] = []
+	start = 0
+	depth = 0
+	for index, character in enumerate(str(label or "")):
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth = max(0, depth - 1)
+		elif character == "&" and depth == 0:
+			parts.append(label[start:index].strip())
+			start = index + 1
+	parts.append(str(label or "")[start:].strip())
+	return tuple(part for part in parts if part)
+
+
+def _symbol_for(predicate: str, args: Sequence[str]) -> str:
+	items = [predicate, *tuple(args or ())]
+	return "_".join(str(item).strip() for item in items if str(item).strip())
 
 
 def _temporal_progress_plans(

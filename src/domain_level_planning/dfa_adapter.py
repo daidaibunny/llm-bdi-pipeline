@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from plan_library.models import AgentSpeakBodyStep
-from temporal_specification.pddl_mapping import map_event_expression_to_pddl_context
 from utils.pddl_parser import PDDLParser
 
 
@@ -132,14 +131,7 @@ def inspect_dfa_guard_to_achievement_request(
 			rejection_reason=raw_rejection_reason,
 			message=message,
 		)
-	state_literals = tuple(
-		literal
-		for literal in map_event_expression_to_pddl_context(
-			normalized_guard,
-			domain_key=domain_key,
-		)
-		if literal and literal != "true"
-	)
+	state_literals = _pddl_context_literals_from_guard(normalized_guard)
 	if any(_is_unsupported_literal(literal) for literal in state_literals):
 		message = (
 			"DFA guard adapter currently supports positive conjunctive "
@@ -203,9 +195,76 @@ def _unsupported_raw_guard_reason(raw_guard: str) -> str | None:
 	text = str(raw_guard or "").strip().lower()
 	if text == "false":
 		return "unsupported_false_guard"
-	if "|" in str(raw_guard or ""):
+	if "|" in str(raw_guard or "") or " or " in f" {str(raw_guard or '').lower()} ":
 		return "unsupported_disjunctive_guard"
 	return None
+
+
+def _pddl_context_literals_from_guard(raw_guard: str) -> tuple[str, ...]:
+	text = str(raw_guard or "").strip()
+	if not text or text.lower() == "true":
+		return ()
+	return tuple(
+		literal
+		for literal in (
+			_normalise_literal_text(part)
+			for part in _split_top_level_conjunction(text)
+		)
+		if literal and literal != "true"
+	)
+
+
+def _split_top_level_conjunction(raw_guard: str) -> tuple[str, ...]:
+	parts: list[str] = []
+	start = 0
+	depth = 0
+	for index, character in enumerate(str(raw_guard or "")):
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth = max(0, depth - 1)
+		elif character == "&" and depth == 0:
+			parts.append(raw_guard[start:index].strip())
+			start = index + 1
+	parts.append(str(raw_guard or "")[start:].strip())
+	return tuple(part for part in parts if part)
+
+
+def _normalise_literal_text(raw_literal: str) -> str:
+	text = _strip_balanced_parentheses(str(raw_literal or "").strip())
+	polarity = ""
+	for prefix in ("not ", "!", "~"):
+		if text.lower().startswith(prefix):
+			polarity = "not "
+			text = text[len(prefix) :].strip()
+			break
+	text = _strip_balanced_parentheses(text)
+	if not text or text.lower() in {"true", "false"}:
+		return f"{polarity}{text.lower()}".strip()
+	predicate, arguments = _parse_atom(text)
+	normalised_atom = _call(predicate, arguments)
+	return f"{polarity}{normalised_atom}" if polarity else normalised_atom
+
+
+def _strip_balanced_parentheses(text: str) -> str:
+	current = str(text or "").strip()
+	while current.startswith("(") and current.endswith(")") and _outer_parentheses_wrap(current):
+		current = current[1:-1].strip()
+	return current
+
+
+def _outer_parentheses_wrap(text: str) -> bool:
+	depth = 0
+	for index, character in enumerate(text):
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+			if depth == 0 and index != len(text) - 1:
+				return False
+			if depth < 0:
+				return False
+	return depth == 0
 
 
 def _unsupported_literal_reason(literals: Sequence[str]) -> str:

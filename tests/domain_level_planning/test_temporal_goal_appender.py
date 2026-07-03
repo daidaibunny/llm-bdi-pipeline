@@ -7,6 +7,7 @@ import pytest
 from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
 from domain_level_planning.temporal_goal_appender import append_lifted_temporal_goal_case_to_library
 from domain_level_planning.temporal_goal_appender import validate_singleton_literal_dfa
+from domain_level_planning.lifted_ltlf_goal_schema import LTLfAtomSpec
 from domain_level_planning.lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
@@ -189,6 +190,41 @@ def test_append_lifted_temporal_goal_case_uses_dfa_builder(tmp_path: Path) -> No
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
 
 
+def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_blocks_domain(tmp_path)
+	library = PlanLibrary(domain_name="blocks", plans=())
+	case = LiftedLTLfGoalCase(
+		query_id="query_1",
+		goal_name="g_query_1",
+		problem_file="p01.pddl",
+		source_text="Eventually put X on Y.",
+		ltlf_formula="F(on(X,Y))",
+		atoms=(
+			# Matches the compact proposition shape produced by the LTLf encoder.
+			# The ASL append layer must restore it to the PDDL predicate atom.
+			LTLfAtomSpec("on_x_y", "on", ("X", "Y")),
+		),
+		bindings={},
+	)
+
+	updated, dfa_payload = append_lifted_temporal_goal_case_to_library(
+		plan_library=library,
+		goal_case=case,
+		domain_file=domain_file,
+		dfa_builder=_FakeEncodedDFABuilder(),
+	)
+
+	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "on(X, Y)"
+	assert dfa_payload["guarded_transitions"][0]["original_raw_label"] == "on_x_y"
+	assert updated.plans[0].context == ("not on(X, Y)",)
+	assert updated.plans[0].body == (
+		AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
+	)
+
+
 def _write_domain(tmp_path: Path) -> Path:
 	domain_file = tmp_path / "domain.pddl"
 	domain_file.write_text(
@@ -209,6 +245,21 @@ def _write_domain(tmp_path: Path) -> Path:
 	return domain_file
 
 
+def _write_blocks_domain(tmp_path: Path) -> Path:
+	domain_file = tmp_path / "blocks-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain blocks)
+		 (:requirements :strips :typing)
+		 (:types block)
+		 (:predicates (on ?x - block ?y - block) (clear ?x - block))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file
+
+
 class _FakeDFABuilder:
 	def build(self, formula: str):
 		return {
@@ -217,5 +268,17 @@ class _FakeDFABuilder:
 			"accepting_states": ["q1"],
 			"guarded_transitions": [
 				{"source_state": "q0", "target_state": "q1", "raw_label": "done(X)"},
+			],
+		}
+
+
+class _FakeEncodedDFABuilder:
+	def build(self, formula: str):
+		return {
+			"original_formula": formula,
+			"initial_state": "q0",
+			"accepting_states": ["q1"],
+			"guarded_transitions": [
+				{"source_state": "q0", "target_state": "q1", "raw_label": "on_x_y"},
 			],
 		}

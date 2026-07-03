@@ -16,7 +16,7 @@ BLOCKS_DOMAIN = "src/domains/blocks/domain.pddl"
 
 def test_dfa_guard_conjunction_becomes_goal_facts_and_subgoal_calls() -> None:
 	request = adapt_dfa_guard_to_achievement_request(
-		"do_put_on_b1_b2 & clear(b1)",
+		"on(b1,b2) & clear(b1)",
 		domain_key="blocksworld",
 		declared_predicates=PDDLParser.parse_domain(BLOCKS_DOMAIN).predicates,
 	)
@@ -38,7 +38,7 @@ def test_dfa_guard_adapter_reports_transition_metadata() -> None:
 		{
 			"source_state": "q0",
 			"target_state": "q1",
-			"raw_label": "do_put_on_b1_b2",
+			"raw_label": "on(b1,b2)",
 		},
 		domain_key="blocksworld",
 		declared_predicates=PDDLParser.parse_domain(BLOCKS_DOMAIN).predicates,
@@ -46,7 +46,7 @@ def test_dfa_guard_adapter_reports_transition_metadata() -> None:
 
 	assert request.source_state == "q0"
 	assert request.target_state == "q1"
-	assert request.raw_guard == "do_put_on_b1_b2"
+	assert request.raw_guard == "on(b1,b2)"
 	assert request.goal_facts == ("goal_on(b1, b2)",)
 	assert request.body_steps == (
 		AgentSpeakBodyStep("subgoal", "on", ("b1", "b2")),
@@ -81,7 +81,7 @@ def test_dfa_guard_adapter_ignores_true_guard() -> None:
 
 def test_dfa_guard_adapter_accepts_domain_file_for_schema_validation() -> None:
 	request = adapt_dfa_guard_to_achievement_request(
-		"do_put_on_b1_b2 & handempty",
+		"on(b1,b2) & handempty",
 		domain_key="blocksworld",
 		domain_file=BLOCKS_DOMAIN,
 	)
@@ -91,6 +91,18 @@ def test_dfa_guard_adapter_accepts_domain_file_for_schema_validation() -> None:
 		AgentSpeakBodyStep("subgoal", "on", ("b1", "b2")),
 		AgentSpeakBodyStep("subgoal", "handempty", ()),
 	)
+
+
+def test_dfa_guard_adapter_rejects_legacy_event_mapping_names() -> None:
+	diagnostic = inspect_dfa_guard_to_achievement_request(
+		"do_put_on_b1_b2",
+		domain_key="blocksworld",
+		domain_file=BLOCKS_DOMAIN,
+	)
+
+	assert diagnostic.supported is False
+	assert diagnostic.rejection_reason == "undeclared_pddl_predicate"
+	assert diagnostic.state_literals == ("do_put_on_b1_b2",)
 
 
 def test_dfa_guard_adapter_rejects_undeclared_pddl_predicates() -> None:
