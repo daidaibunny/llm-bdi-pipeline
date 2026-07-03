@@ -49,7 +49,7 @@ literal semantics.
 | A8 | Remove stale 12-family routing language and old self-synthesis implementation from current path, tests, registry, and paper text. | Implemented | `scripts/materialize_achievement_benchmarks.py`, `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, focused tests, and backend consumption roles now use six selected domains and goal-property groups. Historical schema-derived synthesis, sketch-to-`+!g` compilation, planner-trace transition modules, and old Layer C execution paths are no longer retained in `src`. The only restored DFA-era code is the guard adapter/controller diagnostic interface, which maps DFA guards to atomic achievement requests and does not generate low-level plans. |
 | A9 | Materialize the six selected domains with deterministic splits. | Implemented | `uv run python scripts/materialize_achievement_benchmarks.py` rebuilt `src/domains` with `ferry`, `miconic`, `gripper`, `logistics`, `blocks`, and `8puzzle-1tile`; each uses `floor(2/3 * N)` train and remaining test. |
 | A10 | Preserve current PDDL-only and no synthetic achievement-name constraints. | Implemented for generated current artifacts | New atomic and temporal append code emits no `achieve_*`, `transition_*`, or `dfa_state` names. It appends `g_query` names by design as query-specific top-level temporal wrappers. |
-| A11 | Maintain exactly one appendable domain ASL library per domain. | Implemented and regression-tested | `append_temporal_goal_to_library` now preserves `temporal_goal_append_history` and rejects duplicate temporal goal names with `duplicate_temporal_goal`. CLI regression test appends two queries sequentially by feeding the first output `plan_library.json` into the second append and verifies both top-level goals remain in the same ASL library. |
+| A11 | Maintain exactly one appendable domain ASL library per domain. | Implemented and regression-tested | The main CLI now resolves every maintained library to `artifacts/domain_libraries/<domain>/plan_library.{json,asl}` by default. `--library-root` can relocate the root for tests, but the domain subdirectory is canonical. `--output-root` is deprecated and must equal the canonical domain directory if provided. Append rejects non-canonical `--plan-library-file` paths, preserves `temporal_goal_append_history`, and rejects duplicate temporal goal names with `duplicate_temporal_goal`. Regression tests cover sequential append into the same file plus rejection of non-canonical output/input paths. |
 | A12 | Replace raw MOOSE macro dump with compact recursive atomic minimal literal modules when claiming final domain-level ASL quality. | Implemented for positive PDDL predicate seeds | `src/domain_level_planning/atomic_module_synthesis.py` uses MOOSE singleton predicates as evidence, then synthesizes compact recursive modules from PDDL action schemas. Blocks now compiles from the 72-rule MOOSE readable artifact into 8 lifted plans over `+!on(X,Y)` and `+!clear(X)` only. It uses schema-level producer composition, recursive support predicates, cleanup actions, and prepare branches such as `not clear(X) -> !clear(X); !on(X,Y)`. It does not expose `!holding` or `!handempty`, and it emits no grounded block names. Snapshot: `snapshots/moose_blocks_minimal_modules/`. |
 | A13 | Keep the temporal append path compatible with the new compact atomic library. | Implemented smoke | Using the compact Blocks library as input, `src/main.py append-lifted-temporal-goal` appended `query_1` and `query_2` into one maintained domain library with 19 total plans. Snapshot: `snapshots/moose_blocks_minimal_modules_appended/`. The wrapper remains query-specific and calls atomic predicate subgoals directly. |
 
@@ -57,7 +57,7 @@ literal semantics.
 
 | Check | Result |
 | --- | --- |
-| Full Python test suite | `111 passed, 2 warnings` with `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q`. |
+| Full Python test suite | `117 passed, 2 warnings` with `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q`. |
 | Ruff check | `uv run ruff check ...` passes on the current touched source, scripts, and tests. `ruff==0.15.20` is installed in the dev dependency group. |
 | Final artifact validation | `checks=26` with `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only`. |
 | Atomic selector tests | Included in full suite; selector only chooses MOOSE as implemented atomic ASL compiler and refuses unverified fallback compilers. |
@@ -70,7 +70,8 @@ literal semantics.
 | MOOSE atomic ASL artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-dir tmp/moose-atomic/ferry-library` writes a domain-level atomic `plan_library.json` and `plan_library.asl`. |
 | MOOSE Blocks raw atomic-plus-temporal smoke | Guarded MOOSE Blocks probe first4 training under `16GiB/900s` learned `72` singleton rules and compiled `72` raw MOOSE atomic ASL plans. Appending the first two probe instances as LTLf tower goals produced one maintained context-driven temporal library with `83` plans and no `teg_state` or `dfa_state` beliefs. Snapshots are under `snapshots/moose_blocks_e2e/`. This remains backend evidence, not final compact library quality. |
 | MOOSE-seeded Blocks compact module smoke | `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules --output-dir snapshots/moose_blocks_minimal_modules` writes 8 compact lifted atomic plans. |
-| Compact Blocks atomic-plus-temporal smoke | `PYTHONDONTWRITEBYTECODE=1 uv run python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocks/domain.pddl --plan-library-file snapshots/moose_blocks_minimal_modules/plan_library.json --ltlf-goal-json snapshots/moose_blocks_e2e/probe_first_two_lifted_ltlf.json --query-id query_1 --query-id query_2 --output-root snapshots/moose_blocks_minimal_modules_appended` writes one maintained 19-plan library. |
+| Compact Blocks atomic-plus-temporal smoke | The snapshot in `snapshots/moose_blocks_minimal_modules_appended/` demonstrates the ASL shape. The maintained-library path is now canonicalized by `src/main.py`; use `artifacts/domain_libraries/blocks/plan_library.asl` for the active per-domain library. |
+| Canonical single-ASL smoke | `src/main.py compile-moose-atomic-library ... --library-root tmp/canonical-domain-library-smoke` followed by `src/main.py append-lifted-temporal-goal ... --library-root tmp/canonical-domain-library-smoke` returned the same `tmp/canonical-domain-library-smoke/blocks/plan_library.asl`; `find` found exactly one ASL file under that library root. |
 | MOOSE paper audit | Local paper text confirms MOOSE decomposes training problems into singleton goal conditions and applies goal regression, making it suitable for atomic positive predicate templates. |
 
 ## Commands
@@ -110,22 +111,18 @@ uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
 
 uv run python src/main.py compile-moose-atomic-library \
   --policy-file .external/moose/exact-runs/ferry-seed0.model.readable \
-  --domain-name ferry \
-  --output-root tmp/moose-atomic/ferry-library-main
+  --domain-name ferry
 
 uv run python src/main.py compile-moose-atomic-library \
   --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
   --domain-file src/domains/blocks/domain.pddl \
   --domain-name blocks \
-  --minimal-modules \
-  --output-root snapshots/moose_blocks_minimal_modules
+  --minimal-modules
 
 uv run python src/main.py append-lifted-temporal-goal \
   --domain-file src/domains/blocks/domain.pddl \
-  --plan-library-file artifacts/domain_libraries/blocks/plan_library.json \
   --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
-  --query-id query_1 \
-  --output-root artifacts/domain_libraries/blocks
+  --query-id query_1
 ```
 
 Historical restoration references are no longer part of the active task list.

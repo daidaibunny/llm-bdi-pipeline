@@ -33,10 +33,19 @@ The current architecture has two research-facing components:
 7. Append lifted LTLf/DFA query wrappers only when each relevant DFA transition
    guard is a singleton literal over the PDDL vocabulary.
 
-Generated domain-level atomic libraries are maintained one per domain. Query
-wrappers may introduce top-level names such as `g_query_17`, but generated ASL
-must not emit synthetic names such as `achieve_*`, `transition_*`, or exposed
-`dfa_state(...)` beliefs.
+Generated domain-level libraries are maintained in one canonical directory per
+domain:
+
+```text
+artifacts/domain_libraries/<domain>/plan_library.json
+artifacts/domain_libraries/<domain>/plan_library.asl
+artifacts/domain_libraries/<domain>/artifact_metadata.json
+```
+
+The main CLI refuses non-canonical output roots and non-canonical append input
+files. Query wrappers may introduce top-level names such as `g_query_17`, but
+generated ASL must not emit synthetic names such as `achieve_*`,
+`transition_*`, or exposed `dfa_state(...)` beliefs.
 
 The older in-repository generalized-planning synthesizer and conjunctive-goal
 ordering path have been removed from the current code path. The current schema
@@ -73,6 +82,17 @@ the remaining instances are held out.
 ## Usage
 
 ```bash
+uv run python src/main.py compile-moose-atomic-library \
+  --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
+  --domain-file src/domains/blocks/domain.pddl \
+  --domain-name blocks \
+  --minimal-modules
+
+uv run python src/main.py append-lifted-temporal-goal \
+  --domain-file src/domains/blocks/domain.pddl \
+  --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
+  --query-id query_1
+
 uv run python scripts/run_final_paper_data.py \
   --output-dir tmp/paper-final-latest \
   --config-only

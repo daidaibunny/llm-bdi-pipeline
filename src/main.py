@@ -22,6 +22,11 @@ from domain_level_planning import (  # noqa: E402
 )
 from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import render_plan_library_asl  # noqa: E402
+from utils.pddl_parser import PDDLParser  # noqa: E402
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DOMAIN_LIBRARY_ROOT = PROJECT_ROOT / "artifacts" / "domain_libraries"
 
 
 def _absolute_path(path_text: str | None) -> str | None:
@@ -51,9 +56,9 @@ def build_argument_parser() -> argparse.ArgumentParser:
 		formatter_class=argparse.RawDescriptionHelpFormatter,
 		epilog="""
 Examples:
-  python src/main.py compile-moose-atomic-library --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-root artifacts/domain_libraries/ferry
-  python src/main.py compile-moose-atomic-library --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules --output-root artifacts/domain_libraries/blocks
-  python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocks/domain.pddl --plan-library-file artifacts/domain_libraries/blocks/plan_library.json --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json --query-id query_1 --output-root artifacts/domain_libraries/blocks
+  python src/main.py compile-moose-atomic-library --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry
+  python src/main.py compile-moose-atomic-library --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules
+  python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocks/domain.pddl --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json --query-id query_1
 		""",
 	)
 	subparsers = parser.add_subparsers(dest="command")
@@ -77,9 +82,24 @@ Examples:
 		),
 	)
 	moose_parser.add_argument(
+		"--library-root",
+		default=str(DEFAULT_DOMAIN_LIBRARY_ROOT),
+		help=(
+			"Root directory for canonical per-domain libraries. The command writes "
+			"<library-root>/<domain>/plan_library.{json,asl}."
+		),
+	)
+	moose_parser.add_argument(
 		"--output-root",
-		required=True,
-		help="Output root for plan_library.json, plan_library.asl, and metadata.",
+		help=(
+			"Deprecated compatibility alias for the canonical domain directory. "
+			"If provided, it must equal <library-root>/<domain>."
+		),
+	)
+	moose_parser.add_argument(
+		"--overwrite",
+		action="store_true",
+		help="Allow rebuilding an existing canonical domain library.",
 	)
 
 	append_temporal_parser = subparsers.add_parser(
@@ -92,8 +112,10 @@ Examples:
 	append_temporal_parser.add_argument("--domain-file", required=True, help="Path to the PDDL domain file.")
 	append_temporal_parser.add_argument(
 		"--plan-library-file",
-		required=True,
-		help="Existing domain-level plan_library.json file.",
+		help=(
+			"Existing canonical domain plan_library.json file. Defaults to "
+			"<library-root>/<domain>/plan_library.json and must match it if provided."
+		),
 	)
 	append_temporal_parser.add_argument(
 		"--ltlf-goal-json",
@@ -106,9 +128,19 @@ Examples:
 		help="Query id to append. Repeat for multiple queries. Defaults to all cases.",
 	)
 	append_temporal_parser.add_argument(
+		"--library-root",
+		default=str(DEFAULT_DOMAIN_LIBRARY_ROOT),
+		help=(
+			"Root directory for canonical per-domain libraries. The command updates "
+			"<library-root>/<domain>/plan_library.{json,asl} in place."
+		),
+	)
+	append_temporal_parser.add_argument(
 		"--output-root",
-		required=True,
-		help="Output root for the updated library and DFA metadata.",
+		help=(
+			"Deprecated compatibility alias for the canonical domain directory. "
+			"If provided, it must equal <library-root>/<domain>."
+		),
 	)
 	append_temporal_parser.add_argument(
 		"--log-dir",
@@ -143,21 +175,26 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 		if getattr(args, "minimal_modules", False)
 		else _absolute_path(args.domain_file)
 	)
-	output_root = _require_output_root(args.output_root)
+	domain_name = str(args.domain_name).strip()
+	output_root = _canonical_domain_library_dir(
+		library_root=args.library_root,
+		domain_name=domain_name,
+		output_root=args.output_root,
+	)
 	policy_text = Path(policy_file).read_text(encoding="utf-8")
 	source_name = Path(policy_file).stem.replace(".model", "")
 	if getattr(args, "minimal_modules", False):
 		library = compile_moose_readable_policy_to_minimal_module_asl_library(
 			policy_text,
 			domain_file=str(domain_file),
-			domain_name=str(args.domain_name).strip(),
+			domain_name=domain_name,
 			source_name=source_name,
 			policy_file=policy_file,
 		)
 	else:
 		library = compile_moose_readable_policy_to_asl_library(
 			policy_text,
-			domain_name=str(args.domain_name).strip(),
+			domain_name=domain_name,
 			source_name=source_name,
 			policy_file=policy_file,
 		)
@@ -176,6 +213,7 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 			"policy_file": policy_file,
 			"source_name": source_name,
 		},
+		allow_overwrite=bool(getattr(args, "overwrite", False)),
 	)
 	return {
 		"success": True,
@@ -187,18 +225,35 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 
 def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 	domain_file = _require_existing_path(args.domain_file, label="Domain File")
+	domain = PDDLParser.parse_domain(domain_file)
+	output_root = _canonical_domain_library_dir(
+		library_root=args.library_root,
+		domain_name=domain.name,
+		output_root=args.output_root,
+	)
+	canonical_plan_library_file = str(Path(output_root) / "plan_library.json")
 	plan_library_file = _require_existing_path(
-		args.plan_library_file,
+		args.plan_library_file or canonical_plan_library_file,
 		label="Plan Library File",
 	)
+	if Path(plan_library_file).resolve() != Path(canonical_plan_library_file).resolve():
+		raise ValueError(
+			"noncanonical_domain_library: append-lifted-temporal-goal must update "
+			f"the canonical library for domain {domain.name!r}: "
+			f"{canonical_plan_library_file}",
+		)
 	ltlf_goal_json = _require_existing_path(
 		args.ltlf_goal_json,
 		label="Lifted LTLf Goal JSON",
 	)
-	output_root = _require_output_root(args.output_root)
 	library = PlanLibrary.from_dict(
 		json.loads(Path(plan_library_file).read_text(encoding="utf-8")),
 	)
+	if library.domain_name != domain.name:
+		raise ValueError(
+			"domain_library_mismatch: loaded plan library domain "
+			f"{library.domain_name!r} does not match PDDL domain {domain.name!r}.",
+		)
 	dataset = load_lifted_ltlf_goal_dataset(ltlf_goal_json)
 	selected_query_ids = {
 		str(query_id).strip()
@@ -264,6 +319,7 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 			"query_ids": [case.query_id for case in selected_cases],
 			"dfa_payloads": dfa_payloads,
 		},
+		allow_overwrite=True,
 	)
 	log_path = _finish_successful_temporal_append_log(
 		logger,
@@ -289,14 +345,33 @@ def allow_json_safe(payload: object) -> object:
 	return json.loads(json.dumps(payload, default=str))
 
 
-def _require_output_root(path_text: str | None) -> str:
-	resolved_path = _absolute_path(path_text)
-	if not resolved_path:
-		print("=" * 80)
-		print("ERROR: Output Root Required")
-		print("=" * 80)
-		sys.exit(1)
-	return resolved_path
+def _canonical_domain_library_dir(
+	*,
+	library_root: str | None,
+	domain_name: str,
+	output_root: str | None,
+) -> str:
+	root = Path(library_root or DEFAULT_DOMAIN_LIBRARY_ROOT).expanduser().resolve()
+	domain_key = _domain_library_key(domain_name)
+	canonical_dir = (root / domain_key).resolve()
+	if output_root:
+		resolved_output_root = Path(output_root).expanduser().resolve()
+		if resolved_output_root != canonical_dir:
+			raise ValueError(
+				"noncanonical_domain_library: this pipeline maintains exactly one "
+				f"ASL library per domain. Domain {domain_name!r} must use "
+				f"{canonical_dir}, not {resolved_output_root}.",
+			)
+	return str(canonical_dir)
+
+
+def _domain_library_key(domain_name: str) -> str:
+	key = str(domain_name or "").strip().lower()
+	if not key:
+		raise ValueError("Domain name is required for canonical library storage.")
+	if "/" in key or "\\" in key or key in {".", ".."}:
+		raise ValueError(f"Invalid domain name for library storage: {domain_name!r}")
+	return key
 
 
 def _persist_current_plan_library(
@@ -304,12 +379,19 @@ def _persist_current_plan_library(
 	plan_library: PlanLibrary,
 	output_root: str,
 	metadata: dict[str, object],
+	allow_overwrite: bool,
 ) -> dict[str, str]:
 	root = Path(output_root).expanduser().resolve()
 	root.mkdir(parents=True, exist_ok=True)
 	library_json = root / "plan_library.json"
 	library_asl = root / "plan_library.asl"
 	metadata_file = root / "artifact_metadata.json"
+	if not allow_overwrite and (library_json.exists() or library_asl.exists()):
+		raise ValueError(
+			"domain_library_exists: refusing to overwrite the canonical domain "
+			f"library for {plan_library.domain_name!r}. Use --overwrite only when "
+			"you intentionally want to rebuild the base atomic library.",
+		)
 	library_json.write_text(
 		json.dumps(plan_library.to_dict(), indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",
@@ -319,6 +401,8 @@ def _persist_current_plan_library(
 		json.dumps(
 			{
 				**dict(metadata),
+				"canonical_domain_library": True,
+				"domain_library_dir": str(root),
 				"domain_name": plan_library.domain_name,
 				"plan_count": len(plan_library.plans),
 				"library_quality": dict(plan_library.metadata.get("library_quality") or {}),
