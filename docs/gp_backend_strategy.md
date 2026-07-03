@@ -1,100 +1,77 @@
-# Generalized Planning Backend Strategy
+# External Generalized-Planning Backend Strategy
 
-This document is the project reference for the current architecture after the
-2026-07-03 pivot.
+This document records the current architecture after the 2026-07-03 pivot. The
+repository no longer tries to implement a universal generalized planner and no
+longer routes whole domains by a prior-paper taxonomy class.
 
-## Core Decision
+## Current Products
 
-We are no longer trying to build one universal generalized planner, and we are
-no longer routing a domain to a backend by assigning the domain to a paper
-taxonomy class.
+The framework has two products.
 
-The new architecture has two separate products:
+1. A domain-level lifted atomic AgentSpeak(L) library.
+2. Query-specific lifted temporal wrappers appended to that same domain library.
 
-1. A domain-level atomic literal plan library.
-2. Query-specific temporal goal wrappers appended to that domain library.
-
-The atomic library is learned from a PDDL domain and its training split using
-existing generalized-planning backends. The temporal wrapper is generated from a
-validated lifted LTLf JSON specification compiled to a deterministic finite
-automaton.
-
-## Target Pipeline
+The atomic library is generated from a PDDL domain and its train split by
+consuming an external generalized-planning backend artifact. The temporal
+wrapper is generated from a validated lifted LTLf JSON object compiled to a
+deterministic finite automaton.
 
 ```text
 PDDL domain + train split
--> atomic goal template extraction
--> SOTA generalized-planning backend
--> lifted atomic predicate/literal templates
--> domain-level AgentSpeak(L) atomic library
+-> atomic goal-template extraction
+-> external generalized-planning backend artifact
+-> LiftedPolicyProgram
+-> atomic AgentSpeak(L) compiler
+-> domain-level lifted atomic library
 
-Natural-language input
--> external Input module
--> lifted LTLf JSON
+lifted LTLf JSON
 -> LTLf-to-DFA
--> singleton-literal DFA validation
--> append +!g_query wrapper plans to the domain library
+-> singleton-literal transition validation
+-> append +!g_query wrapper plans
 ```
 
-There is exactly one maintained AgentSpeak(L) library per domain. Each new user
-query appends one new top-level goal name, for example `g_query_17`, to the same
-domain library. The appended plans may call only existing atomic predicate
-modules such as `!on(X,Y)` or primitive PDDL actions already present in the
-atomic library.
+There is exactly one maintained AgentSpeak(L) library per domain. New user
+queries append new top-level goals such as `g_query_17`; they do not create a
+separate query-specific atomic library.
 
-## Atomic Template Generation
+## Backend Policy
 
-An atomic goal template is a lifted predicate or literal family that appears as
-a target in training problems or in a validated temporal transition. Examples:
+Backends are selected by whether their artifact can support the required atomic
+predicate or literal templates, not by assigning a domain to a static class.
+
+MOOSE is the first implemented backend path for positive singleton predicate
+templates because its method learns lifted goal-regression rules over singleton
+goal conditions. The current compiler consumes MOOSE readable policies produced
+by `policy <model> --dump-policy`.
+
+Other generalized-planning backends are pinned and audited as candidates:
+
+- KR 2025 learner-policies-from-examples
+- D2L
+- learner-sketches
+- h-policy-learner
+- PG3 and planning-program systems as comparison or future adapters
+
+A non-MOOSE backend counts as an atomic-library backend only after it passes:
 
 ```text
-on(?x, ?y)
-clear(?x)
-at(?package, ?location)
-served(?passenger)
-not blocked(?cell)
+parse -> LiftedPolicyProgram -> verified atomic binding -> ASL compilation -> held-out validation
 ```
 
-The first backend candidate is MOOSE because its paper method explicitly
-decomposes training problems into singleton goal conditions and applies goal
-regression to learn lifted rules. This makes it a strong fit for atomic
-predicate/literal templates.
+Until then, it remains audit-only or candidate-only.
 
-MOOSE is not the final answer for multi-literal interacting goals. Its own
-theory is based on true, serialisable, or optimal goal independence. Blocks-style
-conjunctive tower goals are the canonical counterexample: `on(X,Y)` can be
-reasonable as a singleton template, while `on(X,Y) & on(Y,Z)` requires temporal
-or structural ordering.
+## Temporal Wrapper Contract
 
-Backend priority for atomic template generation is:
+The Input component is external. This repository consumes its lifted LTLf JSON
+artifact and does not call a language model unless explicitly requested.
 
-1. MOOSE for positive singleton predicate goals.
-2. KR 2025 learner-policies-from-examples when a feature-policy artifact is a
-   better match or when MOOSE cannot emit a usable artifact.
-3. D2L, learner-sketches, and h-policy-learner as audited fallback or comparison
-   backends when their artifacts pass parser, binding, and compilation gates.
+Every relevant DFA transition guard must be a singleton literal over declared
+PDDL vocabulary. Compound guards, undeclared predicates, wrong arities, and
+negative progress literals are rejected with diagnostics. Negative waiting
+guards and accepting `true` self-loops may remain DFA structure.
 
-Negative literal templates are not claimed as supported until a backend artifact
-shows a validated way to produce them. The implementation must reject them with
-a precise diagnostic rather than emitting invented synthetic subgoals.
-
-## Temporal Query Append Layer
-
-The Input component is owned by another project member. Our contract starts from
-its final artifact:
-
-```text
-lifted LTLf JSON -> LTLf formula string -> DFA payload
-```
-
-The DFA payload must satisfy the singleton-literal transition contract before it
-can append ASL plans. Each transition guard must be one literal, not a
-conjunction, disjunction, implication, or arbitrary Boolean formula. Negative
-waiting guards such as `not done` are valid DFA structure and are not compiled
-into atomic subgoals unless they are progress transitions. Accepting self-loops
-labelled `true` are also allowed as implementation plumbing.
-
-For a positive literal transition `on(X,Y)`, the appended ASL shape is:
+For a positive transition literal such as `on(X,Y)`, the appended wrapper has
+this shape:
 
 ```asl
 +!g_query : not on(X,Y) <-
@@ -102,105 +79,80 @@ For a positive literal transition `on(X,Y)`, the appended ASL shape is:
 	!g_query.
 ```
 
-This wrapper does not replace the DFA. For general temporal goals, a DFA or
-reward-machine state must still be maintained by the temporal controller. A pure
-ASL context-only encoding is sound only for monotonic or non-ambiguous sequences
-where the current world state uniquely determines the next temporal step.
+The wrapper calls an existing atomic module. General temporal correctness still
+requires an external DFA or reward-machine state whenever world-state contexts
+alone do not identify the current automaton state.
 
-## Six-Domain Evaluation Scope
+## Selected Six-Domain Scope
 
-The six-domain scope is a benchmark design, not a backend-routing taxonomy. It
-is chosen to cover different goal-property regimes while keeping the paper
-focused.
+The six domains are evaluation coverage, not backend-routing classes.
 
-| Group | Domains | Reason |
+| Evaluation group | Domains | Purpose |
 | --- | --- | --- |
-| Singleton regression-friendly classical goals | `ferry`, `miconic` | Both are MOOSE paper domains and are strong tests for singleton goal regression producing compact lifted templates. |
-| Multi-object classical achievement goals | `gripper`, `logistics` | Both appear in generalized-planning papers and stress whether atomic templates compose over many objects without query-specific grounding. |
-| Structural or temporalized achievement goals | `blocks`, `8puzzle-1tile` | Blocks is the canonical goal-interaction domain; 8puzzle-1tile is a compact rearrangement family from feature-policy work. These domains test whether atomic templates can be reused under a temporal wrapper. |
+| Singleton regression-friendly classical goals | `ferry`, `miconic` | Check MOOSE-style singleton positive predicate templates. |
+| Multi-object classical achievement goals | `gripper`, `logistics` | Check reusable atomic templates over many objects. |
+| Structural or temporalized achievement goals | `blocks`, `8puzzle-1tile` | Check interaction-heavy goals through atomic modules plus temporal wrappers. |
 
-Numeric MOOSE domains are intentionally not in the current six-domain corpus.
-The project target is an AgentSpeak(L) library over PDDL predicates and
-literals. Numeric fluents need a separate semantics and compiler contract before
-they can be included responsibly.
-
-## Reused Paper Code
-
-Pinned backend code remains under `.external/` and is not vendored into `src/`.
-
-| Backend | Paper role in this project | Local role |
-| --- | --- | --- |
-| MOOSE | Goal-regression generalized planner over singleton goals. | Primary atomic template backend candidate; readable `--dump-policy` artifacts now parse into `LiftedPolicyProgram` and lifted ASL plans. |
-| learner-policies-from-examples | KR 2025 feature-policy learner with structural termination checks. | Fallback and comparison backend, especially for structural domains. |
-| D2L | Description-logic feature-policy learner. | Reference backend for Blocks-style atomic policies. |
-| learner-sketches | Serialized-width sketch learner. | Fallback and comparison backend for sketch artifacts. |
-| h-policy-learner | Hierarchical policy learner. | Fallback and comparison backend for reusable policy modules. |
-
-Every consumed artifact must pass:
+Each selected domain is materialized under `src/domains/<domain>/` with:
 
 ```text
-parse -> LiftedPolicyProgram -> feature/action binding -> ASL compilation -> held-out validation
+domain.pddl
+train/*.pddl
+test/*.pddl
+source.json
 ```
 
-Artifacts that do not pass these gates remain baseline or diagnostic evidence,
-not final library output.
+The split is deterministic:
 
-The MOOSE atomic backend path is intentionally artifact-based:
+```text
+train = floor(2/3 * instance_count)
+test = remaining instances
+```
+
+The registry under `src/benchmark_registry/achievement_goals` records these
+domains and their atomic-backend artifact gates. It must not contain old
+planner-trace synthesis fields.
+
+## Current Implementation Status
+
+Implemented:
+
+- atomic template extraction from training problem goals;
+- MOOSE readable-policy to `LiftedPolicyProgram`;
+- MOOSE readable-policy to lifted atomic AgentSpeak(L);
+- lifted LTLf JSON parsing with atom and binding metadata;
+- LTLf-to-DFA integration through the restored temporal compilation code;
+- singleton-literal DFA validation;
+- query-specific `+!g_query` append;
+- structured execution logging for temporal append runs;
+- final artifact package generation without experiment-matrix planner traces.
+
+Removed from the active code path:
+
+- in-repository Clingo or schema-level generalized-planning synthesis;
+- Layer C / conjunctive-goal composer code;
+- planner-trace transition planning and Fast Downward runtime modules;
+- old `goal_<predicate>` read-only descriptor semantics;
+- old natural-language model transport code;
+- old query-specific DFA high-level plan-library generation.
+
+## Reproducibility Commands
 
 ```bash
-uv run python scripts/gp_backend_audit.py moose-atomic-command \
-  --domain-file src/domains/ferry/domain.pddl \
-  --training-dir src/domains/ferry/train \
-  --save-file tmp/moose-atomic/ferry.model \
-  --timeout-seconds 1800
+PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q
 
-uv run python scripts/gp_backend_audit.py moose-readable-summary \
-  --policy-file tmp/moose-atomic/ferry.model.readable \
-  --domain-name ferry
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py \
+  --output-dir tmp/paper-final-latest
 
-uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
-  --policy-file tmp/moose-atomic/ferry.model.readable \
-  --domain-name ferry \
-  --output-dir tmp/moose-atomic/ferry-library
-
-uv run python src/main.py compile-moose-atomic-library \
-  --policy-file tmp/moose-atomic/ferry.model.readable \
-  --domain-name ferry \
-  --output-root artifacts/domain_libraries/ferry
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py \
+  --output-dir tmp/paper-final-latest \
+  --validate-only
 ```
 
-The first command prints a resource-guarded Docker/Apptainer train-and-dump
-command. The second verifies that the dumped readable policy can be parsed into
-`LiftedPolicyProgram` and compiled in memory. The third materializes the current
-paper artifact shape: `plan_library.json`, `plan_library.asl`, and metadata for
-one domain-level atomic library. The fourth exposes the same materialization
-through the main framework command-line interface.
-
-After the external Input component produces lifted LTLf JSON, the main temporal
-append command is:
+Backend audit commands:
 
 ```bash
-uv run python src/main.py append-lifted-temporal-goal \
-  --domain-file src/domains/blocks/domain.pddl \
-  --plan-library-file artifacts/domain_libraries/blocks/plan_library.json \
-  --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
-  --query-id query_1 \
-  --output-root artifacts/domain_libraries/blocks
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py status
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py usage
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py capability
 ```
-
-## Current Implementation Requirements
-
-1. Replace class-based GP routing on the main path with atomic goal-template
-   backend selection.
-2. Keep MOOSE as the first positive singleton-goal backend, but do not claim
-   negative literal support until validated.
-3. Restore and refactor the historical LTLf-to-DFA and logger code into the new
-   temporal append layer.
-4. Keep the registry and generated benchmark data fixed to the six selected
-   domains unless the formal paper scope changes.
-5. Preserve the deterministic `floor(2/3)` train split and remaining held-out
-   split for every selected domain.
-6. Add validator diagnostics that can be returned to the external Input module:
-   malformed LTLf JSON, unsupported predicate, wrong arity, DFA parser failure,
-   non-singleton transition guard, negative progress literal without backend
-   support, and LTLf-to-DFA execution failure.
