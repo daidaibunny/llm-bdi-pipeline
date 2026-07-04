@@ -53,12 +53,12 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		for record in library.metadata["atomic_module_synthesis"]["predicate_roles"]
 	)
 
-	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
+	assert "+!on(X, Y) : not clear(X)" in asl
 	assert "\t!clear(X);" in asl
 	assert "\t!on(X, Y)." in asl
-	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(Y)" in asl
+	assert "+!on(X, Y) : not clear(Y)" in asl
 	assert "\t!clear(Y);" in asl
-	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not holding(X)" in asl
+	assert "+!on(X, Y) : not holding(X)" in asl
 	assert "\t!holding(X);" in asl
 	assert "pick_up(X);\n\tunstack" not in asl
 	assert "on(X, Z) & clear(X) & handempty & clear(Y)" in asl
@@ -74,12 +74,13 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "+!handempty : handempty" in asl
 	assert "put_down(X)." in asl
 	assert "+!ontable(X) : ontable(X)" in asl
-	assert "+!ontable(X) : type_block(X) & not holding(X)" in asl
+	assert "+!ontable(X) : not holding(X)" in asl
 
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
 	assert "dfa_state" not in asl
 	assert "teg_state" not in asl
+	assert "type_" not in asl
 	assert "block0" not in asl
 	assert "block1" not in asl
 	assert "!on(Y, X)" not in asl
@@ -122,7 +123,7 @@ def test_static_predicates_are_context_only_not_atomic_goal_modules() -> None:
 	assert "+!in(X, Y)" in asl
 
 
-def test_logistics_atomic_modules_use_type_guards_and_airplane_bridge() -> None:
+def test_logistics_atomic_modules_use_pddl_typing_without_type_guards() -> None:
 	library = synthesize_atomic_minimal_literal_module_library(
 		domain_file=PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl",
 		seed_predicates=("at",),
@@ -131,9 +132,7 @@ def test_logistics_atomic_modules_use_type_guards_and_airplane_bridge() -> None:
 	)
 	asl = render_plan_library_asl(library)
 
-	assert "type_package(X)" in asl
-	assert "type_truck(Z)" in asl
-	assert "type_airplane(Z)" in asl
+	assert "type_" not in asl
 	assert "load_airplane(X, Z, A);\n\tfly_airplane(Z, A, Y);\n\tunload_airplane(X, Z, Y)." in asl
 	assert "load_airplane(X, Z, A);\n\tunload_airplane(X, Z, Y)." not in asl
 	assert "load_truck(X, Z, A);\n\tunload_truck(X, Z, Y)." not in asl

@@ -104,10 +104,11 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	assert metadata["minimal_modules"] is True
 	assert metadata["post_moose_recursive"] is True
 	assert metadata["moose_backend_path"] == "post_moose_recursive_module_synthesis"
-	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
+	assert "+!on(X, Y) : not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
-	assert "+!clear(X) : type_block(X) & not handempty" in asl
+	assert "+!clear(X) : not handempty" in asl
 	assert "+!holding(X) : holding(X)" in asl
+	assert "type_" not in asl
 	assert "block0" not in asl
 
 

@@ -160,12 +160,13 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert library.metadata["library_quality"]["artifact_classification"] == (
 		"compact_recursive_atomic_module_library"
 	)
-	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
+	assert "+!on(X, Y) : not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
-	assert "+!clear(X) : type_block(X) & not handempty" in asl
+	assert "+!clear(X) : not handempty" in asl
 	assert "\t!handempty;" in asl
 	assert "\t!on(Y, X);" not in asl
 	assert "+!holding(X) : holding(X)" in asl
+	assert "type_" not in asl
 	assert "block0" not in asl
 
 
@@ -258,6 +259,7 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 	assert metadata["library_quality"]["artifact_classification"] == (
 		"compact_recursive_atomic_module_library"
 	)
-	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
-	assert "+!clear(X) : type_block(X) & not handempty" in asl
+	assert "+!on(X, Y) : not clear(X)" in asl
+	assert "+!clear(X) : not handempty" in asl
 	assert "+!holding(X) : holding(X)" in asl
+	assert "type_" not in asl

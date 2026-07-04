@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-import re
 from typing import Mapping, Sequence
 
 from plan_library.models import AgentSpeakBodyStep
@@ -23,9 +22,6 @@ from utils.pddl_parser import PDDLParser
 
 from .pddl_types import type_closure
 from .pddl_types import type_guard_symbol
-
-
-_CONTEXT_VARIABLE_RE = re.compile(r"\b[A-Z][A-Za-z0-9_]*\b")
 
 
 @dataclass(frozen=True)
@@ -1182,8 +1178,7 @@ def _final_action_sequence_plan(
 		),
 		context=tuple(
 			_deduplicate(
-				sequence.type_contexts
-				+ tuple(literal.to_context() for literal in sequence.context_literals),
+				tuple(literal.to_context() for literal in sequence.context_literals),
 			),
 		),
 		body=tuple(
@@ -1222,16 +1217,9 @@ def _prepare_precondition_plan(
 			head_arguments=sequence.target_arguments,
 		)
 	)
-	type_contexts = _prepare_type_contexts(
-		type_contexts=sequence.type_contexts,
-		head_arguments=sequence.target_arguments,
-		precondition=precondition,
-		binding_contexts=binding_contexts,
-	)
 	context = tuple(
 		_deduplicate(
-			type_contexts
-			+ binding_contexts
+			binding_contexts
 			+ (f"not {precondition.to_call()}",),
 		),
 	)
@@ -1265,40 +1253,6 @@ def _prepare_precondition_plan(
 			},
 		),
 	)
-
-
-def _prepare_type_contexts(
-	*,
-	type_contexts: Sequence[str],
-	head_arguments: Sequence[str],
-	precondition: PDDLLiteralSchema,
-	binding_contexts: Sequence[str],
-) -> tuple[str, ...]:
-	"""Keep only type guards whose variables are relevant to a prepare branch."""
-
-	relevant_variables = set(head_arguments) | set(precondition.arguments)
-	for context in binding_contexts:
-		relevant_variables.update(_context_variables(context))
-	filtered = tuple(
-		context
-		for context in tuple(type_contexts or ())
-		if not _context_variables(context)
-		or bool(set(_context_variables(context)) & relevant_variables)
-	)
-	return tuple(_deduplicate(filtered))
-
-
-def _context_variables(context: str) -> tuple[str, ...]:
-	"""Return AgentSpeak-style variables mentioned in a context atom."""
-
-	return tuple(
-		dict.fromkeys(
-			token
-			for token in _CONTEXT_VARIABLE_RE.findall(str(context or ""))
-			if token and token[0].isupper()
-		),
-	)
-
 
 def _producer_effects(
 	actions: Sequence[_ParsedAction],
