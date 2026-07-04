@@ -159,13 +159,14 @@ class JasonPlanLibraryRunner:
 		environment_java = _build_environment_java_source(
 			class_name=self.environment_class_name,
 			action_schemas=action_schemas,
-			seed_facts=seed_facts,
+			seed_facts_file_name="initial_facts.txt",
 		)
 		logging_properties = _logging_properties()
 
 		agentspeak_path = output_path / "agentspeak_generated.asl"
 		mas2j_path = output_path / "jason_runner.mas2j"
 		environment_java_path = output_path / f"{self.environment_class_name}.java"
+		initial_facts_path = output_path / "initial_facts.txt"
 		logging_path = output_path / "logging.properties"
 		stdout_path = output_path / "jason_stdout.txt"
 		stderr_path = output_path / "jason_stderr.txt"
@@ -174,6 +175,10 @@ class JasonPlanLibraryRunner:
 		agentspeak_path.write_text(runner_asl, encoding="utf-8")
 		mas2j_path.write_text(runner_mas2j, encoding="utf-8")
 		environment_java_path.write_text(environment_java, encoding="utf-8")
+		initial_facts_path.write_text(
+			"\n".join(seed_facts) + ("\n" if seed_facts else ""),
+			encoding="utf-8",
+		)
 		logging_path.write_text(logging_properties, encoding="utf-8")
 		timing_profile["materialize_seconds"] = time.perf_counter() - materialize_start
 
@@ -213,6 +218,7 @@ class JasonPlanLibraryRunner:
 					agentspeak_path=agentspeak_path,
 					mas2j_path=mas2j_path,
 					environment_java_path=environment_java_path,
+					initial_facts_path=initial_facts_path,
 					stdout_path=stdout_path,
 					stderr_path=stderr_path,
 					result_path=result_path,
@@ -289,6 +295,7 @@ class JasonPlanLibraryRunner:
 				agentspeak_path=agentspeak_path,
 				mas2j_path=mas2j_path,
 				environment_java_path=environment_java_path,
+				initial_facts_path=initial_facts_path,
 				stdout_path=stdout_path,
 				stderr_path=stderr_path,
 				result_path=result_path,
@@ -454,23 +461,25 @@ def _build_environment_java_source(
 	*,
 	class_name: str,
 	action_schemas: Sequence[RuntimeActionSchema],
-	seed_facts: Sequence[str],
+	seed_facts_file_name: str,
 ) -> str:
-	seed_lines = "\n".join(
-		f"\t\tworld.add({ _java_quote(fact) });"
-		for fact in tuple(seed_facts or ())
-	)
 	action_lines = "\n\t\t".join(
 		_render_action_registration(schema)
 		for schema in tuple(action_schemas or ())
 	)
 	if not action_lines:
 		action_lines = "// no action schemas"
+	seed_file = _java_quote(seed_facts_file_name)
 	return f"""
 import jason.asSyntax.Literal;
 import jason.asSyntax.Structure;
 import jason.environment.Environment;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -513,15 +522,31 @@ public class {class_name} extends Environment {{
 		}}
 	}}
 
+	private static final class EffectDelta {{
+		final Set<String> added;
+		final Set<String> removed;
+
+		EffectDelta(Set<String> added, Set<String> removed) {{
+			this.added = added;
+			this.removed = removed;
+		}}
+
+		boolean changed() {{
+			return !added.isEmpty() || !removed.isEmpty();
+		}}
+	}}
+
 	private final Set<String> world = new LinkedHashSet<>();
+	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
+	private final Path seedFactsPath = Paths.get({seed_file});
 
 	@Override
 	public synchronized void init(String[] args) {{
 		super.init(args);
 		seedInitialFacts();
 		loadActions();
-		syncPercepts();
+		syncInitialPercepts();
 		System.out.println("runtime env ready");
 	}}
 
@@ -556,15 +581,27 @@ public class {class_name} extends Environment {{
 			return false;
 		}}
 
-		applyEffects(schema.effects, bindings);
-		syncPercepts();
+		EffectDelta delta = applyEffects(schema.effects, bindings);
+		syncPerceptDelta(delta);
 		System.out.println("runtime env action success " + tracedAction);
 		return true;
 	}}
 
 	private void seedInitialFacts() {{
 		world.clear();
-{seed_lines if seed_lines else ""}
+		try {{
+			for (String line : Files.readAllLines(seedFactsPath, StandardCharsets.UTF_8)) {{
+				String fact = line.trim();
+				if (!fact.isEmpty() && !fact.startsWith("#")) {{
+					world.add(fact);
+				}}
+			}}
+		}} catch (IOException error) {{
+			throw new RuntimeException(
+				"Failed to load Jason initial facts from " + seedFactsPath.toAbsolutePath(),
+				error
+			);
+		}}
 	}}
 
 	private void loadActions() {{
@@ -587,19 +624,28 @@ public class {class_name} extends Environment {{
 		return true;
 	}}
 
-	private void applyEffects(Pattern[] effects, Map<String, String> bindings) {{
+	private EffectDelta applyEffects(Pattern[] effects, Map<String, String> bindings) {{
+		Set<String> added = new LinkedHashSet<>();
+		Set<String> removed = new LinkedHashSet<>();
 		for (Pattern pattern : effects) {{
 			if (pattern.positive) {{
 				continue;
 			}}
-			world.remove(ground(pattern.predicate, pattern.args, bindings));
+			String grounded = ground(pattern.predicate, pattern.args, bindings);
+			if (world.remove(grounded) && !added.remove(grounded)) {{
+				removed.add(grounded);
+			}}
 		}}
 		for (Pattern pattern : effects) {{
 			if (!pattern.positive) {{
 				continue;
 			}}
-			world.add(ground(pattern.predicate, pattern.args, bindings));
+			String grounded = ground(pattern.predicate, pattern.args, bindings);
+			if (world.add(grounded) && !removed.remove(grounded)) {{
+				added.add(grounded);
+			}}
 		}}
+		return new EffectDelta(added, removed);
 	}}
 
 	private String ground(String predicate, String[] args, Map<String, String> bindings) {{
@@ -658,10 +704,29 @@ public class {class_name} extends Environment {{
 		return sourceName + "(" + String.join(",", args) + ")";
 	}}
 
-	private void syncPercepts() {{
+	private void syncInitialPercepts() {{
 		clearPercepts();
+		perceived.clear();
 		for (String atom : world) {{
 			addPercept(Literal.parseLiteral(atom));
+			perceived.add(atom);
+		}}
+		informAgsEnvironmentChanged();
+	}}
+
+	private void syncPerceptDelta(EffectDelta delta) {{
+		if (!delta.changed()) {{
+			return;
+		}}
+		for (String atom : delta.removed) {{
+			if (perceived.remove(atom)) {{
+				removePercept(Literal.parseLiteral(atom));
+			}}
+		}}
+		for (String atom : delta.added) {{
+			if (perceived.add(atom)) {{
+				addPercept(Literal.parseLiteral(atom));
+			}}
 		}}
 		informAgsEnvironmentChanged();
 	}}
@@ -807,6 +872,7 @@ def _artifact_paths(
 	agentspeak_path: Path,
 	mas2j_path: Path,
 	environment_java_path: Path,
+	initial_facts_path: Path,
 	stdout_path: Path,
 	stderr_path: Path,
 	result_path: Path,
@@ -815,6 +881,7 @@ def _artifact_paths(
 		"agentspeak": str(agentspeak_path),
 		"mas2j": str(mas2j_path),
 		"environment_java": str(environment_java_path),
+		"initial_facts": str(initial_facts_path),
 		"stdout": str(stdout_path),
 		"stderr": str(stderr_path),
 		"result": str(result_path),

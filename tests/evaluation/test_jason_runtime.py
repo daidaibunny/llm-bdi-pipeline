@@ -7,6 +7,7 @@ import pytest
 
 from evaluation.jason_runtime import JasonPlanLibraryRunner
 from evaluation.jason_runtime.environment_adapter import JasonEnvironmentRuntimeAdapter
+from evaluation.jason_runtime.runner import _build_environment_java_source
 from evaluation.jason_runtime.runner import _parse_pddl_patterns
 from evaluation.jason_runtime.runner import _runtime_action_schema
 from utils.pddl_parser import PDDLAction
@@ -52,6 +53,29 @@ def test_parse_pddl_patterns_supports_zero_arity_literals() -> None:
 		("handempty", (), True),
 		("holding", ("x",), False),
 	]
+
+
+def test_environment_source_loads_initial_facts_from_data_file() -> None:
+	action = PDDLAction(
+		name="finish",
+		parameters=[],
+		preconditions="(ready)",
+		effects="(and (done) (not (ready)))",
+	)
+
+	source = _build_environment_java_source(
+		class_name="JasonPipelineEnvironment",
+		action_schemas=(_runtime_action_schema(action),),
+		seed_facts_file_name="initial_facts.txt",
+	)
+
+	assert 'Paths.get("initial_facts.txt")' in source
+	assert "Files.readAllLines(seedFactsPath, StandardCharsets.UTF_8)" in source
+	assert 'world.add("ready")' not in source
+	assert "syncInitialPercepts();" in source
+	assert "EffectDelta delta = applyEffects(schema.effects, bindings);" in source
+	assert "syncPerceptDelta(delta);" in source
+	assert "removePercept(Literal.parseLiteral(atom));" in source
 
 
 @pytest.mark.skipif(
@@ -122,3 +146,7 @@ def test_jason_runner_executes_tiny_pddl_environment(tmp_path: Path) -> None:
 	assert result.action_path == ("finish()",)
 	assert "execute success" in f"{result.stdout}\n{result.stderr}"
 	assert Path(result.artifacts["agentspeak"]).exists()
+	assert Path(result.artifacts["initial_facts"]).read_text(encoding="utf-8") == "ready\n"
+	assert 'world.add("ready")' not in Path(result.artifacts["environment_java"]).read_text(
+		encoding="utf-8",
+	)
