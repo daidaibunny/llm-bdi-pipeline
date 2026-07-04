@@ -218,6 +218,7 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 		if domain_file is not None
 		else str(args.domain_name).strip()
 	)
+	source_metadata = _domain_source_metadata(domain_file)
 	domain_name = _canonical_domain_key_for_domain_file(
 		domain_file,
 		fallback_domain_name=str(args.domain_name).strip(),
@@ -257,8 +258,15 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 			"domain_file": domain_file,
 			"pddl_domain_name": pddl_domain_name,
 			"minimal_modules": bool(getattr(args, "minimal_modules", False)),
+			"moose_backend_path": (
+				"seeded_schema_minimal_modules"
+				if getattr(args, "minimal_modules", False)
+				else "native_train_dump_policy"
+			),
+			"moose_official_benchmark": _is_moose_official_benchmark(source_metadata),
 			"policy_file": policy_file,
 			"source_name": source_name,
+			"source_metadata": source_metadata,
 		},
 		allow_overwrite=bool(getattr(args, "overwrite", False)),
 	)
@@ -361,10 +369,13 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 			results["execution_log"] = str(log_path)
 		return results
 
+	existing_metadata = _existing_artifact_metadata(output_root)
 	artifact_paths = _persist_current_plan_library(
 		plan_library=updated_library,
 		output_root=output_root,
 		metadata={
+			**existing_metadata,
+			"base_artifact_kind": existing_metadata.get("artifact_kind"),
 			"artifact_kind": "domain_library_with_temporal_append",
 			"source_plan_library_file": plan_library_file,
 			"ltlf_goal_json": ltlf_goal_json,
@@ -533,6 +544,17 @@ def _persist_current_plan_library(
 	}
 
 
+def _existing_artifact_metadata(output_root: str) -> dict[str, object]:
+	metadata_file = Path(output_root).expanduser().resolve() / "artifact_metadata.json"
+	if not metadata_file.exists():
+		return {}
+	try:
+		payload = json.loads(metadata_file.read_text(encoding="utf-8"))
+	except json.JSONDecodeError:
+		return {}
+	return dict(payload) if isinstance(payload, dict) else {}
+
+
 def _start_temporal_append_logger(
 	*,
 	log_dir: str | None,
@@ -572,6 +594,23 @@ def _start_temporal_append_logger(
 		},
 	)
 	return logger
+
+
+def _domain_source_metadata(domain_file: str | None) -> dict[str, object]:
+	if not domain_file:
+		return {}
+	source_file = Path(domain_file).resolve().parent / "source.json"
+	if not source_file.exists():
+		return {}
+	try:
+		payload = json.loads(source_file.read_text(encoding="utf-8"))
+	except json.JSONDecodeError:
+		return {"source_file": str(source_file), "source_parse_error": True}
+	return dict(payload) if isinstance(payload, dict) else {"source_file": str(source_file)}
+
+
+def _is_moose_official_benchmark(source_metadata: dict[str, object]) -> bool:
+	return str(source_metadata.get("source_id") or "") == "moose_official_artifact"
 
 
 def _finish_failed_temporal_append_log(logger, errors: list[dict[str, object]]) -> Path | None:

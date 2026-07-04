@@ -1,0 +1,835 @@
+#!/usr/bin/env python3
+"""
+Run the current faithful MOOSE-to-ASL pipeline end to end.
+
+This script uses the selected domain train split as MOOSE training input,
+dumps the learned first-order decision-list policy, compiles it faithfully into
+the canonical per-domain AgentSpeak(L) library, appends two test-instance
+temporal goals, and validates the resulting ASL in Jason.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Sequence
+
+try:
+	import resource
+except ImportError:  # pragma: no cover - Unix-only guard.
+	resource = None  # type: ignore[assignment]
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = PROJECT_ROOT / "src"
+MOOSE_ROOT = PROJECT_ROOT / ".external" / "moose"
+DEFAULT_DOMAINS = (
+	"ferry",
+	"miconic",
+	"gripper",
+	"logistics",
+	"blocks",
+	"8puzzle-1tile",
+)
+
+if str(SRC_ROOT) not in sys.path:
+	sys.path.insert(0, str(SRC_ROOT))
+
+from utils.pddl_parser import PDDLFact  # noqa: E402
+from utils.pddl_parser import PDDLParser  # noqa: E402
+
+
+@dataclass(frozen=True)
+class CommandResult:
+	"""One subprocess execution record."""
+
+	command: tuple[str, ...]
+	cwd: str
+	stdout_file: str
+	stderr_file: str
+	exit_code: int | None
+	timed_out: bool
+	duration_seconds: float
+
+	@property
+	def success(self) -> bool:
+		return not self.timed_out and self.exit_code == 0
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"command": list(self.command),
+			"cwd": self.cwd,
+			"stdout_file": self.stdout_file,
+			"stderr_file": self.stderr_file,
+			"exit_code": self.exit_code,
+			"timed_out": self.timed_out,
+			"duration_seconds": self.duration_seconds,
+			"success": self.success,
+		}
+
+
+def main() -> int:
+	parser = argparse.ArgumentParser(description=__doc__)
+	parser.add_argument(
+		"--domain",
+		action="append",
+		choices=DEFAULT_DOMAINS,
+		help="Selected domain. Repeat to run multiple domains. Defaults to all six.",
+	)
+	parser.add_argument(
+		"--output-root",
+		type=Path,
+		default=PROJECT_ROOT / "tmp" / "moose_faithful_e2e",
+		help="Non-canonical run logs and generated lifted LTLf JSON.",
+	)
+	parser.add_argument(
+		"--library-root",
+		type=Path,
+		default=PROJECT_ROOT / "artifacts" / "domain_libraries",
+		help="Canonical per-domain ASL library root.",
+	)
+	parser.add_argument("--random-seed", type=int, default=0)
+	parser.add_argument("--num-workers", type=int, default=8)
+	parser.add_argument("--num-permutations", type=int, default=3)
+	parser.add_argument("--goal-max-size", type=int, default=1)
+	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
+	parser.add_argument("--dump-timeout-seconds", type=int, default=300)
+	parser.add_argument("--append-timeout-seconds", type=int, default=300)
+	parser.add_argument("--jason-timeout-seconds", type=int, default=90)
+	parser.add_argument("--moose-plan-timeout-seconds", type=int, default=120)
+	parser.add_argument("--moose-plan-bound", type=int, default=5000)
+	parser.add_argument(
+		"--moose-runtime",
+		choices=("docker", "local"),
+		default="docker",
+		help="Run MOOSE in the exact Docker/Apptainer environment or local Python.",
+	)
+	parser.add_argument(
+		"--max-rss-gb",
+		type=float,
+		default=16.0,
+		help="Best-effort memory guard for external MOOSE and MONA subprocesses.",
+	)
+	parser.add_argument(
+		"--skip-moose-policy-validation",
+		action="store_true",
+		help="Skip direct MOOSE policy execution on the two selected test instances.",
+	)
+	parser.add_argument(
+		"--fail-fast",
+		action="store_true",
+		help="Stop after the first domain-level failure.",
+	)
+	args = parser.parse_args()
+
+	domains = tuple(args.domain or DEFAULT_DOMAINS)
+	output_root = args.output_root.expanduser().resolve()
+	output_root.mkdir(parents=True, exist_ok=True)
+	summary = {
+		"pipeline": "faithful_moose_decision_list_to_asl_e2e",
+		"domains": [],
+		"settings": {
+			"domains": list(domains),
+			"random_seed": args.random_seed,
+			"num_workers": args.num_workers,
+			"num_permutations": args.num_permutations,
+			"goal_max_size": args.goal_max_size,
+			"max_rss_gb": args.max_rss_gb,
+			"moose_runtime": args.moose_runtime,
+			"full_train_split": True,
+			"test_instance_count": 2,
+		},
+	}
+	for domain_name in domains:
+		record = run_domain(domain_name, args=args, output_root=output_root)
+		summary["domains"].append(record)
+		(output_root / "summary.json").write_text(
+			json.dumps(summary, indent=2, sort_keys=True) + "\n",
+			encoding="utf-8",
+		)
+		if args.fail_fast and not bool(record.get("success")):
+			break
+	print(json.dumps(summary, indent=2, sort_keys=True))
+	return 0 if all(bool(item.get("success")) for item in summary["domains"]) else 1
+
+
+def run_domain(
+	domain_name: str,
+	*,
+	args: argparse.Namespace,
+	output_root: Path,
+) -> dict[str, Any]:
+	"""Run training, compilation, temporal append, and validation for one domain."""
+
+	domain_root = PROJECT_ROOT / "src" / "domains" / domain_name
+	domain_file = domain_root / "domain.pddl"
+	train_dir = domain_root / "train"
+	test_dir = domain_root / "test"
+	source_metadata = load_domain_source_metadata(domain_root)
+	run_root = output_root / domain_name
+	log_root = run_root / "logs"
+	log_root.mkdir(parents=True, exist_ok=True)
+	model_file = run_root / f"{domain_name}.model"
+	readable_policy_file = run_root / f"{domain_name}.model.readable"
+	goal_json = run_root / f"{domain_name}_first2_test_goals.json"
+	compat_root = run_root / "moose_compatible_pddl"
+
+	record: dict[str, Any] = {
+		"domain": domain_name,
+		"domain_file": str(domain_file),
+		"moose_backend_path": "native_train_dump_policy",
+		"moose_official_benchmark": is_moose_official_benchmark(source_metadata),
+		"source_metadata": source_metadata,
+		"train_dir": str(train_dir),
+		"success": False,
+		"commands": {},
+		"selected_test_instances": [],
+	}
+	try:
+		test_instances = first_n_test_instances(test_dir, count=2)
+		record["selected_test_instances"] = [str(path) for path in test_instances]
+		write_test_goal_dataset(
+			domain_name=domain_name,
+			problem_files=test_instances,
+			output_file=goal_json,
+		)
+		record["ltlf_goal_json"] = str(goal_json)
+		compat = materialize_moose_compatible_pddl(
+			domain_file=domain_file,
+			train_dir=train_dir,
+			test_instances=test_instances,
+			output_root=compat_root,
+		)
+		record["moose_compatible_pddl"] = compat
+
+		train_result = run_command(
+			moose_train_command(
+				domain_file=Path(compat["domain_file"]),
+				train_dir=Path(compat["train_dir"]),
+				model_file=model_file,
+				random_seed=args.random_seed,
+				num_workers=args.num_workers,
+				num_permutations=args.num_permutations,
+				goal_max_size=args.goal_max_size,
+				runtime=args.moose_runtime,
+				max_rss_gb=args.max_rss_gb,
+			),
+			cwd=MOOSE_ROOT,
+			stdout_file=log_root / "moose_train.stdout.txt",
+			stderr_file=log_root / "moose_train.stderr.txt",
+			timeout_seconds=args.train_timeout_seconds,
+			max_rss_gb=args.max_rss_gb,
+		)
+		record["commands"]["moose_train"] = train_result.to_dict()
+		if not train_result.success:
+			return record
+
+		dump_result = run_command(
+			moose_dump_policy_command(
+				model_file=Path(model_file),
+				runtime=args.moose_runtime,
+				max_rss_gb=args.max_rss_gb,
+			),
+			cwd=MOOSE_ROOT,
+			stdout_file=readable_policy_file,
+			stderr_file=log_root / "moose_dump_policy.stderr.txt",
+			timeout_seconds=args.dump_timeout_seconds,
+			max_rss_gb=args.max_rss_gb,
+		)
+		record["commands"]["moose_dump_policy"] = dump_result.to_dict()
+		if not dump_result.success:
+			return record
+
+		compile_result = run_command(
+			(
+				sys.executable,
+				str(PROJECT_ROOT / "src" / "main.py"),
+				"compile-moose-atomic-library",
+				"--policy-file",
+				str(readable_policy_file),
+				"--domain-file",
+				str(domain_file),
+				"--domain-name",
+				domain_name,
+				"--library-root",
+				str(args.library_root),
+				"--overwrite",
+			),
+			cwd=PROJECT_ROOT,
+			stdout_file=log_root / "compile_atomic_library.stdout.json",
+			stderr_file=log_root / "compile_atomic_library.stderr.txt",
+			timeout_seconds=args.append_timeout_seconds,
+			max_rss_gb=args.max_rss_gb,
+		)
+		record["commands"]["compile_atomic_library"] = compile_result.to_dict()
+		if not compile_result.success:
+			return record
+
+		query_ids = tuple(f"query_{index}" for index in range(1, len(test_instances) + 1))
+		append_command = [
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"append-lifted-temporal-goal",
+			"--domain-file",
+			str(domain_file),
+			"--ltlf-goal-json",
+			str(goal_json),
+			"--library-root",
+			str(args.library_root),
+		]
+		for query_id in query_ids:
+			append_command.extend(("--query-id", query_id))
+		append_result = run_command(
+			tuple(append_command),
+			cwd=PROJECT_ROOT,
+			stdout_file=log_root / "append_temporal_goals.stdout.json",
+			stderr_file=log_root / "append_temporal_goals.stderr.txt",
+			timeout_seconds=args.append_timeout_seconds,
+			max_rss_gb=args.max_rss_gb,
+			extra_env={"EVALUATION_MONA_MEMORY_LIMIT_MIB": str(int(args.max_rss_gb * 1024))},
+		)
+		record["commands"]["append_temporal_goals"] = append_result.to_dict()
+		if not append_result.success:
+			return record
+
+		if not args.skip_moose_policy_validation:
+			record["moose_policy_validation"] = [
+				run_moose_policy_validation(
+					domain_name=domain_name,
+					domain_file=Path(compat["domain_file"]),
+					problem_file=Path(compat["test_files"][index - 1]),
+					model_file=model_file,
+					run_root=run_root,
+					index=index,
+					timeout_seconds=args.moose_plan_timeout_seconds,
+					bound=args.moose_plan_bound,
+					max_rss_gb=args.max_rss_gb,
+					runtime=args.moose_runtime,
+				)
+				for index, problem_file in enumerate(test_instances, start=1)
+			]
+
+		jason_results = [
+			run_jason_validation(
+				domain_name=domain_name,
+				domain_file=domain_file,
+				problem_file=problem_file,
+				goal_name=f"g_{_safe_goal_fragment(domain_name)}_test_{index}",
+				run_root=run_root,
+				index=index,
+				timeout_seconds=args.jason_timeout_seconds,
+				library_root=args.library_root,
+				max_rss_gb=args.max_rss_gb,
+			)
+			for index, problem_file in enumerate(test_instances, start=1)
+		]
+		record["jason_validation"] = jason_results
+		record["canonical_library"] = {
+			"json": str(args.library_root / domain_name / "plan_library.json"),
+			"asl": str(args.library_root / domain_name / "plan_library.asl"),
+		}
+		record["success"] = all(bool(result.get("success")) for result in jason_results)
+		return record
+	except Exception as error:  # noqa: BLE001 - persisted in run summary.
+		record["error"] = str(error)
+		return record
+
+
+def run_moose_policy_validation(
+	*,
+	domain_name: str,
+	domain_file: Path,
+	problem_file: Path,
+	model_file: Path,
+	run_root: Path,
+	index: int,
+	timeout_seconds: int,
+	bound: int,
+	max_rss_gb: float,
+	runtime: str,
+) -> dict[str, Any]:
+	"""Execute MOOSE's own policy on one held-out test instance."""
+
+	log_root = run_root / "logs"
+	result = run_command(
+		moose_policy_command(
+			model_file=model_file,
+			domain_file=domain_file,
+			problem_file=problem_file,
+			plan_file=run_root / f"moose_policy_test_{index}.plan",
+			bound=bound,
+			runtime=runtime,
+			max_rss_gb=max_rss_gb,
+		),
+		cwd=MOOSE_ROOT,
+		stdout_file=log_root / f"moose_policy_test_{index}.stdout.txt",
+		stderr_file=log_root / f"moose_policy_test_{index}.stderr.txt",
+		timeout_seconds=timeout_seconds,
+		max_rss_gb=max_rss_gb,
+	)
+	payload = result.to_dict()
+	payload["domain"] = domain_name
+	payload["problem_file"] = str(problem_file)
+	return payload
+
+
+def load_domain_source_metadata(domain_root: Path) -> dict[str, Any]:
+	"""Load optional benchmark provenance for a selected domain."""
+
+	source_file = domain_root / "source.json"
+	if not source_file.exists():
+		return {}
+	try:
+		payload = json.loads(source_file.read_text(encoding="utf-8"))
+	except json.JSONDecodeError:
+		return {"source_file": str(source_file), "source_parse_error": True}
+	return dict(payload) if isinstance(payload, dict) else {"source_file": str(source_file)}
+
+
+def is_moose_official_benchmark(source_metadata: dict[str, Any]) -> bool:
+	"""Return whether the selected domain came from the MOOSE official artifact."""
+
+	return str(source_metadata.get("source_id") or "") == "moose_official_artifact"
+
+
+def run_jason_validation(
+	*,
+	domain_name: str,
+	domain_file: Path,
+	problem_file: Path,
+	goal_name: str,
+	run_root: Path,
+	index: int,
+	timeout_seconds: int,
+	library_root: Path,
+	max_rss_gb: float,
+) -> dict[str, Any]:
+	"""Run the canonical ASL library in Jason for one appended goal."""
+
+	log_root = run_root / "logs"
+	output_dir = run_root / "jason" / f"test_{index}"
+	result = run_command(
+		(
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"validate-jason-plan-library",
+			"--domain-file",
+			str(domain_file),
+			"--problem-file",
+			str(problem_file),
+			"--goal-name",
+			goal_name,
+			"--library-root",
+			str(library_root),
+			"--output-dir",
+			str(output_dir),
+			"--timeout-seconds",
+			str(timeout_seconds),
+		),
+		cwd=PROJECT_ROOT,
+		stdout_file=log_root / f"jason_test_{index}.stdout.json",
+		stderr_file=log_root / f"jason_test_{index}.stderr.txt",
+		timeout_seconds=timeout_seconds + 30,
+		max_rss_gb=max_rss_gb,
+	)
+	payload = result.to_dict()
+	payload["domain"] = domain_name
+	payload["problem_file"] = str(problem_file)
+	payload["goal_name"] = goal_name
+	payload["jason_output_dir"] = str(output_dir)
+	if result.stdout_file and Path(result.stdout_file).exists():
+		try:
+			payload.update(json.loads(Path(result.stdout_file).read_text(encoding="utf-8")))
+		except json.JSONDecodeError:
+			pass
+	return payload
+
+
+def run_command(
+	command: Sequence[str],
+	*,
+	cwd: Path,
+	stdout_file: Path,
+	stderr_file: Path,
+	timeout_seconds: int,
+	max_rss_gb: float,
+	extra_env: dict[str, str] | None = None,
+) -> CommandResult:
+	"""Run one command with file-backed logs, timeout, and best-effort memory guard."""
+
+	stdout_file.parent.mkdir(parents=True, exist_ok=True)
+	stderr_file.parent.mkdir(parents=True, exist_ok=True)
+	env = {**os.environ, **dict(extra_env or {})}
+	start = time.perf_counter()
+	timed_out = False
+	exit_code: int | None = None
+	with stdout_file.open("w", encoding="utf-8") as stdout_handle:
+		with stderr_file.open("w", encoding="utf-8") as stderr_handle:
+			try:
+				process = subprocess.run(
+					tuple(str(item) for item in command),
+					cwd=cwd,
+					env=env,
+					stdout=stdout_handle,
+					stderr=stderr_handle,
+					check=False,
+					timeout=timeout_seconds,
+					preexec_fn=memory_limit_preexec(max_rss_gb),
+				)
+				exit_code = process.returncode
+			except subprocess.TimeoutExpired:
+				timed_out = True
+	duration = time.perf_counter() - start
+	return CommandResult(
+		command=tuple(str(item) for item in command),
+		cwd=str(cwd),
+		stdout_file=str(stdout_file),
+		stderr_file=str(stderr_file),
+		exit_code=exit_code,
+		timed_out=timed_out,
+		duration_seconds=duration,
+	)
+
+
+def memory_limit_preexec(max_rss_gb: float):
+	"""Return a subprocess preexec function that caps address-space memory."""
+
+	if resource is None:
+		return None
+	memory_bytes = max(int(max_rss_gb * 1024 * 1024 * 1024), 1)
+
+	def _apply_memory_limit() -> None:
+		for limit_name in ("RLIMIT_AS", "RLIMIT_DATA", "RLIMIT_RSS"):
+			limit = getattr(resource, limit_name, None)
+			if limit is None:
+				continue
+			try:
+				resource.setrlimit(limit, (memory_bytes, memory_bytes))
+				break
+			except (OSError, ValueError):
+				continue
+
+	return _apply_memory_limit
+
+
+def moose_train_command(
+	*,
+	domain_file: Path,
+	train_dir: Path,
+	model_file: Path,
+	random_seed: int,
+	num_workers: int,
+	num_permutations: int,
+	goal_max_size: int,
+	runtime: str = "docker",
+	max_rss_gb: float = 16.0,
+) -> tuple[str, ...]:
+	"""Return the official MOOSE training command for the full train split."""
+
+	args = (
+		"train",
+		container_path(domain_file) if runtime == "docker" else str(domain_file),
+		container_path(train_dir) if runtime == "docker" else str(train_dir),
+		"--save-file",
+		container_path(model_file) if runtime == "docker" else str(model_file),
+		"--random-seed",
+		str(random_seed),
+		"--num_workers",
+		str(num_workers),
+		"--num-permutations",
+		str(num_permutations),
+		"--goal-max-size",
+		str(goal_max_size),
+		"--num-training",
+		"-1",
+		"--num-validation",
+		"-1",
+	)
+	return moose_runtime_command(args, runtime=runtime, max_rss_gb=max_rss_gb)
+
+
+def moose_dump_policy_command(
+	*,
+	model_file: Path,
+	runtime: str = "docker",
+	max_rss_gb: float = 16.0,
+) -> tuple[str, ...]:
+	"""Return the official MOOSE readable policy dump command."""
+
+	args = (
+		"policy",
+		container_path(model_file) if runtime == "docker" else str(model_file),
+		"--dump-policy",
+	)
+	return moose_runtime_command(args, runtime=runtime, max_rss_gb=max_rss_gb)
+
+
+def moose_policy_command(
+	*,
+	model_file: Path,
+	domain_file: Path,
+	problem_file: Path,
+	plan_file: Path,
+	bound: int,
+	runtime: str = "docker",
+	max_rss_gb: float = 16.0,
+) -> tuple[str, ...]:
+	"""Return the official MOOSE policy execution command."""
+
+	args = (
+		"policy",
+		container_path(model_file) if runtime == "docker" else str(model_file),
+		container_path(domain_file) if runtime == "docker" else str(domain_file),
+		container_path(problem_file) if runtime == "docker" else str(problem_file),
+		"--bound",
+		str(bound),
+		"--plan-file",
+		container_path(plan_file) if runtime == "docker" else str(plan_file),
+		"-val",
+	)
+	return moose_runtime_command(args, runtime=runtime, max_rss_gb=max_rss_gb)
+
+
+def moose_runtime_command(
+	moose_args: Sequence[str],
+	*,
+	runtime: str,
+	max_rss_gb: float,
+) -> tuple[str, ...]:
+	"""Wrap official MOOSE arguments in the selected runtime."""
+
+	if runtime == "local":
+		command = "train.py" if tuple(moose_args)[0] == "train" else "policy.py"
+		return (str(moose_python()), command, *tuple(moose_args)[1:])
+	if runtime != "docker":
+		raise ValueError(f"Unsupported MOOSE runtime: {runtime}")
+	if shutil.which("docker") is None:
+		raise FileNotFoundError("Docker is required for --moose-runtime docker.")
+	inner_command = (
+		"apptainer run --bind /work --bind /project /work/moose.sif "
+		+ shlex.join(tuple(moose_args))
+	)
+	return (
+		"docker",
+		"run",
+		"--rm",
+		"--platform",
+		"linux/amd64",
+		f"--memory={int(max_rss_gb)}g",
+		"--privileged",
+		"-v",
+		f"{MOOSE_ROOT}:/work",
+		"-v",
+		f"{PROJECT_ROOT}:/project",
+		"-w",
+		"/work",
+		"moose-exact-ubuntu22:local",
+		"bash",
+		"-lc",
+		inner_command,
+	)
+
+
+def moose_python() -> Path:
+	"""Return the local MOOSE Python executable."""
+
+	candidate = MOOSE_ROOT / ".venv" / "bin" / "python"
+	if candidate.exists():
+		return candidate
+	raise FileNotFoundError(
+		"Missing MOOSE virtual environment. Expected "
+		f"{candidate}. Install the official MOOSE dependencies first."
+	)
+
+
+def first_n_test_instances(test_dir: Path, *, count: int) -> tuple[Path, ...]:
+	"""Return the first test instances under natural filename ordering."""
+
+	paths = tuple(sorted(test_dir.glob("*.pddl"), key=natural_sort_key))
+	if len(paths) < count:
+		raise ValueError(f"{test_dir} contains only {len(paths)} PDDL test instances.")
+	return paths[:count]
+
+
+def materialize_moose_compatible_pddl(
+	*,
+	domain_file: Path,
+	train_dir: Path,
+	test_instances: Sequence[Path],
+	output_root: Path,
+) -> dict[str, Any]:
+	"""Write normalized PDDL copies for MOOSE's strict parser."""
+
+	domain_output = output_root / "domain.pddl"
+	train_output = output_root / "train"
+	test_output = output_root / "test"
+	domain_output.parent.mkdir(parents=True, exist_ok=True)
+	train_output.mkdir(parents=True, exist_ok=True)
+	test_output.mkdir(parents=True, exist_ok=True)
+	domain_output.write_text(
+		normalise_pddl_for_moose(domain_file.read_text(encoding="utf-8")),
+		encoding="utf-8",
+	)
+	train_files: list[str] = []
+	for source_file in sorted(train_dir.glob("*.pddl"), key=natural_sort_key):
+		target_file = train_output / source_file.name
+		target_file.write_text(
+			normalise_pddl_for_moose(source_file.read_text(encoding="utf-8")),
+			encoding="utf-8",
+		)
+		train_files.append(str(target_file))
+	test_files: list[str] = []
+	for source_file in tuple(test_instances):
+		target_file = test_output / source_file.name
+		target_file.write_text(
+			normalise_pddl_for_moose(source_file.read_text(encoding="utf-8")),
+			encoding="utf-8",
+		)
+		test_files.append(str(target_file))
+	return {
+		"domain_file": str(domain_output),
+		"train_dir": str(train_output),
+		"train_count": len(train_files),
+		"test_files": test_files,
+	}
+
+
+def normalise_pddl_for_moose(text: str) -> str:
+	"""Normalize PDDL syntax accepted by our parser but rejected by MOOSE's parser."""
+
+	normalised = str(text or "").lower()
+	if "(:types" not in normalised or ":typing" in normalised:
+		return normalised
+	requirements_match = re.search(r"\(:requirements(?P<body>[^)]*)\)", normalised)
+	if requirements_match is None:
+		define_match = re.search(r"\(define\s+\(domain\s+[^)]+\)", normalised)
+		if define_match is None:
+			return normalised
+		insert_at = define_match.end()
+		return (
+			normalised[:insert_at]
+			+ "\n (:requirements :strips :typing)"
+			+ normalised[insert_at:]
+		)
+	body = requirements_match.group("body")
+	updated = f"(:requirements{body} :typing)"
+	return (
+		normalised[: requirements_match.start()]
+		+ updated
+		+ normalised[requirements_match.end() :]
+	)
+
+
+def container_path(path: Path) -> str:
+	"""Map a project-local host path into the Docker MOOSE container."""
+
+	resolved = path.expanduser().resolve()
+	try:
+		relative = resolved.relative_to(PROJECT_ROOT)
+	except ValueError as error:
+		raise ValueError(f"Path is outside project root and cannot be containerized: {path}") from error
+	return "/project/" + str(relative).replace(os.sep, "/")
+
+
+def write_test_goal_dataset(
+	*,
+	domain_name: str,
+	problem_files: Sequence[Path],
+	output_file: Path,
+) -> None:
+	"""Write a grounded LTLf JSON dataset from selected PDDL problem goals."""
+
+	cases: dict[str, dict[str, object]] = {}
+	for index, problem_file in enumerate(problem_files, start=1):
+		problem = PDDLParser.parse_problem(problem_file)
+		goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
+		if len(goal_facts) != len(problem.goal_facts):
+			raise ValueError(
+				f"{problem_file} contains negative goal literals; this runner only "
+				"builds positive singleton progress transitions."
+			)
+		if not goal_facts:
+			raise ValueError(f"{problem_file} contains no positive goal literals.")
+		atoms = tuple(_fact_atom(fact) for fact in goal_facts)
+		cases[f"query_{index}"] = {
+			"goal_name": f"g_{_safe_goal_fragment(domain_name)}_test_{index}",
+			"problem_file": str(problem_file),
+			"source_text": (
+				"Sequentialized positive PDDL goal literals from "
+				f"{problem_file.name} for faithful MOOSE-to-ASL validation."
+			),
+			"ltlf_formula": sequential_eventually_formula(atoms),
+			"atoms": list(atoms),
+			"bindings": {},
+			"atom_vocabulary": "pddl_fluents",
+			"status": "supported",
+		}
+	output_file.parent.mkdir(parents=True, exist_ok=True)
+	output_file.write_text(
+		json.dumps(
+			{
+				"schema_version": 1,
+				"goal_specification_kind": "temporal_extended_goal",
+				"temporal_logic": "LTLf",
+				"domain": domain_name,
+				"cases": cases,
+			},
+			indent=2,
+			sort_keys=True,
+		)
+		+ "\n",
+		encoding="utf-8",
+	)
+
+
+def sequential_eventually_formula(atoms: Sequence[str]) -> str:
+	"""Build a singleton-progress LTLf sequence from ordered atom strings."""
+
+	items = tuple(str(atom).strip().replace(" ", "") for atom in atoms if str(atom).strip())
+	if not items:
+		raise ValueError("At least one atom is required.")
+	formula = f"F({items[-1]})"
+	for atom in reversed(items[:-1]):
+		formula = f"F({atom} & X({formula}))"
+	return formula
+
+
+def natural_sort_key(path: Path) -> tuple[object, ...]:
+	"""Sort paths by text fragments and embedded integers."""
+
+	parts: list[object] = []
+	for item in re.split(r"(\d+)", path.name):
+		if item.isdigit():
+			parts.append(int(item))
+		else:
+			parts.append(item.lower())
+	return tuple(parts)
+
+
+def _fact_atom(fact: PDDLFact) -> str:
+	args = tuple(str(arg).strip() for arg in fact.args if str(arg).strip())
+	if not args:
+		return fact.predicate
+	return f"{fact.predicate}({','.join(args)})"
+
+
+def _safe_goal_fragment(value: str) -> str:
+	text = re.sub(r"[^A-Za-z0-9_]+", "_", str(value or "").strip().lower()).strip("_")
+	if not text:
+		return "domain"
+	if text[0].isdigit():
+		return f"d_{text}"
+	return text
+
+
+if __name__ == "__main__":
+	raise SystemExit(main())
