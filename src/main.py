@@ -20,6 +20,7 @@ from domain_level_planning import (  # noqa: E402
 	compile_moose_readable_policy_to_asl_library,
 	load_lifted_ltlf_goal_dataset,
 )
+from evaluation.jason_runtime import JasonPlanLibraryRunner  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import render_plan_library_asl  # noqa: E402
 from utils.pddl_parser import PDDLParser  # noqa: E402
@@ -59,6 +60,7 @@ Examples:
   python src/main.py compile-moose-atomic-library --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry
   python src/main.py compile-moose-atomic-library --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules
   python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocks/domain.pddl --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json --query-id query_1
+  python src/main.py validate-jason-plan-library --domain-file src/domains/blocks/domain.pddl --problem-file src/domains/blocks/test/instance-69.pddl --goal-name g_blocks_user_goal_1
 		""",
 	)
 	subparsers = parser.add_subparsers(dest="command")
@@ -146,6 +148,40 @@ Examples:
 		"--log-dir",
 		help="Optional structured execution log directory for this temporal append run.",
 	)
+
+	jason_parser = subparsers.add_parser(
+		"validate-jason-plan-library",
+		help="Run a canonical domain AgentSpeak(L) library in the real Jason interpreter.",
+	)
+	jason_parser.add_argument("--domain-file", required=True, help="Path to the PDDL domain file.")
+	jason_parser.add_argument("--problem-file", required=True, help="Path to the PDDL problem file.")
+	jason_parser.add_argument(
+		"--goal-name",
+		required=True,
+		help="Top-level AgentSpeak achievement goal to run, for example g_blocks_user_goal_1.",
+	)
+	jason_parser.add_argument(
+		"--plan-library-asl",
+		help=(
+			"Canonical plan_library.asl file. Defaults to "
+			"<library-root>/<domain>/plan_library.asl and must match it if provided."
+		),
+	)
+	jason_parser.add_argument(
+		"--library-root",
+		default=str(DEFAULT_DOMAIN_LIBRARY_ROOT),
+		help="Root directory for canonical per-domain libraries.",
+	)
+	jason_parser.add_argument(
+		"--output-dir",
+		help="Directory for Jason runtime artifacts. Defaults to artifacts/jason_validation/<domain>/<goal>.",
+	)
+	jason_parser.add_argument(
+		"--timeout-seconds",
+		type=int,
+		default=60,
+		help="Hard timeout for the Jason runtime process.",
+	)
 	return parser
 
 
@@ -160,6 +196,8 @@ def main() -> None:
 		results = _compile_moose_atomic_library(args)
 	elif args.command == "append-lifted-temporal-goal":
 		results = _append_lifted_temporal_goal(args)
+	elif args.command == "validate-jason-plan-library":
+		results = _validate_jason_plan_library(args)
 	else:
 		parser.error(f"Unsupported command {args.command!r}")
 		return
@@ -354,6 +392,52 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 	if log_path is not None:
 		results["execution_log"] = str(log_path)
 	return results
+
+
+def _validate_jason_plan_library(args: argparse.Namespace) -> dict[str, Any]:
+	domain_file = _require_existing_path(args.domain_file, label="Domain File")
+	problem_file = _require_existing_path(args.problem_file, label="Problem File")
+	domain = PDDLParser.parse_domain(domain_file)
+	domain_key = _canonical_domain_key_for_domain_file(
+		domain_file,
+		fallback_domain_name=domain.name,
+	)
+	output_root = _canonical_domain_library_dir(
+		library_root=args.library_root,
+		domain_name=domain_key,
+		output_root=None,
+	)
+	canonical_asl = Path(output_root) / "plan_library.asl"
+	plan_library_asl = _require_existing_path(
+		args.plan_library_asl or str(canonical_asl),
+		label="Plan Library ASL File",
+	)
+	if Path(plan_library_asl).resolve() != canonical_asl.resolve():
+		raise ValueError(
+			"noncanonical_domain_library: validate-jason-plan-library must run "
+			f"the canonical ASL library for domain {domain_key!r}: {canonical_asl}",
+		)
+	goal_name = str(args.goal_name or "").strip()
+	if not goal_name:
+		raise ValueError("goal_name is required for Jason validation.")
+	output_dir = (
+		Path(args.output_dir).expanduser().resolve()
+		if args.output_dir
+		else PROJECT_ROOT
+		/ "artifacts"
+		/ "jason_validation"
+		/ domain_key
+		/ goal_name
+	)
+	runner = JasonPlanLibraryRunner(timeout_seconds=max(1, int(args.timeout_seconds or 60)))
+	result = runner.validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=plan_library_asl,
+		goal_name=goal_name,
+		output_dir=output_dir,
+	)
+	return result.to_dict()
 
 
 def allow_json_safe(payload: object) -> object:

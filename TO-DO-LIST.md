@@ -52,6 +52,7 @@ literal semantics.
 | A11 | Maintain exactly one appendable domain ASL library per domain. | Implemented and regression-tested | The main CLI now resolves every maintained library to `artifacts/domain_libraries/<domain>/plan_library.{json,asl}` by default. `--library-root` can relocate the root for tests, but the domain subdirectory is canonical. `--output-root` is deprecated and must equal the canonical domain directory if provided. Append rejects non-canonical `--plan-library-file` paths, preserves `temporal_goal_append_history`, and rejects duplicate temporal goal names with `duplicate_temporal_goal`. Regression tests cover sequential append into the same file plus rejection of non-canonical output/input paths. |
 | A12 | Replace raw MOOSE macro dump with compact recursive atomic minimal literal modules when claiming final domain-level ASL quality. | Implemented for all producible positive PDDL fluents | `src/domain_level_planning/atomic_module_synthesis.py` uses MOOSE singleton predicates as seed-goal evidence, then synthesizes compact recursive modules from PDDL action schemas for every predicate that appears in a positive action effect. Static predicates are detected schema-theoretically by absence from add/delete effects and remain context-only. The synthesizer performs schema-level STRIPS feasibility checks, typed action-argument compatibility, PDDL-derived `type_<type>` context guards, typed functional fluent conflict pruning, and sibling-branch subsumption before emitting ASL. Blocks now emits `+!holding(X)`, `+!handempty`, and `+!ontable(X)` modules in addition to `+!on(X,Y)` and `+!clear(X)`. |
 | A13 | Keep the temporal append path compatible with the new compact atomic library. | Implemented six-domain smoke | For `ferry`, `miconic`, `gripper`, `logistics`, `blocks`, and `8puzzle-1tile`, the pipeline compiled one MOOSE-trained readable policy into the canonical `artifacts/domain_libraries/<domain>/plan_library.asl`, then appended one LTLf query wrapper into the same file. Audit: `tmp/domain_canonical_smoke_subset/final_asl_audit.json`. The wrapper remains query-specific and calls atomic PDDL predicate subgoals directly. |
+| A14 | Restore Jason support as a real PDDL environment validation gate for current ASL libraries. | Implemented runner, partial six-domain pass | `src/evaluation/jason_runtime/runner.py` restores the historical Jason marker protocol and real Java `Environment` execution, but refactors it to the current PDDL-only architecture. It resolves Jason from Maven Central, materializes `agentspeak_generated.asl`, `jason_runner.mas2j`, and `JasonPipelineEnvironment.java`, checks PDDL action preconditions/effects, and exposes `src/main.py validate-jason-plan-library`. Real six-domain smoke in `tmp/jason_validation/summary.json`: Blocks/Ferry/Gripper/Miconic pass both appended goals; 8puzzle-1tile and Logistics timeout before any primitive action, which is an ASL-library generation gap rather than a Jason runner failure. |
 
 ## Current Evidence Snapshot
 
@@ -73,6 +74,7 @@ literal semantics.
 | Compact Blocks atomic-plus-temporal smoke | The snapshot in `snapshots/moose_blocks_minimal_modules_appended/` demonstrates the ASL shape. The maintained-library path is now canonicalized by `src/main.py`; use `artifacts/domain_libraries/blocks/plan_library.asl` for the active per-domain library. |
 | Canonical single-ASL smoke | `src/main.py compile-moose-atomic-library ... --library-root tmp/canonical-domain-library-smoke` followed by `src/main.py append-lifted-temporal-goal ... --library-root tmp/canonical-domain-library-smoke` returned the same `tmp/canonical-domain-library-smoke/blocks/plan_library.asl`; `find` found exactly one ASL file under that library root. |
 | Six-domain canonical ASL smoke | Existing MOOSE readable policies under `tmp/domain_canonical_smoke_subset/` compile and append successfully for all selected domains. Final totals: `ferry 13`, `miconic 15`, `gripper 14`, `logistics 20`, `blocks 19`, and `8puzzle-1tile 10` plans including two query-wrapper plans each. Atomic audit found `0` grounded atomic arguments, `0` role coverage gaps, and no synthetic names in all six libraries. |
+| Real Jason execution smoke | `uv run python src/main.py validate-jason-plan-library ...` now runs generated ASL in Jason with a real PDDL action environment. Results in `tmp/jason_validation/summary.json`: `blocks`, `ferry`, `gripper`, and `miconic` pass both smoke goals; `8puzzle-1tile` and `logistics` hit the 20s timeout with no primitive actions, exposing recursive plan-selection gaps in the generated libraries. |
 | MOOSE paper audit | Local paper text confirms MOOSE decomposes training problems into singleton goal conditions and applies goal regression, making it suitable for atomic positive predicate templates. |
 
 ## Commands
@@ -124,6 +126,12 @@ uv run python src/main.py append-lifted-temporal-goal \
   --domain-file src/domains/blocks/domain.pddl \
   --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
   --query-id query_1
+
+uv run python src/main.py validate-jason-plan-library \
+  --domain-file src/domains/blocks/domain.pddl \
+  --problem-file src/domains/blocks/test/instance-69.pddl \
+  --goal-name g_blocks_user_goal_1 \
+  --timeout-seconds 30
 ```
 
 Historical restoration references are no longer part of the active task list.
