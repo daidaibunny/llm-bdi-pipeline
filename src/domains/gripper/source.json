@@ -1,17 +1,18 @@
 {
-  "instance_count": 20,
-  "ipc_variant": "gripper-round-1-strips",
-  "ipc_year": "1998",
-  "source": "potassco/pddl-instances",
-  "source_commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
-  "source_domain_file": "ipc-1998/domains/gripper-round-1-strips/domain.pddl",
-  "source_id": "pddl_instances",
-  "source_path": "ipc-1998/domains/gripper-round-1-strips",
+  "instance_count": 93,
+  "ipc_variant": "gripper",
+  "ipc_year": "MOOSE 2026",
+  "source": "DillonZChen/moose",
+  "source_commit": "local .external/moose checkout",
+  "source_domain_file": "gripper/domain.pddl",
+  "source_id": "moose_official_artifact",
+  "source_path": "gripper",
   "source_problem_globs": [
-    "instances/*.pddl"
+    "training/*.pddl",
+    "testing/*.pddl"
   ],
-  "source_url": "https://github.com/potassco/pddl-instances",
-  "split_policy": "floor(2/3 * instance_count) train, remaining test",
-  "test_count": 7,
-  "train_count": 13
+  "source_url": "https://github.com/DillonZChen/moose",
+  "split_policy": "MOOSE official artifact split: training/ as train and testing/ as test",
+  "test_count": 90,
+  "train_count": 3
 }

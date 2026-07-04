@@ -1,53 +1,65 @@
-;; logistics domain Typed version.
-;;
-
 (define (domain logistics)
-  (:requirements :strips :typing)
-  (:types truck
-          airplane - vehicle
-          package
-          vehicle - physobj
-          airport
-          location - place
-          city
-          place
-          physobj - object)
+    (:requirements :strips :typing)
 
-  (:predicates   (in-city ?loc - place ?city - city)
-    (at ?obj - physobj ?loc - place)
-    (in ?pkg - package ?veh - vehicle))
+    (:types
+        locatable - object
+        vehicle - locatable
 
-(:action LOAD-TRUCK
-   :parameters    (?pkg - package ?truck - truck ?loc - place)
-   :precondition  (and (at ?truck ?loc) (at ?pkg ?loc))
-   :effect        (and (not (at ?pkg ?loc)) (in ?pkg ?truck)))
+        location - object
+        city - object
+        package - locatable
+        truck - vehicle
+        airplane - vehicle
+    )
 
-(:action LOAD-AIRPLANE
-  :parameters   (?pkg - package ?airplane - airplane ?loc - place)
-  :precondition (and (at ?pkg ?loc) (at ?airplane ?loc))
-  :effect       (and (not (at ?pkg ?loc)) (in ?pkg ?airplane)))
+    (:predicates
+        (has-airport ?location - location)
+        (at ?locatable - locatable ?location - location)
+        (in ?package - package ?vehicle - vehicle)
+        (in-city ?location - location ?city - city)
+    )
 
-(:action UNLOAD-TRUCK
-  :parameters   (?pkg - package ?truck - truck ?loc - place)
-  :precondition (and (at ?truck ?loc) (in ?pkg ?truck))
-  :effect       (and (not (in ?pkg ?truck)) (at ?pkg ?loc)))
+    (:action LOAD-TRUCK
+        :parameters (?obj - package ?truck - truck ?loc - location)
+        :precondition (and
+            (at ?truck ?loc) (at ?obj ?loc))
+        :effect (and (not (at ?obj ?loc)) (in ?obj ?truck))
+    )
 
-(:action UNLOAD-AIRPLANE
-  :parameters    (?pkg - package ?airplane - airplane ?loc - place)
-  :precondition  (and (in ?pkg ?airplane) (at ?airplane ?loc))
-  :effect        (and (not (in ?pkg ?airplane)) (at ?pkg ?loc)))
+    (:action LOAD-AIRPLANE
+        :parameters (?obj - package ?airplane - airplane ?loc - location)
+        :precondition (and
+            (at ?obj ?loc) (at ?airplane ?loc))
+        :effect (and (not (at ?obj ?loc)) (in ?obj ?airplane))
+    )
 
-(:action DRIVE-TRUCK
-  :parameters (?truck - truck ?loc-from - place ?loc-to - place ?city - city)
-  :precondition
-   (and (at ?truck ?loc-from) (in-city ?loc-from ?city) (in-city ?loc-to ?city))
-  :effect
-   (and (not (at ?truck ?loc-from)) (at ?truck ?loc-to)))
+    (:action UNLOAD-TRUCK
+        :parameters (?obj - package ?truck - truck ?loc - location)
+        :precondition (and
+            (at ?truck ?loc) (in ?obj ?truck))
+        :effect (and (not (in ?obj ?truck)) (at ?obj ?loc))
+    )
 
-(:action FLY-AIRPLANE
-  :parameters (?airplane - airplane ?loc-from - airport ?loc-to - airport)
-  :precondition
-   (at ?airplane ?loc-from)
-  :effect
-   (and (not (at ?airplane ?loc-from)) (at ?airplane ?loc-to)))
+    (:action UNLOAD-AIRPLANE
+        :parameters (?obj - package ?airplane - airplane ?loc - location)
+        :precondition (and
+            (in ?obj ?airplane) (at ?airplane ?loc))
+        :effect (and (not (in ?obj ?airplane)) (at ?obj ?loc))
+    )
+
+    (:action DRIVE-TRUCK
+        :parameters (?truck - truck ?loc-from - location ?loc-to - location ?city - city)
+        :precondition (and
+            (at ?truck ?loc-from)
+            (in-city ?loc-from ?city)
+            (in-city ?loc-to ?city))
+        :effect (and (not (at ?truck ?loc-from)) (at ?truck ?loc-to))
+    )
+
+    (:action FLY-AIRPLANE
+        :parameters (?airplane - airplane ?loc-from - location ?loc-to - location)
+        :precondition (and (has-airport ?loc-from) (has-airport ?loc-to)
+            (at ?airplane ?loc-from))
+        :effect (and (not (at ?airplane ?loc-from)) (at ?airplane ?loc-to))
+    )
 )

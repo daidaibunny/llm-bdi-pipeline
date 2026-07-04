@@ -1,10 +1,12 @@
+; Source: https://github.com/AI-Planning/pddl-generators/tree/main/miconic
+; Fix: prevent the elevator from boarding served passengers => (not (origin ?p ?f)) effect added to board action
 (define (domain miconic)
-  (:requirements :strips)
+  (:requirements :strips :typing)
   (:types passenger - object
           floor - object
          )
 
-(:predicates
+(:predicates 
 (origin ?person - passenger ?floor - floor)
 ;; entry of ?person is ?floor
 ;; inertia
@@ -19,14 +21,8 @@
 (boarded ?person - passenger)
 ;; true if ?person has boarded the lift
 
-(not-boarded ?person - passenger)
-;; true if ?person has not boarded the lift
-
 (served ?person - passenger)
 ;; true if ?person has alighted as her destination
-
-(not-served ?person - passenger)
-;; true if ?person is not at their destination
 
 (lift-at ?floor - floor)
 ;; current position of the lift is at ?floor
@@ -38,14 +34,14 @@
 (:action board
   :parameters (?f - floor ?p - passenger)
   :precondition (and (lift-at ?f) (origin ?p ?f))
-  :effect (boarded ?p))
+  :effect (and (boarded ?p) (not (origin ?p ?f))))
 
 (:action depart
   :parameters (?f - floor ?p - passenger)
   :precondition (and (lift-at ?f) (destin ?p ?f)
-         (boarded ?p))
+		     (boarded ?p))
   :effect (and (not (boarded ?p))
-         (served ?p)))
+	       (served ?p)))
 ;;drive up
 
 (:action up
@@ -61,3 +57,6 @@
   :precondition (and (lift-at ?f1) (above ?f2 ?f1))
   :effect (and (lift-at ?f2) (not (lift-at ?f1))))
 )
+
+
+
