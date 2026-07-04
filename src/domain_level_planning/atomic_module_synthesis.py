@@ -23,7 +23,6 @@ from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLParser
 
 from .pddl_types import type_closure
-from .pddl_types import type_guard_symbol
 
 
 @dataclass(frozen=True)
@@ -211,6 +210,13 @@ class _ParsedAction:
 		)
 
 
+def _predicate_parameter_types(domain: PDDLDomain) -> dict[str, tuple[str, ...]]:
+	return {
+		predicate.name: tuple(_parameter_type(parameter) for parameter in predicate.parameters)
+		for predicate in domain.predicates
+	}
+
+
 def _module_predicate_closure(
 	*,
 	seeds: Sequence[str],
@@ -254,6 +260,7 @@ def _candidate_module_plans(
 	policy_file: str | Path | None,
 ) -> tuple[AgentSpeakPlan, ...]:
 	module_set = set(module_predicates)
+	predicate_type_map = _predicate_parameter_types(domain)
 	plans: list[AgentSpeakPlan] = []
 	recursive_module_predicates = {
 		predicate
@@ -283,6 +290,7 @@ def _candidate_module_plans(
 		for sequence in _producer_action_sequences(
 			actions=actions,
 			type_tokens=domain.types,
+			predicate_type_map=predicate_type_map,
 			seed_predicates=set(seed_predicates),
 			target_predicate=predicate.name,
 			module_predicates=module_set,
@@ -313,7 +321,6 @@ class _ProducerSequence:
 	target_predicate: str
 	target_arguments: tuple[str, ...]
 	context_literals: tuple[PDDLLiteralSchema, ...]
-	type_contexts: tuple[str, ...]
 	body_actions: tuple[_ActionCall, ...]
 	producer_action_names: tuple[str, ...]
 
@@ -330,6 +337,7 @@ def _producer_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
 	seed_predicates: set[str],
 	target_predicate: str,
 	module_predicates: set[str],
@@ -359,6 +367,7 @@ def _producer_action_sequences(
 		sequence = _finalize_sequence(
 			actions=actions,
 			type_tokens=type_tokens,
+			predicate_type_map=predicate_type_map,
 			functional_groups=functional_groups,
 			target_effect=mapped_effect,
 			target_arguments=head_arguments,
@@ -412,6 +421,7 @@ def _producer_action_sequences(
 				sequence = _finalize_sequence(
 					actions=actions,
 					type_tokens=type_tokens,
+					predicate_type_map=predicate_type_map,
 					functional_groups=functional_groups,
 					target_effect=mapped_effect,
 					target_arguments=head_arguments,
@@ -424,6 +434,7 @@ def _producer_action_sequences(
 				for bridge in _bridge_action_sequences(
 					actions=actions,
 					type_tokens=type_tokens,
+					predicate_type_map=predicate_type_map,
 					support_action=support_action,
 					support_map=support_map,
 					final_action=final_action,
@@ -433,6 +444,7 @@ def _producer_action_sequences(
 					sequence = _finalize_sequence(
 						actions=actions,
 						type_tokens=type_tokens,
+						predicate_type_map=predicate_type_map,
 						functional_groups=functional_groups,
 						target_effect=mapped_effect,
 						target_arguments=head_arguments,
@@ -456,6 +468,7 @@ def _bridge_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
 	support_action: _ParsedAction,
 	support_map: Mapping[str, str],
 	final_action: _ParsedAction,
@@ -517,6 +530,13 @@ def _bridge_action_sequences(
 				_action_call(final_action, final_map),
 			)
 			if not _action_calls_have_compatible_types(body_actions, type_tokens):
+				continue
+			if not _action_type_bindings_are_observable(
+				body_actions=body_actions,
+				visible_literals=context_literals,
+				predicate_type_map=predicate_type_map,
+				type_tokens=type_tokens,
+			):
 				continue
 			candidates.append(
 				_BridgeCandidate(
@@ -631,6 +651,7 @@ def _finalize_sequence(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
 	functional_groups: Sequence[_FunctionalPredicateGroup],
 	target_effect: PDDLLiteralSchema,
 	target_arguments: tuple[str, ...],
@@ -643,6 +664,13 @@ def _finalize_sequence(
 	sequence_body = tuple(body_actions)
 	if not _action_calls_have_compatible_types(sequence_body, type_tokens):
 		return None
+	if not _action_type_bindings_are_observable(
+		body_actions=sequence_body,
+		visible_literals=(target_effect, *context_literals),
+		predicate_type_map=predicate_type_map,
+		type_tokens=type_tokens,
+	):
+		return None
 	cleanup_actions = _cleanup_action_calls(
 		actions=actions,
 		type_tokens=type_tokens,
@@ -653,6 +681,13 @@ def _finalize_sequence(
 	if cleanup_actions:
 		sequence_body += cleanup_actions
 		if not _action_calls_have_compatible_types(sequence_body, type_tokens):
+			return None
+		if not _action_type_bindings_are_observable(
+			body_actions=sequence_body,
+			visible_literals=(target_effect, *context_literals),
+			predicate_type_map=predicate_type_map,
+			type_tokens=type_tokens,
+		):
 			return None
 		producer_action_names += tuple(action.action.name for action in cleanup_actions)
 	type_contexts = _type_contexts_for_action_calls(sequence_body, type_tokens)
@@ -676,7 +711,6 @@ def _finalize_sequence(
 		target_predicate=target_effect.predicate,
 		target_arguments=target_arguments,
 		context_literals=deduplicated_contexts,
-		type_contexts=type_contexts,
 		body_actions=sequence_body,
 		producer_action_names=producer_action_names,
 	)
@@ -783,6 +817,53 @@ def _action_calls_have_compatible_types(
 	return _type_contexts_for_action_calls(body_actions, type_tokens) is not None
 
 
+def _action_type_bindings_are_observable(
+	*,
+	body_actions: Sequence[_ActionCall],
+	visible_literals: Sequence[PDDLLiteralSchema],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
+	type_tokens: Sequence[str],
+) -> bool:
+	action_types = _argument_required_types(body_actions)
+	visible_types = _visible_argument_types(
+		visible_literals=visible_literals,
+		predicate_type_map=predicate_type_map,
+	)
+	for argument, required_types in action_types.items():
+		observable_types = visible_types.get(argument, set())
+		if not observable_types:
+			continue
+		most_specific_required = _most_specific_compatible_types(required_types, type_tokens)
+		most_specific_observable = _most_specific_compatible_types(observable_types, type_tokens)
+		if most_specific_required is None or most_specific_observable is None:
+			return False
+		for required_type in most_specific_required:
+			if required_type == "object":
+				continue
+			if not any(
+				_is_subtype(observable_type, required_type, type_tokens)
+				for observable_type in most_specific_observable
+			):
+				return False
+	return True
+
+
+def _visible_argument_types(
+	*,
+	visible_literals: Sequence[PDDLLiteralSchema],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
+) -> dict[str, set[str]]:
+	types_by_argument: dict[str, set[str]] = {}
+	for literal in visible_literals:
+		parameter_types = predicate_type_map.get(literal.predicate, ())
+		for argument, type_name in zip(literal.arguments, parameter_types):
+			canonical_type = _canonical_type_name(type_name)
+			if canonical_type == "object":
+				continue
+			types_by_argument.setdefault(argument, set()).add(canonical_type)
+	return types_by_argument
+
+
 def _type_contexts_for_action_calls(
 	body_actions: Sequence[_ActionCall],
 	type_tokens: Sequence[str],
@@ -802,7 +883,7 @@ def _type_contexts_for_action_calls(
 		for type_name in most_specific:
 			if type_name == "object":
 				continue
-			contexts.append(_call(type_guard_symbol(type_name), (argument,)))
+			contexts.append(f"{argument}:{type_name}")
 	return tuple(dict.fromkeys(contexts))
 
 
@@ -1523,6 +1604,7 @@ def _module_synthesis_report(
 			"MOOSE singleton-goal regression supplies lifted target-predicate evidence",
 			"PDDL action schemas supply primitive producer/precondition structure",
 			"policy-reuse style predicate modules allow subgoal calls between atomic literals",
+			"PDDL typing is used internally to reject unobservable subtype role bindings",
 			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",
 		),
 	)

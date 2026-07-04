@@ -185,7 +185,12 @@ def test_logistics_atomic_modules_use_pddl_typing_without_type_guards() -> None:
 	asl = render_plan_library_asl(library)
 
 	assert "type_" not in asl
-	assert "load_airplane(X, Z, A);\n\tfly_airplane(Z, A, Y);\n\tunload_airplane(X, Z, Y)." in asl
+	assert "type_" not in str(library.metadata["atomic_module_synthesis"])
+	assert "load_truck(X, X," not in asl
+	assert "load_airplane(X, X," not in asl
+	assert "drive_truck(X," not in asl
+	assert "fly_airplane(X," not in asl
+	assert "load_airplane(X, Z, A);\n\tfly_airplane(Z, A, Y);\n\tunload_airplane(X, Z, Y)." not in asl
 	assert "load_airplane(X, Z, A);\n\tunload_airplane(X, Z, Y)." not in asl
 	assert "load_truck(X, Z, A);\n\tunload_truck(X, Z, Y)." not in asl
 
