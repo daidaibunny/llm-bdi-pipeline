@@ -125,6 +125,11 @@ def main() -> int:
 		help="Skip direct MOOSE policy execution on the two selected test instances.",
 	)
 	parser.add_argument(
+		"--skip-jason-validation",
+		action="store_true",
+		help="Skip Jason execution after appending the two temporal query wrappers.",
+	)
+	parser.add_argument(
 		"--fail-fast",
 		action="store_true",
 		help="Stop after the first domain-level failure.",
@@ -147,6 +152,8 @@ def main() -> int:
 			"moose_runtime": args.moose_runtime,
 			"full_train_split": True,
 			"test_instance_count": 2,
+			"skip_jason_validation": args.skip_jason_validation,
+			"skip_moose_policy_validation": args.skip_moose_policy_validation,
 		},
 	}
 	for domain_name in domains:
@@ -318,6 +325,16 @@ def run_domain(
 				for index, problem_file in enumerate(test_instances, start=1)
 			]
 
+		record["canonical_library"] = {
+			"json": str(args.library_root / domain_name / "plan_library.json"),
+			"asl": str(args.library_root / domain_name / "plan_library.asl"),
+		}
+		if args.skip_jason_validation:
+			record["jason_validation"] = []
+			record["jason_validation_skipped"] = True
+			record["success"] = True
+			return record
+
 		jason_results = [
 			run_jason_validation(
 				domain_name=domain_name,
@@ -333,10 +350,7 @@ def run_domain(
 			for index, problem_file in enumerate(test_instances, start=1)
 		]
 		record["jason_validation"] = jason_results
-		record["canonical_library"] = {
-			"json": str(args.library_root / domain_name / "plan_library.json"),
-			"asl": str(args.library_root / domain_name / "plan_library.asl"),
-		}
+		record["jason_validation_skipped"] = False
 		record["success"] = all(bool(result.get("success")) for result in jason_results)
 		return record
 	except Exception as error:  # noqa: BLE001 - persisted in run summary.

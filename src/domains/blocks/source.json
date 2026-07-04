@@ -11,7 +11,7 @@
     "instances/*.pddl"
   ],
   "source_url": "https://github.com/potassco/pddl-instances",
-  "split_policy": "floor(2/3 * instance_count) train, remaining test",
-  "test_count": 34,
-  "train_count": 68
+  "split_policy": "floor(1/4 * instance_count) train for structural MOOSE-native audit, remaining test",
+  "test_count": 77,
+  "train_count": 25
 }

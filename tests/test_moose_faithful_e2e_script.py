@@ -11,6 +11,8 @@ from scripts.run_moose_faithful_e2e import natural_sort_key
 from scripts.run_moose_faithful_e2e import normalise_pddl_for_moose
 from scripts.run_moose_faithful_e2e import sequential_eventually_formula
 from scripts.run_moose_faithful_e2e import write_test_goal_dataset
+from scripts.run_timestamped_moose_asl_batch import batch_manifest
+from scripts.run_timestamped_moose_asl_batch import build_moose_batch_command
 
 
 def test_natural_sort_selects_first_split_instances(tmp_path: Path) -> None:
@@ -127,6 +129,50 @@ def test_moose_policy_command_docker_runtime_does_not_need_local_scorpion() -> N
 	assert ".external/moose/ext/planners/scorpion/scorpion.sif" not in command_text
 	assert "/project/tmp/moose_compatible_pddl/domain.pddl" in command_text
 	assert "/project/tmp/moose_compatible_pddl/test/p01.pddl" in command_text
+
+
+def test_timestamped_batch_command_generates_isolated_library_root(
+	tmp_path: Path,
+) -> None:
+	class Args:
+		num_workers = 4
+		num_permutations = 3
+		goal_max_size = 1
+		max_rss_gb = 16
+		train_timeout_seconds = 1800
+		dump_timeout_seconds = 300
+		append_timeout_seconds = 300
+		jason_timeout_seconds = 90
+		moose_plan_timeout_seconds = 120
+		moose_plan_bound = 5000
+		run_jason_validation = False
+		run_moose_policy_validation = False
+
+	batch_root = tmp_path / "20260704-101112"
+	command = build_moose_batch_command(
+		args=Args(),
+		domains=("blocks", "8puzzle-1tile"),
+		batch_root=batch_root,
+	)
+	manifest = batch_manifest(
+		args=Args(),
+		domains=("blocks", "8puzzle-1tile"),
+		timestamp_id="20260704-101112",
+		batch_root=batch_root,
+		command=command,
+	)
+
+	command_text = " ".join(command)
+
+	assert "--num-workers 4" in command_text
+	assert "--skip-jason-validation" in command
+	assert "--skip-moose-policy-validation" in command
+	assert str(batch_root / "domain_libraries") in command
+	assert manifest["expected_asl_files"] == [
+		str(batch_root / "domain_libraries" / "blocks" / "plan_library.asl"),
+		str(batch_root / "domain_libraries" / "8puzzle-1tile" / "plan_library.asl"),
+	]
+	assert manifest["settings"]["domain_execution"] == "sequential"
 
 
 def test_normalise_pddl_for_moose_lowercases_keywords_and_adds_typing() -> None:
