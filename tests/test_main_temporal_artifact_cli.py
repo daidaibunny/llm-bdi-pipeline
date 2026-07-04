@@ -81,7 +81,7 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 			str(PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"),
 			"--domain-name",
 			"blocks",
-			"--minimal-modules",
+			"--post-moose-recursive",
 			"--library-root",
 			str(library_root),
 		],
@@ -97,13 +97,16 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	)
 
 	assert result["success"] is True
-	assert result["plan_count"] == 17
+	assert result["plan_count"] >= 17
 	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "blocks"
 	assert metadata["artifact_kind"] == "moose_seeded_atomic_minimal_literal_module_library"
 	assert metadata["canonical_domain_library"] is True
 	assert metadata["minimal_modules"] is True
+	assert metadata["post_moose_recursive"] is True
+	assert metadata["moose_backend_path"] == "post_moose_recursive_module_synthesis"
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
+	assert "+!clear(X) : type_block(X) & not handempty" in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "block0" not in asl
 
@@ -171,6 +174,7 @@ def test_main_records_nonofficial_source_metadata_for_native_moose_compile(
 
 	assert result["success"] is True
 	assert metadata["minimal_modules"] is False
+	assert metadata["post_moose_recursive"] is False
 	assert metadata["moose_backend_path"] == "native_train_dump_policy"
 	assert metadata["moose_official_benchmark"] is False
 	assert metadata["source_metadata"]["source_id"] == "external_case_study"

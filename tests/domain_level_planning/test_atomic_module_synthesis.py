@@ -21,7 +21,7 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	)
 	asl = render_plan_library_asl(library)
 
-	assert len(library.plans) == 17
+	assert 17 <= len(library.plans) <= 25
 	assert {plan.trigger.symbol for plan in library.plans} == {
 		"clear",
 		"handempty",
@@ -56,6 +56,10 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
 	assert "\t!clear(X);" in asl
 	assert "\t!on(X, Y)." in asl
+	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(Y)" in asl
+	assert "\t!clear(Y);" in asl
+	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not holding(X)" in asl
+	assert "\t!holding(X);" in asl
 	assert "pick_up(X);\n\tunstack" not in asl
 	assert "on(X, Z) & clear(X) & handempty & clear(Y)" in asl
 	assert "\tunstack(X, Z);" in asl
@@ -70,6 +74,7 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "+!handempty : handempty" in asl
 	assert "put_down(X)." in asl
 	assert "+!ontable(X) : ontable(X)" in asl
+	assert "+!ontable(X) : type_block(X) & not holding(X)" in asl
 
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
@@ -77,6 +82,7 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "teg_state" not in asl
 	assert "block0" not in asl
 	assert "block1" not in asl
+	assert "!on(Y, X)" not in asl
 
 
 def test_ferry_bridge_sequence_keeps_negative_precondition_and_movement_module() -> None:

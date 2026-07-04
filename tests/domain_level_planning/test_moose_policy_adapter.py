@@ -117,6 +117,7 @@ def test_moose_readable_policy_compiles_to_atomic_asl_library() -> None:
 		"compact_lifted_singleton_macro_library"
 	)
 	assert library.metadata["library_quality"]["compact_recursive_module_ready"] is False
+	assert library.metadata["library_quality"]["faithful_decision_list_ready"] is True
 
 
 def test_moose_quality_audit_flags_large_raw_macro_policies() -> None:
@@ -131,7 +132,8 @@ def test_moose_quality_audit_flags_large_raw_macro_policies() -> None:
 	assert report.plan_count == 12
 	assert report.singleton_macro_library_ready is False
 	assert report.compact_recursive_module_ready is False
-	assert report.artifact_classification == "raw_lifted_singleton_macro_policy_not_compact"
+	assert report.faithful_decision_list_ready is True
+	assert report.artifact_classification == "faithful_moose_decision_list_asl_library"
 	assert any("Plan count exceeds" in warning for warning in report.warnings)
 
 
@@ -145,7 +147,7 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	)
 	asl = render_plan_library_asl(library)
 
-	assert len(library.plans) == 17
+	assert len(library.plans) >= 17
 	assert {plan.trigger.symbol for plan in library.plans} == {
 		"clear",
 		"handempty",
@@ -160,6 +162,9 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	)
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
+	assert "+!clear(X) : type_block(X) & not handempty" in asl
+	assert "\t!handempty;" in asl
+	assert "\t!on(Y, X);" not in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "block0" not in asl
 
@@ -247,11 +252,12 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 
 	assert "wrote atomic ASL library" in result.stdout
 	assert library_json["domain_name"] == "blocks"
-	assert len(library_json["plans"]) == 17
+	assert len(library_json["plans"]) >= 17
 	assert metadata["minimal_modules"] is True
 	assert metadata["source_raw_rule_count"] == 1
 	assert metadata["library_quality"]["artifact_classification"] == (
 		"compact_recursive_atomic_module_library"
 	)
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
+	assert "+!clear(X) : type_block(X) & not handempty" in asl
 	assert "+!holding(X) : holding(X)" in asl

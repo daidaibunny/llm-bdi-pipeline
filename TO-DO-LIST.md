@@ -70,7 +70,7 @@ literal semantics.
 | MOOSE readable artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry` reports `rules=5`, `modules=5`, `asl_plans=5`. |
 | MOOSE atomic ASL artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-dir tmp/moose-atomic/ferry-library` writes a domain-level atomic `plan_library.json` and `plan_library.asl`. |
 | MOOSE Blocks raw atomic-plus-temporal smoke | Guarded MOOSE Blocks probe first4 training under `16GiB/900s` learned `72` singleton rules and compiled `72` raw MOOSE atomic ASL plans. Appending the first two probe instances as LTLf tower goals produced one maintained context-driven temporal library with `83` plans and no `teg_state` or `dfa_state` beliefs. Snapshots are under `snapshots/moose_blocks_e2e/`. This remains backend evidence, not final compact library quality. |
-| MOOSE-seeded Blocks compact module smoke | `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules --output-dir snapshots/moose_blocks_minimal_modules` writes 8 compact lifted atomic plans. |
+| Post-MOOSE Blocks recursive module smoke | `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --post-moose-recursive --output-dir snapshots/moose_blocks_minimal_modules` writes compact lifted recursive modules over all producible Blocks fluents seeded from MOOSE singleton evidence. Current Blocks unit smoke emits 23 plans covering `on`, `clear`, `holding`, `handempty`, and `ontable`; this replaces the older 8-plan partial-coverage snapshot. |
 | Compact Blocks atomic-plus-temporal smoke | The snapshot in `snapshots/moose_blocks_minimal_modules_appended/` demonstrates the ASL shape. The maintained-library path is now canonicalized by `src/main.py`; use `artifacts/domain_libraries/blocks/plan_library.asl` for the active per-domain library. |
 | Canonical single-ASL smoke | `src/main.py compile-moose-atomic-library ... --library-root tmp/canonical-domain-library-smoke` followed by `src/main.py append-lifted-temporal-goal ... --library-root tmp/canonical-domain-library-smoke` returned the same `tmp/canonical-domain-library-smoke/blocks/plan_library.asl`; `find` found exactly one ASL file under that library root. |
 | Six-domain canonical ASL smoke | Existing MOOSE readable policies under `tmp/domain_canonical_smoke_subset/` compile and append successfully for all selected domains. Final totals: `ferry 13`, `miconic 15`, `gripper 14`, `logistics 20`, `blocks 19`, and `8puzzle-1tile 10` plans including two query-wrapper plans each. Atomic audit found `0` grounded atomic arguments, `0` role coverage gaps, and no synthetic names in all six libraries. |
@@ -109,7 +109,7 @@ uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
   --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
   --domain-file src/domains/blocks/domain.pddl \
   --domain-name blocks \
-  --minimal-modules \
+  --post-moose-recursive \
   --output-dir snapshots/moose_blocks_minimal_modules
 
 uv run python src/main.py compile-moose-atomic-library \
@@ -120,7 +120,7 @@ uv run python src/main.py compile-moose-atomic-library \
   --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
   --domain-file src/domains/blocks/domain.pddl \
   --domain-name blocks \
-  --minimal-modules
+  --post-moose-recursive
 
 uv run python src/main.py append-lifted-temporal-goal \
   --domain-file src/domains/blocks/domain.pddl \

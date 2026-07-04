@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from typing import Mapping, Sequence
 
 from plan_library.models import AgentSpeakBodyStep
@@ -22,6 +23,9 @@ from utils.pddl_parser import PDDLParser
 
 from .pddl_types import type_closure
 from .pddl_types import type_guard_symbol
+
+
+_CONTEXT_VARIABLE_RE = re.compile(r"\b[A-Z][A-Za-z0-9_]*\b")
 
 
 @dataclass(frozen=True)
@@ -256,6 +260,7 @@ def _candidate_module_plans(
 					sequence=sequence,
 					module_predicates=module_set,
 					recursive_module_predicates=recursive_module_predicates,
+					actions=actions,
 					source_backend=source_backend,
 					source_name=source_name,
 					policy_file=policy_file,
@@ -318,24 +323,23 @@ def _producer_action_sequences(
 			target_arguments=head_arguments,
 		):
 			continue
-		if not transient_preconditions:
-			sequence = _finalize_sequence(
-				actions=actions,
-				type_tokens=type_tokens,
-				functional_groups=functional_groups,
-				target_effect=mapped_effect,
-				target_arguments=head_arguments,
-				context_literals=tuple(
-					precondition.mapped(variable_map)
-					for precondition in final_action.preconditions
-				),
-				body_actions=(
-					_action_call(final_action, variable_map),
-				),
-				producer_action_names=(final_action.name,),
-			)
-			if sequence is not None:
-				sequences.append(sequence)
+		sequence = _finalize_sequence(
+			actions=actions,
+			type_tokens=type_tokens,
+			functional_groups=functional_groups,
+			target_effect=mapped_effect,
+			target_arguments=head_arguments,
+			context_literals=tuple(
+				precondition.mapped(variable_map)
+				for precondition in final_action.preconditions
+			),
+			body_actions=(
+				_action_call(final_action, variable_map),
+			),
+			producer_action_names=(final_action.name,),
+		)
+		if sequence is not None:
+			sequences.append(sequence)
 		for transient in transient_preconditions:
 			for support_action, support_effect in _producer_effects(actions, transient.predicate):
 				support_map = {
@@ -1039,18 +1043,63 @@ def _is_public_positive_precondition(
 	sequence: _ProducerSequence,
 	module_predicates: set[str],
 	recursive_module_predicates: set[str],
+	actions: Sequence[_ParsedAction],
 ) -> bool:
 	return (
 		literal.is_positive
 		and literal.predicate in module_predicates
-		and literal.predicate in recursive_module_predicates
 		and not _same_signature(
 			literal.predicate,
 			literal.arguments,
 			sequence.target_predicate,
 			sequence.target_arguments,
 		)
+		and _candidate_subgoal_has_progress_potential(
+			literal=literal,
+			sequence=sequence,
+			recursive_module_predicates=recursive_module_predicates,
+		)
+		and _can_use_precondition_as_subgoal(
+			target_predicate=sequence.target_predicate,
+			target_arguments=sequence.target_arguments,
+			precondition=literal,
+			actions=actions,
+		)
+		and not _is_extra_variable_relation_binding(
+			literal=literal,
+			head_arguments=sequence.target_arguments,
+		)
 	)
+
+
+def _is_extra_variable_relation_binding(
+	*,
+	literal: PDDLLiteralSchema,
+	head_arguments: Sequence[str],
+) -> bool:
+	"""Return whether a relation literal should bind context, not become a goal."""
+
+	return (
+		len(literal.arguments) > 1
+		and bool(set(literal.arguments) - set(head_arguments))
+	)
+
+
+def _candidate_subgoal_has_progress_potential(
+	*,
+	literal: PDDLLiteralSchema,
+	sequence: _ProducerSequence,
+	recursive_module_predicates: set[str],
+) -> bool:
+	"""Return whether a missing precondition can safely become a subgoal branch."""
+
+	if literal.predicate in recursive_module_predicates:
+		return True
+	return any(
+		call.action.name not in sequence.producer_action_names
+		and any(effect.predicate == literal.predicate for effect in call.action.add_effects)
+		for call in sequence.body_actions
+	) or literal.predicate != sequence.target_predicate
 
 
 def _shares_extra_variable(
@@ -1078,6 +1127,7 @@ def _sequence_module_plans(
 	sequence: _ProducerSequence,
 	module_predicates: set[str],
 	recursive_module_predicates: set[str],
+	actions: Sequence[_ParsedAction],
 	source_backend: str,
 	source_name: str,
 	policy_file: str | Path | None,
@@ -1098,6 +1148,7 @@ def _sequence_module_plans(
 			sequence=sequence,
 			module_predicates=module_predicates,
 			recursive_module_predicates=recursive_module_predicates,
+			actions=actions,
 		):
 			continue
 		plans.append(
@@ -1171,9 +1222,15 @@ def _prepare_precondition_plan(
 			head_arguments=sequence.target_arguments,
 		)
 	)
+	type_contexts = _prepare_type_contexts(
+		type_contexts=sequence.type_contexts,
+		head_arguments=sequence.target_arguments,
+		precondition=precondition,
+		binding_contexts=binding_contexts,
+	)
 	context = tuple(
 		_deduplicate(
-			sequence.type_contexts
+			type_contexts
 			+ binding_contexts
 			+ (f"not {precondition.to_call()}",),
 		),
@@ -1206,6 +1263,39 @@ def _prepare_precondition_plan(
 				"source_name": source_name,
 				"policy_file": str(policy_file) if policy_file is not None else None,
 			},
+		),
+	)
+
+
+def _prepare_type_contexts(
+	*,
+	type_contexts: Sequence[str],
+	head_arguments: Sequence[str],
+	precondition: PDDLLiteralSchema,
+	binding_contexts: Sequence[str],
+) -> tuple[str, ...]:
+	"""Keep only type guards whose variables are relevant to a prepare branch."""
+
+	relevant_variables = set(head_arguments) | set(precondition.arguments)
+	for context in binding_contexts:
+		relevant_variables.update(_context_variables(context))
+	filtered = tuple(
+		context
+		for context in tuple(type_contexts or ())
+		if not _context_variables(context)
+		or bool(set(_context_variables(context)) & relevant_variables)
+	)
+	return tuple(_deduplicate(filtered))
+
+
+def _context_variables(context: str) -> tuple[str, ...]:
+	"""Return AgentSpeak-style variables mentioned in a context atom."""
+
+	return tuple(
+		dict.fromkeys(
+			token
+			for token in _CONTEXT_VARIABLE_RE.findall(str(context or ""))
+			if token and token[0].isupper()
 		),
 	)
 

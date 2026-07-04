@@ -172,6 +172,11 @@ def main() -> int:
 	parser.add_argument(
 		"--minimal-modules",
 		action="store_true",
+		help="Deprecated alias for --post-moose-recursive.",
+	)
+	parser.add_argument(
+		"--post-moose-recursive",
+		action="store_true",
 		help="Compile MOOSE singleton evidence into compact recursive atomic modules.",
 	)
 	args = parser.parse_args()
@@ -223,7 +228,7 @@ def main() -> int:
 			domain_name=args.domain_name,
 			domain_file=args.domain_file,
 			output_dir=_required_path(args.output_dir, "--output-dir"),
-			minimal_modules=args.minimal_modules,
+			minimal_modules=bool(args.minimal_modules or args.post_moose_recursive),
 		)
 		return 0
 	if args.command == "learner-sketches-command":

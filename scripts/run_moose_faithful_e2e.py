@@ -101,6 +101,15 @@ def main() -> int:
 	parser.add_argument("--num-workers", type=int, default=8)
 	parser.add_argument("--num-permutations", type=int, default=3)
 	parser.add_argument("--goal-max-size", type=int, default=1)
+	parser.add_argument(
+		"--atomic-library-mode",
+		choices=("faithful", "post-moose-recursive"),
+		default="faithful",
+		help=(
+			"Compile raw MOOSE decision-list macros faithfully, or synthesize "
+			"post-MOOSE recursive atomic modules before ASL rendering."
+		),
+	)
 	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
 	parser.add_argument("--dump-timeout-seconds", type=int, default=300)
 	parser.add_argument("--append-timeout-seconds", type=int, default=300)
@@ -140,7 +149,7 @@ def main() -> int:
 	output_root = args.output_root.expanduser().resolve()
 	output_root.mkdir(parents=True, exist_ok=True)
 	summary = {
-		"pipeline": "faithful_moose_decision_list_to_asl_e2e",
+		"pipeline": _pipeline_name(args.atomic_library_mode),
 		"domains": [],
 		"settings": {
 			"domains": list(domains),
@@ -148,6 +157,7 @@ def main() -> int:
 			"num_workers": args.num_workers,
 			"num_permutations": args.num_permutations,
 			"goal_max_size": args.goal_max_size,
+			"atomic_library_mode": args.atomic_library_mode,
 			"max_rss_gb": args.max_rss_gb,
 			"moose_runtime": args.moose_runtime,
 			"full_train_split": True,
@@ -257,19 +267,12 @@ def run_domain(
 			return record
 
 		compile_result = run_command(
-			(
-				sys.executable,
-				str(PROJECT_ROOT / "src" / "main.py"),
-				"compile-moose-atomic-library",
-				"--policy-file",
-				str(readable_policy_file),
-				"--domain-file",
-				str(domain_file),
-				"--domain-name",
-				domain_name,
-				"--library-root",
-				str(args.library_root),
-				"--overwrite",
+			compile_moose_atomic_library_command(
+				readable_policy_file=readable_policy_file,
+				domain_file=domain_file,
+				domain_name=domain_name,
+				library_root=args.library_root,
+				atomic_library_mode=args.atomic_library_mode,
 			),
 			cwd=PROJECT_ROOT,
 			stdout_file=log_root / "compile_atomic_library.stdout.json",
@@ -356,6 +359,41 @@ def run_domain(
 	except Exception as error:  # noqa: BLE001 - persisted in run summary.
 		record["error"] = str(error)
 		return record
+
+
+def _pipeline_name(atomic_library_mode: str) -> str:
+	if atomic_library_mode == "post-moose-recursive":
+		return "post_moose_recursive_module_synthesis_to_asl_e2e"
+	return "faithful_moose_decision_list_to_asl_e2e"
+
+
+def compile_moose_atomic_library_command(
+	*,
+	readable_policy_file: Path,
+	domain_file: Path,
+	domain_name: str,
+	library_root: Path,
+	atomic_library_mode: str,
+) -> tuple[str, ...]:
+	"""Return the selected post-MOOSE atomic library compilation command."""
+
+	command = [
+		sys.executable,
+		str(PROJECT_ROOT / "src" / "main.py"),
+		"compile-moose-atomic-library",
+		"--policy-file",
+		str(readable_policy_file),
+		"--domain-file",
+		str(domain_file),
+		"--domain-name",
+		domain_name,
+		"--library-root",
+		str(library_root),
+		"--overwrite",
+	]
+	if atomic_library_mode == "post-moose-recursive":
+		command.append("--post-moose-recursive")
+	return tuple(command)
 
 
 def run_moose_policy_validation(
