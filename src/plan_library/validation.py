@@ -10,6 +10,9 @@ from typing import Dict, List, Tuple
 from .models import LibraryValidationRecord, PlanGenerationSummary, PlanLibrary
 
 
+_TEMPORAL_STATE_PREDICATE = "tg_state"
+
+
 @dataclass(frozen=True)
 class PlanLibraryStructuralValidation:
 	"""Structured validation outcome for one generated AgentSpeak(L) plan library."""
@@ -96,16 +99,18 @@ def validate_plan_library_structure(
 			warnings.append(f"Transition plan '{plan.plan_name}' still manipulates DFA state beliefs.")
 		if _is_query_wrapper_symbol(plan.trigger.symbol) and body:
 			last_step = body[-1]
-			if (
-				last_step.kind != "subgoal"
-				or last_step.symbol != plan.trigger.symbol
-				or tuple(last_step.arguments or ())
-			):
+			is_recursive_progress_plan = (
+				last_step.kind == "subgoal"
+				and last_step.symbol == plan.trigger.symbol
+				and not tuple(last_step.arguments or ())
+			)
+			is_temporal_monitor_reset = all(_is_temporal_monitor_step(step) for step in body)
+			if not is_recursive_progress_plan and not is_temporal_monitor_reset:
 				body_valid = False
 				warnings.append(
 					(
 						f"Temporal wrapper plan '{plan.plan_name}' does not recurse "
-						f"to `!{plan.trigger.symbol}`."
+						f"to `!{plan.trigger.symbol}` or update query-local tg_state."
 					),
 				)
 
@@ -131,3 +136,12 @@ def _is_current_plan_head(plan) -> bool:
 def _is_query_wrapper_symbol(symbol: str) -> bool:
 	text = str(symbol or "").strip()
 	return text.startswith("g_") and len(text) > 2
+
+
+def _is_temporal_monitor_step(step) -> bool:
+	return (
+		step.kind in {"belief_addition", "belief_deletion"}
+		and step.symbol == _TEMPORAL_STATE_PREDICATE
+		and len(tuple(step.arguments or ())) == 2
+		and _is_query_wrapper_symbol(tuple(step.arguments or ())[0])
+	)
