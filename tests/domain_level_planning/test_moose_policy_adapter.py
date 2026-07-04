@@ -145,8 +145,14 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	)
 	asl = render_plan_library_asl(library)
 
-	assert len(library.plans) == 8
-	assert {plan.trigger.symbol for plan in library.plans} == {"clear", "on"}
+	assert len(library.plans) == 17
+	assert {plan.trigger.symbol for plan in library.plans} == {
+		"clear",
+		"handempty",
+		"holding",
+		"on",
+		"ontable",
+	}
 	assert library.metadata["source_seed_predicates"] == ["on"]
 	assert library.metadata["source_raw_rule_count"] == 1
 	assert library.metadata["library_quality"]["artifact_classification"] == (
@@ -154,7 +160,7 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	)
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
-	assert "!holding" not in asl
+	assert "+!holding(X) : holding(X)" in asl
 	assert "block0" not in asl
 
 
@@ -241,11 +247,11 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 
 	assert "wrote atomic ASL library" in result.stdout
 	assert library_json["domain_name"] == "blocks"
-	assert len(library_json["plans"]) == 8
+	assert len(library_json["plans"]) == 17
 	assert metadata["minimal_modules"] is True
 	assert metadata["source_raw_rule_count"] == 1
 	assert metadata["library_quality"]["artifact_classification"] == (
 		"compact_recursive_atomic_module_library"
 	)
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
-	assert "!holding" not in asl
+	assert "+!holding(X) : holding(X)" in asl

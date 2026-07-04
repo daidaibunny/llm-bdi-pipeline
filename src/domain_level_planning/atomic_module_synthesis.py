@@ -60,6 +60,7 @@ class AtomicModuleSynthesisReport:
 	producer_actions_by_predicate: Mapping[str, tuple[str, ...]]
 	recursive_predicates: tuple[str, ...]
 	pruned_candidate_count: int
+	predicate_roles: tuple[Mapping[str, object], ...]
 	theoretical_basis: tuple[str, ...]
 
 	def to_dict(self) -> dict[str, object]:
@@ -74,6 +75,7 @@ class AtomicModuleSynthesisReport:
 			},
 			"recursive_predicates": list(self.recursive_predicates),
 			"pruned_candidate_count": self.pruned_candidate_count,
+			"predicate_roles": [dict(item) for item in self.predicate_roles],
 			"theoretical_basis": list(self.theoretical_basis),
 		}
 
@@ -108,6 +110,7 @@ def synthesize_atomic_minimal_literal_module_library(
 	raw_plans = _candidate_module_plans(
 		domain=domain,
 		actions=parsed_actions,
+		seed_predicates=seeds,
 		module_predicates=module_predicates,
 		source_backend=source_backend,
 		source_name=source_name,
@@ -178,6 +181,12 @@ def _module_predicate_closure(
 	declared_predicates: set[str],
 ) -> tuple[str, ...]:
 	module_predicates = set(seeds)
+	module_predicates.update(
+		effect.predicate
+		for action in actions
+		for effect in action.add_effects
+		if effect.predicate in declared_predicates
+	)
 	changed = True
 	while changed:
 		changed = False
@@ -201,6 +210,7 @@ def _candidate_module_plans(
 	*,
 	domain: PDDLDomain,
 	actions: Sequence[_ParsedAction],
+	seed_predicates: Sequence[str],
 	module_predicates: Sequence[str],
 	source_backend: str,
 	source_name: str,
@@ -236,8 +246,10 @@ def _candidate_module_plans(
 		for sequence in _producer_action_sequences(
 			actions=actions,
 			type_tokens=domain.types,
+			seed_predicates=set(seed_predicates),
 			target_predicate=predicate.name,
 			module_predicates=module_set,
+			recursive_module_predicates=recursive_module_predicates,
 		):
 			plans.extend(
 				_sequence_module_plans(
@@ -280,8 +292,10 @@ def _producer_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
+	seed_predicates: set[str],
 	target_predicate: str,
 	module_predicates: set[str],
+	recursive_module_predicates: set[str],
 ) -> tuple[_ProducerSequence, ...]:
 	sequences: list[_ProducerSequence] = []
 	functional_groups = _functional_predicate_groups(actions, type_tokens)
@@ -292,7 +306,10 @@ def _producer_action_sequences(
 		transient_preconditions = _transient_preconditions(
 			action=final_action,
 			variable_map=variable_map,
+			target_predicate=target_predicate,
+			seed_predicates=seed_predicates,
 			module_predicates=module_predicates,
+			recursive_module_predicates=recursive_module_predicates,
 		)
 		if _has_arbitrary_extra_target_relation(
 			action=final_action,
@@ -533,7 +550,10 @@ def _transient_preconditions(
 	*,
 	action: _ParsedAction,
 	variable_map: Mapping[str, str],
+	target_predicate: str,
+	seed_predicates: set[str],
 	module_predicates: set[str],
+	recursive_module_predicates: set[str],
 ) -> tuple[PDDLLiteralSchema, ...]:
 	deleted = tuple(effect.mapped(variable_map) for effect in action.delete_effects)
 	return tuple(
@@ -542,8 +562,31 @@ def _transient_preconditions(
 		for mapped in (precondition.mapped(variable_map),)
 		if mapped.is_positive
 		and mapped.arguments
-		and mapped.predicate not in module_predicates
+		and _should_compose_transient_precondition(
+			mapped,
+			target_predicate=target_predicate,
+			seed_predicates=seed_predicates,
+			module_predicates=module_predicates,
+			recursive_module_predicates=recursive_module_predicates,
+		)
 		and any(_same_atom(mapped, deleted_literal) for deleted_literal in deleted)
+	)
+
+
+def _should_compose_transient_precondition(
+	literal: PDDLLiteralSchema,
+	*,
+	target_predicate: str,
+	seed_predicates: set[str],
+	module_predicates: set[str],
+	recursive_module_predicates: set[str],
+) -> bool:
+	if literal.predicate not in module_predicates:
+		return True
+	return (
+		target_predicate in seed_predicates
+		and literal.predicate != target_predicate
+		and literal.predicate not in recursive_module_predicates
 	)
 
 
@@ -1047,6 +1090,8 @@ def _sequence_module_plans(
 			policy_file=policy_file,
 		),
 	]
+	if not sequence.target_arguments:
+		return tuple(plans)
 	for literal in sequence.context_literals:
 		if not _is_public_positive_precondition(
 			literal=literal,
@@ -1244,6 +1289,12 @@ def _plan_subsumes(candidate: AgentSpeakPlan, other: AgentSpeakPlan) -> bool:
 		return False
 	if tuple(candidate.body) == tuple(other.body):
 		return set(candidate.context) <= set(other.context)
+	if (
+		all(step.kind == "action" for step in candidate.body)
+		and all(step.kind == "action" for step in other.body)
+		and len(candidate.body) <= len(other.body)
+	):
+		return set(candidate.context) <= set(other.context)
 	if candidate.body[-1].kind != "action" or other.body[-1].kind != "action":
 		return False
 	if (
@@ -1292,6 +1343,11 @@ def _module_synthesis_report(
 		producer_actions_by_predicate=producers,
 		recursive_predicates=tuple(sorted(recursive_predicates)),
 		pruned_candidate_count=max(0, raw_plan_count - len(tuple(plans))),
+		predicate_roles=_predicate_role_report(
+			plans=plans,
+			module_predicates=module_predicates,
+			actions=actions,
+		),
 		theoretical_basis=(
 			"MOOSE singleton-goal regression supplies lifted target-predicate evidence",
 			"PDDL action schemas supply primitive producer/precondition structure",
@@ -1299,6 +1355,66 @@ def _module_synthesis_report(
 			"minimal sibling branches are selected by schema subsumption over contexts and subgoals",
 		),
 	)
+
+
+def _predicate_role_report(
+	*,
+	plans: Sequence[AgentSpeakPlan],
+	module_predicates: Sequence[str],
+	actions: Sequence[_ParsedAction],
+) -> tuple[Mapping[str, object], ...]:
+	module_set = set(module_predicates)
+	emitted = {plan.trigger.symbol for plan in plans}
+	declared = tuple(
+		dict.fromkeys(
+			literal.predicate
+			for action in actions
+			for literal in (*action.preconditions, *action.add_effects, *action.delete_effects)
+		),
+	)
+	report: list[Mapping[str, object]] = []
+	for predicate in sorted(declared):
+		producers = tuple(
+			action.name
+			for action, _ in _producer_effects(actions, predicate)
+		)
+		deleters = tuple(
+			action.name
+			for action in actions
+			if any(effect.predicate == predicate for effect in action.delete_effects)
+		)
+		consumers = tuple(
+			action.name
+			for action in actions
+			if any(precondition.predicate == predicate for precondition in action.preconditions)
+		)
+		if producers:
+			role = "producible_fluent"
+			expected_module = True
+		elif deleters:
+			role = "deleted_only_fluent"
+			expected_module = False
+		else:
+			role = "static_context"
+			expected_module = False
+		report.append(
+			{
+				"predicate": predicate,
+				"role": role,
+				"producers": list(dict.fromkeys(producers)),
+				"deleters": list(dict.fromkeys(deleters)),
+				"consumers": list(dict.fromkeys(consumers)),
+				"selected_for_module_generation": predicate in module_set,
+				"emitted_module": predicate in emitted,
+				"expected_module": expected_module,
+				"coverage_status": (
+					"ok"
+					if (predicate in emitted) == expected_module
+					else "gap"
+				),
+			},
+		)
+	return tuple(report)
 
 
 def _head_variable_map(effect: PDDLLiteralSchema) -> tuple[tuple[str, ...], dict[str, str]]:

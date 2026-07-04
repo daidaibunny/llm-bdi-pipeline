@@ -21,14 +21,37 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	)
 	asl = render_plan_library_asl(library)
 
-	assert len(library.plans) == 8
-	assert {plan.trigger.symbol for plan in library.plans} == {"clear", "on"}
+	assert len(library.plans) == 17
+	assert {plan.trigger.symbol for plan in library.plans} == {
+		"clear",
+		"handempty",
+		"holding",
+		"on",
+		"ontable",
+	}
 	assert library.metadata["generation_mode"] == "atomic_minimal_literal_module_library"
 	assert library.metadata["library_quality"]["compact_recursive_module_ready"] is True
 	assert library.metadata["atomic_module_synthesis"]["module_predicates"] == [
 		"clear",
+		"handempty",
+		"holding",
 		"on",
+		"ontable",
 	]
+	role_by_predicate = {
+		record["predicate"]: record
+		for record in library.metadata["atomic_module_synthesis"]["predicate_roles"]
+	}
+	assert role_by_predicate["holding"]["role"] == "producible_fluent"
+	assert role_by_predicate["holding"]["emitted_module"] is True
+	assert role_by_predicate["handempty"]["role"] == "producible_fluent"
+	assert role_by_predicate["handempty"]["emitted_module"] is True
+	assert role_by_predicate["ontable"]["role"] == "producible_fluent"
+	assert role_by_predicate["ontable"]["emitted_module"] is True
+	assert all(
+		record["coverage_status"] == "ok"
+		for record in library.metadata["atomic_module_synthesis"]["predicate_roles"]
+	)
 
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
 	assert "\t!clear(X);" in asl
@@ -41,9 +64,13 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "\tunstack(Y, X);" in asl
 	assert "\tput_down(Y)." in asl
 	assert "on(Y, X) & not clear(Y)" in asl
+	assert "+!holding(X) : holding(X)" in asl
+	assert "pick_up(X)." in asl
+	assert "unstack(X, Y)." in asl
+	assert "+!handempty : handempty" in asl
+	assert "put_down(X)." in asl
+	assert "+!ontable(X) : ontable(X)" in asl
 
-	assert "!holding" not in asl
-	assert "!handempty" not in asl
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
 	assert "dfa_state" not in asl
@@ -66,6 +93,27 @@ def test_ferry_bridge_sequence_keeps_negative_precondition_and_movement_module()
 	assert "not at_ferry(Y)" in asl
 	assert "+!at_ferry(X)" in asl
 	assert "sail(Y, X)." in asl
+
+
+def test_static_predicates_are_context_only_not_atomic_goal_modules() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl",
+		seed_predicates=("at",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="logistics-smoke",
+	)
+	asl = render_plan_library_asl(library)
+	role_by_predicate = {
+		record["predicate"]: record
+		for record in library.metadata["atomic_module_synthesis"]["predicate_roles"]
+	}
+
+	assert role_by_predicate["in-city"]["role"] == "static_context"
+	assert role_by_predicate["in-city"]["emitted_module"] is False
+	assert "+!in_city" not in asl
+	assert role_by_predicate["in"]["role"] == "producible_fluent"
+	assert role_by_predicate["in"]["emitted_module"] is True
+	assert "+!in(X, Y)" in asl
 
 
 def test_logistics_atomic_modules_use_type_guards_and_airplane_bridge() -> None:

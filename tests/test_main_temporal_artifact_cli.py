@@ -97,14 +97,14 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	)
 
 	assert result["success"] is True
-	assert result["plan_count"] == 8
+	assert result["plan_count"] == 17
 	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "blocks"
 	assert metadata["artifact_kind"] == "moose_seeded_atomic_minimal_literal_module_library"
 	assert metadata["canonical_domain_library"] is True
 	assert metadata["minimal_modules"] is True
 	assert "+!on(X, Y) : type_block(X) & type_block(Y) & not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
-	assert "!holding" not in asl
+	assert "+!holding(X) : holding(X)" in asl
 	assert "block0" not in asl
 
 
