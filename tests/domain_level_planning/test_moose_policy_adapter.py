@@ -160,6 +160,11 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert library.metadata["library_quality"]["artifact_classification"] == (
 		"compact_recursive_atomic_module_library"
 	)
+	selector_report = library.metadata["atomic_module_synthesis"]
+	assert selector_report["selector_backend"] == "clingo_asp_minimize"
+	assert selector_report["raw_candidate_count"] >= len(library.plans)
+	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
+	assert len(selector_report["selected_branch_ids"]) == len(library.plans)
 	assert "+!on(X, Y) : not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
 	assert "+!clear(X) : not handempty" in asl
@@ -258,6 +263,10 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 	assert metadata["source_raw_rule_count"] == 1
 	assert metadata["library_quality"]["artifact_classification"] == (
 		"compact_recursive_atomic_module_library"
+	)
+	assert metadata["atomic_module_synthesis"]["selector_backend"] == "clingo_asp_minimize"
+	assert metadata["atomic_module_synthesis"]["selector_obligation_count"] == (
+		metadata["atomic_module_synthesis"]["raw_candidate_count"]
 	)
 	assert "+!on(X, Y) : not clear(X)" in asl
 	assert "+!clear(X) : not handempty" in asl

@@ -3,13 +3,55 @@ from __future__ import annotations
 from pathlib import Path
 
 from domain_level_planning.atomic_module_synthesis import (
+	_select_branches_with_clingo,
 	synthesize_atomic_minimal_literal_module_library,
 )
+from plan_library.models import AgentSpeakBodyStep
+from plan_library.models import AgentSpeakPlan
+from plan_library.models import AgentSpeakTrigger
 from plan_library.rendering import render_plan_library_asl
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+
+
+def test_clingo_selector_removes_context_subsumed_duplicate_branch() -> None:
+	weaker_context_branch = AgentSpeakPlan(
+		plan_name="deliver_with_weaker_context",
+		trigger=AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+		context=("at(X, Y)",),
+		body=(AgentSpeakBodyStep("action", "drop", ("X", "Y")),),
+	)
+	stronger_context_branch = AgentSpeakPlan(
+		plan_name="deliver_with_extra_context",
+		trigger=AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+		context=("at(X, Y)", "clear(Y)"),
+		body=(AgentSpeakBodyStep("action", "drop", ("X", "Y")),),
+	)
+	necessary_recursive_branch = AgentSpeakPlan(
+		plan_name="deliver_prepare_at",
+		trigger=AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+		context=("not at(X, Y)",),
+		body=(
+			AgentSpeakBodyStep("subgoal", "at", ("X", "Y")),
+			AgentSpeakBodyStep("subgoal", "delivered", ("X",)),
+		),
+	)
+
+	selection = _select_branches_with_clingo(
+		(
+			weaker_context_branch,
+			stronger_context_branch,
+			necessary_recursive_branch,
+		),
+	)
+
+	assert selection.plans == (weaker_context_branch, necessary_recursive_branch)
+	assert selection.report.backend == "clingo_asp_minimize"
+	assert selection.report.raw_candidate_count == 3
+	assert selection.report.selected_candidate_count == 2
+	assert selection.report.obligation_count == 3
 
 
 def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted() -> None:
@@ -38,6 +80,16 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		"on",
 		"ontable",
 	]
+	selector_report = library.metadata["atomic_module_synthesis"]
+	assert selector_report["selector_backend"] == "clingo_asp_minimize"
+	assert selector_report["selector_objective"] == [
+		"minimize selected branch count",
+		"then minimize selected context literal count",
+		"then minimize selected body step count",
+	]
+	assert selector_report["raw_candidate_count"] >= len(library.plans)
+	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
+	assert len(selector_report["selected_branch_ids"]) == len(library.plans)
 	role_by_predicate = {
 		record["predicate"]: record
 		for record in library.metadata["atomic_module_synthesis"]["predicate_roles"]
