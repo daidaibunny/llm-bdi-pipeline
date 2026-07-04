@@ -537,7 +537,9 @@ def validate_one_task(
 			"status": payload.get("status"),
 			"timed_out": bool(payload.get("timed_out")),
 			"exit_code": payload.get("exit_code"),
-			"action_count": len(tuple(payload.get("action_path") or ())),
+			"action_count": int(
+				payload.get("action_count") or len(tuple(payload.get("action_path") or ())),
+			),
 			"output_dir": str(task.output_dir),
 			"runtime_plan_library_asl": str(runtime_asl),
 			"domain_full_plan_library_asl": str(task.plan_library_asl),
