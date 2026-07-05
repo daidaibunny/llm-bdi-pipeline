@@ -20,7 +20,7 @@ SUPPORTED_ASL_SUBSET = {
 		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
 		"query-specific +!g_* wrapper subgoal calls"
 	),
-	"initial_beliefs": "empty for maintained domain-level libraries",
+	"initial_beliefs": "empty except zero-arity query entry propositions",
 }
 
 EXECUTION_SEMANTICS = {
@@ -74,10 +74,10 @@ def audit_domain_level_library_contract(
 	plans = tuple(plan_library.plans or ())
 	predicate_arities = _declared_arities(declared_predicates)
 	action_arities = _declared_arities(declared_actions)
-	initial_beliefs_scoped = not tuple(plan_library.initial_beliefs or ())
+	initial_beliefs_scoped = _initial_beliefs_are_query_entries(plan_library)
 	if not initial_beliefs_scoped:
 		violations.append(
-			"Initial beliefs must be empty in maintained domain-level libraries.",
+			"Initial beliefs must be empty or zero-arity query entry propositions.",
 		)
 
 	no_synthetic_names = _collect_synthetic_name_violations(plan_library, violations)
@@ -319,6 +319,11 @@ def _collect_declared_pddl_symbol_violations(
 				),
 			)
 		for context in tuple(plan.context or ()):
+			if (
+				_is_query_wrapper_symbol(plan.trigger.symbol)
+				and context == _query_entry_proposition(plan.trigger.symbol)
+			):
+				continue
 			for symbol, arguments in _context_atoms(context):
 				if symbol == "=":
 					continue
@@ -414,6 +419,25 @@ def _contains_synthetic_name(value: str) -> bool:
 
 def _is_query_wrapper_symbol(symbol: str) -> bool:
 	return bool(re.fullmatch(r"g_[A-Za-z0-9_]+", str(symbol or "").strip()))
+
+
+def _initial_beliefs_are_query_entries(plan_library: PlanLibrary) -> bool:
+	entries = {
+		_query_entry_proposition(plan.trigger.symbol)
+		for plan in tuple(plan_library.plans or ())
+		if _is_query_wrapper_symbol(plan.trigger.symbol)
+	}
+	return all(
+		str(belief or "").strip() in entries
+		for belief in tuple(plan_library.initial_beliefs or ())
+	)
+
+
+def _query_entry_proposition(goal_name: str) -> str:
+	text = str(goal_name or "").strip()
+	if text.startswith("g_") and len(text) > 2:
+		return text[2:]
+	return f"{text}_entry" if text else "query_entry"
 
 
 def _context_atoms(context: str) -> Iterable[tuple[str, tuple[str, ...]]]:

@@ -15,7 +15,9 @@ Current full-test behavior:
 The wrapper shape is:
 
 ```asl
-+!g_miconic_test_61 : true <-
+miconic_test_61.
+
++!g_miconic_test_61 : miconic_test_61 <-
 	!served(p1);
 	!served(p2);
 	!served(p3).
@@ -43,16 +45,19 @@ formula. In this diagnostic runner, the order is just the PDDL parser order.
 ## Temporal Wrapper Policy
 
 The current ASL append policy for linear temporal goals is a single-body
-compression. If the validated DFA has exactly one positive singleton-literal
-progress path from the initial state to an accepting state, the appender writes
-one plan body containing those progress literals as subgoals. It does not write
-`tg_state(...)` beliefs.
+compression with an explicit query entry proposition. A query entry proposition
+is a zero-arity belief that enables one appended query wrapper; for example,
+`miconic_test_61.` enables `+!g_miconic_test_61`. If the validated DFA has
+exactly one positive singleton-literal progress path from the initial state to
+an accepting state, the appender writes one plan body containing those progress
+literals as subgoals. It does not write `tg_state(...)` beliefs.
 
 The old query-local `tg_state(goal,state)` monitor was removed from the current
 maintained output contract because it made large test batches much longer and
 forced Jason to do extra context matching before every progress step. For a
 linear goal such as "serve p1, then p2, then p3", the direct body above is
-semantically sufficient for this diagnostic path.
+semantically sufficient for this diagnostic path. The explicit entry
+proposition keeps many appended query wrappers maintainable in one ASL file.
 
 Branching or state-dependent DFA goals are not silently compiled to `tg_state`
 plans. They now fail with `nonlinear_temporal_goal_not_supported`. Those goals

@@ -237,7 +237,8 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert metadata["query_ids"] == ["query_1"]
 	assert "teg_state" not in asl
 	assert "tg_state" not in asl
-	assert "+!g_query_1 : true <-" in asl
+	assert "query_1." in asl
+	assert "+!g_query_1 : query_1 <-" in asl
 	assert "\t!done." in asl
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
@@ -335,8 +336,10 @@ def test_main_can_append_multiple_queries_to_same_domain_library(
 
 	assert "teg_state" not in asl
 	assert "tg_state" not in asl
-	assert "+!g_query_1 : true <-" in asl
-	assert "+!g_query_2 : true <-" in asl
+	assert "query_1." in asl
+	assert "query_2." in asl
+	assert "+!g_query_1 : query_1 <-" in asl
+	assert "+!g_query_2 : query_2 <-" in asl
 	assert [
 		record["goal_name"]
 		for record in library_json["metadata"]["temporal_goal_append_history"]

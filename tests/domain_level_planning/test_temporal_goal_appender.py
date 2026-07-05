@@ -98,14 +98,18 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		"g_query_1_linear_sequence",
 	]
 	assert updated.plans[1].trigger.symbol == "g_query_1"
-	assert updated.plans[1].context == ()
+	assert updated.plans[1].context == ("query_1",)
 	assert updated.plans[1].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
 		AgentSpeakBodyStep("subgoal", "ready", ("Y",)),
 	)
-	assert updated.initial_beliefs == ()
+	assert updated.initial_beliefs == ("query_1",)
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
 	assert updated.metadata["temporal_goal_append"]["wrapper_mode"] == "linear_single_body"
+	assert (
+		updated.metadata["temporal_goal_append"]["query_entry_proposition"]
+		== "query_1"
+	)
 	assert [
 		diagnostic["request"]["achievement_subgoals"][0]["symbol"]
 		for diagnostic in updated.metadata["temporal_goal_append"]["progress_request_diagnostics"]
@@ -149,7 +153,7 @@ def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -
 		record["goal_name"]
 		for record in after_second.metadata["temporal_goal_append_history"]
 	] == ["g_query_1", "g_query_2"]
-	assert after_second.initial_beliefs == ()
+	assert after_second.initial_beliefs == ("query_1", "query_2")
 
 
 def test_append_temporal_goal_rejects_duplicate_goal_name(tmp_path: Path) -> None:
@@ -203,6 +207,7 @@ def test_append_temporal_goal_allows_negative_waiting_self_loop(
 	assert [plan.plan_name for plan in updated.plans] == [
 		"g_query_1_linear_sequence",
 	]
+	assert updated.plans[0].context == ("query_1",)
 	assert updated.plans[0].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
 	)
@@ -307,7 +312,7 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 
 	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "on(X, Y)"
 	assert dfa_payload["guarded_transitions"][0]["original_raw_label"] == "on_x_y"
-	assert updated.plans[0].context == ()
+	assert updated.plans[0].context == ("query_1",)
 	assert updated.plans[0].body == (
 		AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
 	)

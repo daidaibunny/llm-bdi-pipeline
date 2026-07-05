@@ -455,11 +455,14 @@ def linear_single_body_wrapper_lines(
 	if not goal_facts:
 		raise ValueError(f"{problem_file} contains no positive goal literals.")
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
+	entry_proposition = query_entry_proposition(goal_name)
 	atoms = tuple(render_fact_atom(fact) for fact in goal_facts)
 	lines: list[str] = [
 		f"/* full_test_problem={problem_file.name} */",
+		f"{entry_proposition}.",
+		"",
 		f"/* plan={goal_name}_linear_sequence | source_instruction_ids=none */",
-		f"+!{goal_name} : true <-",
+		f"+!{goal_name} : {entry_proposition} <-",
 	]
 	for atom_index, atom in enumerate(atoms, start=1):
 		suffix = ";" if atom_index < len(atoms) else "."
@@ -497,6 +500,15 @@ def render_fact_atom(fact: PDDLFact) -> str:
 	if not arguments:
 		return predicate
 	return f"{predicate}({', '.join(arguments)})"
+
+
+def query_entry_proposition(goal_name: str) -> str:
+	"""Return the zero-arity belief that enables one appended query wrapper."""
+
+	text = safe_goal_fragment(goal_name)
+	if text.startswith("g_") and len(text) > 2:
+		return text[2:]
+	return f"{text}_entry"
 
 
 def run_jason_tasks(

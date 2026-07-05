@@ -4,6 +4,7 @@ from pathlib import Path
 
 from scripts.run_full_test_jason_validation import append_linear_single_body_full_test_wrappers
 from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
+from scripts.run_full_test_jason_validation import query_entry_proposition
 from scripts.run_full_test_jason_validation import resolve_batch_root
 from scripts.run_full_test_jason_validation import render_fact_atom
 from scripts.run_full_test_jason_validation import safe_goal_fragment
@@ -28,6 +29,11 @@ def test_safe_goal_fragment_matches_existing_domain_goal_naming() -> None:
 def test_safe_path_fragment_keeps_problem_ids_readable() -> None:
 	assert safe_path_fragment("instance-26") == "instance-26"
 	assert safe_path_fragment("p 01/problem") == "p_01_problem"
+
+
+def test_query_entry_proposition_strips_top_level_goal_prefix() -> None:
+	assert query_entry_proposition("g_miconic_test_41") == "miconic_test_41"
+	assert query_entry_proposition("custom_goal") == "custom_goal_entry"
 
 
 def test_render_fact_atom_matches_generated_asl_identifier_rules() -> None:
@@ -86,7 +92,8 @@ def test_full_test_wrapper_uses_linear_single_body(tmp_path: Path) -> None:
 
 	assert record["wrapper_mode"] == "linear_single_body_without_json_metadata"
 	assert "tg_state" not in text
-	assert "+!g_ferry_test_1 : true <-" in text
+	assert "ferry_test_1." in text
+	assert "+!g_ferry_test_1 : ferry_test_1 <-" in text
 	assert "\t!at(car1, loc1);" in text
 	assert "\t!at(car2, loc2)." in text
 	assert "not at(car1, loc1)" not in text

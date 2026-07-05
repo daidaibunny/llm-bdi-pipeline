@@ -111,6 +111,7 @@ def validate_plan_library_structure(
 				and not tuple(last_step.arguments or ())
 			)
 			is_linear_single_body_plan = _is_linear_single_body_plan(plan)
+			has_query_entry_context = _has_query_entry_context(plan)
 			if not is_recursive_progress_plan and not is_linear_single_body_plan:
 				body_valid = False
 				warnings.append(
@@ -118,6 +119,14 @@ def validate_plan_library_structure(
 						f"Temporal wrapper plan '{plan.plan_name}' does not recurse "
 						f"to `!{plan.trigger.symbol}` or compile a certified "
 						"linear single-body sequence."
+					),
+				)
+			if is_linear_single_body_plan and not has_query_entry_context:
+				body_valid = False
+				warnings.append(
+					(
+						f"Temporal wrapper plan '{plan.plan_name}' must use its "
+						"query entry proposition as context."
 					),
 				)
 
@@ -158,3 +167,15 @@ def _is_linear_single_body_plan(plan) -> bool:
 		):
 			return True
 	return False
+
+
+def _has_query_entry_context(plan) -> bool:
+	expected = _query_entry_proposition(plan.trigger.symbol)
+	return tuple(plan.context or ()) == (expected,)
+
+
+def _query_entry_proposition(goal_name: str) -> str:
+	text = str(goal_name or "").strip()
+	if text.startswith("g_") and len(text) > 2:
+		return text[2:]
+	return f"{text}_entry" if text else "query_entry"

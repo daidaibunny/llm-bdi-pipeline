@@ -13,6 +13,7 @@ from plan_library.validation import build_library_validation_record
 def test_library_validation_accepts_current_atomic_and_temporal_contract() -> None:
 	plan_library = PlanLibrary(
 		domain_name="blocks",
+		initial_beliefs=("query_1",),
 		plans=(
 			AgentSpeakPlan(
 				plan_name="on_via_stack",
@@ -27,6 +28,7 @@ def test_library_validation_accepts_current_atomic_and_temporal_contract() -> No
 			AgentSpeakPlan(
 				plan_name="g_query_1_linear_sequence",
 				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g_query_1"),
+				context=("query_1",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
 				),

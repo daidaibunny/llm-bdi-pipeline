@@ -236,14 +236,19 @@ def append_temporal_goal_to_library(
 			sequence=linear_sequence,
 		),
 	)
+	entry_proposition = _query_entry_proposition(goal_name)
 	append_record["wrapper_mode"] = _LINEAR_SINGLE_BODY_WRAPPER_MODE
+	append_record["query_entry_proposition"] = entry_proposition
 	append_record["progress_plan_count"] = len(progress_plans)
 	append_record["accepting_plan_count"] = 0
 	append_record["progress_state_coverage"] = _linear_progress_state_coverage(
 		sequence=linear_sequence,
 	)
 	plans.extend(progress_plans)
-	initial_beliefs = tuple(plan_library.initial_beliefs or ())
+	initial_beliefs = _initial_beliefs_with_query_entry(
+		plan_library=plan_library,
+		entry_proposition=entry_proposition,
+	)
 	return PlanLibrary(
 		domain_name=plan_library.domain_name,
 		plans=tuple(plans),
@@ -531,12 +536,13 @@ def _linear_single_body_plan(
 			symbol=goal_name,
 			arguments=(),
 		),
-		context=(),
+		context=(_query_entry_proposition(goal_name),),
 		body=body,
 		binding_certificate=(
 			{
 				"artifact_family": "temporal_goal_dfa_append",
 				"wrapper_mode": _LINEAR_SINGLE_BODY_WRAPPER_MODE,
+				"query_entry_proposition": _query_entry_proposition(goal_name),
 				"source_states": [
 					str(transition.get("source_state") or "")
 					for _literal, transition in tuple(sequence)
@@ -575,6 +581,28 @@ def _linear_progress_state_coverage(
 		},
 		"plan_count_by_state": {state: 1 for state in source_states},
 	}
+
+
+def _initial_beliefs_with_query_entry(
+	*,
+	plan_library: PlanLibrary,
+	entry_proposition: str,
+) -> tuple[str, ...]:
+	return tuple(
+		dict.fromkeys(
+			(
+				*tuple(plan_library.initial_beliefs or ()),
+				entry_proposition,
+			),
+		),
+	)
+
+
+def _query_entry_proposition(goal_name: str) -> str:
+	text = str(goal_name or "").strip()
+	if text.startswith("g_") and len(text) > 2:
+		return text[2:]
+	return f"{text}_entry" if text else "query_entry"
 
 
 def _required_initial_state(dfa_payload: Mapping[str, Any]) -> str:

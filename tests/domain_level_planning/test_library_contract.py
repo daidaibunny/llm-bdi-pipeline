@@ -10,10 +10,12 @@ from plan_library.models import PlanLibrary
 def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
+		initial_beliefs=("query_1",),
 		plans=(
 			AgentSpeakPlan(
 				plan_name="g_query_1_linear_sequence",
 				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
+				context=("query_1",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ("X",)),
 				),
@@ -39,6 +41,9 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 	assert serialized["supported_asl_subset"]["body_steps"] == (
 		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
 		"query-specific +!g_* wrapper subgoal calls"
+	)
+	assert serialized["supported_asl_subset"]["initial_beliefs"] == (
+		"empty except zero-arity query entry propositions"
 	)
 	assert serialized["supported_asl_subset"]["contexts"] == (
 		"implicit conjunction of atom, not atom, equality, or inequality "
@@ -66,10 +71,12 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
+		initial_beliefs=("query_1",),
 		plans=(
 			AgentSpeakPlan(
 				plan_name="g_query_1_linear_sequence",
 				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
+				context=("query_1",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ("X",)),
 				),
