@@ -646,9 +646,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
-	private final Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> index =
+	private final Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> dynamicIndex =
 		new HashMap<>();
-	private final Map<String, LinkedHashSet<Literal>> exactIndex = new HashMap<>();
+	private final Map<String, LinkedHashSet<Literal>> dynamicExactIndex = new HashMap<>();
+	private final Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> staticIndex =
+		new HashMap<>();
+	private final Map<String, LinkedHashSet<Literal>> staticExactIndex = new HashMap<>();
 	private final Path staticBeliefsPath = Paths.get("static_beliefs.txt");
 
 	@Override
@@ -661,7 +664,7 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 	public boolean add(Literal literal) {
 		boolean changed = super.add(literal);
 		if (changed) {
-			indexLiteral(literal);
+			indexDynamicLiteral(literal);
 		}
 		return changed;
 	}
@@ -670,7 +673,7 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 	public boolean add(int indexPosition, Literal literal) {
 		boolean changed = super.add(indexPosition, literal);
 		if (changed) {
-			indexLiteral(literal);
+			indexDynamicLiteral(literal);
 		}
 		return changed;
 	}
@@ -679,7 +682,8 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 	public boolean remove(Literal literal) {
 		boolean changed = super.remove(literal);
 		if (changed) {
-			deindexLiteral(literal);
+			deindexDynamicLiteral(literal);
+			deindexStaticLiteral(literal);
 		}
 		return changed;
 	}
@@ -687,15 +691,26 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 	@Override
 	public void clear() {
 		super.clear();
-		index.clear();
-		exactIndex.clear();
+		dynamicIndex.clear();
+		dynamicExactIndex.clear();
+		staticIndex.clear();
+		staticExactIndex.clear();
 	}
 
 	@Override
 	public Literal contains(Literal literal) {
-		LinkedHashSet<Literal> exactMatches = exactBucket(literal);
-		if (exactMatches != null) {
-			for (Literal candidate : exactMatches) {
+		LinkedHashSet<Literal> staticExactMatches = exactBucket(staticExactIndex, literal);
+		if (staticExactMatches != null) {
+			for (Literal candidate : staticExactMatches) {
+				if (literal.hasSubsetAnnot(candidate)) {
+					return candidate;
+				}
+			}
+			return null;
+		}
+		LinkedHashSet<Literal> dynamicExactMatches = exactBucket(dynamicExactIndex, literal);
+		if (dynamicExactMatches != null) {
+			for (Literal candidate : dynamicExactMatches) {
 				Literal liveCandidate = super.contains(candidate);
 				if (liveCandidate != null && literal.hasSubsetAnnot(liveCandidate)) {
 					return liveCandidate;
@@ -717,34 +732,47 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		}
 		String exactKey = exactKeyIfBound(literal, unifier);
 		if (exactKey != null) {
-			LinkedHashSet<Literal> exactMatches = exactIndex.get(exactKey);
-			if (exactMatches == null) {
+			LinkedHashSet<Literal> staticExactMatches = staticExactIndex.get(exactKey);
+			LinkedHashSet<Literal> dynamicExactMatches = dynamicExactIndex.get(exactKey);
+			if (staticExactMatches == null && dynamicExactMatches == null) {
 				return Collections.emptyIterator();
 			}
-			return liveBucket(exactMatches).iterator();
+			return candidateBucket(staticExactMatches, dynamicExactMatches).iterator();
 		}
-		LinkedHashSet<Literal> bestBucket = null;
+		LinkedHashSet<Literal> bestStaticBucket = null;
+		LinkedHashSet<Literal> bestDynamicBucket = null;
+		int bestBucketSize = Integer.MAX_VALUE;
 		for (int position = 0; position < terms.size(); position++) {
 			Term bound = boundTerm(terms.get(position), unifier);
 			if (bound == null) {
 				continue;
 			}
-			LinkedHashSet<Literal> bucket = bucketFor(
+			LinkedHashSet<Literal> staticBucket = bucketFor(
+				staticIndex,
 				literal.getPredicateIndicator(),
 				position,
 				bound.toString()
 			);
-			if (bucket == null) {
+			LinkedHashSet<Literal> dynamicBucket = bucketFor(
+				dynamicIndex,
+				literal.getPredicateIndicator(),
+				position,
+				bound.toString()
+			);
+			if (staticBucket == null && dynamicBucket == null) {
 				return Collections.emptyIterator();
 			}
-			if (bestBucket == null || bucket.size() < bestBucket.size()) {
-				bestBucket = bucket;
+			int bucketSize = bucketSize(staticBucket) + bucketSize(dynamicBucket);
+			if (bucketSize < bestBucketSize) {
+				bestStaticBucket = staticBucket;
+				bestDynamicBucket = dynamicBucket;
+				bestBucketSize = bucketSize;
 			}
 		}
-		if (bestBucket == null) {
+		if (bestBucketSize == Integer.MAX_VALUE) {
 			return super.getCandidateBeliefs(literal, unifier);
 		}
-		return liveBucket(bestBucket).iterator();
+		return candidateBucket(bestStaticBucket, bestDynamicBucket).iterator();
 	}
 
 	@Override
@@ -776,7 +804,19 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		return resolved;
 	}
 
-	private void indexLiteral(Literal literal) {
+	private void indexDynamicLiteral(Literal literal) {
+		indexLiteral(literal, dynamicIndex, dynamicExactIndex);
+	}
+
+	private void indexStaticLiteral(Literal literal) {
+		indexLiteral(literal, staticIndex, staticExactIndex);
+	}
+
+	private void indexLiteral(
+		Literal literal,
+		Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> targetIndex,
+		Map<String, LinkedHashSet<Literal>> targetExactIndex
+	) {
 		if (literal == null || literal.isRule()) {
 			return;
 		}
@@ -784,7 +824,7 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		String predicateKey = predicateKey(literal.getPredicateIndicator());
 		String exactKey = exactKey(literal);
 		if (exactKey != null) {
-			exactIndex
+			targetExactIndex
 				.computeIfAbsent(exactKey, ignored -> new LinkedHashSet<>())
 				.add(literal);
 		}
@@ -792,7 +832,7 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 			return;
 		}
 		Map<Integer, Map<String, LinkedHashSet<Literal>>> byPosition =
-			index.computeIfAbsent(predicateKey, ignored -> new HashMap<>());
+			targetIndex.computeIfAbsent(predicateKey, ignored -> new HashMap<>());
 		for (int position = 0; position < terms.size(); position++) {
 			Term term = terms.get(position);
 			if (term == null || term.isVar()) {
@@ -805,37 +845,55 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		}
 	}
 
-	private void deindexLiteral(Literal literal) {
+	private void deindexDynamicLiteral(Literal literal) {
+		deindexLiteral(literal, dynamicIndex, dynamicExactIndex);
+	}
+
+	private void deindexStaticLiteral(Literal literal) {
+		deindexLiteral(literal, staticIndex, staticExactIndex);
+	}
+
+	private void deindexLiteral(
+		Literal literal,
+		Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> targetIndex,
+		Map<String, LinkedHashSet<Literal>> targetExactIndex
+	) {
 		if (literal == null || literal.isRule()) {
 			return;
 		}
-		removeExactIndexLiteral(literal);
-		removeArgumentIndexLiteral(literal);
+		removeExactIndexLiteral(literal, targetExactIndex);
+		removeArgumentIndexLiteral(literal, targetIndex);
 	}
 
-	private void removeExactIndexLiteral(Literal literal) {
+	private void removeExactIndexLiteral(
+		Literal literal,
+		Map<String, LinkedHashSet<Literal>> targetExactIndex
+	) {
 		String key = exactKey(literal);
 		if (key == null) {
 			return;
 		}
-		LinkedHashSet<Literal> bucket = exactIndex.get(key);
+		LinkedHashSet<Literal> bucket = targetExactIndex.get(key);
 		if (bucket == null) {
 			return;
 		}
 		bucket.remove(literal);
 		if (bucket.isEmpty()) {
-			exactIndex.remove(key);
+			targetExactIndex.remove(key);
 		}
 	}
 
-	private void removeArgumentIndexLiteral(Literal literal) {
+	private void removeArgumentIndexLiteral(
+		Literal literal,
+		Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> targetIndex
+	) {
 		List<Term> terms = literal.getTerms();
 		if (terms == null || terms.isEmpty()) {
 			return;
 		}
 		String predicateKey = predicateKey(literal.getPredicateIndicator());
 		Map<Integer, Map<String, LinkedHashSet<Literal>>> byPosition =
-			index.get(predicateKey);
+			targetIndex.get(predicateKey);
 		if (byPosition == null) {
 			return;
 		}
@@ -861,17 +919,18 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 			}
 		}
 		if (byPosition.isEmpty()) {
-			index.remove(predicateKey);
+			targetIndex.remove(predicateKey);
 		}
 	}
 
 	private LinkedHashSet<Literal> bucketFor(
+		Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> targetIndex,
 		PredicateIndicator indicator,
 		int position,
 		String value
 	) {
 		Map<Integer, Map<String, LinkedHashSet<Literal>>> byPosition =
-			index.get(predicateKey(indicator));
+			targetIndex.get(predicateKey(indicator));
 		if (byPosition == null) {
 			return null;
 		}
@@ -882,26 +941,42 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		return byValue.get(value);
 	}
 
-	private List<Literal> liveBucket(LinkedHashSet<Literal> bucket) {
-		List<Literal> live = new ArrayList<>();
-		for (Literal candidate : bucket) {
+	private List<Literal> candidateBucket(
+		LinkedHashSet<Literal> staticBucket,
+		LinkedHashSet<Literal> dynamicBucket
+	) {
+		List<Literal> candidates = new ArrayList<>();
+		if (staticBucket != null) {
+			candidates.addAll(staticBucket);
+		}
+		if (dynamicBucket == null) {
+			return candidates;
+		}
+		for (Literal candidate : dynamicBucket) {
 			if (super.contains(candidate) != null) {
-				live.add(candidate);
+				candidates.add(candidate);
 			}
 		}
-		return live;
+		return candidates;
+	}
+
+	private int bucketSize(LinkedHashSet<Literal> bucket) {
+		return bucket == null ? 0 : bucket.size();
 	}
 
 	private String predicateKey(PredicateIndicator indicator) {
 		return indicator.toString();
 	}
 
-	private LinkedHashSet<Literal> exactBucket(Literal literal) {
+	private LinkedHashSet<Literal> exactBucket(
+		Map<String, LinkedHashSet<Literal>> targetExactIndex,
+		Literal literal
+	) {
 		String key = exactKey(literal);
 		if (key == null) {
 			return null;
 		}
-		return exactIndex.get(key);
+		return targetExactIndex.get(key);
 	}
 
 	private String exactKeyIfBound(Literal literal, Unifier unifier) {
@@ -941,26 +1016,20 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		return predicateKey(literal.getPredicateIndicator()) + "|" + String.join("|", values);
 	}
 
-	private void rebuildIndex() {
-		index.clear();
-		exactIndex.clear();
-		Iterator<Literal> beliefs = iterator();
-		while (beliefs != null && beliefs.hasNext()) {
-			indexLiteral(beliefs.next());
-		}
-	}
-
 	private void loadStaticBeliefs() {
 		if (!Files.exists(staticBeliefsPath)) {
 			return;
 		}
 		try {
-			for (String line : Files.readAllLines(staticBeliefsPath, StandardCharsets.UTF_8)) {
-				String fact = line.trim();
-				if (!fact.isEmpty() && !fact.startsWith("#")) {
-					add(Literal.parseLiteral(fact));
+				for (String line : Files.readAllLines(staticBeliefsPath, StandardCharsets.UTF_8)) {
+					String fact = line.trim();
+					if (!fact.isEmpty() && !fact.startsWith("#")) {
+						Literal literal = Literal.parseLiteral(fact);
+						if (super.add(literal)) {
+							indexStaticLiteral(literal);
+						}
+					}
 				}
-			}
 		} catch (IOException error) {
 			throw new RuntimeException(
 				"Failed to load Jason static beliefs from "

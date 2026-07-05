@@ -102,16 +102,23 @@ def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
 	assert "extends DefaultBeliefBase" in source
 	assert "getCandidateBeliefs(Literal literal, Unifier unifier)" in source
 	assert "Literal contains(Literal literal)" in source
-	assert "exactIndex" in source
+	assert "staticExactIndex" in source
+	assert "dynamicExactIndex" in source
+	assert "staticIndex" in source
+	assert "dynamicIndex" in source
 	assert "static_beliefs.txt" in source
 	assert "loadStaticBeliefs();" in source
 	assert "Literal liveCandidate = super.contains(candidate)" in source
-	assert "return liveBucket(exactMatches).iterator();" in source
+	assert "return candidateBucket(staticExactMatches, dynamicExactMatches).iterator();" in source
+	assert "candidates.addAll(staticBucket);" in source
+	assert "indexStaticLiteral(literal);" in source
+	assert "indexDynamicLiteral(literal);" in source
 	assert "term.capply(unifier)" in source
 	assert "exactKeyIfBound(literal, unifier)" in source
-	assert "bucket.size() < bestBucket.size()" in source
+	assert "bucketSize(staticBucket) + bucketSize(dynamicBucket)" in source
 	assert "Collections.emptyIterator()" in source
-	assert "deindexLiteral(literal)" in source
+	assert "deindexDynamicLiteral(literal)" in source
+	assert "deindexStaticLiteral(literal)" in source
 	assert "removeArgumentIndexLiteral" in source
 	assert "public boolean remove(Literal literal)" in source
 	assert "rebuildIndex();" not in source
