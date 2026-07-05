@@ -11,6 +11,9 @@ Current full-test behavior:
 4. Emit one query wrapper plan whose body calls those atomic goals in sequence.
 5. Run Jason against the generated atomic AgentSpeak(L) library plus that
    wrapper.
+6. Export every successful primitive action as a complete PDDL plan trace.
+7. For paper-quality runs, validate that exported trace with VAL or an IPC-style
+   plan verifier.
 
 The wrapper shape is:
 
@@ -27,6 +30,7 @@ This runner validates:
 
 ```text
 PDDL test goal facts -> ordered singleton goal body -> Jason execution
+-> exported PDDL plan trace -> VAL/IPC plan verification
 ```
 
 It does not validate:
@@ -41,6 +45,26 @@ and executes the body. The planning work is split across two other components:
 the atomic library provides plans for goals such as `!served(P)` or `!at(C,L)`,
 and the upstream input layer chooses the temporal order when it creates an LTLf
 formula. In this diagnostic runner, the order is just the PDDL parser order.
+
+## Validation Semantics And Budget
+
+The Jason Java environment is an execution environment, not the final plan
+validator. It checks PDDL preconditions and effects online while Jason runs, but
+the paper-quality success criterion is stricter: Jason must finish, export a
+complete PDDL plan trace in `jason_plan.plan`, and that trace must be accepted
+by VAL or an IPC-style verifier against the same domain and problem file.
+
+The exported trace uses PDDL action names and object names, not Jason-safe
+identifiers. For example, an ASL action functor `pick_up(b1)` is written as the
+PDDL plan line `(pick-up b1)` when the source PDDL action is `pick-up`. The
+artifact `pddl_symbol_map.tsv` maps Jason-safe symbols back to original PDDL
+symbols when sanitization was needed.
+
+The full-test runner now defaults to `1800` seconds for each Jason validation
+case and `1800` seconds for each VAL/IPC verification call. This follows the
+MOOSE paper's planning/instantiation comparison budget, not its separate
+generalised-plan synthesis budget. Debug runs may pass `--no-require-plan-verifier`,
+but those results are not paper-quality validation results.
 
 ## Temporal Wrapper Policy
 
@@ -214,9 +238,11 @@ The runner also limits successful-action trace output:
 ```
 
 This keeps large validations from spending time and disk space printing every
-primitive action. The real action count is still reported through
-`runtime_summary`, so validation records preserve whether a run executed a short
-or very long plan.
+primitive action to stdout. It does not truncate the exported PDDL plan trace:
+`jason_plan.plan` still contains every successful primitive action and is the
+artifact passed to VAL or the configured IPC-style verifier. The real action
+count is still reported through `runtime_summary`, so validation records
+preserve whether a run executed a short or very long plan.
 
 This optimization is domain-general for PDDL action schemas: adding a new
 domain does not require a special case for that domain or for predicates such as

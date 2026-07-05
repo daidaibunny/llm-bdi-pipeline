@@ -186,8 +186,27 @@ Examples:
 	jason_parser.add_argument(
 		"--timeout-seconds",
 		type=int,
-		default=60,
+		default=1800,
 		help="Hard timeout for the Jason runtime process.",
+	)
+	jason_parser.add_argument(
+		"--plan-verifier-command",
+		help=(
+			"Explicit VAL or IPC verifier command. Omit to skip external plan "
+			"verification and avoid per-action plan-trace I/O."
+		),
+	)
+	jason_parser.add_argument(
+		"--require-plan-verifier",
+		action=argparse.BooleanOptionalAction,
+		default=False,
+		help="Require exported PDDL plan trace validation with VAL/IPC verifier.",
+	)
+	jason_parser.add_argument(
+		"--plan-verifier-timeout-seconds",
+		type=int,
+		default=1800,
+		help="Hard timeout for VAL/IPC plan verification.",
 	)
 	return parser
 
@@ -452,7 +471,15 @@ def _validate_jason_plan_library(args: argparse.Namespace) -> dict[str, Any]:
 		/ domain_key
 		/ goal_name
 	)
-	runner = JasonPlanLibraryRunner(timeout_seconds=max(1, int(args.timeout_seconds or 60)))
+	runner = JasonPlanLibraryRunner(
+		timeout_seconds=max(1, int(args.timeout_seconds or 1800)),
+		plan_verifier_command=args.plan_verifier_command,
+		require_plan_verifier=bool(args.require_plan_verifier),
+		plan_verifier_timeout_seconds=max(
+			1,
+			int(args.plan_verifier_timeout_seconds or 1800),
+		),
+	)
 	result = runner.validate(
 		domain_file=domain_file,
 		problem_file=problem_file,

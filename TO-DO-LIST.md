@@ -132,9 +132,16 @@ uv run python src/main.py validate-jason-plan-library \
   --domain-file src/domains/blocks/domain.pddl \
   --problem-file src/domains/blocks/test/instance-69.pddl \
   --goal-name g_blocks_user_goal_1 \
-  --timeout-seconds 30
+  --timeout-seconds 1800 \
+  --require-plan-verifier \
+  --plan-verifier-timeout-seconds 1800
 ```
 
 Historical restoration references are no longer part of the active task list.
 Current temporal input is the validated lifted LTLf JSON interface in
 `src/domain_level_planning/lifted_ltlf_goal_schema.py`.
+
+Jason full-test validation now exports a complete `jason_plan.plan` PDDL trace
+for every successful run and, in the full-test runner, requires VAL or an
+IPC-style verifier by default. The `1800` second timeout is the MOOSE paper
+planning/instantiation cap; synthesis/train budgets remain separate.

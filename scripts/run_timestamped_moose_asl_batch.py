@@ -58,9 +58,24 @@ def main() -> int:
 	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
 	parser.add_argument("--dump-timeout-seconds", type=int, default=300)
 	parser.add_argument("--append-timeout-seconds", type=int, default=300)
-	parser.add_argument("--jason-timeout-seconds", type=int, default=90)
-	parser.add_argument("--moose-plan-timeout-seconds", type=int, default=120)
+	parser.add_argument("--jason-timeout-seconds", type=int, default=1800)
+	parser.add_argument("--moose-plan-timeout-seconds", type=int, default=1800)
 	parser.add_argument("--moose-plan-bound", type=int, default=5000)
+	parser.add_argument(
+		"--jason-plan-verifier-command",
+		help="Optional VAL or IPC verifier command for Jason-exported PDDL traces.",
+	)
+	parser.add_argument(
+		"--require-jason-plan-verifier",
+		action="store_true",
+		help="Require Jason-exported PDDL plan traces to pass VAL/IPC verification.",
+	)
+	parser.add_argument(
+		"--jason-plan-verifier-timeout-seconds",
+		type=int,
+		default=1800,
+		help="Hard timeout for VAL/IPC verification of Jason-exported traces.",
+	)
 	parser.add_argument(
 		"--run-jason-validation",
 		action="store_true",
@@ -189,7 +204,13 @@ def build_moose_batch_command(
 		str(args.moose_plan_timeout_seconds),
 		"--moose-plan-bound",
 		str(args.moose_plan_bound),
+		"--jason-plan-verifier-timeout-seconds",
+		str(args.jason_plan_verifier_timeout_seconds),
 	]
+	if args.jason_plan_verifier_command:
+		command.extend(("--jason-plan-verifier-command", args.jason_plan_verifier_command))
+	if args.require_jason_plan_verifier:
+		command.append("--require-jason-plan-verifier")
 	for domain in domains:
 		command.extend(("--domain", domain))
 	if not args.run_jason_validation:

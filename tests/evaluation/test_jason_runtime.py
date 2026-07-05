@@ -11,12 +11,20 @@ from evaluation.jason_runtime.environment_adapter import JasonEnvironmentRuntime
 from evaluation.jason_runtime.runner import _build_environment_java_source
 from evaluation.jason_runtime.runner import _build_indexed_belief_base_java_source
 from evaluation.jason_runtime.runner import _build_runner_mas2j
+from evaluation.jason_runtime.runner import _normalize_plan_verifier_command
 from evaluation.jason_runtime.runner import _parse_pddl_patterns
+from evaluation.jason_runtime.runner import _plan_verifier_output_success
+from evaluation.jason_runtime.runner import _plan_verifier_not_attempted
+from evaluation.jason_runtime.runner import _render_pddl_symbol_map
+from evaluation.jason_runtime.runner import _run_plan_verifier
 from evaluation.jason_runtime.runner import _run_process_streamed
 from evaluation.jason_runtime.runner import _runtime_action_schema
 from evaluation.jason_runtime.runner import _scan_runtime_output_files
 from evaluation.jason_runtime.runner import _split_seed_facts_for_jason_runtime
 from utils.pddl_parser import PDDLAction
+from utils.pddl_parser import PDDLDomain
+from utils.pddl_parser import PDDLFact
+from utils.pddl_parser import PDDLProblem
 
 
 def test_environment_adapter_requires_ready_and_success_markers() -> None:
@@ -41,6 +49,7 @@ def test_pddl_action_schema_is_sanitized_for_jason_environment() -> None:
 	schema = _runtime_action_schema(action)
 
 	assert schema.functor == "pick_up"
+	assert schema.source_name == "pick-up"
 	assert schema.parameters == ("x",)
 	assert [(item.predicate, item.args, item.positive) for item in schema.preconditions] == [
 		("clear", ("x",), True),
@@ -77,9 +86,16 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 
 	assert 'Paths.get("initial_facts.txt")' in source
 	assert 'Paths.get("initial_percepts.txt")' in source
+	assert 'Paths.get("jason_plan.plan")' in source
+	assert 'Paths.get("pddl_symbol_map.tsv")' in source
 	assert "Files.readAllLines(seedFactsPath, StandardCharsets.UTF_8)" in source
 	assert "Files.readAllLines(initialPerceptsPath, StandardCharsets.UTF_8)" in source
 	assert 'world.add("ready")' not in source
+	assert "Boolean.parseBoolean(" in source
+	assert '"jason.pipeline.planTraceEnabled"' in source
+	assert 'System.getProperty("jason.pipeline.planTraceEnabled", "true")' in source
+	assert "recordPlanAction(schema, action);" in source
+	assert "private void flushPlanTrace()" in source
 	assert "syncInitialPercepts();" in source
 	assert "EffectDelta delta = applyEffects(schema.effects, bindings);" in source
 	assert "syncPerceptDelta(delta);" in source
@@ -88,6 +104,109 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert "runtime env action count " in source
 	assert "actionTraceLimit" in source
 	assert '"jason.pipeline.actionTraceLimit",\n\t\t3' in source
+	assert "import java.util.Arrays;" not in source
+	assert "Arrays.stream" not in source
+	assert "new StringBuilder(predicate)" in source
+	assert "traceSuccessfulAction(schema, action);" in source
+	assert "traceSuccessfulAction(String tracedAction)" not in source
+
+
+def test_plan_verifier_command_normalization_and_not_configured_result(tmp_path: Path) -> None:
+	assert _normalize_plan_verifier_command(None) is None
+	assert _normalize_plan_verifier_command("Validate -v {domain_file}") == (
+		"Validate",
+		"-v",
+		"{domain_file}",
+	)
+	assert _normalize_plan_verifier_command(("Validate", "{plan_file}")) == (
+		"Validate",
+		"{plan_file}",
+	)
+
+	result = _plan_verifier_not_attempted(
+		stdout_path=tmp_path / "plan_verifier_stdout.txt",
+		stderr_path=tmp_path / "plan_verifier_stderr.txt",
+	)
+
+	assert result.attempted is False
+	assert result.available is False
+	assert result.success is None
+	assert result.error is None
+	assert result.to_dict()["artifacts"]["stdout"].endswith("plan_verifier_stdout.txt")
+
+
+def test_pddl_symbol_map_restores_original_object_names() -> None:
+	domain = PDDLDomain(
+		name="tiny",
+		requirements=[],
+		types=[],
+		constants=["depot-1"],
+		constant_types={},
+		predicates=[],
+		actions=[],
+	)
+	problem = PDDLProblem(
+		name="tiny-problem",
+		domain_name="tiny",
+		objects=["block-1"],
+		object_types={},
+		init_facts=[PDDLFact("ready-at", ["block-1", "depot-1"])],
+		goal_facts=[PDDLFact("done-at", ["block-1"])],
+	)
+
+	symbol_map = _render_pddl_symbol_map(domain=domain, problem=problem)
+
+	assert "block_1\tblock-1\n" in symbol_map
+	assert "depot_1\tdepot-1\n" in symbol_map
+
+
+def test_plan_verifier_accepts_fake_val_output(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	plan_file = tmp_path / "plan.plan"
+	verifier = tmp_path / "fake_validate.py"
+	stdout_path = tmp_path / "verifier.stdout.txt"
+	stderr_path = tmp_path / "verifier.stderr.txt"
+	domain_file.write_text("(define (domain tiny))\n", encoding="utf-8")
+	problem_file.write_text("(define (problem tiny-problem) (:domain tiny))\n", encoding="utf-8")
+	plan_file.write_text("(finish)\n", encoding="utf-8")
+	verifier.write_text(
+		"import sys\n"
+		"print('Plan valid')\n"
+		"print('|'.join(sys.argv[1:]))\n",
+		encoding="utf-8",
+	)
+
+	result = _run_plan_verifier(
+		explicit_command=(sys.executable, str(verifier)),
+		require_verifier=True,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_file=plan_file,
+		output_dir=tmp_path,
+		stdout_path=stdout_path,
+		stderr_path=stderr_path,
+		timeout_seconds=10,
+	)
+
+	assert result.success is True
+	assert result.attempted is True
+	assert result.available is True
+	assert result.command[-3:] == (str(domain_file), str(problem_file), str(plan_file))
+	assert "Plan valid" in result.stdout
+
+
+def test_plan_verifier_output_rejects_explicit_failure() -> None:
+	assert _plan_verifier_output_success(
+		exit_code=0,
+		timed_out=False,
+		output="Plan valid",
+	)
+	assert not _plan_verifier_output_success(
+		exit_code=0,
+		timed_out=False,
+		output="Plan failed: goal not satisfied",
+	)
 
 
 def test_runner_uses_project_indexed_belief_base() -> None:
@@ -325,7 +444,10 @@ def test_jason_runner_executes_tiny_pddl_environment(tmp_path: Path) -> None:
 	assert "execute success" in f"{result.stdout}\n{result.stderr}"
 	assert result.output_summary["stdout_truncated"] is False
 	assert result.output_summary["stderr_truncated"] is False
+	assert result.plan_verifier["attempted"] is False
 	assert Path(result.artifacts["agentspeak"]).exists()
+	assert Path(result.artifacts["plan_trace"]).exists()
+	assert Path(result.artifacts["plan_trace"]).read_text(encoding="utf-8") == "(finish)\n"
 	assert Path(result.artifacts["initial_facts"]).read_text(encoding="utf-8") == "ready\n"
 	assert 'world.add("ready")' not in Path(result.artifacts["environment_java"]).read_text(
 		encoding="utf-8",

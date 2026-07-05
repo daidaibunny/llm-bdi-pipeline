@@ -113,9 +113,24 @@ def main() -> int:
 	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
 	parser.add_argument("--dump-timeout-seconds", type=int, default=300)
 	parser.add_argument("--append-timeout-seconds", type=int, default=300)
-	parser.add_argument("--jason-timeout-seconds", type=int, default=90)
-	parser.add_argument("--moose-plan-timeout-seconds", type=int, default=120)
+	parser.add_argument("--jason-timeout-seconds", type=int, default=1800)
+	parser.add_argument("--moose-plan-timeout-seconds", type=int, default=1800)
 	parser.add_argument("--moose-plan-bound", type=int, default=5000)
+	parser.add_argument(
+		"--jason-plan-verifier-command",
+		help="Optional VAL or IPC verifier command for Jason-exported PDDL traces.",
+	)
+	parser.add_argument(
+		"--require-jason-plan-verifier",
+		action="store_true",
+		help="Require Jason-exported PDDL plan traces to pass VAL/IPC verification.",
+	)
+	parser.add_argument(
+		"--jason-plan-verifier-timeout-seconds",
+		type=int,
+		default=1800,
+		help="Hard timeout for VAL/IPC verification of Jason-exported traces.",
+	)
 	parser.add_argument(
 		"--moose-runtime",
 		choices=("docker", "local"),
@@ -347,6 +362,12 @@ def run_domain(
 				run_root=run_root,
 				index=index,
 				timeout_seconds=args.jason_timeout_seconds,
+				plan_verifier_command=args.jason_plan_verifier_command,
+				require_plan_verifier=bool(args.require_jason_plan_verifier),
+				plan_verifier_timeout_seconds=max(
+					1,
+					int(args.jason_plan_verifier_timeout_seconds),
+				),
 				library_root=args.library_root,
 				max_rss_gb=args.max_rss_gb,
 			)
@@ -462,6 +483,9 @@ def run_jason_validation(
 	run_root: Path,
 	index: int,
 	timeout_seconds: int,
+	plan_verifier_command: str | None,
+	require_plan_verifier: bool,
+	plan_verifier_timeout_seconds: int,
 	library_root: Path,
 	max_rss_gb: float,
 ) -> dict[str, Any]:
@@ -486,6 +510,10 @@ def run_jason_validation(
 			str(output_dir),
 			"--timeout-seconds",
 			str(timeout_seconds),
+			"--plan-verifier-timeout-seconds",
+			str(plan_verifier_timeout_seconds),
+			*(("--plan-verifier-command", plan_verifier_command) if plan_verifier_command else ()),
+			*(("--require-plan-verifier",) if require_plan_verifier else ()),
 		),
 		cwd=PROJECT_ROOT,
 		stdout_file=log_root / f"jason_test_{index}.stdout.json",

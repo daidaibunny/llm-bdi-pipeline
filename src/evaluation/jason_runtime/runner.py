@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import shlex
 import subprocess
 import tempfile
 import time
@@ -25,6 +26,8 @@ from .environment_adapter import build_environment_adapter
 
 _RUNTIME_OUTPUT_EXCERPT_MAX_CHARS = 20_000
 _RUNTIME_ACTION_PATH_MAX_ITEMS = 3
+_PLAN_VERIFIER_OUTPUT_EXCERPT_MAX_CHARS = 20_000
+_DEFAULT_PLAN_VERIFIER_TIMEOUT_SECONDS = 1800
 _ACTION_SUCCESS_MARKER = "runtime env action success "
 _ACTION_COUNT_MARKER = "runtime env action count "
 _ADAPTER_MARKERS = (
@@ -33,6 +36,22 @@ _ADAPTER_MARKERS = (
 	"runtime env unknown action",
 	"runtime env compile failed",
 	"execute success",
+)
+_PLAN_VERIFIER_SUCCESS_MARKERS = (
+	"plan valid",
+	"successful plans: 1",
+	"plan executed successfully",
+)
+_PLAN_VERIFIER_FAILURE_MARKERS = (
+	"plan invalid",
+	"plan failed",
+	"failed plans",
+	"not valid",
+	"goal not satisfied",
+	"precondition not satisfied",
+	"precondition failed",
+	"violated precondition",
+	"unsuccessful",
 )
 
 
@@ -59,6 +78,7 @@ class JasonValidationResult:
 	action_path: tuple[str, ...]
 	action_count: int
 	environment_adapter: dict[str, Any]
+	plan_verifier: dict[str, Any]
 	artifacts: dict[str, str]
 	timing_profile: dict[str, float]
 	output_summary: dict[str, Any]
@@ -77,6 +97,7 @@ class JasonValidationResult:
 			"action_path": list(self.action_path),
 			"action_count": self.action_count,
 			"environment_adapter": dict(self.environment_adapter),
+			"plan_verifier": dict(self.plan_verifier),
 			"artifacts": dict(self.artifacts),
 			"timing_profile": dict(self.timing_profile),
 			"output_summary": dict(self.output_summary),
@@ -112,6 +133,38 @@ class StreamedProcessResult:
 
 	exit_code: int | None
 	timed_out: bool
+
+
+@dataclass(frozen=True)
+class PlanVerifierResult:
+	"""Result for validating an exported PDDL plan trace with VAL or an IPC verifier."""
+
+	attempted: bool
+	available: bool
+	success: bool | None
+	command: tuple[str, ...]
+	exit_code: int | None
+	timed_out: bool
+	stdout: str
+	stderr: str
+	artifacts: dict[str, str]
+	error: str | None = None
+
+	def to_dict(self) -> dict[str, Any]:
+		payload: dict[str, Any] = {
+			"attempted": self.attempted,
+			"available": self.available,
+			"success": self.success,
+			"command": list(self.command),
+			"exit_code": self.exit_code,
+			"timed_out": self.timed_out,
+			"stdout": self.stdout,
+			"stderr": self.stderr,
+			"artifacts": dict(self.artifacts),
+		}
+		if self.error is not None:
+			payload["error"] = self.error
+		return payload
 
 
 @dataclass(frozen=True)
@@ -160,10 +213,13 @@ class JasonPlanLibraryRunner:
 	def __init__(
 		self,
 		*,
-		timeout_seconds: int = 60,
+		timeout_seconds: int = 1800,
 		environment_adapter: Stage6EnvironmentAdapter | None = None,
 		jason_classpath: str | None = None,
 		compiled_environment_dir: str | Path | None = None,
+		plan_verifier_command: Sequence[str] | str | None = None,
+		require_plan_verifier: bool = False,
+		plan_verifier_timeout_seconds: int = _DEFAULT_PLAN_VERIFIER_TIMEOUT_SECONDS,
 	) -> None:
 		self.timeout_seconds = timeout_seconds
 		self.environment_adapter = environment_adapter or build_environment_adapter()
@@ -173,6 +229,11 @@ class JasonPlanLibraryRunner:
 			if compiled_environment_dir is not None
 			else None
 		)
+		self.plan_verifier_command = _normalize_plan_verifier_command(
+			plan_verifier_command,
+		)
+		self.require_plan_verifier = require_plan_verifier
+		self.plan_verifier_timeout_seconds = max(1, int(plan_verifier_timeout_seconds))
 
 	def validate(
 		self,
@@ -195,6 +256,7 @@ class JasonPlanLibraryRunner:
 
 		parse_start = time.perf_counter()
 		domain = PDDLParser.parse_domain(domain_path)
+		problem = PDDLParser.parse_problem(problem_path)
 		seed_facts = _seed_facts(domain_file=domain_path, problem_file=problem_path)
 		action_schemas = tuple(_runtime_action_schema(action) for action in domain.actions)
 		initial_percepts, static_beliefs = _split_seed_facts_for_jason_runtime(
@@ -229,12 +291,6 @@ class JasonPlanLibraryRunner:
 			goal_name=goal_name,
 		)
 		runner_mas2j = _build_runner_mas2j(domain.name)
-		environment_java = _build_environment_java_source(
-			class_name=self.environment_class_name,
-			action_schemas=action_schemas,
-			seed_facts_file_name="initial_facts.txt",
-			initial_percepts_file_name="initial_percepts.txt",
-		)
 		logging_properties = _logging_properties()
 
 		agentspeak_path = output_path / "agentspeak_generated.asl"
@@ -244,10 +300,23 @@ class JasonPlanLibraryRunner:
 		initial_facts_path = output_path / "initial_facts.txt"
 		initial_percepts_path = output_path / "initial_percepts.txt"
 		static_beliefs_path = output_path / "static_beliefs.txt"
+		pddl_symbol_map_path = output_path / "pddl_symbol_map.tsv"
 		logging_path = output_path / "logging.properties"
 		stdout_path = output_path / "jason_stdout.txt"
 		stderr_path = output_path / "jason_stderr.txt"
+		plan_trace_path = output_path / "jason_plan.plan"
+		plan_verifier_stdout_path = output_path / "plan_verifier_stdout.txt"
+		plan_verifier_stderr_path = output_path / "plan_verifier_stderr.txt"
 		result_path = output_path / "jason_validation.json"
+
+		environment_java = _build_environment_java_source(
+			class_name=self.environment_class_name,
+			action_schemas=action_schemas,
+			seed_facts_file_name=initial_facts_path.name,
+			initial_percepts_file_name=initial_percepts_path.name,
+			plan_trace_file_name=plan_trace_path.name,
+			pddl_symbol_map_file_name=pddl_symbol_map_path.name,
+		)
 
 		agentspeak_path.write_text(runner_asl, encoding="utf-8")
 		mas2j_path.write_text(runner_mas2j, encoding="utf-8")
@@ -268,6 +337,11 @@ class JasonPlanLibraryRunner:
 			"\n".join(static_beliefs) + ("\n" if static_beliefs else ""),
 			encoding="utf-8",
 		)
+		pddl_symbol_map_path.write_text(
+			_render_pddl_symbol_map(domain=domain, problem=problem),
+			encoding="utf-8",
+		)
+		plan_trace_path.write_text("", encoding="utf-8")
 		logging_path.write_text(logging_properties, encoding="utf-8")
 		timing_profile["materialize_seconds"] = time.perf_counter() - materialize_start
 
@@ -308,6 +382,10 @@ class JasonPlanLibraryRunner:
 						stdout=compile_process.stdout,
 						stderr=compile_process.stderr,
 					).to_dict(),
+					plan_verifier=_plan_verifier_not_attempted(
+						stdout_path=plan_verifier_stdout_path,
+						stderr_path=plan_verifier_stderr_path,
+					).to_dict(),
 					artifacts=_artifact_paths(
 						agentspeak_path=agentspeak_path,
 						mas2j_path=mas2j_path,
@@ -316,6 +394,10 @@ class JasonPlanLibraryRunner:
 						initial_facts_path=initial_facts_path,
 						initial_percepts_path=initial_percepts_path,
 						static_beliefs_path=static_beliefs_path,
+						pddl_symbol_map_path=pddl_symbol_map_path,
+						plan_trace_path=plan_trace_path,
+						plan_verifier_stdout_path=plan_verifier_stdout_path,
+						plan_verifier_stderr_path=plan_verifier_stderr_path,
 						stdout_path=stdout_path,
 						stderr_path=stderr_path,
 						result_path=result_path,
@@ -363,6 +445,7 @@ class JasonPlanLibraryRunner:
 			"-Djava.awt.headless=true",
 			"-Djason.pipeline.actionTraceLimit=3",
 			"-Djason.pipeline.actionTraceInterval=0",
+			"-Djason.pipeline.planTraceEnabled=true",
 			f"-Djava.util.logging.config.file={logging_path}",
 			"-cp",
 			run_classpath,
@@ -390,13 +473,17 @@ class JasonPlanLibraryRunner:
 			stdout=output_summary.marker_output,
 			stderr="",
 		)
-		success = (
+		jason_success = (
 			not timed_out
 			and exit_code == 0
 			and adapter_result.success
 			and output_summary.has_execute_success
 		)
-		status = "success" if success else "failed"
+		plan_verifier_result = _plan_verifier_not_attempted(
+			stdout_path=plan_verifier_stdout_path,
+			stderr_path=plan_verifier_stderr_path,
+		)
+		status = "success" if jason_success else "failed"
 		error_message = None
 		if timed_out:
 			status = "timeout"
@@ -405,6 +492,37 @@ class JasonPlanLibraryRunner:
 			error_message = f"Jason process exited with code {exit_code}."
 		elif not adapter_result.success:
 			error_message = adapter_result.error
+		elif not output_summary.has_execute_success:
+			error_message = "Jason process did not report execute success."
+		elif jason_success:
+			verifier_start = time.perf_counter()
+			plan_verifier_result = _run_plan_verifier(
+				explicit_command=self.plan_verifier_command,
+				require_verifier=self.require_plan_verifier,
+				domain_file=domain_path,
+				problem_file=problem_path,
+				plan_file=plan_trace_path,
+				output_dir=output_path,
+				stdout_path=plan_verifier_stdout_path,
+				stderr_path=plan_verifier_stderr_path,
+				timeout_seconds=self.plan_verifier_timeout_seconds,
+			)
+			timing_profile["plan_verifier_seconds"] = (
+				time.perf_counter() - verifier_start
+			)
+			if self.require_plan_verifier:
+				if not plan_verifier_result.available:
+					status = "plan_verifier_unavailable"
+					error_message = plan_verifier_result.error
+				elif plan_verifier_result.timed_out:
+					status = "plan_verifier_timeout"
+					error_message = plan_verifier_result.error
+				elif plan_verifier_result.success is not True:
+					status = "plan_verifier_failed"
+					error_message = plan_verifier_result.error
+		success = jason_success and (
+			not self.require_plan_verifier or plan_verifier_result.success is True
+		)
 
 		result = JasonValidationResult(
 			success=success,
@@ -418,6 +536,7 @@ class JasonPlanLibraryRunner:
 			action_path=output_summary.action_path,
 			action_count=output_summary.action_count,
 			environment_adapter=adapter_result.to_dict(),
+			plan_verifier=plan_verifier_result.to_dict(),
 			artifacts=_artifact_paths(
 				agentspeak_path=agentspeak_path,
 				mas2j_path=mas2j_path,
@@ -426,6 +545,10 @@ class JasonPlanLibraryRunner:
 				initial_facts_path=initial_facts_path,
 				initial_percepts_path=initial_percepts_path,
 				static_beliefs_path=static_beliefs_path,
+				pddl_symbol_map_path=pddl_symbol_map_path,
+				plan_trace_path=plan_trace_path,
+				plan_verifier_stdout_path=plan_verifier_stdout_path,
+				plan_verifier_stderr_path=plan_verifier_stderr_path,
 				stdout_path=stdout_path,
 				stderr_path=stderr_path,
 				result_path=result_path,
@@ -483,13 +606,48 @@ def _runtime_fact_predicate(fact: str) -> str:
 def _runtime_action_schema(action: PDDLAction) -> RuntimeActionSchema:
 	return RuntimeActionSchema(
 		functor=sanitize_identifier(action.name),
-		source_name=sanitize_identifier(action.name),
+		source_name=action.name,
 		parameters=tuple(
 			sanitize_identifier(parameter_name(parameter).lstrip("?"))
 			for parameter in tuple(action.parameters or ())
 		),
 		preconditions=tuple(_parse_pddl_patterns(action.preconditions)),
 		effects=tuple(_parse_pddl_patterns(action.effects)),
+	)
+
+
+def _render_pddl_symbol_map(*, domain: Any, problem: Any) -> str:
+	"""Render a reversible map from Jason-safe symbols back to PDDL symbols."""
+
+	symbols: list[str] = []
+	symbols.extend(str(item) for item in tuple(getattr(problem, "objects", ()) or ()))
+	symbols.extend(str(item) for item in tuple(getattr(domain, "constants", ()) or ()))
+	for fact in tuple(getattr(problem, "init_facts", ()) or ()):
+		symbols.extend(str(arg) for arg in tuple(getattr(fact, "args", ()) or ()))
+	for fact in tuple(getattr(problem, "goal_facts", ()) or ()):
+		symbols.extend(str(arg) for arg in tuple(getattr(fact, "args", ()) or ()))
+	symbol_map: dict[str, str] = {}
+	collisions: dict[str, set[str]] = {}
+	for symbol in symbols:
+		if not symbol:
+			continue
+		sanitized = sanitize_identifier(symbol)
+		previous = symbol_map.setdefault(sanitized, symbol)
+		if previous != symbol:
+			collisions.setdefault(sanitized, {previous}).add(symbol)
+	if collisions:
+		raise JasonValidationError(
+			"Cannot export an unambiguous PDDL plan trace because two PDDL symbols "
+			"collapse to the same Jason-safe identifier.",
+			metadata={
+				"collisions": {
+					key: sorted(values) for key, values in collisions.items()
+				},
+			},
+		)
+	return "".join(
+		f"{sanitized}\t{source}\n"
+		for sanitized, source in sorted(symbol_map.items())
 	)
 
 
@@ -1048,6 +1206,8 @@ def _build_environment_java_source(
 	action_schemas: Sequence[RuntimeActionSchema],
 	seed_facts_file_name: str,
 	initial_percepts_file_name: str = "initial_percepts.txt",
+	plan_trace_file_name: str = "jason_plan.plan",
+	pddl_symbol_map_file_name: str = "pddl_symbol_map.tsv",
 ) -> str:
 	action_lines = "\n\t\t".join(
 		_render_action_registration(schema)
@@ -1057,6 +1217,8 @@ def _build_environment_java_source(
 		action_lines = "// no action schemas"
 	seed_file = _java_quote(seed_facts_file_name)
 	initial_percepts_file = _java_quote(initial_percepts_file_name)
+	plan_trace_file = _java_quote(plan_trace_file_name)
+	pddl_symbol_map_file = _java_quote(pddl_symbol_map_file_name)
 	return f"""
 import jason.asSyntax.Literal;
 import jason.asSyntax.Structure;
@@ -1067,9 +1229,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -1126,8 +1289,15 @@ public class {class_name} extends Environment {{
 	private final Set<String> world = new LinkedHashSet<>();
 	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
+	private final Map<String, String> pddlSymbols = new HashMap<>();
+	private final List<String> planTrace = new ArrayList<>();
 	private final Path seedFactsPath = Paths.get({seed_file});
 	private final Path initialPerceptsPath = Paths.get({initial_percepts_file});
+	private final Path planTracePath = Paths.get({plan_trace_file});
+	private final Path pddlSymbolMapPath = Paths.get({pddl_symbol_map_file});
+	private final boolean planTraceEnabled = Boolean.parseBoolean(
+		System.getProperty("jason.pipeline.planTraceEnabled", "true")
+	);
 	private final int actionTraceLimit = Integer.getInteger(
 		"jason.pipeline.actionTraceLimit",
 		3
@@ -1142,6 +1312,8 @@ public class {class_name} extends Environment {{
 	public synchronized void init(String[] args) {{
 		super.init(args);
 		seedInitialFacts();
+		loadPddlSymbolMap();
+		resetPlanTrace();
 		loadActions();
 		syncInitialPercepts();
 		System.out.println("runtime env ready");
@@ -1161,9 +1333,12 @@ public class {class_name} extends Environment {{
 			System.out.println("runtime env unknown action " + action);
 			return false;
 		}}
-		String tracedAction = renderTraceAction(schema.sourceName, action);
 		if (action.getArity() != schema.parameters.length) {{
-			System.out.println("runtime env action failed " + tracedAction + " reason=arity");
+			System.out.println(
+				"runtime env action failed "
+					+ renderTraceAction(schema.sourceName, action)
+					+ " reason=arity"
+			);
 			return false;
 		}}
 
@@ -1178,14 +1353,19 @@ public class {class_name} extends Environment {{
 		}}
 
 		if (!checkPreconditions(schema.preconditions, bindings)) {{
-			System.out.println("runtime env action failed " + tracedAction + " reason=precondition");
+			System.out.println(
+				"runtime env action failed "
+					+ renderTraceAction(schema.sourceName, action)
+					+ " reason=precondition"
+			);
 			return false;
 		}}
 
 		EffectDelta delta = applyEffects(schema.effects, bindings);
 		syncPerceptDelta(delta);
 		actionCount += 1;
-		traceSuccessfulAction(tracedAction);
+		recordPlanAction(schema, action);
+		traceSuccessfulAction(schema, action);
 		return true;
 	}}
 
@@ -1201,6 +1381,45 @@ public class {class_name} extends Environment {{
 		}} catch (IOException error) {{
 			throw new RuntimeException(
 				"Failed to load Jason initial facts from " + seedFactsPath.toAbsolutePath(),
+				error
+			);
+		}}
+	}}
+
+	private void loadPddlSymbolMap() {{
+		pddlSymbols.clear();
+		if (!Files.exists(pddlSymbolMapPath)) {{
+			return;
+		}}
+		try {{
+			for (String line : Files.readAllLines(pddlSymbolMapPath, StandardCharsets.UTF_8)) {{
+				String trimmed = line.trim();
+				if (trimmed.isEmpty() || trimmed.startsWith("#")) {{
+					continue;
+				}}
+				String[] parts = trimmed.split("\\t", 2);
+				if (parts.length == 2 && !parts[0].isEmpty()) {{
+					pddlSymbols.put(parts[0], parts[1]);
+				}}
+			}}
+		}} catch (IOException error) {{
+			throw new RuntimeException(
+				"Failed to load Jason PDDL symbol map from " + pddlSymbolMapPath.toAbsolutePath(),
+				error
+			);
+		}}
+	}}
+
+	private void resetPlanTrace() {{
+		planTrace.clear();
+		if (!planTraceEnabled) {{
+			return;
+		}}
+		try {{
+			Files.write(planTracePath, planTrace, StandardCharsets.UTF_8);
+		}} catch (IOException error) {{
+			throw new RuntimeException(
+				"Failed to initialize Jason plan trace at " + planTracePath.toAbsolutePath(),
 				error
 			);
 		}}
@@ -1254,10 +1473,16 @@ public class {class_name} extends Environment {{
 		if (args.length == 0) {{
 			return predicate;
 		}}
-		String[] groundedArgs = Arrays.stream(args)
-			.map(arg -> renderTerm(resolveToken(arg, bindings)))
-			.toArray(String[]::new);
-		return predicate + "(" + String.join(",", groundedArgs) + ")";
+		StringBuilder builder = new StringBuilder(predicate);
+		builder.append("(");
+		for (int i = 0; i < args.length; i++) {{
+			if (i > 0) {{
+				builder.append(",");
+			}}
+			builder.append(renderTerm(resolveToken(args[i], bindings)));
+		}}
+		builder.append(")");
+		return builder.toString();
 	}}
 
 	private String resolveToken(String rawToken, Map<String, String> bindings) {{
@@ -1306,9 +1531,38 @@ public class {class_name} extends Environment {{
 		return sourceName + "(" + String.join(",", args) + ")";
 	}}
 
-	private void traceSuccessfulAction(String tracedAction) {{
+	private void recordPlanAction(ActionSchema schema, Structure action) {{
+		if (!planTraceEnabled) {{
+			return;
+		}}
+		planTrace.add(renderPddlPlanAction(schema.sourceName, action));
+	}}
+
+	private String renderPddlPlanAction(String sourceName, Structure action) {{
+		StringBuilder builder = new StringBuilder();
+		builder.append("(");
+		builder.append(sourceName);
+		for (int i = 0; i < action.getArity(); i++) {{
+			builder.append(" ");
+			builder.append(toPddlSymbol(canonical(action.getTerm(i).toString())));
+		}}
+		builder.append(")");
+		return builder.toString();
+	}}
+
+	private String toPddlSymbol(String token) {{
+		String value = canonical(token);
+		if (pddlSymbols.containsKey(value)) {{
+			return pddlSymbols.get(value);
+		}}
+		return value;
+	}}
+
+	private void traceSuccessfulAction(ActionSchema schema, Structure action) {{
 		if (actionCount <= actionTraceLimit) {{
-			System.out.println("runtime env action success " + tracedAction);
+			System.out.println(
+				"runtime env action success " + renderTraceAction(schema.sourceName, action)
+			);
 			return;
 		}}
 		if (actionTraceInterval > 0 && actionCount % actionTraceInterval == 0) {{
@@ -1317,7 +1571,22 @@ public class {class_name} extends Environment {{
 	}}
 
 	private void printRuntimeSummary() {{
+		flushPlanTrace();
 		System.out.println("runtime env action count " + actionCount);
+	}}
+
+	private void flushPlanTrace() {{
+		if (!planTraceEnabled) {{
+			return;
+		}}
+		try {{
+			Files.write(planTracePath, planTrace, StandardCharsets.UTF_8);
+		}} catch (IOException error) {{
+			throw new RuntimeException(
+				"Failed to write Jason plan trace to " + planTracePath.toAbsolutePath(),
+				error
+			);
+		}}
 	}}
 
 	private void syncInitialPercepts() {{
@@ -1512,6 +1781,199 @@ def _run_process_streamed(
 	return StreamedProcessResult(exit_code=completed.returncode, timed_out=False)
 
 
+def _normalize_plan_verifier_command(
+	command: Sequence[str] | str | None,
+) -> tuple[str, ...] | None:
+	"""Normalize a user-provided VAL or IPC verifier command."""
+
+	if command is None:
+		return None
+	if isinstance(command, str):
+		items = tuple(shlex.split(command))
+	else:
+		items = tuple(str(item) for item in command)
+	return items or None
+
+
+def _discover_plan_verifier_command() -> tuple[str, ...] | None:
+	"""Find a VAL or IPC-style PDDL plan verifier without hardcoding a local path."""
+
+	for env_name in ("VAL_VALIDATE_BIN", "VAL_BIN", "IPC_VALIDATE_BIN"):
+		value = os.getenv(env_name)
+		if value:
+			return _normalize_plan_verifier_command(value)
+	for executable in ("Validate", "validate", "VAL"):
+		path = shutil.which(executable)
+		if path:
+			return (path,)
+	return None
+
+
+def _plan_verifier_not_attempted(*, stdout_path: Path, stderr_path: Path) -> PlanVerifierResult:
+	return PlanVerifierResult(
+		attempted=False,
+		available=False,
+		success=None,
+		command=(),
+		exit_code=None,
+		timed_out=False,
+		stdout="",
+		stderr="",
+		artifacts={
+			"stdout": str(stdout_path),
+			"stderr": str(stderr_path),
+		},
+	)
+
+
+def _run_plan_verifier(
+	*,
+	explicit_command: Sequence[str],
+	require_verifier: bool,
+	domain_file: Path,
+	problem_file: Path,
+	plan_file: Path,
+	output_dir: Path,
+	stdout_path: Path,
+	stderr_path: Path,
+	timeout_seconds: int,
+) -> PlanVerifierResult:
+	"""Validate a Jason-exported PDDL plan trace with VAL or an IPC verifier."""
+
+	command_prefix = explicit_command or _discover_plan_verifier_command()
+	if command_prefix is None:
+		error = "No VAL/IPC plan verifier found on PATH or in VAL_VALIDATE_BIN/VAL_BIN."
+		if require_verifier:
+			stdout_path.write_text("", encoding="utf-8")
+			stderr_path.write_text(error + "\n", encoding="utf-8")
+			return PlanVerifierResult(
+				attempted=False,
+				available=False,
+				success=None,
+				command=(),
+				exit_code=None,
+				timed_out=False,
+				stdout="",
+				stderr=error,
+				artifacts={
+					"stdout": str(stdout_path),
+					"stderr": str(stderr_path),
+				},
+				error=error,
+			)
+		return _plan_verifier_not_attempted(
+			stdout_path=stdout_path,
+			stderr_path=stderr_path,
+		)
+	executable = str(tuple(command_prefix)[0])
+	if shutil.which(executable) is None and not Path(executable).exists():
+		error = f"Plan verifier executable is not available: {executable}"
+		stdout_path.write_text("", encoding="utf-8")
+		stderr_path.write_text(error + "\n", encoding="utf-8")
+		return PlanVerifierResult(
+			attempted=False,
+			available=False,
+			success=None,
+			command=tuple(command_prefix),
+			exit_code=None,
+			timed_out=False,
+			stdout="",
+			stderr=error,
+			artifacts={
+				"stdout": str(stdout_path),
+				"stderr": str(stderr_path),
+			},
+			error=error,
+		)
+	if not plan_file.exists():
+		error = f"Jason did not export a PDDL plan trace: {plan_file}"
+		stdout_path.write_text("", encoding="utf-8")
+		stderr_path.write_text(error + "\n", encoding="utf-8")
+		return PlanVerifierResult(
+			attempted=False,
+			available=True,
+			success=False,
+			command=tuple(command_prefix),
+			exit_code=None,
+			timed_out=False,
+			stdout="",
+			stderr=error,
+			artifacts={
+				"stdout": str(stdout_path),
+				"stderr": str(stderr_path),
+			},
+			error=error,
+		)
+	command = (
+		*tuple(command_prefix),
+		str(domain_file),
+		str(problem_file),
+		str(plan_file),
+	)
+	process_result = _run_process_streamed(
+		command,
+		cwd=output_dir,
+		stdout_path=stdout_path,
+		stderr_path=stderr_path,
+		timeout_seconds=max(1, int(timeout_seconds)),
+	)
+	stdout_excerpt = _bounded_file_excerpt(stdout_path, _PLAN_VERIFIER_OUTPUT_EXCERPT_MAX_CHARS)
+	stderr_excerpt = _bounded_file_excerpt(stderr_path, _PLAN_VERIFIER_OUTPUT_EXCERPT_MAX_CHARS)
+	output_text = f"{stdout_excerpt}\n{stderr_excerpt}"
+	success = _plan_verifier_output_success(
+		exit_code=process_result.exit_code,
+		timed_out=process_result.timed_out,
+		output=output_text,
+	)
+	error = None
+	if process_result.timed_out:
+		error = f"Plan verifier exceeded {timeout_seconds} seconds."
+	elif not success:
+		error = "Plan verifier did not accept the exported PDDL plan trace."
+	return PlanVerifierResult(
+		attempted=True,
+		available=True,
+		success=success,
+		command=command,
+		exit_code=process_result.exit_code,
+		timed_out=process_result.timed_out,
+		stdout=stdout_excerpt,
+		stderr=stderr_excerpt,
+		artifacts={
+			"stdout": str(stdout_path),
+			"stderr": str(stderr_path),
+		},
+		error=error,
+	)
+
+
+def _plan_verifier_output_success(
+	*,
+	exit_code: int | None,
+	timed_out: bool,
+	output: str,
+) -> bool:
+	"""Interpret VAL/IPC verifier output without depending on one exact binary."""
+
+	if timed_out or exit_code != 0:
+		return False
+	lower_output = str(output or "").lower()
+	if any(marker in lower_output for marker in _PLAN_VERIFIER_FAILURE_MARKERS):
+		return False
+	if not lower_output.strip():
+		return True
+	return any(marker in lower_output for marker in _PLAN_VERIFIER_SUCCESS_MARKERS) or exit_code == 0
+
+
+def _bounded_file_excerpt(path: Path, max_chars: int) -> str:
+	if not path.exists():
+		return ""
+	text = path.read_text(encoding="utf-8", errors="replace")
+	if len(text) <= max_chars:
+		return text
+	return text[:max_chars] + "\n... [output truncated; full log is in the artifact file] ...\n"
+
+
 def _scan_runtime_output_files(
 	*,
 	stdout_path: Path,
@@ -1656,6 +2118,10 @@ def _artifact_paths(
 	initial_facts_path: Path,
 	initial_percepts_path: Path,
 	static_beliefs_path: Path,
+	pddl_symbol_map_path: Path,
+	plan_trace_path: Path,
+	plan_verifier_stdout_path: Path,
+	plan_verifier_stderr_path: Path,
 	stdout_path: Path,
 	stderr_path: Path,
 	result_path: Path,
@@ -1668,6 +2134,10 @@ def _artifact_paths(
 		"initial_facts": str(initial_facts_path),
 		"initial_percepts": str(initial_percepts_path),
 		"static_beliefs": str(static_beliefs_path),
+		"pddl_symbol_map": str(pddl_symbol_map_path),
+		"plan_trace": str(plan_trace_path),
+		"plan_verifier_stdout": str(plan_verifier_stdout_path),
+		"plan_verifier_stderr": str(plan_verifier_stderr_path),
 		"stdout": str(stdout_path),
 		"stderr": str(stderr_path),
 		"result": str(result_path),

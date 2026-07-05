@@ -116,7 +116,29 @@ def main() -> int:
 		help="Domain to validate. Repeat to select multiple. Defaults to all selected domains.",
 	)
 	parser.add_argument("--num-workers", type=int, default=6)
-	parser.add_argument("--timeout-seconds", type=int, default=90)
+	parser.add_argument("--timeout-seconds", type=int, default=1800)
+	parser.add_argument(
+		"--plan-verifier-command",
+		help=(
+			"VAL or IPC verifier command. Defaults to VAL_VALIDATE_BIN, VAL_BIN, "
+			"IPC_VALIDATE_BIN, or Validate/validate/VAL on PATH."
+		),
+	)
+	parser.add_argument(
+		"--require-plan-verifier",
+		action=argparse.BooleanOptionalAction,
+		default=True,
+		help=(
+			"Require the exported PDDL plan trace to pass VAL/IPC verifier. "
+			"Enabled by default for paper-quality validation."
+		),
+	)
+	parser.add_argument(
+		"--plan-verifier-timeout-seconds",
+		type=int,
+		default=1800,
+		help="Hard timeout for VAL/IPC plan verification.",
+	)
 	parser.add_argument(
 		"--atomic-library-mode",
 		choices=ATOMIC_LIBRARY_MODES,
@@ -181,6 +203,9 @@ def main() -> int:
 			"domains": list(domains),
 			"num_workers": args.num_workers,
 			"timeout_seconds": args.timeout_seconds,
+			"plan_verifier_command": args.plan_verifier_command,
+			"require_plan_verifier": bool(args.require_plan_verifier),
+			"plan_verifier_timeout_seconds": args.plan_verifier_timeout_seconds,
 			"atomic_library_mode": args.atomic_library_mode,
 			"prepare_only": bool(args.prepare_only),
 			"write_domain_long_asl": bool(args.write_domain_long_asl),
@@ -225,6 +250,9 @@ def main() -> int:
 		run_root=run_root,
 		num_workers=max(1, int(args.num_workers)),
 		timeout_seconds=max(1, int(args.timeout_seconds)),
+		plan_verifier_command=args.plan_verifier_command,
+		require_plan_verifier=bool(args.require_plan_verifier),
+		plan_verifier_timeout_seconds=max(1, int(args.plan_verifier_timeout_seconds)),
 		summary=summary,
 		summary_file=summary_file,
 	)
@@ -237,6 +265,12 @@ def main() -> int:
 			"test_count": len(domain_items),
 			"success_count": sum(1 for item in domain_items if item.get("success")),
 			"failure_count": sum(1 for item in domain_items if not item.get("success")),
+			"plan_verifier_success_count": sum(
+				1 for item in domain_items if item.get("plan_verifier_success") is True
+			),
+			"plan_verifier_attempted_count": sum(
+				1 for item in domain_items if item.get("plan_verifier_attempted") is True
+			),
 		}
 	summary["completed_at"] = datetime.now().isoformat(timespec="seconds")
 	summary["success"] = all(item.get("success") for item in validation_records) and all(
@@ -747,6 +781,9 @@ def run_jason_tasks(
 	run_root: Path,
 	num_workers: int,
 	timeout_seconds: int,
+	plan_verifier_command: str | None,
+	require_plan_verifier: bool,
+	plan_verifier_timeout_seconds: int,
 	summary: dict[str, Any],
 	summary_file: Path,
 ) -> list[dict[str, Any]]:
@@ -769,6 +806,9 @@ def run_jason_tasks(
 				classpath=classpath,
 				compiled_environment_dirs=compiled_environment_dirs,
 				timeout_seconds=timeout_seconds,
+				plan_verifier_command=plan_verifier_command,
+				require_plan_verifier=require_plan_verifier,
+				plan_verifier_timeout_seconds=plan_verifier_timeout_seconds,
 			): task
 			for task in tasks
 		}
@@ -795,6 +835,9 @@ def validate_one_task(
 	classpath: str,
 	compiled_environment_dirs: Mapping[str, Path],
 	timeout_seconds: int,
+	plan_verifier_command: str | None,
+	require_plan_verifier: bool,
+	plan_verifier_timeout_seconds: int,
 ) -> dict[str, Any]:
 	"""Run one Jason validation and return a compact record."""
 
@@ -808,6 +851,9 @@ def validate_one_task(
 			compiled_environment_dir=compiled_environment_dirs.get(
 				str(task.domain_file.resolve()),
 			),
+			plan_verifier_command=plan_verifier_command,
+			require_plan_verifier=require_plan_verifier,
+			plan_verifier_timeout_seconds=plan_verifier_timeout_seconds,
 		).validate(
 			domain_file=task.domain_file,
 			problem_file=task.problem_file,
@@ -816,6 +862,8 @@ def validate_one_task(
 			output_dir=task.output_dir,
 		)
 		payload = result.to_dict()
+		plan_verifier = dict(payload.get("plan_verifier") or {})
+		artifacts = dict(payload.get("artifacts") or {})
 		record = {
 			"domain": task.domain,
 			"test_index": task.index,
@@ -828,6 +876,12 @@ def validate_one_task(
 			"action_count": int(
 				payload.get("action_count") or len(tuple(payload.get("action_path") or ())),
 			),
+			"plan_verifier_success": plan_verifier.get("success"),
+			"plan_verifier_attempted": plan_verifier.get("attempted"),
+			"plan_verifier_available": plan_verifier.get("available"),
+			"plan_trace": artifacts.get("plan_trace"),
+			"plan_verifier_stdout": artifacts.get("plan_verifier_stdout"),
+			"plan_verifier_stderr": artifacts.get("plan_verifier_stderr"),
 			"output_dir": str(task.output_dir),
 			"runtime_plan_library_asl": str(runtime_asl),
 			"domain_full_plan_library_asl": str(task.plan_library_asl),
