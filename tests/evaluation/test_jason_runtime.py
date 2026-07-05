@@ -9,10 +9,13 @@ import pytest
 from evaluation.jason_runtime import JasonPlanLibraryRunner
 from evaluation.jason_runtime.environment_adapter import JasonEnvironmentRuntimeAdapter
 from evaluation.jason_runtime.runner import _build_environment_java_source
+from evaluation.jason_runtime.runner import _build_indexed_belief_base_java_source
+from evaluation.jason_runtime.runner import _build_runner_mas2j
 from evaluation.jason_runtime.runner import _parse_pddl_patterns
 from evaluation.jason_runtime.runner import _run_process_streamed
 from evaluation.jason_runtime.runner import _runtime_action_schema
 from evaluation.jason_runtime.runner import _scan_runtime_output_files
+from evaluation.jason_runtime.runner import _split_seed_facts_for_jason_runtime
 from utils.pddl_parser import PDDLAction
 
 
@@ -73,7 +76,9 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	)
 
 	assert 'Paths.get("initial_facts.txt")' in source
+	assert 'Paths.get("initial_percepts.txt")' in source
 	assert "Files.readAllLines(seedFactsPath, StandardCharsets.UTF_8)" in source
+	assert "Files.readAllLines(initialPerceptsPath, StandardCharsets.UTF_8)" in source
 	assert 'world.add("ready")' not in source
 	assert "syncInitialPercepts();" in source
 	assert "EffectDelta delta = applyEffects(schema.effects, bindings);" in source
@@ -83,6 +88,50 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert "runtime env action count " in source
 	assert "actionTraceLimit" in source
 	assert '"jason.pipeline.actionTraceLimit",\n\t\t3' in source
+
+
+def test_runner_uses_project_indexed_belief_base() -> None:
+	mas2j = _build_runner_mas2j("tiny")
+
+	assert "beliefBaseClass JasonPipelineIndexedBeliefBase" in mas2j
+
+
+def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
+	source = _build_indexed_belief_base_java_source()
+
+	assert "extends DefaultBeliefBase" in source
+	assert "getCandidateBeliefs(Literal literal, Unifier unifier)" in source
+	assert "Literal contains(Literal literal)" in source
+	assert "exactIndex" in source
+	assert "static_beliefs.txt" in source
+	assert "loadStaticBeliefs();" in source
+	assert "Literal liveCandidate = super.contains(candidate)" in source
+	assert "return liveBucket(exactMatches).iterator();" in source
+	assert "term.capply(unifier)" in source
+	assert "exactKeyIfBound(literal, unifier)" in source
+	assert "bucket.size() < bestBucket.size()" in source
+	assert "Collections.emptyIterator()" in source
+	assert "deindexLiteral(literal)" in source
+	assert "removeArgumentIndexLiteral" in source
+	assert "public boolean remove(Literal literal)" in source
+	assert "rebuildIndex();" not in source
+
+
+def test_runtime_seed_facts_split_static_beliefs_from_dynamic_percepts() -> None:
+	action = PDDLAction(
+		name="move",
+		parameters=["?from", "?to"],
+		preconditions="(and (edge ?from ?to) (at ?from))",
+		effects="(and (at ?to) (not (at ?from)))",
+	)
+
+	initial_percepts, static_beliefs = _split_seed_facts_for_jason_runtime(
+		seed_facts=("edge(a,b)", "at(a)", "type_floor(a)"),
+		action_schemas=(_runtime_action_schema(action),),
+	)
+
+	assert initial_percepts == ("at(a)",)
+	assert static_beliefs == ("edge(a,b)", "type_floor(a)")
 
 
 def test_streamed_process_writes_stdout_and_stderr_to_files(tmp_path: Path) -> None:

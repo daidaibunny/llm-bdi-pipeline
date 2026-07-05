@@ -197,6 +197,10 @@ class JasonPlanLibraryRunner:
 		domain = PDDLParser.parse_domain(domain_path)
 		seed_facts = _seed_facts(domain_file=domain_path, problem_file=problem_path)
 		action_schemas = tuple(_runtime_action_schema(action) for action in domain.actions)
+		initial_percepts, static_beliefs = _split_seed_facts_for_jason_runtime(
+			seed_facts=seed_facts,
+			action_schemas=action_schemas,
+		)
 		timing_profile["parse_seconds"] = time.perf_counter() - parse_start
 
 		if not action_schemas:
@@ -229,13 +233,17 @@ class JasonPlanLibraryRunner:
 			class_name=self.environment_class_name,
 			action_schemas=action_schemas,
 			seed_facts_file_name="initial_facts.txt",
+			initial_percepts_file_name="initial_percepts.txt",
 		)
 		logging_properties = _logging_properties()
 
 		agentspeak_path = output_path / "agentspeak_generated.asl"
 		mas2j_path = output_path / "jason_runner.mas2j"
 		environment_java_path = output_path / f"{self.environment_class_name}.java"
+		belief_base_java_path = output_path / "JasonPipelineIndexedBeliefBase.java"
 		initial_facts_path = output_path / "initial_facts.txt"
+		initial_percepts_path = output_path / "initial_percepts.txt"
+		static_beliefs_path = output_path / "static_beliefs.txt"
 		logging_path = output_path / "logging.properties"
 		stdout_path = output_path / "jason_stdout.txt"
 		stderr_path = output_path / "jason_stderr.txt"
@@ -244,8 +252,20 @@ class JasonPlanLibraryRunner:
 		agentspeak_path.write_text(runner_asl, encoding="utf-8")
 		mas2j_path.write_text(runner_mas2j, encoding="utf-8")
 		environment_java_path.write_text(environment_java, encoding="utf-8")
+		belief_base_java_path.write_text(
+			_build_indexed_belief_base_java_source(),
+			encoding="utf-8",
+		)
 		initial_facts_path.write_text(
 			"\n".join(seed_facts) + ("\n" if seed_facts else ""),
+			encoding="utf-8",
+		)
+		initial_percepts_path.write_text(
+			"\n".join(initial_percepts) + ("\n" if initial_percepts else ""),
+			encoding="utf-8",
+		)
+		static_beliefs_path.write_text(
+			"\n".join(static_beliefs) + ("\n" if static_beliefs else ""),
 			encoding="utf-8",
 		)
 		logging_path.write_text(logging_properties, encoding="utf-8")
@@ -261,6 +281,7 @@ class JasonPlanLibraryRunner:
 					"-cp",
 					classpath,
 					environment_java_path.name,
+					belief_base_java_path.name,
 				],
 				cwd=output_path,
 				text=True,
@@ -291,7 +312,10 @@ class JasonPlanLibraryRunner:
 						agentspeak_path=agentspeak_path,
 						mas2j_path=mas2j_path,
 						environment_java_path=environment_java_path,
+						belief_base_java_path=belief_base_java_path,
 						initial_facts_path=initial_facts_path,
+						initial_percepts_path=initial_percepts_path,
+						static_beliefs_path=static_beliefs_path,
 						stdout_path=stdout_path,
 						stderr_path=stderr_path,
 						result_path=result_path,
@@ -315,6 +339,17 @@ class JasonPlanLibraryRunner:
 						"class_file": str(class_file),
 					},
 				)
+			belief_base_class_file = (
+				compiled_environment_dir / "JasonPipelineIndexedBeliefBase.class"
+			)
+			if not belief_base_class_file.exists():
+				raise JasonValidationError(
+					"Compiled Jason indexed belief base class is missing.",
+					metadata={
+						"compiled_environment_dir": str(compiled_environment_dir),
+						"class_file": str(belief_base_class_file),
+					},
+				)
 			timing_profile["compile_seconds"] = 0.0
 
 		run_start = time.perf_counter()
@@ -326,6 +361,8 @@ class JasonPlanLibraryRunner:
 		cmd = [
 			java_bin,
 			"-Djava.awt.headless=true",
+			"-Djason.pipeline.actionTraceLimit=3",
+			"-Djason.pipeline.actionTraceInterval=0",
 			f"-Djava.util.logging.config.file={logging_path}",
 			"-cp",
 			run_classpath,
@@ -385,7 +422,10 @@ class JasonPlanLibraryRunner:
 				agentspeak_path=agentspeak_path,
 				mas2j_path=mas2j_path,
 				environment_java_path=environment_java_path,
+				belief_base_java_path=belief_base_java_path,
 				initial_facts_path=initial_facts_path,
+				initial_percepts_path=initial_percepts_path,
+				static_beliefs_path=static_beliefs_path,
 				stdout_path=stdout_path,
 				stderr_path=stderr_path,
 				result_path=result_path,
@@ -408,6 +448,36 @@ def _seed_facts(*, domain_file: Path, problem_file: Path) -> tuple[str, ...]:
 	]
 	facts.extend(object_type_atoms(problem, domain.types))
 	return tuple(dict.fromkeys(_render_runtime_atom(fact) for fact in facts))
+
+
+def _split_seed_facts_for_jason_runtime(
+	*,
+	seed_facts: Sequence[str],
+	action_schemas: Sequence[RuntimeActionSchema],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+	"""Split initial facts into dynamic percepts and read-only static beliefs."""
+
+	dynamic_predicates = {
+		pattern.predicate
+		for schema in action_schemas
+		for pattern in tuple(schema.effects or ())
+	}
+	initial_percepts: list[str] = []
+	static_beliefs: list[str] = []
+	for fact in tuple(seed_facts or ()):
+		predicate = _runtime_fact_predicate(fact)
+		if predicate in dynamic_predicates:
+			initial_percepts.append(fact)
+		else:
+			static_beliefs.append(fact)
+	return tuple(initial_percepts), tuple(static_beliefs)
+
+
+def _runtime_fact_predicate(fact: str) -> str:
+	text = str(fact or "").strip()
+	if "(" in text:
+		return text.split("(", 1)[0].strip()
+	return text
 
 
 def _runtime_action_schema(action: PDDLAction) -> RuntimeActionSchema:
@@ -543,10 +613,364 @@ def _build_runner_mas2j(domain_name: str) -> str:
 	return (
 		f"MAS validate_{sanitized_domain} {{\n"
 		f"    environment: {JasonPlanLibraryRunner.environment_class_name}\n"
-		"    agents: agentspeak_generated;\n"
+		"    agents: agentspeak_generated beliefBaseClass JasonPipelineIndexedBeliefBase;\n"
 		"    aslSourcePath: \".\";\n"
 		"}\n"
 	)
+
+
+def _build_indexed_belief_base_java_source() -> str:
+	"""Return a Jason belief base with argument-position indexes for PDDL facts."""
+
+	return r"""
+import jason.asSemantics.Agent;
+import jason.asSemantics.Unifier;
+import jason.asSyntax.Literal;
+import jason.asSyntax.PredicateIndicator;
+import jason.asSyntax.Term;
+import jason.bb.DefaultBeliefBase;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
+	private final Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> index =
+		new HashMap<>();
+	private final Map<String, LinkedHashSet<Literal>> exactIndex = new HashMap<>();
+	private final Path staticBeliefsPath = Paths.get("static_beliefs.txt");
+
+	@Override
+	public void init(Agent agent, String[] args) {
+		super.init(agent, args);
+		loadStaticBeliefs();
+	}
+
+	@Override
+	public boolean add(Literal literal) {
+		boolean changed = super.add(literal);
+		if (changed) {
+			indexLiteral(literal);
+		}
+		return changed;
+	}
+
+	@Override
+	public boolean add(int indexPosition, Literal literal) {
+		boolean changed = super.add(indexPosition, literal);
+		if (changed) {
+			indexLiteral(literal);
+		}
+		return changed;
+	}
+
+	@Override
+	public boolean remove(Literal literal) {
+		boolean changed = super.remove(literal);
+		if (changed) {
+			deindexLiteral(literal);
+		}
+		return changed;
+	}
+
+	@Override
+	public void clear() {
+		super.clear();
+		index.clear();
+		exactIndex.clear();
+	}
+
+	@Override
+	public Literal contains(Literal literal) {
+		LinkedHashSet<Literal> exactMatches = exactBucket(literal);
+		if (exactMatches != null) {
+			for (Literal candidate : exactMatches) {
+				Literal liveCandidate = super.contains(candidate);
+				if (liveCandidate != null && literal.hasSubsetAnnot(liveCandidate)) {
+					return liveCandidate;
+				}
+			}
+			return null;
+		}
+		return super.contains(literal);
+	}
+
+	@Override
+	public Iterator<Literal> getCandidateBeliefs(Literal literal, Unifier unifier) {
+		if (literal == null || literal.isVar()) {
+			return super.getCandidateBeliefs(literal, unifier);
+		}
+		List<Term> terms = literal.getTerms();
+		if (terms == null || terms.isEmpty()) {
+			return super.getCandidateBeliefs(literal, unifier);
+		}
+		String exactKey = exactKeyIfBound(literal, unifier);
+		if (exactKey != null) {
+			LinkedHashSet<Literal> exactMatches = exactIndex.get(exactKey);
+			if (exactMatches == null) {
+				return Collections.emptyIterator();
+			}
+			return liveBucket(exactMatches).iterator();
+		}
+		LinkedHashSet<Literal> bestBucket = null;
+		for (int position = 0; position < terms.size(); position++) {
+			Term bound = boundTerm(terms.get(position), unifier);
+			if (bound == null) {
+				continue;
+			}
+			LinkedHashSet<Literal> bucket = bucketFor(
+				literal.getPredicateIndicator(),
+				position,
+				bound.toString()
+			);
+			if (bucket == null) {
+				return Collections.emptyIterator();
+			}
+			if (bestBucket == null || bucket.size() < bestBucket.size()) {
+				bestBucket = bucket;
+			}
+		}
+		if (bestBucket == null) {
+			return super.getCandidateBeliefs(literal, unifier);
+		}
+		return liveBucket(bestBucket).iterator();
+	}
+
+	@Override
+	public Iterator<Literal> getCandidateBeliefs(PredicateIndicator indicator) {
+		return super.getCandidateBeliefs(indicator);
+	}
+
+	@Override
+	public JasonPipelineIndexedBeliefBase clone() {
+		JasonPipelineIndexedBeliefBase clone = new JasonPipelineIndexedBeliefBase();
+		Iterator<Literal> beliefs = iterator();
+		while (beliefs != null && beliefs.hasNext()) {
+			clone.add(beliefs.next().copy());
+		}
+		return clone;
+	}
+
+	private Term boundTerm(Term term, Unifier unifier) {
+		if (term == null) {
+			return null;
+		}
+		Term resolved = term;
+		if (unifier != null && term.isVar()) {
+			resolved = term.capply(unifier);
+		}
+		if (resolved == null || resolved.isVar()) {
+			return null;
+		}
+		return resolved;
+	}
+
+	private void indexLiteral(Literal literal) {
+		if (literal == null || literal.isRule()) {
+			return;
+		}
+		List<Term> terms = literal.getTerms();
+		String predicateKey = predicateKey(literal.getPredicateIndicator());
+		String exactKey = exactKey(literal);
+		if (exactKey != null) {
+			exactIndex
+				.computeIfAbsent(exactKey, ignored -> new LinkedHashSet<>())
+				.add(literal);
+		}
+		if (terms == null || terms.isEmpty()) {
+			return;
+		}
+		Map<Integer, Map<String, LinkedHashSet<Literal>>> byPosition =
+			index.computeIfAbsent(predicateKey, ignored -> new HashMap<>());
+		for (int position = 0; position < terms.size(); position++) {
+			Term term = terms.get(position);
+			if (term == null || term.isVar()) {
+				continue;
+			}
+			byPosition
+				.computeIfAbsent(position, ignored -> new LinkedHashMap<>())
+				.computeIfAbsent(term.toString(), ignored -> new LinkedHashSet<>())
+				.add(literal);
+		}
+	}
+
+	private void deindexLiteral(Literal literal) {
+		if (literal == null || literal.isRule()) {
+			return;
+		}
+		removeExactIndexLiteral(literal);
+		removeArgumentIndexLiteral(literal);
+	}
+
+	private void removeExactIndexLiteral(Literal literal) {
+		String key = exactKey(literal);
+		if (key == null) {
+			return;
+		}
+		LinkedHashSet<Literal> bucket = exactIndex.get(key);
+		if (bucket == null) {
+			return;
+		}
+		bucket.remove(literal);
+		if (bucket.isEmpty()) {
+			exactIndex.remove(key);
+		}
+	}
+
+	private void removeArgumentIndexLiteral(Literal literal) {
+		List<Term> terms = literal.getTerms();
+		if (terms == null || terms.isEmpty()) {
+			return;
+		}
+		String predicateKey = predicateKey(literal.getPredicateIndicator());
+		Map<Integer, Map<String, LinkedHashSet<Literal>>> byPosition =
+			index.get(predicateKey);
+		if (byPosition == null) {
+			return;
+		}
+		for (int position = 0; position < terms.size(); position++) {
+			Term term = terms.get(position);
+			if (term == null || term.isVar()) {
+				continue;
+			}
+			Map<String, LinkedHashSet<Literal>> byValue = byPosition.get(position);
+			if (byValue == null) {
+				continue;
+			}
+			LinkedHashSet<Literal> bucket = byValue.get(term.toString());
+			if (bucket == null) {
+				continue;
+			}
+			bucket.remove(literal);
+			if (bucket.isEmpty()) {
+				byValue.remove(term.toString());
+			}
+			if (byValue.isEmpty()) {
+				byPosition.remove(position);
+			}
+		}
+		if (byPosition.isEmpty()) {
+			index.remove(predicateKey);
+		}
+	}
+
+	private LinkedHashSet<Literal> bucketFor(
+		PredicateIndicator indicator,
+		int position,
+		String value
+	) {
+		Map<Integer, Map<String, LinkedHashSet<Literal>>> byPosition =
+			index.get(predicateKey(indicator));
+		if (byPosition == null) {
+			return null;
+		}
+		Map<String, LinkedHashSet<Literal>> byValue = byPosition.get(position);
+		if (byValue == null) {
+			return null;
+		}
+		return byValue.get(value);
+	}
+
+	private List<Literal> liveBucket(LinkedHashSet<Literal> bucket) {
+		List<Literal> live = new ArrayList<>();
+		for (Literal candidate : bucket) {
+			if (super.contains(candidate) != null) {
+				live.add(candidate);
+			}
+		}
+		return live;
+	}
+
+	private String predicateKey(PredicateIndicator indicator) {
+		return indicator.toString();
+	}
+
+	private LinkedHashSet<Literal> exactBucket(Literal literal) {
+		String key = exactKey(literal);
+		if (key == null) {
+			return null;
+		}
+		return exactIndex.get(key);
+	}
+
+	private String exactKeyIfBound(Literal literal, Unifier unifier) {
+		if (literal == null) {
+			return null;
+		}
+		List<Term> terms = literal.getTerms();
+		if (terms == null) {
+			return predicateKey(literal.getPredicateIndicator());
+		}
+		List<String> values = new ArrayList<>();
+		for (Term term : terms) {
+			Term bound = boundTerm(term, unifier);
+			if (bound == null) {
+				return null;
+			}
+			values.add(bound.toString());
+		}
+		return predicateKey(literal.getPredicateIndicator()) + "|" + String.join("|", values);
+	}
+
+	private String exactKey(Literal literal) {
+		if (literal == null) {
+			return null;
+		}
+		List<Term> terms = literal.getTerms();
+		if (terms == null || terms.isEmpty()) {
+			return predicateKey(literal.getPredicateIndicator());
+		}
+		List<String> values = new ArrayList<>();
+		for (Term term : terms) {
+			if (term == null || term.isVar()) {
+				return null;
+			}
+			values.add(term.toString());
+		}
+		return predicateKey(literal.getPredicateIndicator()) + "|" + String.join("|", values);
+	}
+
+	private void rebuildIndex() {
+		index.clear();
+		exactIndex.clear();
+		Iterator<Literal> beliefs = iterator();
+		while (beliefs != null && beliefs.hasNext()) {
+			indexLiteral(beliefs.next());
+		}
+	}
+
+	private void loadStaticBeliefs() {
+		if (!Files.exists(staticBeliefsPath)) {
+			return;
+		}
+		try {
+			for (String line : Files.readAllLines(staticBeliefsPath, StandardCharsets.UTF_8)) {
+				String fact = line.trim();
+				if (!fact.isEmpty() && !fact.startsWith("#")) {
+					add(Literal.parseLiteral(fact));
+				}
+			}
+		} catch (IOException error) {
+			throw new RuntimeException(
+				"Failed to load Jason static beliefs from "
+					+ staticBeliefsPath.toAbsolutePath(),
+				error
+			);
+		}
+	}
+}
+""".strip() + "\n"
 
 
 def _build_environment_java_source(
@@ -554,6 +978,7 @@ def _build_environment_java_source(
 	class_name: str,
 	action_schemas: Sequence[RuntimeActionSchema],
 	seed_facts_file_name: str,
+	initial_percepts_file_name: str = "initial_percepts.txt",
 ) -> str:
 	action_lines = "\n\t\t".join(
 		_render_action_registration(schema)
@@ -562,6 +987,7 @@ def _build_environment_java_source(
 	if not action_lines:
 		action_lines = "// no action schemas"
 	seed_file = _java_quote(seed_facts_file_name)
+	initial_percepts_file = _java_quote(initial_percepts_file_name)
 	return f"""
 import jason.asSyntax.Literal;
 import jason.asSyntax.Structure;
@@ -632,6 +1058,7 @@ public class {class_name} extends Environment {{
 	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
 	private final Path seedFactsPath = Paths.get({seed_file});
+	private final Path initialPerceptsPath = Paths.get({initial_percepts_file});
 	private final int actionTraceLimit = Integer.getInteger(
 		"jason.pipeline.actionTraceLimit",
 		3
@@ -827,11 +1254,32 @@ public class {class_name} extends Environment {{
 	private void syncInitialPercepts() {{
 		clearPercepts();
 		perceived.clear();
-		for (String atom : world) {{
-			addPercept(Literal.parseLiteral(atom));
-			perceived.add(atom);
+		for (String atom : initialPerceptFacts()) {{
+			if (world.contains(atom)) {{
+				addPercept(Literal.parseLiteral(atom));
+				perceived.add(atom);
+			}}
 		}}
 		informAgsEnvironmentChanged();
+	}}
+
+	private Set<String> initialPerceptFacts() {{
+		Set<String> facts = new LinkedHashSet<>();
+		try {{
+			for (String line : Files.readAllLines(initialPerceptsPath, StandardCharsets.UTF_8)) {{
+				String fact = line.trim();
+				if (!fact.isEmpty() && !fact.startsWith("#")) {{
+					facts.add(fact);
+				}}
+			}}
+		}} catch (IOException error) {{
+			throw new RuntimeException(
+				"Failed to load Jason initial percepts from "
+					+ initialPerceptsPath.toAbsolutePath(),
+				error
+			);
+		}}
+		return facts;
 	}}
 
 	private void syncPerceptDelta(EffectDelta delta) {{
@@ -1135,7 +1583,10 @@ def _artifact_paths(
 	agentspeak_path: Path,
 	mas2j_path: Path,
 	environment_java_path: Path,
+	belief_base_java_path: Path,
 	initial_facts_path: Path,
+	initial_percepts_path: Path,
+	static_beliefs_path: Path,
 	stdout_path: Path,
 	stderr_path: Path,
 	result_path: Path,
@@ -1144,7 +1595,10 @@ def _artifact_paths(
 		"agentspeak": str(agentspeak_path),
 		"mas2j": str(mas2j_path),
 		"environment_java": str(environment_java_path),
+		"belief_base_java": str(belief_base_java_path),
 		"initial_facts": str(initial_facts_path),
+		"initial_percepts": str(initial_percepts_path),
+		"static_beliefs": str(static_beliefs_path),
 		"stdout": str(stdout_path),
 		"stderr": str(stderr_path),
 		"result": str(result_path),

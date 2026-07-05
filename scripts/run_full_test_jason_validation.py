@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import combinations
 import json
 import re
 import shutil
@@ -32,6 +33,7 @@ if str(SRC_ROOT) not in sys.path:
 	sys.path.insert(0, str(SRC_ROOT))
 
 from evaluation.jason_runtime import JasonPlanLibraryRunner  # noqa: E402
+from evaluation.jason_runtime.runner import _build_indexed_belief_base_java_source  # noqa: E402
 from evaluation.jason_runtime.runner import _build_environment_java_source  # noqa: E402
 from evaluation.jason_runtime.runner import _resolve_jason_classpath  # noqa: E402
 from evaluation.jason_runtime.runner import _runtime_action_schema  # noqa: E402
@@ -80,6 +82,7 @@ class JasonTask:
 	plan_library_asl: Path
 	base_plan_library_asl: Path
 	goal_name: str
+	compact_completion_wrappers: bool
 	output_dir: Path
 
 
@@ -143,6 +146,18 @@ def main() -> int:
 		action="store_true",
 		help="Compile and append full-test goals, but do not start Jason validation.",
 	)
+	parser.add_argument(
+		"--test-name-regex",
+		help="Optional Python regex for selecting test problem file names during probes.",
+	)
+	parser.add_argument(
+		"--compact-completion-wrappers",
+		action="store_true",
+		help=(
+			"Use experimental recursive completion wrappers for repeated same-predicate "
+			"goals. Defaults to linear goal-order wrappers for semantic transparency."
+		),
+	)
 	args = parser.parse_args()
 
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
@@ -187,6 +202,8 @@ def main() -> int:
 			atomic_library_mode=args.atomic_library_mode,
 			write_domain_long_asl=bool(args.write_domain_long_asl),
 			max_domain_long_asl_bytes=max(1, int(args.max_domain_long_asl_mb)) * 1024 * 1024,
+			test_name_regex=args.test_name_regex,
+			compact_completion_wrappers=bool(args.compact_completion_wrappers),
 		)
 		summary["domains"][domain] = record
 		tasks.extend(domain_tasks if record.get("success") else ())
@@ -256,6 +273,8 @@ def prepare_domain_for_full_test(
 	atomic_library_mode: str,
 	write_domain_long_asl: bool,
 	max_domain_long_asl_bytes: int,
+	test_name_regex: str | None = None,
+	compact_completion_wrappers: bool = False,
 ) -> tuple[dict[str, Any], tuple[JasonTask, ...]]:
 	"""Compile atomic ASL, append every test goal, and return Jason tasks."""
 
@@ -280,6 +299,11 @@ def prepare_domain_for_full_test(
 		if not domain_file.exists():
 			raise FileNotFoundError(f"Missing domain file: {domain_file}")
 		test_instances = tuple(sorted(test_dir.glob("*.pddl"), key=natural_sort_key))
+		if test_name_regex:
+			pattern = re.compile(test_name_regex)
+			test_instances = tuple(
+				path for path in test_instances if pattern.search(path.name)
+			)
 		if not test_instances:
 			raise FileNotFoundError(f"No test PDDL instances found under {test_dir}")
 		record["test_count"] = len(test_instances)
@@ -311,11 +335,17 @@ def prepare_domain_for_full_test(
 				plan_library_asl=plan_library_asl,
 				problem_files=test_instances,
 				max_output_bytes=max_domain_long_asl_bytes,
+				compact_completion_wrappers=compact_completion_wrappers,
 			)
 		else:
 			append_record = {
 				"success": True,
-				"wrapper_mode": "per_test_linear_single_body_without_json_metadata",
+				"wrapper_mode": (
+					"per_test_compact_completion_or_linear_without_json_metadata"
+					if compact_completion_wrappers
+					else "per_test_linear_single_body_without_json_metadata"
+				),
+				"compact_completion_wrappers": compact_completion_wrappers,
 				"query_count": len(test_instances),
 				"appended_plan_count": None,
 				"domain_long_asl_written": False,
@@ -332,11 +362,12 @@ def prepare_domain_for_full_test(
 				domain=domain,
 				index=index,
 				problem_file=problem_file,
-					domain_file=domain_file,
-					plan_library_asl=plan_library_asl,
-					base_plan_library_asl=base_plan_library_asl,
-					goal_name=f"g_{safe_goal_fragment(domain)}_test_{index}",
-					output_dir=(
+				domain_file=domain_file,
+				plan_library_asl=plan_library_asl,
+				base_plan_library_asl=base_plan_library_asl,
+				goal_name=f"g_{safe_goal_fragment(domain)}_test_{index}",
+				compact_completion_wrappers=compact_completion_wrappers,
+				output_dir=(
 					run_root
 					/ "jason"
 					/ domain
@@ -389,6 +420,7 @@ def append_linear_single_body_full_test_wrappers(
 	plan_library_asl: Path,
 	problem_files: Sequence[Path],
 	max_output_bytes: int,
+	compact_completion_wrappers: bool = False,
 ) -> dict[str, Any]:
 	"""Append one sequential ASL query body per test problem.
 
@@ -409,10 +441,11 @@ def append_linear_single_body_full_test_wrappers(
 			"   and skip JSON DFA metadata because Jason only needs the ASL file. */\n\n",
 		)
 		for index, problem_file in enumerate(problem_files, start=1):
-			wrapper_lines, wrapper_plan_count = linear_single_body_wrapper_lines(
+			wrapper_lines, wrapper_plan_count = full_test_wrapper_lines(
 				domain=domain,
 				index=index,
 				problem_file=problem_file,
+				compact_completion_wrappers=compact_completion_wrappers,
 			)
 			for line in wrapper_lines:
 				output.write(line)
@@ -429,12 +462,192 @@ def append_linear_single_body_full_test_wrappers(
 			goal_count += 1
 	return {
 		"success": True,
-		"wrapper_mode": "linear_single_body_without_json_metadata",
+		"wrapper_mode": (
+			"compact_completion_or_linear_without_json_metadata"
+			if compact_completion_wrappers
+			else "linear_single_body_without_json_metadata"
+		),
+		"compact_completion_wrappers": compact_completion_wrappers,
 		"query_count": goal_count,
 		"appended_plan_count": plan_count,
 		"line_count": line_count,
 		"domain_long_asl_written": True,
 	}
+
+
+def full_test_wrapper_lines(
+	*,
+	domain: str,
+	index: int,
+	problem_file: Path,
+	compact_completion_wrappers: bool = False,
+) -> tuple[tuple[str, ...], int]:
+	"""Return a compact completion wrapper when safe, otherwise a linear body."""
+
+	problem = PDDLParser.parse_problem(problem_file)
+	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
+	if len(goal_facts) != len(problem.goal_facts):
+		raise ValueError(
+			f"{problem_file} contains negative goal literals; full-test Jason "
+			"validation only appends positive atomic progress goals.",
+		)
+	if not goal_facts:
+		raise ValueError(f"{problem_file} contains no positive goal literals.")
+	if compact_completion_wrappers:
+		compact = compact_recursive_completion_wrapper_lines(
+			domain=domain,
+			index=index,
+			problem_file=problem_file,
+			goal_facts=goal_facts,
+			init_facts=tuple(fact for fact in problem.init_facts if fact.is_positive),
+		)
+		if compact is not None:
+			return compact
+	return linear_single_body_wrapper_lines(
+		domain=domain,
+		index=index,
+		problem_file=problem_file,
+	)
+
+
+def compact_recursive_completion_wrapper_lines(
+	*,
+	domain: str,
+	index: int,
+	problem_file: Path,
+	goal_facts: Sequence[PDDLFact],
+	init_facts: Sequence[PDDLFact],
+) -> tuple[tuple[str, ...], int] | None:
+	"""Compile repeated same-predicate goals into a query-local completion loop."""
+
+	if len(goal_facts) < 2:
+		return None
+	predicate = goal_facts[0].predicate
+	arity = len(goal_facts[0].args)
+	if any(fact.predicate != predicate or len(fact.args) != arity for fact in goal_facts):
+		return None
+	varying_positions = tuple(
+		position
+		for position in range(arity)
+		if len({fact.args[position] for fact in goal_facts}) > 1
+	)
+	if not varying_positions:
+		return None
+	target_tuples = {
+		tuple(fact.args[position] for position in varying_positions)
+		for fact in goal_facts
+	}
+	if len(target_tuples) != len(goal_facts):
+		return None
+	variable_names = tuple(_variable_name(position) for position in range(len(varying_positions)))
+	target_arguments = tuple(
+		variable_names[varying_positions.index(position)]
+		if position in varying_positions
+		else sanitize_identifier(goal_facts[0].args[position])
+		for position in range(arity)
+	)
+	target_atom = _render_call(predicate, target_arguments)
+	range_binder = _select_exact_range_binder(
+		init_facts=init_facts,
+		target_tuples=target_tuples,
+		target_variables=variable_names,
+		target_atom=target_atom,
+	)
+	if range_binder is None:
+		return None
+	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
+	entry_proposition = query_entry_proposition(goal_name)
+	context = " & ".join((entry_proposition, range_binder, f"not {target_atom}"))
+	lines = [
+		f"/* full_test_problem={problem_file.name} */",
+		f"{entry_proposition}.",
+		"",
+		f"/* plan={goal_name}_recursive_completion | source_instruction_ids=none */",
+		f"+!{goal_name} : {context} <-",
+		f"\t!{target_atom};",
+		f"\t!{goal_name}.",
+		"",
+		f"/* plan={goal_name}_completion_done | source_instruction_ids=none */",
+		f"+!{goal_name} : {entry_proposition} <-",
+		"\ttrue.",
+		"",
+	]
+	return tuple(lines), 2
+
+
+def _select_exact_range_binder(
+	*,
+	init_facts: Sequence[PDDLFact],
+	target_tuples: set[tuple[str, ...]],
+	target_variables: Sequence[str],
+	target_atom: str,
+) -> str | None:
+	"""Find a PDDL fact pattern whose projection is exactly the goal object set."""
+
+	candidates: list[tuple[tuple[int, int, int, str], str]] = []
+	facts_by_predicate: dict[tuple[str, int], list[PDDLFact]] = {}
+	for fact in init_facts:
+		if fact.args:
+			facts_by_predicate.setdefault((fact.predicate, len(fact.args)), []).append(fact)
+	for (predicate, arity), facts in facts_by_predicate.items():
+		if arity < len(target_variables):
+			continue
+		for positions in combinations(range(arity), len(target_variables)):
+			projected = {
+				tuple(fact.args[position] for position in positions)
+				for fact in facts
+			}
+			if projected != target_tuples:
+				continue
+			arguments = _range_binder_arguments(
+				arity=arity,
+				positions=positions,
+				target_variables=target_variables,
+			)
+			binder = _render_call(predicate, arguments)
+			if binder == target_atom:
+				continue
+			score = (
+				len(facts),
+				arity,
+				sum(1 for arg in arguments if arg not in target_variables),
+				binder,
+			)
+			candidates.append((score, binder))
+	if not candidates:
+		return None
+	return min(candidates, key=lambda item: item[0])[1]
+
+
+def _range_binder_arguments(
+	*,
+	arity: int,
+	positions: Sequence[int],
+	target_variables: Sequence[str],
+) -> tuple[str, ...]:
+	auxiliary_index = 0
+	arguments: list[str] = []
+	for position in range(arity):
+		if position in positions:
+			arguments.append(target_variables[tuple(positions).index(position)])
+			continue
+		arguments.append(_auxiliary_variable_name(auxiliary_index))
+		auxiliary_index += 1
+	return tuple(arguments)
+
+
+def _variable_name(index: int) -> str:
+	names = ("X", "Y", "Z", "A", "B", "C")
+	if index < len(names):
+		return names[index]
+	return f"X{index + 1}"
+
+
+def _auxiliary_variable_name(index: int) -> str:
+	names = ("A", "B", "C", "D", "E", "F")
+	if index < len(names):
+		return names[index]
+	return f"A{index + 1}"
 
 
 def linear_single_body_wrapper_lines(
@@ -480,10 +693,11 @@ def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
 
 	runtime_asl = task.output_dir / "plan_library.asl"
 	base_text = task.base_plan_library_asl.read_text(encoding="utf-8").rstrip()
-	wrapper_lines, _ = linear_single_body_wrapper_lines(
+	wrapper_lines, _ = full_test_wrapper_lines(
 		domain=task.domain,
 		index=task.index,
 		problem_file=task.problem_file,
+		compact_completion_wrappers=task.compact_completion_wrappers,
 	)
 	runtime_asl.write_text(
 		base_text + "\n\n" + "\n".join(wrapper_lines).rstrip() + "\n",
@@ -500,6 +714,21 @@ def render_fact_atom(fact: PDDLFact) -> str:
 	if not arguments:
 		return predicate
 	return f"{predicate}({', '.join(arguments)})"
+
+
+def _render_call(predicate: str, arguments: Sequence[str]) -> str:
+	rendered_predicate = sanitize_identifier(predicate)
+	rendered_arguments = tuple(
+		argument if _is_wrapper_variable(argument) else sanitize_identifier(argument)
+		for argument in arguments
+	)
+	if not rendered_arguments:
+		return rendered_predicate
+	return f"{rendered_predicate}({', '.join(rendered_arguments)})"
+
+
+def _is_wrapper_variable(value: str) -> bool:
+	return bool(re.fullmatch(r"[A-Z][A-Za-z0-9_]*", str(value or "")))
 
 
 def query_entry_proposition(goal_name: str) -> str:
@@ -679,7 +908,12 @@ def prepare_shared_jason_environments(
 			environment_java_path = (
 				env_dir / f"{JasonPlanLibraryRunner.environment_class_name}.java"
 			)
+			belief_base_java_path = env_dir / "JasonPipelineIndexedBeliefBase.java"
 			environment_java_path.write_text(environment_java, encoding="utf-8")
+			belief_base_java_path.write_text(
+				_build_indexed_belief_base_java_source(),
+				encoding="utf-8",
+			)
 			with stdout_file.open("w", encoding="utf-8") as stdout_handle:
 				with stderr_file.open("w", encoding="utf-8") as stderr_handle:
 					completed = subprocess.run(
@@ -688,6 +922,7 @@ def prepare_shared_jason_environments(
 							"-cp",
 							classpath,
 							environment_java_path.name,
+							belief_base_java_path.name,
 						],
 						cwd=env_dir,
 						stdout=stdout_handle,
