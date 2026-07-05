@@ -87,6 +87,17 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		"then minimize selected context literal count",
 		"then minimize selected body step count",
 	]
+	assert selector_report["branch_certification_rules"] == [
+		(
+			"static context literals must be range-restricted by head variables or "
+			"previous positive dynamic literals"
+		),
+		"negative context literals must be range-restricted and cannot bind new variables",
+		(
+			"same-predicate recursive prepare branches require a deleted dynamic "
+			"obstruction-relation certificate"
+		),
+	]
 	assert selector_report["raw_candidate_count"] >= len(library.plans)
 	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
 	assert len(selector_report["selected_branch_ids"]) == len(library.plans)
@@ -136,6 +147,27 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "block0" not in asl
 	assert "block1" not in asl
 	assert "!on(Y, X)" not in asl
+	clear_recursive_plans = [
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "clear"
+		and any(
+			step.kind == "subgoal"
+			and step.symbol == "clear"
+			and step.arguments != plan.trigger.arguments
+			for step in plan.body
+		)
+	]
+	assert len(clear_recursive_plans) == 1
+	clear_certificate = clear_recursive_plans[0].binding_certificate[0][
+		"recursive_progress_certificate"
+	]
+	assert clear_certificate == {
+		"certificate_kind": "deleted_dynamic_obstruction_relation",
+		"relation_predicate": "on",
+		"relation_arguments": ["Y", "X"],
+		"deleting_action": "unstack",
+	}
 
 
 def test_ferry_bridge_sequence_keeps_negative_precondition_and_movement_module() -> None:
@@ -205,5 +237,52 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 	asl = render_plan_library_asl(library)
 
 	assert "board(Z, X);\n\tdepart(Y, X)." not in asl
-	assert "board(Z, X);\n\tup(Z, Y);\n\tdepart(Y, X)." in asl
-	assert "board(Z, X);\n\tdown(Z, Y);\n\tdepart(Y, X)." in asl
+	assert "board(Z, X);\n\tup(Z, Y);\n\tdepart(Y, X)." not in asl
+	assert "board(Z, X);\n\tdown(Z, Y);\n\tdepart(Y, X)." not in asl
+	assert "+!served(X) : destin(X, Y) & not lift_at(Y)" in asl
+	assert "\t!lift_at(Y);\n\t!served(X)." in asl
+	assert "+!served(X) : not boarded(X)" in asl
+	assert "\t!boarded(X);\n\t!served(X)." in asl
+
+
+def test_gripper_rejects_unranked_same_predicate_navigation_recursion() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "gripper" / "domain.pddl",
+		seed_predicates=("at",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="gripper-smoke",
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "+!at_robby(X) : at_robby(X)" in asl
+	assert "+!at_robby(X) : at_robby(Y)" in asl
+	assert "move(Y, X)." in asl
+	assert "room(Y) & not at_robby(Y)" not in asl
+	assert "!at_robby(Y);\n\t!at_robby(X)." not in asl
+	at_plan_names = [
+		plan.plan_name
+		for plan in library.plans
+		if plan.trigger.symbol == "at"
+	]
+	assert at_plan_names.index("at_via_pick_then_move_then_drop") < at_plan_names.index(
+		"at_prepare_at-robby_Y",
+	)
+	assert at_plan_names.index("at_via_pick_then_move_then_drop") < at_plan_names.index(
+		"at_prepare_at-robby_A",
+	)
+
+
+def test_miconic_static_above_does_not_bind_unbounded_navigation_context() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "miconic" / "domain.pddl",
+		seed_predicates=("served",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="miconic-smoke",
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "+!lift_at(X) : lift_at(X)" in asl
+	assert "+!lift_at(X) : lift_at(Y) & above(Y, X)" in asl
+	assert "+!lift_at(X) : lift_at(Y) & above(X, Y)" in asl
+	assert "above(Y, X) & not lift_at(Y)" not in asl
+	assert "above(X, Y) & not lift_at(Y)" not in asl

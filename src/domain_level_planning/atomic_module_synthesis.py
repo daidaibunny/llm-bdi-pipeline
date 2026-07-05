@@ -68,6 +68,7 @@ class AtomicModuleSynthesisReport:
 	selector_obligation_count: int
 	selected_branch_ids: tuple[str, ...]
 	predicate_roles: tuple[Mapping[str, object], ...]
+	branch_certification_rules: tuple[str, ...]
 	theoretical_basis: tuple[str, ...]
 
 	def to_dict(self) -> dict[str, object]:
@@ -89,6 +90,7 @@ class AtomicModuleSynthesisReport:
 			"selector_obligation_count": self.selector_obligation_count,
 			"selected_branch_ids": list(self.selected_branch_ids),
 			"predicate_roles": [dict(item) for item in self.predicate_roles],
+			"branch_certification_rules": list(self.branch_certification_rules),
 			"theoretical_basis": list(self.theoretical_basis),
 		}
 
@@ -333,6 +335,23 @@ class _FunctionalPredicateGroup:
 	key_types: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class _RecursiveProgressCertificate:
+	"""Schema-level proof that a same-predicate recursive branch makes progress."""
+
+	relation_predicate: str
+	relation_arguments: tuple[str, ...]
+	deleting_action: str
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"certificate_kind": "deleted_dynamic_obstruction_relation",
+			"relation_predicate": self.relation_predicate,
+			"relation_arguments": list(self.relation_arguments),
+			"deleting_action": self.deleting_action,
+		}
+
+
 def _producer_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
@@ -345,6 +364,7 @@ def _producer_action_sequences(
 ) -> tuple[_ProducerSequence, ...]:
 	sequences: list[_ProducerSequence] = []
 	functional_groups = _functional_predicate_groups(actions, type_tokens)
+	dynamic_predicates = _dynamic_predicates(actions)
 	for final_action, effect in _producer_effects(actions, target_predicate):
 		head_arguments, variable_map = _head_variable_map(effect)
 		variable_map = _complete_variable_map(final_action.parameters, variable_map)
@@ -369,6 +389,7 @@ def _producer_action_sequences(
 			type_tokens=type_tokens,
 			predicate_type_map=predicate_type_map,
 			functional_groups=functional_groups,
+			dynamic_predicates=dynamic_predicates,
 			target_effect=mapped_effect,
 			target_arguments=head_arguments,
 			context_literals=tuple(
@@ -423,6 +444,7 @@ def _producer_action_sequences(
 					type_tokens=type_tokens,
 					predicate_type_map=predicate_type_map,
 					functional_groups=functional_groups,
+					dynamic_predicates=dynamic_predicates,
 					target_effect=mapped_effect,
 					target_arguments=head_arguments,
 					context_literals=base_context_literals,
@@ -446,6 +468,7 @@ def _producer_action_sequences(
 						type_tokens=type_tokens,
 						predicate_type_map=predicate_type_map,
 						functional_groups=functional_groups,
+						dynamic_predicates=dynamic_predicates,
 						target_effect=mapped_effect,
 						target_arguments=head_arguments,
 						context_literals=bridge.context_literals,
@@ -653,6 +676,7 @@ def _finalize_sequence(
 	type_tokens: Sequence[str],
 	predicate_type_map: Mapping[str, tuple[str, ...]],
 	functional_groups: Sequence[_FunctionalPredicateGroup],
+	dynamic_predicates: set[str],
 	target_effect: PDDLLiteralSchema,
 	target_arguments: tuple[str, ...],
 	context_literals: Sequence[PDDLLiteralSchema],
@@ -694,8 +718,15 @@ def _finalize_sequence(
 	if type_contexts is None:
 		return None
 	deduplicated_contexts = _deduplicate_literals(tuple(context_literals))
-	if _has_functional_context_conflict(
+	range_restricted_contexts = _range_restricted_context_literals(
 		context_literals=deduplicated_contexts,
+		head_arguments=target_arguments,
+		dynamic_predicates=dynamic_predicates,
+	)
+	if range_restricted_contexts is None:
+		return None
+	if _has_functional_context_conflict(
+		context_literals=range_restricted_contexts,
 		body_actions=sequence_body,
 		type_tokens=type_tokens,
 		functional_groups=functional_groups,
@@ -703,14 +734,14 @@ def _finalize_sequence(
 		return None
 	if not _symbolic_sequence_is_executable(
 		target_effect=target_effect,
-		context_literals=deduplicated_contexts,
+		context_literals=range_restricted_contexts,
 		body_actions=sequence_body,
 	):
 		return None
 	return _ProducerSequence(
 		target_predicate=target_effect.predicate,
 		target_arguments=target_arguments,
-		context_literals=deduplicated_contexts,
+		context_literals=range_restricted_contexts,
 		body_actions=sequence_body,
 		producer_action_names=producer_action_names,
 	)
@@ -808,6 +839,46 @@ def _literal_in(
 	candidates: Sequence[PDDLLiteralSchema],
 ) -> bool:
 	return any(_same_literal(literal, candidate) for candidate in candidates)
+
+
+def _dynamic_predicates(actions: Sequence[_ParsedAction]) -> set[str]:
+	return {
+		literal.predicate
+		for action in actions
+		for literal in (*action.add_effects, *action.delete_effects)
+	}
+
+
+def _range_restricted_context_literals(
+	*,
+	context_literals: Sequence[PDDLLiteralSchema],
+	head_arguments: Sequence[str],
+	dynamic_predicates: set[str],
+) -> tuple[PDDLLiteralSchema, ...] | None:
+	"""Keep only context literals whose variables are safely range-restricted."""
+
+	bound_variables = set(head_arguments)
+	selected: list[PDDLLiteralSchema] = []
+	remaining = list(context_literals)
+	changed = True
+	while changed:
+		changed = False
+		for literal in tuple(remaining):
+			literal_variables = set(literal.arguments)
+			if not literal.is_positive or literal.predicate not in dynamic_predicates:
+				continue
+			selected.append(literal)
+			remaining.remove(literal)
+			bound_variables.update(literal_variables)
+			changed = True
+	for literal in tuple(remaining):
+		literal_variables = set(literal.arguments)
+		if literal_variables - bound_variables:
+			if not literal.is_positive:
+				return None
+			continue
+		selected.append(literal)
+	return _deduplicate_literals(tuple(selected))
 
 
 def _action_calls_have_compatible_types(
@@ -1265,10 +1336,21 @@ def _sequence_module_plans(
 			actions=actions,
 		):
 			continue
+		progress_certificate = _recursive_progress_certificate(
+			sequence=sequence,
+			precondition=literal,
+			actions=actions,
+		)
+		if _requires_recursive_progress_certificate(
+			sequence=sequence,
+			precondition=literal,
+		) and progress_certificate is None:
+			continue
 		plans.append(
 			_prepare_precondition_plan(
 				sequence=sequence,
 				precondition=literal,
+				progress_certificate=progress_certificate,
 				source_backend=source_backend,
 				source_name=source_name,
 				policy_file=policy_file,
@@ -1320,6 +1402,7 @@ def _prepare_precondition_plan(
 	*,
 	sequence: _ProducerSequence,
 	precondition: PDDLLiteralSchema,
+	progress_certificate: _RecursiveProgressCertificate | None,
 	source_backend: str,
 	source_name: str,
 	policy_file: str | Path | None,
@@ -1365,12 +1448,70 @@ def _prepare_precondition_plan(
 				"artifact_family": "atomic_minimal_literal_module",
 				"rule_kind": "prepare_public_precondition",
 				"prepared_predicate": precondition.predicate,
+				"recursive_progress_certificate": (
+					progress_certificate.to_dict()
+					if progress_certificate is not None
+					else None
+				),
 				"source_backend": source_backend,
 				"source_name": source_name,
 				"policy_file": str(policy_file) if policy_file is not None else None,
 			},
 		),
 	)
+
+
+def _requires_recursive_progress_certificate(
+	*,
+	sequence: _ProducerSequence,
+	precondition: PDDLLiteralSchema,
+) -> bool:
+	return (
+		sequence.target_predicate == precondition.predicate
+		and tuple(sequence.target_arguments) != tuple(precondition.arguments)
+	)
+
+
+def _recursive_progress_certificate(
+	*,
+	sequence: _ProducerSequence,
+	precondition: PDDLLiteralSchema,
+	actions: Sequence[_ParsedAction],
+) -> _RecursiveProgressCertificate | None:
+	if not _requires_recursive_progress_certificate(
+		sequence=sequence,
+		precondition=precondition,
+	):
+		return None
+	head_variables = set(sequence.target_arguments)
+	recursive_variables = set(precondition.arguments) - head_variables
+	if not recursive_variables:
+		return None
+	for context_literal in sequence.context_literals:
+		if not context_literal.is_positive:
+			continue
+		context_variables = set(context_literal.arguments)
+		if not recursive_variables <= context_variables:
+			continue
+		if not head_variables & context_variables:
+			continue
+		for call in sequence.body_actions:
+			if call.action.name not in sequence.producer_action_names:
+				continue
+			variable_map = {
+				parameter: argument
+				for parameter, argument in zip(call.action.parameters, call.arguments)
+			}
+			if any(
+				_same_atom(delete_effect.mapped(variable_map), context_literal)
+				for delete_effect in call.action.delete_effects
+			):
+				return _RecursiveProgressCertificate(
+					relation_predicate=context_literal.predicate,
+					relation_arguments=context_literal.arguments,
+					deleting_action=call.action.name,
+				)
+	return None
 
 
 def _select_branches_with_clingo(
@@ -1421,8 +1562,14 @@ def _select_branches_with_clingo(
 		sorted(selected_index_by_id[branch_id] for branch_id in selected_ids)
 	)
 	selected_branch_ids = tuple(branch_ids[index] for index in selected_indexes)
+	selected_plans = tuple(
+		sorted(
+			(raw_plans[index] for index in selected_indexes),
+			key=_runtime_plan_priority,
+		),
+	)
 	return _SelectedModulePlans(
-		plans=tuple(raw_plans[index] for index in selected_indexes),
+		plans=selected_plans,
 		report=_ClingoBranchSelectorReport(
 			backend="clingo_asp_minimize",
 			raw_candidate_count=len(raw_plans),
@@ -1437,6 +1584,31 @@ def _select_branches_with_clingo(
 			),
 		),
 	)
+
+
+def _runtime_plan_priority(plan: AgentSpeakPlan) -> tuple[str, int, int, str]:
+	"""Order selected branches so executable producers run before preparation loops."""
+
+	rule_kind = _plan_rule_kind(plan)
+	priority_by_kind = {
+		"already_true": 0,
+		"producer_action_sequence": 1,
+		"prepare_public_precondition": 2,
+	}
+	return (
+		plan.trigger.symbol,
+		priority_by_kind.get(rule_kind, 9),
+		len(plan.body),
+		plan.plan_name,
+	)
+
+
+def _plan_rule_kind(plan: AgentSpeakPlan) -> str:
+	for certificate in plan.binding_certificate:
+		rule_kind = str(certificate.get("rule_kind") or "").strip()
+		if rule_kind:
+			return rule_kind
+	return ""
 
 
 def _clingo_selector_program(
@@ -1600,11 +1772,22 @@ def _module_synthesis_report(
 			module_predicates=module_predicates,
 			actions=actions,
 		),
+		branch_certification_rules=(
+			"static context literals must be range-restricted by head variables or "
+			"previous positive dynamic literals",
+			"negative context literals must be range-restricted and cannot bind new variables",
+			"same-predicate recursive prepare branches require a deleted dynamic "
+			"obstruction-relation certificate",
+		),
 		theoretical_basis=(
 			"MOOSE singleton-goal regression supplies lifted target-predicate evidence",
 			"PDDL action schemas supply primitive producer/precondition structure",
 			"policy-reuse style predicate modules allow subgoal calls between atomic literals",
 			"PDDL typing is used internally to reject unobservable subtype role bindings",
+			"range-restricted static and negative contexts prevent unbounded "
+			"Jason unification over inertial relations",
+			"same-predicate recursive branches require a schema-level deleted-relation "
+			"progress certificate",
 			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",
 		),
 	)
