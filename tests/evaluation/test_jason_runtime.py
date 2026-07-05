@@ -82,6 +82,7 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert '"runtime_summary".equals(action.getFunctor())' in source
 	assert "runtime env action count " in source
 	assert "actionTraceLimit" in source
+	assert '"jason.pipeline.actionTraceLimit",\n\t\t3' in source
 
 
 def test_streamed_process_writes_stdout_and_stderr_to_files(tmp_path: Path) -> None:
@@ -169,6 +170,33 @@ def test_runtime_output_scan_reads_bounded_trace_count_summary(tmp_path: Path) -
 	assert summary.action_path == ("move(a,b)", "move(b,c)")
 	assert summary.action_path_truncated is True
 	assert summary.has_execute_success is True
+
+
+def test_runtime_output_scan_defaults_to_three_action_paths(tmp_path: Path) -> None:
+	stdout_path = tmp_path / "stdout.txt"
+	stderr_path = tmp_path / "stderr.txt"
+	stdout_path.write_text(
+		"\n".join(
+			(
+				"runtime env ready",
+				"runtime env action success step1",
+				"runtime env action success step2",
+				"runtime env action success step3",
+				"runtime env action success step4",
+				"runtime env action count 4",
+				"execute success",
+			),
+		)
+		+ "\n",
+		encoding="utf-8",
+	)
+	stderr_path.write_text("", encoding="utf-8")
+
+	summary = _scan_runtime_output_files(stdout_path=stdout_path, stderr_path=stderr_path)
+
+	assert summary.action_count == 4
+	assert summary.action_path == ("step1", "step2", "step3")
+	assert summary.action_path_truncated is True
 
 
 @pytest.mark.skipif(

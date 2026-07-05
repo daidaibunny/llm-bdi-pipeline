@@ -24,7 +24,7 @@ from .environment_adapter import build_environment_adapter
 
 
 _RUNTIME_OUTPUT_EXCERPT_MAX_CHARS = 20_000
-_RUNTIME_ACTION_PATH_MAX_ITEMS = 1_000
+_RUNTIME_ACTION_PATH_MAX_ITEMS = 3
 _ACTION_SUCCESS_MARKER = "runtime env action success "
 _ACTION_COUNT_MARKER = "runtime env action count "
 _ADAPTER_MARKERS = (
@@ -634,7 +634,7 @@ public class {class_name} extends Environment {{
 	private final Path seedFactsPath = Paths.get({seed_file});
 	private final int actionTraceLimit = Integer.getInteger(
 		"jason.pipeline.actionTraceLimit",
-		1000
+		3
 	);
 	private final int actionTraceInterval = Integer.getInteger(
 		"jason.pipeline.actionTraceInterval",
