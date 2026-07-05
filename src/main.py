@@ -79,8 +79,15 @@ Examples:
 		"--minimal-modules",
 		action="store_true",
 		help=(
-			"Use MOOSE singleton evidence as seeds for compact recursive atomic "
-			"literal module synthesis."
+			"Deprecated alias for --post-moose-recursive."
+		),
+	)
+	moose_parser.add_argument(
+		"--post-moose-recursive",
+		action="store_true",
+		help=(
+			"Use MOOSE singleton predicate evidence and PDDL action schemas to "
+			"synthesize compact recursive atomic literal modules before ASL rendering."
 		),
 	)
 	moose_parser.add_argument(
@@ -208,9 +215,13 @@ def main() -> None:
 
 def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	policy_file = _require_existing_path(args.policy_file, label="MOOSE Policy File")
+	use_post_moose_recursive = bool(
+		getattr(args, "post_moose_recursive", False)
+		or getattr(args, "minimal_modules", False),
+	)
 	domain_file = (
 		_require_existing_path(args.domain_file, label="Domain File")
-		if getattr(args, "minimal_modules", False)
+		if use_post_moose_recursive
 		else _absolute_path(args.domain_file)
 	)
 	pddl_domain_name = (
@@ -230,7 +241,7 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	)
 	policy_text = Path(policy_file).read_text(encoding="utf-8")
 	source_name = Path(policy_file).stem.replace(".model", "")
-	if getattr(args, "minimal_modules", False):
+	if use_post_moose_recursive:
 		library = compile_moose_readable_policy_to_minimal_module_asl_library(
 			policy_text,
 			domain_file=str(domain_file),
@@ -251,16 +262,17 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 		metadata={
 			"artifact_kind": (
 				"moose_seeded_atomic_minimal_literal_module_library"
-				if getattr(args, "minimal_modules", False)
+				if use_post_moose_recursive
 				else "moose_atomic_library"
 			),
 			"backend": "moose",
 			"domain_file": domain_file,
 			"pddl_domain_name": pddl_domain_name,
-			"minimal_modules": bool(getattr(args, "minimal_modules", False)),
+			"minimal_modules": use_post_moose_recursive,
+			"post_moose_recursive": use_post_moose_recursive,
 			"moose_backend_path": (
-				"seeded_schema_minimal_modules"
-				if getattr(args, "minimal_modules", False)
+				"post_moose_recursive_module_synthesis"
+				if use_post_moose_recursive
 				else "native_train_dump_policy"
 			),
 			"moose_official_benchmark": _is_moose_official_benchmark(source_metadata),

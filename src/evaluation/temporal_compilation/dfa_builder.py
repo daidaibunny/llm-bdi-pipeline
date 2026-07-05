@@ -24,6 +24,14 @@ class DFABuilder:
 		if not formula_str:
 			raise ValueError("Temporal grounding result contains no LTLf formula.")
 
+		ordered_atoms = self._parse_nested_eventually_next_sequence(formula_str)
+		if ordered_atoms:
+			return self._build_ordered_sequence_payload(
+				formula_str=formula_str,
+				ordered_atoms=ordered_atoms,
+				total_start=total_start,
+			)
+
 		convert_start = time.perf_counter()
 		dfa_dot, metadata = self.converter.convert(formula_str)
 		convert_seconds = time.perf_counter() - convert_start
@@ -89,6 +97,154 @@ class DFABuilder:
 		if open_parentheses > 0:
 			characters.extend(")" for _ in range(open_parentheses))
 		return "".join(characters).strip()
+
+	@classmethod
+	def _parse_nested_eventually_next_sequence(cls, formula_str: str) -> Tuple[str, ...]:
+		"""Parse F(a & X(F(b ...))) formulas into singleton progress atoms."""
+
+		def parse_eventually(text: str) -> Tuple[str, ...]:
+			current = text.strip()
+			if not current.startswith("F(") or not current.endswith(")"):
+				return ()
+			inner = current[2:-1].strip()
+			parts = cls._split_top_level_conjunction(inner)
+			if len(parts) == 1:
+				atom = parts[0].strip()
+				return (atom,) if cls._is_singleton_atom_text(atom) else ()
+			if len(parts) != 2:
+				return ()
+			first_atom, next_formula = parts[0].strip(), parts[1].strip()
+			if not cls._is_singleton_atom_text(first_atom):
+				return ()
+			if not next_formula.startswith("X(") or not next_formula.endswith(")"):
+				return ()
+			tail = parse_eventually(next_formula[2:-1].strip())
+			return (first_atom, *tail) if tail else ()
+
+		atoms = parse_eventually(str(formula_str or "").strip())
+		return atoms if atoms and all(cls._is_singleton_atom_text(atom) for atom in atoms) else ()
+
+	@staticmethod
+	def _split_top_level_conjunction(text: str) -> Tuple[str, ...]:
+		parts: list[str] = []
+		start = 0
+		depth = 0
+		for index, character in enumerate(str(text or "")):
+			if character == "(":
+				depth += 1
+				continue
+			if character == ")":
+				depth -= 1
+				if depth < 0:
+					return ()
+				continue
+			if character == "&" and depth == 0:
+				part = text[start:index].strip()
+				if not part:
+					return ()
+				parts.append(part)
+				start = index + 1
+		if depth != 0:
+			return ()
+		final_part = str(text or "")[start:].strip()
+		if not final_part:
+			return ()
+		parts.append(final_part)
+		return tuple(parts)
+
+	@staticmethod
+	def _is_singleton_atom_text(text: str) -> bool:
+		return re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*(?:\([^()]*\))?", str(text or "").strip()) is not None
+
+	@classmethod
+	def _build_ordered_sequence_payload(
+		cls,
+		*,
+		formula_str: str,
+		ordered_atoms: Sequence[str],
+		total_start: float,
+	) -> Dict[str, Any]:
+		"""Build the exact linear DFA for nested eventually-next singleton atoms."""
+
+		atoms = tuple(str(atom).strip() for atom in ordered_atoms if str(atom).strip())
+		accepting_state = str(len(atoms) + 1)
+		guarded_transitions: list[Dict[str, Any]] = []
+		for index, atom in enumerate(atoms, start=1):
+			source_state = str(index)
+			target_state = str(index + 1)
+			guarded_transitions.append(
+				{
+					"source_state": source_state,
+					"target_state": source_state,
+					"guards": ("0",),
+					"raw_label": f"~{atom}",
+				},
+			)
+			guarded_transitions.append(
+				{
+					"source_state": source_state,
+					"target_state": target_state,
+					"guards": ("1",),
+					"raw_label": atom,
+				},
+			)
+		guarded_transitions.append(
+			{
+				"source_state": accepting_state,
+				"target_state": accepting_state,
+				"guards": ("X",),
+				"raw_label": "true",
+			},
+		)
+		dfa_dot = cls._render_ordered_sequence_dot(
+			accepting_state=accepting_state,
+			guarded_transitions=tuple(guarded_transitions),
+		)
+		return {
+			"formula": formula_str,
+			"dfa_dot": dfa_dot,
+			"dfa_path": "dfa.dot",
+			"construction": "ordered_singleton_sequence_fast_path",
+			"num_states": len(atoms) + 1,
+			"num_transitions": len(guarded_transitions),
+			"alphabet": list(atoms),
+			"initial_state": "1",
+			"accepting_states": [accepting_state],
+			"free_variables": list(atoms),
+			"guarded_transitions": guarded_transitions,
+			"timing_profile": {
+				"convert_seconds": 0.0,
+				"total_seconds": time.perf_counter() - total_start,
+			},
+		}
+
+	@staticmethod
+	def _render_ordered_sequence_dot(
+		*,
+		accepting_state: str,
+		guarded_transitions: Sequence[Dict[str, Any]],
+	) -> str:
+		lines = [
+			"digraph ORDERED_SINGLETON_SEQUENCE_DFA {",
+			" rankdir = LR;",
+			" center = true;",
+			" edge [fontname = Courier];",
+			" node [height = .5, width = .5];",
+			f" node [shape = doublecircle]; {accepting_state};",
+			" node [shape = circle]; 1;",
+			' init [shape = plaintext, label = ""];',
+			" init -> 1;",
+		]
+		for transition in guarded_transitions:
+			lines.append(
+				" "
+				+ str(transition["source_state"])
+				+ " -> "
+				+ str(transition["target_state"])
+				+ f' [label="{transition["raw_label"]}"];',
+			)
+		lines.append("}")
+		return "\n".join(lines)
 
 	@classmethod
 	def _normalise_ordered_sequence_formula_for_ltlf2dfa(cls, formula_str: str) -> str:

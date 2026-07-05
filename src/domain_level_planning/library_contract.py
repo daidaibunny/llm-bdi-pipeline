@@ -10,14 +10,19 @@ from typing import Iterable, Mapping, Sequence
 
 from plan_library.models import AgentSpeakPlan, PlanLibrary
 
+_TEMPORAL_STATE_PREDICATE = "tg_state"
+
 SUPPORTED_ASL_SUBSET = {
 	"plan_heads": "PDDL predicate achievement goals or query-specific +!g_* temporal wrappers",
 	"contexts": (
 		"implicit conjunction of atom, not atom, equality, or inequality "
 		"context literals only"
 	),
-	"body_steps": "PDDL primitive action calls and PDDL predicate subgoal calls only",
-	"initial_beliefs": "empty for domain-level reusable libraries",
+	"body_steps": (
+		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
+		"query-local tg_state monitor belief updates"
+	),
+	"initial_beliefs": "empty except query-local tg_state monitor initial states",
 }
 
 EXECUTION_SEMANTICS = {
@@ -29,7 +34,7 @@ EXECUTION_SEMANTICS = {
 	"negation_semantics": (
 		"negation-as-absence over the current state"
 	),
-	"temporal_state_semantics": "general temporal progress is maintained by an external DFA controller",
+	"temporal_state_semantics": "query-local temporal progress is maintained by tg_state(goal,state)",
 	"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
 	"primitive_precondition_semantics": (
 		"primitive action preconditions are checked at execution time; "
@@ -68,9 +73,14 @@ def audit_domain_level_library_contract(
 	plans = tuple(plan_library.plans or ())
 	predicate_arities = _declared_arities(declared_predicates)
 	action_arities = _declared_arities(declared_actions)
-	no_initial_beliefs = not tuple(plan_library.initial_beliefs or ())
-	if not no_initial_beliefs:
-		violations.append("Domain-level libraries must not emit problem-specific initial beliefs.")
+	initial_beliefs_scoped = all(
+		_is_temporal_monitor_belief(belief)
+		for belief in tuple(plan_library.initial_beliefs or ())
+	)
+	if not initial_beliefs_scoped:
+		violations.append(
+			"Initial beliefs must be empty or query-local tg_state(goal,state) monitor beliefs.",
+		)
 
 	no_synthetic_names = _collect_synthetic_name_violations(plan_library, violations)
 	plan_head_subset = _collect_plan_head_subset_violations(plans, violations)
@@ -87,7 +97,7 @@ def audit_domain_level_library_contract(
 		violations=violations,
 	)
 	checked_layers = {
-		"no_initial_beliefs": no_initial_beliefs,
+		"initial_beliefs_scoped": initial_beliefs_scoped,
 		"no_synthetic_names": no_synthetic_names,
 		"plan_head_subset": plan_head_subset,
 		"body_step_subset": body_step_subset,
@@ -166,12 +176,15 @@ def _collect_body_step_subset_violations(
 	allowed_kinds = {"action", "primitive_action", "subgoal"}
 	for plan in tuple(plans or ()):
 		for step in tuple(plan.body or ()):
+			if _is_temporal_monitor_step(step):
+				continue
 			if step.kind not in allowed_kinds:
 				passed = False
 				violations.append(
 					(
 						f"Plan {plan.plan_name!r} contains unsupported body step kind "
-						f"{step.kind!r}; supported kinds are action and subgoal only."
+						f"{step.kind!r}; supported kinds are action, subgoal, and "
+						"query-local tg_state monitor updates only."
 					),
 				)
 	return passed
@@ -184,6 +197,8 @@ def _collect_body_lifting_violations(
 	passed = True
 	for plan in tuple(plans or ()):
 		for step in tuple(plan.body or ()):
+			if _is_temporal_monitor_step(step):
+				continue
 			if _is_query_wrapper_symbol(step.symbol) and not tuple(step.arguments or ()):
 				continue
 			for argument in tuple(step.arguments or ()):
@@ -222,6 +237,8 @@ def _collect_context_lifting_violations(
 	passed = True
 	for plan in tuple(plans or ()):
 		for context in tuple(plan.context or ()):
+			if _is_temporal_monitor_context(context):
+				continue
 			for atom, arguments in _context_atoms(context):
 				for argument in arguments:
 					if not _is_lifted_variable(argument):
@@ -310,6 +327,8 @@ def _collect_declared_pddl_symbol_violations(
 				),
 			)
 		for context in tuple(plan.context or ()):
+			if _is_temporal_monitor_context(context):
+				continue
 			for symbol, arguments in _context_atoms(context):
 				if symbol == "=":
 					continue
@@ -332,6 +351,8 @@ def _collect_declared_pddl_symbol_violations(
 						),
 					)
 		for step in tuple(plan.body or ()):
+			if _is_temporal_monitor_step(step):
+				continue
 			if step.kind == "subgoal":
 				if _is_query_wrapper_symbol(step.symbol):
 					continue
@@ -400,6 +421,36 @@ def _contains_synthetic_name(value: str) -> bool:
 
 def _is_query_wrapper_symbol(symbol: str) -> bool:
 	return bool(re.fullmatch(r"g_[A-Za-z0-9_]+", str(symbol or "").strip()))
+
+
+def _is_temporal_monitor_belief(belief: str) -> bool:
+	atoms = tuple(_context_atoms(str(belief or "").strip()))
+	return len(atoms) == 1 and _is_temporal_monitor_atom(*atoms[0])
+
+
+def _is_temporal_monitor_context(context: str) -> bool:
+	text = str(context or "").strip()
+	if text.lower().startswith("not "):
+		return False
+	atoms = tuple(_context_atoms(text))
+	return len(atoms) == 1 and _is_temporal_monitor_atom(*atoms[0])
+
+
+def _is_temporal_monitor_step(step) -> bool:
+	return (
+		step.kind in {"belief_addition", "belief_deletion"}
+		and step.symbol == _TEMPORAL_STATE_PREDICATE
+		and len(tuple(step.arguments or ())) == 2
+		and _is_query_wrapper_symbol(tuple(step.arguments or ())[0])
+	)
+
+
+def _is_temporal_monitor_atom(symbol: str, arguments: tuple[str, ...]) -> bool:
+	return (
+		symbol == _TEMPORAL_STATE_PREDICATE
+		and len(tuple(arguments or ())) == 2
+		and _is_query_wrapper_symbol(tuple(arguments or ())[0])
+	)
 
 
 def _context_atoms(context: str) -> Iterable[tuple[str, tuple[str, ...]]]:

@@ -68,6 +68,7 @@ class MooseAtomicLibraryQualityReport:
 	subgoal_step_count: int
 	singleton_macro_library_ready: bool
 	compact_recursive_module_ready: bool
+	faithful_decision_list_ready: bool
 	artifact_classification: str
 	warnings: tuple[str, ...] = ()
 
@@ -82,6 +83,7 @@ class MooseAtomicLibraryQualityReport:
 			"subgoal_step_count": self.subgoal_step_count,
 			"singleton_macro_library_ready": self.singleton_macro_library_ready,
 			"compact_recursive_module_ready": self.compact_recursive_module_ready,
+			"faithful_decision_list_ready": self.faithful_decision_list_ready,
 			"artifact_classification": self.artifact_classification,
 			"warnings": list(self.warnings),
 		}
@@ -227,12 +229,18 @@ def compile_moose_readable_policy_to_asl_library(
 		domain_name=domain_name,
 		plans=tuple(plans),
 		metadata={
+			"generation_mode": "faithful_moose_decision_list_asl_library",
 			"atomic_template_backend": "moose",
 			"source_name": source_name,
 			"policy_file": str(policy_file) if policy_file is not None else None,
 			"raw_rule_count": len(rules),
 			"compiled_singleton_rule_count": len(plans),
 			"library_quality": quality_report.to_dict(),
+			"artifact_contract": (
+				"faithful ASL rendering of MOOSE first-order decision-list "
+				"singleton-goal rules; rule order, state context, goal trigger, "
+				"and macro action sequence are preserved"
+			),
 		},
 	)
 
@@ -280,7 +288,7 @@ def audit_moose_atomic_library_quality(
 	max_compact_plan_count: int = 10,
 	max_macro_body_steps: int = 8,
 ) -> MooseAtomicLibraryQualityReport:
-	"""Classify direct MOOSE output without treating raw macros as modules."""
+	"""Classify MOOSE output without mistaking decision-list macros for recursion."""
 
 	plan_tuple = tuple(plans or ())
 	plans_by_goal: dict[str, int] = {}
@@ -303,23 +311,27 @@ def audit_moose_atomic_library_quality(
 		singleton_macro_library_ready
 		and subgoal_step_count > 0
 	)
+	faithful_decision_list_ready = bool(plan_tuple) and primitive_action_step_count > 0
 	if compact_recursive_module_ready:
 		artifact_classification = "compact_recursive_atomic_module_library"
 	elif singleton_macro_library_ready:
 		artifact_classification = "compact_lifted_singleton_macro_library"
+	elif faithful_decision_list_ready:
+		artifact_classification = "faithful_moose_decision_list_asl_library"
 	else:
-		artifact_classification = "raw_lifted_singleton_macro_policy_not_compact"
+		artifact_classification = "empty_or_unbound_moose_atomic_library"
 	warnings: list[str] = []
 	if subgoal_step_count == 0 and plan_tuple:
 		warnings.append(
 			"Direct MOOSE output contains primitive macro actions but no recursive "
-			"atomic subgoal calls; do not claim compact module-level quality when "
-			"the domain requires recursive decomposition."
+			"atomic subgoal calls; claim faithful decision-list compilation rather "
+			"than compact recursive module synthesis."
 		)
 	if len(plan_tuple) > max_compact_plan_count:
 		warnings.append(
-			"Plan count exceeds the compact-library threshold; this artifact is "
-			"backend evidence or a smoke output, not the final compact library."
+			"Plan count exceeds the compact-library threshold; this is acceptable "
+			"for faithful MOOSE decision-list compilation, but it is not a compact "
+			"recursive module artifact."
 		)
 	if max_body_step_count > max_macro_body_steps:
 		warnings.append(
@@ -336,6 +348,7 @@ def audit_moose_atomic_library_quality(
 		subgoal_step_count=subgoal_step_count,
 		singleton_macro_library_ready=singleton_macro_library_ready,
 		compact_recursive_module_ready=compact_recursive_module_ready,
+		faithful_decision_list_ready=faithful_decision_list_ready,
 		artifact_classification=artifact_classification,
 		warnings=tuple(warnings),
 	)

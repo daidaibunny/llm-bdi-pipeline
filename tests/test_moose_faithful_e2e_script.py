@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from scripts.run_moose_faithful_e2e import first_n_test_instances
+from scripts.run_moose_faithful_e2e import compile_moose_atomic_library_command
 from scripts.run_moose_faithful_e2e import materialize_moose_compatible_pddl
 from scripts.run_moose_faithful_e2e import moose_policy_command
 from scripts.run_moose_faithful_e2e import moose_train_command
@@ -138,6 +139,7 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 		num_workers = 4
 		num_permutations = 3
 		goal_max_size = 1
+		atomic_library_mode = "faithful"
 		max_rss_gb = 16
 		train_timeout_seconds = 1800
 		dump_timeout_seconds = 300
@@ -165,6 +167,7 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 	command_text = " ".join(command)
 
 	assert "--num-workers 4" in command_text
+	assert "--atomic-library-mode faithful" in command_text
 	assert "--skip-jason-validation" in command
 	assert "--skip-moose-policy-validation" in command
 	assert str(batch_root / "domain_libraries") in command
@@ -173,6 +176,63 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 		str(batch_root / "domain_libraries" / "8puzzle-1tile" / "plan_library.asl"),
 	]
 	assert manifest["settings"]["domain_execution"] == "sequential"
+	assert manifest["settings"]["atomic_library_backend"] == "native_moose_train_dump_policy"
+
+
+def test_post_moose_recursive_batch_mode_is_explicitly_threaded(
+	tmp_path: Path,
+) -> None:
+	class Args:
+		num_workers = 4
+		num_permutations = 3
+		goal_max_size = 1
+		atomic_library_mode = "post-moose-recursive"
+		max_rss_gb = 16
+		train_timeout_seconds = 1800
+		dump_timeout_seconds = 300
+		append_timeout_seconds = 300
+		jason_timeout_seconds = 90
+		moose_plan_timeout_seconds = 120
+		moose_plan_bound = 5000
+		run_jason_validation = False
+		run_moose_policy_validation = False
+
+	batch_root = tmp_path / "20260704-101113"
+	command = build_moose_batch_command(
+		args=Args(),
+		domains=("blocks",),
+		batch_root=batch_root,
+	)
+	manifest = batch_manifest(
+		args=Args(),
+		domains=("blocks",),
+		timestamp_id="20260704-101113",
+		batch_root=batch_root,
+		command=command,
+	)
+
+	command_text = " ".join(command)
+
+	assert "--atomic-library-mode post-moose-recursive" in command_text
+	assert manifest["settings"]["atomic_library_mode"] == "post-moose-recursive"
+	assert manifest["settings"]["atomic_library_backend"] == (
+		"post_moose_recursive_module_synthesis"
+	)
+
+
+def test_post_moose_recursive_compile_command_uses_semantic_cli_flag(
+	tmp_path: Path,
+) -> None:
+	command = compile_moose_atomic_library_command(
+		readable_policy_file=tmp_path / "blocks.model.readable",
+		domain_file=tmp_path / "domain.pddl",
+		domain_name="blocks",
+		library_root=tmp_path / "libraries",
+		atomic_library_mode="post-moose-recursive",
+	)
+
+	assert "--post-moose-recursive" in command
+	assert "--minimal-modules" not in command
 
 
 def test_normalise_pddl_for_moose_lowercases_keywords_and_adds_typing() -> None:

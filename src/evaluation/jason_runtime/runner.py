@@ -23,6 +23,18 @@ from .environment_adapter import Stage6EnvironmentAdapter
 from .environment_adapter import build_environment_adapter
 
 
+_RUNTIME_OUTPUT_EXCERPT_MAX_CHARS = 20_000
+_RUNTIME_ACTION_PATH_MAX_ITEMS = 1_000
+_ACTION_SUCCESS_MARKER = "runtime env action success "
+_ADAPTER_MARKERS = (
+	"runtime env ready",
+	"runtime env action failed",
+	"runtime env unknown action",
+	"runtime env compile failed",
+	"execute success",
+)
+
+
 class JasonValidationError(RuntimeError):
 	"""Raised when Jason runtime validation cannot be completed."""
 
@@ -44,9 +56,11 @@ class JasonValidationResult:
 	stdout: str
 	stderr: str
 	action_path: tuple[str, ...]
+	action_count: int
 	environment_adapter: dict[str, Any]
 	artifacts: dict[str, str]
 	timing_profile: dict[str, float]
+	output_summary: dict[str, Any]
 	error: str | None = None
 
 	def to_dict(self) -> dict[str, Any]:
@@ -60,9 +74,11 @@ class JasonValidationResult:
 			"stdout": self.stdout,
 			"stderr": self.stderr,
 			"action_path": list(self.action_path),
+			"action_count": self.action_count,
 			"environment_adapter": dict(self.environment_adapter),
 			"artifacts": dict(self.artifacts),
 			"timing_profile": dict(self.timing_profile),
+			"output_summary": dict(self.output_summary),
 		}
 		if self.error is not None:
 			payload["error"] = self.error
@@ -87,6 +103,51 @@ class RuntimeActionSchema:
 	parameters: tuple[str, ...]
 	preconditions: tuple[PredicatePattern, ...]
 	effects: tuple[PredicatePattern, ...]
+
+
+@dataclass(frozen=True)
+class StreamedProcessResult:
+	"""Result for a subprocess whose stdout/stderr were streamed to files."""
+
+	exit_code: int | None
+	timed_out: bool
+
+
+@dataclass(frozen=True)
+class RuntimeOutputSummary:
+	"""Bounded in-memory summary of a Jason stdout/stderr artifact pair."""
+
+	stdout_excerpt: str
+	stderr_excerpt: str
+	marker_output: str
+	action_path: tuple[str, ...]
+	action_count: int
+	action_path_truncated: bool
+	stdout_truncated: bool
+	stderr_truncated: bool
+	has_execute_success: bool
+
+	def to_dict(self) -> dict[str, Any]:
+		return {
+			"action_count": self.action_count,
+			"action_path_truncated": self.action_path_truncated,
+			"stdout_truncated": self.stdout_truncated,
+			"stderr_truncated": self.stderr_truncated,
+			"has_execute_success": self.has_execute_success,
+		}
+
+
+@dataclass(frozen=True)
+class _SingleOutputScan:
+	"""Bounded scan result for one output stream file."""
+
+	excerpt: str
+	marker_lines: tuple[str, ...]
+	action_path: tuple[str, ...]
+	action_count: int
+	truncated: bool
+	action_path_truncated: bool
+	has_execute_success: bool
 
 
 class JasonPlanLibraryRunner:
@@ -159,13 +220,14 @@ class JasonPlanLibraryRunner:
 		environment_java = _build_environment_java_source(
 			class_name=self.environment_class_name,
 			action_schemas=action_schemas,
-			seed_facts=seed_facts,
+			seed_facts_file_name="initial_facts.txt",
 		)
 		logging_properties = _logging_properties()
 
 		agentspeak_path = output_path / "agentspeak_generated.asl"
 		mas2j_path = output_path / "jason_runner.mas2j"
 		environment_java_path = output_path / f"{self.environment_class_name}.java"
+		initial_facts_path = output_path / "initial_facts.txt"
 		logging_path = output_path / "logging.properties"
 		stdout_path = output_path / "jason_stdout.txt"
 		stderr_path = output_path / "jason_stderr.txt"
@@ -174,6 +236,10 @@ class JasonPlanLibraryRunner:
 		agentspeak_path.write_text(runner_asl, encoding="utf-8")
 		mas2j_path.write_text(runner_mas2j, encoding="utf-8")
 		environment_java_path.write_text(environment_java, encoding="utf-8")
+		initial_facts_path.write_text(
+			"\n".join(seed_facts) + ("\n" if seed_facts else ""),
+			encoding="utf-8",
+		)
 		logging_path.write_text(logging_properties, encoding="utf-8")
 		timing_profile["materialize_seconds"] = time.perf_counter() - materialize_start
 
@@ -205,6 +271,7 @@ class JasonPlanLibraryRunner:
 				stdout=compile_process.stdout,
 				stderr=compile_process.stderr,
 				action_path=(),
+				action_count=0,
 				environment_adapter=self.environment_adapter.validate(
 					stdout=compile_process.stdout,
 					stderr=compile_process.stderr,
@@ -213,11 +280,13 @@ class JasonPlanLibraryRunner:
 					agentspeak_path=agentspeak_path,
 					mas2j_path=mas2j_path,
 					environment_java_path=environment_java_path,
+					initial_facts_path=initial_facts_path,
 					stdout_path=stdout_path,
 					stderr_path=stderr_path,
 					result_path=result_path,
 				),
 				timing_profile=timing_profile,
+				output_summary=_empty_runtime_output_summary().to_dict(),
 				error=error,
 			)
 			result_path.write_text(json.dumps(result.to_dict(), indent=2) + "\n", encoding="utf-8")
@@ -235,34 +304,31 @@ class JasonPlanLibraryRunner:
 			mas2j_path.name,
 		]
 		timed_out = False
-		try:
-			run_process = subprocess.run(
-				cmd,
-				cwd=output_path,
-				text=True,
-				capture_output=True,
-				check=False,
-				timeout=self.timeout_seconds,
-			)
-			exit_code: int | None = run_process.returncode
-			stdout = run_process.stdout
-			stderr = run_process.stderr
-		except subprocess.TimeoutExpired as error:
-			timed_out = True
-			exit_code = None
-			stdout = _decode_timeout_output(error.stdout)
-			stderr = _decode_timeout_output(error.stderr)
+		run_process = _run_process_streamed(
+			cmd,
+			cwd=output_path,
+			stdout_path=stdout_path,
+			stderr_path=stderr_path,
+			timeout_seconds=self.timeout_seconds,
+		)
+		exit_code = run_process.exit_code
+		timed_out = run_process.timed_out
 		timing_profile["run_seconds"] = time.perf_counter() - run_start
 		timing_profile["total_seconds"] = time.perf_counter() - total_start
 
-		stdout_path.write_text(stdout, encoding="utf-8")
-		stderr_path.write_text(stderr, encoding="utf-8")
-		adapter_result = self.environment_adapter.validate(stdout=stdout, stderr=stderr)
+		output_summary = _scan_runtime_output_files(
+			stdout_path=stdout_path,
+			stderr_path=stderr_path,
+		)
+		adapter_result = self.environment_adapter.validate(
+			stdout=output_summary.marker_output,
+			stderr="",
+		)
 		success = (
 			not timed_out
 			and exit_code == 0
 			and adapter_result.success
-			and "execute success" in f"{stdout}\n{stderr}"
+			and output_summary.has_execute_success
 		)
 		status = "success" if success else "failed"
 		error_message = None
@@ -281,19 +347,22 @@ class JasonPlanLibraryRunner:
 			goal_name=goal_name,
 			exit_code=exit_code,
 			timed_out=timed_out,
-			stdout=stdout,
-			stderr=stderr,
-			action_path=_extract_action_path(f"{stdout}\n{stderr}"),
+			stdout=output_summary.stdout_excerpt,
+			stderr=output_summary.stderr_excerpt,
+			action_path=output_summary.action_path,
+			action_count=output_summary.action_count,
 			environment_adapter=adapter_result.to_dict(),
 			artifacts=_artifact_paths(
 				agentspeak_path=agentspeak_path,
 				mas2j_path=mas2j_path,
 				environment_java_path=environment_java_path,
+				initial_facts_path=initial_facts_path,
 				stdout_path=stdout_path,
 				stderr_path=stderr_path,
 				result_path=result_path,
 			),
 			timing_profile=timing_profile,
+			output_summary=output_summary.to_dict(),
 			error=error_message,
 		)
 		result_path.write_text(json.dumps(result.to_dict(), indent=2) + "\n", encoding="utf-8")
@@ -454,23 +523,25 @@ def _build_environment_java_source(
 	*,
 	class_name: str,
 	action_schemas: Sequence[RuntimeActionSchema],
-	seed_facts: Sequence[str],
+	seed_facts_file_name: str,
 ) -> str:
-	seed_lines = "\n".join(
-		f"\t\tworld.add({ _java_quote(fact) });"
-		for fact in tuple(seed_facts or ())
-	)
 	action_lines = "\n\t\t".join(
 		_render_action_registration(schema)
 		for schema in tuple(action_schemas or ())
 	)
 	if not action_lines:
 		action_lines = "// no action schemas"
+	seed_file = _java_quote(seed_facts_file_name)
 	return f"""
 import jason.asSyntax.Literal;
 import jason.asSyntax.Structure;
 import jason.environment.Environment;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -513,15 +584,31 @@ public class {class_name} extends Environment {{
 		}}
 	}}
 
+	private static final class EffectDelta {{
+		final Set<String> added;
+		final Set<String> removed;
+
+		EffectDelta(Set<String> added, Set<String> removed) {{
+			this.added = added;
+			this.removed = removed;
+		}}
+
+		boolean changed() {{
+			return !added.isEmpty() || !removed.isEmpty();
+		}}
+	}}
+
 	private final Set<String> world = new LinkedHashSet<>();
+	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
+	private final Path seedFactsPath = Paths.get({seed_file});
 
 	@Override
 	public synchronized void init(String[] args) {{
 		super.init(args);
 		seedInitialFacts();
 		loadActions();
-		syncPercepts();
+		syncInitialPercepts();
 		System.out.println("runtime env ready");
 	}}
 
@@ -556,15 +643,27 @@ public class {class_name} extends Environment {{
 			return false;
 		}}
 
-		applyEffects(schema.effects, bindings);
-		syncPercepts();
+		EffectDelta delta = applyEffects(schema.effects, bindings);
+		syncPerceptDelta(delta);
 		System.out.println("runtime env action success " + tracedAction);
 		return true;
 	}}
 
 	private void seedInitialFacts() {{
 		world.clear();
-{seed_lines if seed_lines else ""}
+		try {{
+			for (String line : Files.readAllLines(seedFactsPath, StandardCharsets.UTF_8)) {{
+				String fact = line.trim();
+				if (!fact.isEmpty() && !fact.startsWith("#")) {{
+					world.add(fact);
+				}}
+			}}
+		}} catch (IOException error) {{
+			throw new RuntimeException(
+				"Failed to load Jason initial facts from " + seedFactsPath.toAbsolutePath(),
+				error
+			);
+		}}
 	}}
 
 	private void loadActions() {{
@@ -587,19 +686,28 @@ public class {class_name} extends Environment {{
 		return true;
 	}}
 
-	private void applyEffects(Pattern[] effects, Map<String, String> bindings) {{
+	private EffectDelta applyEffects(Pattern[] effects, Map<String, String> bindings) {{
+		Set<String> added = new LinkedHashSet<>();
+		Set<String> removed = new LinkedHashSet<>();
 		for (Pattern pattern : effects) {{
 			if (pattern.positive) {{
 				continue;
 			}}
-			world.remove(ground(pattern.predicate, pattern.args, bindings));
+			String grounded = ground(pattern.predicate, pattern.args, bindings);
+			if (world.remove(grounded) && !added.remove(grounded)) {{
+				removed.add(grounded);
+			}}
 		}}
 		for (Pattern pattern : effects) {{
 			if (!pattern.positive) {{
 				continue;
 			}}
-			world.add(ground(pattern.predicate, pattern.args, bindings));
+			String grounded = ground(pattern.predicate, pattern.args, bindings);
+			if (world.add(grounded) && !removed.remove(grounded)) {{
+				added.add(grounded);
+			}}
 		}}
+		return new EffectDelta(added, removed);
 	}}
 
 	private String ground(String predicate, String[] args, Map<String, String> bindings) {{
@@ -658,10 +766,29 @@ public class {class_name} extends Environment {{
 		return sourceName + "(" + String.join(",", args) + ")";
 	}}
 
-	private void syncPercepts() {{
+	private void syncInitialPercepts() {{
 		clearPercepts();
+		perceived.clear();
 		for (String atom : world) {{
 			addPercept(Literal.parseLiteral(atom));
+			perceived.add(atom);
+		}}
+		informAgsEnvironmentChanged();
+	}}
+
+	private void syncPerceptDelta(EffectDelta delta) {{
+		if (!delta.changed()) {{
+			return;
+		}}
+		for (String atom : delta.removed) {{
+			if (perceived.remove(atom)) {{
+				removePercept(Literal.parseLiteral(atom));
+			}}
+		}}
+		for (String atom : delta.added) {{
+			if (perceived.add(atom)) {{
+				addPercept(Literal.parseLiteral(atom));
+			}}
 		}}
 		informAgsEnvironmentChanged();
 	}}
@@ -784,6 +911,145 @@ def _resolve_jason_classpath(artifact: str) -> str:
 		return classpath
 
 
+def _run_process_streamed(
+	command: Sequence[str],
+	*,
+	cwd: Path,
+	stdout_path: Path,
+	stderr_path: Path,
+	timeout_seconds: int,
+) -> StreamedProcessResult:
+	"""Run a process with stdout/stderr streamed directly to files."""
+
+	with stdout_path.open("w", encoding="utf-8") as stdout_handle:
+		with stderr_path.open("w", encoding="utf-8") as stderr_handle:
+			try:
+				completed = subprocess.run(
+					tuple(str(item) for item in command),
+					cwd=cwd,
+					stdout=stdout_handle,
+					stderr=stderr_handle,
+					check=False,
+					timeout=timeout_seconds,
+				)
+			except subprocess.TimeoutExpired:
+				return StreamedProcessResult(exit_code=None, timed_out=True)
+	return StreamedProcessResult(exit_code=completed.returncode, timed_out=False)
+
+
+def _scan_runtime_output_files(
+	*,
+	stdout_path: Path,
+	stderr_path: Path,
+	excerpt_char_limit: int = _RUNTIME_OUTPUT_EXCERPT_MAX_CHARS,
+	action_path_limit: int = _RUNTIME_ACTION_PATH_MAX_ITEMS,
+) -> RuntimeOutputSummary:
+	"""Scan Jason output artifacts without loading complete logs into memory."""
+
+	stdout_scan = _scan_runtime_output_file(
+		stdout_path,
+		excerpt_char_limit=excerpt_char_limit,
+		action_path_limit=action_path_limit,
+	)
+	stderr_scan = _scan_runtime_output_file(
+		stderr_path,
+		excerpt_char_limit=excerpt_char_limit,
+		action_path_limit=action_path_limit,
+	)
+	action_path = (*stdout_scan.action_path, *stderr_scan.action_path)
+	action_count = stdout_scan.action_count + stderr_scan.action_count
+	action_path_truncated = (
+		stdout_scan.action_path_truncated
+		or stderr_scan.action_path_truncated
+		or action_count > len(action_path)
+	)
+	marker_lines = (*stdout_scan.marker_lines, *stderr_scan.marker_lines)
+	return RuntimeOutputSummary(
+		stdout_excerpt=stdout_scan.excerpt,
+		stderr_excerpt=stderr_scan.excerpt,
+		marker_output="\n".join(marker_lines),
+		action_path=action_path,
+		action_count=action_count,
+		action_path_truncated=action_path_truncated,
+		stdout_truncated=stdout_scan.truncated,
+		stderr_truncated=stderr_scan.truncated,
+		has_execute_success=stdout_scan.has_execute_success or stderr_scan.has_execute_success,
+	)
+
+
+def _scan_runtime_output_file(
+	path: Path,
+	*,
+	excerpt_char_limit: int,
+	action_path_limit: int,
+) -> _SingleOutputScan:
+	"""Scan one Jason output stream, keeping only bounded diagnostic data."""
+
+	excerpt_parts: list[str] = []
+	marker_lines: list[str] = []
+	action_path: list[str] = []
+	action_count = 0
+	remaining_excerpt_chars = max(0, int(excerpt_char_limit))
+	truncated = False
+	has_execute_success = False
+
+	if not path.exists():
+		return _SingleOutputScan(
+			excerpt="",
+			marker_lines=(),
+			action_path=(),
+			action_count=0,
+			truncated=False,
+			action_path_truncated=False,
+			has_execute_success=False,
+		)
+
+	with path.open("r", encoding="utf-8", errors="replace") as handle:
+		for line in handle:
+			if remaining_excerpt_chars > 0:
+				excerpt_parts.append(line[:remaining_excerpt_chars])
+				if len(line) > remaining_excerpt_chars:
+					truncated = True
+				remaining_excerpt_chars -= min(len(line), remaining_excerpt_chars)
+			elif line:
+				truncated = True
+
+			if "execute success" in line:
+				has_execute_success = True
+			if any(marker in line for marker in _ADAPTER_MARKERS):
+				marker_lines.append(line.rstrip("\n"))
+			if _ACTION_SUCCESS_MARKER in line:
+				action_count += 1
+				if len(action_path) < action_path_limit:
+					action_path.append(line.split(_ACTION_SUCCESS_MARKER, 1)[1].strip())
+
+	if truncated:
+		excerpt_parts.append("\n... [output truncated; full log is in the artifact file] ...\n")
+	return _SingleOutputScan(
+		excerpt="".join(excerpt_parts),
+		marker_lines=tuple(marker_lines),
+		action_path=tuple(action_path),
+		action_count=action_count,
+		truncated=truncated,
+		action_path_truncated=action_count > len(action_path),
+		has_execute_success=has_execute_success,
+	)
+
+
+def _empty_runtime_output_summary() -> RuntimeOutputSummary:
+	return RuntimeOutputSummary(
+		stdout_excerpt="",
+		stderr_excerpt="",
+		marker_output="",
+		action_path=(),
+		action_count=0,
+		action_path_truncated=False,
+		stdout_truncated=False,
+		stderr_truncated=False,
+		has_execute_success=False,
+	)
+
+
 def _extract_action_path(output: str) -> tuple[str, ...]:
 	actions: list[str] = []
 	for line in str(output or "").splitlines():
@@ -807,6 +1073,7 @@ def _artifact_paths(
 	agentspeak_path: Path,
 	mas2j_path: Path,
 	environment_java_path: Path,
+	initial_facts_path: Path,
 	stdout_path: Path,
 	stderr_path: Path,
 	result_path: Path,
@@ -815,6 +1082,7 @@ def _artifact_paths(
 		"agentspeak": str(agentspeak_path),
 		"mas2j": str(mas2j_path),
 		"environment_java": str(environment_java_path),
+		"initial_facts": str(initial_facts_path),
 		"stdout": str(stdout_path),
 		"stderr": str(stderr_path),
 		"result": str(result_path),

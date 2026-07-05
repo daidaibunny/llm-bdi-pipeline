@@ -45,6 +45,15 @@ def main() -> int:
 	parser.add_argument("--num-workers", type=int, default=4)
 	parser.add_argument("--num-permutations", type=int, default=3)
 	parser.add_argument("--goal-max-size", type=int, default=1)
+	parser.add_argument(
+		"--atomic-library-mode",
+		choices=("faithful", "post-moose-recursive"),
+		default="faithful",
+		help=(
+			"Compile raw MOOSE decision-list macros faithfully, or synthesize "
+			"post-MOOSE recursive atomic modules before ASL rendering."
+		),
+	)
 	parser.add_argument("--max-rss-gb", type=float, default=16.0)
 	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
 	parser.add_argument("--dump-timeout-seconds", type=int, default=300)
@@ -164,6 +173,8 @@ def build_moose_batch_command(
 		str(args.num_permutations),
 		"--goal-max-size",
 		str(args.goal_max_size),
+		"--atomic-library-mode",
+		args.atomic_library_mode,
 		"--max-rss-gb",
 		str(args.max_rss_gb),
 		"--train-timeout-seconds",
@@ -214,6 +225,7 @@ def batch_manifest(
 			"num_workers": args.num_workers,
 			"num_permutations": args.num_permutations,
 			"goal_max_size": args.goal_max_size,
+			"atomic_library_mode": args.atomic_library_mode,
 			"max_rss_gb": args.max_rss_gb,
 			"train_timeout_seconds": args.train_timeout_seconds,
 			"run_jason_validation": bool(args.run_jason_validation),
@@ -221,7 +233,11 @@ def batch_manifest(
 			"test_query_count_per_domain": 2,
 			"domain_execution": "sequential",
 			"moose_runtime": "docker_exact_apptainer",
-			"atomic_library_backend": "native_moose_train_dump_policy",
+			"atomic_library_backend": (
+				"post_moose_recursive_module_synthesis"
+				if args.atomic_library_mode == "post-moose-recursive"
+				else "native_moose_train_dump_policy"
+			),
 		},
 		"command": list(command),
 	}

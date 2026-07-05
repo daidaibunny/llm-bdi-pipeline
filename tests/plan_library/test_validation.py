@@ -13,7 +13,7 @@ from plan_library.validation import build_library_validation_record
 def test_library_validation_accepts_current_atomic_and_temporal_contract() -> None:
 	plan_library = PlanLibrary(
 		domain_name="blocks",
-		initial_beliefs=(),
+		initial_beliefs=("tg_state(g_query_1, q0)",),
 		plans=(
 			AgentSpeakPlan(
 				plan_name="on_via_stack",
@@ -28,10 +28,21 @@ def test_library_validation_accepts_current_atomic_and_temporal_contract() -> No
 			AgentSpeakPlan(
 				plan_name="g_query_1_progress",
 				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g_query_1"),
-				context=("not on(X,Y)",),
+				context=("tg_state(g_query_1, q0)",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+					AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q0")),
+					AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q1")),
 					AgentSpeakBodyStep("subgoal", "g_query_1"),
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="g_query_1_accepting",
+				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g_query_1"),
+				context=("tg_state(g_query_1, q1)",),
+				body=(
+					AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q1")),
+					AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q0")),
 				),
 			),
 		),

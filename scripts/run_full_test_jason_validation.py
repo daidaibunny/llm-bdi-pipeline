@@ -115,7 +115,7 @@ def main() -> int:
 		action="store_true",
 		help=(
 			"Also write one full-test ASL per domain. Disabled by default because "
-			"prefix-context wrappers can expand to many GiB on large test suites."
+			"large validation suites can still produce bulky ASL artifacts."
 		),
 	)
 	parser.add_argument(
@@ -294,7 +294,7 @@ def prepare_domain_for_full_test(
 		base_plan_library_asl = domain_output / "atomic_plan_library.asl"
 		shutil.copyfile(plan_library_asl, base_plan_library_asl)
 		if write_domain_long_asl:
-			append_record = append_prefix_context_full_test_wrappers(
+			append_record = append_state_monitor_full_test_wrappers(
 				domain=domain,
 				plan_library_asl=plan_library_asl,
 				problem_files=test_instances,
@@ -303,7 +303,7 @@ def prepare_domain_for_full_test(
 		else:
 			append_record = {
 				"success": True,
-				"wrapper_mode": "per_test_prefix_context_runtime_asl_without_json_metadata",
+				"wrapper_mode": "per_test_query_local_dfa_state_monitor_without_json_metadata",
 				"query_count": len(test_instances),
 				"appended_plan_count": None,
 				"domain_long_asl_written": False,
@@ -340,14 +340,14 @@ def prepare_domain_for_full_test(
 		return record, ()
 
 
-def append_prefix_context_full_test_wrappers(
+def append_state_monitor_full_test_wrappers(
 	*,
 	domain: str,
 	plan_library_asl: Path,
 	problem_files: Sequence[Path],
 	max_output_bytes: int,
 ) -> dict[str, Any]:
-	"""Append the same prefix-context wrappers as the temporal goal appender.
+	"""Append the same query-local DFA-state wrappers as the temporal appender.
 
 	This validation runner intentionally writes only ASL. It avoids the canonical
 	``plan_library.json`` temporal metadata because full-test batches can contain
@@ -361,12 +361,12 @@ def append_prefix_context_full_test_wrappers(
 	with plan_library_asl.open("w", encoding="utf-8") as output:
 		output.write(base_text)
 		output.write(
-			"\n\n/* Full-test prefix-context temporal wrappers.\n"
+			"\n\n/* Full-test query-local DFA-state temporal wrappers.\n"
 			"   These wrappers keep the same ASL shape as the temporal goal appender,\n"
 			"   but skip JSON DFA metadata because Jason only needs the ASL file. */\n\n",
 		)
 		for index, problem_file in enumerate(problem_files, start=1):
-			wrapper_lines, wrapper_plan_count = prefix_context_wrapper_lines(
+			wrapper_lines, wrapper_plan_count = state_monitor_wrapper_lines(
 				domain=domain,
 				index=index,
 				problem_file=problem_file,
@@ -377,7 +377,7 @@ def append_prefix_context_full_test_wrappers(
 				line_count += 1
 				if output.tell() > max_output_bytes:
 					raise ValueError(
-						"domain_long_asl_size_limit_exceeded: prefix-context full-test "
+						"domain_long_asl_size_limit_exceeded: full-test "
 						f"ASL for {domain!r} exceeded {max_output_bytes} bytes. "
 						"Run without --write-domain-long-asl to validate per-test "
 						"runtime ASL instead.",
@@ -386,7 +386,7 @@ def append_prefix_context_full_test_wrappers(
 			goal_count += 1
 	return {
 		"success": True,
-		"wrapper_mode": "prefix_context_temporal_wrapper_without_json_metadata",
+		"wrapper_mode": "query_local_dfa_state_monitor_without_json_metadata",
 		"query_count": goal_count,
 		"appended_plan_count": plan_count,
 		"line_count": line_count,
@@ -394,13 +394,13 @@ def append_prefix_context_full_test_wrappers(
 	}
 
 
-def prefix_context_wrapper_lines(
+def state_monitor_wrapper_lines(
 	*,
 	domain: str,
 	index: int,
 	problem_file: Path,
 ) -> tuple[tuple[str, ...], int]:
-	"""Return one test problem's old-shape prefix-context temporal wrapper."""
+	"""Return one test problem's query-local DFA-state temporal wrapper."""
 
 	problem = PDDLParser.parse_problem(problem_file)
 	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
@@ -413,26 +413,32 @@ def prefix_context_wrapper_lines(
 		raise ValueError(f"{problem_file} contains no positive goal literals.")
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
 	atoms = tuple(render_fact_atom(fact) for fact in goal_facts)
-	lines: list[str] = [f"/* full_test_problem={problem_file.name} */"]
+	lines: list[str] = [
+		f"/* full_test_problem={problem_file.name} */",
+		f"tg_state({goal_name}, s0).",
+		"",
+	]
 	for atom_index, atom in enumerate(atoms, start=1):
-		prefix = atoms[: atom_index - 1]
-		context_items = (*prefix, f"not {atom}")
-		context = " & ".join(context_items)
+		source_state = f"s{atom_index - 1}"
+		target_state = f"s{atom_index}"
 		lines.extend(
 			[
 				f"/* plan={goal_name}_progress_{atom_index} | source_instruction_ids=none */",
-				f"+!{goal_name} : {context} <-",
+				f"+!{goal_name} : tg_state({goal_name}, {source_state}) <-",
 				f"\t!{atom};",
+				f"\t-tg_state({goal_name}, {source_state});",
+				f"\t+tg_state({goal_name}, {target_state});",
 				f"\t!{goal_name}.",
 				"",
 			],
 		)
-	accept_context = " & ".join(atoms)
+	accepting_state = f"s{len(atoms)}"
 	lines.extend(
 		[
 			f"/* plan={goal_name}_accepting_1 | source_instruction_ids=none */",
-			f"+!{goal_name} : {accept_context} <-",
-			"\ttrue.",
+			f"+!{goal_name} : tg_state({goal_name}, {accepting_state}) <-",
+			f"\t-tg_state({goal_name}, {accepting_state});",
+			f"\t+tg_state({goal_name}, s0).",
 			"",
 		],
 	)
@@ -444,7 +450,7 @@ def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
 
 	runtime_asl = task.output_dir / "plan_library.asl"
 	base_text = task.base_plan_library_asl.read_text(encoding="utf-8").rstrip()
-	wrapper_lines, _ = prefix_context_wrapper_lines(
+	wrapper_lines, _ = state_monitor_wrapper_lines(
 		domain=task.domain,
 		index=task.index,
 		problem_file=task.problem_file,
@@ -537,7 +543,9 @@ def validate_one_task(
 			"status": payload.get("status"),
 			"timed_out": bool(payload.get("timed_out")),
 			"exit_code": payload.get("exit_code"),
-			"action_count": len(tuple(payload.get("action_path") or ())),
+			"action_count": int(
+				payload.get("action_count") or len(tuple(payload.get("action_path") or ())),
+			),
 			"output_dir": str(task.output_dir),
 			"runtime_plan_library_asl": str(runtime_asl),
 			"domain_full_plan_library_asl": str(task.plan_library_asl),

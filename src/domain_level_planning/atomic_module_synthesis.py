@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
+import clingo
+
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
@@ -21,7 +23,6 @@ from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLParser
 
 from .pddl_types import type_closure
-from .pddl_types import type_guard_symbol
 
 
 @dataclass(frozen=True)
@@ -56,10 +57,16 @@ class AtomicModuleSynthesisReport:
 	seed_predicates: tuple[str, ...]
 	module_predicates: tuple[str, ...]
 	plan_count: int
+	raw_candidate_count: int
 	branch_count_by_predicate: Mapping[str, int]
 	producer_actions_by_predicate: Mapping[str, tuple[str, ...]]
 	recursive_predicates: tuple[str, ...]
 	pruned_candidate_count: int
+	selector_backend: str
+	selector_objective: tuple[str, ...]
+	selector_optimization_cost: tuple[int, ...]
+	selector_obligation_count: int
+	selected_branch_ids: tuple[str, ...]
 	predicate_roles: tuple[Mapping[str, object], ...]
 	theoretical_basis: tuple[str, ...]
 
@@ -68,6 +75,7 @@ class AtomicModuleSynthesisReport:
 			"seed_predicates": list(self.seed_predicates),
 			"module_predicates": list(self.module_predicates),
 			"plan_count": self.plan_count,
+			"raw_candidate_count": self.raw_candidate_count,
 			"branch_count_by_predicate": dict(self.branch_count_by_predicate),
 			"producer_actions_by_predicate": {
 				predicate: list(actions)
@@ -75,9 +83,35 @@ class AtomicModuleSynthesisReport:
 			},
 			"recursive_predicates": list(self.recursive_predicates),
 			"pruned_candidate_count": self.pruned_candidate_count,
+			"selector_backend": self.selector_backend,
+			"selector_objective": list(self.selector_objective),
+			"selector_optimization_cost": list(self.selector_optimization_cost),
+			"selector_obligation_count": self.selector_obligation_count,
+			"selected_branch_ids": list(self.selected_branch_ids),
 			"predicate_roles": [dict(item) for item in self.predicate_roles],
 			"theoretical_basis": list(self.theoretical_basis),
 		}
+
+
+@dataclass(frozen=True)
+class _SelectedModulePlans:
+	"""Selected candidate branches plus solver metadata."""
+
+	plans: tuple[AgentSpeakPlan, ...]
+	report: "_ClingoBranchSelectorReport"
+
+
+@dataclass(frozen=True)
+class _ClingoBranchSelectorReport:
+	"""Evidence that candidate branch selection was solved by Clingo/ASP."""
+
+	backend: str
+	raw_candidate_count: int
+	selected_candidate_count: int
+	obligation_count: int
+	optimization_cost: tuple[int, ...]
+	selected_branch_ids: tuple[str, ...]
+	objective: tuple[str, ...]
 
 
 def synthesize_atomic_minimal_literal_module_library(
@@ -116,10 +150,12 @@ def synthesize_atomic_minimal_literal_module_library(
 		source_name=source_name,
 		policy_file=policy_file,
 	)
-	plans = _prune_subsumed_sibling_branches(raw_plans)
+	selection = _select_branches_with_clingo(raw_plans)
+	plans = selection.plans
 	report = _module_synthesis_report(
 		plans=plans,
 		raw_plan_count=len(raw_plans),
+		selection_report=selection.report,
 		seeds=seeds,
 		module_predicates=module_predicates,
 		actions=parsed_actions,
@@ -174,6 +210,13 @@ class _ParsedAction:
 		)
 
 
+def _predicate_parameter_types(domain: PDDLDomain) -> dict[str, tuple[str, ...]]:
+	return {
+		predicate.name: tuple(_parameter_type(parameter) for parameter in predicate.parameters)
+		for predicate in domain.predicates
+	}
+
+
 def _module_predicate_closure(
 	*,
 	seeds: Sequence[str],
@@ -217,6 +260,7 @@ def _candidate_module_plans(
 	policy_file: str | Path | None,
 ) -> tuple[AgentSpeakPlan, ...]:
 	module_set = set(module_predicates)
+	predicate_type_map = _predicate_parameter_types(domain)
 	plans: list[AgentSpeakPlan] = []
 	recursive_module_predicates = {
 		predicate
@@ -246,6 +290,7 @@ def _candidate_module_plans(
 		for sequence in _producer_action_sequences(
 			actions=actions,
 			type_tokens=domain.types,
+			predicate_type_map=predicate_type_map,
 			seed_predicates=set(seed_predicates),
 			target_predicate=predicate.name,
 			module_predicates=module_set,
@@ -256,6 +301,7 @@ def _candidate_module_plans(
 					sequence=sequence,
 					module_predicates=module_set,
 					recursive_module_predicates=recursive_module_predicates,
+					actions=actions,
 					source_backend=source_backend,
 					source_name=source_name,
 					policy_file=policy_file,
@@ -275,7 +321,6 @@ class _ProducerSequence:
 	target_predicate: str
 	target_arguments: tuple[str, ...]
 	context_literals: tuple[PDDLLiteralSchema, ...]
-	type_contexts: tuple[str, ...]
 	body_actions: tuple[_ActionCall, ...]
 	producer_action_names: tuple[str, ...]
 
@@ -292,6 +337,7 @@ def _producer_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
 	seed_predicates: set[str],
 	target_predicate: str,
 	module_predicates: set[str],
@@ -318,24 +364,24 @@ def _producer_action_sequences(
 			target_arguments=head_arguments,
 		):
 			continue
-		if not transient_preconditions:
-			sequence = _finalize_sequence(
-				actions=actions,
-				type_tokens=type_tokens,
-				functional_groups=functional_groups,
-				target_effect=mapped_effect,
-				target_arguments=head_arguments,
-				context_literals=tuple(
-					precondition.mapped(variable_map)
-					for precondition in final_action.preconditions
-				),
-				body_actions=(
-					_action_call(final_action, variable_map),
-				),
-				producer_action_names=(final_action.name,),
-			)
-			if sequence is not None:
-				sequences.append(sequence)
+		sequence = _finalize_sequence(
+			actions=actions,
+			type_tokens=type_tokens,
+			predicate_type_map=predicate_type_map,
+			functional_groups=functional_groups,
+			target_effect=mapped_effect,
+			target_arguments=head_arguments,
+			context_literals=tuple(
+				precondition.mapped(variable_map)
+				for precondition in final_action.preconditions
+			),
+			body_actions=(
+				_action_call(final_action, variable_map),
+			),
+			producer_action_names=(final_action.name,),
+		)
+		if sequence is not None:
+			sequences.append(sequence)
 		for transient in transient_preconditions:
 			for support_action, support_effect in _producer_effects(actions, transient.predicate):
 				support_map = {
@@ -375,6 +421,7 @@ def _producer_action_sequences(
 				sequence = _finalize_sequence(
 					actions=actions,
 					type_tokens=type_tokens,
+					predicate_type_map=predicate_type_map,
 					functional_groups=functional_groups,
 					target_effect=mapped_effect,
 					target_arguments=head_arguments,
@@ -387,6 +434,7 @@ def _producer_action_sequences(
 				for bridge in _bridge_action_sequences(
 					actions=actions,
 					type_tokens=type_tokens,
+					predicate_type_map=predicate_type_map,
 					support_action=support_action,
 					support_map=support_map,
 					final_action=final_action,
@@ -396,6 +444,7 @@ def _producer_action_sequences(
 					sequence = _finalize_sequence(
 						actions=actions,
 						type_tokens=type_tokens,
+						predicate_type_map=predicate_type_map,
 						functional_groups=functional_groups,
 						target_effect=mapped_effect,
 						target_arguments=head_arguments,
@@ -419,6 +468,7 @@ def _bridge_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
 	support_action: _ParsedAction,
 	support_map: Mapping[str, str],
 	final_action: _ParsedAction,
@@ -480,6 +530,13 @@ def _bridge_action_sequences(
 				_action_call(final_action, final_map),
 			)
 			if not _action_calls_have_compatible_types(body_actions, type_tokens):
+				continue
+			if not _action_type_bindings_are_observable(
+				body_actions=body_actions,
+				visible_literals=context_literals,
+				predicate_type_map=predicate_type_map,
+				type_tokens=type_tokens,
+			):
 				continue
 			candidates.append(
 				_BridgeCandidate(
@@ -594,6 +651,7 @@ def _finalize_sequence(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
 	functional_groups: Sequence[_FunctionalPredicateGroup],
 	target_effect: PDDLLiteralSchema,
 	target_arguments: tuple[str, ...],
@@ -606,6 +664,13 @@ def _finalize_sequence(
 	sequence_body = tuple(body_actions)
 	if not _action_calls_have_compatible_types(sequence_body, type_tokens):
 		return None
+	if not _action_type_bindings_are_observable(
+		body_actions=sequence_body,
+		visible_literals=(target_effect, *context_literals),
+		predicate_type_map=predicate_type_map,
+		type_tokens=type_tokens,
+	):
+		return None
 	cleanup_actions = _cleanup_action_calls(
 		actions=actions,
 		type_tokens=type_tokens,
@@ -616,6 +681,13 @@ def _finalize_sequence(
 	if cleanup_actions:
 		sequence_body += cleanup_actions
 		if not _action_calls_have_compatible_types(sequence_body, type_tokens):
+			return None
+		if not _action_type_bindings_are_observable(
+			body_actions=sequence_body,
+			visible_literals=(target_effect, *context_literals),
+			predicate_type_map=predicate_type_map,
+			type_tokens=type_tokens,
+		):
 			return None
 		producer_action_names += tuple(action.action.name for action in cleanup_actions)
 	type_contexts = _type_contexts_for_action_calls(sequence_body, type_tokens)
@@ -639,7 +711,6 @@ def _finalize_sequence(
 		target_predicate=target_effect.predicate,
 		target_arguments=target_arguments,
 		context_literals=deduplicated_contexts,
-		type_contexts=type_contexts,
 		body_actions=sequence_body,
 		producer_action_names=producer_action_names,
 	)
@@ -746,6 +817,53 @@ def _action_calls_have_compatible_types(
 	return _type_contexts_for_action_calls(body_actions, type_tokens) is not None
 
 
+def _action_type_bindings_are_observable(
+	*,
+	body_actions: Sequence[_ActionCall],
+	visible_literals: Sequence[PDDLLiteralSchema],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
+	type_tokens: Sequence[str],
+) -> bool:
+	action_types = _argument_required_types(body_actions)
+	visible_types = _visible_argument_types(
+		visible_literals=visible_literals,
+		predicate_type_map=predicate_type_map,
+	)
+	for argument, required_types in action_types.items():
+		observable_types = visible_types.get(argument, set())
+		if not observable_types:
+			continue
+		most_specific_required = _most_specific_compatible_types(required_types, type_tokens)
+		most_specific_observable = _most_specific_compatible_types(observable_types, type_tokens)
+		if most_specific_required is None or most_specific_observable is None:
+			return False
+		for required_type in most_specific_required:
+			if required_type == "object":
+				continue
+			if not any(
+				_is_subtype(observable_type, required_type, type_tokens)
+				for observable_type in most_specific_observable
+			):
+				return False
+	return True
+
+
+def _visible_argument_types(
+	*,
+	visible_literals: Sequence[PDDLLiteralSchema],
+	predicate_type_map: Mapping[str, tuple[str, ...]],
+) -> dict[str, set[str]]:
+	types_by_argument: dict[str, set[str]] = {}
+	for literal in visible_literals:
+		parameter_types = predicate_type_map.get(literal.predicate, ())
+		for argument, type_name in zip(literal.arguments, parameter_types):
+			canonical_type = _canonical_type_name(type_name)
+			if canonical_type == "object":
+				continue
+			types_by_argument.setdefault(argument, set()).add(canonical_type)
+	return types_by_argument
+
+
 def _type_contexts_for_action_calls(
 	body_actions: Sequence[_ActionCall],
 	type_tokens: Sequence[str],
@@ -765,7 +883,7 @@ def _type_contexts_for_action_calls(
 		for type_name in most_specific:
 			if type_name == "object":
 				continue
-			contexts.append(_call(type_guard_symbol(type_name), (argument,)))
+			contexts.append(f"{argument}:{type_name}")
 	return tuple(dict.fromkeys(contexts))
 
 
@@ -1039,18 +1157,63 @@ def _is_public_positive_precondition(
 	sequence: _ProducerSequence,
 	module_predicates: set[str],
 	recursive_module_predicates: set[str],
+	actions: Sequence[_ParsedAction],
 ) -> bool:
 	return (
 		literal.is_positive
 		and literal.predicate in module_predicates
-		and literal.predicate in recursive_module_predicates
 		and not _same_signature(
 			literal.predicate,
 			literal.arguments,
 			sequence.target_predicate,
 			sequence.target_arguments,
 		)
+		and _candidate_subgoal_has_progress_potential(
+			literal=literal,
+			sequence=sequence,
+			recursive_module_predicates=recursive_module_predicates,
+		)
+		and _can_use_precondition_as_subgoal(
+			target_predicate=sequence.target_predicate,
+			target_arguments=sequence.target_arguments,
+			precondition=literal,
+			actions=actions,
+		)
+		and not _is_extra_variable_relation_binding(
+			literal=literal,
+			head_arguments=sequence.target_arguments,
+		)
 	)
+
+
+def _is_extra_variable_relation_binding(
+	*,
+	literal: PDDLLiteralSchema,
+	head_arguments: Sequence[str],
+) -> bool:
+	"""Return whether a relation literal should bind context, not become a goal."""
+
+	return (
+		len(literal.arguments) > 1
+		and bool(set(literal.arguments) - set(head_arguments))
+	)
+
+
+def _candidate_subgoal_has_progress_potential(
+	*,
+	literal: PDDLLiteralSchema,
+	sequence: _ProducerSequence,
+	recursive_module_predicates: set[str],
+) -> bool:
+	"""Return whether a missing precondition can safely become a subgoal branch."""
+
+	if literal.predicate in recursive_module_predicates:
+		return True
+	return any(
+		call.action.name not in sequence.producer_action_names
+		and any(effect.predicate == literal.predicate for effect in call.action.add_effects)
+		for call in sequence.body_actions
+	) or literal.predicate != sequence.target_predicate
 
 
 def _shares_extra_variable(
@@ -1078,6 +1241,7 @@ def _sequence_module_plans(
 	sequence: _ProducerSequence,
 	module_predicates: set[str],
 	recursive_module_predicates: set[str],
+	actions: Sequence[_ParsedAction],
 	source_backend: str,
 	source_name: str,
 	policy_file: str | Path | None,
@@ -1098,6 +1262,7 @@ def _sequence_module_plans(
 			sequence=sequence,
 			module_predicates=module_predicates,
 			recursive_module_predicates=recursive_module_predicates,
+			actions=actions,
 		):
 			continue
 		plans.append(
@@ -1131,8 +1296,7 @@ def _final_action_sequence_plan(
 		),
 		context=tuple(
 			_deduplicate(
-				sequence.type_contexts
-				+ tuple(literal.to_context() for literal in sequence.context_literals),
+				tuple(literal.to_context() for literal in sequence.context_literals),
 			),
 		),
 		body=tuple(
@@ -1173,8 +1337,7 @@ def _prepare_precondition_plan(
 	)
 	context = tuple(
 		_deduplicate(
-			sequence.type_contexts
-			+ binding_contexts
+			binding_contexts
 			+ (f"not {precondition.to_call()}",),
 		),
 	)
@@ -1208,6 +1371,145 @@ def _prepare_precondition_plan(
 			},
 		),
 	)
+
+
+def _select_branches_with_clingo(
+	plans: Sequence[AgentSpeakPlan],
+) -> _SelectedModulePlans:
+	"""Select a minimum branch set that covers all generated branch evidence."""
+
+	raw_plans = tuple(plans)
+	if not raw_plans:
+		raise ValueError("No candidate branches were generated for Clingo selection.")
+	branch_ids = tuple(f"b{index}" for index, _ in enumerate(raw_plans))
+	coverage_pairs = tuple(
+		(selected_index, obligation_index)
+		for selected_index, selected_plan in enumerate(raw_plans)
+		for obligation_index, obligation_plan in enumerate(raw_plans)
+		if _candidate_branch_covers_evidence(selected_plan, obligation_plan)
+	)
+	if not coverage_pairs:
+		raise ValueError("Clingo branch selector received no candidate coverage facts.")
+	program = _clingo_selector_program(
+		plans=raw_plans,
+		branch_ids=branch_ids,
+		coverage_pairs=coverage_pairs,
+	)
+	control = clingo.Control(["--warn=none"])
+	control.add("base", [], program)
+	control.ground([("base", [])])
+	model_symbols: tuple[clingo.Symbol, ...] = ()
+	optimization_cost: tuple[int, ...] = ()
+
+	def _capture_model(model: clingo.Model) -> None:
+		nonlocal model_symbols, optimization_cost
+		model_symbols = tuple(model.symbols(shown=True))
+		optimization_cost = tuple(int(item) for item in model.cost)
+
+	result = control.solve(on_model=_capture_model)
+	if not result.satisfiable:
+		raise RuntimeError("Clingo branch selector could not satisfy coverage obligations.")
+	selected_ids = tuple(
+		str(symbol.arguments[0])
+		for symbol in model_symbols
+		if symbol.name == "selected" and len(symbol.arguments) == 1
+	)
+	if not selected_ids:
+		raise RuntimeError("Clingo branch selector returned an empty selected branch set.")
+	selected_index_by_id = {branch_id: index for index, branch_id in enumerate(branch_ids)}
+	selected_indexes = tuple(
+		sorted(selected_index_by_id[branch_id] for branch_id in selected_ids)
+	)
+	selected_branch_ids = tuple(branch_ids[index] for index in selected_indexes)
+	return _SelectedModulePlans(
+		plans=tuple(raw_plans[index] for index in selected_indexes),
+		report=_ClingoBranchSelectorReport(
+			backend="clingo_asp_minimize",
+			raw_candidate_count=len(raw_plans),
+			selected_candidate_count=len(selected_indexes),
+			obligation_count=len(raw_plans),
+			optimization_cost=optimization_cost,
+			selected_branch_ids=selected_branch_ids,
+			objective=(
+				"minimize selected branch count",
+				"then minimize selected context literal count",
+				"then minimize selected body step count",
+			),
+		),
+	)
+
+
+def _clingo_selector_program(
+	*,
+	plans: Sequence[AgentSpeakPlan],
+	branch_ids: Sequence[str],
+	coverage_pairs: Sequence[tuple[int, int]],
+) -> str:
+	lines: list[str] = [
+		"{ selected(Branch) } :- branch(Branch).",
+		"covered(Obligation) :- selected(Branch), covers(Branch, Obligation).",
+		":- obligation(Obligation), not covered(Obligation).",
+		"#minimize { 1@3,Branch : selected(Branch) }.",
+		"#minimize { Cost@2,Branch : selected(Branch), context_cost(Branch, Cost) }.",
+		"#minimize { Cost@1,Branch : selected(Branch), body_cost(Branch, Cost) }.",
+		"#show selected/1.",
+	]
+	for index, plan in enumerate(plans):
+		branch_id = branch_ids[index]
+		lines.extend(
+			(
+				f"branch({branch_id}).",
+				f"obligation({branch_id}).",
+				f"context_cost({branch_id}, {len(plan.context)}).",
+				f"body_cost({branch_id}, {len(plan.body)}).",
+			),
+		)
+	for selected_index, obligation_index in coverage_pairs:
+		lines.append(
+			f"covers({branch_ids[selected_index]}, {branch_ids[obligation_index]}).",
+		)
+	return "\n".join(lines)
+
+
+def _candidate_branch_covers_evidence(
+	candidate: AgentSpeakPlan,
+	evidence: AgentSpeakPlan,
+) -> bool:
+	if candidate.trigger.symbol != evidence.trigger.symbol:
+		return False
+	if len(candidate.trigger.arguments) != len(evidence.trigger.arguments):
+		return False
+	if not set(candidate.context) <= set(evidence.context):
+		return False
+	if _same_body(candidate.body, evidence.body):
+		return True
+	return _candidate_recursive_body_covers(candidate.body, evidence.body)
+
+
+def _same_body(
+	left: Sequence[AgentSpeakBodyStep],
+	right: Sequence[AgentSpeakBodyStep],
+) -> bool:
+	return tuple(_body_step_key(step) for step in left) == tuple(
+		_body_step_key(step) for step in right
+	)
+
+
+def _candidate_recursive_body_covers(
+	candidate_body: Sequence[AgentSpeakBodyStep],
+	evidence_body: Sequence[AgentSpeakBodyStep],
+) -> bool:
+	if not candidate_body or not evidence_body:
+		return False
+	if _body_step_key(candidate_body[-1]) != _body_step_key(evidence_body[-1]):
+		return False
+	candidate_prefix = {_body_step_key(step) for step in candidate_body[:-1]}
+	evidence_prefix = {_body_step_key(step) for step in evidence_body[:-1]}
+	return candidate_prefix <= evidence_prefix
+
+
+def _body_step_key(step: AgentSpeakBodyStep) -> tuple[str, str, tuple[str, ...]]:
+	return (step.kind, step.symbol, tuple(step.arguments))
 
 
 def _producer_effects(
@@ -1260,67 +1562,11 @@ def _can_use_precondition_as_subgoal(
 	return circular_producers < len(producers)
 
 
-def _prune_subsumed_sibling_branches(
-	plans: Sequence[AgentSpeakPlan],
-) -> tuple[AgentSpeakPlan, ...]:
-	kept: list[AgentSpeakPlan] = []
-	for plan in tuple(plans):
-		if _is_subsumed_by_existing(plan, kept):
-			continue
-		kept = [
-			existing
-			for existing in kept
-			if not _plan_subsumes(plan, existing)
-		]
-		kept.append(plan)
-	return tuple(kept)
-
-
-def _is_subsumed_by_existing(plan: AgentSpeakPlan, existing_plans: Sequence[AgentSpeakPlan]) -> bool:
-	return any(_plan_subsumes(existing, plan) for existing in existing_plans)
-
-
-def _plan_subsumes(candidate: AgentSpeakPlan, other: AgentSpeakPlan) -> bool:
-	if candidate.trigger.symbol != other.trigger.symbol:
-		return False
-	if len(candidate.trigger.arguments) != len(other.trigger.arguments):
-		return False
-	if not candidate.body or not other.body:
-		return False
-	if tuple(candidate.body) == tuple(other.body):
-		return set(candidate.context) <= set(other.context)
-	if (
-		all(step.kind == "action" for step in candidate.body)
-		and all(step.kind == "action" for step in other.body)
-		and len(candidate.body) <= len(other.body)
-	):
-		return set(candidate.context) <= set(other.context)
-	if candidate.body[-1].kind != "action" or other.body[-1].kind != "action":
-		return False
-	if (
-		candidate.body[-1].symbol != other.body[-1].symbol
-		or candidate.body[-1].arguments != other.body[-1].arguments
-	):
-		return False
-	candidate_context = set(candidate.context)
-	other_context = set(other.context)
-	candidate_subgoals = {
-		(step.symbol, step.arguments)
-		for step in candidate.body[:-1]
-		if step.kind == "subgoal"
-	}
-	other_subgoals = {
-		(step.symbol, step.arguments)
-		for step in other.body[:-1]
-		if step.kind == "subgoal"
-	}
-	return candidate_context <= other_context and candidate_subgoals <= other_subgoals
-
-
 def _module_synthesis_report(
 	*,
 	plans: Sequence[AgentSpeakPlan],
 	raw_plan_count: int,
+	selection_report: _ClingoBranchSelectorReport,
 	seeds: Sequence[str],
 	module_predicates: Sequence[str],
 	actions: Sequence[_ParsedAction],
@@ -1339,10 +1585,16 @@ def _module_synthesis_report(
 		seed_predicates=tuple(seeds),
 		module_predicates=tuple(module_predicates),
 		plan_count=len(tuple(plans)),
+		raw_candidate_count=raw_plan_count,
 		branch_count_by_predicate=branch_counts,
 		producer_actions_by_predicate=producers,
 		recursive_predicates=tuple(sorted(recursive_predicates)),
 		pruned_candidate_count=max(0, raw_plan_count - len(tuple(plans))),
+		selector_backend=selection_report.backend,
+		selector_objective=selection_report.objective,
+		selector_optimization_cost=selection_report.optimization_cost,
+		selector_obligation_count=selection_report.obligation_count,
+		selected_branch_ids=selection_report.selected_branch_ids,
 		predicate_roles=_predicate_role_report(
 			plans=plans,
 			module_predicates=module_predicates,
@@ -1352,7 +1604,8 @@ def _module_synthesis_report(
 			"MOOSE singleton-goal regression supplies lifted target-predicate evidence",
 			"PDDL action schemas supply primitive producer/precondition structure",
 			"policy-reuse style predicate modules allow subgoal calls between atomic literals",
-			"minimal sibling branches are selected by schema subsumption over contexts and subgoals",
+			"PDDL typing is used internally to reject unobservable subtype role bindings",
+			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",
 		),
 	)
 

@@ -100,20 +100,28 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		"g_query_1_accepting_1",
 	]
 	assert updated.plans[1].trigger.symbol == "g_query_1"
-	assert updated.plans[1].context == ("not done(X)",)
+	assert updated.plans[1].context == ("tg_state(g_query_1, q0)",)
 	assert updated.plans[1].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
+		AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q0")),
+		AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q1")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
-	assert updated.plans[2].context == ("done(X)", "not ready(Y)")
+	assert updated.plans[2].context == ("tg_state(g_query_1, q1)",)
 	assert updated.plans[2].body == (
 		AgentSpeakBodyStep("subgoal", "ready", ("Y",)),
+		AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q1")),
+		AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q2")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
-	assert updated.plans[3].context == ("done(X)", "ready(Y)")
-	assert updated.initial_beliefs == ()
+	assert updated.plans[3].context == ("tg_state(g_query_1, q2)",)
+	assert updated.plans[3].body == (
+		AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q2")),
+		AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q0")),
+	)
+	assert updated.initial_beliefs == ("tg_state(g_query_1, q0)",)
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
-	assert updated.metadata["temporal_goal_append"]["wrapper_mode"] == "context_driven_prefix"
+	assert updated.metadata["temporal_goal_append"]["wrapper_mode"] == "query_local_dfa_state_monitor"
 	assert [
 		diagnostic["request"]["achievement_subgoals"][0]["symbol"]
 		for diagnostic in updated.metadata["temporal_goal_append"]["progress_request_diagnostics"]
@@ -159,7 +167,10 @@ def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -
 		record["goal_name"]
 		for record in after_second.metadata["temporal_goal_append_history"]
 	] == ["g_query_1", "g_query_2"]
-	assert after_second.initial_beliefs == ()
+	assert after_second.initial_beliefs == (
+		"tg_state(g_query_1, q0)",
+		"tg_state(g_query_2, q0)",
+	)
 
 
 def test_append_temporal_goal_rejects_duplicate_goal_name(tmp_path: Path) -> None:
@@ -216,7 +227,61 @@ def test_append_temporal_goal_allows_negative_waiting_self_loop(
 	]
 	assert updated.plans[0].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
+		AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q0")),
+		AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q1")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
+	)
+
+
+def test_append_temporal_goal_covers_every_progress_state_to_final(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_branching_domain(tmp_path)
+	library = PlanLibrary(domain_name="branching", plans=())
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q3"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "a"},
+			{"source_state": "q0", "target_state": "q2", "raw_label": "b"},
+			{"source_state": "q1", "target_state": "q3", "raw_label": "c"},
+			{"source_state": "q2", "target_state": "q3", "raw_label": "d"},
+			{"source_state": "q3", "target_state": "q3", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+
+	progress_plans = [
+		plan
+		for plan in updated.plans
+		if plan.plan_name.startswith("g_query_1_progress")
+	]
+	coverage = updated.metadata["temporal_goal_append"]["progress_state_coverage"]
+
+	assert len(progress_plans) == 4
+	assert coverage["valid"] is True
+	assert coverage["required_states"] == ["q0", "q1", "q2"]
+	assert coverage["covered_states"] == ["q0", "q1", "q2"]
+	assert coverage["uncovered_states"] == []
+	assert coverage["progress_transition_count_by_state"] == {
+		"q0": 2,
+		"q1": 1,
+		"q2": 1,
+	}
+	assert coverage["plan_count_by_state"] == {
+		"q0": 2,
+		"q1": 1,
+		"q2": 1,
+	}
+	assert all(
+		plan.body[-1] == AgentSpeakBodyStep("subgoal", "g_query_1", ())
+		for plan in progress_plans
 	)
 
 
@@ -293,9 +358,11 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 
 	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "on(X, Y)"
 	assert dfa_payload["guarded_transitions"][0]["original_raw_label"] == "on_x_y"
-	assert updated.plans[0].context == ("not on(X, Y)",)
+	assert updated.plans[0].context == ("tg_state(g_query_1, q0)",)
 	assert updated.plans[0].body == (
 		AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+		AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q0")),
+		AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q1")),
 		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
 	assert (
@@ -333,6 +400,20 @@ def _write_blocks_domain(tmp_path: Path) -> Path:
 		 (:requirements :strips :typing)
 		 (:types block)
 		 (:predicates (on ?x - block ?y - block) (clear ?x - block))
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file
+
+
+def _write_branching_domain(tmp_path: Path) -> Path:
+	domain_file = tmp_path / "branching-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain branching)
+		 (:requirements :strips)
+		 (:predicates (a) (b) (c) (d))
 		)
 		""",
 		encoding="utf-8",
