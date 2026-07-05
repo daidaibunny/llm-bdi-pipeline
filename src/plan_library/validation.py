@@ -10,7 +10,8 @@ from typing import Dict, List, Tuple
 from .models import LibraryValidationRecord, PlanGenerationSummary, PlanLibrary
 
 
-_TEMPORAL_STATE_PREDICATE = "tg_state"
+_DISALLOWED_CONTROLLER_STATE_PREFIXES = ("dfa_state(", "tg_state(")
+_DISALLOWED_CONTROLLER_STATE_STEPS = {"dfa_state", "tg_state"}
 
 
 @dataclass(frozen=True)
@@ -67,12 +68,12 @@ def validate_plan_library_structure(
 	if not unique_plan_names:
 		warnings.append("Generated plan names are not unique.")
 
-	has_no_dfa_state_beliefs = not any(
-		str(belief or "").strip().startswith("dfa_state(")
+	has_no_controller_state_beliefs = not any(
+		str(belief or "").strip().startswith(_DISALLOWED_CONTROLLER_STATE_PREFIXES)
 		for belief in tuple(plan_library.initial_beliefs or ())
 	)
-	if not has_no_dfa_state_beliefs:
-		warnings.append("Context-driven libraries must not expose dfa_state beliefs.")
+	if not has_no_controller_state_beliefs:
+		warnings.append("Current ASL libraries must not expose dfa_state or tg_state beliefs.")
 
 	plan_heads_valid = all(
 		str(plan.trigger.event_type or "").strip() == "achievement_goal"
@@ -85,18 +86,23 @@ def validate_plan_library_structure(
 		)
 
 	contexts_valid = all(
-		not any(str(literal or "").strip().startswith("dfa_state(") for literal in plan.context)
+		not any(
+			str(literal or "").strip().startswith(_DISALLOWED_CONTROLLER_STATE_PREFIXES)
+			for literal in plan.context
+		)
 		for plan in plans
 	)
 	if not contexts_valid:
-		warnings.append("Plan contexts must be generated from transition literals, not dfa_state.")
+		warnings.append("Plan contexts must not depend on dfa_state or tg_state controller beliefs.")
 
 	body_valid = True
 	for plan in plans:
 		body = tuple(plan.body or ())
-		if any(step.symbol == "dfa_state" for step in body):
+		if any(step.symbol in _DISALLOWED_CONTROLLER_STATE_STEPS for step in body):
 			body_valid = False
-			warnings.append(f"Transition plan '{plan.plan_name}' still manipulates DFA state beliefs.")
+			warnings.append(
+				f"Transition plan '{plan.plan_name}' still manipulates controller state beliefs."
+			)
 		if _is_query_wrapper_symbol(plan.trigger.symbol) and body:
 			last_step = body[-1]
 			is_recursive_progress_plan = (
@@ -104,20 +110,21 @@ def validate_plan_library_structure(
 				and last_step.symbol == plan.trigger.symbol
 				and not tuple(last_step.arguments or ())
 			)
-			is_temporal_monitor_reset = all(_is_temporal_monitor_step(step) for step in body)
-			if not is_recursive_progress_plan and not is_temporal_monitor_reset:
+			is_linear_single_body_plan = _is_linear_single_body_plan(plan)
+			if not is_recursive_progress_plan and not is_linear_single_body_plan:
 				body_valid = False
 				warnings.append(
 					(
 						f"Temporal wrapper plan '{plan.plan_name}' does not recurse "
-						f"to `!{plan.trigger.symbol}` or update query-local tg_state."
+						f"to `!{plan.trigger.symbol}` or compile a certified "
+						"linear single-body sequence."
 					),
 				)
 
 	return PlanLibraryStructuralValidation(
 		checked_layers={
 			"unique_plan_names": unique_plan_names,
-			"no_dfa_state_beliefs": has_no_dfa_state_beliefs,
+			"no_controller_state_beliefs": has_no_controller_state_beliefs,
 			"plan_heads": plan_heads_valid,
 			"transition_contexts": contexts_valid,
 			"context_driven_bodies": body_valid,
@@ -138,10 +145,16 @@ def _is_query_wrapper_symbol(symbol: str) -> bool:
 	return text.startswith("g_") and len(text) > 2
 
 
-def _is_temporal_monitor_step(step) -> bool:
-	return (
-		step.kind in {"belief_addition", "belief_deletion"}
-		and step.symbol == _TEMPORAL_STATE_PREDICATE
-		and len(tuple(step.arguments or ())) == 2
-		and _is_query_wrapper_symbol(tuple(step.arguments or ())[0])
-	)
+def _is_linear_single_body_plan(plan) -> bool:
+	if not tuple(plan.body or ()):
+		return False
+	if not all(step.kind == "subgoal" for step in tuple(plan.body or ())):
+		return False
+	for certificate in tuple(plan.binding_certificate or ()):
+		if (
+			isinstance(certificate, dict)
+			and certificate.get("artifact_family") == "temporal_goal_dfa_append"
+			and certificate.get("wrapper_mode") == "linear_single_body"
+		):
+			return True
+	return False

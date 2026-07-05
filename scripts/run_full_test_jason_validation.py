@@ -306,7 +306,7 @@ def prepare_domain_for_full_test(
 		base_plan_library_asl = domain_output / "atomic_plan_library.asl"
 		shutil.copyfile(plan_library_asl, base_plan_library_asl)
 		if write_domain_long_asl:
-			append_record = append_state_monitor_full_test_wrappers(
+			append_record = append_linear_single_body_full_test_wrappers(
 				domain=domain,
 				plan_library_asl=plan_library_asl,
 				problem_files=test_instances,
@@ -315,7 +315,7 @@ def prepare_domain_for_full_test(
 		else:
 			append_record = {
 				"success": True,
-				"wrapper_mode": "per_test_query_local_dfa_state_monitor_without_json_metadata",
+				"wrapper_mode": "per_test_linear_single_body_without_json_metadata",
 				"query_count": len(test_instances),
 				"appended_plan_count": None,
 				"domain_long_asl_written": False,
@@ -383,14 +383,14 @@ def build_compile_atomic_library_command(
 	return tuple(command)
 
 
-def append_state_monitor_full_test_wrappers(
+def append_linear_single_body_full_test_wrappers(
 	*,
 	domain: str,
 	plan_library_asl: Path,
 	problem_files: Sequence[Path],
 	max_output_bytes: int,
 ) -> dict[str, Any]:
-	"""Append the same query-local DFA-state wrappers as the temporal appender.
+	"""Append one sequential ASL query body per test problem.
 
 	This validation runner intentionally writes only ASL. It avoids the canonical
 	``plan_library.json`` temporal metadata because full-test batches can contain
@@ -404,12 +404,12 @@ def append_state_monitor_full_test_wrappers(
 	with plan_library_asl.open("w", encoding="utf-8") as output:
 		output.write(base_text)
 		output.write(
-			"\n\n/* Full-test query-local DFA-state temporal wrappers.\n"
-			"   These wrappers keep the same ASL shape as the temporal goal appender,\n"
-			"   but skip JSON DFA metadata because Jason only needs the ASL file. */\n\n",
+			"\n\n/* Full-test linear single-body query wrappers.\n"
+			"   These wrappers call the positive PDDL goal literals in parser order\n"
+			"   and skip JSON DFA metadata because Jason only needs the ASL file. */\n\n",
 		)
 		for index, problem_file in enumerate(problem_files, start=1):
-			wrapper_lines, wrapper_plan_count = state_monitor_wrapper_lines(
+			wrapper_lines, wrapper_plan_count = linear_single_body_wrapper_lines(
 				domain=domain,
 				index=index,
 				problem_file=problem_file,
@@ -429,7 +429,7 @@ def append_state_monitor_full_test_wrappers(
 			goal_count += 1
 	return {
 		"success": True,
-		"wrapper_mode": "query_local_dfa_state_monitor_without_json_metadata",
+		"wrapper_mode": "linear_single_body_without_json_metadata",
 		"query_count": goal_count,
 		"appended_plan_count": plan_count,
 		"line_count": line_count,
@@ -437,13 +437,13 @@ def append_state_monitor_full_test_wrappers(
 	}
 
 
-def state_monitor_wrapper_lines(
+def linear_single_body_wrapper_lines(
 	*,
 	domain: str,
 	index: int,
 	problem_file: Path,
 ) -> tuple[tuple[str, ...], int]:
-	"""Return one test problem's query-local DFA-state temporal wrapper."""
+	"""Return one test problem's linear single-body query wrapper."""
 
 	problem = PDDLParser.parse_problem(problem_file)
 	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
@@ -458,34 +458,18 @@ def state_monitor_wrapper_lines(
 	atoms = tuple(render_fact_atom(fact) for fact in goal_facts)
 	lines: list[str] = [
 		f"/* full_test_problem={problem_file.name} */",
-		f"tg_state({goal_name}, s0).",
-		"",
+		f"/* plan={goal_name}_linear_sequence | source_instruction_ids=none */",
+		f"+!{goal_name} : true <-",
 	]
 	for atom_index, atom in enumerate(atoms, start=1):
-		source_state = f"s{atom_index - 1}"
-		target_state = f"s{atom_index}"
-		lines.extend(
-			[
-				f"/* plan={goal_name}_progress_{atom_index} | source_instruction_ids=none */",
-				f"+!{goal_name} : tg_state({goal_name}, {source_state}) <-",
-				f"\t!{atom};",
-				f"\t-tg_state({goal_name}, {source_state});",
-				f"\t+tg_state({goal_name}, {target_state});",
-				f"\t!{goal_name}.",
-				"",
-			],
-		)
-	accepting_state = f"s{len(atoms)}"
+		suffix = ";" if atom_index < len(atoms) else "."
+		lines.append(f"\t!{atom}{suffix}")
 	lines.extend(
 		[
-			f"/* plan={goal_name}_accepting_1 | source_instruction_ids=none */",
-			f"+!{goal_name} : tg_state({goal_name}, {accepting_state}) <-",
-			f"\t-tg_state({goal_name}, {accepting_state});",
-			f"\t+tg_state({goal_name}, s0).",
 			"",
 		],
 	)
-	return tuple(lines), len(atoms) + 1
+	return tuple(lines), 1
 
 
 def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
@@ -493,7 +477,7 @@ def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
 
 	runtime_asl = task.output_dir / "plan_library.asl"
 	base_text = task.base_plan_library_asl.read_text(encoding="utf-8").rstrip()
-	wrapper_lines, _ = state_monitor_wrapper_lines(
+	wrapper_lines, _ = linear_single_body_wrapper_lines(
 		domain=task.domain,
 		index=task.index,
 		problem_file=task.problem_file,
