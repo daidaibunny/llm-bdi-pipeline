@@ -26,8 +26,7 @@ from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 
 
-_TEMPORAL_STATE_PREDICATE = "tg_state"
-_TEMPORAL_WRAPPER_MODE = "query_local_dfa_state_monitor"
+_LINEAR_SINGLE_BODY_WRAPPER_MODE = "linear_single_body"
 
 
 @dataclass(frozen=True)
@@ -211,7 +210,6 @@ def append_temporal_goal_to_library(
 		"goal_name": goal_name,
 		"dfa_initial_state": dfa_payload.get("initial_state"),
 		"dfa_accepting_states": list(dfa_payload.get("accepting_states") or ()),
-		"wrapper_mode": _TEMPORAL_WRAPPER_MODE,
 		"progress_request_diagnostics": _progress_request_diagnostics(
 			dfa_payload=dfa_payload,
 			domain_key=domain.name,
@@ -220,38 +218,36 @@ def append_temporal_goal_to_library(
 		),
 	}
 	plans = list(plan_library.plans)
-	progress_plans = _temporal_progress_plans(
-		goal_name=goal_name,
+	linear_sequence = _linear_progress_sequence(
 		dfa_payload=dfa_payload,
 		declared_arities=declared_arities,
 	)
-	append_record["progress_plan_count"] = len(progress_plans)
-	progress_state_coverage = _progress_state_coverage(
-		goal_name=goal_name,
-		dfa_payload=dfa_payload,
-		progress_plans=progress_plans,
-	)
-	append_record["progress_state_coverage"] = progress_state_coverage
-	if not progress_state_coverage["valid"]:
+	if linear_sequence is None:
 		raise ValueError(
-			"dfa_progress_state_coverage_error: every DFA state with an "
-			"acceptance-progress transition must have at least one generated "
-			f"ASL goal plan. Uncovered states: {progress_state_coverage['uncovered_states']}",
+			"nonlinear_temporal_goal_not_supported: current ASL append emits a "
+			"single sequential goal body and therefore supports only one positive "
+			"singleton-literal progress path from the initial DFA state to an "
+			"accepting state. Branching or state-dependent temporal goals require "
+			"an external DFA/reward-machine controller."
 		)
-	plans.extend(progress_plans)
-	accepting_plans = _temporal_accepting_plans(
-		goal_name=goal_name,
-		dfa_payload=dfa_payload,
+	progress_plans = (
+		_linear_single_body_plan(
+			goal_name=goal_name,
+			sequence=linear_sequence,
+		),
 	)
-	plans.extend(accepting_plans)
+	append_record["wrapper_mode"] = _LINEAR_SINGLE_BODY_WRAPPER_MODE
+	append_record["progress_plan_count"] = len(progress_plans)
+	append_record["accepting_plan_count"] = 0
+	append_record["progress_state_coverage"] = _linear_progress_state_coverage(
+		sequence=linear_sequence,
+	)
+	plans.extend(progress_plans)
+	initial_beliefs = tuple(plan_library.initial_beliefs or ())
 	return PlanLibrary(
 		domain_name=plan_library.domain_name,
 		plans=tuple(plans),
-		initial_beliefs=_initial_beliefs_with_temporal_state(
-			plan_library=plan_library,
-			goal_name=goal_name,
-			dfa_payload=dfa_payload,
-		),
+		initial_beliefs=initial_beliefs,
 		metadata={
 			**dict(plan_library.metadata or {}),
 			"temporal_goal_append": append_record,
@@ -470,205 +466,115 @@ def _symbol_for(predicate: str, args: Sequence[str]) -> str:
 	return "_".join(str(item).strip() for item in items if str(item).strip())
 
 
-def _temporal_progress_plans(
+def _linear_progress_sequence(
 	*,
-	goal_name: str,
 	dfa_payload: Mapping[str, Any],
 	declared_arities: Mapping[str, int],
-) -> tuple[AgentSpeakPlan, ...]:
+) -> tuple[tuple[DFALiteral, Mapping[str, str]], ...] | None:
+	"""Return the single accepting-progress path if the DFA is linear."""
+
 	progress_transitions = _all_progress_transitions(dfa_payload)
-	plans: list[AgentSpeakPlan] = []
+	if not progress_transitions:
+		return None
+	initial_state = _required_initial_state(dfa_payload)
+	accepting_states = frozenset(
+		str(state).strip()
+		for state in tuple(dfa_payload.get("accepting_states") or ())
+		if str(state).strip()
+	)
+	if not accepting_states:
+		return None
+	transitions_by_source: dict[str, list[dict[str, str]]] = {}
 	for transition in progress_transitions:
+		transitions_by_source.setdefault(transition["source_state"], []).append(transition)
+	current_state = initial_state
+	visited: set[str] = set()
+	sequence: list[tuple[DFALiteral, Mapping[str, str]]] = []
+	while current_state not in accepting_states:
+		if current_state in visited:
+			return None
+		visited.add(current_state)
+		outgoing = transitions_by_source.get(current_state) or []
+		if len(outgoing) != 1:
+			return None
+		transition = outgoing[0]
 		literal = _required_progress_literal(transition["raw_label"])
 		_validate_declared_literal(literal, declared_arities=declared_arities)
-		if literal.polarity == "negative":
+		if literal.polarity != "positive":
 			raise ValueError(
 				"negative_literal_template_not_supported: Cannot compile negative "
 				"DFA progress literal into an atomic achievement subgoal yet: "
 				f"{transition['raw_label']!r}."
 			)
-		source_state = _required_state_label(transition["source_state"], role="source_state")
-		target_state = _required_state_label(transition["target_state"], role="target_state")
-		plan_index = len(plans) + 1
-		context = (_temporal_state_atom(goal_name, source_state),)
-		plans.append(
-			AgentSpeakPlan(
-				plan_name=f"{goal_name}_progress_{plan_index}",
-				trigger=AgentSpeakTrigger(
-					event_type="achievement_goal",
-					symbol=goal_name,
-					arguments=(),
-				),
-				context=context,
-				body=(
-					AgentSpeakBodyStep("subgoal", literal.predicate, literal.arguments),
-					AgentSpeakBodyStep(
-						"belief_deletion",
-						_TEMPORAL_STATE_PREDICATE,
-						(goal_name, source_state),
-					),
-					AgentSpeakBodyStep(
-						"belief_addition",
-						_TEMPORAL_STATE_PREDICATE,
-						(goal_name, target_state),
-					),
-					AgentSpeakBodyStep("subgoal", goal_name, ()),
-				),
-				binding_certificate=(
-					{
-						"artifact_family": "temporal_goal_dfa_append",
-						"wrapper_mode": _TEMPORAL_WRAPPER_MODE,
-						"source_state": source_state,
-						"target_state": target_state,
-						"raw_label": transition["raw_label"],
-						"context": list(context),
-						"state_belief": context[0],
-					},
-				),
-			),
-		)
-	return tuple(plans)
+		sequence.append((literal, transition))
+		current_state = transition["target_state"]
+	if len(sequence) != len(progress_transitions):
+		return None
+	return tuple(sequence)
 
 
-def _temporal_accepting_plans(
+def _linear_single_body_plan(
 	*,
 	goal_name: str,
-	dfa_payload: Mapping[str, Any],
-) -> tuple[AgentSpeakPlan, ...]:
-	initial_state = _required_initial_state(dfa_payload)
-	accepting_states = tuple(
-		str(state).strip()
-		for state in tuple(dfa_payload.get("accepting_states") or ())
-		if str(state).strip()
+	sequence: Sequence[tuple[DFALiteral, Mapping[str, str]]],
+) -> AgentSpeakPlan:
+	"""Compile a linear positive DFA path into one sequential ASL goal body."""
+
+	body = tuple(
+		AgentSpeakBodyStep("subgoal", literal.predicate, literal.arguments)
+		for literal, _transition in tuple(sequence)
 	)
-	plans: list[AgentSpeakPlan] = []
-	for state in accepting_states:
-		accepting_state = _required_state_label(state, role="accepting_state")
-		context = (_temporal_state_atom(goal_name, accepting_state),)
-		plans.append(
-			AgentSpeakPlan(
-				plan_name=f"{goal_name}_accepting_{len(plans) + 1}",
-				trigger=AgentSpeakTrigger(
-					event_type="achievement_goal",
-					symbol=goal_name,
-					arguments=(),
-				),
-				context=context,
-				body=(
-					AgentSpeakBodyStep(
-						"belief_deletion",
-						_TEMPORAL_STATE_PREDICATE,
-						(goal_name, accepting_state),
-					),
-					AgentSpeakBodyStep(
-						"belief_addition",
-						_TEMPORAL_STATE_PREDICATE,
-						(goal_name, initial_state),
-					),
-				),
-				binding_certificate=(
-					{
-						"artifact_family": "temporal_goal_dfa_append",
-						"wrapper_mode": _TEMPORAL_WRAPPER_MODE,
-						"role": "accepting_state",
-						"accepting_state": accepting_state,
-						"reset_state": initial_state,
-						"context": list(context),
-					},
-				),
-			),
-		)
-	return tuple(plans)
+	return AgentSpeakPlan(
+		plan_name=f"{goal_name}_linear_sequence",
+		trigger=AgentSpeakTrigger(
+			event_type="achievement_goal",
+			symbol=goal_name,
+			arguments=(),
+		),
+		context=(),
+		body=body,
+		binding_certificate=(
+			{
+				"artifact_family": "temporal_goal_dfa_append",
+				"wrapper_mode": _LINEAR_SINGLE_BODY_WRAPPER_MODE,
+				"source_states": [
+					str(transition.get("source_state") or "")
+					for _literal, transition in tuple(sequence)
+				],
+				"target_states": [
+					str(transition.get("target_state") or "")
+					for _literal, transition in tuple(sequence)
+				],
+				"raw_labels": [
+					str(transition.get("raw_label") or "")
+					for _literal, transition in tuple(sequence)
+				],
+			},
+		),
+	)
 
 
-def _progress_state_coverage(
+def _linear_progress_state_coverage(
 	*,
-	goal_name: str,
-	dfa_payload: Mapping[str, Any],
-	progress_plans: Sequence[AgentSpeakPlan],
+	sequence: Sequence[tuple[DFALiteral, Mapping[str, str]]],
 ) -> dict[str, object]:
-	"""Report whether every accepting-progress DFA state has a goal plan."""
-
-	progress_transitions = _all_progress_transitions(dfa_payload)
-	required_states = tuple(
-		sorted(
-			{
-				str(transition.get("source_state") or "").strip()
-				for transition in progress_transitions
-				if str(transition.get("source_state") or "").strip()
-			},
-		),
+	source_states = tuple(
+		str(transition.get("source_state") or "").strip()
+		for _literal, transition in tuple(sequence)
 	)
-	covered_states = tuple(
-		sorted(
-			{
-				str(certificate.get("source_state") or "").strip()
-				for plan in tuple(progress_plans or ())
-				if plan.trigger.event_type == "achievement_goal"
-				and plan.trigger.symbol == goal_name
-				and _plan_recurses_to_goal(plan, goal_name)
-				for certificate in tuple(plan.binding_certificate or ())
-				if isinstance(certificate, Mapping)
-				and certificate.get("artifact_family") == "temporal_goal_dfa_append"
-				and str(certificate.get("source_state") or "").strip()
-			},
-		),
-	)
-	uncovered_states = tuple(
-		state for state in required_states if state not in set(covered_states)
-	)
-	progress_transition_count_by_state = {
-		state: sum(
-			1
-			for transition in progress_transitions
-			if str(transition.get("source_state") or "").strip() == state
-		)
-		for state in required_states
-	}
-	plan_count_by_state = {
-		state: sum(
-			1
-			for plan in tuple(progress_plans or ())
-			for certificate in tuple(plan.binding_certificate or ())
-			if isinstance(certificate, Mapping)
-			and str(certificate.get("source_state") or "").strip() == state
-		)
-		for state in required_states
-	}
 	return {
-		"valid": not uncovered_states,
-		"required_states": list(required_states),
-		"covered_states": list(covered_states),
-		"uncovered_states": list(uncovered_states),
-		"progress_state_count": len(required_states),
-		"covered_progress_state_count": len(covered_states),
-		"progress_transition_count": len(progress_transitions),
-		"progress_transition_count_by_state": progress_transition_count_by_state,
-		"plan_count_by_state": plan_count_by_state,
+		"valid": True,
+		"required_states": list(source_states),
+		"covered_states": list(source_states),
+		"uncovered_states": [],
+		"progress_state_count": len(source_states),
+		"covered_progress_state_count": len(source_states),
+		"progress_transition_count": len(sequence),
+		"progress_transition_count_by_state": {
+			state: source_states.count(state) for state in source_states
+		},
+		"plan_count_by_state": {state: 1 for state in source_states},
 	}
-
-
-def _plan_recurses_to_goal(plan: AgentSpeakPlan, goal_name: str) -> bool:
-	return any(
-		step.kind == "subgoal"
-		and step.symbol == goal_name
-		and not tuple(step.arguments or ())
-		for step in tuple(plan.body or ())
-	)
-
-
-def _initial_beliefs_with_temporal_state(
-	*,
-	plan_library: PlanLibrary,
-	goal_name: str,
-	dfa_payload: Mapping[str, Any],
-) -> tuple[str, ...]:
-	return _deduplicate_literals(
-		(
-			*tuple(plan_library.initial_beliefs or ()),
-			_temporal_state_atom(goal_name, _required_initial_state(dfa_payload)),
-		),
-	)
 
 
 def _required_initial_state(dfa_payload: Mapping[str, Any]) -> str:
@@ -682,13 +588,6 @@ def _required_state_label(value: object, *, role: str) -> str:
 	return state
 
 
-def _temporal_state_atom(goal_name: str, state: str) -> str:
-	return _call(
-		_TEMPORAL_STATE_PREDICATE,
-		(str(goal_name or "").strip(), _required_state_label(state, role="state")),
-	)
-
-
 def _all_progress_transitions(dfa_payload: Mapping[str, Any]) -> tuple[dict[str, str], ...]:
 	progress_transitions: list[dict[str, str]] = []
 	for source_state in _source_states(dfa_payload):
@@ -699,10 +598,6 @@ def _all_progress_transitions(dfa_payload: Mapping[str, Any]) -> tuple[dict[str,
 			),
 		)
 	return tuple(progress_transitions)
-
-
-def _deduplicate_literals(literals: Sequence[str]) -> tuple[str, ...]:
-	return tuple(dict.fromkeys(str(literal).strip() for literal in literals if str(literal).strip()))
 
 
 def _required_progress_literal(raw_label: str) -> DFALiteral:

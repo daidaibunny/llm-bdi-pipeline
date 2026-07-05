@@ -10,26 +10,12 @@ from plan_library.models import PlanLibrary
 def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
-		initial_beliefs=("tg_state(g_query_1, q0)",),
 		plans=(
 			AgentSpeakPlan(
-				plan_name="g_query_1_progress_1",
+				plan_name="g_query_1_linear_sequence",
 				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
-				context=("tg_state(g_query_1, q0)",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ("X",)),
-					AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q0")),
-					AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q1")),
-					AgentSpeakBodyStep("subgoal", "g_query_1"),
-				),
-			),
-			AgentSpeakPlan(
-				plan_name="g_query_1_accepting_1",
-				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
-				context=("tg_state(g_query_1, q1)",),
-				body=(
-					AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q1")),
-					AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q0")),
 				),
 			),
 			AgentSpeakPlan(
@@ -52,7 +38,7 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 	)
 	assert serialized["supported_asl_subset"]["body_steps"] == (
 		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
-		"query-local tg_state monitor belief updates"
+		"query-specific +!g_* wrapper subgoal calls"
 	)
 	assert serialized["supported_asl_subset"]["contexts"] == (
 		"implicit conjunction of atom, not atom, equality, or inequality "
@@ -65,7 +51,10 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 			"positive context atoms bind variables before negated context atoms are checked"
 		),
 		"negation_semantics": "negation-as-absence over the current state",
-		"temporal_state_semantics": "query-local temporal progress is maintained by tg_state(goal,state)",
+		"temporal_state_semantics": (
+			"linear query wrappers execute certified singleton-literal subgoals in "
+			"stored order; branching DFA goals require an external controller"
+		),
 		"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
 		"primitive_precondition_semantics": (
 			"primitive action preconditions are checked at execution time; "
@@ -77,17 +66,12 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
-		initial_beliefs=("tg_state(g_query_1, q0)",),
 		plans=(
 			AgentSpeakPlan(
-				plan_name="g_query_1_progress_1",
+				plan_name="g_query_1_linear_sequence",
 				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
-				context=("tg_state(g_query_1, q0)",),
 				body=(
 					AgentSpeakBodyStep("subgoal", "done", ("X",)),
-					AgentSpeakBodyStep("belief_deletion", "tg_state", ("g_query_1", "q0")),
-					AgentSpeakBodyStep("belief_addition", "tg_state", ("g_query_1", "q1")),
-					AgentSpeakBodyStep("subgoal", "g_query_1"),
 				),
 			),
 			AgentSpeakPlan(

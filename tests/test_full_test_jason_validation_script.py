@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from scripts.run_full_test_jason_validation import append_state_monitor_full_test_wrappers
+from scripts.run_full_test_jason_validation import append_linear_single_body_full_test_wrappers
 from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
 from scripts.run_full_test_jason_validation import resolve_batch_root
 from scripts.run_full_test_jason_validation import render_fact_atom
@@ -60,7 +60,7 @@ def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> 
 	assert "--post-moose-recursive" not in command
 
 
-def test_full_test_wrapper_uses_query_local_dfa_state_monitor(tmp_path: Path) -> None:
+def test_full_test_wrapper_uses_linear_single_body(tmp_path: Path) -> None:
 	asl_file = tmp_path / "plan_library.asl"
 	problem_file = tmp_path / "p01.pddl"
 	asl_file.write_text("/* base */\n", encoding="utf-8")
@@ -76,7 +76,7 @@ def test_full_test_wrapper_uses_query_local_dfa_state_monitor(tmp_path: Path) ->
 		encoding="utf-8",
 	)
 
-	record = append_state_monitor_full_test_wrappers(
+	record = append_linear_single_body_full_test_wrappers(
 		domain="ferry",
 		plan_library_asl=asl_file,
 		problem_files=(problem_file,),
@@ -84,13 +84,10 @@ def test_full_test_wrapper_uses_query_local_dfa_state_monitor(tmp_path: Path) ->
 	)
 	text = asl_file.read_text(encoding="utf-8")
 
-	assert record["wrapper_mode"] == "query_local_dfa_state_monitor_without_json_metadata"
-	assert "tg_state(g_ferry_test_1, s0)." in text
-	assert "+!g_ferry_test_1 : tg_state(g_ferry_test_1, s0) <-" in text
+	assert record["wrapper_mode"] == "linear_single_body_without_json_metadata"
+	assert "tg_state" not in text
+	assert "+!g_ferry_test_1 : true <-" in text
 	assert "\t!at(car1, loc1);" in text
-	assert "\t-tg_state(g_ferry_test_1, s0);" in text
-	assert "\t+tg_state(g_ferry_test_1, s1);" in text
-	assert "+!g_ferry_test_1 : tg_state(g_ferry_test_1, s1) <-" in text
-	assert "+!g_ferry_test_1 : tg_state(g_ferry_test_1, s2) <-" in text
+	assert "\t!at(car2, loc2)." in text
 	assert "not at(car1, loc1)" not in text
 	assert "at(car1, loc1) & not at(car2, loc2)" not in text

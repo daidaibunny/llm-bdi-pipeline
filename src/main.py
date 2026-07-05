@@ -679,6 +679,8 @@ def _temporal_append_error_type(error: Exception) -> str:
 		return "ltlf_to_dfa_execution_failure"
 	if "negative_literal_template_not_supported" in message:
 		return "negative_literal_template_not_supported"
+	if "nonlinear_temporal_goal_not_supported" in message:
+		return "nonlinear_temporal_goal_not_supported"
 	if "undeclared PDDL predicate" in message:
 		return "unsupported_predicate"
 	if "wrong arity" in message:
