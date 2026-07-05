@@ -23,6 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 DEFAULT_BATCH_ROOT = PROJECT_ROOT / "artifacts" / "moose_asl_batches"
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "artifacts" / "jason_full_test_runs"
+ATOMIC_LIBRARY_MODES = ("faithful", "post-moose-recursive")
 
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
@@ -111,6 +112,16 @@ def main() -> int:
 	parser.add_argument("--num-workers", type=int, default=6)
 	parser.add_argument("--timeout-seconds", type=int, default=90)
 	parser.add_argument(
+		"--atomic-library-mode",
+		choices=ATOMIC_LIBRARY_MODES,
+		default="post-moose-recursive",
+		help=(
+			"Compile raw MOOSE decision-list macros faithfully, or synthesize "
+			"post-MOOSE recursive atomic modules before Jason validation. Defaults "
+			"to the current post-MOOSE recursive architecture."
+		),
+	)
+	parser.add_argument(
 		"--write-domain-long-asl",
 		action="store_true",
 		help=(
@@ -152,6 +163,7 @@ def main() -> int:
 			"domains": list(domains),
 			"num_workers": args.num_workers,
 			"timeout_seconds": args.timeout_seconds,
+			"atomic_library_mode": args.atomic_library_mode,
 			"prepare_only": bool(args.prepare_only),
 			"write_domain_long_asl": bool(args.write_domain_long_asl),
 			"max_domain_long_asl_mb": args.max_domain_long_asl_mb,
@@ -169,6 +181,7 @@ def main() -> int:
 			batch_root=batch_root,
 			run_root=run_root,
 			timeout_seconds=args.timeout_seconds,
+			atomic_library_mode=args.atomic_library_mode,
 			write_domain_long_asl=bool(args.write_domain_long_asl),
 			max_domain_long_asl_bytes=max(1, int(args.max_domain_long_asl_mb)) * 1024 * 1024,
 		)
@@ -236,6 +249,7 @@ def prepare_domain_for_full_test(
 	batch_root: Path,
 	run_root: Path,
 	timeout_seconds: int,
+	atomic_library_mode: str,
 	write_domain_long_asl: bool,
 	max_domain_long_asl_bytes: int,
 ) -> tuple[dict[str, Any], tuple[JasonTask, ...]]:
@@ -253,6 +267,7 @@ def prepare_domain_for_full_test(
 		"domain_file": str(domain_file),
 		"readable_policy_file": str(readable_policy),
 		"plan_library_asl": str(domain_output / "plan_library.asl"),
+		"atomic_library_mode": atomic_library_mode,
 		"success": False,
 	}
 	try:
@@ -268,19 +283,12 @@ def prepare_domain_for_full_test(
 		record["last_test_file"] = str(test_instances[-1])
 
 		compile_result = run_logged_command(
-			(
-				sys.executable,
-				str(PROJECT_ROOT / "src" / "main.py"),
-				"compile-moose-atomic-library",
-				"--policy-file",
-				str(readable_policy),
-				"--domain-file",
-				str(domain_file),
-				"--domain-name",
-				domain,
-				"--library-root",
-				str(library_root),
-				"--overwrite",
+			build_compile_atomic_library_command(
+				readable_policy=readable_policy,
+				domain_file=domain_file,
+				domain=domain,
+				library_root=library_root,
+				atomic_library_mode=atomic_library_mode,
 			),
 			stdout_file=log_dir / "compile_atomic_library.stdout.json",
 			stderr_file=log_dir / "compile_atomic_library.stderr.txt",
@@ -338,6 +346,37 @@ def prepare_domain_for_full_test(
 	except Exception as error:  # noqa: BLE001 - persisted for batch diagnosis.
 		record["error"] = str(error)
 		return record, ()
+
+
+def build_compile_atomic_library_command(
+	*,
+	readable_policy: Path,
+	domain_file: Path,
+	domain: str,
+	library_root: Path,
+	atomic_library_mode: str,
+) -> tuple[str, ...]:
+	"""Return the compile command used before full-test Jason validation."""
+
+	if atomic_library_mode not in ATOMIC_LIBRARY_MODES:
+		raise ValueError(f"Unsupported atomic library mode: {atomic_library_mode}")
+	command = [
+		sys.executable,
+		str(PROJECT_ROOT / "src" / "main.py"),
+		"compile-moose-atomic-library",
+		"--policy-file",
+		str(readable_policy),
+		"--domain-file",
+		str(domain_file),
+		"--domain-name",
+		domain,
+		"--library-root",
+		str(library_root),
+		"--overwrite",
+	]
+	if atomic_library_mode == "post-moose-recursive":
+		command.append("--post-moose-recursive")
+	return tuple(command)
 
 
 def append_state_monitor_full_test_wrappers(

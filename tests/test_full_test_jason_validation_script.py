@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from scripts.run_full_test_jason_validation import append_state_monitor_full_test_wrappers
+from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
 from scripts.run_full_test_jason_validation import resolve_batch_root
 from scripts.run_full_test_jason_validation import render_fact_atom
 from scripts.run_full_test_jason_validation import safe_goal_fragment
@@ -32,6 +33,31 @@ def test_safe_path_fragment_keeps_problem_ids_readable() -> None:
 def test_render_fact_atom_matches_generated_asl_identifier_rules() -> None:
 	assert render_fact_atom(PDDLFact("at-ferry", ["loc-1"])) == "at_ferry(loc_1)"
 	assert render_fact_atom(PDDLFact("handempty", [])) == "handempty"
+
+
+def test_full_test_compile_command_defaults_to_post_moose_recursive(tmp_path: Path) -> None:
+	command = build_compile_atomic_library_command(
+		readable_policy=tmp_path / "ferry.model.readable",
+		domain_file=tmp_path / "domain.pddl",
+		domain="ferry",
+		library_root=tmp_path / "libraries",
+		atomic_library_mode="post-moose-recursive",
+	)
+
+	assert "--post-moose-recursive" in command
+	assert "--domain-file" in command
+
+
+def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> None:
+	command = build_compile_atomic_library_command(
+		readable_policy=tmp_path / "ferry.model.readable",
+		domain_file=tmp_path / "domain.pddl",
+		domain="ferry",
+		library_root=tmp_path / "libraries",
+		atomic_library_mode="faithful",
+	)
+
+	assert "--post-moose-recursive" not in command
 
 
 def test_full_test_wrapper_uses_query_local_dfa_state_monitor(tmp_path: Path) -> None:
