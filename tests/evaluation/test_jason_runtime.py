@@ -79,6 +79,9 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert "EffectDelta delta = applyEffects(schema.effects, bindings);" in source
 	assert "syncPerceptDelta(delta);" in source
 	assert "removePercept(Literal.parseLiteral(atom));" in source
+	assert '"runtime_summary".equals(action.getFunctor())' in source
+	assert "runtime env action count " in source
+	assert "actionTraceLimit" in source
 
 
 def test_streamed_process_writes_stdout_and_stderr_to_files(tmp_path: Path) -> None:
@@ -134,6 +137,37 @@ def test_runtime_output_scan_keeps_bounded_excerpt_and_true_action_count(tmp_pat
 	assert summary.stdout_truncated is True
 	assert "runtime env ready" in summary.marker_output
 	assert "execute success" in summary.marker_output
+	assert summary.has_execute_success is True
+
+
+def test_runtime_output_scan_reads_bounded_trace_count_summary(tmp_path: Path) -> None:
+	stdout_path = tmp_path / "stdout.txt"
+	stderr_path = tmp_path / "stderr.txt"
+	stdout_path.write_text(
+		"\n".join(
+			(
+				"runtime env ready",
+				"runtime env action success move(a,b)",
+				"runtime env action success move(b,c)",
+				"runtime env action count 100000",
+				"execute success",
+			),
+		)
+		+ "\n",
+		encoding="utf-8",
+	)
+	stderr_path.write_text("", encoding="utf-8")
+
+	summary = _scan_runtime_output_files(
+		stdout_path=stdout_path,
+		stderr_path=stderr_path,
+		excerpt_char_limit=200,
+		action_path_limit=10,
+	)
+
+	assert summary.action_count == 100000
+	assert summary.action_path == ("move(a,b)", "move(b,c)")
+	assert summary.action_path_truncated is True
 	assert summary.has_execute_success is True
 
 

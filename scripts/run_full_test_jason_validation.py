@@ -16,6 +16,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any
+from typing import Mapping
 from typing import Sequence
 
 
@@ -31,7 +32,9 @@ if str(SRC_ROOT) not in sys.path:
 	sys.path.insert(0, str(SRC_ROOT))
 
 from evaluation.jason_runtime import JasonPlanLibraryRunner  # noqa: E402
+from evaluation.jason_runtime.runner import _build_environment_java_source  # noqa: E402
 from evaluation.jason_runtime.runner import _resolve_jason_classpath  # noqa: E402
+from evaluation.jason_runtime.runner import _runtime_action_schema  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
@@ -202,6 +205,7 @@ def main() -> int:
 	validation_records = run_jason_tasks(
 		tasks=tuple(tasks),
 		classpath=classpath,
+		run_root=run_root,
 		num_workers=max(1, int(args.num_workers)),
 		timeout_seconds=max(1, int(args.timeout_seconds)),
 		summary=summary,
@@ -515,6 +519,7 @@ def run_jason_tasks(
 	*,
 	tasks: Sequence[JasonTask],
 	classpath: str,
+	run_root: Path,
 	num_workers: int,
 	timeout_seconds: int,
 	summary: dict[str, Any],
@@ -522,6 +527,14 @@ def run_jason_tasks(
 ) -> list[dict[str, Any]]:
 	"""Run Jason validation tasks in a bounded worker pool."""
 
+	compiled_environment_dirs = prepare_shared_jason_environments(
+		tasks=tuple(tasks),
+		classpath=classpath,
+		run_root=run_root,
+		timeout_seconds=timeout_seconds,
+		summary=summary,
+		summary_file=summary_file,
+	)
 	records: list[dict[str, Any]] = []
 	with ThreadPoolExecutor(max_workers=num_workers) as executor:
 		future_map = {
@@ -529,6 +542,7 @@ def run_jason_tasks(
 				validate_one_task,
 				task,
 				classpath=classpath,
+				compiled_environment_dirs=compiled_environment_dirs,
 				timeout_seconds=timeout_seconds,
 			): task
 			for task in tasks
@@ -554,6 +568,7 @@ def validate_one_task(
 	task: JasonTask,
 	*,
 	classpath: str,
+	compiled_environment_dirs: Mapping[str, Path],
 	timeout_seconds: int,
 ) -> dict[str, Any]:
 	"""Run one Jason validation and return a compact record."""
@@ -565,6 +580,9 @@ def validate_one_task(
 		result = JasonPlanLibraryRunner(
 			timeout_seconds=timeout_seconds,
 			jason_classpath=classpath,
+			compiled_environment_dir=compiled_environment_dirs.get(
+				str(task.domain_file.resolve()),
+			),
 		).validate(
 			domain_file=task.domain_file,
 			problem_file=task.problem_file,
@@ -611,6 +629,99 @@ def validate_one_task(
 		encoding="utf-8",
 	)
 	return record
+
+
+def prepare_shared_jason_environments(
+	*,
+	tasks: Sequence[JasonTask],
+	classpath: str,
+	run_root: Path,
+	timeout_seconds: int,
+	summary: dict[str, Any],
+	summary_file: Path,
+) -> dict[str, Path]:
+	"""Compile one reusable Jason Java environment per PDDL domain."""
+
+	compiled_dirs: dict[str, Path] = {}
+	records: dict[str, dict[str, Any]] = {}
+	javac_bin = shutil.which("javac")
+	if not javac_bin:
+		summary["shared_jason_environments"] = {
+			"success": False,
+			"error": "javac not found; falling back to per-task compilation",
+		}
+		write_json(summary_file, summary)
+		return compiled_dirs
+
+	domain_tasks = {
+		str(task.domain_file.resolve()): task
+		for task in sorted(tasks, key=lambda item: (item.domain, str(item.domain_file)))
+	}
+	for domain_file_text, task in domain_tasks.items():
+		start = time.perf_counter()
+		env_dir = run_root / "shared_jason_environments" / safe_path_fragment(task.domain)
+		stdout_file = env_dir / "javac.stdout.txt"
+		stderr_file = env_dir / "javac.stderr.txt"
+		record: dict[str, Any] = {
+			"domain": task.domain,
+			"domain_file": domain_file_text,
+			"environment_dir": str(env_dir),
+			"success": False,
+		}
+		try:
+			env_dir.mkdir(parents=True, exist_ok=True)
+			domain_model = PDDLParser.parse_domain(task.domain_file)
+			action_schemas = tuple(
+				_runtime_action_schema(action)
+				for action in tuple(domain_model.actions or ())
+			)
+			environment_java = _build_environment_java_source(
+				class_name=JasonPlanLibraryRunner.environment_class_name,
+				action_schemas=action_schemas,
+				seed_facts_file_name="initial_facts.txt",
+			)
+			environment_java_path = (
+				env_dir / f"{JasonPlanLibraryRunner.environment_class_name}.java"
+			)
+			environment_java_path.write_text(environment_java, encoding="utf-8")
+			with stdout_file.open("w", encoding="utf-8") as stdout_handle:
+				with stderr_file.open("w", encoding="utf-8") as stderr_handle:
+					completed = subprocess.run(
+						[
+							javac_bin,
+							"-cp",
+							classpath,
+							environment_java_path.name,
+						],
+						cwd=env_dir,
+						stdout=stdout_handle,
+						stderr=stderr_handle,
+						check=False,
+						timeout=max(30, min(int(timeout_seconds), 120)),
+					)
+			record.update(
+				{
+					"exit_code": completed.returncode,
+					"stdout_file": str(stdout_file),
+					"stderr_file": str(stderr_file),
+					"duration_seconds": time.perf_counter() - start,
+					"success": completed.returncode == 0,
+				},
+			)
+			if completed.returncode == 0:
+				compiled_dirs[domain_file_text] = env_dir
+		except Exception as error:  # noqa: BLE001 - fallback preserves old behavior.
+			record.update(
+				{
+					"error": str(error),
+					"duration_seconds": time.perf_counter() - start,
+					"fallback": "per_task_javac",
+				},
+			)
+		records[task.domain] = record
+		summary["shared_jason_environments"] = records
+		write_json(summary_file, summary)
+	return compiled_dirs
 
 
 def run_logged_command(

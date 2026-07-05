@@ -26,6 +26,7 @@ from .environment_adapter import build_environment_adapter
 _RUNTIME_OUTPUT_EXCERPT_MAX_CHARS = 20_000
 _RUNTIME_ACTION_PATH_MAX_ITEMS = 1_000
 _ACTION_SUCCESS_MARKER = "runtime env action success "
+_ACTION_COUNT_MARKER = "runtime env action count "
 _ADAPTER_MARKERS = (
 	"runtime env ready",
 	"runtime env action failed",
@@ -162,10 +163,16 @@ class JasonPlanLibraryRunner:
 		timeout_seconds: int = 60,
 		environment_adapter: Stage6EnvironmentAdapter | None = None,
 		jason_classpath: str | None = None,
+		compiled_environment_dir: str | Path | None = None,
 	) -> None:
 		self.timeout_seconds = timeout_seconds
 		self.environment_adapter = environment_adapter or build_environment_adapter()
 		self.jason_classpath = jason_classpath
+		self.compiled_environment_dir = (
+			Path(compiled_environment_dir).expanduser().resolve()
+			if compiled_environment_dir is not None
+			else None
+		)
 
 	def validate(
 		self,
@@ -201,9 +208,10 @@ class JasonPlanLibraryRunner:
 		resolve_start = time.perf_counter()
 		java_bin = shutil.which("java")
 		javac_bin = shutil.which("javac")
-		if not java_bin or not javac_bin:
+		compiled_environment_dir = self.compiled_environment_dir
+		if not java_bin or (not javac_bin and compiled_environment_dir is None):
 			raise JasonValidationError(
-				"Jason validation requires both java and javac on PATH.",
+				"Jason validation requires java and, without a precompiled environment, javac.",
 				metadata={"java": java_bin, "javac": javac_bin},
 			)
 		classpath = self.jason_classpath or _resolve_jason_classpath(
@@ -243,57 +251,78 @@ class JasonPlanLibraryRunner:
 		logging_path.write_text(logging_properties, encoding="utf-8")
 		timing_profile["materialize_seconds"] = time.perf_counter() - materialize_start
 
-		compile_start = time.perf_counter()
-		compile_process = subprocess.run(
-			[
-				javac_bin,
-				"-cp",
-				classpath,
-				environment_java_path.name,
-			],
-			cwd=output_path,
-			text=True,
-			capture_output=True,
-			check=False,
-		)
-		timing_profile["compile_seconds"] = time.perf_counter() - compile_start
-		if compile_process.returncode != 0:
-			error = "Jason environment Java compilation failed."
-			stdout_path.write_text(compile_process.stdout, encoding="utf-8")
-			stderr_path.write_text(compile_process.stderr, encoding="utf-8")
-			result = JasonValidationResult(
-				success=False,
-				status="compile_failed",
-				domain_name=domain.name,
-				goal_name=goal_name,
-				exit_code=compile_process.returncode,
-				timed_out=False,
-				stdout=compile_process.stdout,
-				stderr=compile_process.stderr,
-				action_path=(),
-				action_count=0,
-				environment_adapter=self.environment_adapter.validate(
+		if compiled_environment_dir is None:
+			if javac_bin is None:
+				raise JasonValidationError("Jason validation requires javac on PATH.")
+			compile_start = time.perf_counter()
+			compile_process = subprocess.run(
+				[
+					javac_bin,
+					"-cp",
+					classpath,
+					environment_java_path.name,
+				],
+				cwd=output_path,
+				text=True,
+				capture_output=True,
+				check=False,
+			)
+			timing_profile["compile_seconds"] = time.perf_counter() - compile_start
+			if compile_process.returncode != 0:
+				error = "Jason environment Java compilation failed."
+				stdout_path.write_text(compile_process.stdout, encoding="utf-8")
+				stderr_path.write_text(compile_process.stderr, encoding="utf-8")
+				result = JasonValidationResult(
+					success=False,
+					status="compile_failed",
+					domain_name=domain.name,
+					goal_name=goal_name,
+					exit_code=compile_process.returncode,
+					timed_out=False,
 					stdout=compile_process.stdout,
 					stderr=compile_process.stderr,
-				).to_dict(),
-				artifacts=_artifact_paths(
-					agentspeak_path=agentspeak_path,
-					mas2j_path=mas2j_path,
-					environment_java_path=environment_java_path,
-					initial_facts_path=initial_facts_path,
-					stdout_path=stdout_path,
-					stderr_path=stderr_path,
-					result_path=result_path,
-				),
-				timing_profile=timing_profile,
-				output_summary=_empty_runtime_output_summary().to_dict(),
-				error=error,
-			)
-			result_path.write_text(json.dumps(result.to_dict(), indent=2) + "\n", encoding="utf-8")
-			return result
+					action_path=(),
+					action_count=0,
+					environment_adapter=self.environment_adapter.validate(
+						stdout=compile_process.stdout,
+						stderr=compile_process.stderr,
+					).to_dict(),
+					artifacts=_artifact_paths(
+						agentspeak_path=agentspeak_path,
+						mas2j_path=mas2j_path,
+						environment_java_path=environment_java_path,
+						initial_facts_path=initial_facts_path,
+						stdout_path=stdout_path,
+						stderr_path=stderr_path,
+						result_path=result_path,
+					),
+					timing_profile=timing_profile,
+					output_summary=_empty_runtime_output_summary().to_dict(),
+					error=error,
+				)
+				result_path.write_text(
+					json.dumps(result.to_dict(), indent=2) + "\n",
+					encoding="utf-8",
+				)
+				return result
+		else:
+			class_file = compiled_environment_dir / f"{self.environment_class_name}.class"
+			if not class_file.exists():
+				raise JasonValidationError(
+					"Compiled Jason environment class is missing.",
+					metadata={
+						"compiled_environment_dir": str(compiled_environment_dir),
+						"class_file": str(class_file),
+					},
+				)
+			timing_profile["compile_seconds"] = 0.0
 
 		run_start = time.perf_counter()
-		run_classpath = os.pathsep.join((classpath, str(output_path)))
+		run_classpath_items = [classpath]
+		if compiled_environment_dir is not None:
+			run_classpath_items.append(str(compiled_environment_dir))
+		run_classpath_items.append(str(output_path))
+		run_classpath = os.pathsep.join(run_classpath_items)
 		cmd = [
 			java_bin,
 			"-Djava.awt.headless=true",
@@ -497,6 +526,7 @@ def _build_runner_asl(*, plan_library_asl: str, goal_name: str) -> str:
 			"+!execute : true <-",
 			'\t.print("execute start");',
 			f"\t!{goal};",
+			"\truntime_summary;",
 			'\t.print("execute success");',
 			"\t.stopMAS.",
 			"",
@@ -602,6 +632,15 @@ public class {class_name} extends Environment {{
 	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
 	private final Path seedFactsPath = Paths.get({seed_file});
+	private final int actionTraceLimit = Integer.getInteger(
+		"jason.pipeline.actionTraceLimit",
+		1000
+	);
+	private final int actionTraceInterval = Integer.getInteger(
+		"jason.pipeline.actionTraceInterval",
+		100000
+	);
+	private int actionCount = 0;
 
 	@Override
 	public synchronized void init(String[] args) {{
@@ -615,6 +654,10 @@ public class {class_name} extends Environment {{
 	@Override
 	public synchronized boolean executeAction(String agName, Structure action) {{
 		if ("true".equals(action.getFunctor()) && action.getArity() == 0) {{
+			return true;
+		}}
+		if ("runtime_summary".equals(action.getFunctor()) && action.getArity() == 0) {{
+			printRuntimeSummary();
 			return true;
 		}}
 		ActionSchema schema = actions.get(action.getFunctor());
@@ -645,7 +688,8 @@ public class {class_name} extends Environment {{
 
 		EffectDelta delta = applyEffects(schema.effects, bindings);
 		syncPerceptDelta(delta);
-		System.out.println("runtime env action success " + tracedAction);
+		actionCount += 1;
+		traceSuccessfulAction(tracedAction);
 		return true;
 	}}
 
@@ -764,6 +808,20 @@ public class {class_name} extends Environment {{
 			args[i] = canonical(action.getTerm(i).toString());
 		}}
 		return sourceName + "(" + String.join(",", args) + ")";
+	}}
+
+	private void traceSuccessfulAction(String tracedAction) {{
+		if (actionCount <= actionTraceLimit) {{
+			System.out.println("runtime env action success " + tracedAction);
+			return;
+		}}
+		if (actionTraceInterval > 0 && actionCount % actionTraceInterval == 0) {{
+			printRuntimeSummary();
+		}}
+	}}
+
+	private void printRuntimeSummary() {{
+		System.out.println("runtime env action count " + actionCount);
 	}}
 
 	private void syncInitialPercepts() {{
@@ -1022,6 +1080,10 @@ def _scan_runtime_output_file(
 				action_count += 1
 				if len(action_path) < action_path_limit:
 					action_path.append(line.split(_ACTION_SUCCESS_MARKER, 1)[1].strip())
+			if _ACTION_COUNT_MARKER in line:
+				count_text = line.split(_ACTION_COUNT_MARKER, 1)[1].strip()
+				if count_text.isdigit():
+					action_count = max(action_count, int(count_text))
 
 	if truncated:
 		excerpt_parts.append("\n... [output truncated; full log is in the artifact file] ...\n")
