@@ -1,4 +1,17 @@
 # Generalized Planner Routing Taxonomy
+
+1. 根据domain分类不是很合理，要根据achievement goal type去分类，比如一个目标block X放到Y上面可以做，on(X, Y) and on(Y, X)一起就不能成立
+
+	1. 核心是找出来goal literal相互关系，可以使用LLM的
+
+		测试和使用分开来，测试可以用test split，但是intance要变成，goal specification，只考虑and和not的LTLf，里面不是instance而是variable/template
+
+2. 6个domain，从MOOSE那篇文章里面逻辑型，数值型，时序型各找2个domain
+
+3. GP还是要用最合适的GP，先把train出来atomic goal，看一下是否支持negative
+
+4. Append新的用户query goal到atomic的plan library里面。如何生成：reward machine，每一个transition必须是一个literal，如果不是就使用
+
 This document is the project reference for the current achievement-goal
 planning line. It replaces the earlier attempt to build one universal
 generalized planner inside this repository.
