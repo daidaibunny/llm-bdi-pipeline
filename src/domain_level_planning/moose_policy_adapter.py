@@ -24,6 +24,7 @@ from utils.pddl_parser import PDDLParser
 from .atomic_module_synthesis import synthesize_atomic_minimal_literal_module_library
 from .atomic_module_synthesis import PDDLLiteralSchema
 from .atomic_module_synthesis import _ParsedAction
+from .atomic_module_synthesis import _order_contexts_for_matching
 from .atomic_module_synthesis import _parameter_type
 from .pddl_types import OBJ_TP_PREDICATE
 from .pddl_types import type_closure
@@ -508,9 +509,12 @@ def _validated_moose_macro_rule_plan(
 			symbol=goal.predicate,
 			arguments=tuple(variable_map.get(argument, argument) for argument in goal.arguments),
 		),
-		context=_deduplicate_strings(
-			tuple(condition.to_call(variable_map) for condition in rule.state_conditions)
-			+ type_contexts,
+		context=_order_contexts_for_matching(
+			tuple(condition.to_call(variable_map) for condition in rule.state_conditions),
+			type_contexts,
+			initial_bound_variables=tuple(
+				variable_map.get(argument, argument) for argument in goal.arguments
+			),
 		),
 		body=tuple(
 			AgentSpeakBodyStep(

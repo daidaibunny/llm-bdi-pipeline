@@ -8,6 +8,7 @@ into reusable predicate modules using PDDL action precondition/effect structure.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -1482,6 +1483,7 @@ def _final_action_sequence_plan(
 			_order_contexts_for_matching(
 				tuple(literal.to_context() for literal in sequence.context_literals),
 				sequence.type_contexts,
+				initial_bound_variables=sequence.target_arguments,
 			),
 		),
 		body=tuple(
@@ -1529,6 +1531,7 @@ def _prepare_precondition_plan(
 		_order_contexts_for_matching(
 			binding_contexts + (f"not {precondition.to_call()}",),
 			_filter_obj_tp_contexts(sequence.type_contexts, body_variables),
+			initial_bound_variables=sequence.target_arguments,
 		),
 	)
 	return AgentSpeakPlan(
@@ -2127,10 +2130,94 @@ def _deduplicate(items: Sequence[str]) -> tuple[str, ...]:
 def _order_contexts_for_matching(
 	relational_contexts: Sequence[str],
 	type_contexts: Sequence[str],
+	initial_bound_variables: Sequence[str] = (),
 ) -> tuple[str, ...]:
-	"""Keep type safety while letting dynamic/static relations bind variables first."""
+	"""Order conjunctive contexts so Jason can use bound-argument indexes early."""
 
-	return _deduplicate(tuple(relational_contexts or ()) + tuple(type_contexts or ()))
+	remaining = list(_deduplicate(tuple(relational_contexts or ()) + tuple(type_contexts or ())))
+	ordered: list[str] = []
+	bound_variables = {
+		variable
+		for variable in tuple(initial_bound_variables or ())
+		if _is_agentspeak_variable(variable)
+	}
+	while remaining:
+		best_index = min(
+			range(len(remaining)),
+			key=lambda index: _context_matching_key(remaining[index], bound_variables),
+		)
+		context = remaining.pop(best_index)
+		ordered.append(context)
+		parsed = _parse_context_literal_for_matching(context)
+		if parsed is None or parsed["negative"]:
+			continue
+		bound_variables.update(
+			argument
+			for argument in parsed["arguments"]
+			if _is_agentspeak_variable(argument)
+		)
+	return tuple(ordered)
+
+
+def _context_matching_key(
+	context: str,
+	bound_variables: set[str],
+) -> tuple[int, int, int, int, str]:
+	parsed = _parse_context_literal_for_matching(context)
+	if parsed is None:
+		return (9, 0, 0, 0, context)
+	arguments = tuple(parsed["arguments"])
+	variables = tuple(argument for argument in arguments if _is_agentspeak_variable(argument))
+	unbound_variables = tuple(variable for variable in variables if variable not in bound_variables)
+	bound_count = len(variables) - len(unbound_variables)
+	all_variables_bound = not unbound_variables
+	is_obj_tp = parsed["predicate"] == OBJ_TP_PREDICATE
+	is_negative = bool(parsed["negative"])
+	if all_variables_bound and not is_negative:
+		group = 0
+	elif all_variables_bound:
+		group = 1
+	elif is_obj_tp and bound_count:
+		group = 2
+	elif not is_obj_tp and bound_count:
+		group = 3
+	elif is_obj_tp:
+		group = 4
+	else:
+		group = 5
+	return (group, len(unbound_variables), -bound_count, len(arguments), context)
+
+
+def _parse_context_literal_for_matching(context: str) -> dict[str, object] | None:
+	text = str(context or "").strip()
+	negative = False
+	if text.startswith("not "):
+		negative = True
+		text = text[4:].strip()
+	if not text:
+		return None
+	if "(" not in text:
+		if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", text):
+			return None
+		return {"negative": negative, "predicate": text, "arguments": ()}
+	match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_-]*)\((.*)\)", text)
+	if match is None:
+		return None
+	arguments_text = match.group(2).strip()
+	arguments = tuple(
+		argument.strip()
+		for argument in arguments_text.split(",")
+		if argument.strip()
+	)
+	return {
+		"negative": negative,
+		"predicate": match.group(1),
+		"arguments": arguments,
+	}
+
+
+def _is_agentspeak_variable(token: str) -> bool:
+	return bool(re.fullmatch(r"[A-Z][A-Za-z0-9_]*", str(token or "").strip()))
 
 
 def _deduplicate_literals(

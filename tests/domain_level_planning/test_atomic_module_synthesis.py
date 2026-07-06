@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from domain_level_planning.atomic_module_synthesis import (
+	_order_contexts_for_matching,
 	_select_branches_with_clingo,
 	synthesize_atomic_minimal_literal_module_library,
 )
@@ -14,6 +15,38 @@ from plan_library.rendering import render_plan_library_asl
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+
+
+def test_context_order_uses_bound_goal_arguments_before_unbound_buckets() -> None:
+	context = _order_contexts_for_matching(
+		(
+			"at(Z, C)",
+			"in-city(C, D)",
+			"in-city(A, D)",
+			"at(X, A)",
+			"in-city(A, B)",
+			"in-city(Y, B)",
+		),
+		(
+			"obj_tp(A, location)",
+			"obj_tp(B, city)",
+			"obj_tp(C, location)",
+			"obj_tp(D, city)",
+			"obj_tp(X, package)",
+			"obj_tp(Y, location)",
+			"obj_tp(Z, truck)",
+		),
+		initial_bound_variables=("X", "Y"),
+	)
+
+	assert context[:3] == (
+		"obj_tp(X, package)",
+		"obj_tp(Y, location)",
+		"at(X, A)",
+	)
+	assert context.index("at(X, A)") < context.index("in-city(A, B)")
+	assert context.index("in-city(C, D)") < context.index("at(Z, C)")
+	assert context.index("at(Z, C)") < context.index("obj_tp(Z, truck)")
 
 
 def test_clingo_selector_removes_context_subsumed_duplicate_branch() -> None:
@@ -116,28 +149,29 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		for record in library.metadata["atomic_module_synthesis"]["predicate_roles"]
 	)
 
-	assert "+!on(X, Y) : not clear(X)" in asl
+	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
 	assert "\t!clear(X);" in asl
 	assert "\t!on(X, Y)." in asl
-	assert "+!on(X, Y) : not clear(Y)" in asl
+	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "\t!clear(Y);" in asl
-	assert "+!on(X, Y) : not holding(X)" in asl
+	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not holding(X)" in asl
 	assert "\t!holding(X);" in asl
 	assert "pick_up(X);\n\tunstack" not in asl
-	assert "on(X, Z) & clear(X) & handempty & clear(Y)" in asl
+	assert "clear(X) & clear(Y) & obj_tp(X, block) & obj_tp(Y, block)" in asl
+	assert "handempty & on(X, Z) & obj_tp(Z, block)" in asl
 	assert "\tunstack(X, Z);" in asl
 	assert "\tstack(X, Y)." in asl
-	assert "on(Y, X) & clear(Y) & handempty" in asl
+	assert "obj_tp(X, block) & handempty & on(Y, X) & clear(Y) & obj_tp(Y, block)" in asl
 	assert "\tunstack(Y, X);" in asl
 	assert "\tput_down(Y)." in asl
-	assert "on(Y, X) & not clear(Y)" in asl
+	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "pick_up(X)." in asl
 	assert "unstack(X, Y)." in asl
 	assert "+!handempty : handempty" in asl
 	assert "put_down(X)." in asl
 	assert "+!ontable(X) : ontable(X)" in asl
-	assert "+!ontable(X) : not holding(X)" in asl
+	assert "+!ontable(X) : obj_tp(X, block) & not holding(X)" in asl
 
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
@@ -258,9 +292,13 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 	assert "obj_tp(X, passenger)" in asl
 	assert "obj_tp(Y, floor)" in asl
 	assert len({plan.plan_name for plan in library.plans}) == len(library.plans)
-	assert "+!served(X) : destin(X, Y) & not lift_at(Y)" in asl
+	assert (
+		"+!served(X) : obj_tp(X, passenger) & destin(X, Y) "
+		"& obj_tp(Y, floor) & not lift_at(Y)"
+		in asl
+	)
 	assert "\t!lift_at(Y);\n\t!served(X)." in asl
-	assert "+!served(X) : not boarded(X)" in asl
+	assert "+!served(X) : obj_tp(X, passenger) & not boarded(X)" in asl
 	assert "\t!boarded(X);\n\t!served(X)." in asl
 
 
@@ -301,7 +339,7 @@ def test_miconic_static_above_does_not_bind_unbounded_navigation_context() -> No
 	asl = render_plan_library_asl(library)
 
 	assert "+!lift_at(X) : lift_at(X)" in asl
-	assert "+!lift_at(X) : lift_at(Y) & above(Y, X)" in asl
-	assert "+!lift_at(X) : lift_at(Y) & above(X, Y)" in asl
+	assert "+!lift_at(X) : obj_tp(X, floor) & above(Y, X) & lift_at(Y) & obj_tp(Y, floor)" in asl
+	assert "+!lift_at(X) : obj_tp(X, floor) & above(X, Y) & lift_at(Y) & obj_tp(Y, floor)" in asl
 	assert "above(Y, X) & not lift_at(Y)" not in asl
 	assert "above(X, Y) & not lift_at(Y)" not in asl

@@ -192,9 +192,9 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert selector_report["raw_candidate_count"] >= len(library.plans)
 	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
 	assert len(selector_report["selected_branch_ids"]) == len(library.plans)
-	assert "+!on(X, Y) : not clear(X)" in asl
-	assert "on(Y, X) & not clear(Y)" in asl
-	assert "+!clear(X) : not handempty" in asl
+	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
+	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
+	assert "+!clear(X) : obj_tp(X, block) & not handempty" in asl
 	assert "\t!handempty;" in asl
 	assert "\t!on(Y, X);" not in asl
 	assert "+!holding(X) : holding(X)" in asl
@@ -334,7 +334,7 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 	assert metadata["atomic_module_synthesis"]["selector_obligation_count"] == (
 		metadata["atomic_module_synthesis"]["raw_candidate_count"]
 	)
-	assert "+!on(X, Y) : not clear(X)" in asl
-	assert "+!clear(X) : not handempty" in asl
+	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
+	assert "+!clear(X) : obj_tp(X, block) & not handempty" in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "type_" not in asl
