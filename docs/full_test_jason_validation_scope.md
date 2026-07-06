@@ -173,6 +173,110 @@ required branch kinds such as already-true branches, direct producer branches,
 and certified recursive preparation branches, while minimizing branch count,
 context count, and body cost within the generated candidate space.
 
+## Post-MOOSE To ASL Synthesis
+
+This repository does not modify MOOSE's goal regression learner. A MOOSE
+readable policy is the `policy --dump-policy` first-order decision-list artifact,
+for example a singleton goal rule whose target is `at(ball1, roomb)` and whose
+macro action sequence is `pick(ball1, rooma, right); move(rooma, roomb);
+drop(ball1, roomb, right)`. In the compact path, the MOOSE readable policy is
+used only as evidence for which singleton goal predicates should seed the ASL
+library.
+
+The post-MOOSE synthesis path is:
+
+```text
+MOOSE readable singleton policy
+-> seed predicate extraction
+-> PDDL schema parsing
+-> producible fluent closure
+-> candidate atomic branch generation
+-> schema feasibility and safety filters
+-> Clingo/ASP branch selection
+-> AgentSpeak(L) rendering
+```
+
+Seed predicate extraction means collecting the PDDL predicate symbols that MOOSE
+actually learned as singleton targets. For example, if MOOSE learned singleton
+rules for `served(p1)` and `served(p2)`, the seed predicate is `served`. This
+step is in `compile_moose_readable_policy_to_minimal_module_asl_library`.
+
+PDDL schema parsing means reading the domain's lifted predicate and action
+schemas, not the grounded training instances. For example, in Miconic the
+schema says `depart(?f, ?p)` requires `lift_at(?f)`, `destin(?p, ?f)`, and
+`boarded(?p)`, and adds `served(?p)`.
+
+Producible fluent closure means adding every dynamic predicate that appears in a
+positive action effect as a possible atomic module, plus recursively needed
+support predicates. For example, even if MOOSE only seeds `served`, the closure
+adds `lift_at` and `boarded` because they are producible fluents needed by the
+PDDL schemas. Static predicates, such as Miconic `above/2` or Logistics
+`in_city/2`, remain context predicates and do not become `+!above(...)` or
+`+!in_city(...)` achievement goals.
+
+Candidate atomic branch generation means creating possible ASL plans for each
+module predicate from action preconditions and effects. For example,
+`depart(?f, ?p)` generates a direct candidate:
+
+```asl
++!served(X) : lift_at(Y) & destin(X, Y) & boarded(X) <-
+	depart(Y, X).
+```
+
+It also generates preparation candidates when a required producible fluent is
+missing. For example, if `lift_at(Y)` is not true, `served(X)` may delegate to
+the `lift_at` module:
+
+```asl
++!served(X) : destin(X, Y) & not lift_at(Y) <-
+	!lift_at(Y);
+	!served(X).
+```
+
+Schema feasibility and safety filters remove candidates that are not safe under
+the current ASL execution contract. These filters are domain-general; they do
+not check for domain names such as `miconic` or action names such as `up`.
+
+- Static context range restriction: a static relation can be used only after its
+  variables are connected to the goal head or to earlier positive context
+  literals. For example, `lift_at(Y) & above(X,Y)` is safe because `Y` is first
+  bound by the dynamic fluent `lift_at(Y)`, but `above(Y,X) & not lift_at(Y)` is
+  rejected because the dense static relation introduces `Y` before a dynamic
+  binding.
+- Recursive progress certification: a same-predicate recursive branch is allowed
+  only when a body action deletes or changes a dynamic obstruction relation. For
+  example, Blocks `clear(X)` can recursively clear a block above `X` because
+  `unstack(Y,X)` deletes `on(Y,X)`.
+- Bridge precondition delegation: if a bridge action only prepares a missing
+  producible fluent over variables outside the target goal head, and that fluent
+  already has its own module, the outer module delegates instead of inlining the
+  bridge. For example, `served(X)` has head variable `X`; `lift_at(Y)` introduces
+  non-head variable `Y`; since `lift_at` has its own module, `served(X)` calls
+  `!lift_at(Y)` instead of inlining `board; up/down; depart`. In contrast,
+  Gripper `at(X,Y)` keeps branches involving `at_robby(Y)` because `Y` is part
+  of the target head.
+- Type-compatible binding: PDDL action parameter types are checked during
+  branch construction. The final ASL uses the reserved static context
+  `obj_tp(Variable, Type)`, for example `obj_tp(X, package)` and
+  `obj_tp(Z, truck)`, instead of domain-specific guards such as `type_truck(Z)`.
+  This allows Logistics to keep `load_truck(X,Z,A); drive_truck(...);
+  unload_truck(...)` while rejecting bindings that would treat the package `X`
+  as the truck `Z`.
+
+The Clingo/ASP branch selector receives the candidate branches and solves a
+coverage/minimization problem. A coverage obligation is a candidate branch that
+must be represented either by itself or by another branch with no stronger
+context and an equivalent or recursively covering body. The selector minimizes
+selected branch count, then context literal count, then body step count. This is
+post-MOOSE reduction; it is not MOOSE goal regression.
+
+AgentSpeak(L) rendering is the final formatting step. It emits PDDL predicate
+achievement heads such as `+!served(X)`, PDDL primitive actions such as
+`depart(Y,X)`, PDDL predicate subgoals such as `!lift_at(Y)`, allowed query
+wrappers such as `+!g_query_1`, and reserved `obj_tp/2` contexts. It must not
+emit synthetic achievements such as `achieve_*`, `transition_*`, `dfa_state`, or
+domain-specific `type_*` guards.
+
 ## Jason Runtime Optimization
 
 The current Jason validation runner keeps the AgentSpeak(L) library semantics
