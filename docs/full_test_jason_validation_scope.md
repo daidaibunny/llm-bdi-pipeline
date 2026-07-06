@@ -46,6 +46,29 @@ the atomic library provides plans for goals such as `!served(P)` or `!at(C,L)`,
 and the upstream input layer chooses the temporal order when it creates an LTLf
 formula. In this diagnostic runner, the order is just the PDDL parser order.
 
+The parser-order shortcut is not the expected input contract for support-
+dependent construction goals. In the real input pipeline, the natural-language
+component must output a lifted LTLf sequence whose next singleton literal is
+safe with respect to literals already achieved. Here "safe" means that pursuing
+the next subgoal should not delete a previous progress literal that is meant to
+hold in the final world state. For example, when the final Blocks tower contains
+`on(j,c)` and `on(c,e)`, the safe construction order is to achieve the lower
+support `on(c,e)` before placing `j` on `c`; otherwise achieving `on(c,e)` may
+require unstacking `j` from `c`, deleting the previous progress literal.
+
+The July 6, 2026 timestamped batch exposed this distinction. Blocks test
+wrappers were generated from PDDL goal literals in parser order. IPC Blocks
+problems often print tower goals from top to bottom, so the generated wrapper
+first called `!on(j,c)` and later called `!on(c,e)`. Jason reported success
+because each singleton subgoal was achieved at some point. VAL rejected the
+exported trace because the final state no longer satisfied the earlier top
+literal. Earlier local Blocks records that showed complete coverage were Jason
+runtime records only: they did not export `jason_plan.plan`, did not run
+`plan_verifier`, and therefore did not prove VAL-valid final conjunctive-goal
+coverage. A paper-quality Blocks result must therefore use VAL/IPC verification
+and a support-safe temporal order from the input layer or an equivalent
+dependency-aware ordering step.
+
 ## Validation Semantics And Budget
 
 The Jason Java environment is an execution environment, not the final plan
