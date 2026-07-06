@@ -197,6 +197,14 @@ Examples:
 		help="Hard timeout for the Jason runtime process.",
 	)
 	jason_parser.add_argument(
+		"--jason-java-stack-size",
+		default="64m",
+		help=(
+			"Java thread stack size for Jason, passed as -Xss<size>. "
+			"Large single-body query wrappers need more than the JVM default."
+		),
+	)
+	jason_parser.add_argument(
 		"--plan-verifier-command",
 		help=(
 			"Explicit VAL or IPC verifier command. Omit to skip external plan "
@@ -487,6 +495,7 @@ def _validate_jason_plan_library(args: argparse.Namespace) -> dict[str, Any]:
 	)
 	runner = JasonPlanLibraryRunner(
 		timeout_seconds=max(1, int(args.timeout_seconds or 1800)),
+		jason_java_stack_size=args.jason_java_stack_size,
 		plan_verifier_command=args.plan_verifier_command,
 		require_plan_verifier=bool(args.require_plan_verifier),
 		plan_verifier_timeout_seconds=max(

@@ -28,6 +28,7 @@ _RUNTIME_OUTPUT_EXCERPT_MAX_CHARS = 20_000
 _RUNTIME_ACTION_PATH_MAX_ITEMS = 3
 _PLAN_VERIFIER_OUTPUT_EXCERPT_MAX_CHARS = 20_000
 _DEFAULT_PLAN_VERIFIER_TIMEOUT_SECONDS = 1800
+_DEFAULT_JASON_JAVA_STACK_SIZE = "64m"
 _ACTION_SUCCESS_MARKER = "runtime env action success "
 _ACTION_COUNT_MARKER = "runtime env action count "
 _ADAPTER_MARKERS = (
@@ -217,6 +218,7 @@ class JasonPlanLibraryRunner:
 		environment_adapter: Stage6EnvironmentAdapter | None = None,
 		jason_classpath: str | None = None,
 		compiled_environment_dir: str | Path | None = None,
+		jason_java_stack_size: str | None = None,
 		plan_verifier_command: Sequence[str] | str | None = None,
 		require_plan_verifier: bool = False,
 		plan_verifier_timeout_seconds: int = _DEFAULT_PLAN_VERIFIER_TIMEOUT_SECONDS,
@@ -229,6 +231,7 @@ class JasonPlanLibraryRunner:
 			if compiled_environment_dir is not None
 			else None
 		)
+		self.jason_java_stack_size = jason_java_stack_size
 		self.plan_verifier_command = _normalize_plan_verifier_command(
 			plan_verifier_command,
 		)
@@ -243,6 +246,7 @@ class JasonPlanLibraryRunner:
 		plan_library_asl: str | Path,
 		goal_name: str,
 		output_dir: str | Path,
+		plan_library_asl_text: str | None = None,
 	) -> JasonValidationResult:
 		"""Run one canonical AgentSpeak(L) library with real Jason action semantics."""
 
@@ -287,7 +291,11 @@ class JasonPlanLibraryRunner:
 
 		materialize_start = time.perf_counter()
 		runner_asl = _build_runner_asl(
-			plan_library_asl=library_path.read_text(encoding="utf-8"),
+			plan_library_asl=(
+				plan_library_asl_text
+				if plan_library_asl_text is not None
+				else library_path.read_text(encoding="utf-8")
+			),
 			goal_name=goal_name,
 		)
 		runner_mas2j = _build_runner_mas2j(domain.name)
@@ -295,8 +303,16 @@ class JasonPlanLibraryRunner:
 
 		agentspeak_path = output_path / "agentspeak_generated.asl"
 		mas2j_path = output_path / "jason_runner.mas2j"
-		environment_java_path = output_path / f"{self.environment_class_name}.java"
-		belief_base_java_path = output_path / "JasonPipelineIndexedBeliefBase.java"
+		if compiled_environment_dir is None:
+			environment_java_path = output_path / f"{self.environment_class_name}.java"
+			belief_base_java_path = output_path / "JasonPipelineIndexedBeliefBase.java"
+		else:
+			environment_java_path = (
+				compiled_environment_dir / f"{self.environment_class_name}.java"
+			)
+			belief_base_java_path = (
+				compiled_environment_dir / "JasonPipelineIndexedBeliefBase.java"
+			)
 		initial_facts_path = output_path / "initial_facts.txt"
 		initial_percepts_path = output_path / "initial_percepts.txt"
 		static_beliefs_path = output_path / "static_beliefs.txt"
@@ -309,22 +325,22 @@ class JasonPlanLibraryRunner:
 		plan_verifier_stderr_path = output_path / "plan_verifier_stderr.txt"
 		result_path = output_path / "jason_validation.json"
 
-		environment_java = _build_environment_java_source(
-			class_name=self.environment_class_name,
-			action_schemas=action_schemas,
-			seed_facts_file_name=initial_facts_path.name,
-			initial_percepts_file_name=initial_percepts_path.name,
-			plan_trace_file_name=plan_trace_path.name,
-			pddl_symbol_map_file_name=pddl_symbol_map_path.name,
-		)
-
 		agentspeak_path.write_text(runner_asl, encoding="utf-8")
 		mas2j_path.write_text(runner_mas2j, encoding="utf-8")
-		environment_java_path.write_text(environment_java, encoding="utf-8")
-		belief_base_java_path.write_text(
-			_build_indexed_belief_base_java_source(),
-			encoding="utf-8",
-		)
+		if compiled_environment_dir is None:
+			environment_java = _build_environment_java_source(
+				class_name=self.environment_class_name,
+				action_schemas=action_schemas,
+				seed_facts_file_name=initial_facts_path.name,
+				initial_percepts_file_name=initial_percepts_path.name,
+				plan_trace_file_name=plan_trace_path.name,
+				pddl_symbol_map_file_name=pddl_symbol_map_path.name,
+			)
+			environment_java_path.write_text(environment_java, encoding="utf-8")
+			belief_base_java_path.write_text(
+				_build_indexed_belief_base_java_source(),
+				encoding="utf-8",
+			)
 		initial_facts_path.write_text(
 			"\n".join(seed_facts) + ("\n" if seed_facts else ""),
 			encoding="utf-8",
@@ -442,6 +458,7 @@ class JasonPlanLibraryRunner:
 		run_classpath = os.pathsep.join(run_classpath_items)
 		cmd = [
 			java_bin,
+			_jason_java_stack_option(self.jason_java_stack_size),
 			"-Djava.awt.headless=true",
 			"-Djason.pipeline.actionTraceLimit=3",
 			"-Djason.pipeline.actionTraceInterval=0",
@@ -1831,6 +1848,19 @@ def _run_process_streamed(
 			except subprocess.TimeoutExpired:
 				return StreamedProcessResult(exit_code=None, timed_out=True)
 	return StreamedProcessResult(exit_code=completed.returncode, timed_out=False)
+
+
+def _jason_java_stack_option(value: str | None = None) -> str:
+	"""Return the Java stack option used when Jason parses large ASL programs."""
+
+	stack_size = str(
+		value if value is not None else os.getenv("JASON_JAVA_STACK_SIZE", ""),
+	).strip()
+	if not stack_size:
+		stack_size = _DEFAULT_JASON_JAVA_STACK_SIZE
+	if stack_size.startswith("-Xss"):
+		return stack_size
+	return f"-Xss{stack_size}"
 
 
 def _normalize_plan_verifier_command(

@@ -11,6 +11,7 @@ from evaluation.jason_runtime.environment_adapter import JasonEnvironmentRuntime
 from evaluation.jason_runtime.runner import _build_environment_java_source
 from evaluation.jason_runtime.runner import _build_indexed_belief_base_java_source
 from evaluation.jason_runtime.runner import _build_runner_mas2j
+from evaluation.jason_runtime.runner import _jason_java_stack_option
 from evaluation.jason_runtime.runner import _normalize_plan_verifier_command
 from evaluation.jason_runtime.runner import _parse_pddl_patterns
 from evaluation.jason_runtime.runner import _plan_verifier_output_success
@@ -134,6 +135,20 @@ def test_plan_verifier_command_normalization_and_not_configured_result(tmp_path:
 	assert result.success is None
 	assert result.error is None
 	assert result.to_dict()["artifacts"]["stdout"].endswith("plan_verifier_stdout.txt")
+
+
+def test_jason_java_stack_option_defaults_and_accepts_override(monkeypatch) -> None:
+	monkeypatch.delenv("JASON_JAVA_STACK_SIZE", raising=False)
+	assert _jason_java_stack_option() == "-Xss64m"
+
+	monkeypatch.setenv("JASON_JAVA_STACK_SIZE", "128m")
+	assert _jason_java_stack_option() == "-Xss128m"
+
+	monkeypatch.setenv("JASON_JAVA_STACK_SIZE", "-Xss256m")
+	assert _jason_java_stack_option() == "-Xss256m"
+
+	monkeypatch.setenv("JASON_JAVA_STACK_SIZE", "512m")
+	assert _jason_java_stack_option("32m") == "-Xss32m"
 
 
 def test_pddl_symbol_map_restores_original_object_names() -> None:

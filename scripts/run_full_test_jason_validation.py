@@ -118,6 +118,15 @@ def main() -> int:
 	parser.add_argument("--num-workers", type=int, default=6)
 	parser.add_argument("--timeout-seconds", type=int, default=1800)
 	parser.add_argument(
+		"--jason-java-stack-size",
+		default="64m",
+		help=(
+			"Java thread stack size for Jason, passed as -Xss<size>. "
+			"Defaults to 64m so large parser-order query wrappers do not "
+			"overflow the JVM default stack."
+		),
+	)
+	parser.add_argument(
 		"--plan-verifier-command",
 		help=(
 			"VAL or IPC verifier command. Defaults to VAL_VALIDATE_BIN, VAL_BIN, "
@@ -156,6 +165,15 @@ def main() -> int:
 		help=(
 			"Also write one full-test ASL per domain. Disabled by default because "
 			"large validation suites can still produce bulky ASL artifacts."
+		),
+	)
+	parser.add_argument(
+		"--write-per-test-runtime-asl",
+		action="store_true",
+		help=(
+			"Also write each per-test runtime plan_library.asl before Jason runs. "
+			"Disabled by default because agentspeak_generated.asl already contains "
+			"the exact executable ASL used by Jason."
 		),
 	)
 	parser.add_argument(
@@ -213,12 +231,14 @@ def main() -> int:
 			"domains": list(domains),
 			"num_workers": args.num_workers,
 			"timeout_seconds": args.timeout_seconds,
+			"jason_java_stack_size": args.jason_java_stack_size,
 			"plan_verifier_command": args.plan_verifier_command,
 			"require_plan_verifier": bool(args.require_plan_verifier),
 			"plan_verifier_timeout_seconds": args.plan_verifier_timeout_seconds,
 			"atomic_library_mode": args.atomic_library_mode,
 			"prepare_only": bool(args.prepare_only),
 			"write_domain_long_asl": bool(args.write_domain_long_asl),
+			"write_per_test_runtime_asl": bool(args.write_per_test_runtime_asl),
 			"max_domain_long_asl_mb": args.max_domain_long_asl_mb,
 			"suppress_final_summary_json": bool(args.suppress_final_summary_json),
 		},
@@ -264,9 +284,11 @@ def main() -> int:
 		run_root=run_root,
 		num_workers=max(1, int(args.num_workers)),
 		timeout_seconds=max(1, int(args.timeout_seconds)),
+		jason_java_stack_size=str(args.jason_java_stack_size or "64m"),
 		plan_verifier_command=args.plan_verifier_command,
 		require_plan_verifier=bool(args.require_plan_verifier),
 		plan_verifier_timeout_seconds=max(1, int(args.plan_verifier_timeout_seconds)),
+		write_per_test_runtime_asl=bool(args.write_per_test_runtime_asl),
 		summary=summary,
 		summary_file=summary_file,
 	)
@@ -752,20 +774,23 @@ def linear_single_body_wrapper_lines(
 	return tuple(lines), 1
 
 
-def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
-	"""Write a per-test ASL file with the same wrapper shape as the long library."""
+def render_runtime_asl_for_task(task: JasonTask) -> str:
+	"""Render the per-test ASL with the same wrapper shape as the long library."""
 
-	runtime_asl = task.output_dir / "plan_library.asl"
 	wrapper_lines, _ = full_test_wrapper_lines(
 		domain=task.domain,
 		index=task.index,
 		problem_file=task.problem_file,
 		compact_completion_wrappers=task.compact_completion_wrappers,
 	)
-	runtime_asl.write_text(
-		task.base_plan_library_asl_text + "\n\n" + "\n".join(wrapper_lines).rstrip() + "\n",
-		encoding="utf-8",
-	)
+	return task.base_plan_library_asl_text + "\n\n" + "\n".join(wrapper_lines).rstrip() + "\n"
+
+
+def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
+	"""Write a per-test ASL file with the same wrapper shape as the long library."""
+
+	runtime_asl = task.output_dir / "plan_library.asl"
+	runtime_asl.write_text(render_runtime_asl_for_task(task), encoding="utf-8")
 	return runtime_asl
 
 
@@ -810,9 +835,11 @@ def run_jason_tasks(
 	run_root: Path,
 	num_workers: int,
 	timeout_seconds: int,
+	jason_java_stack_size: str,
 	plan_verifier_command: str | None,
 	require_plan_verifier: bool,
 	plan_verifier_timeout_seconds: int,
+	write_per_test_runtime_asl: bool,
 	summary: dict[str, Any],
 	summary_file: Path,
 ) -> list[dict[str, Any]]:
@@ -835,9 +862,11 @@ def run_jason_tasks(
 				classpath=classpath,
 				compiled_environment_dirs=compiled_environment_dirs,
 				timeout_seconds=timeout_seconds,
+				jason_java_stack_size=jason_java_stack_size,
 				plan_verifier_command=plan_verifier_command,
 				require_plan_verifier=require_plan_verifier,
 				plan_verifier_timeout_seconds=plan_verifier_timeout_seconds,
+				write_per_test_runtime_asl=write_per_test_runtime_asl,
 			): task
 			for task in tasks
 		}
@@ -897,31 +926,38 @@ def validate_one_task(
 	classpath: str,
 	compiled_environment_dirs: Mapping[str, Path],
 	timeout_seconds: int,
+	jason_java_stack_size: str,
 	plan_verifier_command: str | None,
 	require_plan_verifier: bool,
 	plan_verifier_timeout_seconds: int,
+	write_per_test_runtime_asl: bool,
 ) -> dict[str, Any]:
 	"""Run one Jason validation and return a compact record."""
 
 	start = time.perf_counter()
 	task.output_dir.mkdir(parents=True, exist_ok=True)
 	try:
-		runtime_asl = materialize_runtime_asl_for_task(task)
+		runtime_asl_text = render_runtime_asl_for_task(task)
+		runtime_asl = task.output_dir / "plan_library.asl"
+		if write_per_test_runtime_asl:
+			runtime_asl.write_text(runtime_asl_text, encoding="utf-8")
 		result = JasonPlanLibraryRunner(
 			timeout_seconds=timeout_seconds,
 			jason_classpath=classpath,
 			compiled_environment_dir=compiled_environment_dirs.get(
 				str(task.domain_file.resolve()),
 			),
+			jason_java_stack_size=jason_java_stack_size,
 			plan_verifier_command=plan_verifier_command,
 			require_plan_verifier=require_plan_verifier,
 			plan_verifier_timeout_seconds=plan_verifier_timeout_seconds,
 		).validate(
 			domain_file=task.domain_file,
 			problem_file=task.problem_file,
-			plan_library_asl=runtime_asl,
+			plan_library_asl=runtime_asl if write_per_test_runtime_asl else task.plan_library_asl,
 			goal_name=task.goal_name,
 			output_dir=task.output_dir,
+			plan_library_asl_text=runtime_asl_text,
 		)
 		payload = result.to_dict()
 		plan_verifier = dict(payload.get("plan_verifier") or {})
@@ -945,7 +981,12 @@ def validate_one_task(
 			"plan_verifier_stdout": artifacts.get("plan_verifier_stdout"),
 			"plan_verifier_stderr": artifacts.get("plan_verifier_stderr"),
 			"output_dir": str(task.output_dir),
-			"runtime_plan_library_asl": str(runtime_asl),
+			"runtime_plan_library_asl": (
+				str(runtime_asl) if write_per_test_runtime_asl else None
+			),
+			"runtime_plan_library_embedded_in_agentspeak": (
+				not write_per_test_runtime_asl
+			),
 			"domain_full_plan_library_asl": str(task.plan_library_asl),
 			"error": payload.get("error"),
 			"duration_seconds": time.perf_counter() - start,

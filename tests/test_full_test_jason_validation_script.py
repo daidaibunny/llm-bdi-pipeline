@@ -5,12 +5,14 @@ from pathlib import Path
 from scripts.run_full_test_jason_validation import append_linear_single_body_full_test_wrappers
 from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
 from scripts.run_full_test_jason_validation import full_test_wrapper_lines
+from scripts.run_full_test_jason_validation import JasonTask
 from scripts.run_full_test_jason_validation import prepare_domain_for_full_test
 from scripts.run_full_test_jason_validation import query_entry_proposition
 from scripts.run_full_test_jason_validation import resolve_batch_root
 from scripts.run_full_test_jason_validation import render_fact_atom
 from scripts.run_full_test_jason_validation import safe_goal_fragment
 from scripts.run_full_test_jason_validation import safe_path_fragment
+from scripts.run_full_test_jason_validation import validate_one_task
 from scripts.run_full_test_jason_validation import _jason_runtime_status_label
 from scripts.run_full_test_jason_validation import _plan_verifier_status_label
 from utils.pddl_parser import PDDLFact
@@ -328,3 +330,90 @@ def test_docker_val_wrapper_builds_large_stack_validate_binary() -> None:
 	assert "YYMAXDEPTH" in script
 	assert "tmp/val-large-stack" in script
 	assert ".build.lock" in script
+
+
+def test_validate_one_task_embeds_runtime_asl_without_extra_plan_library_file(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	problem_file = tmp_path / "p01.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain gripper)
+		 (:objects ball1 rooma roomb)
+		 (:init)
+		 (:goal (and (at ball1 roomb)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text("(define (domain gripper))\n", encoding="utf-8")
+	plan_library_asl = tmp_path / "domain_plan_library.asl"
+	plan_library_asl.write_text("/* base */\n", encoding="utf-8")
+	output_dir = tmp_path / "out"
+	captured: dict[str, object] = {}
+
+	class FakeRunner:
+		def __init__(self, **kwargs):
+			captured["init"] = kwargs
+
+		def validate(self, **kwargs):
+			captured["validate"] = kwargs
+
+			class Result:
+				def to_dict(self):
+					return {
+						"success": True,
+						"status": "success",
+						"timed_out": False,
+						"exit_code": 0,
+						"action_count": 1,
+						"plan_verifier": {
+							"success": True,
+							"attempted": True,
+							"available": True,
+						},
+						"artifacts": {
+							"plan_trace": "trace.plan",
+							"plan_verifier_stdout": "val.stdout",
+							"plan_verifier_stderr": "val.stderr",
+						},
+						"error": None,
+					}
+
+			return Result()
+
+	monkeypatch.setattr("scripts.run_full_test_jason_validation.JasonPlanLibraryRunner", FakeRunner)
+	task = JasonTask(
+		domain="gripper",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		plan_library_asl=plan_library_asl,
+		base_plan_library_asl_text="/* base */",
+		goal_name="g_gripper_test_1",
+		compact_completion_wrappers=False,
+		output_dir=output_dir,
+	)
+
+	record = validate_one_task(
+		task,
+		classpath="fake-classpath",
+		compiled_environment_dirs={},
+		timeout_seconds=1,
+		jason_java_stack_size="64m",
+		plan_verifier_command=None,
+		require_plan_verifier=False,
+		plan_verifier_timeout_seconds=1,
+		write_per_test_runtime_asl=False,
+	)
+
+	validate_kwargs = captured["validate"]
+	assert record["success"] is True
+	assert record["runtime_plan_library_asl"] is None
+	assert record["runtime_plan_library_embedded_in_agentspeak"] is True
+	assert not (output_dir / "plan_library.asl").exists()
+	assert validate_kwargs["plan_library_asl"] == plan_library_asl
+	assert "!at(ball1, roomb)." in validate_kwargs["plan_library_asl_text"]
