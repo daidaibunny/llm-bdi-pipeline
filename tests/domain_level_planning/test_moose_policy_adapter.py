@@ -168,7 +168,7 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert library.metadata["source_seed_predicates"] == ["on"]
 	assert library.metadata["source_raw_rule_count"] == 1
 	assert library.metadata["library_quality"]["artifact_classification"] == (
-		"moose_evidence_augmented_compact_recursive_atomic_module_library"
+		"validated_policy_lifting_with_schema_augmented_recursive_modules"
 	)
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
@@ -205,10 +205,10 @@ def test_post_moose_reducer_preserves_validated_logistics_intermodal_macro() -> 
 	assert "\tdrive_truck(D, C, Y, A);" in asl
 	assert "\tunload_truck(X, D, Y)." in asl
 	assert "type_" not in asl
-	assert library.metadata["moose_macro_evidence_reducer"]["validated_macro_count"] == 1
-	assert library.metadata["moose_macro_evidence_reducer"]["invalid_macro_count"] == 0
+	assert library.metadata["validated_policy_lifting"]["validated_macro_count"] == 1
+	assert library.metadata["validated_policy_lifting"]["invalid_macro_count"] == 0
 	assert library.metadata["library_quality"]["artifact_classification"] == (
-		"validated_moose_macro_evidence_atomic_library"
+		"validated_lifted_policy_rule_library"
 	)
 	assert "block0" not in asl
 
@@ -277,7 +277,7 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 			str(BLOCKS_DOMAIN),
 			"--domain-name",
 			"blocks",
-			"--minimal-modules",
+			"--validated-policy-lifting",
 			"--output-dir",
 			str(output_dir),
 		),
@@ -298,9 +298,10 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 	assert library_json["domain_name"] == "blocks"
 	assert len(library_json["plans"]) >= 17
 	assert metadata["minimal_modules"] is True
+	assert metadata["validated_policy_lifting"] is True
 	assert metadata["source_raw_rule_count"] == 1
 	assert metadata["library_quality"]["artifact_classification"] == (
-		"moose_evidence_augmented_compact_recursive_atomic_module_library"
+		"validated_policy_lifting_with_schema_augmented_recursive_modules"
 	)
 	assert metadata["atomic_module_synthesis"]["selector_backend"] == "clingo_asp_minimize"
 	assert metadata["atomic_module_synthesis"]["selector_obligation_count"] == (

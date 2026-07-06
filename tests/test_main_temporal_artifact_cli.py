@@ -81,7 +81,7 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 			str(PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"),
 			"--domain-name",
 			"blocks",
-			"--post-moose-recursive",
+			"--validated-policy-lifting",
 			"--library-root",
 			str(library_root),
 		],
@@ -99,11 +99,13 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	assert result["success"] is True
 	assert result["plan_count"] >= 17
 	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "blocks"
-	assert metadata["artifact_kind"] == "moose_seeded_atomic_minimal_literal_module_library"
+	assert metadata["artifact_kind"] == "validated_policy_lifting_atomic_library"
 	assert metadata["canonical_domain_library"] is True
 	assert metadata["minimal_modules"] is True
 	assert metadata["post_moose_recursive"] is True
-	assert metadata["moose_backend_path"] == "post_moose_recursive_module_synthesis"
+	assert metadata["validated_policy_lifting"] is True
+	assert metadata["moose_backend_path"] == "validated_policy_lifting_and_asl_compilation"
+	assert metadata["atomic_compiler_path"] == "validated_policy_lifting_and_asl_compilation"
 	assert "+!on(X, Y) : not clear(X)" in asl
 	assert "on(Y, X) & not clear(Y)" in asl
 	assert "+!clear(X) : not handempty" in asl

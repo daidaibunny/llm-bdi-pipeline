@@ -173,21 +173,31 @@ required branch kinds such as already-true branches, direct producer branches,
 and certified recursive preparation branches, while minimizing branch count,
 context count, and body cost within the generated candidate space.
 
-## Post-MOOSE To ASL Synthesis
+## Validated Policy Lifting And ASL Compilation
 
-This repository does not modify MOOSE's goal regression learner. A MOOSE
-readable policy is the `policy --dump-policy` first-order decision-list artifact,
-for example a singleton goal rule whose target is `at(ball1, roomb)` and whose
-macro action sequence is `pick(ball1, rooma, right); move(rooma, roomb);
-drop(ball1, roomb, right)`. In the compact path, the MOOSE readable policy is
-used only as evidence for which singleton goal predicates should seed the ASL
-library.
+This repository does not modify MOOSE's goal regression learner and should not
+claim to replace the generalized planner. The implemented module after MOOSE is
+a validated policy-lifting compiler: it takes MOOSE singleton-goal policy
+evidence, checks it against the PDDL schema, lifts grounded-looking rule
+variables into domain-level AgentSpeak(L) variables, and writes one maintained
+ASL library for the domain.
 
-The post-MOOSE synthesis path is:
+A MOOSE readable policy is the `policy --dump-policy` first-order decision-list
+artifact. For example, one readable rule may have goal condition
+`at(package0, location2)` and action sequence `load-airplane(package0,
+airplane0, location0); fly-airplane(airplane0, location0, location1);
+unload-airplane(package0, airplane0, location1); load-truck(package0, truck0,
+location1); drive-truck(truck0, location1, location2, city0);
+unload-truck(package0, truck0, location2)`. The compiler does not trust this
+sequence merely because the domain is named `logistics`; it preserves the
+branch only if every primitive action is symbolically executable from the rule's
+state condition under the PDDL action schemas.
+
+The current compiler path is:
 
 ```text
 MOOSE readable singleton policy
--> seed predicate extraction
+-> validated policy-rule lifting
 -> PDDL schema parsing
 -> producible fluent closure
 -> candidate atomic branch generation
@@ -196,10 +206,22 @@ MOOSE readable singleton policy
 -> AgentSpeak(L) rendering
 ```
 
-Seed predicate extraction means collecting the PDDL predicate symbols that MOOSE
-actually learned as singleton targets. For example, if MOOSE learned singleton
-rules for `served(p1)` and `served(p2)`, the seed predicate is `served`. This
-step is in `compile_moose_readable_policy_to_minimal_module_asl_library`.
+Validated policy-rule lifting means parsing each singleton MOOSE rule's state
+condition, goal condition, and macro action sequence, then replaying the macro
+over a symbolic state using the PDDL action schemas. For example, the Logistics
+intermodal macro above is kept only if `load-airplane` has its required
+`at(package0, location0)` and `at(airplane0, location0)` preconditions in the
+symbolic state, and if the subsequent `fly-airplane`, `unload-airplane`,
+`load-truck`, `drive-truck`, and `unload-truck` steps make the target
+`at(package0, location2)` true. During this step, `package0`, `airplane0`,
+`truck0`, and locations are alpha-normalized to variables such as `X`, `Z`,
+`D`, and `Y`; PDDL typing is compiled to reserved `obj_tp/2` context guards.
+
+Seed predicate extraction is still used after lifting. It collects the PDDL
+predicate symbols that MOOSE actually learned as singleton targets. For example,
+if MOOSE learned singleton rules for `served(p1)` and `served(p2)`, the seed
+predicate is `served`. This seed set is not treated as the whole library; it is
+the starting evidence for schema closure.
 
 PDDL schema parsing means reading the domain's lifted predicate and action
 schemas, not the grounded training instances. For example, in Miconic the
@@ -235,7 +257,7 @@ the `lift_at` module:
 
 Schema feasibility and safety filters remove candidates that are not safe under
 the current ASL execution contract. These filters are domain-general; they do
-not check for domain names such as `miconic` or action names such as `up`.
+not check for particular domain names or particular action names.
 
 - Static context range restriction: a static relation can be used only after its
   variables are connected to the goal head or to earlier positive context
@@ -268,7 +290,8 @@ coverage/minimization problem. A coverage obligation is a candidate branch that
 must be represented either by itself or by another branch with no stronger
 context and an equivalent or recursively covering body. The selector minimizes
 selected branch count, then context literal count, then body step count. This is
-post-MOOSE reduction; it is not MOOSE goal regression.
+validated policy lifting plus schema-augmented branch selection; it is not MOOSE
+goal regression.
 
 AgentSpeak(L) rendering is the final formatting step. It emits PDDL predicate
 achievement heads such as `+!served(X)`, PDDL primitive actions such as
@@ -276,6 +299,36 @@ achievement heads such as `+!served(X)`, PDDL primitive actions such as
 wrappers such as `+!g_query_1`, and reserved `obj_tp/2` contexts. It must not
 emit synthetic achievements such as `achieve_*`, `transition_*`, `dfa_state`, or
 domain-specific `type_*` guards.
+
+There is no Logistics-specific compiler branch. The same implementation is used
+for every selected domain. The artifact shape is determined by evidence and
+schema checks:
+
+- `validated_lifted_policy_rule_library`: the MOOSE singleton policy already
+  contains complete validated macro branches, so the final ASL can mostly
+  preserve those lifted branches. Logistics currently falls here for the tested
+  intermodal package-delivery evidence, but any other domain with complete
+  symbolically executable singleton macros would be compiled the same way.
+- `validated_policy_lifting_with_schema_augmented_recursive_modules`: validated
+  MOOSE rules exist, but PDDL schema closure also requires internal producible
+  fluent modules. Blocks currently falls here because `on(X,Y)` may need
+  internal goals such as `clear(Y)` or `holding(X)`, and these modules can be
+  justified from PDDL add effects and certified recursive progress.
+- `unsupported_by_current_compiler`: neither validated policy-rule lifting nor
+  schema-augmented recursive modules can provide a safe atomic ASL library under
+  the current contract. A graph-search-style domain such as `8puzzle-1tile` is
+  an example when the available evidence does not yield a compact progress-safe
+  atomic module. The correct behavior is to fail or report the limitation, not
+  to add a domain-name patch.
+
+For paper writing, the domain grouping should therefore be evaluation analysis,
+not a backend-routing rule. A precise statement is: this work compiles validated
+singleton-goal policy evidence from an external generalized planner into a
+domain-level AgentSpeak(L) atomic library; when the PDDL schema exposes
+additional producible fluents required for closure, the compiler may add
+schema-augmented recursive atomic modules subject to safety and progress
+certificates. This is a compiler claim, not a claim that MOOSE directly solves
+interacting conjunctive or temporal goals.
 
 ## Jason Runtime Optimization
 

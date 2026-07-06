@@ -288,7 +288,7 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 	source_name: str,
 	policy_file: str | Path | None = None,
 ) -> PlanLibrary:
-	"""Compress MOOSE singleton evidence into compact recursive atomic modules."""
+	"""Lift validated MOOSE singleton evidence into an executable ASL library."""
 
 	rules = parse_moose_readable_policy(text)
 	seed_predicates = tuple(
@@ -301,7 +301,7 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 	library = synthesize_atomic_minimal_literal_module_library(
 		domain_file=domain_file,
 		seed_predicates=seed_predicates,
-		source_backend="moose_schema_minimal_modules",
+		source_backend="moose_validated_policy_lifting",
 		source_name=source_name,
 		policy_file=policy_file,
 	)
@@ -327,7 +327,7 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 			**dict(library.metadata),
 			"source_raw_rule_count": len(rules),
 			"source_seed_predicates": list(seed_predicates),
-			"moose_macro_evidence_reducer": {
+			"validated_policy_lifting": {
 				**macro_evidence.report.to_dict(),
 				"merged_plan_count": len(merged_plans),
 			},
@@ -405,11 +405,11 @@ def _post_moose_reducer_library_quality(
 		if step.kind == "action"
 	)
 	if macro_evidence_plan_count and subgoal_step_count:
-		classification = "moose_evidence_augmented_compact_recursive_atomic_module_library"
+		classification = "validated_policy_lifting_with_schema_augmented_recursive_modules"
 	elif macro_evidence_plan_count:
-		classification = "validated_moose_macro_evidence_atomic_library"
+		classification = "validated_lifted_policy_rule_library"
 	elif subgoal_step_count:
-		classification = "compact_recursive_atomic_module_library"
+		classification = "schema_augmented_recursive_atomic_module_library"
 	else:
 		classification = "compact_lifted_singleton_macro_library"
 	return {
@@ -418,8 +418,11 @@ def _post_moose_reducer_library_quality(
 		"primitive_action_step_count": primitive_action_step_count,
 		"subgoal_step_count": subgoal_step_count,
 		"moose_macro_evidence_plan_count": macro_evidence_plan_count,
+		"validated_policy_rule_plan_count": macro_evidence_plan_count,
 		"compact_recursive_module_ready": subgoal_step_count > 0,
+		"schema_augmented_recursive_modules_ready": subgoal_step_count > 0,
 		"validated_macro_evidence_ready": macro_evidence_plan_count > 0,
+		"validated_policy_lifting_ready": macro_evidence_plan_count > 0,
 	}
 
 
@@ -472,7 +475,7 @@ def _validated_moose_macro_rule_plan(
 		),
 		binding_certificate=(
 			{
-				"artifact_family": "validated_moose_macro_evidence",
+				"artifact_family": "validated_policy_lifting_macro_rule",
 				"source_backend": "moose",
 				"source_name": source_name,
 				"policy_file": str(policy_file) if policy_file is not None else None,

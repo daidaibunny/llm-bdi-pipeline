@@ -47,11 +47,12 @@ def main() -> int:
 	parser.add_argument("--goal-max-size", type=int, default=1)
 	parser.add_argument(
 		"--atomic-library-mode",
-		choices=("faithful", "post-moose-recursive"),
+		choices=("faithful", "validated-policy-lifting", "post-moose-recursive"),
 		default="faithful",
 		help=(
-			"Compile raw MOOSE decision-list macros faithfully, or synthesize "
-			"post-MOOSE recursive atomic modules before ASL rendering."
+			"Compile raw MOOSE decision-list macros faithfully, or validate and "
+			"lift MOOSE singleton policy evidence with the PDDL schema before "
+			"ASL rendering. post-moose-recursive is a deprecated alias."
 		),
 	)
 	parser.add_argument("--max-rss-gb", type=float, default=16.0)
@@ -97,6 +98,7 @@ def main() -> int:
 		help="Allow reusing an existing timestamp output directory.",
 	)
 	args = parser.parse_args()
+	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
 
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	timestamp_id = args.timestamp_id or datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -256,13 +258,21 @@ def batch_manifest(
 			"domain_execution": "sequential",
 			"moose_runtime": "docker_exact_apptainer",
 			"atomic_library_backend": (
-				"post_moose_recursive_module_synthesis"
-				if args.atomic_library_mode == "post-moose-recursive"
+				"validated_policy_lifting_and_asl_compilation"
+				if args.atomic_library_mode == "validated-policy-lifting"
 				else "native_moose_train_dump_policy"
 			),
 		},
 		"command": list(command),
 	}
+
+
+def normalise_atomic_library_mode(mode: str) -> str:
+	"""Map legacy mode names to the current compiler terminology."""
+
+	if mode == "post-moose-recursive":
+		return "validated-policy-lifting"
+	return mode
 
 
 def write_manifest(batch_root: Path, manifest: dict[str, object]) -> None:

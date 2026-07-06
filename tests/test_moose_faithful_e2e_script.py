@@ -179,14 +179,14 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 	assert manifest["settings"]["atomic_library_backend"] == "native_moose_train_dump_policy"
 
 
-def test_post_moose_recursive_batch_mode_is_explicitly_threaded(
+def test_validated_policy_lifting_batch_mode_is_explicitly_threaded(
 	tmp_path: Path,
 ) -> None:
 	class Args:
 		num_workers = 4
 		num_permutations = 3
 		goal_max_size = 1
-		atomic_library_mode = "post-moose-recursive"
+		atomic_library_mode = "validated-policy-lifting"
 		max_rss_gb = 16
 		train_timeout_seconds = 1800
 		dump_timeout_seconds = 300
@@ -213,14 +213,14 @@ def test_post_moose_recursive_batch_mode_is_explicitly_threaded(
 
 	command_text = " ".join(command)
 
-	assert "--atomic-library-mode post-moose-recursive" in command_text
-	assert manifest["settings"]["atomic_library_mode"] == "post-moose-recursive"
+	assert "--atomic-library-mode validated-policy-lifting" in command_text
+	assert manifest["settings"]["atomic_library_mode"] == "validated-policy-lifting"
 	assert manifest["settings"]["atomic_library_backend"] == (
-		"post_moose_recursive_module_synthesis"
+		"validated_policy_lifting_and_asl_compilation"
 	)
 
 
-def test_post_moose_recursive_compile_command_uses_semantic_cli_flag(
+def test_validated_policy_lifting_compile_command_uses_semantic_cli_flag(
 	tmp_path: Path,
 ) -> None:
 	command = compile_moose_atomic_library_command(
@@ -228,10 +228,10 @@ def test_post_moose_recursive_compile_command_uses_semantic_cli_flag(
 		domain_file=tmp_path / "domain.pddl",
 		domain_name="blocks",
 		library_root=tmp_path / "libraries",
-		atomic_library_mode="post-moose-recursive",
+		atomic_library_mode="validated-policy-lifting",
 	)
 
-	assert "--post-moose-recursive" in command
+	assert "--validated-policy-lifting" in command
 	assert "--minimal-modules" not in command
 
 

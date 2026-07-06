@@ -114,7 +114,7 @@ def main() -> int:
 	parser.add_argument(
 		"--domain-file",
 		type=Path,
-		help="PDDL domain file for MOOSE command generation or minimal module synthesis.",
+		help="PDDL domain file for MOOSE command generation or validated policy lifting.",
 	)
 	parser.add_argument(
 		"--training-dir",
@@ -172,12 +172,20 @@ def main() -> int:
 	parser.add_argument(
 		"--minimal-modules",
 		action="store_true",
-		help="Deprecated alias for --post-moose-recursive.",
+		help="Deprecated alias for --validated-policy-lifting.",
+	)
+	parser.add_argument(
+		"--validated-policy-lifting",
+		action="store_true",
+		help=(
+			"Validate and lift MOOSE singleton policy evidence with the PDDL "
+			"schema before ASL rendering."
+		),
 	)
 	parser.add_argument(
 		"--post-moose-recursive",
 		action="store_true",
-		help="Compile MOOSE singleton evidence into compact recursive atomic modules.",
+		help="Deprecated alias for --validated-policy-lifting.",
 	)
 	args = parser.parse_args()
 
@@ -228,7 +236,11 @@ def main() -> int:
 			domain_name=args.domain_name,
 			domain_file=args.domain_file,
 			output_dir=_required_path(args.output_dir, "--output-dir"),
-			minimal_modules=bool(args.minimal_modules or args.post_moose_recursive),
+			minimal_modules=bool(
+				args.minimal_modules
+				or args.validated_policy_lifting
+				or args.post_moose_recursive
+			),
 		)
 		return 0
 	if args.command == "learner-sketches-command":
@@ -563,7 +575,9 @@ def compile_moose_readable_atomic_library(
 	source_name = policy_file.stem.replace(".model", "")
 	if minimal_modules:
 		if domain_file is None:
-			raise ValueError("--domain-file is required with --minimal-modules.")
+			raise ValueError(
+				"--domain-file is required with --validated-policy-lifting.",
+			)
 		library = compile_moose_readable_policy_to_minimal_module_asl_library(
 			text,
 			domain_file=domain_file,
@@ -602,6 +616,7 @@ def compile_moose_readable_atomic_library(
 				"policy_file": str(policy_file),
 				"source_name": source_name,
 				"minimal_modules": minimal_modules,
+				"validated_policy_lifting": minimal_modules,
 				"raw_rule_count": int(
 					library.metadata.get("raw_rule_count")
 					or library.metadata.get("source_raw_rule_count")
@@ -624,6 +639,9 @@ def compile_moose_readable_atomic_library(
 				"policy_program_rule_count": len(program.rules),
 				"policy_program_module_count": len(program.modules),
 				"library_quality": dict(library.metadata.get("library_quality") or {}),
+				"validated_policy_lifting_report": dict(
+					library.metadata.get("validated_policy_lifting") or {},
+				),
 				"atomic_module_synthesis": dict(
 					library.metadata.get("atomic_module_synthesis") or {},
 				),

@@ -25,7 +25,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 DEFAULT_BATCH_ROOT = PROJECT_ROOT / "artifacts" / "moose_asl_batches"
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "artifacts" / "jason_full_test_runs"
-ATOMIC_LIBRARY_MODES = ("faithful", "post-moose-recursive")
+ATOMIC_LIBRARY_MODES = ("faithful", "validated-policy-lifting", "post-moose-recursive")
 
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
@@ -142,11 +142,12 @@ def main() -> int:
 	parser.add_argument(
 		"--atomic-library-mode",
 		choices=ATOMIC_LIBRARY_MODES,
-		default="post-moose-recursive",
+		default="validated-policy-lifting",
 		help=(
-			"Compile raw MOOSE decision-list macros faithfully, or synthesize "
-			"post-MOOSE recursive atomic modules before Jason validation. Defaults "
-			"to the current post-MOOSE recursive architecture."
+			"Compile raw MOOSE decision-list macros faithfully, or validate and "
+			"lift MOOSE singleton policy evidence with the PDDL schema before "
+			"Jason validation. Defaults to validated-policy-lifting. "
+			"post-moose-recursive is accepted as a deprecated alias."
 		),
 	)
 	parser.add_argument(
@@ -181,6 +182,7 @@ def main() -> int:
 		),
 	)
 	args = parser.parse_args()
+	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
 
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	batch_root = resolve_batch_root(args.batch_root, args.batch_id)
@@ -428,6 +430,7 @@ def build_compile_atomic_library_command(
 ) -> tuple[str, ...]:
 	"""Return the compile command used before full-test Jason validation."""
 
+	atomic_library_mode = normalise_atomic_library_mode(atomic_library_mode)
 	if atomic_library_mode not in ATOMIC_LIBRARY_MODES:
 		raise ValueError(f"Unsupported atomic library mode: {atomic_library_mode}")
 	command = [
@@ -444,9 +447,17 @@ def build_compile_atomic_library_command(
 		str(library_root),
 		"--overwrite",
 	]
-	if atomic_library_mode == "post-moose-recursive":
-		command.append("--post-moose-recursive")
+	if atomic_library_mode == "validated-policy-lifting":
+		command.append("--validated-policy-lifting")
 	return tuple(command)
+
+
+def normalise_atomic_library_mode(mode: str) -> str:
+	"""Map legacy mode names to the current compiler terminology."""
+
+	if mode == "post-moose-recursive":
+		return "validated-policy-lifting"
+	return mode
 
 
 def append_linear_single_body_full_test_wrappers(

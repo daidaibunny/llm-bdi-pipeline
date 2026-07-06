@@ -43,7 +43,22 @@ def test_render_fact_atom_matches_generated_asl_identifier_rules() -> None:
 	assert render_fact_atom(PDDLFact("handempty", [])) == "handempty"
 
 
-def test_full_test_compile_command_defaults_to_post_moose_recursive(tmp_path: Path) -> None:
+def test_full_test_compile_command_defaults_to_validated_policy_lifting(tmp_path: Path) -> None:
+	command = build_compile_atomic_library_command(
+		readable_policy=tmp_path / "ferry.model.readable",
+		domain_file=tmp_path / "domain.pddl",
+		domain="ferry",
+		library_root=tmp_path / "libraries",
+		atomic_library_mode="validated-policy-lifting",
+	)
+
+	assert "--validated-policy-lifting" in command
+	assert "--domain-file" in command
+
+
+def test_full_test_compile_command_accepts_legacy_post_moose_alias(
+	tmp_path: Path,
+) -> None:
 	command = build_compile_atomic_library_command(
 		readable_policy=tmp_path / "ferry.model.readable",
 		domain_file=tmp_path / "domain.pddl",
@@ -52,8 +67,8 @@ def test_full_test_compile_command_defaults_to_post_moose_recursive(tmp_path: Pa
 		atomic_library_mode="post-moose-recursive",
 	)
 
-	assert "--post-moose-recursive" in command
-	assert "--domain-file" in command
+	assert "--validated-policy-lifting" in command
+	assert "--post-moose-recursive" not in command
 
 
 def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> None:
@@ -65,7 +80,7 @@ def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> 
 		atomic_library_mode="faithful",
 	)
 
-	assert "--post-moose-recursive" not in command
+	assert "--validated-policy-lifting" not in command
 
 
 def test_full_test_wrapper_uses_linear_single_body(tmp_path: Path) -> None:
@@ -281,7 +296,7 @@ def test_prepare_domain_can_filter_test_problem_names(
 		batch_root=batch_root,
 		run_root=tmp_path / "run",
 		timeout_seconds=1,
-		atomic_library_mode="post-moose-recursive",
+		atomic_library_mode="validated-policy-lifting",
 		write_domain_long_asl=False,
 		max_domain_long_asl_bytes=1024,
 		test_name_regex=r"^p2_0[12]\.pddl$",

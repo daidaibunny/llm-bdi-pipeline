@@ -103,11 +103,12 @@ def main() -> int:
 	parser.add_argument("--goal-max-size", type=int, default=1)
 	parser.add_argument(
 		"--atomic-library-mode",
-		choices=("faithful", "post-moose-recursive"),
+		choices=("faithful", "validated-policy-lifting", "post-moose-recursive"),
 		default="faithful",
 		help=(
-			"Compile raw MOOSE decision-list macros faithfully, or synthesize "
-			"post-MOOSE recursive atomic modules before ASL rendering."
+			"Compile raw MOOSE decision-list macros faithfully, or validate and "
+			"lift MOOSE singleton policy evidence with the PDDL schema before "
+			"ASL rendering. post-moose-recursive is a deprecated alias."
 		),
 	)
 	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
@@ -159,6 +160,7 @@ def main() -> int:
 		help="Stop after the first domain-level failure.",
 	)
 	args = parser.parse_args()
+	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
 
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	output_root = args.output_root.expanduser().resolve()
@@ -383,9 +385,17 @@ def run_domain(
 
 
 def _pipeline_name(atomic_library_mode: str) -> str:
-	if atomic_library_mode == "post-moose-recursive":
-		return "post_moose_recursive_module_synthesis_to_asl_e2e"
+	if normalise_atomic_library_mode(atomic_library_mode) == "validated-policy-lifting":
+		return "validated_policy_lifting_to_asl_e2e"
 	return "faithful_moose_decision_list_to_asl_e2e"
+
+
+def normalise_atomic_library_mode(mode: str) -> str:
+	"""Map legacy mode names to the current compiler terminology."""
+
+	if mode == "post-moose-recursive":
+		return "validated-policy-lifting"
+	return mode
 
 
 def compile_moose_atomic_library_command(
@@ -412,8 +422,8 @@ def compile_moose_atomic_library_command(
 		str(library_root),
 		"--overwrite",
 	]
-	if atomic_library_mode == "post-moose-recursive":
-		command.append("--post-moose-recursive")
+	if normalise_atomic_library_mode(atomic_library_mode) == "validated-policy-lifting":
+		command.append("--validated-policy-lifting")
 	return tuple(command)
 
 

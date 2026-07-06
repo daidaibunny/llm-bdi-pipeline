@@ -58,7 +58,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
 		epilog="""
 Examples:
   python src/main.py compile-moose-atomic-library --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry
-  python src/main.py compile-moose-atomic-library --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --minimal-modules
+  python src/main.py compile-moose-atomic-library --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --validated-policy-lifting
   python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocks/domain.pddl --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json --query-id query_1
   python src/main.py validate-jason-plan-library --domain-file src/domains/blocks/domain.pddl --problem-file src/domains/blocks/test/instance-69.pddl --goal-name g_blocks_user_goal_1
 		""",
@@ -79,15 +79,22 @@ Examples:
 		"--minimal-modules",
 		action="store_true",
 		help=(
-			"Deprecated alias for --post-moose-recursive."
+			"Deprecated alias for --validated-policy-lifting."
+		),
+	)
+	moose_parser.add_argument(
+		"--validated-policy-lifting",
+		action="store_true",
+		help=(
+			"Validate and lift MOOSE singleton policy evidence with the PDDL "
+			"schema, then compile the result into a domain-level atomic ASL library."
 		),
 	)
 	moose_parser.add_argument(
 		"--post-moose-recursive",
 		action="store_true",
 		help=(
-			"Use MOOSE singleton predicate evidence and PDDL action schemas to "
-			"synthesize compact recursive atomic literal modules before ASL rendering."
+			"Deprecated alias for --validated-policy-lifting."
 		),
 	)
 	moose_parser.add_argument(
@@ -234,13 +241,14 @@ def main() -> None:
 
 def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	policy_file = _require_existing_path(args.policy_file, label="MOOSE Policy File")
-	use_post_moose_recursive = bool(
-		getattr(args, "post_moose_recursive", False)
+	use_validated_policy_lifting = bool(
+		getattr(args, "validated_policy_lifting", False)
+		or getattr(args, "post_moose_recursive", False)
 		or getattr(args, "minimal_modules", False),
 	)
 	domain_file = (
 		_require_existing_path(args.domain_file, label="Domain File")
-		if use_post_moose_recursive
+		if use_validated_policy_lifting
 		else _absolute_path(args.domain_file)
 	)
 	pddl_domain_name = (
@@ -260,7 +268,7 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	)
 	policy_text = Path(policy_file).read_text(encoding="utf-8")
 	source_name = Path(policy_file).stem.replace(".model", "")
-	if use_post_moose_recursive:
+	if use_validated_policy_lifting:
 		library = compile_moose_readable_policy_to_minimal_module_asl_library(
 			policy_text,
 			domain_file=str(domain_file),
@@ -280,18 +288,24 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 		output_root=output_root,
 		metadata={
 			"artifact_kind": (
-				"moose_seeded_atomic_minimal_literal_module_library"
-				if use_post_moose_recursive
+				"validated_policy_lifting_atomic_library"
+				if use_validated_policy_lifting
 				else "moose_atomic_library"
 			),
 			"backend": "moose",
 			"domain_file": domain_file,
 			"pddl_domain_name": pddl_domain_name,
-			"minimal_modules": use_post_moose_recursive,
-			"post_moose_recursive": use_post_moose_recursive,
+			"minimal_modules": use_validated_policy_lifting,
+			"post_moose_recursive": use_validated_policy_lifting,
+			"validated_policy_lifting": use_validated_policy_lifting,
 			"moose_backend_path": (
-				"post_moose_recursive_module_synthesis"
-				if use_post_moose_recursive
+				"validated_policy_lifting_and_asl_compilation"
+				if use_validated_policy_lifting
+				else "native_train_dump_policy"
+			),
+			"atomic_compiler_path": (
+				"validated_policy_lifting_and_asl_compilation"
+				if use_validated_policy_lifting
 				else "native_train_dump_policy"
 			),
 			"moose_official_benchmark": _is_moose_official_benchmark(source_metadata),
