@@ -124,8 +124,14 @@ def test_moose_readable_policy_compiles_to_atomic_asl_library() -> None:
 	assert "\tsail(Location0, Location1);" in asl
 	assert "\tdebark(Car0, Location1)." in asl
 	assert library.metadata["library_quality"]["artifact_classification"] == (
-		"compact_lifted_singleton_macro_library"
+		"atomic_template_library"
 	)
+	assert library.metadata["library_quality"]["library_profile"] == (
+		"action_only_atomic_template_library"
+	)
+	assert library.metadata["library_quality"]["plan_template_kind_counts"] == {
+		"action_only_plan_template": 2,
+	}
 	assert library.metadata["library_quality"]["compact_recursive_module_ready"] is False
 	assert library.metadata["library_quality"]["faithful_decision_list_ready"] is True
 
@@ -143,7 +149,9 @@ def test_moose_quality_audit_flags_large_raw_macro_policies() -> None:
 	assert report.singleton_macro_library_ready is False
 	assert report.compact_recursive_module_ready is False
 	assert report.faithful_decision_list_ready is True
-	assert report.artifact_classification == "faithful_moose_decision_list_asl_library"
+	assert report.artifact_classification == "atomic_template_library"
+	assert report.library_profile == "action_only_atomic_template_library"
+	assert report.plan_template_kind_counts == {"action_only_plan_template": 12}
 	assert any("Plan count exceeds" in warning for warning in report.warnings)
 
 
@@ -168,7 +176,16 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert library.metadata["source_seed_predicates"] == ["on"]
 	assert library.metadata["source_raw_rule_count"] == 1
 	assert library.metadata["library_quality"]["artifact_classification"] == (
-		"validated_policy_lifting_with_schema_augmented_recursive_modules"
+		"atomic_template_library"
+	)
+	assert library.metadata["library_quality"]["library_profile"] == (
+		"mixed_atomic_template_library"
+	)
+	assert (
+		library.metadata["library_quality"]["plan_template_kind_counts"][
+			"subgoal_decomposed_plan_template"
+		]
+		> 0
 	)
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
@@ -208,7 +225,11 @@ def test_post_moose_reducer_preserves_validated_logistics_intermodal_macro() -> 
 	assert library.metadata["validated_policy_lifting"]["validated_macro_count"] == 1
 	assert library.metadata["validated_policy_lifting"]["invalid_macro_count"] == 0
 	assert library.metadata["library_quality"]["artifact_classification"] == (
-		"validated_lifted_policy_rule_library"
+		"atomic_template_library"
+	)
+	assert library.metadata["library_quality"]["subgoal_step_count"] == 0
+	assert library.metadata["library_quality"]["library_profile"] == (
+		"mixed_atomic_template_library"
 	)
 	assert "block0" not in asl
 
@@ -251,7 +272,10 @@ def test_moose_readable_compile_asl_cli_materializes_atomic_library(
 	assert metadata["backend"] == "moose"
 	assert metadata["compiled_singleton_rule_count"] == 2
 	assert metadata["library_quality"]["artifact_classification"] == (
-		"compact_lifted_singleton_macro_library"
+		"atomic_template_library"
+	)
+	assert metadata["library_quality"]["library_profile"] == (
+		"action_only_atomic_template_library"
 	)
 	assert "+!at(Car0, Location1)" in asl
 	assert "achieve_" not in asl
@@ -301,7 +325,10 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 	assert metadata["validated_policy_lifting"] is True
 	assert metadata["source_raw_rule_count"] == 1
 	assert metadata["library_quality"]["artifact_classification"] == (
-		"validated_policy_lifting_with_schema_augmented_recursive_modules"
+		"atomic_template_library"
+	)
+	assert metadata["library_quality"]["library_profile"] == (
+		"mixed_atomic_template_library"
 	)
 	assert metadata["atomic_module_synthesis"]["selector_backend"] == "clingo_asp_minimize"
 	assert metadata["atomic_module_synthesis"]["selector_obligation_count"] == (

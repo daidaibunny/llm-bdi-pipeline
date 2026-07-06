@@ -323,39 +323,117 @@ wrappers such as `+!g_query_1`, and reserved `obj_tp/2` contexts. It must not
 emit synthetic achievements such as `achieve_*`, `transition_*`, `dfa_state`, or
 domain-specific `type_*` guards.
 
-There is no Logistics-specific compiler branch. The same implementation is used
-for every selected domain. The artifact shape is determined by evidence and
-schema checks:
+There is no Logistics-specific compiler branch and no Blocks-specific compiler
+branch. The same implementation is used for every selected domain. The
+structural labels are plan-template-level labels, not domain labels. A plan
+template is one AgentSpeak(L) plan branch, for example one
+`+!at(X,Y) : ... <- ...` branch. A single domain library usually contains
+several template kinds at the same time:
 
-- `validated_lifted_policy_rule_library`: the MOOSE singleton policy already
-  contains complete validated macro branches, so the final ASL can mostly
-  preserve those lifted branches. A complete macro branch is a lifted action
-  sequence that the compiler can replay with the PDDL schema; for example, a
-  Logistics package-delivery branch may load a package into an airplane, fly it,
-  unload it, load it into a truck, drive the truck, and unload it at the target
-  location. Logistics currently falls here for the tested intermodal evidence,
-  but any other domain with complete symbolically executable singleton macros
-  would be compiled the same way.
-- `validated_policy_lifting_with_schema_augmented_recursive_modules`: validated
-  MOOSE rules exist, but PDDL schema closure also requires internal producible
-  fluent modules. A producible fluent is a PDDL predicate that appears in a
-  positive action effect, for example Blocks `clear(X)` or Depots `lifting(H,C)`.
-  Blocks falls here because `on(X,Y)` may need internal goals such as
-  `clear(Y)`, `holding(X)`, or `handempty`; Depots is selected for the same
-  outcome because stack construction goals such as `on(C,P)` require internal
-  modules over `clear`, `lifting`, `available`, `at`, and `in`. These modules
-  are justified from PDDL add effects and certified recursive progress, not
-  from domain-name patches.
-- `unsupported_by_current_compiler`: neither validated policy-rule lifting nor
-  schema-augmented recursive modules can provide a safe atomic ASL library under
-  the current contract. A graph-search-style domain such as `8puzzle-1tile` is
-  an example when the available evidence does not yield a compact progress-safe
-  atomic module. Moving a target tile depends on blank-position reachability and
-  permutation constraints; the current compiler has no graph-search controller
-  or ranking certificate for that structure. The correct behavior is to report
-  the limitation, not to add a domain-name patch.
+- `already_true_plan_template`: the requested fluent is already true, so the
+  plan body is empty except for rendered `true`. For example:
 
-## Current Benchmark Scope And Compiler Outcomes
+```asl
++!clear(X) : clear(X) <-
+	true.
+```
+
+- `action_only_plan_template`: the body contains only primitive PDDL actions. A
+  macro is one fixed primitive-action sequence; it is not a new PDDL action and
+  not a hidden planner call. For example, a Logistics macro for `+!at(X,Y)` may
+  execute `load_truck(X,Z,A); drive_truck(Z,A,Y,B); unload_truck(X,Z,Y)`. A
+  Blocks action-only template for `+!clear(X)` may execute `unstack(Y,X);
+  put_down(Y)`.
+- `subgoal_decomposed_plan_template`: the body contains at least one internal
+  AgentSpeak achievement subgoal. For example:
+
+```asl
++!on(X, Y) : not clear(Y) & obj_tp(X, block) & obj_tp(Y, block) <-
+	!clear(Y);
+	!on(X, Y).
+```
+
+The metadata therefore reports a generic `artifact_classification` of
+`atomic_template_library`, plus `library_profile` and
+`plan_template_kind_counts`. A `mixed_atomic_template_library` means the domain
+library contains multiple plan-template kinds. This is a diagnostic profile of
+the ASL file, not a taxonomy of the domain and not a routing decision.
+
+`unsupported_by_current_compiler` remains a boundary diagnosis, not a domain
+class. A graph-search-style domain such as `8puzzle-1tile` is an example when
+the available evidence does not yield a compact progress-safe atomic module.
+Moving a target tile depends on blank-position reachability and permutation
+constraints; the current compiler has no graph-search controller or ranking
+certificate for that structure. The correct behavior is to report the
+limitation, not to add a domain-name patch.
+
+### Internal Subgoal Coverage
+
+An internal subgoal such as `!clear(Y)` is emitted only when the compiler can
+also emit plans for the target predicate `clear`. The input to this check is the
+MOOSE readable singleton policy plus the PDDL domain schema. The output is a
+closed set of atomic modules before AgentSpeak(L) rendering.
+
+The closure rule is domain-general:
+
+1. Start from MOOSE seed predicates. If MOOSE learned singleton rules for
+   `on(X,Y)`, then `on` is a seed predicate.
+2. Add every predicate that appears in a positive PDDL action effect. Such a
+   predicate is a producible fluent, meaning an action can make it true. In
+   Blocks, `put-down` adds `clear(X)`, `handempty`, and `ontable(X)`; `unstack`
+   adds `holding(X)` and `clear(Y)`.
+3. For every module predicate, generate an already-true template and producer
+   templates from actions whose add effects produce that predicate.
+4. Generate a prepare-subgoal template only when the missing precondition is
+   itself a producible module predicate with a valid producer. Static predicates
+   such as Miconic `above(F1,F2)` remain context only and do not become
+   `+!above(...)` goals.
+
+For Blocks, this process generates `clear` without any Blocks-name branch:
+
+```asl
++!clear(X) : clear(X) <-
+	true.
+
++!clear(X) : holding(X) & obj_tp(X, block) <-
+	put_down(X).
+
++!clear(X) : on(Y, X) & clear(Y) & handempty & obj_tp(X, block) & obj_tp(Y, block) <-
+	unstack(Y, X);
+	put_down(Y).
+```
+
+These templates come from the PDDL schema: `put-down(?x)` has add effect
+`clear(?x)`, and `unstack(?x,?y)` has add effect `clear(?y)`. To make
+`clear(X)` with `unstack`, the compiler aligns PDDL parameter `?y` with ASL
+variable `X`, producing the context `on(Y,X) & clear(Y) & handempty`.
+
+Same-predicate recursive templates require a progress certificate. A progress
+certificate is a schema-level witness that the recursive call can remove a
+dynamic obstruction relation, not a domain-specific proof. In Blocks:
+
+```asl
++!clear(X) : on(Y, X) & not clear(Y) & obj_tp(X, block) & obj_tp(Y, block) <-
+	!clear(Y);
+	!clear(X).
+```
+
+The certificate is:
+
+```text
+relation_predicate = on
+relation_arguments = Y, X
+deleting_action = unstack
+```
+
+This means `on(Y,X)` binds the recursive variable `Y` to the target `X`, and
+the producer action `unstack(Y,X)` deletes the obstruction relation `on(Y,X)`.
+The compiler checks this pattern over PDDL action schemas; it does not check
+`domain == blocks`, `predicate == clear`, or `action == unstack`. Any domain
+with the same schema-level obstruction-removal pattern can use the same rule,
+and recursive branches without such a deleting-action witness are rejected.
+
+## Current Benchmark Scope And Library Profiles
 
 The post-MOOSE, pre-ASL component is called a validated policy-lifting
 compiler. "Post-MOOSE" means it runs after MOOSE has produced a readable policy;
@@ -365,17 +443,16 @@ and whose body is a macro sequence of PDDL actions. "Pre-ASL" means it runs
 before rendering the final AgentSpeak(L) file; an AgentSpeak(L) file is the
 executable library containing plans such as `+!at(X,Y) : ... <- ...`.
 
-The compiler outcome is chosen from evidence shape plus PDDL schema structure,
-not from a domain-name switch:
+The benchmark groups describe evaluation coverage, not compiler outcomes:
 
-| Domain | Goal/property group | Compiler outcome | Reason |
-| --- | --- | --- | --- |
-| `ferry` | Singleton regression-friendly classical goals | `validated_lifted_policy_rule_library` | The goal items are atomic car-at-location fluents such as `at(C,L)`, and MOOSE provides singleton regression evidence that replays through ferry loading, sailing, and debarking actions. |
-| `miconic` | Singleton regression-friendly classical goals | `validated_lifted_policy_rule_library` with schema-safe movement modules | The benchmark goal items are `served(P)`. Static floor ordering such as `above(F1,F2)` is context only; executable movement branches are retained only when the current lift location is bound by `lift_at(F)`. |
-| `gripper` | Multi-object classical achievement goals | `validated_lifted_policy_rule_library` | The goal items are repeated `at(B,R)` literals over many balls. Validated producer macros bind a ball, current room, target room, and gripper, then execute `pick`, `move`, and `drop` without grounding per instance. |
-| `logistics` | Multi-object classical achievement goals | `validated_lifted_policy_rule_library` | The goal items are package-location literals. The useful evidence is long but complete intermodal MOOSE macros, and `obj_tp/2` guards keep package, truck, airplane, city, and location roles type safe. |
-| `blocks` | Support-dependent construction goals | `validated_policy_lifting_with_schema_augmented_recursive_modules` | Construction goals such as `on(X,Y)` depend on support and clearing relations. Schema closure adds internal modules such as `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)` when they are producible by PDDL actions. |
-| `depots` | Support-dependent construction goals | `validated_policy_lifting_with_schema_augmented_recursive_modules` | Depots combines transport and stacking. Goals such as `on(C,P)` require support-dependent internal modules over `clear`, `lifting`, `available`, `at`, and `in`, all of which are PDDL fluents generated from action effects. |
+| Domain | Goal/property group | Evidence note |
+| --- | --- | --- |
+| `ferry` | Singleton regression-friendly classical goals | Atomic car-location fluents such as `at(C,L)` exercise ferry loading, sailing, and debarking actions. |
+| `miconic` | Singleton regression-friendly classical goals | Passenger service goals such as `served(P)` exercise boarding, lift movement, and departure; static floor order such as `above(F1,F2)` remains context only. |
+| `gripper` | Multi-object classical achievement goals | Repeated `at(B,R)` literals over many balls exercise lifted object transport with `pick`, `move`, and `drop`. |
+| `logistics` | Multi-object classical achievement goals | Package-location literals exercise long intermodal macros while `obj_tp/2` keeps package, truck, airplane, city, and location roles type safe. |
+| `blocks` | Support-dependent construction goals | Construction goals such as `on(X,Y)` exercise internal modules such as `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)`. |
+| `depots` | Support-dependent construction goals | Crate support goals such as `on(C,P)` combine transport and stacking, exercising internal modules over `clear`, `lifting`, `available`, `at`, and `in`. |
 
 `8puzzle-1tile` is no longer a selected benchmark domain. It remains a boundary
 case for the current compiler because the atomic goal "put one tile at its

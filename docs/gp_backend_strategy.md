@@ -19,14 +19,21 @@ checks that the readable policy's actions replay through those schemas, lifts
 object names to variables, adds required PDDL-schema closure modules, selects a
 compact branch set, and renders AgentSpeak(L) plans such as `+!at(X,Y)`.
 
-The compiler does not use a domain-name switch. It assigns an evidence outcome
-from the shape of the MOOSE policy plus the PDDL schema:
+The compiler does not use a domain-name switch and does not assign a whole
+domain to a compiler class. The structural labels are plan-template-level
+labels. A plan template is one AgentSpeak(L) plan branch, for example one
+`+!at(X,Y) : ... <- ...` branch. A single domain library usually contains
+several plan-template kinds at the same time.
 
-| Compiler outcome | Meaning | Example |
+| Plan-template kind | Meaning | Example |
 | --- | --- | --- |
-| `validated_lifted_policy_rule_library` | MOOSE already gives complete singleton macro evidence, and the macro replays symbolically through PDDL action schemas. | Logistics `+!at(P,L)` can preserve a lifted load-fly-unload-drive-unload macro after type-safe binding. |
-| `validated_policy_lifting_with_schema_augmented_recursive_modules` | MOOSE provides seed singleton evidence, but PDDL add-effect/precondition closure requires internal producible fluent modules. | Blocks `+!on(X,Y)` may call `!clear(Y)` before stacking; Depots `+!on(C,P)` may need `!lifting(H,C)` or `!clear(P)`. |
-| `unsupported_by_current_compiler` | The available evidence cannot be compiled into a compact, progress-safe atomic library under the current contract. | `8puzzle-1tile` needs graph reachability and permutation-progress reasoning over the blank square. |
+| `already_true_plan_template` | The requested fluent is already true, so the plan body is empty except for rendered `true`. | `+!clear(X) : clear(X) <- true.` |
+| `action_only_plan_template` | The body contains only primitive PDDL actions. This includes fixed MOOSE macro evidence, where a macro is a fixed action sequence, not a new PDDL action. | Logistics `+!at(P,L)` may execute `load_truck; drive_truck; unload_truck`. Blocks `+!clear(X)` may execute `unstack(Y,X); put_down(Y)`. |
+| `subgoal_decomposed_plan_template` | The body contains at least one internal AgentSpeak achievement subgoal such as `!clear(Y)`. | Blocks `+!on(X,Y)` may call `!clear(Y); !on(X,Y)` when `Y` is not clear. |
+
+The metadata reports a library profile such as `mixed_atomic_template_library`
+when several plan-template kinds appear in one domain library. This profile is
+diagnostic only; it is not a domain taxonomy and is not used for routing.
 
 ## Selected Benchmark Scope
 
@@ -49,16 +56,19 @@ The current split policy is:
 | `ferry`, `miconic`, `gripper`, `logistics` | MOOSE official artifact split: source `training/` is train, source `testing/` is test. |
 | `blocks`, `depots` | `floor(1/4 * instance_count)` train, remaining instances as test. |
 
-## Domain Outcomes
+## Domain Evidence Notes
 
-| Domain | Compiler outcome | Assignment reason |
-| --- | --- | --- |
-| `ferry` | `validated_lifted_policy_rule_library` | Singleton car-location goals such as `at(C,L)` are directly supported by MOOSE macro evidence over loading, sailing, and debarking actions. |
-| `miconic` | `validated_lifted_policy_rule_library` | Passenger service goals such as `served(P)` compile from validated boarding, movement, and departure branches; static floor-order predicates remain context only. |
-| `gripper` | `validated_lifted_policy_rule_library` | Ball-location goals such as `at(B,R)` compile to lifted producer macros over `pick`, `move`, and `drop`. |
-| `logistics` | `validated_lifted_policy_rule_library` | Package-location goals require long macros, but those macros are complete MOOSE evidence and are type-safe after `obj_tp/2` binding. |
-| `blocks` | `validated_policy_lifting_with_schema_augmented_recursive_modules` | Support construction goals such as `on(X,Y)` require internal producible fluents such as `clear`, `holding`, `handempty`, and `ontable`. |
-| `depots` | `validated_policy_lifting_with_schema_augmented_recursive_modules` | Crate support goals such as `on(C,P)` combine stacking and transport, requiring internal modules over `clear`, `lifting`, `available`, `at`, and `in`. |
+The following notes describe which goal structures each benchmark stresses.
+They are not compiler-outcome assignments.
+
+| Domain | Evidence note |
+| --- | --- |
+| `ferry` | Car-location goals such as `at(C,L)` exercise lifted ferry-loading and sailing actions. The resulting library can contain already-true, action-only, and preparation templates. |
+| `miconic` | Passenger service goals such as `served(P)` exercise boarding, lift movement, and departure actions; static floor-order predicates such as `above(F1,F2)` remain context only. |
+| `gripper` | Ball-location goals such as `at(B,R)` exercise repeated lifted object movement over balls and grippers. |
+| `logistics` | Package-location goals exercise long intermodal action-only macros such as loading into an airplane, flying, unloading, loading into a truck, driving, and unloading. |
+| `blocks` | Support construction goals such as `on(X,Y)` exercise schema-derived internal modules such as `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)`. |
+| `depots` | Crate support goals such as `on(C,P)` combine transport and stacking, exercising internal modules over `clear`, `lifting`, `available`, `at`, and `in`. |
 
 ## Unsupported Boundary
 

@@ -169,7 +169,8 @@ Logistics-specific code path. Evidence:
 `moose-reducer-logistics-p0` passes all `30/30` `p0_*` Logistics tests. A full
 Logistics Jason-only run was started and interrupted after `37/37` recorded
 successes because later `p1` instances are long performance probes. The
-Logistics artifact is classified by evidence shape as
-`validated_lifted_policy_rule_library`, while Blocks-style libraries with real
-subgoal branches are classified as
-`validated_policy_lifting_with_schema_augmented_recursive_modules`.
+Compiler metadata no longer classifies whole domains by outcome. It reports a
+generic `atomic_template_library` plus plan-template-level diagnostics:
+`already_true_plan_template`, `action_only_plan_template`, and
+`subgoal_decomposed_plan_template`. A whole domain library can be
+`mixed_atomic_template_library` because it may contain all three template kinds.

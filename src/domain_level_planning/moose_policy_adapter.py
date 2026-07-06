@@ -77,6 +77,8 @@ class MooseAtomicLibraryQualityReport:
 	compact_recursive_module_ready: bool
 	faithful_decision_list_ready: bool
 	artifact_classification: str
+	library_profile: str
+	plan_template_kind_counts: Mapping[str, int]
 	warnings: tuple[str, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
@@ -92,6 +94,8 @@ class MooseAtomicLibraryQualityReport:
 			"compact_recursive_module_ready": self.compact_recursive_module_ready,
 			"faithful_decision_list_ready": self.faithful_decision_list_ready,
 			"artifact_classification": self.artifact_classification,
+			"library_profile": self.library_profile,
+			"plan_template_kind_counts": dict(self.plan_template_kind_counts),
 			"warnings": list(self.warnings),
 		}
 
@@ -404,16 +408,24 @@ def _post_moose_reducer_library_quality(
 		for step in tuple(plan.body or ())
 		if step.kind == "action"
 	)
-	if macro_evidence_plan_count and subgoal_step_count:
-		classification = "validated_policy_lifting_with_schema_augmented_recursive_modules"
-	elif macro_evidence_plan_count:
-		classification = "validated_lifted_policy_rule_library"
-	elif subgoal_step_count:
-		classification = "schema_augmented_recursive_atomic_module_library"
-	else:
-		classification = "compact_lifted_singleton_macro_library"
+	plan_template_kind_counts = _plan_template_kind_counts(plan_tuple)
 	return {
-		"artifact_classification": classification,
+		"artifact_classification": (
+			"atomic_template_library"
+			if plan_tuple
+			else "empty_or_unbound_atomic_template_library"
+		),
+		"artifact_classification_basis": (
+			"generic artifact label; structural categories are plan-template-level, "
+			"not domain-level"
+		),
+		"library_profile": _library_template_profile(plan_template_kind_counts),
+		"plan_template_kind_counts": plan_template_kind_counts,
+		"plan_template_classification_basis": (
+			"per plan template: empty body is already-true, bodies with only "
+			"primitive actions are action-only, bodies containing achievement "
+			"subgoals are subgoal-decomposed"
+		),
 		"plan_count": len(plan_tuple),
 		"primitive_action_step_count": primitive_action_step_count,
 		"subgoal_step_count": subgoal_step_count,
@@ -424,6 +436,41 @@ def _post_moose_reducer_library_quality(
 		"validated_macro_evidence_ready": macro_evidence_plan_count > 0,
 		"validated_policy_lifting_ready": macro_evidence_plan_count > 0,
 	}
+
+
+def _plan_template_kind_counts(plans: Sequence[AgentSpeakPlan]) -> dict[str, int]:
+	counts: dict[str, int] = {}
+	for plan in tuple(plans or ()):
+		kind = _plan_template_kind(plan)
+		counts[kind] = counts.get(kind, 0) + 1
+	return dict(sorted(counts.items()))
+
+
+def _plan_template_kind(plan: AgentSpeakPlan) -> str:
+	body = tuple(plan.body or ())
+	if not body:
+		return "already_true_plan_template"
+	if any(step.kind == "subgoal" for step in body):
+		return "subgoal_decomposed_plan_template"
+	if all(step.kind == "action" for step in body):
+		return "action_only_plan_template"
+	return "mixed_body_plan_template"
+
+
+def _library_template_profile(kind_counts: Mapping[str, int]) -> str:
+	kinds = {kind for kind, count in dict(kind_counts).items() if count > 0}
+	if not kinds:
+		return "empty_atomic_template_library"
+	if len(kinds) > 1:
+		return "mixed_atomic_template_library"
+	kind = next(iter(kinds))
+	if kind == "already_true_plan_template":
+		return "already_true_only_atomic_template_library"
+	if kind == "action_only_plan_template":
+		return "action_only_atomic_template_library"
+	if kind == "subgoal_decomposed_plan_template":
+		return "subgoal_decomposed_atomic_template_library"
+	return "mixed_body_atomic_template_library"
 
 
 def _validated_moose_macro_rule_plan(
@@ -713,14 +760,12 @@ def audit_moose_atomic_library_quality(
 		and subgoal_step_count > 0
 	)
 	faithful_decision_list_ready = bool(plan_tuple) and primitive_action_step_count > 0
-	if compact_recursive_module_ready:
-		artifact_classification = "compact_recursive_atomic_module_library"
-	elif singleton_macro_library_ready:
-		artifact_classification = "compact_lifted_singleton_macro_library"
-	elif faithful_decision_list_ready:
-		artifact_classification = "faithful_moose_decision_list_asl_library"
-	else:
-		artifact_classification = "empty_or_unbound_moose_atomic_library"
+	artifact_classification = (
+		"atomic_template_library"
+		if plan_tuple
+		else "empty_or_unbound_moose_atomic_library"
+	)
+	plan_template_kind_counts = _plan_template_kind_counts(plan_tuple)
 	warnings: list[str] = []
 	if subgoal_step_count == 0 and plan_tuple:
 		warnings.append(
@@ -751,6 +796,8 @@ def audit_moose_atomic_library_quality(
 		compact_recursive_module_ready=compact_recursive_module_ready,
 		faithful_decision_list_ready=faithful_decision_list_ready,
 		artifact_classification=artifact_classification,
+		library_profile=_library_template_profile(plan_template_kind_counts),
+		plan_template_kind_counts=plan_template_kind_counts,
 		warnings=tuple(warnings),
 	)
 

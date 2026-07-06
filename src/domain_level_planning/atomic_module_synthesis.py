@@ -155,6 +155,18 @@ def synthesize_atomic_minimal_literal_module_library(
 	)
 	selection = _select_branches_with_clingo(raw_plans)
 	plans = _ensure_unique_plan_names(selection.plans)
+	subgoal_step_count = sum(
+		1
+		for plan in plans
+		for step in plan.body
+		if step.kind == "subgoal"
+	)
+	primitive_action_step_count = sum(
+		1
+		for plan in plans
+		for step in plan.body
+		if step.kind == "action"
+	)
 	report = _module_synthesis_report(
 		plans=plans,
 		raw_plan_count=len(raw_plans),
@@ -173,19 +185,67 @@ def synthesize_atomic_minimal_literal_module_library(
 			"source_name": source_name,
 			"policy_file": str(policy_file) if policy_file is not None else None,
 			"library_quality": {
-				"artifact_classification": "compact_recursive_atomic_module_library",
-				"compact_recursive_module_ready": True,
-				"plan_count": len(plans),
-				"subgoal_step_count": sum(
-					1
-					for plan in plans
-					for step in plan.body
-					if step.kind == "subgoal"
+				"artifact_classification": (
+					"atomic_template_library"
+					if plans
+					else "empty_or_unbound_atomic_template_library"
 				),
+				"artifact_classification_basis": (
+					"generic artifact label; structural categories are "
+					"plan-template-level, not domain-level"
+				),
+				"library_profile": _library_template_profile(
+					_plan_template_kind_counts(plans),
+				),
+				"plan_template_kind_counts": _plan_template_kind_counts(plans),
+				"plan_template_classification_basis": (
+					"per plan template: empty body is already-true, bodies with "
+					"only primitive actions are action-only, bodies containing "
+					"achievement subgoals are subgoal-decomposed"
+				),
+				"compact_recursive_module_ready": subgoal_step_count > 0,
+				"plan_count": len(plans),
+				"primitive_action_step_count": primitive_action_step_count,
+				"subgoal_step_count": subgoal_step_count,
 			},
 			"atomic_module_synthesis": report.to_dict(),
 		},
 	)
+
+
+def _plan_template_kind_counts(plans: Sequence[AgentSpeakPlan]) -> dict[str, int]:
+	counts: dict[str, int] = {}
+	for plan in tuple(plans or ()):
+		kind = _plan_template_kind(plan)
+		counts[kind] = counts.get(kind, 0) + 1
+	return dict(sorted(counts.items()))
+
+
+def _plan_template_kind(plan: AgentSpeakPlan) -> str:
+	body = tuple(plan.body or ())
+	if not body:
+		return "already_true_plan_template"
+	if any(step.kind == "subgoal" for step in body):
+		return "subgoal_decomposed_plan_template"
+	if all(step.kind == "action" for step in body):
+		return "action_only_plan_template"
+	return "mixed_body_plan_template"
+
+
+def _library_template_profile(kind_counts: Mapping[str, int]) -> str:
+	kinds = {kind for kind, count in dict(kind_counts).items() if count > 0}
+	if not kinds:
+		return "empty_atomic_template_library"
+	if len(kinds) > 1:
+		return "mixed_atomic_template_library"
+	kind = next(iter(kinds))
+	if kind == "already_true_plan_template":
+		return "already_true_only_atomic_template_library"
+	if kind == "action_only_plan_template":
+		return "action_only_atomic_template_library"
+	if kind == "subgoal_decomposed_plan_template":
+		return "subgoal_decomposed_atomic_template_library"
+	return "mixed_body_atomic_template_library"
 
 
 @dataclass(frozen=True)
