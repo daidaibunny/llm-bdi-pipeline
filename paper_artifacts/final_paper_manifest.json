@@ -8,7 +8,7 @@
   },
   "benchmark_source": {
     "coverage": "six selected achievement-goal planning domains",
-    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. The train split uses floor(2/3 * instance_count); the remainder is held out for goal specification.",
+    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. Ferry, Miconic, Gripper, and Logistics use the MOOSE official training/testing split; Blocks and Depots use floor(1/4 * instance_count) training instances and the remainder as test.",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
@@ -27,18 +27,11 @@
       "url": "https://github.com/DillonZChen/moose-dataset"
     },
     {
-      "commit": "7a7ea6a6356035afa16ed958b53d8edc86994e0a",
-      "coverage": "learned-sketch benchmark and testing families",
-      "id": "learner_sketches",
-      "name": "bonetblai/learner-sketches",
-      "url": "https://github.com/bonetblai/learner-sketches"
-    },
-    {
-      "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
-      "coverage": "KR 2025 feature-policy benchmark families",
-      "id": "kr2025_policies",
-      "name": "bonetblai/learner-policies-from-examples",
-      "url": "https://github.com/bonetblai/learner-policies-from-examples"
+      "commit": "0620e169c894d79b3c84f435dba1462996f7c270",
+      "coverage": "D2L benchmark domains used as reputable GP-family PDDL sources",
+      "id": "d2l",
+      "name": "rleap-project/d2l",
+      "url": "https://github.com/rleap-project/d2l"
     }
   ],
   "commands": {
@@ -343,22 +336,22 @@
     },
     {
       "kind": "file",
-      "path": "src/domains/8puzzle-1tile/domain.pddl",
+      "path": "src/domains/depots/domain.pddl",
       "tracked": true
     },
     {
       "kind": "directory",
-      "path": "src/domains/8puzzle-1tile/train",
+      "path": "src/domains/depots/train",
       "tracked": true
     },
     {
       "kind": "directory",
-      "path": "src/domains/8puzzle-1tile/test",
+      "path": "src/domains/depots/test",
       "tracked": true
     },
     {
       "kind": "file",
-      "path": "src/domains/8puzzle-1tile/source.json",
+      "path": "src/domains/depots/source.json",
       "tracked": true
     }
   ],

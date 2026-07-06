@@ -2,7 +2,7 @@
 ;;
 (define (problem ferry-08)
  (:domain ferry)
- (:objects 
+ (:objects
     car1 car2 - car
     loc1 loc2 loc3 - location
  )

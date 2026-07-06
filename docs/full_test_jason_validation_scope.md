@@ -306,20 +306,61 @@ schema checks:
 
 - `validated_lifted_policy_rule_library`: the MOOSE singleton policy already
   contains complete validated macro branches, so the final ASL can mostly
-  preserve those lifted branches. Logistics currently falls here for the tested
-  intermodal package-delivery evidence, but any other domain with complete
-  symbolically executable singleton macros would be compiled the same way.
+  preserve those lifted branches. A complete macro branch is a lifted action
+  sequence that the compiler can replay with the PDDL schema; for example, a
+  Logistics package-delivery branch may load a package into an airplane, fly it,
+  unload it, load it into a truck, drive the truck, and unload it at the target
+  location. Logistics currently falls here for the tested intermodal evidence,
+  but any other domain with complete symbolically executable singleton macros
+  would be compiled the same way.
 - `validated_policy_lifting_with_schema_augmented_recursive_modules`: validated
   MOOSE rules exist, but PDDL schema closure also requires internal producible
-  fluent modules. Blocks currently falls here because `on(X,Y)` may need
-  internal goals such as `clear(Y)` or `holding(X)`, and these modules can be
-  justified from PDDL add effects and certified recursive progress.
+  fluent modules. A producible fluent is a PDDL predicate that appears in a
+  positive action effect, for example Blocks `clear(X)` or Depots `lifting(H,C)`.
+  Blocks falls here because `on(X,Y)` may need internal goals such as
+  `clear(Y)`, `holding(X)`, or `handempty`; Depots is selected for the same
+  outcome because stack construction goals such as `on(C,P)` require internal
+  modules over `clear`, `lifting`, `available`, `at`, and `in`. These modules
+  are justified from PDDL add effects and certified recursive progress, not
+  from domain-name patches.
 - `unsupported_by_current_compiler`: neither validated policy-rule lifting nor
   schema-augmented recursive modules can provide a safe atomic ASL library under
   the current contract. A graph-search-style domain such as `8puzzle-1tile` is
   an example when the available evidence does not yield a compact progress-safe
-  atomic module. The correct behavior is to fail or report the limitation, not
-  to add a domain-name patch.
+  atomic module. Moving a target tile depends on blank-position reachability and
+  permutation constraints; the current compiler has no graph-search controller
+  or ranking certificate for that structure. The correct behavior is to report
+  the limitation, not to add a domain-name patch.
+
+## Current Benchmark Scope And Compiler Outcomes
+
+The post-MOOSE, pre-ASL component is called a validated policy-lifting
+compiler. "Post-MOOSE" means it runs after MOOSE has produced a readable policy;
+a MOOSE readable policy is the `policy --dump-policy` first-order decision-list
+artifact, for example a rule whose goal condition is `at(package0, location2)`
+and whose body is a macro sequence of PDDL actions. "Pre-ASL" means it runs
+before rendering the final AgentSpeak(L) file; an AgentSpeak(L) file is the
+executable library containing plans such as `+!at(X,Y) : ... <- ...`.
+
+The compiler outcome is chosen from evidence shape plus PDDL schema structure,
+not from a domain-name switch:
+
+| Domain | Goal/property group | Compiler outcome | Reason |
+| --- | --- | --- | --- |
+| `ferry` | Singleton regression-friendly classical goals | `validated_lifted_policy_rule_library` | The goal items are atomic car-at-location fluents such as `at(C,L)`, and MOOSE provides singleton regression evidence that replays through ferry loading, sailing, and debarking actions. |
+| `miconic` | Singleton regression-friendly classical goals | `validated_lifted_policy_rule_library` with schema-safe movement modules | The benchmark goal items are `served(P)`. Static floor ordering such as `above(F1,F2)` is context only; executable movement branches are retained only when the current lift location is bound by `lift_at(F)`. |
+| `gripper` | Multi-object classical achievement goals | `validated_lifted_policy_rule_library` | The goal items are repeated `at(B,R)` literals over many balls. Validated producer macros bind a ball, current room, target room, and gripper, then execute `pick`, `move`, and `drop` without grounding per instance. |
+| `logistics` | Multi-object classical achievement goals | `validated_lifted_policy_rule_library` | The goal items are package-location literals. The useful evidence is long but complete intermodal MOOSE macros, and `obj_tp/2` guards keep package, truck, airplane, city, and location roles type safe. |
+| `blocks` | Support-dependent construction goals | `validated_policy_lifting_with_schema_augmented_recursive_modules` | Construction goals such as `on(X,Y)` depend on support and clearing relations. Schema closure adds internal modules such as `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)` when they are producible by PDDL actions. |
+| `depots` | Support-dependent construction goals | `validated_policy_lifting_with_schema_augmented_recursive_modules` | Depots combines transport and stacking. Goals such as `on(C,P)` require support-dependent internal modules over `clear`, `lifting`, `available`, `at`, and `in`, all of which are PDDL fluents generated from action effects. |
+
+`8puzzle-1tile` is no longer a selected benchmark domain. It remains a boundary
+case for the current compiler because the atomic goal "put one tile at its
+target square" is not just a local producer or support-clearing pattern. It
+requires reasoning about blank reachability and permutation progress over a
+graph. Supporting it would require a graph-search or planning-program style
+controller with a proof of progress, which is outside the current
+MOOSE-evidence-to-ASL compiler contract.
 
 For paper writing, the domain grouping should therefore be evaluation analysis,
 not a backend-routing rule. A precise statement is: this work compiles validated

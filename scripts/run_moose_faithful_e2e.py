@@ -38,7 +38,7 @@ DEFAULT_DOMAINS = (
 	"gripper",
 	"logistics",
 	"blocks",
-	"8puzzle-1tile",
+	"depots",
 )
 
 if str(SRC_ROOT) not in sys.path:

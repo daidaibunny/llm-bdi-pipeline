@@ -47,7 +47,7 @@
       "train_problem_set": "train"
     }
   ],
-  "goal_property_group_id": "structural_temporalized_achievement_goals",
+  "goal_property_group_id": "support_dependent_construction_goals",
   "goal_specification_layer": "achievement_goal_layer",
   "problem_sets": {
     "all": {
@@ -178,7 +178,7 @@
     "source_problem_globs": [
       "instances/*.pddl"
     ],
-    "split_policy": "floor(1/4 * instance_count) train for structural MOOSE-native audit, remaining test",
+    "split_policy": "floor(1/4 * instance_count) train for support-dependent construction audit, remaining test",
     "test_count": 77,
     "train_count": 25,
     "url": "https://github.com/potassco/pddl-instances"

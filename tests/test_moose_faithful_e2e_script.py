@@ -153,12 +153,12 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 	batch_root = tmp_path / "20260704-101112"
 	command = build_moose_batch_command(
 		args=Args(),
-		domains=("blocks", "8puzzle-1tile"),
+		domains=("blocks", "depots"),
 		batch_root=batch_root,
 	)
 	manifest = batch_manifest(
 		args=Args(),
-		domains=("blocks", "8puzzle-1tile"),
+		domains=("blocks", "depots"),
 		timestamp_id="20260704-101112",
 		batch_root=batch_root,
 		command=command,
@@ -173,7 +173,7 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 	assert str(batch_root / "domain_libraries") in command
 	assert manifest["expected_asl_files"] == [
 		str(batch_root / "domain_libraries" / "blocks" / "plan_library.asl"),
-		str(batch_root / "domain_libraries" / "8puzzle-1tile" / "plan_library.asl"),
+		str(batch_root / "domain_libraries" / "depots" / "plan_library.asl"),
 	]
 	assert manifest["settings"]["domain_execution"] == "sequential"
 	assert manifest["settings"]["atomic_library_backend"] == "native_moose_train_dump_policy"

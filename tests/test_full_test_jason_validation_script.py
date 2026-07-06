@@ -24,7 +24,7 @@ def test_resolve_batch_root_selects_latest_timestamp(tmp_path: Path) -> None:
 
 
 def test_safe_goal_fragment_matches_existing_domain_goal_naming() -> None:
-	assert safe_goal_fragment("8puzzle-1tile") == "d_8puzzle_1tile"
+	assert safe_goal_fragment("domain-with-dash") == "domain_with_dash"
 	assert safe_goal_fragment("blocks") == "blocks"
 
 

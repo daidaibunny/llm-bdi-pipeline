@@ -2,11 +2,11 @@
 ;;
 (define (problem ferry-02)
  (:domain ferry)
- (:objects 
+ (:objects
     car1 - car
     loc1 loc2 - location
  )
- (:init 
+ (:init
     (empty-ferry)
     (at-ferry loc2)
     (at car1 loc1)

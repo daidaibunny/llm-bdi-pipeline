@@ -175,12 +175,12 @@
   },
   "schema_version": 1,
   "source": {
-    "commit": "local .external/moose checkout",
-    "id": "moose_official_artifact",
+    "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
+    "id": "moose_dataset",
     "instance_count": 110,
     "ipc_variant": "ferry",
     "ipc_year": "MOOSE 2026",
-    "name": "DillonZChen/moose",
+    "name": "DillonZChen/moose-dataset",
     "source_domain_file": "ferry/domain.pddl",
     "source_path": "ferry",
     "source_problem_globs": [
@@ -190,7 +190,7 @@
     "split_policy": "MOOSE official artifact split: training/ as train and testing/ as test",
     "test_count": 90,
     "train_count": 20,
-    "url": "https://github.com/DillonZChen/moose"
+    "url": "https://github.com/DillonZChen/moose-dataset"
   },
   "support_level": "main_claim",
   "target_paper_domains": [

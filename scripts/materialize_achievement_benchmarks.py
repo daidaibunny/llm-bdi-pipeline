@@ -19,7 +19,7 @@ REGISTRY_ROOT = PROJECT_ROOT / "src" / "benchmark_registry" / "achievement_goals
 PDDL_INSTANCE_CACHE_ROOT = (
 	PROJECT_ROOT / ".external" / "benchmark-sources" / "pddl-instances-cache"
 )
-TRAIN_RATIO = 2 / 3
+STRUCTURAL_TRAIN_RATIO = 1 / 4
 
 
 class SourceSpec(NamedTuple):
@@ -41,6 +41,9 @@ class DomainSpec(NamedTuple):
 	ipc_variant: str
 	problem_globs: tuple[str, ...]
 	source_domain_file: str = "domain.pddl"
+	split_strategy: str = "ratio"
+	train_ratio: float = 2 / 3
+	split_policy: str = "floor(2/3 * instance_count) train, remaining test"
 
 
 SOURCES: dict[str, SourceSpec] = {
@@ -71,23 +74,34 @@ SOURCES: dict[str, SourceSpec] = {
 		"9991926f7655c4b6c8dc2f0404123639e42056f2",
 		"KR 2025 feature-policy benchmark families",
 	),
+	"d2l": SourceSpec(
+		"d2l",
+		"rleap-project/d2l",
+		"https://github.com/rleap-project/d2l",
+		PROJECT_ROOT / ".external" / "gp-backends" / "d2l",
+		"0620e169c894d79b3c84f435dba1462996f7c270",
+		"D2L benchmark domains used as reputable GP-family PDDL sources",
+	),
 }
 
 
 def main() -> None:
 	"""Regenerate local IPC PDDL snapshots and the achievement registry."""
 
-	_validate_source()
-	_reset_directory(DOMAINS_ROOT)
 	specs = _domain_specs()
+	_validate_source(specs)
+	_reset_directory(DOMAINS_ROOT)
 	for spec in specs:
 		_materialize_domain(spec)
 	_write_registry(specs)
 	print(f"materialized {len(specs)} selected achievement benchmark domains")
 
 
-def _validate_source() -> None:
+def _validate_source(specs: tuple[DomainSpec, ...]) -> None:
+	used_source_ids = {spec.source_id for spec in specs}
 	for source in SOURCES.values():
+		if source.source_id not in used_source_ids:
+			continue
 		if not source.local_root.exists():
 			raise FileNotFoundError(
 				f"missing benchmark source {source.local_root}; clone {source.name} first",
@@ -119,56 +133,86 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 			"MOOSE 2026",
 			"ferry",
 			("training/*.pddl", "testing/*.pddl"),
+			split_strategy="source_directories",
+			split_policy=(
+				"MOOSE official artifact split: training/ as train and "
+				"testing/ as test"
+			),
 		),
 		DomainSpec(
 			"miconic",
-			"pddl_instances",
-			"ipc-2000/domains/elevator-strips-simple-typed",
+			"moose_dataset",
+			"miconic",
 			"singleton_regression_friendly_classical_goals",
 			"Miconic",
-			"2000",
-			"elevator-strips-simple-typed",
-			("instances/*.pddl",),
+			"MOOSE 2026",
+			"miconic",
+			("training/*.pddl", "testing/*.pddl"),
+			split_strategy="source_directories",
+			split_policy=(
+				"MOOSE official artifact split: training/ as train and "
+				"testing/ as test"
+			),
 		),
 		DomainSpec(
 			"gripper",
-			"pddl_instances",
-			"ipc-1998/domains/gripper-round-1-strips",
+			"moose_dataset",
+			"gripper",
 			"multi_object_classical_achievement_goals",
 			"Gripper",
-			"1998",
-			"gripper-round-1-strips",
-			("instances/*.pddl",),
+			"MOOSE 2026",
+			"gripper",
+			("training/*.pddl", "testing/*.pddl"),
+			split_strategy="source_directories",
+			split_policy=(
+				"MOOSE official artifact split: training/ as train and "
+				"testing/ as test"
+			),
 		),
 		DomainSpec(
 			"logistics",
-			"pddl_instances",
-			"ipc-2000/domains/logistics-strips-typed",
+			"moose_dataset",
+			"logistics",
 			"multi_object_classical_achievement_goals",
 			"Logistics",
-			"2000",
-			"logistics-strips-typed",
-			("instances/*.pddl",),
+			"MOOSE 2026",
+			"logistics",
+			("training/*.pddl", "testing/*.pddl"),
+			split_strategy="source_directories",
+			split_policy=(
+				"MOOSE official artifact split: training/ as train and "
+				"testing/ as test"
+			),
 		),
 		DomainSpec(
 			"blocks",
 			"pddl_instances",
 			"ipc-2000/domains/blocks-strips-typed",
-			"structural_temporalized_achievement_goals",
+			"support_dependent_construction_goals",
 			"Blocks",
 			"2000",
 			"blocks-strips-typed",
 			("instances/*.pddl",),
+			train_ratio=STRUCTURAL_TRAIN_RATIO,
+			split_policy=(
+				"floor(1/4 * instance_count) train for support-dependent "
+				"construction audit, remaining test"
+			),
 		),
 		DomainSpec(
-			"8puzzle-1tile",
-			"kr2025_policies",
-			"learning/benchmarks/tractable/8puzzle-1tile",
-			"structural_temporalized_achievement_goals",
-			"8puzzle-1tile",
-			"KR 2025",
-			"8puzzle-1tile",
-			("training/easy/*.pddl",),
+			"depots",
+			"d2l",
+			"domains/depot",
+			"support_dependent_construction_goals",
+			"Depots",
+			"D2L",
+			"depot",
+			("p*.pddl",),
+			train_ratio=STRUCTURAL_TRAIN_RATIO,
+			split_policy=(
+				"floor(1/4 * instance_count) train for support-dependent "
+				"construction audit, remaining test"
+			),
 		),
 	)
 
@@ -184,11 +228,12 @@ def _materialize_domain(spec: DomainSpec) -> None:
 		raise RuntimeError(
 			f"{spec.domain_id} has no benchmark instances in {spec.source_path}",
 		)
-	split = math.floor(len(problem_paths) * TRAIN_RATIO)
 	_copy_source_file(spec, spec.source_domain_file, domain_root / "domain.pddl")
-	for index, source_problem in enumerate(problem_paths, start=1):
-		target_root = train_root if index <= split else test_root
-		_copy_source_file(spec, source_problem, target_root / Path(source_problem).name)
+	train_paths, test_paths = _split_problem_paths(spec, problem_paths)
+	for source_problem in train_paths:
+		_copy_source_file(spec, source_problem, train_root / Path(source_problem).name)
+	for source_problem in test_paths:
+		_copy_source_file(spec, source_problem, test_root / Path(source_problem).name)
 	source = SOURCES[spec.source_id]
 	source_record = {
 		"source": source.name,
@@ -201,14 +246,32 @@ def _materialize_domain(spec: DomainSpec) -> None:
 		"ipc_year": spec.ipc_year,
 		"ipc_variant": spec.ipc_variant,
 		"instance_count": len(problem_paths),
-		"train_count": split,
-		"test_count": len(problem_paths) - split,
-		"split_policy": "floor(2/3 * instance_count) train, remaining test",
+		"train_count": len(train_paths),
+		"test_count": len(test_paths),
+		"split_policy": spec.split_policy,
 	}
 	(domain_root / "source.json").write_text(
 		json.dumps(source_record, indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",
 	)
+
+
+def _split_problem_paths(
+	spec: DomainSpec,
+	problem_paths: tuple[str, ...],
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+	if spec.split_strategy == "source_directories":
+		train_paths = tuple(path for path in problem_paths if path.startswith("training/"))
+		test_paths = tuple(path for path in problem_paths if path.startswith("testing/"))
+		if not train_paths or not test_paths:
+			raise RuntimeError(
+				f"{spec.domain_id} expects source training/ and testing/ directories",
+			)
+		return train_paths, test_paths
+	if spec.split_strategy == "ratio":
+		split = math.floor(len(problem_paths) * spec.train_ratio)
+		return problem_paths[:split], problem_paths[split:]
+	raise ValueError(f"unknown split strategy {spec.split_strategy!r}")
 
 
 def _source_problem_paths(spec: DomainSpec) -> tuple[str, ...]:
@@ -276,7 +339,8 @@ def _write_pddl_snapshot(content: bytes, target_path: Path) -> None:
 	target_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
 
-def _benchmark_sources_payload() -> tuple[dict[str, str], ...]:
+def _benchmark_sources_payload(specs: tuple[DomainSpec, ...]) -> tuple[dict[str, str], ...]:
+	used_source_ids = {spec.source_id for spec in specs}
 	return tuple(
 		{
 			"id": source.source_id,
@@ -286,6 +350,7 @@ def _benchmark_sources_payload() -> tuple[dict[str, str], ...]:
 			"coverage": source.coverage,
 		}
 		for source in SOURCES.values()
+		if source.source_id in used_source_ids
 	)
 
 
@@ -301,7 +366,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				"selected_goal_property_group_ids": [
 					"singleton_regression_friendly_classical_goals",
 					"multi_object_classical_achievement_goals",
-					"structural_temporalized_achievement_goals",
+					"support_dependent_construction_goals",
 				],
 				"matrix_names": {
 					"main": "paper-final-main-library",
@@ -325,7 +390,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 					"name": "selected reputable generalized-planning benchmark sources",
 					"coverage": "six selected achievement-goal planning domains",
 				},
-				"benchmark_sources": _benchmark_sources_payload(),
+				"benchmark_sources": _benchmark_sources_payload(specs),
 			},
 			indent=2,
 			sort_keys=True,
@@ -375,7 +440,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				"instance_count": len(problem_paths),
 				"train_count": len(train_paths),
 				"test_count": len(test_paths),
-				"split_policy": "floor(2/3 * instance_count) train, remaining test",
+				"split_policy": spec.split_policy,
 			},
 			"baseline_groups": {},
 			"experiments": [

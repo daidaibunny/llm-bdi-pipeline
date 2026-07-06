@@ -1,10 +1,10 @@
 (define (problem miconic-01)
  (:domain miconic)
- (:objects 
+ (:objects
     p1 - passenger
     f1 f2 - floor
     )
- (:init 
+ (:init
     (lift-at f2)
     (origin p1 f1)
     (destin p1 f2)
