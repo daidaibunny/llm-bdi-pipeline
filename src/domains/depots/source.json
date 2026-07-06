@@ -11,7 +11,7 @@
     "p*.pddl"
   ],
   "source_url": "https://github.com/rleap-project/d2l",
-  "split_policy": "floor(1/4 * instance_count) train for support-dependent construction audit, remaining test",
+  "split_policy": "floor(1/4 * instance_count) train for feature-definable serialized-width policy audit, remaining test",
   "test_count": 17,
   "train_count": 5
 }

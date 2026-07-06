@@ -46,15 +46,16 @@ the atomic library provides plans for goals such as `!served(P)` or `!at(C,L)`,
 and the upstream input layer chooses the temporal order when it creates an LTLf
 formula. In this diagnostic runner, the order is just the PDDL parser order.
 
-The parser-order shortcut is not the expected input contract for support-
-dependent construction goals. In the real input pipeline, the natural-language
-component must output a lifted LTLf sequence whose next singleton literal is
-safe with respect to literals already achieved. Here "safe" means that pursuing
-the next subgoal should not delete a previous progress literal that is meant to
-hold in the final world state. For example, when the final Blocks tower contains
-`on(j,c)` and `on(c,e)`, the safe construction order is to achieve the lower
-support `on(c,e)` before placing `j` on `c`; otherwise achieving `on(c,e)` may
-require unstacking `j` from `c`, deleting the previous progress literal.
+The parser-order shortcut is not the expected input contract for feature-
+defined relational goal interactions. In the real input pipeline, the natural-
+language component must output a lifted LTLf sequence whose next singleton
+literal is safe with respect to literals already achieved. Here "safe" means
+that pursuing the next subgoal should not delete a previous progress literal
+that is meant to hold in the final world state. For example, when the final
+Blocks tower contains `on(j,c)` and `on(c,e)`, the safe order is to achieve the
+lower relational support `on(c,e)` before placing `j` on `c`; otherwise
+achieving `on(c,e)` may require unstacking `j` from `c`, deleting the previous
+progress literal.
 
 The July 6, 2026 timestamped batch exposed this distinction. Blocks test
 wrappers were generated from PDDL goal literals in parser order. IPC Blocks
@@ -443,16 +444,31 @@ and whose body is a macro sequence of PDDL actions. "Pre-ASL" means it runs
 before rendering the final AgentSpeak(L) file; an AgentSpeak(L) file is the
 executable library containing plans such as `+!at(X,Y) : ... <- ...`.
 
-The benchmark groups describe evaluation coverage, not compiler outcomes:
+The benchmark groups describe evaluation coverage, not compiler outcomes. ESHO
+classical domains are the easy-to-solve, hard-to-optimise classical benchmark
+family used by MOOSE. Numeric fluent domains are PDDL domains whose state,
+action applicability, or goals use numeric functions, numeric comparisons, or
+numeric effects. Feature-definable serialized-width domains are relational
+domains where prior general-policy and sketch work describes compact behavior
+with lifted features and serialized subgoals whose induced subproblems have
+small width.
 
-| Domain | Goal/property group | Evidence note |
+| Domain | Benchmark property group | Evidence note |
 | --- | --- | --- |
-| `ferry` | Singleton regression-friendly classical goals | Atomic car-location fluents such as `at(C,L)` exercise ferry loading, sailing, and debarking actions. |
-| `miconic` | Singleton regression-friendly classical goals | Passenger service goals such as `served(P)` exercise boarding, lift movement, and departure; static floor order such as `above(F1,F2)` remains context only. |
-| `gripper` | Multi-object classical achievement goals | Repeated `at(B,R)` literals over many balls exercise lifted object transport with `pick`, `move`, and `drop`. |
-| `logistics` | Multi-object classical achievement goals | Package-location literals exercise long intermodal macros while `obj_tp/2` keeps package, truck, airplane, city, and location roles type safe. |
-| `blocks` | Support-dependent construction goals | Construction goals such as `on(X,Y)` exercise internal modules such as `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)`. |
-| `depots` | Support-dependent construction goals | Crate support goals such as `on(C,P)` combine transport and stacking, exercising internal modules over `clear`, `lifting`, `available`, `at`, and `in`. |
+| `barman` | ESHO classical domains | Beverage goals such as `contains(Shot,Cocktail)` exercise cleaning, filling, pouring, shaking, and container state. |
+| `ferry` | ESHO classical domains | Atomic car-location fluents such as `at(C,L)` exercise ferry loading, sailing, and debarking actions. |
+| `gripper` | ESHO classical domains | Repeated `at(B,R)` literals over many balls exercise lifted object transport with `pick`, `move`, and `drop`. |
+| `logistics` | ESHO classical domains | Package-location literals exercise long intermodal macros while `obj_tp/2` keeps package, truck, airplane, city, and location roles type safe. |
+| `miconic` | ESHO classical domains | Passenger service goals such as `served(P)` exercise boarding, lift movement, and departure; static floor order such as `above(F1,F2)` remains context only. |
+| `rovers` | ESHO classical domains | Communication goals such as `communicated_soil_data(W)` exercise sampling, imaging, and data transmission. |
+| `satellite` | ESHO classical domains | Pointing and image goals such as `have_image(D,M)` exercise instrument power, calibration, turning, and imaging. |
+| `transport` | ESHO classical domains | Package-location goals such as `at(P,L)` exercise capacity-aware loading, driving, and dropping. |
+| `numeric-ferry` | Numeric fluent domains | Numeric ferry variant included for experimental numeric evidence import. |
+| `numeric-miconic` | Numeric fluent domains | Numeric miconic variant included for experimental numeric evidence import. |
+| `numeric-minecraft` | Numeric fluent domains | Numeric resource-production goals such as reducing `pogo_sticks_to_make` to zero exercise non-predicate goal semantics. |
+| `numeric-transport` | Numeric fluent domains | Numeric transport variant included for experimental numeric evidence import. |
+| `blocks` | Feature-definable serialized-width domains | Atomic goals such as `on(X,Y)` exercise internal modules such as `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)`. |
+| `depots` | Feature-definable serialized-width domains | Crate-location and crate-support literals exercise internal modules over `clear`, `lifting`, `available`, `at`, and `in`. |
 
 `8puzzle-1tile` is no longer a selected benchmark domain. It remains a boundary
 case for the current compiler because the atomic goal "put one tile at its

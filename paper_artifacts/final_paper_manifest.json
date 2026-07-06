@@ -7,8 +7,8 @@
     "source_name": "ferry-seed0"
   },
   "benchmark_source": {
-    "coverage": "six selected achievement-goal planning domains",
-    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. Ferry, Miconic, Gripper, and Logistics use the MOOSE official training/testing split; Blocks and Depots use floor(1/4 * instance_count) training instances and the remainder as test.",
+    "coverage": "all MOOSE direct train/test domains plus project-added feature-definable serialized-width domains",
+    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. MOOSE direct train/test domains use the official companion training/testing split; Blocks and Depots use floor(1/4 * instance_count) training instances and the remainder as test.",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
@@ -21,7 +21,7 @@
     },
     {
       "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
-      "coverage": "MOOSE goal-regression benchmark families",
+      "coverage": "MOOSE companion benchmark families with official train/test splits",
       "id": "moose_dataset",
       "name": "DillonZChen/moose-dataset",
       "url": "https://github.com/DillonZChen/moose-dataset"
@@ -236,6 +236,26 @@
     },
     {
       "kind": "file",
+      "path": "src/domains/barman/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/barman/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/barman/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/barman/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
       "path": "src/domains/ferry/domain.pddl",
       "tracked": true
     },
@@ -276,6 +296,26 @@
     },
     {
       "kind": "file",
+      "path": "src/domains/logistics/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/logistics/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/logistics/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/logistics/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
       "path": "src/domains/miconic/domain.pddl",
       "tracked": true
     },
@@ -296,22 +336,142 @@
     },
     {
       "kind": "file",
-      "path": "src/domains/logistics/domain.pddl",
+      "path": "src/domains/rovers/domain.pddl",
       "tracked": true
     },
     {
       "kind": "directory",
-      "path": "src/domains/logistics/train",
+      "path": "src/domains/rovers/train",
       "tracked": true
     },
     {
       "kind": "directory",
-      "path": "src/domains/logistics/test",
+      "path": "src/domains/rovers/test",
       "tracked": true
     },
     {
       "kind": "file",
-      "path": "src/domains/logistics/source.json",
+      "path": "src/domains/rovers/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/satellite/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/satellite/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/satellite/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/satellite/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/transport/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/transport/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/transport/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/transport/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-ferry/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-ferry/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-ferry/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-ferry/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-miconic/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-miconic/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-miconic/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-miconic/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-minecraft/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-minecraft/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-minecraft/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-minecraft/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-transport/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-transport/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/numeric-transport/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/numeric-transport/source.json",
       "tracked": true
     },
     {

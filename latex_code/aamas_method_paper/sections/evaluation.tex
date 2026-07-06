@@ -6,8 +6,10 @@ planners can produce lifted atomic templates that compile into a domain-level
 \asl{} library. Second, it tests whether lifted LTLf queries can append
 top-level temporal wrapper goals that call that atomic library.
 
-The current formal corpus contains six domains, organized by the goal-property
-coverage in Table~\ref{tab:six-domain-scope}. Each local snapshot contains:
+The current formal corpus contains the MOOSE direct train/test domains plus
+project-added feature-definable serialized-width domains, organized by the
+property coverage in Table~\ref{tab:benchmark-scope}. Each local snapshot
+contains:
 
 \begin{verbatim}
 src/domains/<domain>/domain.pddl
@@ -16,9 +18,11 @@ src/domains/<domain>/test/*.pddl
 src/domains/<domain>/source.json
 \end{verbatim}
 
-The split is deterministic: $\lfloor 2N/3 \rfloor$ training instances and the
-remaining instances as held-out goal-specification cases. The same split is
-used by the atomic-template backend selector and by the query-generation layer.
+The split is deterministic: MOOSE domains use the official companion
+\texttt{training/} and \texttt{testing/} directories; Blocks and Depots use the
+project feature-definable serialized-width split described in the repository
+benchmark strategy. The same split is used by the atomic-template backend
+selector and by the query-generation layer.
 
 \subsection{Checks}
 
@@ -47,7 +51,7 @@ does not include an in-repository planner-trace synthesis path.
 
 The reproducibility artifact is specified by
 \texttt{paper\_artifacts/final\_paper\_manifest.json}. Before submission, the
-six-domain registry, generated ASL libraries, LTLf JSON cases, DFA validation
+benchmark registry, generated ASL libraries, LTLf JSON cases, DFA validation
 diagnostics, and LaTeX result macros must be regenerated from tracked commands.
 Generated experiment outputs live under \texttt{tmp/paper-final-latest} and are
 treated as rebuildable artifacts.

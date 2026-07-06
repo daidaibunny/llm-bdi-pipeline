@@ -1,0 +1,110 @@
+{
+  "baseline_groups": {},
+  "display_name": "Depots",
+  "domain_file": "src/domains/depots/domain.pddl",
+  "domain_id": "depots",
+  "domain_role": "main_claim",
+  "experiments": [
+    {
+      "ablation_label": "depots_atomic_backend_smoke",
+      "artifact_kind": "atomic_template_library_candidate",
+      "backend_artifact_gate": [
+        "parse",
+        "LiftedPolicyProgram",
+        "atomic_asl_compile",
+        "held_out_validation"
+      ],
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "preset",
+      "name": "depots-atomic-backend-smoke",
+      "order": 100,
+      "preset_tags": [
+        "paper-expanded-smoke"
+      ],
+      "primary_atomic_backend": "moose",
+      "runtime_full_trace_planner": false,
+      "timeout_seconds": 1800,
+      "train_problem_set": "train"
+    },
+    {
+      "ablation_label": "depots_atomic_backend_main",
+      "artifact_kind": "atomic_template_library_candidate",
+      "backend_artifact_gate": [
+        "parse",
+        "LiftedPolicyProgram",
+        "atomic_asl_compile",
+        "held_out_validation"
+      ],
+      "eval_problem_set": "goal_specification",
+      "evaluation_timeout_seconds": 15,
+      "matrix": "main",
+      "name": "depots-atomic-backend-main",
+      "order": 100,
+      "primary_atomic_backend": "moose",
+      "runtime_full_trace_planner": false,
+      "timeout_seconds": 1800,
+      "train_problem_set": "train"
+    }
+  ],
+  "benchmark_property_group_id": "feature_definable_serialized_width_domains",
+  "goal_specification_layer": "achievement_goal_layer",
+  "problem_sets": {
+    "all": {
+      "problems": [
+        "src/domains/depots/train/p01.pddl",
+        "src/domains/depots/train/p02.pddl",
+        "src/domains/depots/train/p03.pddl",
+        "src/domains/depots/train/p04.pddl",
+        "src/domains/depots/train/p05.pddl",
+        "src/domains/depots/test/p06.pddl",
+        "src/domains/depots/test/p07.pddl",
+        "src/domains/depots/test/p08.pddl",
+        "src/domains/depots/test/p09.pddl",
+        "src/domains/depots/test/p10.pddl",
+        "src/domains/depots/test/p11.pddl",
+        "src/domains/depots/test/p12.pddl",
+        "src/domains/depots/test/p13.pddl",
+        "src/domains/depots/test/p14.pddl",
+        "src/domains/depots/test/p15.pddl",
+        "src/domains/depots/test/p16.pddl",
+        "src/domains/depots/test/p17.pddl",
+        "src/domains/depots/test/p18.pddl",
+        "src/domains/depots/test/p19.pddl",
+        "src/domains/depots/test/p20.pddl",
+        "src/domains/depots/test/p21.pddl",
+        "src/domains/depots/test/p22.pddl"
+      ]
+    },
+    "goal_specification": {
+      "base": "src/domains/depots/test",
+      "glob": "*.pddl"
+    },
+    "train": {
+      "base": "src/domains/depots/train",
+      "glob": "*.pddl"
+    }
+  },
+  "schema_version": 1,
+  "source": {
+    "commit": "0620e169c894d79b3c84f435dba1462996f7c270",
+    "id": "d2l",
+    "instance_count": 22,
+    "ipc_variant": "depot",
+    "ipc_year": "D2L",
+    "name": "rleap-project/d2l",
+    "source_domain_file": "domains/depot/domain.pddl",
+    "source_path": "domains/depot",
+    "source_problem_globs": [
+      "p*.pddl"
+    ],
+    "split_policy": "floor(1/4 * instance_count) train for feature-definable serialized-width policy audit, remaining test",
+    "test_count": 17,
+    "train_count": 5,
+    "url": "https://github.com/rleap-project/d2l"
+  },
+  "support_level": "main_claim",
+  "target_paper_domains": [
+    "depots"
+  ]
+}

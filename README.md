@@ -63,21 +63,21 @@ an in-repository planner-trace synthesis path.
 
 Formal achievement-goal benchmarks are materialized from pinned reputable
 generalized-planning benchmark sources: `potassco/pddl-instances`,
-`DillonZChen/moose-dataset`, `bonetblai/learner-sketches`, and
-`bonetblai/learner-policies-from-examples`.
+`DillonZChen/moose-dataset`, and `rleap-project/d2l`.
 
 The materialized benchmark corpus and backend policy are described in
 `docs/gp_backend_strategy.md`.
 
 | Evaluation group | Target domains | Purpose |
 | --- | --- | --- |
-| Singleton regression-friendly classical goals | `ferry`, `miconic` | Check MOOSE-style positive singleton predicate templates. |
-| Multi-object classical achievement goals | `gripper`, `logistics` | Check reusable atomic templates over many objects. |
-| Structural or temporalized achievement goals | `blocks`, `8puzzle-1tile` | Check Blocks-style interaction and compact rearrangement via temporal wrappers. |
+| ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | Check lifted atomic modules on the classical easy-to-solve, hard-to-optimise benchmark family used by MOOSE. |
+| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | Include MOOSE numeric train/test domains for experimental support. |
+| Feature-definable serialized-width domains | `blocks`, `depots` | Check feature-defined subgoal serialization and schema-derived internal atomic modules. |
 
 Each selected domain has `domain.pddl`, `train`, `test`, and `source.json`
-under `src/domains/<domain>`. The train split is `floor(2/3 * N)` instances and
-the remaining instances are held out.
+under `src/domains/<domain>`. MOOSE domains use the official companion
+`training/` and `testing/` split. `blocks` and `depots` use the project
+feature-definable serialized-width split described in `docs/gp_backend_strategy.md`.
 
 ## Usage
 

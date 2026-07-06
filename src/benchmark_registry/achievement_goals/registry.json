@@ -1,6 +1,6 @@
 {
   "benchmark_source": {
-    "coverage": "six selected achievement-goal planning domains",
+    "coverage": "all MOOSE direct train/test benchmark domains plus project-added feature-definable serialized-width benchmarks",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
@@ -13,7 +13,7 @@
     },
     {
       "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
-      "coverage": "MOOSE goal-regression benchmark families",
+      "coverage": "MOOSE companion benchmark families with official train/test splits",
       "id": "moose_dataset",
       "name": "DillonZChen/moose-dataset",
       "url": "https://github.com/DillonZChen/moose-dataset"
@@ -50,18 +50,26 @@
     ]
   },
   "schema_version": 1,
-  "scope": "positive_conjunctive_achievement_goals",
+  "scope": "positive_conjunctive_or_numeric_achievement_goals",
   "selected_domain_ids": [
     "ferry",
-    "miconic",
     "gripper",
     "logistics",
+    "miconic",
+    "transport",
+    "barman",
+    "rovers",
+    "satellite",
+    "numeric-ferry",
+    "numeric-miconic",
+    "numeric-minecraft",
+    "numeric-transport",
     "blocks",
     "depots"
   ],
-  "selected_goal_property_group_ids": [
-    "singleton_regression_friendly_classical_goals",
-    "multi_object_classical_achievement_goals",
-    "support_dependent_construction_goals"
+  "selected_benchmark_property_group_ids": [
+    "esho_classical_domains",
+    "numeric_fluent_domains",
+    "feature_definable_serialized_width_domains"
   ]
 }

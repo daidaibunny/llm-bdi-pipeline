@@ -22,8 +22,8 @@ class BenchmarkRecord:
 	payload: dict[str, object]
 
 	@property
-	def goal_property_group_id(self) -> str:
-		return str(self.payload.get("goal_property_group_id") or "")
+	def benchmark_property_group_id(self) -> str:
+		return str(self.payload.get("benchmark_property_group_id") or "")
 
 	@property
 	def domain_id(self) -> str:
@@ -56,7 +56,7 @@ class AchievementBenchmarkRegistry:
 		selected_group_ids = set(
 			str(item)
 			for item in tuple(
-				self.control.get("selected_goal_property_group_ids")
+				self.control.get("selected_benchmark_property_group_ids")
 				or ()
 			)
 		)
@@ -67,7 +67,7 @@ class AchievementBenchmarkRegistry:
 				record.domain_id in selected_domain_ids
 				or (
 					not selected_domain_ids
-					and record.goal_property_group_id in selected_group_ids
+					and record.benchmark_property_group_id in selected_group_ids
 				)
 			)
 			and str(record.payload.get("support_level") or "") in {
@@ -138,7 +138,7 @@ class AchievementBenchmarkRegistry:
 		rendered: dict[str, object] = {
 			"name": str(experiment.pop("name")),
 			"domain_file": record.domain_file,
-			"goal_property_group_id": record.goal_property_group_id,
+			"benchmark_property_group_id": record.benchmark_property_group_id,
 			"domain_id": record.domain_id,
 		}
 		_apply_problem_set(
@@ -284,7 +284,7 @@ def _validate_registry(
 		raise ValueError("achievement registry must declare achievement_goal_layer")
 	selected_domain_ids = tuple(control.get("selected_domain_ids") or ())
 	selected_group_ids = tuple(
-		control.get("selected_goal_property_group_ids") or (),
+		control.get("selected_benchmark_property_group_ids") or (),
 	)
 	if not selected_domain_ids and not selected_group_ids:
 		raise ValueError("achievement registry must declare selected domains")
@@ -296,8 +296,10 @@ def _validate_registry(
 			"achievement_goal_layer"
 		):
 			raise ValueError(f"benchmark must use achievement_goal_layer: {record.path}")
-		if not record.goal_property_group_id:
-			raise ValueError(f"benchmark missing goal property group id: {record.path}")
+		if not record.benchmark_property_group_id:
+			raise ValueError(
+				f"benchmark missing benchmark property group id: {record.path}",
+			)
 		if not record.domain_id:
 			raise ValueError(f"benchmark missing domain id: {record.path}")
 		if record.domain_id in seen_domain_ids:

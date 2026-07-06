@@ -103,24 +103,24 @@ boundary, not an implementation detail.
 
 \subsection{Selected Evaluation Scope}
 
-The six-domain scope is used to evaluate coverage of goal properties, not to
-route backends by class:
+The benchmark scope is used to evaluate coverage of literature-grounded domain
+properties, not to route backends by class:
 
 \begin{table}[t]
-	\caption{Focused six-domain evaluation scope.}
-	\label{tab:six-domain-scope}
+	\caption{Current benchmark evaluation scope.}
+	\label{tab:benchmark-scope}
 	\small
 	\begin{tabular}{p{0.33\columnwidth}p{0.43\columnwidth}}
 		\toprule
 		Group & Domains \\
 		\midrule
-		Singleton regression-friendly classical goals & Ferry and Miconic \\
-		Multi-object classical achievement goals & Gripper and Logistics \\
-		Support-dependent construction goals & Blocks and Depots \\
+		ESHO classical domains & Barman, Ferry, Gripper, Logistics, Miconic, Rovers, Satellite, and Transport \\
+		Numeric fluent domains & Numeric Ferry, Numeric Miconic, Numeric Minecraft, and Numeric Transport \\
+		Feature-definable serialized-width domains & Blocks and Depots \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
-Numeric MOOSE domains are excluded from the current scope because the target
-artifact is an \asl{} library over PDDL predicates and literals. Numeric
-fluents need a separate semantic contract before they can be compiled safely.
+Numeric domains are included for MOOSE-faithful benchmark coverage, but their
+\asl{} compilation remains experimental until numeric fluents have a complete
+executable semantic contract.

@@ -36,9 +36,17 @@ SRC_ROOT = PROJECT_ROOT / "src"
 MOOSE_ROOT = PROJECT_ROOT / ".external" / "moose"
 DEFAULT_DOMAINS = (
 	"ferry",
-	"miconic",
 	"gripper",
 	"logistics",
+	"miconic",
+	"transport",
+	"barman",
+	"rovers",
+	"satellite",
+	"numeric-ferry",
+	"numeric-miconic",
+	"numeric-minecraft",
+	"numeric-transport",
 	"blocks",
 	"depots",
 )
@@ -85,7 +93,7 @@ def main() -> int:
 		"--domain",
 		action="append",
 		choices=DEFAULT_DOMAINS,
-		help="Selected domain. Repeat to run multiple domains. Defaults to all six.",
+		help="Selected domain. Repeat to run multiple domains. Defaults to all benchmark domains.",
 	)
 	parser.add_argument(
 		"--output-root",

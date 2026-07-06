@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 
@@ -39,8 +40,6 @@ def test_paper_experiment_scripts_use_registry_instead_of_embedded_domain_rows()
 	forbidden_tokens = (
 		"/".join(("src", "domains", "blocksworld")),
 		"/".join(("src", "domains", "lab" + "workflow")),
-		"/".join(("src", "domains", "transport")),
-		"/".join(("src", "domains", "satellite")),
 		"/".join(("src", "domains", "marsrover")),
 		"blocks_4_on_2",
 	)
@@ -71,8 +70,6 @@ def test_obsolete_generated_benchmark_implementation_names_are_absent() -> None:
 		"learner_sketches_blocksworld_blocks_4_on_2",
 		"/".join(("src", "domains", "blocksworld")),
 		"/".join(("src", "domains", "marsrover")),
-		"/".join(("src", "domains", "satellite")),
-		"/".join(("src", "domains", "transport")),
 		"fixed train/test snapshot",
 	)
 	scan_roots = (
@@ -106,3 +103,27 @@ def test_obsolete_generated_benchmark_implementation_names_are_absent() -> None:
 				violations.append(f"{relative}:{token}")
 
 	assert violations == []
+
+
+def test_benchmark_registry_uses_literature_property_groups() -> None:
+	"""Benchmark groups should describe literature properties, not task stories."""
+
+	registry_root = PROJECT_ROOT / "src" / "benchmark_registry" / "achievement_goals"
+	expected_groups = {
+		"esho_classical_domains",
+		"numeric_fluent_domains",
+		"feature_definable_serialized_width_domains",
+	}
+	control = json.loads((registry_root / "registry.json").read_text(encoding="utf-8"))
+
+	assert set(control["selected_benchmark_property_group_ids"]) == expected_groups
+	assert "selected_goal_property_group_ids" not in control
+
+	records = [
+		json.loads(path.read_text(encoding="utf-8"))
+		for path in registry_root.glob("*/*/benchmark.json")
+	]
+	assert len(records) == 14
+	assert {record["benchmark_property_group_id"] for record in records} == expected_groups
+	for record in records:
+		assert "goal_property_group_id" not in record

@@ -1,0 +1,7 @@
+(define (problem prob11)
+    (:domain numeric-minecraft)
+    (:requirements :disjunctive-preconditions :fluents :negative-preconditions :strips :typing)
+    (:objects cell0 cell1 cell10 cell11 cell12 cell13 cell14 cell15 cell16 cell17 cell18 cell19 cell2 cell20 cell21 cell22 cell23 cell24 cell25 cell26 cell27 cell28 cell29 cell3 cell30 cell31 cell32 cell33 cell34 cell35 cell36 cell37 cell4 cell5 cell6 cell7 cell8 cell9 - cell)
+    (:init (= (count_log_in_inventory) 0) (= (count_planks_in_inventory) 0) (= (count_sack_polyisoprene_pellets_in_inventory) 0) (= (count_stick_in_inventory) 0) (= (count_tree_tap_in_inventory) 0) (= (pogo_sticks_to_make) 14) (air_cell cell0) (air_cell cell12) (air_cell cell13) (air_cell cell14) (air_cell cell26) (air_cell cell27) (air_cell cell28) (air_cell cell31) (air_cell cell36) (air_cell cell4) (position cell0) (tree_cell cell1) (tree_cell cell10) (tree_cell cell11) (tree_cell cell15) (tree_cell cell16) (tree_cell cell17) (tree_cell cell18) (tree_cell cell19) (tree_cell cell2) (tree_cell cell20) (tree_cell cell21) (tree_cell cell22) (tree_cell cell23) (tree_cell cell24) (tree_cell cell25) (tree_cell cell29) (tree_cell cell3) (tree_cell cell30) (tree_cell cell32) (tree_cell cell33) (tree_cell cell34) (tree_cell cell35) (tree_cell cell37) (tree_cell cell5) (tree_cell cell6) (tree_cell cell7) (tree_cell cell8) (tree_cell cell9))
+    (:goal (= (pogo_sticks_to_make) 0))
+)

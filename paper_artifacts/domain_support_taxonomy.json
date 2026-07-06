@@ -1,20 +1,20 @@
 {
   "backend_selection_principle": "Backend choice is made from the atomic goal templates observed in the training split or requested by a validated temporal transition. MOOSE is the first positive singleton predicate backend candidate because its method learns goal-regression rules from singleton goal conditions; other backends remain candidates only when their artifacts pass parser, binding, ASL compilation, and held-out validation gates.",
   "benchmark_source": {
-    "coverage": "six selected achievement-goal planning domains",
+    "coverage": "all MOOSE direct train/test benchmark domains plus project-added feature-definable serialized-width benchmarks",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
     {
       "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
-      "coverage": "IPC benchmark directories used for selected classical PDDL domains",
+      "coverage": "IPC benchmark directories used for Blocks",
       "id": "pddl_instances",
       "name": "potassco/pddl-instances",
       "url": "https://github.com/potassco/pddl-instances"
     },
     {
       "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
-      "coverage": "MOOSE benchmark data for singleton-regression-friendly domains",
+      "coverage": "MOOSE companion benchmark families with official non-empty training/ and testing/ splits",
       "id": "moose_dataset",
       "name": "DillonZChen/moose-dataset",
       "url": "https://github.com/DillonZChen/moose-dataset"
@@ -32,17 +32,25 @@
     "broad_universal_gp_claim": false,
     "current_nonstandard_mechanism_domain_count": 0,
     "current_nonstandard_mechanism_domains": [],
-    "current_paper_positioning": "The benchmark infrastructure targets six selected achievement-goal planning domains. The groups describe goal properties that stress the compiler; they do not route domains to backends.",
-    "current_strict_main_standard_domain_count": 6,
+    "current_paper_positioning": "The benchmark infrastructure targets 14 achievement-goal planning domains. The groups describe evaluation properties from prior GP and planning-width work; they do not route domains to backends.",
+    "current_strict_main_standard_domain_count": 14,
     "current_strict_main_standard_domains": [
+      "barman",
       "ferry",
-      "miconic",
       "gripper",
       "logistics",
+      "miconic",
+      "rovers",
+      "satellite",
+      "transport",
+      "numeric-ferry",
+      "numeric-miconic",
+      "numeric-minecraft",
+      "numeric-transport",
       "blocks",
       "depots"
     ],
-    "prior_broad_gp_domain_count_range": "Prior GP papers commonly evaluate around 6-13 standard or paper-defined planning families for a broad method claim; this paper deliberately uses six because the contribution is a caller/compiler framework around existing GP backends, not another universal GP learner.",
+    "prior_broad_gp_domain_count_range": "Prior GP and sketch papers commonly evaluate around 6-13 standard or paper-defined planning families. This corpus uses every MOOSE direct train/test family plus two feature-definable serialized-width stress domains, because the contribution is an evidence-to-ASL compiler rather than a new universal GP learner.",
     "revision_needed_for_broad_gp_claim": false
   },
   "evaluation_policy": {
@@ -55,40 +63,6 @@
   },
   "excluded_or_boundary_domains": [
     {
-      "current_project_domains": [],
-      "domains": [
-        "numeric ferry",
-        "numeric miconic",
-        "numeric minecraft",
-        "numeric transport"
-      ],
-      "id": "numeric_goal_boundary",
-      "reason": "The current ASL compiler targets predicates and literals; numeric fluent semantics require a separate compiler contract."
-    },
-    {
-      "current_project_domains": [],
-      "domains": [
-        "rovers",
-        "transport",
-        "satellite"
-      ],
-      "id": "route_or_resource_boundary",
-      "reason": "These domains may require richer reachability, resource, or instrument reasoning before their backend artifacts can be safely compiled into ASL."
-    },
-    {
-      "current_project_domains": [],
-      "domains": [
-        "barman",
-        "childsnack",
-        "delivery",
-        "spanner",
-        "visitall",
-        "sokoban-1stone"
-      ],
-      "id": "unselected_breadth_domains",
-      "reason": "Useful future evaluation breadth, but excluded from the current six-domain focused scope."
-    },
-    {
       "current_project_domains": [
         "8puzzle-1tile"
       ],
@@ -96,10 +70,42 @@
         "8puzzle-1tile"
       ],
       "id": "graph_search_permutation_boundary",
-      "reason": "The current compiler does not yet support graph-search or permutation-progress controllers. Putting one tile at its target square depends on blank reachability and solvability-preserving moves, not only on local producer macros or support-clearing recursion."
+      "reason": "The current compiler does not yet support graph-search or permutation-progress controllers. Putting one tile at its target square depends on blank reachability and solvability-preserving moves, not only on validated singleton macros or feature-definable serialized-width schema closure."
+    },
+    {
+      "current_project_domains": [],
+      "domains": [
+        "barman-axioms",
+        "barman-disjpres",
+        "ferry-axioms",
+        "ferry-disjpres",
+        "gripper-axioms",
+        "gripper-disjpres",
+        "logistics-axioms",
+        "logistics-disjpres",
+        "miconic-axioms",
+        "miconic-disjpres",
+        "rovers-axioms",
+        "rovers-disjpres",
+        "satellite-axioms",
+        "satellite-disjpres",
+        "transport-axioms",
+        "transport-disjpres"
+      ],
+      "id": "moose_testing_only_variants",
+      "reason": "The official MOOSE companion dataset provides testing/ problems for these axiom and disjunctive-precondition variants but no matching non-empty training/ split, so they are robustness probes rather than default train/test benchmarks."
     }
   ],
   "formal_properties": [
+    {
+      "definition": "An ESHO domain is a classical planning benchmark family that is easy to solve satisficingly but hard to optimize; MOOSE uses this family for its main classical synthesis-cost comparison.",
+      "id": "esho_classical_family",
+      "literature_basis": [
+        "Chen2026Moose"
+      ],
+      "name": "ESHO classical family",
+      "paper_use": "Defines the classical benchmark coverage group without inventing per-domain task-story labels."
+    },
     {
       "definition": "A training corpus is suitable for a MOOSE-style atomic backend when the relevant reusable targets can be represented as singleton positive predicate goals, allowing first-order regression rules to explain how to achieve each literal template.",
       "id": "singleton_goal_regression_suitability",
@@ -120,14 +126,25 @@
       "paper_use": "Separates multi-object classical achievement evaluation from singleton-only sanity checks."
     },
     {
-      "definition": "Some achievement goals are ordinary final-state PDDL literals but require support, clearing, lifting, or stacking relations to be achieved in a valid internal order. The compiler handles this by adding schema-augmented recursive atomic modules when PDDL add effects and progress certificates justify them.",
-      "id": "support_dependent_construction_need",
+      "definition": "The planning state includes numeric functions, numeric conditions, or numeric effects, as in PDDL numeric planning. These are not just larger object sets; they require a separate executable semantics for an ASL library.",
+      "id": "numeric_fluent_semantics",
+      "literature_basis": [
+        "Chen2026Moose"
+      ],
+      "name": "Numeric fluent semantics",
+      "paper_use": "Separates numeric benchmark coverage from predicate-only ASL support."
+    },
+    {
+      "definition": "Useful generalized behavior is expressible with lifted Boolean or numerical features over objects and relations, and those features serialize a goal into progress-making subgoals whose induced subproblems have small width. Example features include a counter of blockers, a Boolean test for whether a relational goal already holds, or a decreasing progress measure.",
+      "id": "feature_definable_serialized_width_structure",
       "literature_basis": [
         "Frances2021LearningGeneralPolicies",
+        "Drexler2022LearningSketches",
+        "Bonet2024GeneralPoliciesWidth",
         "Bonet2024PolicyReuse"
       ],
-      "name": "Support-dependent construction need",
-      "paper_use": "Explains why Blocks and Depots stress the compiler beyond direct singleton macro preservation."
+      "name": "Feature-definable serialized-width structure",
+      "paper_use": "Explains why Blocks and Depots stress schema-derived internal modules and recursive progress without naming the group after a construction task."
     },
     {
       "definition": "A backend artifact can enter the final library only when its symbols bind to declared PDDL predicates, primitive actions, predicate subgoals, or validated temporal wrapper calls without synthetic achievement names.",
@@ -139,63 +156,81 @@
       "paper_use": "Defines the compiler gate between external GP artifacts and the maintained AgentSpeak(L) library."
     }
   ],
-  "goal_property_groups": [
+  "benchmark_property_groups": [
     {
       "backend_route": "not_by_group; backend is selected from atomic templates",
-      "current_evidence": "Both domains are present in MOOSE or IPC sources and materialized with deterministic train/test splits.",
+      "current_evidence": "All eight domains are present in the official MOOSE companion dataset with non-empty training/ and testing/ splits.",
       "domain_examples": [
+        "barman",
         "ferry",
-        "miconic"
-      ],
-      "formal_membership": "Problem goals whose reusable training targets are primarily positive singleton predicate templates and whose known GP evidence includes MOOSE-style goal regression.",
-      "id": "singleton_regression_friendly_classical_goals",
-      "name": "Singleton-regression-friendly classical goals",
-      "paper_role": "Tests the atomic template learner in domains where singleton goal regression should be a strong fit.",
-      "prior_property_basis": [
-        "singleton_goal_regression_suitability"
-      ],
-      "support_level": "main_claim",
-      "target_paper_domains": [
-        "ferry",
-        "miconic"
-      ]
-    },
-    {
-      "backend_route": "not_by_group; backend is selected from atomic templates",
-      "current_evidence": "Both domains are standard IPC or GP-paper domains with local train/test snapshots.",
-      "domain_examples": [
         "gripper",
-        "logistics"
+        "logistics",
+        "miconic",
+        "rovers",
+        "satellite",
+        "transport"
       ],
-      "formal_membership": "Problem goals that require repeated lifted atomic templates across multiple objects while still being represented as ordinary classical PDDL achievement goals.",
-      "id": "multi_object_classical_achievement_goals",
-      "name": "Multi-object classical achievement goals",
-      "paper_role": "Tests whether the maintained ASL library remains lifted and domain-level as object counts grow.",
+      "formal_membership": "Classical PDDL domains in the Easy-to-Solve, Hard-to-Optimise family used by MOOSE for synthesis-cost evaluation. Goal atoms are ordinary predicate literals, and MOOSE analyzes their interaction through TGI, SGI, and OGI rather than by per-domain task stories.",
+      "id": "esho_classical_domains",
+      "name": "ESHO classical domains",
+      "paper_role": "Tests predicate-level atomic-library compilation on the MOOSE classical benchmark family.",
       "prior_property_basis": [
+        "esho_classical_family",
+        "singleton_goal_regression_suitability",
         "multi_object_template_composition"
       ],
-      "support_level": "main_claim",
+      "support_level": "main_claim_for_predicate_asl",
       "target_paper_domains": [
+        "barman",
+        "ferry",
         "gripper",
-        "logistics"
+        "logistics",
+        "miconic",
+        "rovers",
+        "satellite",
+        "transport"
       ]
     },
     {
       "backend_route": "not_by_group; backend is selected from atomic templates",
-      "current_evidence": "Blocks and Depots are selected because their PDDL schemas expose support-dependent construction goals whose internal modules can be justified from action add effects and progress certificates.",
+      "current_evidence": "All four domains are present in the official MOOSE companion dataset with non-empty training/ and testing/ splits.",
+      "domain_examples": [
+        "numeric-ferry",
+        "numeric-miconic",
+        "numeric-minecraft",
+        "numeric-transport"
+      ],
+      "formal_membership": "PDDL domains whose state, action applicability, or goals include numeric functions, numeric conditions, or numeric effects.",
+      "id": "numeric_fluent_domains",
+      "name": "Numeric fluent domains",
+      "paper_role": "Keeps MOOSE numeric train/test coverage visible while marking ASL numeric compilation as experimental.",
+      "prior_property_basis": [
+        "numeric_fluent_semantics"
+      ],
+      "support_level": "benchmark_coverage_experimental_asl",
+      "target_paper_domains": [
+        "numeric-ferry",
+        "numeric-miconic",
+        "numeric-minecraft",
+        "numeric-transport"
+      ]
+    },
+    {
+      "backend_route": "not_by_group; backend is selected from atomic templates",
+      "current_evidence": "Blocks and Depots are selected because their PDDL schemas expose relational fluents whose compact generalized behavior is normally described with lifted features, serialized subgoal structure, sketches, or reusable policy modules.",
       "domain_examples": [
         "blocks",
         "depots"
       ],
-      "formal_membership": "Problem goals whose literals depend on support, clearing, lifting, stacking, or containment relations, so a compact ASL library needs schema-augmented internal producible fluent modules.",
-      "id": "support_dependent_construction_goals",
-      "name": "Support-dependent construction goals",
-      "paper_role": "Tests whether the validated policy-lifting compiler can go beyond preserving MOOSE macros and emit compact support-dependent atomic modules.",
+      "formal_membership": "Relational domains where reusable atomic behavior is naturally described by feature-defined policies or sketches that serialize goals into bounded-width subproblems, and where the compiler must justify internal producible-fluent modules from PDDL action schemas.",
+      "id": "feature_definable_serialized_width_domains",
+      "name": "Feature-definable serialized-width domains",
+      "paper_role": "Tests whether validated policy lifting can add compact internal atomic modules without domain-name hard-coding.",
       "prior_property_basis": [
-        "support_dependent_construction_need",
+        "feature_definable_serialized_width_structure",
         "safe_asl_compilability"
       ],
-      "support_level": "main_claim",
+      "support_level": "main_claim_for_predicate_asl",
       "target_paper_domains": [
         "blocks",
         "depots"
@@ -296,7 +331,7 @@
         "numeric_domains": 4
       },
       "id": "moose_goal_regression",
-      "implication_for_this_paper": "Use goal-independent domains as the goal-separable and serialisable selected class and as MOOSE-style baselines. Do not treat them as covered unless they pass the same compiled-ASL protocol.",
+      "implication_for_this_paper": "Use the ESHO classical family and MOOSE goal-independence analysis as benchmark context. Do not treat them as covered unless they pass the same compiled-ASL protocol.",
       "literature_basis": [
         "Chen2026Moose"
       ],
@@ -368,12 +403,12 @@
         "problem_classes": 9
       },
       "id": "d2l_feature_definable_policies",
-      "implication_for_this_paper": "Blocksworld is the right core goal-dependency domain, but one standard family is narrower than this precedent.",
+      "implication_for_this_paper": "Blocksworld is the right core goal-dependency domain, but the feature-definable serialized-width group is narrower than this precedent.",
       "literature_basis": [
         "Frances2021LearningGeneralPolicies"
       ],
       "property_axis": "feature-definable terminating general policies learned from small examples",
-      "selection_style": "The paper evaluates problem classes where a finite description-logic feature pool can separate good transitions and defines a terminating policy, including full Blocksworld with goal-dependent construction."
+      "selection_style": "The paper evaluates problem classes where a finite description-logic feature pool can separate good transitions and defines a terminating policy, including full Blocksworld with feature-defined relational goals."
     },
     {
       "domains": [
@@ -423,17 +458,25 @@
       "selection_style": "The paper groups domains by whether compact loop programs can solve all input instances and then validates the synthesized programs on larger instances."
     }
   ],
-  "schema_version": 3,
+  "schema_version": 4,
   "scope": "achievement_goal_atomic_templates_with_temporal_extended_goal_wrappers",
-  "selected_goal_property_group_count": 3,
+  "selected_benchmark_property_group_count": 3,
   "selected_goal_specification_layer_count": 2,
   "selected_standard_domain_targets": [
+    "barman",
     "ferry",
-    "miconic",
     "gripper",
     "logistics",
+    "miconic",
+    "rovers",
+    "satellite",
+    "transport",
+    "numeric-ferry",
+    "numeric-miconic",
+    "numeric-minecraft",
+    "numeric-transport",
     "blocks",
     "depots"
   ],
-  "selection_principle": "The six-domain corpus is selected to cover goal-property regimes needed by the framework rather than to route whole domains to different GP algorithms. Domains are materialized from pinned reputable sources: potassco/pddl-instances, DillonZChen/moose-dataset, and bonetblai/learner-policies-from-examples. Each local domain snapshot has a domain.pddl file, all selected source instances, a deterministic floor(2/3 * N) training split, and a remaining held-out goal-specification split."
+  "selection_principle": "The corpus is selected to cover literature-level evaluation properties rather than to route whole domains to different GP algorithms: ESHO classical domains, numeric fluent domains, and feature-definable serialized-width domains. MOOSE official domains use the companion training/ and testing/ split; Blocks and Depots use floor(1/4 * instance_count) train and the remaining instances as test."
 }

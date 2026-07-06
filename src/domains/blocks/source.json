@@ -11,7 +11,7 @@
     "instances/*.pddl"
   ],
   "source_url": "https://github.com/potassco/pddl-instances",
-  "split_policy": "floor(1/4 * instance_count) train for support-dependent construction audit, remaining test",
+  "split_policy": "floor(1/4 * instance_count) train for feature-definable serialized-width policy audit, remaining test",
   "test_count": 77,
   "train_count": 25
 }

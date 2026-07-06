@@ -35,7 +35,7 @@ class DomainSpec(NamedTuple):
 	domain_id: str
 	source_id: str
 	source_path: str
-	goal_property_group_id: str
+	benchmark_property_group_id: str
 	display_name: str
 	ipc_year: str
 	ipc_variant: str
@@ -61,7 +61,7 @@ SOURCES: dict[str, SourceSpec] = {
 		"https://github.com/DillonZChen/moose-dataset",
 		PROJECT_ROOT / ".external" / "moose-dataset",
 		"e00970516154e9042b783a4613a1ed7286c9beee",
-		"MOOSE goal-regression benchmark families",
+		"MOOSE companion benchmark families with official train/test splits",
 	),
 	"kr2025_policies": SourceSpec(
 		"kr2025_policies",
@@ -123,97 +123,145 @@ def _reset_directory(path: Path) -> None:
 
 
 def _domain_specs() -> tuple[DomainSpec, ...]:
+	moose_split_policy = (
+		"MOOSE official artifact split: training/ as train and testing/ as test"
+	)
 	return (
-		DomainSpec(
+		_moose_domain_spec(
 			"ferry",
-			"moose_dataset",
-			"ferry",
-			"singleton_regression_friendly_classical_goals",
+			"esho_classical_domains",
 			"Ferry",
-			"MOOSE 2026",
 			"ferry",
-			("training/*.pddl", "testing/*.pddl"),
-			split_strategy="source_directories",
-			split_policy=(
-				"MOOSE official artifact split: training/ as train and "
-				"testing/ as test"
-			),
+			moose_split_policy,
 		),
-		DomainSpec(
-			"miconic",
-			"moose_dataset",
-			"miconic",
-			"singleton_regression_friendly_classical_goals",
-			"Miconic",
-			"MOOSE 2026",
-			"miconic",
-			("training/*.pddl", "testing/*.pddl"),
-			split_strategy="source_directories",
-			split_policy=(
-				"MOOSE official artifact split: training/ as train and "
-				"testing/ as test"
-			),
-		),
-		DomainSpec(
+		_moose_domain_spec(
 			"gripper",
-			"moose_dataset",
-			"gripper",
-			"multi_object_classical_achievement_goals",
+			"esho_classical_domains",
 			"Gripper",
-			"MOOSE 2026",
 			"gripper",
-			("training/*.pddl", "testing/*.pddl"),
-			split_strategy="source_directories",
-			split_policy=(
-				"MOOSE official artifact split: training/ as train and "
-				"testing/ as test"
-			),
+			moose_split_policy,
 		),
-		DomainSpec(
+		_moose_domain_spec(
 			"logistics",
-			"moose_dataset",
-			"logistics",
-			"multi_object_classical_achievement_goals",
+			"esho_classical_domains",
 			"Logistics",
-			"MOOSE 2026",
 			"logistics",
-			("training/*.pddl", "testing/*.pddl"),
-			split_strategy="source_directories",
-			split_policy=(
-				"MOOSE official artifact split: training/ as train and "
-				"testing/ as test"
-			),
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"miconic",
+			"esho_classical_domains",
+			"Miconic",
+			"miconic",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"transport",
+			"esho_classical_domains",
+			"Transport",
+			"transport",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"barman",
+			"esho_classical_domains",
+			"Barman",
+			"barman",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"rovers",
+			"esho_classical_domains",
+			"Rovers",
+			"rovers",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"satellite",
+			"esho_classical_domains",
+			"Satellite",
+			"satellite",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"numeric-ferry",
+			"numeric_fluent_domains",
+			"Numeric Ferry",
+			"numeric-ferry",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"numeric-miconic",
+			"numeric_fluent_domains",
+			"Numeric Miconic",
+			"numeric-miconic",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"numeric-minecraft",
+			"numeric_fluent_domains",
+			"Numeric Minecraft",
+			"numeric-minecraft",
+			moose_split_policy,
+		),
+		_moose_domain_spec(
+			"numeric-transport",
+			"numeric_fluent_domains",
+			"Numeric Transport",
+			"numeric-transport",
+			moose_split_policy,
 		),
 		DomainSpec(
 			"blocks",
 			"pddl_instances",
 			"ipc-2000/domains/blocks-strips-typed",
-			"support_dependent_construction_goals",
+			"feature_definable_serialized_width_domains",
 			"Blocks",
 			"2000",
 			"blocks-strips-typed",
 			("instances/*.pddl",),
 			train_ratio=STRUCTURAL_TRAIN_RATIO,
 			split_policy=(
-				"floor(1/4 * instance_count) train for support-dependent "
-				"construction audit, remaining test"
+				"floor(1/4 * instance_count) train for feature-definable "
+				"serialized-width policy audit, remaining test"
 			),
 		),
 		DomainSpec(
 			"depots",
 			"d2l",
 			"domains/depot",
-			"support_dependent_construction_goals",
+			"feature_definable_serialized_width_domains",
 			"Depots",
 			"D2L",
 			"depot",
 			("p*.pddl",),
 			train_ratio=STRUCTURAL_TRAIN_RATIO,
 			split_policy=(
-				"floor(1/4 * instance_count) train for support-dependent "
-				"construction audit, remaining test"
+				"floor(1/4 * instance_count) train for feature-definable "
+				"serialized-width policy audit, remaining test"
 			),
 		),
+	)
+
+
+def _moose_domain_spec(
+	domain_id: str,
+	benchmark_property_group_id: str,
+	display_name: str,
+	ipc_variant: str,
+	split_policy: str,
+) -> DomainSpec:
+	return DomainSpec(
+		domain_id,
+		"moose_dataset",
+		domain_id,
+		benchmark_property_group_id,
+		display_name,
+		"MOOSE 2026",
+		ipc_variant,
+		("training/*.pddl", "testing/*.pddl"),
+		split_strategy="source_directories",
+		split_policy=split_policy,
 	)
 
 
@@ -363,10 +411,10 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				"goal_specification_layer": "achievement_goal_layer",
 				"future_goal_specification_layers": ["temporal_extended_goal_layer"],
 				"selected_domain_ids": [spec.domain_id for spec in specs],
-				"selected_goal_property_group_ids": [
-					"singleton_regression_friendly_classical_goals",
-					"multi_object_classical_achievement_goals",
-					"support_dependent_construction_goals",
+				"selected_benchmark_property_group_ids": [
+					"esho_classical_domains",
+					"numeric_fluent_domains",
+					"feature_definable_serialized_width_domains",
 				],
 				"matrix_names": {
 					"main": "paper-final-main-library",
@@ -385,10 +433,13 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 						"paper-expanded-smoke",
 					],
 				},
-				"scope": "positive_conjunctive_achievement_goals",
+				"scope": "positive_conjunctive_or_numeric_achievement_goals",
 				"benchmark_source": {
 					"name": "selected reputable generalized-planning benchmark sources",
-					"coverage": "six selected achievement-goal planning domains",
+					"coverage": (
+						"all MOOSE direct train/test benchmark domains plus "
+						"project-added feature-definable serialized-width benchmarks"
+					),
 				},
 				"benchmark_sources": _benchmark_sources_payload(specs),
 			},
@@ -399,7 +450,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 		encoding="utf-8",
 	)
 	for spec in specs:
-		record_dir = REGISTRY_ROOT / spec.goal_property_group_id / spec.domain_id
+		record_dir = REGISTRY_ROOT / spec.benchmark_property_group_id / spec.domain_id
 		record_dir.mkdir(parents=True)
 		problem_paths = _local_problem_paths(spec.domain_id)
 		train_paths = tuple(path for path in problem_paths if "/train/" in path)
@@ -407,7 +458,7 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 		payload = {
 			"schema_version": 1,
 			"goal_specification_layer": "achievement_goal_layer",
-			"goal_property_group_id": spec.goal_property_group_id,
+			"benchmark_property_group_id": spec.benchmark_property_group_id,
 			"domain_id": spec.domain_id,
 			"display_name": spec.display_name,
 			"domain_role": "main_claim",

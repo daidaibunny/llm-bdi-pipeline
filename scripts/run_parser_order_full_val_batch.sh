@@ -22,7 +22,14 @@ MOOSE_STDERR="$LOG_ROOT/moose_batch.stderr.log"
 if [[ $# -gt 0 ]]; then
 	DOMAINS=("$@")
 else
-	DOMAINS=(ferry miconic gripper logistics blocks depots)
+	mapfile -t DOMAINS < <(
+		PYTHONDONTWRITEBYTECODE=1 uv run python - <<'PY'
+from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS
+
+for domain in DEFAULT_DOMAINS:
+	print(domain)
+PY
+	)
 fi
 
 DOMAIN_ARGS=()
