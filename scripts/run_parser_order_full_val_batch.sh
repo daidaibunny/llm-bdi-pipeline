@@ -117,6 +117,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_full_test_jason_validation.p
 	--plan-verifier-timeout-seconds "$VAL_TIMEOUT_SECONDS" \
 	--atomic-library-mode validated-policy-lifting \
 	--write-domain-long-asl \
+	--write-per-test-runtime-asl \
 	--suppress-final-summary-json \
 	"${DOMAIN_ARGS[@]}"
 VALIDATION_EXIT_CODE=$?
