@@ -86,12 +86,15 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 		seed_facts_file_name="initial_facts.txt",
 	)
 
-	assert 'Paths.get("initial_facts.txt")' in source
+	assert 'Paths.get("initial_facts.txt")' not in source
 	assert 'Paths.get("initial_percepts.txt")' in source
+	assert 'Paths.get("static_beliefs.txt")' in source
 	assert 'Paths.get("jason_plan.plan")' in source
 	assert 'Paths.get("pddl_symbol_map.tsv")' in source
-	assert "Files.readAllLines(seedFactsPath, StandardCharsets.UTF_8)" in source
-	assert "Files.readAllLines(initialPerceptsPath, StandardCharsets.UTF_8)" in source
+	assert "Files.readAllLines" not in source
+	assert "Files.newBufferedReader" in source
+	assert "loadFactsIntoWorld(staticBeliefsPath);" in source
+	assert "loadFactsIntoWorld(initialPerceptsPath);" in source
 	assert 'world.add("ready")' not in source
 	assert "Boolean.parseBoolean(" in source
 	assert '"jason.pipeline.planTraceEnabled"' in source
@@ -259,6 +262,8 @@ def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
 	assert "removeArgumentIndexLiteral" in source
 	assert "public boolean remove(Literal literal)" in source
 	assert "rebuildIndex();" not in source
+	assert "Files.readAllLines" not in source
+	assert "Files.newBufferedReader" in source
 
 
 def test_runtime_seed_facts_split_static_beliefs_from_dynamic_percepts() -> None:
@@ -506,7 +511,11 @@ def test_jason_runner_executes_tiny_pddl_environment(tmp_path: Path) -> None:
 	assert Path(result.artifacts["agentspeak"]).exists()
 	assert Path(result.artifacts["plan_trace"]).exists()
 	assert Path(result.artifacts["plan_trace"]).read_text(encoding="utf-8") == "(finish)\n"
-	assert Path(result.artifacts["initial_facts"]).read_text(encoding="utf-8") == "ready\n"
+	assert "Deprecated duplicate runtime seed file omitted" in Path(
+		result.artifacts["initial_facts"],
+	).read_text(encoding="utf-8")
+	assert Path(result.artifacts["initial_percepts"]).read_text(encoding="utf-8") == "ready\n"
+	assert Path(result.artifacts["static_beliefs"]).read_text(encoding="utf-8") == ""
 	assert 'world.add("ready")' not in Path(result.artifacts["environment_java"]).read_text(
 		encoding="utf-8",
 	)

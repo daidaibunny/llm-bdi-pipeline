@@ -169,6 +169,20 @@ class PlanVerifierResult:
 
 
 @dataclass(frozen=True)
+class RuntimeProblemArtifacts:
+	"""Parsed PDDL and derived runtime facts for one Jason validation task."""
+
+	domain: Any
+	problem: Any
+	seed_facts: tuple[str, ...]
+	action_schemas: tuple[RuntimeActionSchema, ...]
+	initial_percepts: tuple[str, ...]
+	static_beliefs: tuple[str, ...]
+	pddl_symbol_map: str
+	build_seconds: float = 0.0
+
+
+@dataclass(frozen=True)
 class RuntimeOutputSummary:
 	"""Bounded in-memory summary of a Jason stdout/stderr artifact pair."""
 
@@ -247,6 +261,7 @@ class JasonPlanLibraryRunner:
 		goal_name: str,
 		output_dir: str | Path,
 		plan_library_asl_text: str | None = None,
+		runtime_artifacts: RuntimeProblemArtifacts | None = None,
 	) -> JasonValidationResult:
 		"""Run one canonical AgentSpeak(L) library with real Jason action semantics."""
 
@@ -259,15 +274,19 @@ class JasonPlanLibraryRunner:
 		output_path.mkdir(parents=True, exist_ok=True)
 
 		parse_start = time.perf_counter()
-		domain = PDDLParser.parse_domain(domain_path)
-		problem = PDDLParser.parse_problem(problem_path)
-		seed_facts = _seed_facts(domain_file=domain_path, problem_file=problem_path)
-		action_schemas = tuple(_runtime_action_schema(action) for action in domain.actions)
-		initial_percepts, static_beliefs = _split_seed_facts_for_jason_runtime(
-			seed_facts=seed_facts,
-			action_schemas=action_schemas,
+		artifacts = runtime_artifacts or build_runtime_problem_artifacts(
+			domain_file=domain_path,
+			problem_file=problem_path,
 		)
-		timing_profile["parse_seconds"] = time.perf_counter() - parse_start
+		domain = artifacts.domain
+		action_schemas = artifacts.action_schemas
+		initial_percepts = artifacts.initial_percepts
+		static_beliefs = artifacts.static_beliefs
+		timing_profile["parse_seconds"] = (
+			artifacts.build_seconds
+			if runtime_artifacts is not None
+			else time.perf_counter() - parse_start
+		)
 
 		if not action_schemas:
 			raise JasonValidationError(
@@ -342,7 +361,8 @@ class JasonPlanLibraryRunner:
 				encoding="utf-8",
 			)
 		initial_facts_path.write_text(
-			"\n".join(seed_facts) + ("\n" if seed_facts else ""),
+			"# Deprecated duplicate runtime seed file omitted.\n"
+			"# Reconstruct initial facts as initial_percepts.txt + static_beliefs.txt.\n",
 			encoding="utf-8",
 		)
 		initial_percepts_path.write_text(
@@ -354,7 +374,7 @@ class JasonPlanLibraryRunner:
 			encoding="utf-8",
 		)
 		pddl_symbol_map_path.write_text(
-			_render_pddl_symbol_map(domain=domain, problem=problem),
+			artifacts.pddl_symbol_map,
 			encoding="utf-8",
 		)
 		plan_trace_path.write_text("", encoding="utf-8")
@@ -578,9 +598,54 @@ class JasonPlanLibraryRunner:
 		return result
 
 
-def _seed_facts(*, domain_file: Path, problem_file: Path) -> tuple[str, ...]:
-	domain = PDDLParser.parse_domain(domain_file)
-	problem = PDDLParser.parse_problem(problem_file)
+def build_runtime_problem_artifacts(
+	*,
+	domain_file: Path,
+	problem_file: Path,
+	domain: Any | None = None,
+	problem: Any | None = None,
+) -> RuntimeProblemArtifacts:
+	"""Parse one PDDL task once and derive the facts needed by Jason."""
+
+	start = time.perf_counter()
+	domain_model = domain if domain is not None else PDDLParser.parse_domain(domain_file)
+	problem_model = problem if problem is not None else PDDLParser.parse_problem(problem_file)
+	action_schemas = tuple(
+		_runtime_action_schema(action)
+		for action in tuple(getattr(domain_model, "actions", ()) or ())
+	)
+	seed_facts = _seed_facts(domain=domain_model, problem=problem_model)
+	initial_percepts, static_beliefs = _split_seed_facts_for_jason_runtime(
+		seed_facts=seed_facts,
+		action_schemas=action_schemas,
+	)
+	return RuntimeProblemArtifacts(
+		domain=domain_model,
+		problem=problem_model,
+		seed_facts=seed_facts,
+		action_schemas=action_schemas,
+		initial_percepts=initial_percepts,
+		static_beliefs=static_beliefs,
+		pddl_symbol_map=_render_pddl_symbol_map(domain=domain_model, problem=problem_model),
+		build_seconds=time.perf_counter() - start,
+	)
+
+
+def _seed_facts(
+	*,
+	domain_file: Path | None = None,
+	problem_file: Path | None = None,
+	domain: Any | None = None,
+	problem: Any | None = None,
+) -> tuple[str, ...]:
+	if domain is None:
+		if domain_file is None:
+			raise ValueError("domain or domain_file is required")
+		domain = PDDLParser.parse_domain(domain_file)
+	if problem is None:
+		if problem_file is None:
+			raise ValueError("problem or problem_file is required")
+		problem = PDDLParser.parse_problem(problem_file)
 	facts = [
 		_call(fact.predicate, fact.args)
 		for fact in problem.init_facts
@@ -805,6 +870,7 @@ import jason.asSyntax.PredicateIndicator;
 import jason.asSyntax.Term;
 import jason.bb.DefaultBeliefBase;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -1234,16 +1300,20 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		if (!Files.exists(staticBeliefsPath)) {
 			return;
 		}
-		try {
-				for (String line : Files.readAllLines(staticBeliefsPath, StandardCharsets.UTF_8)) {
-					String fact = line.trim();
-					if (!fact.isEmpty() && !fact.startsWith("#")) {
-						Literal literal = Literal.parseLiteral(fact);
-						if (super.add(literal)) {
-							indexStaticLiteral(literal);
-						}
+		try (BufferedReader reader = Files.newBufferedReader(
+			staticBeliefsPath,
+			StandardCharsets.UTF_8
+		)) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				String fact = line.trim();
+				if (!fact.isEmpty() && !fact.startsWith("#")) {
+					Literal literal = Literal.parseLiteral(fact);
+					if (super.add(literal)) {
+						indexStaticLiteral(literal);
 					}
 				}
+			}
 		} catch (IOException error) {
 			throw new RuntimeException(
 				"Failed to load Jason static beliefs from "
@@ -1271,7 +1341,6 @@ def _build_environment_java_source(
 	)
 	if not action_lines:
 		action_lines = "// no action schemas"
-	seed_file = _java_quote(seed_facts_file_name)
 	initial_percepts_file = _java_quote(initial_percepts_file_name)
 	plan_trace_file = _java_quote(plan_trace_file_name)
 	pddl_symbol_map_file = _java_quote(pddl_symbol_map_file_name)
@@ -1280,6 +1349,7 @@ import jason.asSyntax.Literal;
 import jason.asSyntax.Structure;
 import jason.environment.Environment;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -1346,8 +1416,8 @@ public class {class_name} extends Environment {{
 	private final Map<String, String> pddlSymbols = new HashMap<>();
 	private final StringBuilder planTraceBuffer = new StringBuilder();
 	private boolean planTraceDirty = false;
-	private final Path seedFactsPath = Paths.get({seed_file});
 	private final Path initialPerceptsPath = Paths.get({initial_percepts_file});
+	private final Path staticBeliefsPath = Paths.get("static_beliefs.txt");
 	private final Path planTracePath = Paths.get({plan_trace_file});
 	private final Path pddlSymbolMapPath = Paths.get({pddl_symbol_map_file});
 	private final boolean planTraceEnabled = Boolean.parseBoolean(
@@ -1435,8 +1505,20 @@ public class {class_name} extends Environment {{
 
 	private void seedInitialFacts() {{
 		world.clear();
-		try {{
-			for (String line : Files.readAllLines(seedFactsPath, StandardCharsets.UTF_8)) {{
+		loadFactsIntoWorld(staticBeliefsPath);
+		loadFactsIntoWorld(initialPerceptsPath);
+	}}
+
+	private void loadFactsIntoWorld(Path factsPath) {{
+		if (!Files.exists(factsPath)) {{
+			return;
+		}}
+		try (BufferedReader reader = Files.newBufferedReader(
+			factsPath,
+			StandardCharsets.UTF_8
+		)) {{
+			String line;
+			while ((line = reader.readLine()) != null) {{
 				String fact = line.trim();
 				if (!fact.isEmpty() && !fact.startsWith("#")) {{
 					world.add(fact);
@@ -1444,7 +1526,7 @@ public class {class_name} extends Environment {{
 			}}
 		}} catch (IOException error) {{
 			throw new RuntimeException(
-				"Failed to load Jason initial facts from " + seedFactsPath.toAbsolutePath(),
+				"Failed to load Jason initial facts from " + factsPath.toAbsolutePath(),
 				error
 			);
 		}}
@@ -1455,8 +1537,12 @@ public class {class_name} extends Environment {{
 		if (!Files.exists(pddlSymbolMapPath)) {{
 			return;
 		}}
-		try {{
-			for (String line : Files.readAllLines(pddlSymbolMapPath, StandardCharsets.UTF_8)) {{
+		try (BufferedReader reader = Files.newBufferedReader(
+			pddlSymbolMapPath,
+			StandardCharsets.UTF_8
+		)) {{
+			String line;
+			while ((line = reader.readLine()) != null) {{
 				String trimmed = line.trim();
 				if (trimmed.isEmpty() || trimmed.startsWith("#")) {{
 					continue;
@@ -1672,8 +1758,12 @@ public class {class_name} extends Environment {{
 
 	private Set<String> initialPerceptFacts() {{
 		Set<String> facts = new LinkedHashSet<>();
-		try {{
-			for (String line : Files.readAllLines(initialPerceptsPath, StandardCharsets.UTF_8)) {{
+		try (BufferedReader reader = Files.newBufferedReader(
+			initialPerceptsPath,
+			StandardCharsets.UTF_8
+		)) {{
+			String line;
+			while ((line = reader.readLine()) != null) {{
 				String fact = line.trim();
 				if (!fact.isEmpty() && !fact.startsWith("#")) {{
 					facts.add(fact);

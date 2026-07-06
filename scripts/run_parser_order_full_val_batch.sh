@@ -14,6 +14,7 @@ TRAIN_TIMEOUT_SECONDS="${TRAIN_TIMEOUT_SECONDS:-1800}"
 JASON_TIMEOUT_SECONDS="${JASON_TIMEOUT_SECONDS:-1800}"
 VAL_TIMEOUT_SECONDS="${VAL_TIMEOUT_SECONDS:-1800}"
 JASON_JAVA_STACK_SIZE="${JASON_JAVA_STACK_SIZE:-64m}"
+PLAN_VERIFIER_COMMAND="${PLAN_VERIFIER_COMMAND:-bash $PROJECT_ROOT/scripts/validate_with_docker_val.sh}"
 LOG_ROOT="$PROJECT_ROOT/artifacts/parser_order_full_val_logs/$RUN_ID"
 MOOSE_STDOUT="$LOG_ROOT/moose_batch.stdout.log"
 MOOSE_STDERR="$LOG_ROOT/moose_batch.stderr.log"
@@ -32,6 +33,7 @@ done
 echo "[run] id=$RUN_ID"
 echo "[run] domains=${DOMAINS[*]}"
 echo "[run] jason_timeout_seconds=$JASON_TIMEOUT_SECONDS val_timeout_seconds=$VAL_TIMEOUT_SECONDS jason_java_stack_size=$JASON_JAVA_STACK_SIZE"
+echo "[run] plan_verifier_command=$PLAN_VERIFIER_COMMAND"
 echo "[stage 1] generating MOOSE-backed atomic ASL libraries"
 mkdir -p "$LOG_ROOT"
 
@@ -112,7 +114,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_full_test_jason_validation.p
 	--num-workers "$JASON_WORKERS" \
 	--timeout-seconds "$JASON_TIMEOUT_SECONDS" \
 	--jason-java-stack-size "$JASON_JAVA_STACK_SIZE" \
-	--plan-verifier-command "bash $PROJECT_ROOT/scripts/validate_with_docker_val.sh" \
+	--plan-verifier-command "$PLAN_VERIFIER_COMMAND" \
 	--require-plan-verifier \
 	--plan-verifier-timeout-seconds "$VAL_TIMEOUT_SECONDS" \
 	--atomic-library-mode validated-policy-lifting \

@@ -37,6 +37,7 @@ from evaluation.jason_runtime.runner import _build_indexed_belief_base_java_sour
 from evaluation.jason_runtime.runner import _build_environment_java_source  # noqa: E402
 from evaluation.jason_runtime.runner import _resolve_jason_classpath  # noqa: E402
 from evaluation.jason_runtime.runner import _runtime_action_schema  # noqa: E402
+from evaluation.jason_runtime.runner import build_runtime_problem_artifacts  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
@@ -84,6 +85,7 @@ class JasonTask:
 	goal_name: str
 	compact_completion_wrappers: bool
 	output_dir: Path
+	runtime_wrapper_text: str | None = None
 
 
 def main() -> int:
@@ -403,13 +405,22 @@ def prepare_domain_for_full_test(
 		base_plan_library_asl = domain_output / "atomic_plan_library.asl"
 		shutil.copyfile(plan_library_asl, base_plan_library_asl)
 		base_plan_library_asl_text = plan_library_asl.read_text(encoding="utf-8").rstrip()
+		wrapper_text_by_problem: dict[Path, str] = {}
+		wrapper_plan_count: int | None = None
 		if write_domain_long_asl:
+			wrapper_text_by_problem, wrapper_plan_count = build_full_test_wrapper_texts(
+				domain=domain,
+				problem_files=test_instances,
+				compact_completion_wrappers=compact_completion_wrappers,
+			)
 			append_record = append_linear_single_body_full_test_wrappers(
 				domain=domain,
 				plan_library_asl=plan_library_asl,
 				problem_files=test_instances,
 				max_output_bytes=max_domain_long_asl_bytes,
 				compact_completion_wrappers=compact_completion_wrappers,
+				wrapper_text_by_problem=wrapper_text_by_problem,
+				appended_plan_count=wrapper_plan_count,
 			)
 		else:
 			append_record = {
@@ -447,6 +458,7 @@ def prepare_domain_for_full_test(
 					/ domain
 					/ f"test_{index:04d}_{safe_path_fragment(problem_file.stem)}"
 				),
+				runtime_wrapper_text=wrapper_text_by_problem.get(problem_file),
 			)
 			for index, problem_file in enumerate(test_instances, start=1)
 		)
@@ -504,6 +516,8 @@ def append_linear_single_body_full_test_wrappers(
 	problem_files: Sequence[Path],
 	max_output_bytes: int,
 	compact_completion_wrappers: bool = False,
+	wrapper_text_by_problem: Mapping[Path, str] | None = None,
+	appended_plan_count: int | None = None,
 ) -> dict[str, Any]:
 	"""Append one sequential ASL query body per test problem.
 
@@ -513,8 +527,19 @@ def append_linear_single_body_full_test_wrappers(
 	"""
 
 	base_text = plan_library_asl.read_text(encoding="utf-8").rstrip()
-	goal_count = 0
-	plan_count = 0
+	if wrapper_text_by_problem is None:
+		wrapper_map, plan_count = build_full_test_wrapper_texts(
+			domain=domain,
+			problem_files=problem_files,
+			compact_completion_wrappers=compact_completion_wrappers,
+		)
+	else:
+		wrapper_map = dict(wrapper_text_by_problem)
+		plan_count = (
+			appended_plan_count
+			if appended_plan_count is not None
+			else len(tuple(problem_files))
+		)
 	line_count = len(base_text.splitlines()) + 5
 	with plan_library_asl.open("w", encoding="utf-8") as output:
 		output.write(base_text)
@@ -523,14 +548,8 @@ def append_linear_single_body_full_test_wrappers(
 			"   These wrappers call the positive PDDL goal literals in parser order\n"
 			"   and skip JSON DFA metadata because Jason only needs the ASL file. */\n\n",
 		)
-		for index, problem_file in enumerate(problem_files, start=1):
-			wrapper_lines, wrapper_plan_count = full_test_wrapper_lines(
-				domain=domain,
-				index=index,
-				problem_file=problem_file,
-				compact_completion_wrappers=compact_completion_wrappers,
-			)
-			for line in wrapper_lines:
+		for problem_file in problem_files:
+			for line in wrapper_map[problem_file].splitlines():
 				output.write(line)
 				output.write("\n")
 				line_count += 1
@@ -541,8 +560,6 @@ def append_linear_single_body_full_test_wrappers(
 						"Run without --write-domain-long-asl to validate per-test "
 						"runtime ASL instead.",
 					)
-			plan_count += wrapper_plan_count
-			goal_count += 1
 	return {
 		"success": True,
 		"wrapper_mode": (
@@ -551,11 +568,33 @@ def append_linear_single_body_full_test_wrappers(
 			else "linear_single_body_without_json_metadata"
 		),
 		"compact_completion_wrappers": compact_completion_wrappers,
-		"query_count": goal_count,
+		"query_count": len(problem_files),
 		"appended_plan_count": plan_count,
 		"line_count": line_count,
 		"domain_long_asl_written": True,
 	}
+
+
+def build_full_test_wrapper_texts(
+	*,
+	domain: str,
+	problem_files: Sequence[Path],
+	compact_completion_wrappers: bool = False,
+) -> tuple[dict[Path, str], int]:
+	"""Render each full-test query wrapper once, keyed by problem file."""
+
+	wrapper_map: dict[Path, str] = {}
+	total_plan_count = 0
+	for index, problem_file in enumerate(problem_files, start=1):
+		wrapper_lines, wrapper_plan_count = full_test_wrapper_lines(
+			domain=domain,
+			index=index,
+			problem_file=problem_file,
+			compact_completion_wrappers=compact_completion_wrappers,
+		)
+		wrapper_map[problem_file] = "\n".join(wrapper_lines).rstrip()
+		total_plan_count += wrapper_plan_count
+	return wrapper_map, total_plan_count
 
 
 def full_test_wrapper_lines(
@@ -774,16 +813,21 @@ def linear_single_body_wrapper_lines(
 	return tuple(lines), 1
 
 
-def render_runtime_asl_for_task(task: JasonTask) -> str:
+def render_runtime_asl_for_task(task: JasonTask, *, problem: Any | None = None) -> str:
 	"""Render the per-test ASL with the same wrapper shape as the long library."""
 
-	wrapper_lines, _ = full_test_wrapper_lines(
-		domain=task.domain,
-		index=task.index,
-		problem_file=task.problem_file,
-		compact_completion_wrappers=task.compact_completion_wrappers,
-	)
-	return task.base_plan_library_asl_text + "\n\n" + "\n".join(wrapper_lines).rstrip() + "\n"
+	if task.runtime_wrapper_text is None:
+		wrapper_lines, _ = full_test_wrapper_lines(
+			domain=task.domain,
+			index=task.index,
+			problem_file=task.problem_file,
+			compact_completion_wrappers=task.compact_completion_wrappers,
+			problem=problem,
+		)
+		wrapper_text = "\n".join(wrapper_lines).rstrip()
+	else:
+		wrapper_text = task.runtime_wrapper_text.rstrip()
+	return task.base_plan_library_asl_text + "\n\n" + wrapper_text + "\n"
 
 
 def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
@@ -853,6 +897,8 @@ def run_jason_tasks(
 		summary=summary,
 		summary_file=summary_file,
 	)
+	results_jsonl = run_root / "validation_results.jsonl"
+	summary["validation_results_jsonl"] = str(results_jsonl)
 	records: list[dict[str, Any]] = []
 	with ThreadPoolExecutor(max_workers=num_workers) as executor:
 		future_map = {
@@ -873,11 +919,7 @@ def run_jason_tasks(
 		for future in as_completed(future_map):
 			record = future.result()
 			records.append(record)
-			summary["validations"] = sorted(
-				records,
-				key=lambda item: (str(item["domain"]), int(item["test_index"])),
-			)
-			write_json(summary_file, summary)
+			append_jsonl(results_jsonl, record)
 			status = "ok" if record.get("success") else "fail"
 			jason_status = _jason_runtime_status_label(record)
 			verifier_status = _plan_verifier_status_label(record)
@@ -937,7 +979,14 @@ def validate_one_task(
 	start = time.perf_counter()
 	task.output_dir.mkdir(parents=True, exist_ok=True)
 	try:
-		runtime_asl_text = render_runtime_asl_for_task(task)
+		runtime_artifacts = build_runtime_problem_artifacts(
+			domain_file=task.domain_file,
+			problem_file=task.problem_file,
+		)
+		runtime_asl_text = render_runtime_asl_for_task(
+			task,
+			problem=runtime_artifacts.problem,
+		)
 		runtime_asl = task.output_dir / "plan_library.asl"
 		if write_per_test_runtime_asl:
 			runtime_asl.write_text(runtime_asl_text, encoding="utf-8")
@@ -958,6 +1007,7 @@ def validate_one_task(
 			goal_name=task.goal_name,
 			output_dir=task.output_dir,
 			plan_library_asl_text=runtime_asl_text,
+			runtime_artifacts=runtime_artifacts,
 		)
 		payload = result.to_dict()
 		plan_verifier = dict(payload.get("plan_verifier") or {})
@@ -1159,6 +1209,13 @@ def resolve_jason_classpath_once() -> str:
 def write_json(path: Path, payload: Any) -> None:
 	path.parent.mkdir(parents=True, exist_ok=True)
 	path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def append_jsonl(path: Path, payload: Mapping[str, Any]) -> None:
+	path.parent.mkdir(parents=True, exist_ok=True)
+	with path.open("a", encoding="utf-8") as handle:
+		handle.write(json.dumps(payload, sort_keys=True))
+		handle.write("\n")
 
 
 def safe_goal_fragment(value: str) -> str:

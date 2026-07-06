@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from scripts.run_full_test_jason_validation import append_linear_single_body_full_test_wrappers
@@ -10,6 +11,7 @@ from scripts.run_full_test_jason_validation import prepare_domain_for_full_test
 from scripts.run_full_test_jason_validation import query_entry_proposition
 from scripts.run_full_test_jason_validation import resolve_batch_root
 from scripts.run_full_test_jason_validation import render_fact_atom
+from scripts.run_full_test_jason_validation import run_jason_tasks
 from scripts.run_full_test_jason_validation import safe_goal_fragment
 from scripts.run_full_test_jason_validation import safe_path_fragment
 from scripts.run_full_test_jason_validation import validate_one_task
@@ -417,3 +419,77 @@ def test_validate_one_task_embeds_runtime_asl_without_extra_plan_library_file(
 	assert not (output_dir / "plan_library.asl").exists()
 	assert validate_kwargs["plan_library_asl"] == plan_library_asl
 	assert "!at(ball1, roomb)." in validate_kwargs["plan_library_asl_text"]
+
+
+def test_run_jason_tasks_appends_progress_records_without_rewriting_summary(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	plan_library_asl = tmp_path / "plan_library.asl"
+	domain_file.write_text("(define (domain ferry))\n", encoding="utf-8")
+	problem_file.write_text("(define (problem p01) (:domain ferry))\n", encoding="utf-8")
+	plan_library_asl.write_text("/* base */\n", encoding="utf-8")
+	task = JasonTask(
+		domain="ferry",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		plan_library_asl=plan_library_asl,
+		base_plan_library_asl_text="/* base */",
+		goal_name="g_ferry_test_1",
+		compact_completion_wrappers=False,
+		output_dir=tmp_path / "jason" / "ferry" / "test_0001_p01",
+	)
+	summary = {"validations": []}
+	summary_file = tmp_path / "summary.json"
+
+	monkeypatch.setattr(
+		"scripts.run_full_test_jason_validation.prepare_shared_jason_environments",
+		lambda **kwargs: {},
+	)
+	monkeypatch.setattr(
+		"scripts.run_full_test_jason_validation.validate_one_task",
+		lambda *args, **kwargs: {
+			"domain": "ferry",
+			"test_index": 1,
+			"goal_name": "g_ferry_test_1",
+			"success": True,
+			"status": "success",
+			"timed_out": False,
+			"action_count": 1,
+			"plan_verifier_attempted": True,
+			"plan_verifier_success": True,
+		},
+	)
+
+	records = run_jason_tasks(
+		tasks=(task,),
+		classpath="fake-classpath",
+		run_root=tmp_path,
+		num_workers=1,
+		timeout_seconds=1,
+		jason_java_stack_size="64m",
+		plan_verifier_command=None,
+		require_plan_verifier=True,
+		plan_verifier_timeout_seconds=1,
+		write_per_test_runtime_asl=False,
+		summary=summary,
+		summary_file=summary_file,
+	)
+
+	jsonl_file = tmp_path / "validation_results.jsonl"
+	lines = jsonl_file.read_text(encoding="utf-8").splitlines()
+	assert records[0]["success"] is True
+	assert len(lines) == 1
+	assert json.loads(lines[0])["goal_name"] == "g_ferry_test_1"
+	assert summary["validation_results_jsonl"] == str(jsonl_file)
+	assert not summary_file.exists()
+
+
+def test_parser_order_batch_allows_native_plan_verifier_command_override() -> None:
+	script = Path("scripts/run_parser_order_full_val_batch.sh").read_text(encoding="utf-8")
+
+	assert 'PLAN_VERIFIER_COMMAND="${PLAN_VERIFIER_COMMAND:-bash $PROJECT_ROOT/scripts/validate_with_docker_val.sh}"' in script
+	assert '--plan-verifier-command "$PLAN_VERIFIER_COMMAND"' in script
