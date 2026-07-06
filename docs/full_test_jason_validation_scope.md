@@ -93,9 +93,13 @@ not equivalent to a branching automaton.
 The important repairs are in the atomic minimal literal module synthesis stage.
 An atomic goal is a single PDDL fluent used as an AgentSpeak achievement goal,
 for example `!at(Car, Location)`, `!served(Person)`, or `!on(Block, Support)`.
-The output must use only PDDL fluents and PDDL actions plus allowed `g_*` query
-wrapper names. Internal type checks may be used while compiling, but final ASL
-must not contain non-PDDL guards such as `type_block(X)`.
+The output must use PDDL fluents, PDDL actions, allowed `g_*` query wrapper
+names, and the reserved static sort metadata predicate `obj_tp(Object, Type)`.
+Internal type checks may be used while compiling, but final ASL must not contain
+domain-specific non-PDDL guards such as `type_block(X)`. `obj_tp/2` is allowed
+only in plan contexts and is generated from PDDL `:types` and problem
+`:objects`; it is not an achievement goal, not a primitive action, and not part
+of exported PDDL action traces.
 
 Static context safety means predicates that are never produced by any action are
 used only as context, not as achievement goals. For example, Miconic `above(F1,
@@ -195,9 +199,9 @@ names. A predicate is dynamic if it appears in any action add or delete effect.
 Otherwise, it is static. For example, if `lift_at` appears in lift movement
 effects, `lift_at(f0)` is loaded from `initial_percepts.txt`. If `above` never
 appears in any effect, `above(f0,f1)` is loaded from `static_beliefs.txt`.
-The complete world is still present in `initial_facts.txt`, so the Java
-environment continues to check PDDL action preconditions and effects against
-the full state.
+Reserved `obj_tp/2` facts are also static beliefs. The complete world is still
+present in `initial_facts.txt`, so the Java environment continues to check PDDL
+action preconditions and effects against the full state.
 
 The generated MAS file now uses `JasonPipelineIndexedBeliefBase`:
 
@@ -228,7 +232,9 @@ the belief is inserted into the exact and argument-position indexes. When Jason
 removes a belief, the belief is removed from those indexes incrementally.
 Candidates returned from an index are also checked against the underlying
 default belief base before use, so stale candidates cannot survive action
-effects.
+effects. Candidate lookup is streamed through a lazy iterator: static candidates
+are returned directly, while dynamic candidates are live-checked one by one.
+This avoids allocating a merged candidate list for each context match.
 
 The runner also limits successful-action trace output:
 
@@ -243,6 +249,12 @@ primitive action to stdout. It does not truncate the exported PDDL plan trace:
 artifact passed to VAL or the configured IPC-style verifier. The real action
 count is still reported through `runtime_summary`, so validation records
 preserve whether a run executed a short or very long plan.
+
+The complete PDDL plan trace is accumulated in memory during Jason execution
+and written to `jason_plan.plan` when `runtime_summary` or MAS shutdown runs.
+This keeps the VAL-compatible trace intact while avoiding per-action file I/O.
+The trace writer tracks whether the in-memory buffer has changed, so shutdown
+does not rewrite the same file after `runtime_summary` has already exported it.
 
 This optimization is domain-general for PDDL action schemas: adding a new
 domain does not require a special case for that domain or for predicates such as

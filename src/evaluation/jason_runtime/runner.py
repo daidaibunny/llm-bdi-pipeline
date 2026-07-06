@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-from domain_level_planning.pddl_types import object_type_atoms
+from domain_level_planning.pddl_types import obj_tp_atoms
 from domain_level_planning.pddl_types import parameter_name
 from plan_library.rendering import sanitize_identifier
 from utils.pddl_parser import PDDLAction
@@ -569,7 +569,7 @@ def _seed_facts(*, domain_file: Path, problem_file: Path) -> tuple[str, ...]:
 		for fact in problem.init_facts
 		if fact.is_positive
 	]
-	facts.extend(object_type_atoms(problem, domain.types))
+	facts.extend(obj_tp_atoms(problem, domain.types))
 	return tuple(dict.fromkeys(_render_runtime_atom(fact) for fact in facts))
 
 
@@ -895,7 +895,7 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 			if (staticExactMatches == null && dynamicExactMatches == null) {
 				return Collections.emptyIterator();
 			}
-			return candidateBucket(staticExactMatches, dynamicExactMatches).iterator();
+			return candidateIterator(staticExactMatches, dynamicExactMatches);
 		}
 		LinkedHashSet<Literal> bestStaticBucket = null;
 		LinkedHashSet<Literal> bestDynamicBucket = null;
@@ -930,7 +930,7 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		if (bestBucketSize == Integer.MAX_VALUE) {
 			return super.getCandidateBeliefs(literal, unifier);
 		}
-		return candidateBucket(bestStaticBucket, bestDynamicBucket).iterator();
+		return candidateIterator(bestStaticBucket, bestDynamicBucket);
 	}
 
 	@Override
@@ -1099,23 +1099,62 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		return byValue.get(value);
 	}
 
-	private List<Literal> candidateBucket(
+	private Iterator<Literal> candidateIterator(
 		LinkedHashSet<Literal> staticBucket,
 		LinkedHashSet<Literal> dynamicBucket
 	) {
-		List<Literal> candidates = new ArrayList<>();
-		if (staticBucket != null) {
-			candidates.addAll(staticBucket);
-		}
-		if (dynamicBucket == null) {
-			return candidates;
-		}
-		for (Literal candidate : dynamicBucket) {
-			if (super.contains(candidate) != null) {
-				candidates.add(candidate);
+		Iterator<Literal> staticIterator = staticBucket == null
+			? Collections.emptyIterator()
+			: staticBucket.iterator();
+		Iterator<Literal> dynamicIterator = dynamicBucket == null
+			? Collections.emptyIterator()
+			: dynamicBucket.iterator();
+		return new Iterator<Literal>() {
+			private Literal nextDynamic = null;
+
+			@Override
+			public boolean hasNext() {
+				if (staticIterator.hasNext()) {
+					return true;
+				}
+				if (nextDynamic != null) {
+					return true;
+				}
+				nextDynamic = nextLiveDynamic();
+				return nextDynamic != null;
 			}
-		}
-		return candidates;
+
+			@Override
+			public Literal next() {
+				if (staticIterator.hasNext()) {
+					return staticIterator.next();
+				}
+				if (nextDynamic == null) {
+					nextDynamic = nextLiveDynamic();
+				}
+				if (nextDynamic == null) {
+					throw new java.util.NoSuchElementException();
+				}
+				Literal result = nextDynamic;
+				nextDynamic = null;
+				return result;
+			}
+
+			private Literal nextLiveDynamic() {
+				while (dynamicIterator.hasNext()) {
+					Literal candidate = dynamicIterator.next();
+					Literal liveCandidate = superContains(candidate);
+					if (liveCandidate != null) {
+						return liveCandidate;
+					}
+				}
+				return null;
+			}
+		};
+	}
+
+	private Literal superContains(Literal candidate) {
+		return super.contains(candidate);
 	}
 
 	private int bucketSize(LinkedHashSet<Literal> bucket) {
@@ -1229,10 +1268,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -1290,7 +1327,8 @@ public class {class_name} extends Environment {{
 	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
 	private final Map<String, String> pddlSymbols = new HashMap<>();
-	private final List<String> planTrace = new ArrayList<>();
+	private final StringBuilder planTraceBuffer = new StringBuilder();
+	private boolean planTraceDirty = false;
 	private final Path seedFactsPath = Paths.get({seed_file});
 	private final Path initialPerceptsPath = Paths.get({initial_percepts_file});
 	private final Path planTracePath = Paths.get({plan_trace_file});
@@ -1317,6 +1355,15 @@ public class {class_name} extends Environment {{
 		loadActions();
 		syncInitialPercepts();
 		System.out.println("runtime env ready");
+	}}
+
+	@Override
+	public synchronized void stop() {{
+		try {{
+			flushPlanTrace();
+		}} finally {{
+			super.stop();
+		}}
 	}}
 
 	@Override
@@ -1411,12 +1458,13 @@ public class {class_name} extends Environment {{
 	}}
 
 	private void resetPlanTrace() {{
-		planTrace.clear();
+		planTraceBuffer.setLength(0);
+		planTraceDirty = false;
 		if (!planTraceEnabled) {{
 			return;
 		}}
 		try {{
-			Files.write(planTracePath, planTrace, StandardCharsets.UTF_8);
+			Files.write(planTracePath, new byte[0]);
 		}} catch (IOException error) {{
 			throw new RuntimeException(
 				"Failed to initialize Jason plan trace at " + planTracePath.toAbsolutePath(),
@@ -1535,27 +1583,24 @@ public class {class_name} extends Environment {{
 		if (!planTraceEnabled) {{
 			return;
 		}}
-		planTrace.add(renderPddlPlanAction(schema.sourceName, action));
+		appendPddlPlanAction(schema.sourceName, action);
+		planTraceBuffer.append(System.lineSeparator());
+		planTraceDirty = true;
 	}}
 
-	private String renderPddlPlanAction(String sourceName, Structure action) {{
-		StringBuilder builder = new StringBuilder();
-		builder.append("(");
-		builder.append(sourceName);
+	private void appendPddlPlanAction(String sourceName, Structure action) {{
+		planTraceBuffer.append("(");
+		planTraceBuffer.append(sourceName);
 		for (int i = 0; i < action.getArity(); i++) {{
-			builder.append(" ");
-			builder.append(toPddlSymbol(canonical(action.getTerm(i).toString())));
+			planTraceBuffer.append(" ");
+			planTraceBuffer.append(toPddlSymbol(canonical(action.getTerm(i).toString())));
 		}}
-		builder.append(")");
-		return builder.toString();
+		planTraceBuffer.append(")");
 	}}
 
-	private String toPddlSymbol(String token) {{
-		String value = canonical(token);
-		if (pddlSymbols.containsKey(value)) {{
-			return pddlSymbols.get(value);
-		}}
-		return value;
+	private String toPddlSymbol(String canonicalToken) {{
+		String value = pddlSymbols.get(canonicalToken);
+		return value == null ? canonicalToken : value;
 	}}
 
 	private void traceSuccessfulAction(ActionSchema schema, Structure action) {{
@@ -1579,8 +1624,15 @@ public class {class_name} extends Environment {{
 		if (!planTraceEnabled) {{
 			return;
 		}}
+		if (!planTraceDirty && Files.exists(planTracePath)) {{
+			return;
+		}}
 		try {{
-			Files.write(planTracePath, planTrace, StandardCharsets.UTF_8);
+			Files.write(
+				planTracePath,
+				planTraceBuffer.toString().getBytes(StandardCharsets.UTF_8)
+			);
+			planTraceDirty = false;
 		}} catch (IOException error) {{
 			throw new RuntimeException(
 				"Failed to write Jason plan trace to " + planTracePath.toAbsolutePath(),

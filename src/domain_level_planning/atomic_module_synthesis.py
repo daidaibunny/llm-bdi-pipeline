@@ -22,6 +22,7 @@ from utils.pddl_parser import PDDLAction
 from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLParser
 
+from .pddl_types import OBJ_TP_PREDICATE
 from .pddl_types import type_closure
 
 
@@ -153,7 +154,7 @@ def synthesize_atomic_minimal_literal_module_library(
 		policy_file=policy_file,
 	)
 	selection = _select_branches_with_clingo(raw_plans)
-	plans = selection.plans
+	plans = _ensure_unique_plan_names(selection.plans)
 	report = _module_synthesis_report(
 		plans=plans,
 		raw_plan_count=len(raw_plans),
@@ -212,13 +213,6 @@ class _ParsedAction:
 		)
 
 
-def _predicate_parameter_types(domain: PDDLDomain) -> dict[str, tuple[str, ...]]:
-	return {
-		predicate.name: tuple(_parameter_type(parameter) for parameter in predicate.parameters)
-		for predicate in domain.predicates
-	}
-
-
 def _module_predicate_closure(
 	*,
 	seeds: Sequence[str],
@@ -262,7 +256,6 @@ def _candidate_module_plans(
 	policy_file: str | Path | None,
 ) -> tuple[AgentSpeakPlan, ...]:
 	module_set = set(module_predicates)
-	predicate_type_map = _predicate_parameter_types(domain)
 	plans: list[AgentSpeakPlan] = []
 	recursive_module_predicates = {
 		predicate
@@ -292,7 +285,6 @@ def _candidate_module_plans(
 		for sequence in _producer_action_sequences(
 			actions=actions,
 			type_tokens=domain.types,
-			predicate_type_map=predicate_type_map,
 			seed_predicates=set(seed_predicates),
 			target_predicate=predicate.name,
 			module_predicates=module_set,
@@ -323,6 +315,7 @@ class _ProducerSequence:
 	target_predicate: str
 	target_arguments: tuple[str, ...]
 	context_literals: tuple[PDDLLiteralSchema, ...]
+	type_contexts: tuple[str, ...]
 	body_actions: tuple[_ActionCall, ...]
 	producer_action_names: tuple[str, ...]
 
@@ -356,7 +349,6 @@ def _producer_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
-	predicate_type_map: Mapping[str, tuple[str, ...]],
 	seed_predicates: set[str],
 	target_predicate: str,
 	module_predicates: set[str],
@@ -387,7 +379,6 @@ def _producer_action_sequences(
 		sequence = _finalize_sequence(
 			actions=actions,
 			type_tokens=type_tokens,
-			predicate_type_map=predicate_type_map,
 			functional_groups=functional_groups,
 			dynamic_predicates=dynamic_predicates,
 			target_effect=mapped_effect,
@@ -442,7 +433,6 @@ def _producer_action_sequences(
 				sequence = _finalize_sequence(
 					actions=actions,
 					type_tokens=type_tokens,
-					predicate_type_map=predicate_type_map,
 					functional_groups=functional_groups,
 					dynamic_predicates=dynamic_predicates,
 					target_effect=mapped_effect,
@@ -456,17 +446,18 @@ def _producer_action_sequences(
 				for bridge in _bridge_action_sequences(
 					actions=actions,
 					type_tokens=type_tokens,
-					predicate_type_map=predicate_type_map,
 					support_action=support_action,
 					support_map=support_map,
 					final_action=final_action,
 					final_map=variable_map,
 					transient=transient,
+					target_predicate=target_predicate,
+					target_arguments=head_arguments,
+					module_predicates=module_predicates,
 				):
 					sequence = _finalize_sequence(
 						actions=actions,
 						type_tokens=type_tokens,
-						predicate_type_map=predicate_type_map,
 						functional_groups=functional_groups,
 						dynamic_predicates=dynamic_predicates,
 						target_effect=mapped_effect,
@@ -491,12 +482,14 @@ def _bridge_action_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
-	predicate_type_map: Mapping[str, tuple[str, ...]],
 	support_action: _ParsedAction,
 	support_map: Mapping[str, str],
 	final_action: _ParsedAction,
 	final_map: Mapping[str, str],
 	transient: PDDLLiteralSchema,
+	target_predicate: str,
+	target_arguments: Sequence[str],
+	module_predicates: set[str],
 ) -> tuple[_BridgeCandidate, ...]:
 	support_contexts = tuple(
 		precondition.mapped(support_map)
@@ -517,6 +510,13 @@ def _bridge_action_sequences(
 	)
 	candidates: list[_BridgeCandidate] = []
 	for missing in missing_final_preconditions:
+		if _should_delegate_missing_bridge_precondition(
+			missing=missing,
+			target_predicate=target_predicate,
+			target_arguments=target_arguments,
+			module_predicates=module_predicates,
+		):
+			continue
 		for bridge_action, bridge_effect in _producer_effects(actions, missing.predicate):
 			if bridge_action.name in {support_action.name, final_action.name}:
 				continue
@@ -554,25 +554,108 @@ def _bridge_action_sequences(
 			)
 			if not _action_calls_have_compatible_types(body_actions, type_tokens):
 				continue
-			if not _action_type_bindings_are_observable(
+			base_candidate = _BridgeCandidate(
+				context_literals=_deduplicate_literals(context_literals),
 				body_actions=body_actions,
-				visible_literals=context_literals,
-				predicate_type_map=predicate_type_map,
-				type_tokens=type_tokens,
-			):
+				producer_action_names=(
+					support_action.name,
+					bridge_action.name,
+					final_action.name,
+				),
+			)
+			candidates.append(base_candidate)
+			candidates.extend(
+				_prefix_bridge_action_sequences(
+					actions=actions,
+					type_tokens=type_tokens,
+					base_candidate=base_candidate,
+				),
+			)
+	return tuple(candidates)
+
+
+def _prefix_bridge_action_sequences(
+	*,
+	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
+	base_candidate: _BridgeCandidate,
+) -> tuple[_BridgeCandidate, ...]:
+	"""Add one producer before a bridge sequence when it establishes support context."""
+
+	if not base_candidate.body_actions:
+		return ()
+	candidates: list[_BridgeCandidate] = []
+	for context_literal in tuple(base_candidate.context_literals or ()):
+		if not context_literal.is_positive:
+			continue
+		for prefix_action, prefix_effect in _producer_effects(actions, context_literal.predicate):
+			prefix_map = {
+				raw_argument: mapped_argument
+				for raw_argument, mapped_argument in zip(
+					prefix_effect.arguments,
+					context_literal.arguments,
+				)
+			}
+			prefix_map = _complete_variable_map(
+				prefix_action.parameters,
+				prefix_map,
+				avoid_variables=_body_action_variables(base_candidate.body_actions)
+				- set(prefix_map.values()),
+			)
+			prefix_effect_mapped = prefix_effect.mapped(prefix_map)
+			if not _same_literal(prefix_effect_mapped, context_literal):
 				continue
+			prefix_adds = tuple(effect.mapped(prefix_map) for effect in prefix_action.add_effects)
+			prefix_contexts = tuple(
+				precondition.mapped(prefix_map)
+				for precondition in prefix_action.preconditions
+			)
+			body_actions = (
+				_action_call(prefix_action, prefix_map),
+				*base_candidate.body_actions,
+			)
+			if not _action_calls_have_compatible_types(body_actions, type_tokens):
+				continue
+			context_literals = tuple(
+				literal
+				for literal in prefix_contexts + base_candidate.context_literals
+				if not _literal_in(literal, prefix_adds)
+			)
 			candidates.append(
 				_BridgeCandidate(
 					context_literals=_deduplicate_literals(context_literals),
 					body_actions=body_actions,
 					producer_action_names=(
-						support_action.name,
-						bridge_action.name,
-						final_action.name,
+						prefix_action.name,
+						*base_candidate.producer_action_names,
 					),
 				),
 			)
 	return tuple(candidates)
+
+
+def _body_action_variables(body_actions: Sequence[_ActionCall]) -> set[str]:
+	return {
+		argument
+		for call in tuple(body_actions or ())
+		for argument in tuple(call.arguments or ())
+	}
+
+
+def _should_delegate_missing_bridge_precondition(
+	*,
+	missing: PDDLLiteralSchema,
+	target_predicate: str,
+	target_arguments: Sequence[str],
+	module_predicates: set[str],
+) -> bool:
+	"""Prefer an atomic module when a bridge prepares non-head internal state."""
+
+	if missing.predicate not in module_predicates:
+		return False
+	if missing.predicate == target_predicate:
+		return False
+	return not set(missing.arguments) <= set(target_arguments)
 
 
 def _recursive_support_predicates(
@@ -674,7 +757,6 @@ def _finalize_sequence(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
-	predicate_type_map: Mapping[str, tuple[str, ...]],
 	functional_groups: Sequence[_FunctionalPredicateGroup],
 	dynamic_predicates: set[str],
 	target_effect: PDDLLiteralSchema,
@@ -688,13 +770,6 @@ def _finalize_sequence(
 	sequence_body = tuple(body_actions)
 	if not _action_calls_have_compatible_types(sequence_body, type_tokens):
 		return None
-	if not _action_type_bindings_are_observable(
-		body_actions=sequence_body,
-		visible_literals=(target_effect, *context_literals),
-		predicate_type_map=predicate_type_map,
-		type_tokens=type_tokens,
-	):
-		return None
 	cleanup_actions = _cleanup_action_calls(
 		actions=actions,
 		type_tokens=type_tokens,
@@ -706,15 +781,8 @@ def _finalize_sequence(
 		sequence_body += cleanup_actions
 		if not _action_calls_have_compatible_types(sequence_body, type_tokens):
 			return None
-		if not _action_type_bindings_are_observable(
-			body_actions=sequence_body,
-			visible_literals=(target_effect, *context_literals),
-			predicate_type_map=predicate_type_map,
-			type_tokens=type_tokens,
-		):
-			return None
 		producer_action_names += tuple(action.action.name for action in cleanup_actions)
-	type_contexts = _type_contexts_for_action_calls(sequence_body, type_tokens)
+	type_contexts = _obj_tp_contexts_for_action_calls(sequence_body, type_tokens)
 	if type_contexts is None:
 		return None
 	deduplicated_contexts = _deduplicate_literals(tuple(context_literals))
@@ -742,6 +810,7 @@ def _finalize_sequence(
 		target_predicate=target_effect.predicate,
 		target_arguments=target_arguments,
 		context_literals=range_restricted_contexts,
+		type_contexts=type_contexts,
 		body_actions=sequence_body,
 		producer_action_names=producer_action_names,
 	)
@@ -865,7 +934,11 @@ def _range_restricted_context_literals(
 		changed = False
 		for literal in tuple(remaining):
 			literal_variables = set(literal.arguments)
-			if not literal.is_positive or literal.predicate not in dynamic_predicates:
+			if not literal.is_positive:
+				continue
+			if literal.predicate not in dynamic_predicates and not (
+				literal_variables <= bound_variables or literal_variables & bound_variables
+			):
 				continue
 			selected.append(literal)
 			remaining.remove(literal)
@@ -885,67 +958,14 @@ def _action_calls_have_compatible_types(
 	body_actions: Sequence[_ActionCall],
 	type_tokens: Sequence[str],
 ) -> bool:
-	return _type_contexts_for_action_calls(body_actions, type_tokens) is not None
+	return _obj_tp_contexts_for_action_calls(body_actions, type_tokens) is not None
 
 
-def _action_type_bindings_are_observable(
-	*,
-	body_actions: Sequence[_ActionCall],
-	visible_literals: Sequence[PDDLLiteralSchema],
-	predicate_type_map: Mapping[str, tuple[str, ...]],
-	type_tokens: Sequence[str],
-) -> bool:
-	action_types = _argument_required_types(body_actions)
-	visible_types = _visible_argument_types(
-		visible_literals=visible_literals,
-		predicate_type_map=predicate_type_map,
-	)
-	for argument, required_types in action_types.items():
-		observable_types = visible_types.get(argument, set())
-		if not observable_types:
-			continue
-		most_specific_required = _most_specific_compatible_types(required_types, type_tokens)
-		most_specific_observable = _most_specific_compatible_types(observable_types, type_tokens)
-		if most_specific_required is None or most_specific_observable is None:
-			return False
-		for required_type in most_specific_required:
-			if required_type == "object":
-				continue
-			if not any(
-				_is_subtype(observable_type, required_type, type_tokens)
-				for observable_type in most_specific_observable
-			):
-				return False
-	return True
-
-
-def _visible_argument_types(
-	*,
-	visible_literals: Sequence[PDDLLiteralSchema],
-	predicate_type_map: Mapping[str, tuple[str, ...]],
-) -> dict[str, set[str]]:
-	types_by_argument: dict[str, set[str]] = {}
-	for literal in visible_literals:
-		parameter_types = predicate_type_map.get(literal.predicate, ())
-		for argument, type_name in zip(literal.arguments, parameter_types):
-			canonical_type = _canonical_type_name(type_name)
-			if canonical_type == "object":
-				continue
-			types_by_argument.setdefault(argument, set()).add(canonical_type)
-	return types_by_argument
-
-
-def _type_contexts_for_action_calls(
+def _obj_tp_contexts_for_action_calls(
 	body_actions: Sequence[_ActionCall],
 	type_tokens: Sequence[str],
 ) -> tuple[str, ...] | None:
-	types_by_argument: dict[str, set[str]] = {}
-	for call in body_actions:
-		for parameter, argument in zip(call.action.parameters, call.arguments):
-			argument_type = call.action.parameter_types.get(parameter, "object")
-			if not argument_type or argument_type == "object":
-				continue
-			types_by_argument.setdefault(argument, set()).add(argument_type)
+	types_by_argument = _argument_required_types(body_actions)
 	contexts: list[str] = []
 	for argument, type_names in sorted(types_by_argument.items()):
 		most_specific = _most_specific_compatible_types(type_names, type_tokens)
@@ -954,8 +974,30 @@ def _type_contexts_for_action_calls(
 		for type_name in most_specific:
 			if type_name == "object":
 				continue
-			contexts.append(f"{argument}:{type_name}")
+			contexts.append(f"{OBJ_TP_PREDICATE}({argument}, {type_name})")
 	return tuple(dict.fromkeys(contexts))
+
+
+def _filter_obj_tp_contexts(
+	contexts: Sequence[str],
+	variables: set[str],
+) -> tuple[str, ...]:
+	return tuple(
+		context
+		for context in tuple(contexts or ())
+		if (_obj_tp_context_variable(context) in variables)
+	)
+
+
+def _obj_tp_context_variable(context: str) -> str | None:
+	text = str(context or "").strip()
+	prefix = f"{OBJ_TP_PREDICATE}("
+	if not text.startswith(prefix) or not text.endswith(")"):
+		return None
+	arguments = tuple(argument.strip() for argument in text[len(prefix) : -1].split(","))
+	if len(arguments) != 2:
+		return None
+	return arguments[0]
 
 
 def _most_specific_compatible_types(
@@ -1377,8 +1419,9 @@ def _final_action_sequence_plan(
 			arguments=sequence.target_arguments,
 		),
 		context=tuple(
-			_deduplicate(
+			_order_contexts_for_matching(
 				tuple(literal.to_context() for literal in sequence.context_literals),
+				sequence.type_contexts,
 			),
 		),
 		body=tuple(
@@ -1407,8 +1450,8 @@ def _prepare_precondition_plan(
 	source_name: str,
 	policy_file: str | Path | None,
 ) -> AgentSpeakPlan:
-	binding_contexts = tuple(
-		literal.to_context()
+	binding_literals = tuple(
+		literal
 		for literal in sequence.context_literals
 		if literal.is_positive
 		and literal.predicate != precondition.predicate
@@ -1418,10 +1461,14 @@ def _prepare_precondition_plan(
 			head_arguments=sequence.target_arguments,
 		)
 	)
+	binding_contexts = tuple(literal.to_context() for literal in binding_literals)
+	body_variables = set(sequence.target_arguments) | set(precondition.arguments)
+	for literal in binding_literals:
+		body_variables.update(literal.arguments)
 	context = tuple(
-		_deduplicate(
-			binding_contexts
-			+ (f"not {precondition.to_call()}",),
+		_order_contexts_for_matching(
+			binding_contexts + (f"not {precondition.to_call()}",),
+			_filter_obj_tp_contexts(sequence.type_contexts, body_variables),
 		),
 	)
 	return AgentSpeakPlan(
@@ -2017,6 +2064,15 @@ def _deduplicate(items: Sequence[str]) -> tuple[str, ...]:
 	return tuple(dict.fromkeys(item for item in items if item))
 
 
+def _order_contexts_for_matching(
+	relational_contexts: Sequence[str],
+	type_contexts: Sequence[str],
+) -> tuple[str, ...]:
+	"""Keep type safety while letting dynamic/static relations bind variables first."""
+
+	return _deduplicate(tuple(relational_contexts or ()) + tuple(type_contexts or ()))
+
+
 def _deduplicate_literals(
 	items: Sequence[PDDLLiteralSchema],
 ) -> tuple[PDDLLiteralSchema, ...]:
@@ -2068,3 +2124,28 @@ def _deduplicate_plans(plans: Sequence[AgentSpeakPlan]) -> tuple[AgentSpeakPlan,
 		seen.add(key)
 		unique.append(plan)
 	return tuple(unique)
+
+
+def _ensure_unique_plan_names(plans: Sequence[AgentSpeakPlan]) -> tuple[AgentSpeakPlan, ...]:
+	"""Keep ASL plan labels unique without changing selected branch semantics."""
+
+	name_counts: dict[str, int] = {}
+	renamed: list[AgentSpeakPlan] = []
+	for plan in tuple(plans or ()):
+		base_name = plan.plan_name
+		seen_count = name_counts.get(base_name, 0)
+		name_counts[base_name] = seen_count + 1
+		if seen_count == 0:
+			renamed.append(plan)
+			continue
+		renamed.append(
+			AgentSpeakPlan(
+				plan_name=f"{base_name}_{seen_count + 1}",
+				trigger=plan.trigger,
+				context=plan.context,
+				body=plan.body,
+				source_instruction_ids=plan.source_instruction_ids,
+				binding_certificate=plan.binding_certificate,
+			),
+		)
+	return tuple(renamed)

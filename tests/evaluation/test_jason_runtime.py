@@ -19,6 +19,7 @@ from evaluation.jason_runtime.runner import _render_pddl_symbol_map
 from evaluation.jason_runtime.runner import _run_plan_verifier
 from evaluation.jason_runtime.runner import _run_process_streamed
 from evaluation.jason_runtime.runner import _runtime_action_schema
+from evaluation.jason_runtime.runner import _seed_facts
 from evaluation.jason_runtime.runner import _scan_runtime_output_files
 from evaluation.jason_runtime.runner import _split_seed_facts_for_jason_runtime
 from utils.pddl_parser import PDDLAction
@@ -228,8 +229,10 @@ def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
 	assert "static_beliefs.txt" in source
 	assert "loadStaticBeliefs();" in source
 	assert "Literal liveCandidate = super.contains(candidate)" in source
-	assert "return candidateBucket(staticExactMatches, dynamicExactMatches).iterator();" in source
-	assert "candidates.addAll(staticBucket);" in source
+	assert "return candidateIterator(staticExactMatches, dynamicExactMatches);" in source
+	assert "private Literal nextLiveDynamic()" in source
+	assert "return super.contains(candidate);" in source
+	assert "candidates.addAll(staticBucket);" not in source
 	assert "indexStaticLiteral(literal);" in source
 	assert "indexDynamicLiteral(literal);" in source
 	assert "term.capply(unifier)" in source
@@ -252,12 +255,52 @@ def test_runtime_seed_facts_split_static_beliefs_from_dynamic_percepts() -> None
 	)
 
 	initial_percepts, static_beliefs = _split_seed_facts_for_jason_runtime(
-		seed_facts=("edge(a,b)", "at(a)", "type_floor(a)"),
+		seed_facts=("edge(a,b)", "at(a)", "obj_tp(a,floor)"),
 		action_schemas=(_runtime_action_schema(action),),
 	)
 
 	assert initial_percepts == ("at(a)",)
-	assert static_beliefs == ("edge(a,b)", "type_floor(a)")
+	assert static_beliefs == ("edge(a,b)", "obj_tp(a,floor)")
+
+
+def test_runtime_seed_facts_include_obj_tp_type_closure(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain logistics-fragment)
+		 (:requirements :strips :typing)
+		 (:types locatable vehicle - object truck - vehicle package - locatable location)
+		 (:predicates (at ?x - locatable ?l - location))
+		 (:action move
+		  :parameters (?t - truck ?from - location ?to - location)
+		  :precondition (at ?t ?from)
+		  :effect (and (not (at ?t ?from)) (at ?t ?to))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file = tmp_path / "problem.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p1)
+		 (:domain logistics-fragment)
+		 (:objects truck-0 - truck package-0 - package loc-0 loc-1 - location)
+		 (:init (at truck-0 loc-0) (at package-0 loc-1))
+		 (:goal (and (at truck-0 loc-1)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	facts = _seed_facts(domain_file=domain_file, problem_file=problem_file)
+
+	assert "obj_tp(truck_0,truck)" in facts
+	assert "obj_tp(truck_0,vehicle)" in facts
+	assert "obj_tp(package_0,package)" in facts
+	assert "obj_tp(package_0,locatable)" in facts
+	assert "obj_tp(loc_0,location)" in facts
+	assert "type_truck(truck_0)" not in facts
 
 
 def test_streamed_process_writes_stdout_and_stderr_to_files(tmp_path: Path) -> None:

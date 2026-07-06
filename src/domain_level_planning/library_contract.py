@@ -14,7 +14,8 @@ SUPPORTED_ASL_SUBSET = {
 	"plan_heads": "PDDL predicate achievement goals or query-specific +!g_* temporal wrappers",
 	"contexts": (
 		"implicit conjunction of atom, not atom, equality, or inequality "
-		"context literals only"
+		"context literals only; reserved obj_tp(Variable, Type) sort "
+		"contexts may appear as compiler metadata"
 	),
 	"body_steps": (
 		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
@@ -232,6 +233,18 @@ def _collect_context_lifting_violations(
 	for plan in tuple(plans or ()):
 		for context in tuple(plan.context or ()):
 			for atom, arguments in _context_atoms(context):
+				if atom == _OBJECT_TYPE_CONTEXT_PREDICATE:
+					if _obj_tp_context_is_lifted(arguments):
+						continue
+					passed = False
+					violations.append(
+						(
+							f"Reserved object type context {context!r} in "
+							f"{plan.plan_name!r} must have shape "
+							"obj_tp(Variable, type_constant)."
+						),
+					)
+					continue
 				for argument in arguments:
 					if not _is_lifted_variable(argument):
 						passed = False
@@ -326,6 +339,16 @@ def _collect_declared_pddl_symbol_violations(
 				continue
 			for symbol, arguments in _context_atoms(context):
 				if symbol == "=":
+					continue
+				if symbol == _OBJECT_TYPE_CONTEXT_PREDICATE:
+					if len(arguments) != 2:
+						passed = False
+						violations.append(
+							(
+								f"Plan {plan.plan_name!r} uses reserved context "
+								f"{context!r} with wrong arity {len(arguments)}."
+							),
+						)
 					continue
 				predicate = symbol
 				if predicate not in declared_predicates:
@@ -503,6 +526,18 @@ def _is_lifted_variable(argument: str) -> bool:
 	return bool(text) and text[0].isupper()
 
 
+def _obj_tp_context_is_lifted(arguments: Sequence[str]) -> bool:
+	if len(tuple(arguments or ())) != 2:
+		return False
+	variable, type_name = tuple(arguments)
+	return _is_lifted_variable(variable) and _is_type_constant(type_name)
+
+
+def _is_type_constant(argument: str) -> bool:
+	text = str(argument or "").strip()
+	return bool(re.fullmatch(_PDDL_SYMBOL_PATTERN, text)) and not _is_lifted_variable(text)
+
+
 def _declared_arities(items: Sequence[object] | Mapping[str, int]) -> dict[str, int | None]:
 	if isinstance(items, Mapping):
 		return {
@@ -529,3 +564,4 @@ def _schema_signature(symbol: str, arity: int | None) -> str:
 
 
 _PDDL_SYMBOL_PATTERN = r"[A-Za-z_][A-Za-z0-9_-]*"
+_OBJECT_TYPE_CONTEXT_PREDICATE = "obj_tp"

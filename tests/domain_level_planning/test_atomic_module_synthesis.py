@@ -207,7 +207,7 @@ def test_static_predicates_are_context_only_not_atomic_goal_modules() -> None:
 	assert "+!in(X, Y)" in asl
 
 
-def test_logistics_atomic_modules_use_pddl_typing_without_type_guards() -> None:
+def test_logistics_atomic_modules_compile_pddl_typing_to_obj_tp_guards() -> None:
 	library = synthesize_atomic_minimal_literal_module_library(
 		domain_file=PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl",
 		seed_predicates=("at",),
@@ -218,11 +218,27 @@ def test_logistics_atomic_modules_use_pddl_typing_without_type_guards() -> None:
 
 	assert "type_" not in asl
 	assert "type_" not in str(library.metadata["atomic_module_synthesis"])
+	assert "obj_tp(X, package)" in asl
+	assert "obj_tp(Y, location)" in asl
+	assert "obj_tp(Z, truck)" in asl
+	assert "obj_tp(Z, airplane)" in asl
+	assert "load_truck(X, Z, A);\n\tdrive_truck(Z, A, Y, B);\n\tunload_truck(X, Z, Y)." in asl
+	assert (
+		"drive_truck(Z, C, A, D);\n\tload_truck(X, Z, A);\n\t"
+		"drive_truck(Z, A, Y, B);\n\tunload_truck(X, Z, Y)."
+		in asl
+	)
+	assert (
+		"load_airplane(X, Z, A);\n\tfly_airplane(Z, A, Y);\n\tunload_airplane(X, Z, Y)."
+		in asl
+	)
+	assert (
+		"fly_airplane(Z, B, A);\n\tload_airplane(X, Z, A);\n\t"
+		"fly_airplane(Z, A, Y);\n\tunload_airplane(X, Z, Y)."
+		in asl
+	)
 	assert "load_truck(X, X," not in asl
 	assert "load_airplane(X, X," not in asl
-	assert "drive_truck(X," not in asl
-	assert "fly_airplane(X," not in asl
-	assert "load_airplane(X, Z, A);\n\tfly_airplane(Z, A, Y);\n\tunload_airplane(X, Z, Y)." not in asl
 	assert "load_airplane(X, Z, A);\n\tunload_airplane(X, Z, Y)." not in asl
 	assert "load_truck(X, Z, A);\n\tunload_truck(X, Z, Y)." not in asl
 
@@ -239,6 +255,9 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 	assert "board(Z, X);\n\tdepart(Y, X)." not in asl
 	assert "board(Z, X);\n\tup(Z, Y);\n\tdepart(Y, X)." not in asl
 	assert "board(Z, X);\n\tdown(Z, Y);\n\tdepart(Y, X)." not in asl
+	assert "obj_tp(X, passenger)" in asl
+	assert "obj_tp(Y, floor)" in asl
+	assert len({plan.plan_name for plan in library.plans}) == len(library.plans)
 	assert "+!served(X) : destin(X, Y) & not lift_at(Y)" in asl
 	assert "\t!lift_at(Y);\n\t!served(X)." in asl
 	assert "+!served(X) : not boarded(X)" in asl
@@ -255,7 +274,7 @@ def test_gripper_rejects_unranked_same_predicate_navigation_recursion() -> None:
 	asl = render_plan_library_asl(library)
 
 	assert "+!at_robby(X) : at_robby(X)" in asl
-	assert "+!at_robby(X) : at_robby(Y)" in asl
+	assert "+!at_robby(X) : room(X) & at_robby(Y) & room(Y)" in asl
 	assert "move(Y, X)." in asl
 	assert "room(Y) & not at_robby(Y)" not in asl
 	assert "!at_robby(Y);\n\t!at_robby(X)." not in asl

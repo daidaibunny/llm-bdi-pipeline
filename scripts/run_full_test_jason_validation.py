@@ -80,7 +80,7 @@ class JasonTask:
 	problem_file: Path
 	domain_file: Path
 	plan_library_asl: Path
-	base_plan_library_asl: Path
+	base_plan_library_asl_text: str
 	goal_name: str
 	compact_completion_wrappers: bool
 	output_dir: Path
@@ -363,6 +363,7 @@ def prepare_domain_for_full_test(
 		plan_library_asl = domain_output / "plan_library.asl"
 		base_plan_library_asl = domain_output / "atomic_plan_library.asl"
 		shutil.copyfile(plan_library_asl, base_plan_library_asl)
+		base_plan_library_asl_text = plan_library_asl.read_text(encoding="utf-8").rstrip()
 		if write_domain_long_asl:
 			append_record = append_linear_single_body_full_test_wrappers(
 				domain=domain,
@@ -398,7 +399,7 @@ def prepare_domain_for_full_test(
 				problem_file=problem_file,
 				domain_file=domain_file,
 				plan_library_asl=plan_library_asl,
-				base_plan_library_asl=base_plan_library_asl,
+				base_plan_library_asl_text=base_plan_library_asl_text,
 				goal_name=f"g_{safe_goal_fragment(domain)}_test_{index}",
 				compact_completion_wrappers=compact_completion_wrappers,
 				output_dir=(
@@ -515,10 +516,11 @@ def full_test_wrapper_lines(
 	index: int,
 	problem_file: Path,
 	compact_completion_wrappers: bool = False,
+	problem: Any | None = None,
 ) -> tuple[tuple[str, ...], int]:
 	"""Return a compact completion wrapper when safe, otherwise a linear body."""
 
-	problem = PDDLParser.parse_problem(problem_file)
+	problem = problem if problem is not None else PDDLParser.parse_problem(problem_file)
 	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
 	if len(goal_facts) != len(problem.goal_facts):
 		raise ValueError(
@@ -541,6 +543,7 @@ def full_test_wrapper_lines(
 		domain=domain,
 		index=index,
 		problem_file=problem_file,
+		problem=problem,
 	)
 
 
@@ -689,10 +692,11 @@ def linear_single_body_wrapper_lines(
 	domain: str,
 	index: int,
 	problem_file: Path,
+	problem: Any | None = None,
 ) -> tuple[tuple[str, ...], int]:
 	"""Return one test problem's linear single-body query wrapper."""
 
-	problem = PDDLParser.parse_problem(problem_file)
+	problem = problem if problem is not None else PDDLParser.parse_problem(problem_file)
 	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
 	if len(goal_facts) != len(problem.goal_facts):
 		raise ValueError(
@@ -726,7 +730,6 @@ def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
 	"""Write a per-test ASL file with the same wrapper shape as the long library."""
 
 	runtime_asl = task.output_dir / "plan_library.asl"
-	base_text = task.base_plan_library_asl.read_text(encoding="utf-8").rstrip()
 	wrapper_lines, _ = full_test_wrapper_lines(
 		domain=task.domain,
 		index=task.index,
@@ -734,7 +737,7 @@ def materialize_runtime_asl_for_task(task: JasonTask) -> Path:
 		compact_completion_wrappers=task.compact_completion_wrappers,
 	)
 	runtime_asl.write_text(
-		base_text + "\n\n" + "\n".join(wrapper_lines).rstrip() + "\n",
+		task.base_plan_library_asl_text + "\n\n" + "\n".join(wrapper_lines).rstrip() + "\n",
 		encoding="utf-8",
 	)
 	return runtime_asl

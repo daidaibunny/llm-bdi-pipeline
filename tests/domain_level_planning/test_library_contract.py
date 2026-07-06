@@ -47,7 +47,8 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 	)
 	assert serialized["supported_asl_subset"]["contexts"] == (
 		"implicit conjunction of atom, not atom, equality, or inequality "
-		"context literals only"
+		"context literals only; reserved obj_tp(Variable, Type) sort "
+		"contexts may appear as compiler metadata"
 	)
 	assert serialized["execution_semantics"] == {
 		"plan_selection": "deterministic_first_applicable_asl_order",
@@ -98,6 +99,45 @@ def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 
 	assert report.passed is True
 	assert report.checked_layers["declared_pddl_symbols"] is True
+	assert report.violations == ()
+
+
+def test_domain_level_library_contract_accepts_reserved_obj_tp_context() -> None:
+	plan_library = PlanLibrary(
+		domain_name="transport",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="at_via_truck",
+				trigger=AgentSpeakTrigger("achievement_goal", "at", ("X", "Y")),
+				context=(
+					"obj_tp(X, package)",
+					"obj_tp(Y, location)",
+					"obj_tp(Z, truck)",
+					"obj_tp(A, location)",
+					"obj_tp(C, city)",
+					"at(X, A)",
+					"at(Z, A)",
+					"in-city(A, C)",
+					"in-city(Y, C)",
+				),
+				body=(
+					AgentSpeakBodyStep("action", "load-truck", ("X", "Z", "A")),
+					AgentSpeakBodyStep("action", "drive-truck", ("Z", "A", "Y", "C")),
+					AgentSpeakBodyStep("action", "unload-truck", ("X", "Z", "Y")),
+				),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates={"at": 2, "in-city": 2},
+		declared_actions={"load-truck": 3, "drive-truck": 4, "unload-truck": 3},
+	)
+
+	assert report.passed is True
+	assert report.checked_layers["declared_pddl_symbols"] is True
+	assert report.checked_layers["lifted_contexts"] is True
 	assert report.violations == ()
 
 

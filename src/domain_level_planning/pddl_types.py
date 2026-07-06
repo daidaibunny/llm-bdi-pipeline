@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import Iterable, Mapping, Sequence
 
+OBJ_TP_PREDICATE = "obj_tp"
+
 
 def parameter_name(parameter: str) -> str:
 	text = str(parameter or "").strip()
@@ -19,10 +21,6 @@ def parameter_type(parameter: str) -> str:
 	if " - " not in text:
 		return "object"
 	return _canonical_type(text.split(" - ", 1)[1])
-
-
-def type_guard_symbol(type_name: str) -> str:
-	return f"type_{_canonical_type(type_name)}"
 
 
 def declared_type_names(type_tokens: Sequence[str]) -> tuple[str, ...]:
@@ -60,7 +58,7 @@ def type_closure(type_name: str, type_tokens: Sequence[str]) -> tuple[str, ...]:
 	return _type_closure_from_parent_map(type_name, parent_by_type)
 
 
-def object_type_atoms(problem: object, type_tokens: Sequence[str]) -> tuple[str, ...]:
+def obj_tp_atoms(problem: object, type_tokens: Sequence[str]) -> tuple[str, ...]:
 	parent_by_type = type_parent_map(type_tokens)
 	object_types = dict(getattr(problem, "object_types", {}) or {})
 	atoms: list[str] = []
@@ -71,7 +69,7 @@ def object_type_atoms(problem: object, type_tokens: Sequence[str]) -> tuple[str,
 		):
 			if type_name == "object":
 				continue
-			atoms.append(_call(type_guard_symbol(type_name), (str(object_name),)))
+			atoms.append(_call(OBJ_TP_PREDICATE, (str(object_name), type_name)))
 	return tuple(dict.fromkeys(atoms))
 
 
