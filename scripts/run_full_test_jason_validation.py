@@ -181,6 +181,14 @@ def main() -> int:
 			"goals. Defaults to linear goal-order wrappers for semantic transparency."
 		),
 	)
+	parser.add_argument(
+		"--suppress-final-summary-json",
+		action="store_true",
+		help=(
+			"Do not print the full summary JSON to stdout. The summary file is "
+			"still written; per-test status lines remain visible."
+		),
+	)
 	args = parser.parse_args()
 	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
 
@@ -212,6 +220,7 @@ def main() -> int:
 			"prepare_only": bool(args.prepare_only),
 			"write_domain_long_asl": bool(args.write_domain_long_asl),
 			"max_domain_long_asl_mb": args.max_domain_long_asl_mb,
+			"suppress_final_summary_json": bool(args.suppress_final_summary_json),
 		},
 		"domains": {},
 		"validations": [],
@@ -242,7 +251,10 @@ def main() -> int:
 			bool(record.get("success")) for record in summary["domains"].values()
 		)
 		write_json(summary_file, summary)
-		print(json.dumps(summary, indent=2, sort_keys=True))
+		if args.suppress_final_summary_json:
+			print(f"summary_file={summary_file}", flush=True)
+		else:
+			print(json.dumps(summary, indent=2, sort_keys=True))
 		return 0 if summary["success"] else 1
 
 	classpath = resolve_jason_classpath_once()
@@ -279,7 +291,10 @@ def main() -> int:
 		bool(record.get("success")) for record in summary["domains"].values()
 	)
 	write_json(summary_file, summary)
-	print(json.dumps(summary, indent=2, sort_keys=True))
+	if args.suppress_final_summary_json:
+		print(f"summary_file={summary_file}", flush=True)
+	else:
+		print(json.dumps(summary, indent=2, sort_keys=True))
 	return 0 if summary["success"] else 1
 
 
@@ -835,12 +850,45 @@ def run_jason_tasks(
 			)
 			write_json(summary_file, summary)
 			status = "ok" if record.get("success") else "fail"
+			jason_status = _jason_runtime_status_label(record)
+			verifier_status = _plan_verifier_status_label(record)
 			print(
 				f"[{status}] {record['domain']} test={record['test_index']} "
-				f"goal={record['goal_name']} status={record.get('status')}",
+				f"goal={record['goal_name']} jason={jason_status} "
+				f"val={verifier_status} actions={record.get('action_count')} "
+				f"status={record.get('status')}",
 				flush=True,
 			)
 	return sorted(records, key=lambda item: (str(item["domain"]), int(item["test_index"])))
+
+
+def _jason_runtime_status_label(record: Mapping[str, Any]) -> str:
+	"""Return whether Jason produced a complete candidate action trace."""
+
+	status = str(record.get("status") or "")
+	if status in {
+		"success",
+		"plan_verifier_failed",
+		"plan_verifier_timeout",
+		"plan_verifier_unavailable",
+	}:
+		return "ok"
+	if bool(record.get("timed_out")):
+		return "timeout"
+	return "fail"
+
+
+def _plan_verifier_status_label(record: Mapping[str, Any]) -> str:
+	"""Return whether VAL or the configured IPC verifier accepted the trace."""
+
+	if record.get("plan_verifier_success") is True:
+		return "ok"
+	if record.get("plan_verifier_attempted") is not True:
+		return "not_attempted"
+	status = str(record.get("status") or "")
+	if "timeout" in status:
+		return "timeout"
+	return "fail"
 
 
 def validate_one_task(

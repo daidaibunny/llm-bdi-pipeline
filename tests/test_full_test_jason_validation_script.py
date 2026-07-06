@@ -11,6 +11,8 @@ from scripts.run_full_test_jason_validation import resolve_batch_root
 from scripts.run_full_test_jason_validation import render_fact_atom
 from scripts.run_full_test_jason_validation import safe_goal_fragment
 from scripts.run_full_test_jason_validation import safe_path_fragment
+from scripts.run_full_test_jason_validation import _jason_runtime_status_label
+from scripts.run_full_test_jason_validation import _plan_verifier_status_label
 from utils.pddl_parser import PDDLFact
 
 
@@ -81,6 +83,19 @@ def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> 
 	)
 
 	assert "--validated-policy-lifting" not in command
+
+
+def test_validation_status_labels_split_jason_and_val_outcomes() -> None:
+	assert _jason_runtime_status_label({"status": "plan_verifier_failed"}) == "ok"
+	assert _plan_verifier_status_label(
+		{
+			"status": "plan_verifier_failed",
+			"plan_verifier_attempted": True,
+			"plan_verifier_success": False,
+		},
+	) == "fail"
+	assert _jason_runtime_status_label({"status": "timeout", "timed_out": True}) == "timeout"
+	assert _plan_verifier_status_label({"plan_verifier_attempted": False}) == "not_attempted"
 
 
 def test_full_test_wrapper_uses_linear_single_body(tmp_path: Path) -> None:
