@@ -149,6 +149,7 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 		moose_plan_bound = 5000
 		run_jason_validation = False
 		run_moose_policy_validation = False
+		skip_temporal_append = False
 
 	batch_root = tmp_path / "20260704-101112"
 	command = build_moose_batch_command(
@@ -171,6 +172,8 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 	assert "--skip-jason-validation" in command
 	assert "--skip-moose-policy-validation" in command
 	assert str(batch_root / "domain_libraries") in command
+	assert manifest["settings"]["temporal_append_in_stage1"] is True
+	assert manifest["settings"]["test_query_count_per_domain"] == 2
 	assert manifest["expected_asl_files"] == [
 		str(batch_root / "domain_libraries" / "blocks" / "plan_library.asl"),
 		str(batch_root / "domain_libraries" / "depots" / "plan_library.asl"),
@@ -196,6 +199,7 @@ def test_validated_policy_lifting_batch_mode_is_explicitly_threaded(
 		moose_plan_bound = 5000
 		run_jason_validation = False
 		run_moose_policy_validation = False
+		skip_temporal_append = False
 
 	batch_root = tmp_path / "20260704-101113"
 	command = build_moose_batch_command(
@@ -218,6 +222,44 @@ def test_validated_policy_lifting_batch_mode_is_explicitly_threaded(
 	assert manifest["settings"]["atomic_library_backend"] == (
 		"validated_policy_lifting_and_asl_compilation"
 	)
+
+
+def test_timestamped_batch_can_generate_atomic_libraries_without_first2_append(
+	tmp_path: Path,
+) -> None:
+	class Args:
+		num_workers = 4
+		num_permutations = 3
+		goal_max_size = 1
+		atomic_library_mode = "validated-policy-lifting"
+		max_rss_gb = 16
+		train_timeout_seconds = 1800
+		dump_timeout_seconds = 300
+		append_timeout_seconds = 300
+		jason_timeout_seconds = 90
+		moose_plan_timeout_seconds = 120
+		moose_plan_bound = 5000
+		run_jason_validation = False
+		run_moose_policy_validation = False
+		skip_temporal_append = True
+
+	batch_root = tmp_path / "20260706-101113"
+	command = build_moose_batch_command(
+		args=Args(),
+		domains=("logistics",),
+		batch_root=batch_root,
+	)
+	manifest = batch_manifest(
+		args=Args(),
+		domains=("logistics",),
+		timestamp_id="20260706-101113",
+		batch_root=batch_root,
+		command=command,
+	)
+
+	assert "--skip-temporal-append" in command
+	assert manifest["settings"]["temporal_append_in_stage1"] is False
+	assert manifest["settings"]["test_query_count_per_domain"] == 0
 
 
 def test_validated_policy_lifting_compile_command_uses_semantic_cli_flag(

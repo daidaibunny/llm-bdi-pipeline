@@ -38,6 +38,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_timestamped_moose_asl_batch.
 	--timestamp-id "$BATCH_ID" \
 	--num-workers "$MOOSE_WORKERS" \
 	--atomic-library-mode validated-policy-lifting \
+	--skip-temporal-append \
 	--train-timeout-seconds "$TRAIN_TIMEOUT_SECONDS" \
 	--dump-timeout-seconds "${DUMP_TIMEOUT_SECONDS:-300}" \
 	--append-timeout-seconds "${APPEND_TIMEOUT_SECONDS:-300}" \
@@ -69,7 +70,7 @@ if not summary_file.exists():
 	sys.exit(0)
 
 summary = json.loads(summary_file.read_text(encoding="utf-8"))
-print("[stage 1] domain,moose_train,compile_asl,append_first2,status")
+print("[stage 1] domain,moose_train,compile_asl,status")
 for item in summary.get("domains") or []:
 	commands = item.get("commands") or {}
 
@@ -89,7 +90,6 @@ for item in summary.get("domains") or []:
 				str(item.get("domain")),
 				command_status("moose_train"),
 				command_status("compile_atomic_library"),
-				command_status("append_temporal_goals"),
 				"ok" if item.get("success") else "fail",
 			)
 		)

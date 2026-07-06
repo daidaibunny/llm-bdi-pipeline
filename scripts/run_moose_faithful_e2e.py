@@ -3,9 +3,11 @@
 Run the current faithful MOOSE-to-ASL pipeline end to end.
 
 This script uses the selected domain train split as MOOSE training input,
-dumps the learned first-order decision-list policy, compiles it faithfully into
-the canonical per-domain AgentSpeak(L) library, appends two test-instance
-temporal goals, and validates the resulting ASL in Jason.
+dumps the learned first-order decision-list policy, and compiles it into a
+per-domain AgentSpeak(L) atomic literal library. The historical two-query
+temporal append smoke test is still available for targeted probes, but batch
+paper validation should use ``--skip-temporal-append`` and then run the full
+test split through ``scripts/run_full_test_jason_validation.py``.
 """
 
 from __future__ import annotations
@@ -150,6 +152,14 @@ def main() -> int:
 		help="Skip direct MOOSE policy execution on the two selected test instances.",
 	)
 	parser.add_argument(
+		"--skip-temporal-append",
+		action="store_true",
+		help=(
+			"Generate only the atomic MOOSE-backed ASL library. Do not append the "
+			"legacy first-two test query wrappers or run stage-1 validation."
+		),
+	)
+	parser.add_argument(
 		"--skip-jason-validation",
 		action="store_true",
 		help="Skip Jason execution after appending the two temporal query wrappers.",
@@ -178,7 +188,8 @@ def main() -> int:
 			"max_rss_gb": args.max_rss_gb,
 			"moose_runtime": args.moose_runtime,
 			"full_train_split": True,
-			"test_instance_count": 2,
+			"temporal_append_in_stage1": not args.skip_temporal_append,
+			"test_instance_count": 0 if args.skip_temporal_append else 2,
 			"skip_jason_validation": args.skip_jason_validation,
 			"skip_moose_policy_validation": args.skip_moose_policy_validation,
 		},
@@ -227,16 +238,19 @@ def run_domain(
 		"success": False,
 		"commands": {},
 		"selected_test_instances": [],
+		"temporal_append_in_stage1": not args.skip_temporal_append,
 	}
 	try:
-		test_instances = first_n_test_instances(test_dir, count=2)
-		record["selected_test_instances"] = [str(path) for path in test_instances]
-		write_test_goal_dataset(
-			domain_name=domain_name,
-			problem_files=test_instances,
-			output_file=goal_json,
-		)
-		record["ltlf_goal_json"] = str(goal_json)
+		test_instances: tuple[Path, ...] = ()
+		if not args.skip_temporal_append:
+			test_instances = first_n_test_instances(test_dir, count=2)
+			record["selected_test_instances"] = [str(path) for path in test_instances]
+			write_test_goal_dataset(
+				domain_name=domain_name,
+				problem_files=test_instances,
+				output_file=goal_json,
+			)
+			record["ltlf_goal_json"] = str(goal_json)
 		compat = materialize_moose_compatible_pddl(
 			domain_file=domain_file,
 			train_dir=train_dir,
@@ -301,6 +315,19 @@ def run_domain(
 		if not compile_result.success:
 			return record
 
+		record["canonical_library"] = {
+			"json": str(args.library_root / domain_name / "plan_library.json"),
+			"asl": str(args.library_root / domain_name / "plan_library.asl"),
+		}
+		if args.skip_temporal_append:
+			record["temporal_append_skipped"] = True
+			record["moose_policy_validation"] = []
+			record["moose_policy_validation_skipped"] = True
+			record["jason_validation"] = []
+			record["jason_validation_skipped"] = True
+			record["success"] = True
+			return record
+
 		query_ids = tuple(f"query_{index}" for index in range(1, len(test_instances) + 1))
 		append_command = [
 			sys.executable,
@@ -345,10 +372,6 @@ def run_domain(
 				for index, problem_file in enumerate(test_instances, start=1)
 			]
 
-		record["canonical_library"] = {
-			"json": str(args.library_root / domain_name / "plan_library.json"),
-			"asl": str(args.library_root / domain_name / "plan_library.asl"),
-		}
 		if args.skip_jason_validation:
 			record["jason_validation"] = []
 			record["jason_validation_skipped"] = True

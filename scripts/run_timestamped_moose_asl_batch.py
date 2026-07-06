@@ -88,6 +88,14 @@ def main() -> int:
 		help="Also execute MOOSE's own learned policy on two selected test problems.",
 	)
 	parser.add_argument(
+		"--skip-temporal-append",
+		action="store_true",
+		help=(
+			"Generate atomic ASL libraries only. This is the expected first stage "
+			"for full-test Jason/VAL validation batches."
+		),
+	)
+	parser.add_argument(
 		"--dry-run",
 		action="store_true",
 		help="Write manifest and print the command without running MOOSE.",
@@ -220,6 +228,8 @@ def build_moose_batch_command(
 		command.append("--skip-jason-validation")
 	if not args.run_moose_policy_validation:
 		command.append("--skip-moose-policy-validation")
+	if args.skip_temporal_append:
+		command.append("--skip-temporal-append")
 	return command
 
 
@@ -254,7 +264,8 @@ def batch_manifest(
 			"train_timeout_seconds": args.train_timeout_seconds,
 			"run_jason_validation": bool(args.run_jason_validation),
 			"run_moose_policy_validation": bool(args.run_moose_policy_validation),
-			"test_query_count_per_domain": 2,
+			"temporal_append_in_stage1": not bool(args.skip_temporal_append),
+			"test_query_count_per_domain": 0 if args.skip_temporal_append else 2,
 			"domain_execution": "sequential",
 			"moose_runtime": "docker_exact_apptainer",
 			"atomic_library_backend": (
