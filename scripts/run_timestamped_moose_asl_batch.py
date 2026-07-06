@@ -205,11 +205,12 @@ def build_moose_batch_command(
 		"--moose-plan-bound",
 		str(args.moose_plan_bound),
 		"--jason-plan-verifier-timeout-seconds",
-		str(args.jason_plan_verifier_timeout_seconds),
+		str(getattr(args, "jason_plan_verifier_timeout_seconds", 1800)),
 	]
-	if args.jason_plan_verifier_command:
-		command.extend(("--jason-plan-verifier-command", args.jason_plan_verifier_command))
-	if args.require_jason_plan_verifier:
+	jason_plan_verifier_command = getattr(args, "jason_plan_verifier_command", None)
+	if jason_plan_verifier_command:
+		command.extend(("--jason-plan-verifier-command", jason_plan_verifier_command))
+	if getattr(args, "require_jason_plan_verifier", False):
 		command.append("--require-jason-plan-verifier")
 	for domain in domains:
 		command.extend(("--domain", domain))

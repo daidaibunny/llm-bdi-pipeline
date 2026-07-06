@@ -12,17 +12,24 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Mapping, Sequence
 
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
+from utils.pddl_parser import PDDLDomain
+from utils.pddl_parser import PDDLParser
 
+from .atomic_module_synthesis import synthesize_atomic_minimal_literal_module_library
+from .atomic_module_synthesis import PDDLLiteralSchema
+from .atomic_module_synthesis import _ParsedAction
+from .atomic_module_synthesis import _parameter_type
+from .pddl_types import OBJ_TP_PREDICATE
+from .pddl_types import type_closure
 from .policy_program import LearnedPolicyRule
 from .policy_program import LiftedPolicyProgram
 from .policy_program import PolicyModule
-from .atomic_module_synthesis import synthesize_atomic_minimal_literal_module_library
 
 
 @dataclass(frozen=True)
@@ -87,6 +94,34 @@ class MooseAtomicLibraryQualityReport:
 			"artifact_classification": self.artifact_classification,
 			"warnings": list(self.warnings),
 		}
+
+
+@dataclass(frozen=True)
+class MooseMacroEvidenceReducerReport:
+	"""Audit record for validated MOOSE macro evidence preserved in ASL."""
+
+	raw_singleton_macro_count: int
+	validated_macro_count: int
+	invalid_macro_count: int
+	deduplicated_macro_count: int
+	merged_plan_count: int
+	validation_basis: tuple[str, ...]
+
+	def to_dict(self) -> dict[str, object]:
+		return {
+			"raw_singleton_macro_count": self.raw_singleton_macro_count,
+			"validated_macro_count": self.validated_macro_count,
+			"invalid_macro_count": self.invalid_macro_count,
+			"deduplicated_macro_count": self.deduplicated_macro_count,
+			"merged_plan_count": self.merged_plan_count,
+			"validation_basis": list(self.validation_basis),
+		}
+
+
+@dataclass(frozen=True)
+class _MooseMacroEvidencePlans:
+	plans: tuple[AgentSpeakPlan, ...]
+	report: MooseMacroEvidenceReducerReport
 
 
 def parse_moose_readable_policy(text: str) -> tuple[MooseReadableRule, ...]:
@@ -270,16 +305,379 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 		source_name=source_name,
 		policy_file=policy_file,
 	)
+	macro_evidence = _compile_validated_moose_macro_evidence_plans(
+		rules=rules,
+		domain_file=domain_file,
+		source_name=source_name,
+		policy_file=policy_file,
+	)
+	merged_plans = _ensure_unique_plan_names(
+		_deduplicate_agent_plans((*library.plans, *macro_evidence.plans)),
+	)
+	macro_quality_report = audit_moose_atomic_library_quality(plans=macro_evidence.plans)
+	library_quality = _post_moose_reducer_library_quality(
+		plans=merged_plans,
+		macro_evidence_plan_count=len(macro_evidence.plans),
+	)
 	return PlanLibrary(
 		domain_name=domain_name or library.domain_name,
-		plans=library.plans,
+		plans=merged_plans,
 		initial_beliefs=library.initial_beliefs,
 		metadata={
 			**dict(library.metadata),
 			"source_raw_rule_count": len(rules),
 			"source_seed_predicates": list(seed_predicates),
+			"moose_macro_evidence_reducer": {
+				**macro_evidence.report.to_dict(),
+				"merged_plan_count": len(merged_plans),
+			},
+			"library_quality": library_quality,
+			"moose_macro_library_quality": macro_quality_report.to_dict(),
 		},
 	)
+
+
+def _compile_validated_moose_macro_evidence_plans(
+	*,
+	rules: Sequence[MooseReadableRule],
+	domain_file: str | Path,
+	source_name: str,
+	policy_file: str | Path | None,
+) -> _MooseMacroEvidencePlans:
+	domain = PDDLParser.parse_domain(domain_file)
+	actions_by_name = {
+		action.name: action
+		for action in (_ParsedAction.from_pddl(action) for action in domain.actions)
+	}
+	predicate_types = _predicate_parameter_types(domain)
+	raw_singleton_rules = tuple(rule for rule in rules if rule.is_singleton_goal_rule)
+	plans: list[AgentSpeakPlan] = []
+	invalid_count = 0
+	for index, rule in enumerate(raw_singleton_rules, start=1):
+		plan = _validated_moose_macro_rule_plan(
+			rule=rule,
+			rule_index=index,
+			actions_by_name=actions_by_name,
+			predicate_types=predicate_types,
+			type_tokens=domain.types,
+			source_name=source_name,
+			policy_file=policy_file,
+		)
+		if plan is None:
+			invalid_count += 1
+			continue
+		plans.append(plan)
+	deduplicated = _deduplicate_agent_plans(tuple(plans))
+	return _MooseMacroEvidencePlans(
+		plans=_ensure_unique_plan_names(deduplicated),
+		report=MooseMacroEvidenceReducerReport(
+			raw_singleton_macro_count=len(raw_singleton_rules),
+			validated_macro_count=len(plans),
+			invalid_macro_count=invalid_count,
+			deduplicated_macro_count=len(deduplicated),
+			merged_plan_count=len(deduplicated),
+			validation_basis=(
+				"MOOSE readable singleton goal rule supplies state context, goal, and macro action sequence",
+				"PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
+				"PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
+				"Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
+			),
+		),
+	)
+
+
+def _post_moose_reducer_library_quality(
+	*,
+	plans: Sequence[AgentSpeakPlan],
+	macro_evidence_plan_count: int,
+) -> dict[str, object]:
+	plan_tuple = tuple(plans or ())
+	subgoal_step_count = sum(
+		1
+		for plan in plan_tuple
+		for step in tuple(plan.body or ())
+		if step.kind == "subgoal"
+	)
+	primitive_action_step_count = sum(
+		1
+		for plan in plan_tuple
+		for step in tuple(plan.body or ())
+		if step.kind == "action"
+	)
+	if macro_evidence_plan_count and subgoal_step_count:
+		classification = "moose_evidence_augmented_compact_recursive_atomic_module_library"
+	elif macro_evidence_plan_count:
+		classification = "validated_moose_macro_evidence_atomic_library"
+	elif subgoal_step_count:
+		classification = "compact_recursive_atomic_module_library"
+	else:
+		classification = "compact_lifted_singleton_macro_library"
+	return {
+		"artifact_classification": classification,
+		"plan_count": len(plan_tuple),
+		"primitive_action_step_count": primitive_action_step_count,
+		"subgoal_step_count": subgoal_step_count,
+		"moose_macro_evidence_plan_count": macro_evidence_plan_count,
+		"compact_recursive_module_ready": subgoal_step_count > 0,
+		"validated_macro_evidence_ready": macro_evidence_plan_count > 0,
+	}
+
+
+def _validated_moose_macro_rule_plan(
+	*,
+	rule: MooseReadableRule,
+	rule_index: int,
+	actions_by_name: Mapping[str, _ParsedAction],
+	predicate_types: Mapping[str, tuple[str, ...]],
+	type_tokens: Sequence[str],
+	source_name: str,
+	policy_file: str | Path | None,
+) -> AgentSpeakPlan | None:
+	if not rule.is_singleton_goal_rule or not rule.actions:
+		return None
+	goal = rule.goal_conditions[0]
+	variable_map = _canonical_rule_variable_map(rule)
+	type_contexts = _obj_tp_contexts_for_rule(
+		rule=rule,
+		actions_by_name=actions_by_name,
+		predicate_types=predicate_types,
+		type_tokens=type_tokens,
+		variable_map=variable_map,
+	)
+	if type_contexts is None:
+		return None
+	if not _moose_macro_rule_is_symbolically_executable(
+		rule=rule,
+		actions_by_name=actions_by_name,
+	):
+		return None
+	return AgentSpeakPlan(
+		plan_name=f"moose_reduced_{_safe_name(source_name)}_rule_{rule_index}",
+		trigger=AgentSpeakTrigger(
+			event_type="achievement_goal",
+			symbol=goal.predicate,
+			arguments=tuple(variable_map.get(argument, argument) for argument in goal.arguments),
+		),
+		context=_deduplicate_strings(
+			tuple(condition.to_call(variable_map) for condition in rule.state_conditions)
+			+ type_contexts,
+		),
+		body=tuple(
+			AgentSpeakBodyStep(
+				"action",
+				action.predicate,
+				tuple(variable_map.get(argument, argument) for argument in action.arguments),
+			)
+			for action in rule.actions
+		),
+		binding_certificate=(
+			{
+				"artifact_family": "validated_moose_macro_evidence",
+				"source_backend": "moose",
+				"source_name": source_name,
+				"policy_file": str(policy_file) if policy_file is not None else None,
+				"precedence": rule.precedence,
+				"validation": "pddl_schema_symbolic_execution",
+			},
+		),
+	)
+
+
+def _canonical_rule_variable_map(rule: MooseReadableRule) -> dict[str, str]:
+	names = ("X", "Y", "Z", "A", "B", "C", "D")
+	mapping: dict[str, str] = {}
+	next_index = 0
+	for argument in rule.goal_conditions[0].arguments if rule.goal_conditions else ():
+		if argument in mapping:
+			continue
+		mapping[argument] = names[next_index] if next_index < len(names) else f"V{next_index}"
+		next_index += 1
+	for variable in rule.variables:
+		if variable in mapping:
+			continue
+		mapping[variable] = names[next_index] if next_index < len(names) else f"V{next_index}"
+		next_index += 1
+	return mapping
+
+
+def _moose_macro_rule_is_symbolically_executable(
+	*,
+	rule: MooseReadableRule,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> bool:
+	state = {_atom_key(condition): True for condition in rule.state_conditions}
+	for action_call in rule.actions:
+		action = actions_by_name.get(action_call.predicate)
+		if action is None or len(action.parameters) != len(action_call.arguments):
+			return False
+		binding = {
+			parameter: argument
+			for parameter, argument in zip(action.parameters, action_call.arguments)
+		}
+		for precondition in action.preconditions:
+			mapped = _map_schema_literal(precondition, binding)
+			current = state.get(_atom_key(mapped))
+			if precondition.is_positive and current is not True:
+				return False
+			if not precondition.is_positive and current is True:
+				return False
+		for delete_effect in action.delete_effects:
+			state[_atom_key(_map_schema_literal(delete_effect, binding))] = False
+		for add_effect in action.add_effects:
+			state[_atom_key(_map_schema_literal(add_effect, binding))] = True
+	return all(state.get(_atom_key(goal)) is True for goal in rule.goal_conditions)
+
+
+def _map_schema_literal(
+	literal: PDDLLiteralSchema,
+	binding: Mapping[str, str],
+) -> MooseAtom:
+	return MooseAtom(
+		predicate=literal.predicate,
+		arguments=tuple(binding.get(argument, argument) for argument in literal.arguments),
+	)
+
+
+def _obj_tp_contexts_for_rule(
+	*,
+	rule: MooseReadableRule,
+	actions_by_name: Mapping[str, _ParsedAction],
+	predicate_types: Mapping[str, tuple[str, ...]],
+	type_tokens: Sequence[str],
+	variable_map: Mapping[str, str],
+) -> tuple[str, ...] | None:
+	types_by_argument: dict[str, set[str]] = {}
+	for atom in (*rule.state_conditions, *rule.goal_conditions):
+		for argument, type_name in zip(atom.arguments, predicate_types.get(atom.predicate, ())):
+			_add_required_type(types_by_argument, argument, type_name)
+	for action_call in rule.actions:
+		action = actions_by_name.get(action_call.predicate)
+		if action is None or len(action.parameters) != len(action_call.arguments):
+			return None
+		for parameter, argument in zip(action.parameters, action_call.arguments):
+			_add_required_type(
+				types_by_argument,
+				argument,
+				action.parameter_types.get(parameter, "object"),
+			)
+	contexts: list[str] = []
+	for argument, required_types in sorted(types_by_argument.items()):
+		most_specific = _most_specific_compatible_types(required_types, type_tokens)
+		if most_specific is None:
+			return None
+		for type_name in most_specific:
+			if type_name == "object":
+				continue
+			contexts.append(
+				f"{OBJ_TP_PREDICATE}({variable_map.get(argument, argument)}, {type_name})",
+			)
+	return _deduplicate_strings(tuple(contexts))
+
+
+def _add_required_type(
+	types_by_argument: dict[str, set[str]],
+	argument: str,
+	type_name: str,
+) -> None:
+	canonical = _canonical_type_name(type_name)
+	if canonical == "object":
+		return
+	types_by_argument.setdefault(argument, set()).add(canonical)
+
+
+def _predicate_parameter_types(domain: PDDLDomain) -> dict[str, tuple[str, ...]]:
+	return {
+		predicate.name: tuple(_parameter_type(parameter) for parameter in predicate.parameters)
+		for predicate in domain.predicates
+	}
+
+
+def _most_specific_compatible_types(
+	type_names: set[str],
+	type_tokens: Sequence[str],
+) -> tuple[str, ...] | None:
+	normalized = tuple(dict.fromkeys(_canonical_type_name(item) for item in type_names))
+	non_object = tuple(type_name for type_name in normalized if type_name != "object")
+	if not non_object:
+		return ()
+	for left in non_object:
+		for right in non_object:
+			if left == right:
+				continue
+			if not _types_are_compatible(left, right, type_tokens):
+				return None
+	return tuple(
+		dict.fromkeys(
+			type_name
+			for type_name in non_object
+			if not any(
+				type_name != other
+				and _is_subtype(other, type_name, type_tokens)
+				for other in non_object
+			)
+		),
+	)
+
+
+def _types_are_compatible(left: str, right: str, type_tokens: Sequence[str]) -> bool:
+	if left == "object" or right == "object":
+		return True
+	return _is_subtype(left, right, type_tokens) or _is_subtype(right, left, type_tokens)
+
+
+def _is_subtype(child: str, parent: str, type_tokens: Sequence[str]) -> bool:
+	return _canonical_type_name(parent) in type_closure(_canonical_type_name(child), type_tokens)
+
+
+def _canonical_type_name(type_name: str) -> str:
+	return str(type_name or "").strip().lower() or "object"
+
+
+def _atom_key(atom: MooseAtom) -> tuple[str, tuple[str, ...]]:
+	return (atom.predicate, atom.arguments)
+
+
+def _deduplicate_agent_plans(plans: Sequence[AgentSpeakPlan]) -> tuple[AgentSpeakPlan, ...]:
+	seen: set[tuple[object, ...]] = set()
+	unique: list[AgentSpeakPlan] = []
+	for plan in plans:
+		key = (
+			plan.trigger.symbol,
+			plan.trigger.arguments,
+			plan.context,
+			tuple((step.kind, step.symbol, step.arguments) for step in plan.body),
+		)
+		if key in seen:
+			continue
+		seen.add(key)
+		unique.append(plan)
+	return tuple(unique)
+
+
+def _ensure_unique_plan_names(plans: Sequence[AgentSpeakPlan]) -> tuple[AgentSpeakPlan, ...]:
+	name_counts: dict[str, int] = {}
+	unique: list[AgentSpeakPlan] = []
+	for plan in plans:
+		seen_count = name_counts.get(plan.plan_name, 0)
+		name_counts[plan.plan_name] = seen_count + 1
+		if seen_count == 0:
+			unique.append(plan)
+			continue
+		unique.append(
+			AgentSpeakPlan(
+				plan_name=f"{plan.plan_name}_{seen_count + 1}",
+				trigger=plan.trigger,
+				context=plan.context,
+				body=plan.body,
+				source_instruction_ids=plan.source_instruction_ids,
+				binding_certificate=plan.binding_certificate,
+			),
+		)
+	return tuple(unique)
+
+
+def _deduplicate_strings(items: Sequence[str]) -> tuple[str, ...]:
+	return tuple(dict.fromkeys(item for item in items if item))
 
 
 def audit_moose_atomic_library_quality(

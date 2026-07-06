@@ -17,6 +17,7 @@ from plan_library.rendering import render_plan_library_asl
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+LOGISTICS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl"
 
 
 FERRY_READABLE_POLICY = """
@@ -40,6 +41,15 @@ BLOCKS_READABLE_POLICY = """
      s_cond : (clear block0) (ontable block0) (handempty) (clear block1)
      g_cond : (on block0 block1)
     actions : (pick-up block0) (stack block0 block1)
+"""
+
+
+LOGISTICS_INTERMODAL_READABLE_POLICY = """
+ precedence : (1, 6, 0, 0)
+       vars : airplane0 city0 location0 location1 location2 package0 truck0
+     s_cond : (at airplane0 location0) (at package0 location0) (at truck0 location1) (has-airport location0) (has-airport location1) (in-city location1 city0) (in-city location2 city0)
+     g_cond : (at package0 location2)
+    actions : (load-airplane package0 airplane0 location0) (fly-airplane airplane0 location0 location1) (unload-airplane package0 airplane0 location1) (load-truck package0 truck0 location1) (drive-truck truck0 location1 location2 city0) (unload-truck package0 truck0 location2)
 """
 
 
@@ -158,7 +168,7 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert library.metadata["source_seed_predicates"] == ["on"]
 	assert library.metadata["source_raw_rule_count"] == 1
 	assert library.metadata["library_quality"]["artifact_classification"] == (
-		"compact_recursive_atomic_module_library"
+		"moose_evidence_augmented_compact_recursive_atomic_module_library"
 	)
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
@@ -172,6 +182,34 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert "\t!on(Y, X);" not in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "type_" not in asl
+
+
+def test_post_moose_reducer_preserves_validated_logistics_intermodal_macro() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		LOGISTICS_INTERMODAL_READABLE_POLICY,
+		domain_file=LOGISTICS_DOMAIN,
+		domain_name="logistics",
+		source_name="logistics-seed0",
+		policy_file=Path("logistics-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "obj_tp(X, package)" in asl
+	assert "obj_tp(Y, location)" in asl
+	assert "obj_tp(Z, airplane)" in asl
+	assert "obj_tp(D, truck)" in asl
+	assert "\tload_airplane(X, Z, B);" in asl
+	assert "\tfly_airplane(Z, B, C);" in asl
+	assert "\tunload_airplane(X, Z, C);" in asl
+	assert "\tload_truck(X, D, C);" in asl
+	assert "\tdrive_truck(D, C, Y, A);" in asl
+	assert "\tunload_truck(X, D, Y)." in asl
+	assert "type_" not in asl
+	assert library.metadata["moose_macro_evidence_reducer"]["validated_macro_count"] == 1
+	assert library.metadata["moose_macro_evidence_reducer"]["invalid_macro_count"] == 0
+	assert library.metadata["library_quality"]["artifact_classification"] == (
+		"validated_moose_macro_evidence_atomic_library"
+	)
 	assert "block0" not in asl
 
 
@@ -262,7 +300,7 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 	assert metadata["minimal_modules"] is True
 	assert metadata["source_raw_rule_count"] == 1
 	assert metadata["library_quality"]["artifact_classification"] == (
-		"compact_recursive_atomic_module_library"
+		"moose_evidence_augmented_compact_recursive_atomic_module_library"
 	)
 	assert metadata["atomic_module_synthesis"]["selector_backend"] == "clingo_asp_minimize"
 	assert metadata["atomic_module_synthesis"]["selector_obligation_count"] == (

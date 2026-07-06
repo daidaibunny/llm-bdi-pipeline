@@ -154,3 +154,20 @@ allocating a merged list for each context match. Probe evidence:
 `gripper/p2_02` still executes `25,999` primitive actions, but the current
 single-worker run completed in `71.48s`; this confirms the remaining bottleneck
 is mainly the long atomic policy trace, not trace-file I/O.
+
+Post-MOOSE atomic synthesis now preserves validated MOOSE macro evidence instead
+of using readable policies only as seed-predicate lists. The reducer parses each
+singleton MOOSE rule's state context, goal, and action sequence; validates the
+macro by symbolic execution against the PDDL action schemas; alpha-normalizes
+goal variables to `X,Y,...`; compiles PDDL typing into reserved `obj_tp/2`
+context guards; and merges the validated macro branches with the compact schema
+modules. This fixes the Logistics intermodal gap where a package must move by
+airplane and then truck to a non-airport destination. Evidence:
+`moose-reducer-logistics-p0-06` passes Jason with `15` actions, and
+`moose-reducer-logistics-p0` passes all `30/30` `p0_*` Logistics tests. A full
+Logistics Jason-only run was started and interrupted after `37/37` recorded
+successes because later `p1` instances are long performance probes. The merged
+Logistics artifact is classified as `validated_moose_macro_evidence_atomic_library`
+rather than compact recursive synthesis, while Blocks-style libraries with real
+subgoal branches are classified as
+`moose_evidence_augmented_compact_recursive_atomic_module_library`.
