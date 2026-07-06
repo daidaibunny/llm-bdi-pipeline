@@ -46,9 +46,9 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 		"empty except zero-arity query entry propositions"
 	)
 	assert serialized["supported_asl_subset"]["contexts"] == (
-		"implicit conjunction of atom, not atom, equality, or inequality "
-		"context literals only; reserved obj_tp(Variable, Type) sort "
-		"contexts may appear as compiler metadata"
+		"implicit conjunction of atom, not atom, equality, inequality, numeric "
+		"comparison, or PDDL numeric fluent context literals only; reserved "
+		"obj_tp(Variable, Type) sort contexts may appear as compiler metadata"
 	)
 	assert serialized["execution_semantics"] == {
 		"plan_selection": "deterministic_first_applicable_asl_order",
@@ -139,6 +139,63 @@ def test_domain_level_library_contract_accepts_reserved_obj_tp_context() -> None
 	assert report.checked_layers["declared_pddl_symbols"] is True
 	assert report.checked_layers["lifted_contexts"] is True
 	assert report.violations == ()
+
+
+def test_domain_level_library_contract_accepts_numeric_fluent_contexts() -> None:
+	plan_library = PlanLibrary(
+		domain_name="numeric-transport",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="in_via_pick_up",
+				trigger=AgentSpeakTrigger("achievement_goal", "in", ("X", "Y")),
+				context=(
+					"at(X, Z)",
+					"at(Y, Z)",
+					"capacity(Y, N)",
+					"N >= 1",
+				),
+				body=(AgentSpeakBodyStep("action", "pick-up", ("Y", "X", "Z")),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates={"at": 2, "in": 2},
+		declared_actions={"pick-up": 3},
+		declared_functions={"capacity": 1},
+	)
+
+	assert report.passed is True
+	assert report.checked_layers["context_subset"] is True
+	assert report.checked_layers["declared_pddl_symbols"] is True
+	assert report.checked_layers["variable_binding_safety"] is True
+	assert report.violations == ()
+
+
+def test_domain_level_library_contract_rejects_unbound_numeric_comparison() -> None:
+	plan_library = PlanLibrary(
+		domain_name="numeric-transport",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="in_via_pick_up",
+				trigger=AgentSpeakTrigger("achievement_goal", "in", ("X", "Y")),
+				context=("N >= 1", "capacity(Y, N)"),
+				body=(AgentSpeakBodyStep("action", "pick-up", ("Y", "X", "Z")),),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates={"in": 2},
+		declared_actions={"pick-up": 3},
+		declared_functions={"capacity": 1},
+	)
+
+	assert report.passed is False
+	assert report.checked_layers["variable_binding_safety"] is False
+	assert any("numeric comparison" in violation for violation in report.violations)
 
 
 def test_domain_level_library_contract_rejects_undeclared_goal_descriptor_convention() -> None:

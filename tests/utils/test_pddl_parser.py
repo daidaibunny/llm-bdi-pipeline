@@ -99,3 +99,55 @@ def test_parse_domain_constants_with_types(tmp_path: Path) -> None:
 		"table1": "place",
 		"box1": "item",
 	}
+
+
+def test_parse_bounded_integer_numeric_resource_fragment(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain numeric-transport)
+		 (:requirements :strips :typing :numeric-fluents)
+		 (:types vehicle package location)
+		 (:predicates
+		  (at ?x ?l - location)
+		  (in ?p - package ?v - vehicle)
+		 )
+		 (:functions
+		  (capacity ?v - vehicle)
+		 )
+		 (:action pick-up
+		  :parameters (?v - vehicle ?p - package ?l - location)
+		  :precondition (and (at ?v ?l) (at ?p ?l) (>= (capacity ?v) 1))
+		  :effect (and (not (at ?p ?l)) (in ?p ?v) (decrease (capacity ?v) 1))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file = tmp_path / "problem.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p1)
+		 (:domain numeric-transport)
+		 (:objects truck1 - vehicle package1 - package depot1 - location)
+		 (:init (= (capacity truck1) 2) (at truck1 depot1) (at package1 depot1))
+		 (:goal (and (in package1 truck1) (= (capacity truck1) 1)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	domain = PDDLParser.parse_domain(domain_file)
+	problem = PDDLParser.parse_problem(problem_file)
+
+	assert [function.name for function in domain.functions] == ["capacity"]
+	assert domain.actions[0].numeric_preconditions[0].comparator == ">="
+	assert domain.actions[0].numeric_preconditions[0].left.to_signature() == "capacity(?v)"
+	assert domain.actions[0].numeric_preconditions[0].right.to_signature() == "1"
+	assert domain.actions[0].numeric_effects[0].operator == "decrease"
+	assert domain.actions[0].numeric_effects[0].fluent.to_signature() == "capacity(?v)"
+	assert domain.actions[0].numeric_effects[0].amount.to_signature() == "1"
+	assert problem.numeric_init[0].fluent.to_signature() == "capacity(truck1)"
+	assert problem.numeric_init[0].value == 2
+	assert [fact.to_signature() for fact in problem.goal_facts] == ["in(package1, truck1)"]
+	assert problem.numeric_goal_conditions[0].to_signature() == "capacity(truck1) = 1"

@@ -51,6 +51,88 @@ def test_pddl_support_report_accepts_metric_only_action_costs(tmp_path: Path) ->
 	assert ":action-costs" in serialized["supported_requirement_set"]
 
 
+def test_pddl_support_accepts_bounded_integer_numeric_resource_fragment(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_numeric_resource_domain_and_problem(tmp_path)
+
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+
+	assert serialized["is_compilable"] is True
+	assert serialized["unsupported_requirements"] == []
+	assert serialized["unsupported_expression_operators"] == []
+	assert serialized["logical_numeric_functions"] == ["capacity"]
+	assert serialized["metric_only_numeric_functions"] == []
+	assert any(
+		"bounded integer numeric resource fluents" in assumption
+		for assumption in serialized["fragment_assumptions"]
+	)
+
+
+def test_pddl_support_rejects_numeric_goal_synthesis_until_supported(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_numeric_resource_domain_and_problem(
+		tmp_path,
+		goal="(= (capacity truck1) 0)",
+	)
+
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+
+	assert serialized["is_compilable"] is False
+	assert {
+		"kind": "unsupported_numeric_goal",
+		"location": str(problem_file),
+		"symbol": "=",
+		"message": (
+			f"{problem_file}: numeric problem goals are not supported by current "
+			"atomic ASL synthesis; supported numeric fluents may appear in action "
+			"preconditions and effects for bounded integer resource accounting"
+		),
+	} in serialized["unsupported_diagnostics"]
+
+
+def test_pddl_support_rejects_non_constant_numeric_effect_amount(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_numeric_resource_domain_and_problem(
+		tmp_path,
+		effect_amount="(weight package1)",
+	)
+
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+
+	assert serialized["is_compilable"] is False
+	assert any(
+		"numeric effects must increase or decrease by integer constants" in reason
+		for reason in serialized["unsupported_reasons"]
+	)
+
+
+def test_pddl_support_rejects_arbitrary_numeric_effect_expression(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_numeric_resource_domain_and_problem(
+		tmp_path,
+		effect_amount="(+ 1 1)",
+	)
+
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+
+	assert serialized["is_compilable"] is False
+	assert "+" in serialized["unsupported_expression_operators"]
+	assert {
+		"kind": "unsupported_expression_operator",
+		"location": str(domain_file),
+		"symbol": "+",
+		"message": f"{domain_file}: Unsupported PDDL expression operator '+'",
+	} in serialized["unsupported_diagnostics"]
+
+
 def test_pddl_support_accepts_forward_referenced_type_parents(
 	tmp_path: Path,
 ) -> None:
@@ -194,6 +276,68 @@ def _write_minimal_strips_domain_and_problem(
 		 (:domain generic)
 		 (:objects a - item)
 		 (:init (ready a))
+		 (:goal {goal})
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file, problem_file
+
+
+def _write_numeric_resource_domain_and_problem(
+	tmp_path: Path,
+	*,
+	goal: str = "(and (at package1 depot2))",
+	effect_amount: str = "1",
+) -> tuple[Path, Path]:
+	domain_file = tmp_path / "numeric-domain.pddl"
+	problem_file = tmp_path / "numeric-problem.pddl"
+	domain_file.write_text(
+		f"""
+		(define (domain numeric-transport)
+		 (:requirements :strips :typing :numeric-fluents)
+		 (:types location vehicle package)
+		 (:predicates
+		  (at ?x ?l - location)
+		  (in ?p - package ?v - vehicle)
+		 )
+		 (:functions
+		  (capacity ?v - vehicle)
+		  (weight ?p - package)
+		 )
+		 (:action pick-up
+		  :parameters (?v - vehicle ?p - package ?l - location)
+		  :precondition (and (at ?v ?l) (at ?p ?l) (>= (capacity ?v) 1))
+		  :effect (and
+		   (not (at ?p ?l))
+		   (in ?p ?v)
+		   (decrease (capacity ?v) {effect_amount})
+		  )
+		 )
+		 (:action drop
+		  :parameters (?v - vehicle ?p - package ?l - location)
+		  :precondition (and (at ?v ?l) (in ?p ?v))
+		  :effect (and
+		   (not (in ?p ?v))
+		   (at ?p ?l)
+		   (increase (capacity ?v) 1)
+		  )
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		f"""
+		(define (problem numeric-p1)
+		 (:domain numeric-transport)
+		 (:objects truck1 - vehicle package1 - package depot1 depot2 - location)
+		 (:init
+		  (= (capacity truck1) 1)
+		  (= (weight package1) 1)
+		  (at truck1 depot1)
+		  (at package1 depot1)
+		 )
 		 (:goal {goal})
 		)
 		""",

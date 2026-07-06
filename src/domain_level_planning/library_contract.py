@@ -13,9 +13,9 @@ from plan_library.models import AgentSpeakPlan, PlanLibrary
 SUPPORTED_ASL_SUBSET = {
 	"plan_heads": "PDDL predicate achievement goals or query-specific +!g_* temporal wrappers",
 	"contexts": (
-		"implicit conjunction of atom, not atom, equality, or inequality "
-		"context literals only; reserved obj_tp(Variable, Type) sort "
-		"contexts may appear as compiler metadata"
+		"implicit conjunction of atom, not atom, equality, inequality, numeric "
+		"comparison, or PDDL numeric fluent context literals only; reserved "
+		"obj_tp(Variable, Type) sort contexts may appear as compiler metadata"
 	),
 	"body_steps": (
 		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
@@ -68,6 +68,7 @@ def audit_domain_level_library_contract(
 	*,
 	declared_predicates: Sequence[object] = (),
 	declared_actions: Sequence[object] = (),
+	declared_functions: Sequence[object] = (),
 ) -> DomainLevelLibraryContractReport:
 	"""Check that a generated library stays domain-level, lifted, and clean."""
 
@@ -75,6 +76,7 @@ def audit_domain_level_library_contract(
 	plans = tuple(plan_library.plans or ())
 	predicate_arities = _declared_arities(declared_predicates)
 	action_arities = _declared_arities(declared_actions)
+	function_arities = _declared_arities(declared_functions)
 	initial_beliefs_scoped = _initial_beliefs_are_query_entries(plan_library)
 	if not initial_beliefs_scoped:
 		violations.append(
@@ -93,6 +95,7 @@ def audit_domain_level_library_contract(
 		plans,
 		declared_predicates=predicate_arities,
 		declared_actions=action_arities,
+		declared_functions=function_arities,
 		violations=violations,
 	)
 	checked_layers = {
@@ -271,6 +274,21 @@ def _collect_variable_binding_violations(
 		for context in tuple(plan.context or ()):
 			if str(context or "").strip().lower().startswith("not "):
 				continue
+			comparison_variables = _numeric_comparison_variables(context)
+			if comparison_variables is not None:
+				for variable in comparison_variables:
+					if variable in bound_variables:
+						continue
+					passed = False
+					violations.append(
+						(
+							f"Context numeric comparison {context!r} in "
+							f"{plan.plan_name!r} uses unbound variable "
+							f"{variable!r}; numeric value variables must be "
+							"bound by an earlier positive context fluent."
+						),
+					)
+				continue
 			for _symbol, arguments in _context_atoms(context):
 				bound_variables.update(
 					argument
@@ -301,9 +319,10 @@ def _collect_declared_pddl_symbol_violations(
 	*,
 	declared_predicates: Mapping[str, int | None],
 	declared_actions: Mapping[str, int | None],
+	declared_functions: Mapping[str, int | None],
 	violations: list[str],
 ) -> bool:
-	if not declared_predicates and not declared_actions:
+	if not declared_predicates and not declared_actions and not declared_functions:
 		return True
 	passed = True
 	for plan in tuple(plans or ()):
@@ -347,6 +366,18 @@ def _collect_declared_pddl_symbol_violations(
 							(
 								f"Plan {plan.plan_name!r} uses reserved context "
 								f"{context!r} with wrong arity {len(arguments)}."
+							),
+					)
+					continue
+				if symbol in declared_functions:
+					expected_arity = _numeric_context_arity(declared_functions[symbol])
+					if not _arity_matches(expected_arity, len(arguments)):
+						passed = False
+						violations.append(
+							(
+								f"Plan {plan.plan_name!r} uses PDDL numeric fluent "
+								f"{_schema_signature(symbol, expected_arity)} with wrong "
+								f"arity {len(arguments)} in context {context!r}."
 							),
 						)
 					continue
@@ -497,6 +528,8 @@ def _is_supported_context_literal(context: str) -> bool:
 	text = str(context or "").strip()
 	if not text or text.lower() == "true":
 		return True
+	if _is_numeric_comparison_literal(text):
+		return True
 	if any(operator in text for operator in ("|", "&", "==", "!=", "\\==")):
 		return False
 	if text.lower().startswith("not "):
@@ -516,6 +549,27 @@ def _is_atom_literal(text: str) -> bool:
 			rf"{_PDDL_SYMBOL_PATTERN}\s*\(\s*[^()]*\s*\)",
 			text,
 		),
+	)
+
+
+def _is_numeric_comparison_literal(context: str) -> bool:
+	return _numeric_comparison_variables(context) is not None
+
+
+def _numeric_comparison_variables(context: str) -> tuple[str, ...] | None:
+	text = str(context or "").strip()
+	match = re.fullmatch(
+		r"\s*(?P<left>[A-Z][A-Za-z0-9_]*|[+-]?\d+)\s*"
+		r"(?P<operator>>=|<=|>|<)\s*"
+		r"(?P<right>[A-Z][A-Za-z0-9_]*|[+-]?\d+)\s*",
+		text,
+	)
+	if match is None:
+		return None
+	return tuple(
+		token
+		for token in (match.group("left"), match.group("right"))
+		if _is_lifted_variable(token)
 	)
 
 
@@ -557,6 +611,10 @@ def _declared_arities(items: Sequence[object] | Mapping[str, int]) -> dict[str, 
 
 def _arity_matches(expected: int | None, observed: int) -> bool:
 	return expected is None or expected == observed
+
+
+def _numeric_context_arity(function_arity: int | None) -> int | None:
+	return None if function_arity is None else function_arity + 1
 
 
 def _schema_signature(symbol: str, arity: int | None) -> str:

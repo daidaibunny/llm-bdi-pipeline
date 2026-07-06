@@ -177,3 +177,16 @@ generic `atomic_template_library` plus plan-template-level diagnostics:
 `already_true_plan_template`, `action_only_plan_template`, and
 `subgoal_decomposed_plan_template`. A whole domain library can be
 `mixed_atomic_template_library` because it may contain all three template kinds.
+
+Restricted numeric-resource support is now implemented for the bounded integer
+fragment. The project parser reads PDDL `:functions`, numeric initial values,
+numeric action comparisons, and constant `increase/decrease` effects. Support
+audit distinguishes metric-only action cost functions from logical numeric
+resources and rejects numeric goals, non-integer initial values, non-constant
+numeric updates, and arbitrary arithmetic expressions. Jason runtime seeds
+numeric fluents as mutable beliefs such as `capacity(truck1,1)` and updates
+them during primitive action execution. Atomic ASL synthesis compiles numeric
+preconditions into context guards such as `capacity(V,N) & N >= 1`; these are
+context-only numeric fluent checks, not subgoals. Full numeric PDDL, numeric
+atomic goal synthesis, optimization metrics, real-valued fluents, and recursive
+numeric ranking goals remain unsupported until a separate certificate is added.

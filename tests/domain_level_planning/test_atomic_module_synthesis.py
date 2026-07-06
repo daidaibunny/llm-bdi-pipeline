@@ -220,6 +220,51 @@ def test_ferry_bridge_sequence_keeps_negative_precondition_and_movement_module()
 	assert "sail(Y, X)." in asl
 
 
+def test_numeric_resource_preconditions_compile_to_context_guards(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain numeric-transport)
+  (:requirements :strips :typing :numeric-fluents)
+  (:types vehicle package location)
+  (:predicates
+    (at ?x ?l - location)
+    (in ?p - package ?v - vehicle)
+  )
+  (:functions
+    (capacity ?v - vehicle)
+  )
+  (:action pick-up
+    :parameters (?v - vehicle ?p - package ?l - location)
+    :precondition (and (at ?v ?l) (at ?p ?l) (>= (capacity ?v) 1))
+    :effect (and
+      (not (at ?p ?l))
+      (in ?p ?v)
+      (decrease (capacity ?v) 1)
+    )
+  )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("in",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="numeric-smoke",
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "capacity(Y, N)" in asl
+	assert "N >= 1" in asl
+	assert "\tpick_up(Y, X, Z)." in asl
+	assert "+!>=" not in asl
+	assert ">=(" not in asl
+	assert "decrease" not in asl
+
+
 def test_static_predicates_are_context_only_not_atomic_goal_modules() -> None:
 	library = synthesize_atomic_minimal_literal_module_library(
 		domain_file=PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl",

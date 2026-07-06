@@ -102,7 +102,7 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert "recordPlanAction(schema, action);" in source
 	assert "private void flushPlanTrace()" in source
 	assert "syncInitialPercepts();" in source
-	assert "EffectDelta delta = applyEffects(schema.effects, bindings);" in source
+	assert "EffectDelta delta = applyEffects(schema, bindings);" in source
 	assert "syncPerceptDelta(delta);" in source
 	assert "removePercept(Literal.parseLiteral(atom));" in source
 	assert '"runtime_summary".equals(action.getFunctor())' in source
@@ -518,4 +518,92 @@ def test_jason_runner_executes_tiny_pddl_environment(tmp_path: Path) -> None:
 	assert Path(result.artifacts["static_beliefs"]).read_text(encoding="utf-8") == ""
 	assert 'world.add("ready")' not in Path(result.artifacts["environment_java"]).read_text(
 		encoding="utf-8",
+	)
+
+
+@pytest.mark.skipif(
+	not (shutil.which("java") and shutil.which("javac") and shutil.which("mvn")),
+	reason="real Jason validation requires java, javac, and Maven",
+)
+def test_jason_runner_updates_bounded_integer_numeric_resource(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_file = tmp_path / "plan_library.asl"
+	output_dir = tmp_path / "jason"
+	domain_file.write_text(
+		"""
+(define (domain numeric-tiny)
+  (:requirements :strips :typing :numeric-fluents)
+  (:types vehicle package location)
+  (:predicates
+    (at ?x ?l - location)
+    (in ?p - package ?v - vehicle)
+  )
+  (:functions
+    (capacity ?v - vehicle)
+  )
+  (:action pick-up
+    :parameters (?v - vehicle ?p - package ?l - location)
+    :precondition (and (at ?v ?l) (at ?p ?l) (>= (capacity ?v) 1))
+    :effect (and
+      (not (at ?p ?l))
+      (in ?p ?v)
+      (decrease (capacity ?v) 1)
+    )
+  )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem numeric-tiny-problem)
+  (:domain numeric-tiny)
+  (:objects truck1 - vehicle package1 - package depot1 - location)
+  (:init (= (capacity truck1) 1) (at truck1 depot1) (at package1 depot1))
+  (:goal (and (in package1 truck1)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library_file.write_text(
+		"""
+/* Generated AgentSpeak(L) Plan Library */
+/* Domain: numeric-tiny */
+
++!in(P, V) : in(P, V) <-
+	true.
+
++!in(P, V) : at(P, L) & at(V, L) & capacity(V, N) & N > 0 <-
+	pick_up(V, P, L).
+
++!g_query : not in(package1, truck1) <-
+	!in(package1, truck1);
+	!g_query.
+
++!g_query : in(package1, truck1) & capacity(truck1, 0) <-
+	true.
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	result = JasonPlanLibraryRunner(timeout_seconds=20).validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=library_file,
+		goal_name="g_query",
+		output_dir=output_dir,
+	)
+
+	assert result.success is True, result.to_dict()
+	assert result.action_path == ("pick-up(truck1,package1,depot1)",)
+	assert Path(result.artifacts["initial_percepts"]).read_text(encoding="utf-8") == (
+		"at(truck1,depot1)\n"
+		"at(package1,depot1)\n"
+		"capacity(truck1,1)\n"
 	)

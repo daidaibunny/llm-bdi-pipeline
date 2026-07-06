@@ -21,6 +21,8 @@ from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
 from utils.pddl_parser import PDDLAction
 from utils.pddl_parser import PDDLDomain
+from utils.pddl_parser import PDDLNumericCondition
+from utils.pddl_parser import PDDLNumericExpression
 from utils.pddl_parser import PDDLParser
 
 from .pddl_types import OBJ_TP_PREDICATE
@@ -257,6 +259,7 @@ class _ParsedAction:
 	preconditions: tuple[PDDLLiteralSchema, ...]
 	add_effects: tuple[PDDLLiteralSchema, ...]
 	delete_effects: tuple[PDDLLiteralSchema, ...]
+	numeric_preconditions: tuple[PDDLNumericCondition, ...] = ()
 
 	@classmethod
 	def from_pddl(cls, action: PDDLAction) -> "_ParsedAction":
@@ -271,6 +274,9 @@ class _ParsedAction:
 			preconditions=tuple(_parse_pddl_literals(action.preconditions)),
 			add_effects=tuple(literal for literal in effects if literal.is_positive),
 			delete_effects=tuple(literal for literal in effects if not literal.is_positive),
+			numeric_preconditions=tuple(
+				getattr(action, "numeric_preconditions", ()) or (),
+			),
 		)
 
 
@@ -376,6 +382,7 @@ class _ProducerSequence:
 	target_predicate: str
 	target_arguments: tuple[str, ...]
 	context_literals: tuple[PDDLLiteralSchema, ...]
+	numeric_contexts: tuple[str, ...]
 	type_contexts: tuple[str, ...]
 	body_actions: tuple[_ActionCall, ...]
 	producer_action_names: tuple[str, ...]
@@ -846,6 +853,7 @@ def _finalize_sequence(
 	type_contexts = _obj_tp_contexts_for_action_calls(sequence_body, type_tokens)
 	if type_contexts is None:
 		return None
+	numeric_contexts = _numeric_contexts_for_action_calls(sequence_body)
 	deduplicated_contexts = _deduplicate_literals(tuple(context_literals))
 	range_restricted_contexts = _range_restricted_context_literals(
 		context_literals=deduplicated_contexts,
@@ -871,6 +879,7 @@ def _finalize_sequence(
 		target_predicate=target_effect.predicate,
 		target_arguments=target_arguments,
 		context_literals=range_restricted_contexts,
+		numeric_contexts=numeric_contexts,
 		type_contexts=type_contexts,
 		body_actions=sequence_body,
 		producer_action_names=producer_action_names,
@@ -938,6 +947,97 @@ def _cleanup_action_calls(
 			continue
 		return (cleanup_call,)
 	return ()
+
+
+def _numeric_contexts_for_action_calls(
+	body_actions: Sequence[_ActionCall],
+) -> tuple[str, ...]:
+	contexts: list[str] = []
+	used_variables = {
+		argument
+		for call in tuple(body_actions or ())
+		for argument in tuple(call.arguments or ())
+		if _is_agentspeak_variable(argument)
+	}
+	for call in tuple(body_actions or ()):
+		variable_map = {
+			parameter: argument
+			for parameter, argument in zip(call.action.parameters, call.arguments)
+		}
+		for condition in call.action.numeric_preconditions:
+			contexts.extend(
+				_numeric_condition_contexts(
+					condition=condition,
+					variable_map=variable_map,
+					used_variables=used_variables,
+				),
+			)
+	return _deduplicate(tuple(contexts))
+
+
+def _numeric_condition_contexts(
+	*,
+	condition: PDDLNumericCondition,
+	variable_map: Mapping[str, str],
+	used_variables: set[str],
+) -> tuple[str, ...]:
+	fluent_contexts: list[str] = []
+	value_variables_by_fluent: dict[tuple[str, tuple[str, ...]], str] = {}
+
+	def render_term(expression: PDDLNumericExpression) -> str:
+		if expression.kind == "constant":
+			return str(expression.value)
+		arguments = tuple(
+			_map_numeric_argument(argument, variable_map)
+			for argument in tuple(expression.args or ())
+		)
+		key = (str(expression.value), arguments)
+		value_variable = value_variables_by_fluent.get(key)
+		if value_variable is None:
+			value_variable = _fresh_numeric_value_variable(used_variables)
+			used_variables.add(value_variable)
+			value_variables_by_fluent[key] = value_variable
+			fluent_contexts.append(
+				_numeric_fluent_context(
+					function=str(expression.value),
+					arguments=arguments,
+					value_variable=value_variable,
+				),
+			)
+		return value_variable
+
+	left = render_term(condition.left)
+	right = render_term(condition.right)
+	return tuple(fluent_contexts + [f"{left} {condition.comparator} {right}"])
+
+
+def _map_numeric_argument(argument: str, variable_map: Mapping[str, str]) -> str:
+	text = str(argument or "").strip()
+	name = _parameter_name(text)
+	if name in variable_map:
+		return variable_map[name]
+	if text.startswith("?"):
+		return _var(name)
+	return name
+
+
+def _numeric_fluent_context(
+	*,
+	function: str,
+	arguments: Sequence[str],
+	value_variable: str,
+) -> str:
+	return _call(str(function), (*tuple(arguments or ()), value_variable))
+
+
+def _fresh_numeric_value_variable(used_variables: set[str]) -> str:
+	for candidate in ("N", "M", "K", "Q", "R"):
+		if candidate not in used_variables:
+			return candidate
+	index = 0
+	while f"N{index}" in used_variables:
+		index += 1
+	return f"N{index}"
 
 
 def _cleanup_variable_map(
@@ -1481,7 +1581,8 @@ def _final_action_sequence_plan(
 		),
 		context=tuple(
 			_order_contexts_for_matching(
-				tuple(literal.to_context() for literal in sequence.context_literals),
+				tuple(literal.to_context() for literal in sequence.context_literals)
+				+ sequence.numeric_contexts,
 				sequence.type_contexts,
 				initial_bound_variables=sequence.target_arguments,
 			),
@@ -1495,6 +1596,7 @@ def _final_action_sequence_plan(
 				"artifact_family": "atomic_minimal_literal_module",
 				"rule_kind": "producer_action_sequence",
 				"producer_actions": list(sequence.producer_action_names),
+				"numeric_contexts": list(sequence.numeric_contexts),
 				"source_backend": source_backend,
 				"source_name": source_name,
 				"policy_file": str(policy_file) if policy_file is not None else None,
@@ -2023,6 +2125,8 @@ def _literal_schemas_from_sexpr(expression: object) -> tuple[PDDLLiteralSchema, 
 			)
 			for literal in _literal_schemas_from_sexpr(expression[1])
 		)
+	if _is_numeric_pddl_expression(expression):
+		return ()
 	if operator in {"or", "forall", "exists", "when", "imply"}:
 		return ()
 	return (
@@ -2032,6 +2136,34 @@ def _literal_schemas_from_sexpr(expression: object) -> tuple[PDDLLiteralSchema, 
 			is_positive=True,
 		),
 	)
+
+
+def _is_numeric_pddl_expression(expression: Sequence[object]) -> bool:
+	if not expression:
+		return False
+	operator = str(expression[0]).lower()
+	if operator in {
+		">",
+		">=",
+		"<",
+		"<=",
+		"increase",
+		"decrease",
+		"assign",
+		"scale-up",
+		"scale-down",
+	}:
+		return True
+	if operator != "=" or len(expression) != 3:
+		return False
+	return any(
+		isinstance(argument, list) or _is_numeric_constant_token(argument)
+		for argument in expression[1:]
+	)
+
+
+def _is_numeric_constant_token(value: object) -> bool:
+	return re.fullmatch(r"[+-]?\d+(?:\.\d+)?", str(value or "").strip()) is not None
 
 
 def _parse_sexpr(expression: str) -> object | None:
@@ -2247,6 +2379,7 @@ def _deduplicate_sequences(
 				(literal.predicate, literal.arguments, literal.is_positive)
 				for literal in sequence.context_literals
 			),
+			sequence.numeric_contexts,
 			tuple((call.action.name, call.arguments) for call in sequence.body_actions),
 		)
 		if key in seen:

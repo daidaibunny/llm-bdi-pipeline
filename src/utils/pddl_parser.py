@@ -5,7 +5,7 @@ PDDL parser for the benchmark subset used by this project.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List
 
@@ -19,6 +19,72 @@ class PDDLPredicate:
 
 
 @dataclass(frozen=True)
+class PDDLFunction:
+	"""Numeric function schema declared by a PDDL domain."""
+
+	name: str
+	parameters: List[str]
+
+
+@dataclass(frozen=True)
+class PDDLNumericFluent:
+	"""Grounded-at-runtime PDDL numeric fluent term such as ``capacity(?v)``."""
+
+	function: str
+	args: List[str]
+
+	def to_signature(self) -> str:
+		if not self.args:
+			return self.function
+		return f"{self.function}({', '.join(self.args)})"
+
+
+@dataclass(frozen=True)
+class PDDLNumericExpression:
+	"""Numeric expression in the supported parser subset."""
+
+	kind: str
+	value: str
+	args: List[str] = field(default_factory=list)
+
+	def to_signature(self) -> str:
+		if self.kind == "constant":
+			return self.value
+		if not self.args:
+			return self.value
+		return f"{self.value}({', '.join(self.args)})"
+
+
+@dataclass(frozen=True)
+class PDDLNumericCondition:
+	"""PDDL numeric comparison such as ``(>= (capacity ?v) 1)``."""
+
+	comparator: str
+	left: PDDLNumericExpression
+	right: PDDLNumericExpression
+
+	def to_signature(self) -> str:
+		return f"{self.left.to_signature()} {self.comparator} {self.right.to_signature()}"
+
+
+@dataclass(frozen=True)
+class PDDLNumericEffect:
+	"""PDDL numeric update such as ``(decrease (capacity ?v) 1)``."""
+
+	operator: str
+	fluent: PDDLNumericFluent
+	amount: PDDLNumericExpression
+
+
+@dataclass(frozen=True)
+class PDDLNumericAssignment:
+	"""Initial numeric fluent assignment in a PDDL problem."""
+
+	fluent: PDDLNumericFluent
+	value: int
+
+
+@dataclass(frozen=True)
 class PDDLAction:
 	"""Primitive action schema declared by a PDDL domain."""
 
@@ -26,6 +92,8 @@ class PDDLAction:
 	parameters: List[str]
 	preconditions: str
 	effects: str
+	numeric_preconditions: List[PDDLNumericCondition] = field(default_factory=list)
+	numeric_effects: List[PDDLNumericEffect] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -51,7 +119,8 @@ class PDDLDomain:
 	constants: List[str]
 	constant_types: Dict[str, str]
 	predicates: List[PDDLPredicate]
-	actions: List[PDDLAction]
+	functions: List[PDDLFunction] = field(default_factory=list)
+	actions: List[PDDLAction] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -64,6 +133,8 @@ class PDDLProblem:
 	object_types: Dict[str, str]
 	init_facts: List[PDDLFact]
 	goal_facts: List[PDDLFact]
+	numeric_init: List[PDDLNumericAssignment] = field(default_factory=list)
+	numeric_goal_conditions: List[PDDLNumericCondition] = field(default_factory=list)
 
 
 class PDDLParser:
@@ -84,6 +155,7 @@ class PDDLParser:
 			constants=constants,
 			constant_types=constant_types,
 			predicates=_extract_predicates(content),
+			functions=_extract_functions(content),
 			actions=_extract_actions(content),
 		)
 
@@ -108,6 +180,8 @@ class PDDLParser:
 			object_types=object_types,
 			init_facts=_extract_problem_facts(content, "init"),
 			goal_facts=_extract_problem_goal_facts(content),
+			numeric_init=_extract_problem_numeric_init(content),
+			numeric_goal_conditions=_extract_problem_numeric_goals(content),
 		)
 
 
@@ -145,6 +219,23 @@ def _extract_predicates(content: str) -> List[PDDLPredicate]:
 	return predicates
 
 
+def _extract_functions(content: str) -> List[PDDLFunction]:
+	start = _find_block_start(content, "functions")
+	if start == -1:
+		return []
+	end = _find_matching_paren(content, start)
+	inner = content[start + len("(:functions") : end]
+	functions: List[PDDLFunction] = []
+	for expression in _top_level_expressions(inner):
+		tokens = expression.strip("() \n\t").split()
+		if not tokens:
+			continue
+		name = _canonical_symbol(tokens[0])
+		parameters = _group_typed_parameters(tokens[1:])
+		functions.append(PDDLFunction(name=name, parameters=parameters))
+	return functions
+
+
 def _extract_actions(content: str) -> List[PDDLAction]:
 	actions: List[PDDLAction] = []
 	cursor = 0
@@ -159,15 +250,26 @@ def _extract_actions(content: str) -> List[PDDLAction]:
 			cursor = end + 1
 			continue
 		actions.append(
-			PDDLAction(
+			_action_from_block(
+				block=block,
 				name=_canonical_symbol(header_match.group(1)),
-				parameters=_extract_action_parameters(block),
-				preconditions=_extract_keyword_expression(block, "precondition"),
-				effects=_extract_keyword_expression(block, "effect"),
 			),
 		)
 		cursor = end + 1
 	return actions
+
+
+def _action_from_block(*, block: str, name: str) -> PDDLAction:
+	preconditions = _extract_keyword_expression(block, "precondition")
+	effects = _extract_keyword_expression(block, "effect")
+	return PDDLAction(
+		name=name,
+		parameters=_extract_action_parameters(block),
+		preconditions=preconditions,
+		effects=effects,
+		numeric_preconditions=_extract_numeric_conditions(preconditions),
+		numeric_effects=_extract_numeric_effects(effects),
+	)
 
 
 def _extract_action_parameters(block: str) -> List[str]:
@@ -261,6 +363,126 @@ def _extract_problem_goal_facts(content: str) -> List[PDDLFact]:
 	return _parse_fact_expressions([inner])
 
 
+def _extract_problem_numeric_init(content: str) -> List[PDDLNumericAssignment]:
+	start = _find_block_start(content, "init")
+	if start == -1:
+		return []
+	end = _find_matching_paren(content, start)
+	inner = content[start + len("(:init") : end]
+	assignments: List[PDDLNumericAssignment] = []
+	for expression in _top_level_expressions(inner):
+		assignment = _parse_numeric_assignment(_parse_s_expression(expression))
+		if assignment is not None:
+			assignments.append(assignment)
+	return assignments
+
+
+def _extract_problem_numeric_goals(content: str) -> List[PDDLNumericCondition]:
+	start = _find_block_start(content, "goal")
+	if start == -1:
+		return []
+	end = _find_matching_paren(content, start)
+	inner = content[start + len("(:goal") : end].strip()
+	return _extract_numeric_conditions(inner)
+
+
+def _extract_numeric_conditions(expression: str) -> List[PDDLNumericCondition]:
+	parsed = _parse_s_expression(expression)
+	conditions: List[PDDLNumericCondition] = []
+	_collect_numeric_conditions(parsed, conditions)
+	return conditions
+
+
+def _extract_numeric_effects(expression: str) -> List[PDDLNumericEffect]:
+	parsed = _parse_s_expression(expression)
+	effects: List[PDDLNumericEffect] = []
+	_collect_numeric_effects(parsed, effects)
+	return effects
+
+
+def _collect_numeric_conditions(
+	node: object,
+	conditions: List[PDDLNumericCondition],
+) -> None:
+	if not isinstance(node, list) or not node:
+		return
+	head = _canonical_symbol(str(node[0]))
+	if head == "and":
+		for child in node[1:]:
+			_collect_numeric_conditions(child, conditions)
+		return
+	if head in {">", ">=", "<", "<=", "="} and len(node) == 3:
+		left = _parse_numeric_expression(node[1])
+		right = _parse_numeric_expression(node[2])
+		if left is not None and right is not None:
+			conditions.append(
+				PDDLNumericCondition(comparator=head, left=left, right=right),
+			)
+
+
+def _collect_numeric_effects(node: object, effects: List[PDDLNumericEffect]) -> None:
+	if not isinstance(node, list) or not node:
+		return
+	head = _canonical_symbol(str(node[0]))
+	if head == "and":
+		for child in node[1:]:
+			_collect_numeric_effects(child, effects)
+		return
+	if head not in {"increase", "decrease"} or len(node) != 3:
+		return
+	fluent = _parse_numeric_fluent(node[1])
+	amount = _parse_numeric_expression(node[2])
+	if fluent is not None and amount is not None:
+		effects.append(PDDLNumericEffect(operator=head, fluent=fluent, amount=amount))
+
+
+def _parse_numeric_assignment(node: object) -> PDDLNumericAssignment | None:
+	if not isinstance(node, list) or len(node) != 3:
+		return None
+	if _canonical_symbol(str(node[0])) != "=":
+		return None
+	fluent = _parse_numeric_fluent(node[1])
+	value = _parse_integer_token(node[2])
+	if fluent is None or value is None:
+		return None
+	return PDDLNumericAssignment(fluent=fluent, value=value)
+
+
+def _parse_numeric_expression(node: object) -> PDDLNumericExpression | None:
+	value = _parse_integer_token(node)
+	if value is not None:
+		return PDDLNumericExpression(kind="constant", value=str(value))
+	fluent = _parse_numeric_fluent(node)
+	if fluent is None:
+		return None
+	return PDDLNumericExpression(
+		kind="fluent",
+		value=fluent.function,
+		args=list(fluent.args),
+	)
+
+
+def _parse_numeric_fluent(node: object) -> PDDLNumericFluent | None:
+	if not isinstance(node, list) or not node:
+		return None
+	function = _canonical_symbol(str(node[0]))
+	if function in {"and", "not", "increase", "decrease", "assign", "scale-up", "scale-down"}:
+		return None
+	args = [_canonical_symbol(str(token)) for token in node[1:] if not isinstance(token, list)]
+	if len(args) != len(node) - 1:
+		return None
+	return PDDLNumericFluent(function=function, args=args)
+
+
+def _parse_integer_token(node: object) -> int | None:
+	if isinstance(node, list):
+		return None
+	text = str(node).strip()
+	if not re.fullmatch(r"[+-]?\d+", text):
+		return None
+	return int(text)
+
+
 def _parse_fact_expressions(expressions: List[str]) -> List[PDDLFact]:
 	facts: List[PDDLFact] = []
 	for expression in expressions:
@@ -294,6 +516,31 @@ def _parse_positive_fact(expression: str) -> PDDLFact | None:
 def _is_negated_fact_expression(expression: str) -> bool:
 	tokens = expression.strip("() \n\t").split(maxsplit=1)
 	return bool(tokens) and _canonical_symbol(tokens[0]) == "not"
+
+
+def _parse_s_expression(expression: str) -> object:
+	text = str(expression or "").strip()
+	if not text:
+		return []
+	tokens = re.findall(r"\(|\)|[^\s()]+", text)
+	position = 0
+
+	def parse_one() -> object:
+		nonlocal position
+		if position >= len(tokens):
+			return []
+		token = tokens[position]
+		position += 1
+		if token != "(":
+			return _canonical_symbol(token)
+		items: List[object] = []
+		while position < len(tokens) and tokens[position] != ")":
+			items.append(parse_one())
+		if position < len(tokens):
+			position += 1
+		return items
+
+	return parse_one()
 
 
 def _top_level_expressions(text: str) -> List[str]:

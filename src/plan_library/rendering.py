@@ -146,7 +146,15 @@ def _render_context_expression(expression: str) -> _RenderedContextExpression:
 			text=f"not {_maybe_parenthesize_context(child, _CONTEXT_PRECEDENCE['not'])}",
 			precedence=_CONTEXT_PRECEDENCE["not"],
 		)
-	for operator, rendered_operator in (("\\==", "\\\\=="), ("!=", "\\\\=="), ("==", "==")):
+	for operator, rendered_operator in (
+		("\\==", "\\\\=="),
+		("!=", "\\\\=="),
+		(">=", ">="),
+		("<=", "<="),
+		("==", "=="),
+		(">", ">"),
+		("<", "<"),
+	):
 		parts = _split_top_level_operator(text, operator)
 		if len(parts) == 2:
 			left, right = parts

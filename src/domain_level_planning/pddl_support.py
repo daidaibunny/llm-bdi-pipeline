@@ -11,6 +11,8 @@ from typing import Iterable, Mapping, Sequence
 
 from plan_library.rendering import sanitize_identifier
 from tarski.io import PDDLReader
+from utils.pddl_parser import PDDLParser
+from utils.pddl_parser import PDDLNumericExpression
 
 
 SUPPORTED_REQUIREMENTS = frozenset(
@@ -20,6 +22,8 @@ SUPPORTED_REQUIREMENTS = frozenset(
 		":negative-preconditions",
 		":equality",
 		":action-costs",
+		":numeric-fluents",
+		":fluents",
 	}
 )
 
@@ -29,8 +33,6 @@ UNSUPPORTED_REQUIREMENTS = frozenset(
 		":conditional-effects",
 		":derived-predicates",
 		":durative-actions",
-		":fluents",
-		":numeric-fluents",
 		":preferences",
 		":quantified-preconditions",
 		":universal-preconditions",
@@ -54,11 +56,13 @@ UNSUPPORTED_EXPRESSION_OPERATORS = frozenset(
 		"when",
 		"imply",
 		"preference",
-		"increase",
-		"decrease",
 		"assign",
 		"scale-up",
 		"scale-down",
+		"+",
+		"-",
+		"*",
+		"/",
 	}
 )
 
@@ -66,13 +70,15 @@ SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 	"classical finite-domain PDDL files parsed before lifted ASL synthesis",
 	"positive conjunctive predicate achievement goals only",
 	"primitive action schemas with predicate preconditions and predicate effects",
+	"bounded integer numeric resource fluents may appear in action preconditions and effects",
+	"numeric effects are limited to constant integer increase/decrease updates",
 	"PDDL predicate and action symbols may be sanitized for AgentSpeak rendering",
 	"sanitized predicate and action functors must remain unique",
-	"metric-only action-costs functions and increase effects are ignored by ASL synthesis",
+	"metric-only action-costs functions are distinguished from logical numeric resources",
 	"typing, equality, and negative preconditions are accepted only inside the project parser subset",
 	(
 		"derived predicates, conditional effects, quantifiers, preferences, durative "
-		"actions, and numeric fluents used as logical state conditions are rejected"
+		"actions, arbitrary arithmetic expressions, and numeric goals remain unsupported"
 	),
 )
 
@@ -108,6 +114,9 @@ class PDDLSupportReport:
 	unsupported_expression_operators: tuple[str, ...]
 	unsupported_reasons: tuple[str, ...]
 	unsupported_diagnostics: tuple[PDDLUnsupportedDiagnostic, ...] = ()
+	numeric_functions: tuple[str, ...] = ()
+	logical_numeric_functions: tuple[str, ...] = ()
+	metric_only_numeric_functions: tuple[str, ...] = ()
 
 	@property
 	def is_compilable(self) -> bool:
@@ -129,6 +138,9 @@ class PDDLSupportReport:
 				diagnostic.to_dict()
 				for diagnostic in self.unsupported_diagnostics
 			],
+			"numeric_functions": list(self.numeric_functions),
+			"logical_numeric_functions": list(self.logical_numeric_functions),
+			"metric_only_numeric_functions": list(self.metric_only_numeric_functions),
 			"is_compilable": self.is_compilable,
 			"supported_requirement_set": sorted(SUPPORTED_REQUIREMENTS),
 			"known_unsupported_requirement_set": sorted(UNSUPPORTED_REQUIREMENTS),
@@ -172,6 +184,9 @@ def inspect_pddl_support(
 		for path in problem_paths
 	)
 	requirements = tuple(_requirements(domain_text))
+	parsed_domain = PDDLParser.parse_domain(domain_path)
+	parsed_problems = tuple(PDDLParser.parse_problem(path) for path in problem_paths)
+	numeric_profile = _numeric_profile(parsed_domain, parsed_problems)
 	reasons: list[str] = []
 	diagnostics: list[PDDLUnsupportedDiagnostic] = []
 	unsupported_requirements: list[str] = []
@@ -238,6 +253,14 @@ def inspect_pddl_support(
 		for diagnostic in _unsupported_goal_diagnostics(problem_path, problem_text):
 			reasons.append(diagnostic.message)
 			diagnostics.append(diagnostic)
+	for diagnostic in _unsupported_numeric_diagnostics(
+		domain_path=domain_path,
+		problem_paths=problem_paths,
+		domain=parsed_domain,
+		problems=parsed_problems,
+	):
+		reasons.append(diagnostic.message)
+		diagnostics.append(diagnostic)
 	for diagnostic in _unsupported_asl_symbol_collision_diagnostics(
 		domain_path,
 		domain_text,
@@ -259,13 +282,22 @@ def inspect_pddl_support(
 		unsupported_expression_operators=tuple(dict.fromkeys(unsupported_operators)),
 		unsupported_reasons=tuple(dict.fromkeys(reasons)),
 		unsupported_diagnostics=tuple(_deduplicate_diagnostics(diagnostics)),
+		numeric_functions=numeric_profile["numeric_functions"],
+		logical_numeric_functions=numeric_profile["logical_numeric_functions"],
+		metric_only_numeric_functions=numeric_profile["metric_only_numeric_functions"],
 	)
 
 
 def _validate_with_tarski(domain_file: Path, problem_files: tuple[Path, ...]) -> None:
 	try:
+		raw_domain_text = _strip_comments(domain_file.read_text(encoding="utf-8"))
+		if _contains_numeric_pddl(raw_domain_text):
+			PDDLParser.parse_domain(domain_file)
+			for problem_file in problem_files:
+				PDDLParser.parse_problem(problem_file)
+			return
 		domain_text = _normalize_domain_for_tarski(
-			_strip_comments(domain_file.read_text(encoding="utf-8")),
+			raw_domain_text,
 		)
 		if problem_files:
 			for problem_file in problem_files:
@@ -282,6 +314,15 @@ def _validate_with_tarski(domain_file: Path, problem_files: tuple[Path, ...]) ->
 			reader.parse_domain_string(domain_text)
 	except Exception as error:
 		raise ValueError(f"PDDL syntax validation failed: {error}") from error
+
+
+def _contains_numeric_pddl(domain_text: str) -> bool:
+	requirements = set(_requirements(domain_text))
+	return (
+		":numeric-fluents" in requirements
+		or ":fluents" in requirements
+		or _keyword_block(domain_text, "functions") is not None
+	)
 
 
 def _normalize_domain_for_tarski(text: str) -> str:
@@ -441,6 +482,117 @@ def _unsupported_goal_diagnostics(
 			symbol=symbol,
 			message=message,
 		),
+	)
+
+
+def _numeric_profile(domain: object, problems: Sequence[object]) -> dict[str, tuple[str, ...]]:
+	declared = tuple(
+		sanitize_identifier(getattr(function, "name", ""))
+		for function in tuple(getattr(domain, "functions", ()) or ())
+	)
+	condition_functions: set[str] = set()
+	effect_functions: set[str] = set()
+	goal_functions: set[str] = set()
+	for action in tuple(getattr(domain, "actions", ()) or ()):
+		for condition in tuple(getattr(action, "numeric_preconditions", ()) or ()):
+			condition_functions.update(_numeric_condition_functions(condition))
+		for effect in tuple(getattr(action, "numeric_effects", ()) or ()):
+			effect_functions.add(sanitize_identifier(effect.fluent.function))
+			effect_functions.update(_numeric_expression_functions(effect.amount))
+	for problem in tuple(problems or ()):
+		for condition in tuple(getattr(problem, "numeric_goal_conditions", ()) or ()):
+			goal_functions.update(_numeric_condition_functions(condition))
+	logical = condition_functions | effect_functions | goal_functions
+	metric_only = {
+		function
+		for function in declared
+		if function == "total_cost" and function not in condition_functions and function not in goal_functions
+	}
+	return {
+		"numeric_functions": tuple(sorted(dict.fromkeys(declared))),
+		"logical_numeric_functions": tuple(sorted(logical - metric_only)),
+		"metric_only_numeric_functions": tuple(sorted(metric_only)),
+	}
+
+
+def _unsupported_numeric_diagnostics(
+	*,
+	domain_path: Path,
+	problem_paths: Sequence[Path],
+	domain: object,
+	problems: Sequence[object],
+) -> tuple[PDDLUnsupportedDiagnostic, ...]:
+	diagnostics: list[PDDLUnsupportedDiagnostic] = []
+	for action in tuple(getattr(domain, "actions", ()) or ()):
+		for effect in tuple(getattr(action, "numeric_effects", ()) or ()):
+			if _is_integer_constant_expression(effect.amount):
+				continue
+			message = (
+				f"{domain_path}: action {action.name!r} numeric effects must "
+				"increase or decrease by integer constants in the supported "
+				"bounded resource fragment"
+			)
+			diagnostics.append(
+				PDDLUnsupportedDiagnostic(
+					kind="unsupported_numeric_effect_amount",
+					location=f"{domain_path}:action:{action.name}",
+					symbol=effect.operator,
+					message=message,
+				),
+			)
+	for problem_path, problem in zip(problem_paths, problems):
+		for assignment in tuple(getattr(problem, "numeric_init", ()) or ()):
+			if isinstance(assignment.value, int):
+				continue
+			message = (
+				f"{problem_path}: numeric initial values must be finite integers "
+				"in the supported bounded resource fragment"
+			)
+			diagnostics.append(
+				PDDLUnsupportedDiagnostic(
+					kind="unsupported_numeric_init_value",
+					location=str(problem_path),
+					symbol=assignment.fluent.function,
+					message=message,
+				),
+			)
+		if tuple(getattr(problem, "numeric_goal_conditions", ()) or ()):
+			message = (
+				f"{problem_path}: numeric problem goals are not supported by current "
+				"atomic ASL synthesis; supported numeric fluents may appear in action "
+				"preconditions and effects for bounded integer resource accounting"
+			)
+			diagnostics.append(
+				PDDLUnsupportedDiagnostic(
+					kind="unsupported_numeric_goal",
+					location=str(problem_path),
+					symbol="=",
+					message=message,
+				),
+			)
+	return tuple(diagnostics)
+
+
+def _numeric_condition_functions(condition: object) -> set[str]:
+	return (
+		_numeric_expression_functions(getattr(condition, "left", None))
+		| _numeric_expression_functions(getattr(condition, "right", None))
+	)
+
+
+def _numeric_expression_functions(expression: object) -> set[str]:
+	if not isinstance(expression, PDDLNumericExpression):
+		return set()
+	if expression.kind != "fluent":
+		return set()
+	return {sanitize_identifier(expression.value)}
+
+
+def _is_integer_constant_expression(expression: object) -> bool:
+	return (
+		isinstance(expression, PDDLNumericExpression)
+		and expression.kind == "constant"
+		and re.fullmatch(r"[+-]?\d+", expression.value) is not None
 	)
 
 

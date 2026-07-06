@@ -18,6 +18,11 @@ from domain_level_planning.pddl_types import obj_tp_atoms
 from domain_level_planning.pddl_types import parameter_name
 from plan_library.rendering import sanitize_identifier
 from utils.pddl_parser import PDDLAction
+from utils.pddl_parser import PDDLNumericAssignment
+from utils.pddl_parser import PDDLNumericCondition
+from utils.pddl_parser import PDDLNumericEffect
+from utils.pddl_parser import PDDLNumericExpression
+from utils.pddl_parser import PDDLNumericFluent
 from utils.pddl_parser import PDDLParser
 
 from .environment_adapter import Stage6EnvironmentAdapter
@@ -118,6 +123,34 @@ class PredicatePattern:
 
 
 @dataclass(frozen=True)
+class RuntimeNumericTerm:
+	"""Numeric term lowered to the Jason Java environment."""
+
+	kind: str
+	value: str
+	args: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RuntimeNumericCondition:
+	"""Runtime numeric comparison for action applicability."""
+
+	comparator: str
+	left: RuntimeNumericTerm
+	right: RuntimeNumericTerm
+
+
+@dataclass(frozen=True)
+class RuntimeNumericEffect:
+	"""Runtime numeric increase/decrease update."""
+
+	operator: str
+	function: str
+	args: tuple[str, ...]
+	amount: RuntimeNumericTerm
+
+
+@dataclass(frozen=True)
 class RuntimeActionSchema:
 	"""PDDL action schema lowered to the Jason Java environment."""
 
@@ -126,6 +159,8 @@ class RuntimeActionSchema:
 	parameters: tuple[str, ...]
 	preconditions: tuple[PredicatePattern, ...]
 	effects: tuple[PredicatePattern, ...]
+	numeric_preconditions: tuple[RuntimeNumericCondition, ...] = ()
+	numeric_effects: tuple[RuntimeNumericEffect, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -647,12 +682,16 @@ def _seed_facts(
 			raise ValueError("problem or problem_file is required")
 		problem = PDDLParser.parse_problem(problem_file)
 	facts = [
-		_call(fact.predicate, fact.args)
+		_render_runtime_atom(_call(fact.predicate, fact.args))
 		for fact in problem.init_facts
 		if fact.is_positive
 	]
-	facts.extend(obj_tp_atoms(problem, domain.types))
-	return tuple(dict.fromkeys(_render_runtime_atom(fact) for fact in facts))
+	facts.extend(
+		_numeric_assignment_fact(assignment)
+		for assignment in tuple(getattr(problem, "numeric_init", ()) or ())
+	)
+	facts.extend(_render_runtime_atom(fact) for fact in obj_tp_atoms(problem, domain.types))
+	return tuple(dict.fromkeys(facts))
 
 
 def _split_seed_facts_for_jason_runtime(
@@ -667,6 +706,11 @@ def _split_seed_facts_for_jason_runtime(
 		for schema in action_schemas
 		for pattern in tuple(schema.effects or ())
 	}
+	dynamic_predicates.update(
+		effect.function
+		for schema in action_schemas
+		for effect in tuple(getattr(schema, "numeric_effects", ()) or ())
+	)
 	initial_percepts: list[str] = []
 	static_beliefs: list[str] = []
 	for fact in tuple(seed_facts or ()):
@@ -676,6 +720,20 @@ def _split_seed_facts_for_jason_runtime(
 		else:
 			static_beliefs.append(fact)
 	return tuple(initial_percepts), tuple(static_beliefs)
+
+
+def _numeric_assignment_fact(assignment: PDDLNumericAssignment) -> str:
+	return _numeric_fluent_fact(
+		fluent=assignment.fluent,
+		value=assignment.value,
+	)
+
+
+def _numeric_fluent_fact(*, fluent: PDDLNumericFluent, value: int) -> str:
+	args = tuple(_render_runtime_term(arg) for arg in tuple(fluent.args or ()))
+	rendered_function = sanitize_identifier(fluent.function)
+	rendered_args = (*args, str(int(value)))
+	return f"{rendered_function}({','.join(rendered_args)})"
 
 
 def _runtime_fact_predicate(fact: str) -> str:
@@ -695,6 +753,43 @@ def _runtime_action_schema(action: PDDLAction) -> RuntimeActionSchema:
 		),
 		preconditions=tuple(_parse_pddl_patterns(action.preconditions)),
 		effects=tuple(_parse_pddl_patterns(action.effects)),
+		numeric_preconditions=tuple(
+			_runtime_numeric_condition(condition)
+			for condition in tuple(getattr(action, "numeric_preconditions", ()) or ())
+		),
+		numeric_effects=tuple(
+			_runtime_numeric_effect(effect)
+			for effect in tuple(getattr(action, "numeric_effects", ()) or ())
+		),
+	)
+
+
+def _runtime_numeric_condition(
+	condition: PDDLNumericCondition,
+) -> RuntimeNumericCondition:
+	return RuntimeNumericCondition(
+		comparator=str(condition.comparator),
+		left=_runtime_numeric_term(condition.left),
+		right=_runtime_numeric_term(condition.right),
+	)
+
+
+def _runtime_numeric_effect(effect: PDDLNumericEffect) -> RuntimeNumericEffect:
+	return RuntimeNumericEffect(
+		operator=str(effect.operator),
+		function=sanitize_identifier(effect.fluent.function),
+		args=tuple(_render_runtime_term(argument) for argument in tuple(effect.fluent.args)),
+		amount=_runtime_numeric_term(effect.amount),
+	)
+
+
+def _runtime_numeric_term(expression: PDDLNumericExpression) -> RuntimeNumericTerm:
+	if expression.kind == "constant":
+		return RuntimeNumericTerm(kind="constant", value=str(expression.value))
+	return RuntimeNumericTerm(
+		kind="fluent",
+		value=sanitize_identifier(expression.value),
+		args=tuple(_render_runtime_term(argument) for argument in tuple(expression.args)),
 	)
 
 
@@ -708,6 +803,12 @@ def _render_pddl_symbol_map(*, domain: Any, problem: Any) -> str:
 		symbols.extend(str(arg) for arg in tuple(getattr(fact, "args", ()) or ()))
 	for fact in tuple(getattr(problem, "goal_facts", ()) or ()):
 		symbols.extend(str(arg) for arg in tuple(getattr(fact, "args", ()) or ()))
+	for assignment in tuple(getattr(problem, "numeric_init", ()) or ()):
+		symbols.extend(str(arg) for arg in tuple(getattr(assignment.fluent, "args", ()) or ()))
+	for condition in tuple(getattr(problem, "numeric_goal_conditions", ()) or ()):
+		for expression in (condition.left, condition.right):
+			if getattr(expression, "kind", "") == "fluent":
+				symbols.extend(str(arg) for arg in tuple(getattr(expression, "args", ()) or ()))
 	symbol_map: dict[str, str] = {}
 	collisions: dict[str, set[str]] = {}
 	for symbol in symbols:
@@ -789,6 +890,8 @@ def _flatten_pddl_literals(node: Any, *, positive: bool = True) -> Iterable[Pred
 		return tuple(patterns)
 	if head == "not" and len(items) == 2:
 		return tuple(_flatten_pddl_literals(items[1], positive=not positive))
+	if head in {">", ">=", "<", "<=", "=", "increase", "decrease", "assign", "scale-up", "scale-down"}:
+		return ()
 	predicate = sanitize_identifier(str(items[0]))
 	args = tuple(_render_runtime_term(str(item)) for item in items[1:])
 	return (PredicatePattern(predicate=predicate, args=args, positive=positive),)
@@ -1374,25 +1477,74 @@ public class {class_name} extends Environment {{
 		}}
 	}}
 
+	private static final class NumericTerm {{
+		final String kind;
+		final String value;
+		final String[] args;
+
+		NumericTerm(String kind, String value, String[] args) {{
+			this.kind = kind;
+			this.value = value;
+			this.args = args;
+		}}
+	}}
+
+	private static final class NumericCondition {{
+		final String comparator;
+		final NumericTerm left;
+		final NumericTerm right;
+
+		NumericCondition(String comparator, NumericTerm left, NumericTerm right) {{
+			this.comparator = comparator;
+			this.left = left;
+			this.right = right;
+		}}
+	}}
+
+	private static final class NumericEffect {{
+		final String operator;
+		final String predicate;
+		final String[] args;
+		final NumericTerm amount;
+
+		NumericEffect(
+			String operator,
+			String predicate,
+			String[] args,
+			NumericTerm amount
+		) {{
+			this.operator = operator;
+			this.predicate = predicate;
+			this.args = args;
+			this.amount = amount;
+		}}
+	}}
+
 	private static final class ActionSchema {{
 		final String name;
 		final String sourceName;
 		final String[] parameters;
 		final Pattern[] preconditions;
 		final Pattern[] effects;
+		final NumericCondition[] numericPreconditions;
+		final NumericEffect[] numericEffects;
 
 		ActionSchema(
 			String name,
 			String sourceName,
 			String[] parameters,
 			Pattern[] preconditions,
-			Pattern[] effects
+			Pattern[] effects,
+			NumericCondition[] numericPreconditions,
+			NumericEffect[] numericEffects
 		) {{
 			this.name = name;
 			this.sourceName = sourceName;
 			this.parameters = parameters;
 			this.preconditions = preconditions;
 			this.effects = effects;
+			this.numericPreconditions = numericPreconditions;
+			this.numericEffects = numericEffects;
 		}}
 	}}
 
@@ -1486,7 +1638,10 @@ public class {class_name} extends Environment {{
 			}}
 		}}
 
-		if (!checkPreconditions(schema.preconditions, bindings)) {{
+		if (
+			!checkPreconditions(schema.preconditions, bindings)
+			|| !checkNumericPreconditions(schema.numericPreconditions, bindings)
+		) {{
 			System.out.println(
 				"runtime env action failed "
 					+ renderTraceAction(schema.sourceName, action)
@@ -1495,7 +1650,7 @@ public class {class_name} extends Environment {{
 			return false;
 		}}
 
-		EffectDelta delta = applyEffects(schema.effects, bindings);
+		EffectDelta delta = applyEffects(schema, bindings);
 		syncPerceptDelta(delta);
 		actionCount += 1;
 		recordPlanAction(schema, action);
@@ -1596,10 +1751,46 @@ public class {class_name} extends Environment {{
 		return true;
 	}}
 
-	private EffectDelta applyEffects(Pattern[] effects, Map<String, String> bindings) {{
+	private boolean checkNumericPreconditions(
+		NumericCondition[] preconditions,
+		Map<String, String> bindings
+	) {{
+		for (NumericCondition condition : preconditions) {{
+			Long left = evaluateNumericTerm(condition.left, bindings);
+			Long right = evaluateNumericTerm(condition.right, bindings);
+			if (left == null || right == null) {{
+				return false;
+			}}
+			if (!compareNumeric(left.longValue(), right.longValue(), condition.comparator)) {{
+				return false;
+			}}
+		}}
+		return true;
+	}}
+
+	private boolean compareNumeric(long left, long right, String comparator) {{
+		if (">".equals(comparator)) {{
+			return left > right;
+		}}
+		if (">=".equals(comparator)) {{
+			return left >= right;
+		}}
+		if ("<".equals(comparator)) {{
+			return left < right;
+		}}
+		if ("<=".equals(comparator)) {{
+			return left <= right;
+		}}
+		if ("=".equals(comparator)) {{
+			return left == right;
+		}}
+		return false;
+	}}
+
+	private EffectDelta applyEffects(ActionSchema schema, Map<String, String> bindings) {{
 		Set<String> added = new LinkedHashSet<>();
 		Set<String> removed = new LinkedHashSet<>();
-		for (Pattern pattern : effects) {{
+		for (Pattern pattern : schema.effects) {{
 			if (pattern.positive) {{
 				continue;
 			}}
@@ -1608,7 +1799,7 @@ public class {class_name} extends Environment {{
 				removed.add(grounded);
 			}}
 		}}
-		for (Pattern pattern : effects) {{
+		for (Pattern pattern : schema.effects) {{
 			if (!pattern.positive) {{
 				continue;
 			}}
@@ -1617,7 +1808,105 @@ public class {class_name} extends Environment {{
 				added.add(grounded);
 			}}
 		}}
+		applyNumericEffects(schema.numericEffects, bindings, added, removed);
 		return new EffectDelta(added, removed);
+	}}
+
+	private void applyNumericEffects(
+		NumericEffect[] effects,
+		Map<String, String> bindings,
+		Set<String> added,
+		Set<String> removed
+	) {{
+		for (NumericEffect effect : effects) {{
+			Long current = currentNumericValue(effect.predicate, effect.args, bindings);
+			Long amount = evaluateNumericTerm(effect.amount, bindings);
+			if (current == null || amount == null) {{
+				throw new RuntimeException(
+					"Missing numeric fluent while applying " + effect.operator
+				);
+			}}
+			long next = current.longValue();
+			if ("increase".equals(effect.operator)) {{
+				next += amount.longValue();
+			}} else if ("decrease".equals(effect.operator)) {{
+				next -= amount.longValue();
+			}} else {{
+				throw new RuntimeException("Unsupported numeric effect " + effect.operator);
+			}}
+			String oldFact = groundNumericFact(effect.predicate, effect.args, bindings, current);
+			String newFact = groundNumericFact(effect.predicate, effect.args, bindings, next);
+			if (world.remove(oldFact) && !added.remove(oldFact)) {{
+				removed.add(oldFact);
+			}}
+			if (world.add(newFact) && !removed.remove(newFact)) {{
+				added.add(newFact);
+			}}
+		}}
+	}}
+
+	private Long evaluateNumericTerm(NumericTerm term, Map<String, String> bindings) {{
+		if ("constant".equals(term.kind)) {{
+			try {{
+				return Long.valueOf(term.value);
+			}} catch (NumberFormatException error) {{
+				return null;
+			}}
+		}}
+		return currentNumericValue(term.value, term.args, bindings);
+	}}
+
+	private Long currentNumericValue(
+		String predicate,
+		String[] args,
+		Map<String, String> bindings
+	) {{
+		String prefix = numericFactPrefix(predicate, args, bindings);
+		Long value = null;
+		for (String fact : world) {{
+			if (!fact.startsWith(prefix) || !fact.endsWith(")")) {{
+				continue;
+			}}
+			String rawValue = fact.substring(prefix.length(), fact.length() - 1);
+			try {{
+				long parsed = Long.parseLong(rawValue);
+				if (value != null) {{
+					return null;
+				}}
+				value = Long.valueOf(parsed);
+			}} catch (NumberFormatException error) {{
+				return null;
+			}}
+		}}
+		return value;
+	}}
+
+	private String groundNumericFact(
+		String predicate,
+		String[] args,
+		Map<String, String> bindings,
+		long value
+	) {{
+		return numericFactPrefix(predicate, args, bindings) + value + ")";
+	}}
+
+	private String numericFactPrefix(
+		String predicate,
+		String[] args,
+		Map<String, String> bindings
+	) {{
+		StringBuilder builder = new StringBuilder(predicate);
+		builder.append("(");
+		for (int i = 0; i < args.length; i++) {{
+			if (i > 0) {{
+				builder.append(",");
+			}}
+			builder.append(renderTerm(resolveToken(args[i], bindings)));
+		}}
+		if (args.length > 0) {{
+			builder.append(",");
+		}}
+		return builder.toString();
 	}}
 
 	private String ground(String predicate, String[] args, Map<String, String> bindings) {{
@@ -1803,13 +2092,23 @@ def _render_action_registration(schema: RuntimeActionSchema) -> str:
 	parameters = ", ".join(_java_quote(parameter) for parameter in schema.parameters)
 	preconditions = ", ".join(_render_pattern_java(pattern) for pattern in schema.preconditions)
 	effects = ", ".join(_render_pattern_java(pattern) for pattern in schema.effects)
+	numeric_preconditions = ", ".join(
+		_render_numeric_condition_java(condition)
+		for condition in schema.numeric_preconditions
+	)
+	numeric_effects = ", ".join(
+		_render_numeric_effect_java(effect)
+		for effect in schema.numeric_effects
+	)
 	return (
 		"register(new ActionSchema("
 		f"{_java_quote(schema.functor)}, "
 		f"{_java_quote(schema.source_name)}, "
 		f"new String[]{{{parameters}}}, "
 		f"new Pattern[]{{{preconditions}}}, "
-		f"new Pattern[]{{{effects}}}"
+		f"new Pattern[]{{{effects}}}, "
+		f"new NumericCondition[]{{{numeric_preconditions}}}, "
+		f"new NumericEffect[]{{{numeric_effects}}}"
 		"));"
 	)
 
@@ -1820,6 +2119,39 @@ def _render_pattern_java(pattern: PredicatePattern) -> str:
 		"new Pattern("
 		f"{_java_quote(pattern.predicate)}, "
 		f"{str(pattern.positive).lower()}, "
+		f"new String[]{{{args}}}"
+		")"
+	)
+
+
+def _render_numeric_condition_java(condition: RuntimeNumericCondition) -> str:
+	return (
+		"new NumericCondition("
+		f"{_java_quote(condition.comparator)}, "
+		f"{_render_numeric_term_java(condition.left)}, "
+		f"{_render_numeric_term_java(condition.right)}"
+		")"
+	)
+
+
+def _render_numeric_effect_java(effect: RuntimeNumericEffect) -> str:
+	args = ", ".join(_java_quote(argument) for argument in effect.args)
+	return (
+		"new NumericEffect("
+		f"{_java_quote(effect.operator)}, "
+		f"{_java_quote(effect.function)}, "
+		f"new String[]{{{args}}}, "
+		f"{_render_numeric_term_java(effect.amount)}"
+		")"
+	)
+
+
+def _render_numeric_term_java(term: RuntimeNumericTerm) -> str:
+	args = ", ".join(_java_quote(argument) for argument in term.args)
+	return (
+		"new NumericTerm("
+		f"{_java_quote(term.kind)}, "
+		f"{_java_quote(term.value)}, "
 		f"new String[]{{{args}}}"
 		")"
 	)
