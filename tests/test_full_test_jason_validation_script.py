@@ -319,3 +319,12 @@ def test_prepare_domain_can_filter_test_problem_names(
 
 	assert record["success"] is True
 	assert [task.problem_file.name for task in tasks] == ["p2_01.pddl", "p2_02.pddl"]
+
+
+def test_docker_val_wrapper_builds_large_stack_validate_binary() -> None:
+	script = Path("scripts/validate_with_docker_val.sh").read_text(encoding="utf-8")
+
+	assert "VAL_PARSER_STACK_DEPTH" in script
+	assert "YYMAXDEPTH" in script
+	assert "tmp/val-large-stack" in script
+	assert ".build.lock" in script
