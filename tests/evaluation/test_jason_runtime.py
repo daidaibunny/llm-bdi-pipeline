@@ -103,7 +103,7 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert "private void flushPlanTrace()" in source
 	assert "syncInitialPercepts();" in source
 	assert "EffectDelta delta = applyEffects(schema, bindings);" in source
-	assert "syncPerceptDelta(delta);" in source
+	assert "syncPerceptDelta(delta, schema.numericEffects.length > 0);" in source
 	assert "private final Map<String, Literal> literalCache = new HashMap<>();" in source
 	assert "removePercept(cachedLiteral(atom));" in source
 	assert "addPercept(cachedLiteral(atom));" in source
@@ -247,12 +247,17 @@ def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
 	assert "Literal contains(Literal literal)" in source
 	assert "staticExactIndex" in source
 	assert "dynamicExactIndex" in source
+	assert "dynamicPredicateIndex" in source
 	assert "staticIndex" in source
+	assert "staticPredicateIndex" in source
 	assert "dynamicIndex" in source
 	assert "static_beliefs.txt" in source
 	assert "loadStaticBeliefs();" in source
 	assert "private boolean isLiveDynamicLiteral(Literal candidate)" in source
+	assert "public Iterator<Literal> getPercepts()" in source
+	assert "deindexDynamicLiteral(current);" in source
 	assert "dynamicExactIndex.get(key)" in source
+	assert "dynamicPredicateIndex.get" in source
 	assert "bucket != null && bucket.contains(candidate)" in source
 	assert "super.contains(candidate)" not in source
 	assert "return candidateIterator(staticExactMatches, dynamicExactMatches);" in source
@@ -266,7 +271,9 @@ def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
 	assert "Collections.emptyIterator()" in source
 	assert "deindexDynamicLiteral(literal)" in source
 	assert "deindexStaticLiteral(literal)" in source
+	assert "if (changed) {\n\t\t\tdeindexDynamicLiteral(literal);" not in source
 	assert "removeArgumentIndexLiteral" in source
+	assert "removeExactKeyFromBucket(bucket, exactKey(literal));" in source
 	assert "public boolean remove(Literal literal)" in source
 	assert "rebuildIndex();" not in source
 	assert "Files.readAllLines" not in source
@@ -614,3 +621,152 @@ def test_jason_runner_updates_bounded_integer_numeric_resource(
 		"at(package1,depot1)\n"
 		"capacity(truck1,1)\n"
 	)
+
+
+@pytest.mark.skipif(
+	not (shutil.which("java") and shutil.which("javac") and shutil.which("mvn")),
+	reason="real Jason validation requires java, javac, and Maven",
+)
+def test_jason_runner_supports_recursive_numeric_countdown_goal(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_file = tmp_path / "plan_library.asl"
+	output_dir = tmp_path / "jason"
+	domain_file.write_text(
+		"""
+(define (domain numeric-countdown)
+  (:requirements :strips :numeric-fluents)
+  (:predicates)
+  (:functions
+    (remaining)
+  )
+  (:action decrement
+    :parameters ()
+    :precondition (> (remaining) 0)
+    :effect (decrease (remaining) 1)
+  )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem numeric-countdown-problem)
+  (:domain numeric-countdown)
+  (:init (= (remaining) 2))
+  (:goal (= (remaining) 0))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library_file.write_text(
+		"""
+/* Generated AgentSpeak(L) Plan Library */
+/* Domain: numeric-countdown */
+
++!remaining(0) : remaining(N) & N == 0 <-
+	true.
+
++!remaining(0) : remaining(N) & N > 0 <-
+	decrement;
+	!remaining(0).
+
++!g_query : true <-
+	!remaining(0).
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	result = JasonPlanLibraryRunner(timeout_seconds=20).validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=library_file,
+		goal_name="g_query",
+		output_dir=output_dir,
+	)
+
+	assert result.success is True, result.to_dict()
+	assert result.action_path == ("decrement()", "decrement()")
+	assert Path(result.artifacts["plan_trace"]).read_text(encoding="utf-8") == (
+		"(decrement)\n"
+		"(decrement)\n"
+	)
+
+
+@pytest.mark.skipif(
+	not (shutil.which("java") and shutil.which("javac") and shutil.which("mvn")),
+	reason="real Jason validation requires java, javac, and Maven",
+)
+def test_jason_runner_preserves_numeric_belief_when_value_returns_to_initial(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_file = tmp_path / "plan_library.asl"
+	output_dir = tmp_path / "jason"
+	domain_file.write_text(
+		"""
+(define (domain numeric-roundtrip)
+  (:requirements :strips :numeric-fluents)
+  (:predicates)
+  (:functions
+    (stock)
+  )
+  (:action increase-stock
+    :parameters ()
+    :precondition (= (stock) 0)
+    :effect (increase (stock) 1)
+  )
+  (:action decrease-stock
+    :parameters ()
+    :precondition (= (stock) 1)
+    :effect (decrease (stock) 1)
+  )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem numeric-roundtrip-problem)
+  (:domain numeric-roundtrip)
+  (:init (= (stock) 0))
+  (:goal (= (stock) 0))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library_file.write_text(
+		"""
+/* Generated AgentSpeak(L) Plan Library */
+/* Domain: numeric-roundtrip */
+
++!stock_ready : stock(N) & N == 0 <-
+	true.
+
++!g_query : true <-
+	increase_stock;
+	decrease_stock;
+	!stock_ready.
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	result = JasonPlanLibraryRunner(timeout_seconds=20).validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=library_file,
+		goal_name="g_query",
+		output_dir=output_dir,
+	)
+
+	assert result.success is True, result.to_dict()
+	assert result.action_path == ("increase-stock()", "decrease-stock()")

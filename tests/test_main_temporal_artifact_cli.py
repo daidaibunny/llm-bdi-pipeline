@@ -107,7 +107,7 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	assert metadata["moose_backend_path"] == "validated_policy_lifting_and_asl_compilation"
 	assert metadata["atomic_compiler_path"] == "validated_policy_lifting_and_asl_compilation"
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
-	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
+	assert "on(Y, X) & obj_tp(X, block) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "+!clear(X) : obj_tp(X, block) & not handempty" in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "type_" not in asl

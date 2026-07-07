@@ -73,6 +73,15 @@ NUMERIC_MINECRAFT_READABLE_POLICY = """
 """
 
 
+NUMERIC_MINECRAFT_STICK_THEN_POGO_POLICY = """
+ precedence : (1, 2, 0, 0)
+       vars :
+     s_cond : (>= (count_planks_in_inventory) 2) (>= (count_sack_polyisoprene_pellets_in_inventory) 1) (>= (count_stick_in_inventory) 0) (>= (pogo_sticks_to_make) 0) (position crafting_table)
+     g_cond : (= (pogo_sticks_to_make__ug) 0)
+    actions : (craft_stick) (craft_wooden_pogo)
+"""
+
+
 NUMERIC_MINECRAFT_MOVE_TO_CONSTANT_POLICY = """
  precedence : (1, 4, 0, 0)
        vars : cell0 crafting_table
@@ -255,7 +264,7 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
 	assert len(selector_report["selected_branch_ids"]) == selector_report["plan_count"]
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
-	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
+	assert "on(Y, X) & obj_tp(X, block) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "+!clear(X) : obj_tp(X, block) & not handempty" in asl
 	assert "\t!handempty;" in asl
 	assert "\t!on(Y, X);" not in asl
@@ -332,11 +341,30 @@ def test_post_moose_reducer_compiles_numeric_resource_goal_module() -> None:
 	assert "count_planks_in_inventory(N)" not in asl
 	assert "count_planks_in_inventory" in asl
 	assert "N >= -2" not in asl
-	assert "\tcraft_wooden_pogo;" in asl
-	assert "\t!pogo_sticks_to_make(0)." in asl
+	assert "\tcraft_wooden_pogo." in asl
+	assert "\t!pogo_sticks_to_make(0)." not in asl
 	assert "pogo_sticks_to_make__ug" not in asl
 	assert library.metadata["source_seed_predicates"] == []
 	assert library.metadata["source_numeric_goal_functions"] == ["pogo_sticks_to_make"]
+	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
+
+
+def test_numeric_macro_contexts_account_for_prior_numeric_effects() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		NUMERIC_MINECRAFT_STICK_THEN_POGO_POLICY,
+		domain_file=NUMERIC_MINECRAFT_DOMAIN,
+		domain_name="numeric-minecraft",
+		source_name="numeric-minecraft-seed0",
+		policy_file=Path("numeric-minecraft-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "count_planks_in_inventory(M)" in asl
+	assert "M >= 4" in asl
+	assert "count_stick_in_inventory(K)" in asl
+	assert "K >= 0" in asl
+	assert "\tcraft_stick;" in asl
+	assert "\tcraft_wooden_pogo." in asl
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 	assert library.metadata["library_quality"]["library_profile"] == (
 		"numeric_resource_atomic_template_library"

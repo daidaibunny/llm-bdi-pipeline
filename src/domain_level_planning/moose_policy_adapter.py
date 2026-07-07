@@ -160,6 +160,19 @@ class _NumericProgressSpec:
 	net_delta: int
 
 
+@dataclass(frozen=True)
+class _NumericFluentRef:
+	function: str
+	arguments: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _NumericInitialGuard:
+	ref: _NumericFluentRef
+	comparator: str
+	threshold: int
+
+
 def parse_moose_readable_policy(text: str) -> tuple[MooseReadableRule, ...]:
 	"""Parse MOOSE `--dump-policy` output into structured lifted rules."""
 
@@ -878,11 +891,23 @@ def _validated_moose_numeric_macro_rule_plan(
 	state_contexts = _rule_state_contexts(
 		rule=rule,
 		variable_map=variable_map,
-		skip_numeric_functions=(spec.function,),
+		skip_numeric_functions=(
+			*tuple(_numeric_macro_guard_functions(rule=rule, actions_by_name=actions_by_name)),
+			spec.function,
+		),
 		reserved_numeric_variables=(*trigger_arguments, value_variable),
 	)
+	numeric_execution_contexts = _numeric_macro_execution_contexts(
+		rule=rule,
+		actions_by_name=actions_by_name,
+		variable_map=variable_map,
+		reserved_numeric_variables=(*trigger_arguments, value_variable),
+		skip_numeric_functions=(spec.function,),
+	)
+	if numeric_execution_contexts is None:
+		return None
 	contexts = _order_contexts_for_matching(
-		(*progress_contexts, *state_contexts, *binding_guards),
+		(*progress_contexts, *state_contexts, *numeric_execution_contexts, *binding_guards),
 		type_contexts,
 		initial_bound_variables=trigger_arguments,
 	)
@@ -901,13 +926,6 @@ def _validated_moose_numeric_macro_rule_plan(
 				tuple(variable_map.get(argument, argument) for argument in action.arguments),
 			)
 			for action in rule.actions
-		)
-		+ (
-			AgentSpeakBodyStep(
-				"subgoal",
-				spec.function,
-				(*trigger_arguments, spec.target),
-			),
 		),
 		binding_certificate=(
 			{
@@ -918,14 +936,14 @@ def _validated_moose_numeric_macro_rule_plan(
 				"policy_file": str(policy_file) if policy_file is not None else None,
 				"precedence": rule.precedence,
 				"numeric_function": spec.function,
-					"target_value": spec.target,
-					"net_delta": progress.net_delta,
-					"validation": "pddl_schema_symbolic_execution_and_unit_numeric_progress",
-					"schema_binding_guards": list(symbolic_guards),
-					"evidence_distinctness_guards": list(evidence_distinctness_guards),
-				},
-			),
-		)
+				"target_value": spec.target,
+				"net_delta": progress.net_delta,
+				"validation": "pddl_schema_symbolic_execution_and_unit_numeric_progress",
+				"schema_binding_guards": list(symbolic_guards),
+				"evidence_distinctness_guards": list(evidence_distinctness_guards),
+			},
+		),
+	)
 
 
 def _numeric_goal_spec_from_rule(
@@ -1041,6 +1059,274 @@ def _numeric_macro_progress_spec(
 	if net_delta == 1:
 		return _NumericProgressSpec(guard_operator="<", net_delta=net_delta)
 	return None
+
+
+def _numeric_macro_guard_functions(
+	*,
+	rule: MooseReadableRule,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> tuple[str, ...]:
+	functions: list[str] = []
+	for action_call in tuple(rule.actions or ()):
+		action = actions_by_name.get(action_call.predicate)
+		if action is None:
+			continue
+		for condition in action.numeric_preconditions:
+			for expression in (condition.left, condition.right):
+				if expression.kind == "fluent":
+					functions.append(str(expression.value).strip().lower())
+		for effect in action.numeric_effects:
+			functions.append(str(effect.fluent.function).strip().lower())
+	return tuple(dict.fromkeys(functions))
+
+
+def _numeric_macro_execution_contexts(
+	*,
+	rule: MooseReadableRule,
+	actions_by_name: Mapping[str, _ParsedAction],
+	variable_map: Mapping[str, str],
+	reserved_numeric_variables: Sequence[str],
+	skip_numeric_functions: Sequence[str] = (),
+) -> tuple[str, ...] | None:
+	guards = _numeric_macro_initial_guards(
+		rule=rule,
+		actions_by_name=actions_by_name,
+	)
+	if guards is None:
+		return None
+	skip_functions = {
+		str(function).strip().lower()
+		for function in tuple(skip_numeric_functions or ())
+	}
+	value_variables: dict[_NumericFluentRef, str] = {}
+	used_variables = {
+		variable
+		for variable in tuple(reserved_numeric_variables or ())
+		if _is_agentspeak_variable_name(variable)
+	}
+	used_variables.update(
+		value
+		for value in variable_map.values()
+		if _is_agentspeak_variable_name(value)
+	)
+	contexts: list[str] = []
+	for guard in guards:
+		if guard.ref.function in skip_functions:
+			continue
+		mapped_ref = _map_numeric_ref(guard.ref, variable_map=variable_map)
+		value_variable = value_variables.get(mapped_ref)
+		if value_variable is None:
+			value_variable = _first_available_numeric_variable(used_variables)
+			used_variables.add(value_variable)
+			value_variables[mapped_ref] = value_variable
+			contexts.append(
+				_numeric_fluent_context(
+					function=mapped_ref.function,
+					arguments=mapped_ref.arguments,
+					value_variable=value_variable,
+				),
+			)
+		contexts.append(f"{value_variable} {guard.comparator} {guard.threshold}")
+	return _deduplicate_strings(tuple(contexts))
+
+
+def _numeric_macro_initial_guards(
+	*,
+	rule: MooseReadableRule,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> tuple[_NumericInitialGuard, ...] | None:
+	offsets: dict[_NumericFluentRef, int] = {}
+	strongest_lower_bounds: dict[_NumericFluentRef, int] = {}
+	weakest_upper_bounds: dict[_NumericFluentRef, int] = {}
+	for action_call in tuple(rule.actions or ()):
+		action = actions_by_name.get(action_call.predicate)
+		if action is None or len(action.parameters) != len(action_call.arguments):
+			return None
+		binding = {
+			parameter: argument
+			for parameter, argument in zip(action.parameters, action_call.arguments)
+		}
+		for condition in action.numeric_preconditions:
+			guards = _numeric_condition_initial_guards(
+				condition=condition,
+				binding=binding,
+				offsets=offsets,
+			)
+			if guards is None:
+				return None
+			for guard in guards:
+				_add_numeric_guard_bound(
+					guard=guard,
+					strongest_lower_bounds=strongest_lower_bounds,
+					weakest_upper_bounds=weakest_upper_bounds,
+				)
+		for effect in action.numeric_effects:
+			mapped_effect = _mapped_numeric_effect_delta(effect, binding=binding)
+			if mapped_effect is None:
+				return None
+			ref, delta = mapped_effect
+			offsets[ref] = offsets.get(ref, 0) + delta
+	guards = [
+		_NumericInitialGuard(ref=ref, comparator=">=", threshold=threshold)
+		for ref, threshold in strongest_lower_bounds.items()
+	]
+	guards.extend(
+		_NumericInitialGuard(ref=ref, comparator="<=", threshold=threshold)
+		for ref, threshold in weakest_upper_bounds.items()
+	)
+	return tuple(guards)
+
+
+def _numeric_condition_initial_guards(
+	*,
+	condition: PDDLNumericCondition,
+	binding: Mapping[str, str],
+	offsets: Mapping[_NumericFluentRef, int],
+) -> tuple[_NumericInitialGuard, ...] | None:
+	left_ref, left_constant = _numeric_expression_ref_or_constant(condition.left, binding)
+	right_ref, right_constant = _numeric_expression_ref_or_constant(condition.right, binding)
+	if left_ref is not None and right_constant is not None:
+		return _initial_guards_for_fluent_constant_comparison(
+			ref=left_ref,
+			comparator=condition.comparator,
+			constant=right_constant,
+			offset=offsets.get(left_ref, 0),
+		)
+	if right_ref is not None and left_constant is not None:
+		return _initial_guards_for_fluent_constant_comparison(
+			ref=right_ref,
+			comparator=_reverse_numeric_comparator(condition.comparator),
+			constant=left_constant,
+			offset=offsets.get(right_ref, 0),
+		)
+	return None
+
+
+def _initial_guards_for_fluent_constant_comparison(
+	*,
+	ref: _NumericFluentRef,
+	comparator: str,
+	constant: int,
+	offset: int,
+) -> tuple[_NumericInitialGuard, ...] | None:
+	threshold = constant - offset
+	if comparator == ">":
+		return (
+			_NumericInitialGuard(
+				ref=ref,
+				comparator=">=",
+				threshold=threshold + 1,
+			)
+		,)
+	if comparator == ">=":
+		return (
+			_NumericInitialGuard(ref=ref, comparator=">=", threshold=threshold),
+		)
+	if comparator == "<":
+		return (
+			_NumericInitialGuard(
+				ref=ref,
+				comparator="<=",
+				threshold=threshold - 1,
+			)
+		,)
+	if comparator == "<=":
+		return (
+			_NumericInitialGuard(ref=ref, comparator="<=", threshold=threshold),
+		)
+	if comparator == "=":
+		return (
+			_NumericInitialGuard(ref=ref, comparator=">=", threshold=threshold),
+			_NumericInitialGuard(ref=ref, comparator="<=", threshold=threshold),
+		)
+	return None
+
+
+def _reverse_numeric_comparator(comparator: str) -> str:
+	return {
+		">": "<",
+		">=": "<=",
+		"<": ">",
+		"<=": ">=",
+		"=": "=",
+	}.get(comparator, comparator)
+
+
+def _numeric_expression_ref_or_constant(
+	expression: PDDLNumericExpression,
+	binding: Mapping[str, str],
+) -> tuple[_NumericFluentRef | None, int | None]:
+	if expression.kind == "constant":
+		if not re.fullmatch(r"[+-]?\d+", str(expression.value)):
+			return None, None
+		return None, int(str(expression.value))
+	if expression.kind != "fluent":
+		return None, None
+	return _NumericFluentRef(
+		function=str(expression.value).strip().lower(),
+		arguments=tuple(
+			binding.get(argument, argument)
+			for argument in tuple(expression.args or ())
+		),
+	), None
+
+
+def _add_numeric_guard_bound(
+	*,
+	guard: _NumericInitialGuard,
+	strongest_lower_bounds: dict[_NumericFluentRef, int],
+	weakest_upper_bounds: dict[_NumericFluentRef, int],
+) -> None:
+	if guard.comparator == ">=":
+		current = strongest_lower_bounds.get(guard.ref)
+		if current is None or guard.threshold > current:
+			strongest_lower_bounds[guard.ref] = guard.threshold
+		return
+	if guard.comparator == "<=":
+		current = weakest_upper_bounds.get(guard.ref)
+		if current is None or guard.threshold < current:
+			weakest_upper_bounds[guard.ref] = guard.threshold
+
+
+def _mapped_numeric_effect_delta(
+	effect: object,
+	*,
+	binding: Mapping[str, str],
+) -> tuple[_NumericFluentRef, int] | None:
+	fluent = getattr(effect, "fluent", None)
+	amount = getattr(effect, "amount", None)
+	operator = str(getattr(effect, "operator", "") or "").strip().lower()
+	if fluent is None or amount is None:
+		return None
+	if getattr(amount, "kind", None) != "constant" or not re.fullmatch(
+		r"[+-]?\d+",
+		str(getattr(amount, "value", "")),
+	):
+		return None
+	delta = int(str(amount.value))
+	if operator == "decrease":
+		delta = -delta
+	elif operator != "increase":
+		return None
+	ref = _NumericFluentRef(
+		function=str(fluent.function).strip().lower(),
+		arguments=tuple(
+			binding.get(argument, argument)
+			for argument in tuple(fluent.args or ())
+		),
+	)
+	return ref, delta
+
+
+def _map_numeric_ref(
+	ref: _NumericFluentRef,
+	*,
+	variable_map: Mapping[str, str],
+) -> _NumericFluentRef:
+	return _NumericFluentRef(
+		function=ref.function,
+		arguments=tuple(variable_map.get(argument, argument) for argument in ref.arguments),
+	)
 
 
 def _numeric_condition_mentions_any_function(

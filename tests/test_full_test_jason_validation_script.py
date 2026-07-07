@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from scripts.run_full_test_jason_validation import append_linear_single_body_full_test_wrappers
+from scripts.run_full_test_jason_validation import apply_validation_summaries
 from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
 from scripts.run_full_test_jason_validation import full_test_wrapper_lines
 from scripts.run_full_test_jason_validation import JasonTask
@@ -11,6 +12,7 @@ from scripts.run_full_test_jason_validation import prepare_domain_for_full_test
 from scripts.run_full_test_jason_validation import query_entry_proposition
 from scripts.run_full_test_jason_validation import resolve_batch_root
 from scripts.run_full_test_jason_validation import render_fact_atom
+from scripts.run_full_test_jason_validation import reported_action_count_fields
 from scripts.run_full_test_jason_validation import run_jason_tasks
 from scripts.run_full_test_jason_validation import safe_goal_fragment
 from scripts.run_full_test_jason_validation import safe_path_fragment
@@ -258,6 +260,193 @@ def test_full_test_wrapper_keeps_mixed_destination_goals_linear(tmp_path: Path) 
 	assert "+!g_ferry_test_1 : ferry_test_1 <-" in text
 	assert "\t!at(car1, loc2);" in text
 	assert "\t!at(car2, loc3)." in text
+
+
+def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None:
+	problem_file = tmp_path / "p01.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain numeric-minecraft)
+		 (:objects cell0)
+		 (:init (= (pogo-sticks-to-make) 4))
+		 (:goal (= (pogo-sticks-to-make) 0))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	lines, plan_count = full_test_wrapper_lines(
+		domain="numeric-minecraft",
+		index=1,
+		problem_file=problem_file,
+	)
+	text = "\n".join(lines)
+
+	assert plan_count == 1
+	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in text
+	assert text.count("!pogo_sticks_to_make(0)") == 4
+	assert "\t!pogo_sticks_to_make(0);" in text
+	assert "\t!pogo_sticks_to_make(0)." in text
+
+
+def test_full_test_wrapper_accepts_mixed_predicate_and_numeric_equality_goal(
+	tmp_path: Path,
+) -> None:
+	problem_file = tmp_path / "p01.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain numeric-transport)
+		 (:objects truck1 package1)
+		 (:init (= (capacity truck1) 2))
+		 (:goal (and (in package1 truck1) (= (capacity truck1) 1)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	lines, plan_count = full_test_wrapper_lines(
+		domain="numeric-transport",
+		index=1,
+		problem_file=problem_file,
+	)
+	text = "\n".join(lines)
+
+	assert plan_count == 1
+	assert "\t!in(package1, truck1);" in text
+	assert "\t!capacity(truck1, 1)." in text
+
+
+def test_full_test_wrapper_rejects_unsupported_numeric_goal_comparator(
+	tmp_path: Path,
+) -> None:
+	problem_file = tmp_path / "p01.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain numeric-transport)
+		 (:objects truck1)
+		 (:init (= (capacity truck1) 2))
+		 (:goal (>= (capacity truck1) 1))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	try:
+		full_test_wrapper_lines(
+			domain="numeric-transport",
+			index=1,
+			problem_file=problem_file,
+		)
+	except ValueError as error:
+		assert "unsupported numeric goal comparator" in str(error)
+	else:
+		raise AssertionError("Expected unsupported numeric comparator to be rejected.")
+
+
+def test_apply_validation_summaries_marks_domain_failed_when_any_test_fails() -> None:
+	summary = {
+		"domains": {
+			"ferry": {"success": True},
+			"barman": {"success": True},
+		},
+	}
+
+	apply_validation_summaries(
+		summary=summary,
+		domains=("ferry", "barman"),
+		validation_records=(
+			{
+				"domain": "ferry",
+				"success": True,
+				"plan_verifier_success": True,
+				"plan_verifier_attempted": True,
+			},
+			{
+				"domain": "barman",
+				"success": False,
+				"plan_verifier_success": None,
+				"plan_verifier_attempted": False,
+			},
+		),
+	)
+
+	assert summary["domains"]["ferry"]["success"] is True
+	assert summary["domains"]["ferry"]["validation_success"] is True
+	assert summary["domains"]["barman"]["success"] is False
+	assert summary["domains"]["barman"]["validation_success"] is False
+	assert summary["domains"]["barman"]["jason_validation"]["failure_count"] == 1
+
+
+def test_reported_action_count_uses_plan_trace_when_stdout_is_truncated(
+	tmp_path: Path,
+) -> None:
+	plan_trace = tmp_path / "jason_plan.plan"
+	plan_trace.write_text("(a)\n(b)\n(c)\n(d)\n", encoding="utf-8")
+
+	fields = reported_action_count_fields(
+		payload={
+			"action_count": 3,
+			"timed_out": False,
+			"exit_code": 0,
+			"output_summary": {"has_execute_success": True},
+		},
+		plan_trace_path=plan_trace,
+	)
+
+	assert fields["action_count"] == 4
+	assert fields["observed_action_prefix_count"] == 3
+	assert fields["plan_trace_action_count"] == 4
+	assert fields["action_count_complete"] is True
+	assert fields["action_count_source"] == "plan_trace"
+
+
+def test_reported_action_count_ignores_plan_trace_for_failed_execution(
+	tmp_path: Path,
+) -> None:
+	plan_trace = tmp_path / "jason_plan.plan"
+	plan_trace.write_text("(a)\n(b)\n(c)\n(d)\n", encoding="utf-8")
+
+	fields = reported_action_count_fields(
+		payload={
+			"action_count": 3,
+			"timed_out": False,
+			"exit_code": 0,
+			"output_summary": {"has_execute_success": False},
+		},
+		plan_trace_path=plan_trace,
+	)
+
+	assert fields["action_count"] is None
+	assert fields["observed_action_prefix_count"] == 3
+	assert fields["plan_trace_action_count"] == 4
+	assert fields["action_count_complete"] is False
+	assert fields["action_count_source"] == "unknown_incomplete_execution"
+
+
+def test_reported_action_count_marks_timeout_without_trace_as_unknown(
+	tmp_path: Path,
+) -> None:
+	plan_trace = tmp_path / "jason_plan.plan"
+	plan_trace.write_text("", encoding="utf-8")
+
+	fields = reported_action_count_fields(
+		payload={
+			"action_count": 3,
+			"timed_out": True,
+			"exit_code": None,
+			"output_summary": {"has_execute_success": False},
+		},
+		plan_trace_path=plan_trace,
+	)
+
+	assert fields["action_count"] is None
+	assert fields["observed_action_prefix_count"] == 3
+	assert fields["plan_trace_action_count"] == 0
+	assert fields["action_count_complete"] is False
+	assert fields["action_count_source"] == "unknown_timeout"
 
 
 def test_prepare_domain_can_filter_test_problem_names(

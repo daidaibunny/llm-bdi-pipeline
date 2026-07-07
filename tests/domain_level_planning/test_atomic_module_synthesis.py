@@ -157,14 +157,14 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not holding(X)" in asl
 	assert "\t!holding(X);" in asl
 	assert "pick_up(X);\n\tunstack" not in asl
-	assert "clear(X) & clear(Y) & obj_tp(X, block) & obj_tp(Y, block)" in asl
-	assert "handempty & on(X, Z) & obj_tp(Z, block)" in asl
+	assert "clear(X) & clear(Y) & ontable(X) & handempty & obj_tp(X, block) & obj_tp(Y, block)" in asl
+	assert "clear(X) & clear(Y) & handempty & on(X, Z) & obj_tp(X, block) & obj_tp(Y, block) & obj_tp(Z, block)" in asl
 	assert "\tunstack(X, Z);" in asl
 	assert "\tstack(X, Y)." in asl
-	assert "obj_tp(X, block) & handempty & on(Y, X) & clear(Y) & obj_tp(Y, block)" in asl
+	assert "handempty & on(Y, X) & clear(Y) & obj_tp(X, block) & obj_tp(Y, block)" in asl
 	assert "\tunstack(Y, X);" in asl
 	assert "\tput_down(Y)." in asl
-	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
+	assert "on(Y, X) & obj_tp(X, block) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "pick_up(X)." in asl
 	assert "unstack(X, Y)." in asl
@@ -338,7 +338,7 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 	assert "obj_tp(Y, floor)" in asl
 	assert len({plan.plan_name for plan in library.plans}) == len(library.plans)
 	assert (
-		"+!served(X) : obj_tp(X, passenger) & destin(X, Y) "
+		"+!served(X) : destin(X, Y) & obj_tp(X, passenger) "
 		"& obj_tp(Y, floor) & not lift_at(Y)"
 		in asl
 	)
@@ -384,7 +384,7 @@ def test_miconic_static_above_does_not_bind_unbounded_navigation_context() -> No
 	asl = render_plan_library_asl(library)
 
 	assert "+!lift_at(X) : lift_at(X)" in asl
-	assert "+!lift_at(X) : obj_tp(X, floor) & above(Y, X) & lift_at(Y) & obj_tp(Y, floor)" in asl
-	assert "+!lift_at(X) : obj_tp(X, floor) & above(X, Y) & lift_at(Y) & obj_tp(Y, floor)" in asl
+	assert "+!lift_at(X) : above(Y, X) & lift_at(Y) & obj_tp(X, floor) & obj_tp(Y, floor)" in asl
+	assert "+!lift_at(X) : above(X, Y) & lift_at(Y) & obj_tp(X, floor) & obj_tp(Y, floor)" in asl
 	assert "above(Y, X) & not lift_at(Y)" not in asl
 	assert "above(X, Y) & not lift_at(Y)" not in asl

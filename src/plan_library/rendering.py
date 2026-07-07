@@ -36,7 +36,10 @@ def _render_plan(plan: AgentSpeakPlan) -> List[str]:
 		plan.trigger.symbol,
 		tuple(_raw_argument(argument) for argument in plan.trigger.arguments),
 	)
-	context = " & ".join(_render_context_item(literal) for literal in plan.context) or "true"
+	context = " & ".join(
+		_render_context_item(literal)
+		for literal in _ordered_context_items(plan.context)
+	) or "true"
 	body_items = [_render_body_step(step) for step in plan.body]
 	if not body_items:
 		body_items = ["true"]
@@ -49,6 +52,52 @@ def _render_plan(plan: AgentSpeakPlan) -> List[str]:
 		suffix = ";" if index < len(body_items) - 1 else "."
 		lines.append(f"\t{body_item}{suffix}")
 	return lines
+
+
+def _ordered_context_items(context: tuple[str, ...]) -> tuple[str, ...]:
+	"""Order context guards so dynamic binders run before static type filters."""
+
+	return tuple(
+		item
+		for _, item in sorted(
+			enumerate(context),
+			key=lambda indexed: (_context_item_order_bucket(indexed[1]), indexed[0]),
+		)
+	)
+
+
+def _context_item_order_bucket(item: str) -> int:
+	text = str(item or "").strip()
+	if _is_positive_simple_context_atom(text) and not _is_obj_tp_context_atom(text):
+		return 0
+	if _is_obj_tp_context_atom(text):
+		return 1
+	return 2
+
+
+def _is_positive_simple_context_atom(text: str) -> bool:
+	if not text or text.lower().startswith("not "):
+		return False
+	if any(operator in text for operator in ("&", "|", "\\==", "!=", ">=", "<=", "==", ">", "<")):
+		return False
+	return _simple_atom_symbol(text) is not None
+
+
+def _is_obj_tp_context_atom(text: str) -> bool:
+	return _simple_atom_symbol(text) == "obj_tp"
+
+
+def _simple_atom_symbol(text: str) -> str | None:
+	if not text or text.startswith("="):
+		return None
+	if "(" not in text:
+		return sanitize_identifier(text)
+	if not text.endswith(")"):
+		return None
+	symbol, raw_args = text.split("(", 1)
+	if not symbol.strip() or "(" in raw_args[:-1] or ")" in raw_args[:-1]:
+		return None
+	return sanitize_identifier(symbol)
 
 
 def _render_body_step(step: AgentSpeakBodyStep) -> str:

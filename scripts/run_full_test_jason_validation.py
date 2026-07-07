@@ -42,6 +42,10 @@ from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
 from utils.pddl_parser import PDDLFact  # noqa: E402
+from utils.pddl_parser import PDDLNumericAssignment  # noqa: E402
+from utils.pddl_parser import PDDLNumericCondition  # noqa: E402
+from utils.pddl_parser import PDDLNumericExpression  # noqa: E402
+from utils.pddl_parser import PDDLNumericFluent  # noqa: E402
 from utils.pddl_parser import PDDLParser  # noqa: E402
 
 
@@ -295,23 +299,15 @@ def main() -> int:
 		summary_file=summary_file,
 	)
 	summary["validations"] = validation_records
-	for domain in domains:
-		domain_items = [item for item in validation_records if item["domain"] == domain]
-		if not domain_items:
-			continue
-		summary["domains"][domain]["jason_validation"] = {
-			"test_count": len(domain_items),
-			"success_count": sum(1 for item in domain_items if item.get("success")),
-			"failure_count": sum(1 for item in domain_items if not item.get("success")),
-			"plan_verifier_success_count": sum(
-				1 for item in domain_items if item.get("plan_verifier_success") is True
-			),
-			"plan_verifier_attempted_count": sum(
-				1 for item in domain_items if item.get("plan_verifier_attempted") is True
-			),
-		}
+	apply_validation_summaries(
+		summary=summary,
+		domains=domains,
+		validation_records=validation_records,
+	)
 	summary["completed_at"] = datetime.now().isoformat(timespec="seconds")
-	summary["success"] = all(item.get("success") for item in validation_records) and all(
+	summary["success"] = bool(validation_records) and all(
+		item.get("success") for item in validation_records
+	) and all(
 		bool(record.get("success")) for record in summary["domains"].values()
 	)
 	write_json(summary_file, summary)
@@ -614,9 +610,10 @@ def full_test_wrapper_lines(
 			f"{problem_file} contains negative goal literals; full-test Jason "
 			"validation only appends positive atomic progress goals.",
 		)
-	if not goal_facts:
-		raise ValueError(f"{problem_file} contains no positive goal literals.")
-	if compact_completion_wrappers:
+	numeric_goal_conditions = tuple(problem.numeric_goal_conditions or ())
+	if not goal_facts and not numeric_goal_conditions:
+		raise ValueError(f"{problem_file} contains no supported PDDL goal steps.")
+	if compact_completion_wrappers and not numeric_goal_conditions:
 		compact = compact_recursive_completion_wrapper_lines(
 			domain=domain,
 			index=index,
@@ -790,11 +787,23 @@ def linear_single_body_wrapper_lines(
 			f"{problem_file} contains negative goal literals; full-test Jason "
 			"validation only appends positive atomic progress goals.",
 		)
-	if not goal_facts:
-		raise ValueError(f"{problem_file} contains no positive goal literals.")
+	numeric_goal_conditions = tuple(problem.numeric_goal_conditions or ())
+	if not goal_facts and not numeric_goal_conditions:
+		raise ValueError(f"{problem_file} contains no supported PDDL goal steps.")
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
 	entry_proposition = query_entry_proposition(goal_name)
-	atoms = tuple(render_fact_atom(fact) for fact in goal_facts)
+	atoms = (
+		*(render_fact_atom(fact) for fact in goal_facts),
+		*(
+			atom
+			for condition in numeric_goal_conditions
+			for atom in render_numeric_goal_atoms(
+				condition,
+				problem=problem,
+				problem_file=problem_file,
+			)
+		),
+	)
 	lines: list[str] = [
 		f"/* full_test_problem={problem_file.name} */",
 		f"{entry_proposition}.",
@@ -848,15 +857,131 @@ def render_fact_atom(fact: PDDLFact) -> str:
 	return f"{predicate}({', '.join(arguments)})"
 
 
-def _render_call(predicate: str, arguments: Sequence[str]) -> str:
+def render_numeric_goal_atom(condition: PDDLNumericCondition, *, problem_file: Path) -> str:
+	"""Render a bounded numeric equality goal as an AgentSpeak atomic subgoal."""
+
+	return render_numeric_goal_atoms(
+		condition,
+		problem=None,
+		problem_file=problem_file,
+	)[0]
+
+
+def render_numeric_goal_atoms(
+	condition: PDDLNumericCondition,
+	*,
+	problem: Any | None,
+	problem_file: Path,
+) -> tuple[str, ...]:
+	"""Render bounded numeric equality as one or more atomic progress calls."""
+
+	if condition.comparator != "=":
+		raise ValueError(
+			f"{problem_file} contains unsupported numeric goal comparator "
+			f"{condition.comparator!r}; only equality is in the bounded resource fragment.",
+		)
+	fluent, target = _numeric_goal_fluent_and_target(condition.left, condition.right)
+	if fluent is None or target is None:
+		fluent, target = _numeric_goal_fluent_and_target(condition.right, condition.left)
+	if fluent is None or target is None:
+		raise ValueError(
+			f"{problem_file} contains unsupported numeric goal "
+			f"{condition.to_signature()!r}; expected one numeric fluent and one "
+			"integer target constant.",
+		)
+	arguments = tuple(str(argument) for argument in tuple(fluent.args or ()))
+	atom = _render_call(
+		fluent.function,
+		(*arguments, str(target)),
+		raw_argument_indexes={len(arguments)},
+	)
+	repeat_count = _numeric_goal_repeat_count(
+		fluent=fluent,
+		target=target,
+		problem=problem,
+	)
+	return tuple(atom for _ in range(repeat_count))
+
+
+def _numeric_goal_fluent_and_target(
+	left: PDDLNumericExpression,
+	right: PDDLNumericExpression,
+) -> tuple[PDDLNumericFluent | None, int | None]:
+	if left.kind != "fluent" or right.kind != "constant":
+		return None, None
+	if not re.fullmatch(r"[+-]?\d+", str(right.value)):
+		return None, None
+	return (
+		PDDLNumericFluent(
+			function=str(left.value),
+			args=[str(argument) for argument in tuple(left.args or ())],
+		),
+		int(str(right.value)),
+	)
+
+
+def _numeric_goal_repeat_count(
+	*,
+	fluent: PDDLNumericFluent,
+	target: int,
+	problem: Any | None,
+) -> int:
+	if problem is None:
+		return 1
+	initial = _numeric_initial_value(
+		fluent=fluent,
+		assignments=tuple(getattr(problem, "numeric_init", ()) or ()),
+	)
+	if initial is None:
+		return 1
+	return max(1, abs(initial - target))
+
+
+def _numeric_initial_value(
+	*,
+	fluent: PDDLNumericFluent,
+	assignments: Sequence[PDDLNumericAssignment],
+) -> int | None:
+	expected = (
+		str(fluent.function).strip().lower(),
+		tuple(str(argument).strip().lower() for argument in tuple(fluent.args or ())),
+	)
+	for assignment in assignments:
+		candidate = (
+			str(assignment.fluent.function).strip().lower(),
+			tuple(
+				str(argument).strip().lower()
+				for argument in tuple(assignment.fluent.args or ())
+			),
+		)
+		if candidate == expected:
+			return int(assignment.value)
+	return None
+
+
+def _render_call(
+	predicate: str,
+	arguments: Sequence[str],
+	*,
+	raw_argument_indexes: set[int] | None = None,
+) -> str:
 	rendered_predicate = sanitize_identifier(predicate)
+	raw_indexes = raw_argument_indexes or set()
 	rendered_arguments = tuple(
-		argument if _is_wrapper_variable(argument) else sanitize_identifier(argument)
-		for argument in arguments
+		_render_call_argument(index=index, argument=argument, raw_indexes=raw_indexes)
+		for index, argument in enumerate(arguments)
 	)
 	if not rendered_arguments:
 		return rendered_predicate
 	return f"{rendered_predicate}({', '.join(rendered_arguments)})"
+
+
+def _render_call_argument(*, index: int, argument: str, raw_indexes: set[int]) -> str:
+	if index in raw_indexes:
+		return str(argument)
+	if _is_wrapper_variable(argument):
+		return argument
+	return sanitize_identifier(argument)
 
 
 def _is_wrapper_variable(value: str) -> bool:
@@ -1012,6 +1137,10 @@ def validate_one_task(
 		payload = result.to_dict()
 		plan_verifier = dict(payload.get("plan_verifier") or {})
 		artifacts = dict(payload.get("artifacts") or {})
+		action_count_fields = reported_action_count_fields(
+			payload=payload,
+			plan_trace_path=Path(str(artifacts.get("plan_trace") or "")),
+		)
 		record = {
 			"domain": task.domain,
 			"test_index": task.index,
@@ -1021,9 +1150,7 @@ def validate_one_task(
 			"status": payload.get("status"),
 			"timed_out": bool(payload.get("timed_out")),
 			"exit_code": payload.get("exit_code"),
-			"action_count": int(
-				payload.get("action_count") or len(tuple(payload.get("action_path") or ())),
-			),
+			**action_count_fields,
 			"plan_verifier_success": plan_verifier.get("success"),
 			"plan_verifier_attempted": plan_verifier.get("attempted"),
 			"plan_verifier_available": plan_verifier.get("available"),
@@ -1051,7 +1178,11 @@ def validate_one_task(
 			"status": "exception",
 			"timed_out": False,
 			"exit_code": None,
-			"action_count": 0,
+			"action_count": None,
+			"observed_action_prefix_count": 0,
+			"plan_trace_action_count": 0,
+			"action_count_complete": False,
+			"action_count_source": "exception",
 			"output_dir": str(task.output_dir),
 			"error": str(error),
 			"duration_seconds": time.perf_counter() - start,
@@ -1061,6 +1192,87 @@ def validate_one_task(
 		encoding="utf-8",
 	)
 	return record
+
+
+def apply_validation_summaries(
+	*,
+	summary: dict[str, Any],
+	domains: Sequence[str],
+	validation_records: Sequence[Mapping[str, Any]],
+) -> None:
+	"""Update domain records with validation outcomes, not just prepare-stage success."""
+
+	for domain in domains:
+		domain_items = [item for item in validation_records if item.get("domain") == domain]
+		record = summary.get("domains", {}).get(domain)
+		if record is None or not domain_items:
+			continue
+		success_count = sum(1 for item in domain_items if item.get("success"))
+		failure_count = sum(1 for item in domain_items if not item.get("success"))
+		record["jason_validation"] = {
+			"test_count": len(domain_items),
+			"success_count": success_count,
+			"failure_count": failure_count,
+			"plan_verifier_success_count": sum(
+				1 for item in domain_items if item.get("plan_verifier_success") is True
+			),
+			"plan_verifier_attempted_count": sum(
+				1 for item in domain_items if item.get("plan_verifier_attempted") is True
+			),
+		}
+		record["validation_success"] = failure_count == 0 and success_count == len(domain_items)
+		record["success"] = bool(record.get("success")) and bool(record["validation_success"])
+
+
+def reported_action_count_fields(
+	*,
+	payload: Mapping[str, Any],
+	plan_trace_path: Path,
+) -> dict[str, Any]:
+	"""Return action-count fields without pretending prefix-only stdout is complete."""
+
+	observed_prefix_count = int(
+		payload.get("action_count") or len(tuple(payload.get("action_path") or ())),
+	)
+	plan_trace_count = _count_plan_trace_actions(plan_trace_path)
+	has_execute_success = bool(
+		dict(payload.get("output_summary") or {}).get("has_execute_success"),
+	)
+	if plan_trace_count > 0 and has_execute_success:
+		return {
+			"action_count": plan_trace_count,
+			"observed_action_prefix_count": observed_prefix_count,
+			"plan_trace_action_count": plan_trace_count,
+			"action_count_complete": True,
+			"action_count_source": "plan_trace",
+		}
+	if bool(payload.get("timed_out")) or not has_execute_success:
+		return {
+			"action_count": None,
+			"observed_action_prefix_count": observed_prefix_count,
+			"plan_trace_action_count": plan_trace_count,
+			"action_count_complete": False,
+			"action_count_source": "unknown_timeout"
+			if bool(payload.get("timed_out"))
+			else "unknown_incomplete_execution",
+		}
+	return {
+		"action_count": observed_prefix_count,
+		"observed_action_prefix_count": observed_prefix_count,
+		"plan_trace_action_count": plan_trace_count,
+		"action_count_complete": True,
+		"action_count_source": "runtime_summary",
+	}
+
+
+def _count_plan_trace_actions(path: Path) -> int:
+	try:
+		if not path or not path.exists():
+			return 0
+		with path.open("r", encoding="utf-8") as handle:
+			return sum(1 for line in handle if line.strip() and not line.lstrip().startswith(";"))
+	except OSError:
+		return 0
 
 
 def prepare_shared_jason_environments(

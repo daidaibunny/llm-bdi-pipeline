@@ -67,6 +67,32 @@ def test_render_plan_library_preserves_numeric_comparison_contexts() -> None:
 	assert "\tpick_up(V, P)." in asl
 
 
+def test_render_plan_library_orders_dynamic_binders_before_type_guards() -> None:
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="typed_dynamic_binder",
+				trigger=AgentSpeakTrigger("achievement_goal", "done"),
+				context=(
+					"obj_tp(X, cell)",
+					"position(crafting_table)",
+					"tree_cell(X)",
+					"N > 0",
+				),
+				body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
+			),
+		),
+	)
+
+	asl = render_plan_library_asl(plan_library)
+
+	assert (
+		"+!done : position(crafting_table) & tree_cell(X) & obj_tp(X, cell) & N > 0 <-"
+		in asl
+	)
+
+
 def test_render_plan_library_preserves_signed_numeric_terms() -> None:
 	plan_library = PlanLibrary(
 		domain_name="numeric",
