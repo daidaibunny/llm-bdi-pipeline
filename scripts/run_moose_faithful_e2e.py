@@ -47,7 +47,9 @@ DEFAULT_DOMAINS = (
 	"numeric-miconic",
 	"numeric-minecraft",
 	"numeric-transport",
-	"blocks",
+	"blocksworld-clear",
+	"blocksworld-on",
+	"blocksworld-tower",
 	"depots",
 )
 

@@ -70,7 +70,17 @@ MOOSE is a source of evidence and benchmark provenance, not the taxonomy itself.
 | --- | --- | --- |
 | ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | Classical PDDL domains in the easy-to-solve, hard-to-optimise benchmark family used by MOOSE following the Helmert-style complexity view. These domains are suitable for testing whether singleton-goal regression evidence can be lifted into reusable atomic AgentSpeak(L) modules. |
 | Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | PDDL domains whose state, action applicability, or goals include numeric functions, numeric conditions, or numeric effects. They are included for benchmark coverage and for the bounded integer numeric-resource compiler fragment. |
-| Feature-definable serialized-width domains | `blocks`, `depots` | Relational domains whose compact reusable behavior is normally expressed through lifted features and serialized subgoal structure: a feature-defined policy or sketch selects progress-making subgoals whose induced subproblems have small width. This group tests whether the compiler can add justified internal atomic modules from PDDL schemas rather than merely replay fixed singleton macros. |
+| Feature-definable serialized-width domains | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` | Relational planning-family entries whose compact reusable behavior is normally expressed through lifted features and serialized subgoal structure: a feature-defined policy or sketch selects progress-making subgoals whose induced subproblems have small width. This group tests whether the compiler can add justified internal atomic modules from PDDL schemas rather than merely replay fixed singleton macros. |
+
+Here a benchmark entry may be a planning-family entry rather than a unique PDDL
+dynamics file. `blocksworld-clear` and `blocksworld-on` share Blocksworld-style
+dynamics but differ in the lifted singleton goal family: the former is the
+`QClear` family with goals such as `clear(X)`, and the latter is the `QOn`
+family with goals such as `on(X,Y)`. `blocksworld-tower` is the classical typed
+Blocksworld arrangement family, where multiple support literals interact and
+must be serialized. This naming follows prior general-policy and planning-width
+work on `QClear`, `QOn`, and full Blocksworld; it is not an implementation
+route or a duplicate-counting trick.
 
 The formal local corpus lives under `src/domains/<domain>/` with
 `domain.pddl`, `train/*.pddl`, `test/*.pddl`, and `source.json`.
@@ -80,7 +90,8 @@ The current split policy is:
 | Domains | Split policy |
 | --- | --- |
 | All twelve MOOSE direct train/test domains | MOOSE official companion split: source `training/` as train and source `testing/` as test. |
-| `blocks`, `depots` | Project feature-definable serialized-width split: `floor(1/4 * instance_count)` train and remaining instances as test. |
+| `blocksworld-clear`, `blocksworld-on` | KR 2025 learner-policies no-constants split: source `learning/benchmarks/tractable/<family>/training/easy` as train and source `testing/benchmarks/<family>` as test. |
+| `blocksworld-tower`, `depots` | Project feature-definable serialized-width split: `floor(1/4 * instance_count)` train and remaining instances as test. |
 
 ## Domain Evidence Notes
 
@@ -101,7 +112,9 @@ They are not compiler-outcome assignments.
 | `numeric-miconic` | Numeric fluent domains | Numeric variant of miconic service goals, included to test numeric evidence import. |
 | `numeric-minecraft` | Numeric fluent domains | Numeric resource-production goals such as reducing `pogo_sticks_to_make` to zero exercise non-predicate goal semantics. |
 | `numeric-transport` | Numeric fluent domains | Numeric variant of transport package-location goals, included to test numeric evidence import. |
-| `blocks` | Feature-definable serialized-width domains | Atomic goals such as `on(X,Y)` and `clear(X)` exercise schema-derived internal modules such as `holding(X)`, `handempty`, and `ontable(X)`. |
+| `blocksworld-clear` | Feature-definable serialized-width domains | KR 2025 `QClear` family. Atomic `clear(X)` goals exercise recursive obstruction removal and internal modules such as `holding(X)`, `handempty`, and `ontable(X)`. |
+| `blocksworld-on` | Feature-definable serialized-width domains | KR 2025 `QOn` family. Atomic `on(X,Y)` goals exercise support preparation through `clear(X)`, `clear(Y)`, `holding(X)`, `handempty`, and `ontable(X)`. |
+| `blocksworld-tower` | Feature-definable serialized-width domains | Classical typed Blocksworld arrangement family. Multi-literal tower goals stress serialized support-dependent construction over the same atomic modules. |
 | `depots` | Feature-definable serialized-width domains | Crate-location and crate-support literals exercise internal modules over `clear`, `lifting`, `available`, `at`, and `in`. |
 
 ## Unsupported Boundary

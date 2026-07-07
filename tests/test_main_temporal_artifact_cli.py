@@ -78,9 +78,9 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 			"--policy-file",
 			str(policy_file),
 			"--domain-file",
-			str(PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"),
+			str(PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"),
 			"--domain-name",
-			"blocks",
+			"blocksworld-tower",
 			"--validated-policy-lifting",
 			"--library-root",
 			str(library_root),
@@ -98,7 +98,7 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 
 	assert result["success"] is True
 	assert result["plan_count"] >= 17
-	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "blocks"
+	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "blocksworld-tower"
 	assert metadata["artifact_kind"] == "validated_policy_lifting_atomic_library"
 	assert metadata["canonical_domain_library"] is True
 	assert metadata["minimal_modules"] is True

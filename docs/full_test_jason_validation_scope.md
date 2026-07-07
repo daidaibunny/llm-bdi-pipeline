@@ -494,7 +494,9 @@ small width.
 | `numeric-miconic` | Numeric fluent domains | Numeric miconic variant included for experimental numeric evidence import. |
 | `numeric-minecraft` | Numeric fluent domains | Numeric resource-production goals such as reducing `pogo_sticks_to_make` to zero exercise non-predicate goal semantics. |
 | `numeric-transport` | Numeric fluent domains | Numeric transport variant included for experimental numeric evidence import. |
-| `blocks` | Feature-definable serialized-width domains | Atomic goals such as `on(X,Y)` exercise internal modules such as `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)`. |
+| `blocksworld-clear` | Feature-definable serialized-width domains | KR 2025 `QClear` family. Atomic `clear(X)` goals exercise recursive obstruction removal and internal modules such as `holding(X)`, `handempty`, and `ontable(X)`. |
+| `blocksworld-on` | Feature-definable serialized-width domains | KR 2025 `QOn` family. Atomic `on(X,Y)` goals exercise support preparation through `clear(X)`, `clear(Y)`, `holding(X)`, `handempty`, and `ontable(X)`. |
+| `blocksworld-tower` | Feature-definable serialized-width domains | Classical typed Blocksworld arrangement family. Multi-literal tower goals stress serialized support-dependent construction over the same atomic modules. |
 | `depots` | Feature-definable serialized-width domains | Crate-location and crate-support literals exercise internal modules over `clear`, `lifting`, `available`, `at`, and `in`. |
 
 `8puzzle-1tile` is no longer a selected benchmark domain. It remains a boundary

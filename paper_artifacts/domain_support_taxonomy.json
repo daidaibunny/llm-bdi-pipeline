@@ -1,23 +1,115 @@
 {
   "backend_selection_principle": "Backend choice is made from the atomic goal templates observed in the training split or requested by a validated temporal transition. MOOSE is the first positive singleton predicate backend candidate because its method learns goal-regression rules from singleton goal conditions; other backends remain candidates only when their artifacts pass parser, binding, ASL compilation, and held-out validation gates.",
+  "benchmark_property_groups": [
+    {
+      "backend_route": "not_by_group; backend is selected from atomic templates",
+      "current_evidence": "All eight domains are present in the official MOOSE companion dataset with non-empty training/ and testing/ splits.",
+      "domain_examples": [
+        "barman",
+        "ferry",
+        "gripper",
+        "logistics",
+        "miconic",
+        "rovers",
+        "satellite",
+        "transport"
+      ],
+      "formal_membership": "Classical PDDL domains in the Easy-to-Solve, Hard-to-Optimise family used by MOOSE for synthesis-cost evaluation. Goal atoms are ordinary predicate literals, and MOOSE analyzes their interaction through TGI, SGI, and OGI rather than by per-domain task stories.",
+      "id": "esho_classical_domains",
+      "name": "ESHO classical domains",
+      "paper_role": "Tests predicate-level atomic-library compilation on the MOOSE classical benchmark family.",
+      "prior_property_basis": [
+        "esho_classical_family",
+        "singleton_goal_regression_suitability",
+        "multi_object_template_composition"
+      ],
+      "support_level": "main_claim_for_predicate_asl",
+      "target_paper_domains": [
+        "barman",
+        "ferry",
+        "gripper",
+        "logistics",
+        "miconic",
+        "rovers",
+        "satellite",
+        "transport"
+      ]
+    },
+    {
+      "backend_route": "not_by_group; backend is selected from atomic templates",
+      "current_evidence": "All four domains are present in the official MOOSE companion dataset with non-empty training/ and testing/ splits.",
+      "domain_examples": [
+        "numeric-ferry",
+        "numeric-miconic",
+        "numeric-minecraft",
+        "numeric-transport"
+      ],
+      "formal_membership": "PDDL domains whose state, action applicability, or goals include numeric functions, numeric conditions, or numeric effects.",
+      "id": "numeric_fluent_domains",
+      "name": "Numeric fluent domains",
+      "paper_role": "Keeps MOOSE numeric train/test coverage visible while marking ASL numeric compilation as experimental.",
+      "prior_property_basis": [
+        "numeric_fluent_semantics"
+      ],
+      "support_level": "benchmark_coverage_experimental_asl",
+      "target_paper_domains": [
+        "numeric-ferry",
+        "numeric-miconic",
+        "numeric-minecraft",
+        "numeric-transport"
+      ]
+    },
+    {
+      "backend_route": "not_by_group; backend is selected from atomic templates",
+      "current_evidence": "Blocksworld Clear and Blocksworld On follow the KR 2025 no-constants QClear/QOn families; Blocksworld Tower uses the classical IPC typed Blocks arrangement family; Depots uses the D2L Depot PDDL source. All four expose relational fluents whose compact generalized behavior is normally described with lifted features, serialized subgoal structure, sketches, or reusable policy modules.",
+      "domain_examples": [
+        "blocksworld-clear",
+        "blocksworld-on",
+        "blocksworld-tower",
+        "depots"
+      ],
+      "formal_membership": "Relational planning-family entries where reusable atomic behavior is naturally described by feature-defined policies or sketches that serialize goals into bounded-width subproblems, and where the compiler must justify internal producible-fluent modules from PDDL action schemas.",
+      "id": "feature_definable_serialized_width_domains",
+      "name": "Feature-definable serialized-width domains",
+      "paper_role": "Tests whether validated policy lifting can add compact internal atomic modules without domain-name hard-coding.",
+      "prior_property_basis": [
+        "feature_definable_serialized_width_structure",
+        "safe_asl_compilability"
+      ],
+      "support_level": "main_claim_for_predicate_asl",
+      "target_paper_domains": [
+        "blocksworld-clear",
+        "blocksworld-on",
+        "blocksworld-tower",
+        "depots"
+      ]
+    }
+  ],
   "benchmark_source": {
-    "coverage": "all MOOSE direct train/test benchmark domains plus project-added feature-definable serialized-width benchmarks",
+    "coverage": "all MOOSE direct train/test benchmark domains plus four feature-definable serialized-width planning-family entries",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
     {
       "commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
-      "coverage": "IPC benchmark directories used for Blocks",
+      "coverage": "IPC benchmark directories used for standard classical PDDL domains",
       "id": "pddl_instances",
       "name": "potassco/pddl-instances",
       "url": "https://github.com/potassco/pddl-instances"
     },
     {
       "commit": "e00970516154e9042b783a4613a1ed7286c9beee",
-      "coverage": "MOOSE companion benchmark families with official non-empty training/ and testing/ splits",
+      "coverage": "MOOSE companion benchmark families with official train/test splits",
       "id": "moose_dataset",
       "name": "DillonZChen/moose-dataset",
       "url": "https://github.com/DillonZChen/moose-dataset"
+    },
+    {
+      "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+      "coverage": "KR 2025 feature-policy benchmark families",
+      "id": "kr2025_policies",
+      "name": "bonetblai/learner-policies-from-examples",
+      "url": "https://github.com/bonetblai/learner-policies-from-examples"
     },
     {
       "commit": "0620e169c894d79b3c84f435dba1462996f7c270",
@@ -32,25 +124,27 @@
     "broad_universal_gp_claim": false,
     "current_nonstandard_mechanism_domain_count": 0,
     "current_nonstandard_mechanism_domains": [],
-    "current_paper_positioning": "The benchmark infrastructure targets 14 achievement-goal planning domains. The groups describe evaluation properties from prior GP and planning-width work; they do not route domains to backends.",
-    "current_strict_main_standard_domain_count": 14,
+    "current_paper_positioning": "The benchmark infrastructure targets 16 achievement-goal planning families. The groups describe evaluation properties from prior generalized-planning and planning-width work; they do not route domains to backends.",
+    "current_strict_main_standard_domain_count": 16,
     "current_strict_main_standard_domains": [
-      "barman",
       "ferry",
       "gripper",
       "logistics",
       "miconic",
+      "transport",
+      "barman",
       "rovers",
       "satellite",
-      "transport",
       "numeric-ferry",
       "numeric-miconic",
       "numeric-minecraft",
       "numeric-transport",
-      "blocks",
+      "blocksworld-clear",
+      "blocksworld-on",
+      "blocksworld-tower",
       "depots"
     ],
-    "prior_broad_gp_domain_count_range": "Prior GP and sketch papers commonly evaluate around 6-13 standard or paper-defined planning families. This corpus uses every MOOSE direct train/test family plus two feature-definable serialized-width stress domains, because the contribution is an evidence-to-ASL compiler rather than a new universal GP learner.",
+    "prior_broad_gp_domain_count_range": "Prior generalized-planning and sketch papers commonly evaluate around 6-13 standard or paper-defined planning families. This corpus uses every MOOSE direct train/test family plus four feature-definable serialized-width entries, because the contribution is an evidence-to-AgentSpeak(L) compiler rather than a new universal generalized planner.",
     "revision_needed_for_broad_gp_claim": false
   },
   "evaluation_policy": {
@@ -144,7 +238,7 @@
         "Bonet2024PolicyReuse"
       ],
       "name": "Feature-definable serialized-width structure",
-      "paper_use": "Explains why Blocks and Depots stress schema-derived internal modules and recursive progress without naming the group after a construction task."
+      "paper_use": "Explains why Blocksworld Clear, Blocksworld On, Blocksworld Tower, and Depots stress schema-derived internal modules and recursive progress without naming the group after one construction task."
     },
     {
       "definition": "A backend artifact can enter the final library only when its symbols bind to declared PDDL predicates, primitive actions, predicate subgoals, or validated temporal wrapper calls without synthetic achievement names.",
@@ -154,87 +248,6 @@
       ],
       "name": "Safe lifted ASL compilability",
       "paper_use": "Defines the compiler gate between external GP artifacts and the maintained AgentSpeak(L) library."
-    }
-  ],
-  "benchmark_property_groups": [
-    {
-      "backend_route": "not_by_group; backend is selected from atomic templates",
-      "current_evidence": "All eight domains are present in the official MOOSE companion dataset with non-empty training/ and testing/ splits.",
-      "domain_examples": [
-        "barman",
-        "ferry",
-        "gripper",
-        "logistics",
-        "miconic",
-        "rovers",
-        "satellite",
-        "transport"
-      ],
-      "formal_membership": "Classical PDDL domains in the Easy-to-Solve, Hard-to-Optimise family used by MOOSE for synthesis-cost evaluation. Goal atoms are ordinary predicate literals, and MOOSE analyzes their interaction through TGI, SGI, and OGI rather than by per-domain task stories.",
-      "id": "esho_classical_domains",
-      "name": "ESHO classical domains",
-      "paper_role": "Tests predicate-level atomic-library compilation on the MOOSE classical benchmark family.",
-      "prior_property_basis": [
-        "esho_classical_family",
-        "singleton_goal_regression_suitability",
-        "multi_object_template_composition"
-      ],
-      "support_level": "main_claim_for_predicate_asl",
-      "target_paper_domains": [
-        "barman",
-        "ferry",
-        "gripper",
-        "logistics",
-        "miconic",
-        "rovers",
-        "satellite",
-        "transport"
-      ]
-    },
-    {
-      "backend_route": "not_by_group; backend is selected from atomic templates",
-      "current_evidence": "All four domains are present in the official MOOSE companion dataset with non-empty training/ and testing/ splits.",
-      "domain_examples": [
-        "numeric-ferry",
-        "numeric-miconic",
-        "numeric-minecraft",
-        "numeric-transport"
-      ],
-      "formal_membership": "PDDL domains whose state, action applicability, or goals include numeric functions, numeric conditions, or numeric effects.",
-      "id": "numeric_fluent_domains",
-      "name": "Numeric fluent domains",
-      "paper_role": "Keeps MOOSE numeric train/test coverage visible while marking ASL numeric compilation as experimental.",
-      "prior_property_basis": [
-        "numeric_fluent_semantics"
-      ],
-      "support_level": "benchmark_coverage_experimental_asl",
-      "target_paper_domains": [
-        "numeric-ferry",
-        "numeric-miconic",
-        "numeric-minecraft",
-        "numeric-transport"
-      ]
-    },
-    {
-      "backend_route": "not_by_group; backend is selected from atomic templates",
-      "current_evidence": "Blocks and Depots are selected because their PDDL schemas expose relational fluents whose compact generalized behavior is normally described with lifted features, serialized subgoal structure, sketches, or reusable policy modules.",
-      "domain_examples": [
-        "blocks",
-        "depots"
-      ],
-      "formal_membership": "Relational domains where reusable atomic behavior is naturally described by feature-defined policies or sketches that serialize goals into bounded-width subproblems, and where the compiler must justify internal producible-fluent modules from PDDL action schemas.",
-      "id": "feature_definable_serialized_width_domains",
-      "name": "Feature-definable serialized-width domains",
-      "paper_role": "Tests whether validated policy lifting can add compact internal atomic modules without domain-name hard-coding.",
-      "prior_property_basis": [
-        "feature_definable_serialized_width_structure",
-        "safe_asl_compilability"
-      ],
-      "support_level": "main_claim_for_predicate_asl",
-      "target_paper_domains": [
-        "blocks",
-        "depots"
-      ]
     }
   ],
   "goal_specification_layers": [
@@ -306,7 +319,9 @@
     }
   },
   "paper_core_domains": [
-    "blocks",
+    "blocksworld-clear",
+    "blocksworld-on",
+    "blocksworld-tower",
     "depots"
   ],
   "prior_benchmark_practice": [
@@ -463,20 +478,22 @@
   "selected_benchmark_property_group_count": 3,
   "selected_goal_specification_layer_count": 2,
   "selected_standard_domain_targets": [
-    "barman",
     "ferry",
     "gripper",
     "logistics",
     "miconic",
+    "transport",
+    "barman",
     "rovers",
     "satellite",
-    "transport",
     "numeric-ferry",
     "numeric-miconic",
     "numeric-minecraft",
     "numeric-transport",
-    "blocks",
+    "blocksworld-clear",
+    "blocksworld-on",
+    "blocksworld-tower",
     "depots"
   ],
-  "selection_principle": "The corpus is selected to cover literature-level evaluation properties rather than to route whole domains to different GP algorithms: ESHO classical domains, numeric fluent domains, and feature-definable serialized-width domains. MOOSE official domains use the companion training/ and testing/ split; Blocks and Depots use floor(1/4 * instance_count) train and the remaining instances as test."
+  "selection_principle": "The corpus is selected to cover literature-level evaluation properties rather than to route whole domains to different generalized-planning algorithms: ESHO classical domains, numeric fluent domains, and feature-definable serialized-width domains. MOOSE official domains use the companion training/ and testing/ split; blocksworld-clear and blocksworld-on use the KR 2025 learner-policies official no-constants train/test folders; blocksworld-tower and depots use floor(1/4 * instance_count) train and the remaining instances as test."
 }

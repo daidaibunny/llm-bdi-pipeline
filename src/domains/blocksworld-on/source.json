@@ -1,0 +1,21 @@
+{
+  "instance_count": 180,
+  "ipc_variant": "blocks_4_on_no_constants",
+  "ipc_year": "KR 2025",
+  "source": "bonetblai/learner-policies-from-examples",
+  "source_commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+  "source_domain_file": "learning/benchmarks/tractable/blocks_4_on_no_constants/domain.pddl",
+  "source_id": "kr2025_policies",
+  "source_path": "learning/benchmarks/tractable/blocks_4_on_no_constants",
+  "source_problem_globs": [
+    "training/easy/*.pddl"
+  ],
+  "source_url": "https://github.com/bonetblai/learner-policies-from-examples",
+  "split_policy": "QOn Blocksworld family: official no-constants train/test split from the KR 2025 learner-policies benchmark",
+  "test_count": 30,
+  "test_source_path": "testing/benchmarks/blocks_4_on_no_constants",
+  "test_source_problem_globs": [
+    "*.pddl"
+  ],
+  "train_count": 150
+}

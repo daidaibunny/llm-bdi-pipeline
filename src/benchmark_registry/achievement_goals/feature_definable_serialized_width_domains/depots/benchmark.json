@@ -1,5 +1,6 @@
 {
   "baseline_groups": {},
+  "benchmark_property_group_id": "feature_definable_serialized_width_domains",
   "display_name": "Depots",
   "domain_file": "src/domains/depots/domain.pddl",
   "domain_id": "depots",
@@ -47,7 +48,6 @@
       "train_problem_set": "train"
     }
   ],
-  "benchmark_property_group_id": "feature_definable_serialized_width_domains",
   "goal_specification_layer": "achievement_goal_layer",
   "problem_sets": {
     "all": {
@@ -100,6 +100,8 @@
     ],
     "split_policy": "floor(1/4 * instance_count) train for feature-definable serialized-width policy audit, remaining test",
     "test_count": 17,
+    "test_source_path": null,
+    "test_source_problem_globs": [],
     "train_count": 5,
     "url": "https://github.com/rleap-project/d2l"
   },

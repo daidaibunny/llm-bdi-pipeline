@@ -44,6 +44,8 @@ class DomainSpec(NamedTuple):
 	split_strategy: str = "ratio"
 	train_ratio: float = 2 / 3
 	split_policy: str = "floor(2/3 * instance_count) train, remaining test"
+	test_source_path: str | None = None
+	test_problem_globs: tuple[str, ...] = ()
 
 
 SOURCES: dict[str, SourceSpec] = {
@@ -211,19 +213,33 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 			"numeric-transport",
 			moose_split_policy,
 		),
+		_kr2025_blocksworld_singleton_spec(
+			"blocksworld-clear",
+			"Blocksworld Clear",
+			"blocks_4_clear_no_constants",
+			"QClear Blocksworld family: official no-constants train/test split "
+			"from the KR 2025 learner-policies benchmark",
+		),
+		_kr2025_blocksworld_singleton_spec(
+			"blocksworld-on",
+			"Blocksworld On",
+			"blocks_4_on_no_constants",
+			"QOn Blocksworld family: official no-constants train/test split "
+			"from the KR 2025 learner-policies benchmark",
+		),
 		DomainSpec(
-			"blocks",
+			"blocksworld-tower",
 			"pddl_instances",
 			"ipc-2000/domains/blocks-strips-typed",
 			"feature_definable_serialized_width_domains",
-			"Blocks",
+			"Blocksworld Tower",
 			"2000",
 			"blocks-strips-typed",
 			("instances/*.pddl",),
 			train_ratio=STRUCTURAL_TRAIN_RATIO,
 			split_policy=(
 				"floor(1/4 * instance_count) train for feature-definable "
-				"serialized-width policy audit, remaining test"
+				"serialized-width tower-construction policy audit, remaining test"
 			),
 		),
 		DomainSpec(
@@ -241,6 +257,28 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 				"serialized-width policy audit, remaining test"
 			),
 		),
+	)
+
+
+def _kr2025_blocksworld_singleton_spec(
+	domain_id: str,
+	display_name: str,
+	family_name: str,
+	split_policy: str,
+) -> DomainSpec:
+	return DomainSpec(
+		domain_id,
+		"kr2025_policies",
+		f"learning/benchmarks/tractable/{family_name}",
+		"feature_definable_serialized_width_domains",
+		display_name,
+		"KR 2025",
+		family_name,
+		("training/easy/*.pddl",),
+		split_strategy="paired_source_directories",
+		split_policy=split_policy,
+		test_source_path=f"testing/benchmarks/{family_name}",
+		test_problem_globs=("*.pddl",),
 	)
 
 
@@ -289,8 +327,10 @@ def _materialize_domain(spec: DomainSpec) -> None:
 		"source_url": source.url,
 		"source_commit": source.commit,
 		"source_path": spec.source_path,
+		"test_source_path": spec.test_source_path,
 		"source_domain_file": f"{spec.source_path}/{spec.source_domain_file}",
 		"source_problem_globs": list(spec.problem_globs),
+		"test_source_problem_globs": list(spec.test_problem_globs),
 		"ipc_year": spec.ipc_year,
 		"ipc_variant": spec.ipc_variant,
 		"instance_count": len(problem_paths),
@@ -316,6 +356,14 @@ def _split_problem_paths(
 				f"{spec.domain_id} expects source training/ and testing/ directories",
 			)
 		return train_paths, test_paths
+	if spec.split_strategy == "paired_source_directories":
+		train_paths = tuple(path for path in problem_paths if path.startswith("training/"))
+		test_paths = tuple(path for path in problem_paths if path.startswith("testing/"))
+		if not train_paths or not test_paths:
+			raise RuntimeError(
+				f"{spec.domain_id} expects paired source training/ and testing/ data",
+			)
+		return train_paths, test_paths
 	if spec.split_strategy == "ratio":
 		split = math.floor(len(problem_paths) * spec.train_ratio)
 		return problem_paths[:split], problem_paths[split:]
@@ -323,15 +371,50 @@ def _split_problem_paths(
 
 
 def _source_problem_paths(spec: DomainSpec) -> tuple[str, ...]:
+	if spec.split_strategy == "paired_source_directories":
+		if spec.test_source_path is None:
+			raise RuntimeError(f"{spec.domain_id} is missing test_source_path")
+		train_paths = _source_problem_paths_under(
+			spec.source_id,
+			spec.source_path,
+			spec.problem_globs,
+			spec.source_domain_file,
+		)
+		test_paths = _source_problem_paths_under(
+			spec.source_id,
+			spec.test_source_path,
+			spec.test_problem_globs,
+			spec.source_domain_file,
+		)
+		return tuple(
+			str(Path("training") / path)
+			if not str(path).startswith("training/")
+			else str(path)
+			for path in train_paths
+		) + tuple(str(Path("testing") / path) for path in test_paths)
+	return _source_problem_paths_under(
+		spec.source_id,
+		spec.source_path,
+		spec.problem_globs,
+		spec.source_domain_file,
+	)
+
+
+def _source_problem_paths_under(
+	source_id: str,
+	source_path: str,
+	problem_globs: tuple[str, ...],
+	source_domain_file: str,
+) -> tuple[str, ...]:
 	output = subprocess.check_output(
 		(
 			"git",
 			"-C",
-			str(SOURCES[spec.source_id].local_root),
+			str(SOURCES[source_id].local_root),
 			"ls-tree",
 			"-r",
 			"--name-only",
-			f"HEAD:{spec.source_path}",
+			f"HEAD:{source_path}",
 		),
 		text=True,
 	)
@@ -339,9 +422,9 @@ def _source_problem_paths(spec: DomainSpec) -> tuple[str, ...]:
 	source_paths = tuple(
 		line
 		for line in output.splitlines()
-		if line.endswith(".pddl") and Path(line).name != spec.source_domain_file
+		if line.endswith(".pddl") and Path(line).name != source_domain_file
 	)
-	for glob_text in spec.problem_globs:
+	for glob_text in problem_globs:
 		paths.extend(
 			Path(path)
 			for path in source_paths
@@ -363,7 +446,12 @@ def _copy_source_file(spec: DomainSpec, relative_path: str, target_path: Path) -
 
 def _read_source_file(spec: DomainSpec, relative_path: str) -> bytes:
 	source = SOURCES[spec.source_id]
-	full_path = f"{spec.source_path}/{relative_path}"
+	source_path = spec.source_path
+	source_relative_path = relative_path
+	if relative_path.startswith("testing/") and spec.test_source_path is not None:
+		source_path = spec.test_source_path
+		source_relative_path = relative_path.removeprefix("testing/")
+	full_path = f"{source_path}/{source_relative_path}"
 	cache_path = PDDL_INSTANCE_CACHE_ROOT / source.commit / full_path
 	if source.source_id == "pddl_instances" and cache_path.exists():
 		return cache_path.read_bytes()
@@ -484,8 +572,10 @@ def _write_registry(specs: tuple[DomainSpec, ...]) -> None:
 				"url": SOURCES[spec.source_id].url,
 				"commit": SOURCES[spec.source_id].commit,
 				"source_path": spec.source_path,
+				"test_source_path": spec.test_source_path,
 				"source_domain_file": f"{spec.source_path}/{spec.source_domain_file}",
 				"source_problem_globs": list(spec.problem_globs),
+				"test_source_problem_globs": list(spec.test_problem_globs),
 				"ipc_year": spec.ipc_year,
 				"ipc_variant": spec.ipc_variant,
 				"instance_count": len(problem_paths),

@@ -38,7 +38,7 @@ def test_paper_experiment_scripts_use_registry_instead_of_embedded_domain_rows()
 	"""Final-data scripts should not encode benchmark-specific PDDL rows."""
 
 	forbidden_tokens = (
-		"/".join(("src", "domains", "blocksworld")),
+		"/".join(("src", "domains", "blocksworld", "")),
 		"/".join(("src", "domains", "lab" + "workflow")),
 		"/".join(("src", "domains", "marsrover")),
 		"blocks_4_on_2",
@@ -68,7 +68,7 @@ def test_obsolete_generated_benchmark_implementation_names_are_absent() -> None:
 		"blocksworld_qbw",
 		"run_blocks_train_experiment",
 		"learner_sketches_blocksworld_blocks_4_on_2",
-		"/".join(("src", "domains", "blocksworld")),
+		"/".join(("src", "domains", "blocksworld", "")),
 		"/".join(("src", "domains", "marsrover")),
 		"fixed train/test snapshot",
 	)
@@ -123,7 +123,7 @@ def test_benchmark_registry_uses_literature_property_groups() -> None:
 		json.loads(path.read_text(encoding="utf-8"))
 		for path in registry_root.glob("*/*/benchmark.json")
 	]
-	assert len(records) == 14
+	assert len(records) == 16
 	assert {record["benchmark_property_group_id"] for record in records} == expected_groups
 	for record in records:
 		assert "goal_property_group_id" not in record

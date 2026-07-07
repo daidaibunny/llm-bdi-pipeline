@@ -11,7 +11,7 @@ from plan_library.models import AgentSpeakBodyStep
 from utils.pddl_parser import PDDLParser
 
 
-BLOCKS_DOMAIN = "src/domains/blocks/domain.pddl"
+BLOCKS_DOMAIN = "src/domains/blocksworld-tower/domain.pddl"
 
 
 def test_dfa_guard_conjunction_becomes_goal_facts_and_subgoal_calls() -> None:

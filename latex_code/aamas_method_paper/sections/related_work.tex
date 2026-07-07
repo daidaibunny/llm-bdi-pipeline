@@ -18,6 +18,10 @@ examples line are important fallback backends for structural domains, especially
 when MOOSE-style singleton regression is not the right artifact. In this paper,
 such policies are useful only after their features can be bound to declared
 \pddl{} predicates, primitive actions, or predicate achievement goals.
+The Blocksworld part of the benchmark follows this literature-level family
+view: \texttt{QClear} isolates singleton \texttt{clear(X)} goals,
+\texttt{QOn} isolates singleton \texttt{on(X,Y)} goals, and the full
+Blocksworld arrangement family exposes support-dependent goal serialization.
 
 Policy sketches express domain-general subgoal structure as qualitative feature
 rules \cite{Drexler2024SubgoalSketches}, and learner-sketches learns such rules

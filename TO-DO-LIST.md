@@ -1,212 +1,86 @@
 # To Do List
 
-This tracker reflects the 2026-07-03 pivot. Keep it focused on the current
-atomic-template library plus temporal-goal append architecture.
+This tracker reflects the current atomic-template library plus temporal-goal
+append architecture. Completed historical milestones have been removed.
 
 ## Current Target
 
-We do not build a universal generalized planner and do not route domains by
-prior paper taxonomy classes. The project now has two layers:
+The repository does not implement a universal generalized planner and does not
+route whole domains by prior paper taxonomy classes. The current path is:
 
 ```text
 PDDL domain + train split
--> atomic predicate/literal template backend
--> domain-level lifted AgentSpeak(L) atomic library
+-> external generalized-planning evidence
+-> atomic minimal literal module synthesis
+-> one maintained domain-level AgentSpeak(L) library
 
 validated lifted LTLf JSON
 -> LTLf-to-DFA
--> singleton-literal DFA validator
--> append +!g_query temporal wrapper to the same domain library
+-> singleton-literal DFA validation
+-> append +!g_query wrapper to the same domain library
 ```
 
-There is one maintained ASL library per domain. New user queries append new
-top-level goals to that domain library.
+Each selected domain has one maintained library under
+`artifacts/domain_libraries/<domain>/`.
 
 ## Selected Benchmark Scope
 
-The domain groups are for evaluation coverage only, not for backend routing.
+The groups are evaluation coverage, not backend-routing classes. A benchmark
+entry may be a planning-family entry rather than a unique PDDL dynamics file.
 
-| Group | Domains | Current rationale |
+| Group | Domains | Split policy |
 | --- | --- | --- |
-| ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | Literature-level easy-to-solve, hard-to-optimise classical benchmark class used by MOOSE. |
-| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | Official MOOSE numeric direct train/test domains; included for experimental ASL support and MOOSE-faithful coverage. |
-| Feature-definable serialized-width domains | `blocks`, `depots` | Tests feature-defined subgoal serialization, bounded-width style decomposition, and ordered internal atomic modules. |
+| ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | MOOSE official `training/` as train and `testing/` as test. |
+| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | MOOSE official `training/` as train and `testing/` as test; ASL compilation remains experimental. |
+| Feature-definable serialized-width domains | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` | `blocksworld-clear/on` use KR 2025 learner-policies no-constants train/test folders; `blocksworld-tower` and `depots` use `floor(1/4 * instance_count)` train and the remainder as test. |
 
-The `*-axioms` and `*-disjpres` companion directories are testing-only in the
-official dataset and are not default train/test benchmarks.
+`8puzzle-1tile` is outside the selected benchmark scope because the current
+compiler does not yet provide a graph-search or permutation-progress
+certificate.
 
-## Active Requirements
+## Active Work
 
-| ID | Requirement | Status | Evidence / Next Step |
-| --- | --- | --- | --- |
-| A1 | Replace class-based backend routing and old in-repo generalized-planning synthesis on the main path with atomic template backend selection. | Implemented | `src/domain_level_planning/atomic_backend_selector.py` selects from training goal templates, not benchmark class ids. Old schema synthesis, conjunctive-goal ordering/refinement, experiment matrix runner, Fast Downward transition planning, and language-model Input helpers have been removed from public code. Registry rows use goal-property groups only for evaluation coverage. |
-| A2 | Use MOOSE as the first positive singleton-goal backend candidate. | Implemented for artifact path | Selector chooses MOOSE first when present. `src/domain_level_planning/moose_policy_adapter.py` parses official `policy --dump-policy` readable artifacts into `LiftedPolicyProgram` and lifted ASL atomic plans. `scripts/gp_backend_audit.py moose-atomic-command` prints a guarded train+dump command, and `moose-readable-compile-asl` materializes `plan_library.json`, `plan_library.asl`, and metadata from the readable artifact. Next: run selected-domain MOOSE smoke jobs only under an explicit runtime budget. |
-| A3 | Do not claim negative literal template support without evidence. | Implemented at selector and progress-boundary | Negative training goal items return `negative_literal_template_not_supported`. Negative DFA waiting guards are allowed as automaton structure; negative progress literals still fail unless a backend later supplies a validated negative atomic template. |
-| A4 | Add singleton-literal DFA validation for the Input handoff. | Implemented with restored request diagnostics | `validate_singleton_literal_dfa` rejects conjunctive/disjunctive guards, undeclared predicates, wrong arities, malformed transition records, and optionally unsupported negative literals. `src/domain_level_planning/dfa_adapter.py` restores the last-generation guard-to-achievement-request diagnostics for Input/validator feedback. Temporal appending allows negative waiting guards but rejects negative progress literals. Next: wire logger events around LTLf-to-DFA execution failures. |
-| A5 | Append query-specific temporal goals to a domain ASL library. | Implemented as context-driven prefix wrapper | `append_temporal_goal_to_library` appends `+!g_query` plans for positive progress literals. The wrapper follows the historical context-driven style: already satisfied DFA prefix literals identify the current progress context, the next positive transition literal is called as an atomic PDDL subgoal, and the wrapper recurses to the same query goal. Accepting plans terminate when the full accepted prefix context holds. Append metadata records DFA progress request diagnostics, while the ASL body still calls atomic PDDL predicate subgoals directly rather than `goal_*` descriptors. |
-| A6 | Restore/refactor historical logger into the new pipeline. | Implemented first pass | `src/execution_logging/execution_logger.py` restores structured JSON, human log, and payload externalization without HTN/HDDL imports. Tests: `tests/evaluation/test_execution_logger.py`. |
-| A7 | Restore/refactor historical LTLf JSON schema and prompts only as Input interface references. | Implemented at handoff boundary | `src/domain_level_planning/lifted_ltlf_goal_schema.py` parses lifted LTLf JSON with atoms and bindings. Historical prompt generation stays outside this repository because the Input component is owned separately. |
-| A8 | Remove stale 12-family routing language and old self-synthesis implementation from current path, tests, registry, and paper text. | Implemented | `scripts/materialize_achievement_benchmarks.py`, `src/benchmark_registry/achievement_goals`, `paper_artifacts/domain_support_taxonomy.json`, focused tests, and backend consumption roles now use official MOOSE direct train/test domains plus project-added feature-definable serialized-width benchmarks. Historical schema-derived synthesis, sketch-to-`+!g` compilation, planner-trace transition modules, and old Layer C execution paths are no longer retained in `src`. The only restored DFA-era code is the guard adapter/controller diagnostic interface, which maps DFA guards to atomic achievement requests and does not generate low-level plans. |
-| A9 | Materialize selected domains with deterministic splits. | Updated to MOOSE direct train/test scope | `uv run python scripts/materialize_achievement_benchmarks.py` rebuilds `src/domains` with 12 official MOOSE direct train/test domains plus `blocks` and `depots`. MOOSE domains use source `training/` and `testing/`; `blocks` and `depots` use `floor(1/4 * N)` train and remaining test for feature-definable serialized-width policy audits. |
-| A10 | Preserve current PDDL-only and no synthetic achievement-name constraints. | Implemented for generated current artifacts | New atomic and temporal append code emits no `achieve_*`, `transition_*`, or `dfa_state` names. It appends `g_query` names by design as query-specific top-level temporal wrappers. |
-| A11 | Maintain exactly one appendable domain ASL library per domain. | Implemented and regression-tested | The main CLI now resolves every maintained library to `artifacts/domain_libraries/<domain>/plan_library.{json,asl}` by default. `--library-root` can relocate the root for tests, but the domain subdirectory is canonical. `--output-root` is deprecated and must equal the canonical domain directory if provided. Append rejects non-canonical `--plan-library-file` paths, preserves `temporal_goal_append_history`, and rejects duplicate temporal goal names with `duplicate_temporal_goal`. Regression tests cover sequential append into the same file plus rejection of non-canonical output/input paths. |
-| A12 | Replace raw MOOSE macro dump with compact recursive atomic minimal literal modules when claiming final domain-level ASL quality. | Implemented with Clingo branch selection and reserved `obj_tp/2` type guards | `src/domain_level_planning/atomic_module_synthesis.py` uses MOOSE singleton predicates as seed-goal evidence, then synthesizes compact recursive modules from PDDL action schemas for every predicate that appears in a positive action effect. Static predicates are detected schema-theoretically by absence from add/delete effects and remain context-only. The synthesizer performs schema-level STRIPS feasibility checks, typed action-argument compatibility, typed functional fluent conflict pruning, and connected static-context range restriction before candidate generation. Final branch selection is Clingo/ASP-backed obligation coverage with lexicographic minimization over selected branch count, context literal count, and body step count. PDDL typing is compiled into the reserved context-only metadata predicate `obj_tp(Object, Type)`, so final ASL still rejects domain-specific `type_*` fluents while preserving subtype-safe Logistics-style branches for package, truck, and airplane roles. |
-| A13 | Keep the temporal append path compatible with the new compact atomic library. | Implemented for previous scope; full-scope rerun pending | The formal benchmark scope now includes all MOOSE direct train/test domains plus `blocks` and `depots`, so the next timestamped MOOSE-to-ASL batch must regenerate the maintained libraries for the current scope. |
-| A14 | Restore Jason support as a real PDDL environment validation gate for current ASL libraries. | Implemented with indexed/static-belief runtime | `src/evaluation/jason_runtime/runner.py` restores the historical Jason marker protocol and real Java `Environment` execution, refactored to the current PDDL-only architecture. It resolves Jason from Maven Central, materializes `agentspeak_generated.asl`, `jason_runner.mas2j`, `JasonPipelineEnvironment.java`, and `JasonPipelineIndexedBeliefBase.java`, checks PDDL action preconditions/effects against the complete world state, and exposes `src/main.py validate-jason-plan-library`. The runtime now splits PDDL seed facts schema-theoretically: dynamic action-effect predicates are Jason percepts, while static predicates and reserved `obj_tp/2` type facts are loaded as indexed read-only beliefs. This aligns validation with MOOSE's database-style rule instantiation and avoids Jason percept/matching blowups on dense static facts. |
-
-## Current Evidence Snapshot
-
-| Check | Result |
-| --- | --- |
-| Focused Python suites | `37 passed` with `PYTHONDONTWRITEBYTECODE=1 uv run pytest tests/evaluation/test_jason_runtime.py tests/test_full_test_jason_validation_script.py tests/domain_level_planning/test_temporal_goal_appender.py tests/plan_library/test_validation.py -q`. |
-| Ruff check | `uv run ruff check ...` passes on the current touched source, scripts, and tests. `ruff==0.15.20` is installed in the dev dependency group. |
-| Final artifact validation | `checks=26` with `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only`. |
-| Atomic selector tests | Included in full suite; selector only chooses MOOSE as implemented atomic ASL compiler and refuses unverified fallback compilers. |
-| Type-aware atomic binding smoke | Focused tests now require Logistics to emit `obj_tp/2`-guarded package, truck, and airplane branches, including `load_truck -> drive_truck -> unload_truck` and `load_airplane -> fly_airplane -> unload_airplane` producer macros, while still rejecting domain-specific `type_*` fluents and invalid same-variable cargo/vehicle bindings. |
-| Temporal appender tests | Included in full suite; validates lifted atom restoration, singleton transition guards, negative waiting guards, and negative progress rejection. |
-| Lifted LTLf schema tests | Included in full suite; validates lifted atom/binding JSON handoff. |
-| Logger tests | `2 passed` with `uv run pytest tests/evaluation/test_execution_logger.py`. |
-| DFA adapter/controller/appender tests | `30 passed` with `PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q tests/domain_level_planning/test_dfa_goal_adapter.py tests/domain_level_planning/test_dfa_controller.py tests/domain_level_planning/test_temporal_goal_appender.py tests/domain_level_planning/test_moose_policy_adapter.py`. |
-| MOOSE readable policy adapter tests | Included in DFA/MOOSE focused suite; verifies readable-policy parsing, ASL compilation, CLI materialization, and quality metadata. |
-| MOOSE readable artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry` reports `rules=5`, `modules=5`, `asl_plans=5`. |
-| MOOSE atomic ASL artifact smoke | `uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-dir tmp/moose-atomic/ferry-library` writes a domain-level atomic `plan_library.json` and `plan_library.asl`. |
-| MOOSE Blocks raw atomic-plus-temporal smoke | Guarded MOOSE Blocks probe first4 training under `16GiB/900s` learned `72` singleton rules and compiled `72` raw MOOSE atomic ASL plans. Appending the first two probe instances as LTLf tower goals produced one maintained context-driven temporal library with `83` plans and no `teg_state` or `dfa_state` beliefs. Snapshots are under `snapshots/moose_blocks_e2e/`. This remains backend evidence, not final compact library quality. |
-| Validated policy lifting Blocks recursive-module smoke | `PYTHONDONTWRITEBYTECODE=1 uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocks/domain.pddl --domain-name blocks --validated-policy-lifting --output-dir snapshots/moose_blocks_minimal_modules` writes compact lifted recursive modules over all producible Blocks fluents seeded from MOOSE singleton evidence. Current Blocks unit smoke emits 23 plans covering `on`, `clear`, `holding`, `handempty`, and `ontable`; this replaces the older 8-plan partial-coverage snapshot. |
-| Compact Blocks atomic-plus-temporal smoke | The snapshot in `snapshots/moose_blocks_minimal_modules_appended/` demonstrates the ASL shape. The maintained-library path is now canonicalized by `src/main.py`; use `artifacts/domain_libraries/blocks/plan_library.asl` for the active per-domain library. |
-| Canonical single-ASL smoke | `src/main.py compile-moose-atomic-library ... --library-root tmp/canonical-domain-library-smoke` followed by `src/main.py append-lifted-temporal-goal ... --library-root tmp/canonical-domain-library-smoke` returned the same `tmp/canonical-domain-library-smoke/blocks/plan_library.asl`; `find` found exactly one ASL file under that library root. |
-| Current-scope canonical ASL smoke | Previous pre-expansion result is archived evidence only: it included `8puzzle-1tile`, which is now a boundary domain rather than a selected benchmark. The next accepted scope smoke must cover all materialized benchmark domains in `src/benchmark_registry/achievement_goals/registry.json`. |
-| Real Jason execution smoke | `uv run python src/main.py validate-jason-plan-library ...` now runs generated ASL in Jason with a real PDDL action environment and an indexed/static-belief belief base. Targeted p2 probes that previously timed out now pass: Miconic `p2_01` succeeds in `6.79s` with `400` actions; Gripper `p2_02` succeeds in `102.18s` with the default linear wrapper and `25999` actions. The optional compact completion wrapper also passes Gripper `p2_02` in `111.92s`. Full current-scope validation still needs to be rerun after this runtime fix. |
-| Long-plan VAL verification | Gripper `p2_*` Jason traces were semantically valid but exceeded the default VAL parser stack around `9995` action lines because VAL's generated parser defaults to `YYMAXDEPTH=10000`. `scripts/validate_with_docker_val.sh` now builds and reuses a Docker-local large-stack VAL binary with `VAL_PARSER_STACK_DEPTH=1000000` under `tmp/val-large-stack`, guarded by an atomic build lock for `worker=6` runs. |
-| Long ASL Jason stack and IO probe | Gripper `p2_08` previously hit Jason `StackOverflowError` while Jason recursively traversed a single-body wrapper with `15,500` subgoals. Jason validation now passes `--jason-java-stack-size 64m` to the Java process, recorded in full-test summary metadata and exposed through `scripts/run_parser_order_full_val_batch.sh`. Probe `gripper-p2-08-no-extra-asl-probe-20260706` succeeds with Jason and VAL `ok`, `61,999` actions, and no per-test `plan_library.asl`; the exact executable ASL remains in `agentspeak_generated.asl`. |
-| Parser-order full-test batch runner | `scripts/run_parser_order_full_val_batch.sh` now makes stage 1 atomic-library-only by passing `--skip-temporal-append` to the timestamped MOOSE batch. The former first-two query append remains available only as a targeted smoke mode in `scripts/run_moose_faithful_e2e.py`; full-test validation is stage 2 and enumerates every `src/domains/<domain>/test/*.pddl` problem through Jason plus VAL. |
-| MOOSE paper audit | Local paper text confirms MOOSE decomposes training problems into singleton goal conditions and applies goal regression, making it suitable for atomic positive predicate templates. |
+| Item | Status | Next step |
+| --- | --- | --- |
+| Full 16-domain benchmark materialization | Updated | Keep `scripts/materialize_achievement_benchmarks.py` as the single source of truth and rerun it after source-policy changes. |
+| Atomic ASL library generation | Needs full rerun | Run the timestamped MOOSE-to-ASL batch for all 16 selected benchmark entries after this benchmark expansion. |
+| Jason plus VAL validation | Needs full rerun | Run parser-order full-test validation after the new ASL batch completes. Report per-domain Jason and VAL success, timeout, and failure categories. |
+| Numeric domains | Experimental | Keep numeric support marked experimental until numeric fluents have a complete executable semantics and full validation evidence. |
+| Temporal Input integration | External dependency | Consume provided lifted LTLf JSON only; do not regenerate language-model prompts in this repository unless explicitly requested. |
 
 ## Commands
 
-```bash
-PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q \
-  tests/domain_level_planning/test_atomic_backend_selector.py \
-  tests/domain_level_planning/test_temporal_goal_appender.py \
-  tests/domain_level_planning/test_lifted_ltlf_goal_schema.py \
-  tests/evaluation/test_execution_logger.py
-```
-
-MOOSE atomic backend helper commands:
+Regenerate the selected benchmark corpus:
 
 ```bash
-uv run python scripts/gp_backend_audit.py moose-atomic-command \
-  --domain-file src/domains/ferry/domain.pddl \
-  --training-dir src/domains/ferry/train \
-  --save-file tmp/moose-atomic/ferry.model \
-  --timeout-seconds 1800
-
-uv run python scripts/gp_backend_audit.py moose-readable-summary \
-  --policy-file .external/moose/exact-runs/ferry-seed0.model.readable \
-  --domain-name ferry
-
-uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
-  --policy-file .external/moose/exact-runs/ferry-seed0.model.readable \
-  --domain-name ferry \
-  --output-dir tmp/moose-atomic/ferry-library
-
-uv run python scripts/gp_backend_audit.py moose-readable-compile-asl \
-  --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
-  --domain-file src/domains/blocks/domain.pddl \
-  --domain-name blocks \
-  --validated-policy-lifting \
-  --output-dir snapshots/moose_blocks_minimal_modules
-
-uv run python src/main.py compile-moose-atomic-library \
-  --policy-file .external/moose/exact-runs/ferry-seed0.model.readable \
-  --domain-name ferry
-
-uv run python src/main.py compile-moose-atomic-library \
-  --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
-  --domain-file src/domains/blocks/domain.pddl \
-  --domain-name blocks \
-  --validated-policy-lifting
-
-uv run python src/main.py append-lifted-temporal-goal \
-  --domain-file src/domains/blocks/domain.pddl \
-  --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
-  --query-id query_1
-
-uv run python src/main.py validate-jason-plan-library \
-  --domain-file src/domains/blocks/domain.pddl \
-  --problem-file src/domains/blocks/test/instance-69.pddl \
-  --goal-name g_blocks_user_goal_1 \
-  --timeout-seconds 1800 \
-  --require-plan-verifier \
-  --plan-verifier-timeout-seconds 1800
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/materialize_achievement_benchmarks.py
 ```
 
-Historical restoration references are no longer part of the active task list.
-Current temporal input is the validated lifted LTLf JSON interface in
-`src/domain_level_planning/lifted_ltlf_goal_schema.py`.
+Run the full benchmark ASL batch with the current default domain list:
 
-Jason full-test validation now exports a complete `jason_plan.plan` PDDL trace
-for every successful run and, in the full-test runner, requires VAL or an
-IPC-style verifier by default. The `1800` second timeout is the MOOSE paper
-planning/instantiation cap; synthesis/train budgets remain separate.
+```bash
+PYTHONDONTWRITEBYTECODE=1 WORKERS=16 JASON_JAVA_STACK_SIZE=64m \
+bash scripts/run_parser_order_full_val_batch.sh
+```
 
-Jason runtime performance now keeps complete VAL-compatible traces while
-avoiding per-action file writes. The generated Java environment accumulates the
-PDDL trace in memory and writes it at `runtime_summary` or shutdown. The indexed
-belief base also streams static and dynamic candidate buckets lazily instead of
-allocating a merged list for each context match. Probe evidence:
-`gripper/p2_02` still executes `25,999` primitive actions, but the current
-single-worker run completed in `71.48s`; this confirms the remaining bottleneck
-is mainly the long atomic policy trace, not trace-file I/O.
+Run focused checks after benchmark, compiler, or paper-scope edits:
 
-Validated policy lifting now preserves validated MOOSE macro evidence instead
-of using readable policies only as seed-predicate lists. The compiler parses
-each singleton MOOSE rule's state context, goal, and action sequence; validates
-the macro by symbolic execution against the PDDL action schemas;
-alpha-normalizes goal variables to `X,Y,...`; compiles PDDL typing into
-reserved `obj_tp/2` context guards; and merges the validated policy-rule
-branches with schema-augmented recursive modules when closure requires internal
-producible fluents. This fixes the Logistics intermodal gap where a package must
-move by airplane and then truck to a non-airport destination without adding a
-Logistics-specific code path. Evidence:
-`moose-reducer-logistics-p0-06` passes Jason with `15` actions, and
-`moose-reducer-logistics-p0` passes all `30/30` `p0_*` Logistics tests. A full
-Logistics Jason-only run was started and interrupted after `37/37` recorded
-successes because later `p1` instances are long performance probes. The
-Compiler metadata no longer classifies whole domains by outcome. It reports a
-generic `atomic_template_library` plus plan-template-level diagnostics:
-`already_true_plan_template`, `action_only_plan_template`, and
-`subgoal_decomposed_plan_template`. A whole domain library can be
-`mixed_atomic_template_library` because it may contain all three template kinds.
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run ruff check \
+  scripts/materialize_achievement_benchmarks.py \
+  scripts/run_moose_faithful_e2e.py \
+  tests/test_moose_faithful_e2e_script.py \
+  tests/test_main_temporal_artifact_cli.py \
+  tests/domain_level_planning/test_no_domain_hardcoding.py \
+  tests/domain_level_planning/test_atomic_module_synthesis.py \
+  tests/domain_level_planning/test_moose_policy_adapter.py \
+  tests/domain_level_planning/test_dfa_goal_adapter.py
 
-Restricted numeric-resource support is now implemented for the bounded integer
-fragment. The project parser reads PDDL `:functions`, numeric initial values,
-numeric action comparisons, bounded integer equality numeric goals, and
-constant `increase/decrease` effects. Support audit distinguishes metric-only
-action cost functions from logical numeric resources and rejects non-equality
-numeric goals, non-integer initial values, non-constant numeric updates, and
-arbitrary arithmetic expressions. Jason runtime seeds numeric fluents as
-mutable beliefs such as `capacity(truck1,1)` and updates them during primitive
-action execution. Atomic ASL synthesis compiles numeric preconditions into
-context guards such as `capacity(V,N) & N >= 1`; these are context-only numeric
-fluent checks, not subgoals. Numeric resource goals such as
-`(= (pogo_sticks_to_make) 0)` compile to resource modules such as
-`+!pogo_sticks_to_make(0)`, including an already-true branch and validated
-MOOSE macro branches that make unit monotone progress toward the target.
-Full numeric PDDL, optimization metrics as achievement goals, real-valued
-fluents, arbitrary arithmetic, and recursive numeric ranking goals remain
-unsupported until a separate certificate is added. Smoke evidence:
-`tmp/numeric_smoke_all_20260707-122338` trained and compiled
-`numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, and
-`numeric-transport`; the first two test goals for each domain passed both Jason
-and VAL.
-
-Numeric resource plans now have explicit plan-template kinds in metadata.
-`numeric_already_true_plan_template` marks an already-at-target numeric branch,
-for example `+!pogo_sticks_to_make(0)` with `N == 0`.
-`numeric_resource_progress_plan_template` marks a validated unit-progress
-resource branch, for example `craft_wooden_pogo; !pogo_sticks_to_make(0)`.
-The direct PDDL problem-goal append used by benchmark smoke scripts has been
-renamed in metadata to `evaluation_pddl_goal_wrapper_bridge`: it is only a
-bridge from PDDL test files to query-wrapper ASL for evaluation. The deployed
-query contract remains lifted LTLf JSON -> LTLf2DFA -> singleton-literal DFA
-validation -> temporal AgentSpeak(L) append.
+PYTHONDONTWRITEBYTECODE=1 uv run pytest -q \
+  tests/test_moose_faithful_e2e_script.py \
+  tests/test_main_temporal_artifact_cli.py \
+  tests/domain_level_planning/test_no_domain_hardcoding.py \
+  tests/domain_level_planning/test_atomic_module_synthesis.py \
+  tests/domain_level_planning/test_moose_policy_adapter.py \
+  tests/domain_level_planning/test_dfa_goal_adapter.py
+```

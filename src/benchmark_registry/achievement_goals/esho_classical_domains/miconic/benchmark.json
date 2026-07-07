@@ -1,5 +1,6 @@
 {
   "baseline_groups": {},
+  "benchmark_property_group_id": "esho_classical_domains",
   "display_name": "Miconic",
   "domain_file": "src/domains/miconic/domain.pddl",
   "domain_id": "miconic",
@@ -47,7 +48,6 @@
       "train_problem_set": "train"
     }
   ],
-  "benchmark_property_group_id": "esho_classical_domains",
   "goal_specification_layer": "achievement_goal_layer",
   "problem_sets": {
     "all": {
@@ -199,6 +199,8 @@
     ],
     "split_policy": "MOOSE official artifact split: training/ as train and testing/ as test",
     "test_count": 90,
+    "test_source_path": null,
+    "test_source_problem_globs": [],
     "train_count": 30,
     "url": "https://github.com/DillonZChen/moose-dataset"
   },

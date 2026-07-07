@@ -16,7 +16,7 @@ from plan_library.rendering import render_plan_library_asl
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
 LOGISTICS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl"
 NUMERIC_FERRY_DOMAIN = PROJECT_ROOT / "src" / "domains" / "numeric-ferry" / "domain.pddl"
 NUMERIC_MINECRAFT_DOMAIN = PROJECT_ROOT / "src" / "domains" / "numeric-minecraft" / "domain.pddl"
@@ -221,7 +221,7 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		BLOCKS_READABLE_POLICY,
 		domain_file=BLOCKS_DOMAIN,
-		domain_name="blocks",
+		domain_name="blocksworld-tower",
 		source_name="blocks-seed0",
 		policy_file=Path("blocks-seed0.model.readable"),
 	)
@@ -467,7 +467,7 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 			"--domain-file",
 			str(BLOCKS_DOMAIN),
 			"--domain-name",
-			"blocks",
+			"blocksworld-tower",
 			"--validated-policy-lifting",
 			"--output-dir",
 			str(output_dir),
@@ -486,7 +486,7 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 	asl = (output_dir / "plan_library.asl").read_text(encoding="utf-8")
 
 	assert "wrote atomic ASL library" in result.stdout
-	assert library_json["domain_name"] == "blocks"
+	assert library_json["domain_name"] == "blocksworld-tower"
 	assert len(library_json["plans"]) >= 17
 	assert metadata["minimal_modules"] is True
 	assert metadata["validated_policy_lifting"] is True

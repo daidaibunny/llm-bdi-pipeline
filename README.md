@@ -63,7 +63,8 @@ an in-repository planner-trace synthesis path.
 
 Formal achievement-goal benchmarks are materialized from pinned reputable
 generalized-planning benchmark sources: `potassco/pddl-instances`,
-`DillonZChen/moose-dataset`, and `rleap-project/d2l`.
+`DillonZChen/moose-dataset`, `bonetblai/learner-policies-from-examples`, and
+`rleap-project/d2l`.
 
 The materialized benchmark corpus and backend policy are described in
 `docs/gp_backend_strategy.md`.
@@ -72,24 +73,26 @@ The materialized benchmark corpus and backend policy are described in
 | --- | --- | --- |
 | ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | Check lifted atomic modules on the classical easy-to-solve, hard-to-optimise benchmark family used by MOOSE. |
 | Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | Include MOOSE numeric train/test domains for experimental support. |
-| Feature-definable serialized-width domains | `blocks`, `depots` | Check feature-defined subgoal serialization and schema-derived internal atomic modules. |
+| Feature-definable serialized-width domains | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` | Check feature-defined subgoal serialization and schema-derived internal atomic modules. |
 
 Each selected domain has `domain.pddl`, `train`, `test`, and `source.json`
 under `src/domains/<domain>`. MOOSE domains use the official companion
-`training/` and `testing/` split. `blocks` and `depots` use the project
-feature-definable serialized-width split described in `docs/gp_backend_strategy.md`.
+`training/` and `testing/` split. `blocksworld-clear` and `blocksworld-on`
+use the KR 2025 learner-policies no-constants train/test folders.
+`blocksworld-tower` and `depots` use the project feature-definable
+serialized-width split described in `docs/gp_backend_strategy.md`.
 
 ## Usage
 
 ```bash
 uv run python src/main.py compile-moose-atomic-library \
   --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
-  --domain-file src/domains/blocks/domain.pddl \
-  --domain-name blocks \
-  --minimal-modules
+  --domain-file src/domains/blocksworld-tower/domain.pddl \
+  --domain-name blocksworld-tower \
+  --validated-policy-lifting
 
 uv run python src/main.py append-lifted-temporal-goal \
-  --domain-file src/domains/blocks/domain.pddl \
+  --domain-file src/domains/blocksworld-tower/domain.pddl \
   --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
   --query-id query_1
 

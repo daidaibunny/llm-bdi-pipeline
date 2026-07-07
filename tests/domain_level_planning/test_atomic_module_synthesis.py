@@ -14,7 +14,7 @@ from plan_library.rendering import render_plan_library_asl
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
+BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
 
 
 def test_context_order_uses_bound_goal_arguments_before_unbound_buckets() -> None:

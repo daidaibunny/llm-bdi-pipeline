@@ -7,8 +7,8 @@
     "source_name": "ferry-seed0"
   },
   "benchmark_source": {
-    "coverage": "all MOOSE direct train/test domains plus project-added feature-definable serialized-width domains",
-    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. MOOSE direct train/test domains use the official companion training/testing split; Blocks and Depots use floor(1/4 * instance_count) training instances and the remainder as test.",
+    "coverage": "all MOOSE direct train/test domains plus four feature-definable serialized-width planning-family entries",
+    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. MOOSE direct train/test domains use the official companion training/testing split; blocksworld-clear and blocksworld-on use the KR 2025 learner-policies official no-constants train/test folders; blocksworld-tower and depots use floor(1/4 * instance_count) training instances and the remainder as test.",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
@@ -25,6 +25,13 @@
       "id": "moose_dataset",
       "name": "DillonZChen/moose-dataset",
       "url": "https://github.com/DillonZChen/moose-dataset"
+    },
+    {
+      "commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
+      "coverage": "KR 2025 feature-policy benchmark families",
+      "id": "kr2025_policies",
+      "name": "bonetblai/learner-policies-from-examples",
+      "url": "https://github.com/bonetblai/learner-policies-from-examples"
     },
     {
       "commit": "0620e169c894d79b3c84f435dba1462996f7c270",
@@ -236,26 +243,6 @@
     },
     {
       "kind": "file",
-      "path": "src/domains/barman/domain.pddl",
-      "tracked": true
-    },
-    {
-      "kind": "directory",
-      "path": "src/domains/barman/train",
-      "tracked": true
-    },
-    {
-      "kind": "directory",
-      "path": "src/domains/barman/test",
-      "tracked": true
-    },
-    {
-      "kind": "file",
-      "path": "src/domains/barman/source.json",
-      "tracked": true
-    },
-    {
-      "kind": "file",
       "path": "src/domains/ferry/domain.pddl",
       "tracked": true
     },
@@ -336,6 +323,46 @@
     },
     {
       "kind": "file",
+      "path": "src/domains/transport/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/transport/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/transport/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/transport/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/barman/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/barman/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/barman/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/barman/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
       "path": "src/domains/rovers/domain.pddl",
       "tracked": true
     },
@@ -372,26 +399,6 @@
     {
       "kind": "file",
       "path": "src/domains/satellite/source.json",
-      "tracked": true
-    },
-    {
-      "kind": "file",
-      "path": "src/domains/transport/domain.pddl",
-      "tracked": true
-    },
-    {
-      "kind": "directory",
-      "path": "src/domains/transport/train",
-      "tracked": true
-    },
-    {
-      "kind": "directory",
-      "path": "src/domains/transport/test",
-      "tracked": true
-    },
-    {
-      "kind": "file",
-      "path": "src/domains/transport/source.json",
       "tracked": true
     },
     {
@@ -476,22 +483,62 @@
     },
     {
       "kind": "file",
-      "path": "src/domains/blocks/domain.pddl",
+      "path": "src/domains/blocksworld-clear/domain.pddl",
       "tracked": true
     },
     {
       "kind": "directory",
-      "path": "src/domains/blocks/train",
+      "path": "src/domains/blocksworld-clear/train",
       "tracked": true
     },
     {
       "kind": "directory",
-      "path": "src/domains/blocks/test",
+      "path": "src/domains/blocksworld-clear/test",
       "tracked": true
     },
     {
       "kind": "file",
-      "path": "src/domains/blocks/source.json",
+      "path": "src/domains/blocksworld-clear/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/blocksworld-on/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/blocksworld-on/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/blocksworld-on/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/blocksworld-on/source.json",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/blocksworld-tower/domain.pddl",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/blocksworld-tower/train",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "src/domains/blocksworld-tower/test",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "src/domains/blocksworld-tower/source.json",
       "tracked": true
     },
     {

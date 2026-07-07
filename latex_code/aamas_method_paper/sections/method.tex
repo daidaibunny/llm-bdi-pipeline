@@ -116,10 +116,18 @@ properties, not to route backends by class:
 		\midrule
 		ESHO classical domains & Barman, Ferry, Gripper, Logistics, Miconic, Rovers, Satellite, and Transport \\
 		Numeric fluent domains & Numeric Ferry, Numeric Miconic, Numeric Minecraft, and Numeric Transport \\
-		Feature-definable serialized-width domains & Blocks and Depots \\
+		Feature-definable serialized-width domains & Blocksworld Clear, Blocksworld On, Blocksworld Tower, and Depots \\
 		\bottomrule
 	\end{tabular}
 \end{table}
+
+The benchmark unit is a planning-family entry, not necessarily a unique action
+schema file. Blocksworld Clear and Blocksworld On follow the standard
+\texttt{QClear} and \texttt{QOn} singleton-goal families, while Blocksworld
+Tower represents the classical support-dependent arrangement family. This lets
+the evaluation separate singleton literal modules such as \texttt{clear(X)}
+and \texttt{on(X,Y)} from tower requests whose support literals must be
+serialized.
 
 Numeric domains are included for MOOSE-faithful benchmark coverage, but their
 \asl{} compilation remains experimental until numeric fluents have a complete

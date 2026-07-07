@@ -55,7 +55,7 @@ def test_write_test_goal_dataset_uses_grounded_problem_goals(tmp_path: Path) -> 
 	output_file = tmp_path / "goals.json"
 
 	write_test_goal_dataset(
-		domain_name="blocks",
+		domain_name="blocksworld-tower",
 		problem_files=(problem_file,),
 		output_file=output_file,
 	)
@@ -63,8 +63,8 @@ def test_write_test_goal_dataset_uses_grounded_problem_goals(tmp_path: Path) -> 
 	payload = json.loads(output_file.read_text(encoding="utf-8"))
 	case = payload["cases"]["query_1"]
 
-	assert payload["domain"] == "blocks"
-	assert case["goal_name"] == "g_blocks_test_1"
+	assert payload["domain"] == "blocksworld-tower"
+	assert case["goal_name"] == "g_blocksworld_tower_test_1"
 	assert case["ltlf_formula"] == "F(on(a,b) & X(F(on(b,c))))"
 	assert case["atoms"] == ["on(a,b)", "on(b,c)"]
 
@@ -254,12 +254,12 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 	batch_root = tmp_path / "20260704-101112"
 	command = build_moose_batch_command(
 		args=Args(),
-		domains=("blocks", "depots"),
+		domains=("blocksworld-clear", "depots"),
 		batch_root=batch_root,
 	)
 	manifest = batch_manifest(
 		args=Args(),
-		domains=("blocks", "depots"),
+		domains=("blocksworld-clear", "depots"),
 		timestamp_id="20260704-101112",
 		batch_root=batch_root,
 		command=command,
@@ -275,7 +275,7 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 	assert manifest["settings"]["temporal_append_in_stage1"] is True
 	assert manifest["settings"]["test_query_count_per_domain"] == 2
 	assert manifest["expected_asl_files"] == [
-		str(batch_root / "domain_libraries" / "blocks" / "plan_library.asl"),
+		str(batch_root / "domain_libraries" / "blocksworld-clear" / "plan_library.asl"),
 		str(batch_root / "domain_libraries" / "depots" / "plan_library.asl"),
 	]
 	assert manifest["settings"]["domain_execution"] == "sequential"
@@ -304,12 +304,12 @@ def test_validated_policy_lifting_batch_mode_is_explicitly_threaded(
 	batch_root = tmp_path / "20260704-101113"
 	command = build_moose_batch_command(
 		args=Args(),
-		domains=("blocks",),
+		domains=("blocksworld-tower",),
 		batch_root=batch_root,
 	)
 	manifest = batch_manifest(
 		args=Args(),
-		domains=("blocks",),
+		domains=("blocksworld-tower",),
 		timestamp_id="20260704-101113",
 		batch_root=batch_root,
 		command=command,
@@ -368,7 +368,7 @@ def test_validated_policy_lifting_compile_command_uses_semantic_cli_flag(
 	command = compile_moose_atomic_library_command(
 		readable_policy_file=tmp_path / "blocks.model.readable",
 		domain_file=tmp_path / "domain.pddl",
-		domain_name="blocks",
+		domain_name="blocksworld-tower",
 		library_root=tmp_path / "libraries",
 		atomic_library_mode="validated-policy-lifting",
 	)
