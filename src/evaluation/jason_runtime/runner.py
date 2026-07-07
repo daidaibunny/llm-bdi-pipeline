@@ -1055,9 +1055,8 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		LinkedHashSet<Literal> dynamicExactMatches = exactBucket(dynamicExactIndex, literal);
 		if (dynamicExactMatches != null) {
 			for (Literal candidate : dynamicExactMatches) {
-				Literal liveCandidate = super.contains(candidate);
-				if (liveCandidate != null && literal.hasSubsetAnnot(liveCandidate)) {
-					return liveCandidate;
+				if (isLiveDynamicLiteral(candidate) && literal.hasSubsetAnnot(candidate)) {
+					return candidate;
 				}
 			}
 			return null;
@@ -1329,9 +1328,8 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 			private Literal nextLiveDynamic() {
 				while (dynamicIterator.hasNext()) {
 					Literal candidate = dynamicIterator.next();
-					Literal liveCandidate = superContains(candidate);
-					if (liveCandidate != null) {
-						return liveCandidate;
+					if (isLiveDynamicLiteral(candidate)) {
+						return candidate;
 					}
 				}
 				return null;
@@ -1339,8 +1337,13 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		};
 	}
 
-	private Literal superContains(Literal candidate) {
-		return super.contains(candidate);
+	private boolean isLiveDynamicLiteral(Literal candidate) {
+		String key = exactKey(candidate);
+		if (key == null) {
+			return false;
+		}
+		LinkedHashSet<Literal> bucket = dynamicExactIndex.get(key);
+		return bucket != null && bucket.contains(candidate);
 	}
 
 	private int bucketSize(LinkedHashSet<Literal> bucket) {
@@ -1566,6 +1569,7 @@ public class {class_name} extends Environment {{
 	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
 	private final Map<String, String> pddlSymbols = new HashMap<>();
+	private final Map<String, Literal> literalCache = new HashMap<>();
 	private final StringBuilder planTraceBuffer = new StringBuilder();
 	private boolean planTraceDirty = false;
 	private final Path initialPerceptsPath = Paths.get({initial_percepts_file});
@@ -2038,7 +2042,7 @@ public class {class_name} extends Environment {{
 		perceived.clear();
 		for (String atom : initialPerceptFacts()) {{
 			if (world.contains(atom)) {{
-				addPercept(Literal.parseLiteral(atom));
+				addPercept(cachedLiteral(atom));
 				perceived.add(atom);
 			}}
 		}}
@@ -2074,15 +2078,24 @@ public class {class_name} extends Environment {{
 		}}
 		for (String atom : delta.removed) {{
 			if (perceived.remove(atom)) {{
-				removePercept(Literal.parseLiteral(atom));
+				removePercept(cachedLiteral(atom));
 			}}
 		}}
 		for (String atom : delta.added) {{
 			if (perceived.add(atom)) {{
-				addPercept(Literal.parseLiteral(atom));
+				addPercept(cachedLiteral(atom));
 			}}
 		}}
 		informAgsEnvironmentChanged();
+	}}
+
+	private Literal cachedLiteral(String atom) {{
+		Literal parsed = literalCache.get(atom);
+		if (parsed == null) {{
+			parsed = Literal.parseLiteral(atom);
+			literalCache.put(atom, parsed);
+		}}
+		return parsed.copy();
 	}}
 }}
 """.strip() + "\n"

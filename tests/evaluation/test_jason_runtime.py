@@ -104,7 +104,12 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert "syncInitialPercepts();" in source
 	assert "EffectDelta delta = applyEffects(schema, bindings);" in source
 	assert "syncPerceptDelta(delta);" in source
-	assert "removePercept(Literal.parseLiteral(atom));" in source
+	assert "private final Map<String, Literal> literalCache = new HashMap<>();" in source
+	assert "removePercept(cachedLiteral(atom));" in source
+	assert "addPercept(cachedLiteral(atom));" in source
+	assert "private Literal cachedLiteral(String atom)" in source
+	assert "parsed = Literal.parseLiteral(atom);" in source
+	assert "return parsed.copy();" in source
 	assert '"runtime_summary".equals(action.getFunctor())' in source
 	assert "runtime env action count " in source
 	assert "actionTraceLimit" in source
@@ -246,10 +251,12 @@ def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
 	assert "dynamicIndex" in source
 	assert "static_beliefs.txt" in source
 	assert "loadStaticBeliefs();" in source
-	assert "Literal liveCandidate = super.contains(candidate)" in source
+	assert "private boolean isLiveDynamicLiteral(Literal candidate)" in source
+	assert "dynamicExactIndex.get(key)" in source
+	assert "bucket != null && bucket.contains(candidate)" in source
+	assert "super.contains(candidate)" not in source
 	assert "return candidateIterator(staticExactMatches, dynamicExactMatches);" in source
 	assert "private Literal nextLiveDynamic()" in source
-	assert "return super.contains(candidate);" in source
 	assert "candidates.addAll(staticBucket);" not in source
 	assert "indexStaticLiteral(literal);" in source
 	assert "indexDynamicLiteral(literal);" in source
