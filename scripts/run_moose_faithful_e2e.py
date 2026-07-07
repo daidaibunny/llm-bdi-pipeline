@@ -375,13 +375,13 @@ def run_domain(
 			if not append_result.success:
 				return record
 		else:
-			record["pddl_goal_wrapper_append"] = append_problem_goal_wrappers_to_library(
+			record["evaluation_pddl_goal_wrapper_bridge"] = append_problem_goal_wrappers_to_library(
 				domain_name=domain_name,
 				problem_files=test_instances,
 				library_root=args.library_root,
 				artifact_metadata={
 					"base_artifact_kind": "domain_library",
-					"artifact_kind": "domain_library_with_pddl_goal_wrappers",
+					"artifact_kind": "domain_library_with_evaluation_pddl_goal_wrapper_bridge",
 					"pddl_domain_name": domain_name,
 					"query_append_mode": record.get("query_append_mode"),
 				},
@@ -896,7 +896,7 @@ def selected_query_append_mode(problem_files: Sequence[Path]) -> str:
 		if any(not fact.is_positive for fact in tuple(problem.goal_facts or ())):
 			requires_direct_wrapper = True
 	return (
-		"pddl_goal_single_body_wrapper"
+		"evaluation_pddl_goal_wrapper_bridge"
 		if requires_direct_wrapper
 		else "ltlf_singleton_predicate_sequence"
 	)
@@ -909,7 +909,7 @@ def append_problem_goal_wrappers_to_library(
 	library_root: Path,
 	artifact_metadata: dict[str, object] | None = None,
 ) -> dict[str, object]:
-	"""Append grounded PDDL goal wrappers directly to one canonical domain library."""
+	"""Append PDDL test goals as an evaluation bridge, not the final query path."""
 
 	domain_key = _safe_goal_fragment(domain_name)
 	library_dir = library_root.expanduser().resolve() / domain_name
@@ -935,7 +935,7 @@ def append_problem_goal_wrappers_to_library(
 			body=body_steps,
 			binding_certificate=(
 				{
-					"artifact_family": "pddl_problem_goal_wrapper_append",
+					"artifact_family": "evaluation_pddl_goal_wrapper_bridge",
 					"problem_file": str(problem_file),
 					"goal_step_count": len(body_steps),
 					"contains_numeric_resource_goal": any(
@@ -965,14 +965,24 @@ def append_problem_goal_wrappers_to_library(
 		initial_beliefs=tuple(initial_beliefs),
 		metadata={
 			**dict(library.metadata),
-			"pddl_goal_wrapper_append": {
-				"wrapper_mode": "linear_single_body_from_pddl_goal",
+			"evaluation_pddl_goal_wrapper_bridge": {
+				"wrapper_mode": "linear_single_body_from_pddl_problem_goal",
+				"scope": "benchmark_smoke_only",
+				"final_query_contract": (
+					"validated_lifted_ltlf_json_to_ltlf2dfa_to_singleton_literal_dfa_append"
+				),
 				"append_records": append_records,
 			},
-			"pddl_goal_wrapper_append_history": [
-				*list(dict(library.metadata).get("pddl_goal_wrapper_append_history") or []),
+			"evaluation_pddl_goal_wrapper_bridge_history": [
+				*list(
+					dict(library.metadata).get(
+						"evaluation_pddl_goal_wrapper_bridge_history",
+					)
+					or [],
+				),
 				{
-					"wrapper_mode": "linear_single_body_from_pddl_goal",
+					"wrapper_mode": "linear_single_body_from_pddl_problem_goal",
+					"scope": "benchmark_smoke_only",
 					"query_count": len(append_records),
 					"goal_names": [record["goal_name"] for record in append_records],
 				},
@@ -1002,7 +1012,7 @@ def append_problem_goal_wrappers_to_library(
 				"domain_library_dir": str(library_dir),
 				"domain_name": updated.domain_name,
 				"plan_count": len(updated.plans),
-				"appended_pddl_goal_wrapper_count": len(append_records),
+				"appended_evaluation_pddl_goal_wrapper_count": len(append_records),
 			},
 			indent=2,
 			sort_keys=True,
@@ -1012,7 +1022,7 @@ def append_problem_goal_wrappers_to_library(
 	)
 	return {
 		"success": True,
-		"mode": "pddl_goal_single_body_wrapper",
+		"mode": "evaluation_pddl_goal_wrapper_bridge",
 		"appended_query_count": len(append_records),
 		"artifact_paths": {
 			"plan_library": str(library_json),

@@ -42,6 +42,8 @@ several plan-template kinds at the same time.
 | `already_true_plan_template` | The requested fluent is already true, so the plan body is empty except for rendered `true`. | `+!clear(X) : clear(X) <- true.` |
 | `action_only_plan_template` | The body contains only primitive PDDL actions. This includes fixed MOOSE macro evidence, where a macro is a fixed action sequence, not a new PDDL action. | Logistics `+!at(P,L)` may execute `load_truck; drive_truck; unload_truck`. Blocks `+!clear(X)` may execute `unstack(Y,X); put_down(Y)`. |
 | `subgoal_decomposed_plan_template` | The body contains at least one internal AgentSpeak achievement subgoal such as `!clear(Y)`. | Blocks `+!on(X,Y)` may call `!clear(Y); !on(X,Y)` when `Y` is not clear. |
+| `numeric_already_true_plan_template` | A bounded integer numeric-resource achievement is already at the requested target value. This kind is chosen from the numeric certificate, not from the empty body alone. | `+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <- true.` |
+| `numeric_resource_progress_plan_template` | A bounded integer numeric-resource achievement executes a validated unit-progress macro and recursively asks for the same target value. | `+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N > 0 <- craft_wooden_pogo; !pogo_sticks_to_make(0).` |
 
 The metadata reports a library profile such as `mixed_atomic_template_library`
 when several plan-template kinds appear in one domain library. This profile is
@@ -182,11 +184,21 @@ The implemented pipeline now:
 4. renders numeric contexts such as `capacity(V,N) & N > 0`;
 5. validates MOOSE-readable numeric macro evidence against predicate and
    numeric schema conditions before rendering ASL;
-6. appends numeric-only test queries as direct single-body PDDL goal wrappers,
-   for example `+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-
-   !pogo_sticks_to_make(0).`;
+6. accepts numeric resource functions as singleton LTLf/DFA progress atoms by
+   adding the target value as the final argument. For example, the PDDL function
+   `(pogo_sticks_to_make)` is legal in a DFA transition as
+   `pogo_sticks_to_make(0)`, which appends the subgoal
+   `!pogo_sticks_to_make(0)`;
 7. relies on VAL or an equivalent numeric-capable validator for final action
    trace justification.
+
+The deployed query path remains the temporal path:
+validated lifted LTLf JSON, then LTLf-to-DFA, then singleton-literal DFA
+validation, then AgentSpeak(L) append. Direct PDDL test-goal wrappers are only
+an evaluation bridge for benchmark smoke runs where the input is a PDDL problem
+file rather than a user query artifact. Those bridge plans are marked with
+`evaluation_pddl_goal_wrapper_bridge` metadata and must not be described as the
+final natural-language query interface.
 
 Unsupported numeric cases include arbitrary arithmetic expressions, real-valued
 updates, optimization metrics as achievement goals, non-equality numeric goals,

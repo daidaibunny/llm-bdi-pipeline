@@ -354,11 +354,38 @@ several template kinds at the same time:
 	!on(X, Y).
 ```
 
+- `numeric_already_true_plan_template`: a bounded integer numeric-resource
+  achievement is already at the requested target value. For example:
+
+```asl
++!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <-
+	true.
+```
+
+- `numeric_resource_progress_plan_template`: a bounded integer numeric-resource
+  achievement executes a validated unit-progress macro and recursively asks for
+  the same target value. For example:
+
+```asl
++!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N > 0 <-
+	craft_wooden_pogo;
+	!pogo_sticks_to_make(0).
+```
+
 The metadata therefore reports a generic `artifact_classification` of
 `atomic_template_library`, plus `library_profile` and
 `plan_template_kind_counts`. A `mixed_atomic_template_library` means the domain
 library contains multiple plan-template kinds. This is a diagnostic profile of
 the ASL file, not a taxonomy of the domain and not a routing decision.
+
+Numeric resource functions are legal singleton LTLf/DFA progress atoms in the
+temporal append contract by adding the target value as the final argument. For
+example, the PDDL function `(pogo_sticks_to_make)` is represented in a DFA
+transition as `pogo_sticks_to_make(0)` and compiles to the subgoal
+`!pogo_sticks_to_make(0)`. Direct PDDL test-goal wrappers are only an
+evaluation bridge for benchmark smoke runs where the input is a PDDL problem
+file. The final user-query path remains validated lifted LTLf JSON,
+LTLf-to-DFA, singleton-literal DFA validation, then AgentSpeak(L) append.
 
 `unsupported_by_current_compiler` remains a boundary diagnosis, not a domain
 class. A graph-search-style domain such as `8puzzle-1tile` is an example when

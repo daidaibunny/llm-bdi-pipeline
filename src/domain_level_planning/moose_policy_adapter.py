@@ -528,9 +528,10 @@ def _post_moose_reducer_library_quality(
 		"library_profile": _library_template_profile(plan_template_kind_counts),
 		"plan_template_kind_counts": plan_template_kind_counts,
 		"plan_template_classification_basis": (
-			"per plan template: empty body is already-true, bodies with only "
-			"primitive actions are action-only, bodies containing achievement "
-			"subgoals are subgoal-decomposed"
+			"per plan template: numeric resource goal modules are classified "
+			"by their numeric certificate, empty non-numeric bodies are "
+			"already-true, bodies with only primitive actions are action-only, "
+			"and bodies containing achievement subgoals are subgoal-decomposed"
 		),
 		"plan_count": len(plan_tuple),
 		"primitive_action_step_count": primitive_action_step_count,
@@ -553,6 +554,9 @@ def _plan_template_kind_counts(plans: Sequence[AgentSpeakPlan]) -> dict[str, int
 
 
 def _plan_template_kind(plan: AgentSpeakPlan) -> str:
+	numeric_kind = _numeric_plan_template_kind(plan)
+	if numeric_kind is not None:
+		return numeric_kind
 	body = tuple(plan.body or ())
 	if not body:
 		return "already_true_plan_template"
@@ -563,10 +567,36 @@ def _plan_template_kind(plan: AgentSpeakPlan) -> str:
 	return "mixed_body_plan_template"
 
 
+_NUMERIC_PLAN_TEMPLATE_KINDS = frozenset(
+	{
+		"numeric_already_true_plan_template",
+		"numeric_resource_progress_plan_template",
+		"numeric_resource_plan_template",
+	},
+)
+
+
+def _numeric_plan_template_kind(plan: AgentSpeakPlan) -> str | None:
+	for certificate in tuple(plan.binding_certificate or ()):
+		if not isinstance(certificate, Mapping):
+			continue
+		if certificate.get("artifact_family") != "numeric_resource_goal_module":
+			continue
+		rule_kind = str(certificate.get("rule_kind") or "").strip()
+		if rule_kind == "already_true":
+			return "numeric_already_true_plan_template"
+		if rule_kind == "monotone_resource_macro":
+			return "numeric_resource_progress_plan_template"
+		return "numeric_resource_plan_template"
+	return None
+
+
 def _library_template_profile(kind_counts: Mapping[str, int]) -> str:
 	kinds = {kind for kind, count in dict(kind_counts).items() if count > 0}
 	if not kinds:
 		return "empty_atomic_template_library"
+	if kinds <= _NUMERIC_PLAN_TEMPLATE_KINDS:
+		return "numeric_resource_atomic_template_library"
 	if len(kinds) > 1:
 		return "mixed_atomic_template_library"
 	kind = next(iter(kinds))

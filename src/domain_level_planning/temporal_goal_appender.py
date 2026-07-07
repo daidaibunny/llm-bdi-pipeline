@@ -18,6 +18,7 @@ from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
 from utils.symbol_normalizer import SymbolNormalizer
+from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLParser
 
 from .lifted_ltlf_goal_schema import LTLfAtomSpec
@@ -146,8 +147,9 @@ def validate_singleton_literal_dfa(
 					"predicate": literal.predicate,
 					"error_type": "unsupported_predicate",
 					"message": (
-						"DFA transition references a predicate that is not "
-						"declared in the PDDL domain."
+						"DFA transition references a predicate or numeric "
+						"resource function that is not declared in the PDDL "
+						"domain."
 					),
 				},
 			)
@@ -166,8 +168,8 @@ def validate_singleton_literal_dfa(
 					"actual_arity": actual_arity,
 					"error_type": "wrong_arity",
 					"message": (
-						"DFA transition predicate arity does not match the PDDL "
-						"domain declaration."
+						"DFA transition predicate or numeric resource function "
+						"arity does not match the PDDL domain declaration."
 					),
 				},
 			)
@@ -190,10 +192,7 @@ def append_temporal_goal_to_library(
 			f"achievement-goal entry for {goal_name!r}."
 		)
 	domain = PDDLParser.parse_domain(domain_file)
-	declared_arities = {
-		str(predicate.name): len(tuple(predicate.parameters or ()))
-		for predicate in domain.predicates
-	}
+	declared_arities = _declared_temporal_goal_arities(domain)
 	diagnostic = validate_singleton_literal_dfa(
 		dfa_payload,
 		allow_true_accepting_self_loops=allow_true_accepting_self_loops,
@@ -676,17 +675,29 @@ def _validate_declared_literal(
 ) -> None:
 	if literal.predicate not in declared_arities:
 		raise ValueError(
-			f"DFA transition references undeclared PDDL predicate {literal.predicate!r}.",
+			"DFA transition references undeclared PDDL predicate or numeric "
+			f"resource function {literal.predicate!r}.",
 		)
 	declared_arity = declared_arities[literal.predicate]
 	if declared_arity != len(literal.arguments):
 		raise ValueError(
 			(
-				"DFA transition references PDDL predicate "
+				"DFA transition references PDDL predicate or numeric resource "
+				"function "
 				f"{literal.predicate}/{declared_arity} with wrong arity "
 				f"{len(literal.arguments)}."
 			),
 		)
+
+
+def _declared_temporal_goal_arities(domain: PDDLDomain) -> dict[str, int]:
+	arities = {
+		str(predicate.name): len(tuple(predicate.parameters or ()))
+		for predicate in tuple(getattr(domain, "predicates", ()) or ())
+	}
+	for function in tuple(getattr(domain, "functions", ()) or ()):
+		arities[str(function.name)] = len(tuple(function.parameters or ())) + 1
+	return arities
 
 
 def _strip_balanced_parentheses(text: str) -> str:

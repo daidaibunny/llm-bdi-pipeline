@@ -63,6 +63,26 @@ def test_validate_singleton_literal_dfa_reports_domain_errors() -> None:
 	assert diagnostic.errors[1]["actual_arity"] == 2
 
 
+def test_validate_singleton_literal_dfa_accepts_numeric_resource_function() -> None:
+	diagnostic = validate_singleton_literal_dfa(
+		{
+			"initial_state": "q0",
+			"accepting_states": ["q1"],
+			"guarded_transitions": [
+				{
+					"source_state": "q0",
+					"target_state": "q1",
+					"raw_label": "pogo_sticks_to_make(0)",
+				},
+			],
+		},
+		declared_arities={"pogo_sticks_to_make": 1},
+	)
+
+	assert diagnostic.valid is True
+	assert diagnostic.errors == ()
+
+
 def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> None:
 	domain_file = _write_domain(tmp_path)
 	library = PlanLibrary(
@@ -323,6 +343,64 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 	)
 
 
+def test_append_lifted_temporal_goal_accepts_numeric_resource_function_atom(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_numeric_resource_domain(tmp_path)
+	library = PlanLibrary(domain_name="numeric-minecraft", plans=())
+	case = LiftedLTLfGoalCase(
+		query_id="query_1",
+		goal_name="g_numeric_minecraft_test_1",
+		problem_file="p01.pddl",
+		source_text="Craft until no pogo sticks remain to make.",
+		ltlf_formula="F(pogo_done)",
+		atoms=(
+			LTLfAtomSpec("pogo_done", "pogo_sticks_to_make", ("0",)),
+		),
+		bindings={},
+	)
+
+	updated, dfa_payload = append_lifted_temporal_goal_case_to_library(
+		plan_library=library,
+		goal_case=case,
+		domain_file=domain_file,
+		dfa_builder=_FakeNumericEncodedDFABuilder(),
+	)
+
+	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "pogo_sticks_to_make(0)"
+	assert updated.plans[0].context == ("numeric_minecraft_test_1",)
+	assert updated.plans[0].body == (
+		AgentSpeakBodyStep("subgoal", "pogo_sticks_to_make", ("0",)),
+	)
+	assert (
+		updated.metadata["temporal_goal_append"]["progress_request_diagnostics"][0]
+		["request"]["achievement_subgoals"]
+		== [{"kind": "subgoal", "symbol": "pogo_sticks_to_make", "arguments": ["0"]}]
+	)
+
+
+def test_append_temporal_goal_rejects_wrong_numeric_resource_function_arity(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_numeric_resource_domain(tmp_path)
+	library = PlanLibrary(domain_name="numeric-minecraft", plans=())
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "pogo_sticks_to_make"},
+		],
+	}
+
+	with pytest.raises(ValueError, match="wrong_arity"):
+		append_temporal_goal_to_library(
+			plan_library=library,
+			goal_name="g_numeric_minecraft_test_1",
+			dfa_payload=dfa_payload,
+			domain_file=domain_file,
+		)
+
+
 def _write_domain(tmp_path: Path) -> Path:
 	domain_file = tmp_path / "domain.pddl"
 	domain_file.write_text(
@@ -335,6 +413,25 @@ def _write_domain(tmp_path: Path) -> Path:
 		  :parameters (?x - item)
 		  :precondition (ready ?x)
 		  :effect (and (not (ready ?x)) (done ?x))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	return domain_file
+
+
+def _write_numeric_resource_domain(tmp_path: Path) -> Path:
+	domain_file = tmp_path / "numeric-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain numeric-minecraft)
+		 (:requirements :strips :typing :numeric-fluents)
+		 (:functions (pogo_sticks_to_make))
+		 (:action craft_wooden_pogo
+		  :parameters ()
+		  :precondition (> (pogo_sticks_to_make) 0)
+		  :effect (decrease (pogo_sticks_to_make) 1)
 		 )
 		)
 		""",
@@ -392,5 +489,18 @@ class _FakeEncodedDFABuilder:
 			"accepting_states": ["q1"],
 			"guarded_transitions": [
 				{"source_state": "q0", "target_state": "q1", "raw_label": "on_x_y"},
+			],
+		}
+
+
+class _FakeNumericEncodedDFABuilder:
+	def build(self, formula: str):
+		return {
+			"original_formula": formula,
+			"initial_state": "q0",
+			"accepting_states": ["q1"],
+			"guarded_transitions": [
+				{"source_state": "q0", "target_state": "q1", "raw_label": "pogo_done"},
+				{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
 			],
 		}

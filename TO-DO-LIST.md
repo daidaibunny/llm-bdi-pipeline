@@ -199,3 +199,14 @@ unsupported until a separate certificate is added. Smoke evidence:
 `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, and
 `numeric-transport`; the first two test goals for each domain passed both Jason
 and VAL.
+
+Numeric resource plans now have explicit plan-template kinds in metadata.
+`numeric_already_true_plan_template` marks an already-at-target numeric branch,
+for example `+!pogo_sticks_to_make(0)` with `N == 0`.
+`numeric_resource_progress_plan_template` marks a validated unit-progress
+resource branch, for example `craft_wooden_pogo; !pogo_sticks_to_make(0)`.
+The direct PDDL problem-goal append used by benchmark smoke scripts has been
+renamed in metadata to `evaluation_pddl_goal_wrapper_bridge`: it is only a
+bridge from PDDL test files to query-wrapper ASL for evaluation. The deployed
+query contract remains lifted LTLf JSON -> LTLf2DFA -> singleton-literal DFA
+validation -> temporal AgentSpeak(L) append.

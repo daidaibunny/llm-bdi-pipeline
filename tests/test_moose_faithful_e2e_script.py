@@ -85,7 +85,7 @@ def test_selected_query_append_mode_detects_numeric_problem_goals(tmp_path: Path
 
 	mode = selected_query_append_mode((problem_file,))
 
-	assert mode == "pddl_goal_single_body_wrapper"
+	assert mode == "evaluation_pddl_goal_wrapper_bridge"
 
 
 def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) -> None:
@@ -148,10 +148,19 @@ def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) 
 	payload = json.loads((library_dir / "plan_library.json").read_text(encoding="utf-8"))
 
 	assert result["success"] is True
+	assert result["mode"] == "evaluation_pddl_goal_wrapper_bridge"
 	assert "numeric_minecraft_test_1." in asl
 	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in asl
 	assert "\t!pogo_sticks_to_make(0)." in asl
 	assert payload["initial_beliefs"] == ["numeric_minecraft_test_1"]
+	assert (
+		payload["metadata"]["evaluation_pddl_goal_wrapper_bridge"]["final_query_contract"]
+		== "validated_lifted_ltlf_json_to_ltlf2dfa_to_singleton_literal_dfa_append"
+	)
+	assert (
+		payload["plans"][-1]["binding_certificate"][0]["artifact_family"]
+		== "evaluation_pddl_goal_wrapper_bridge"
+	)
 
 
 def test_moose_train_command_uses_full_train_split(tmp_path: Path) -> None:

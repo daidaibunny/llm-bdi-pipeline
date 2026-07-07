@@ -338,6 +338,13 @@ def test_post_moose_reducer_compiles_numeric_resource_goal_module() -> None:
 	assert library.metadata["source_seed_predicates"] == []
 	assert library.metadata["source_numeric_goal_functions"] == ["pogo_sticks_to_make"]
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
+	assert library.metadata["library_quality"]["library_profile"] == (
+		"numeric_resource_atomic_template_library"
+	)
+	assert library.metadata["library_quality"]["plan_template_kind_counts"] == {
+		"numeric_already_true_plan_template": 1,
+		"numeric_resource_progress_plan_template": 1,
+	}
 
 
 def test_post_moose_reducer_preserves_pddl_constants_in_numeric_macros() -> None:
