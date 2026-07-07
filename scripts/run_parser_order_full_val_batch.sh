@@ -23,7 +23,10 @@ MOOSE_STDERR="$LOG_ROOT/moose_batch.stderr.log"
 if [[ $# -gt 0 ]]; then
 	DOMAINS=("$@")
 else
-	mapfile -t DOMAINS < <(
+	DOMAINS=()
+	while IFS= read -r domain; do
+		[[ -n "$domain" ]] && DOMAINS+=("$domain")
+	done < <(
 		PYTHONDONTWRITEBYTECODE=1 uv run python - <<'PY'
 import json
 from pathlib import Path
