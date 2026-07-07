@@ -34,24 +34,19 @@ except ImportError:  # pragma: no cover - Unix-only guard.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 MOOSE_ROOT = PROJECT_ROOT / ".external" / "moose"
-DEFAULT_DOMAINS = (
-	"ferry",
-	"gripper",
-	"logistics",
-	"miconic",
-	"transport",
-	"barman",
-	"rovers",
-	"satellite",
-	"numeric-ferry",
-	"numeric-miconic",
-	"numeric-minecraft",
-	"numeric-transport",
-	"blocksworld-clear",
-	"blocksworld-on",
-	"blocksworld-tower",
-	"depots",
-)
+
+
+def load_selected_benchmark_domain_ids() -> tuple[str, ...]:
+	"""Load the selected benchmark domain ids from the registry control file."""
+
+	registry_file = (
+		PROJECT_ROOT / "src" / "benchmark_registry" / "achievement_goals" / "registry.json"
+	)
+	payload = json.loads(registry_file.read_text(encoding="utf-8"))
+	return tuple(str(domain_id) for domain_id in payload["selected_domain_ids"])
+
+
+DEFAULT_DOMAINS = load_selected_benchmark_domain_ids()
 
 if str(SRC_ROOT) not in sys.path:
 	sys.path.insert(0, str(SRC_ROOT))

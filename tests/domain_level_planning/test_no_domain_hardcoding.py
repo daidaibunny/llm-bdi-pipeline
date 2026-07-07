@@ -127,3 +127,23 @@ def test_benchmark_registry_uses_literature_property_groups() -> None:
 	assert {record["benchmark_property_group_id"] for record in records} == expected_groups
 	for record in records:
 		assert "goal_property_group_id" not in record
+
+
+def test_batch_scripts_default_to_selected_registry_domains() -> None:
+	"""Long-running batch defaults should not drift from the selected registry."""
+
+	from scripts import run_full_test_jason_validation
+	from scripts import run_moose_faithful_e2e
+	from scripts import run_timestamped_moose_asl_batch
+
+	registry_root = PROJECT_ROOT / "src" / "benchmark_registry" / "achievement_goals"
+	control = json.loads((registry_root / "registry.json").read_text(encoding="utf-8"))
+	selected_domain_ids = tuple(control["selected_domain_ids"])
+
+	assert run_moose_faithful_e2e.DEFAULT_DOMAINS == selected_domain_ids
+	assert run_timestamped_moose_asl_batch.DEFAULT_DOMAINS == selected_domain_ids
+	assert run_full_test_jason_validation.DEFAULT_DOMAINS == selected_domain_ids
+	assert "blocks" not in selected_domain_ids
+	assert "blocksworld-clear" in selected_domain_ids
+	assert "blocksworld-on" in selected_domain_ids
+	assert "blocksworld-tower" in selected_domain_ids
