@@ -69,6 +69,7 @@ UNSUPPORTED_EXPRESSION_OPERATORS = frozenset(
 SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 	"classical finite-domain PDDL files parsed before lifted ASL synthesis",
 	"positive conjunctive predicate achievement goals only",
+	"bounded integer numeric equality goals may target declared numeric resource fluents",
 	"primitive action schemas with predicate preconditions and predicate effects",
 	"bounded integer numeric resource fluents may appear in action preconditions and effects",
 	"numeric effects are limited to constant integer increase/decrease updates",
@@ -78,7 +79,8 @@ SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 	"typing, equality, and negative preconditions are accepted only inside the project parser subset",
 	(
 		"derived predicates, conditional effects, quantifiers, preferences, durative "
-		"actions, arbitrary arithmetic expressions, and numeric goals remain unsupported"
+		"actions, arbitrary arithmetic expressions, non-integer numeric goals, and "
+		"optimization metrics as goals remain unsupported"
 	),
 )
 
@@ -469,6 +471,22 @@ def _unsupported_goal_diagnostics(
 	parsed = _parse_form(goal_expression)
 	if _is_positive_conjunctive_goal(parsed):
 		return ()
+	if _is_supported_numeric_goal_fragment(parsed):
+		return ()
+	if _is_numeric_goal_fragment(parsed):
+		message = (
+			f"{problem_path}: numeric problem goals must be equality between one "
+			"declared numeric fluent and one integer constant in the supported "
+			"bounded resource fragment"
+		)
+		return (
+			PDDLUnsupportedDiagnostic(
+				kind="unsupported_numeric_goal",
+				location=str(problem_path),
+				symbol="=",
+				message=message,
+			),
+		)
 	kind, symbol, fragment_label = _unsupported_goal_fragment(parsed)
 	message = (
 		f"{problem_path}: {fragment_label} problem goals are not supported; "
@@ -556,17 +574,22 @@ def _unsupported_numeric_diagnostics(
 					message=message,
 				),
 			)
-		if tuple(getattr(problem, "numeric_goal_conditions", ()) or ()):
+		for condition in tuple(getattr(problem, "numeric_goal_conditions", ()) or ()):
+			if _is_supported_numeric_goal_condition(
+				condition,
+				declared_functions=tuple(getattr(domain, "functions", ()) or ()),
+			):
+				continue
 			message = (
-				f"{problem_path}: numeric problem goals are not supported by current "
-				"atomic ASL synthesis; supported numeric fluents may appear in action "
-				"preconditions and effects for bounded integer resource accounting"
+				f"{problem_path}: numeric problem goals must be equality between one "
+				"declared numeric fluent and one integer constant in the supported "
+				"bounded resource fragment"
 			)
 			diagnostics.append(
 				PDDLUnsupportedDiagnostic(
 					kind="unsupported_numeric_goal",
 					location=str(problem_path),
-					symbol="=",
+					symbol=getattr(condition, "comparator", "="),
 					message=message,
 				),
 			)
@@ -593,6 +616,39 @@ def _is_integer_constant_expression(expression: object) -> bool:
 		isinstance(expression, PDDLNumericExpression)
 		and expression.kind == "constant"
 		and re.fullmatch(r"[+-]?\d+", expression.value) is not None
+	)
+
+
+def _is_supported_numeric_goal_condition(
+	condition: object,
+	*,
+	declared_functions: Sequence[object],
+) -> bool:
+	if str(getattr(condition, "comparator", "")).strip() != "=":
+		return False
+	left = getattr(condition, "left", None)
+	right = getattr(condition, "right", None)
+	declared = {
+		str(getattr(function, "name", function) or "").strip()
+		for function in tuple(declared_functions or ())
+		if str(getattr(function, "name", function) or "").strip()
+	}
+	return (
+		_numeric_goal_side_is_declared_fluent(left, declared)
+		and _is_integer_constant_expression(right)
+		or _numeric_goal_side_is_declared_fluent(right, declared)
+		and _is_integer_constant_expression(left)
+	)
+
+
+def _numeric_goal_side_is_declared_fluent(
+	expression: object,
+	declared_functions: set[str],
+) -> bool:
+	return (
+		isinstance(expression, PDDLNumericExpression)
+		and expression.kind == "fluent"
+		and str(expression.value).strip() in declared_functions
 	)
 
 
@@ -730,6 +786,64 @@ def _is_positive_goal_atom(expression: object) -> bool:
 	return all(not isinstance(argument, tuple) for argument in expression[1:])
 
 
+def _is_supported_numeric_goal_fragment(expression: object) -> bool:
+	if not isinstance(expression, tuple) or not expression:
+		return False
+	if str(expression[0]).lower() == "and":
+		return bool(expression[1:]) and all(
+			_is_supported_numeric_goal_fragment(child)
+			for child in expression[1:]
+		)
+	if not _is_numeric_goal_fragment(expression):
+		return False
+	left, right = expression[1], expression[2]
+	return (
+		_is_numeric_fluent_form(left)
+		and _is_integer_token(right)
+		or _is_numeric_fluent_form(right)
+		and _is_integer_token(left)
+	)
+
+
+def _is_numeric_goal_fragment(expression: object) -> bool:
+	if not isinstance(expression, tuple) or not expression:
+		return False
+	if str(expression[0]).lower() == "and":
+		return any(_is_numeric_goal_fragment(child) for child in expression[1:])
+	return (
+		len(expression) == 3
+		and str(expression[0]).lower() == "="
+		and (
+			_is_numeric_fluent_form(expression[1])
+			or _is_numeric_fluent_form(expression[2])
+			or _is_numeric_token(expression[1])
+			or _is_numeric_token(expression[2])
+		)
+	)
+
+
+def _is_numeric_fluent_form(expression: object) -> bool:
+	return (
+		isinstance(expression, tuple)
+		and bool(expression)
+		and all(not isinstance(argument, tuple) for argument in expression[1:])
+	)
+
+
+def _is_integer_token(expression: object) -> bool:
+	return (
+		not isinstance(expression, tuple)
+		and re.fullmatch(r"[+-]?\d+", str(expression)) is not None
+	)
+
+
+def _is_numeric_token(expression: object) -> bool:
+	return (
+		not isinstance(expression, tuple)
+		and re.fullmatch(r"[+-]?\d+(?:\.\d+)?", str(expression)) is not None
+	)
+
+
 def _unsupported_goal_fragment(expression: object) -> tuple[str, str, str]:
 	if _contains_operator(expression, "not"):
 		return ("unsupported_negative_goal", "not", "negative")
@@ -762,7 +876,7 @@ def _collect_unsupported_operators(expression: object, operators: list[str]) -> 
 	if not isinstance(expression, tuple) or not expression:
 		return
 	head = str(expression[0]).lower()
-	if _is_supported_numeric_effect_expression(expression):
+	if _is_supported_numeric_effect_expression(expression) or _is_numeric_goal_fragment(expression):
 		return
 	if head in UNSUPPORTED_EXPRESSION_OPERATORS:
 		operators.append(head)
@@ -773,10 +887,10 @@ def _collect_unsupported_operators(expression: object, operators: list[str]) -> 
 def _is_supported_numeric_effect_expression(expression: object) -> bool:
 	return (
 		isinstance(expression, tuple)
-		and len(expression) >= 3
-		and str(expression[0]).lower() == "increase"
-		and isinstance(expression[1], tuple)
-		and bool(expression[1])
+		and len(expression) == 3
+		and str(expression[0]).lower() in {"increase", "decrease"}
+		and _is_numeric_fluent_form(expression[1])
+		and not isinstance(expression[2], tuple)
 	)
 
 

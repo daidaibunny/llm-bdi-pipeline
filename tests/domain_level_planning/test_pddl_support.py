@@ -70,12 +70,31 @@ def test_pddl_support_accepts_bounded_integer_numeric_resource_fragment(
 	)
 
 
-def test_pddl_support_rejects_numeric_goal_synthesis_until_supported(
+def test_pddl_support_accepts_bounded_integer_numeric_equality_goal(
 	tmp_path: Path,
 ) -> None:
 	domain_file, problem_file = _write_numeric_resource_domain_and_problem(
 		tmp_path,
 		goal="(= (capacity truck1) 0)",
+	)
+
+	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
+	serialized = report.to_dict()
+
+	assert serialized["is_compilable"] is True
+	assert serialized["unsupported_diagnostics"] == []
+	assert any(
+		"bounded integer numeric equality goals" in assumption
+		for assumption in serialized["fragment_assumptions"]
+	)
+
+
+def test_pddl_support_rejects_non_integer_numeric_goal(
+	tmp_path: Path,
+) -> None:
+	domain_file, problem_file = _write_numeric_resource_domain_and_problem(
+		tmp_path,
+		goal="(= (capacity truck1) 0.5)",
 	)
 
 	report = inspect_pddl_support(domain_file=domain_file, problem_files=(problem_file,))
@@ -87,9 +106,9 @@ def test_pddl_support_rejects_numeric_goal_synthesis_until_supported(
 		"location": str(problem_file),
 		"symbol": "=",
 		"message": (
-			f"{problem_file}: numeric problem goals are not supported by current "
-			"atomic ASL synthesis; supported numeric fluents may appear in action "
-			"preconditions and effects for bounded integer resource accounting"
+			f"{problem_file}: numeric problem goals must be equality between one "
+			"declared numeric fluent and one integer constant in the supported "
+			"bounded resource fragment"
 		),
 	} in serialized["unsupported_diagnostics"]
 

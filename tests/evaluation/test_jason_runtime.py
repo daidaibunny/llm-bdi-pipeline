@@ -578,7 +578,7 @@ def test_jason_runner_updates_bounded_integer_numeric_resource(
 +!in(P, V) : in(P, V) <-
 	true.
 
-+!in(P, V) : at(P, L) & at(V, L) & capacity(V, N) & N > 0 <-
++!in(P, V) : at(P, L) & at(V, L) & capacity(V, N) & N > 0 & V \\== package1 <-
 	pick_up(V, P, L).
 
 +!g_query : not in(package1, truck1) <-

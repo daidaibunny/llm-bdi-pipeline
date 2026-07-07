@@ -180,13 +180,22 @@ generic `atomic_template_library` plus plan-template-level diagnostics:
 
 Restricted numeric-resource support is now implemented for the bounded integer
 fragment. The project parser reads PDDL `:functions`, numeric initial values,
-numeric action comparisons, and constant `increase/decrease` effects. Support
-audit distinguishes metric-only action cost functions from logical numeric
-resources and rejects numeric goals, non-integer initial values, non-constant
-numeric updates, and arbitrary arithmetic expressions. Jason runtime seeds
-numeric fluents as mutable beliefs such as `capacity(truck1,1)` and updates
-them during primitive action execution. Atomic ASL synthesis compiles numeric
-preconditions into context guards such as `capacity(V,N) & N >= 1`; these are
-context-only numeric fluent checks, not subgoals. Full numeric PDDL, numeric
-atomic goal synthesis, optimization metrics, real-valued fluents, and recursive
-numeric ranking goals remain unsupported until a separate certificate is added.
+numeric action comparisons, bounded integer equality numeric goals, and
+constant `increase/decrease` effects. Support audit distinguishes metric-only
+action cost functions from logical numeric resources and rejects non-equality
+numeric goals, non-integer initial values, non-constant numeric updates, and
+arbitrary arithmetic expressions. Jason runtime seeds numeric fluents as
+mutable beliefs such as `capacity(truck1,1)` and updates them during primitive
+action execution. Atomic ASL synthesis compiles numeric preconditions into
+context guards such as `capacity(V,N) & N >= 1`; these are context-only numeric
+fluent checks, not subgoals. Numeric resource goals such as
+`(= (pogo_sticks_to_make) 0)` compile to resource modules such as
+`+!pogo_sticks_to_make(0)`, including an already-true branch and validated
+MOOSE macro branches that make unit monotone progress toward the target.
+Full numeric PDDL, optimization metrics as achievement goals, real-valued
+fluents, arbitrary arithmetic, and recursive numeric ranking goals remain
+unsupported until a separate certificate is added. Smoke evidence:
+`tmp/numeric_smoke_all_20260707-122338` trained and compiled
+`numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, and
+`numeric-transport`; the first two test goals for each domain passed both Jason
+and VAL.

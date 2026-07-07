@@ -18,6 +18,8 @@ from plan_library.rendering import render_plan_library_asl
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocks" / "domain.pddl"
 LOGISTICS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl"
+NUMERIC_FERRY_DOMAIN = PROJECT_ROOT / "src" / "domains" / "numeric-ferry" / "domain.pddl"
+NUMERIC_MINECRAFT_DOMAIN = PROJECT_ROOT / "src" / "domains" / "numeric-minecraft" / "domain.pddl"
 
 
 FERRY_READABLE_POLICY = """
@@ -53,6 +55,51 @@ LOGISTICS_INTERMODAL_READABLE_POLICY = """
 """
 
 
+NUMERIC_FERRY_READABLE_POLICY = """
+ precedence : (1, 1, 0, 0)
+       vars : car0 location0
+     s_cond : (at-ferry location0) (on car0) (>= (ferry-capacity) 1)
+     g_cond : (at car0 location0)
+    actions : (debark car0 location0)
+"""
+
+
+NUMERIC_MINECRAFT_READABLE_POLICY = """
+ precedence : (1, 1, 0, 0)
+       vars :
+     s_cond : (>= (count_planks_in_inventory) 2) (>= (count_sack_polyisoprene_pellets_in_inventory) 1) (>= (count_stick_in_inventory) 4) (>= (pogo_sticks_to_make) 0) (position crafting_table)
+     g_cond : (= (pogo_sticks_to_make__ug) 0)
+    actions : (craft_wooden_pogo)
+"""
+
+
+NUMERIC_MINECRAFT_MOVE_TO_CONSTANT_POLICY = """
+ precedence : (1, 4, 0, 0)
+       vars : cell0 crafting_table
+     s_cond : (>= (count_log_in_inventory) 1) (>= (count_planks_in_inventory) -2) (>= (count_sack_polyisoprene_pellets_in_inventory) 1) (>= (count_stick_in_inventory) 0) (>= (pogo_sticks_to_make) 0) (position cell0)
+     g_cond : (= (pogo_sticks_to_make__ug) 0)
+    actions : (tp_to cell0 crafting_table) (craft_plank) (craft_stick) (craft_wooden_pogo)
+"""
+
+
+NUMERIC_MINECRAFT_MOVE_TO_VARIABLE_POLICY = """
+ precedence : (1, 10, 0, 0)
+       vars : cell0 cell1 crafting_table
+     s_cond : (>= (count_log_in_inventory) 1) (>= (count_planks_in_inventory) 1) (>= (count_sack_polyisoprene_pellets_in_inventory) 0) (>= (count_stick_in_inventory) 1) (>= (count_tree_tap_in_inventory) 0) (>= (pogo_sticks_to_make) 0) (position cell0) (tree_cell cell1)
+     g_cond : (= (pogo_sticks_to_make__ug) 0)
+    actions : (tp_to cell0 crafting_table) (craft_plank) (craft_tree_tap) (tp_to crafting_table cell1) (place_tree_tap cell1) (break cell1) (tp_to cell1 crafting_table) (craft_plank) (craft_stick) (craft_wooden_pogo)
+"""
+
+
+NUMERIC_MINECRAFT_THREE_CELL_POLICY = """
+ precedence : (1, 15, 0, 0)
+       vars : cell0 cell1 cell2 crafting_table
+     s_cond : (>= (count_log_in_inventory) 0) (>= (count_planks_in_inventory) -2) (>= (count_sack_polyisoprene_pellets_in_inventory) 0) (>= (count_stick_in_inventory) -3) (>= (count_tree_tap_in_inventory) 0) (>= (pogo_sticks_to_make) 0) (position cell0) (tree_cell cell0) (tree_cell cell1) (tree_cell cell2)
+     g_cond : (= (pogo_sticks_to_make__ug) 0)
+    actions : (break cell0) (tp_to cell0 cell1) (craft_plank) (craft_stick) (break cell1) (tp_to cell1 crafting_table) (craft_plank) (craft_tree_tap) (tp_to crafting_table cell2) (place_tree_tap cell2) (break cell2) (tp_to cell2 crafting_table) (craft_plank) (craft_stick) (craft_wooden_pogo)
+"""
+
+
 def test_parse_moose_readable_policy_extracts_lifted_rules() -> None:
 	rules = parse_moose_readable_policy(FERRY_READABLE_POLICY)
 
@@ -62,6 +109,21 @@ def test_parse_moose_readable_policy_extracts_lifted_rules() -> None:
 	assert rules[0].goal_conditions[0].arguments == ("car0", "location0")
 	assert rules[1].actions[0].predicate == "board"
 	assert rules[1].actions[-1].arguments == ("car0", "location1")
+
+
+def test_parse_moose_readable_policy_extracts_numeric_conditions() -> None:
+	rules = parse_moose_readable_policy(NUMERIC_FERRY_READABLE_POLICY)
+
+	assert len(rules) == 1
+	assert rules[0].state_conditions == (
+		rules[0].state_conditions[0],
+		rules[0].state_conditions[1],
+	)
+	assert [condition.to_signature() for condition in rules[0].state_numeric_conditions] == [
+		"ferry-capacity >= 1",
+	]
+	assert rules[0].goal_conditions[0].predicate == "at"
+	assert rules[0].goal_numeric_conditions == ()
 
 
 def test_parse_moose_readable_policy_ignores_dump_logs() -> None:
@@ -189,9 +251,9 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	)
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
-	assert selector_report["raw_candidate_count"] >= len(library.plans)
+	assert selector_report["raw_candidate_count"] >= selector_report["plan_count"]
 	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
-	assert len(selector_report["selected_branch_ids"]) == len(library.plans)
+	assert len(selector_report["selected_branch_ids"]) == selector_report["plan_count"]
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
 	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "+!clear(X) : obj_tp(X, block) & not handempty" in asl
@@ -232,6 +294,104 @@ def test_post_moose_reducer_preserves_validated_logistics_intermodal_macro() -> 
 		"mixed_atomic_template_library"
 	)
 	assert "block0" not in asl
+
+
+def test_post_moose_reducer_preserves_numeric_macro_contexts() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		NUMERIC_FERRY_READABLE_POLICY,
+		domain_file=NUMERIC_FERRY_DOMAIN,
+		domain_name="numeric-ferry",
+		source_name="numeric-ferry-seed0",
+		policy_file=Path("numeric-ferry-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "ferry_capacity(N)" in asl
+	assert "N >= 1" in asl
+	assert " & ferry_capacity <-" not in asl
+	assert " & ferry_capacity &" not in asl
+	assert library.metadata["validated_policy_lifting"]["validated_macro_count"] == 1
+	assert library.metadata["validated_policy_lifting"]["invalid_macro_count"] == 0
+
+
+def test_post_moose_reducer_compiles_numeric_resource_goal_module() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		NUMERIC_MINECRAFT_READABLE_POLICY,
+		domain_file=NUMERIC_MINECRAFT_DOMAIN,
+		domain_name="numeric-minecraft",
+		source_name="numeric-minecraft-seed0",
+		policy_file=Path("numeric-minecraft-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <-" in asl
+	assert "+!pogo_sticks_to_make(0) :" in asl
+	assert "pogo_sticks_to_make(N)" in asl
+	assert "N > 0" in asl
+	assert "count_planks_in_inventory(M)" in asl
+	assert "count_planks_in_inventory(N)" not in asl
+	assert "count_planks_in_inventory" in asl
+	assert "N >= -2" not in asl
+	assert "\tcraft_wooden_pogo;" in asl
+	assert "\t!pogo_sticks_to_make(0)." in asl
+	assert "pogo_sticks_to_make__ug" not in asl
+	assert library.metadata["source_seed_predicates"] == []
+	assert library.metadata["source_numeric_goal_functions"] == ["pogo_sticks_to_make"]
+	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
+
+
+def test_post_moose_reducer_preserves_pddl_constants_in_numeric_macros() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		NUMERIC_MINECRAFT_MOVE_TO_CONSTANT_POLICY,
+		domain_file=NUMERIC_MINECRAFT_DOMAIN,
+		domain_name="numeric-minecraft",
+		source_name="numeric-minecraft-seed0",
+		policy_file=Path("numeric-minecraft-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "\ttp_to(X, crafting_table);" in asl
+	assert "obj_tp(crafting_table, cell)" not in asl
+	assert "X \\== crafting_table" in asl
+	assert "\ttp_to(X, Y);" not in asl
+	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
+
+
+def test_post_moose_reducer_adds_negative_precondition_binding_guards() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		NUMERIC_MINECRAFT_MOVE_TO_VARIABLE_POLICY,
+		domain_file=NUMERIC_MINECRAFT_DOMAIN,
+		domain_name="numeric-minecraft",
+		source_name="numeric-minecraft-seed0",
+		policy_file=Path("numeric-minecraft-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "\ttp_to(X, crafting_table);" in asl
+	assert "\ttp_to(crafting_table, Y);" in asl
+	assert "\ttp_to(Y, crafting_table);" in asl
+	assert "X \\== crafting_table" in asl
+	assert "Y \\== crafting_table" in asl
+	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
+
+
+def test_post_moose_reducer_preserves_distinct_evidence_objects_as_guards() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		NUMERIC_MINECRAFT_THREE_CELL_POLICY,
+		domain_file=NUMERIC_MINECRAFT_DOMAIN,
+		domain_name="numeric-minecraft",
+		source_name="numeric-minecraft-seed0",
+		policy_file=Path("numeric-minecraft-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+
+	assert "X \\== Y" in asl
+	assert "X \\== Z" in asl
+	assert "Y \\== Z" in asl
+	assert "X \\== crafting_table" in asl
+	assert "Y \\== crafting_table" in asl
+	assert "Z \\== crafting_table" in asl
+	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 
 
 def test_moose_readable_compile_asl_cli_materializes_atomic_library(

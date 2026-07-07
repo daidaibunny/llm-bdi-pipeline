@@ -36,11 +36,12 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 	assert report.violations == ()
 	serialized = report.to_dict()
 	assert serialized["supported_asl_subset"]["plan_heads"] == (
-		"PDDL predicate achievement goals or query-specific +!g_* temporal wrappers"
+		"PDDL predicate achievement goals, PDDL numeric function resource goals, "
+		"or query-specific +!g_* temporal wrappers"
 	)
 	assert serialized["supported_asl_subset"]["body_steps"] == (
-		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
-		"query-specific +!g_* wrapper subgoal calls"
+		"PDDL primitive action calls, PDDL predicate subgoal calls, PDDL numeric "
+		"function resource subgoal calls, and query-specific +!g_* wrapper subgoal calls"
 	)
 	assert serialized["supported_asl_subset"]["initial_beliefs"] == (
 		"empty except zero-arity query entry propositions"
@@ -173,6 +174,74 @@ def test_domain_level_library_contract_accepts_numeric_fluent_contexts() -> None
 	assert report.violations == ()
 
 
+def test_domain_level_library_contract_accepts_numeric_function_goal_modules() -> None:
+	plan_library = PlanLibrary(
+		domain_name="numeric-minecraft",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="pogo_already_target_0",
+				trigger=AgentSpeakTrigger(
+					"achievement_goal",
+					"pogo_sticks_to_make",
+					("0",),
+				),
+				context=("pogo_sticks_to_make(N)", "N == 0"),
+				body=(),
+			),
+			AgentSpeakPlan(
+				plan_name="pogo_via_craft",
+				trigger=AgentSpeakTrigger(
+					"achievement_goal",
+					"pogo_sticks_to_make",
+					("0",),
+				),
+				context=("pogo_sticks_to_make(N)", "N > 0", "position(crafting_table)"),
+				body=(
+					AgentSpeakBodyStep("action", "craft_wooden_pogo"),
+					AgentSpeakBodyStep("subgoal", "pogo_sticks_to_make", ("0",)),
+				),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates={"position": 1},
+		declared_actions={"craft_wooden_pogo": 0},
+		declared_functions={"pogo_sticks_to_make": 0},
+		declared_constants=("crafting_table",),
+	)
+
+	assert report.passed is True
+	assert report.checked_layers["declared_pddl_symbols"] is True
+	assert report.checked_layers["lifted_plan_heads"] is True
+	assert report.checked_layers["lifted_body_calls"] is True
+	assert report.violations == ()
+
+
+def test_domain_level_library_contract_rejects_undeclared_numeric_function_goal() -> None:
+	plan_library = PlanLibrary(
+		domain_name="numeric-minecraft",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="unknown_resource",
+				trigger=AgentSpeakTrigger("achievement_goal", "unknown_resource", ("0",)),
+				context=("unknown_resource(N)", "N == 0"),
+				body=(),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_functions={"pogo_sticks_to_make": 0},
+	)
+
+	assert report.passed is False
+	assert report.checked_layers["declared_pddl_symbols"] is False
+	assert any("unknown_resource" in violation for violation in report.violations)
+
+
 def test_domain_level_library_contract_rejects_unbound_numeric_comparison() -> None:
 	plan_library = PlanLibrary(
 		domain_name="numeric-transport",
@@ -267,6 +336,43 @@ def test_domain_level_library_contract_accepts_lifted_equality_contexts() -> Non
 	assert report.passed is True
 	assert report.checked_layers["context_subset"] is True
 	assert report.checked_layers["declared_pddl_symbols"] is True
+	assert report.violations == ()
+
+
+def test_domain_level_library_contract_accepts_bound_inequality_contexts() -> None:
+	plan_library = PlanLibrary(
+		domain_name="numeric-minecraft",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="pogo_via_move",
+				trigger=AgentSpeakTrigger(
+					"achievement_goal",
+					"pogo_sticks_to_make",
+					("0",),
+				),
+				context=(
+					"position(X)",
+					"obj_tp(X, cell)",
+					"X != crafting_table",
+				),
+				body=(
+					AgentSpeakBodyStep("action", "tp_to", ("X", "crafting_table")),
+				),
+			),
+		),
+	)
+
+	report = audit_domain_level_library_contract(
+		plan_library,
+		declared_predicates={"position": 1},
+		declared_actions={"tp_to": 2},
+		declared_functions={"pogo_sticks_to_make": 0},
+		declared_constants=("crafting_table",),
+	)
+
+	assert report.passed is True
+	assert report.checked_layers["context_subset"] is True
+	assert report.checked_layers["variable_binding_safety"] is True
 	assert report.violations == ()
 
 

@@ -11,15 +11,18 @@ from typing import Iterable, Mapping, Sequence
 from plan_library.models import AgentSpeakPlan, PlanLibrary
 
 SUPPORTED_ASL_SUBSET = {
-	"plan_heads": "PDDL predicate achievement goals or query-specific +!g_* temporal wrappers",
+	"plan_heads": (
+		"PDDL predicate achievement goals, PDDL numeric function resource goals, "
+		"or query-specific +!g_* temporal wrappers"
+	),
 	"contexts": (
 		"implicit conjunction of atom, not atom, equality, inequality, numeric "
 		"comparison, or PDDL numeric fluent context literals only; reserved "
 		"obj_tp(Variable, Type) sort contexts may appear as compiler metadata"
 	),
 	"body_steps": (
-		"PDDL primitive action calls, PDDL predicate subgoal calls, and "
-		"query-specific +!g_* wrapper subgoal calls"
+		"PDDL primitive action calls, PDDL predicate subgoal calls, PDDL numeric "
+		"function resource subgoal calls, and query-specific +!g_* wrapper subgoal calls"
 	),
 	"initial_beliefs": "empty except zero-arity query entry propositions",
 }
@@ -69,6 +72,7 @@ def audit_domain_level_library_contract(
 	declared_predicates: Sequence[object] = (),
 	declared_actions: Sequence[object] = (),
 	declared_functions: Sequence[object] = (),
+	declared_constants: Sequence[object] = (),
 ) -> DomainLevelLibraryContractReport:
 	"""Check that a generated library stays domain-level, lifted, and clean."""
 
@@ -77,6 +81,11 @@ def audit_domain_level_library_contract(
 	predicate_arities = _declared_arities(declared_predicates)
 	action_arities = _declared_arities(declared_actions)
 	function_arities = _declared_arities(declared_functions)
+	constant_names = {
+		str(constant).strip()
+		for constant in tuple(declared_constants or ())
+		if str(constant).strip()
+	}
 	initial_beliefs_scoped = _initial_beliefs_are_query_entries(plan_library)
 	if not initial_beliefs_scoped:
 		violations.append(
@@ -85,11 +94,25 @@ def audit_domain_level_library_contract(
 
 	no_synthetic_names = _collect_synthetic_name_violations(plan_library, violations)
 	plan_head_subset = _collect_plan_head_subset_violations(plans, violations)
-	lifted_heads = _collect_head_lifting_violations(plans, violations)
+	lifted_heads = _collect_head_lifting_violations(
+		plans,
+		declared_functions=function_arities,
+		declared_constants=constant_names,
+		violations=violations,
+	)
 	body_step_subset = _collect_body_step_subset_violations(plans, violations)
-	lifted_body_calls = _collect_body_lifting_violations(plans, violations)
+	lifted_body_calls = _collect_body_lifting_violations(
+		plans,
+		declared_functions=function_arities,
+		declared_constants=constant_names,
+		violations=violations,
+	)
 	context_subset = _collect_context_subset_violations(plans, violations)
-	lifted_contexts = _collect_context_lifting_violations(plans, violations)
+	lifted_contexts = _collect_context_lifting_violations(
+		plans,
+		declared_constants=constant_names,
+		violations=violations,
+	)
 	variable_binding_safety = _collect_variable_binding_violations(plans, violations)
 	declared_pddl_symbols = _collect_declared_pddl_symbol_violations(
 		plans,
@@ -149,6 +172,9 @@ def _collect_synthetic_name_violations(
 
 def _collect_head_lifting_violations(
 	plans: Iterable[AgentSpeakPlan],
+	*,
+	declared_functions: Mapping[str, int | None],
+	declared_constants: set[str],
 	violations: list[str],
 ) -> bool:
 	passed = True
@@ -161,8 +187,15 @@ def _collect_head_lifting_violations(
 					f"must not take arguments: {plan.plan_name!r}."
 				),
 			)
-		for argument in tuple(plan.trigger.arguments or ()):
-			if not _is_lifted_variable(argument):
+		for index, argument in enumerate(tuple(plan.trigger.arguments or ())):
+			if _is_numeric_function_target_argument(
+				symbol=plan.trigger.symbol,
+				index=index,
+				argument=argument,
+				declared_functions=declared_functions,
+			):
+				continue
+			if not _is_lifted_variable(argument) and argument not in declared_constants:
 				passed = False
 				violations.append(
 					f"Plan head contains grounded argument {argument!r} in {plan.plan_name!r}.",
@@ -192,6 +225,9 @@ def _collect_body_step_subset_violations(
 
 def _collect_body_lifting_violations(
 	plans: Iterable[AgentSpeakPlan],
+	*,
+	declared_functions: Mapping[str, int | None],
+	declared_constants: set[str],
 	violations: list[str],
 ) -> bool:
 	passed = True
@@ -199,8 +235,15 @@ def _collect_body_lifting_violations(
 		for step in tuple(plan.body or ()):
 			if _is_query_wrapper_symbol(step.symbol) and not tuple(step.arguments or ()):
 				continue
-			for argument in tuple(step.arguments or ()):
-				if not _is_lifted_variable(argument):
+			for index, argument in enumerate(tuple(step.arguments or ())):
+				if _is_numeric_function_target_argument(
+					symbol=step.symbol,
+					index=index,
+					argument=argument,
+					declared_functions=declared_functions,
+				):
+					continue
+				if not _is_lifted_variable(argument) and argument not in declared_constants:
 					passed = False
 					violations.append(
 						f"Body step {step.symbol!r} contains grounded argument "
@@ -230,6 +273,8 @@ def _collect_context_subset_violations(
 
 def _collect_context_lifting_violations(
 	plans: Iterable[AgentSpeakPlan],
+	*,
+	declared_constants: set[str],
 	violations: list[str],
 ) -> bool:
 	passed = True
@@ -249,7 +294,7 @@ def _collect_context_lifting_violations(
 					)
 					continue
 				for argument in arguments:
-					if not _is_lifted_variable(argument):
+					if not _is_lifted_variable(argument) and argument not in declared_constants:
 						passed = False
 						violations.append(
 							f"Context atom {atom!r} contains grounded argument "
@@ -274,7 +319,7 @@ def _collect_variable_binding_violations(
 		for context in tuple(plan.context or ()):
 			if str(context or "").strip().lower().startswith("not "):
 				continue
-			comparison_variables = _numeric_comparison_variables(context)
+			comparison_variables = _comparison_variables(context)
 			if comparison_variables is not None:
 				for variable in comparison_variables:
 					if variable in bound_variables:
@@ -329,14 +374,30 @@ def _collect_declared_pddl_symbol_violations(
 		if (
 			not _is_query_wrapper_symbol(plan.trigger.symbol)
 			and plan.trigger.symbol not in declared_predicates
+			and plan.trigger.symbol not in declared_functions
 		):
 			passed = False
 			violations.append(
 				(
-					f"Plan {plan.plan_name!r} uses undeclared PDDL predicate "
+					f"Plan {plan.plan_name!r} uses undeclared PDDL predicate or numeric function "
 					f"{plan.trigger.symbol!r} as plan head."
 				),
 			)
+		elif not _is_query_wrapper_symbol(plan.trigger.symbol) and plan.trigger.symbol in declared_functions:
+			expected_arity = _numeric_goal_arity(declared_functions[plan.trigger.symbol])
+			if not _arity_matches(
+				expected_arity,
+				len(tuple(plan.trigger.arguments or ())),
+			):
+				passed = False
+				violations.append(
+					(
+						f"Plan {plan.plan_name!r} uses PDDL numeric function "
+						f"{_schema_signature(plan.trigger.symbol, expected_arity)} "
+						f"with wrong arity {len(tuple(plan.trigger.arguments or ()))} "
+						"as plan head."
+					),
+				)
 		elif not _is_query_wrapper_symbol(plan.trigger.symbol) and not _arity_matches(
 			declared_predicates[plan.trigger.symbol],
 			len(tuple(plan.trigger.arguments or ())),
@@ -402,6 +463,22 @@ def _collect_declared_pddl_symbol_violations(
 		for step in tuple(plan.body or ()):
 			if step.kind == "subgoal":
 				if _is_query_wrapper_symbol(step.symbol):
+					continue
+				if step.symbol in declared_functions:
+					expected_arity = _numeric_goal_arity(declared_functions[step.symbol])
+					if not _arity_matches(
+						expected_arity,
+						len(tuple(step.arguments or ())),
+					):
+						passed = False
+						violations.append(
+							(
+								f"Plan {plan.plan_name!r} uses PDDL numeric function "
+								f"{_schema_signature(step.symbol, expected_arity)} "
+								f"with wrong arity {len(tuple(step.arguments or ()))} "
+								"as body subgoal."
+							),
+						)
 					continue
 				if step.symbol not in declared_predicates:
 					passed = False
@@ -528,7 +605,7 @@ def _is_supported_context_literal(context: str) -> bool:
 	text = str(context or "").strip()
 	if not text or text.lower() == "true":
 		return True
-	if _is_numeric_comparison_literal(text):
+	if _is_comparison_literal(text):
 		return True
 	if any(operator in text for operator in ("|", "&", "==", "!=", "\\==")):
 		return False
@@ -552,25 +629,52 @@ def _is_atom_literal(text: str) -> bool:
 	)
 
 
-def _is_numeric_comparison_literal(context: str) -> bool:
-	return _numeric_comparison_variables(context) is not None
+def _is_comparison_literal(context: str) -> bool:
+	return _comparison_variables(context) is not None
 
 
-def _numeric_comparison_variables(context: str) -> tuple[str, ...] | None:
+def _comparison_variables(context: str) -> tuple[str, ...] | None:
 	text = str(context or "").strip()
 	match = re.fullmatch(
-		r"\s*(?P<left>[A-Z][A-Za-z0-9_]*|[+-]?\d+)\s*"
-		r"(?P<operator>>=|<=|>|<)\s*"
-		r"(?P<right>[A-Z][A-Za-z0-9_]*|[+-]?\d+)\s*",
+		r"\s*(?P<left>[A-Za-z_][A-Za-z0-9_-]*|[+-]?\d+)\s*"
+		r"(?P<operator>\\==|!=|==|>=|<=|>|<)\s*"
+		r"(?P<right>[A-Za-z_][A-Za-z0-9_-]*|[+-]?\d+)\s*",
 		text,
 	)
 	if match is None:
 		return None
+	operator = match.group("operator")
+	left = match.group("left")
+	right = match.group("right")
+	if operator in {">", ">=", "<", "<="}:
+		if not all(_is_lifted_variable(token) or _is_numeric_constant(token) for token in (left, right)):
+			return None
 	return tuple(
 		token
-		for token in (match.group("left"), match.group("right"))
+		for token in (left, right)
 		if _is_lifted_variable(token)
 	)
+
+
+def _is_numeric_function_target_argument(
+	*,
+	symbol: str,
+	index: int,
+	argument: str,
+	declared_functions: Mapping[str, int | None],
+) -> bool:
+	if symbol not in declared_functions:
+		return False
+	function_arity = declared_functions[symbol]
+	return (
+		function_arity is not None
+		and index == function_arity
+		and _is_numeric_constant(argument)
+	)
+
+
+def _is_numeric_constant(argument: str) -> bool:
+	return re.fullmatch(r"[+-]?\d+(?:\.\d+)?", str(argument or "").strip()) is not None
 
 
 def _is_lifted_variable(argument: str) -> bool:
@@ -614,6 +718,10 @@ def _arity_matches(expected: int | None, observed: int) -> bool:
 
 
 def _numeric_context_arity(function_arity: int | None) -> int | None:
+	return None if function_arity is None else function_arity + 1
+
+
+def _numeric_goal_arity(function_arity: int | None) -> int | None:
 	return None if function_arity is None else function_arity + 1
 
 

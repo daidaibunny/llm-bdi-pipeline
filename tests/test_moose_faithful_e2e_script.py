@@ -4,16 +4,22 @@ import json
 from pathlib import Path
 
 from scripts.run_moose_faithful_e2e import first_n_test_instances
+from scripts.run_moose_faithful_e2e import append_problem_goal_wrappers_to_library
 from scripts.run_moose_faithful_e2e import compile_moose_atomic_library_command
 from scripts.run_moose_faithful_e2e import materialize_moose_compatible_pddl
 from scripts.run_moose_faithful_e2e import moose_policy_command
 from scripts.run_moose_faithful_e2e import moose_train_command
 from scripts.run_moose_faithful_e2e import natural_sort_key
 from scripts.run_moose_faithful_e2e import normalise_pddl_for_moose
+from scripts.run_moose_faithful_e2e import selected_query_append_mode
 from scripts.run_moose_faithful_e2e import sequential_eventually_formula
 from scripts.run_moose_faithful_e2e import write_test_goal_dataset
 from scripts.run_timestamped_moose_asl_batch import batch_manifest
 from scripts.run_timestamped_moose_asl_batch import build_moose_batch_command
+from plan_library.models import AgentSpeakBodyStep
+from plan_library.models import AgentSpeakPlan
+from plan_library.models import AgentSpeakTrigger
+from plan_library.models import PlanLibrary
 
 
 def test_natural_sort_selects_first_split_instances(tmp_path: Path) -> None:
@@ -61,6 +67,91 @@ def test_write_test_goal_dataset_uses_grounded_problem_goals(tmp_path: Path) -> 
 	assert case["goal_name"] == "g_blocks_test_1"
 	assert case["ltlf_formula"] == "F(on(a,b) & X(F(on(b,c))))"
 	assert case["atoms"] == ["on(a,b)", "on(b,c)"]
+
+
+def test_selected_query_append_mode_detects_numeric_problem_goals(tmp_path: Path) -> None:
+	problem_file = tmp_path / "numeric.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain numeric-minecraft)
+		 (:objects)
+		 (:init (= (pogo_sticks_to_make) 2))
+		 (:goal (= (pogo_sticks_to_make) 0))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	mode = selected_query_append_mode((problem_file,))
+
+	assert mode == "pddl_goal_single_body_wrapper"
+
+
+def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) -> None:
+	library_root = tmp_path / "libraries"
+	library_dir = library_root / "numeric-minecraft"
+	library_dir.mkdir(parents=True)
+	base_library = PlanLibrary(
+		domain_name="numeric-minecraft",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="pogo_already_target_0",
+				trigger=AgentSpeakTrigger(
+					"achievement_goal",
+					"pogo_sticks_to_make",
+					("0",),
+				),
+				context=("pogo_sticks_to_make(N)", "N == 0"),
+				body=(),
+			),
+			AgentSpeakPlan(
+				plan_name="pogo_via_craft",
+				trigger=AgentSpeakTrigger(
+					"achievement_goal",
+					"pogo_sticks_to_make",
+					("0",),
+				),
+				context=("pogo_sticks_to_make(N)", "N > 0"),
+				body=(
+					AgentSpeakBodyStep("action", "craft_wooden_pogo"),
+					AgentSpeakBodyStep("subgoal", "pogo_sticks_to_make", ("0",)),
+				),
+			),
+		),
+	)
+	(library_dir / "plan_library.json").write_text(
+		json.dumps(base_library.to_dict(), indent=2) + "\n",
+		encoding="utf-8",
+	)
+	(library_dir / "artifact_metadata.json").write_text("{}\n", encoding="utf-8")
+	problem_file = tmp_path / "numeric.pddl"
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain numeric-minecraft)
+		 (:objects)
+		 (:init (= (pogo_sticks_to_make) 2))
+		 (:goal (= (pogo_sticks_to_make) 0))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	result = append_problem_goal_wrappers_to_library(
+		domain_name="numeric-minecraft",
+		problem_files=(problem_file,),
+		library_root=library_root,
+	)
+
+	asl = (library_dir / "plan_library.asl").read_text(encoding="utf-8")
+	payload = json.loads((library_dir / "plan_library.json").read_text(encoding="utf-8"))
+
+	assert result["success"] is True
+	assert "numeric_minecraft_test_1." in asl
+	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in asl
+	assert "\t!pogo_sticks_to_make(0)." in asl
+	assert payload["initial_beliefs"] == ["numeric_minecraft_test_1"]
 
 
 def test_moose_train_command_uses_full_train_split(tmp_path: Path) -> None:

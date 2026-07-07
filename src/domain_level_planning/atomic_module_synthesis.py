@@ -22,6 +22,7 @@ from plan_library.models import PlanLibrary
 from utils.pddl_parser import PDDLAction
 from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLNumericCondition
+from utils.pddl_parser import PDDLNumericEffect
 from utils.pddl_parser import PDDLNumericExpression
 from utils.pddl_parser import PDDLParser
 
@@ -260,6 +261,7 @@ class _ParsedAction:
 	add_effects: tuple[PDDLLiteralSchema, ...]
 	delete_effects: tuple[PDDLLiteralSchema, ...]
 	numeric_preconditions: tuple[PDDLNumericCondition, ...] = ()
+	numeric_effects: tuple[PDDLNumericEffect, ...] = ()
 
 	@classmethod
 	def from_pddl(cls, action: PDDLAction) -> "_ParsedAction":
@@ -276,6 +278,9 @@ class _ParsedAction:
 			delete_effects=tuple(literal for literal in effects if not literal.is_positive),
 			numeric_preconditions=tuple(
 				getattr(action, "numeric_preconditions", ()) or (),
+			),
+			numeric_effects=tuple(
+				getattr(action, "numeric_effects", ()) or (),
 			),
 		)
 

@@ -19,6 +19,18 @@ checks that the readable policy's actions replay through those schemas, lifts
 object names to variables, adds required PDDL-schema closure modules, selects a
 compact branch set, and renders AgentSpeak(L) plans such as `+!at(X,Y)`.
 
+The compiler contract also includes a bounded integer numeric-resource fragment.
+A numeric resource is a declared PDDL function with an integer value in the
+state, for example `(capacity ?vehicle)` or `(pogo_sticks_to_make)`. A numeric
+resource context is rendered as a mutable AgentSpeak belief plus comparison,
+for example `capacity(V,N) & N > 0`. A numeric resource goal is rendered with
+the target value as the final achievement-goal argument, for example
+`+!pogo_sticks_to_make(0)`. Numeric macro evidence is accepted only when the
+PDDL schema validates the primitive action sequence and the macro has a unit
+monotone numeric effect toward the target, for example
+`craft_wooden_pogo; !pogo_sticks_to_make(0)` after a `decrease` effect on
+`pogo_sticks_to_make`.
+
 The compiler does not use a domain-name switch and does not assign a whole
 domain to a compiler class. The structural labels are plan-template-level
 labels. A plan template is one AgentSpeak(L) plan branch, for example one
@@ -55,7 +67,7 @@ MOOSE is a source of evidence and benchmark provenance, not the taxonomy itself.
 | Group | Domains | Shared property |
 | --- | --- | --- |
 | ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | Classical PDDL domains in the easy-to-solve, hard-to-optimise benchmark family used by MOOSE following the Helmert-style complexity view. These domains are suitable for testing whether singleton-goal regression evidence can be lifted into reusable atomic AgentSpeak(L) modules. |
-| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | PDDL domains whose state, action applicability, or goals include numeric functions, numeric conditions, or numeric effects. They are included for benchmark coverage and for a staged numeric compiler extension, but the current main compiler contract remains predicate-level until numeric fluent semantics are implemented end to end. |
+| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | PDDL domains whose state, action applicability, or goals include numeric functions, numeric conditions, or numeric effects. They are included for benchmark coverage and for the bounded integer numeric-resource compiler fragment. |
 | Feature-definable serialized-width domains | `blocks`, `depots` | Relational domains whose compact reusable behavior is normally expressed through lifted features and serialized subgoal structure: a feature-defined policy or sketch selects progress-making subgoals whose induced subproblems have small width. This group tests whether the compiler can add justified internal atomic modules from PDDL schemas rather than merely replay fixed singleton macros. |
 
 The formal local corpus lives under `src/domains/<domain>/` with
@@ -117,56 +129,69 @@ blank reachability and permutation distance. Until such a certificate is
 generated and validated, those goals remain outside the selected benchmark
 claim rather than being patched with domain-specific code.
 
-## Numeric Support Track
+## Numeric Support
 
-Numeric fluent support should be added only as an explicit compiler extension,
-not by silently treating numeric PDDL as classical predicates. A numeric fluent
-is a PDDL function whose value is part of the state, for example
-`(ferry-capacity)` or `(capacity ?vehicle)`. A numeric condition is a comparison
-over such values, for example `(> (capacity ?vehicle) 0)`. A numeric effect is
-an update such as `(decrease (capacity ?vehicle) 1)` or
-`(increase (ferry-capacity) 1)`.
+Numeric fluent support is an explicit compiler extension, not a silent
+translation of numeric PDDL into classical predicates. A numeric fluent is a
+PDDL function whose value is part of the state, for example `(ferry-capacity)`
+or `(capacity ?vehicle)`. A numeric condition is a comparison over such values,
+for example `(> (capacity ?vehicle) 0)`. A numeric effect is an update such as
+`(decrease (capacity ?vehicle) 1)` or `(increase (ferry-capacity) 1)`.
 
-The safe first target is a bounded integer-resource fragment:
+The implemented fragment is bounded integer-resource PDDL:
 
 - numeric functions have finite integer values in the problem initial state;
 - numeric preconditions use simple comparisons against constants or another
   parsed numeric term;
 - numeric effects use `increase` and `decrease` by constant amounts;
+- numeric problem goals may use equality between one declared numeric fluent and
+  one integer target value;
 - numeric fluents are used as action applicability and resource accounting, not
   as recursive ranking proofs for graph-search-style goals;
 - generated action traces are still validated by a PDDL validator that supports
   numeric fluents.
 
-Under this fragment, AgentSpeak(L) plans may use numeric beliefs as executable
-state, for example `capacity(v1, 2)`, and primitive action execution updates
-those beliefs according to the PDDL numeric effect. The final ASL library must
-therefore include a clear numeric state convention and must not compile
-`increase` or `decrease` into unchecked text. A numeric atomic goal such as
-`pogo_sticks_to_make == 0` should be represented by an explicit wrapper goal
-whose context checks the numeric belief and whose recursive branch is emitted
-only when the compiler has a validated producer action or macro that decreases
-the relevant value.
+Under this fragment, AgentSpeak(L) plans use numeric beliefs as executable
+state, for example `capacity(v1,2)`, and primitive action execution updates
+those beliefs according to the PDDL numeric effect. The final ASL library uses
+declared PDDL function names directly. For example, the numeric goal
+`(= (pogo_sticks_to_make) 0)` is represented as:
 
-The staged implementation order is:
+```asl
++!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <-
+	true.
 
-1. Extend the PDDL support audit to distinguish metric-only action costs from
-   logical numeric fluents, instead of rejecting all numeric fluent domains
-   under one diagnostic.
-2. Parse functions, numeric initial assignments, numeric preconditions, numeric
-   effects, and numeric goals into typed internal data structures.
-3. Extend the Jason runtime bridge so each numeric fluent is seeded as one
-   mutable belief and each primitive action applies the corresponding numeric
-   update atomically with predicate add/delete effects.
-4. Extend ASL rendering with numeric contexts only after the runtime semantics
-   are defined, for example `capacity(V,N) & N > 0`.
-5. Extend the MOOSE-readable-policy adapter so numeric macro evidence remains
-   schema-validated against both predicate and numeric preconditions/effects.
-6. Add VAL or an equivalent numeric-capable validator to the batch pipeline and
-   require validator success before claiming numeric support.
-7. Only after the above works, consider numeric atomic goal synthesis such as
-   resource-production goals; recursive numeric modules require an explicit
-   decreasing measure and should remain unsupported without one.
++!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N > 0 & position(crafting_table) <-
+	craft_wooden_pogo;
+	!pogo_sticks_to_make(0).
+```
+
+The first plan is the already-true branch: if the numeric belief already equals
+the target, no primitive action is needed. The second plan is the monotone
+resource branch: it is emitted only when validated MOOSE macro evidence and the
+PDDL schema show that the primitive action decreases the target resource by one.
+
+The implemented pipeline now:
+
+1. distinguishes metric-only action costs from logical numeric resources in the
+   PDDL support audit;
+2. parses functions, numeric initial assignments, numeric preconditions,
+   numeric effects, and numeric equality goals into typed internal structures;
+3. seeds numeric fluents as mutable Jason beliefs and applies numeric
+   `increase`/`decrease` effects during primitive action execution;
+4. renders numeric contexts such as `capacity(V,N) & N > 0`;
+5. validates MOOSE-readable numeric macro evidence against predicate and
+   numeric schema conditions before rendering ASL;
+6. appends numeric-only test queries as direct single-body PDDL goal wrappers,
+   for example `+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-
+   !pogo_sticks_to_make(0).`;
+7. relies on VAL or an equivalent numeric-capable validator for final action
+   trace justification.
+
+Unsupported numeric cases include arbitrary arithmetic expressions, real-valued
+updates, optimization metrics as achievement goals, non-equality numeric goals,
+and numeric goals that require a recursive ranking proof not present in the
+validated evidence.
 
 ## Sources
 

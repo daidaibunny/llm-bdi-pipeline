@@ -55,7 +55,15 @@ if str(SRC_ROOT) not in sys.path:
 	sys.path.insert(0, str(SRC_ROOT))
 
 from utils.pddl_parser import PDDLFact  # noqa: E402
+from utils.pddl_parser import PDDLNumericCondition  # noqa: E402
+from utils.pddl_parser import PDDLNumericExpression  # noqa: E402
+from utils.pddl_parser import PDDLNumericFluent  # noqa: E402
 from utils.pddl_parser import PDDLParser  # noqa: E402
+from plan_library.models import AgentSpeakBodyStep  # noqa: E402
+from plan_library.models import AgentSpeakPlan  # noqa: E402
+from plan_library.models import AgentSpeakTrigger  # noqa: E402
+from plan_library.models import PlanLibrary  # noqa: E402
+from plan_library.rendering import render_plan_library_asl  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -253,12 +261,15 @@ def run_domain(
 		if not args.skip_temporal_append:
 			test_instances = first_n_test_instances(test_dir, count=2)
 			record["selected_test_instances"] = [str(path) for path in test_instances]
-			write_test_goal_dataset(
-				domain_name=domain_name,
-				problem_files=test_instances,
-				output_file=goal_json,
-			)
-			record["ltlf_goal_json"] = str(goal_json)
+			query_append_mode = selected_query_append_mode(test_instances)
+			record["query_append_mode"] = query_append_mode
+			if query_append_mode == "ltlf_singleton_predicate_sequence":
+				write_test_goal_dataset(
+					domain_name=domain_name,
+					problem_files=test_instances,
+					output_file=goal_json,
+				)
+				record["ltlf_goal_json"] = str(goal_json)
 		compat = materialize_moose_compatible_pddl(
 			domain_file=domain_file,
 			train_dir=train_dir,
@@ -336,32 +347,45 @@ def run_domain(
 			record["success"] = True
 			return record
 
-		query_ids = tuple(f"query_{index}" for index in range(1, len(test_instances) + 1))
-		append_command = [
-			sys.executable,
-			str(PROJECT_ROOT / "src" / "main.py"),
-			"append-lifted-temporal-goal",
-			"--domain-file",
-			str(domain_file),
-			"--ltlf-goal-json",
-			str(goal_json),
-			"--library-root",
-			str(args.library_root),
-		]
-		for query_id in query_ids:
-			append_command.extend(("--query-id", query_id))
-		append_result = run_command(
-			tuple(append_command),
-			cwd=PROJECT_ROOT,
-			stdout_file=log_root / "append_temporal_goals.stdout.json",
-			stderr_file=log_root / "append_temporal_goals.stderr.txt",
-			timeout_seconds=args.append_timeout_seconds,
-			max_rss_gb=args.max_rss_gb,
-			extra_env={"EVALUATION_MONA_MEMORY_LIMIT_MIB": str(int(args.max_rss_gb * 1024))},
-		)
-		record["commands"]["append_temporal_goals"] = append_result.to_dict()
-		if not append_result.success:
-			return record
+		if record.get("query_append_mode") == "ltlf_singleton_predicate_sequence":
+			query_ids = tuple(f"query_{index}" for index in range(1, len(test_instances) + 1))
+			append_command = [
+				sys.executable,
+				str(PROJECT_ROOT / "src" / "main.py"),
+				"append-lifted-temporal-goal",
+				"--domain-file",
+				str(domain_file),
+				"--ltlf-goal-json",
+				str(goal_json),
+				"--library-root",
+				str(args.library_root),
+			]
+			for query_id in query_ids:
+				append_command.extend(("--query-id", query_id))
+			append_result = run_command(
+				tuple(append_command),
+				cwd=PROJECT_ROOT,
+				stdout_file=log_root / "append_temporal_goals.stdout.json",
+				stderr_file=log_root / "append_temporal_goals.stderr.txt",
+				timeout_seconds=args.append_timeout_seconds,
+				max_rss_gb=args.max_rss_gb,
+				extra_env={"EVALUATION_MONA_MEMORY_LIMIT_MIB": str(int(args.max_rss_gb * 1024))},
+			)
+			record["commands"]["append_temporal_goals"] = append_result.to_dict()
+			if not append_result.success:
+				return record
+		else:
+			record["pddl_goal_wrapper_append"] = append_problem_goal_wrappers_to_library(
+				domain_name=domain_name,
+				problem_files=test_instances,
+				library_root=args.library_root,
+				artifact_metadata={
+					"base_artifact_kind": "domain_library",
+					"artifact_kind": "domain_library_with_pddl_goal_wrappers",
+					"pddl_domain_name": domain_name,
+					"query_append_mode": record.get("query_append_mode"),
+				},
+			)
 
 		if not args.skip_moose_policy_validation:
 			record["moose_policy_validation"] = [
@@ -859,6 +883,216 @@ def container_path(path: Path) -> str:
 	except ValueError as error:
 		raise ValueError(f"Path is outside project root and cannot be containerized: {path}") from error
 	return "/project/" + str(relative).replace(os.sep, "/")
+
+
+def selected_query_append_mode(problem_files: Sequence[Path]) -> str:
+	"""Return the append path required by the selected problem goals."""
+
+	requires_direct_wrapper = False
+	for problem_file in tuple(problem_files or ()):
+		problem = PDDLParser.parse_problem(problem_file)
+		if tuple(problem.numeric_goal_conditions or ()):
+			requires_direct_wrapper = True
+		if any(not fact.is_positive for fact in tuple(problem.goal_facts or ())):
+			requires_direct_wrapper = True
+	return (
+		"pddl_goal_single_body_wrapper"
+		if requires_direct_wrapper
+		else "ltlf_singleton_predicate_sequence"
+	)
+
+
+def append_problem_goal_wrappers_to_library(
+	*,
+	domain_name: str,
+	problem_files: Sequence[Path],
+	library_root: Path,
+	artifact_metadata: dict[str, object] | None = None,
+) -> dict[str, object]:
+	"""Append grounded PDDL goal wrappers directly to one canonical domain library."""
+
+	domain_key = _safe_goal_fragment(domain_name)
+	library_dir = library_root.expanduser().resolve() / domain_name
+	library_json = library_dir / "plan_library.json"
+	library_asl = library_dir / "plan_library.asl"
+	metadata_file = library_dir / "artifact_metadata.json"
+	if not library_json.exists():
+		raise FileNotFoundError(f"Missing canonical plan library: {library_json}")
+	library = PlanLibrary.from_dict(json.loads(library_json.read_text(encoding="utf-8")))
+	new_plans = list(library.plans)
+	initial_beliefs = list(library.initial_beliefs)
+	append_records: list[dict[str, object]] = []
+	for index, problem_file in enumerate(tuple(problem_files or ()), start=1):
+		goal_name = f"g_{domain_key}_test_{index}"
+		entry_proposition = f"{domain_key}_test_{index}"
+		body_steps = _problem_goal_body_steps(problem_file)
+		if entry_proposition not in initial_beliefs:
+			initial_beliefs.append(entry_proposition)
+		plan = AgentSpeakPlan(
+			plan_name=f"{goal_name}_pddl_goal_wrapper",
+			trigger=AgentSpeakTrigger("achievement_goal", goal_name),
+			context=(entry_proposition,),
+			body=body_steps,
+			binding_certificate=(
+				{
+					"artifact_family": "pddl_problem_goal_wrapper_append",
+					"problem_file": str(problem_file),
+					"goal_step_count": len(body_steps),
+					"contains_numeric_resource_goal": any(
+						step.kind == "subgoal" and _step_has_numeric_target(step)
+						for step in body_steps
+					),
+				},
+			),
+		)
+		new_plans = [
+			existing
+			for existing in new_plans
+			if existing.plan_name != plan.plan_name
+		]
+		new_plans.append(plan)
+		append_records.append(
+			{
+				"goal_name": goal_name,
+				"entry_proposition": entry_proposition,
+				"problem_file": str(problem_file),
+				"body_steps": [step.to_dict() for step in body_steps],
+			},
+		)
+	updated = PlanLibrary(
+		domain_name=library.domain_name,
+		plans=tuple(new_plans),
+		initial_beliefs=tuple(initial_beliefs),
+		metadata={
+			**dict(library.metadata),
+			"pddl_goal_wrapper_append": {
+				"wrapper_mode": "linear_single_body_from_pddl_goal",
+				"append_records": append_records,
+			},
+			"pddl_goal_wrapper_append_history": [
+				*list(dict(library.metadata).get("pddl_goal_wrapper_append_history") or []),
+				{
+					"wrapper_mode": "linear_single_body_from_pddl_goal",
+					"query_count": len(append_records),
+					"goal_names": [record["goal_name"] for record in append_records],
+				},
+			],
+		},
+	)
+	library_dir.mkdir(parents=True, exist_ok=True)
+	library_json.write_text(
+		json.dumps(updated.to_dict(), indent=2, sort_keys=True) + "\n",
+		encoding="utf-8",
+	)
+	library_asl.write_text(render_plan_library_asl(updated), encoding="utf-8")
+	existing_metadata: dict[str, object] = {}
+	if metadata_file.exists():
+		try:
+			existing_payload = json.loads(metadata_file.read_text(encoding="utf-8"))
+			if isinstance(existing_payload, dict):
+				existing_metadata = existing_payload
+		except json.JSONDecodeError:
+			existing_metadata = {}
+	metadata_file.write_text(
+		json.dumps(
+			{
+				**existing_metadata,
+				**dict(artifact_metadata or {}),
+				"canonical_domain_library": True,
+				"domain_library_dir": str(library_dir),
+				"domain_name": updated.domain_name,
+				"plan_count": len(updated.plans),
+				"appended_pddl_goal_wrapper_count": len(append_records),
+			},
+			indent=2,
+			sort_keys=True,
+		)
+		+ "\n",
+		encoding="utf-8",
+	)
+	return {
+		"success": True,
+		"mode": "pddl_goal_single_body_wrapper",
+		"appended_query_count": len(append_records),
+		"artifact_paths": {
+			"plan_library": str(library_json),
+			"plan_library_asl": str(library_asl),
+			"artifact_metadata": str(metadata_file),
+		},
+		"append_records": append_records,
+	}
+
+
+def _problem_goal_body_steps(problem_file: Path) -> tuple[AgentSpeakBodyStep, ...]:
+	problem = PDDLParser.parse_problem(problem_file)
+	steps: list[AgentSpeakBodyStep] = []
+	for fact in tuple(problem.goal_facts or ()):
+		if not fact.is_positive:
+			raise ValueError(
+				f"{problem_file} contains a negative goal literal; direct PDDL goal "
+				"wrappers currently support positive predicates and bounded numeric "
+				"resource equalities only."
+			)
+		steps.append(
+			AgentSpeakBodyStep(
+				"subgoal",
+				fact.predicate,
+				tuple(str(argument) for argument in fact.args),
+			),
+		)
+	for condition in tuple(problem.numeric_goal_conditions or ()):
+		steps.append(_numeric_goal_condition_step(condition, problem_file=problem_file))
+	if not steps:
+		raise ValueError(f"{problem_file} contains no supported PDDL goal steps.")
+	return tuple(steps)
+
+
+def _numeric_goal_condition_step(
+	condition: PDDLNumericCondition,
+	*,
+	problem_file: Path,
+) -> AgentSpeakBodyStep:
+	if condition.comparator != "=":
+		raise ValueError(
+			f"{problem_file} contains unsupported numeric goal comparator "
+			f"{condition.comparator!r}; only equality is in the bounded resource fragment."
+		)
+	fluent, target = _numeric_goal_fluent_and_target(condition.left, condition.right)
+	if fluent is None or target is None:
+		fluent, target = _numeric_goal_fluent_and_target(condition.right, condition.left)
+	if fluent is None or target is None:
+		raise ValueError(
+			f"{problem_file} contains unsupported numeric goal "
+			f"{condition.to_signature()!r}; expected one numeric fluent and one "
+			"integer target constant."
+		)
+	return AgentSpeakBodyStep(
+		"subgoal",
+		fluent.function,
+		(*tuple(fluent.args or ()), str(target)),
+	)
+
+
+def _numeric_goal_fluent_and_target(
+	left: PDDLNumericExpression,
+	right: PDDLNumericExpression,
+) -> tuple[PDDLNumericFluent | None, int | None]:
+	if left.kind != "fluent" or right.kind != "constant":
+		return None, None
+	if not re.fullmatch(r"[+-]?\d+", str(right.value)):
+		return None, None
+	return (
+		PDDLNumericFluent(
+			function=str(left.value),
+			args=[str(argument) for argument in tuple(left.args or ())],
+		),
+		int(str(right.value)),
+	)
+
+
+def _step_has_numeric_target(step: AgentSpeakBodyStep) -> bool:
+	arguments = tuple(step.arguments or ())
+	return bool(arguments) and re.fullmatch(r"[+-]?\d+", arguments[-1]) is not None
 
 
 def write_test_goal_dataset(

@@ -86,7 +86,7 @@ def _render_context_literal(literal: str) -> str:
 		equality = _parse_equality_atom(atom)
 		if equality is not None:
 			left, right = equality
-			return f"{_render_term(left)} \\\\== {_render_term(right)}"
+			return f"{_render_term(left)} \\== {_render_term(right)}"
 		return f"not {_render_atom(atom)}"
 	equality = _parse_equality_atom(text)
 	if equality is not None:
@@ -94,7 +94,7 @@ def _render_context_literal(literal: str) -> str:
 		return f"{_render_term(left)} == {_render_term(right)}"
 	if "!=" in text:
 		left, right = text.split("!=", 1)
-		return f"{_render_term(left)} \\\\== {_render_term(right)}"
+		return f"{_render_term(left)} \\== {_render_term(right)}"
 	if "==" in text:
 		left, right = text.split("==", 1)
 		return f"{_render_term(left)} == {_render_term(right)}"
@@ -147,8 +147,8 @@ def _render_context_expression(expression: str) -> _RenderedContextExpression:
 			precedence=_CONTEXT_PRECEDENCE["not"],
 		)
 	for operator, rendered_operator in (
-		("\\==", "\\\\=="),
-		("!=", "\\\\=="),
+		("\\==", "\\=="),
+		("!=", "\\=="),
 		(">=", ">="),
 		("<=", "<="),
 		("==", "=="),
@@ -265,7 +265,7 @@ def _render_term(term: str) -> str:
 		return "item"
 	if _is_agentspeak_variable(text):
 		return text
-	if re.fullmatch(r"[0-9]+(?:\.[0-9]+)?", text):
+	if re.fullmatch(r"[+-]?[0-9]+(?:\.[0-9]+)?", text):
 		return text
 	if re.fullmatch(r"[a-z][A-Za-z0-9_]*", text):
 		return text
