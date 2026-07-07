@@ -493,3 +493,10 @@ def test_parser_order_batch_allows_native_plan_verifier_command_override() -> No
 
 	assert 'PLAN_VERIFIER_COMMAND="${PLAN_VERIFIER_COMMAND:-bash $PROJECT_ROOT/scripts/validate_with_docker_val.sh}"' in script
 	assert '--plan-verifier-command "$PLAN_VERIFIER_COMMAND"' in script
+
+
+def test_parser_order_batch_keeps_per_test_asl_without_domain_long_asl() -> None:
+	script = Path("scripts/run_parser_order_full_val_batch.sh").read_text(encoding="utf-8")
+
+	assert "--write-per-test-runtime-asl" in script
+	assert "--write-domain-long-asl" not in script

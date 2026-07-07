@@ -605,3 +605,104 @@ domain does not require a special case for that domain or for predicates such as
 the generated plan actually executes a very long primitive action sequence, as
 in large Gripper p2 instances, or that the atomic ASL library itself lacks a
 good executable branch.
+
+### Large Gripper p2 Runtime Boundary
+
+The July 7, 2026 full-test run exposed a separate scalability boundary in
+Gripper p2. This is not the old oscillation bug. The current Gripper atomic
+library can generate VAL-valid traces for large p2 instances, but the parser-
+order diagnostic wrapper expands every PDDL goal literal into one sequential
+singleton subgoal.
+
+For `p2_10`, the wrapper contains 18,500 subgoals of the form
+`!at(ball_i, roomb)` and Jason produced a 73,999-action trace in 1686.9
+seconds; VAL accepted that trace. For `p2_11`, the wrapper contains 20,000
+such subgoals. The expected trace is about 79,999 actions, which crosses the
+current 1800-second per-case budget.
+
+Current wrapper shape:
+
+```asl
+!g_gripper_test_71 : gripper_test_71 <-
+	!at(ball1, roomb);
+	!at(ball2, roomb);
+	...
+	!at(ball20000, roomb).
+```
+
+Current singleton behavior moves each ball independently. After the first ball,
+each additional ball normally requires moving back to `rooma`, picking the ball,
+moving to `roomb`, and dropping it:
+
+```text
+move(roomb, rooma);
+pick(ball_i, rooma, left);
+move(rooma, roomb);
+drop(ball_i, roomb, left)
+```
+
+This means the primitive action count grows approximately as
+`4 * number_of_balls - 1`. The timeout threshold therefore appears exactly when
+the test instances move from 18,500 to 20,000 balls under a 1800-second cap.
+
+The indexed belief base still uses bound variables first. For example, when
+checking `at(X,A)` inside a branch for `!at(ball123, roomb)`, the target ball is
+already bound, so candidate lookup can use the first-argument bucket for
+`ball123` instead of scanning all `at/2` facts. This is the intended binding-
+first behavior. The remaining cost comes from doing this tens of thousands of
+times while dynamic facts are updated after every primitive action.
+
+The most important future method-level improvement is query-level batching for
+repeated goals. Gripper has two grippers, but the current diagnostic wrapper and
+atomic singleton library use the same one-ball pattern repeatedly. A better
+query controller could exploit both grippers:
+
+```text
+pick(ball_i, rooma, left);
+pick(ball_j, rooma, right);
+move(rooma, roomb);
+drop(ball_i, roomb, left);
+drop(ball_j, roomb, right)
+```
+
+That would reduce movement actions and move the query-level controller closer
+to a domain-level repeated-goal policy. It should not be hidden inside the
+atomic singleton compiler, because the optimization depends on grouping several
+same-target user goals together. It belongs in a future temporal/query
+composition layer with an explicit progress certificate: each batch must reduce
+the number of unsatisfied `at(B, roomb)` goals while preserving already achieved
+goals.
+
+### Domain-Long ASL Artifact Policy
+
+The full-test script no longer writes the combined domain-long ASL file by
+default. The combined file appends every test wrapper for a domain to one
+library. For Gripper, 90 full-test wrappers produced an 820,781-line ASL file.
+That artifact is useful only for offline inspection of all appended test
+wrappers together; it is not required for Jason execution because each test
+uses a per-test runtime ASL containing the atomic library plus one query
+wrapper.
+
+Before:
+
+```text
+domain_libraries/gripper/plan_library.asl
+  atomic library
+  +!g_gripper_test_1 ...
+  +!g_gripper_test_2 ...
+  ...
+  +!g_gripper_test_90 ...
+```
+
+After:
+
+```text
+jason/gripper/test_0071_p2_11/plan_library.asl
+  atomic library
+  +!g_gripper_test_71 ...
+```
+
+The best practice for full-test validation is therefore to keep per-test ASL
+artifacts and omit domain-long ASL unless the specific debugging question needs
+one file containing all wrappers. This reduces large redundant file writes and
+keeps inspection focused on the exact ASL Jason executed for one test case.
