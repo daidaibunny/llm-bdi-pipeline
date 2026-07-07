@@ -8,8 +8,9 @@ RUN_ID="${RUN_ID:-parser-order-val-$(date +%Y%m%d-%H%M%S)}"
 BATCH_ID="${BATCH_ID:-$RUN_ID}"
 VALIDATION_RUN_ID="${VALIDATION_RUN_ID:-$RUN_ID-full-test}"
 
-MOOSE_WORKERS="${MOOSE_WORKERS:-4}"
-JASON_WORKERS="${JASON_WORKERS:-6}"
+WORKERS="${WORKERS:-16}"
+MOOSE_WORKERS="${MOOSE_WORKERS:-$WORKERS}"
+JASON_WORKERS="${JASON_WORKERS:-$WORKERS}"
 TRAIN_TIMEOUT_SECONDS="${TRAIN_TIMEOUT_SECONDS:-1800}"
 JASON_TIMEOUT_SECONDS="${JASON_TIMEOUT_SECONDS:-1800}"
 VAL_TIMEOUT_SECONDS="${VAL_TIMEOUT_SECONDS:-1800}"
@@ -24,9 +25,16 @@ if [[ $# -gt 0 ]]; then
 else
 	mapfile -t DOMAINS < <(
 		PYTHONDONTWRITEBYTECODE=1 uv run python - <<'PY'
-from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS
+import json
+from pathlib import Path
 
-for domain in DEFAULT_DOMAINS:
+registry = json.loads(
+	Path("src/benchmark_registry/achievement_goals/registry.json").read_text(
+		encoding="utf-8"
+	)
+)
+
+for domain in registry["selected_domain_ids"]:
 	print(domain)
 PY
 	)
@@ -39,6 +47,7 @@ done
 
 echo "[run] id=$RUN_ID"
 echo "[run] domains=${DOMAINS[*]}"
+echo "[run] moose_workers=$MOOSE_WORKERS jason_workers=$JASON_WORKERS"
 echo "[run] jason_timeout_seconds=$JASON_TIMEOUT_SECONDS val_timeout_seconds=$VAL_TIMEOUT_SECONDS jason_java_stack_size=$JASON_JAVA_STACK_SIZE"
 echo "[run] plan_verifier_command=$PLAN_VERIFIER_COMMAND"
 echo "[stage 1] generating MOOSE-backed atomic ASL libraries"
