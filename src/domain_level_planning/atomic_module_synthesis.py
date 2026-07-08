@@ -1426,8 +1426,37 @@ def _has_arbitrary_extra_target_relation(
 		if not effect_arguments - target_argument_set:
 			continue
 		if not any(_same_literal(mapped, precondition) for precondition in preconditions):
-			return True
+			extra_arguments = effect_arguments - target_argument_set
+			if not _variables_are_bound_by_positive_precondition_chain(
+				variables=extra_arguments,
+				preconditions=preconditions,
+				initial_bound_variables=target_argument_set,
+			):
+				return True
 	return False
+
+
+def _variables_are_bound_by_positive_precondition_chain(
+	*,
+	variables: set[str],
+	preconditions: Sequence[PDDLLiteralSchema],
+	initial_bound_variables: set[str],
+) -> bool:
+	"""Return whether variables are range-restricted by positive preconditions."""
+
+	bound_variables = set(initial_bound_variables)
+	remaining = [literal for literal in preconditions if literal.is_positive]
+	changed = True
+	while changed:
+		changed = False
+		for literal in tuple(remaining):
+			literal_variables = set(literal.arguments)
+			if not (literal_variables & bound_variables):
+				continue
+			bound_variables.update(literal_variables)
+			remaining.remove(literal)
+			changed = True
+	return variables <= bound_variables
 
 
 def _is_public_positive_precondition(

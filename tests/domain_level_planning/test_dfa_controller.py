@@ -119,8 +119,9 @@ def test_dfa_controller_reports_progress_request_diagnostics(tmp_path) -> None:
 	)
 
 	assert [diagnostic["target_state"] for diagnostic in diagnostics] == ["q1", "q2"]
-	assert [diagnostic["supported"] for diagnostic in diagnostics] == [False, True]
-	assert diagnostics[0]["rejection_reason"] == "unsupported_negative_guard"
+	assert [diagnostic["supported"] for diagnostic in diagnostics] == [True, True]
+	assert diagnostics[0]["request"]["guard_constraints"] == ["not done"]
+	assert diagnostics[0]["request"]["achievement_subgoals"] == []
 	assert diagnostics[1]["request"]["goal_facts"] == ["goal_ready"]
 
 

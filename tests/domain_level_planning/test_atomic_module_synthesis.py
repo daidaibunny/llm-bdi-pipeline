@@ -315,6 +315,33 @@ def test_static_predicates_are_context_only_not_atomic_goal_modules() -> None:
 	assert "+!in(X, Y)" in asl
 
 
+def test_depots_drop_is_on_producer_when_extra_variables_are_precondition_bound() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl",
+		seed_predicates=("on",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="depots-smoke",
+	)
+	asl = render_plan_library_asl(library)
+
+	drop_plans = [
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "on"
+		and plan.body == (AgentSpeakBodyStep("action", "drop", ("Z", "X", "Y", "A")),)
+	]
+
+	assert len(drop_plans) == 1
+	plan = drop_plans[0]
+	assert plan.trigger.arguments == ("X", "Y")
+	assert "lifting(Z, X)" in plan.context
+	assert "at(Y, A)" in plan.context
+	assert "at(Z, A)" in plan.context
+	assert "clear(Y)" in plan.context
+	assert "\tdrop(Z, X, Y, A)." in asl
+	assert "type_" not in asl
+
+
 def test_logistics_atomic_modules_compile_pddl_typing_to_obj_tp_guards() -> None:
 	library = synthesize_atomic_minimal_literal_module_library(
 		domain_file=PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl",
