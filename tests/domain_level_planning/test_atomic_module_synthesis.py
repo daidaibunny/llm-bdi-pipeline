@@ -195,6 +195,11 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 			"same-predicate recursive prepare branches require a deleted dynamic "
 			"obstruction-relation certificate"
 		),
+		(
+			"resource-release cleanup branches require a schema certificate "
+			"that deletes a producer-created resource debt, restores a lower-arity "
+			"availability literal, and preserves the protected target"
+		),
 	]
 	assert selector_report["raw_candidate_count"] >= len(library.plans)
 	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
@@ -409,6 +414,69 @@ def test_depots_lifts_range_safe_extra_variable_precondition_to_subgoal() -> Non
 	assert "+!on(X, Y)" in asl
 	assert "\t!lifting(Z, X);\n\t!on(X, Y)." in asl
 	assert "type_" not in asl
+
+
+def test_depots_clear_can_release_hoist_without_deleting_protected_clear() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl",
+		seed_predicates=("on",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="depots-smoke",
+	)
+
+	release_plans = [
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "clear"
+		and tuple(step.symbol for step in plan.body) == ("lift", "drop")
+	]
+
+	assert len(release_plans) == 1
+	plan = release_plans[0]
+	lift_step, drop_step = plan.body
+	assert lift_step.arguments[2] == "X"
+	assert drop_step.arguments[:2] == lift_step.arguments[:2]
+	assert drop_step.arguments[3] == lift_step.arguments[3]
+	parking_surface = drop_step.arguments[2]
+	assert parking_surface != "X"
+	assert f"clear({parking_surface})" in plan.context
+	assert f"at({parking_surface}, {drop_step.arguments[3]})" in plan.context
+	assert any(
+		context in plan.context
+		for context in (
+			f"{parking_surface} \\== X",
+			f"X \\== {parking_surface}",
+		)
+	)
+	assert any(
+		certificate.get("resource_release_certificates")
+		for certificate in plan.binding_certificate
+	)
+
+
+def test_depots_lifting_target_is_not_forced_to_release_the_lifted_crate() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl",
+		seed_predicates=("on",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="depots-smoke",
+	)
+
+	lift_only_plans = [
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "lifting"
+		and tuple(step.symbol for step in plan.body) == ("lift",)
+	]
+	released_lifting_target_plans = [
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "lifting"
+		and tuple(step.symbol for step in plan.body) == ("lift", "drop")
+	]
+
+	assert lift_only_plans
+	assert released_lifting_target_plans == []
 
 
 def test_logistics_atomic_modules_compile_pddl_typing_to_obj_tp_guards() -> None:

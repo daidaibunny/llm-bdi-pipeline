@@ -62,6 +62,210 @@ The metadata reports a library profile such as `mixed_atomic_template_library`
 when several plan-template kinds appear in one domain library. This profile is
 diagnostic only; it is not a domain taxonomy and is not used for routing.
 
+## MOOSE Evidence and Compiler Responsibilities
+
+The MOOSE module and the compiler module have different responsibilities. The
+MOOSE module is the external evidence provider: it trains on singleton-goal
+PDDL problems and emits a readable first-order decision list through
+`policy --dump-policy`. A readable policy rule contains a lifted-looking state
+condition, one singleton goal condition, and a primitive action macro. For
+example, a Depots rule may say that under state facts such as
+`at(crate0, depot0)`, `at(hoist0, depot0)`, and `clear(pallet0)`, the singleton
+goal `on(crate0, pallet0)` can be achieved by a macro ending in
+`drop(hoist0, crate0, pallet0, depot0)`.
+
+The compiler module is the post-MOOSE, pre-AgentSpeak component. It consumes
+the readable policy as evidence, checks it against the PDDL domain schema, adds
+internal atomic modules required by PDDL precondition/effect closure, runs the
+Clingo/ASP branch selector, and renders the final AgentSpeak(L) library. A
+PDDL domain schema is the declared predicate and action model, for example
+Depots `drop(?hoist, ?crate, ?surface, ?place)` with preconditions such as
+`lifting(?hoist, ?crate)`, `clear(?surface)`, `at(?hoist, ?place)`, and
+`at(?surface, ?place)`, and an add effect `on(?crate, ?surface)`.
+
+The compiler therefore does not simply rename objects from training instances
+into variables. It may add an internal module when the target action's
+precondition names a producible fluent. A producible fluent is a predicate that
+appears in some positive add effect, for example Depots `lifting(H,C)` or
+Blocks `clear(X)`. A static context predicate is a predicate that never appears
+in positive add/delete effects, for example Logistics `in-city(L,C)`; it can
+bind context but must not become a `+!in_city(...)` achievement module.
+
+### Range-Safe Precondition Lifting
+
+Range-safe precondition lifting is the current general fix for producer actions
+whose useful preconditions contain variables not present in the requested goal
+head. Range-safe means every non-head variable is bound by positive context
+facts before the compiler turns the precondition into an internal subgoal.
+
+Before this fix, the compiler could emit the direct producer branch below, but
+it would usually not emit the repair branch for the missing `lifting(Z,X)`
+precondition because `Z` is not an argument of the head goal `on(X,Y)`:
+
+```asl
++!on(X, Y) :
+	clear(Y) & crate(X) & surface(Y) & at(Y, A) & place(A) &
+	at(Z, A) & hoist(Z) & lifting(Z, X) <-
+	drop(Z, X, Y, A).
+```
+
+This branch is correct only when the hoist is already lifting the target crate.
+If `lifting(Z,X)` is false, Jason cannot use this branch and the library may
+fall back to a much longer MOOSE macro or fail to repair the missing condition.
+
+After the fix, the same PDDL schema also justifies a prepare branch:
+
+```asl
++!on(X, Y) :
+	clear(Y) & crate(X) & surface(Y) & at(Y, A) & place(A) &
+	at(Z, A) & hoist(Z) & not lifting(Z, X) <-
+	!lifting(Z, X);
+	!on(X, Y).
+```
+
+The important part is the binding proof for `Z`: `at(Z,A) & hoist(Z)` binds
+the hoist variable, while `at(Y,A) & place(A)` connects the hoist's place to
+the target surface. The rule is not Depots-specific; it is generated from the
+producer action's positive preconditions and add effect. The same mechanism
+applies to any domain where a producer action needs an extra witness object,
+provided that witness is range-restricted by positive context.
+
+The fix is intentionally conservative. The compiler still refuses to turn an
+extra-variable relation into an achievement subgoal if the extra variables can
+only be introduced by a negative literal, by a static relation with no dynamic
+anchor, or by an unrelated context fact. This avoids unsafe plans such as
+asking Jason to achieve a relation over an unbound object.
+
+### Protected Resource Release Certificate
+
+Protected resource release is the compiler rule for a producer action that
+achieves the requested atomic literal but leaves behind a temporary resource
+debt. A resource debt is a fluent produced by the action that represents an
+object being held, lifted, carried, boarded, or otherwise tied to a resource.
+For example, in Depots the action `lift(H,C,S,P)` can achieve `clear(S)`, but
+it also creates `lifting(H,C)` and deletes `available(H)`. If the library stops
+there, later goals may fail because the hoist is still occupied.
+
+The compiler now accepts a one-step cleanup action only when the PDDL schema
+certifies all of the following facts:
+
+- the cleanup action deletes the producer-created debt, for example
+  `drop(H,C,B,P)` deletes `lifting(H,C)`;
+- the cleanup action restores a lower-arity availability literal that the
+  producer deleted, for example `available(H)` is unary while `lifting(H,C)` is
+  binary;
+- the debt predicate is not merely a same-predicate property moved by the
+  producer, so `clear(Y)` created by `unstack(X,Y)` is not treated as a held
+  resource;
+- every extra cleanup variable is range-restricted by positive context facts,
+  for example a parking surface `B` must satisfy `surface(B)`, `at(B,P)`, and
+  `clear(B)`;
+- if the cleanup action could delete the protected target, the compiler emits a
+  Jason non-unification guard such as `B \== S`.
+
+Before this rule, a generated `+!clear(S)` branch in Depots could stop after
+lifting the obstructing crate:
+
+```asl
++!clear(S) :
+	surface(S) & on(C, S) & clear(C) & at(C, P) &
+	at(H, P) & available(H) <-
+	lift(H, C, S, P).
+```
+
+This branch achieves `clear(S)`, but it leaves `lifting(H,C)` true and
+`available(H)` false. After the rule, the compiler can emit a certified cleanup
+branch:
+
+```asl
++!clear(S) :
+	surface(S) & on(C, S) & clear(C) & at(C, P) &
+	at(H, P) & available(H) &
+	surface(B) & at(B, P) & clear(B) & B \== S <-
+	lift(H, C, S, P);
+	drop(H, C, B, P).
+```
+
+This is still not a domain-name patch. The same rule would also accept a
+Blocks-style `unstack; put-down` cleanup, because `unstack(B,S)` creates
+`holding(B)` and deletes `handempty`, while `put-down(B)` deletes
+`holding(B)` and restores zero-arity `handempty`. The rule rejects the reverse
+shape, such as turning `available(H)` back into `lifting(H,C)`, because that is
+resource acquisition rather than resource release.
+
+The current implementation is intentionally one-step. If a domain needs
+multi-step parking, such as releasing a resource only after moving a truck or
+finding a buffer through several actions, that remains a future compiler
+extension rather than an implicit hardcoded repair.
+
+### Validated Macro Priority
+
+Validated macro priority is a plan-ordering rule applied after schema-augmented
+modules are merged with validated MOOSE macro evidence. A validated MOOSE macro
+is a readable-policy action sequence that replays through the PDDL action
+schemas, for example a complete Logistics package-delivery macro
+`load-truck; drive-truck; unload-truck`. A recursive repair branch is a branch
+whose body calls internal subgoals, for example `!lifting(Z,X); !on(X,Y)`.
+
+Before this ordering rule, a recursive repair branch could appear before a
+complete action-only macro. Jason tries applicable AgentSpeak(L) plans in file
+order, so a broad recursive branch could preempt a complete validated macro and
+send execution into avoidable repair loops:
+
+```asl
+/* broad repair branch tried too early */
++!at(X, Y) : obj_tp(X, ball) & obj_tp(Y, room) & not at_robby(Y) <-
+	!at_robby(Y);
+	!at(X, Y).
+
+/* complete macro exists but may be tried later */
++!at(X, Y) : at(X, A) & at_robby(A) & free(Z) <-
+	pick(X, A, Z);
+	move(A, Y);
+	drop(X, Y).
+```
+
+After the ordering rule, already-true branches are rendered first, complete
+action-only validated macros are rendered second, mixed bodies are rendered
+third, and recursive repair branches are rendered last:
+
+```asl
++!at(X, Y) : at(X, A) & at_robby(A) & free(Z) <-
+	pick(X, A, Z);
+	move(A, Y);
+	drop(X, Y).
+
++!at(X, Y) : obj_tp(X, ball) & obj_tp(Y, room) & not at_robby(Y) <-
+	!at_robby(Y);
+	!at(X, Y).
+```
+
+This is a safe positive optimization because it does not remove any branch or
+change any primitive action semantics. It only makes Jason try a schema-checked
+complete macro before a broader recursive fallback when both contexts match.
+
+### Current Alignment and Remaining Gap
+
+The current implementation is aligned with the intended post-MOOSE compiler
+role in these ways:
+
+- MOOSE remains evidence, not the final library.
+- Internal modules such as `clear`, `holding`, `lifting`, `available`, `at`,
+  and `in` are generated from PDDL add-effect/precondition closure when they
+  are producible fluents.
+- Static predicates remain context-only.
+- The final ASL uses PDDL fluents and actions plus the reserved `obj_tp/2`
+  type metadata; it must not emit `type_*` predicates.
+- Clingo/ASP is the branch selector for compactness within the generated
+  candidate space.
+
+The current implementation now supports one-step protected resource release
+when a cleanup action is certified directly by PDDL preconditions and effects.
+It is not yet complete for all possible parking cases. If a domain needs a
+multi-step release strategy, or if every available cleanup action would delete
+the protected target without a representable non-unification guard, the compiler
+should reject the branch rather than patching the domain by name.
+
 ## Benchmark Scope
 
 The MOOSE paper evaluates eight classical ESHO domains for synthesis cost:

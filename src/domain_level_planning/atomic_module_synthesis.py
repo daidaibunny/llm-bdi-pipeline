@@ -389,9 +389,20 @@ class _ProducerSequence:
 	target_arguments: tuple[str, ...]
 	context_literals: tuple[PDDLLiteralSchema, ...]
 	numeric_contexts: tuple[str, ...]
+	guard_contexts: tuple[str, ...]
 	type_contexts: tuple[str, ...]
 	body_actions: tuple[_ActionCall, ...]
 	producer_action_names: tuple[str, ...]
+	resource_release_certificates: tuple[Mapping[str, object], ...] = ()
+
+
+@dataclass(frozen=True)
+class _CleanupExtension:
+	context_literals: tuple[PDDLLiteralSchema, ...]
+	guard_contexts: tuple[str, ...]
+	body_actions: tuple[_ActionCall, ...]
+	producer_action_names: tuple[str, ...]
+	resource_release_certificates: tuple[Mapping[str, object], ...]
 
 
 @dataclass(frozen=True)
@@ -842,25 +853,32 @@ def _finalize_sequence(
 	if any(_same_literal(target_effect, literal) for literal in context_literals):
 		return None
 	sequence_body = tuple(body_actions)
+	sequence_contexts = tuple(context_literals)
+	guard_contexts: tuple[str, ...] = ()
+	resource_release_certificates: tuple[Mapping[str, object], ...] = ()
 	if not _action_calls_have_compatible_types(sequence_body, type_tokens):
 		return None
-	cleanup_actions = _cleanup_action_calls(
+	cleanup_extension = _cleanup_action_calls(
 		actions=actions,
 		type_tokens=type_tokens,
 		target_effect=target_effect,
 		target_arguments=target_arguments,
+		context_literals=sequence_contexts,
 		body_actions=sequence_body,
 	)
-	if cleanup_actions:
-		sequence_body += cleanup_actions
+	if cleanup_extension is not None:
+		sequence_body += cleanup_extension.body_actions
+		sequence_contexts += cleanup_extension.context_literals
+		guard_contexts = cleanup_extension.guard_contexts
+		resource_release_certificates = cleanup_extension.resource_release_certificates
 		if not _action_calls_have_compatible_types(sequence_body, type_tokens):
 			return None
-		producer_action_names += tuple(action.action.name for action in cleanup_actions)
+		producer_action_names += cleanup_extension.producer_action_names
 	type_contexts = _obj_tp_contexts_for_action_calls(sequence_body, type_tokens)
 	if type_contexts is None:
 		return None
 	numeric_contexts = _numeric_contexts_for_action_calls(sequence_body)
-	deduplicated_contexts = _deduplicate_literals(tuple(context_literals))
+	deduplicated_contexts = _deduplicate_literals(sequence_contexts)
 	range_restricted_contexts = _range_restricted_context_literals(
 		context_literals=deduplicated_contexts,
 		head_arguments=target_arguments,
@@ -868,12 +886,13 @@ def _finalize_sequence(
 	)
 	if range_restricted_contexts is None:
 		return None
-	if _has_functional_context_conflict(
+	has_functional_conflict = _has_functional_context_conflict(
 		context_literals=range_restricted_contexts,
 		body_actions=sequence_body,
 		type_tokens=type_tokens,
 		functional_groups=functional_groups,
-	):
+	)
+	if has_functional_conflict and not resource_release_certificates:
 		return None
 	if not _symbolic_sequence_is_executable(
 		target_effect=target_effect,
@@ -886,9 +905,11 @@ def _finalize_sequence(
 		target_arguments=target_arguments,
 		context_literals=range_restricted_contexts,
 		numeric_contexts=numeric_contexts,
+		guard_contexts=guard_contexts,
 		type_contexts=type_contexts,
 		body_actions=sequence_body,
 		producer_action_names=producer_action_names,
+		resource_release_certificates=resource_release_certificates,
 	)
 
 
@@ -898,10 +919,11 @@ def _cleanup_action_calls(
 	type_tokens: Sequence[str],
 	target_effect: PDDLLiteralSchema,
 	target_arguments: tuple[str, ...],
+	context_literals: tuple[PDDLLiteralSchema, ...],
 	body_actions: tuple[_ActionCall, ...],
-) -> tuple[_ActionCall, ...]:
+) -> _CleanupExtension | None:
 	if not body_actions:
-		return ()
+		return None
 	last_call = body_actions[-1]
 	last_map = {
 		parameter: argument
@@ -909,50 +931,383 @@ def _cleanup_action_calls(
 	}
 	available = tuple(effect.mapped(last_map) for effect in last_call.action.add_effects)
 	deleted = tuple(effect.mapped(last_map) for effect in last_call.action.delete_effects)
+	true_before_cleanup = _positive_state_after_action_calls(
+		context_literals=context_literals,
+		body_actions=body_actions,
+	)
 	for cleanup_action in actions:
 		if cleanup_action.name == last_call.action.name:
 			continue
-		cleanup_map = _cleanup_variable_map(
+		for cleanup_map, released_literal in _cleanup_variable_maps(
 			cleanup_action=cleanup_action,
 			available_literals=available,
-		)
-		if cleanup_map is None:
-			continue
-		mapped_preconditions = tuple(
-			precondition.mapped(cleanup_map)
-			for precondition in cleanup_action.preconditions
-		)
-		if any(not literal.is_positive for literal in mapped_preconditions):
-			continue
-		if not all(
-			any(_same_literal(literal, available_literal) for available_literal in available)
-			for literal in mapped_preconditions
-		):
-			continue
-		mapped_adds = tuple(effect.mapped(cleanup_map) for effect in cleanup_action.add_effects)
-		mapped_deletes = tuple(
-			effect.mapped(cleanup_map)
-			for effect in cleanup_action.delete_effects
-		)
-		if any(_same_atom(target_effect, deleted_literal) for deleted_literal in mapped_deletes):
-			continue
-		if not any(
-			any(_same_atom(add_literal, deleted_literal) for deleted_literal in deleted)
-			for add_literal in mapped_adds
-		):
-			continue
-		if _has_arbitrary_extra_target_relation(
-			action=cleanup_action,
+			true_before_cleanup=true_before_cleanup,
 			target_effect=target_effect,
-			variable_map=cleanup_map,
 			target_arguments=target_arguments,
 		):
+			mapped_preconditions = tuple(
+				precondition.mapped(cleanup_map)
+				for precondition in cleanup_action.preconditions
+			)
+			if any(not literal.is_positive for literal in mapped_preconditions):
+				continue
+			mapped_adds = tuple(
+				effect.mapped(cleanup_map)
+				for effect in cleanup_action.add_effects
+			)
+			mapped_deletes = tuple(
+				effect.mapped(cleanup_map)
+				for effect in cleanup_action.delete_effects
+			)
+			if not any(
+				_same_atom(released_literal, deleted_literal)
+				for deleted_literal in mapped_deletes
+			):
+				continue
+			if any(released_literal.predicate == deleted_literal.predicate for deleted_literal in deleted):
+				continue
+			if not any(
+				any(_same_atom(add_literal, deleted_literal) for deleted_literal in deleted)
+				for add_literal in mapped_adds
+			):
+				continue
+			restored_literals = tuple(
+				add_literal
+				for add_literal in mapped_adds
+				if any(_same_atom(add_literal, deleted_literal) for deleted_literal in deleted)
+			)
+			if not _has_arity_lowering_resource_release(
+				released_literal=released_literal,
+				restored_literals=restored_literals,
+			):
+				continue
+			guard_contexts = _target_preservation_guards(
+				target_effect=target_effect,
+				mapped_deletes=mapped_deletes,
+			)
+			if guard_contexts is None:
+				continue
+			if _has_arbitrary_extra_target_relation(
+				action=cleanup_action,
+				target_effect=target_effect,
+				variable_map=cleanup_map,
+				target_arguments=target_arguments,
+			):
+				continue
+			cleanup_call = _action_call(cleanup_action, cleanup_map)
+			if not _action_calls_have_compatible_types((*body_actions, cleanup_call), type_tokens):
+				continue
+			extra_contexts = tuple(
+				literal
+				for literal in mapped_preconditions
+				if not any(
+					_same_literal(literal, state_literal)
+					for state_literal in true_before_cleanup
+				)
+			)
+			resource_certificate = {
+				"certificate_kind": "schema_resource_release",
+				"producer_action": last_call.action.name,
+				"release_action": cleanup_action.name,
+				"released_literal": released_literal.to_call(),
+				"restored_literals": [
+					add_literal.to_call()
+					for add_literal in restored_literals
+				],
+				"target_preservation_guards": list(guard_contexts),
+			}
+			return _CleanupExtension(
+				context_literals=_deduplicate_literals(extra_contexts),
+				guard_contexts=guard_contexts,
+				body_actions=(cleanup_call,),
+				producer_action_names=(cleanup_action.name,),
+				resource_release_certificates=(resource_certificate,),
+			)
+	return None
+
+
+def _positive_state_after_action_calls(
+	*,
+	context_literals: Sequence[PDDLLiteralSchema],
+	body_actions: Sequence[_ActionCall],
+) -> tuple[PDDLLiteralSchema, ...]:
+	state: dict[tuple[str, tuple[str, ...]], PDDLLiteralSchema | None] = {}
+	for literal in context_literals:
+		state[_atom_key(literal)] = literal if literal.is_positive else None
+	for call in body_actions:
+		variable_map = {
+			parameter: argument
+			for parameter, argument in zip(call.action.parameters, call.arguments)
+		}
+		for effect in call.action.delete_effects:
+			state[_atom_key(effect.mapped(variable_map))] = None
+		for effect in call.action.add_effects:
+			mapped = effect.mapped(variable_map)
+			state[_atom_key(mapped)] = mapped
+	return tuple(literal for literal in state.values() if literal is not None)
+
+
+def _cleanup_variable_maps(
+	*,
+	cleanup_action: _ParsedAction,
+	available_literals: Sequence[PDDLLiteralSchema],
+	true_before_cleanup: Sequence[PDDLLiteralSchema],
+	target_effect: PDDLLiteralSchema,
+	target_arguments: Sequence[str],
+) -> tuple[tuple[dict[str, str], PDDLLiteralSchema], ...]:
+	candidates: list[tuple[dict[str, str], PDDLLiteralSchema]] = []
+	protected_assignments = _protected_delete_assignments(
+		cleanup_action=cleanup_action,
+		target_effect=target_effect,
+	)
+	for precondition in cleanup_action.preconditions:
+		if not precondition.is_positive:
 			continue
-		cleanup_call = _action_call(cleanup_action, cleanup_map)
-		if not _action_calls_have_compatible_types((*body_actions, cleanup_call), type_tokens):
+		for available in available_literals:
+			variable_map = _literal_schema_variable_map(
+				pattern=precondition,
+				literal=available,
+				parameters=cleanup_action.parameters,
+				protected_assignments=protected_assignments,
+			)
+			if variable_map is None:
+				continue
+			variable_map = _bind_cleanup_map_from_state(
+				cleanup_action=cleanup_action,
+				variable_map=variable_map,
+				true_before_cleanup=true_before_cleanup,
+				protected_assignments=protected_assignments,
+			)
+			variable_map = _complete_cleanup_variable_map(
+				parameters=cleanup_action.parameters,
+				variable_map=variable_map,
+				protected_assignments=protected_assignments,
+				target_arguments=target_arguments,
+			)
+			candidates.append((variable_map, available))
+	return tuple(candidates)
+
+
+def _literal_schema_variable_map(
+	*,
+	pattern: PDDLLiteralSchema,
+	literal: PDDLLiteralSchema,
+	parameters: Sequence[str],
+	protected_assignments: Mapping[str, set[str]],
+) -> dict[str, str] | None:
+	if pattern.predicate != literal.predicate or len(pattern.arguments) != len(literal.arguments):
+		return None
+	parameter_names = set(parameters)
+	variable_map: dict[str, str] = {}
+	for raw_argument, mapped_argument in zip(pattern.arguments, literal.arguments):
+		if raw_argument not in parameter_names:
+			if raw_argument != mapped_argument:
+				return None
 			continue
-		return (cleanup_call,)
-	return ()
+		if _cleanup_assignment_is_protected(
+			parameter=raw_argument,
+			candidate=mapped_argument,
+			protected_assignments=protected_assignments,
+		):
+			return None
+		variable_map[raw_argument] = mapped_argument
+	return variable_map
+
+
+def _bind_cleanup_map_from_state(
+	*,
+	cleanup_action: _ParsedAction,
+	variable_map: Mapping[str, str],
+	true_before_cleanup: Sequence[PDDLLiteralSchema],
+	protected_assignments: Mapping[str, set[str]],
+) -> dict[str, str]:
+	bound = dict(variable_map)
+	changed = True
+	while changed:
+		changed = False
+		for precondition in cleanup_action.preconditions:
+			if not precondition.is_positive:
+				continue
+			for state_literal in _cleanup_state_binding_order(true_before_cleanup, bound):
+				extended = _extend_cleanup_map_from_literal(
+					pattern=precondition,
+					literal=state_literal,
+					parameters=cleanup_action.parameters,
+					variable_map=bound,
+					protected_assignments=protected_assignments,
+				)
+				if extended is None or extended == bound:
+					continue
+				bound = extended
+				changed = True
+				break
+			if changed:
+				break
+	return bound
+
+
+def _cleanup_state_binding_order(
+	literals: Sequence[PDDLLiteralSchema],
+	variable_map: Mapping[str, str],
+) -> tuple[PDDLLiteralSchema, ...]:
+	bound_values = set(variable_map.values())
+	return tuple(
+		sorted(
+			literals,
+			key=lambda literal: (
+				-sum(1 for argument in literal.arguments if argument in bound_values),
+				len(literal.arguments),
+				literal.predicate,
+				literal.arguments,
+			),
+		),
+	)
+
+
+def _extend_cleanup_map_from_literal(
+	*,
+	pattern: PDDLLiteralSchema,
+	literal: PDDLLiteralSchema,
+	parameters: Sequence[str],
+	variable_map: Mapping[str, str],
+	protected_assignments: Mapping[str, set[str]],
+) -> dict[str, str] | None:
+	if pattern.predicate != literal.predicate or len(pattern.arguments) != len(literal.arguments):
+		return None
+	parameter_names = set(parameters)
+	extended = dict(variable_map)
+	for raw_argument, mapped_argument in zip(pattern.arguments, literal.arguments):
+		if raw_argument not in parameter_names:
+			if raw_argument != mapped_argument:
+				return None
+			continue
+		current = extended.get(raw_argument)
+		if current is not None:
+			if current != mapped_argument:
+				return None
+			continue
+		if raw_argument in protected_assignments:
+			return None
+		if _cleanup_assignment_is_protected(
+			parameter=raw_argument,
+			candidate=mapped_argument,
+			protected_assignments=protected_assignments,
+		):
+			return None
+		extended[raw_argument] = mapped_argument
+	return extended
+
+
+def _complete_cleanup_variable_map(
+	*,
+	parameters: Sequence[str],
+	variable_map: Mapping[str, str],
+	protected_assignments: Mapping[str, set[str]],
+	target_arguments: Sequence[str],
+) -> dict[str, str]:
+	completed = dict(variable_map)
+	used_variables = set(completed.values())
+	for parameter in parameters:
+		if parameter in completed:
+			continue
+		avoid_variables = set()
+		if protected_assignments.get(parameter):
+			avoid_variables.update(target_arguments)
+			avoid_variables.update(protected_assignments[parameter])
+		next_index = 0
+		while (
+			_head_variable(next_index) in used_variables
+			or _head_variable(next_index) in avoid_variables
+		):
+			next_index += 1
+		completed[parameter] = _head_variable(next_index)
+		used_variables.add(completed[parameter])
+	return completed
+
+
+def _protected_delete_assignments(
+	*,
+	cleanup_action: _ParsedAction,
+	target_effect: PDDLLiteralSchema,
+) -> dict[str, set[str]]:
+	protected: dict[str, set[str]] = {}
+	for delete_effect in cleanup_action.delete_effects:
+		if (
+			delete_effect.predicate != target_effect.predicate
+			or len(delete_effect.arguments) != len(target_effect.arguments)
+		):
+			continue
+		for raw_argument, target_argument in zip(delete_effect.arguments, target_effect.arguments):
+			if raw_argument == target_argument:
+				continue
+			protected.setdefault(raw_argument, set()).add(target_argument)
+	return protected
+
+
+def _cleanup_assignment_is_protected(
+	*,
+	parameter: str,
+	candidate: str,
+	protected_assignments: Mapping[str, set[str]],
+) -> bool:
+	return candidate in protected_assignments.get(parameter, set())
+
+
+def _target_preservation_guards(
+	*,
+	target_effect: PDDLLiteralSchema,
+	mapped_deletes: Sequence[PDDLLiteralSchema],
+) -> tuple[str, ...] | None:
+	guards: list[str] = []
+	for deleted in mapped_deletes:
+		if deleted.predicate != target_effect.predicate:
+			continue
+		if len(deleted.arguments) != len(target_effect.arguments):
+			continue
+		if tuple(deleted.arguments) == tuple(target_effect.arguments):
+			return None
+		guard = _non_unification_guard(deleted.arguments, target_effect.arguments)
+		if guard is None:
+			return None
+		if guard:
+			guards.append(guard)
+	return _deduplicate(tuple(guards))
+
+
+def _has_arity_lowering_resource_release(
+	*,
+	released_literal: PDDLLiteralSchema,
+	restored_literals: Sequence[PDDLLiteralSchema],
+) -> bool:
+	released_arguments = set(released_literal.arguments)
+	return any(
+		set(restored.arguments) <= released_arguments
+		and len(restored.arguments) < len(released_literal.arguments)
+		for restored in restored_literals
+	)
+
+
+def _non_unification_guard(
+	left_arguments: Sequence[str],
+	right_arguments: Sequence[str],
+) -> str | None:
+	for left, right in zip(left_arguments, right_arguments):
+		if left == right:
+			continue
+		if not (_is_agentspeak_variable(left) or _is_agentspeak_variable(right)):
+			return ""
+		return _inequality_guard_text(left, right)
+	return None
+
+
+def _inequality_guard_text(left: str, right: str) -> str:
+	left_is_variable = _is_agentspeak_variable(left)
+	right_is_variable = _is_agentspeak_variable(right)
+	if right_is_variable and not left_is_variable:
+		left, right = right, left
+	elif left_is_variable == right_is_variable and right < left:
+		left, right = right, left
+	return f"{left} \\== {right}"
 
 
 def _numeric_contexts_for_action_calls(
@@ -1044,30 +1399,6 @@ def _fresh_numeric_value_variable(used_variables: set[str]) -> str:
 	while f"N{index}" in used_variables:
 		index += 1
 	return f"N{index}"
-
-
-def _cleanup_variable_map(
-	*,
-	cleanup_action: _ParsedAction,
-	available_literals: Sequence[PDDLLiteralSchema],
-) -> dict[str, str] | None:
-	for precondition in cleanup_action.preconditions:
-		if not precondition.is_positive:
-			continue
-		for available in available_literals:
-			if precondition.predicate != available.predicate:
-				continue
-			if len(precondition.arguments) != len(available.arguments):
-				continue
-			variable_map = {
-				raw_argument: mapped_argument
-				for raw_argument, mapped_argument in zip(
-					precondition.arguments,
-					available.arguments,
-				)
-			}
-			return _complete_variable_map(cleanup_action.parameters, variable_map)
-	return None
 
 
 def _literal_in(
@@ -1681,7 +2012,8 @@ def _final_action_sequence_plan(
 		context=tuple(
 			_order_contexts_for_matching(
 				tuple(literal.to_context() for literal in sequence.context_literals)
-				+ sequence.numeric_contexts,
+				+ sequence.numeric_contexts
+				+ sequence.guard_contexts,
 				sequence.type_contexts,
 				initial_bound_variables=sequence.target_arguments,
 			),
@@ -1696,6 +2028,11 @@ def _final_action_sequence_plan(
 				"rule_kind": "producer_action_sequence",
 				"producer_actions": list(sequence.producer_action_names),
 				"numeric_contexts": list(sequence.numeric_contexts),
+				"guard_contexts": list(sequence.guard_contexts),
+				"resource_release_certificates": [
+					dict(certificate)
+					for certificate in sequence.resource_release_certificates
+				],
 				"source_backend": source_backend,
 				"source_name": source_name,
 				"policy_file": str(policy_file) if policy_file is not None else None,
@@ -2140,6 +2477,11 @@ def _module_synthesis_report(
 			),
 			"same-predicate recursive prepare branches require a deleted dynamic "
 			"obstruction-relation certificate",
+			(
+				"resource-release cleanup branches require a schema certificate "
+				"that deletes a producer-created resource debt, restores a lower-arity "
+				"availability literal, and preserves the protected target"
+			),
 		),
 		theoretical_basis=(
 			"MOOSE singleton-goal regression supplies lifted target-predicate evidence",
@@ -2152,6 +2494,8 @@ def _module_synthesis_report(
 			"atomic subgoal calls instead of staying as long primitive macros",
 			"same-predicate recursive branches require a schema-level deleted-relation "
 			"progress certificate",
+			"resource-release cleanup branches are accepted only when PDDL effects "
+			"prove resource debt discharge plus target preservation",
 			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",
 		),
 	)
@@ -2561,6 +2905,7 @@ def _deduplicate_sequences(
 				for literal in sequence.context_literals
 			),
 			sequence.numeric_contexts,
+			sequence.guard_contexts,
 			tuple((call.action.name, call.arguments) for call in sequence.body_actions),
 		)
 		if key in seen:
