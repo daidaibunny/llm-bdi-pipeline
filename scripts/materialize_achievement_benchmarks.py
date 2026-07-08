@@ -20,6 +20,7 @@ PDDL_INSTANCE_CACHE_ROOT = (
 	PROJECT_ROOT / ".external" / "benchmark-sources" / "pddl-instances-cache"
 )
 STRUCTURAL_TRAIN_RATIO = 1 / 4
+DEPOTS_SMALL_INSTANCE_TRAIN_RATIO = 1 / 2
 
 
 class SourceSpec(NamedTuple):
@@ -251,10 +252,10 @@ def _domain_specs() -> tuple[DomainSpec, ...]:
 			"D2L",
 			"depot",
 			("p*.pddl",),
-			train_ratio=STRUCTURAL_TRAIN_RATIO,
+			train_ratio=DEPOTS_SMALL_INSTANCE_TRAIN_RATIO,
 			split_policy=(
-				"floor(1/4 * instance_count) train for feature-definable "
-				"serialized-width policy audit, remaining test"
+				"floor(1/2 * instance_count) train for the small-instance "
+				"feature-definable serialized-width policy audit, remaining test"
 			),
 		),
 	)

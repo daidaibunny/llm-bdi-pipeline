@@ -309,7 +309,8 @@ The current split policy is:
 | --- | --- |
 | All twelve MOOSE direct train/test domains | MOOSE official companion split: source `training/` as train and source `testing/` as test. |
 | `blocksworld-clear`, `blocksworld-on` | KR 2025 learner-policies no-constants split: source `learning/benchmarks/tractable/<family>/training/easy` as train and source `testing/benchmarks/<family>` as test. |
-| `blocksworld-tower`, `depots` | Project feature-definable serialized-width split: `floor(1/4 * instance_count)` train and remaining instances as test. |
+| `blocksworld-tower` | Project feature-definable serialized-width split: `floor(1/4 * instance_count)` train and remaining instances as test. |
+| `depots` | Project small-instance feature-definable serialized-width split: `floor(1/2 * instance_count)` train and remaining instances as test. The D2L source has 22 instances, so the larger train side gives MOOSE and the post-MOOSE compiler broader stacking/transport evidence before held-out testing. |
 
 ## Domain Evidence Notes
 

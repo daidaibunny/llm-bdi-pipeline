@@ -147,3 +147,23 @@ def test_batch_scripts_default_to_selected_registry_domains() -> None:
 	assert "blocksworld-clear" in selected_domain_ids
 	assert "blocksworld-on" in selected_domain_ids
 	assert "blocksworld-tower" in selected_domain_ids
+
+
+def test_depots_small_instance_split_uses_half_train_data() -> None:
+	"""Depots has few source instances, so keep its training evidence at half."""
+
+	from scripts.materialize_achievement_benchmarks import _domain_specs
+
+	depots_spec = next(spec for spec in _domain_specs() if spec.domain_id == "depots")
+	assert depots_spec.train_ratio == 1 / 2
+	assert "1/2" in depots_spec.split_policy
+
+	depots_root = PROJECT_ROOT / "src" / "domains" / "depots"
+	source = json.loads((depots_root / "source.json").read_text(encoding="utf-8"))
+	train_names = tuple(path.name for path in sorted((depots_root / "train").glob("*.pddl")))
+	test_names = tuple(path.name for path in sorted((depots_root / "test").glob("*.pddl")))
+
+	assert source["train_count"] == 11
+	assert source["test_count"] == 11
+	assert train_names == tuple(f"p{index:02d}.pddl" for index in range(1, 12))
+	assert test_names == tuple(f"p{index:02d}.pddl" for index in range(12, 23))
