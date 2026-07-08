@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 from typing import Mapping, Sequence
 
 import clingo
@@ -1897,11 +1898,62 @@ def _candidate_branch_covers_evidence(
 		return False
 	if len(candidate.trigger.arguments) != len(evidence.trigger.arguments):
 		return False
+	if _canonical_branch_signature(candidate) == _canonical_branch_signature(evidence):
+		return True
 	if not set(candidate.context) <= set(evidence.context):
 		return False
 	if _same_body(candidate.body, evidence.body):
 		return True
 	return _candidate_recursive_body_covers(candidate.body, evidence.body)
+
+
+def _canonical_branch_signature(
+	plan: AgentSpeakPlan,
+) -> tuple[str, int, tuple[str, ...], tuple[tuple[str, str, tuple[str, ...]], ...]]:
+	"""Canonicalize local variable names while preserving trigger argument positions."""
+
+	variable_map = {
+		argument: f"H{index}"
+		for index, argument in enumerate(tuple(plan.trigger.arguments or ()))
+	}
+	next_local_index = 0
+
+	def canonical_argument(argument: str) -> str:
+		nonlocal next_local_index
+		if not _is_agentspeak_variable(argument):
+			return argument
+		if argument not in variable_map:
+			variable_map[argument] = f"V{next_local_index}"
+			next_local_index += 1
+		return variable_map[argument]
+
+	def canonical_context(context: str) -> str:
+		return _replace_context_variables(context, canonical_argument)
+
+	return (
+		plan.trigger.symbol,
+		len(tuple(plan.trigger.arguments or ())),
+		tuple(sorted(canonical_context(context) for context in tuple(plan.context or ()))),
+		tuple(
+			(
+				step.kind,
+				step.symbol,
+				tuple(canonical_argument(argument) for argument in tuple(step.arguments or ())),
+			)
+			for step in tuple(plan.body or ())
+		),
+	)
+
+
+def _replace_context_variables(
+	context: str,
+	replace_argument: Callable[[str], str],
+) -> str:
+	tokens = re.split(r"(\b[A-Z][A-Za-z0-9_]*\b)", str(context or ""))
+	return "".join(
+		replace_argument(token) if _is_agentspeak_variable(token) else token
+		for token in tokens
+	)
 
 
 def _same_body(

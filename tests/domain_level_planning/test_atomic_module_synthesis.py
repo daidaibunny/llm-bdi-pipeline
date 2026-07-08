@@ -116,6 +116,38 @@ def test_clingo_selector_removes_context_subsumed_duplicate_branch() -> None:
 	assert selection.report.obligation_count == 3
 
 
+def test_clingo_selector_removes_alpha_equivalent_prepare_branch() -> None:
+	first_prepare = AgentSpeakPlan(
+		plan_name="at_prepare_at_robby_A",
+		trigger=AgentSpeakTrigger("achievement_goal", "at", ("X", "Y")),
+		context=("not at_robby(A)", "room(A)"),
+		body=(
+			AgentSpeakBodyStep("subgoal", "at_robby", ("A",)),
+			AgentSpeakBodyStep("subgoal", "at", ("X", "Y")),
+		),
+	)
+	second_prepare = AgentSpeakPlan(
+		plan_name="at_prepare_at_robby_B",
+		trigger=AgentSpeakTrigger("achievement_goal", "at", ("X", "Y")),
+		context=("not at_robby(B)", "room(B)"),
+		body=(
+			AgentSpeakBodyStep("subgoal", "at_robby", ("B",)),
+			AgentSpeakBodyStep("subgoal", "at", ("X", "Y")),
+		),
+	)
+
+	selection = _select_branches_with_clingo((first_prepare, second_prepare))
+
+	assert len(selection.plans) == 1
+	assert selection.plans[0].plan_name in {
+		"at_prepare_at_robby_A",
+		"at_prepare_at_robby_B",
+	}
+	assert selection.report.raw_candidate_count == 2
+	assert selection.report.selected_candidate_count == 1
+	assert selection.report.obligation_count == 2
+
+
 def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted() -> None:
 	library = synthesize_atomic_minimal_literal_module_library(
 		domain_file=BLOCKS_DOMAIN,
