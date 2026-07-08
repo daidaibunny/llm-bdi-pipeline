@@ -338,10 +338,22 @@ def test_evidence_compiler_preserves_validated_logistics_intermodal_macro() -> N
 	assert library.metadata["library_quality"]["artifact_classification"] == (
 		"atomic_template_library"
 	)
-	assert library.metadata["library_quality"]["subgoal_step_count"] == 0
+	assert library.metadata["moose_macro_library_quality"]["subgoal_step_count"] == 0
+	assert library.metadata["library_quality"]["subgoal_step_count"] > 0
 	assert library.metadata["library_quality"]["library_profile"] == (
 		"mixed_atomic_template_library"
 	)
+	first_moose_macro_index = next(
+		index
+		for index, plan in enumerate(library.plans)
+		if plan.plan_name.startswith("moose_reduced_logistics_seed0_rule_")
+	)
+	first_subgoal_index = next(
+		index
+		for index, plan in enumerate(library.plans)
+		if any(step.kind == "subgoal" for step in plan.body)
+	)
+	assert first_moose_macro_index < first_subgoal_index
 	assert "block0" not in asl
 
 

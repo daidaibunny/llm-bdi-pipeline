@@ -188,6 +188,10 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		),
 		"negative context literals must be range-restricted and cannot bind new variables",
 		(
+			"extra-variable prepared preconditions require a positive context "
+			"closure that binds every non-head variable before the negative guard"
+		),
+		(
 			"same-predicate recursive prepare branches require a deleted dynamic "
 			"obstruction-relation certificate"
 		),
@@ -374,6 +378,39 @@ def test_depots_drop_is_on_producer_when_extra_variables_are_precondition_bound(
 	assert "type_" not in asl
 
 
+def test_depots_lifts_range_safe_extra_variable_precondition_to_subgoal() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl",
+		seed_predicates=("on",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="depots-smoke",
+	)
+	asl = render_plan_library_asl(library)
+
+	prepare_plans = [
+		plan
+		for plan in library.plans
+		if plan.plan_name == "on_prepare_lifting_Z_X"
+	]
+
+	assert len(prepare_plans) == 1
+	plan = prepare_plans[0]
+	assert plan.trigger.symbol == "on"
+	assert plan.trigger.arguments == ("X", "Y")
+	assert "not lifting(Z, X)" in plan.context
+	assert "at(Z, A)" in plan.context
+	assert "at(Y, A)" in plan.context
+	assert "hoist(Z)" in plan.context
+	assert "place(A)" in plan.context
+	assert plan.body == (
+		AgentSpeakBodyStep("subgoal", "lifting", ("Z", "X")),
+		AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+	)
+	assert "+!on(X, Y)" in asl
+	assert "\t!lifting(Z, X);\n\t!on(X, Y)." in asl
+	assert "type_" not in asl
+
+
 def test_logistics_atomic_modules_compile_pddl_typing_to_obj_tp_guards() -> None:
 	library = synthesize_atomic_minimal_literal_module_library(
 		domain_file=PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl",
@@ -425,11 +462,23 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 	assert "obj_tp(X, passenger)" in asl
 	assert "obj_tp(Y, floor)" in asl
 	assert len({plan.plan_name for plan in library.plans}) == len(library.plans)
-	assert (
-		"+!served(X) : obj_tp(X, passenger) & destin(X, Y) "
-		"& obj_tp(Y, floor) & not lift_at(Y)"
-		in asl
-	)
+	lift_repair_plans = [
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "served"
+		and plan.body
+		== (
+			AgentSpeakBodyStep("subgoal", "lift_at", ("Y",)),
+			AgentSpeakBodyStep("subgoal", "served", ("X",)),
+		)
+	]
+	assert len(lift_repair_plans) == 1
+	lift_repair_context = lift_repair_plans[0].context
+	assert "boarded(X)" in lift_repair_context
+	assert "destin(X, Y)" in lift_repair_context
+	assert "obj_tp(X, passenger)" in lift_repair_context
+	assert "obj_tp(Y, floor)" in lift_repair_context
+	assert "not lift_at(Y)" in lift_repair_context
 	assert "\t!lift_at(Y);\n\t!served(X)." in asl
 	assert "+!served(X) : obj_tp(X, passenger) & not boarded(X)" in asl
 	assert "\t!boarded(X);\n\t!served(X)." in asl

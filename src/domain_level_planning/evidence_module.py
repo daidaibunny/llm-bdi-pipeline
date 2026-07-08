@@ -502,7 +502,9 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 		policy_file=evidence_program.policy_file,
 	)
 	merged_plans = _ensure_unique_plan_names(
-		_deduplicate_agent_plans((*library.plans, *macro_evidence.plans)),
+		_order_validated_policy_lifting_plans(
+			_deduplicate_agent_plans((*library.plans, *macro_evidence.plans)),
+		),
 	)
 	macro_quality_report = audit_moose_atomic_library_quality(plans=macro_evidence.plans)
 	library_quality = _evidence_compiler_library_quality(
@@ -695,6 +697,29 @@ def _plan_template_kind(plan: AgentSpeakPlan) -> str:
 	if all(step.kind == "action" for step in body):
 		return "action_only_plan_template"
 	return "mixed_body_plan_template"
+
+
+def _order_validated_policy_lifting_plans(
+	plans: Sequence[AgentSpeakPlan],
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Prefer certified complete macros before recursive repair branches."""
+
+	return tuple(sorted(tuple(plans or ()), key=_plan_execution_priority))
+
+
+def _plan_execution_priority(plan: AgentSpeakPlan) -> int:
+	kind = _plan_template_kind(plan)
+	if kind in {"already_true_plan_template", "numeric_already_true_plan_template"}:
+		return 0
+	if kind in {
+		"action_only_plan_template",
+		"numeric_resource_progress_plan_template",
+		"numeric_resource_plan_template",
+	}:
+		return 1
+	if kind == "mixed_body_plan_template":
+		return 2
+	return 3
 
 
 _NUMERIC_PLAN_TEMPLATE_KINDS = frozenset(

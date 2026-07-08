@@ -1488,24 +1488,88 @@ def _is_public_positive_precondition(
 			precondition=literal,
 			actions=actions,
 		)
-		and not _is_extra_variable_relation_binding(
+		and _precondition_has_range_safe_prepare_context(
+			sequence=sequence,
+			precondition=literal,
+		)
+		and not _is_unbound_extra_variable_relation_binding(
 			literal=literal,
-			head_arguments=sequence.target_arguments,
+			sequence=sequence,
 		)
 	)
 
 
-def _is_extra_variable_relation_binding(
+def _is_unbound_extra_variable_relation_binding(
 	*,
 	literal: PDDLLiteralSchema,
-	head_arguments: Sequence[str],
+	sequence: _ProducerSequence,
 ) -> bool:
 	"""Return whether a relation literal should bind context, not become a goal."""
 
-	return (
-		len(literal.arguments) > 1
-		and bool(set(literal.arguments) - set(head_arguments))
+	extra_variables = set(literal.arguments) - set(sequence.target_arguments)
+	return bool(extra_variables) and _prepare_precondition_binding_literals(
+		sequence=sequence,
+		precondition=literal,
+	) is None
+
+
+def _precondition_has_range_safe_prepare_context(
+	*,
+	sequence: _ProducerSequence,
+	precondition: PDDLLiteralSchema,
+) -> bool:
+	return _prepare_precondition_binding_literals(
+		sequence=sequence,
+		precondition=precondition,
+	) is not None
+
+
+def _prepare_precondition_binding_literals(
+	*,
+	sequence: _ProducerSequence,
+	precondition: PDDLLiteralSchema,
+) -> tuple[PDDLLiteralSchema, ...] | None:
+	"""Return positive contexts that bind a prepared precondition safely."""
+
+	head_variables = set(sequence.target_arguments)
+	extra_variables = set(precondition.arguments) - head_variables
+	positive_contexts = tuple(
+		literal
+		for literal in sequence.context_literals
+		if literal.is_positive and not _same_literal(literal, precondition)
 	)
+	if not extra_variables:
+		return tuple(
+			literal
+			for literal in positive_contexts
+			if _shares_extra_variable(
+				literal=literal,
+				precondition=precondition,
+				head_arguments=sequence.target_arguments,
+			)
+		)
+
+	selected: list[PDDLLiteralSchema] = []
+	remaining = list(positive_contexts)
+	bound_variables = set(precondition.arguments) | head_variables
+	changed = True
+	while changed:
+		changed = False
+		for literal in tuple(remaining):
+			literal_variables = set(literal.arguments)
+			if not (literal_variables & bound_variables):
+				continue
+			selected.append(literal)
+			remaining.remove(literal)
+			bound_variables.update(literal_variables)
+			changed = True
+	if not extra_variables <= {
+		argument
+		for literal in selected
+		for argument in literal.arguments
+	} | head_variables:
+		return None
+	return _deduplicate_literals(tuple(selected))
 
 
 def _candidate_subgoal_has_progress_potential(
@@ -1649,16 +1713,12 @@ def _prepare_precondition_plan(
 	source_name: str,
 	policy_file: str | Path | None,
 ) -> AgentSpeakPlan:
-	binding_literals = tuple(
-		literal
-		for literal in sequence.context_literals
-		if literal.is_positive
-		and literal.predicate != precondition.predicate
-		and _shares_extra_variable(
-			literal=literal,
+	binding_literals = (
+		_prepare_precondition_binding_literals(
+			sequence=sequence,
 			precondition=precondition,
-			head_arguments=sequence.target_arguments,
 		)
+		or ()
 	)
 	binding_contexts = tuple(literal.to_context() for literal in binding_literals)
 	body_variables = set(sequence.target_arguments) | set(precondition.arguments)
@@ -2074,6 +2134,10 @@ def _module_synthesis_report(
 			"static context literals must be range-restricted by head variables or "
 			"previous positive dynamic literals",
 			"negative context literals must be range-restricted and cannot bind new variables",
+			(
+				"extra-variable prepared preconditions require a positive context "
+				"closure that binds every non-head variable before the negative guard"
+			),
 			"same-predicate recursive prepare branches require a deleted dynamic "
 			"obstruction-relation certificate",
 		),
@@ -2084,6 +2148,8 @@ def _module_synthesis_report(
 			"PDDL typing is used internally to reject unobservable subtype role bindings",
 			"range-restricted static and negative contexts prevent unbounded "
 			"Jason unification over inertial relations",
+			"range-safe extra-variable preconditions may be lifted into internal "
+			"atomic subgoal calls instead of staying as long primitive macros",
 			"same-predicate recursive branches require a schema-level deleted-relation "
 			"progress certificate",
 			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",
