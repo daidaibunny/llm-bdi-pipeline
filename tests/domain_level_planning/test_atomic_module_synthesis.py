@@ -49,6 +49,35 @@ def test_context_order_uses_bound_goal_arguments_before_unbound_buckets() -> Non
 	assert context.index("at(Z, C)") < context.index("obj_tp(Z, truck)")
 
 
+def test_context_order_places_only_bound_inequalities_before_pddl_filters() -> None:
+	context = _order_contexts_for_matching(
+		(
+			"surface(B)",
+			"B != X",
+			"B != Z",
+			"clear(B)",
+			"on(Z, X)",
+			"at(B, A)",
+			"at(Z, A)",
+		),
+		(
+			"obj_tp(X, crate)",
+			"obj_tp(B, surface)",
+		),
+		initial_bound_variables=("X",),
+	)
+
+	assert context.index("obj_tp(X, crate)") < context.index("on(Z, X)")
+	assert context.index("on(Z, X)") < context.index("B != Z")
+	assert context.index("at(B, A)") < context.index("obj_tp(B, surface)")
+	assert context.index("obj_tp(B, surface)") < context.index("B != X")
+	assert context.index("obj_tp(B, surface)") < context.index("B != Z")
+	assert context.index("B != X") < context.index("surface(B)")
+	assert context.index("B != Z") < context.index("surface(B)")
+	assert context.index("B != X") < context.index("clear(B)")
+	assert context.index("B != Z") < context.index("clear(B)")
+
+
 def test_clingo_selector_removes_context_subsumed_duplicate_branch() -> None:
 	weaker_context_branch = AgentSpeakPlan(
 		plan_name="deliver_with_weaker_context",
@@ -157,14 +186,14 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not holding(X)" in asl
 	assert "\t!holding(X);" in asl
 	assert "pick_up(X);\n\tunstack" not in asl
-	assert "clear(X) & clear(Y) & ontable(X) & handempty & obj_tp(X, block) & obj_tp(Y, block)" in asl
-	assert "clear(X) & clear(Y) & handempty & on(X, Z) & obj_tp(X, block) & obj_tp(Y, block) & obj_tp(Z, block)" in asl
+	assert "obj_tp(X, block) & obj_tp(Y, block) & clear(X) & clear(Y) & ontable(X) & handempty" in asl
+	assert "obj_tp(X, block) & obj_tp(Y, block) & clear(X) & clear(Y) & handempty & on(X, Z) & obj_tp(Z, block)" in asl
 	assert "\tunstack(X, Z);" in asl
 	assert "\tstack(X, Y)." in asl
-	assert "handempty & on(Y, X) & clear(Y) & obj_tp(X, block) & obj_tp(Y, block)" in asl
+	assert "obj_tp(X, block) & handempty & on(Y, X) & obj_tp(Y, block) & clear(Y)" in asl
 	assert "\tunstack(Y, X);" in asl
 	assert "\tput_down(Y)." in asl
-	assert "on(Y, X) & obj_tp(X, block) & obj_tp(Y, block) & not clear(Y)" in asl
+	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "+!holding(X) : holding(X)" in asl
 	assert "pick_up(X)." in asl
 	assert "unstack(X, Y)." in asl
@@ -338,7 +367,7 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 	assert "obj_tp(Y, floor)" in asl
 	assert len({plan.plan_name for plan in library.plans}) == len(library.plans)
 	assert (
-		"+!served(X) : destin(X, Y) & obj_tp(X, passenger) "
+		"+!served(X) : obj_tp(X, passenger) & destin(X, Y) "
 		"& obj_tp(Y, floor) & not lift_at(Y)"
 		in asl
 	)
@@ -384,7 +413,7 @@ def test_miconic_static_above_does_not_bind_unbounded_navigation_context() -> No
 	asl = render_plan_library_asl(library)
 
 	assert "+!lift_at(X) : lift_at(X)" in asl
-	assert "+!lift_at(X) : above(Y, X) & lift_at(Y) & obj_tp(X, floor) & obj_tp(Y, floor)" in asl
-	assert "+!lift_at(X) : above(X, Y) & lift_at(Y) & obj_tp(X, floor) & obj_tp(Y, floor)" in asl
+	assert "+!lift_at(X) : obj_tp(X, floor) & above(Y, X) & obj_tp(Y, floor) & lift_at(Y)" in asl
+	assert "+!lift_at(X) : obj_tp(X, floor) & above(X, Y) & obj_tp(Y, floor) & lift_at(Y)" in asl
 	assert "above(Y, X) & not lift_at(Y)" not in asl
 	assert "above(X, Y) & not lift_at(Y)" not in asl

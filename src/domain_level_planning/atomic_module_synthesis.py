@@ -2286,7 +2286,7 @@ def _order_contexts_for_matching(
 		context = remaining.pop(best_index)
 		ordered.append(context)
 		parsed = _parse_context_literal_for_matching(context)
-		if parsed is None or parsed["negative"]:
+		if parsed is None or parsed["negative"] or parsed["kind"] != "atom":
 			continue
 		bound_variables.update(
 			argument
@@ -2309,19 +2309,26 @@ def _context_matching_key(
 	bound_count = len(variables) - len(unbound_variables)
 	all_variables_bound = not unbound_variables
 	is_obj_tp = parsed["predicate"] == OBJ_TP_PREDICATE
+	is_comparison = parsed["kind"] == "comparison"
 	is_negative = bool(parsed["negative"])
-	if all_variables_bound and not is_negative:
+	if is_obj_tp and all_variables_bound and not is_negative:
 		group = 0
-	elif all_variables_bound:
+	elif is_comparison and all_variables_bound:
 		group = 1
-	elif is_obj_tp and bound_count:
+	elif all_variables_bound and not is_negative:
 		group = 2
-	elif not is_obj_tp and bound_count:
+	elif all_variables_bound:
 		group = 3
-	elif is_obj_tp:
+	elif not is_comparison and not is_obj_tp and not is_negative and bound_count:
 		group = 4
-	else:
+	elif is_obj_tp and not is_negative and bound_count:
 		group = 5
+	elif not is_comparison and not is_obj_tp and not is_negative:
+		group = 6
+	elif is_obj_tp and not is_negative:
+		group = 7
+	else:
+		group = 8
 	return (group, len(unbound_variables), -bound_count, len(arguments), context)
 
 
@@ -2333,10 +2340,19 @@ def _parse_context_literal_for_matching(context: str) -> dict[str, object] | Non
 		text = text[4:].strip()
 	if not text:
 		return None
+	comparison = _parse_context_comparison_for_matching(text)
+	if comparison is not None:
+		left, right = comparison
+		return {
+			"kind": "comparison",
+			"negative": negative,
+			"predicate": "",
+			"arguments": (left, right),
+		}
 	if "(" not in text:
 		if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", text):
 			return None
-		return {"negative": negative, "predicate": text, "arguments": ()}
+		return {"kind": "atom", "negative": negative, "predicate": text, "arguments": ()}
 	match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_-]*)\((.*)\)", text)
 	if match is None:
 		return None
@@ -2347,10 +2363,23 @@ def _parse_context_literal_for_matching(context: str) -> dict[str, object] | Non
 		if argument.strip()
 	)
 	return {
+		"kind": "atom",
 		"negative": negative,
 		"predicate": match.group(1),
 		"arguments": arguments,
 	}
+
+
+def _parse_context_comparison_for_matching(text: str) -> tuple[str, str] | None:
+	match = re.fullmatch(
+		r"\s*(?P<left>[A-Za-z_][A-Za-z0-9_-]*|[+-]?\d+(?:\.\d+)?)\s*"
+		r"(?P<operator>\\==|!=|==|>=|<=|>|<)\s*"
+		r"(?P<right>[A-Za-z_][A-Za-z0-9_-]*|[+-]?\d+(?:\.\d+)?)\s*",
+		text,
+	)
+	if match is None:
+		return None
+	return match.group("left"), match.group("right")
 
 
 def _is_agentspeak_variable(token: str) -> bool:

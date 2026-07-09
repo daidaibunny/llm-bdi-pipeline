@@ -264,7 +264,7 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
 	assert len(selector_report["selected_branch_ids"]) == selector_report["plan_count"]
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
-	assert "on(Y, X) & obj_tp(X, block) & obj_tp(Y, block) & not clear(Y)" in asl
+	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
 	assert "+!clear(X) : obj_tp(X, block) & not handempty" in asl
 	assert "\t!handempty;" in asl
 	assert "\t!on(Y, X);" not in asl

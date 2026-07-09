@@ -38,7 +38,12 @@ def _render_plan(plan: AgentSpeakPlan) -> List[str]:
 	)
 	context = " & ".join(
 		_render_context_item(literal)
-		for literal in _ordered_context_items(plan.context)
+		for literal in _ordered_context_items(
+			plan.context,
+			initial_bound_variables=tuple(
+				_raw_argument(argument) for argument in plan.trigger.arguments
+			),
+		)
 	) or "true"
 	body_items = [_render_body_step(step) for step in plan.body]
 	if not body_items:
@@ -54,25 +59,125 @@ def _render_plan(plan: AgentSpeakPlan) -> List[str]:
 	return lines
 
 
-def _ordered_context_items(context: tuple[str, ...]) -> tuple[str, ...]:
-	"""Order context guards so dynamic binders run before static type filters."""
+def _ordered_context_items(
+	context: tuple[str, ...],
+	initial_bound_variables: tuple[str, ...] = (),
+) -> tuple[str, ...]:
+	"""Order context guards so cheap bound filters run before broad matchers."""
 
-	return tuple(
-		item
-		for _, item in sorted(
-			enumerate(context),
-			key=lambda indexed: (_context_item_order_bucket(indexed[1]), indexed[0]),
+	remaining = list(enumerate(context))
+	ordered: list[str] = []
+	bound_variables = {
+		variable
+		for variable in initial_bound_variables
+		if _is_agentspeak_variable(variable)
+	}
+	while remaining:
+		best_position = min(
+			range(len(remaining)),
+			key=lambda position: _context_item_order_key(
+				remaining[position][1],
+				bound_variables,
+				remaining[position][0],
+			),
 		)
-	)
+		_, item = remaining.pop(best_position)
+		ordered.append(item)
+		parsed = _parse_context_item_for_ordering(item)
+		if parsed is None or parsed["kind"] != "atom" or parsed["negative"]:
+			continue
+		bound_variables.update(
+			argument
+			for argument in parsed["arguments"]
+			if _is_agentspeak_variable(argument)
+		)
+	return tuple(ordered)
 
 
-def _context_item_order_bucket(item: str) -> int:
+def _context_item_order_key(
+	item: str,
+	bound_variables: set[str],
+	original_index: int,
+) -> tuple[int, int, int, int, int]:
+	parsed = _parse_context_item_for_ordering(item)
+	if parsed is None:
+		return (9, 0, 0, 0, original_index)
+	arguments = tuple(parsed["arguments"])
+	variables = tuple(argument for argument in arguments if _is_agentspeak_variable(argument))
+	unbound_variables = tuple(variable for variable in variables if variable not in bound_variables)
+	bound_count = len(variables) - len(unbound_variables)
+	all_variables_bound = not unbound_variables
+	is_obj_tp = parsed["predicate"] == "obj_tp"
+	is_comparison = parsed["kind"] == "comparison"
+	is_negative = bool(parsed["negative"])
+	if is_obj_tp and all_variables_bound and not is_negative:
+		group = 0
+	elif is_comparison and all_variables_bound:
+		group = 1
+	elif all_variables_bound and not is_negative:
+		group = 2
+	elif all_variables_bound:
+		group = 3
+	elif not is_comparison and not is_obj_tp and not is_negative and bound_count:
+		group = 4
+	elif is_obj_tp and not is_negative and bound_count:
+		group = 5
+	elif not is_comparison and not is_obj_tp and not is_negative:
+		group = 6
+	elif is_obj_tp and not is_negative:
+		group = 7
+	else:
+		group = 9
+	return (group, len(unbound_variables), -bound_count, len(arguments), original_index)
+
+
+def _parse_context_item_for_ordering(item: str) -> dict[str, object] | None:
 	text = str(item or "").strip()
-	if _is_positive_simple_context_atom(text) and not _is_obj_tp_context_atom(text):
-		return 0
-	if _is_obj_tp_context_atom(text):
-		return 1
-	return 2
+	negative = False
+	if text.lower().startswith("not "):
+		negative = True
+		text = text[4:].strip()
+	if not text or any(operator in text for operator in ("&", "|")):
+		return None
+	comparison = _parse_context_comparison_for_ordering(text)
+	if comparison is not None:
+		left, right = comparison
+		return {
+			"kind": "comparison",
+			"negative": negative,
+			"predicate": "",
+			"arguments": (left, right),
+		}
+	symbol = _simple_atom_symbol(text)
+	if symbol is None:
+		return None
+	if "(" not in text:
+		arguments: tuple[str, ...] = ()
+	else:
+		raw_args = text.split("(", 1)[1][:-1]
+		arguments = tuple(
+			argument.strip()
+			for argument in raw_args.split(",")
+			if argument.strip()
+		)
+	return {
+		"kind": "atom",
+		"negative": negative,
+		"predicate": symbol,
+		"arguments": arguments,
+	}
+
+
+def _parse_context_comparison_for_ordering(text: str) -> tuple[str, str] | None:
+	match = re.fullmatch(
+		r"\s*(?P<left>[A-Za-z_][A-Za-z0-9_-]*|[+-]?\d+(?:\.\d+)?)\s*"
+		r"(?P<operator>\\==|!=|==|>=|<=|>|<)\s*"
+		r"(?P<right>[A-Za-z_][A-Za-z0-9_-]*|[+-]?\d+(?:\.\d+)?)\s*",
+		text,
+	)
+	if match is None:
+		return None
+	return match.group("left"), match.group("right")
 
 
 def _is_positive_simple_context_atom(text: str) -> bool:

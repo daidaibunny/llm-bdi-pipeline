@@ -93,6 +93,39 @@ def test_render_plan_library_orders_dynamic_binders_before_type_guards() -> None
 	)
 
 
+def test_render_plan_library_places_bound_inequalities_after_type_guards() -> None:
+	plan_library = PlanLibrary(
+		domain_name="depots-like",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="clear_via_safe_drop",
+				trigger=AgentSpeakTrigger("achievement_goal", "clear", ("X",)),
+				context=(
+					"surface(B)",
+					"B != X",
+					"B != Z",
+					"clear(B)",
+					"on(Z, X)",
+					"obj_tp(X, crate)",
+					"obj_tp(B, surface)",
+				),
+				body=(
+					AgentSpeakBodyStep("action", "lift", ("Y", "Z", "X", "A")),
+					AgentSpeakBodyStep("action", "drop", ("Y", "Z", "B", "A")),
+				),
+			),
+		),
+	)
+
+	asl = render_plan_library_asl(plan_library)
+
+	assert (
+		"+!clear(X) : obj_tp(X, crate) & on(Z, X) & surface(B) "
+		"& obj_tp(B, surface) & B \\== X & B \\== Z & clear(B) <-"
+		in asl
+	)
+
+
 def test_render_plan_library_preserves_signed_numeric_terms() -> None:
 	plan_library = PlanLibrary(
 		domain_name="numeric",
