@@ -79,7 +79,7 @@ def _artifact_manifest(tmp_path: Path) -> dict[str, object]:
 			"paper_table_row_count": 0,
 		},
 		"atomic_artifact_smoke": {
-			"backend": "moose",
+			"evidence_provider": "moose",
 			"domain_name": "ferry",
 			"readable_policy": str(policy_file),
 			"source_name": "unit-policy",
@@ -124,7 +124,7 @@ def _write_minimal_artifact_outputs(output_dir: Path, manifest: dict[str, object
 	(atomic_dir / "atomic_library_metadata.json").write_text(
 		json.dumps(
 			{
-				"backend": smoke["backend"],
+				"evidence_provider": smoke["evidence_provider"],
 				"compiled_singleton_rule_count": 1,
 			},
 		),

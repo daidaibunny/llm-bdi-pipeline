@@ -1,7 +1,7 @@
 {
   "artifact_id": "aamas2026-domain-level-lifted-asl-final-data",
   "atomic_artifact_smoke": {
-    "backend": "moose",
+    "evidence_provider": "moose",
     "domain_name": "ferry",
     "readable_policy": ".external/moose/exact-runs/ferry-seed0.model.readable",
     "source_name": "ferry-seed0"

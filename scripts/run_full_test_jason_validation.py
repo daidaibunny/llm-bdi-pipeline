@@ -25,7 +25,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 DEFAULT_BATCH_ROOT = PROJECT_ROOT / "artifacts" / "moose_asl_batches"
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "artifacts" / "jason_full_test_runs"
-ATOMIC_LIBRARY_MODES = ("faithful", "validated-policy-lifting", "post-moose-recursive")
+ATOMIC_LIBRARY_MODES = ("faithful", "validated-policy-lifting")
 
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
@@ -163,8 +163,7 @@ def main() -> int:
 		help=(
 			"Compile raw MOOSE decision-list macros faithfully, or validate and "
 			"lift MOOSE singleton policy evidence with the PDDL schema before "
-			"Jason validation. Defaults to validated-policy-lifting. "
-			"post-moose-recursive is accepted as a deprecated alias."
+			"Jason validation. Defaults to validated-policy-lifting."
 		),
 	)
 	parser.add_argument(
@@ -498,10 +497,8 @@ def build_compile_atomic_library_command(
 
 
 def normalise_atomic_library_mode(mode: str) -> str:
-	"""Map legacy mode names to the current compiler terminology."""
+	"""Return the configured atomic library mode."""
 
-	if mode == "post-moose-recursive":
-		return "validated-policy-lifting"
 	return mode
 
 

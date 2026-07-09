@@ -5,10 +5,12 @@ from pathlib import Path
 import subprocess
 import sys
 
-from domain_level_planning.moose_policy_adapter import (
+from domain_level_planning.evidence_module import (
 	audit_moose_atomic_library_quality,
+	compile_policy_evidence_program_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_asl_library,
+	evidence_program_from_moose_readable_policy,
 	parse_moose_readable_policy,
 	policy_program_from_moose_readable_policy,
 )
@@ -282,7 +284,35 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	assert "type_" not in asl
 
 
-def test_post_moose_reducer_preserves_validated_logistics_intermodal_macro() -> None:
+def test_evidence_program_decouples_moose_adapter_from_compiler() -> None:
+	evidence_program = evidence_program_from_moose_readable_policy(
+		BLOCKS_READABLE_POLICY,
+		source_name="blocks-seed0",
+		policy_file=Path("blocks-seed0.model.readable"),
+	)
+
+	library = compile_policy_evidence_program_to_minimal_module_asl_library(
+		evidence_program,
+		domain_file=BLOCKS_DOMAIN,
+		domain_name="blocksworld-tower",
+	)
+
+	assert evidence_program.source_provider == "moose"
+	assert evidence_program.representation == "moose_readable_first_order_decision_list"
+	assert library.metadata["evidence_module"] == {
+		"source_provider": "moose",
+		"source_name": "blocks-seed0",
+		"representation": "moose_readable_first_order_decision_list",
+		"policy_file": "blocks-seed0.model.readable",
+		"rule_count": 1,
+	}
+	assert library.metadata["source_seed_predicates"] == ["on"]
+	assert library.metadata["atomic_module_synthesis"]["selector_backend"] == (
+		"clingo_asp_minimize"
+	)
+
+
+def test_evidence_compiler_preserves_validated_logistics_intermodal_macro() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		LOGISTICS_INTERMODAL_READABLE_POLICY,
 		domain_file=LOGISTICS_DOMAIN,
@@ -315,7 +345,7 @@ def test_post_moose_reducer_preserves_validated_logistics_intermodal_macro() -> 
 	assert "block0" not in asl
 
 
-def test_post_moose_reducer_adds_positive_precondition_preservation_guards() -> None:
+def test_evidence_compiler_adds_positive_precondition_preservation_guards() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		DEPOTS_CLEAR_WITH_PARKING_READABLE_POLICY,
 		domain_file=DEPOTS_DOMAIN,
@@ -335,7 +365,7 @@ def test_post_moose_reducer_adds_positive_precondition_preservation_guards() -> 
 	assert "\tdrop(Y, Z, B, A)." in asl
 
 
-def test_post_moose_reducer_preserves_numeric_macro_contexts() -> None:
+def test_evidence_compiler_preserves_numeric_macro_contexts() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		NUMERIC_FERRY_READABLE_POLICY,
 		domain_file=NUMERIC_FERRY_DOMAIN,
@@ -353,7 +383,7 @@ def test_post_moose_reducer_preserves_numeric_macro_contexts() -> None:
 	assert library.metadata["validated_policy_lifting"]["invalid_macro_count"] == 0
 
 
-def test_post_moose_reducer_compiles_numeric_resource_goal_module() -> None:
+def test_evidence_compiler_compiles_numeric_resource_goal_module() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		NUMERIC_MINECRAFT_READABLE_POLICY,
 		domain_file=NUMERIC_MINECRAFT_DOMAIN,
@@ -405,7 +435,7 @@ def test_numeric_macro_contexts_account_for_prior_numeric_effects() -> None:
 	}
 
 
-def test_post_moose_reducer_preserves_pddl_constants_in_numeric_macros() -> None:
+def test_evidence_compiler_preserves_pddl_constants_in_numeric_macros() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		NUMERIC_MINECRAFT_MOVE_TO_CONSTANT_POLICY,
 		domain_file=NUMERIC_MINECRAFT_DOMAIN,
@@ -422,7 +452,7 @@ def test_post_moose_reducer_preserves_pddl_constants_in_numeric_macros() -> None
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 
 
-def test_post_moose_reducer_adds_negative_precondition_binding_guards() -> None:
+def test_evidence_compiler_adds_negative_precondition_binding_guards() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		NUMERIC_MINECRAFT_MOVE_TO_VARIABLE_POLICY,
 		domain_file=NUMERIC_MINECRAFT_DOMAIN,
@@ -440,7 +470,7 @@ def test_post_moose_reducer_adds_negative_precondition_binding_guards() -> None:
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 
 
-def test_post_moose_reducer_preserves_distinct_evidence_objects_as_guards() -> None:
+def test_evidence_compiler_preserves_distinct_evidence_objects_as_guards() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		NUMERIC_MINECRAFT_THREE_CELL_POLICY,
 		domain_file=NUMERIC_MINECRAFT_DOMAIN,
@@ -494,7 +524,7 @@ def test_moose_readable_compile_asl_cli_materializes_atomic_library(
 	assert "wrote atomic ASL library" in result.stdout
 	assert library_json["domain_name"] == "ferry"
 	assert len(library_json["plans"]) == 2
-	assert metadata["backend"] == "moose"
+	assert metadata["evidence_provider"] == "moose"
 	assert metadata["compiled_singleton_rule_count"] == 2
 	assert metadata["library_quality"]["artifact_classification"] == (
 		"atomic_template_library"

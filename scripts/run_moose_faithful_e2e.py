@@ -118,12 +118,12 @@ def main() -> int:
 	parser.add_argument("--goal-max-size", type=int, default=1)
 	parser.add_argument(
 		"--atomic-library-mode",
-		choices=("faithful", "validated-policy-lifting", "post-moose-recursive"),
+		choices=("faithful", "validated-policy-lifting"),
 		default="faithful",
 		help=(
 			"Compile raw MOOSE decision-list macros faithfully, or validate and "
 			"lift MOOSE singleton policy evidence with the PDDL schema before "
-			"ASL rendering. post-moose-recursive is a deprecated alias."
+			"ASL rendering."
 		),
 	)
 	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
@@ -244,7 +244,7 @@ def run_domain(
 	record: dict[str, Any] = {
 		"domain": domain_name,
 		"domain_file": str(domain_file),
-		"moose_backend_path": "native_train_dump_policy",
+		"evidence_provider_path": "native_train_dump_policy",
 		"moose_official_benchmark": is_moose_official_benchmark(source_metadata),
 		"source_metadata": source_metadata,
 		"train_dir": str(train_dir),
@@ -443,10 +443,8 @@ def _pipeline_name(atomic_library_mode: str) -> str:
 
 
 def normalise_atomic_library_mode(mode: str) -> str:
-	"""Map legacy mode names to the current compiler terminology."""
+	"""Return the configured atomic library mode."""
 
-	if mode == "post-moose-recursive":
-		return "validated-policy-lifting"
 	return mode
 
 
@@ -458,7 +456,7 @@ def compile_moose_atomic_library_command(
 	library_root: Path,
 	atomic_library_mode: str,
 ) -> tuple[str, ...]:
-	"""Return the selected post-MOOSE atomic library compilation command."""
+	"""Return the selected Evidence Module atomic library compilation command."""
 
 	command = [
 		sys.executable,

@@ -44,11 +44,13 @@ a lifted LTLf formula, compiled into a deterministic finite automaton, validated
 under a singleton-literal transition contract, and appended as a query-specific
 top-level AgentSpeak(L) goal that calls the atomic library. The resulting
 artifact is one domain-level library that grows with user queries, rather than
-one plan per problem or one planner call per execution. We use MOOSE as the
-primary positive singleton-goal backend candidate and keep feature-policy and
-sketch learners as audited fallbacks. The current claim is limited to PDDL
-predicate and literal goals; numeric fluents and unsupported negative literal
-templates are rejected with diagnostics.
+one plan per problem or one planner call per execution. An Evidence Module
+imports external generalized-planning artifacts into a backend-agnostic
+singleton-goal evidence representation. We instantiate this interface with
+MOOSE, while keeping the compiler independent of that provider. The current
+claim covers schema-validated predicate goals and validated numeric fluent
+goals; unsupported negative literal templates are rejected before library
+generation.
 \end{abstract}
 
 \ccsdesc[500]{Computing methodologies~Planning and scheduling}
@@ -88,23 +90,24 @@ of lifted plan schemas whose triggers, contexts, and bodies can be inspected
 independently of any particular test instance.
 
 The central difficulty is the interface between reusable atomic behavior and
-query-specific temporal structure. MOOSE formalizes useful goal-independence
-assumptions and, crucially for our purpose, synthesizes rules by decomposing
-training problems into singleton goal conditions \cite{Chen2026Moose}. This
-makes it a natural backend for atomic templates such as \texttt{on(X,Y)} or
-\texttt{served(P)}. It is not a complete answer for interacting multi-literal
-goals. In Blocksworld, for example, \texttt{on(X,Y)} can be a useful atomic
-template, while a tower request such as \texttt{on(X,Y)} followed by
-\texttt{on(Y,Z)} needs explicit temporal or structural control. We place that
-control in a query-specific LTLf-to-DFA layer above the atomic library.
+query-specific temporal structure. The Evidence Module normalizes backend
+artifacts before compilation. Our MOOSE instantiation uses goal-regression
+rules that decompose training problems into singleton goal conditions
+\cite{Chen2026Moose}. This makes MOOSE a natural evidence provider for atomic
+templates such as \texttt{on(X,Y)} or \texttt{served(P)}, but not a complete
+answer for interacting multi-literal goals. In Blocksworld, for example,
+\texttt{on(X,Y)} can be a useful atomic template, while a tower request such as
+\texttt{on(X,Y)} followed by \texttt{on(Y,Z)} needs explicit temporal or
+structural control. We place that control in a query-specific LTLf-to-DFA layer
+above the atomic library.
 
 The paper makes four contributions.
 \begin{enumerate}
 \item We define an architecture that separates atomic lifted template learning
 	from query-specific temporal goal appending.
-\item We give a backend-selection interface for atomic predicate and literal
-	templates, with MOOSE as the primary positive singleton-goal candidate and
-	feature-policy or sketch learners as audited alternatives.
+\item We define an Evidence Module interface for atomic predicate and literal
+	templates. The MOOSE adapter is one provider that emits the common
+	singleton-goal evidence representation consumed by the compiler.
 \item We restore an LTLf-to-DFA temporal layer with a singleton-literal
 	transition contract, producing \asl{} wrapper goals that call only atomic
 	predicate modules.
@@ -114,9 +117,9 @@ The paper makes four contributions.
 
 The contribution is deliberately bounded. We do not claim that one backend is
 state of the art for every planning problem, nor that context-only \asl{} can
-encode every temporal automaton without controller state. Numeric fluents,
-unsupported negative literal templates, and DFA transitions with compound
-Boolean guards remain outside the current claim.
+encode every temporal automaton without controller state. Unsupported negative
+literal templates and DFA transitions whose guards require compound Boolean
+reasoning remain outside the current claim.
 
 \input{sections/related_work}
 
@@ -127,12 +130,12 @@ Boolean guards remain outside the current claim.
 \section{Current Scope and Exclusions}
 \label{sec:scope}
 
-The current method supports PDDL predicate and literal goals with validated
-lifted atomic templates. Unsupported negative literal templates, disjunctive
-goals, numeric fluents, derived predicates, and conditional effects require
+The current method supports PDDL predicate goals and validated numeric fluent
+goals with lifted atomic templates. Unsupported negative literal templates,
+disjunctive goals, derived predicates, and conditional effects require
 additional semantics before they can enter the claim. Unsupported cases are
-rejected before compilation so that the generated library never contains
-undeclared symbols, grounded training objects, or synthetic achievement names.
+rejected before compilation so that the generated library remains a
+domain-level program rather than an instance-specific trace.
 
 Temporal goals are compiled from LTLf into deterministic finite automata. Only
 DFA transitions that validate as singleton literals can be compiled into

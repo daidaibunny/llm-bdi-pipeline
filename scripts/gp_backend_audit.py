@@ -26,7 +26,7 @@ from domain_level_planning.gp_backends import (
 	discover_learning_general_policies_policy_file,
 	parse_dlplan_policy,
 )
-from domain_level_planning.moose_policy_adapter import (
+from domain_level_planning.evidence_module import (
 	compile_moose_readable_policy_to_asl_library,
 	compile_moose_readable_policy_to_minimal_module_asl_library,
 	policy_program_from_moose_readable_policy,
@@ -182,11 +182,6 @@ def main() -> int:
 			"schema before ASL rendering."
 		),
 	)
-	parser.add_argument(
-		"--post-moose-recursive",
-		action="store_true",
-		help="Deprecated alias for --validated-policy-lifting.",
-	)
 	args = parser.parse_args()
 
 	if args.command == "install":
@@ -239,7 +234,6 @@ def main() -> int:
 			minimal_modules=bool(
 				args.minimal_modules
 				or args.validated_policy_lifting
-				or args.post_moose_recursive
 			),
 		)
 		return 0
@@ -610,7 +604,7 @@ def compile_moose_readable_atomic_library(
 	metadata_file.write_text(
 		json.dumps(
 			{
-				"backend": "moose",
+				"evidence_provider": "moose",
 				"domain_name": domain_name,
 				"domain_file": str(domain_file) if domain_file is not None else None,
 				"policy_file": str(policy_file),

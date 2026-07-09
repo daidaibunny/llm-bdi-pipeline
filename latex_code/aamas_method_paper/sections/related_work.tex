@@ -4,8 +4,8 @@
 MOOSE learns first-order condition-to-action rules by goal regression from
 training plans \cite{Chen2026Moose}. Its synthesis algorithm decomposes
 training problems into singleton goal conditions, which makes it the closest
-match for our atomic-template layer. The same theory also explains why MOOSE is
-not the whole solution for this project: strongly interacting multi-literal
+match for our atomic-template component. The same theory also explains why
+MOOSE is not the whole solution for this project: strongly interacting multi-literal
 goals, such as Blocksworld tower goals, should be represented through an
 explicit temporal or structural controller rather than by assuming arbitrary
 goal independence.
@@ -14,10 +14,10 @@ Generalized-policy learning with description-logic features studies policies
 that solve many instances of a domain using lifted symbolic features
 \cite{Bonet2018Features,Frances2021LearningGeneralPolicies,
 Bonet2024GeneralPoliciesWidth}. D2L and the KR 2025 learner-policies-from-
-examples line are important fallback backends for structural domains, especially
-when MOOSE-style singleton regression is not the right artifact. In this paper,
-such policies are useful only after their features can be bound to declared
-\pddl{} predicates, primitive actions, or predicate achievement goals.
+examples line are possible evidence providers for structural domains,
+especially when MOOSE-style singleton regression is not the right artifact. In
+this paper, such policies are useful only after their features can be bound to
+declared \pddl{} predicates, primitive actions, or predicate achievement goals.
 The Blocksworld part of the benchmark follows this literature-level family
 view: \texttt{QClear} isolates singleton \texttt{clear(X)} goals,
 \texttt{QOn} isolates singleton \texttt{on(X,Y)} goals, and the full
@@ -26,7 +26,7 @@ Blocksworld arrangement family exposes support-dependent goal serialization.
 Policy sketches express domain-general subgoal structure as qualitative feature
 rules \cite{Drexler2024SubgoalSketches}, and learner-sketches learns such rules
 automatically \cite{Drexler2022LearningSketches}. Sketches remain useful
-comparison artifacts and possible backend outputs, but a raw sketch is not yet
+comparison artifacts and possible evidence outputs, but a raw sketch is not yet
 an \asl{} plan library. It normally guides a planner that fills in subproblems;
 our compiler must instead produce executable predicate-goal plans.
 

@@ -47,12 +47,12 @@ def main() -> int:
 	parser.add_argument("--goal-max-size", type=int, default=1)
 	parser.add_argument(
 		"--atomic-library-mode",
-		choices=("faithful", "validated-policy-lifting", "post-moose-recursive"),
+		choices=("faithful", "validated-policy-lifting"),
 		default="faithful",
 		help=(
 			"Compile raw MOOSE decision-list macros faithfully, or validate and "
 			"lift MOOSE singleton policy evidence with the PDDL schema before "
-			"ASL rendering. post-moose-recursive is a deprecated alias."
+			"ASL rendering."
 		),
 	)
 	parser.add_argument("--max-rss-gb", type=float, default=16.0)
@@ -279,10 +279,8 @@ def batch_manifest(
 
 
 def normalise_atomic_library_mode(mode: str) -> str:
-	"""Map legacy mode names to the current compiler terminology."""
+	"""Return the configured atomic library mode."""
 
-	if mode == "post-moose-recursive":
-		return "validated-policy-lifting"
 	return mode
 
 

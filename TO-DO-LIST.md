@@ -73,7 +73,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run ruff check \
   tests/test_main_temporal_artifact_cli.py \
   tests/domain_level_planning/test_no_domain_hardcoding.py \
   tests/domain_level_planning/test_atomic_module_synthesis.py \
-  tests/domain_level_planning/test_moose_policy_adapter.py \
+  tests/domain_level_planning/test_evidence_module.py \
   tests/domain_level_planning/test_dfa_goal_adapter.py
 
 PYTHONDONTWRITEBYTECODE=1 uv run pytest -q \
@@ -81,6 +81,6 @@ PYTHONDONTWRITEBYTECODE=1 uv run pytest -q \
   tests/test_main_temporal_artifact_cli.py \
   tests/domain_level_planning/test_no_domain_hardcoding.py \
   tests/domain_level_planning/test_atomic_module_synthesis.py \
-  tests/domain_level_planning/test_moose_policy_adapter.py \
+  tests/domain_level_planning/test_evidence_module.py \
   tests/domain_level_planning/test_dfa_goal_adapter.py
 ```

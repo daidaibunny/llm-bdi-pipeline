@@ -1,16 +1,18 @@
-"""
-Adapter for MOOSE readable policy artifacts.
+"""Evidence-module interfaces and backend adapters.
 
-MOOSE stores trained policies as Python pickle files, but its official
-interface exposes a stable text form via `policy <model> --dump-policy`. This
-module consumes that readable decision-list form instead of importing MOOSE
-runtime classes into the main package.
+The evidence module is the boundary between external generalized-planning
+backends and the validated policy-lifting compiler. Backend-specific adapters
+parse native artifacts, such as a MOOSE ``policy --dump-policy`` readable
+decision list, into a backend-agnostic policy evidence program. The compiler
+then consumes that evidence program plus the PDDL domain schema; it does not
+need to know which backend produced the evidence.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from dataclasses import field
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -38,8 +40,13 @@ from .policy_program import PolicyModule
 
 
 @dataclass(frozen=True)
-class MooseAtom:
-	"""One lifted atom or action call in a MOOSE readable policy rule."""
+class PolicyEvidenceAtom:
+	"""One atom or primitive action call supplied by an evidence backend.
+
+	Example: in a singleton-goal policy rule, ``at(package0, location1)`` is a
+	goal atom and ``load-truck(package0, truck0, location0)`` is a primitive
+	action atom.
+	"""
 
 	predicate: str
 	arguments: tuple[str, ...]
@@ -49,16 +56,22 @@ class MooseAtom:
 
 
 @dataclass(frozen=True)
-class MooseReadableRule:
-	"""One MOOSE first-order decision-list rule parsed from readable text."""
+class PolicyEvidenceRule:
+	"""One backend-agnostic singleton-goal evidence rule.
+
+	A rule states that, under ``state_conditions``, a backend observed or learned
+	that the ``actions`` sequence can make the ``goal_conditions`` true. For
+	example, a MOOSE rule for Logistics may say that a package at airport A can
+	reach location L through ``load-airplane; fly-airplane; unload-airplane``.
+	"""
 
 	precedence: str
 	variables: tuple[str, ...]
-	state_conditions: tuple[MooseAtom, ...]
-	goal_conditions: tuple[MooseAtom, ...]
+	state_conditions: tuple[PolicyEvidenceAtom, ...]
+	goal_conditions: tuple[PolicyEvidenceAtom, ...]
 	state_numeric_conditions: tuple[PDDLNumericCondition, ...]
 	goal_numeric_conditions: tuple[PDDLNumericCondition, ...]
-	actions: tuple[MooseAtom, ...]
+	actions: tuple[PolicyEvidenceAtom, ...]
 	source_rule: str
 
 	@property
@@ -75,6 +88,32 @@ class MooseReadableRule:
 
 	def variable_map(self) -> dict[str, str]:
 		return {variable: _agentspeak_variable(variable) for variable in self.variables}
+
+
+@dataclass(frozen=True)
+class PolicyEvidenceProgram:
+	"""Backend-agnostic evidence program consumed by the compiler.
+
+	``source_provider`` records provenance, for example ``"moose"``. ``rules``
+	are the normalized singleton-goal policy rules. A future D2L or sketch
+	adapter should emit this same shape rather than making the compiler parse its
+	native artifact directly.
+	"""
+
+	source_provider: str
+	source_name: str
+	representation: str
+	rules: tuple[PolicyEvidenceRule, ...]
+	policy_file: str | Path | None = None
+	provenance: Mapping[str, object] = field(default_factory=dict)
+
+
+class MooseAtom(PolicyEvidenceAtom):
+	"""MOOSE-specific alias for one readable-policy atom."""
+
+
+class MooseReadableRule(PolicyEvidenceRule):
+	"""MOOSE-specific alias for one readable decision-list rule."""
 
 
 @dataclass(frozen=True)
@@ -116,8 +155,8 @@ class MooseAtomicLibraryQualityReport:
 
 
 @dataclass(frozen=True)
-class MooseMacroEvidenceReducerReport:
-	"""Audit record for validated MOOSE macro evidence preserved in ASL."""
+class PolicyEvidenceReducerReport:
+	"""Audit record for validated macro evidence preserved in ASL."""
 
 	raw_singleton_macro_count: int
 	raw_numeric_goal_macro_count: int
@@ -142,9 +181,12 @@ class MooseMacroEvidenceReducerReport:
 
 
 @dataclass(frozen=True)
-class _MooseMacroEvidencePlans:
+class _PolicyEvidencePlans:
 	plans: tuple[AgentSpeakPlan, ...]
-	report: MooseMacroEvidenceReducerReport
+	report: PolicyEvidenceReducerReport
+
+
+MooseMacroEvidenceReducerReport = PolicyEvidenceReducerReport
 
 
 @dataclass(frozen=True)
@@ -193,6 +235,29 @@ def load_moose_readable_policy(path: str | Path) -> tuple[MooseReadableRule, ...
 	"""Load a MOOSE readable policy file from disk."""
 
 	return parse_moose_readable_policy(Path(path).read_text(encoding="utf-8"))
+
+
+def evidence_program_from_moose_readable_policy(
+	text: str,
+	*,
+	source_name: str,
+	policy_file: str | Path | None = None,
+) -> PolicyEvidenceProgram:
+	"""Convert MOOSE readable policy text into backend-agnostic evidence IR."""
+
+	rules = parse_moose_readable_policy(text)
+	return PolicyEvidenceProgram(
+		source_provider="moose",
+		source_name=source_name,
+		representation="moose_readable_first_order_decision_list",
+		rules=tuple(rules),
+		policy_file=policy_file,
+		provenance={
+			"paper_basis": "MOOSE goal-regression generalized planner",
+			"artifact_format": "policy --dump-policy readable text",
+			"policy_file": str(policy_file) if policy_file is not None else None,
+		},
+	)
 
 
 def policy_program_from_moose_readable_policy(
@@ -252,7 +317,7 @@ def policy_program_from_moose_readable_policy(
 		provenance={
 			"paper_basis": "MOOSE goal-regression generalized planner",
 			"policy_file": str(policy_file) if policy_file is not None else None,
-			"source_backend": "moose",
+			"source_provider": "moose",
 			"artifact_format": "policy --dump-policy readable text",
 		},
 		is_learned_policy=True,
@@ -299,7 +364,7 @@ def compile_moose_readable_policy_to_asl_library(
 				binding_certificate=(
 					{
 						"artifact_family": "moose_goal_regression_policy",
-						"source_backend": "moose",
+						"source_provider": "moose",
 						"source_name": source_name,
 						"policy_file": str(policy_file) if policy_file is not None else None,
 						"precedence": rule.precedence,
@@ -315,6 +380,7 @@ def compile_moose_readable_policy_to_asl_library(
 		plans=tuple(plans),
 		metadata={
 			"generation_mode": "faithful_moose_decision_list_asl_library",
+			"atomic_template_provider": "moose",
 			"atomic_template_backend": "moose",
 			"source_name": source_name,
 			"policy_file": str(policy_file) if policy_file is not None else None,
@@ -338,9 +404,34 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 	source_name: str,
 	policy_file: str | Path | None = None,
 ) -> PlanLibrary:
-	"""Lift validated MOOSE singleton evidence into an executable ASL library."""
+	"""Lift validated MOOSE adapter evidence into an executable ASL library."""
 
-	rules = parse_moose_readable_policy(text)
+	evidence_program = evidence_program_from_moose_readable_policy(
+		text,
+		source_name=source_name,
+		policy_file=policy_file,
+	)
+	return compile_policy_evidence_program_to_minimal_module_asl_library(
+		evidence_program,
+		domain_file=domain_file,
+		domain_name=domain_name,
+	)
+
+
+def compile_policy_evidence_program_to_minimal_module_asl_library(
+	evidence_program: PolicyEvidenceProgram,
+	*,
+	domain_file: str | Path,
+	domain_name: str,
+) -> PlanLibrary:
+	"""Compile backend-agnostic singleton evidence into an atomic ASL library.
+
+		The evidence program is the decoupling point: MOOSE, D2L, or future sketch
+		providers should normalize their native artifacts into this IR before the
+		validated policy-lifting compiler sees them.
+	"""
+
+	rules = tuple(evidence_program.rules or ())
 	seed_predicates = tuple(
 		dict.fromkeys(
 			rule.goal_conditions[0].predicate
@@ -357,9 +448,9 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 		library = synthesize_atomic_minimal_literal_module_library(
 			domain_file=domain_file,
 			seed_predicates=seed_predicates,
-			source_backend="moose_validated_policy_lifting",
-			source_name=source_name,
-			policy_file=policy_file,
+			source_backend=f"{evidence_program.source_provider}_validated_policy_lifting",
+			source_name=evidence_program.source_name,
+			policy_file=evidence_program.policy_file,
 		)
 	else:
 		library = PlanLibrary(
@@ -368,14 +459,23 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 			initial_beliefs=(),
 			metadata={
 				"generation_mode": "atomic_minimal_literal_module_library",
-				"atomic_template_backend": "moose_validated_policy_lifting",
-				"source_name": source_name,
-				"policy_file": str(policy_file) if policy_file is not None else None,
+				"atomic_template_provider": (
+					f"{evidence_program.source_provider}_validated_policy_lifting"
+				),
+				"atomic_template_backend": (
+					f"{evidence_program.source_provider}_validated_policy_lifting"
+				),
+				"source_name": evidence_program.source_name,
+				"policy_file": (
+					str(evidence_program.policy_file)
+					if evidence_program.policy_file is not None
+					else None
+				),
 				"library_quality": {
 					"artifact_classification": "empty_or_unbound_atomic_template_library",
 					"artifact_classification_basis": (
 						"no predicate singleton seeds were present; numeric resource "
-						"modules may still be emitted from validated MOOSE numeric "
+						"modules may still be emitted from validated evidence-module numeric "
 						"goal evidence"
 					),
 					"library_profile": "empty_atomic_template_library",
@@ -392,19 +492,20 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 					"raw_candidate_count": 0,
 					"selector_backend": "not_invoked_no_predicate_seed",
 				},
-			},
-		)
-	macro_evidence = _compile_validated_moose_macro_evidence_plans(
+				},
+			)
+	macro_evidence = _compile_validated_policy_evidence_macro_plans(
 		rules=rules,
 		domain_file=domain_file,
-		source_name=source_name,
-		policy_file=policy_file,
+		source_provider=evidence_program.source_provider,
+		source_name=evidence_program.source_name,
+		policy_file=evidence_program.policy_file,
 	)
 	merged_plans = _ensure_unique_plan_names(
 		_deduplicate_agent_plans((*library.plans, *macro_evidence.plans)),
 	)
 	macro_quality_report = audit_moose_atomic_library_quality(plans=macro_evidence.plans)
-	library_quality = _post_moose_reducer_library_quality(
+	library_quality = _evidence_compiler_library_quality(
 		plans=merged_plans,
 		macro_evidence_plan_count=len(macro_evidence.plans),
 	)
@@ -414,6 +515,17 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 		initial_beliefs=library.initial_beliefs,
 		metadata={
 			**dict(library.metadata),
+			"evidence_module": {
+				"source_provider": evidence_program.source_provider,
+				"source_name": evidence_program.source_name,
+				"representation": evidence_program.representation,
+				"policy_file": (
+					str(evidence_program.policy_file)
+					if evidence_program.policy_file is not None
+					else None
+				),
+				"rule_count": len(rules),
+			},
 			"source_raw_rule_count": len(rules),
 			"source_seed_predicates": list(seed_predicates),
 			"source_numeric_goal_functions": list(numeric_goal_functions),
@@ -427,13 +539,14 @@ def compile_moose_readable_policy_to_minimal_module_asl_library(
 	)
 
 
-def _compile_validated_moose_macro_evidence_plans(
+def _compile_validated_policy_evidence_macro_plans(
 	*,
-	rules: Sequence[MooseReadableRule],
+	rules: Sequence[PolicyEvidenceRule],
 	domain_file: str | Path,
+	source_provider: str,
 	source_name: str,
 	policy_file: str | Path | None,
-) -> _MooseMacroEvidencePlans:
+) -> _PolicyEvidencePlans:
 	domain = PDDLParser.parse_domain(domain_file)
 	actions_by_name = {
 		action.name: action
@@ -446,16 +559,17 @@ def _compile_validated_moose_macro_evidence_plans(
 	plans: list[AgentSpeakPlan] = []
 	invalid_count = 0
 	for index, rule in enumerate(raw_singleton_rules, start=1):
-		plan = _validated_moose_macro_rule_plan(
+		plan = _validated_policy_evidence_macro_rule_plan(
 			rule=rule,
 			rule_index=index,
 			actions_by_name=actions_by_name,
-			predicate_types=predicate_types,
-			type_tokens=domain.types,
-			declared_constants=declared_constants,
-			source_name=source_name,
-			policy_file=policy_file,
-		)
+				predicate_types=predicate_types,
+				type_tokens=domain.types,
+				declared_constants=declared_constants,
+				source_provider=source_provider,
+				source_name=source_name,
+				policy_file=policy_file,
+			)
 		if plan is None:
 			invalid_count += 1
 			continue
@@ -464,22 +578,24 @@ def _compile_validated_moose_macro_evidence_plans(
 		rules=raw_numeric_goal_rules,
 		declared_functions=domain.functions,
 		declared_constants=declared_constants,
+		source_provider=source_provider,
 		source_name=source_name,
 		policy_file=policy_file,
 	)
 	validated_numeric_count = 0
 	for index, rule in enumerate(raw_numeric_goal_rules, start=1):
-		plan = _validated_moose_numeric_macro_rule_plan(
+		plan = _validated_policy_evidence_numeric_macro_rule_plan(
 			rule=rule,
 			rule_index=index,
 			actions_by_name=actions_by_name,
 			predicate_types=predicate_types,
 			type_tokens=domain.types,
-			declared_functions=domain.functions,
-			declared_constants=declared_constants,
-			source_name=source_name,
-			policy_file=policy_file,
-		)
+				declared_functions=domain.functions,
+				declared_constants=declared_constants,
+				source_provider=source_provider,
+				source_name=source_name,
+				policy_file=policy_file,
+			)
 		if plan is None:
 			invalid_count += 1
 			continue
@@ -487,9 +603,9 @@ def _compile_validated_moose_macro_evidence_plans(
 		plans.append(plan)
 	plans.extend(numeric_plans)
 	deduplicated = _deduplicate_agent_plans(tuple(plans))
-	return _MooseMacroEvidencePlans(
+	return _PolicyEvidencePlans(
 		plans=_ensure_unique_plan_names(deduplicated),
-		report=MooseMacroEvidenceReducerReport(
+		report=PolicyEvidenceReducerReport(
 			raw_singleton_macro_count=len(raw_singleton_rules),
 			raw_numeric_goal_macro_count=len(raw_numeric_goal_rules),
 			validated_macro_count=len(plans),
@@ -509,7 +625,7 @@ def _compile_validated_moose_macro_evidence_plans(
 		)
 
 
-def _post_moose_reducer_library_quality(
+def _evidence_compiler_library_quality(
 	*,
 	plans: Sequence[AgentSpeakPlan],
 	macro_evidence_plan_count: int,
@@ -549,6 +665,7 @@ def _post_moose_reducer_library_quality(
 		"plan_count": len(plan_tuple),
 		"primitive_action_step_count": primitive_action_step_count,
 		"subgoal_step_count": subgoal_step_count,
+		"macro_evidence_plan_count": macro_evidence_plan_count,
 		"moose_macro_evidence_plan_count": macro_evidence_plan_count,
 		"validated_policy_rule_plan_count": macro_evidence_plan_count,
 		"compact_recursive_module_ready": subgoal_step_count > 0,
@@ -622,14 +739,15 @@ def _library_template_profile(kind_counts: Mapping[str, int]) -> str:
 	return "mixed_body_atomic_template_library"
 
 
-def _validated_moose_macro_rule_plan(
+def _validated_policy_evidence_macro_rule_plan(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	rule_index: int,
 	actions_by_name: Mapping[str, _ParsedAction],
 	predicate_types: Mapping[str, tuple[str, ...]],
 	type_tokens: Sequence[str],
 	declared_constants: Sequence[str],
+	source_provider: str,
 	source_name: str,
 	policy_file: str | Path | None,
 ) -> AgentSpeakPlan | None:
@@ -649,7 +767,7 @@ def _validated_moose_macro_rule_plan(
 	)
 	if type_contexts is None:
 		return None
-	symbolic_guards = _moose_macro_rule_symbolic_execution_guards(
+	symbolic_guards = _policy_evidence_rule_symbolic_execution_guards(
 		rule=rule,
 		actions_by_name=actions_by_name,
 		variable_map=variable_map,
@@ -657,7 +775,7 @@ def _validated_moose_macro_rule_plan(
 	)
 	if symbolic_guards is None:
 		return None
-	evidence_distinctness_guards = _moose_evidence_distinctness_guards(
+	evidence_distinctness_guards = _evidence_distinctness_guards(
 		rule=rule,
 		variable_map=variable_map,
 		declared_constants=declared_constants,
@@ -670,7 +788,7 @@ def _validated_moose_macro_rule_plan(
 		variable_map=variable_map,
 	)
 	return AgentSpeakPlan(
-		plan_name=f"moose_reduced_{_safe_name(source_name)}_rule_{rule_index}",
+		plan_name=f"{_safe_name(source_provider)}_reduced_{_safe_name(source_name)}_rule_{rule_index}",
 		trigger=AgentSpeakTrigger(
 			event_type="achievement_goal",
 			symbol=goal.predicate,
@@ -690,11 +808,11 @@ def _validated_moose_macro_rule_plan(
 				tuple(variable_map.get(argument, argument) for argument in action.arguments),
 			)
 			for action in rule.actions
-		),
-		binding_certificate=(
+			),
+			binding_certificate=(
 				{
 					"artifact_family": "validated_policy_lifting_macro_rule",
-					"source_backend": "moose",
+					"source_provider": source_provider,
 					"source_name": source_name,
 					"policy_file": str(policy_file) if policy_file is not None else None,
 					"precedence": rule.precedence,
@@ -708,7 +826,7 @@ def _validated_moose_macro_rule_plan(
 
 def _rule_state_contexts(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	variable_map: Mapping[str, str],
 	skip_numeric_functions: Sequence[str] = (),
 	reserved_numeric_variables: Sequence[str] = (),
@@ -744,7 +862,7 @@ def _rule_state_contexts(
 
 def _numeric_goal_functions_from_rules(
 	*,
-	rules: Sequence[MooseReadableRule],
+	rules: Sequence[PolicyEvidenceRule],
 	declared_functions: Sequence[PDDLFunction],
 ) -> tuple[str, ...]:
 	functions: list[str] = []
@@ -761,9 +879,10 @@ def _numeric_goal_functions_from_rules(
 
 def _numeric_goal_already_true_plans(
 	*,
-	rules: Sequence[MooseReadableRule],
+	rules: Sequence[PolicyEvidenceRule],
 	declared_functions: Sequence[PDDLFunction],
 	declared_constants: Sequence[str],
+	source_provider: str,
 	source_name: str,
 	policy_file: str | Path | None,
 ) -> tuple[AgentSpeakPlan, ...]:
@@ -807,12 +926,12 @@ def _numeric_goal_already_true_plans(
 				),
 				body=(),
 				binding_certificate=(
-					{
-						"artifact_family": "numeric_resource_goal_module",
-						"rule_kind": "already_true",
-						"source_backend": "moose",
-						"source_name": source_name,
-						"policy_file": str(policy_file) if policy_file is not None else None,
+						{
+							"artifact_family": "numeric_resource_goal_module",
+							"rule_kind": "already_true",
+							"source_provider": source_provider,
+							"source_name": source_name,
+							"policy_file": str(policy_file) if policy_file is not None else None,
 						"numeric_function": spec.function,
 						"target_value": spec.target,
 					},
@@ -822,15 +941,16 @@ def _numeric_goal_already_true_plans(
 	return tuple(plans)
 
 
-def _validated_moose_numeric_macro_rule_plan(
+def _validated_policy_evidence_numeric_macro_rule_plan(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	rule_index: int,
 	actions_by_name: Mapping[str, _ParsedAction],
 	predicate_types: Mapping[str, tuple[str, ...]],
 	type_tokens: Sequence[str],
 	declared_functions: Sequence[PDDLFunction],
 	declared_constants: Sequence[str],
+	source_provider: str,
 	source_name: str,
 	policy_file: str | Path | None,
 ) -> AgentSpeakPlan | None:
@@ -855,7 +975,7 @@ def _validated_moose_numeric_macro_rule_plan(
 	)
 	if type_contexts is None:
 		return None
-	symbolic_guards = _moose_macro_rule_symbolic_execution_guards(
+	symbolic_guards = _policy_evidence_rule_symbolic_execution_guards(
 		rule=rule,
 		actions_by_name=actions_by_name,
 		variable_map=variable_map,
@@ -863,7 +983,7 @@ def _validated_moose_numeric_macro_rule_plan(
 	)
 	if symbolic_guards is None:
 		return None
-	evidence_distinctness_guards = _moose_evidence_distinctness_guards(
+	evidence_distinctness_guards = _evidence_distinctness_guards(
 		rule=rule,
 		variable_map=variable_map,
 		declared_constants=declared_constants,
@@ -912,7 +1032,7 @@ def _validated_moose_numeric_macro_rule_plan(
 		initial_bound_variables=trigger_arguments,
 	)
 	return AgentSpeakPlan(
-		plan_name=f"moose_numeric_{_safe_name(source_name)}_rule_{rule_index}",
+		plan_name=f"{_safe_name(source_provider)}_numeric_{_safe_name(source_name)}_rule_{rule_index}",
 		trigger=AgentSpeakTrigger(
 			"achievement_goal",
 			spec.function,
@@ -926,16 +1046,16 @@ def _validated_moose_numeric_macro_rule_plan(
 				tuple(variable_map.get(argument, argument) for argument in action.arguments),
 			)
 			for action in rule.actions
-		),
-		binding_certificate=(
-			{
-				"artifact_family": "numeric_resource_goal_module",
-				"rule_kind": "monotone_resource_macro",
-				"source_backend": "moose",
-				"source_name": source_name,
-				"policy_file": str(policy_file) if policy_file is not None else None,
-				"precedence": rule.precedence,
-				"numeric_function": spec.function,
+			),
+			binding_certificate=(
+				{
+					"artifact_family": "numeric_resource_goal_module",
+					"rule_kind": "monotone_resource_macro",
+					"source_provider": source_provider,
+					"source_name": source_name,
+					"policy_file": str(policy_file) if policy_file is not None else None,
+					"precedence": rule.precedence,
+					"numeric_function": spec.function,
 				"target_value": spec.target,
 				"net_delta": progress.net_delta,
 				"validation": "pddl_schema_symbolic_execution_and_unit_numeric_progress",
@@ -948,7 +1068,7 @@ def _validated_moose_numeric_macro_rule_plan(
 
 def _numeric_goal_spec_from_rule(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	declared_functions: Sequence[PDDLFunction],
 ) -> _NumericGoalSpec | None:
 	if len(rule.goal_numeric_conditions) != 1 or rule.goal_conditions:
@@ -1019,7 +1139,7 @@ def _declared_numeric_function_name(
 
 def _numeric_macro_progress_spec(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	spec: _NumericGoalSpec,
 	actions_by_name: Mapping[str, _ParsedAction],
 ) -> _NumericProgressSpec | None:
@@ -1063,7 +1183,7 @@ def _numeric_macro_progress_spec(
 
 def _numeric_macro_guard_functions(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	actions_by_name: Mapping[str, _ParsedAction],
 ) -> tuple[str, ...]:
 	functions: list[str] = []
@@ -1082,7 +1202,7 @@ def _numeric_macro_guard_functions(
 
 def _numeric_macro_execution_contexts(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	actions_by_name: Mapping[str, _ParsedAction],
 	variable_map: Mapping[str, str],
 	reserved_numeric_variables: Sequence[str],
@@ -1132,7 +1252,7 @@ def _numeric_macro_execution_contexts(
 
 def _numeric_macro_initial_guards(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	actions_by_name: Mapping[str, _ParsedAction],
 ) -> tuple[_NumericInitialGuard, ...] | None:
 	offsets: dict[_NumericFluentRef, int] = {}
@@ -1373,7 +1493,7 @@ def _is_agentspeak_variable_name(value: str) -> bool:
 
 
 def _canonical_rule_variable_map(
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	*,
 	declared_constants: Sequence[str] = (),
 ) -> dict[str, str]:
@@ -1409,12 +1529,12 @@ def _canonical_rule_variable_map(
 	return mapping
 
 
-def _moose_macro_rule_is_symbolically_executable(
+def _evidence_rule_is_symbolically_executable(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	actions_by_name: Mapping[str, _ParsedAction],
 ) -> bool:
-	return _moose_macro_rule_symbolic_execution_guards(
+	return _policy_evidence_rule_symbolic_execution_guards(
 		rule=rule,
 		actions_by_name=actions_by_name,
 		variable_map=_canonical_rule_variable_map(rule),
@@ -1422,9 +1542,9 @@ def _moose_macro_rule_is_symbolically_executable(
 	) is not None
 
 
-def _moose_macro_rule_symbolic_execution_guards(
+def _policy_evidence_rule_symbolic_execution_guards(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	actions_by_name: Mapping[str, _ParsedAction],
 	variable_map: Mapping[str, str],
 	declared_constants: Sequence[str],
@@ -1487,16 +1607,16 @@ def _moose_macro_rule_symbolic_execution_guards(
 	return _deduplicate_strings(tuple(guards))
 
 
-def _moose_evidence_distinctness_guards(
+def _evidence_distinctness_guards(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	variable_map: Mapping[str, str],
 	declared_constants: Sequence[str],
 ) -> tuple[str, ...]:
 	"""Preserve distinct PDDL objects that were merged away by variable lifting."""
 
 	constants = {str(constant).strip().lower() for constant in tuple(declared_constants or ())}
-	source_terms = _moose_rule_object_terms(rule)
+	source_terms = _evidence_rule_object_terms(rule)
 	lifted_terms = tuple(
 		term
 		for term in source_terms
@@ -1520,7 +1640,7 @@ def _moose_evidence_distinctness_guards(
 	return _deduplicate_strings(tuple(guards))
 
 
-def _moose_rule_object_terms(rule: MooseReadableRule) -> tuple[str, ...]:
+def _evidence_rule_object_terms(rule: PolicyEvidenceRule) -> tuple[str, ...]:
 	terms: list[str] = []
 	terms.extend(rule.variables)
 	for atom in (*rule.state_conditions, *rule.goal_conditions):
@@ -1537,10 +1657,10 @@ def _moose_rule_object_terms(rule: MooseReadableRule) -> tuple[str, ...]:
 def _state_atoms_that_can_conflict(
 	*,
 	state: Mapping[tuple[str, tuple[str, ...]], bool],
-	atom: MooseAtom,
+	atom: PolicyEvidenceAtom,
 	expected_value: bool,
-) -> tuple[MooseAtom, ...]:
-	candidates: list[MooseAtom] = []
+) -> tuple[PolicyEvidenceAtom, ...]:
+	candidates: list[PolicyEvidenceAtom] = []
 	for (predicate, arguments), value in state.items():
 		if value is not expected_value:
 			continue
@@ -1548,14 +1668,14 @@ def _state_atoms_that_can_conflict(
 			continue
 		if len(arguments) != len(atom.arguments):
 			continue
-		candidates.append(MooseAtom(predicate=predicate, arguments=arguments))
+		candidates.append(PolicyEvidenceAtom(predicate=predicate, arguments=arguments))
 	return tuple(candidates)
 
 
 def _non_unification_guard(
 	*,
-	positive_atom: MooseAtom,
-	negative_atom: MooseAtom,
+	positive_atom: PolicyEvidenceAtom,
+	negative_atom: PolicyEvidenceAtom,
 	variable_map: Mapping[str, str],
 	declared_constants: Sequence[str],
 ) -> str | None:
@@ -1601,8 +1721,8 @@ def _guard_term(
 def _map_schema_literal(
 	literal: PDDLLiteralSchema,
 	binding: Mapping[str, str],
-) -> MooseAtom:
-	return MooseAtom(
+) -> PolicyEvidenceAtom:
+	return PolicyEvidenceAtom(
 		predicate=literal.predicate,
 		arguments=tuple(binding.get(argument, argument) for argument in literal.arguments),
 	)
@@ -1610,7 +1730,7 @@ def _map_schema_literal(
 
 def _obj_tp_contexts_for_rule(
 	*,
-	rule: MooseReadableRule,
+	rule: PolicyEvidenceRule,
 	actions_by_name: Mapping[str, _ParsedAction],
 	predicate_types: Mapping[str, tuple[str, ...]],
 	type_tokens: Sequence[str],
@@ -1706,7 +1826,7 @@ def _canonical_type_name(type_name: str) -> str:
 	return str(type_name or "").strip().lower() or "object"
 
 
-def _atom_key(atom: MooseAtom) -> tuple[str, tuple[str, ...]]:
+def _atom_key(atom: PolicyEvidenceAtom) -> tuple[str, tuple[str, ...]]:
 	return (atom.predicate, atom.arguments)
 
 

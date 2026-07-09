@@ -102,9 +102,9 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	assert metadata["artifact_kind"] == "validated_policy_lifting_atomic_library"
 	assert metadata["canonical_domain_library"] is True
 	assert metadata["minimal_modules"] is True
-	assert metadata["post_moose_recursive"] is True
+	assert metadata["evidence_provider"] == "moose"
 	assert metadata["validated_policy_lifting"] is True
-	assert metadata["moose_backend_path"] == "validated_policy_lifting_and_asl_compilation"
+	assert metadata["evidence_provider_path"] == "validated_policy_lifting_and_asl_compilation"
 	assert metadata["atomic_compiler_path"] == "validated_policy_lifting_and_asl_compilation"
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
 	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
@@ -177,8 +177,7 @@ def test_main_records_nonofficial_source_metadata_for_native_moose_compile(
 
 	assert result["success"] is True
 	assert metadata["minimal_modules"] is False
-	assert metadata["post_moose_recursive"] is False
-	assert metadata["moose_backend_path"] == "native_train_dump_policy"
+	assert metadata["evidence_provider_path"] == "native_train_dump_policy"
 	assert metadata["moose_official_benchmark"] is False
 	assert metadata["source_metadata"]["source_id"] == "external_case_study"
 
@@ -193,7 +192,7 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 		json.dumps(
 			{
 				"artifact_kind": "moose_atomic_library",
-				"moose_backend_path": "native_train_dump_policy",
+				"evidence_provider_path": "native_train_dump_policy",
 				"moose_official_benchmark": False,
 				"source_metadata": {"source_id": "external_case_study"},
 			},
@@ -233,7 +232,7 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "tiny"
 	assert metadata["canonical_domain_library"] is True
 	assert metadata["base_artifact_kind"] == "moose_atomic_library"
-	assert metadata["moose_backend_path"] == "native_train_dump_policy"
+	assert metadata["evidence_provider_path"] == "native_train_dump_policy"
 	assert metadata["moose_official_benchmark"] is False
 	assert metadata["source_metadata"]["source_id"] == "external_case_study"
 	assert metadata["query_ids"] == ["query_1"]

@@ -6,20 +6,20 @@
 Let $D = \langle \mathcal{P}, \mathcal{A} \rangle$ be a typed \pddl{} domain
 with predicate schemas $\mathcal{P}$ and action schemas $\mathcal{A}$. A
 training split $\mathcal{I}_{train}$ contains planning problems over $D$. The
-goal of the first layer is to obtain a lifted atomic \asl{} library
+goal of the atomic component is to obtain a lifted atomic \asl{} library
 $\mathcal{L}_D$ whose plan heads are declared predicate or literal goals, such
 as \texttt{+!on(X,Y)} or \texttt{+!served(P)}. The library is domain-level:
 training-object names must not appear in plan heads, and the library is reused
 across future queries for the same domain.
 
-A user query is handled by a second layer. The Input component produces a
+A user query is handled by a temporal component. The Input component produces a
 lifted LTLf JSON object. We parse that object, compile the LTLf formula into a
 deterministic finite automaton, validate that relevant transition guards are
 singleton literals, and append a query-specific top-level \asl{} goal such as
 \texttt{+!g\_query\_17}. The appended wrapper calls the atomic library; it does
 not replace the atomic library.
 
-\subsection{Atomic Template Extraction}
+\subsection{Atomic Template Evidence}
 
 From the training split we extract the set of atomic goal templates:
 \[
@@ -32,37 +32,46 @@ classify the domain into a backend-specific taxonomy. Instead, it asks which
 backend can produce reusable lifted artifacts for the required atomic
 templates.
 
-MOOSE is the first candidate for positive singleton predicate templates because
-its synthesis algorithm decomposes training problems into singleton goal
-conditions and uses goal regression to learn lifted rules
-\cite{Chen2026Moose}. This directly matches our atomic-template interface.
-Feature-policy learners such as KR 2025 learner-policies-from-examples and D2L,
-and sketch learners such as learner-sketches and h-policy-learner, are kept as
-audited alternatives when their artifacts pass the same compiler gates.
+The Evidence Module is the interface to external generalized-planning
+backends. An Evidence Module adapter is a backend-specific parser that emits a
+backend-agnostic evidence program. For example, the MOOSE adapter reads a
+\texttt{policy --dump-policy} decision-list rule whose goal condition is
+\texttt{at(package0,location2)} and whose action sequence is a sequence of PDDL
+operators such as \texttt{load-airplane}, \texttt{fly-airplane}, and
+\texttt{unload-airplane}. The emitted evidence program contains the target
+goal atom, context atoms, numeric guards when present, macro actions, and
+provenance.
+
+MOOSE is the first evidence provider we instantiate for positive singleton
+predicate templates because its synthesis algorithm decomposes training
+problems into singleton goal conditions and uses goal regression to learn
+lifted rules \cite{Chen2026Moose}. This directly matches our
+atomic-template interface. The compiler is not tied to MOOSE: another
+generalized-planning system can serve as an evidence provider if it emits the
+same evidence program and satisfies the same schema-level obligations.
 
 Negative literal templates are not part of the current positive claim. If a
-training split requires them, the selector reports
-\texttt{negative\_literal\_template\_not\_supported} unless a backend artifact
-supplies a validated lifted implementation.
+training split requires them, they require a provider-side lifted rule and a
+compiler-side certificate that the generated module really achieves the
+negative literal.
 
-\subsection{Backend Artifact Gate}
+\subsection{Evidence Gate and Policy-Lifting Compiler}
 
-Every consumed backend artifact must pass the same pipeline:
+Every consumed backend artifact is normalized before compilation:
 \[
-\text{parse} \rightarrow \text{LiftedPolicyProgram} \rightarrow
-\text{feature/action binding} \rightarrow \text{\asl{} compilation} \rightarrow
-\text{held-out validation}.
+\text{backend artifact} \rightarrow \text{Evidence Module adapter}
+\rightarrow \text{PolicyEvidenceProgram} \rightarrow
+\text{validated policy-lifting compiler} \rightarrow \text{\asl{} library}.
 \]
-Artifacts that do not pass these gates remain diagnostic evidence or baselines.
-This prevents a qualitative sketch, a decision list, or a planning program from
-being treated as executable agent code merely because it performs well inside
-its original system.
-
-The compiler rejects undeclared predicates, wrong arities, grounded training
-objects in plan heads, object-specific features without a lifting proof, and
-synthetic achievement names such as \texttt{achieve\_*} or
-\texttt{transition\_*}. The only query-specific symbols allowed in final \asl{}
-are top-level temporal wrappers such as \texttt{g\_query\_17}.
+Here a \texttt{PolicyEvidenceProgram} is the evidence representation between a
+provider and the compiler: it is a normalized set of singleton-goal rules with
+contexts, macro actions, numeric conditions, and provenance. The compiler then
+checks that each candidate rule is compatible with the PDDL domain schema and
+that the rendered \asl{} plan remains lifted. Provider-specific artifacts that
+cannot satisfy this contract are not compiled into the domain library. This is
+the main decoupling point: the Evidence Module decides how external planning
+artifacts become evidence, while the compiler decides which evidence is safe to
+render as reusable agent code.
 
 \subsection{Temporal Goal Append}
 
@@ -89,17 +98,16 @@ the form:
 	\texttt{ <- !}p(\bar{X})\texttt{; !}g_q\texttt{.}
 \]
 This plan calls the existing atomic module for $p$. For a negative progress
-literal, the current implementation reports an unsupported-literal diagnostic
-unless a negative atomic template has been validated.
+literal, the transition is compiled only if the atomic library contains a
+validated negative-achievement module.
 
 \subsection{Controller State}
 
 A pure context-only \asl{} wrapper is not sufficient for every deterministic
 finite automaton. If two automaton states expose the same literal or if temporal
 progress cannot be inferred from the current world state, an external
-reward-machine state must be maintained by the temporal controller. The wrapper
-therefore records whether external DFA state is required. This is a correctness
-boundary, not an implementation detail.
+reward-machine state must be maintained by the temporal controller. This is a
+correctness boundary of the method.
 
 \subsection{Selected Evaluation Scope}
 
@@ -129,6 +137,6 @@ the evaluation separate singleton literal modules such as \texttt{clear(X)}
 and \texttt{on(X,Y)} from tower requests whose support literals must be
 serialized.
 
-Numeric domains are included for MOOSE-faithful benchmark coverage, but their
-\asl{} compilation remains experimental until numeric fluents have a complete
-executable semantic contract.
+Numeric domains are included when the evidence provider supplies validated
+numeric fluent rules and the compiler can preserve their resource semantics in
+\asl{}.

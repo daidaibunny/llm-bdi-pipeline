@@ -200,11 +200,13 @@ context count, and body cost within the generated candidate space.
 ## Validated Policy Lifting And ASL Compilation
 
 This repository does not modify MOOSE's goal regression learner and should not
-claim to replace the generalized planner. The implemented module after MOOSE is
-a validated policy-lifting compiler: it takes MOOSE singleton-goal policy
-evidence, checks it against the PDDL schema, lifts grounded-looking rule
-variables into domain-level AgentSpeak(L) variables, and writes one maintained
-ASL library for the domain.
+claim to replace the generalized planner. The implemented architecture uses an
+Evidence Module followed by a validated policy-lifting compiler. The Evidence
+Module imports backend artifacts such as MOOSE singleton-goal policy evidence
+and normalizes them into a `PolicyEvidenceProgram`. The compiler checks that
+evidence against the PDDL schema, lifts grounded-looking rule variables into
+domain-level AgentSpeak(L) variables, and writes one maintained ASL library for
+the domain.
 
 A MOOSE readable policy is the `policy --dump-policy` first-order decision-list
 artifact. For example, one readable rule may have goal condition
@@ -221,6 +223,8 @@ The current compiler path is:
 
 ```text
 MOOSE readable singleton policy
+-> Evidence Module adapter
+-> PolicyEvidenceProgram
 -> validated policy-rule lifting
 -> PDDL schema parsing
 -> producible fluent closure
@@ -399,13 +403,15 @@ limitation, not to add a domain-name patch.
 
 An internal subgoal such as `!clear(Y)` is emitted only when the compiler can
 also emit plans for the target predicate `clear`. The input to this check is the
-MOOSE readable singleton policy plus the PDDL domain schema. The output is a
-closed set of atomic modules before AgentSpeak(L) rendering.
+Evidence Module's `PolicyEvidenceProgram` plus the PDDL domain schema. For the
+current MOOSE backend, that evidence program is produced from a MOOSE readable
+singleton policy. The output is a closed set of atomic modules before
+AgentSpeak(L) rendering.
 
 The closure rule is domain-general:
 
-1. Start from MOOSE seed predicates. If MOOSE learned singleton rules for
-   `on(X,Y)`, then `on` is a seed predicate.
+1. Start from evidence seed predicates. If the Evidence Module imports a
+   singleton rule for `on(X,Y)`, then `on` is a seed predicate.
 2. Add every predicate that appears in a positive PDDL action effect. Such a
    predicate is a producible fluent, meaning an action can make it true. In
    Blocks, `put-down` adds `clear(X)`, `handempty`, and `ontable(X)`; `unstack`
@@ -463,13 +469,14 @@ and recursive branches without such a deleting-action witness are rejected.
 
 ## Current Benchmark Scope And Library Profiles
 
-The post-MOOSE, pre-ASL component is called a validated policy-lifting
-compiler. "Post-MOOSE" means it runs after MOOSE has produced a readable policy;
-a MOOSE readable policy is the `policy --dump-policy` first-order decision-list
-artifact, for example a rule whose goal condition is `at(package0, location2)`
-and whose body is a macro sequence of PDDL actions. "Pre-ASL" means it runs
-before rendering the final AgentSpeak(L) file; an AgentSpeak(L) file is the
-executable library containing plans such as `+!at(X,Y) : ... <- ...`.
+The component between backend artifacts and ASL rendering is called the
+validated policy-lifting compiler. It runs after the Evidence Module has
+normalized a backend artifact into a `PolicyEvidenceProgram`; for example, the
+MOOSE adapter normalizes a `policy --dump-policy` first-order decision-list rule
+whose goal condition is `at(package0, location2)` and whose body is a macro
+sequence of PDDL actions. The compiler runs before rendering the final
+AgentSpeak(L) file; an AgentSpeak(L) file is the executable library containing
+plans such as `+!at(X,Y) : ... <- ...`.
 
 The benchmark groups describe evaluation coverage, not compiler outcomes. ESHO
 classical domains are the easy-to-solve, hard-to-optimise classical benchmark
@@ -505,7 +512,7 @@ target square" is not just a local producer or support-clearing pattern. It
 requires reasoning about blank reachability and permutation progress over a
 graph. Supporting it would require a graph-search or planning-program style
 controller with a proof of progress, which is outside the current
-MOOSE-evidence-to-ASL compiler contract.
+Evidence-Module-to-ASL compiler contract.
 
 For paper writing, the domain grouping should therefore be evaluation analysis,
 not a backend-routing rule. A precise statement is: this work compiles validated

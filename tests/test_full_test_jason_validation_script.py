@@ -64,21 +64,6 @@ def test_full_test_compile_command_defaults_to_validated_policy_lifting(tmp_path
 	assert "--domain-file" in command
 
 
-def test_full_test_compile_command_accepts_legacy_post_moose_alias(
-	tmp_path: Path,
-) -> None:
-	command = build_compile_atomic_library_command(
-		readable_policy=tmp_path / "ferry.model.readable",
-		domain_file=tmp_path / "domain.pddl",
-		domain="ferry",
-		library_root=tmp_path / "libraries",
-		atomic_library_mode="post-moose-recursive",
-	)
-
-	assert "--validated-policy-lifting" in command
-	assert "--post-moose-recursive" not in command
-
-
 def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> None:
 	command = build_compile_atomic_library_command(
 		readable_policy=tmp_path / "ferry.model.readable",

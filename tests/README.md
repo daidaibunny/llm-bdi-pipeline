@@ -6,7 +6,7 @@ The active test suite covers:
 - lifted LTLf JSON schema validation
 - LTLf-to-DFA conversion
 - singleton-literal DFA validation
-- MOOSE readable-policy to atomic AgentSpeak(L) compilation
+- Evidence Module compilation, including the MOOSE readable-policy adapter
 - temporal goal append wrappers
 - external generalized-planning backend audit helpers
 
@@ -20,5 +20,5 @@ uv run pytest \
   tests/evaluation/temporal_compilation/test_ltlf_to_dfa.py \
   tests/domain_level_planning/test_lifted_ltlf_goal_schema.py \
   tests/domain_level_planning/test_temporal_goal_appender.py \
-  tests/domain_level_planning/test_moose_policy_adapter.py
+  tests/domain_level_planning/test_evidence_module.py
 ```

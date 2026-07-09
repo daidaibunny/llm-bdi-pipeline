@@ -22,7 +22,7 @@ from domain_level_planning.architecture_contract import (  # noqa: E402
 	architecture_gap_summary,
 	domain_level_architecture_contract,
 )
-from domain_level_planning.moose_policy_adapter import (  # noqa: E402
+from domain_level_planning.evidence_module import (  # noqa: E402
 	compile_moose_readable_policy_to_asl_library,
 )
 from plan_library.rendering import render_plan_library_asl  # noqa: E402
@@ -211,7 +211,7 @@ def _write_current_artifact_only_package(
 	manifest: dict[str, object],
 ) -> dict[str, object]:
 	smoke = dict(manifest.get("atomic_artifact_smoke") or {})
-	backend_name = str(smoke.get("backend") or "").strip()
+	provider_name = str(smoke.get("evidence_provider") or smoke.get("backend") or "").strip()
 	domain_name = str(smoke.get("domain_name") or "unknown").strip()
 	readable_policy = _resolve_project_path(
 		smoke.get("readable_policy"),
@@ -220,7 +220,7 @@ def _write_current_artifact_only_package(
 	source_name = str(smoke.get("source_name") or readable_policy.stem).replace(".model", "")
 	artifact_dir = output_dir / "atomic-artifacts" / domain_name
 	artifact_dir.mkdir(parents=True, exist_ok=True)
-	if backend_name == "moose" and readable_policy.exists():
+	if provider_name == "moose" and readable_policy.exists():
 		library = compile_moose_readable_policy_to_asl_library(
 			readable_policy.read_text(encoding="utf-8"),
 			domain_name=domain_name,
@@ -236,7 +236,7 @@ def _write_current_artifact_only_package(
 			encoding="utf-8",
 		)
 		atomic_status = {
-			"backend": backend_name,
+			"evidence_provider": provider_name,
 			"domain_name": domain_name,
 			"policy_file": str(readable_policy),
 			"compiled_singleton_rule_count": len(library.plans),
@@ -244,7 +244,7 @@ def _write_current_artifact_only_package(
 		}
 	else:
 		atomic_status = {
-			"backend": backend_name,
+			"evidence_provider": provider_name,
 			"domain_name": domain_name,
 			"policy_file": str(readable_policy),
 			"compiled_singleton_rule_count": 0,
@@ -284,7 +284,11 @@ def _validate_atomic_smoke(
 	metadata_file = output_dir / "atomic-artifacts" / domain_name / "atomic_library_metadata.json"
 	require(metadata_file.exists(), "atomic smoke metadata exists")
 	metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
-	require(metadata.get("backend") == smoke.get("backend"), "atomic smoke backend matches")
+	expected_provider = smoke.get("evidence_provider") or smoke.get("backend")
+	require(
+		metadata.get("evidence_provider") == expected_provider,
+		"atomic smoke evidence provider matches",
+	)
 	require(
 		int(metadata.get("compiled_singleton_rule_count") or 0) >= 0,
 		"atomic smoke compiled rule count recorded",

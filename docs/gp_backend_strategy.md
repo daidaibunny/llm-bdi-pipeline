@@ -2,22 +2,35 @@
 
 This repository no longer builds a universal generalized planner and no longer
 routes domains by prior-paper taxonomy labels. The current strategy is to use
-MOOSE as the external generalized-planning evidence backend for positive
-singleton PDDL predicate goals, then compile the accepted evidence into one
-maintained domain-level AgentSpeak(L) library per domain.
+an Evidence Module to import external generalized-planning artifacts, normalize
+them into backend-agnostic singleton-goal evidence, then compile the accepted
+evidence into one maintained domain-level AgentSpeak(L) library per domain.
+MOOSE is the current Evidence Module provider for positive singleton PDDL
+predicate goals; it is not the name of the framework module.
 
 ## Compiler Contract
 
-The post-MOOSE, pre-AgentSpeak component is the validated policy-lifting
-compiler. A MOOSE readable policy is the `policy --dump-policy` first-order
-decision-list artifact; for example, a rule may say that when the singleton goal
-is `at(package0, location2)`, a macro sequence of PDDL actions can load a
-package, fly it, unload it, drive it by truck, and unload it at the destination.
-A PDDL domain is the action-schema file, for example a `drive-truck` action with
-typed parameters, preconditions, add effects, and delete effects. The compiler
-checks that the readable policy's actions replay through those schemas, lifts
-object names to variables, adds required PDDL-schema closure modules, selects a
-compact branch set, and renders AgentSpeak(L) plans such as `+!at(X,Y)`.
+The architecture separates four modules.
+
+1. The Evidence Module imports backend artifacts and emits a
+   `PolicyEvidenceProgram`. A `PolicyEvidenceProgram` is the common evidence
+   intermediate representation: it records a backend name, a source artifact,
+   and singleton-goal policy rules. For example, the MOOSE adapter parses a
+   `policy --dump-policy` first-order decision-list rule whose singleton goal is
+   `at(package0, location2)` and whose macro sequence loads a package, flies it,
+   unloads it, drives it by truck, and unloads it at the destination.
+2. The Validated Policy-Lifting Compiler consumes the evidence program plus the
+   PDDL domain schema. A PDDL domain schema is the action-schema file, for
+   example a `drive-truck` action with typed parameters, preconditions, add
+   effects, and delete effects. The compiler checks that evidence actions replay
+   through those schemas, lifts object names to variables, adds required
+   PDDL-schema closure modules, selects a compact branch set, and renders
+   AgentSpeak(L) plans such as `+!at(X,Y)`.
+3. The Temporal Query Compiler consumes validated lifted LTLf/DFA query
+   artifacts and appends query-local wrapper plans that call the atomic library.
+4. The Execution Validation Module runs the generated ASL in Jason, writes a
+   committed PDDL action trace only after Jason success, and validates that trace
+   with VAL or an equivalent verifier.
 
 The compiler contract also includes a bounded integer numeric-resource fragment.
 A numeric resource is a declared PDDL function with an integer value in the
@@ -40,7 +53,7 @@ several plan-template kinds at the same time.
 | Plan-template kind | Meaning | Example |
 | --- | --- | --- |
 | `already_true_plan_template` | The requested fluent is already true, so the plan body is empty except for rendered `true`. | `+!clear(X) : clear(X) <- true.` |
-| `action_only_plan_template` | The body contains only primitive PDDL actions. This includes fixed MOOSE macro evidence, where a macro is a fixed action sequence, not a new PDDL action. | Logistics `+!at(P,L)` may execute `load_truck; drive_truck; unload_truck`. Blocks `+!clear(X)` may execute `unstack(Y,X); put_down(Y)`. |
+| `action_only_plan_template` | The body contains only primitive PDDL actions. This includes fixed backend macro evidence, where a macro is a fixed action sequence, not a new PDDL action. | Logistics `+!at(P,L)` may execute `load_truck; drive_truck; unload_truck`. Blocks `+!clear(X)` may execute `unstack(Y,X); put_down(Y)`. |
 | `subgoal_decomposed_plan_template` | The body contains at least one internal AgentSpeak achievement subgoal such as `!clear(Y)`. | Blocks `+!on(X,Y)` may call `!clear(Y); !on(X,Y)` when `Y` is not clear. |
 | `numeric_already_true_plan_template` | A bounded integer numeric-resource achievement is already at the requested target value. This kind is chosen from the numeric certificate, not from the empty body alone. | `+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <- true.` |
 | `numeric_resource_progress_plan_template` | A bounded integer numeric-resource achievement executes a validated unit-progress macro and recursively asks for the same target value. | `+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N > 0 <- craft_wooden_pogo; !pogo_sticks_to_make(0).` |
@@ -64,7 +77,8 @@ We therefore materialize every MOOSE direct train/test domain, including the
 numeric domains, plus the project-added feature-definable serialized-width
 benchmarks needed for the internal-module part of the plan-library claim. The
 taxonomy below uses literature-level properties rather than task-story labels.
-MOOSE is a source of evidence and benchmark provenance, not the taxonomy itself.
+MOOSE is a source of evidence and benchmark provenance, not the taxonomy itself
+and not the name of the compiler module.
 
 | Group | Domains | Shared property |
 | --- | --- | --- |
@@ -183,8 +197,10 @@ declared PDDL function names directly. For example, the numeric goal
 
 The first plan is the already-true branch: if the numeric belief already equals
 the target, no primitive action is needed. The second plan is the monotone
-resource branch: it is emitted only when validated MOOSE macro evidence and the
-PDDL schema show that the primitive action decreases the target resource by one.
+resource branch: it is emitted only when validated Evidence Module macro
+evidence and the PDDL schema show that the primitive action decreases the
+target resource by one. In the current experiments, that evidence comes from
+the MOOSE readable-policy provider.
 
 The implemented pipeline now:
 
@@ -195,7 +211,7 @@ The implemented pipeline now:
 3. seeds numeric fluents as mutable Jason beliefs and applies numeric
    `increase`/`decrease` effects during primitive action execution;
 4. renders numeric contexts such as `capacity(V,N) & N > 0`;
-5. validates MOOSE-readable numeric macro evidence against predicate and
+5. validates Evidence Module numeric macro evidence against predicate and
    numeric schema conditions before rendering ASL;
 6. accepts numeric resource functions as singleton LTLf/DFA progress atoms by
    adding the target value as the final argument. For example, the PDDL function

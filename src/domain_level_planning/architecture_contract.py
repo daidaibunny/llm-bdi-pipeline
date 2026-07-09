@@ -332,14 +332,15 @@ def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
 				"artifacts into reusable +!P(Args) ASL plans"
 			),
 			admissible_evidence=(
-				"MOOSE readable policy artifacts",
-				"other backend artifacts after parser and binding gates",
+				"Evidence Module policy evidence programs",
+				"MOOSE readable policy artifacts after adapter normalization",
+				"other backend artifacts after adapter, parser, and binding gates",
 				"PDDL domain predicate and action declarations",
 				"held-out validation without runtime full-trace planning",
 			),
 			selector_obligations=(
 				"derive required atomic templates from the train split",
-				"prefer MOOSE for positive singleton predicate templates",
+				"use the Evidence Module backend that can emit validated singleton evidence",
 				"reject unsupported negative templates",
 				"reject undeclared predicates, wrong arities, and grounded plan heads",
 			),

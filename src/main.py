@@ -16,8 +16,9 @@ if _src_dir not in sys.path:
 
 from domain_level_planning import (  # noqa: E402
 	append_lifted_temporal_goal_case_to_library,
-	compile_moose_readable_policy_to_minimal_module_asl_library,
+	compile_policy_evidence_program_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_asl_library,
+	evidence_program_from_moose_readable_policy,
 	load_lifted_ltlf_goal_dataset,
 )
 from evaluation.jason_runtime import JasonPlanLibraryRunner  # noqa: E402
@@ -86,15 +87,10 @@ Examples:
 		"--validated-policy-lifting",
 		action="store_true",
 		help=(
-			"Validate and lift MOOSE singleton policy evidence with the PDDL "
-			"schema, then compile the result into a domain-level atomic ASL library."
-		),
-	)
-	moose_parser.add_argument(
-		"--post-moose-recursive",
-		action="store_true",
-		help=(
-			"Deprecated alias for --validated-policy-lifting."
+			"Normalize the MOOSE readable policy into the Evidence Module "
+			"intermediate representation, validate and lift it with the PDDL "
+			"schema, then compile the result into a domain-level atomic ASL "
+			"library."
 		),
 	)
 	moose_parser.add_argument(
@@ -251,7 +247,6 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	policy_file = _require_existing_path(args.policy_file, label="MOOSE Policy File")
 	use_validated_policy_lifting = bool(
 		getattr(args, "validated_policy_lifting", False)
-		or getattr(args, "post_moose_recursive", False)
 		or getattr(args, "minimal_modules", False),
 	)
 	domain_file = (
@@ -277,12 +272,15 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	policy_text = Path(policy_file).read_text(encoding="utf-8")
 	source_name = Path(policy_file).stem.replace(".model", "")
 	if use_validated_policy_lifting:
-		library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		evidence_program = evidence_program_from_moose_readable_policy(
 			policy_text,
-			domain_file=str(domain_file),
-			domain_name=domain_name,
 			source_name=source_name,
 			policy_file=policy_file,
+		)
+		library = compile_policy_evidence_program_to_minimal_module_asl_library(
+			evidence_program,
+			domain_file=str(domain_file),
+			domain_name=domain_name,
 		)
 	else:
 		library = compile_moose_readable_policy_to_asl_library(
@@ -300,13 +298,12 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 				if use_validated_policy_lifting
 				else "moose_atomic_library"
 			),
-			"backend": "moose",
+			"evidence_provider": "moose",
 			"domain_file": domain_file,
 			"pddl_domain_name": pddl_domain_name,
 			"minimal_modules": use_validated_policy_lifting,
-			"post_moose_recursive": use_validated_policy_lifting,
 			"validated_policy_lifting": use_validated_policy_lifting,
-			"moose_backend_path": (
+			"evidence_provider_path": (
 				"validated_policy_lifting_and_asl_compilation"
 				if use_validated_policy_lifting
 				else "native_train_dump_policy"
