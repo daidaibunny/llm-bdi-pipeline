@@ -536,7 +536,7 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 		if plan.trigger.symbol == "served"
 		and plan.body
 		== (
-			AgentSpeakBodyStep("subgoal", "lift_at", ("Y",)),
+			AgentSpeakBodyStep("subgoal", "lift-at", ("Y",)),
 			AgentSpeakBodyStep("subgoal", "served", ("X",)),
 		)
 	]
@@ -546,7 +546,7 @@ def test_miconic_rejects_simultaneous_lift_location_direct_branch() -> None:
 	assert "destin(X, Y)" in lift_repair_context
 	assert "obj_tp(X, passenger)" in lift_repair_context
 	assert "obj_tp(Y, floor)" in lift_repair_context
-	assert "not lift_at(Y)" in lift_repair_context
+	assert "not lift-at(Y)" in lift_repair_context
 	assert "\t!lift_at(Y);\n\t!served(X)." in asl
 	assert "+!served(X) : obj_tp(X, passenger) & not boarded(X)" in asl
 	assert "\t!boarded(X);\n\t!served(X)." in asl
