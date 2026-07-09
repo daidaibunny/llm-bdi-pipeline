@@ -27,14 +27,14 @@ From the training split we extract the set of atomic goal templates:
 	\neg p(o_1,\ldots,o_k) \text{ appears as a training goal item}\},
 \]
 where $\sigma$ records positive or negative polarity. These templates are the
-interface to external generalized-planning backends. The project does not first
-classify the domain into a backend-specific taxonomy. Instead, it asks which
-backend can produce reusable lifted artifacts for the required atomic
+interface to external generalized-planning providers. The project does not first
+classify the domain into a provider-specific taxonomy. Instead, it asks which
+provider can produce reusable lifted artifacts for the required atomic
 templates.
 
 The Evidence Module is the interface to external generalized-planning
-backends. An Evidence Module adapter is a backend-specific parser that emits a
-backend-agnostic evidence program. For example, the MOOSE adapter reads a
+providers. An Evidence Module adapter is a provider-specific parser that emits a
+provider-neutral evidence program. For example, the MOOSE adapter reads a
 \texttt{policy --dump-policy} decision-list rule whose goal condition is
 \texttt{at(package0,location2)} and whose action sequence is a sequence of PDDL
 operators such as \texttt{load-airplane}, \texttt{fly-airplane}, and
@@ -57,9 +57,9 @@ negative literal.
 
 \subsection{Evidence Gate and Policy-Lifting Compiler}
 
-Every consumed backend artifact is normalized before compilation:
+Every consumed provider artifact is normalized before compilation:
 \[
-\text{backend artifact} \rightarrow \text{Evidence Module adapter}
+\text{provider artifact} \rightarrow \text{Evidence Module adapter}
 \rightarrow \text{PolicyEvidenceProgram} \rightarrow
 \text{validated policy-lifting compiler} \rightarrow \text{\asl{} library}.
 \]
@@ -112,7 +112,7 @@ correctness boundary of the method.
 \subsection{Selected Evaluation Scope}
 
 The benchmark scope is used to evaluate coverage of literature-grounded domain
-properties, not to route backends by class:
+properties, not to route evidence providers by class:
 
 \begin{table}[t]
 	\caption{Current benchmark evaluation scope.}

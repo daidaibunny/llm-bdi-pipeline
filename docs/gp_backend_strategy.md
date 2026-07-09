@@ -1,9 +1,9 @@
-# Generalized-Planning Backend Strategy
+# Generalized-Planning Evidence Strategy
 
 This repository no longer builds a universal generalized planner and no longer
 routes domains by prior-paper taxonomy labels. The current strategy is to use
 an Evidence Module to import external generalized-planning artifacts, normalize
-them into backend-agnostic singleton-goal evidence, then compile the accepted
+them into provider-neutral singleton-goal evidence, then compile the accepted
 evidence into one maintained domain-level AgentSpeak(L) library per domain.
 MOOSE is the current Evidence Module provider for positive singleton PDDL
 predicate goals; it is not the name of the framework module.
@@ -12,9 +12,9 @@ predicate goals; it is not the name of the framework module.
 
 The architecture separates four modules.
 
-1. The Evidence Module imports backend artifacts and emits a
+1. The Evidence Module imports provider artifacts and emits a
    `PolicyEvidenceProgram`. A `PolicyEvidenceProgram` is the common evidence
-   intermediate representation: it records a backend name, a source artifact,
+   intermediate representation: it records a provider name, a source artifact,
    and singleton-goal policy rules. For example, the MOOSE adapter parses a
    `policy --dump-policy` first-order decision-list rule whose singleton goal is
    `at(package0, location2)` and whose macro sequence loads a package, flies it,

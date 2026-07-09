@@ -1,11 +1,11 @@
-"""Evidence-module interfaces and backend adapters.
+"""Evidence Module interfaces and provider adapters.
 
 The evidence module is the boundary between external generalized-planning
-backends and the validated policy-lifting compiler. Backend-specific adapters
+providers and the validated policy-lifting compiler. Provider-specific adapters
 parse native artifacts, such as a MOOSE ``policy --dump-policy`` readable
-decision list, into a backend-agnostic policy evidence program. The compiler
+decision list, into a provider-neutral policy evidence program. The compiler
 then consumes that evidence program plus the PDDL domain schema; it does not
-need to know which backend produced the evidence.
+need to know which provider produced the evidence.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ from .policy_program import PolicyModule
 
 @dataclass(frozen=True)
 class PolicyEvidenceAtom:
-	"""One atom or primitive action call supplied by an evidence backend.
+	"""One atom or primitive action call supplied by an evidence provider.
 
 	Example: in a singleton-goal policy rule, ``at(package0, location1)`` is a
 	goal atom and ``load-truck(package0, truck0, location0)`` is a primitive
@@ -57,9 +57,9 @@ class PolicyEvidenceAtom:
 
 @dataclass(frozen=True)
 class PolicyEvidenceRule:
-	"""One backend-agnostic singleton-goal evidence rule.
+	"""One provider-neutral singleton-goal evidence rule.
 
-	A rule states that, under ``state_conditions``, a backend observed or learned
+	A rule states that, under ``state_conditions``, a provider observed or learned
 	that the ``actions`` sequence can make the ``goal_conditions`` true. For
 	example, a MOOSE rule for Logistics may say that a package at airport A can
 	reach location L through ``load-airplane; fly-airplane; unload-airplane``.
@@ -243,7 +243,7 @@ def evidence_program_from_moose_readable_policy(
 	source_name: str,
 	policy_file: str | Path | None = None,
 ) -> PolicyEvidenceProgram:
-	"""Convert MOOSE readable policy text into backend-agnostic evidence IR."""
+	"""Convert MOOSE readable policy text into a provider-neutral evidence program."""
 
 	rules = parse_moose_readable_policy(text)
 	return PolicyEvidenceProgram(
@@ -267,7 +267,7 @@ def policy_program_from_moose_readable_policy(
 	source_name: str,
 	policy_file: str | Path | None = None,
 ) -> LiftedPolicyProgram:
-	"""Convert MOOSE readable policy text into the policy-first IR."""
+	"""Convert MOOSE readable policy text into the policy-first representation."""
 
 	rules = parse_moose_readable_policy(text)
 	learned_rules: list[LearnedPolicyRule] = []
@@ -424,7 +424,7 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 	domain_file: str | Path,
 	domain_name: str,
 ) -> PlanLibrary:
-	"""Compile backend-agnostic singleton evidence into an atomic ASL library.
+	"""Compile provider-neutral singleton evidence into an atomic ASL library.
 
 		The evidence program is the decoupling point: MOOSE, D2L, or future sketch
 		providers should normalize their native artifacts into this IR before the

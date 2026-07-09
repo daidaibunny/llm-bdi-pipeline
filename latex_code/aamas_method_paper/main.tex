@@ -45,7 +45,7 @@ under a singleton-literal transition contract, and appended as a query-specific
 top-level AgentSpeak(L) goal that calls the atomic library. The resulting
 artifact is one domain-level library that grows with user queries, rather than
 one plan per problem or one planner call per execution. An Evidence Module
-imports external generalized-planning artifacts into a backend-agnostic
+imports external generalized-planning artifacts into a provider-neutral
 singleton-goal evidence representation. We instantiate this interface with
 MOOSE, while keeping the compiler independent of that provider. The current
 claim covers schema-validated predicate goals and validated numeric fluent
@@ -90,7 +90,7 @@ of lifted plan schemas whose triggers, contexts, and bodies can be inspected
 independently of any particular test instance.
 
 The central difficulty is the interface between reusable atomic behavior and
-query-specific temporal structure. The Evidence Module normalizes backend
+query-specific temporal structure. The Evidence Module normalizes provider
 artifacts before compilation. Our MOOSE instantiation uses goal-regression
 rules that decompose training problems into singleton goal conditions
 \cite{Chen2026Moose}. This makes MOOSE a natural evidence provider for atomic
@@ -115,11 +115,11 @@ The paper makes four contributions.
 	fluent domains, and feature-definable serialized-width domains.
 \end{enumerate}
 
-The contribution is deliberately bounded. We do not claim that one backend is
-state of the art for every planning problem, nor that context-only \asl{} can
-encode every temporal automaton without controller state. Unsupported negative
-literal templates and DFA transitions whose guards require compound Boolean
-reasoning remain outside the current claim.
+The contribution is deliberately bounded. We do not claim that one evidence
+provider is state of the art for every planning problem, nor that context-only
+\asl{} can encode every temporal automaton without controller state.
+Unsupported negative literal templates and DFA transitions whose guards require
+compound Boolean reasoning remain outside the current claim.
 
 \input{sections/related_work}
 
