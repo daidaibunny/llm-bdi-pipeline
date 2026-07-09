@@ -38,6 +38,8 @@ from evaluation.jason_runtime.runner import _build_environment_java_source  # no
 from evaluation.jason_runtime.runner import _resolve_jason_classpath  # noqa: E402
 from evaluation.jason_runtime.runner import _runtime_action_schema  # noqa: E402
 from evaluation.jason_runtime.runner import build_runtime_problem_artifacts  # noqa: E402
+from evaluation.jason_runtime.runner import PredicatePattern  # noqa: E402
+from evaluation.jason_runtime.runner import RuntimeActionSchema  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
@@ -201,8 +203,8 @@ def main() -> int:
 		"--compact-completion-wrappers",
 		action="store_true",
 		help=(
-			"Use experimental recursive completion wrappers for repeated same-predicate "
-			"goals. Defaults to linear goal-order wrappers for semantic transparency."
+			"Deprecated compatibility flag. Full-test validation always uses "
+			"query-local guard-transition replay wrappers."
 		),
 	)
 	parser.add_argument(
@@ -407,12 +409,14 @@ def prepare_domain_for_full_test(
 			wrapper_text_by_problem, wrapper_plan_count = build_full_test_wrapper_texts(
 				domain=domain,
 				problem_files=test_instances,
+				domain_file=domain_file,
 				compact_completion_wrappers=compact_completion_wrappers,
 			)
-			append_record = append_linear_single_body_full_test_wrappers(
+			append_record = append_guard_transition_full_test_wrappers(
 				domain=domain,
 				plan_library_asl=plan_library_asl,
 				problem_files=test_instances,
+				domain_file=domain_file,
 				max_output_bytes=max_domain_long_asl_bytes,
 				compact_completion_wrappers=compact_completion_wrappers,
 				wrapper_text_by_problem=wrapper_text_by_problem,
@@ -421,11 +425,7 @@ def prepare_domain_for_full_test(
 		else:
 			append_record = {
 				"success": True,
-				"wrapper_mode": (
-					"per_test_compact_completion_or_linear_without_json_metadata"
-					if compact_completion_wrappers
-					else "per_test_linear_single_body_without_json_metadata"
-				),
+				"wrapper_mode": "per_test_guard_trans_replay_without_json_metadata",
 				"compact_completion_wrappers": compact_completion_wrappers,
 				"query_count": len(test_instances),
 				"appended_plan_count": None,
@@ -505,17 +505,18 @@ def normalise_atomic_library_mode(mode: str) -> str:
 	return mode
 
 
-def append_linear_single_body_full_test_wrappers(
+def append_guard_transition_full_test_wrappers(
 	*,
 	domain: str,
 	plan_library_asl: Path,
 	problem_files: Sequence[Path],
+	domain_file: Path | None = None,
 	max_output_bytes: int,
 	compact_completion_wrappers: bool = False,
 	wrapper_text_by_problem: Mapping[Path, str] | None = None,
 	appended_plan_count: int | None = None,
 ) -> dict[str, Any]:
-	"""Append one sequential ASL query body per test problem.
+	"""Append one query-local guard-transition replay wrapper per test problem.
 
 	This validation runner intentionally writes only ASL. It avoids the canonical
 	``plan_library.json`` temporal metadata because full-test batches can contain
@@ -527,6 +528,7 @@ def append_linear_single_body_full_test_wrappers(
 		wrapper_map, plan_count = build_full_test_wrapper_texts(
 			domain=domain,
 			problem_files=problem_files,
+			domain_file=domain_file,
 			compact_completion_wrappers=compact_completion_wrappers,
 		)
 	else:
@@ -540,9 +542,9 @@ def append_linear_single_body_full_test_wrappers(
 	with plan_library_asl.open("w", encoding="utf-8") as output:
 		output.write(base_text)
 		output.write(
-			"\n\n/* Full-test linear single-body query wrappers.\n"
-			"   These wrappers call the positive PDDL goal literals in parser order\n"
-			"   and skip JSON DFA metadata because Jason only needs the ASL file. */\n\n",
+			"\n\n/* Full-test query-local guard-transition replay wrappers.\n"
+			"   Each PDDL conjunctive goal is treated as one DFA-style transition\n"
+			"   guard whose positive achievement literals must hold together. */\n\n",
 		)
 		for problem_file in problem_files:
 			for line in wrapper_map[problem_file].splitlines():
@@ -558,11 +560,7 @@ def append_linear_single_body_full_test_wrappers(
 					)
 	return {
 		"success": True,
-		"wrapper_mode": (
-			"compact_completion_or_linear_without_json_metadata"
-			if compact_completion_wrappers
-			else "linear_single_body_without_json_metadata"
-		),
+		"wrapper_mode": "guard_trans_replay_without_json_metadata",
 		"compact_completion_wrappers": compact_completion_wrappers,
 		"query_count": len(problem_files),
 		"appended_plan_count": plan_count,
@@ -575,17 +573,21 @@ def build_full_test_wrapper_texts(
 	*,
 	domain: str,
 	problem_files: Sequence[Path],
+	domain_file: Path | None = None,
 	compact_completion_wrappers: bool = False,
 ) -> tuple[dict[Path, str], int]:
 	"""Render each full-test query wrapper once, keyed by problem file."""
 
 	wrapper_map: dict[Path, str] = {}
 	total_plan_count = 0
+	action_schemas = _runtime_action_schemas_for_domain(domain_file)
 	for index, problem_file in enumerate(problem_files, start=1):
 		wrapper_lines, wrapper_plan_count = full_test_wrapper_lines(
 			domain=domain,
 			index=index,
 			problem_file=problem_file,
+			domain_file=domain_file,
+			action_schemas=action_schemas,
 			compact_completion_wrappers=compact_completion_wrappers,
 		)
 		wrapper_map[problem_file] = "\n".join(wrapper_lines).rstrip()
@@ -600,9 +602,12 @@ def full_test_wrapper_lines(
 	problem_file: Path,
 	compact_completion_wrappers: bool = False,
 	problem: Any | None = None,
+	domain_file: Path | None = None,
+	action_schemas: Sequence[RuntimeActionSchema] | None = None,
 ) -> tuple[tuple[str, ...], int]:
-	"""Return a compact completion wrapper when safe, otherwise a linear body."""
+	"""Return the query-local guard-transition replay wrapper for a test problem."""
 
+	_ = compact_completion_wrappers
 	problem = problem if problem is not None else PDDLParser.parse_problem(problem_file)
 	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
 	if len(goal_facts) != len(problem.goal_facts):
@@ -613,21 +618,13 @@ def full_test_wrapper_lines(
 	numeric_goal_conditions = tuple(problem.numeric_goal_conditions or ())
 	if not goal_facts and not numeric_goal_conditions:
 		raise ValueError(f"{problem_file} contains no supported PDDL goal steps.")
-	if compact_completion_wrappers and not numeric_goal_conditions:
-		compact = compact_recursive_completion_wrapper_lines(
-			domain=domain,
-			index=index,
-			problem_file=problem_file,
-			goal_facts=goal_facts,
-			init_facts=tuple(fact for fact in problem.init_facts if fact.is_positive),
-		)
-		if compact is not None:
-			return compact
-	return linear_single_body_wrapper_lines(
+	return guard_transition_replay_wrapper_lines(
 		domain=domain,
 		index=index,
 		problem_file=problem_file,
 		problem=problem,
+		domain_file=domain_file,
+		action_schemas=action_schemas,
 	)
 
 
@@ -771,14 +768,16 @@ def _auxiliary_variable_name(index: int) -> str:
 	return f"A{index + 1}"
 
 
-def linear_single_body_wrapper_lines(
+def guard_transition_replay_wrapper_lines(
 	*,
 	domain: str,
 	index: int,
 	problem_file: Path,
 	problem: Any | None = None,
+	domain_file: Path | None = None,
+	action_schemas: Sequence[RuntimeActionSchema] | None = None,
 ) -> tuple[tuple[str, ...], int]:
-	"""Return one test problem's linear single-body query wrapper."""
+	"""Return one conjunctive guard-transition replay wrapper."""
 
 	problem = problem if problem is not None else PDDLParser.parse_problem(problem_file)
 	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
@@ -792,34 +791,298 @@ def linear_single_body_wrapper_lines(
 		raise ValueError(f"{problem_file} contains no supported PDDL goal steps.")
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
 	entry_proposition = query_entry_proposition(goal_name)
-	atoms = (
-		*(render_fact_atom(fact) for fact in goal_facts),
-		*(
-			atom
-			for condition in numeric_goal_conditions
-			for atom in render_numeric_goal_atoms(
-				condition,
-				problem=problem,
-				problem_file=problem_file,
-			)
+	schemas = tuple(action_schemas or _runtime_action_schemas_for_domain(domain_file))
+	ordered_goal_facts = _threat_ordered_goal_facts(goal_facts, schemas)
+	atoms = _deduplicate_strings(
+		(
+			*(render_fact_atom(fact) for fact in ordered_goal_facts),
+			*(
+				atom
+				for condition in numeric_goal_conditions
+				for atom in render_numeric_goal_atoms(
+					condition,
+					problem=problem,
+					problem_file=problem_file,
+				)
+			),
 		),
 	)
+	transition_name = f"{goal_name}_trans_1"
+	done_context = " & ".join((entry_proposition, *atoms))
 	lines: list[str] = [
 		f"/* full_test_problem={problem_file.name} */",
 		f"{entry_proposition}.",
 		"",
-		f"/* plan={goal_name}_linear_sequence | source_instruction_ids=none */",
+		f"/* plan={goal_name}_transition_sequence | source_instruction_ids=none */",
 		f"+!{goal_name} : {entry_proposition} <-",
+		f"\t!{transition_name}.",
+		"",
+		f"/* plan={transition_name}_done | source_instruction_ids=none */",
+		f"+!{transition_name} : {done_context} <-",
+		"\ttrue.",
+		"",
 	]
-	for atom_index, atom in enumerate(atoms, start=1):
-		suffix = ";" if atom_index < len(atoms) else "."
-		lines.append(f"\t!{atom}{suffix}")
-	lines.extend(
-		[
-			"",
-		],
+	for atom in atoms:
+		lines.extend(
+			[
+				f"/* plan={transition_name}_repair_{safe_goal_fragment(atom)} | source_instruction_ids=none */",
+				f"+!{transition_name} : {entry_proposition} & not {atom} <-",
+				f"\t!{atom};",
+				f"\t!{transition_name}.",
+				"",
+			],
+		)
+	return tuple(lines), 2 + len(atoms)
+
+
+def _runtime_action_schemas_for_domain(
+	domain_file: Path | None,
+) -> tuple[RuntimeActionSchema, ...]:
+	if domain_file is None:
+		return ()
+	try:
+		domain = PDDLParser.parse_domain(domain_file)
+	except Exception:  # noqa: BLE001 - preserve parser order when probing incomplete domains.
+		return ()
+	return tuple(_runtime_action_schema(action) for action in tuple(domain.actions or ()))
+
+
+def _deduplicate_strings(values: Sequence[str]) -> tuple[str, ...]:
+	return tuple(dict.fromkeys(str(value) for value in tuple(values or ())))
+
+
+@dataclass(frozen=True)
+class _LiftedAtom:
+	predicate: str
+	arguments: tuple[str, ...]
+	variables: frozenset[str] = frozenset()
+
+
+def _threat_ordered_goal_facts(
+	goal_facts: Sequence[PDDLFact],
+	action_schemas: Sequence[RuntimeActionSchema],
+) -> tuple[PDDLFact, ...]:
+	"""Order conjunctive achievements so delete-threatening goals run earlier."""
+
+	facts = tuple(goal_facts or ())
+	schemas = tuple(action_schemas or ())
+	if len(facts) < 2 or not schemas:
+		return facts
+	threat_edges: dict[int, set[int]] = {index: set() for index in range(len(facts))}
+	for achiever_index, achiever in enumerate(facts):
+		threats = _possible_delete_patterns_for_goal(
+			_lifted_atom_from_fact(achiever),
+			action_schemas=schemas,
+			depth=2,
+		)
+		for protected_index, protected in enumerate(facts):
+			if achiever_index == protected_index:
+				continue
+			protected_atom = _lifted_atom_from_fact(protected)
+			if any(_lifted_atom_unifies(threat, protected_atom) for threat in threats):
+				threat_edges[achiever_index].add(protected_index)
+	for source, target in _same_predicate_argument_dependency_edges(facts):
+		threat_edges[source].add(target)
+	return _stable_topological_goal_order(facts, threat_edges)
+
+
+def _same_predicate_argument_dependency_edges(
+	facts: Sequence[PDDLFact],
+) -> tuple[tuple[int, int], ...]:
+	"""Infer support-style ordering from repeated predicate argument sharing."""
+
+	edges: list[tuple[int, int]] = []
+	for source_index, source in enumerate(facts):
+		source_arguments = tuple(sanitize_identifier(argument) for argument in source.args)
+		if len(source_arguments) < 2:
+			continue
+		for target_index, target in enumerate(facts):
+			if source_index == target_index or source.predicate != target.predicate:
+				continue
+			target_arguments = tuple(sanitize_identifier(argument) for argument in target.args)
+			if len(target_arguments) != len(source_arguments):
+				continue
+			if source_arguments[0] in target_arguments[1:]:
+				edges.append((source_index, target_index))
+	return tuple(dict.fromkeys(edges))
+
+
+def _lifted_atom_from_fact(fact: PDDLFact) -> _LiftedAtom:
+	return _LiftedAtom(
+		predicate=sanitize_identifier(fact.predicate),
+		arguments=tuple(sanitize_identifier(argument) for argument in fact.args),
 	)
-	return tuple(lines), 1
+
+
+def _possible_delete_patterns_for_goal(
+	goal: _LiftedAtom,
+	*,
+	action_schemas: Sequence[RuntimeActionSchema],
+	depth: int,
+	_seen: frozenset[tuple[str, tuple[str, ...]]] = frozenset(),
+) -> tuple[_LiftedAtom, ...]:
+	if depth <= 0:
+		return ()
+	key = (goal.predicate, tuple("*" if arg in goal.variables else arg for arg in goal.arguments))
+	if key in _seen:
+		return ()
+	next_seen = frozenset((*_seen, key))
+	deletes: list[_LiftedAtom] = []
+	for action in tuple(action_schemas or ()):
+		action_parameters = frozenset(action.parameters)
+		for effect in _positive_patterns(action.effects):
+			binding = _unify_action_effect_with_goal(
+				effect=effect,
+				action_parameters=action_parameters,
+				goal=goal,
+			)
+			if binding is None:
+				continue
+			for delete_effect in _negative_patterns(action.effects):
+				deletes.append(
+					_map_runtime_pattern(
+						delete_effect,
+						binding=binding,
+						action_parameters=action_parameters,
+						inherited_variables=goal.variables,
+					),
+				)
+			for precondition in _positive_patterns(action.preconditions):
+				mapped_precondition = _map_runtime_pattern(
+					precondition,
+					binding=binding,
+					action_parameters=action_parameters,
+					inherited_variables=goal.variables,
+				)
+				if not _has_producer_for_pattern(mapped_precondition, action_schemas):
+					continue
+				deletes.extend(
+					_possible_delete_patterns_for_goal(
+						mapped_precondition,
+						action_schemas=action_schemas,
+						depth=depth - 1,
+						_seen=next_seen,
+					),
+				)
+	return tuple(dict.fromkeys(deletes))
+
+
+def _positive_patterns(patterns: Sequence[PredicatePattern]) -> tuple[PredicatePattern, ...]:
+	return tuple(pattern for pattern in tuple(patterns or ()) if pattern.positive)
+
+
+def _negative_patterns(patterns: Sequence[PredicatePattern]) -> tuple[PredicatePattern, ...]:
+	return tuple(pattern for pattern in tuple(patterns or ()) if not pattern.positive)
+
+
+def _has_producer_for_pattern(
+	target: _LiftedAtom,
+	action_schemas: Sequence[RuntimeActionSchema],
+) -> bool:
+	return any(
+		_unify_action_effect_with_goal(
+			effect=effect,
+			action_parameters=frozenset(action.parameters),
+			goal=target,
+		)
+		is not None
+		for action in tuple(action_schemas or ())
+		for effect in _positive_patterns(action.effects)
+	)
+
+
+def _unify_action_effect_with_goal(
+	*,
+	effect: PredicatePattern,
+	action_parameters: frozenset[str],
+	goal: _LiftedAtom,
+) -> dict[str, str] | None:
+	if effect.predicate != goal.predicate or len(effect.args) != len(goal.arguments):
+		return None
+	binding: dict[str, str] = {}
+	for effect_argument, goal_argument in zip(effect.args, goal.arguments):
+		if effect_argument in action_parameters:
+			previous = binding.get(effect_argument)
+			if previous is not None and previous != goal_argument:
+				return None
+			binding[effect_argument] = goal_argument
+			continue
+		if goal_argument in goal.variables:
+			continue
+		if effect_argument != goal_argument:
+			return None
+	for parameter in action_parameters:
+		binding.setdefault(parameter, parameter)
+	return binding
+
+
+def _map_runtime_pattern(
+	pattern: PredicatePattern,
+	*,
+	binding: Mapping[str, str],
+	action_parameters: frozenset[str],
+	inherited_variables: frozenset[str],
+) -> _LiftedAtom:
+	arguments: list[str] = []
+	variables: set[str] = set()
+	for argument in pattern.args:
+		value = binding.get(argument, argument) if argument in action_parameters else argument
+		arguments.append(value)
+		if value in action_parameters or value in inherited_variables:
+			variables.add(value)
+	return _LiftedAtom(
+		predicate=pattern.predicate,
+		arguments=tuple(arguments),
+		variables=frozenset(variables),
+	)
+
+
+def _lifted_atom_unifies(left: _LiftedAtom, right: _LiftedAtom) -> bool:
+	if left.predicate != right.predicate or len(left.arguments) != len(right.arguments):
+		return False
+	bindings: dict[str, str] = {}
+	for left_argument, right_argument in zip(left.arguments, right.arguments):
+		left_is_variable = left_argument in left.variables
+		right_is_variable = right_argument in right.variables
+		if left_is_variable and right_is_variable:
+			continue
+		if left_is_variable:
+			previous = bindings.get(left_argument)
+			if previous is not None and previous != right_argument:
+				return False
+			bindings[left_argument] = right_argument
+			continue
+		if right_is_variable:
+			continue
+		if left_argument != right_argument:
+			return False
+	return True
+
+
+def _stable_topological_goal_order(
+	facts: Sequence[PDDLFact],
+	edges: Mapping[int, set[int]],
+) -> tuple[PDDLFact, ...]:
+	"""Return a stable topological order, or parser order when threats cycle."""
+
+	remaining = set(range(len(facts)))
+	incoming = {
+		index: {
+			source
+			for source, targets in edges.items()
+			if index in targets and source != index
+		}
+		for index in remaining
+	}
+	order: list[int] = []
+	while remaining:
+		ready = [index for index in sorted(remaining) if not incoming[index] & remaining]
+		if not ready:
+			return tuple(facts)
+		chosen = ready[0]
+		order.append(chosen)
+		remaining.remove(chosen)
+	return tuple(facts[index] for index in order)
 
 
 def render_runtime_asl_for_task(task: JasonTask, *, problem: Any | None = None) -> str:
@@ -832,6 +1095,7 @@ def render_runtime_asl_for_task(task: JasonTask, *, problem: Any | None = None) 
 			problem_file=task.problem_file,
 			compact_completion_wrappers=task.compact_completion_wrappers,
 			problem=problem,
+			domain_file=task.domain_file,
 		)
 		wrapper_text = "\n".join(wrapper_lines).rstrip()
 	else:
@@ -1137,9 +1401,14 @@ def validate_one_task(
 		payload = result.to_dict()
 		plan_verifier = dict(payload.get("plan_verifier") or {})
 		artifacts = dict(payload.get("artifacts") or {})
+		committed_trace_path = Path(str(artifacts.get("committed_plan_trace") or ""))
+		raw_trace_path = Path(str(artifacts.get("plan_trace") or ""))
+		count_trace_path = (
+			committed_trace_path if committed_trace_path.exists() else raw_trace_path
+		)
 		action_count_fields = reported_action_count_fields(
 			payload=payload,
-			plan_trace_path=Path(str(artifacts.get("plan_trace") or "")),
+			plan_trace_path=count_trace_path,
 		)
 		record = {
 			"domain": task.domain,
@@ -1154,8 +1423,9 @@ def validate_one_task(
 			"plan_verifier_success": plan_verifier.get("success"),
 			"plan_verifier_attempted": plan_verifier.get("attempted"),
 			"plan_verifier_available": plan_verifier.get("available"),
-			"plan_trace": artifacts.get("plan_trace"),
-			"plan_verifier_stdout": artifacts.get("plan_verifier_stdout"),
+				"plan_trace": artifacts.get("plan_trace"),
+				"committed_plan_trace": artifacts.get("committed_plan_trace"),
+				"plan_verifier_stdout": artifacts.get("plan_verifier_stdout"),
 			"plan_verifier_stderr": artifacts.get("plan_verifier_stderr"),
 			"output_dir": str(task.output_dir),
 			"runtime_plan_library_asl": (

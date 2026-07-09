@@ -17,6 +17,7 @@ from plan_library.rendering import render_plan_library_asl
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
+DEPOTS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl"
 LOGISTICS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "logistics" / "domain.pddl"
 NUMERIC_FERRY_DOMAIN = PROJECT_ROOT / "src" / "domains" / "numeric-ferry" / "domain.pddl"
 NUMERIC_MINECRAFT_DOMAIN = PROJECT_ROOT / "src" / "domains" / "numeric-minecraft" / "domain.pddl"
@@ -51,7 +52,16 @@ LOGISTICS_INTERMODAL_READABLE_POLICY = """
        vars : airplane0 city0 location0 location1 location2 package0 truck0
      s_cond : (at airplane0 location0) (at package0 location0) (at truck0 location1) (has-airport location0) (has-airport location1) (in-city location1 city0) (in-city location2 city0)
      g_cond : (at package0 location2)
-    actions : (load-airplane package0 airplane0 location0) (fly-airplane airplane0 location0 location1) (unload-airplane package0 airplane0 location1) (load-truck package0 truck0 location1) (drive-truck truck0 location1 location2 city0) (unload-truck package0 truck0 location2)
+	    actions : (load-airplane package0 airplane0 location0) (fly-airplane airplane0 location0 location1) (unload-airplane package0 airplane0 location1) (load-truck package0 truck0 location1) (drive-truck truck0 location1 location2 city0) (unload-truck package0 truck0 location2)
+	"""
+
+
+DEPOTS_CLEAR_WITH_PARKING_READABLE_POLICY = """
+ precedence : (1, 2, 0, 0)
+       vars : hoist0 crate0 crate1 place0 surface0
+     s_cond : (hoist hoist0) (crate crate0) (surface crate1) (place place0) (at hoist0 place0) (available hoist0) (at crate0 place0) (on crate0 crate1) (clear crate0) (at surface0 place0) (clear surface0) (surface surface0)
+     g_cond : (clear crate1)
+    actions : (lift hoist0 crate0 crate1 place0) (drop hoist0 crate0 surface0 place0)
 """
 
 
@@ -303,6 +313,26 @@ def test_post_moose_reducer_preserves_validated_logistics_intermodal_macro() -> 
 		"mixed_atomic_template_library"
 	)
 	assert "block0" not in asl
+
+
+def test_post_moose_reducer_adds_positive_precondition_preservation_guards() -> None:
+	library = compile_moose_readable_policy_to_minimal_module_asl_library(
+		DEPOTS_CLEAR_WITH_PARKING_READABLE_POLICY,
+		domain_file=DEPOTS_DOMAIN,
+		domain_name="depots",
+		source_name="depots-seed0",
+		policy_file=Path("depots-seed0.model.readable"),
+	)
+	asl = render_plan_library_asl(library)
+	plan = next(
+		item for item in library.plans if item.plan_name == "moose_reduced_depots_seed0_rule_1"
+	)
+	certificate = dict(plan.binding_certificate[0])
+
+	assert "B != Z" in certificate["schema_binding_guards"]
+	assert "B \\== Z" in asl
+	assert "\tlift(Y, Z, X, A);" in asl
+	assert "\tdrop(Y, Z, B, A)." in asl
 
 
 def test_post_moose_reducer_preserves_numeric_macro_contexts() -> None:

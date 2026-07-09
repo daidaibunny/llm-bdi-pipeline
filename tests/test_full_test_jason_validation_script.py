@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from scripts.run_full_test_jason_validation import append_linear_single_body_full_test_wrappers
+from scripts.run_full_test_jason_validation import append_guard_transition_full_test_wrappers
 from scripts.run_full_test_jason_validation import apply_validation_summaries
 from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
 from scripts.run_full_test_jason_validation import full_test_wrapper_lines
@@ -104,7 +104,7 @@ def test_validation_status_labels_split_jason_and_val_outcomes() -> None:
 	assert _plan_verifier_status_label({"plan_verifier_attempted": False}) == "not_attempted"
 
 
-def test_full_test_wrapper_uses_linear_single_body(tmp_path: Path) -> None:
+def test_full_test_wrapper_uses_guard_transition_replay(tmp_path: Path) -> None:
 	asl_file = tmp_path / "plan_library.asl"
 	problem_file = tmp_path / "p01.pddl"
 	asl_file.write_text("/* base */\n", encoding="utf-8")
@@ -120,7 +120,7 @@ def test_full_test_wrapper_uses_linear_single_body(tmp_path: Path) -> None:
 		encoding="utf-8",
 	)
 
-	record = append_linear_single_body_full_test_wrappers(
+	record = append_guard_transition_full_test_wrappers(
 		domain="ferry",
 		plan_library_asl=asl_file,
 		problem_files=(problem_file,),
@@ -128,18 +128,19 @@ def test_full_test_wrapper_uses_linear_single_body(tmp_path: Path) -> None:
 	)
 	text = asl_file.read_text(encoding="utf-8")
 
-	assert record["wrapper_mode"] == "linear_single_body_without_json_metadata"
+	assert record["wrapper_mode"] == "guard_trans_replay_without_json_metadata"
 	assert "tg_state" not in text
 	assert "ferry_test_1." in text
 	assert "+!g_ferry_test_1 : ferry_test_1 <-" in text
+	assert "\t!g_ferry_test_1_trans_1." in text
+	assert "+!g_ferry_test_1_trans_1 : ferry_test_1 & at(car1, loc1) & at(car2, loc2) <-" in text
+	assert "+!g_ferry_test_1_trans_1 : ferry_test_1 & not at(car1, loc1) <-" in text
 	assert "\t!at(car1, loc1);" in text
-	assert "\t!at(car2, loc2)." in text
+	assert "\t!g_ferry_test_1_trans_1." in text
 	assert "\t!at(X, loc1);" not in text
-	assert "not at(car1, loc1)" not in text
-	assert "at(car1, loc1) & not at(car2, loc2)" not in text
 
 
-def test_full_test_wrapper_compacts_uniform_gripper_goal_set_when_opted_in(
+def test_full_test_wrapper_ignores_compact_flag_and_uses_guard_transition(
 	tmp_path: Path,
 ) -> None:
 	problem_file = tmp_path / "p01.pddl"
@@ -166,15 +167,17 @@ def test_full_test_wrapper_compacts_uniform_gripper_goal_set_when_opted_in(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 2
-	assert "+!g_gripper_test_1 : gripper_test_1 & ball(X) & not at(X, roomb) <-" in text
-	assert "\t!at(X, roomb);" in text
-	assert "\t!g_gripper_test_1." in text
+	assert plan_count == 4
 	assert "+!g_gripper_test_1 : gripper_test_1 <-" in text
-	assert "!at(ball1, roomb)" not in text
+	assert "\t!g_gripper_test_1_trans_1." in text
+	assert "+!g_gripper_test_1_trans_1 : gripper_test_1 & at(ball1, roomb) & at(ball2, roomb) <-" in text
+	assert "+!g_gripper_test_1_trans_1 : gripper_test_1 & not at(ball1, roomb) <-" in text
+	assert "\t!at(ball1, roomb);" in text
+	assert "\t!g_gripper_test_1_trans_1." in text
+	assert "ball(X) & not at(X, roomb)" not in text
 
 
-def test_full_test_wrapper_keeps_uniform_goal_set_linear_by_default(tmp_path: Path) -> None:
+def test_full_test_wrapper_uses_guard_transition_by_default(tmp_path: Path) -> None:
 	problem_file = tmp_path / "p01.pddl"
 	problem_file.write_text(
 		"""
@@ -195,14 +198,15 @@ def test_full_test_wrapper_keeps_uniform_goal_set_linear_by_default(tmp_path: Pa
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 1
+	assert plan_count == 4
 	assert "+!g_gripper_test_1 : gripper_test_1 <-" in text
+	assert "\t!g_gripper_test_1_trans_1." in text
 	assert "\t!at(ball1, roomb);" in text
-	assert "\t!at(ball2, roomb)." in text
+	assert "\t!at(ball2, roomb);" in text
 	assert "not at(X, roomb)" not in text
 
 
-def test_full_test_wrapper_compacts_uniform_miconic_goal_set_when_opted_in(
+def test_single_literal_guard_transition_matches_old_linear_effect(
 	tmp_path: Path,
 ) -> None:
 	problem_file = tmp_path / "p01.pddl"
@@ -210,15 +214,12 @@ def test_full_test_wrapper_compacts_uniform_miconic_goal_set_when_opted_in(
 		"""
 		(define (problem p01)
 		 (:domain miconic)
-		 (:objects p1 p2 f1 f2)
-		 (:init
-		   (origin p1 f1) (origin p2 f2)
-		   (destin p1 f2) (destin p2 f1)
-		 )
-		 (:goal (and (served p1) (served p2)))
-		)
-		""",
-		encoding="utf-8",
+			 (:objects p1 f1 f2)
+			 (:init (origin p1 f1) (destin p1 f2))
+			 (:goal (and (served p1)))
+			)
+			""",
+			encoding="utf-8",
 	)
 
 	lines, plan_count = full_test_wrapper_lines(
@@ -229,13 +230,15 @@ def test_full_test_wrapper_compacts_uniform_miconic_goal_set_when_opted_in(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 2
-	assert "+!g_miconic_test_1 : miconic_test_1 & destin(X, A) & not served(X) <-" in text
-	assert "\t!served(X);" in text
-	assert "!served(p1)" not in text
+	assert plan_count == 3
+	assert "+!g_miconic_test_1 : miconic_test_1 <-" in text
+	assert "\t!g_miconic_test_1_trans_1." in text
+	assert "+!g_miconic_test_1_trans_1 : miconic_test_1 & served(p1) <-" in text
+	assert "+!g_miconic_test_1_trans_1 : miconic_test_1 & not served(p1) <-" in text
+	assert "\t!served(p1);" in text
 
 
-def test_full_test_wrapper_keeps_mixed_destination_goals_linear(tmp_path: Path) -> None:
+def test_full_test_wrapper_keeps_mixed_destination_goals_in_one_transition(tmp_path: Path) -> None:
 	problem_file = tmp_path / "p01.pddl"
 	problem_file.write_text(
 		"""
@@ -256,10 +259,66 @@ def test_full_test_wrapper_keeps_mixed_destination_goals_linear(tmp_path: Path) 
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 1
+	assert plan_count == 4
 	assert "+!g_ferry_test_1 : ferry_test_1 <-" in text
+	assert "\t!g_ferry_test_1_trans_1." in text
+	assert "+!g_ferry_test_1_trans_1 : ferry_test_1 & at(car1, loc2) & at(car2, loc3) <-" in text
 	assert "\t!at(car1, loc2);" in text
-	assert "\t!at(car2, loc3)." in text
+	assert "\t!at(car2, loc3);" in text
+
+
+def test_full_test_wrapper_orders_delete_threatening_goals_first(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain blocks-fragment)
+		 (:requirements :strips)
+		 (:predicates
+		  (clear ?x)
+		  (holding ?x)
+		  (handempty)
+		  (on ?x ?y)
+		 )
+		 (:action stack
+		  :parameters (?x ?y)
+		  :precondition (and (holding ?x) (clear ?y))
+		  :effect (and (on ?x ?y) (clear ?x) (handempty) (not (holding ?x)) (not (clear ?y)))
+		 )
+		 (:action unstack
+		  :parameters (?x ?y)
+		  :precondition (and (on ?x ?y) (clear ?x) (handempty))
+		  :effect (and (holding ?x) (clear ?y) (not (on ?x ?y)) (not (clear ?x)) (not (handempty)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain blocks-fragment)
+		 (:objects top middle base)
+		 (:init (handempty) (clear top) (on top middle) (clear base))
+		 (:goal (and (on top middle) (on middle base)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	lines, plan_count = full_test_wrapper_lines(
+		domain="blocks-fragment",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+	)
+	text = "\n".join(lines)
+
+	assert plan_count == 4
+	assert text.index("not on(middle, base)") < text.index("not on(top, middle)")
+	assert "+!g_blocks_fragment_test_1_trans_1 : blocks_fragment_test_1 & on(middle, base) & on(top, middle) <-" in text
 
 
 def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None:
@@ -283,11 +342,12 @@ def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 1
+	assert plan_count == 3
 	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in text
-	assert text.count("!pogo_sticks_to_make(0)") == 4
+	assert "\t!g_numeric_minecraft_test_1_trans_1." in text
+	assert text.count("!pogo_sticks_to_make(0)") == 1
+	assert "pogo_sticks_to_make(0) <-" in text
 	assert "\t!pogo_sticks_to_make(0);" in text
-	assert "\t!pogo_sticks_to_make(0)." in text
 
 
 def test_full_test_wrapper_accepts_mixed_predicate_and_numeric_equality_goal(
@@ -313,9 +373,10 @@ def test_full_test_wrapper_accepts_mixed_predicate_and_numeric_equality_goal(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 1
+	assert plan_count == 4
+	assert "+!g_numeric_transport_test_1 : numeric_transport_test_1 <-" in text
 	assert "\t!in(package1, truck1);" in text
-	assert "\t!capacity(truck1, 1)." in text
+	assert "\t!capacity(truck1, 1);" in text
 
 
 def test_full_test_wrapper_rejects_unsupported_numeric_goal_comparator(
@@ -561,18 +622,20 @@ def test_validate_one_task_embeds_runtime_asl_without_extra_plan_library_file(
 						"timed_out": False,
 						"exit_code": 0,
 						"action_count": 1,
-						"plan_verifier": {
-							"success": True,
-							"attempted": True,
-							"available": True,
-						},
-						"artifacts": {
-							"plan_trace": "trace.plan",
-							"plan_verifier_stdout": "val.stdout",
-							"plan_verifier_stderr": "val.stderr",
-						},
-						"error": None,
-					}
+							"plan_verifier": {
+								"success": True,
+								"attempted": True,
+								"available": True,
+							},
+							"artifacts": {
+								"plan_trace": "trace.plan",
+								"committed_plan_trace": "committed.plan",
+								"plan_verifier_stdout": "val.stdout",
+								"plan_verifier_stderr": "val.stderr",
+							},
+							"output_summary": {"has_execute_success": True},
+							"error": None,
+						}
 
 			return Result()
 
@@ -607,7 +670,8 @@ def test_validate_one_task_embeds_runtime_asl_without_extra_plan_library_file(
 	assert record["runtime_plan_library_embedded_in_agentspeak"] is True
 	assert not (output_dir / "plan_library.asl").exists()
 	assert validate_kwargs["plan_library_asl"] == plan_library_asl
-	assert "!at(ball1, roomb)." in validate_kwargs["plan_library_asl_text"]
+	assert "!g_gripper_test_1_trans_1." in validate_kwargs["plan_library_asl_text"]
+	assert "!at(ball1, roomb);" in validate_kwargs["plan_library_asl_text"]
 
 
 def test_run_jason_tasks_appends_progress_records_without_rewriting_summary(

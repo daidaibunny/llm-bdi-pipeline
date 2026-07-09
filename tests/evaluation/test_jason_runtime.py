@@ -524,7 +524,11 @@ def test_jason_runner_executes_tiny_pddl_environment(tmp_path: Path) -> None:
 	assert result.plan_verifier["attempted"] is False
 	assert Path(result.artifacts["agentspeak"]).exists()
 	assert Path(result.artifacts["plan_trace"]).exists()
+	assert Path(result.artifacts["committed_plan_trace"]).exists()
 	assert Path(result.artifacts["plan_trace"]).read_text(encoding="utf-8") == "(finish)\n"
+	assert Path(result.artifacts["committed_plan_trace"]).read_text(encoding="utf-8") == (
+		"(finish)\n"
+	)
 	assert "Deprecated duplicate runtime seed file omitted" in Path(
 		result.artifacts["initial_facts"],
 	).read_text(encoding="utf-8")
@@ -533,6 +537,68 @@ def test_jason_runner_executes_tiny_pddl_environment(tmp_path: Path) -> None:
 	assert 'world.add("ready")' not in Path(result.artifacts["environment_java"]).read_text(
 		encoding="utf-8",
 	)
+
+
+@pytest.mark.skipif(
+	not (shutil.which("java") and shutil.which("javac") and shutil.which("mvn")),
+	reason="real Jason validation requires java, javac, and Maven",
+)
+def test_jason_runner_keeps_failed_prefix_trace_uncommitted(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_file = tmp_path / "plan_library.asl"
+	output_dir = tmp_path / "jason"
+	domain_file.write_text(
+		"""
+(define (domain tiny)
+  (:requirements :strips)
+  (:predicates (ready) (done))
+  (:action finish
+    :parameters ()
+    :precondition (ready)
+    :effect (and (done) (not (ready))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem tiny-problem)
+  (:domain tiny)
+  (:init (ready))
+  (:goal (and (done)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library_file.write_text(
+		"""
+/* Generated AgentSpeak(L) Plan Library */
+/* Domain: tiny */
+
++!g_query : ready <-
+	finish;
+	!missing_goal.
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	result = JasonPlanLibraryRunner(timeout_seconds=20).validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=library_file,
+		goal_name="g_query",
+		output_dir=output_dir,
+	)
+
+	assert result.success is False, result.to_dict()
+	assert result.output_summary["has_execute_success"] is False
+	assert Path(result.artifacts["plan_trace"]).read_text(encoding="utf-8") == "(finish)\n"
+	assert not Path(result.artifacts["committed_plan_trace"]).exists()
+	assert result.plan_verifier["attempted"] is False
 
 
 @pytest.mark.skipif(

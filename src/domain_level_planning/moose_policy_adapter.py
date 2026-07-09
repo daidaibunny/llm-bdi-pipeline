@@ -497,16 +497,16 @@ def _compile_validated_moose_macro_evidence_plans(
 			invalid_macro_count=invalid_count,
 			deduplicated_macro_count=len(deduplicated),
 			merged_plan_count=len(deduplicated),
-			validation_basis=(
-				"MOOSE readable singleton goal rule supplies state context, goal, and macro action sequence",
-				"PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
-				"MOOSE numeric equality goal evidence may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
-				"PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
-				"Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
-				"PDDL constants are preserved as constants and negative precondition conflicts compile to explicit inequality guards when representable in the supported ASL subset",
+				validation_basis=(
+					"MOOSE readable singleton goal rule supplies state context, goal, and macro action sequence",
+					"PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
+					"MOOSE numeric equality goal evidence may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
+					"PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
+					"Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
+					"PDDL constants are preserved as constants; negative precondition conflicts and positive preconditions that may alias prior deletes compile to explicit inequality guards when representable in the supported ASL subset",
+				),
 			),
-		),
-	)
+		)
 
 
 def _post_moose_reducer_library_quality(
@@ -1442,18 +1442,17 @@ def _moose_macro_rule_symbolic_execution_guards(
 		for precondition in action.preconditions:
 			mapped = _map_schema_literal(precondition, binding)
 			current = state.get(_atom_key(mapped))
-			if precondition.is_positive and current is not True:
-				return None
-			if not precondition.is_positive and current is True:
-				return None
-			if not precondition.is_positive:
-				for positive_atom in _positive_state_atoms_that_can_conflict(
+			if precondition.is_positive:
+				if current is not True:
+					return None
+				for deleted_atom in _state_atoms_that_can_conflict(
 					state=state,
-					negative_atom=mapped,
+					atom=mapped,
+					expected_value=False,
 				):
 					guard = _non_unification_guard(
-						positive_atom=positive_atom,
-						negative_atom=mapped,
+						positive_atom=mapped,
+						negative_atom=deleted_atom,
 						variable_map=variable_map,
 						declared_constants=declared_constants,
 					)
@@ -1461,6 +1460,24 @@ def _moose_macro_rule_symbolic_execution_guards(
 						return None
 					if guard:
 						guards.append(guard)
+				continue
+			if current is True:
+				return None
+			for positive_atom in _state_atoms_that_can_conflict(
+				state=state,
+				atom=mapped,
+				expected_value=True,
+			):
+				guard = _non_unification_guard(
+					positive_atom=positive_atom,
+					negative_atom=mapped,
+					variable_map=variable_map,
+					declared_constants=declared_constants,
+				)
+				if guard is None:
+					return None
+				if guard:
+					guards.append(guard)
 		for delete_effect in action.delete_effects:
 			state[_atom_key(_map_schema_literal(delete_effect, binding))] = False
 		for add_effect in action.add_effects:
@@ -1517,18 +1534,19 @@ def _moose_rule_object_terms(rule: MooseReadableRule) -> tuple[str, ...]:
 	return tuple(dict.fromkeys(str(term).strip() for term in terms if str(term).strip()))
 
 
-def _positive_state_atoms_that_can_conflict(
+def _state_atoms_that_can_conflict(
 	*,
 	state: Mapping[tuple[str, tuple[str, ...]], bool],
-	negative_atom: MooseAtom,
+	atom: MooseAtom,
+	expected_value: bool,
 ) -> tuple[MooseAtom, ...]:
 	candidates: list[MooseAtom] = []
 	for (predicate, arguments), value in state.items():
-		if value is not True:
+		if value is not expected_value:
 			continue
-		if predicate != negative_atom.predicate:
+		if predicate != atom.predicate:
 			continue
-		if len(arguments) != len(negative_atom.arguments):
+		if len(arguments) != len(atom.arguments):
 			continue
 		candidates.append(MooseAtom(predicate=predicate, arguments=arguments))
 	return tuple(candidates)
@@ -1557,8 +1575,6 @@ def _non_unification_guard(
 			return None
 		differences.append((left, right))
 	if not differences:
-		return None
-	if len(differences) != 1:
 		return None
 	left, right = differences[0]
 	return _inequality_guard_text(left, right)

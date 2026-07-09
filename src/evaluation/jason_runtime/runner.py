@@ -377,6 +377,7 @@ class JasonPlanLibraryRunner:
 		stdout_path = output_path / "jason_stdout.txt"
 		stderr_path = output_path / "jason_stderr.txt"
 		plan_trace_path = output_path / "jason_plan.plan"
+		committed_plan_trace_path = output_path / "committed_plan.plan"
 		plan_verifier_stdout_path = output_path / "plan_verifier_stdout.txt"
 		plan_verifier_stderr_path = output_path / "plan_verifier_stderr.txt"
 		result_path = output_path / "jason_validation.json"
@@ -469,6 +470,7 @@ class JasonPlanLibraryRunner:
 						static_beliefs_path=static_beliefs_path,
 						pddl_symbol_map_path=pddl_symbol_map_path,
 						plan_trace_path=plan_trace_path,
+						committed_plan_trace_path=committed_plan_trace_path,
 						plan_verifier_stdout_path=plan_verifier_stdout_path,
 						plan_verifier_stderr_path=plan_verifier_stderr_path,
 						stdout_path=stdout_path,
@@ -569,13 +571,14 @@ class JasonPlanLibraryRunner:
 		elif not output_summary.has_execute_success:
 			error_message = "Jason process did not report execute success."
 		elif jason_success:
+			shutil.copyfile(plan_trace_path, committed_plan_trace_path)
 			verifier_start = time.perf_counter()
 			plan_verifier_result = _run_plan_verifier(
 				explicit_command=self.plan_verifier_command,
 				require_verifier=self.require_plan_verifier,
 				domain_file=domain_path,
 				problem_file=problem_path,
-				plan_file=plan_trace_path,
+				plan_file=committed_plan_trace_path,
 				output_dir=output_path,
 				stdout_path=plan_verifier_stdout_path,
 				stderr_path=plan_verifier_stderr_path,
@@ -621,6 +624,7 @@ class JasonPlanLibraryRunner:
 				static_beliefs_path=static_beliefs_path,
 				pddl_symbol_map_path=pddl_symbol_map_path,
 				plan_trace_path=plan_trace_path,
+				committed_plan_trace_path=committed_plan_trace_path,
 				plan_verifier_stdout_path=plan_verifier_stdout_path,
 				plan_verifier_stderr_path=plan_verifier_stderr_path,
 				stdout_path=stdout_path,
@@ -2730,6 +2734,7 @@ def _artifact_paths(
 	static_beliefs_path: Path,
 	pddl_symbol_map_path: Path,
 	plan_trace_path: Path,
+	committed_plan_trace_path: Path,
 	plan_verifier_stdout_path: Path,
 	plan_verifier_stderr_path: Path,
 	stdout_path: Path,
@@ -2746,6 +2751,7 @@ def _artifact_paths(
 		"static_beliefs": str(static_beliefs_path),
 		"pddl_symbol_map": str(pddl_symbol_map_path),
 		"plan_trace": str(plan_trace_path),
+		"committed_plan_trace": str(committed_plan_trace_path),
 		"plan_verifier_stdout": str(plan_verifier_stdout_path),
 		"plan_verifier_stderr": str(plan_verifier_stderr_path),
 		"stdout": str(stdout_path),
