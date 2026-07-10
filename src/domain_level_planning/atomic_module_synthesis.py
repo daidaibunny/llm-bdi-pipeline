@@ -2667,14 +2667,19 @@ def _select_branches_with_clingo(
 			},
 			evidence_obligation_count=len(tuple(evidence_obligations or ())),
 			coverage_basis=(
-				"alpha-equivalent trigger, context, and body",
-				"or identical primitive/subgoal body under a context subset implication",
+				"evidence obligations: alpha-equivalent trigger, context, and body",
 				(
-					"or a weaker-context primitive producer whose schema-derived positive "
-					"postconditions refine the obligation without additional deletes and "
-					"with an identical numeric transformation and independently certified "
-					"resource release"
+					"evidence obligations: identical primitive/subgoal body under a "
+					"context subset implication"
 				),
+				(
+					"schema producer obligations only: a weaker-context primitive producer "
+					"whose schema-derived positive "
+					"postconditions refine the obligation without additional deletes and "
+					"with an identical numeric transformation and a causally refining "
+					"resource-release contract"
+				),
+				"arbitrary MOOSE macro-to-recursive-module semantic replacement is not certified",
 				"recursive body-prefix similarity is not accepted as semantic coverage",
 			),
 			ranking_incompatibility_count=len(
@@ -2871,10 +2876,19 @@ def _candidate_achieves_schema_obligation(
 	)
 	if not candidate_contract.complete or not obligation_contract.complete:
 		return False
+	target_atom = (candidate.trigger.symbol, tuple(candidate.trigger.arguments))
+	if target_atom not in candidate_contract.must_add:
+		return False
+	if target_atom not in obligation_contract.must_add:
+		return False
 	return (
 		obligation_contract.must_add <= candidate_contract.must_add
 		and candidate_contract.may_delete <= obligation_contract.may_delete
 		and candidate_contract.numeric_delta == obligation_contract.numeric_delta
+		and _resource_release_contract_refines(
+			candidate_contract.resource_release,
+			obligation_contract.resource_release,
+		)
 	)
 
 
@@ -2943,16 +2957,13 @@ def _branch_effect_contract(
 			if effect.operator == "decrease":
 				amount = -amount
 			numeric_delta[fluent] = numeric_delta.get(fluent, 0) + amount
-	target_atom = (
-		plan.trigger.symbol,
-		tuple(plan.trigger.arguments),
-	)
 	resource_release = _resource_release_contract(plan)
 	resource_certificates = tuple(
 		_first_binding_certificate(plan).get("resource_release_certificates") or ()
 	)
 	if resource_certificates and not resource_release:
 		return _BranchEffectContract(frozenset(), frozenset(), (), (), False)
+	target_atom = (plan.trigger.symbol, tuple(plan.trigger.arguments))
 	return _BranchEffectContract(
 		must_add=frozenset((target_atom,)) if target_atom in must_add else frozenset(),
 		may_delete=frozenset(may_delete),
@@ -2985,7 +2996,12 @@ def _certified_resource_release_alternative(
 		return False
 	if not set(candidate.context) <= set(obligation.context):
 		return False
-	return _resource_release_contract(candidate) == _resource_release_contract(obligation) != ()
+	candidate_contract = _resource_release_contract(candidate)
+	obligation_contract = _resource_release_contract(obligation)
+	return bool(obligation_contract) and _resource_release_contract_refines(
+		candidate_contract,
+		obligation_contract,
+	)
 
 
 def _resource_release_contract(plan: AgentSpeakPlan) -> tuple[object, ...]:
@@ -2993,7 +3009,16 @@ def _resource_release_contract(plan: AgentSpeakPlan) -> tuple[object, ...]:
 	resource_certificates = tuple(certificate.get("resource_release_certificates") or ())
 	if not resource_certificates:
 		return ()
-	canonical_argument = _canonical_plan_argument_replacer(plan)
+	preferred_arguments = tuple(
+		str(argument)
+		for resource in resource_certificates
+		for field in ("capacity_key_arguments", "occupancy_arguments")
+		for argument in tuple(resource.get(field) or ())
+	)
+	canonical_argument = _canonical_plan_argument_replacer(
+		plan,
+		preferred_arguments=preferred_arguments,
+	)
 
 	def canonical_text(value: object) -> str:
 		return _replace_context_variables(str(value or ""), canonical_argument)
@@ -3043,7 +3068,35 @@ def _resource_release_contract(plan: AgentSpeakPlan) -> tuple[object, ...]:
 	return tuple(contracts)
 
 
-def _canonical_plan_argument_replacer(plan: AgentSpeakPlan) -> Callable[[str], str]:
+def _resource_release_contract_refines(
+	candidate: tuple[object, ...],
+	obligation: tuple[object, ...],
+) -> bool:
+	"""Check causal discharge refinement while retaining full contract identity."""
+
+	if not candidate or not obligation or len(candidate) != len(obligation):
+		return candidate == obligation
+	for candidate_record, obligation_record in zip(candidate, obligation):
+		if not isinstance(candidate_record, tuple) or not isinstance(obligation_record, tuple):
+			return False
+		if len(candidate_record) != 11 or len(obligation_record) != 11:
+			return False
+		if candidate_record[0:2] != obligation_record[0:2]:
+			return False
+		if candidate_record[3:9] != obligation_record[3:9]:
+			return False
+		if not set(candidate_record[9]) <= set(obligation_record[9]):
+			return False
+		if not set(candidate_record[10]) <= set(obligation_record[10]):
+			return False
+	return True
+
+
+def _canonical_plan_argument_replacer(
+	plan: AgentSpeakPlan,
+	*,
+	preferred_arguments: Sequence[str] = (),
+) -> Callable[[str], str]:
 	"""Return one alpha-renaming shared by a plan body and its certificates."""
 
 	variable_map = {
@@ -3062,6 +3115,8 @@ def _canonical_plan_argument_replacer(plan: AgentSpeakPlan) -> Callable[[str], s
 			next_local_index += 1
 		return variable_map[argument]
 
+	for argument in tuple(preferred_arguments or ()):
+		replace(argument)
 	for context in sorted(tuple(plan.context or ())):
 		_replace_context_variables(context, replace)
 	for step in tuple(plan.body or ()):
@@ -3148,6 +3203,8 @@ def _candidate_branch_covers_evidence(
 	if candidate.trigger.symbol != evidence.trigger.symbol:
 		return False
 	if len(candidate.trigger.arguments) != len(evidence.trigger.arguments):
+		return False
+	if _resource_release_contract(candidate) != _resource_release_contract(evidence):
 		return False
 	if _canonical_branch_signature(candidate) == _canonical_branch_signature(evidence):
 		return True

@@ -102,6 +102,15 @@ executable AgentSpeak module branches rather than abstract sketch rules.
 The resulting optimum is relative to the generated certified candidate space;
 we do not claim optimality over all AgentSpeak programs or completeness for
 arbitrary PDDL domains.
+Evidence obligations are covered only by alpha-equivalent branches or identical
+bodies under weaker conjunctive contexts. For schema-producer obligations, an
+effect-refinement alternative must preserve the target \emph{MustAdd} contract,
+introduce no additional \emph{MayDelete} effects, and have identical numeric and
+causally compatible resource-release contracts. A different release action is
+admissible only when debt, restored fluents, capacity/occupancy roles, target
+preservation, and alias guards refine the obligation. The current compiler does not prove arbitrary
+long MOOSE macros equivalent to shorter recursive modules; such semantic macro
+compression is outside the present claim.
 
 Every selected recursive branch requires a compile-time well-founded feature.
 The fixed, domain-independent feature grammar currently contains (i) the
@@ -117,6 +126,9 @@ The feature is metadata and is not emitted as an AgentSpeak belief. This design
 is related to feature-defined general policies \cite{Frances2021LearningGeneralPolicies},
 while restricting the claim to features whose changes can be certified from
 the PDDL schemas.
+The grammar contains only the global relation count and the query-anchored
+acyclic relation-cone count; it does not synthesize arbitrary lexicographic or
+multi-relation rankings.
 
 A resource cleanup requires a keyed capacity invariant. The producer must
 consume a key-only free mode and create a key-plus-occupant debt mode; the
@@ -124,6 +136,8 @@ cleanup must perform the inverse transition while preserving the atomic target.
 Structurally symmetric modes whose direction cannot be inferred are rejected.
 Thus resource roles are derived from paired causal effects rather than fluent
 names.
+Cleanup synthesis is limited to one certified primitive release action.
+Multi-step parking or resource-release search is rejected rather than inferred.
 
 \subsection{Temporal Goal Append}
 
@@ -154,6 +168,9 @@ alpha-normalized, PDDL type constraints restrict unification, and
 schema-derived single-valued invariants reject inconsistent conjunctive goals.
 This covers parameter-changing recursion without a benchmark-specific depth
 bound and preserves shared-variable identity across guard literals.
+The temporal compiler summarizes every selected branch of each called module;
+it does not choose a query-local alternative module branch to break a threat
+cycle. An uncertified cycle is rejected.
 An edge $G_j \rightarrow G_i$
 means that achieving $G_j$ may delete $G_i$, so $G_j$ must be repaired first.
 An acyclic graph is topologically serialized. One cyclic structural case is

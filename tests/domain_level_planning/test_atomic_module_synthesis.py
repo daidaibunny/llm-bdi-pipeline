@@ -8,6 +8,8 @@ import pytest
 from domain_level_planning.atomic_module_synthesis import (
 	PDDLLiteralSchema,
 	_ParsedAction,
+	_candidate_achieves_schema_obligation,
+	_candidate_branch_covers_evidence,
 	_resource_release_contract,
 	_order_contexts_for_matching,
 	_select_branches_with_clingo,
@@ -267,6 +269,75 @@ def test_resource_release_contract_preserves_release_action_and_argument_roles()
 
 	assert _resource_release_contract(release) != _resource_release_contract(park)
 	assert _resource_release_contract(release) != _resource_release_contract(swapped_roles)
+
+
+def test_effect_refinement_rejects_different_resource_release_contracts() -> None:
+	def producer_plan(
+		*,
+		name: str,
+		release_action: str,
+		context: tuple[str, ...],
+		occupancy_arguments: tuple[str, ...] = ("X",),
+	):
+		return AgentSpeakPlan(
+			plan_name=name,
+			trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+			context=context,
+			body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
+			binding_certificate=(
+				{
+					"rule_kind": "producer_action_sequence",
+					"resource_release_certificates": [
+						{
+							"certificate_kind": (
+								"causal_resource_capacity_invariant_discharge"
+							),
+							"producer_action": "acquire",
+							"release_action": release_action,
+							"resource_debt_literal": "occupied(R, X)",
+							"restored_literals": ["free(R)"],
+							"resource_invariant_kind": (
+								"keyed_single_capacity_occupancy_transition"
+							),
+							"capacity_key_arguments": ["R"],
+							"occupancy_arguments": list(occupancy_arguments),
+							"target_preserved": True,
+							"target_preservation_guards": [],
+							"sequence_alias_guards": [],
+						},
+					],
+				},
+			),
+		)
+
+	candidate = producer_plan(
+		name="candidate_release",
+		release_action="release",
+		context=("ready(X)",),
+	)
+	obligation = producer_plan(
+		name="obligation_park",
+		release_action="park",
+		context=("ready(X)", "safe(X)"),
+		occupancy_arguments=("R",),
+	)
+	actions_by_name = {
+		"finish": _ParsedAction(
+			name="finish",
+			parameters=("?x",),
+			parameter_types={"?x": "object"},
+			preconditions=(PDDLLiteralSchema("ready", ("?x",)),),
+			add_effects=(PDDLLiteralSchema("done", ("?x",)),),
+			delete_effects=(),
+		),
+	}
+
+	assert not _candidate_achieves_schema_obligation(
+		candidate,
+		obligation,
+		actions_by_name=actions_by_name,
+	)
+	assert not _candidate_branch_covers_evidence(candidate, obligation)
 
 
 def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted() -> None:

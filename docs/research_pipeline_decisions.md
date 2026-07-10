@@ -350,15 +350,21 @@ whose body calls internal subgoals, for example `!lifting(Z,X); !on(X,Y)`.
 Each MOOSE macro is an evidence obligation in the same Clingo program that
 selects direct producers, preparation branches, resource-release branches, and
 validated bounded-integer numeric branches. Numeric-only evidence therefore no
-longer bypasses Clingo. Coverage is accepted for alpha-equivalent branches,
-identical bodies under a weaker conjunctive context, or a weaker-context
-primitive producer whose PDDL-derived atomic target effect is preserved, whose
-net delete set is no larger, and whose numeric transformation is identical.
-The compiler compares complete parameterized resource-release certificates;
-predicate-name equality alone is not sufficient. Body-prefix similarity is not
-treated as semantic equivalence. Clingo also enforces internal-module closure
-and rejects simultaneously selected branches that invalidate a relational
-ranking certificate.
+longer bypasses Clingo. An evidence obligation is covered only by an
+alpha-equivalent branch or an identical body under a weaker conjunctive context.
+Separately, one schema-producer obligation may be covered by a weaker-context
+primitive producer only when its composed `MustAdd` set contains the required
+target, its `MayDelete` set is no larger, and its `NumericDelta` and complete
+parameterized `ResourceRelease` contracts are causally compatible. Contract
+identity records both action names, but refinement may use a different release
+action only when debt, restored literals, capacity/occupancy roles, target
+preservation, and alias guards refine the obligation and the composed Boolean
+and numeric effects introduce no new harm. Predicate-name
+equality and body-prefix similarity are not semantic evidence coverage. In
+particular, the current compiler does not yet prove that a short recursive
+module is equivalent to an arbitrary long MOOSE macro. Clingo also enforces
+internal-module closure and rejects simultaneously selected branches that
+invalidate a relational ranking certificate.
 
 ```asl
 /* broad repair branch tried too early */
