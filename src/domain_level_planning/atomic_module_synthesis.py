@@ -152,6 +152,17 @@ class _ClingoBranchSelectorReport:
 	selected_recursive_capability_count: int
 
 
+@dataclass(frozen=True)
+class _BranchEffectContract:
+	"""Schema-derived final-state contract for one primitive-action branch."""
+
+	must_add: frozenset[tuple[str, tuple[str, ...]]]
+	may_delete: frozenset[tuple[str, tuple[str, ...]]]
+	numeric_delta: tuple[tuple[str, tuple[str, ...], int], ...]
+	resource_release: tuple[object, ...]
+	complete: bool
+
+
 def synthesize_atomic_minimal_literal_module_library(
 	*,
 	domain_file: str | Path,
@@ -173,13 +184,21 @@ def synthesize_atomic_minimal_literal_module_library(
 			if predicate and predicate in declared_predicates
 		),
 	)
-	if not seeds:
-		raise ValueError("No declared seed predicates were provided for atomic module synthesis.")
+	evidence_candidates = tuple(validated_evidence_candidates or ())
+	if not seeds and not evidence_candidates:
+		raise ValueError(
+			"No declared seed predicates or validated evidence candidates were "
+			"provided for atomic module synthesis.",
+		)
 	parsed_actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
-	module_predicates = _module_predicate_closure(
-		seeds=seeds,
-		actions=parsed_actions,
-		declared_predicates=declared_predicates,
+	module_predicates = (
+		_module_predicate_closure(
+			seeds=seeds,
+			actions=parsed_actions,
+			declared_predicates=declared_predicates,
+		)
+		if seeds
+		else ()
 	)
 	schema_candidates = _candidate_module_plans(
 		domain=domain,
@@ -190,7 +209,6 @@ def synthesize_atomic_minimal_literal_module_library(
 		source_name=source_name,
 		policy_file=policy_file,
 	)
-	evidence_candidates = tuple(validated_evidence_candidates or ())
 	raw_plans = tuple(
 		_deduplicate_plans((*schema_candidates, *evidence_candidates)),
 	)
@@ -2448,6 +2466,7 @@ def _select_branches_with_clingo(
 		raw_plans=raw_plans,
 		schema_candidates=schema_candidates,
 		evidence_obligations=evidence_obligations,
+		actions=actions,
 	)
 	recursive_capability_groups = _recursive_capability_obligation_groups(
 		raw_plans=raw_plans,
@@ -2538,6 +2557,12 @@ def _select_branches_with_clingo(
 			coverage_basis=(
 				"alpha-equivalent trigger, context, and body",
 				"or identical primitive/subgoal body under a context subset implication",
+				(
+					"or a weaker-context primitive producer whose schema-derived positive "
+					"postconditions refine the obligation without additional deletes and "
+					"with an identical numeric transformation and independently certified "
+					"resource release"
+				),
 				"recursive body-prefix similarity is not accepted as semantic coverage",
 			),
 			ranking_incompatibility_count=len(
@@ -2649,10 +2674,12 @@ def _certified_branch_obligation_groups(
 	raw_plans: Sequence[AgentSpeakPlan],
 	schema_candidates: Sequence[AgentSpeakPlan],
 	evidence_obligations: Sequence[AgentSpeakPlan],
+	actions: Sequence[_ParsedAction],
 ) -> tuple[tuple[int, ...], ...]:
 	"""Build structural schema obligations plus semantic evidence obligations."""
 
 	raw_tuple = tuple(raw_plans or ())
+	actions_by_name = {action.name: action for action in tuple(actions or ())}
 	groups: list[tuple[int, ...]] = []
 	for obligation in tuple(schema_candidates or ()):
 		if _recursive_progress_certificate_from_plan(obligation) is not None:
@@ -2661,7 +2688,11 @@ def _certified_branch_obligation_groups(
 			index
 			for index, candidate in enumerate(raw_tuple)
 			if _candidate_branch_covers_evidence(candidate, obligation)
-			or _candidate_achieves_schema_obligation(candidate, obligation)
+			or _candidate_achieves_schema_obligation(
+				candidate,
+				obligation,
+				actions_by_name=actions_by_name,
+			)
 			or _certified_resource_release_alternative(candidate, obligation)
 		)
 		if candidate_indexes:
@@ -2703,8 +2734,10 @@ def _recursive_capability_obligation_groups(
 def _candidate_achieves_schema_obligation(
 	candidate: AgentSpeakPlan,
 	obligation: AgentSpeakPlan,
+	*,
+	actions_by_name: Mapping[str, _ParsedAction],
 ) -> bool:
-	"""Allow a weaker-context certified producer to satisfy an internal target contract."""
+	"""Check positive-achievement refinement under complete PDDL effect contracts."""
 
 	if _plan_rule_kind(candidate) != "producer_action_sequence":
 		return False
@@ -2714,7 +2747,113 @@ def _candidate_achieves_schema_obligation(
 		return False
 	if candidate.trigger.arguments != obligation.trigger.arguments:
 		return False
-	return set(candidate.context) <= set(obligation.context)
+	if not set(candidate.context) <= set(obligation.context):
+		return False
+	candidate_contract = _branch_effect_contract(
+		candidate,
+		actions_by_name=actions_by_name,
+	)
+	obligation_contract = _branch_effect_contract(
+		obligation,
+		actions_by_name=actions_by_name,
+	)
+	if not candidate_contract.complete or not obligation_contract.complete:
+		return False
+	return (
+		obligation_contract.must_add <= candidate_contract.must_add
+		and candidate_contract.may_delete <= obligation_contract.may_delete
+		and candidate_contract.numeric_delta == obligation_contract.numeric_delta
+	)
+
+
+def _branch_effect_contract(
+	plan: AgentSpeakPlan,
+	*,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> _BranchEffectContract:
+	"""Compose net Boolean and numeric effects for an action-only plan body."""
+
+	must_add: set[tuple[str, tuple[str, ...]]] = set()
+	may_delete: set[tuple[str, tuple[str, ...]]] = set()
+	numeric_delta: dict[tuple[str, tuple[str, ...]], int] = {}
+	for step in tuple(plan.body or ()):
+		if step.kind != "action":
+			return _BranchEffectContract(
+				frozenset(),
+				frozenset(),
+				(),
+				(),
+				False,
+			)
+		action = actions_by_name.get(step.symbol)
+		if action is None or len(action.parameters) != len(step.arguments):
+			return _BranchEffectContract(
+				frozenset(),
+				frozenset(),
+				(),
+				(),
+				False,
+			)
+		binding = {
+			parameter: argument
+			for parameter, argument in zip(action.parameters, step.arguments)
+		}
+		for effect in action.delete_effects:
+			atom = (
+				effect.predicate,
+				tuple(binding.get(argument, argument) for argument in effect.arguments),
+			)
+			must_add.discard(atom)
+			may_delete.add(atom)
+		for effect in action.add_effects:
+			atom = (
+				effect.predicate,
+				tuple(binding.get(argument, argument) for argument in effect.arguments),
+			)
+			may_delete.discard(atom)
+			must_add.add(atom)
+		for effect in action.numeric_effects:
+			if effect.operator not in {"increase", "decrease"}:
+				return _BranchEffectContract(frozenset(), frozenset(), (), (), False)
+			if effect.amount.kind != "constant" or not re.fullmatch(
+				r"[+-]?\d+",
+				str(effect.amount.value),
+			):
+				return _BranchEffectContract(frozenset(), frozenset(), (), (), False)
+			fluent = (
+				str(effect.fluent.function).strip().lower(),
+				tuple(
+					binding.get(argument, argument)
+					for argument in tuple(effect.fluent.args or ())
+				),
+			)
+			amount = int(str(effect.amount.value))
+			if effect.operator == "decrease":
+				amount = -amount
+			numeric_delta[fluent] = numeric_delta.get(fluent, 0) + amount
+	target_atom = (
+		plan.trigger.symbol,
+		tuple(plan.trigger.arguments),
+	)
+	resource_release = _resource_release_contract(plan)
+	resource_certificates = tuple(
+		_first_binding_certificate(plan).get("resource_release_certificates") or ()
+	)
+	if resource_certificates and not resource_release:
+		return _BranchEffectContract(frozenset(), frozenset(), (), (), False)
+	return _BranchEffectContract(
+		must_add=frozenset((target_atom,)) if target_atom in must_add else frozenset(),
+		may_delete=frozenset(may_delete),
+		numeric_delta=tuple(
+			sorted(
+				(function, arguments, delta)
+				for (function, arguments), delta in numeric_delta.items()
+				if delta != 0
+			),
+		),
+		resource_release=resource_release,
+		complete=True,
+	)
 
 
 def _first_binding_certificate(plan: AgentSpeakPlan) -> Mapping[str, object]:
@@ -2742,6 +2881,11 @@ def _resource_release_contract(plan: AgentSpeakPlan) -> tuple[object, ...]:
 	resource_certificates = tuple(certificate.get("resource_release_certificates") or ())
 	if not resource_certificates:
 		return ()
+	canonical_argument = _canonical_plan_argument_replacer(plan)
+
+	def canonical_text(value: object) -> str:
+		return _replace_context_variables(str(value or ""), canonical_argument)
+
 	contracts = []
 	for resource in resource_certificates:
 		if resource.get("certificate_kind") != (
@@ -2750,17 +2894,68 @@ def _resource_release_contract(plan: AgentSpeakPlan) -> tuple[object, ...]:
 			return ()
 		contracts.append(
 			(
+				str(resource.get("certificate_kind") or ""),
 				str(resource.get("producer_action") or ""),
-				_call_predicate(str(resource.get("resource_debt_literal") or "")),
+				str(resource.get("release_action") or ""),
+				canonical_text(resource.get("resource_debt_literal")),
 				tuple(
 					sorted(
-						_call_predicate(str(item))
+						canonical_text(item)
 						for item in tuple(resource.get("restored_literals") or ())
+					),
+				),
+				str(resource.get("resource_invariant_kind") or ""),
+				tuple(
+					canonical_argument(str(item))
+					for item in tuple(resource.get("capacity_key_arguments") or ())
+				),
+				tuple(
+					canonical_argument(str(item))
+					for item in tuple(resource.get("occupancy_arguments") or ())
+				),
+				bool(resource.get("target_preserved")),
+				tuple(
+					sorted(
+						canonical_text(item)
+						for item in tuple(resource.get("target_preservation_guards") or ())
+					),
+				),
+				tuple(
+					sorted(
+						canonical_text(item)
+						for item in tuple(resource.get("sequence_alias_guards") or ())
 					),
 				),
 			)
 		)
 	return tuple(contracts)
+
+
+def _canonical_plan_argument_replacer(plan: AgentSpeakPlan) -> Callable[[str], str]:
+	"""Return one alpha-renaming shared by a plan body and its certificates."""
+
+	variable_map = {
+		argument: f"H{index}"
+		for index, argument in enumerate(tuple(plan.trigger.arguments or ()))
+		if _is_agentspeak_variable(argument)
+	}
+	next_local_index = 0
+
+	def replace(argument: str) -> str:
+		nonlocal next_local_index
+		if not _is_agentspeak_variable(argument):
+			return argument
+		if argument not in variable_map:
+			variable_map[argument] = f"V{next_local_index}"
+			next_local_index += 1
+		return variable_map[argument]
+
+	for context in sorted(tuple(plan.context or ())):
+		_replace_context_variables(context, replace)
+	for step in tuple(plan.body or ()):
+		for argument in tuple(step.arguments or ()):
+			replace(argument)
+	return replace
 
 
 def _call_predicate(call: str) -> str:

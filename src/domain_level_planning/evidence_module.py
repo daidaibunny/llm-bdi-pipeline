@@ -453,19 +453,14 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 		source_name=evidence_program.source_name,
 		policy_file=evidence_program.policy_file,
 	)
-	predicate_macro_candidates = tuple(
-		plan
-		for plan in macro_evidence.plans
-		if _numeric_plan_template_kind(plan) is None
-	)
-	if seed_predicates:
+	if seed_predicates or macro_evidence.plans:
 		library = synthesize_atomic_minimal_literal_module_library(
 			domain_file=domain_file,
 			seed_predicates=seed_predicates,
 			source_backend=f"{evidence_program.source_provider}_validated_policy_lifting",
 			source_name=evidence_program.source_name,
 			policy_file=evidence_program.policy_file,
-			validated_evidence_candidates=predicate_macro_candidates,
+			validated_evidence_candidates=macro_evidence.plans,
 		)
 	else:
 		library = PlanLibrary(
@@ -509,25 +504,9 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 				},
 				},
 			)
-	selected_predicate_signatures = {
-		_plan_semantic_key(plan)
-		for plan in library.plans
-	}
-	numeric_evidence_plans = tuple(
-		plan
-		for plan in macro_evidence.plans
-		if _numeric_plan_template_kind(plan) is not None
-	)
-	jointly_selected_macro_plans = tuple(
-		plan
-		for plan in predicate_macro_candidates
-		if _plan_semantic_key(plan) in selected_predicate_signatures
-	)
 	merged_plans = _ensure_unique_plan_names(
 		_order_validated_policy_lifting_plans(
-			_deduplicate_agent_plans(
-				(*library.plans, *jointly_selected_macro_plans, *numeric_evidence_plans),
-			),
+			_deduplicate_agent_plans(library.plans),
 		),
 	)
 	macro_quality_report = audit_moose_atomic_library_quality(plans=macro_evidence.plans)
@@ -559,11 +538,7 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 			"validated_policy_lifting": {
 				**macro_evidence.report.to_dict(),
 				"merged_plan_count": len(merged_plans),
-				"selection_stage": (
-					"joint_clingo_certified_candidate_selection"
-					if seed_predicates
-					else "numeric_evidence_certificate_selection"
-				),
+				"selection_stage": "joint_clingo_certified_candidate_selection",
 			},
 			"library_quality": library_quality,
 			"moose_macro_library_quality": macro_quality_report.to_dict(),

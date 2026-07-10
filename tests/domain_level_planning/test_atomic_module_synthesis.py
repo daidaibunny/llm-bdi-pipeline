@@ -5,6 +5,9 @@ from pathlib import Path
 import pytest
 
 from domain_level_planning.atomic_module_synthesis import (
+	PDDLLiteralSchema,
+	_ParsedAction,
+	_resource_release_contract,
 	_order_contexts_for_matching,
 	_select_branches_with_clingo,
 	synthesize_atomic_minimal_literal_module_library,
@@ -148,6 +151,121 @@ def test_clingo_selector_removes_alpha_equivalent_prepare_branch() -> None:
 	assert selection.report.raw_candidate_count == 2
 	assert selection.report.selected_candidate_count == 1
 	assert selection.report.obligation_count == 1
+
+
+def test_clingo_selector_does_not_replace_safe_producer_with_extra_delete() -> None:
+	dangerous_producer = AgentSpeakPlan(
+		plan_name="done_via_short_destructive_action",
+		trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+		context=("ready(X)",),
+		body=(AgentSpeakBodyStep("action", "finish_destructively", ("X",)),),
+		binding_certificate=(
+			{"rule_kind": "producer_action_sequence"},
+		),
+	)
+	safe_producer = AgentSpeakPlan(
+		plan_name="done_via_two_safe_actions",
+		trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+		context=("ready(X)",),
+		body=(
+			AgentSpeakBodyStep("action", "prepare_safely", ("X",)),
+			AgentSpeakBodyStep("action", "finish_safely", ("X",)),
+		),
+		binding_certificate=(
+			{"rule_kind": "producer_action_sequence"},
+		),
+	)
+	actions = (
+		_ParsedAction(
+			name="finish_destructively",
+			parameters=("?x",),
+			parameter_types={"?x": "object"},
+			preconditions=(),
+			add_effects=(PDDLLiteralSchema("done", ("?x",)),),
+			delete_effects=(PDDLLiteralSchema("protected", ("?x",), False),),
+		),
+		_ParsedAction(
+			name="prepare_safely",
+			parameters=("?x",),
+			parameter_types={"?x": "object"},
+			preconditions=(),
+			add_effects=(PDDLLiteralSchema("staged", ("?x",)),),
+			delete_effects=(),
+		),
+		_ParsedAction(
+			name="finish_safely",
+			parameters=("?x",),
+			parameter_types={"?x": "object"},
+			preconditions=(),
+			add_effects=(PDDLLiteralSchema("done", ("?x",)),),
+			delete_effects=(),
+		),
+	)
+
+	selection = _select_branches_with_clingo(
+		(dangerous_producer, safe_producer),
+		actions=actions,
+	)
+
+	assert selection.plans == (safe_producer,)
+
+
+def test_resource_release_contract_preserves_release_action_and_argument_roles() -> None:
+	def release_plan(
+		*,
+		release_action: str,
+		capacity_key_arguments: tuple[str, ...],
+		occupancy_arguments: tuple[str, ...],
+	) -> AgentSpeakPlan:
+		return AgentSpeakPlan(
+			plan_name=f"done_via_{release_action}",
+			trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+			context=("free(R)",),
+			body=(AgentSpeakBodyStep("action", release_action, ("R", "X")),),
+			binding_certificate=(
+				{
+					"rule_kind": "producer_action_sequence",
+					"resource_release_certificates": [
+						{
+							"certificate_kind": (
+								"causal_resource_capacity_invariant_discharge"
+							),
+							"producer_action": "acquire",
+							"release_action": release_action,
+							"resource_debt_literal": "occupied(R, X)",
+							"restored_literals": ["free(R)"],
+							"resource_invariant_kind": (
+								"keyed_single_capacity_occupancy_transition"
+							),
+							"capacity_key_arguments": list(capacity_key_arguments),
+							"occupancy_arguments": list(occupancy_arguments),
+							"target_preserved": True,
+							"target_preservation_guards": ["R \\== X"],
+							"sequence_alias_guards": ["R \\== X"],
+						},
+					],
+				},
+			),
+		)
+
+	release = release_plan(
+		release_action="release",
+		capacity_key_arguments=("R",),
+		occupancy_arguments=("X",),
+	)
+	park = release_plan(
+		release_action="park",
+		capacity_key_arguments=("R",),
+		occupancy_arguments=("X",),
+	)
+	swapped_roles = release_plan(
+		release_action="release",
+		capacity_key_arguments=("X",),
+		occupancy_arguments=("R",),
+	)
+
+	assert _resource_release_contract(release) != _resource_release_contract(park)
+	assert _resource_release_contract(release) != _resource_release_contract(swapped_roles)
 
 
 def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted() -> None:

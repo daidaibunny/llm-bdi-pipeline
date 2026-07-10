@@ -431,6 +431,16 @@ def test_evidence_compiler_compiles_numeric_resource_goal_module() -> None:
 	assert library.metadata["source_seed_predicates"] == []
 	assert library.metadata["source_numeric_goal_functions"] == ["pogo_sticks_to_make"]
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
+	selector_report = library.metadata["atomic_module_synthesis"]
+	assert selector_report["selector_backend"] == "clingo_asp_minimize"
+	assert selector_report["selection_scope"] == (
+		"joint_schema_and_validated_evidence_candidates"
+	)
+	assert selector_report["candidate_source_counts"]["validated_evidence"] == 2
+	assert selector_report["evidence_obligation_count"] == 2
+	assert library.metadata["validated_policy_lifting"]["selection_stage"] == (
+		"joint_clingo_certified_candidate_selection"
+	)
 
 
 def test_numeric_macro_contexts_account_for_prior_numeric_effects() -> None:
