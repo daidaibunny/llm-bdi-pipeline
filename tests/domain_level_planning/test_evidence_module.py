@@ -310,6 +310,15 @@ def test_evidence_program_decouples_moose_adapter_from_compiler() -> None:
 	assert library.metadata["atomic_module_synthesis"]["selector_backend"] == (
 		"clingo_asp_minimize"
 	)
+	selector_report = library.metadata["atomic_module_synthesis"]
+	assert selector_report["selection_scope"] == (
+		"joint_schema_and_validated_evidence_candidates"
+	)
+	assert selector_report["candidate_source_counts"]["validated_evidence"] == 1
+	assert selector_report["evidence_obligation_count"] == 1
+	assert library.metadata["validated_policy_lifting"]["selection_stage"] == (
+		"joint_clingo_certified_candidate_selection"
+	)
 
 
 def test_evidence_compiler_preserves_validated_logistics_intermodal_macro() -> None:

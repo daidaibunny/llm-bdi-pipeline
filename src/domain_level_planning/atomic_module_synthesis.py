@@ -74,6 +74,10 @@ class AtomicModuleSynthesisReport:
 	selector_optimization_cost: tuple[int, ...]
 	selector_obligation_count: int
 	selected_branch_ids: tuple[str, ...]
+	selection_scope: str
+	candidate_source_counts: Mapping[str, int]
+	evidence_obligation_count: int
+	selector_coverage_basis: tuple[str, ...]
 	predicate_roles: tuple[Mapping[str, object], ...]
 	branch_certification_rules: tuple[str, ...]
 	theoretical_basis: tuple[str, ...]
@@ -96,6 +100,10 @@ class AtomicModuleSynthesisReport:
 			"selector_optimization_cost": list(self.selector_optimization_cost),
 			"selector_obligation_count": self.selector_obligation_count,
 			"selected_branch_ids": list(self.selected_branch_ids),
+			"selection_scope": self.selection_scope,
+			"candidate_source_counts": dict(self.candidate_source_counts),
+			"evidence_obligation_count": self.evidence_obligation_count,
+			"selector_coverage_basis": list(self.selector_coverage_basis),
 			"predicate_roles": [dict(item) for item in self.predicate_roles],
 			"branch_certification_rules": list(self.branch_certification_rules),
 			"theoretical_basis": list(self.theoretical_basis),
@@ -121,6 +129,10 @@ class _ClingoBranchSelectorReport:
 	optimization_cost: tuple[int, ...]
 	selected_branch_ids: tuple[str, ...]
 	objective: tuple[str, ...]
+	selection_scope: str
+	candidate_source_counts: Mapping[str, int]
+	evidence_obligation_count: int
+	coverage_basis: tuple[str, ...]
 
 
 def synthesize_atomic_minimal_literal_module_library(
@@ -130,6 +142,7 @@ def synthesize_atomic_minimal_literal_module_library(
 	source_backend: str,
 	source_name: str,
 	policy_file: str | Path | None = None,
+	validated_evidence_candidates: Sequence[AgentSpeakPlan] = (),
 ) -> PlanLibrary:
 	"""Build compact recursive atomic modules for seed PDDL predicates."""
 
@@ -151,7 +164,7 @@ def synthesize_atomic_minimal_literal_module_library(
 		actions=parsed_actions,
 		declared_predicates=declared_predicates,
 	)
-	raw_plans = _candidate_module_plans(
+	schema_candidates = _candidate_module_plans(
 		domain=domain,
 		actions=parsed_actions,
 		seed_predicates=seeds,
@@ -160,7 +173,14 @@ def synthesize_atomic_minimal_literal_module_library(
 		source_name=source_name,
 		policy_file=policy_file,
 	)
-	selection = _select_branches_with_clingo(raw_plans)
+	evidence_candidates = tuple(validated_evidence_candidates or ())
+	raw_plans = tuple(
+		_deduplicate_plans((*schema_candidates, *evidence_candidates)),
+	)
+	selection = _select_branches_with_clingo(
+		raw_plans,
+		evidence_obligations=evidence_candidates,
+	)
 	plans = _ensure_unique_plan_names(selection.plans)
 	subgoal_step_count = sum(
 		1
@@ -2328,6 +2348,8 @@ def _recursive_progress_certificate(
 
 def _select_branches_with_clingo(
 	plans: Sequence[AgentSpeakPlan],
+	*,
+	evidence_obligations: Sequence[AgentSpeakPlan] = (),
 ) -> _SelectedModulePlans:
 	"""Select a minimum branch set that covers all generated branch evidence."""
 
@@ -2394,6 +2416,21 @@ def _select_branches_with_clingo(
 				"then minimize selected context literal count",
 				"then minimize selected body step count",
 			),
+			selection_scope=(
+				"joint_schema_and_validated_evidence_candidates"
+				if evidence_obligations
+				else "schema_candidates"
+			),
+			candidate_source_counts={
+				"schema": len(raw_plans) - len(tuple(evidence_obligations or ())),
+				"validated_evidence": len(tuple(evidence_obligations or ())),
+			},
+			evidence_obligation_count=len(tuple(evidence_obligations or ())),
+			coverage_basis=(
+				"alpha-equivalent trigger, context, and body",
+				"or identical primitive/subgoal body under a context subset implication",
+				"recursive body-prefix similarity is not accepted as semantic coverage",
+			),
 		),
 	)
 
@@ -2431,6 +2468,9 @@ def _clingo_selector_program(
 ) -> str:
 	lines: list[str] = [
 		"{ selected(Branch) } :- branch(Branch).",
+		":- selected(Branch), not certified(Branch).",
+		"provided(Predicate) :- selected(Branch), provides(Branch, Predicate).",
+		":- selected(Branch), calls(Branch, Predicate), not provided(Predicate).",
 		"covered(Obligation) :- selected(Branch), covers(Branch, Obligation).",
 		":- obligation(Obligation), not covered(Obligation).",
 		"#minimize { 1@3,Branch : selected(Branch) }.",
@@ -2443,11 +2483,29 @@ def _clingo_selector_program(
 		lines.extend(
 			(
 				f"branch({branch_id}).",
+				f"certified({branch_id}).",
 				f"obligation({branch_id}).",
 				f"context_cost({branch_id}, {len(plan.context)}).",
 				f"body_cost({branch_id}, {len(plan.body)}).",
 			),
 		)
+	predicate_ids = {
+		predicate: f"p{index}"
+		for index, predicate in enumerate(
+			sorted({plan.trigger.symbol for plan in plans}),
+		)
+	}
+	for index, plan in enumerate(plans):
+		branch_id = branch_ids[index]
+		lines.append(f"provides({branch_id}, {predicate_ids[plan.trigger.symbol]}).")
+		for predicate in sorted(
+			{
+				step.symbol
+				for step in plan.body
+				if step.kind == "subgoal" and step.symbol in predicate_ids
+			},
+		):
+			lines.append(f"calls({branch_id}, {predicate_ids[predicate]}).")
 	for selected_index, obligation_index in coverage_pairs:
 		lines.append(
 			f"covers({branch_ids[selected_index]}, {branch_ids[obligation_index]}).",
@@ -2469,7 +2527,7 @@ def _candidate_branch_covers_evidence(
 		return False
 	if _same_body(candidate.body, evidence.body):
 		return True
-	return _candidate_recursive_body_covers(candidate.body, evidence.body)
+	return False
 
 
 def _canonical_branch_signature(
@@ -2528,19 +2586,6 @@ def _same_body(
 	return tuple(_body_step_key(step) for step in left) == tuple(
 		_body_step_key(step) for step in right
 	)
-
-
-def _candidate_recursive_body_covers(
-	candidate_body: Sequence[AgentSpeakBodyStep],
-	evidence_body: Sequence[AgentSpeakBodyStep],
-) -> bool:
-	if not candidate_body or not evidence_body:
-		return False
-	if _body_step_key(candidate_body[-1]) != _body_step_key(evidence_body[-1]):
-		return False
-	candidate_prefix = {_body_step_key(step) for step in candidate_body[:-1]}
-	evidence_prefix = {_body_step_key(step) for step in evidence_body[:-1]}
-	return candidate_prefix <= evidence_prefix
 
 
 def _body_step_key(step: AgentSpeakBodyStep) -> tuple[str, str, tuple[str, ...]]:
@@ -2630,6 +2675,10 @@ def _module_synthesis_report(
 		selector_optimization_cost=selection_report.optimization_cost,
 		selector_obligation_count=selection_report.obligation_count,
 		selected_branch_ids=selection_report.selected_branch_ids,
+		selection_scope=selection_report.selection_scope,
+		candidate_source_counts=selection_report.candidate_source_counts,
+		evidence_obligation_count=selection_report.evidence_obligation_count,
+		selector_coverage_basis=selection_report.coverage_basis,
 		predicate_roles=_predicate_role_report(
 			plans=plans,
 			module_predicates=module_predicates,
