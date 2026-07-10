@@ -19,7 +19,8 @@ SUPPORTED_REQUIREMENTS = frozenset(
 	{
 		":strips",
 		":typing",
-		":negative-preconditions",
+			":negative-preconditions",
+			":disjunctive-preconditions",
 		":equality",
 		":action-costs",
 		":numeric-fluents",
@@ -77,6 +78,10 @@ SUPPORTED_FRAGMENT_ASSUMPTIONS = (
 	"sanitized predicate and action functors must remain unique",
 	"metric-only action-costs functions are distinguished from logical numeric resources",
 	"typing, equality, and negative preconditions are accepted only inside the project parser subset",
+	(
+		"a :disjunctive-preconditions requirement declaration is accepted only when "
+		"the parsed action and goal expressions contain no or operator"
+	),
 	(
 		"derived predicates, conditional effects, quantifiers, preferences, durative "
 		"actions, arbitrary arithmetic expressions, non-integer numeric goals, and "

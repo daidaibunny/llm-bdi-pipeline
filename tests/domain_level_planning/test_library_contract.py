@@ -13,7 +13,7 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 		initial_beliefs=("query_1",),
 		plans=(
 			AgentSpeakPlan(
-				plan_name="g_query_1_linear_sequence",
+				plan_name="g_query_1_trans_sequence",
 				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
 				context=("query_1",),
 				body=(
@@ -58,10 +58,11 @@ def test_domain_level_library_contract_accepts_lifted_predicate_modules() -> Non
 			"positive context atoms bind variables before negated context atoms are checked"
 		),
 		"negation_semantics": "negation-as-absence over the current state",
-		"temporal_state_semantics": (
-			"linear query wrappers execute certified singleton-literal subgoals in "
-			"stored order; branching DFA goals require an external controller"
-		),
+			"temporal_state_semantics": (
+				"query wrappers execute one certified helper per DFA progress transition; "
+				"each helper rechecks its conjunctive guard and branching DFA goals require "
+				"an external controller"
+			),
 		"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
 		"primitive_precondition_semantics": (
 			"primitive action preconditions are checked at execution time; "
@@ -76,7 +77,7 @@ def test_domain_level_library_contract_accepts_declared_pddl_symbols() -> None:
 		initial_beliefs=("query_1",),
 		plans=(
 			AgentSpeakPlan(
-				plan_name="g_query_1_linear_sequence",
+				plan_name="g_query_1_trans_sequence",
 				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
 				context=("query_1",),
 				body=(

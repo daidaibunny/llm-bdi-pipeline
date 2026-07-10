@@ -53,14 +53,21 @@ def test_dfa_guard_adapter_reports_transition_metadata() -> None:
 	)
 
 
-def test_dfa_guard_adapter_rejects_unsupported_negative_or_false_guards() -> None:
-	with pytest.raises(ValueError, match="positive conjunctive"):
-		adapt_dfa_guard_to_achievement_request(
-			"not on(b1,b2)",
-			domain_key="blocksworld",
-		)
+def test_dfa_guard_adapter_keeps_negative_literals_as_context_only() -> None:
+	request = adapt_dfa_guard_to_achievement_request(
+		"clear(b1) & not on(b1,b2)",
+		domain_key="blocksworld",
+		domain_file=BLOCKS_DOMAIN,
+	)
 
-	with pytest.raises(ValueError, match="positive conjunctive"):
+	assert request.state_literals == ("clear(b1)", "not on(b1, b2)")
+	assert request.negative_context_literals == ("not on(b1, b2)",)
+	assert request.goal_facts == ("goal_clear(b1)",)
+	assert request.body_steps == (AgentSpeakBodyStep("subgoal", "clear", ("b1",)),)
+
+
+def test_dfa_guard_adapter_rejects_false_guard() -> None:
+	with pytest.raises(ValueError, match="conjunction-and-negation"):
 		adapt_dfa_guard_to_achievement_request(
 			"false",
 			domain_key="blocksworld",
@@ -123,28 +130,36 @@ def test_dfa_guard_adapter_rejects_wrong_pddl_predicate_arity() -> None:
 		)
 
 
-def test_dfa_guard_adapter_reports_structured_rejection_diagnostics() -> None:
+def test_dfa_guard_adapter_reports_structured_negative_context_diagnostics() -> None:
 	diagnostic = inspect_dfa_guard_to_achievement_request(
 		"not on(b1,b2)",
 		domain_key="blocksworld",
 		domain_file=BLOCKS_DOMAIN,
 	)
 
-	assert diagnostic.supported is False
-	assert diagnostic.rejection_reason == "unsupported_negative_guard"
+	assert diagnostic.supported is True
+	assert diagnostic.rejection_reason is None
 	assert diagnostic.raw_guard == "not on(b1,b2)"
 	assert diagnostic.state_literals == ("not on(b1, b2)",)
-	assert diagnostic.request is None
+	assert diagnostic.request is not None
+	assert diagnostic.request.negative_context_literals == ("not on(b1, b2)",)
+	assert diagnostic.request.body_steps == ()
 	assert diagnostic.to_dict() == {
 		"raw_guard": "not on(b1,b2)",
-		"supported": False,
-		"rejection_reason": "unsupported_negative_guard",
-		"message": (
-			"DFA guard adapter currently supports positive conjunctive "
-			"achievement requests only; received 'not on(b1,b2)'."
-		),
+		"supported": True,
+		"rejection_reason": None,
+		"message": None,
 		"state_literals": ["not on(b1, b2)"],
-		"request": None,
+		"request": {
+			"raw_guard": "not on(b1,b2)",
+			"source_state": None,
+			"target_state": None,
+			"state_literals": ["not on(b1, b2)"],
+			"negative_context_literals": ["not on(b1, b2)"],
+			"guard_constraints": ["not on(b1, b2)"],
+			"goal_facts": [],
+			"achievement_subgoals": [],
+		},
 	}
 
 

@@ -26,16 +26,54 @@ def test_library_validation_accepts_current_atomic_and_temporal_contract() -> No
 				body=(AgentSpeakBodyStep("action", "stack", ("X", "Y")),),
 			),
 			AgentSpeakPlan(
-				plan_name="g_query_1_linear_sequence",
+				plan_name="g_query_1_trans_sequence",
 				trigger=AgentSpeakTrigger(event_type="achievement_goal", symbol="g_query_1"),
 				context=("query_1",),
 				body=(
-					AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+					AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 				),
 				binding_certificate=(
 					{
 						"artifact_family": "temporal_goal_dfa_append",
-						"wrapper_mode": "linear_single_body",
+						"wrapper_mode": "dfa_guard_transition_replay",
+						"wrapper_role": "transition_sequence_entry",
+						"query_entry_proposition": "query_1",
+					},
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="g_query_1_trans_1_done",
+				trigger=AgentSpeakTrigger(
+					event_type="achievement_goal",
+					symbol="g_query_1_trans_1",
+				),
+				context=("query_1", "on(X, Y)"),
+				binding_certificate=(
+					{
+						"artifact_family": "temporal_goal_dfa_append",
+						"wrapper_mode": "dfa_guard_transition_replay",
+						"wrapper_role": "transition_done",
+						"query_entry_proposition": "query_1",
+					},
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="g_query_1_trans_1_repair_1_on",
+				trigger=AgentSpeakTrigger(
+					event_type="achievement_goal",
+					symbol="g_query_1_trans_1",
+				),
+				context=("query_1", "not on(X, Y)"),
+				body=(
+					AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+					AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
+				),
+				binding_certificate=(
+					{
+						"artifact_family": "temporal_goal_dfa_append",
+						"wrapper_mode": "dfa_guard_transition_replay",
+						"wrapper_role": "transition_positive_literal_repair",
+						"query_entry_proposition": "query_1",
 					},
 				),
 			),
@@ -56,6 +94,42 @@ def test_library_validation_accepts_current_atomic_and_temporal_contract() -> No
 
 	assert record.passed is True
 	assert all(record.checked_layers.values())
+
+
+def test_library_validation_rejects_removed_linear_single_body_wrapper() -> None:
+	plan_library = PlanLibrary(
+		domain_name="blocks",
+		initial_beliefs=("query_1",),
+		plans=(
+			AgentSpeakPlan(
+				plan_name="g_query_1_linear_sequence",
+				trigger=AgentSpeakTrigger("achievement_goal", "g_query_1"),
+				context=("query_1",),
+				body=(AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),),
+				binding_certificate=(
+					{
+						"artifact_family": "temporal_goal_dfa_append",
+						"wrapper_mode": "linear_single_body",
+					},
+				),
+			),
+		),
+	)
+
+	record = build_library_validation_record(
+		domain_name="blocks",
+		plan_library=plan_library,
+		generation_summary=PlanGenerationSummary(
+			domain_name="blocks",
+			dfa_count=1,
+			transition_count=1,
+			plans_generated=1,
+			initial_belief_count=1,
+		),
+	)
+
+	assert record.passed is False
+	assert record.checked_layers["context_driven_bodies"] is False
 
 
 def test_library_validation_rejects_exposed_dfa_state_belief() -> None:

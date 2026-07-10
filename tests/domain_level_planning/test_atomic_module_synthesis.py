@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from domain_level_planning.atomic_module_synthesis import (
 	_order_contexts_for_matching,
 	_select_branches_with_clingo,
@@ -228,6 +230,7 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not holding(X)" in asl
 	assert "\t!holding(X);" in asl
 	assert "pick_up(X);\n\tunstack" not in asl
+	assert library.metadata["pddl_support"]["is_compilable"] is True
 	assert "obj_tp(X, block) & obj_tp(Y, block) & clear(X) & clear(Y) & ontable(X) & handempty" in asl
 	assert "obj_tp(X, block) & obj_tp(Y, block) & clear(X) & clear(Y) & handempty & on(X, Z) & obj_tp(Z, block)" in asl
 	assert "\tunstack(X, Z);" in asl
@@ -273,6 +276,34 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		"relation_arguments": ["Y", "X"],
 		"deleting_action": "unstack",
 	}
+
+
+def test_atomic_module_synthesis_rejects_unsupported_pddl_before_compilation(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "conditional.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain conditional)
+		 (:requirements :strips :conditional-effects)
+		 (:predicates (ready ?x) (done ?x))
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (when (ready ?x) (done ?x))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	with pytest.raises(ValueError, match="Unsupported PDDL for lifted ASL synthesis"):
+		synthesize_atomic_minimal_literal_module_library(
+			domain_file=domain_file,
+			seed_predicates=("done",),
+			source_backend="test",
+			source_name="conditional",
+		)
 
 
 def test_ferry_bridge_sequence_keeps_negative_precondition_and_movement_module() -> None:

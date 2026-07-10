@@ -34,6 +34,7 @@ from .atomic_module_synthesis import _order_contexts_for_matching
 from .atomic_module_synthesis import _parameter_type
 from .pddl_types import OBJ_TP_PREDICATE
 from .pddl_types import type_closure
+from .pddl_support import assert_compilable_pddl_files
 from .policy_program import LearnedPolicyRule
 from .policy_program import LiftedPolicyProgram
 from .policy_program import PolicyModule
@@ -431,6 +432,7 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 		validated policy-lifting compiler sees them.
 	"""
 
+	pddl_support = assert_compilable_pddl_files(domain_file=domain_file)
 	rules = tuple(evidence_program.rules or ())
 	seed_predicates = tuple(
 		dict.fromkeys(
@@ -517,6 +519,7 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 		initial_beliefs=library.initial_beliefs,
 		metadata={
 			**dict(library.metadata),
+			"pddl_support": pddl_support.to_dict(),
 			"evidence_module": {
 				"source_provider": evidence_program.source_provider,
 				"source_name": evidence_program.source_name,
@@ -800,14 +803,7 @@ def _validated_policy_evidence_macro_rule_plan(
 	)
 	if symbolic_guards is None:
 		return None
-	evidence_distinctness_guards = _evidence_distinctness_guards(
-		rule=rule,
-		variable_map=variable_map,
-		declared_constants=declared_constants,
-	)
-	binding_guards = _deduplicate_strings(
-		(*symbolic_guards, *evidence_distinctness_guards),
-	)
+	binding_guards = _deduplicate_strings(symbolic_guards)
 	state_contexts = _rule_state_contexts(
 		rule=rule,
 		variable_map=variable_map,
@@ -843,7 +839,7 @@ def _validated_policy_evidence_macro_rule_plan(
 					"precedence": rule.precedence,
 					"validation": "pddl_schema_symbolic_execution",
 					"schema_binding_guards": list(symbolic_guards),
-					"evidence_distinctness_guards": list(evidence_distinctness_guards),
+					"alias_guard_basis": "pddl_schema_symbolic_execution_only",
 				},
 			),
 		)
@@ -1008,14 +1004,7 @@ def _validated_policy_evidence_numeric_macro_rule_plan(
 	)
 	if symbolic_guards is None:
 		return None
-	evidence_distinctness_guards = _evidence_distinctness_guards(
-		rule=rule,
-		variable_map=variable_map,
-		declared_constants=declared_constants,
-	)
-	binding_guards = _deduplicate_strings(
-		(*symbolic_guards, *evidence_distinctness_guards),
-	)
+	binding_guards = _deduplicate_strings(symbolic_guards)
 	progress = _numeric_macro_progress_spec(
 		rule=rule,
 		spec=spec,
@@ -1081,13 +1070,13 @@ def _validated_policy_evidence_numeric_macro_rule_plan(
 					"policy_file": str(policy_file) if policy_file is not None else None,
 					"precedence": rule.precedence,
 					"numeric_function": spec.function,
-				"target_value": spec.target,
-				"net_delta": progress.net_delta,
-				"validation": "pddl_schema_symbolic_execution_and_unit_numeric_progress",
-				"schema_binding_guards": list(symbolic_guards),
-				"evidence_distinctness_guards": list(evidence_distinctness_guards),
-			},
-		),
+					"target_value": spec.target,
+					"net_delta": progress.net_delta,
+					"validation": "pddl_schema_symbolic_execution_and_unit_numeric_progress",
+					"schema_binding_guards": list(symbolic_guards),
+					"alias_guard_basis": "pddl_schema_symbolic_execution_only",
+				},
+			),
 	)
 
 
@@ -1630,53 +1619,6 @@ def _policy_evidence_rule_symbolic_execution_guards(
 	if not all(state.get(_atom_key(goal)) is True for goal in rule.goal_conditions):
 		return None
 	return _deduplicate_strings(tuple(guards))
-
-
-def _evidence_distinctness_guards(
-	*,
-	rule: PolicyEvidenceRule,
-	variable_map: Mapping[str, str],
-	declared_constants: Sequence[str],
-) -> tuple[str, ...]:
-	"""Preserve distinct PDDL objects that were merged away by variable lifting."""
-
-	constants = {str(constant).strip().lower() for constant in tuple(declared_constants or ())}
-	source_terms = _evidence_rule_object_terms(rule)
-	lifted_terms = tuple(
-		term
-		for term in source_terms
-		if term in variable_map and _is_agentspeak_variable_name(variable_map[term])
-	)
-	constant_terms = tuple(term for term in source_terms if term in constants)
-	guards: list[str] = []
-	for left_index, left in enumerate(lifted_terms):
-		for right in lifted_terms[left_index + 1 :]:
-			if left == right:
-				continue
-			guards.append(
-				_inequality_guard_text(variable_map[left], variable_map[right]),
-			)
-		for constant in constant_terms:
-			if left == constant:
-				continue
-			guards.append(
-				_inequality_guard_text(variable_map[left], constant),
-			)
-	return _deduplicate_strings(tuple(guards))
-
-
-def _evidence_rule_object_terms(rule: PolicyEvidenceRule) -> tuple[str, ...]:
-	terms: list[str] = []
-	terms.extend(rule.variables)
-	for atom in (*rule.state_conditions, *rule.goal_conditions):
-		terms.extend(atom.arguments)
-	for condition in (*rule.state_numeric_conditions, *rule.goal_numeric_conditions):
-		for expression in (condition.left, condition.right):
-			if expression.kind == "fluent":
-				terms.extend(str(argument) for argument in tuple(expression.args or ()))
-	for action in rule.actions:
-		terms.extend(action.arguments)
-	return tuple(dict.fromkeys(str(term).strip() for term in terms if str(term).strip()))
 
 
 def _state_atoms_that_can_conflict(

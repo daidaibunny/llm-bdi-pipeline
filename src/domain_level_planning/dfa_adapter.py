@@ -18,6 +18,7 @@ class DFAAchievementRequest:
 
 	raw_guard: str
 	state_literals: tuple[str, ...]
+	negative_context_literals: tuple[str, ...]
 	goal_facts: tuple[str, ...]
 	body_steps: tuple[AgentSpeakBodyStep, ...]
 	source_state: str | None = None
@@ -29,6 +30,8 @@ class DFAAchievementRequest:
 			"source_state": self.source_state,
 			"target_state": self.target_state,
 			"state_literals": list(self.state_literals),
+			"negative_context_literals": list(self.negative_context_literals),
+			"guard_constraints": list(self.negative_context_literals),
 			"goal_facts": list(self.goal_facts),
 			"achievement_subgoals": [
 				step.to_dict() for step in self.body_steps
@@ -76,6 +79,7 @@ def adapt_dfa_guarded_transition_to_achievement_request(
 	return DFAAchievementRequest(
 		raw_guard=request.raw_guard,
 		state_literals=request.state_literals,
+		negative_context_literals=request.negative_context_literals,
 		goal_facts=request.goal_facts,
 		body_steps=request.body_steps,
 		source_state=_optional_text(transition.get("source_state")),
@@ -90,12 +94,11 @@ def adapt_dfa_guard_to_achievement_request(
 	domain_file: str | Path | None = None,
 	declared_predicates: Sequence[object] | Mapping[str, int | None] = (),
 ) -> DFAAchievementRequest:
-	"""Translate a positive conjunctive DFA guard into achievement requests.
+	"""Translate a conjunctive DFA guard into achievements and negative contexts.
 
 	The current ASL append contract requires singleton-literal progress guards,
-	but this adapter deliberately accepts positive conjunctions for diagnostics
-	and offline controller validation. Negative, false, or disjunctive guards are
-	rejected instead of being compiled into query-specific low-level plans.
+	Positive literals become atomic achievement subgoals. Negative literals remain
+	context constraints and are never turned into synthetic negative subgoals.
 	"""
 
 	_ = domain_key
@@ -124,8 +127,8 @@ def inspect_dfa_guard_to_achievement_request(
 	raw_rejection_reason = _unsupported_raw_guard_reason(normalized_guard)
 	if raw_rejection_reason is not None:
 		message = (
-			"DFA guard adapter currently supports positive conjunctive "
-			f"achievement requests only; received {raw_guard!r}."
+			"DFA guard adapter supports conjunction-and-negation guards only; "
+			f"received {raw_guard!r}."
 		)
 		return DFAGuardAdaptationDiagnostic(
 			raw_guard=normalized_guard,
@@ -137,8 +140,8 @@ def inspect_dfa_guard_to_achievement_request(
 	state_literals = _pddl_context_literals_from_guard(normalized_guard)
 	if any(_is_unsupported_literal(literal) for literal in state_literals):
 		message = (
-			"DFA guard adapter currently supports positive conjunctive "
-			f"achievement requests only; received {raw_guard!r}."
+			"DFA guard adapter supports conjunction-and-negation guards only; "
+			f"received {raw_guard!r}."
 		)
 		return DFAGuardAdaptationDiagnostic(
 			raw_guard=normalized_guard,
@@ -148,7 +151,20 @@ def inspect_dfa_guard_to_achievement_request(
 			message=message,
 		)
 	try:
-		parsed_atoms = tuple(_parse_atom(literal) for literal in state_literals)
+		positive_literals = tuple(
+			literal
+			for literal in state_literals
+			if not literal.lower().startswith("not ")
+		)
+		negative_literals = tuple(
+			literal
+			for literal in state_literals
+			if literal.lower().startswith("not ")
+		)
+		parsed_atoms = tuple(
+			_parse_atom(literal[4:].strip() if literal.lower().startswith("not ") else literal)
+			for literal in state_literals
+		)
 		_validate_guard_atoms(
 			parsed_atoms,
 			declared_predicates=_predicate_arities(
@@ -167,13 +183,18 @@ def inspect_dfa_guard_to_achievement_request(
 	request = DFAAchievementRequest(
 		raw_guard=normalized_guard,
 		state_literals=state_literals,
+		negative_context_literals=negative_literals,
 		goal_facts=tuple(
 			_call(f"goal_{predicate}", arguments)
-			for predicate, arguments in parsed_atoms
+			for predicate, arguments in (
+				_parse_atom(literal) for literal in positive_literals
+			)
 		),
 		body_steps=tuple(
 			AgentSpeakBodyStep("subgoal", predicate, arguments)
-			for predicate, arguments in parsed_atoms
+			for predicate, arguments in (
+				_parse_atom(literal) for literal in positive_literals
+			)
 		),
 	)
 	return DFAGuardAdaptationDiagnostic(
@@ -189,7 +210,6 @@ def _is_unsupported_literal(literal: str) -> bool:
 	return (
 		not text
 		or text.lower() == "false"
-		or text.lower().startswith("not ")
 		or "|" in text
 	)
 
@@ -275,8 +295,6 @@ def _unsupported_literal_reason(literals: Sequence[str]) -> str:
 		return "unsupported_false_guard"
 	if any("|" in str(literal or "") for literal in literals):
 		return "unsupported_disjunctive_guard"
-	if any(str(literal or "").strip().lower().startswith("not ") for literal in literals):
-		return "unsupported_negative_guard"
 	return "unsupported_guard_literal"
 
 

@@ -231,6 +231,16 @@ def test_plan_verifier_output_rejects_explicit_failure() -> None:
 		timed_out=False,
 		output="Plan failed: goal not satisfied",
 	)
+	assert not _plan_verifier_output_success(
+		exit_code=0,
+		timed_out=False,
+		output="Verifier completed without a recognized verdict",
+	)
+	assert not _plan_verifier_output_success(
+		exit_code=0,
+		timed_out=False,
+		output="",
+	)
 
 
 def test_runner_uses_project_indexed_belief_base() -> None:

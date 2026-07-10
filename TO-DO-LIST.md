@@ -50,6 +50,22 @@ certificate.
 
 ## Certified Generic Fixes
 
+- Temporal append now always calls the real `ltlf2dfa`/MONA converter. The
+  removed ordered-sequence fast path can no longer bypass DFA construction.
+  Every progress edge on the unique accepting path produces exactly one
+  query-local `trans` helper; singleton guards reduce to the former ordered
+  achievement behavior, while conjunctive guards are rechecked after repair.
+- Query goal ordering no longer infers semantics from predicate argument
+  positions. Delete threats come from the compiled atomic module call graph,
+  with a cycle-safe PDDL producer fixed point only when a module summary is
+  unavailable.
+- MOOSE evidence variables are no longer made pairwise distinct by default.
+  Inequality guards are emitted only when PDDL symbolic execution proves that
+  aliasing would violate an action precondition or a prior delete effect.
+- Atomic compilation and temporal append now enforce the supported PDDL
+  fragment before synthesis. LTLf formulas with unbalanced parentheses are
+  rejected rather than repaired, and VAL success requires an explicit known
+  success marker instead of exit code zero alone.
 - PDDL constants and schema variables now have distinct symbolic identities.
   Threat ordering therefore remains sound even when an object is literally
   named `x`, `y`, or another schema-variable-like token.
@@ -63,7 +79,9 @@ certificate.
   regression domains cover constant/variable identity, alias-safe cleanup,
   persistent goals, and interfering goals.
 
-Focused validation evidence after these fixes:
+Previously recorded focused validation evidence. Rerun these probes after the
+current threat-ordering and temporal-append changes before using them as paper
+results:
 
 | Probe | Result |
 | --- | --- |

@@ -151,15 +151,16 @@ def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) 
 	assert result["mode"] == "evaluation_pddl_goal_wrapper_bridge"
 	assert "numeric_minecraft_test_1." in asl
 	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in asl
-	assert "\t!pogo_sticks_to_make(0)." in asl
+	assert "\t!g_numeric_minecraft_test_1_trans_1." in asl
+	assert "\t!pogo_sticks_to_make(0);" in asl
 	assert payload["initial_beliefs"] == ["numeric_minecraft_test_1"]
 	assert (
 		payload["metadata"]["evaluation_pddl_goal_wrapper_bridge"]["final_query_contract"]
-		== "validated_lifted_ltlf_json_to_ltlf2dfa_to_singleton_literal_dfa_append"
+		== "validated_lifted_ltlf_json_to_ltlf2dfa_to_guard_transition_append"
 	)
 	assert (
 		payload["plans"][-1]["binding_certificate"][0]["artifact_family"]
-		== "evaluation_pddl_goal_wrapper_bridge"
+		== "temporal_goal_dfa_append"
 	)
 
 

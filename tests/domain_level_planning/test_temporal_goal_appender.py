@@ -6,7 +6,7 @@ import pytest
 
 from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
 from domain_level_planning.temporal_goal_appender import append_lifted_temporal_goal_case_to_library
-from domain_level_planning.temporal_goal_appender import validate_singleton_literal_dfa
+from domain_level_planning.temporal_goal_appender import validate_guard_transition_dfa
 from domain_level_planning.lifted_ltlf_goal_schema import LTLfAtomSpec
 from domain_level_planning.lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 from plan_library.models import AgentSpeakBodyStep
@@ -15,32 +15,28 @@ from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
 
 
-def test_validate_singleton_literal_dfa_rejects_conjunctive_transition() -> None:
-	diagnostic = validate_singleton_literal_dfa(
+def test_validate_guard_transition_dfa_accepts_conjunction_and_negation() -> None:
+	diagnostic = validate_guard_transition_dfa(
 		{
 			"initial_state": "q0",
 			"accepting_states": ["q1"],
 			"guarded_transitions": [
-				{"source_state": "q0", "target_state": "q1", "raw_label": "a & b"},
+				{
+					"source_state": "q0",
+					"target_state": "q1",
+					"raw_label": "a(X) & not b(Y)",
+				},
 			],
 		},
+		declared_arities={"a": 1, "b": 1},
 	)
 
-	assert diagnostic.valid is False
-	assert diagnostic.errors == (
-		{
-			"transition_index": 1,
-			"source_state": "q0",
-			"target_state": "q1",
-			"raw_label": "a & b",
-			"error_type": "non_singleton_literal_guard",
-			"message": "DFA transition guard must contain exactly one literal.",
-		},
-	)
+	assert diagnostic.valid is True
+	assert diagnostic.errors == ()
 
 
-def test_validate_singleton_literal_dfa_reports_domain_errors() -> None:
-	diagnostic = validate_singleton_literal_dfa(
+def test_validate_guard_transition_dfa_reports_domain_errors() -> None:
+	diagnostic = validate_guard_transition_dfa(
 		{
 			"initial_state": "q0",
 			"accepting_states": ["q1"],
@@ -56,15 +52,14 @@ def test_validate_singleton_literal_dfa_reports_domain_errors() -> None:
 	assert [error["error_type"] for error in diagnostic.errors] == [
 		"unsupported_predicate",
 		"wrong_arity",
-		"negative_literal_template_not_supported",
 	]
 	assert diagnostic.errors[0]["predicate"] == "missing"
 	assert diagnostic.errors[1]["expected_arity"] == 1
 	assert diagnostic.errors[1]["actual_arity"] == 2
 
 
-def test_validate_singleton_literal_dfa_accepts_numeric_resource_function() -> None:
-	diagnostic = validate_singleton_literal_dfa(
+def test_validate_guard_transition_dfa_accepts_numeric_resource_function() -> None:
+	diagnostic = validate_guard_transition_dfa(
 		{
 			"initial_state": "q0",
 			"accepting_states": ["q1"],
@@ -115,17 +110,35 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 
 	assert [plan.plan_name for plan in updated.plans] == [
 		"done_via_finish",
-		"g_query_1_linear_sequence",
+		"g_query_1_trans_sequence",
+		"g_query_1_trans_1_done",
+		"g_query_1_trans_1_repair_1_done",
+		"g_query_1_trans_2_done",
+		"g_query_1_trans_2_repair_1_ready",
 	]
 	assert updated.plans[1].trigger.symbol == "g_query_1"
 	assert updated.plans[1].context == ("query_1",)
 	assert updated.plans[1].body == (
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_2", ()),
+	)
+	assert updated.plans[2].context == ("query_1", "obj_tp(X, item)", "done(X)")
+	assert updated.plans[2].body == ()
+	assert updated.plans[3].context == (
+		"query_1",
+		"obj_tp(X, item)",
+		"not done(X)",
+	)
+	assert updated.plans[3].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
-		AgentSpeakBodyStep("subgoal", "ready", ("Y",)),
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 	)
 	assert updated.initial_beliefs == ("query_1",)
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
-	assert updated.metadata["temporal_goal_append"]["wrapper_mode"] == "linear_single_body"
+	assert updated.metadata["temporal_goal_append"]["wrapper_mode"] == (
+		"dfa_guard_transition_replay"
+	)
+	assert updated.metadata["temporal_goal_append"]["progress_transition_count"] == 2
 	assert (
 		updated.metadata["temporal_goal_append"]["query_entry_proposition"]
 		== "query_1"
@@ -138,6 +151,67 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		record["goal_name"]
 		for record in updated.metadata["temporal_goal_append_history"]
 	] == ["g_query_1"]
+
+
+def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_domain(tmp_path)
+	library = PlanLibrary(domain_name="tiny", plans=())
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q2"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "done(X) & ready(Y)",
+			},
+			{
+				"source_state": "q1",
+				"target_state": "q2",
+				"raw_label": "done(Y) & not ready(Y)",
+			},
+			{"source_state": "q2", "target_state": "q2", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+
+	assert updated.plans[0].body == (
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_2", ()),
+	)
+	assert updated.plans[1].context == (
+		"query_1",
+		"obj_tp(X, item)",
+		"obj_tp(Y, item)",
+		"done(X)",
+		"ready(Y)",
+	)
+	assert updated.plans[4].context == (
+		"query_1",
+		"obj_tp(Y, item)",
+		"done(Y)",
+		"not ready(Y)",
+	)
+	assert updated.plans[5].context == (
+		"query_1",
+		"obj_tp(Y, item)",
+		"not ready(Y)",
+		"not done(Y)",
+	)
+	assert all(
+		diagnostic["supported"] is True
+		for diagnostic in updated.metadata["temporal_goal_append"][
+			"progress_request_diagnostics"
+		]
+	)
 
 
 def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -> None:
@@ -167,7 +241,11 @@ def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -
 
 	assert [plan.trigger.symbol for plan in after_second.plans] == [
 		"g_query_1",
+		"g_query_1_trans_1",
+		"g_query_1_trans_1",
 		"g_query_2",
+		"g_query_2_trans_1",
+		"g_query_2_trans_1",
 	]
 	assert [
 		record["goal_name"]
@@ -225,11 +303,13 @@ def test_append_temporal_goal_allows_negative_waiting_self_loop(
 	)
 
 	assert [plan.plan_name for plan in updated.plans] == [
-		"g_query_1_linear_sequence",
+		"g_query_1_trans_sequence",
+		"g_query_1_trans_1_done",
+		"g_query_1_trans_1_repair_1_done",
 	]
 	assert updated.plans[0].context == ("query_1",)
 	assert updated.plans[0].body == (
-		AgentSpeakBodyStep("subgoal", "done", ("X",)),
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 	)
 
 
@@ -259,7 +339,7 @@ def test_append_temporal_goal_rejects_branching_dfa_without_external_controller(
 		)
 
 
-def test_append_temporal_goal_rejects_negative_progress_literal(tmp_path: Path) -> None:
+def test_append_temporal_goal_keeps_negative_progress_literal_as_context(tmp_path: Path) -> None:
 	domain_file = _write_domain(tmp_path)
 	library = PlanLibrary(domain_name="tiny", plans=())
 	dfa_payload = {
@@ -270,13 +350,23 @@ def test_append_temporal_goal_rejects_negative_progress_literal(tmp_path: Path) 
 		],
 	}
 
-	with pytest.raises(ValueError, match="negative_literal_template_not_supported"):
-		append_temporal_goal_to_library(
-			plan_library=library,
-			goal_name="g_query_1",
-			dfa_payload=dfa_payload,
-			domain_file=domain_file,
-		)
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+
+	assert [plan.plan_name for plan in updated.plans] == [
+		"g_query_1_trans_sequence",
+		"g_query_1_trans_1_done",
+	]
+	assert updated.plans[1].context == (
+		"query_1",
+		"obj_tp(X, item)",
+		"not done(X)",
+	)
+	assert updated.plans[1].body == ()
 
 
 def test_append_lifted_temporal_goal_case_uses_dfa_builder(tmp_path: Path) -> None:
@@ -300,7 +390,7 @@ def test_append_lifted_temporal_goal_case_uses_dfa_builder(tmp_path: Path) -> No
 	)
 
 	assert dfa_payload["original_formula"] == "F(done(X))"
-	assert updated.plans[0].plan_name == "g_query_1_linear_sequence"
+	assert updated.plans[0].plan_name == "g_query_1_trans_sequence"
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
 
 
@@ -334,7 +424,7 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 	assert dfa_payload["guarded_transitions"][0]["original_raw_label"] == "on_x_y"
 	assert updated.plans[0].context == ("query_1",)
 	assert updated.plans[0].body == (
-		AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 	)
 	assert (
 		updated.metadata["temporal_goal_append"]["progress_request_diagnostics"][0]
@@ -370,7 +460,7 @@ def test_append_lifted_temporal_goal_accepts_numeric_resource_function_atom(
 	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "pogo_sticks_to_make(0)"
 	assert updated.plans[0].context == ("numeric_minecraft_test_1",)
 	assert updated.plans[0].body == (
-		AgentSpeakBodyStep("subgoal", "pogo_sticks_to_make", ("0",)),
+		AgentSpeakBodyStep("subgoal", "g_numeric_minecraft_test_1_trans_1", ()),
 	)
 	assert (
 		updated.metadata["temporal_goal_append"]["progress_request_diagnostics"][0]

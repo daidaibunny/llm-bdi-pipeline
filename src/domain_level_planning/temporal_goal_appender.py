@@ -25,14 +25,15 @@ from .lifted_ltlf_goal_schema import LTLfAtomSpec
 from .dfa_controller import inspect_progress_requests_from_dfa_state
 from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
+from .pddl_support import assert_compilable_pddl_files
 
 
-_LINEAR_SINGLE_BODY_WRAPPER_MODE = "linear_single_body"
+_DFA_GUARD_TRANSITION_WRAPPER_MODE = "dfa_guard_transition_replay"
 
 
 @dataclass(frozen=True)
-class SingletonLiteralDFADiagnostic:
-	"""Validation result for the singleton-literal DFA interface contract."""
+class GuardTransitionDFADiagnostic:
+	"""Validation result for the conjunctive DFA guard interface contract."""
 
 	valid: bool
 	errors: tuple[dict[str, object], ...]
@@ -57,14 +58,13 @@ class DFALiteral:
 		return _call(self.predicate, self.arguments)
 
 
-def validate_singleton_literal_dfa(
+def validate_guard_transition_dfa(
 	dfa_payload: Mapping[str, Any],
 	*,
 	allow_true_accepting_self_loops: bool = True,
 	declared_arities: Mapping[str, int] | None = None,
-	allow_negative_literals: bool = False,
-) -> SingletonLiteralDFADiagnostic:
-	"""Check that every relevant DFA transition guard is one literal."""
+) -> GuardTransitionDFADiagnostic:
+	"""Check that every relevant DFA transition guard uses conjunction and negation."""
 
 	accepting_states = {
 		str(state).strip()
@@ -77,7 +77,7 @@ def validate_singleton_literal_dfa(
 		guarded_transitions,
 		(str, bytes),
 	):
-		return SingletonLiteralDFADiagnostic(
+		return GuardTransitionDFADiagnostic(
 			valid=False,
 			errors=(
 				{
@@ -106,74 +106,60 @@ def validate_singleton_literal_dfa(
 			and source_state in accepting_states
 		):
 			continue
-		literal = _parse_literal(raw_label)
-		if literal is None:
+		try:
+			literals = _parse_guard_literals(raw_label)
+		except ValueError as error:
 			errors.append(
 				{
 					"transition_index": index,
 					"source_state": source_state,
 					"target_state": target_state,
 					"raw_label": raw_label,
-					"error_type": "non_singleton_literal_guard",
-					"message": "DFA transition guard must contain exactly one literal.",
+					"error_type": "unsupported_guard_expression",
+					"message": str(error),
 				},
 			)
 			continue
-		if literal.polarity == "negative" and not allow_negative_literals:
-			errors.append(
-				{
-					"transition_index": index,
-					"source_state": source_state,
-					"target_state": target_state,
-					"raw_label": raw_label,
-					"predicate": literal.predicate,
-					"error_type": "negative_literal_template_not_supported",
-					"message": (
-						"Negative DFA transition literals are not supported by the "
-						"atomic template compiler yet."
-					),
-				},
-			)
-			continue
-		if declared_arities is None:
-			continue
-		if literal.predicate not in declared_arities:
-			errors.append(
-				{
-					"transition_index": index,
-					"source_state": source_state,
-					"target_state": target_state,
-					"raw_label": raw_label,
-					"predicate": literal.predicate,
-					"error_type": "unsupported_predicate",
-					"message": (
-						"DFA transition references a predicate or numeric "
-						"resource function that is not declared in the PDDL "
-						"domain."
-					),
-				},
-			)
-			continue
-		expected_arity = int(declared_arities[literal.predicate])
-		actual_arity = len(literal.arguments)
-		if expected_arity != actual_arity:
-			errors.append(
-				{
-					"transition_index": index,
-					"source_state": source_state,
-					"target_state": target_state,
-					"raw_label": raw_label,
-					"predicate": literal.predicate,
-					"expected_arity": expected_arity,
-					"actual_arity": actual_arity,
-					"error_type": "wrong_arity",
-					"message": (
-						"DFA transition predicate or numeric resource function "
-						"arity does not match the PDDL domain declaration."
-					),
-				},
-			)
-	return SingletonLiteralDFADiagnostic(valid=not errors, errors=tuple(errors))
+		for literal in literals:
+			if declared_arities is None:
+				continue
+			if literal.predicate not in declared_arities:
+				errors.append(
+					{
+						"transition_index": index,
+						"source_state": source_state,
+						"target_state": target_state,
+						"raw_label": raw_label,
+						"predicate": literal.predicate,
+						"error_type": "unsupported_predicate",
+						"message": (
+							"DFA transition references a predicate or numeric "
+							"resource function that is not declared in the PDDL "
+							"domain."
+						),
+					},
+				)
+				continue
+			expected_arity = int(declared_arities[literal.predicate])
+			actual_arity = len(literal.arguments)
+			if expected_arity != actual_arity:
+				errors.append(
+					{
+						"transition_index": index,
+						"source_state": source_state,
+						"target_state": target_state,
+						"raw_label": raw_label,
+						"predicate": literal.predicate,
+						"expected_arity": expected_arity,
+						"actual_arity": actual_arity,
+						"error_type": "wrong_arity",
+						"message": (
+							"DFA transition predicate or numeric resource function "
+							"arity does not match the PDDL domain declaration."
+						),
+					},
+				)
+	return GuardTransitionDFADiagnostic(valid=not errors, errors=tuple(errors))
 
 
 def append_temporal_goal_to_library(
@@ -191,22 +177,23 @@ def append_temporal_goal_to_library(
 			"duplicate_temporal_goal: Plan library already contains an "
 			f"achievement-goal entry for {goal_name!r}."
 		)
+	pddl_support = assert_compilable_pddl_files(domain_file=domain_file)
 	domain = PDDLParser.parse_domain(domain_file)
 	declared_arities = _declared_temporal_goal_arities(domain)
-	diagnostic = validate_singleton_literal_dfa(
+	diagnostic = validate_guard_transition_dfa(
 		dfa_payload,
 		allow_true_accepting_self_loops=allow_true_accepting_self_loops,
 		declared_arities=declared_arities,
-		allow_negative_literals=True,
 	)
 	if not diagnostic.valid:
 		first_error = diagnostic.errors[0]
 		raise ValueError(
-			"DFA payload does not satisfy the singleton-literal transition contract: "
+			"DFA payload does not satisfy the conjunctive guard-transition contract: "
 			f"{first_error['error_type']}: {first_error['message']}"
 		)
 	append_record: dict[str, Any] = {
 		"goal_name": goal_name,
+		"pddl_support": pddl_support.to_dict(),
 		"dfa_initial_state": dfa_payload.get("initial_state"),
 		"dfa_accepting_states": list(dfa_payload.get("accepting_states") or ()),
 		"progress_request_diagnostics": _progress_request_diagnostics(
@@ -217,31 +204,31 @@ def append_temporal_goal_to_library(
 		),
 	}
 	plans = list(plan_library.plans)
-	linear_sequence = _linear_progress_sequence(
+	transition_path = _unique_accepting_progress_path(
 		dfa_payload=dfa_payload,
 		declared_arities=declared_arities,
 	)
-	if linear_sequence is None:
+	if transition_path is None:
 		raise ValueError(
 			"nonlinear_temporal_goal_not_supported: current ASL append emits a "
-			"single sequential goal body and therefore supports only one positive "
-			"singleton-literal progress path from the initial DFA state to an "
+			"sequence of query-local transition helpers and therefore supports only "
+			"one progress path from the initial DFA state to an "
 			"accepting state. Branching or state-dependent temporal goals require "
 			"an external DFA/reward-machine controller."
 		)
-	progress_plans = (
-		_linear_single_body_plan(
-			goal_name=goal_name,
-			sequence=linear_sequence,
-		),
+	progress_plans = _guard_transition_wrapper_plans(
+		goal_name=goal_name,
+		transition_path=transition_path,
+		domain=domain,
 	)
 	entry_proposition = _query_entry_proposition(goal_name)
-	append_record["wrapper_mode"] = _LINEAR_SINGLE_BODY_WRAPPER_MODE
+	append_record["wrapper_mode"] = _DFA_GUARD_TRANSITION_WRAPPER_MODE
 	append_record["query_entry_proposition"] = entry_proposition
 	append_record["progress_plan_count"] = len(progress_plans)
+	append_record["progress_transition_count"] = len(transition_path)
 	append_record["accepting_plan_count"] = 0
-	append_record["progress_state_coverage"] = _linear_progress_state_coverage(
-		sequence=linear_sequence,
+	append_record["progress_state_coverage"] = _progress_transition_state_coverage(
+		transition_path=transition_path,
 	)
 	plans.extend(progress_plans)
 	initial_beliefs = _initial_beliefs_with_query_entry(
@@ -470,12 +457,12 @@ def _symbol_for(predicate: str, args: Sequence[str]) -> str:
 	return "_".join(str(item).strip() for item in items if str(item).strip())
 
 
-def _linear_progress_sequence(
+def _unique_accepting_progress_path(
 	*,
 	dfa_payload: Mapping[str, Any],
 	declared_arities: Mapping[str, int],
-) -> tuple[tuple[DFALiteral, Mapping[str, str]], ...] | None:
-	"""Return the single accepting-progress path if the DFA is linear."""
+) -> tuple[tuple[tuple[DFALiteral, ...], Mapping[str, str]], ...] | None:
+	"""Return the unique accepting-progress path represented by the DFA."""
 
 	progress_transitions = _all_progress_transitions(dfa_payload)
 	if not progress_transitions:
@@ -493,7 +480,7 @@ def _linear_progress_sequence(
 		transitions_by_source.setdefault(transition["source_state"], []).append(transition)
 	current_state = initial_state
 	visited: set[str] = set()
-	sequence: list[tuple[DFALiteral, Mapping[str, str]]] = []
+	path: list[tuple[tuple[DFALiteral, ...], Mapping[str, str]]] = []
 	while current_state not in accepting_states:
 		if current_state in visited:
 			return None
@@ -502,70 +489,179 @@ def _linear_progress_sequence(
 		if len(outgoing) != 1:
 			return None
 		transition = outgoing[0]
-		literal = _required_progress_literal(transition["raw_label"])
-		_validate_declared_literal(literal, declared_arities=declared_arities)
-		if literal.polarity != "positive":
-			raise ValueError(
-				"negative_literal_template_not_supported: Cannot compile negative "
-				"DFA progress literal into an atomic achievement subgoal yet: "
-				f"{transition['raw_label']!r}."
-			)
-		sequence.append((literal, transition))
+		literals = _parse_guard_literals(transition["raw_label"])
+		for literal in literals:
+			_validate_declared_literal(literal, declared_arities=declared_arities)
+		path.append((literals, transition))
 		current_state = transition["target_state"]
-	if len(sequence) != len(progress_transitions):
+	if len(path) != len(progress_transitions):
 		return None
-	return tuple(sequence)
+	return tuple(path)
 
 
-def _linear_single_body_plan(
+def _guard_transition_wrapper_plans(
 	*,
 	goal_name: str,
-	sequence: Sequence[tuple[DFALiteral, Mapping[str, str]]],
-) -> AgentSpeakPlan:
-	"""Compile a linear positive DFA path into one sequential ASL goal body."""
+	transition_path: Sequence[
+		tuple[tuple[DFALiteral, ...], Mapping[str, str]]
+	],
+	domain: PDDLDomain,
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Compile every DFA progress edge into one query-local transition helper."""
 
-	body = tuple(
-		AgentSpeakBodyStep("subgoal", literal.predicate, literal.arguments)
-		for literal, _transition in tuple(sequence)
+	entry_proposition = _query_entry_proposition(goal_name)
+	transition_names = tuple(
+		f"{goal_name}_trans_{index}"
+		for index in range(1, len(tuple(transition_path)) + 1)
 	)
-	return AgentSpeakPlan(
-		plan_name=f"{goal_name}_linear_sequence",
-		trigger=AgentSpeakTrigger(
-			event_type="achievement_goal",
-			symbol=goal_name,
-			arguments=(),
+	plans: list[AgentSpeakPlan] = [
+		AgentSpeakPlan(
+			plan_name=f"{goal_name}_trans_sequence",
+			trigger=AgentSpeakTrigger("achievement_goal", goal_name, ()),
+			context=(entry_proposition,),
+			body=tuple(
+				AgentSpeakBodyStep("subgoal", transition_name, ())
+				for transition_name in transition_names
+			),
+			binding_certificate=(
+				{
+					"artifact_family": "temporal_goal_dfa_append",
+					"wrapper_mode": _DFA_GUARD_TRANSITION_WRAPPER_MODE,
+					"wrapper_role": "transition_sequence_entry",
+					"query_entry_proposition": entry_proposition,
+					"progress_transition_count": len(transition_names),
+				},
+			),
 		),
-		context=(_query_entry_proposition(goal_name),),
-		body=body,
-		binding_certificate=(
-			{
-				"artifact_family": "temporal_goal_dfa_append",
-				"wrapper_mode": _LINEAR_SINGLE_BODY_WRAPPER_MODE,
-				"query_entry_proposition": _query_entry_proposition(goal_name),
-				"source_states": [
-					str(transition.get("source_state") or "")
-					for _literal, transition in tuple(sequence)
-				],
-				"target_states": [
-					str(transition.get("target_state") or "")
-					for _literal, transition in tuple(sequence)
-				],
-				"raw_labels": [
-					str(transition.get("raw_label") or "")
-					for _literal, transition in tuple(sequence)
-				],
-			},
-		),
-	)
+	]
+	for transition_index, ((literals, transition), transition_name) in enumerate(
+		zip(tuple(transition_path), transition_names),
+		start=1,
+	):
+		positive_literals = tuple(
+			literal for literal in literals if literal.polarity == "positive"
+		)
+		negative_literals = tuple(
+			literal for literal in literals if literal.polarity == "negative"
+		)
+		type_contexts = _guard_variable_type_contexts(literals, domain=domain)
+		guard_context = (
+			entry_proposition,
+			*type_contexts,
+			*tuple(literal.atom for literal in positive_literals),
+			*tuple(f"not {literal.atom}" for literal in negative_literals),
+		)
+		certificate = {
+			"artifact_family": "temporal_goal_dfa_append",
+			"wrapper_mode": _DFA_GUARD_TRANSITION_WRAPPER_MODE,
+			"query_entry_proposition": entry_proposition,
+			"transition_index": transition_index,
+			"source_state": str(transition.get("source_state") or ""),
+			"target_state": str(transition.get("target_state") or ""),
+			"raw_label": str(transition.get("raw_label") or ""),
+		}
+		plans.append(
+			AgentSpeakPlan(
+				plan_name=f"{transition_name}_done",
+				trigger=AgentSpeakTrigger("achievement_goal", transition_name, ()),
+				context=guard_context,
+				body=(),
+				binding_certificate=({**certificate, "wrapper_role": "transition_done"},),
+			),
+		)
+		for literal_index, literal in enumerate(positive_literals, start=1):
+			plans.append(
+				AgentSpeakPlan(
+					plan_name=(
+						f"{transition_name}_repair_{literal_index}_{literal.predicate}"
+					),
+					trigger=AgentSpeakTrigger("achievement_goal", transition_name, ()),
+					context=(
+						entry_proposition,
+						*type_contexts,
+						*tuple(f"not {item.atom}" for item in negative_literals),
+						f"not {literal.atom}",
+					),
+					body=(
+						AgentSpeakBodyStep(
+							"subgoal",
+							literal.predicate,
+							literal.arguments,
+						),
+						AgentSpeakBodyStep("subgoal", transition_name, ()),
+					),
+					binding_certificate=(
+						{
+							**certificate,
+							"wrapper_role": "transition_positive_literal_repair",
+							"positive_literal_index": literal_index,
+						},
+					),
+				),
+			)
+	return tuple(plans)
 
 
-def _linear_progress_state_coverage(
+def _guard_variable_type_contexts(
+	literals: Sequence[DFALiteral],
 	*,
-	sequence: Sequence[tuple[DFALiteral, Mapping[str, str]]],
+	domain: PDDLDomain,
+) -> tuple[str, ...]:
+	"""Range-restrict lifted guard variables using declared PDDL object types."""
+
+	parameter_types = {
+		str(predicate.name): tuple(
+			_parameter_type(parameter) for parameter in tuple(predicate.parameters or ())
+		)
+		for predicate in tuple(domain.predicates or ())
+	}
+	parameter_types.update(
+		{
+			str(function.name): (
+				*tuple(
+					_parameter_type(parameter)
+					for parameter in tuple(function.parameters or ())
+				),
+				None,
+			)
+			for function in tuple(domain.functions or ())
+		},
+	)
+	contexts: list[str] = []
+	for literal in literals:
+		for argument, type_name in zip(
+			literal.arguments,
+			parameter_types.get(literal.predicate, ()),
+		):
+			if not _is_agentspeak_variable(argument) or not type_name:
+				continue
+			context = f"obj_tp({argument}, {type_name})"
+			if context not in contexts:
+				contexts.append(context)
+	return tuple(contexts)
+
+
+def _parameter_type(parameter: str) -> str:
+	text = str(parameter or "").strip()
+	if " - " not in text:
+		return "object"
+	return text.rsplit(" - ", 1)[1].strip() or "object"
+
+
+def _is_agentspeak_variable(argument: str) -> bool:
+	text = str(argument or "").strip()
+	return bool(text) and (text[0].isupper() or text[0] == "_")
+
+
+def _progress_transition_state_coverage(
+	*,
+	transition_path: Sequence[
+		tuple[tuple[DFALiteral, ...], Mapping[str, str]]
+	],
 ) -> dict[str, object]:
 	source_states = tuple(
 		str(transition.get("source_state") or "").strip()
-		for _literal, transition in tuple(sequence)
+		for _literals, transition in tuple(transition_path)
 	)
 	return {
 		"valid": True,
@@ -574,7 +670,7 @@ def _linear_progress_state_coverage(
 		"uncovered_states": [],
 		"progress_state_count": len(source_states),
 		"covered_progress_state_count": len(source_states),
-		"progress_transition_count": len(sequence),
+		"progress_transition_count": len(transition_path),
 		"progress_transition_count_by_state": {
 			state: source_states.count(state) for state in source_states
 		},
@@ -627,11 +723,56 @@ def _all_progress_transitions(dfa_payload: Mapping[str, Any]) -> tuple[dict[str,
 	return tuple(progress_transitions)
 
 
-def _required_progress_literal(raw_label: str) -> DFALiteral:
-	literal = _parse_literal(raw_label)
-	if literal is None:
-		raise ValueError(f"DFA progress transition is not a singleton literal: {raw_label!r}.")
-	return literal
+def _parse_guard_literals(raw_label: str) -> tuple[DFALiteral, ...]:
+	"""Parse one MONA guard in the supported conjunction-and-negation fragment."""
+
+	text = str(raw_label or "").strip()
+	if not text:
+		raise ValueError("DFA transition guard must be non-empty.")
+	if text.lower() == "true":
+		return ()
+	if text.lower() == "false":
+		raise ValueError("False DFA transition guards cannot be compiled as progress helpers.")
+	if "|" in text or " or " in f" {text.lower()} ":
+		raise ValueError("Disjunctive DFA transition guards are not supported.")
+	parts = _split_top_level_conjunction_strict(text)
+	literals: list[DFALiteral] = []
+	for part in parts:
+		literal = _parse_literal(part)
+		if literal is None:
+			raise ValueError(
+				"DFA transition guards must contain only declared predicate or numeric "
+				f"resource literals joined by conjunction; received {raw_label!r}.",
+			)
+		if literal not in literals:
+			literals.append(literal)
+	return tuple(literals)
+
+
+def _split_top_level_conjunction_strict(raw_guard: str) -> tuple[str, ...]:
+	parts: list[str] = []
+	start = 0
+	depth = 0
+	for index, character in enumerate(str(raw_guard or "")):
+		if character == "(":
+			depth += 1
+		elif character == ")":
+			depth -= 1
+			if depth < 0:
+				raise ValueError("DFA transition guard has unbalanced parentheses.")
+		elif character == "&" and depth == 0:
+			part = raw_guard[start:index].strip()
+			if not part:
+				raise ValueError("DFA transition guard contains an empty conjunction term.")
+			parts.append(part)
+			start = index + 1
+	if depth != 0:
+		raise ValueError("DFA transition guard has unbalanced parentheses.")
+	final_part = str(raw_guard or "")[start:].strip()
+	if not final_part:
+		raise ValueError("DFA transition guard contains an empty conjunction term.")
+	parts.append(final_part)
+	return tuple(parts)
 
 
 def _parse_literal(raw_label: str) -> DFALiteral | None:

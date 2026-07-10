@@ -28,6 +28,7 @@ from utils.pddl_parser import PDDLNumericExpression
 from utils.pddl_parser import PDDLParser
 
 from .pddl_types import OBJ_TP_PREDICATE
+from .pddl_support import assert_compilable_pddl_files
 from .pddl_types import type_closure
 
 
@@ -132,6 +133,7 @@ def synthesize_atomic_minimal_literal_module_library(
 ) -> PlanLibrary:
 	"""Build compact recursive atomic modules for seed PDDL predicates."""
 
+	pddl_support = assert_compilable_pddl_files(domain_file=domain_file)
 	domain = PDDLParser.parse_domain(domain_file)
 	declared_predicates = {predicate.name for predicate in domain.predicates}
 	seeds = tuple(
@@ -185,6 +187,7 @@ def synthesize_atomic_minimal_literal_module_library(
 		plans=plans,
 		initial_beliefs=(),
 		metadata={
+			"pddl_support": pddl_support.to_dict(),
 			"generation_mode": "atomic_minimal_literal_module_library",
 			"atomic_template_backend": source_backend,
 			"source_name": source_name,

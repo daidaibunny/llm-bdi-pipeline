@@ -3,6 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from domain_level_planning.atomic_module_synthesis import (
+	synthesize_atomic_minimal_literal_module_library,
+)
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -32,6 +36,87 @@ def test_domain_level_planning_production_code_has_no_blocksworld_special_cases(
 				violations.append(f"{path.name}:{token}")
 
 	assert violations == []
+
+
+def test_atomic_synthesis_is_invariant_under_vocabulary_alpha_renaming(
+	tmp_path: Path,
+) -> None:
+	first_domain = _write_alpha_renamed_domain(
+		tmp_path / "first.pddl",
+		domain_name="first",
+		context_predicate="ready",
+		goal_predicate="done",
+		action_name="finish",
+	)
+	second_domain = _write_alpha_renamed_domain(
+		tmp_path / "second.pddl",
+		domain_name="second",
+		context_predicate="enabled",
+		goal_predicate="completed",
+		action_name="commit",
+	)
+
+	first = synthesize_atomic_minimal_literal_module_library(
+		domain_file=first_domain,
+		seed_predicates=("done",),
+		source_backend="test",
+		source_name="alpha-first",
+	)
+	second = synthesize_atomic_minimal_literal_module_library(
+		domain_file=second_domain,
+		seed_predicates=("completed",),
+		source_backend="test",
+		source_name="alpha-second",
+	)
+
+	assert _plan_structure_profile(first) == _plan_structure_profile(second)
+	assert (
+		first.metadata["atomic_module_synthesis"]["raw_candidate_count"]
+		== second.metadata["atomic_module_synthesis"]["raw_candidate_count"]
+	)
+
+
+def _write_alpha_renamed_domain(
+	path: Path,
+	*,
+	domain_name: str,
+	context_predicate: str,
+	goal_predicate: str,
+	action_name: str,
+) -> Path:
+	path.write_text(
+		f"""
+		(define (domain {domain_name})
+		 (:requirements :strips :typing)
+		 (:types item)
+		 (:predicates
+		  ({context_predicate} ?x - item)
+		  ({goal_predicate} ?x - item)
+		 )
+		 (:action {action_name}
+		  :parameters (?x - item)
+		  :precondition ({context_predicate} ?x)
+		  :effect ({goal_predicate} ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	return path
+
+
+def _plan_structure_profile(library) -> tuple[tuple[object, ...], ...]:
+	return tuple(
+		sorted(
+			(
+				len(plan.trigger.arguments),
+				len(plan.context),
+				tuple(step.kind for step in plan.body),
+				len(plan.binding_certificate),
+			)
+			for plan in library.plans
+		)
+	)
 
 
 def test_paper_experiment_scripts_use_registry_instead_of_embedded_domain_rows() -> None:

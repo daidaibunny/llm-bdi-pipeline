@@ -2574,9 +2574,7 @@ def _plan_verifier_output_success(
 	lower_output = str(output or "").lower()
 	if any(marker in lower_output for marker in _PLAN_VERIFIER_FAILURE_MARKERS):
 		return False
-	if not lower_output.strip():
-		return True
-	return any(marker in lower_output for marker in _PLAN_VERIFIER_SUCCESS_MARKERS) or exit_code == 0
+	return any(marker in lower_output for marker in _PLAN_VERIFIER_SUCCESS_MARKERS)
 
 
 def _bounded_file_excerpt(path: Path, max_chars: int) -> str:

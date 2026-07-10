@@ -103,30 +103,17 @@ def validate_plan_library_structure(
 			warnings.append(
 				f"Transition plan '{plan.plan_name}' still manipulates controller state beliefs."
 			)
-		if _is_query_wrapper_symbol(plan.trigger.symbol) and body:
-			last_step = body[-1]
-			is_recursive_progress_plan = (
-				last_step.kind == "subgoal"
-				and last_step.symbol == plan.trigger.symbol
-				and not tuple(last_step.arguments or ())
-			)
-			is_linear_single_body_plan = _is_linear_single_body_plan(plan)
-			has_query_entry_context = _has_query_entry_context(plan)
-			if not is_recursive_progress_plan and not is_linear_single_body_plan:
+		if _is_query_wrapper_symbol(plan.trigger.symbol):
+			certificate = _guard_transition_certificate(plan)
+			if certificate is None or not _guard_transition_plan_is_valid(
+				plan,
+				certificate=certificate,
+			):
 				body_valid = False
 				warnings.append(
 					(
-						f"Temporal wrapper plan '{plan.plan_name}' does not recurse "
-						f"to `!{plan.trigger.symbol}` or compile a certified "
-						"linear single-body sequence."
-					),
-				)
-			if is_linear_single_body_plan and not has_query_entry_context:
-				body_valid = False
-				warnings.append(
-					(
-						f"Temporal wrapper plan '{plan.plan_name}' must use its "
-						"query entry proposition as context."
+						f"Temporal wrapper plan '{plan.plan_name}' is not a certified "
+						"DFA guard-transition entry, completion, or repair plan."
 					),
 				)
 
@@ -154,28 +141,44 @@ def _is_query_wrapper_symbol(symbol: str) -> bool:
 	return text.startswith("g_") and len(text) > 2
 
 
-def _is_linear_single_body_plan(plan) -> bool:
-	if not tuple(plan.body or ()):
-		return False
-	if not all(step.kind == "subgoal" for step in tuple(plan.body or ())):
-		return False
+def _guard_transition_certificate(plan) -> dict | None:
 	for certificate in tuple(plan.binding_certificate or ()):
 		if (
 			isinstance(certificate, dict)
 			and certificate.get("artifact_family") == "temporal_goal_dfa_append"
-			and certificate.get("wrapper_mode") == "linear_single_body"
+			and certificate.get("wrapper_mode") == "dfa_guard_transition_replay"
 		):
-			return True
+			return certificate
+	return None
+
+
+def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
+	role = str(certificate.get("wrapper_role") or "").strip()
+	entry_proposition = str(certificate.get("query_entry_proposition") or "").strip()
+	context = tuple(plan.context or ())
+	body = tuple(plan.body or ())
+	if not entry_proposition or entry_proposition not in context:
+		return False
+	if role == "transition_sequence_entry":
+		return (
+			context == (entry_proposition,)
+			and bool(body)
+			and all(
+				step.kind == "subgoal"
+				and step.symbol.startswith(f"{plan.trigger.symbol}_trans_")
+				and not tuple(step.arguments or ())
+				for step in body
+			)
+		)
+	if role == "transition_done":
+		return not body and "_trans_" in plan.trigger.symbol
+	if role == "transition_positive_literal_repair":
+		return (
+			len(body) == 2
+			and body[0].kind == "subgoal"
+			and body[0].symbol != plan.trigger.symbol
+			and body[1].kind == "subgoal"
+			and body[1].symbol == plan.trigger.symbol
+			and not tuple(body[1].arguments or ())
+		)
 	return False
-
-
-def _has_query_entry_context(plan) -> bool:
-	expected = _query_entry_proposition(plan.trigger.symbol)
-	return tuple(plan.context or ()) == (expected,)
-
-
-def _query_entry_proposition(goal_name: str) -> str:
-	text = str(goal_name or "").strip()
-	if text.startswith("g_") and len(text) > 2:
-		return text[2:]
-	return f"{text}_entry" if text else "query_entry"

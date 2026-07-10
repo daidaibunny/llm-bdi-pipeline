@@ -57,10 +57,11 @@ from utils.pddl_parser import PDDLNumericExpression  # noqa: E402
 from utils.pddl_parser import PDDLNumericFluent  # noqa: E402
 from utils.pddl_parser import PDDLParser  # noqa: E402
 from plan_library.models import AgentSpeakBodyStep  # noqa: E402
-from plan_library.models import AgentSpeakPlan  # noqa: E402
-from plan_library.models import AgentSpeakTrigger  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import render_plan_library_asl  # noqa: E402
+from domain_level_planning.temporal_goal_appender import (  # noqa: E402
+	append_temporal_goal_to_library,
+)
 
 
 @dataclass(frozen=True)
@@ -914,57 +915,48 @@ def append_problem_goal_wrappers_to_library(
 	if not library_json.exists():
 		raise FileNotFoundError(f"Missing canonical plan library: {library_json}")
 	library = PlanLibrary.from_dict(json.loads(library_json.read_text(encoding="utf-8")))
-	new_plans = list(library.plans)
-	initial_beliefs = list(library.initial_beliefs)
 	append_records: list[dict[str, object]] = []
+	domain_file = PROJECT_ROOT / "src" / "domains" / domain_name / "domain.pddl"
+	if not domain_file.exists():
+		raise FileNotFoundError(f"Missing canonical PDDL domain: {domain_file}")
 	for index, problem_file in enumerate(tuple(problem_files or ()), start=1):
 		goal_name = f"g_{domain_key}_test_{index}"
 		entry_proposition = f"{domain_key}_test_{index}"
 		body_steps = _problem_goal_body_steps(problem_file)
-		if entry_proposition not in initial_beliefs:
-			initial_beliefs.append(entry_proposition)
-		plan = AgentSpeakPlan(
-			plan_name=f"{goal_name}_pddl_goal_wrapper",
-			trigger=AgentSpeakTrigger("achievement_goal", goal_name),
-			context=(entry_proposition,),
-			body=body_steps,
-			binding_certificate=(
-				{
-					"artifact_family": "evaluation_pddl_goal_wrapper_bridge",
-					"problem_file": str(problem_file),
-					"goal_step_count": len(body_steps),
-					"contains_numeric_resource_goal": any(
-						step.kind == "subgoal" and _step_has_numeric_target(step)
-						for step in body_steps
-					),
-				},
-			),
+		raw_guard = " & ".join(_body_step_atom(step) for step in body_steps)
+		library = append_temporal_goal_to_library(
+			plan_library=library,
+			goal_name=goal_name,
+			dfa_payload={
+				"initial_state": "q0",
+				"accepting_states": ["q1"],
+				"guarded_transitions": [
+					{"source_state": "q0", "target_state": "q1", "raw_label": raw_guard},
+					{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+				],
+			},
+			domain_file=domain_file,
 		)
-		new_plans = [
-			existing
-			for existing in new_plans
-			if existing.plan_name != plan.plan_name
-		]
-		new_plans.append(plan)
 		append_records.append(
 			{
 				"goal_name": goal_name,
 				"entry_proposition": entry_proposition,
 				"problem_file": str(problem_file),
+				"raw_guard": raw_guard,
 				"body_steps": [step.to_dict() for step in body_steps],
 			},
 		)
 	updated = PlanLibrary(
 		domain_name=library.domain_name,
-		plans=tuple(new_plans),
-		initial_beliefs=tuple(initial_beliefs),
+		plans=library.plans,
+		initial_beliefs=library.initial_beliefs,
 		metadata={
 			**dict(library.metadata),
 			"evaluation_pddl_goal_wrapper_bridge": {
-				"wrapper_mode": "linear_single_body_from_pddl_problem_goal",
+				"wrapper_mode": "dfa_guard_transition_replay_from_pddl_goal",
 				"scope": "benchmark_smoke_only",
 				"final_query_contract": (
-					"validated_lifted_ltlf_json_to_ltlf2dfa_to_singleton_literal_dfa_append"
+					"validated_lifted_ltlf_json_to_ltlf2dfa_to_guard_transition_append"
 				),
 				"append_records": append_records,
 			},
@@ -976,7 +968,7 @@ def append_problem_goal_wrappers_to_library(
 					or [],
 				),
 				{
-					"wrapper_mode": "linear_single_body_from_pddl_problem_goal",
+					"wrapper_mode": "dfa_guard_transition_replay_from_pddl_goal",
 					"scope": "benchmark_smoke_only",
 					"query_count": len(append_records),
 					"goal_names": [record["goal_name"] for record in append_records],
@@ -1052,6 +1044,13 @@ def _problem_goal_body_steps(problem_file: Path) -> tuple[AgentSpeakBodyStep, ..
 	return tuple(steps)
 
 
+def _body_step_atom(step: AgentSpeakBodyStep) -> str:
+	arguments = tuple(step.arguments or ())
+	if not arguments:
+		return step.symbol
+	return f"{step.symbol}({', '.join(arguments)})"
+
+
 def _numeric_goal_condition_step(
 	condition: PDDLNumericCondition,
 	*,
@@ -1093,11 +1092,6 @@ def _numeric_goal_fluent_and_target(
 		),
 		int(str(right.value)),
 	)
-
-
-def _step_has_numeric_target(step: AgentSpeakBodyStep) -> bool:
-	arguments = tuple(step.arguments or ())
-	return bool(arguments) and re.fullmatch(r"[+-]?\d+", arguments[-1]) is not None
 
 
 def write_test_goal_dataset(

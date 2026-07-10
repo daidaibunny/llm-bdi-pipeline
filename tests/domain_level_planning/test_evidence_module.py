@@ -326,6 +326,7 @@ def test_evidence_compiler_preserves_validated_logistics_intermodal_macro() -> N
 	assert "obj_tp(Y, location)" in asl
 	assert "obj_tp(Z, airplane)" in asl
 	assert "obj_tp(D, truck)" in asl
+	assert "X \\== Y" not in asl
 	assert "\tload_airplane(X, Z, B);" in asl
 	assert "\tfly_airplane(Z, B, C);" in asl
 	assert "\tunload_airplane(X, Z, C);" in asl
@@ -482,7 +483,7 @@ def test_evidence_compiler_adds_negative_precondition_binding_guards() -> None:
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 
 
-def test_evidence_compiler_preserves_distinct_evidence_objects_as_guards() -> None:
+def test_evidence_compiler_emits_only_schema_required_alias_guards() -> None:
 	library = compile_moose_readable_policy_to_minimal_module_asl_library(
 		NUMERIC_MINECRAFT_THREE_CELL_POLICY,
 		domain_file=NUMERIC_MINECRAFT_DOMAIN,
@@ -498,6 +499,14 @@ def test_evidence_compiler_preserves_distinct_evidence_objects_as_guards() -> No
 	assert "X \\== crafting_table" in asl
 	assert "Y \\== crafting_table" in asl
 	assert "Z \\== crafting_table" in asl
+	plan = next(
+		item
+		for item in library.plans
+		if item.plan_name == "moose_numeric_numeric_minecraft_seed0_rule_1"
+	)
+	certificate = dict(plan.binding_certificate[0])
+	assert "evidence_distinctness_guards" not in certificate
+	assert certificate["schema_binding_guards"]
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 
 

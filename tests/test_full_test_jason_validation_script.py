@@ -302,12 +302,125 @@ def test_full_test_wrapper_orders_delete_threatening_goals_first(
 		index=1,
 		problem_file=problem_file,
 		domain_file=domain_file,
+		atomic_plan_library=_blocks_fragment_atomic_library(),
 	)
 	text = "\n".join(lines)
 
 	assert plan_count == 4
 	assert text.index("not on(middle, base)") < text.index("not on(top, middle)")
 	assert "+!g_blocks_fragment_test_1_trans_1 : blocks_fragment_test_1 & on(middle, base) & on(top, middle) <-" in text
+
+
+def test_full_test_wrapper_does_not_infer_semantics_from_argument_positions(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain generic-relations)
+		 (:requirements :strips)
+		 (:predicates (linked ?left ?right) (ready ?left ?right))
+		 (:action make-linked
+		  :parameters (?left ?right)
+		  :precondition (ready ?left ?right)
+		  :effect (linked ?left ?right)
+		 )
+		 (:action remove-linked
+		  :parameters (?left ?right)
+		  :precondition (linked ?left ?right)
+		  :effect (not (linked ?left ?right))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain generic-relations)
+		 (:objects a b c)
+		 (:init (ready a b) (ready b c))
+		 (:goal (and (linked a b) (linked b c)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	lines, _ = full_test_wrapper_lines(
+		domain="generic-relations",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+	)
+	text = "\n".join(lines)
+
+	assert text.index("not linked(a, b)") < text.index("not linked(b, c)")
+
+
+def test_full_test_wrapper_finds_threats_beyond_two_producer_layers(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain deep-threat)
+		 (:requirements :strips)
+		 (:predicates
+		  (goal ?x) (stage1 ?x) (stage2 ?x) (stage3 ?x)
+		  (protected ?x) (seed ?x)
+		 )
+		 (:action achieve-goal
+		  :parameters (?x)
+		  :precondition (stage1 ?x)
+		  :effect (goal ?x)
+		 )
+		 (:action make-stage1
+		  :parameters (?x)
+		  :precondition (stage2 ?x)
+		  :effect (stage1 ?x)
+		 )
+		 (:action make-stage2
+		  :parameters (?x)
+		  :precondition (stage3 ?x)
+		  :effect (stage2 ?x)
+		 )
+		 (:action make-stage3
+		  :parameters (?x)
+		  :precondition (seed ?x)
+		  :effect (and (stage3 ?x) (not (protected ?x)))
+		 )
+		 (:action restore-protected
+		  :parameters (?x)
+		  :precondition (seed ?x)
+		  :effect (protected ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain deep-threat)
+		 (:objects item)
+		 (:init (seed item))
+		 (:goal (and (protected item) (goal item)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	lines, _ = full_test_wrapper_lines(
+		domain="deep-threat",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+	)
+	text = "\n".join(lines)
+
+	assert text.index("not goal(item)") < text.index("not protected(item)")
 
 
 def test_full_test_wrapper_keeps_ground_constants_distinct_from_schema_variables(
@@ -358,6 +471,7 @@ def test_full_test_wrapper_keeps_ground_constants_distinct_from_schema_variables
 		index=1,
 		problem_file=problem_file,
 		domain_file=domain_file,
+		atomic_plan_library=_blocks_fragment_atomic_library(),
 	)
 	text = "\n".join(lines)
 
@@ -366,6 +480,38 @@ def test_full_test_wrapper_keeps_ground_constants_distinct_from_schema_variables
 		"+!g_blocks_fragment_test_1_trans_1 : blocks_fragment_test_1 "
 		"& on(middle, base) & on(x, middle) & on(top, x) <-"
 	) in text
+
+
+def _blocks_fragment_atomic_library() -> PlanLibrary:
+	return PlanLibrary(
+		domain_name="blocks-fragment",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="clear_via_unstack",
+				trigger=AgentSpeakTrigger("achievement_goal", "clear", ("X",)),
+				context=("on(Y, X)", "clear(Y)"),
+				body=(AgentSpeakBodyStep("action", "unstack", ("Y", "X")),),
+			),
+			AgentSpeakPlan(
+				plan_name="holding_via_clear_and_unstack",
+				trigger=AgentSpeakTrigger("achievement_goal", "holding", ("X",)),
+				context=("on(X, Z)",),
+				body=(
+					AgentSpeakBodyStep("subgoal", "clear", ("X",)),
+					AgentSpeakBodyStep("action", "unstack", ("X", "Z")),
+				),
+			),
+			AgentSpeakPlan(
+				plan_name="on_via_preparation",
+				trigger=AgentSpeakTrigger("achievement_goal", "on", ("X", "Y")),
+				body=(
+					AgentSpeakBodyStep("subgoal", "clear", ("X",)),
+					AgentSpeakBodyStep("subgoal", "holding", ("X",)),
+					AgentSpeakBodyStep("action", "stack", ("X", "Y")),
+				),
+			),
+		),
+	)
 
 
 def test_full_test_wrapper_uses_step_helpers_for_certified_monotonic_goals(

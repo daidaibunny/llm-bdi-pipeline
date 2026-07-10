@@ -165,13 +165,13 @@ class ArchitectureContract:
 			),
 			(
 				"The temporal layer consumes lifted LTLf JSON, compiles it to a "
-				"DFA, validates singleton-literal transition guards, and appends "
+				"DFA, validates conjunctive guard transitions, and appends one "
+				"query-local transition helper per progress edge plus "
 				"query-specific +!g_query wrappers to the same domain library."
 			),
 			(
-				"Negative waiting guards may appear in the DFA as no-op structure, "
-				"but negative progress literals are rejected until a negative "
-				"atomic-template backend is validated."
+				"Negative transition literals remain AgentSpeak context constraints "
+				"and never become negative achievement subgoals."
 			),
 			(
 				f"The current bounded claim is {hypothesis.correctness_language['claim_scope']}; "
@@ -187,7 +187,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 		guarantee=(
 			"bounded atomic-template guarantee: import or learn lifted singleton "
 			"predicate/literal plan templates from verified external generalized-"
-			"planning artifacts, append only singleton-literal DFA temporal wrappers, "
+			"planning artifacts, append conjunction-and-negation DFA transition wrappers, "
 			"and do not claim universal PDDL generalized-planning completeness"
 		),
 		paper_core_method=(
@@ -196,14 +196,14 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"LiftedPolicyProgram normalizer",
 			"AgentSpeak(L) compiler for lifted atomic plans",
 			"lifted LTLf-to-DFA temporal goal append",
-			"singleton-literal DFA validator",
+			"conjunctive guard-transition DFA validator",
 		),
 		implementation_safeguards=(
 			"old in-repository GP synthesis and conjunctive-goal ordering code is not part of the current method",
 			"external learners must run under resource guards",
 			"backend artifacts must pass parser, binding, compiler, and validation gates",
-			"negative progress literals fail unless a validated negative template exists",
-			"DFA wrapper progress is encoded through validated prefix-literal contexts",
+			"negative guard literals remain context-only and never become subgoals",
+			"DFA wrapper progress is encoded through one validated helper per progress edge",
 		),
 		non_goals=(
 			"universal completeness for arbitrary PDDL domains",
@@ -227,7 +227,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 		),
 		temporal_append_target=(
 			"query-specific +!g_query wrappers from "
-			"singleton-literal DFA progress transitions"
+			"conjunctive DFA progress transitions with context-only negation"
 		),
 		temporal_descriptor_semantics=(
 			"lifted LTLf atoms and DFA metadata are external Input artifacts, not "
@@ -265,9 +265,9 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			),
 			ArchitectureDecision(
 				id="D5",
-				decision="Reject unsupported negative progress literals with structured diagnostics.",
+				decision="Compile negative transition literals as context constraints only.",
 				status="accepted",
-				rationale="Negative waiting guards are DFA structure; negative achievement requires a separate backend contract.",
+				rationale="Negation constrains transition eligibility; negative achievement still requires a separate backend contract.",
 			),
 		),
 		gaps=(
@@ -291,8 +291,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				layer="temporal append",
 				gap="DFA wrapper execution requires a controller when ASL context cannot infer DFA state.",
 				current_state=(
-					"The appender validates singleton-literal DFA transitions, allows "
-					"negative waiting guards, rejects negative progress literals, and "
+					"The appender validates conjunction-and-negation DFA transitions, "
+					"keeps negative literals context-only, and "
 					"records when external DFA state is required."
 				),
 				required_improvement=(
@@ -369,23 +369,24 @@ def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
 			target_artifact="query-specific +!g_query wrappers over the domain library",
 			core_claim=(
 				"compile lifted LTLf goals to DFA metadata and append wrapper plans "
-				"only when DFA progress transitions expose singleton literals"
+				"when the unique accepting progress path uses conjunction and negation"
 			),
 			admissible_evidence=(
 				"lifted LTLf JSON from the external Input component",
 				"ltlf2dfa DFA payloads",
-				"singleton-literal DFA validator diagnostics",
+				"conjunctive guard-transition DFA validator diagnostics",
 				"PDDL predicate arity checks",
 			),
 			selector_obligations=(
-				"reject compound transition guards",
+				"compile every progress edge into exactly one query-local transition helper",
+				"accept conjunctive positive achievement literals",
 				"allow negative waiting guards as DFA structure",
-				"reject negative progress literals",
+				"keep negative progress literals as context constraints",
 				"record whether external DFA state is required",
 			),
 			compiler_output=(
-				"ASL +!g_query plans whose bodies call existing atomic predicate "
-				"subgoals and then recurse to +!g_query"
+				"ASL +!g_query entry plans that call one +!g_query_trans_i helper "
+				"per DFA progress edge; each helper rechecks and repairs its guard"
 			),
 			runtime_semantics=(
 				"an external DFA or reward-machine controller owns temporal state "
@@ -394,7 +395,7 @@ def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
 			),
 			required_reports=(
 				"dfa_payload",
-				"singleton_literal_dfa_diagnostic",
+				"guard_transition_dfa_diagnostic",
 				"temporal_append_metadata",
 				"updated plan_library.asl",
 			),
@@ -411,7 +412,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 	"""Return the exact bounded hypothesis class claimed now."""
 
 	return HypothesisClassContract(
-		name="atomic_template_with_singleton_literal_temporal_append",
+		name="atomic_template_with_guard_transition_temporal_append",
 		feature_language={
 			"state_features": (
 				"PDDL predicate literals over lifted variables",
@@ -428,15 +429,15 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 		},
 		module_language={
 			"heads": "declared PDDL predicate achievement goals and query-specific +!g_query",
-			"contexts": "PDDL state literals and validated singleton DFA progress contexts",
+			"contexts": "PDDL state literals and validated conjunction-and-negation DFA guards",
 			"body_calls": "declared PDDL primitive actions or declared PDDL predicate subgoals",
-			"recursion": "temporal wrappers may recurse to +!g_query after one atomic subgoal call",
+			"recursion": "each transition helper may repair one missing positive literal and recurse to itself",
 		},
 		temporal_wrapper_language={
 			"rule_shape": "+!g_query context rules generated from DFA progress transitions",
 			"ordering_evidence": (
 				"DFA progress distance to accepting states",
-				"singleton transition literal validation",
+				"conjunctive guard-transition validation",
 			),
 			"runtime_gate": "validated prefix-literal context; external DFA state is reserved for ambiguous future cases",
 			"goal_dependency_scope": "temporal ordering expressed by lifted LTLf and DFA",
@@ -445,16 +446,16 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"selection_constraints": (
 				"backend artifact parser success",
 				"declared predicate and arity checks",
-				"singleton-literal DFA transition validation",
+				"conjunctive guard-transition DFA validation",
 			),
 			"validation_scope": "selected PDDL train/test splits and supplied lifted LTLf cases",
 			"termination_checks": (
 				"DFA progress transitions must reduce distance to acceptance",
-				"negative progress literals are rejected",
+				"negative progress literals remain context-only",
 			),
 		},
 		correctness_language={
-			"claim_scope": "verified atomic libraries plus singleton-literal DFA wrappers",
+			"claim_scope": "verified atomic libraries plus conjunction-and-negation DFA transition wrappers",
 			"success_condition": "atomic subgoals are delegated to domain-level lifted ASL plans",
 			"runtime_planning": "no full-trace planner call during library execution",
 			"evidence": (
@@ -466,9 +467,9 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 		},
 		exclusions=(
 			"arbitrary PDDL domains",
-			"compound DFA transition guards",
-			"negative progress literals without a validated backend",
-			"numeric fluents and action costs",
+			"disjunctive or branching DFA progress structures without an external controller",
+			"negative achievement subgoals without a validated backend",
+			"numeric goals outside bounded integer resource equality",
 			"runtime full-trace planning as the library executor",
 		),
 	)

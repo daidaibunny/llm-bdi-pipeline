@@ -819,7 +819,11 @@ def guard_transition_replay_wrapper_lines(
 	if monotonic_certified:
 		ordered_goal_facts = goal_facts
 	else:
-		ordering_edges = _goal_threat_edges(goal_facts, schemas, closure_depth=2)
+		ordering_edges = _goal_threat_edges(
+			goal_facts,
+			schemas,
+			plan_library=atomic_plan_library,
+		)
 		ordered_goal_facts = _stable_topological_goal_order(goal_facts, ordering_edges)
 	atoms = _deduplicate_strings(
 		(
@@ -849,7 +853,7 @@ def guard_transition_replay_wrapper_lines(
 		f"/* full_test_problem={problem_file.name} */",
 		f"{entry_proposition}.",
 		"",
-		f"/* plan={goal_name}_transition_sequence | source_instruction_ids=none */",
+		f"/* plan={goal_name}_trans_sequence | source_instruction_ids=none */",
 		f"+!{goal_name} : {entry_proposition} <-",
 		f"\t!{transition_name}.",
 		"",
@@ -1249,7 +1253,7 @@ def _threat_ordered_goal_facts(
 		return facts
 	return _stable_topological_goal_order(
 		facts,
-		_goal_threat_edges(facts, schemas, closure_depth=2),
+		_goal_threat_edges(facts, schemas),
 	)
 
 
@@ -1257,9 +1261,9 @@ def _goal_threat_edges(
 	goal_facts: Sequence[PDDLFact],
 	action_schemas: Sequence[RuntimeActionSchema],
 	*,
-	closure_depth: int,
+	plan_library: PlanLibrary | None = None,
 ) -> dict[int, set[int]]:
-	"""Return producer-delete and support-dependency edges for one guard block."""
+	"""Return module-certified delete edges for one conjunctive guard block."""
 
 	facts = tuple(goal_facts or ())
 	schemas = tuple(action_schemas or ())
@@ -1267,10 +1271,19 @@ def _goal_threat_edges(
 	if len(facts) < 2 or not schemas:
 		return threat_edges
 	for achiever_index, achiever in enumerate(facts):
-		threats = _possible_delete_patterns_for_goal(
-			_lifted_atom_from_fact(achiever),
+		goal_atom = _lifted_atom_from_fact(achiever)
+		module_threats = _compiled_module_delete_patterns_for_goal(
+			goal=goal_atom,
 			action_schemas=schemas,
-			depth=closure_depth,
+			plan_library=plan_library,
+		)
+		threats = (
+			module_threats
+			if module_threats is not None
+			else _possible_delete_patterns_for_goal(
+				goal_atom,
+				action_schemas=schemas,
+			)
 		)
 		for protected_index, protected in enumerate(facts):
 			if achiever_index == protected_index:
@@ -1278,30 +1291,38 @@ def _goal_threat_edges(
 			protected_atom = _lifted_atom_from_fact(protected)
 			if any(_lifted_atom_unifies(threat, protected_atom) for threat in threats):
 				threat_edges[achiever_index].add(protected_index)
-	for source, target in _same_predicate_argument_dependency_edges(facts):
-		threat_edges[source].add(target)
 	return threat_edges
 
 
-def _same_predicate_argument_dependency_edges(
-	facts: Sequence[PDDLFact],
-) -> tuple[tuple[int, int], ...]:
-	"""Infer support-style ordering from repeated predicate argument sharing."""
+def _compiled_module_delete_patterns_for_goal(
+	*,
+	goal: _LiftedAtom,
+	action_schemas: Sequence[RuntimeActionSchema],
+	plan_library: PlanLibrary | None,
+) -> tuple[_LiftedAtom, ...] | None:
+	"""Summarize the actual compiled module; return None when it is incomplete."""
 
-	edges: list[tuple[int, int]] = []
-	for source_index, source in enumerate(facts):
-		source_arguments = tuple(sanitize_identifier(argument) for argument in source.args)
-		if len(source_arguments) < 2:
-			continue
-		for target_index, target in enumerate(facts):
-			if source_index == target_index or source.predicate != target.predicate:
-				continue
-			target_arguments = tuple(sanitize_identifier(argument) for argument in target.args)
-			if len(target_arguments) != len(source_arguments):
-				continue
-			if source_arguments[0] in target_arguments[1:]:
-				edges.append((source_index, target_index))
-	return tuple(dict.fromkeys(edges))
+	if plan_library is None:
+		return None
+	plans_by_predicate: dict[str, list[AgentSpeakPlan]] = {}
+	for plan in plan_library.plans:
+		plans_by_predicate.setdefault(
+			sanitize_identifier(plan.trigger.symbol),
+			[],
+		).append(plan)
+	actions_by_name = {
+		sanitize_identifier(action.functor): action
+		for action in tuple(action_schemas or ())
+	}
+	max_depth = max(2, len(plans_by_predicate) + 1)
+	summary = _module_delete_summary(
+		goal=goal,
+		plans_by_predicate=plans_by_predicate,
+		actions_by_name=actions_by_name,
+		depth=max_depth,
+		seen={},
+	)
+	return summary.delete_patterns if summary.complete else None
 
 
 def _lifted_atom_from_fact(fact: PDDLFact) -> _LiftedAtom:
@@ -1318,54 +1339,80 @@ def _possible_delete_patterns_for_goal(
 	goal: _LiftedAtom,
 	*,
 	action_schemas: Sequence[RuntimeActionSchema],
-	depth: int,
-	_seen: frozenset[tuple[str, tuple[str, ...]]] = frozenset(),
 ) -> tuple[_LiftedAtom, ...]:
-	if depth <= 0:
-		return ()
-	key = (
-		goal.predicate,
-		tuple("*" if argument.is_variable else argument.symbol for argument in goal.arguments),
+	"""Compute transitive producer deletes to a schema fixed point.
+
+	Every positive precondition with a PDDL producer is explored. Alpha-normalized
+	atom signatures and a worklist make cyclic producer graphs terminate without a
+	domain-specific depth bound.
+	"""
+
+	pending = [goal]
+	goal_anchors = frozenset(
+		argument.symbol for argument in goal.arguments if not argument.is_variable
 	)
-	if key in _seen:
-		return ()
-	next_seen = frozenset((*_seen, key))
+	seen: set[tuple[str, tuple[str, ...]]] = set()
 	deletes: list[_LiftedAtom] = []
-	for action in tuple(action_schemas or ()):
-		action_parameters = frozenset(action.parameters)
-		for effect in _positive_patterns(action.effects):
-			binding = _unify_action_effect_with_goal(
-				effect=effect,
-				action_parameters=action_parameters,
-				goal=goal,
-			)
-			if binding is None:
-				continue
-			for delete_effect in _negative_patterns(action.effects):
-				deletes.append(
+	while pending:
+		current_goal = pending.pop()
+		key = _alpha_normalized_atom_key(current_goal)
+		if key in seen:
+			continue
+		seen.add(key)
+		for action in tuple(action_schemas or ()):
+			action_parameters = frozenset(action.parameters)
+			for effect in _positive_patterns(action.effects):
+				binding = _unify_action_effect_with_goal(
+					effect=effect,
+					action_parameters=action_parameters,
+					goal=current_goal,
+				)
+				if binding is None:
+					continue
+				deletes.extend(
 					_map_runtime_pattern(
 						delete_effect,
 						binding=binding,
 						action_parameters=action_parameters,
-					),
+					)
+					for delete_effect in _negative_patterns(action.effects)
 				)
-			for precondition in _positive_patterns(action.preconditions):
-				mapped_precondition = _map_runtime_pattern(
-					precondition,
-					binding=binding,
-					action_parameters=action_parameters,
-				)
-				if not _has_producer_for_pattern(mapped_precondition, action_schemas):
-					continue
-				deletes.extend(
-					_possible_delete_patterns_for_goal(
-						mapped_precondition,
-						action_schemas=action_schemas,
-						depth=depth - 1,
-						_seen=next_seen,
-					),
-				)
+				for precondition in _positive_patterns(action.preconditions):
+					mapped_precondition = _map_runtime_pattern(
+						precondition,
+						binding=binding,
+						action_parameters=action_parameters,
+					)
+					if (
+						_pattern_mentions_any_constant(mapped_precondition, goal_anchors)
+						and _has_producer_for_pattern(mapped_precondition, action_schemas)
+					):
+						pending.append(mapped_precondition)
 	return tuple(dict.fromkeys(deletes))
+
+
+def _pattern_mentions_any_constant(
+	atom: _LiftedAtom,
+	constants: frozenset[str],
+) -> bool:
+	return any(
+		not argument.is_variable and argument.symbol in constants
+		for argument in atom.arguments
+	)
+
+
+def _alpha_normalized_atom_key(atom: _LiftedAtom) -> tuple[str, tuple[str, ...]]:
+	"""Return a variable-name-independent atom signature for cycle detection."""
+
+	variable_ids: dict[_LiftedTerm, int] = {}
+	arguments: list[str] = []
+	for argument in atom.arguments:
+		if not argument.is_variable:
+			arguments.append(f"={argument.symbol}")
+			continue
+		variable_ids.setdefault(argument, len(variable_ids))
+		arguments.append(f"?{variable_ids[argument]}")
+	return atom.predicate, tuple(arguments)
 
 
 def _positive_patterns(patterns: Sequence[PredicatePattern]) -> tuple[PredicatePattern, ...]:

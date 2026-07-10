@@ -37,8 +37,9 @@ EXECUTION_SEMANTICS = {
 		"negation-as-absence over the current state"
 	),
 	"temporal_state_semantics": (
-		"linear query wrappers execute certified singleton-literal subgoals in "
-		"stored order; branching DFA goals require an external controller"
+		"query wrappers execute one certified helper per DFA progress transition; "
+		"each helper rechecks its conjunctive guard and branching DFA goals require "
+		"an external controller"
 	),
 	"primitive_action_semantics": "PDDL STRIPS simulator applies declared actions",
 	"primitive_precondition_semantics": (

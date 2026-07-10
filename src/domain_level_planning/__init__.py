@@ -106,10 +106,10 @@ from .pddl_support import (
 	inspect_pddl_support,
 )
 from .temporal_goal_appender import (
-	SingletonLiteralDFADiagnostic,
+	GuardTransitionDFADiagnostic,
 	append_lifted_temporal_goal_case_to_library,
 	append_temporal_goal_to_library,
-	validate_singleton_literal_dfa,
+	validate_guard_transition_dfa,
 )
 
 __all__ = [
@@ -146,7 +146,7 @@ __all__ = [
 	"PolicyEvidenceReducerReport",
 	"PolicyEvidenceRule",
 	"PolicyModule",
-	"SingletonLiteralDFADiagnostic",
+	"GuardTransitionDFADiagnostic",
 	"SketchCondition",
 	"SketchEffect",
 	"SketchFeature",
@@ -189,5 +189,5 @@ __all__ = [
 	"run_learning_general_policies",
 	"select_atomic_template_backend",
 	"synthesize_atomic_minimal_literal_module_library",
-	"validate_singleton_literal_dfa",
+	"validate_guard_transition_dfa",
 ]
