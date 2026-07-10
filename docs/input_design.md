@@ -1,5 +1,115 @@
 # Parametric Natural-Language LTLf Input and Evaluation Design
 
+## Terminology and Evaluation Units
+
+This glossary is normative. Later sections refine these terms but do not change
+their meanings.
+
+### PDDL and Temporal Logic
+
+| Term | Definition and example |
+| --- | --- |
+| **PDDL domain** | A Planning Domain Definition Language file containing types, predicates/functions, and action schemas. Example: `stack(X,Y)` requires `holding(X)` and `clear(Y)` and adds `on(X,Y)`. |
+| **PDDL problem instance** | One object universe, initial state, and classical final goal interpreted under a PDDL domain. Example: `p01.pddl` declares blocks `b1,b2` and their initial arrangement. |
+| **Initial state (`s0`)** | The facts and numeric values true before the first query action. TEG evaluation reuses it from the PDDL problem. |
+| **Original PDDL goal** | The problem's classical final-state conjunction. It remains provenance in TEG evaluation and is not silently conjoined with the temporal query. |
+| **PDDL catalogue** | A deterministic schema-derived inventory of predicate/function signatures, subtype closure, constants, and effect roles supplied to the Input component. |
+| **Dynamic fluent** | A predicate that appears in an action add or delete effect. Example: `on(X,Y)` can change during Blocks execution. |
+| **Static context** | A predicate that never appears in an action effect. It may constrain a query or plan context but is not synthesized as an achievement. |
+| **Producible / deletable** | Independent effect properties: a predicate is producible if some action adds it and deletable if some action deletes it. One predicate may be both. |
+| **Numeric fluent** | A PDDL state function changed or tested numerically. The current profile supports comparisons such as `capacity(V) = 0`. |
+| **TEG** | A temporally extended goal whose truth depends on intermediate and/or final states. Example: make `clear(Y)` true and later make `on(X,Y)` true. |
+| **LTLf** | Linear temporal logic over a finite state trace. It is the formal language used for TEG templates. |
+| **Temporal operators** | `X(phi)` means `phi` in the next state, `F(phi)` eventually, `G(phi)` always, `phi U psi` until, and `phi R psi` release. The temporal `X` is distinct from a parameter named `X`. |
+| **Conjunction** | Conditions joined by `and` that must hold in the same state. Example: `clear(Y) & holding(X)`. |
+| **Negative state guard** | A condition such as `not holding(X)` checked against a state. It is not a request to execute a synthetic negative action. |
+| **Formula AST** | The abstract syntax tree that represents formula structure in JSON. Example: `{"operator":"eventually","operand":{"operator":"atom","atom_id":"a0"}}`; deterministic code renders its LTLf text. |
+| **Atom** | One lifted PDDL state condition referenced by the formula AST. Example: atom `a0` represents `on(X,Y)`. |
+| **Atomic proposition (AP)** | A safe propositional identifier consumed by `ltlf2dfa`/MONA. Example: `ap_0001` stands for `on(X,Y)`; it is not a PDDL fluent. |
+| **Lifted** | Expressed with typed parameters rather than one problem's objects. Example: `on(X,Y)` with `X:block,Y:block`. |
+| **Grounded** | Expressed with concrete objects from one problem. Example: `on(b1,b2)`. |
+| **Typed** | Every parameter and predicate argument is checked against the PDDL type hierarchy. Example: a `vehicle` parameter cannot bind to a `package`. |
+| **Externally bound parametric semantics** | A template is compiled once and the caller supplies one complete typed assignment. `phi(X,Y)` with `X=b1,Y=b2` means neither existential nor universal quantification. |
+| **Lifted LTLf template** | The reusable tuple of parameters, types, constraints, lifted atoms, and formula AST. It contains no test-problem object names. |
+| **Gold template** | A human-audited lifted template used only as the intended-formula oracle. It is hidden from the evaluated translation model. |
+| **Predicted template** | The normalized lifted template produced from a natural-language query by the evaluated model and deterministic validator. |
+| **Gold grounded LTLf** | The gold template after capture-safe substitution of one invocation assignment, used only for validation. Example: substitute `X=b1,Y=b2` into the gold atoms. |
+
+### Benchmark Units
+
+| Term | Definition and example |
+| --- | --- |
+| **Benchmark domain** | One selected PDDL domain evaluated with reusable lifted temporal templates. The current scope contains 16 domains. |
+| **Test split** | Held-out PDDL problems not used to train the generalized-planning evidence backend. Every selected test problem is represented in the TEG manifest. |
+| **Full test-split coverage** | Every test problem remains in the evaluation denominator, including structured no-assignment, no-witness, and unsupported outcomes. It does not mean generating one formula from every original PDDL goal. |
+| **Natural-language query record** | One parametric utterance plus declared parameters and provenance. Example: "Given distinct blocks X and Y, make Y clear and later place X on Y." |
+| **Template/problem pair** | One reusable lifted template considered in one PDDL initial-state environment before choosing concrete parameter objects. |
+| **Assignment / binding (`theta`)** | A total type-correct mapping from template parameters to problem objects. Example: `{X:b1,Y:b2}`. |
+| **Invocation** | One executable combination of query, template, PDDL problem, and assignment. The same template produces different invocations without recompiling its DFA. |
+| **Binding sampling** | The deterministic, recorded selection of at most three valid assignments for one template/problem pair. It samples object tuples, not formulas. |
+| **Formula family** | A structural temporal pattern used to measure a capability. Example: `F(A(X) & X(F(B(X))))` tests shared-parameter ordered achievement. |
+| **Witness trace** | A primitive PDDL action trace supplied independently of the evaluated ASL library and replayed before use as benchmark evidence. |
+| **Positive witness** | A PDDL-valid witness whose state trace is accepted by the gold DFA. |
+| **Negative witness** | A PDDL-valid witness rejected by the gold DFA. It shows that temporal acceptance is not equivalent to action legality or final-state success. |
+| **Manifest** | The machine-readable benchmark index linking domains, test problems, queries, hidden gold templates, invocations, witness hashes, limits, and outcomes. It is not included in the model prompt. |
+| **Coverage denominator** | All predeclared domain/problem/template combinations against which success, rejection, and skip rates are reported. |
+| **Skip semantics** | A structured non-success outcome retained in the manifest, such as `no_valid_assignment` or `no_positive_witness`; it is never a silently deleted sample. |
+| **Unsupported outcome** | A fail-closed result showing that a valid request is outside the declared logic or controller capability, such as `unsupported_controller_topology`. |
+
+### Propositionalization and DFA Control
+
+| Term | Definition and example |
+| --- | --- |
+| **Propositionization** | AST traversal that replaces each distinct lifted atom with one deterministic AP, independent of problem object count. |
+| **Proposition map** | The persisted reversible mapping from APs to lifted atoms. Example: `ap_0001 -> clear(Y)`. |
+| **`ltlf2dfa`** | The required software package that translates a propositional LTLf formula to a DFA by invoking MONA. No hand-written DFA may replace a failed call. |
+| **DFA** | A deterministic finite automaton compiled from one propositionized LTLf template and reused across assignments. |
+| **MONA** | The external decision-procedure backend invoked by the real `ltlf2dfa` package to construct the DFA. |
+| **DFA state** | One automaton progress condition, such as an initial, intermediate, accepting, or rejecting state. It is not emitted as a domain-level PDDL fluent. |
+| **Transition guard** | The Boolean AP condition labeling a DFA edge. Example: `ap_0001 & !ap_0002`. |
+| **Progress transition** | A selected DFA edge that advances the query toward acceptance after waiting/self-loop plumbing is excluded. |
+| **Controller topology** | The progress-edge shape that the Temporal Query Compiler must certify. The current controller accepts one certifiable progress path and rejects unsupported branching or cyclic protection. |
+| **`trans` helper** | One query-local AgentSpeak(L) goal implementing one certified DFA progress transition. Example: `g_query_trans_1(X,Y)` repeatedly achieves and rechecks its guard. |
+| **DFA acceptance** | Starting from the DFA initial state, consume the proposition labels of every PDDL state from `s0` through the final committed state; the trace is accepted only if the resulting DFA state is accepting. |
+| **DFA language equivalence** | Predicted and gold complete DFAs accept exactly the same finite traces, checked through a symmetric-difference product after type-preserving parameter canonicalization. |
+| **Certificate** | Compile-time machine-checkable evidence that a generated controller step is executable and preserves required effects. Example: a conjunction serialization has no unresolved may-delete cycle. |
+
+### Architecture, Execution, and Validation
+
+| Term | Definition and example |
+| --- | --- |
+| **Language model (LLM)** | The provider-injected model evaluated only for natural-language-to-template translation. Deterministic code, not the model, validates PDDL symbols, types, and schema conformance. |
+| **Generalized-planning evidence** | Backend-produced first-order policy rules or action macros learned from training problems and consumed as compiler evidence, not accepted directly as the final library. |
+| **MOOSE** | The current implemented external generalized-planning evidence provider for singleton goals. It is not the Input language model or the temporal validator. |
+| **Evidence Module** | The external generalized-planning backend that supplies lifted singleton-goal policy evidence; MOOSE is the current implemented provider. |
+| **Validated Policy-Lifting Compiler** | The module that combines backend evidence with PDDL schemas to produce certified reusable atomic AgentSpeak(L) modules. It does not translate natural language. |
+| **AgentSpeak(L) / ASL** | The belief-desire-intention agent programming language and source representation used for the executable plan library. |
+| **Atomic module** | A reusable ASL achievement plan for one lifted PDDL literal, such as `+!on(X,Y)`; its body may call other certified atomic modules. |
+| **Atomic plan library** | The one maintained domain-level AgentSpeak(L) library containing modules such as `+!on(X,Y)` and `+!clear(X)`. |
+| **Input Component** | The provider-neutral language path that converts a natural-language query and PDDL catalogue into a validated predicted lifted template. |
+| **Temporal Query Compiler** | The module that restores lifted atoms from DFA guards and appends parameterized query-local wrappers to the atomic library. |
+| **ASL wrapper** | AgentSpeak(L) query plans such as `+!g_query(X,Y)` that call `trans` helpers and atomic modules; it is not an additional generalized planner. |
+| **`obj_tp(Object,Type)`** | The only reserved non-PDDL context predicate in final ASL, used to enforce PDDL object-type membership. It is never an achievement subgoal or exported action. |
+| **Jason** | The AgentSpeak(L) runtime that executes the appended wrapper and atomic library against the PDDL-backed environment. |
+| **Primitive-action trace** | The ordered PDDL action calls actually accepted by the execution environment. Example: `pickup(b1); stack(b1,b2)`. |
+| **Committed trace** | A primitive-action trace retained as a successful result only after the top-level query intention reports success. Failed prefixes remain diagnostic. |
+| **State trace** | The independently replayed finite sequence `s0,s1,...,sn` induced by a committed primitive-action trace. |
+| **PDDL replay** | Independent application of action preconditions and effects from `s0`; it determines action legality and reconstructs state labels without trusting Jason output. |
+| **VAL** | A standards-based PDDL plan validator used as an additional action-legality cross-check. VAL alone does not validate arbitrary LTLf. |
+| **Oracle** | An independent criterion used to judge a result rather than produce it. Gold DFA acceptance is the temporal oracle; PDDL replay is the action-legality oracle. |
+| **Predicted-DFA oracle** | Reports whether execution satisfies the model-produced formula; it is not sufficient for natural-language correctness. |
+| **Gold-DFA oracle** | Reports whether execution satisfies the human-audited intended formula and is the temporal success oracle. |
+| **Execution Validation Module** | The independent component that combines PDDL replay, optional VAL checking, predicted/gold DFA runs, and the final validation record. |
+| **End-to-end intent success** | True only when the committed trace is PDDL-valid and accepted by the gold DFA. |
+
+Requirement words are used normatively:
+
+- **MUST** is required for a paper result to count as valid.
+- **MUST NOT** marks a semantic or methodological error.
+- **SHOULD** is the default unless an experiment explicitly justifies a
+  deviation.
+- **MAY** describes an optional extension that does not change the core claim.
+
 ## Status and Scope
 
 This document is the normative pre-paper design for the Input component and
@@ -15,29 +125,6 @@ type-correct assignment such as `X=b1, Y=b2`. It does not mean either
 `exists X,Y. phi(X,Y)` or `forall X,Y. phi(X,Y)`. Existential binding search and
 universal quantification are different first-order temporal-logic problems and
 are outside the current claim.
-
-The document uses the following requirement terms:
-
-- **MUST** is required for a paper result to count as valid.
-- **MUST NOT** marks a semantic or methodological error.
-- **SHOULD** is the default unless an experiment explicitly justifies a
-  deviation.
-- **MAY** describes an optional extension that does not change the core claim.
-
-Key terms used throughout:
-
-- **PDDL** is the Planning Domain Definition Language domain/problem input.
-- **TEG** is a temporally extended goal whose success depends on a finite state
-  trace, not only the final state.
-- **LTLf** is linear temporal logic interpreted over finite traces.
-- **DFA** is the deterministic finite automaton produced from one LTLf formula.
-- **MONA** is the external decision-procedure backend used by `ltlf2dfa`.
-- **Lifted** means predicates contain typed parameters such as `on(X,Y)` rather
-  than one fixed object assignment such as `on(b1,b2)`.
-- **Gold** means a human-audited formal artifact used only as an evaluation
-  oracle; it is never shown to the translation model.
-- **ASL wrapper** means the query-local AgentSpeak(L) plans that invoke the
-  reusable atomic plan library according to certified DFA progress transitions.
 
 ## Canonical End-to-End Contract
 
