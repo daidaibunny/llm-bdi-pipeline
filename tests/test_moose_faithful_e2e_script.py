@@ -7,6 +7,9 @@ from scripts.run_moose_faithful_e2e import first_n_test_instances
 from scripts.run_moose_faithful_e2e import append_problem_goal_wrappers_to_library
 from scripts.run_moose_faithful_e2e import compile_moose_atomic_library_command
 from scripts.run_moose_faithful_e2e import materialize_moose_compatible_pddl
+from scripts.run_moose_faithful_e2e import MOOSE_PAPER_GOAL_PERMUTATIONS
+from scripts.run_moose_faithful_e2e import MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS
+from scripts.run_moose_faithful_e2e import MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS
 from scripts.run_moose_faithful_e2e import moose_policy_command
 from scripts.run_moose_faithful_e2e import moose_train_command
 from scripts.run_moose_faithful_e2e import natural_sort_key
@@ -20,6 +23,12 @@ from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
+
+
+def test_moose_paper_budget_constants_match_official_experiment() -> None:
+	assert MOOSE_PAPER_GOAL_PERMUTATIONS == 3
+	assert MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS == 12 * 60 * 60
+	assert MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS == 1800
 
 
 def test_natural_sort_selects_first_split_instances(tmp_path: Path) -> None:

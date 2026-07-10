@@ -34,6 +34,9 @@ except ImportError:  # pragma: no cover - Unix-only guard.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 MOOSE_ROOT = PROJECT_ROOT / ".external" / "moose"
+MOOSE_PAPER_GOAL_PERMUTATIONS = 3
+MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS = 12 * 60 * 60
+MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS = 1800
 
 
 def load_selected_benchmark_domain_ids() -> tuple[str, ...]:
@@ -115,7 +118,12 @@ def main() -> int:
 	)
 	parser.add_argument("--random-seed", type=int, default=0)
 	parser.add_argument("--num-workers", type=int, default=8)
-	parser.add_argument("--num-permutations", type=int, default=3)
+	parser.add_argument(
+		"--num-permutations",
+		type=int,
+		default=MOOSE_PAPER_GOAL_PERMUTATIONS,
+		help="Goal orderings per problem; Algorithm 1 in the MOOSE paper defaults to 3.",
+	)
 	parser.add_argument("--goal-max-size", type=int, default=1)
 	parser.add_argument(
 		"--atomic-library-mode",
@@ -127,11 +135,21 @@ def main() -> int:
 			"ASL rendering."
 		),
 	)
-	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
+	parser.add_argument(
+		"--train-timeout-seconds",
+		type=int,
+		default=MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS,
+		help="MOOSE synthesis wall-clock cap; the paper uses 12 hours.",
+	)
 	parser.add_argument("--dump-timeout-seconds", type=int, default=300)
 	parser.add_argument("--append-timeout-seconds", type=int, default=300)
 	parser.add_argument("--jason-timeout-seconds", type=int, default=1800)
-	parser.add_argument("--moose-plan-timeout-seconds", type=int, default=1800)
+	parser.add_argument(
+		"--moose-plan-timeout-seconds",
+		type=int,
+		default=MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS,
+		help="MOOSE test-time planning cap; the paper uses 1800 seconds.",
+	)
 	parser.add_argument("--moose-plan-bound", type=int, default=5000)
 	parser.add_argument(
 		"--jason-plan-verifier-command",

@@ -14,10 +14,16 @@ from typing import Sequence
 
 try:
 	from run_moose_faithful_e2e import DEFAULT_DOMAINS
+	from run_moose_faithful_e2e import MOOSE_PAPER_GOAL_PERMUTATIONS
+	from run_moose_faithful_e2e import MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS
+	from run_moose_faithful_e2e import MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS
 	from run_moose_faithful_e2e import MOOSE_ROOT
 	from run_moose_faithful_e2e import PROJECT_ROOT
 except ModuleNotFoundError:  # pragma: no cover - used when imported by pytest.
 	from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS
+	from scripts.run_moose_faithful_e2e import MOOSE_PAPER_GOAL_PERMUTATIONS
+	from scripts.run_moose_faithful_e2e import MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS
+	from scripts.run_moose_faithful_e2e import MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS
 	from scripts.run_moose_faithful_e2e import MOOSE_ROOT
 	from scripts.run_moose_faithful_e2e import PROJECT_ROOT
 
@@ -43,7 +49,12 @@ def main() -> int:
 		help="Stable output id. Defaults to local timestamp YYYYmmdd-HHMMSS.",
 	)
 	parser.add_argument("--num-workers", type=int, default=4)
-	parser.add_argument("--num-permutations", type=int, default=3)
+	parser.add_argument(
+		"--num-permutations",
+		type=int,
+		default=MOOSE_PAPER_GOAL_PERMUTATIONS,
+		help="Goal orderings per problem; Algorithm 1 in the MOOSE paper defaults to 3.",
+	)
 	parser.add_argument("--goal-max-size", type=int, default=1)
 	parser.add_argument(
 		"--atomic-library-mode",
@@ -56,11 +67,21 @@ def main() -> int:
 		),
 	)
 	parser.add_argument("--max-rss-gb", type=float, default=16.0)
-	parser.add_argument("--train-timeout-seconds", type=int, default=1800)
+	parser.add_argument(
+		"--train-timeout-seconds",
+		type=int,
+		default=MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS,
+		help="MOOSE synthesis wall-clock cap; the paper uses 12 hours.",
+	)
 	parser.add_argument("--dump-timeout-seconds", type=int, default=300)
 	parser.add_argument("--append-timeout-seconds", type=int, default=300)
 	parser.add_argument("--jason-timeout-seconds", type=int, default=1800)
-	parser.add_argument("--moose-plan-timeout-seconds", type=int, default=1800)
+	parser.add_argument(
+		"--moose-plan-timeout-seconds",
+		type=int,
+		default=MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS,
+		help="MOOSE test-time planning cap; the paper uses 1800 seconds.",
+	)
 	parser.add_argument("--moose-plan-bound", type=int, default=5000)
 	parser.add_argument(
 		"--jason-plan-verifier-command",
