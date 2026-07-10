@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import heapq
+import re
 from typing import Mapping, Sequence
 
 from plan_library.models import AgentSpeakPlan
@@ -11,6 +12,8 @@ from plan_library.models import PlanLibrary
 from utils.pddl_parser import PDDLDomain
 
 from .atomic_module_synthesis import _ParsedAction
+from .atomic_module_synthesis import _FunctionalPredicateGroup
+from .atomic_module_synthesis import _functional_predicate_groups
 from .pddl_types import parameter_type
 from .pddl_types import type_closure
 
@@ -36,10 +39,33 @@ class EffectAtom:
 
 @dataclass(frozen=True)
 class AtomicModuleEffectSummary:
-	"""May-delete summary for every selected branch of one atomic module call."""
+	"""Conditional may-delete summary for selected branches of one module call."""
 
-	delete_atoms: tuple[EffectAtom, ...]
+	conditional_delete_effects: tuple["ConditionalDeleteEffect", ...]
 	complete: bool
+
+	@property
+	def delete_atoms(self) -> tuple[EffectAtom, ...]:
+		return tuple(effect.delete_atom for effect in self.conditional_delete_effects)
+
+
+@dataclass(frozen=True)
+class ConditionalDeleteEffect:
+	"""One delete effect guarded by the relational context of its plan branch."""
+
+	delete_atom: EffectAtom
+	positive_context: tuple[EffectAtom, ...] = ()
+	negative_context: tuple[EffectAtom, ...] = ()
+	equalities: tuple[tuple[EffectTerm, EffectTerm], ...] = ()
+	disequalities: tuple[tuple[EffectTerm, EffectTerm], ...] = ()
+
+
+@dataclass(frozen=True)
+class _BranchCondition:
+	positive_context: tuple[EffectAtom, ...] = ()
+	negative_context: tuple[EffectAtom, ...] = ()
+	equalities: tuple[tuple[EffectTerm, EffectTerm], ...] = ()
+	disequalities: tuple[tuple[EffectTerm, EffectTerm], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -49,15 +75,19 @@ class TransitionSerializationCertificate:
 	ordered_indexes: tuple[int, ...]
 	threat_edges: tuple[tuple[int, int], ...]
 	module_summaries_complete: bool
+	conditional_effects_checked: bool = True
+	functional_invariant_count: int = 0
 
 	def to_dict(self) -> dict[str, object]:
 		return {
 			"certificate_kind": "atomic_module_delete_effect_serialization",
-			"effect_summary_method": "pddl_typed_relational_fixed_point",
+			"effect_summary_method": "pddl_typed_conditional_relational_fixed_point",
 			"shared_query_variable_types_checked": True,
 			"ordered_literal_indexes": list(self.ordered_indexes),
 			"threat_edges": [list(edge) for edge in self.threat_edges],
 			"module_summaries_complete": self.module_summaries_complete,
+			"conditional_effects_checked": self.conditional_effects_checked,
+			"functional_invariant_count": self.functional_invariant_count,
 		}
 
 
@@ -77,6 +107,7 @@ def threat_safe_positive_literal_order(
 	actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
 	plans_by_predicate = _plans_by_predicate(plan_library.plans)
 	actions_by_name = {action.name: action for action in actions}
+	functional_groups = _functional_predicate_groups(actions, domain.types)
 	predicate_types = {
 		predicate.name: tuple(parameter_type(parameter) for parameter in predicate.parameters)
 		for predicate in domain.predicates
@@ -105,6 +136,7 @@ def threat_safe_positive_literal_order(
 		)
 		for predicate, arguments in literal_tuple
 	)
+	_assert_functional_goal_consistency(goal_atoms, functional_groups=functional_groups)
 	goal_indexes_by_predicate, goal_indexes_by_constant, goal_indexes_by_variable = (
 		_index_goal_atoms(goal_atoms)
 	)
@@ -127,7 +159,8 @@ def threat_safe_positive_literal_order(
 				"uncertified_conjunctive_transition: selected atomic module effect "
 				f"summary is incomplete for {literal_tuple[achiever_index][0]}.",
 			)
-		for deleted in summary.delete_atoms:
+		for conditional_delete in summary.conditional_delete_effects:
+			deleted = conditional_delete.delete_atom
 			for protected_index in _indexed_goal_candidates(
 				deleted,
 				goal_indexes_by_predicate=goal_indexes_by_predicate,
@@ -136,9 +169,10 @@ def threat_safe_positive_literal_order(
 			):
 				if achiever_index == protected_index:
 					continue
-				if _atoms_unify(
-					deleted,
-					goal_atoms[protected_index],
+				if _conditional_delete_can_threaten(
+					conditional_delete,
+					protected=goal_atoms[protected_index],
+					functional_groups=functional_groups,
 					type_tokens=domain.types,
 				):
 					edges.add((achiever_index, protected_index))
@@ -152,6 +186,8 @@ def threat_safe_positive_literal_order(
 		ordered_indexes=ordered_indexes,
 		threat_edges=tuple(sorted(edges)),
 		module_summaries_complete=True,
+		conditional_effects_checked=True,
+		functional_invariant_count=len(functional_groups),
 	)
 	return ordered_indexes, certificate
 
@@ -209,9 +245,9 @@ def _cached_module_delete_summary(
 		for generic_argument, actual_argument in zip(generic_goal.arguments, goal.arguments)
 	}
 	return AtomicModuleEffectSummary(
-		delete_atoms=tuple(
-			_instantiate_query_anchors(atom, head_binding=head_binding)
-			for atom in generic_summary.delete_atoms
+		conditional_delete_effects=tuple(
+			_instantiate_conditional_delete(effect, head_binding=head_binding)
+			for effect in generic_summary.conditional_delete_effects
 		),
 		complete=generic_summary.complete,
 	)
@@ -229,6 +265,30 @@ def _instantiate_query_anchors(
 			if argument.variable_scope == "query"
 			else argument
 			for argument in atom.arguments
+		),
+	)
+
+
+def _instantiate_conditional_delete(
+	effect: ConditionalDeleteEffect,
+	*,
+	head_binding: Mapping[str, EffectTerm],
+) -> ConditionalDeleteEffect:
+	def atom(item: EffectAtom) -> EffectAtom:
+		return _instantiate_query_anchors(item, head_binding=head_binding)
+
+	def term(item: EffectTerm) -> EffectTerm:
+		if item.variable_scope == "query":
+			return head_binding.get(item.symbol, item)
+		return item
+
+	return ConditionalDeleteEffect(
+		delete_atom=atom(effect.delete_atom),
+		positive_context=tuple(atom(item) for item in effect.positive_context),
+		negative_context=tuple(atom(item) for item in effect.negative_context),
+		equalities=tuple((term(left), term(right)) for left, right in effect.equalities),
+		disequalities=tuple(
+			(term(left), term(right)) for left, right in effect.disequalities
 		),
 	)
 
@@ -292,7 +352,7 @@ def _module_delete_summary(
 ) -> AtomicModuleEffectSummary:
 	pending = [_canonicalize_effect_atom(goal, namespace="module-call")]
 	seen: set[EffectAtom] = set()
-	delete_atoms: list[EffectAtom] = []
+	conditional_deletes: list[ConditionalDeleteEffect] = []
 	complete = True
 	while pending:
 		current_goal = pending.pop()
@@ -312,6 +372,13 @@ def _module_delete_summary(
 			local_scope = (
 				f"{current_goal.predicate}:{len(seen)}:{plan_index}"
 			)
+			branch_condition = _plan_branch_condition(
+				plan,
+				binding=binding,
+				scope=local_scope,
+				predicate_types=predicate_types,
+				type_tokens=type_tokens,
+			)
 			for step in plan.body:
 				if step.kind == "action":
 					action = actions_by_name.get(step.symbol)
@@ -330,20 +397,26 @@ def _module_delete_summary(
 					)
 					action_binding = dict(zip(action.parameters, step_arguments))
 					for effect in action.delete_effects:
-						delete_atoms.append(
-							_canonicalize_effect_atom(
-								EffectAtom(
-									predicate=effect.predicate,
-									arguments=tuple(
-										action_binding.get(
-											argument,
-											EffectTerm(
+						conditional_deletes.append(
+							_canonicalize_conditional_delete(
+								ConditionalDeleteEffect(
+									delete_atom=EffectAtom(
+										predicate=effect.predicate,
+										arguments=tuple(
+											action_binding.get(
 												argument,
-												variable_scope=local_scope,
-											),
-										)
-										for argument in effect.arguments
+												EffectTerm(
+													argument,
+													variable_scope=local_scope,
+												),
+											)
+											for argument in effect.arguments
+										),
 									),
+									positive_context=branch_condition.positive_context,
+									negative_context=branch_condition.negative_context,
+									equalities=branch_condition.equalities,
+									disequalities=branch_condition.disequalities,
 								),
 								namespace="delete-effect",
 							),
@@ -375,8 +448,124 @@ def _module_delete_summary(
 		if not matched_plan:
 			complete = False
 	return AtomicModuleEffectSummary(
-		delete_atoms=tuple(dict.fromkeys(delete_atoms)),
+		conditional_delete_effects=tuple(dict.fromkeys(conditional_deletes)),
 		complete=complete,
+	)
+
+
+def _plan_branch_condition(
+	plan: AgentSpeakPlan,
+	*,
+	binding: Mapping[str, EffectTerm],
+	scope: str,
+	predicate_types: Mapping[str, Sequence[str]],
+	type_tokens: Sequence[str],
+) -> _BranchCondition:
+	positive: list[EffectAtom] = []
+	negative: list[EffectAtom] = []
+	equalities: list[tuple[EffectTerm, EffectTerm]] = []
+	disequalities: list[tuple[EffectTerm, EffectTerm]] = []
+	for raw_context in tuple(plan.context or ()):
+		context = str(raw_context or "").strip()
+		comparison = re.fullmatch(
+			r"(?P<left>[A-Za-z_][A-Za-z0-9_]*|[+-]?\d+)\s*"
+			r"(?P<operator>\\==|!=|==)\s*"
+			r"(?P<right>[A-Za-z_][A-Za-z0-9_]*|[+-]?\d+)",
+			context,
+		)
+		if comparison is not None:
+			pair = (
+				_context_term(comparison.group("left"), binding=binding, scope=scope),
+				_context_term(comparison.group("right"), binding=binding, scope=scope),
+			)
+			if comparison.group("operator") == "==":
+				equalities.append(pair)
+			else:
+				disequalities.append(pair)
+			continue
+		is_negative = context.startswith("not ")
+		atom_text = context[4:].strip() if is_negative else context
+		match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_-]*)(?:\((.*)\))?", atom_text)
+		if match is None:
+			continue
+		predicate = match.group(1)
+		if predicate not in predicate_types:
+			continue
+		arguments = tuple(
+			item.strip()
+			for item in str(match.group(2) or "").split(",")
+			if item.strip()
+		)
+		signature = tuple(predicate_types.get(predicate, ()))
+		if len(arguments) != len(signature):
+			continue
+		atom = EffectAtom(
+			predicate,
+			tuple(
+				_bound_term(
+					argument,
+					binding=binding,
+					scope=scope,
+					required_type=signature[position],
+					type_tokens=type_tokens,
+				)
+				for position, argument in enumerate(arguments)
+			),
+		)
+		(negative if is_negative else positive).append(atom)
+	return _BranchCondition(
+		positive_context=tuple(positive),
+		negative_context=tuple(negative),
+		equalities=tuple(equalities),
+		disequalities=tuple(disequalities),
+	)
+
+
+def _context_term(
+	argument: str,
+	*,
+	binding: Mapping[str, EffectTerm],
+	scope: str,
+) -> EffectTerm:
+	if argument in binding:
+		return binding[argument]
+	if _is_agentspeak_variable(argument):
+		return EffectTerm(argument, variable_scope=scope)
+	return EffectTerm(argument)
+
+
+def _canonicalize_conditional_delete(
+	effect: ConditionalDeleteEffect,
+	*,
+	namespace: str,
+) -> ConditionalDeleteEffect:
+	variable_map: dict[tuple[str, str], EffectTerm] = {}
+
+	def term(argument: EffectTerm) -> EffectTerm:
+		if not argument.is_variable or argument.variable_scope == "query":
+			return argument
+		key = (str(argument.variable_scope), argument.symbol)
+		variable_map.setdefault(
+			key,
+			EffectTerm(
+				f"V{len(variable_map)}",
+				variable_scope=namespace,
+				required_types=argument.required_types,
+			),
+		)
+		return variable_map[key]
+
+	def atom(item: EffectAtom) -> EffectAtom:
+		return EffectAtom(item.predicate, tuple(term(argument) for argument in item.arguments))
+
+	return ConditionalDeleteEffect(
+		delete_atom=atom(effect.delete_atom),
+		positive_context=tuple(atom(item) for item in effect.positive_context),
+		negative_context=tuple(atom(item) for item in effect.negative_context),
+		equalities=tuple((term(left), term(right)) for left, right in effect.equalities),
+		disequalities=tuple(
+			(term(left), term(right)) for left, right in effect.disequalities
+		),
 	)
 
 
@@ -513,6 +702,167 @@ def _bound_term(
 			required_types=frozenset((required_type,)),
 		)
 	return EffectTerm(str(argument), required_types=frozenset((required_type,)))
+
+
+def _assert_functional_goal_consistency(
+	goal_atoms: Sequence[EffectAtom],
+	*,
+	functional_groups: Sequence[_FunctionalPredicateGroup],
+) -> None:
+	for left_index, left in enumerate(tuple(goal_atoms or ())):
+		for right_index in range(left_index + 1, len(tuple(goal_atoms or ()))):
+			right = tuple(goal_atoms)[right_index]
+			for group in functional_groups:
+				if _functional_atoms_are_mutex(left, right, group=group, bindings={}):
+					raise ValueError(
+						"functionally_inconsistent_conjunctive_transition: positive "
+						f"literals at indexes {left_index} and {right_index} violate "
+						"a PDDL schema-derived single-valued predicate invariant.",
+					)
+
+
+def _conditional_delete_can_threaten(
+	effect: ConditionalDeleteEffect,
+	*,
+	protected: EffectAtom,
+	functional_groups: Sequence[_FunctionalPredicateGroup],
+	type_tokens: Sequence[str],
+) -> bool:
+	bindings = _atom_unification_bindings(
+		effect.delete_atom,
+		protected,
+		type_tokens=type_tokens,
+	)
+	if bindings is None:
+		return False
+	if any(
+		_atoms_forced_equal(item, protected, bindings=bindings)
+		for item in effect.negative_context
+	):
+		return False
+	if any(
+		_terms_forced_equal(left, right, bindings=bindings)
+		for left, right in effect.disequalities
+	):
+		return False
+	if any(
+		_terms_forced_distinct(left, right, bindings=bindings)
+		for left, right in effect.equalities
+	):
+		return False
+	for context_atom in effect.positive_context:
+		if any(
+			_functional_atoms_are_mutex(
+				context_atom,
+				protected,
+				group=group,
+				bindings=bindings,
+			)
+			for group in functional_groups
+		):
+			return False
+	return True
+
+
+def _atom_unification_bindings(
+	left: EffectAtom,
+	right: EffectAtom,
+	*,
+	type_tokens: Sequence[str],
+) -> dict[tuple[str, str], EffectTerm] | None:
+	if left.predicate != right.predicate or len(left.arguments) != len(right.arguments):
+		return None
+	bindings: dict[tuple[str, str], EffectTerm] = {}
+	for left_term, right_term in zip(left.arguments, right.arguments):
+		if not _terms_unify(left_term, right_term, bindings, type_tokens=type_tokens):
+			return None
+	return bindings
+
+
+def _atoms_forced_equal(
+	left: EffectAtom,
+	right: EffectAtom,
+	*,
+	bindings: Mapping[tuple[str, str], EffectTerm],
+) -> bool:
+	return (
+		left.predicate == right.predicate
+		and len(left.arguments) == len(right.arguments)
+		and all(
+			_terms_forced_equal(left_term, right_term, bindings=bindings)
+			for left_term, right_term in zip(left.arguments, right.arguments)
+		)
+	)
+
+
+def _functional_atoms_are_mutex(
+	left: EffectAtom,
+	right: EffectAtom,
+	*,
+	group: _FunctionalPredicateGroup,
+	bindings: Mapping[tuple[str, str], EffectTerm],
+) -> bool:
+	if left.predicate != group.predicate or right.predicate != group.predicate:
+		return False
+	if not all(
+		_terms_forced_equal(
+			left.arguments[position],
+			right.arguments[position],
+			bindings=bindings,
+		)
+		for position in group.key_positions
+	):
+		return False
+	return any(
+		_terms_forced_distinct(
+			left.arguments[position],
+			right.arguments[position],
+			bindings=bindings,
+		)
+		for position in group.value_positions
+	)
+
+
+def _terms_forced_equal(
+	left: EffectTerm,
+	right: EffectTerm,
+	*,
+	bindings: Mapping[tuple[str, str], EffectTerm],
+) -> bool:
+	resolved_left = _resolve_term(left, bindings=bindings)
+	resolved_right = _resolve_term(right, bindings=bindings)
+	return resolved_left == resolved_right
+
+
+def _terms_forced_distinct(
+	left: EffectTerm,
+	right: EffectTerm,
+	*,
+	bindings: Mapping[tuple[str, str], EffectTerm],
+) -> bool:
+	resolved_left = _resolve_term(left, bindings=bindings)
+	resolved_right = _resolve_term(right, bindings=bindings)
+	return (
+		not resolved_left.is_variable
+		and not resolved_right.is_variable
+		and resolved_left.symbol != resolved_right.symbol
+	)
+
+
+def _resolve_term(
+	term: EffectTerm,
+	*,
+	bindings: Mapping[tuple[str, str], EffectTerm],
+) -> EffectTerm:
+	current = term
+	seen: set[tuple[str, str]] = set()
+	while current.is_variable:
+		key = (str(current.variable_scope), current.symbol)
+		if key in seen or key not in bindings:
+			break
+		seen.add(key)
+		current = bindings[key]
+	return current
 
 
 def _atoms_unify(

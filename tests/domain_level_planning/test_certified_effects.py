@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import domain_level_planning.certified_effects as certified_effects
+import pytest
 from domain_level_planning.certified_effects import threat_safe_positive_literal_order
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
@@ -165,6 +166,79 @@ def test_threat_certificate_reuses_typed_summary_and_indexes_ground_anchors(
 	assert order == tuple(range(200))
 	assert certificate.threat_edges == ()
 	assert counts == {"summary": 1, "unify": 0}
+
+
+def test_threat_certificate_uses_negative_branch_context_to_exclude_delete(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "conditional-delete-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain conditional-delete-fragment)
+		 (:requirements :strips :negative-preconditions)
+		 (:predicates (protected ?x) (done ?x))
+		 (:action finish-when-unprotected
+		  :parameters (?x)
+		  :precondition (not (protected ?x))
+		  :effect (and (done ?x) (not (protected ?x)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="conditional-delete-fragment",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="protected_already_true",
+				trigger=AgentSpeakTrigger("achievement_goal", "protected", ("X",)),
+				context=("protected(X)",),
+				body=(),
+			),
+			AgentSpeakPlan(
+				plan_name="done_via_finish_when_unprotected",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("not protected(X)",),
+				body=(
+					AgentSpeakBodyStep("action", "finish-when-unprotected", ("X",)),
+				),
+			),
+		),
+	)
+
+	order, certificate = threat_safe_positive_literal_order(
+		(("protected", ("item",)), ("done", ("item",))),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert order == (0, 1)
+	assert certificate.threat_edges == ()
+	assert certificate.conditional_effects_checked is True
+
+
+def test_threat_certificate_rejects_functionally_inconsistent_goal_block(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_typed_transport_fragment(tmp_path / "domain.pddl")
+
+	with pytest.raises(
+		ValueError,
+		match="functionally_inconsistent_conjunctive_transition",
+	):
+		threat_safe_positive_literal_order(
+			(
+				("at", ("parcel1", "origin")),
+				("at", ("parcel1", "destination")),
+			),
+			plan_library=_typed_transport_library(),
+			domain=PDDLParser.parse_domain(domain_file),
+			object_types={
+				"parcel1": "package",
+				"origin": "location",
+				"destination": "location",
+			},
+		)
 
 
 def _write_typed_transport_fragment(path: Path) -> Path:

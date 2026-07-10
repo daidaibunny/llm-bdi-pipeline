@@ -231,11 +231,13 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 	certificate = updated.plans[3].binding_certificate[0]["serialization_certificate"]
 	assert certificate == {
 		"certificate_kind": "atomic_module_delete_effect_serialization",
-		"effect_summary_method": "pddl_typed_relational_fixed_point",
+		"effect_summary_method": "pddl_typed_conditional_relational_fixed_point",
 		"shared_query_variable_types_checked": True,
 		"ordered_literal_indexes": [0, 1],
 		"threat_edges": [[0, 1]],
 		"module_summaries_complete": True,
+		"conditional_effects_checked": True,
+		"functional_invariant_count": 0,
 	}
 
 
