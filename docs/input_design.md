@@ -24,6 +24,21 @@ The document uses the following requirement terms:
   deviation.
 - **MAY** describes an optional extension that does not change the core claim.
 
+Key terms used throughout:
+
+- **PDDL** is the Planning Domain Definition Language domain/problem input.
+- **TEG** is a temporally extended goal whose success depends on a finite state
+  trace, not only the final state.
+- **LTLf** is linear temporal logic interpreted over finite traces.
+- **DFA** is the deterministic finite automaton produced from one LTLf formula.
+- **MONA** is the external decision-procedure backend used by `ltlf2dfa`.
+- **Lifted** means predicates contain typed parameters such as `on(X,Y)` rather
+  than one fixed object assignment such as `on(b1,b2)`.
+- **Gold** means a human-audited formal artifact used only as an evaluation
+  oracle; it is never shown to the translation model.
+- **ASL wrapper** means the query-local AgentSpeak(L) plans that invoke the
+  reusable atomic plan library according to certified DFA progress transitions.
+
 ## Canonical End-to-End Contract
 
 The complete path has four modules and two independently evaluated concerns:
@@ -49,6 +64,305 @@ Compiler produces the reusable atomic library. The Temporal Query Compiler
 connects a query DFA to that library. The Execution Validation Module validates
 the resulting trace. These responsibilities MUST remain separate so that an
 input-translation failure is not reported as an atomic-library failure.
+
+## Implementation Blueprint
+
+This section is the implementation handoff. Later sections define the schemas,
+semantics, benchmark protocol, and paper acceptance criteria in detail.
+
+### Stage Interfaces
+
+| Stage | Required input | Required output | Implementation rule |
+| --- | --- | --- | --- |
+| 1. PDDL catalogue | `domain.pddl` | Typed predicate/function catalogue with dynamic/static roles | Derive roles only from declarations and add/delete effects. |
+| 2. Query translation | Catalogue + natural-language query record | Lifted template v2 or structured diagnostic | LLM returns the formula AST; deterministic code validates it. |
+| 3. Invocation validation | Lifted template + `problem.pddl` + assignment | Typed runtime invocation | Bind every parameter exactly once; never expand all objects. |
+| 4. Propositionization | Validated lifted template | Canonical propositional formula + reversible proposition map | Traverse the AST; do not regex-rewrite predicate strings. |
+| 5. DFA construction | Propositional formula + map | Audited DFA artifact + raw MONA output | Use real `ltlf2dfa`/MONA under recorded limits; no fallback DFA. |
+| 6. Query compilation | DFA + map + lifted template + atomic library | Parametric ASL query wrapper appended to the domain library | Restore atoms from the map; preserve template variables as goal arguments. |
+| 7. Execution | Appended library + problem initial state + invocation | Jason status + committed primitive-action trace | Invoke `!g_template(theta(X),...)`; failed prefixes are diagnostic only. |
+| 8. Temporal validation | Gold/predicted templates + invocation + committed trace | PDDL replay, DFA runs, equivalence, and validation record | End-to-end success uses PDDL legality and gold-DFA acceptance. |
+
+No stage may infer missing semantics from a later stage. In particular, the DFA
+builder does not repair an invalid LLM formula, and Jason success does not
+replace independent trace validation.
+
+Every rejected stage writes `temporal_input_diagnostic` with one stable code.
+The minimum code set is:
+
+| Stage | Required codes |
+| --- | --- |
+| PDDL catalogue | `pddl_parse_error`, `unsupported_pddl_feature` |
+| Translation | `model_provider_error`, `model_response_schema_invalid`, `model_identity_mismatch` |
+| Semantic validation | `unknown_symbol`, `predicate_arity_mismatch`, `argument_type_mismatch`, `unsupported_formula_operator` |
+| Invocation | `invalid_grounding`, `incomplete_assignment`, `parameter_constraint_violation` |
+| Propositionization | `propositionization_error`, `non_reversible_proposition_map` |
+| DFA | the `ltlf2dfa_*`, `mona_*`, and `dfa_*` codes defined under state-explosion risk |
+| Query compilation | `unsupported_controller_topology`, `missing_atomic_module`, `uncertified_transition_serialization` |
+| Execution/validation | `jason_failed`, `jason_timeout`, `pddl_trace_invalid`, `gold_dfa_rejected` |
+
+Unexpected implementation faults are not converted into semantic rejection;
+they fail the run with `internal_error` and retain a traceback in the artifact
+log.
+
+### Repository Integration Map
+
+The implementer MUST use these ownership boundaries:
+
+| Path | Required change |
+| --- | --- |
+| `src/temporal_input/models.py` | New immutable models for query text, lifted template, invocation, proposition map, and diagnostics. |
+| `src/temporal_input/schemas/*.schema.json` | New machine-readable closed JSON Schemas matching this document. |
+| `src/temporal_input/pddl_catalog.py` | New domain-generic PDDL vocabulary/type/effect-role extractor. |
+| `src/temporal_input/translator.py` | New provider-neutral LLM envelope builder, provider protocol, provenance recorder, and strict response parser. |
+| `src/temporal_input/propositionizer.py` | New AST-to-proposition transformation and deterministic canonical renderer. |
+| `src/temporal_input/benchmark_builder.py` | New formula-first benchmark construction and assignment selection logic. |
+| `src/domain_level_planning/lifted_ltlf_goal_schema.py` | Keep schema v1 as a legacy reader only; do not extend its combined case/binding model for paper artifacts. |
+| `src/evaluation/temporal_compilation/ltlf_to_dfa.py` | Reuse real MONA invocation, but add an entry point for an already-propositionized formula and explicit proposition map. The v2 path must bypass `PredicateToProposition.convert_formula`. |
+| `src/evaluation/temporal_compilation/dfa_builder.py` | Accept the v2 propositionized artifact and emit the complete audited DFA artifact defined below. |
+| `src/domain_level_planning/temporal_goal_appender.py` | Add a parametric append entry point; preserve query parameters in top-level and `trans` helper triggers/bodies. Keep v1 append only for legacy artifacts. |
+| `src/evaluation/temporal_validation.py` | New independent PDDL trace replayer, proposition labeler, DFA runner, and gold/predicted validation-record writer. |
+| `src/evaluation/dfa_equivalence.py` | New alpha-canonicalization and symmetric-difference DFA language-equivalence checker. |
+| `src/main.py` | Add the three CLI contracts below without changing atomic-library compilation. |
+| `pyproject.toml` | Include `temporal_input*`; add a JSON Schema validator dependency. |
+
+The existing `dfa_adapter.py`, `dfa_controller.py`, certified-effect summaries,
+and conjunctive transition serializer remain the capability gate after restored
+PDDL atoms reach the Temporal Query Compiler.
+
+The checked-in schema files MUST be named:
+
+```text
+query_text.schema.json
+model_input_envelope.schema.json
+parametric_ltlf_template.schema.json
+temporal_invocation.schema.json
+proposition_map.schema.json
+dfa_artifact.schema.json
+input_diagnostic.schema.json
+temporal_validation.schema.json
+```
+
+### Existing and Required Capability
+
+This table prevents an implementer from mistaking current code for the completed
+version 2 path:
+
+| Capability | Existing implementation | Required paper path |
+| --- | --- | --- |
+| Lifted JSON | Schema version 1 reader combines formulas and case bindings. | Version 2 keeps reusable templates separate from runtime invocations. |
+| LTLf compilation | Real `ltlf2dfa` and MONA invocation exists. | Accept an already-propositionized formula and persist a reversible map and complete audit metadata. |
+| DFA adaptation | Guard parsing and controller capability checks exist. | Consume version 2 proposition maps and preserve template parameters. |
+| Query append | Version 1 emits zero-argument query and `trans` goals. | Emit `g_template(X,...)` and pass every required argument through every `trans` helper. |
+| Execution | Jason can produce primitive PDDL action traces. | Mark a trace committed only after top-level query success; failed prefixes remain diagnostic. |
+| Temporal validation | PDDL and achievement-goal validation exists. | Independently replay states and run both predicted and gold DFAs over the same finite trace. |
+| TEG benchmark | No complete parametric natural-language benchmark builder exists. | Build formula-first, human-reviewed templates with certified positive and negative traces. |
+
+### Required Public Python Interfaces
+
+Names may change only if the replacement preserves these typed responsibilities:
+
+```python
+def build_pddl_catalog(domain_file: Path) -> PDDLCatalog: ...
+
+def translate_parametric_query(
+	*,
+	query: ParametricTemporalQueryText,
+	catalog: PDDLCatalog,
+	template_id: str,
+	provider: TemporalTranslationProvider,
+) -> TranslationAttempt: ...
+
+def parse_parametric_template(
+	payload: Mapping[str, object],
+	*,
+	domain_file: Path,
+) -> ParametricLTLfTemplate: ...
+
+def validate_invocation(
+	payload: Mapping[str, object],
+	*,
+	template: ParametricLTLfTemplate,
+	problem_file: Path,
+) -> TemporalQueryInvocation: ...
+
+def propositionize_template(
+	template: ParametricLTLfTemplate,
+) -> PropositionizedLTLf: ...
+
+def build_audited_dfa(
+	propositionized: PropositionizedLTLf,
+) -> DFAArtifact: ...
+
+def append_parametric_temporal_template(
+	*,
+	plan_library: PlanLibrary,
+	template: ParametricLTLfTemplate,
+	dfa: DFAArtifact,
+	domain_file: Path,
+) -> PlanLibrary: ...
+
+def validate_temporal_execution(
+	*,
+	domain_file: Path,
+	problem_file: Path,
+	invocation: TemporalQueryInvocation,
+	committed_actions: Sequence[PDDLActionCall],
+	predicted_template: ParametricLTLfTemplate,
+	gold_template: ParametricLTLfTemplate,
+) -> TemporalExecutionValidation: ...
+
+def build_temporal_benchmark(
+	*,
+	domain_file: Path,
+	problem_files: Sequence[Path],
+	gold_templates: Sequence[ParametricLTLfTemplate],
+	witness_provider: TemporalWitnessProvider,
+) -> TemporalBenchmarkManifest: ...
+```
+
+All public functions MUST return typed values or raise a typed/structured
+diagnostic. They MUST NOT return partially valid dictionaries after failure.
+`TemporalTranslationProvider` supplies one raw model response plus provider
+provenance; deterministic code owns validation and normalization.
+`TemporalWitnessProvider` supplies candidate primitive-action traces; the
+benchmark builder independently replays and accepts/rejects them before storing
+them, so no provider can self-certify a case.
+
+### Required Command-Line Interfaces
+
+```bash
+uv run python src/main.py translate-parametric-temporal-query \
+  --domain-file src/domains/<domain>/domain.pddl \
+  --query-json artifacts/input/query_text/<query_id>.json \
+  --template-id <predicted_template_id> \
+  --output-dir artifacts/input/templates/<domain>/<template_id>
+
+uv run python src/main.py append-parametric-temporal-template \
+  --domain-file src/domains/<domain>/domain.pddl \
+  --template-json artifacts/input/templates/<domain>/<template_id>/template.json \
+  --library-root artifacts/domain_libraries
+
+uv run python src/main.py validate-parametric-temporal-invocation \
+  --domain-file src/domains/<domain>/domain.pddl \
+  --problem-file src/domains/<domain>/test/<problem>.pddl \
+  --template-json artifacts/input/templates/<domain>/<template_id>/template.json \
+  --invocation-json artifacts/input/invocations/<domain>/<invocation_id>.json \
+  --library-root artifacts/domain_libraries \
+  --output-dir artifacts/temporal_validation/<run_id>/<invocation_id>
+```
+
+Each command MUST print one concise completion/failure line and write detailed
+metadata to files. It MUST NOT print the full LLM response, DFA, or metadata to
+the terminal by default.
+
+### Canonical Artifact Layout
+
+```text
+artifacts/input/query_text/<query_id>.json
+artifacts/input/templates/<domain>/<template_id>/
+  template.json
+  llm_request.json
+  llm_response.raw.json
+  input_diagnostic.json                 # only on rejection
+  proposition_map.json
+  formula.ltlf
+  dfa.json
+  dfa.dot
+  mona.stdout.txt
+  mona.stderr.txt
+artifacts/input/invocations/<domain>/<invocation_id>.json
+artifacts/teg_benchmarks/<benchmark_id>/
+  manifest.json
+  templates.jsonl
+  invocations.jsonl
+  positive_traces/
+  negative_traces/
+artifacts/temporal_validation/<run_id>/<invocation_id>/
+  committed_plan.plan
+  state_trace.jsonl
+  predicted_dfa_run.json
+  gold_dfa_run.json
+  val_output.txt
+  validation.json
+```
+
+Generated template and evaluation artifacts are snapshots. Appended query plans
+still live in the single canonical domain library under
+`artifacts/domain_libraries/<domain>/`.
+
+The benchmark `manifest.json` MUST map each `query_id` to its hidden
+`gold_template_id`, list every invocation and trace hash, identify the PDDL
+source commit and split, and record the witness-trace provider and version. This
+manifest is evaluation metadata and MUST NOT be included in the model prompt.
+
+### Dependencies and Runtime Configuration
+
+- Python is managed by `uv`; the repository currently requires Python 3.12 or
+  later.
+- `ltlf2dfa>=1.0.2` and MONA are mandatory. Install MONA with
+  `bash scripts/setup_mona.sh`.
+- The current safe defaults are a 300-second MONA timeout and a 16-GiB memory
+  limit. They may be configured, but every run records the actual values.
+- Use the existing `dd` Binary Decision Diagram package to audit symbolic guard
+  overlap/exhaustiveness and DFA products without enumerating `2^|AP|` when the
+  alphabet is large.
+- Add `jsonschema` through `uv add jsonschema`; every normative JSON example and
+  fixture must validate against the checked-in schema.
+- Jason and VAL remain execution dependencies, not Input translation
+  dependencies.
+- The LLM provider is injected behind a protocol. Model name, base URL, request
+  identifier, prompt hash, generation parameters, and raw response are recorded;
+  API keys are read only from environment variables and never persisted.
+
+For reproducible translation, request structured JSON output when the provider
+supports it, use deterministic decoding where available, and record all model
+settings. No model name is part of the research algorithm.
+
+### Implementation Order and Definition of Done
+
+1. Add JSON Schemas and typed models; make every valid/invalid schema fixture
+   pass before adding model calls.
+2. Add the PDDL catalogue and strict LLM envelope/response validator.
+3. Add AST canonicalization and propositionization; prove object-count
+   invariance with the same template over small and large problems.
+4. Add the propositionized real-MONA entry point and DFA audits.
+5. Add parameter-carrying ASL wrappers and invocation goal arguments.
+6. Add independent state replay, DFA monitoring, and formula equivalence.
+7. Add benchmark generation, positive/negative trace certification, and the
+   three evaluation tracks.
+8. Add CLIs, concise logging, artifact manifests, documentation fixtures, and
+   end-to-end tests.
+
+Implementation is complete only when the same template and DFA hash are used
+for at least two held-out problems and two assignments, Jason is invoked with
+different concrete arguments, both traces are independently replayed, and the
+gold DFA produces the expected accept/reject result.
+
+### Required Test Matrix
+
+The implementation MUST include automated tests for:
+
+- every valid and invalid JSON fixture, including unknown-field rejection;
+- undeclared predicates, wrong arity, wrong types, incomplete assignments, and
+  violated parameter constraints;
+- deterministic atom deduplication, formula rendering, hashing, and reversible
+  proposition restoration;
+- alpha-renaming and predicate/action renaming invariance;
+- identical formula, proposition-map, and DFA hashes when only problem object
+  count or runtime assignment changes;
+- a real MONA smoke test plus timeout, memory, malformed-output, determinism,
+  completeness, and state-limit failures;
+- propagation of all parameters through the top-level ASL goal and every
+  recursive `trans` helper;
+- singleton-transition action equivalence with one direct atomic goal call;
+- conjunction serialization, negative context guards, and fail-closed rejection
+  of unsupported DFA topology;
+- independent replay including the initial state, numeric updates, failed-prefix
+  exclusion, positive acceptance, and PDDL-valid negative rejection;
+- gold/predicted DFA equivalence and non-equivalence witnesses;
+- one end-to-end template reused across two held-out problems and two distinct
+  typed assignments without regenerating the DFA.
 
 ## Formal Model
 
@@ -163,6 +477,14 @@ semantic objects. Arrays whose order contributes to canonical hashing, such as
 variables, atoms, formula operands, states, and transitions, MUST use the order
 specified by this document rather than object-map iteration order.
 
+Query, template, and invocation records use schema version 2 because they
+replace the combined version 1 contract. Supporting artifacts such as proposition
+maps, DFA records, diagnostics, and validation records start at their own schema
+version 1. Hashes use SHA-256 over canonical UTF-8 JSON: object keys are sorted,
+insignificant whitespace is removed, and arrays retain their specified semantic
+order. Raw model and tool outputs are hashed as bytes and are never
+canonicalized before preservation.
+
 ### 1. Natural-Language Query Record
 
 This is the benchmark input seen by the language model:
@@ -207,7 +529,9 @@ declared PDDL vocabulary:
       {
         "name": "clear",
         "parameters": [{"position": 0, "pddl_type": "block"}],
-        "role": "producible_dynamic_fluent"
+        "state_role": "dynamic_fluent",
+        "producible": true,
+        "deletable": true
       },
       {
         "name": "on",
@@ -215,7 +539,9 @@ declared PDDL vocabulary:
           {"position": 0, "pddl_type": "block"},
           {"position": 1, "pddl_type": "block"}
         ],
-        "role": "producible_dynamic_fluent"
+        "state_role": "dynamic_fluent",
+        "producible": true,
+        "deletable": true
       }
     ],
     "numeric_functions": []
@@ -228,19 +554,42 @@ declared PDDL vocabulary:
       {"name": "Y", "pddl_type": "block"}
     ]
   },
-  "output_contract": "parametric_lifted_ltlf_template_v2"
+  "requested_output": {
+    "template_id": "tpl_blocks_clear_then_on_001",
+    "template_role": "predicted",
+    "output_contract": "parametric_lifted_ltlf_template_v2"
+  }
 }
 ```
 
-Predicate roles MUST be derived from PDDL effects. Domain-specific prose MAY
-be supplied for language grounding, but the executable compiler MUST NOT use
-that prose as a replacement for predicate, arity, or type validation.
+Predicate roles MUST be derived from PDDL effects. `state_role` is
+`dynamic_fluent` when the predicate occurs in any add/delete effect and
+`static_context` otherwise. `producible` and `deletable` are independent
+Booleans because one predicate can have both roles. Domain-specific prose MAY be
+supplied for language grounding, but the executable compiler MUST NOT use that
+prose as a replacement for predicate, arity, or type validation.
 
-### 3. Language-Model Output: Lifted LTLf Template
+The orchestration code, not the model, assigns `template_id` and
+`template_role`. A predicted identifier MUST be unique to one query/attempt.
+The validator requires the response to echo both values exactly. Gold templates
+use the same schema with `template_role: "gold"`, but are created by the audited
+benchmark process rather than the translation model.
 
-The language model MUST return JSON only. Formula structure MUST be represented
-as an abstract syntax tree; formula text is derived by deterministic rendering
-and is not independently trusted.
+The provider request consists of one versioned system instruction and this JSON
+envelope. The system instruction states the externally bound parameter
+semantics, requires JSON matching the output schema, forbids invented symbols or
+undeclared constants, and forbids explanatory text. Its exact bytes and SHA-256
+hash are recorded. Few-shot examples, when used, belong to the training or
+development partition and are recorded separately; no test query or gold
+formula may appear in them.
+
+### 3. Normalized Lifted LTLf Template
+
+For a predicted template, the language model MUST return JSON only and echo the
+orchestrator-owned identity fields. Gold and predicted templates use the same
+normalized schema. Formula structure MUST be represented as an abstract syntax
+tree; formula text is derived by deterministic rendering and is not independently
+trusted.
 
 ```json
 {
@@ -250,6 +599,8 @@ and is not independently trusted.
   "temporal_logic": "LTLf",
   "logic_profile": "typed_parametric_ltlf_v1",
   "query_id": "blocks_clear_then_on_001",
+  "template_id": "tpl_blocks_clear_then_on_001",
+  "template_role": "predicted",
   "domain": "blocksworld-on",
   "parameter_semantics": "externally_bound",
   "variables": [
@@ -307,10 +658,18 @@ phi ::= true
       | release(phi, phi)
 ```
 
-Explicit `or` and implication are excluded from the version 1 model-output
-grammar. This restriction does not imply that MONA transition guards will be
-free of disjunction. Automaton minimization can introduce arbitrary Boolean
-guards, which the DFA capability checker must handle or reject explicitly.
+Explicit `or` and implication are excluded from the
+`typed_parametric_ltlf_v1` logic profile. This restriction does not imply that
+MONA transition guards will be free of disjunction. Automaton minimization can
+introduce arbitrary Boolean guards, which the DFA capability checker must
+handle or reject explicitly.
+
+The `typed_parametric_ltlf_v1` profile contains only
+`not_equal(left, right)` parameter constraints between type-compatible declared
+parameters or declared PDDL domain constants.
+Problem-instance object names MUST NOT occur in a reusable lifted template;
+they enter only through an invocation assignment. This restriction does not
+forbid a constant declared by the PDDL domain itself.
 
 The Input validator MUST enforce all of the following:
 
@@ -361,10 +720,10 @@ Numeric comparisons are first-class state conditions:
 }
 ```
 
-Version 1 supports one declared numeric fluent compared with one integer
-constant. Arbitrary arithmetic, real-valued tolerances, function-to-function
-comparison, and optimization metrics MUST be rejected unless their semantics
-are separately specified.
+The `typed_parametric_ltlf_v1` profile supports one declared numeric fluent
+compared with one integer constant. Arbitrary arithmetic, real-valued
+tolerances, function-to-function comparison, and optimization metrics MUST be
+rejected unless their semantics are separately specified.
 
 ### 5. Runtime Invocation
 
@@ -375,7 +734,9 @@ Bindings belong to an invocation, not to the lifted template:
   "schema_version": 2,
   "artifact_kind": "parametric_temporal_query_invocation",
   "invocation_id": "blocks_p01_clear_then_on_b1_b2",
-  "template_id": "blocks_clear_then_on_001",
+  "query_id": "blocks_clear_then_on_001",
+  "template_id": "tpl_blocks_clear_then_on_001",
+  "gold_template_id": "gold_blocks_clear_then_on_001",
   "domain": "blocksworld-on",
   "problem_file": "src/domains/blocksworld-on/test/p01.pddl",
   "assignment": {"X": "b1", "Y": "b2"},
@@ -384,8 +745,11 @@ Bindings belong to an invocation, not to the lifted template:
 }
 ```
 
-The invocation validator MUST check total binding, object declaration, PDDL
-type membership, constants, and parameter constraints before Jason execution.
+`template_id` identifies the wrapper executed by Jason. In Track B it is the
+gold template; in Track C it is the predicted template. `gold_template_id`
+always identifies the hidden evaluation oracle. The invocation validator MUST
+check query/template linkage, total binding, object declaration, PDDL type
+membership, constants, and parameter constraints before Jason execution.
 
 ### 6. Proposition Map
 
@@ -397,7 +761,7 @@ map:
 {
   "schema_version": 1,
   "artifact_kind": "lifted_proposition_map",
-  "template_id": "blocks_clear_then_on_001",
+  "template_id": "tpl_blocks_clear_then_on_001",
   "propositions": [
     {
       "proposition": "ap_0001",
@@ -427,7 +791,7 @@ The real tool output MUST be normalized without inventing transitions:
 {
   "schema_version": 1,
   "artifact_kind": "ltlf_dfa",
-  "template_id": "blocks_clear_then_on_001",
+  "template_id": "tpl_blocks_clear_then_on_001",
   "formula_sha256": "...",
   "proposition_map_sha256": "...",
   "construction": {
@@ -436,7 +800,7 @@ The real tool output MUST be normalized without inventing transitions:
     "backend": "MONA",
     "mona_version": "recorded-at-runtime",
     "mona_binary_sha256": "...",
-    "timeout_seconds": 60
+    "timeout_seconds": 300
   },
   "states": ["q0", "q1", "q2"],
   "initial_state": "q0",
@@ -512,6 +876,10 @@ Every formal result MUST preserve separate oracles:
   "schema_version": 1,
   "artifact_kind": "temporal_execution_validation",
   "invocation_id": "blocks_p01_clear_then_on_b1_b2",
+  "executed_template_id": "tpl_blocks_clear_then_on_001",
+  "gold_template_id": "gold_blocks_clear_then_on_001",
+  "executed_formula_sha256": "...",
+  "gold_formula_sha256": "...",
   "jason_success": true,
   "committed_action_count": 8,
   "pddl_action_trace_valid": true,
@@ -524,7 +892,8 @@ Every formal result MUST preserve separate oracles:
   "artifact_paths": {
     "committed_plan": "...",
     "state_trace": "...",
-    "dfa_run": "...",
+    "predicted_dfa_run": "...",
+    "gold_dfa_run": "...",
     "val_output": "..."
   }
 }
@@ -534,7 +903,87 @@ Every formal result MUST preserve separate oracles:
 and the **gold** DFA accepts it. Acceptance by the model's own predicted DFA is
 not sufficient.
 
+The state trace is JSON Lines with one record for every consumed PDDL state,
+including `state_index: 0` for the invocation initial state. Each row records
+the preceding primitive action or `null`, a canonical state hash, relevant
+numeric values, and proposition labels for the executed and gold templates.
+The state trace is derived evidence; the independent replayer MUST reconstruct
+it from `domain.pddl`, `problem.pddl`, and `committed_plan.plan` rather than
+trusting labels emitted by Jason.
+
 ## Constructing Natural-Language TEG Queries from PDDL
+
+### Benchmark Scope
+
+The paper-facing TEG benchmark covers the complete held-out `test/` split of
+every currently selected domain:
+
+| Benchmark group | Domains |
+| --- | --- |
+| Classical | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` |
+| Numeric fluent | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` |
+| Feature-definable serialized-width | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` |
+
+"Complete test split" means every test problem appears in the benchmark
+manifest and denominator. It does **not** mean generating one grounded formula
+from every original PDDL goal. The generation unit is:
+
+```text
+per domain:
+  4-8 reusable lifted gold templates
+  x every held-out test problem
+  x 1-3 deterministic typed assignments when certifiable
+```
+
+For each domain/problem/template combination, the builder MUST record exactly
+one of:
+
+- `certified_invocations`: one or more type-correct assignments with an
+  independently PDDL-valid positive witness;
+- `no_valid_assignment`: no assignment satisfies typing and template
+  constraints;
+- `no_positive_witness`: assignments exist but the bounded independent witness
+  procedure cannot certify realizability;
+- `unsupported_logic` or `unsupported_controller_topology`: the formula is
+  outside the declared Input or controller capability.
+
+The witness bound, planner/provider, timeout, and failure reason are recorded.
+`no_positive_witness` means "not certified under the recorded procedure", not a
+proof that the temporal goal is impossible.
+
+### Artifact Cardinality and Form
+
+| Scope | Generated artifact | Reuse rule |
+| --- | --- | --- |
+| One domain | PDDL catalogue | Shared by all templates and invocations in that domain. |
+| One intended temporal meaning | One gold lifted template, one proposition map, and one gold DFA | Compiled once; contains parameters, never test-instance object names. |
+| One natural-language wording | One query-text record | Linked to one hidden gold template; never contains a runtime assignment. |
+| One template/problem pairing | Zero or more invocation records | Each supplies one external typed assignment. |
+| One invocation | One independently certified positive witness | Checked by the gold DFA and never produced by the evaluated ASL library. |
+| One translation attempt | Predicted template, map, DFA, wrapper result, and provenance | Compared with the hidden gold template; retries remain separate attempts. |
+
+Every gold template MUST additionally have at least one type-correct,
+PDDL-valid negative trace across its invocation set; a negative trace per
+invocation SHOULD be stored when independently obtainable.
+
+Each gold template has one controlled-English query and at least three
+human-reviewed paraphrases. At least one paraphrase is independently
+human-authored; an LLM-generated paraphrase MUST be reviewed and its generator
+recorded. The same wording and lifted template are reused across assignments;
+object-specific sentences such as "put b1 on b2" do not count as lifted-query
+evaluation.
+
+Assignment selection is deterministic and domain-independent. For each
+template/problem pair, construct type-compatible object lists using subtype
+closure. Enumerate the complete Cartesian product when its size is at most a
+pre-registered candidate budget; otherwise sample tuple indices without
+replacement using a seed derived from the benchmark, domain, problem, and
+template hashes. Filter the resulting tuples by parameter constraints and
+select at most three certified assignments from distinct initial
+atom-valuation strata when possible. The budget, seed, product size, sampled
+count, rejected count, and witness outcomes MUST be recorded; the default
+candidate budget is 256. This procedure samples bindings, not formulas, and
+never changes the lifted template or DFA.
 
 ### Do Not Rewrite Every Original Goal
 
@@ -561,14 +1010,20 @@ one original PDDL final goal
 
 ### Schema-Derived Atom Catalogue
 
-For each PDDL domain, the benchmark builder MUST classify state symbols from
-the action schemas:
+For each PDDL domain, the benchmark builder MUST derive these non-exclusive
+properties from the action schemas:
 
-- `producible_dynamic_fluent`: appears in a positive add effect;
-- `deletable_dynamic_fluent`: appears in a delete effect;
-- `static_context`: appears in state descriptions but no add/delete effect;
-- `numeric_state_function`: declared PDDL function with supported state
+- `state_role = dynamic_fluent` when a predicate appears in any add/delete
+  effect, otherwise `state_role = static_context`;
+- `producible = true` when it appears in a positive add effect;
+- `deletable = true` when it appears in a delete effect;
+- `numeric_state_function` for each declared PDDL function with supported state
   semantics.
+
+Predicate/function signatures include argument position and declared type.
+Type checking uses the transitive PDDL subtype closure, and domain constants are
+included with their declared types. No role is inferred from predicate names,
+benchmark goals, or natural-language descriptions.
 
 Positive achievement milestones MUST use producible dynamic fluents or
 supported numeric targets. Static predicates MAY constrain bindings or describe
@@ -708,6 +1163,19 @@ on(X,Y)  -> ap_0002
 F(ap_0001 & X(F(ap_0002)))
 ```
 
+The deterministic renderer uses these `ltlf2dfa` tokens:
+
+| Abstract-syntax-tree operator | Canonical text |
+| --- | --- |
+| `true`, `false`, `atom` | `true`, `false`, `ap_NNNN` |
+| `not` | `!(phi)` |
+| `and` | `(phi_1 & ... & phi_n)` |
+| `next`, `eventually`, `always` | `X(phi)`, `F(phi)`, `G(phi)` |
+| `until`, `release` | `(phi_1 U phi_2)`, `(phi_1 R phi_2)` |
+
+Parentheses are emitted exactly as shown. The renderer operates only on safe
+proposition identifiers, so PDDL punctuation never reaches the formula parser.
+
 Incorrect:
 
 ```text
@@ -770,12 +1238,29 @@ blocks_clear_then_on.
 	blocks_clear_then_on & obj_tp(X, block) & obj_tp(Y, block) & X \== Y <-
 	!g_blocks_clear_then_on_trans_1(X, Y);
 	!g_blocks_clear_then_on_trans_2(X, Y).
+
++!g_blocks_clear_then_on_trans_1(X, Y) : clear(Y) <-
+	true.
+
++!g_blocks_clear_then_on_trans_1(X, Y) : not clear(Y) <-
+	!clear(Y);
+	!g_blocks_clear_then_on_trans_1(X, Y).
+
++!g_blocks_clear_then_on_trans_2(X, Y) : on(X, Y) <-
+	true.
+
++!g_blocks_clear_then_on_trans_2(X, Y) : not on(X, Y) <-
+	!on(X, Y);
+	!g_blocks_clear_then_on_trans_2(X, Y).
 ```
 
 Every query-local transition helper MUST receive the variables required by its
 guard and recursive calls. One maintained domain library may contain many query
 templates, but every template remains parametric and is invoked with concrete
-arguments only at runtime.
+arguments only at runtime, for example `!g_blocks_clear_then_on(b1, b2)`. The
+shown helpers illustrate parameter propagation and declarative guard rechecking;
+the actual number and guards of `trans` helpers MUST come from the audited DFA,
+not from the surface order of the formula or natural-language sentence.
 
 ## DFA-Based Goal Validation
 
@@ -909,21 +1394,10 @@ separately.
 
 ### Instance Coverage
 
-Using all current test problems as TEG environments is encouraged when compute
-permits, but the template set MUST remain lifted and reusable. A defensible
-default is:
-
-```text
-per domain:
-  4-8 lifted temporal templates
-  x every held-out test problem with at least one certified valid assignment
-  x 1-3 deterministic assignments per template/problem
-```
-
+The denominator and artifact cardinality are fixed by **Benchmark Scope** above.
 Assignments SHOULD cover small, medium, and large problems; already-true and
 not-yet-true milestones; shared variables; threat/interference contexts;
-resource-consuming contexts; and type/alias edge cases. Skipped instances MUST
-record why no certified assignment or witness was available.
+resource-consuming contexts; and type/alias edge cases.
 
 The same template identifier, formula hash, proposition map, and DFA artifact
 SHOULD be reused across assignments. Regenerating one object-specific formula
@@ -985,6 +1459,12 @@ The framework MUST NOT claim:
 
 The Input implementation is paper-ready only when all items below pass:
 
+- every selected domain's complete test split is represented in the benchmark
+  manifest, including structured skip/unsupported outcomes;
+- each domain has 4-8 reusable lifted gold templates rather than one grounded
+  formula per problem;
+- every gold template has reviewed language, a certified positive witness, and
+  at least one PDDL-valid gold-DFA-rejected trace;
 - schema version 2 separates templates from invocations;
 - structured formula AST is authoritative;
 - LLM output is validated against the actual PDDL schema;
