@@ -32,6 +32,8 @@ include = [
     "domain_level_planning*",
     "evaluation*",
     "plan_library*",
+    "temporal_input*",
+    "temporal_specification*",
     "utils*",
 ]
 
