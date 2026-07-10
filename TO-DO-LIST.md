@@ -44,7 +44,7 @@ certificate.
 | --- | --- | --- |
 | Full 16-domain benchmark materialization | Updated | Keep `scripts/materialize_achievement_benchmarks.py` as the single source of truth and rerun it after source-policy changes. |
 | Atomic ASL library generation | Needs full rerun | Run the timestamped MOOSE-to-ASL batch for all 16 selected benchmark entries after this benchmark expansion. |
-| Jason plus VAL validation | Needs full rerun | Run parser-order full-test validation after the new ASL batch completes. Report per-domain Jason and VAL success, timeout, and failure categories. |
+| Jason plus VAL validation | Needs full rerun | Run full-test DFA-transition validation after the new ASL batch completes. Report per-domain Jason and VAL success, timeout, and failure categories. |
 | Numeric domains | Experimental | Keep numeric support marked experimental until numeric fluents have a complete executable semantics and full validation evidence. |
 | Temporal Input integration | External dependency | Consume provided lifted LTLf JSON only; do not regenerate language-model prompts in this repository unless explicitly requested. |
 
@@ -55,10 +55,16 @@ certificate.
   Every progress edge on the unique accepting path produces exactly one
   query-local `trans` helper; singleton guards reduce to the former ordered
   achievement behavior, while conjunctive guards are rechecked after repair.
+- Validated MOOSE macros and PDDL-schema branches now enter one Clingo candidate
+  space. Evidence coverage, internal-module closure, compatible recursive
+  capabilities, branch count, context count, and body cost are decided in one
+  solve; MOOSE macros are no longer appended after schema selection.
 - Query goal ordering no longer infers semantics from predicate argument
-  positions. Delete threats come from the compiled atomic module call graph,
-  with a cycle-safe PDDL producer fixed point only when a module summary is
-  unavailable.
+  positions. Delete threats come only from conservative summaries of the final
+  selected atomic module call graph. Summaries use a PDDL-typed relational fixed
+  point over alpha-normalized subgoal-call shapes, so recursive parameter changes
+  are included without a domain-specific depth bound. Incomplete summaries and
+  cyclic threat graphs are rejected; parser order is not a fallback.
 - MOOSE evidence variables are no longer made pairwise distinct by default.
   Inequality guards are emitted only when PDDL symbolic execution proves that
   aliasing would violate an action precondition or a prior delete effect.
@@ -69,15 +75,28 @@ certificate.
 - PDDL constants and schema variables now have distinct symbolic identities.
   Threat ordering therefore remains sound even when an object is literally
   named `x`, `y`, or another schema-variable-like token.
-- Compiler-generated resource-release sequences enumerate every schema-valid
-  cleanup alternative and derive required alias disequalities. For example, a
-  lifted object cannot also be selected as its own parking support.
-- Query transition helpers use indexed forward completion only when persistence
-  is certified from PDDL delete effects or from the actual atomic module call
-  graph. Potentially interfering goals retain replay semantics.
+- Compiler-generated resource-release sequences require a causal keyed-capacity
+  invariant, inverse acquire/release effects, target preservation, and exact
+  alias guards. Structurally symmetric same-arity modes are rejected when their
+  free/debt orientation cannot be inferred.
+- Same-predicate recursion requires a non-negative relational-count feature
+  with a strict delete and no selected branch that can increase the feature.
+- Every positive DFA progress transition uses the same `trans` replay shape.
+  Singleton guards use identity serialization; conjunctions use certified
+  threat ordering. The old monotonic step-helper path is no longer selected.
 - The implementation contains no domain-name routing for these rules. Synthetic
   regression domains cover constant/variable identity, alias-safe cleanup,
   persistent goals, and interfering goals.
+
+Current compiler acceptance gate (2026-07-10): full `ruff check .` passes;
+`pytest -q` reports 256 passed with only two third-party Lark deprecation
+warnings; real `ltlf2dfa`/MONA builds the expected three-state, five-transition
+automaton for `F(a & X(F(b)))`; and the typed threat certificate processes the
+48,500-literal Gripper `p2_30` goal in about 11 seconds with one cached module
+summary and zero threat edges. Representative real MOOSE readable-policy
+wrappers accept Numeric Minecraft, Blocksworld Clear, Gripper, Satellite,
+Rovers, and Logistics. Depots, Barman, and Blocksworld Tower remain explicit
+cyclic-threat rejections rather than falling back to an uncertified order.
 
 Previously recorded focused validation evidence. Rerun these probes after the
 current threat-ordering and temporal-append changes before using them as paper

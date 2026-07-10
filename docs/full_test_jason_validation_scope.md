@@ -6,30 +6,40 @@ natural-language to LTLf to DFA input pipeline.
 Current full-test behavior:
 
 1. Read each test `problem.pddl`.
-2. Extract only positive facts from the PDDL `:goal`.
-3. Preserve the parser/file order of those facts.
-4. Emit one query wrapper plan whose body calls those atomic goals in sequence.
+2. Interpret the positive conjunctive PDDL goal as one diagnostic DFA-style
+   transition guard.
+3. Compute conservative may-delete summaries from the final selected atomic
+   module call graph to a finite, alpha-normalized relational fixed point, with
+   PDDL type constraints participating in unification.
+4. Serialize the guard only when those summaries are complete and the induced
+   delete-threat graph is acyclic.
 5. Run Jason against the generated atomic AgentSpeak(L) library plus that
    wrapper.
 6. Export every successful primitive action as a complete PDDL plan trace.
 7. For paper-quality runs, validate that exported trace with VAL or an IPC-style
    plan verifier.
 
-The wrapper shape is:
+The wrapper shape is a declarative `trans` replay controller:
 
 ```asl
 miconic_test_61.
 
 +!g_miconic_test_61 : miconic_test_61 <-
+	!g_miconic_test_61_trans_1.
+
++!g_miconic_test_61_trans_1 :
+	miconic_test_61 & served(p1) & served(p2) <-
+	true.
+
++!g_miconic_test_61_trans_1 : miconic_test_61 & not served(p1) <-
 	!served(p1);
-	!served(p2);
-	!served(p3).
+	!g_miconic_test_61_trans_1.
 ```
 
 This runner validates:
 
 ```text
-PDDL test goal facts -> ordered singleton goal body -> Jason execution
+PDDL test conjunction -> certified guard serialization -> trans replay -> Jason execution
 -> exported PDDL plan trace -> VAL/IPC plan verification
 ```
 
@@ -39,36 +49,20 @@ It does not validate:
 natural language -> lifted LTLf JSON -> LTLf2DFA -> validated DFA -> ASL append
 ```
 
-Jason is not doing classical planning in this setup. Jason receives the top-level
-goal event such as `!g_miconic_test_61`, matches the first applicable ASL plan,
-and executes the body. The planning work is split across two other components:
-the atomic library provides plans for goals such as `!served(P)` or `!at(C,L)`,
-and the upstream input layer chooses the temporal order when it creates an LTLf
-formula. In this diagnostic runner, the order is just the PDDL parser order.
+Jason is not doing classical planning in this setup. It dispatches the selected
+atomic modules and repeatedly rechecks the transition guard. If achieving
+`G2` may delete `G1`, the serializer places `G2` before `G1`. This ordering is
+derived from PDDL effects and the selected ASL call graph, not predicate names,
+argument positions, or PDDL file order. If the graph is cyclic, the diagnostic
+query is rejected instead of silently replaying an unproved order.
 
-The parser-order shortcut is not the expected input contract for feature-
-defined relational goal interactions. In the real input pipeline, the natural-
-language component must output a lifted LTLf sequence whose next singleton
-literal is safe with respect to literals already achieved. Here "safe" means
-that pursuing the next subgoal should not delete a previous progress literal
-that is meant to hold in the final world state. For example, when the final
-Blocks tower contains `on(j,c)` and `on(c,e)`, the safe order is to achieve the
-lower relational support `on(c,e)` before placing `j` on `c`; otherwise
-achieving `on(c,e)` may require unstacking `j` from `c`, deleting the previous
-progress literal.
-
-The July 6, 2026 timestamped batch exposed this distinction. Blocks test
-wrappers were generated from PDDL goal literals in parser order. IPC Blocks
-problems often print tower goals from top to bottom, so the generated wrapper
-first called `!on(j,c)` and later called `!on(c,e)`. Jason reported success
-because each singleton subgoal was achieved at some point. VAL rejected the
-exported trace because the final state no longer satisfied the earlier top
-literal. Earlier local Blocks records that showed complete coverage were Jason
-runtime records only: they did not export `jason_plan.plan`, did not run
-`plan_verifier`, and therefore did not prove VAL-valid final conjunctive-goal
-coverage. A paper-quality Blocks result must therefore use VAL/IPC verification
-and a support-safe temporal order from the input layer or an equivalent
-dependency-aware ordering step.
+The effect fixed point keeps query arguments as anchors and alpha-normalizes
+internal variables, so parameter-changing recursive calls are explored without
+a benchmark-specific recursion depth. PDDL sibling types remain disjoint during
+threat unification. For example, a module delete effect over `at(Truck,L)` does
+not threaten a conjunctive goal over `at(Package,L)`, while a delete over a
+compatible truck subtype still does. Repeated lifted variables in one guard
+share both their binding and accumulated type requirements.
 
 ## Validation Semantics And Budget
 
@@ -92,20 +86,17 @@ but those results are not paper-quality validation results.
 
 ## Temporal Wrapper Policy
 
-The current ASL append policy for linear temporal goals is a single-body
-compression with an explicit query entry proposition. A query entry proposition
-is a zero-arity belief that enables one appended query wrapper; for example,
-`miconic_test_61.` enables `+!g_miconic_test_61`. If the validated DFA has
-exactly one positive singleton-literal progress path from the initial state to
-an accepting state, the appender writes one plan body containing those progress
-literals as subgoals. It does not write `tg_state(...)` beliefs.
+The canonical appender uses the real `ltlf2dfa`/MONA automaton and emits one
+query-local `trans` helper for every progress transition on the unique accepting
+path. A query entry proposition is a zero-arity belief that enables one query;
+for example, `miconic_test_61.` enables `+!g_miconic_test_61`.
 
-The old query-local `tg_state(goal,state)` monitor was removed from the current
-maintained output contract because it made large test batches much longer and
-forced Jason to do extra context matching before every progress step. For a
-linear goal such as "serve p1, then p2, then p3", the direct body above is
-semantically sufficient for this diagnostic path. The explicit entry
-proposition keeps many appended query wrappers maintainable in one ASL file.
+A singleton positive guard has identity serialization: the helper calls one
+atomic subgoal and rechecks itself. A conjunctive guard is serialized with the
+selected modules' delete-effect certificate and then replayed until every
+positive literal and every negative context guard holds together. Negative
+literals are context checks, never negative achievement subgoals. The old
+linear body and monotonic step-helper paths are not selected.
 
 Branching or state-dependent DFA goals are not silently compiled to `tg_state`
 plans. They now fail with `nonlinear_temporal_goal_not_supported`. Those goals
@@ -443,8 +434,8 @@ These templates come from the PDDL schema: `put-down(?x)` has add effect
 variable `X`, producing the context `on(Y,X) & clear(Y) & handempty`.
 
 Same-predicate recursive templates require a progress certificate. A progress
-certificate is a schema-level witness that the recursive call can remove a
-dynamic obstruction relation, not a domain-specific proof. In Blocks:
+certificate is a schema-level well-founded ranking proof, not merely a witness
+that one action deletes one fact. In Blocks:
 
 ```asl
 +!clear(X) : on(Y, X) & not clear(Y) & obj_tp(X, block) & obj_tp(Y, block) <-
@@ -452,20 +443,24 @@ dynamic obstruction relation, not a domain-specific proof. In Blocks:
 	!clear(X).
 ```
 
-The certificate is:
+The compile-time certificate is:
 
 ```text
+certificate_kind = well_founded_relational_count_decrease
+ranking_feature_kind = global_dynamic_atom_count
 relation_predicate = on
 relation_arguments = Y, X
-deleting_action = unstack
+strictly_decreasing_actions = [unstack]
+non_increasing_actions = [put-down]
+lower_bound = 0
 ```
 
-This means `on(Y,X)` binds the recursive variable `Y` to the target `X`, and
-the producer action `unstack(Y,X)` deletes the obstruction relation `on(Y,X)`.
-The compiler checks this pattern over PDDL action schemas; it does not check
-`domain == blocks`, `predicate == clear`, or `action == unstack`. Any domain
-with the same schema-level obstruction-removal pattern can use the same rule,
-and recursive branches without such a deleting-action witness are rejected.
+This means the number of dynamic `on` atoms is a non-negative feature. The
+producer sequence deletes at least one such atom and adds none. The compiler
+also follows the selected module call graph and tells Clingo that this recursion
+cannot coexist with any candidate branch that may add `on`; for example,
+`unstack; stack` is incompatible because it exchanges one `on` fact for
+another. The compiler does not inspect domain, predicate, or action names.
 
 ## Current Benchmark Scope And Library Profiles
 

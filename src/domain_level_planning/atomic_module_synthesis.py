@@ -2427,6 +2427,8 @@ def _recursive_progress_certificate_from_plan(
 			),
 		)
 	return None
+
+
 def _select_branches_with_clingo(
 	plans: Sequence[AgentSpeakPlan],
 	*,

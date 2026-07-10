@@ -41,16 +41,17 @@ conflated. First, an external generalized planner learns lifted templates for
 atomic predicate or literal goals from a Planning Domain Definition Language
 domain and its training split. Second, each user temporal goal is represented as
 a lifted LTLf formula, compiled into a deterministic finite automaton, validated
-under a singleton-literal transition contract, and appended as a query-specific
+under a conjunction-and-negation guard contract, and appended as a query-specific
 top-level AgentSpeak(L) goal that calls the atomic library. The resulting
 artifact is one domain-level library that grows with user queries, rather than
 one plan per problem or one planner call per execution. An Evidence Module
 imports external generalized-planning artifacts into a provider-neutral
 singleton-goal evidence representation. We instantiate this interface with
-MOOSE, while keeping the compiler independent of that provider. The current
-claim covers schema-validated predicate goals and validated numeric fluent
-goals; unsupported negative literal templates are rejected before library
-generation.
+MOOSE, while keeping the compiler independent of that provider. A single
+Clingo program jointly selects validated evidence macros and schema-derived
+branches under executability, closure, recursive-progress, resource-restoration,
+and target-preservation certificates. Unsupported candidates and uncertified
+cyclic transition guards are rejected before library generation.
 \end{abstract}
 
 \ccsdesc[500]{Computing methodologies~Planning and scheduling}
@@ -101,25 +102,28 @@ answer for interacting multi-literal goals. In Blocksworld, for example,
 structural control. We place that control in a query-specific LTLf-to-DFA layer
 above the atomic library.
 
-The paper makes four contributions.
+The paper makes five contributions.
 \begin{enumerate}
 \item We define an architecture that separates atomic lifted template learning
 	from query-specific temporal goal appending.
 \item We define an Evidence Module interface for atomic predicate and literal
 	templates. The MOOSE adapter is one provider that emits the common
 	singleton-goal evidence representation consumed by the compiler.
-\item We restore an LTLf-to-DFA temporal layer with a singleton-literal
-	transition contract, producing \asl{} wrapper goals that call only atomic
-	predicate modules.
-\item We define a benchmark scope covering ESHO classical domains, numeric
-	fluent domains, and feature-definable serialized-width domains.
+\item We define one certificate-carrying policy-lifting compiler that jointly
+	selects evidence and schema-derived atomic modules in a single Clingo
+	optimization problem.
+\item We restore an LTLf-to-DFA temporal layer whose conjunctive guards use
+	conservative summaries of selected-module effects.
+\item We define a benchmark scope spanning classical, numeric, and
+	serialized-width domains.
 \end{enumerate}
 
 The contribution is deliberately bounded. We do not claim that one evidence
 provider is state of the art for every planning problem, nor that context-only
 \asl{} can encode every temporal automaton without controller state.
-Unsupported negative literal templates and DFA transitions whose guards require
-compound Boolean reasoning remain outside the current claim.
+Unsupported negative achievement templates, disjunctive guards, cyclic
+delete-threat graphs without a ranking certificate, and multi-literal numeric
+guards without numeric preservation certificates remain outside the claim.
 
 \input{sections/related_work}
 
@@ -137,9 +141,9 @@ additional semantics before they can enter the claim. Unsupported cases are
 rejected before compilation so that the generated library remains a
 domain-level program rather than an instance-specific trace.
 
-Temporal goals are compiled from LTLf into deterministic finite automata. Only
-DFA transitions that validate as singleton literals can be compiled into
-query-specific \asl{} wrapper plans. A general DFA still requires an external
+Temporal goals are compiled from LTLf into deterministic finite automata. DFA
+transition guards may contain conjunction and negation. Positive conjuncts call
+atomic modules; negative conjuncts remain context guards. A general DFA still requires an external
 reward-machine state unless the world state uniquely determines temporal
 progress. Ordinary classical \pddl{} goals define achievement goals; they do
 not define arbitrary temporal extended goals, although PDDL3 trajectory

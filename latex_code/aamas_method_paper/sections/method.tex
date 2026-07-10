@@ -15,7 +15,8 @@ across future queries for the same domain.
 A user query is handled by a temporal component. The Input component produces a
 lifted LTLf JSON object. We parse that object, compile the LTLf formula into a
 deterministic finite automaton, validate that relevant transition guards are
-singleton literals, and append a query-specific top-level \asl{} goal such as
+conjunctions of declared positive or negative literals, and append a
+query-specific top-level \asl{} goal such as
 \texttt{+!g\_query\_17}. The appended wrapper calls the atomic library; it does
 not replace the atomic library.
 
@@ -23,8 +24,11 @@ not replace the atomic library.
 
 From the training split we extract the set of atomic goal templates:
 \[
-	T_D = \{(p,k,\sigma) \mid p(o_1,\ldots,o_k) \text{ or }
-	\neg p(o_1,\ldots,o_k) \text{ appears as a training goal item}\},
+	\begin{aligned}
+	T_D = \{(p,k,\sigma) \mid {}&p(o_1,\ldots,o_k) \text{ or }
+	\neg p(o_1,\ldots,o_k) \\
+	&\text{appears as a training goal item}\}.
+	\end{aligned}
 \]
 where $\sigma$ records positive or negative polarity. These templates are the
 interface to external generalized-planning providers. The project does not first
@@ -36,9 +40,9 @@ The Evidence Module is the interface to external generalized-planning
 providers. An Evidence Module adapter is a provider-specific parser that emits a
 provider-neutral evidence program. For example, the MOOSE adapter reads a
 \texttt{policy --dump-policy} decision-list rule whose goal condition is
-\texttt{at(package0,location2)} and whose action sequence is a sequence of PDDL
-operators such as \texttt{load-airplane}, \texttt{fly-airplane}, and
-\texttt{unload-airplane}. The emitted evidence program contains the target
+\texttt{at(p0,l2)} and whose action sequence is a sequence of PDDL
+operators such as \texttt{load}, \texttt{fly}, and \texttt{unload}. The
+emitted evidence program contains the target
 goal atom, context atoms, numeric guards when present, macro actions, and
 provenance.
 
@@ -59,9 +63,12 @@ negative literal.
 
 Every consumed provider artifact is normalized before compilation:
 \[
-\text{provider artifact} \rightarrow \text{Evidence Module adapter}
-\rightarrow \text{PolicyEvidenceProgram} \rightarrow
-\text{validated policy-lifting compiler} \rightarrow \text{\asl{} library}.
+\begin{aligned}
+	&\text{provider artifact} \rightarrow \text{Evidence Module adapter} \\
+	&\quad\rightarrow \texttt{PolicyEvidenceProgram} \\
+	&\quad\rightarrow \text{validated policy-lifting compiler}
+	\rightarrow \text{\asl{} library}.
+\end{aligned}
 \]
 Here a \texttt{PolicyEvidenceProgram} is the evidence representation between a
 provider and the compiler: it is a normalized set of singleton-goal rules with
@@ -73,6 +80,34 @@ the main decoupling point: the Evidence Module decides how external planning
 artifacts become evidence, while the compiler decides which evidence is safe to
 render as reusable agent code.
 
+The compiler constructs one candidate space containing validated provider
+macros, direct PDDL producers, recursive preparation branches, and certified
+resource-release branches. One Clingo program enforces evidence coverage and
+internal-module closure, maximizes compatible certified recursive capabilities,
+and then minimizes branch, context, and body cost. This use of answer-set
+optimization follows the general synthesis pattern used for learned planning
+sketches \cite{Drexler2022LearningSketches}, but our decision variables denote
+executable AgentSpeak module branches rather than abstract sketch rules.
+The resulting optimum is relative to the generated certified candidate space;
+we do not claim optimality over all AgentSpeak programs or completeness for
+arbitrary PDDL domains.
+
+Every selected recursive branch requires a compile-time well-founded feature.
+The implemented feature family counts atoms of a dynamic relation. A recursive
+candidate is compatible only with selected branches that never increase this
+count, and at least one certified producer sequence must strictly decrease it.
+The feature is metadata and is not emitted as an AgentSpeak belief. This design
+is related to feature-defined general policies \cite{Frances2021LearningGeneralPolicies},
+while restricting the claim to features whose changes can be certified from
+the PDDL schemas.
+
+A resource cleanup requires a keyed capacity invariant. The producer must
+consume a key-only free mode and create a key-plus-occupant debt mode; the
+cleanup must perform the inverse transition while preserving the atomic target.
+Structurally symmetric modes whose direction cannot be inferred are rejected.
+Thus resource roles are derived from paired causal effects rather than fluent
+names.
+
 \subsection{Temporal Goal Append}
 
 The temporal layer consumes a lifted LTLf goal case:
@@ -83,23 +118,27 @@ where $q$ is a query identifier, $g_q$ is the top-level \asl{} goal name,
 $\varphi_q$ is an LTLf formula, $A_q$ lists declared atoms, and $B_q$ is an
 optional variable-to-object binding map used by the external Input component.
 
-The LTLf formula is compiled to a deterministic finite automaton. Before any
-\asl{} plan is appended, the automaton must satisfy the singleton-literal
-transition contract: every relevant transition guard is exactly one literal
-over declared \pddl{} vocabulary. Guards such as \texttt{on(X,Y) \& clear(X)}
-or disjunctions are rejected and returned to the Input component as validation
-errors. Accepting self-loops labelled \texttt{true} are allowed as automaton
-plumbing and are not compiled into atomic subgoals.
+The LTLf formula is compiled to a deterministic finite automaton by the real
+\texttt{ltlf2dfa}/MONA toolchain. Every progress edge on the unique accepting
+path becomes one query-local transition helper. A guard may contain conjunction
+and negation but not disjunction. Accepting self-loops labelled \texttt{true}
+are automaton plumbing and do not become atomic subgoals.
 
-For a positive transition literal $p(\bar{X})$, the appended wrapper plan has
-the form:
-\[
-	\texttt{+!}g_q \texttt{ : not } p(\bar{X})
-	\texttt{ <- !}p(\bar{X})\texttt{; !}g_q\texttt{.}
-\]
-This plan calls the existing atomic module for $p$. For a negative progress
-literal, the transition is compiled only if the atomic library contains a
-validated negative-achievement module.
+For one positive literal $p(\bar{X})$, the helper has an already-satisfied
+branch and a repair branch that calls $p$ once and rechecks the same transition.
+For a conjunction, the compiler computes conservative may-delete summaries over
+the final selected atomic module call graph. It computes a relational fixed
+point over reachable module calls: query variables remain symbolic anchors,
+internal variables are alpha-normalized, and PDDL type constraints restrict
+unification. This covers parameter-changing recursion without a benchmark-specific
+depth bound and preserves shared-variable identity across guard literals.
+An edge $G_j \rightarrow G_i$
+means that achieving $G_j$ may delete $G_i$, so $G_j$ must be repaired first.
+An acyclic graph is topologically serialized; an incomplete or cyclic graph is
+rejected unless a future transition-level ranking certificate is supplied.
+This reordering is confined to literals on one DFA edge and therefore does not
+change temporal order between edges. Negative literals remain context guards
+and are never compiled as negative achievements.
 
 \subsection{Controller State}
 

@@ -137,7 +137,7 @@ def test_full_test_wrapper_uses_guard_transition_replay(tmp_path: Path) -> None:
 	)
 	text = asl_file.read_text(encoding="utf-8")
 
-	assert record["wrapper_mode"] == "guard_trans_replay_without_json_metadata"
+	assert record["wrapper_mode"] == "dfa_guard_transition_replay"
 	assert "tg_state" not in text
 	assert "ferry_test_1." in text
 	assert "+!g_ferry_test_1 : ferry_test_1 <-" in text
@@ -147,46 +147,6 @@ def test_full_test_wrapper_uses_guard_transition_replay(tmp_path: Path) -> None:
 	assert "\t!at(car1, loc1);" in text
 	assert "\t!g_ferry_test_1_trans_1." in text
 	assert "\t!at(X, loc1);" not in text
-
-
-def test_full_test_wrapper_ignores_compact_flag_and_uses_guard_transition(
-	tmp_path: Path,
-) -> None:
-	problem_file = tmp_path / "p01.pddl"
-	problem_file.write_text(
-		"""
-		(define (problem p01)
-		 (:domain gripper)
-		 (:objects ball1 ball2 rooma roomb)
-		 (:init
-		   (ball ball1) (ball ball2)
-		   (at ball1 rooma) (at ball2 rooma)
-		 )
-		 (:goal (and (at ball1 roomb) (at ball2 roomb)))
-		)
-		""",
-		encoding="utf-8",
-	)
-
-	domain_file = PROJECT_ROOT / "src" / "domains" / "gripper" / "domain.pddl"
-	lines, plan_count = full_test_wrapper_lines(
-		domain="gripper",
-		index=1,
-		problem_file=problem_file,
-		compact_completion_wrappers=True,
-		domain_file=domain_file,
-		atomic_plan_library=_certified_library(domain_file, "at"),
-	)
-	text = "\n".join(lines)
-
-	assert plan_count == 4
-	assert "+!g_gripper_test_1 : gripper_test_1 <-" in text
-	assert "\t!g_gripper_test_1_trans_1." in text
-	assert "+!g_gripper_test_1_trans_1 : gripper_test_1 & at(ball1, roomb) & at(ball2, roomb) <-" in text
-	assert "+!g_gripper_test_1_trans_1 : gripper_test_1 & not at(ball1, roomb) <-" in text
-	assert "\t!at(ball1, roomb);" in text
-	assert "\t!g_gripper_test_1_trans_1." in text
-	assert "ball(X) & not at(X, roomb)" not in text
 
 
 def test_full_test_wrapper_uses_guard_transition_by_default(tmp_path: Path) -> None:
@@ -241,7 +201,6 @@ def test_single_literal_guard_transition_matches_old_linear_effect(
 		domain="miconic",
 		index=1,
 		problem_file=problem_file,
-		compact_completion_wrappers=True,
 	)
 	text = "\n".join(lines)
 
@@ -995,7 +954,6 @@ def test_validate_one_task_embeds_runtime_asl_without_extra_plan_library_file(
 		plan_library_asl=plan_library_asl,
 		base_plan_library_asl_text="/* base */",
 		goal_name="g_gripper_test_1",
-		compact_completion_wrappers=False,
 		output_dir=output_dir,
 	)
 
@@ -1039,7 +997,6 @@ def test_run_jason_tasks_appends_progress_records_without_rewriting_summary(
 		plan_library_asl=plan_library_asl,
 		base_plan_library_asl_text="/* base */",
 		goal_name="g_ferry_test_1",
-		compact_completion_wrappers=False,
 		output_dir=tmp_path / "jason" / "ferry" / "test_0001_p01",
 	)
 	summary = {"validations": []}

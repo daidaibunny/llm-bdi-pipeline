@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
 from dataclasses import dataclass
 from datetime import datetime
-from itertools import combinations
 import json
 import re
 import shutil
@@ -38,11 +37,8 @@ from evaluation.jason_runtime.runner import _build_environment_java_source  # no
 from evaluation.jason_runtime.runner import _resolve_jason_classpath  # noqa: E402
 from evaluation.jason_runtime.runner import _runtime_action_schema  # noqa: E402
 from evaluation.jason_runtime.runner import build_runtime_problem_artifacts  # noqa: E402
-from evaluation.jason_runtime.runner import PredicatePattern  # noqa: E402
-from evaluation.jason_runtime.runner import RuntimeActionSchema  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
-from plan_library.models import AgentSpeakPlan  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
 from domain_level_planning.certified_effects import (  # noqa: E402
@@ -94,7 +90,6 @@ class JasonTask:
 	plan_library_asl: Path
 	base_plan_library_asl_text: str
 	goal_name: str
-	compact_completion_wrappers: bool
 	output_dir: Path
 	runtime_wrapper_text: str | None = None
 	atomic_plan_library: PlanLibrary | None = None
@@ -205,14 +200,6 @@ def main() -> int:
 		help="Optional Python regex for selecting test problem file names during probes.",
 	)
 	parser.add_argument(
-		"--compact-completion-wrappers",
-		action="store_true",
-		help=(
-			"Deprecated compatibility flag. Full-test validation always uses "
-			"query-local guard-transition replay wrappers."
-		),
-	)
-	parser.add_argument(
 		"--suppress-final-summary-json",
 		action="store_true",
 		help=(
@@ -272,7 +259,6 @@ def main() -> int:
 			write_domain_long_asl=bool(args.write_domain_long_asl),
 			max_domain_long_asl_bytes=max(1, int(args.max_domain_long_asl_mb)) * 1024 * 1024,
 			test_name_regex=args.test_name_regex,
-			compact_completion_wrappers=bool(args.compact_completion_wrappers),
 		)
 		summary["domains"][domain] = record
 		tasks.extend(domain_tasks if record.get("success") else ())
@@ -352,7 +338,6 @@ def prepare_domain_for_full_test(
 	write_domain_long_asl: bool,
 	max_domain_long_asl_bytes: int,
 	test_name_regex: str | None = None,
-	compact_completion_wrappers: bool = False,
 ) -> tuple[dict[str, Any], tuple[JasonTask, ...]]:
 	"""Compile atomic ASL, append every test goal, and return Jason tasks."""
 
@@ -420,7 +405,6 @@ def prepare_domain_for_full_test(
 				problem_files=test_instances,
 				domain_file=domain_file,
 				atomic_plan_library=atomic_plan_library,
-				compact_completion_wrappers=compact_completion_wrappers,
 			)
 			append_record = append_guard_transition_full_test_wrappers(
 				domain=domain,
@@ -428,15 +412,13 @@ def prepare_domain_for_full_test(
 				problem_files=test_instances,
 				domain_file=domain_file,
 				max_output_bytes=max_domain_long_asl_bytes,
-				compact_completion_wrappers=compact_completion_wrappers,
 				wrapper_text_by_problem=wrapper_text_by_problem,
 				appended_plan_count=wrapper_plan_count,
 			)
 		else:
 			append_record = {
 				"success": True,
-				"wrapper_mode": "per_test_guard_trans_replay_without_json_metadata",
-				"compact_completion_wrappers": compact_completion_wrappers,
+				"wrapper_mode": "dfa_guard_transition_replay",
 				"query_count": len(test_instances),
 				"appended_plan_count": None,
 				"domain_long_asl_written": False,
@@ -457,7 +439,6 @@ def prepare_domain_for_full_test(
 				plan_library_asl=plan_library_asl,
 				base_plan_library_asl_text=base_plan_library_asl_text,
 				goal_name=f"g_{safe_goal_fragment(domain)}_test_{index}",
-				compact_completion_wrappers=compact_completion_wrappers,
 				output_dir=(
 					run_root
 					/ "jason"
@@ -521,7 +502,6 @@ def append_guard_transition_full_test_wrappers(
 	problem_files: Sequence[Path],
 	domain_file: Path | None = None,
 	max_output_bytes: int,
-	compact_completion_wrappers: bool = False,
 	wrapper_text_by_problem: Mapping[Path, str] | None = None,
 	appended_plan_count: int | None = None,
 	atomic_plan_library: PlanLibrary | None = None,
@@ -540,7 +520,6 @@ def append_guard_transition_full_test_wrappers(
 			problem_files=problem_files,
 			domain_file=domain_file,
 			atomic_plan_library=atomic_plan_library,
-			compact_completion_wrappers=compact_completion_wrappers,
 		)
 	else:
 		wrapper_map = dict(wrapper_text_by_problem)
@@ -571,8 +550,7 @@ def append_guard_transition_full_test_wrappers(
 					)
 	return {
 		"success": True,
-		"wrapper_mode": "guard_trans_replay_without_json_metadata",
-		"compact_completion_wrappers": compact_completion_wrappers,
+		"wrapper_mode": "dfa_guard_transition_replay",
 		"query_count": len(problem_files),
 		"appended_plan_count": plan_count,
 		"line_count": line_count,
@@ -586,7 +564,6 @@ def build_full_test_wrapper_texts(
 	problem_files: Sequence[Path],
 	domain_file: Path | None = None,
 	atomic_plan_library: PlanLibrary | None = None,
-	compact_completion_wrappers: bool = False,
 ) -> tuple[dict[Path, str], int]:
 	"""Render each full-test query wrapper once, keyed by problem file."""
 
@@ -599,7 +576,6 @@ def build_full_test_wrapper_texts(
 			problem_file=problem_file,
 			domain_file=domain_file,
 			atomic_plan_library=atomic_plan_library,
-			compact_completion_wrappers=compact_completion_wrappers,
 		)
 		wrapper_map[problem_file] = "\n".join(wrapper_lines).rstrip()
 		total_plan_count += wrapper_plan_count
@@ -611,14 +587,12 @@ def full_test_wrapper_lines(
 	domain: str,
 	index: int,
 	problem_file: Path,
-	compact_completion_wrappers: bool = False,
 	problem: Any | None = None,
 	domain_file: Path | None = None,
 	atomic_plan_library: PlanLibrary | None = None,
 ) -> tuple[tuple[str, ...], int]:
 	"""Return the query-local guard-transition replay wrapper for a test problem."""
 
-	_ = compact_completion_wrappers
 	problem = problem if problem is not None else PDDLParser.parse_problem(problem_file)
 	goal_facts = tuple(fact for fact in problem.goal_facts if fact.is_positive)
 	if len(goal_facts) != len(problem.goal_facts):
@@ -643,146 +617,6 @@ def full_test_wrapper_lines(
 		domain_file=domain_file,
 		atomic_plan_library=atomic_plan_library,
 	)
-
-
-def compact_recursive_completion_wrapper_lines(
-	*,
-	domain: str,
-	index: int,
-	problem_file: Path,
-	goal_facts: Sequence[PDDLFact],
-	init_facts: Sequence[PDDLFact],
-) -> tuple[tuple[str, ...], int] | None:
-	"""Compile repeated same-predicate goals into a query-local completion loop."""
-
-	if len(goal_facts) < 2:
-		return None
-	predicate = goal_facts[0].predicate
-	arity = len(goal_facts[0].args)
-	if any(fact.predicate != predicate or len(fact.args) != arity for fact in goal_facts):
-		return None
-	varying_positions = tuple(
-		position
-		for position in range(arity)
-		if len({fact.args[position] for fact in goal_facts}) > 1
-	)
-	if not varying_positions:
-		return None
-	target_tuples = {
-		tuple(fact.args[position] for position in varying_positions)
-		for fact in goal_facts
-	}
-	if len(target_tuples) != len(goal_facts):
-		return None
-	variable_names = tuple(_variable_name(position) for position in range(len(varying_positions)))
-	target_arguments = tuple(
-		variable_names[varying_positions.index(position)]
-		if position in varying_positions
-		else sanitize_identifier(goal_facts[0].args[position])
-		for position in range(arity)
-	)
-	target_atom = _render_call(predicate, target_arguments)
-	range_binder = _select_exact_range_binder(
-		init_facts=init_facts,
-		target_tuples=target_tuples,
-		target_variables=variable_names,
-		target_atom=target_atom,
-	)
-	if range_binder is None:
-		return None
-	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
-	entry_proposition = query_entry_proposition(goal_name)
-	context = " & ".join((entry_proposition, range_binder, f"not {target_atom}"))
-	lines = [
-		f"/* full_test_problem={problem_file.name} */",
-		f"{entry_proposition}.",
-		"",
-		f"/* plan={goal_name}_recursive_completion | source_instruction_ids=none */",
-		f"+!{goal_name} : {context} <-",
-		f"\t!{target_atom};",
-		f"\t!{goal_name}.",
-		"",
-		f"/* plan={goal_name}_completion_done | source_instruction_ids=none */",
-		f"+!{goal_name} : {entry_proposition} <-",
-		"\ttrue.",
-		"",
-	]
-	return tuple(lines), 2
-
-
-def _select_exact_range_binder(
-	*,
-	init_facts: Sequence[PDDLFact],
-	target_tuples: set[tuple[str, ...]],
-	target_variables: Sequence[str],
-	target_atom: str,
-) -> str | None:
-	"""Find a PDDL fact pattern whose projection is exactly the goal object set."""
-
-	candidates: list[tuple[tuple[int, int, int, str], str]] = []
-	facts_by_predicate: dict[tuple[str, int], list[PDDLFact]] = {}
-	for fact in init_facts:
-		if fact.args:
-			facts_by_predicate.setdefault((fact.predicate, len(fact.args)), []).append(fact)
-	for (predicate, arity), facts in facts_by_predicate.items():
-		if arity < len(target_variables):
-			continue
-		for positions in combinations(range(arity), len(target_variables)):
-			projected = {
-				tuple(fact.args[position] for position in positions)
-				for fact in facts
-			}
-			if projected != target_tuples:
-				continue
-			arguments = _range_binder_arguments(
-				arity=arity,
-				positions=positions,
-				target_variables=target_variables,
-			)
-			binder = _render_call(predicate, arguments)
-			if binder == target_atom:
-				continue
-			score = (
-				len(facts),
-				arity,
-				sum(1 for arg in arguments if arg not in target_variables),
-				binder,
-			)
-			candidates.append((score, binder))
-	if not candidates:
-		return None
-	return min(candidates, key=lambda item: item[0])[1]
-
-
-def _range_binder_arguments(
-	*,
-	arity: int,
-	positions: Sequence[int],
-	target_variables: Sequence[str],
-) -> tuple[str, ...]:
-	auxiliary_index = 0
-	arguments: list[str] = []
-	for position in range(arity):
-		if position in positions:
-			arguments.append(target_variables[tuple(positions).index(position)])
-			continue
-		arguments.append(_auxiliary_variable_name(auxiliary_index))
-		auxiliary_index += 1
-	return tuple(arguments)
-
-
-def _variable_name(index: int) -> str:
-	names = ("X", "Y", "Z", "A", "B", "C")
-	if index < len(names):
-		return names[index]
-	return f"X{index + 1}"
-
-
-def _auxiliary_variable_name(index: int) -> str:
-	names = ("A", "B", "C", "D", "E", "F")
-	if index < len(names):
-		return names[index]
-	return f"A{index + 1}"
 
 
 def guard_transition_replay_wrapper_lines(
@@ -824,6 +658,7 @@ def guard_transition_replay_wrapper_lines(
 			tuple((fact.predicate, tuple(fact.args)) for fact in goal_facts),
 			plan_library=atomic_plan_library,
 			domain=PDDLParser.parse_domain(domain_file),
+			object_types=problem.object_types,
 		)
 		ordered_goal_facts = tuple(goal_facts[index] for index in ordered_indexes)
 	atoms = _deduplicate_strings(
@@ -868,672 +703,8 @@ def guard_transition_replay_wrapper_lines(
 	return tuple(lines), 2 + len(atoms)
 
 
-def _goal_predicates_are_globally_persistent(
-	goal_facts: Sequence[PDDLFact],
-	action_schemas: Sequence[RuntimeActionSchema],
-) -> bool:
-	goal_predicates = {
-		sanitize_identifier(fact.predicate)
-		for fact in tuple(goal_facts or ())
-	}
-	deleted_predicates = {
-		pattern.predicate
-		for action in tuple(action_schemas or ())
-		for pattern in _negative_patterns(action.effects)
-	}
-	return bool(goal_predicates) and goal_predicates.isdisjoint(deleted_predicates)
-
-
-@dataclass(frozen=True)
-class _ModuleDeleteSummary:
-	delete_patterns: tuple[_LiftedAtom, ...]
-	complete: bool
-
-
-def _atomic_modules_preserve_other_goals(
-	*,
-	goal_facts: Sequence[PDDLFact],
-	action_schemas: Sequence[RuntimeActionSchema],
-	plan_library: PlanLibrary | None,
-) -> bool:
-	"""Certify that each compiled atomic module preserves every sibling goal."""
-
-	if plan_library is None:
-		return False
-	facts = tuple(goal_facts or ())
-	plans_by_predicate: dict[str, list[AgentSpeakPlan]] = {}
-	for plan in plan_library.plans:
-		plans_by_predicate.setdefault(
-			sanitize_identifier(plan.trigger.symbol),
-			[],
-		).append(plan)
-	actions_by_name = {
-		sanitize_identifier(action.functor): action
-		for action in tuple(action_schemas or ())
-	}
-	goal_atoms = tuple(_lifted_atom_from_fact(fact) for fact in facts)
-	goal_indexes_by_predicate: dict[str, set[int]] = {}
-	goal_indexes_by_argument: dict[tuple[str, int, str], set[int]] = {}
-	for index, atom in enumerate(goal_atoms):
-		goal_indexes_by_predicate.setdefault(atom.predicate, set()).add(index)
-		for position, argument in enumerate(atom.arguments):
-			if argument.is_variable:
-				continue
-			goal_indexes_by_argument.setdefault(
-				(atom.predicate, position, argument.symbol),
-				set(),
-			).add(index)
-	max_depth = max(2, len(plans_by_predicate) + 1)
-	summary_cache: dict[tuple[str, int], tuple[_LiftedAtom, _ModuleDeleteSummary]] = {}
-	for achiever_index, achiever_atom in enumerate(goal_atoms):
-		cache_key = (achiever_atom.predicate, len(achiever_atom.arguments))
-		cached = summary_cache.get(cache_key)
-		if cached is None:
-			variable_scope = object()
-			generic_goal = _LiftedAtom(
-				predicate=achiever_atom.predicate,
-				arguments=tuple(
-					_LiftedTerm(f"head_{index}", variable_scope=variable_scope)
-					for index in range(len(achiever_atom.arguments))
-				),
-			)
-			generic_summary = _module_delete_summary(
-				goal=generic_goal,
-				plans_by_predicate=plans_by_predicate,
-				actions_by_name=actions_by_name,
-				depth=max_depth,
-				seen={},
-			)
-			cached = (generic_goal, generic_summary)
-			summary_cache[cache_key] = cached
-		generic_goal, generic_summary = cached
-		summary = _instantiate_module_delete_summary(
-			summary=generic_summary,
-			generic_goal=generic_goal,
-			ground_goal=achiever_atom,
-		)
-		if not summary.complete:
-			return False
-		for pattern in summary.delete_patterns:
-			candidate_indexes = _indexed_goal_candidates_for_delete_pattern(
-				pattern=pattern,
-				goal_indexes_by_predicate=goal_indexes_by_predicate,
-				goal_indexes_by_argument=goal_indexes_by_argument,
-			)
-			for protected_index in candidate_indexes:
-				if achiever_index == protected_index:
-					continue
-				if _lifted_atom_unifies(pattern, goal_atoms[protected_index]):
-					return False
-	return True
-
-
-def _instantiate_module_delete_summary(
-	*,
-	summary: _ModuleDeleteSummary,
-	generic_goal: _LiftedAtom,
-	ground_goal: _LiftedAtom,
-) -> _ModuleDeleteSummary:
-	binding = dict(zip(generic_goal.arguments, ground_goal.arguments))
-	return _ModuleDeleteSummary(
-		delete_patterns=tuple(
-			_LiftedAtom(
-				predicate=pattern.predicate,
-				arguments=tuple(
-					binding.get(argument, argument)
-					for argument in pattern.arguments
-				),
-			)
-			for pattern in summary.delete_patterns
-		),
-		complete=summary.complete,
-	)
-
-
-def _indexed_goal_candidates_for_delete_pattern(
-	*,
-	pattern: _LiftedAtom,
-	goal_indexes_by_predicate: Mapping[str, set[int]],
-	goal_indexes_by_argument: Mapping[tuple[str, int, str], set[int]],
-) -> set[int]:
-	candidates = goal_indexes_by_predicate.get(pattern.predicate, set())
-	constant_buckets = tuple(
-		goal_indexes_by_argument.get(
-			(pattern.predicate, position, argument.symbol),
-			set(),
-		)
-		for position, argument in enumerate(pattern.arguments)
-		if not argument.is_variable
-	)
-	if not constant_buckets:
-		return candidates
-	return min(constant_buckets, key=len)
-
-
-def _module_delete_summary(
-	*,
-	goal: _LiftedAtom,
-	plans_by_predicate: Mapping[str, Sequence[AgentSpeakPlan]],
-	actions_by_name: Mapping[str, RuntimeActionSchema],
-	depth: int,
-	seen: Mapping[tuple[str, tuple[str, ...]], _LiftedAtom],
-) -> _ModuleDeleteSummary:
-	if depth <= 0:
-		return _ModuleDeleteSummary((), False)
-	shape = (
-		goal.predicate,
-		tuple("*" if argument.is_variable else argument.symbol for argument in goal.arguments),
-	)
-	previous = seen.get(shape)
-	if previous is not None:
-		if previous == goal:
-			return _ModuleDeleteSummary((), True)
-		return _ModuleDeleteSummary(
-			(_generalized_recursive_delete_pattern(previous, goal),),
-			True,
-		)
-	plans = tuple(plans_by_predicate.get(goal.predicate, ()))
-	if not plans:
-		return _ModuleDeleteSummary((), False)
-	next_seen = dict(seen)
-	next_seen[shape] = goal
-	delete_patterns: list[_LiftedAtom] = []
-	complete = True
-	for plan in plans:
-		variable_scope = object()
-		binding = _bind_plan_trigger(
-			plan=plan,
-			goal=goal,
-			variable_scope=variable_scope,
-		)
-		if binding is None:
-			continue
-		for step in plan.body:
-			arguments = tuple(
-				_plan_argument_term(
-					argument,
-					binding=binding,
-					variable_scope=variable_scope,
-				)
-				for argument in step.arguments
-			)
-			if step.kind == "action":
-				action = actions_by_name.get(sanitize_identifier(step.symbol))
-				if action is None or len(action.parameters) != len(arguments):
-					complete = False
-					continue
-				action_binding = dict(zip(action.parameters, arguments))
-				for effect in _negative_patterns(action.effects):
-					delete_patterns.append(
-						_map_runtime_pattern(
-							effect,
-							binding=action_binding,
-							action_parameters=frozenset(action.parameters),
-						),
-					)
-				continue
-			if step.kind == "subgoal":
-				subgoal_summary = _module_delete_summary(
-					goal=_LiftedAtom(
-						predicate=sanitize_identifier(step.symbol),
-						arguments=arguments,
-					),
-					plans_by_predicate=plans_by_predicate,
-					actions_by_name=actions_by_name,
-					depth=depth - 1,
-					seen=next_seen,
-				)
-				delete_patterns.extend(subgoal_summary.delete_patterns)
-				complete = complete and subgoal_summary.complete
-				continue
-			complete = False
-	return _ModuleDeleteSummary(tuple(dict.fromkeys(delete_patterns)), complete)
-
-
-def _generalized_recursive_delete_pattern(
-	previous: _LiftedAtom,
-	current: _LiftedAtom,
-) -> _LiftedAtom:
-	variable_scope = object()
-	arguments: list[_LiftedTerm] = []
-	for index, (previous_argument, current_argument) in enumerate(
-		zip(previous.arguments, current.arguments),
-	):
-		if previous_argument == current_argument:
-			arguments.append(previous_argument)
-			continue
-		arguments.append(
-			_LiftedTerm(f"recursive_{index}", variable_scope=variable_scope),
-		)
-	return _LiftedAtom(predicate=current.predicate, arguments=tuple(arguments))
-
-
-def _bind_plan_trigger(
-	*,
-	plan: AgentSpeakPlan,
-	goal: _LiftedAtom,
-	variable_scope: object,
-) -> dict[str, _LiftedTerm] | None:
-	trigger_arguments = tuple(plan.trigger.arguments or ())
-	if len(trigger_arguments) != len(goal.arguments):
-		return None
-	binding: dict[str, _LiftedTerm] = {}
-	for trigger_argument, goal_argument in zip(trigger_arguments, goal.arguments):
-		if _is_plan_variable(trigger_argument):
-			previous = binding.get(trigger_argument)
-			if previous is not None and previous != goal_argument:
-				return None
-			binding[trigger_argument] = goal_argument
-			continue
-		if goal_argument.is_variable:
-			binding[trigger_argument] = goal_argument
-			continue
-		if sanitize_identifier(trigger_argument) != goal_argument.symbol:
-			return None
-	return binding
-
-
-def _plan_argument_term(
-	argument: str,
-	*,
-	binding: Mapping[str, _LiftedTerm],
-	variable_scope: object,
-) -> _LiftedTerm:
-	if _is_plan_variable(argument):
-		return binding.get(
-			argument,
-			_LiftedTerm(sanitize_identifier(argument), variable_scope=variable_scope),
-		)
-	return _LiftedTerm(sanitize_identifier(argument))
-
-
-def _is_plan_variable(argument: str) -> bool:
-	text = str(argument or "").strip()
-	return bool(text) and (text[0].isupper() or text[0] == "_")
-
-
-def _monotonic_guard_transition_wrapper_lines(
-	*,
-	goal_name: str,
-	entry_proposition: str,
-	transition_name: str,
-	problem_file: Path,
-	atoms: Sequence[str],
-) -> tuple[tuple[str, ...], int]:
-	"""Compile a threat-free conjunctive guard into indexed transition steps."""
-
-	first_step = f"{transition_name}_step_1"
-	lines: list[str] = [
-		f"/* full_test_problem={problem_file.name} */",
-		f"{entry_proposition}.",
-		"",
-		f"/* plan={goal_name}_certified_monotonic_transition | source_instruction_ids=none */",
-		f"+!{goal_name} : {entry_proposition} <-",
-		f"\t!{first_step}.",
-		"",
-	]
-	for index, atom in enumerate(atoms, start=1):
-		step_name = f"{transition_name}_step_{index}"
-		next_step = f"{transition_name}_step_{index + 1}"
-		lines.extend(
-			[
-				f"/* plan={step_name}_advance | source_instruction_ids=none */",
-				f"+!{step_name} : {entry_proposition} & {atom} <-",
-				f"\t!{next_step}.",
-				"",
-				f"/* plan={step_name}_repair | source_instruction_ids=none */",
-				f"+!{step_name} : {entry_proposition} & not {atom} <-",
-				f"\t!{atom};",
-				f"\t!{step_name}.",
-				"",
-			],
-		)
-	final_step = f"{transition_name}_step_{len(atoms) + 1}"
-	lines.extend(
-		[
-			f"/* plan={final_step}_done | source_instruction_ids=none */",
-			f"+!{final_step} : {entry_proposition} <-",
-			"\ttrue.",
-			"",
-		],
-	)
-	return tuple(lines), 2 + (2 * len(atoms))
-
-
-def _runtime_action_schemas_for_domain(
-	domain_file: Path | None,
-) -> tuple[RuntimeActionSchema, ...]:
-	if domain_file is None:
-		return ()
-	try:
-		domain = PDDLParser.parse_domain(domain_file)
-	except Exception:  # noqa: BLE001 - preserve parser order when probing incomplete domains.
-		return ()
-	return tuple(_runtime_action_schema(action) for action in tuple(domain.actions or ()))
-
-
 def _deduplicate_strings(values: Sequence[str]) -> tuple[str, ...]:
 	return tuple(dict.fromkeys(str(value) for value in tuple(values or ())))
-
-
-@dataclass(frozen=True)
-class _LiftedTerm:
-	"""One threat-analysis term with explicit constant/variable identity."""
-
-	symbol: str
-	variable_scope: object | None = None
-
-	@property
-	def is_variable(self) -> bool:
-		return self.variable_scope is not None
-
-
-@dataclass(frozen=True)
-class _LiftedAtom:
-	predicate: str
-	arguments: tuple[_LiftedTerm, ...]
-
-
-def _threat_ordered_goal_facts(
-	goal_facts: Sequence[PDDLFact],
-	action_schemas: Sequence[RuntimeActionSchema],
-) -> tuple[PDDLFact, ...]:
-	"""Order conjunctive achievements so delete-threatening goals run earlier."""
-
-	facts = tuple(goal_facts or ())
-	schemas = tuple(action_schemas or ())
-	if len(facts) < 2 or not schemas:
-		return facts
-	return _stable_topological_goal_order(
-		facts,
-		_goal_threat_edges(facts, schemas),
-	)
-
-
-def _goal_threat_edges(
-	goal_facts: Sequence[PDDLFact],
-	action_schemas: Sequence[RuntimeActionSchema],
-	*,
-	plan_library: PlanLibrary | None = None,
-) -> dict[int, set[int]]:
-	"""Return module-certified delete edges for one conjunctive guard block."""
-
-	facts = tuple(goal_facts or ())
-	schemas = tuple(action_schemas or ())
-	threat_edges: dict[int, set[int]] = {index: set() for index in range(len(facts))}
-	if len(facts) < 2 or not schemas:
-		return threat_edges
-	for achiever_index, achiever in enumerate(facts):
-		goal_atom = _lifted_atom_from_fact(achiever)
-		module_threats = _compiled_module_delete_patterns_for_goal(
-			goal=goal_atom,
-			action_schemas=schemas,
-			plan_library=plan_library,
-		)
-		threats = (
-			module_threats
-			if module_threats is not None
-			else _possible_delete_patterns_for_goal(
-				goal_atom,
-				action_schemas=schemas,
-			)
-		)
-		for protected_index, protected in enumerate(facts):
-			if achiever_index == protected_index:
-				continue
-			protected_atom = _lifted_atom_from_fact(protected)
-			if any(_lifted_atom_unifies(threat, protected_atom) for threat in threats):
-				threat_edges[achiever_index].add(protected_index)
-	return threat_edges
-
-
-def _compiled_module_delete_patterns_for_goal(
-	*,
-	goal: _LiftedAtom,
-	action_schemas: Sequence[RuntimeActionSchema],
-	plan_library: PlanLibrary | None,
-) -> tuple[_LiftedAtom, ...] | None:
-	"""Summarize the actual compiled module; return None when it is incomplete."""
-
-	if plan_library is None:
-		return None
-	plans_by_predicate: dict[str, list[AgentSpeakPlan]] = {}
-	for plan in plan_library.plans:
-		plans_by_predicate.setdefault(
-			sanitize_identifier(plan.trigger.symbol),
-			[],
-		).append(plan)
-	actions_by_name = {
-		sanitize_identifier(action.functor): action
-		for action in tuple(action_schemas or ())
-	}
-	max_depth = max(2, len(plans_by_predicate) + 1)
-	summary = _module_delete_summary(
-		goal=goal,
-		plans_by_predicate=plans_by_predicate,
-		actions_by_name=actions_by_name,
-		depth=max_depth,
-		seen={},
-	)
-	return summary.delete_patterns if summary.complete else None
-
-
-def _lifted_atom_from_fact(fact: PDDLFact) -> _LiftedAtom:
-	return _LiftedAtom(
-		predicate=sanitize_identifier(fact.predicate),
-		arguments=tuple(
-			_LiftedTerm(sanitize_identifier(argument))
-			for argument in fact.args
-		),
-	)
-
-
-def _possible_delete_patterns_for_goal(
-	goal: _LiftedAtom,
-	*,
-	action_schemas: Sequence[RuntimeActionSchema],
-) -> tuple[_LiftedAtom, ...]:
-	"""Compute transitive producer deletes to a schema fixed point.
-
-	Every positive precondition with a PDDL producer is explored. Alpha-normalized
-	atom signatures and a worklist make cyclic producer graphs terminate without a
-	domain-specific depth bound.
-	"""
-
-	pending = [goal]
-	goal_anchors = frozenset(
-		argument.symbol for argument in goal.arguments if not argument.is_variable
-	)
-	seen: set[tuple[str, tuple[str, ...]]] = set()
-	deletes: list[_LiftedAtom] = []
-	while pending:
-		current_goal = pending.pop()
-		key = _alpha_normalized_atom_key(current_goal)
-		if key in seen:
-			continue
-		seen.add(key)
-		for action in tuple(action_schemas or ()):
-			action_parameters = frozenset(action.parameters)
-			for effect in _positive_patterns(action.effects):
-				binding = _unify_action_effect_with_goal(
-					effect=effect,
-					action_parameters=action_parameters,
-					goal=current_goal,
-				)
-				if binding is None:
-					continue
-				deletes.extend(
-					_map_runtime_pattern(
-						delete_effect,
-						binding=binding,
-						action_parameters=action_parameters,
-					)
-					for delete_effect in _negative_patterns(action.effects)
-				)
-				for precondition in _positive_patterns(action.preconditions):
-					mapped_precondition = _map_runtime_pattern(
-						precondition,
-						binding=binding,
-						action_parameters=action_parameters,
-					)
-					if (
-						_pattern_mentions_any_constant(mapped_precondition, goal_anchors)
-						and _has_producer_for_pattern(mapped_precondition, action_schemas)
-					):
-						pending.append(mapped_precondition)
-	return tuple(dict.fromkeys(deletes))
-
-
-def _pattern_mentions_any_constant(
-	atom: _LiftedAtom,
-	constants: frozenset[str],
-) -> bool:
-	return any(
-		not argument.is_variable and argument.symbol in constants
-		for argument in atom.arguments
-	)
-
-
-def _alpha_normalized_atom_key(atom: _LiftedAtom) -> tuple[str, tuple[str, ...]]:
-	"""Return a variable-name-independent atom signature for cycle detection."""
-
-	variable_ids: dict[_LiftedTerm, int] = {}
-	arguments: list[str] = []
-	for argument in atom.arguments:
-		if not argument.is_variable:
-			arguments.append(f"={argument.symbol}")
-			continue
-		variable_ids.setdefault(argument, len(variable_ids))
-		arguments.append(f"?{variable_ids[argument]}")
-	return atom.predicate, tuple(arguments)
-
-
-def _positive_patterns(patterns: Sequence[PredicatePattern]) -> tuple[PredicatePattern, ...]:
-	return tuple(pattern for pattern in tuple(patterns or ()) if pattern.positive)
-
-
-def _negative_patterns(patterns: Sequence[PredicatePattern]) -> tuple[PredicatePattern, ...]:
-	return tuple(pattern for pattern in tuple(patterns or ()) if not pattern.positive)
-
-
-def _has_producer_for_pattern(
-	target: _LiftedAtom,
-	action_schemas: Sequence[RuntimeActionSchema],
-) -> bool:
-	return any(
-		_unify_action_effect_with_goal(
-			effect=effect,
-			action_parameters=frozenset(action.parameters),
-			goal=target,
-		)
-		is not None
-		for action in tuple(action_schemas or ())
-		for effect in _positive_patterns(action.effects)
-	)
-
-
-def _unify_action_effect_with_goal(
-	*,
-	effect: PredicatePattern,
-	action_parameters: frozenset[str],
-	goal: _LiftedAtom,
-) -> dict[str, _LiftedTerm] | None:
-	if effect.predicate != goal.predicate or len(effect.args) != len(goal.arguments):
-		return None
-	binding: dict[str, _LiftedTerm] = {}
-	for effect_argument, goal_argument in zip(effect.args, goal.arguments):
-		if effect_argument in action_parameters:
-			previous = binding.get(effect_argument)
-			if previous is not None and previous != goal_argument:
-				return None
-			binding[effect_argument] = goal_argument
-			continue
-		if goal_argument.is_variable:
-			continue
-		if effect_argument != goal_argument.symbol:
-			return None
-	variable_scope = object()
-	for parameter in action_parameters:
-		binding.setdefault(
-			parameter,
-			_LiftedTerm(parameter, variable_scope=variable_scope),
-		)
-	return binding
-
-
-def _map_runtime_pattern(
-	pattern: PredicatePattern,
-	*,
-	binding: Mapping[str, _LiftedTerm],
-	action_parameters: frozenset[str],
-) -> _LiftedAtom:
-	arguments = tuple(
-		binding[argument]
-		if argument in action_parameters
-		else _LiftedTerm(argument)
-		for argument in pattern.args
-	)
-	return _LiftedAtom(
-		predicate=pattern.predicate,
-		arguments=arguments,
-	)
-
-
-def _lifted_atom_unifies(left: _LiftedAtom, right: _LiftedAtom) -> bool:
-	if left.predicate != right.predicate or len(left.arguments) != len(right.arguments):
-		return False
-	bindings: dict[_LiftedTerm, _LiftedTerm] = {}
-	for left_argument, right_argument in zip(left.arguments, right.arguments):
-		left_argument = _resolve_lifted_term(left_argument, bindings)
-		right_argument = _resolve_lifted_term(right_argument, bindings)
-		if left_argument == right_argument:
-			continue
-		if left_argument.is_variable:
-			bindings[left_argument] = right_argument
-			continue
-		if right_argument.is_variable:
-			bindings[right_argument] = left_argument
-			continue
-		return False
-	return True
-
-
-def _resolve_lifted_term(
-	term: _LiftedTerm,
-	bindings: Mapping[_LiftedTerm, _LiftedTerm],
-) -> _LiftedTerm:
-	resolved = term
-	seen: set[_LiftedTerm] = set()
-	while resolved.is_variable and resolved in bindings and resolved not in seen:
-		seen.add(resolved)
-		resolved = bindings[resolved]
-	return resolved
-
-
-def _stable_topological_goal_order(
-	facts: Sequence[PDDLFact],
-	edges: Mapping[int, set[int]],
-) -> tuple[PDDLFact, ...]:
-	"""Return a stable topological order, or parser order when threats cycle."""
-
-	remaining = set(range(len(facts)))
-	incoming = {
-		index: {
-			source
-			for source, targets in edges.items()
-			if index in targets and source != index
-		}
-		for index in remaining
-	}
-	order: list[int] = []
-	while remaining:
-		ready = [index for index in sorted(remaining) if not incoming[index] & remaining]
-		if not ready:
-			return tuple(facts)
-		chosen = ready[0]
-		order.append(chosen)
-		remaining.remove(chosen)
-	return tuple(facts[index] for index in order)
 
 
 def render_runtime_asl_for_task(task: JasonTask, *, problem: Any | None = None) -> str:
@@ -1544,7 +715,6 @@ def render_runtime_asl_for_task(task: JasonTask, *, problem: Any | None = None) 
 			domain=task.domain,
 			index=task.index,
 			problem_file=task.problem_file,
-			compact_completion_wrappers=task.compact_completion_wrappers,
 			problem=problem,
 			domain_file=task.domain_file,
 			atomic_plan_library=task.atomic_plan_library,

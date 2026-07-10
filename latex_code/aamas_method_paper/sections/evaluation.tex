@@ -37,23 +37,23 @@ Each domain is evaluated through four checks.
 	bind to declared \pddl{} vocabulary, compile to \asl{}, and validate on held
 	out instances.
 \item Temporal append validation: generated LTLf JSON cases must compile to DFA
-	payloads whose relevant transitions are singleton literals.
+	payloads whose relevant transitions contain conjunction and negation only.
 \item Library maintenance: each accepted query appends one new top-level
 	\texttt{g\_query} goal to the same domain library without introducing
 	\texttt{achieve\_*}, \texttt{transition\_*}, or \texttt{dfa\_state} plan
 	names.
 \end{enumerate}
 
-Classical planners may be used inside external generalized-planning systems,
-paper-artifact reproduction, and validation. They are not allowed to replace
+Classical planners may support external generalized-planning systems, artifact
+reproduction, and validation. They are not allowed to replace
 the maintained \asl{} library during execution; execution traces are produced
 by the generated agent program and then validated externally.
 
 \subsection{Reproducibility}
 
-The reproducibility artifact is specified by
-\texttt{paper\_artifacts/final\_paper\_manifest.json}. Before submission, the
+The reproducibility artifact is the
+\path{final_paper_manifest.json} file under \path{paper_artifacts/}. Before submission, the
 benchmark registry, generated ASL libraries, LTLf JSON cases, DFA validation
 diagnostics, and LaTeX result macros must be regenerated from tracked commands.
-Generated experiment outputs live under \texttt{tmp/paper-final-latest} and are
+Generated experiment outputs live under \path{tmp/paper-final-latest} and are
 treated as rebuildable artifacts.
