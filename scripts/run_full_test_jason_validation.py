@@ -789,7 +789,8 @@ def guard_transition_replay_wrapper_lines(
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
 	entry_proposition = query_entry_proposition(goal_name)
 	schemas = tuple(action_schemas or _runtime_action_schemas_for_domain(domain_file))
-	ordered_goal_facts = _threat_ordered_goal_facts(goal_facts, schemas)
+	ordering_edges = _goal_threat_edges(goal_facts, schemas, closure_depth=2)
+	ordered_goal_facts = _stable_topological_goal_order(goal_facts, ordering_edges)
 	atoms = _deduplicate_strings(
 		(
 			*(render_fact_atom(fact) for fact in ordered_goal_facts),
@@ -805,6 +806,19 @@ def guard_transition_replay_wrapper_lines(
 		),
 	)
 	transition_name = f"{goal_name}_trans_1"
+	if (
+		len(atoms) > 1
+		and schemas
+		and not numeric_goal_conditions
+		and _goal_predicates_are_globally_persistent(goal_facts, schemas)
+	):
+		return _monotonic_guard_transition_wrapper_lines(
+			goal_name=goal_name,
+			entry_proposition=entry_proposition,
+			transition_name=transition_name,
+			problem_file=problem_file,
+			atoms=atoms,
+		)
 	done_context = " & ".join((entry_proposition, *atoms))
 	lines: list[str] = [
 		f"/* full_test_problem={problem_file.name} */",
@@ -830,6 +844,70 @@ def guard_transition_replay_wrapper_lines(
 			],
 		)
 	return tuple(lines), 2 + len(atoms)
+
+
+def _goal_predicates_are_globally_persistent(
+	goal_facts: Sequence[PDDLFact],
+	action_schemas: Sequence[RuntimeActionSchema],
+) -> bool:
+	goal_predicates = {
+		sanitize_identifier(fact.predicate)
+		for fact in tuple(goal_facts or ())
+	}
+	deleted_predicates = {
+		pattern.predicate
+		for action in tuple(action_schemas or ())
+		for pattern in _negative_patterns(action.effects)
+	}
+	return bool(goal_predicates) and goal_predicates.isdisjoint(deleted_predicates)
+
+
+def _monotonic_guard_transition_wrapper_lines(
+	*,
+	goal_name: str,
+	entry_proposition: str,
+	transition_name: str,
+	problem_file: Path,
+	atoms: Sequence[str],
+) -> tuple[tuple[str, ...], int]:
+	"""Compile a threat-free conjunctive guard into indexed transition steps."""
+
+	first_step = f"{transition_name}_step_1"
+	lines: list[str] = [
+		f"/* full_test_problem={problem_file.name} */",
+		f"{entry_proposition}.",
+		"",
+		f"/* plan={goal_name}_certified_monotonic_transition | source_instruction_ids=none */",
+		f"+!{goal_name} : {entry_proposition} <-",
+		f"\t!{first_step}.",
+		"",
+	]
+	for index, atom in enumerate(atoms, start=1):
+		step_name = f"{transition_name}_step_{index}"
+		next_step = f"{transition_name}_step_{index + 1}"
+		lines.extend(
+			[
+				f"/* plan={step_name}_advance | source_instruction_ids=none */",
+				f"+!{step_name} : {entry_proposition} & {atom} <-",
+				f"\t!{next_step}.",
+				"",
+				f"/* plan={step_name}_repair | source_instruction_ids=none */",
+				f"+!{step_name} : {entry_proposition} & not {atom} <-",
+				f"\t!{atom};",
+				f"\t!{step_name}.",
+				"",
+			],
+		)
+	final_step = f"{transition_name}_step_{len(atoms) + 1}"
+	lines.extend(
+		[
+			f"/* plan={final_step}_done | source_instruction_ids=none */",
+			f"+!{final_step} : {entry_proposition} <-",
+			"\ttrue.",
+			"",
+		],
+	)
+	return tuple(lines), 2 + (2 * len(atoms))
 
 
 def _runtime_action_schemas_for_domain(
@@ -876,12 +954,30 @@ def _threat_ordered_goal_facts(
 	schemas = tuple(action_schemas or ())
 	if len(facts) < 2 or not schemas:
 		return facts
+	return _stable_topological_goal_order(
+		facts,
+		_goal_threat_edges(facts, schemas, closure_depth=2),
+	)
+
+
+def _goal_threat_edges(
+	goal_facts: Sequence[PDDLFact],
+	action_schemas: Sequence[RuntimeActionSchema],
+	*,
+	closure_depth: int,
+) -> dict[int, set[int]]:
+	"""Return producer-delete and support-dependency edges for one guard block."""
+
+	facts = tuple(goal_facts or ())
+	schemas = tuple(action_schemas or ())
 	threat_edges: dict[int, set[int]] = {index: set() for index in range(len(facts))}
+	if len(facts) < 2 or not schemas:
+		return threat_edges
 	for achiever_index, achiever in enumerate(facts):
 		threats = _possible_delete_patterns_for_goal(
 			_lifted_atom_from_fact(achiever),
 			action_schemas=schemas,
-			depth=2,
+			depth=closure_depth,
 		)
 		for protected_index, protected in enumerate(facts):
 			if achiever_index == protected_index:
@@ -891,7 +987,7 @@ def _threat_ordered_goal_facts(
 				threat_edges[achiever_index].add(protected_index)
 	for source, target in _same_predicate_argument_dependency_edges(facts):
 		threat_edges[source].add(target)
-	return _stable_topological_goal_order(facts, threat_edges)
+	return threat_edges
 
 
 def _same_predicate_argument_dependency_edges(

@@ -364,6 +364,59 @@ def test_full_test_wrapper_keeps_ground_constants_distinct_from_schema_variables
 	) in text
 
 
+def test_full_test_wrapper_uses_step_helpers_for_certified_monotonic_goals(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain delivery-fragment)
+		 (:requirements :strips)
+		 (:predicates (holding ?x) (at ?x ?y))
+		 (:action place
+		  :parameters (?x ?y)
+		  :precondition (holding ?x)
+		  :effect (and (at ?x ?y) (not (holding ?x)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain delivery-fragment)
+		 (:objects item1 item2 loc1 loc2)
+		 (:init (holding item1) (holding item2))
+		 (:goal (and (at item1 loc1) (at item2 loc2)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	lines, plan_count = full_test_wrapper_lines(
+		domain="delivery-fragment",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+	)
+	text = "\n".join(lines)
+
+	assert plan_count == 6
+	assert "\t!g_delivery_fragment_test_1_trans_1_step_1." in text
+	assert (
+		"+!g_delivery_fragment_test_1_trans_1_step_1 : "
+		"delivery_fragment_test_1 & at(item1, loc1) <-"
+	) in text
+	assert "\t!g_delivery_fragment_test_1_trans_1_step_2." in text
+	assert (
+		"+!g_delivery_fragment_test_1_trans_1_step_2 : "
+		"delivery_fragment_test_1 & not at(item2, loc2) <-"
+	) in text
+	assert "& at(item1, loc1) & at(item2, loc2) <-" not in text
+
+
 def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None:
 	problem_file = tmp_path / "p01.pddl"
 	problem_file.write_text(
