@@ -50,6 +50,12 @@ def main() -> int:
 	)
 	parser.add_argument("--num-workers", type=int, default=4)
 	parser.add_argument(
+		"--random-seed",
+		type=int,
+		default=0,
+		help="One MOOSE synthesis repetition seed; paper results repeat five seeds.",
+	)
+	parser.add_argument(
 		"--num-permutations",
 		type=int,
 		default=MOOSE_PAPER_GOAL_PERMUTATIONS,
@@ -215,6 +221,8 @@ def build_moose_batch_command(
 		"docker",
 		"--num-workers",
 		str(args.num_workers),
+		"--random-seed",
+		str(getattr(args, "random_seed", 0)),
 		"--num-permutations",
 		str(args.num_permutations),
 		"--goal-max-size",
@@ -278,6 +286,7 @@ def batch_manifest(
 		],
 		"settings": {
 			"num_workers": args.num_workers,
+			"random_seed": getattr(args, "random_seed", 0),
 			"num_permutations": args.num_permutations,
 			"goal_max_size": args.goal_max_size,
 			"atomic_library_mode": args.atomic_library_mode,
