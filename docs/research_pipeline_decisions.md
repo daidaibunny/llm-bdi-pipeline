@@ -1,4 +1,55 @@
-# Generalized-Planning Evidence Strategy
+# Research Pipeline Decisions
+
+This document is the maintained pre-paper decision record for the research
+pipeline. It records the current architecture, evidence/compiler boundaries,
+benchmark scope, certificate requirements, supported fragments, and explicit
+limitations. It is not the paper narrative and MUST be updated whenever an
+implementation change alters a research-facing claim. The normative design for
+parametric natural-language LTLf input and temporal evaluation is maintained in
+[`input_design.md`](input_design.md).
+
+## Canonical Terminology
+
+**MOOSE evidence** is the readable first-order decision-list artifact emitted by
+`policy --dump-policy`. For example, one evidence rule may associate the
+singleton goal `at(package0,location2)` with the fixed primitive sequence
+`load-truck; drive-truck; unload-truck` under a regressed state condition. MOOSE
+is the current Evidence Module provider; it is not the compiler and does not
+generate AgentSpeak(L) query wrappers.
+
+A **macro** is a finite, fixed sequence of primitive PDDL actions in one
+evidence rule or action-only plan template. It is not a new PDDL action and is
+not a recursive module. For example, `load-truck; drive-truck; unload-truck` is
+a macro, whereas `!clear(Y); !on(X,Y)` is a recursive subgoal decomposition.
+
+The **Validated Policy-Lifting Compiler** consumes provider-neutral evidence
+and the PDDL action schemas. It validates action sequences, generates required
+schema-closure candidates, checks binding and progress conditions, selects a
+compact candidate set, and renders the maintained atomic AgentSpeak(L) library.
+MOOSE and the compiler are upstream and downstream components rather than
+alternative planners.
+
+**Clingo** is the Answer Set Programming solver used for constrained branch
+selection. It does not plan in a PDDL state space and does not execute actions.
+The compiler presents candidate branches, evidence-coverage obligations,
+internal-module closure requirements, incompatibility constraints, and a
+lexicographic cost objective; Clingo returns an optimal selected subset within
+that certified candidate space.
+
+A **certificate** is a machine-recheckable witness that justifies one compiler
+claim. It must contain enough structured information for an independent checker
+to replay the relevant PDDL schema reasoning; a prose metadata label is not a
+certificate. The current certificate families are binding, schema
+executability, target achievement, evidence coverage, internal-module closure,
+well-founded recursive progress, resource-capacity restoration, and
+target-preserving DFA guard serialization. Optimality is claimed only after all
+hard certificate obligations hold and only within the generated candidate
+space.
+
+The **Temporal Query Compiler** is the third production component. It consumes
+a validated lifted LTLf/DFA artifact and appends query-local `trans` wrappers
+that call the atomic library. The **Execution Validation Module** is a fourth,
+separate evaluation component that runs Jason and validates committed traces.
 
 This repository no longer builds a universal generalized planner and no longer
 routes domains by prior-paper taxonomy labels. The current strategy is to use
@@ -76,8 +127,10 @@ goal `on(crate0, pallet0)` can be achieved by a macro ending in
 
 The compiler module is the post-MOOSE, pre-AgentSpeak component. It consumes
 the readable policy as evidence, checks it against the PDDL domain schema, adds
-internal atomic modules required by PDDL precondition/effect closure, runs the
-Clingo/ASP branch selector, and renders the final AgentSpeak(L) library. A
+internal atomic modules required by PDDL precondition/effect closure, places
+both evidence macros and schema-derived branches in one certified candidate
+space, runs one Clingo/ASP selection, and renders the final AgentSpeak(L)
+library. A
 PDDL domain schema is the declared predicate and action model, for example
 Depots `drop(?hoist, ?crate, ?surface, ?place)` with preconditions such as
 `lifting(?hoist, ?crate)`, `clear(?surface)`, `at(?hoist, ?place)`, and
@@ -136,7 +189,28 @@ only be introduced by a negative literal, by a static relation with no dynamic
 anchor, or by an unrelated context fact. This avoids unsafe plans such as
 asking Jason to achieve a relation over an unbound object.
 
-### Protected Resource Release Certificate
+### Well-Founded Relational Progress
+
+A same-predicate recursive preparation branch is admitted only when the
+compiler can construct a non-negative relational-count ranking feature. A
+ranking feature is compile-time metadata, not a new ASL fluent. For example,
+for `+!clear(X)` the schema can induce the feature `count(on)`, meaning the
+number of currently true atoms of the dynamic predicate used as the obstruction
+relation. The generated `unstack; put-down` sequence deletes one `on` atom and
+does not add any `on` atom, so the feature strictly decreases and is bounded
+below by zero.
+
+Deleting one obstruction is not sufficient by itself. The compiler follows the
+selected module call graph and adds Clingo incompatibility constraints against
+any candidate branch that may add the ranking predicate. Thus a branch such as
+`unstack; stack`, which exchanges one `on` atom for another, cannot coexist
+with a recursion certified by `count(on)`. Navigation recursion such as moving
+between two rooms deletes and re-adds one location fluent, so no strict count
+decrease is available and that recursion is not selected. Predicate names and
+argument positions are not consulted; the feature and action effects come from
+the PDDL schema.
+
+### Causal Resource-Capacity Certificate
 
 Protected resource release is the compiler rule for a producer action that
 achieves the requested atomic literal but leaves behind a temporary resource
@@ -151,9 +225,9 @@ certifies all of the following facts:
 
 - the cleanup action deletes the producer-created debt, for example
   `drop(H,C,B,P)` deletes `lifting(H,C)`;
-- the cleanup action restores a lower-arity availability literal that the
-  producer deleted, for example `available(H)` is unary while `lifting(H,C)` is
-  binary;
+- the producer consumes a key-only free mode and creates a key-plus-occupant
+  debt mode, while the cleanup performs the inverse transition. For example,
+  `available(H)` supplies key `H`, while `lifting(H,C)` adds occupant `C`;
 - the debt predicate is not merely a same-predicate property moved by the
   producer, so `clear(Y)` created by `unstack(X,Y)` is not treated as a held
   resource;
@@ -193,24 +267,34 @@ Blocks-style `unstack; put-down` cleanup, because `unstack(B,S)` creates
 shape, such as turning `available(H)` back into `lifting(H,C)`, because that is
 resource acquisition rather than resource release.
 
+The key-plus-occupant condition is not treated as an arity shortcut. It is used
+together with the paired precondition/add/delete effects to orient an otherwise
+symmetric transition. If two same-shaped predicates can be swapped without
+changing the schema, the compiler cannot know which mode denotes availability;
+it rejects that cleanup unless provider evidence or a future explicit resource
+contract supplies the missing orientation.
+
 The current implementation is intentionally one-step. If a domain needs
 multi-step parking, such as releasing a resource only after moving a truck or
 finding a buffer through several actions, that remains a future compiler
 extension rather than an implicit hardcoded repair.
 
-### Validated Macro Priority
+### Joint Certified Candidate Selection
 
-Validated macro priority is a plan-ordering rule applied after schema-augmented
-modules are merged with validated MOOSE macro evidence. A validated MOOSE macro
+Validated MOOSE macros and schema-derived modules are no longer selected in
+separate phases. A validated MOOSE macro
 is a readable-policy action sequence that replays through the PDDL action
 schemas, for example a complete Logistics package-delivery macro
 `load-truck; drive-truck; unload-truck`. A recursive repair branch is a branch
 whose body calls internal subgoals, for example `!lifting(Z,X); !on(X,Y)`.
 
-Before this ordering rule, a recursive repair branch could appear before a
-complete action-only macro. Jason tries applicable AgentSpeak(L) plans in file
-order, so a broad recursive branch could preempt a complete validated macro and
-send execution into avoidable repair loops:
+Each MOOSE macro is an evidence obligation in the same Clingo program that
+selects direct producers, preparation branches, and resource-release branches.
+Coverage is accepted only for alpha-equivalent branches or identical bodies
+under a weaker conjunctive context; body-prefix similarity is not treated as
+semantic equivalence. Clingo also enforces internal-module closure and rejects
+simultaneously selected branches that invalidate a relational ranking
+certificate.
 
 ```asl
 /* broad repair branch tried too early */
@@ -225,9 +309,9 @@ send execution into avoidable repair loops:
 	drop(X, Y).
 ```
 
-After the ordering rule, already-true branches are rendered first, complete
-action-only validated macros are rendered second, mixed bodies are rendered
-third, and recursive repair branches are rendered last:
+After selection, already-true branches are rendered first, complete action-only
+validated macros are rendered second, mixed bodies are rendered third, and
+recursive repair branches are rendered last:
 
 ```asl
 +!at(X, Y) : at(X, A) & at_robby(A) & free(Z) <-
@@ -240,9 +324,11 @@ third, and recursive repair branches are rendered last:
 	!at(X, Y).
 ```
 
-This is a safe positive optimization because it does not remove any branch or
-change any primitive action semantics. It only makes Jason try a schema-checked
-complete macro before a broader recursive fallback when both contexts match.
+The optimization is lexicographic. Hard schema/evidence/closure obligations
+must first be satisfiable; then Clingo maximizes compatible well-founded
+recursive capabilities and minimizes branch count, context count, and body
+cost. Optimality is claimed only within the generated certified candidate
+space, not over all possible AgentSpeak programs.
 
 ### Current Alignment and Remaining Gap
 
@@ -265,6 +351,35 @@ It is not yet complete for all possible parking cases. If a domain needs a
 multi-step release strategy, or if every available cleanup action would delete
 the protected target without a representable non-unification guard, the compiler
 should reject the branch rather than patching the domain by name.
+
+### Certified DFA Guard Serialization
+
+Every progress edge on the accepted DFA path is compiled into one query-local
+`trans` helper. A singleton positive guard calls its atomic module once and
+rechecks the guard, which is action-equivalent to the former linear call while
+adding declarative completion checking. For a conjunctive guard, the compiler
+computes conservative may-delete summaries over the final selected atomic
+module call graph. The summary is a finite relational fixed point: root query
+arguments remain symbolic anchors, newly introduced module variables are
+alpha-normalized, and subgoal calls are expanded until no new predicate/argument
+shape is reachable. It therefore covers parameter-changing recursion such as
+`at(X,Y) -> carry(X,Z) -> at(X,Z)` without a domain-specific depth bound. PDDL
+type constraints are part of unification, so deleting `at(Truck,L)` cannot
+falsely threaten `at(Package,L)` when `truck` and `package` are disjoint sibling
+types. Shared lifted variables retain one binding and the conjunction is
+rejected if their declared type requirements are inconsistent.
+
+If achieving literal `G2` may delete literal `G1`, the certificate requires
+`G2` before `G1`. Only literals on the same DFA transition may be reordered;
+different transitions retain DFA order. The persisted certificate records the
+summary method as `pddl_typed_relational_fixed_point`, the ordered literal
+indexes, and all induced threat edges.
+
+The serializer rejects incomplete summaries, cyclic threat graphs, and
+multi-literal numeric guards without numeric effect-preservation certificates.
+It never falls back to parser order or a monotonic step-helper path. Negative
+guard literals remain context checks and are never converted into negative
+achievement subgoals.
 
 ## Benchmark Scope
 

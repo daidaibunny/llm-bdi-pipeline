@@ -66,8 +66,10 @@ generalized-planning benchmark sources: `potassco/pddl-instances`,
 `DillonZChen/moose-dataset`, `bonetblai/learner-policies-from-examples`, and
 `rleap-project/d2l`.
 
-The materialized benchmark corpus and backend policy are described in
-`docs/gp_backend_strategy.md`.
+The materialized benchmark corpus and current research decisions are described
+in `docs/research_pipeline_decisions.md`. The normative parametric
+natural-language LTLf input and evaluation contract is in
+`docs/input_design.md`.
 
 | Evaluation group | Target domains | Purpose |
 | --- | --- | --- |
@@ -80,7 +82,7 @@ under `src/domains/<domain>`. MOOSE domains use the official companion
 `training/` and `testing/` split. `blocksworld-clear` and `blocksworld-on`
 use the KR 2025 learner-policies no-constants train/test folders.
 `blocksworld-tower` and `depots` use the project feature-definable
-serialized-width split described in `docs/gp_backend_strategy.md`.
+serialized-width split described in `docs/research_pipeline_decisions.md`.
 
 ## Usage
 

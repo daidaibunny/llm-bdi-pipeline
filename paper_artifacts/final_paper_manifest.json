@@ -193,7 +193,12 @@
     },
     {
       "kind": "file",
-      "path": "docs/gp_backend_strategy.md",
+      "path": "docs/research_pipeline_decisions.md",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "docs/input_design.md",
       "tracked": true
     },
     {
