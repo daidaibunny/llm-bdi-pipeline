@@ -78,6 +78,10 @@ class AtomicModuleSynthesisReport:
 	candidate_source_counts: Mapping[str, int]
 	evidence_obligation_count: int
 	selector_coverage_basis: tuple[str, ...]
+	rejected_uncertified_candidate_count: int
+	ranking_incompatibility_count: int
+	recursive_capability_obligation_count: int
+	selected_recursive_capability_count: int
 	predicate_roles: tuple[Mapping[str, object], ...]
 	branch_certification_rules: tuple[str, ...]
 	theoretical_basis: tuple[str, ...]
@@ -104,6 +108,16 @@ class AtomicModuleSynthesisReport:
 			"candidate_source_counts": dict(self.candidate_source_counts),
 			"evidence_obligation_count": self.evidence_obligation_count,
 			"selector_coverage_basis": list(self.selector_coverage_basis),
+			"rejected_uncertified_candidate_count": (
+				self.rejected_uncertified_candidate_count
+			),
+			"ranking_incompatibility_count": self.ranking_incompatibility_count,
+			"recursive_capability_obligation_count": (
+				self.recursive_capability_obligation_count
+			),
+			"selected_recursive_capability_count": (
+				self.selected_recursive_capability_count
+			),
 			"predicate_roles": [dict(item) for item in self.predicate_roles],
 			"branch_certification_rules": list(self.branch_certification_rules),
 			"theoretical_basis": list(self.theoretical_basis),
@@ -133,6 +147,9 @@ class _ClingoBranchSelectorReport:
 	candidate_source_counts: Mapping[str, int]
 	evidence_obligation_count: int
 	coverage_basis: tuple[str, ...]
+	ranking_incompatibility_count: int
+	recursive_capability_obligation_count: int
+	selected_recursive_capability_count: int
 
 
 def synthesize_atomic_minimal_literal_module_library(
@@ -179,7 +196,9 @@ def synthesize_atomic_minimal_literal_module_library(
 	)
 	selection = _select_branches_with_clingo(
 		raw_plans,
+		schema_candidates=schema_candidates,
 		evidence_obligations=evidence_candidates,
+		actions=parsed_actions,
 	)
 	plans = _ensure_unique_plan_names(selection.plans)
 	subgoal_step_count = sum(
@@ -201,6 +220,7 @@ def synthesize_atomic_minimal_literal_module_library(
 		seeds=seeds,
 		module_predicates=module_predicates,
 		actions=parsed_actions,
+		rejected_uncertified_candidate_count=0,
 	)
 	return PlanLibrary(
 		domain_name=domain.name,
@@ -438,18 +458,22 @@ class _FunctionalPredicateGroup:
 
 @dataclass(frozen=True)
 class _RecursiveProgressCertificate:
-	"""Schema-level proof that a same-predicate recursive branch makes progress."""
+	"""Well-founded schema proof for one same-predicate recursive branch."""
 
 	relation_predicate: str
 	relation_arguments: tuple[str, ...]
-	deleting_action: str
+	strictly_decreasing_actions: tuple[str, ...]
+	non_increasing_actions: tuple[str, ...]
 
 	def to_dict(self) -> dict[str, object]:
 		return {
-			"certificate_kind": "deleted_dynamic_obstruction_relation",
+			"certificate_kind": "well_founded_relational_count_decrease",
+			"ranking_feature_kind": "global_dynamic_atom_count",
 			"relation_predicate": self.relation_predicate,
 			"relation_arguments": list(self.relation_arguments),
-			"deleting_action": self.deleting_action,
+			"strictly_decreasing_actions": list(self.strictly_decreasing_actions),
+			"non_increasing_actions": list(self.non_increasing_actions),
+			"lower_bound": 0,
 		}
 
 
@@ -1019,10 +1043,17 @@ def _cleanup_action_calls(
 				for add_literal in mapped_adds
 				if any(_same_atom(add_literal, deleted_literal) for deleted_literal in deleted)
 			)
-			if not _has_arity_lowering_resource_release(
-				released_literal=released_literal,
+			if not restored_literals:
+				continue
+			capacity_invariant = _causal_resource_capacity_invariant(
+				resource_debt_literal=released_literal,
 				restored_literals=restored_literals,
-			):
+				producer_preconditions=tuple(
+					precondition.mapped(last_map)
+					for precondition in last_call.action.preconditions
+				),
+			)
+			if capacity_invariant is None:
 				continue
 			guard_contexts = _target_preservation_guards(
 				target_effect=target_effect,
@@ -1049,14 +1080,16 @@ def _cleanup_action_calls(
 				)
 			)
 			resource_certificate = {
-				"certificate_kind": "schema_resource_release",
+				"certificate_kind": "causal_resource_capacity_invariant_discharge",
 				"producer_action": last_call.action.name,
 				"release_action": cleanup_action.name,
-				"released_literal": released_literal.to_call(),
+				"resource_debt_literal": released_literal.to_call(),
 				"restored_literals": [
 					add_literal.to_call()
 					for add_literal in restored_literals
 				],
+				"target_preserved": True,
+				**capacity_invariant,
 				"target_preservation_guards": list(guard_contexts),
 			}
 			extensions.append(
@@ -1069,6 +1102,34 @@ def _cleanup_action_calls(
 				),
 			)
 	return _deduplicate_cleanup_extensions(extensions)
+
+
+def _causal_resource_capacity_invariant(
+	*,
+	resource_debt_literal: PDDLLiteralSchema,
+	restored_literals: Sequence[PDDLLiteralSchema],
+	producer_preconditions: Sequence[PDDLLiteralSchema],
+) -> Mapping[str, object] | None:
+	"""Infer a free-key/occupied-key transition; reject structurally symmetric modes."""
+
+	debt_arguments = set(resource_debt_literal.arguments)
+	for restored in restored_literals:
+		key_arguments = set(restored.arguments)
+		occupancy_arguments = debt_arguments - key_arguments
+		if not key_arguments < debt_arguments or not occupancy_arguments:
+			continue
+		if not any(_same_atom(restored, item) for item in producer_preconditions):
+			continue
+		return {
+			"resource_invariant_kind": "keyed_single_capacity_occupancy_transition",
+			"capacity_key_arguments": sorted(key_arguments),
+			"occupancy_arguments": sorted(occupancy_arguments),
+			"orientation_basis": (
+				"producer consumes the key-only free mode and creates the "
+				"key-plus-occupant debt mode; cleanup performs the inverse transition"
+			),
+		}
+	return None
 
 
 def _deduplicate_cleanup_extensions(
@@ -1362,19 +1423,6 @@ def _target_preservation_guards(
 		if guard:
 			guards.append(guard)
 	return _deduplicate(tuple(guards))
-
-
-def _has_arity_lowering_resource_release(
-	*,
-	released_literal: PDDLLiteralSchema,
-	restored_literals: Sequence[PDDLLiteralSchema],
-) -> bool:
-	released_arguments = set(released_literal.arguments)
-	return any(
-		set(restored.arguments) <= released_arguments
-		and len(restored.arguments) < len(released_literal.arguments)
-		for restored in restored_literals
-	)
 
 
 def _non_unification_guard(
@@ -2327,48 +2375,99 @@ def _recursive_progress_certificate(
 			continue
 		if not head_variables & context_variables:
 			continue
+		strictly_decreasing: list[str] = []
+		non_increasing: list[str] = []
 		for call in sequence.body_actions:
-			if call.action.name not in sequence.producer_action_names:
-				continue
 			variable_map = {
 				parameter: argument
 				for parameter, argument in zip(call.action.parameters, call.arguments)
 			}
-			if any(
-				_same_atom(delete_effect.mapped(variable_map), context_literal)
+			mapped_adds = tuple(
+				add_effect.mapped(variable_map)
+				for add_effect in call.action.add_effects
+			)
+			if any(add.predicate == context_literal.predicate for add in mapped_adds):
+				break
+			mapped_deletes = tuple(
+				delete_effect.mapped(variable_map)
 				for delete_effect in call.action.delete_effects
-			):
+			)
+			if any(_same_atom(deleted, context_literal) for deleted in mapped_deletes):
+				strictly_decreasing.append(call.action.name)
+			else:
+				non_increasing.append(call.action.name)
+		else:
+			if strictly_decreasing:
 				return _RecursiveProgressCertificate(
 					relation_predicate=context_literal.predicate,
 					relation_arguments=context_literal.arguments,
-					deleting_action=call.action.name,
+					strictly_decreasing_actions=tuple(strictly_decreasing),
+					non_increasing_actions=tuple(non_increasing),
 				)
 	return None
 
 
+def _recursive_progress_certificate_from_plan(
+	plan: AgentSpeakPlan,
+) -> _RecursiveProgressCertificate | None:
+	for record in tuple(plan.binding_certificate or ()):
+		payload = record.get("recursive_progress_certificate")
+		if not isinstance(payload, Mapping):
+			continue
+		if payload.get("certificate_kind") != "well_founded_relational_count_decrease":
+			continue
+		return _RecursiveProgressCertificate(
+			relation_predicate=str(payload["relation_predicate"]),
+			relation_arguments=tuple(str(item) for item in payload["relation_arguments"]),
+			strictly_decreasing_actions=tuple(
+				str(item) for item in payload["strictly_decreasing_actions"]
+			),
+			non_increasing_actions=tuple(
+				str(item) for item in payload["non_increasing_actions"]
+			),
+		)
+	return None
 def _select_branches_with_clingo(
 	plans: Sequence[AgentSpeakPlan],
 	*,
+	schema_candidates: Sequence[AgentSpeakPlan] = (),
 	evidence_obligations: Sequence[AgentSpeakPlan] = (),
+	actions: Sequence[_ParsedAction] = (),
 ) -> _SelectedModulePlans:
 	"""Select a minimum branch set that covers all generated branch evidence."""
 
 	raw_plans = tuple(plans)
 	if not raw_plans:
 		raise ValueError("No candidate branches were generated for Clingo selection.")
+	if not schema_candidates and not evidence_obligations:
+		schema_candidates = raw_plans
 	branch_ids = tuple(f"b{index}" for index, _ in enumerate(raw_plans))
+	obligation_groups = _certified_branch_obligation_groups(
+		raw_plans=raw_plans,
+		schema_candidates=schema_candidates,
+		evidence_obligations=evidence_obligations,
+	)
+	recursive_capability_groups = _recursive_capability_obligation_groups(
+		raw_plans=raw_plans,
+		schema_candidates=schema_candidates,
+	)
 	coverage_pairs = tuple(
 		(selected_index, obligation_index)
-		for selected_index, selected_plan in enumerate(raw_plans)
-		for obligation_index, obligation_plan in enumerate(raw_plans)
-		if _candidate_branch_covers_evidence(selected_plan, obligation_plan)
+		for obligation_index, candidate_indexes in enumerate(obligation_groups)
+		for selected_index in candidate_indexes
 	)
 	if not coverage_pairs:
 		raise ValueError("Clingo branch selector received no candidate coverage facts.")
 	program = _clingo_selector_program(
 		plans=raw_plans,
 		branch_ids=branch_ids,
+		obligation_ids=tuple(f"o{index}" for index in range(len(obligation_groups))),
 		coverage_pairs=coverage_pairs,
+		recursive_capability_groups=recursive_capability_groups,
+		ranking_incompatibility_pairs=_recursive_rank_incompatibility_pairs(
+			raw_plans,
+			actions=actions,
+		),
 	)
 	control = clingo.Control(["--warn=none"])
 	control.add("base", [], program)
@@ -2396,6 +2495,12 @@ def _select_branches_with_clingo(
 		sorted(selected_index_by_id[branch_id] for branch_id in selected_ids)
 	)
 	selected_branch_ids = tuple(branch_ids[index] for index in selected_indexes)
+	selected_index_set = set(selected_indexes)
+	selected_recursive_capability_count = sum(
+		1
+		for group in recursive_capability_groups
+		if any(index in selected_index_set for index in group)
+	)
 	selected_plans = tuple(
 		sorted(
 			(raw_plans[index] for index in selected_indexes),
@@ -2408,10 +2513,11 @@ def _select_branches_with_clingo(
 			backend="clingo_asp_minimize",
 			raw_candidate_count=len(raw_plans),
 			selected_candidate_count=len(selected_indexes),
-			obligation_count=len(raw_plans),
+			obligation_count=len(obligation_groups),
 			optimization_cost=optimization_cost,
 			selected_branch_ids=selected_branch_ids,
 			objective=(
+				"maximize compatible well-founded recursive capabilities",
 				"minimize selected branch count",
 				"then minimize selected context literal count",
 				"then minimize selected body step count",
@@ -2422,8 +2528,9 @@ def _select_branches_with_clingo(
 				else "schema_candidates"
 			),
 			candidate_source_counts={
-				"schema": len(raw_plans) - len(tuple(evidence_obligations or ())),
+				"schema": len(tuple(schema_candidates or ())),
 				"validated_evidence": len(tuple(evidence_obligations or ())),
+				"joint_unique": len(raw_plans),
 			},
 			evidence_obligation_count=len(tuple(evidence_obligations or ())),
 			coverage_basis=(
@@ -2431,6 +2538,11 @@ def _select_branches_with_clingo(
 				"or identical primitive/subgoal body under a context subset implication",
 				"recursive body-prefix similarity is not accepted as semantic coverage",
 			),
+			ranking_incompatibility_count=len(
+				_recursive_rank_incompatibility_pairs(raw_plans, actions=actions),
+			),
+			recursive_capability_obligation_count=len(recursive_capability_groups),
+			selected_recursive_capability_count=selected_recursive_capability_count,
 		),
 	)
 
@@ -2464,15 +2576,22 @@ def _clingo_selector_program(
 	*,
 	plans: Sequence[AgentSpeakPlan],
 	branch_ids: Sequence[str],
+	obligation_ids: Sequence[str],
 	coverage_pairs: Sequence[tuple[int, int]],
+	recursive_capability_groups: Sequence[Sequence[int]],
+	ranking_incompatibility_pairs: Sequence[tuple[int, int]],
 ) -> str:
 	lines: list[str] = [
 		"{ selected(Branch) } :- branch(Branch).",
 		":- selected(Branch), not certified(Branch).",
 		"provided(Predicate) :- selected(Branch), provides(Branch, Predicate).",
 		":- selected(Branch), calls(Branch, Predicate), not provided(Predicate).",
+		":- selected(Left), selected(Right), incompatible(Left, Right).",
 		"covered(Obligation) :- selected(Branch), covers(Branch, Obligation).",
+		"recursive_covered(Capability) :- selected(Branch), "
+		"recursive_candidate(Capability, Branch).",
 		":- obligation(Obligation), not covered(Obligation).",
+		"#maximize { 1@4,Capability : recursive_covered(Capability) }.",
 		"#minimize { 1@3,Branch : selected(Branch) }.",
 		"#minimize { Cost@2,Branch : selected(Branch), context_cost(Branch, Cost) }.",
 		"#minimize { Cost@1,Branch : selected(Branch), body_cost(Branch, Cost) }.",
@@ -2484,11 +2603,17 @@ def _clingo_selector_program(
 			(
 				f"branch({branch_id}).",
 				f"certified({branch_id}).",
-				f"obligation({branch_id}).",
 				f"context_cost({branch_id}, {len(plan.context)}).",
 				f"body_cost({branch_id}, {len(plan.body)}).",
 			),
 		)
+	for obligation_id in obligation_ids:
+		lines.append(f"obligation({obligation_id}).")
+	for capability_index, candidate_indexes in enumerate(recursive_capability_groups):
+		for candidate_index in candidate_indexes:
+			lines.append(
+				f"recursive_candidate(r{capability_index}, {branch_ids[candidate_index]}).",
+			)
 	predicate_ids = {
 		predicate: f"p{index}"
 		for index, predicate in enumerate(
@@ -2508,9 +2633,203 @@ def _clingo_selector_program(
 			lines.append(f"calls({branch_id}, {predicate_ids[predicate]}).")
 	for selected_index, obligation_index in coverage_pairs:
 		lines.append(
-			f"covers({branch_ids[selected_index]}, {branch_ids[obligation_index]}).",
+			f"covers({branch_ids[selected_index]}, {obligation_ids[obligation_index]}).",
+		)
+	for left_index, right_index in ranking_incompatibility_pairs:
+		lines.append(
+			f"incompatible({branch_ids[left_index]}, {branch_ids[right_index]}).",
 		)
 	return "\n".join(lines)
+
+
+def _certified_branch_obligation_groups(
+	*,
+	raw_plans: Sequence[AgentSpeakPlan],
+	schema_candidates: Sequence[AgentSpeakPlan],
+	evidence_obligations: Sequence[AgentSpeakPlan],
+) -> tuple[tuple[int, ...], ...]:
+	"""Build structural schema obligations plus semantic evidence obligations."""
+
+	raw_tuple = tuple(raw_plans or ())
+	groups: list[tuple[int, ...]] = []
+	for obligation in tuple(schema_candidates or ()):
+		if _recursive_progress_certificate_from_plan(obligation) is not None:
+			continue
+		candidate_indexes = tuple(
+			index
+			for index, candidate in enumerate(raw_tuple)
+			if _candidate_branch_covers_evidence(candidate, obligation)
+			or _candidate_achieves_schema_obligation(candidate, obligation)
+			or _certified_resource_release_alternative(candidate, obligation)
+		)
+		if candidate_indexes:
+			groups.append(candidate_indexes)
+	for evidence in tuple(evidence_obligations or ()):
+		candidate_indexes = tuple(
+			index
+			for index, candidate in enumerate(raw_tuple)
+			if _candidate_branch_covers_evidence(candidate, evidence)
+		)
+		if not candidate_indexes:
+			raise ValueError(
+				"A validated evidence obligation has no schema-certified candidate coverage.",
+			)
+		groups.append(candidate_indexes)
+	return tuple(dict.fromkeys(groups))
+
+
+def _recursive_capability_obligation_groups(
+	*,
+	raw_plans: Sequence[AgentSpeakPlan],
+	schema_candidates: Sequence[AgentSpeakPlan],
+) -> tuple[tuple[int, ...], ...]:
+	raw_tuple = tuple(raw_plans or ())
+	groups = []
+	for obligation in tuple(schema_candidates or ()):
+		if _recursive_progress_certificate_from_plan(obligation) is None:
+			continue
+		candidate_indexes = tuple(
+			index
+			for index, candidate in enumerate(raw_tuple)
+			if _candidate_branch_covers_evidence(candidate, obligation)
+		)
+		if candidate_indexes:
+			groups.append(candidate_indexes)
+	return tuple(dict.fromkeys(groups))
+
+
+def _candidate_achieves_schema_obligation(
+	candidate: AgentSpeakPlan,
+	obligation: AgentSpeakPlan,
+) -> bool:
+	"""Allow a weaker-context certified producer to satisfy an internal target contract."""
+
+	if _plan_rule_kind(candidate) != "producer_action_sequence":
+		return False
+	if _plan_rule_kind(obligation) != "producer_action_sequence":
+		return False
+	if candidate.trigger.symbol != obligation.trigger.symbol:
+		return False
+	if candidate.trigger.arguments != obligation.trigger.arguments:
+		return False
+	return set(candidate.context) <= set(obligation.context)
+
+
+def _first_binding_certificate(plan: AgentSpeakPlan) -> Mapping[str, object]:
+	return next(
+		(record for record in tuple(plan.binding_certificate or ()) if isinstance(record, Mapping)),
+		{},
+	)
+
+
+def _certified_resource_release_alternative(
+	candidate: AgentSpeakPlan,
+	obligation: AgentSpeakPlan,
+) -> bool:
+	if candidate.trigger.symbol != obligation.trigger.symbol:
+		return False
+	if len(candidate.trigger.arguments) != len(obligation.trigger.arguments):
+		return False
+	if not set(candidate.context) <= set(obligation.context):
+		return False
+	return _resource_release_contract(candidate) == _resource_release_contract(obligation) != ()
+
+
+def _resource_release_contract(plan: AgentSpeakPlan) -> tuple[object, ...]:
+	certificate = _first_binding_certificate(plan)
+	resource_certificates = tuple(certificate.get("resource_release_certificates") or ())
+	if not resource_certificates:
+		return ()
+	contracts = []
+	for resource in resource_certificates:
+		if resource.get("certificate_kind") != (
+			"causal_resource_capacity_invariant_discharge"
+		):
+			return ()
+		contracts.append(
+			(
+				str(resource.get("producer_action") or ""),
+				_call_predicate(str(resource.get("resource_debt_literal") or "")),
+				tuple(
+					sorted(
+						_call_predicate(str(item))
+						for item in tuple(resource.get("restored_literals") or ())
+					),
+				),
+			)
+		)
+	return tuple(contracts)
+
+
+def _call_predicate(call: str) -> str:
+	return str(call or "").partition("(")[0].strip()
+
+
+def _recursive_rank_incompatibility_pairs(
+	plans: Sequence[AgentSpeakPlan],
+	*,
+	actions: Sequence[_ParsedAction],
+) -> tuple[tuple[int, int], ...]:
+	plan_tuple = tuple(plans or ())
+	actions_by_name = {action.name: action for action in actions}
+	call_graph: dict[str, set[str]] = {}
+	for plan in plan_tuple:
+		call_graph.setdefault(plan.trigger.symbol, set()).update(
+			step.symbol for step in plan.body if step.kind == "subgoal"
+		)
+	pairs: set[tuple[int, int]] = set()
+	for recursive_index, recursive_plan in enumerate(plan_tuple):
+		certificate = _recursive_progress_certificate_from_plan(recursive_plan)
+		if certificate is None:
+			continue
+		reachable_modules = _reachable_module_predicates(
+			{step.symbol for step in recursive_plan.body if step.kind == "subgoal"},
+			call_graph=call_graph,
+		)
+		for candidate_index, candidate in enumerate(plan_tuple):
+			if candidate.trigger.symbol not in reachable_modules:
+				continue
+			if _plan_directly_adds_predicate(
+				candidate,
+				predicate=certificate.relation_predicate,
+				actions_by_name=actions_by_name,
+			):
+				pairs.add((recursive_index, candidate_index))
+	return tuple(sorted(pairs))
+
+
+def _reachable_module_predicates(
+	initial: set[str],
+	*,
+	call_graph: Mapping[str, set[str]],
+) -> set[str]:
+	reachable = set(initial)
+	frontier = list(initial)
+	while frontier:
+		predicate = frontier.pop()
+		for called in call_graph.get(predicate, set()):
+			if called in reachable:
+				continue
+			reachable.add(called)
+			frontier.append(called)
+	return reachable
+
+
+def _plan_directly_adds_predicate(
+	plan: AgentSpeakPlan,
+	*,
+	predicate: str,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> bool:
+	for step in plan.body:
+		if step.kind != "action":
+			continue
+		action = actions_by_name.get(step.symbol)
+		if action is None:
+			return True
+		if any(effect.predicate == predicate for effect in action.add_effects):
+			return True
+	return False
 
 
 def _candidate_branch_covers_evidence(
@@ -2650,6 +2969,7 @@ def _module_synthesis_report(
 	seeds: Sequence[str],
 	module_predicates: Sequence[str],
 	actions: Sequence[_ParsedAction],
+	rejected_uncertified_candidate_count: int,
 ) -> AtomicModuleSynthesisReport:
 	branch_counts: dict[str, int] = {}
 	recursive_predicates: set[str] = set()
@@ -2679,6 +2999,14 @@ def _module_synthesis_report(
 		candidate_source_counts=selection_report.candidate_source_counts,
 		evidence_obligation_count=selection_report.evidence_obligation_count,
 		selector_coverage_basis=selection_report.coverage_basis,
+		rejected_uncertified_candidate_count=rejected_uncertified_candidate_count,
+		ranking_incompatibility_count=selection_report.ranking_incompatibility_count,
+		recursive_capability_obligation_count=(
+			selection_report.recursive_capability_obligation_count
+		),
+		selected_recursive_capability_count=(
+			selection_report.selected_recursive_capability_count
+		),
 		predicate_roles=_predicate_role_report(
 			plans=plans,
 			module_predicates=module_predicates,
@@ -2692,12 +3020,12 @@ def _module_synthesis_report(
 				"extra-variable prepared preconditions require a positive context "
 				"closure that binds every non-head variable before the negative guard"
 			),
-			"same-predicate recursive prepare branches require a deleted dynamic "
-			"obstruction-relation certificate",
+			"same-predicate recursive prepare branches require a non-negative "
+			"relational-count ranking feature that strictly decreases and is never increased",
 			(
 				"resource-release cleanup branches require a schema certificate "
-				"that deletes a producer-created resource debt, restores a lower-arity "
-				"availability literal, preserves the protected target, and records "
+				"that deletes a producer-created resource debt, restores a literal "
+				"deleted by the producer, preserves the protected target, and records "
 				"all exact alias guards needed by later action preconditions"
 			),
 		),
@@ -2710,8 +3038,8 @@ def _module_synthesis_report(
 			"Jason unification over inertial relations",
 			"range-safe extra-variable preconditions may be lifted into internal "
 			"atomic subgoal calls instead of staying as long primitive macros",
-			"same-predicate recursive branches require a schema-level deleted-relation "
-			"progress certificate",
+			"same-predicate recursive branches require a schema-level well-founded "
+			"relational-count progress certificate",
 			"resource-release cleanup branches are accepted only when PDDL effects "
 			"prove resource debt discharge plus target preservation",
 			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",

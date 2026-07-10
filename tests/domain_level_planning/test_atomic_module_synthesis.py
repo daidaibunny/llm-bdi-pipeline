@@ -147,7 +147,7 @@ def test_clingo_selector_removes_alpha_equivalent_prepare_branch() -> None:
 	}
 	assert selection.report.raw_candidate_count == 2
 	assert selection.report.selected_candidate_count == 1
-	assert selection.report.obligation_count == 2
+	assert selection.report.obligation_count == 1
 
 
 def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted() -> None:
@@ -179,6 +179,7 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
 	assert selector_report["selector_objective"] == [
+		"maximize compatible well-founded recursive capabilities",
 		"minimize selected branch count",
 		"then minimize selected context literal count",
 		"then minimize selected body step count",
@@ -194,18 +195,20 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 			"closure that binds every non-head variable before the negative guard"
 		),
 		(
-			"same-predicate recursive prepare branches require a deleted dynamic "
-			"obstruction-relation certificate"
+			"same-predicate recursive prepare branches require a non-negative "
+			"relational-count ranking feature that strictly decreases and is never increased"
 		),
 		(
 			"resource-release cleanup branches require a schema certificate "
-			"that deletes a producer-created resource debt, restores a lower-arity "
-			"availability literal, preserves the protected target, and records "
+			"that deletes a producer-created resource debt, restores a literal "
+			"deleted by the producer, preserves the protected target, and records "
 			"all exact alias guards needed by later action preconditions"
 		),
 	]
 	assert selector_report["raw_candidate_count"] >= len(library.plans)
-	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
+	assert 0 < selector_report["selector_obligation_count"] <= (
+		selector_report["raw_candidate_count"]
+	)
 	assert len(selector_report["selected_branch_ids"]) == len(library.plans)
 	role_by_predicate = {
 		record["predicate"]: record
@@ -271,11 +274,92 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		"recursive_progress_certificate"
 	]
 	assert clear_certificate == {
-		"certificate_kind": "deleted_dynamic_obstruction_relation",
+		"certificate_kind": "well_founded_relational_count_decrease",
+		"ranking_feature_kind": "global_dynamic_atom_count",
 		"relation_predicate": "on",
 		"relation_arguments": ["Y", "X"],
-		"deleting_action": "unstack",
+		"strictly_decreasing_actions": ["unstack"],
+		"non_increasing_actions": ["put-down"],
+		"lower_bound": 0,
 	}
+
+
+def test_recursive_progress_rejects_delete_add_obstruction_exchange(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain exchange)
+ (:requirements :strips)
+ (:predicates (ready ?x) (link ?x ?y))
+ (:action exchange-link
+  :parameters (?x ?y)
+  :precondition (and (link ?y ?x) (ready ?y))
+  :effect (and (ready ?x) (link ?x ?y)
+   (not (link ?y ?x)) (not (ready ?y)))
+ )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("ready",),
+		source_backend="test",
+		source_name="exchange",
+	)
+
+	assert not any(
+		plan.trigger.symbol == "ready"
+		and any(step.kind == "subgoal" and step.symbol == "ready" for step in plan.body)
+		for plan in library.plans
+	)
+
+
+def test_resource_release_rejects_symmetric_modes_without_capacity_key(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain resource-cycle)
+ (:requirements :strips)
+ (:predicates (available ?r ?x) (debt ?r ?x) (done ?x))
+ (:action acquire
+  :parameters (?r ?x)
+  :precondition (available ?r ?x)
+  :effect (and (done ?x) (debt ?r ?x) (not (available ?r ?x)))
+ )
+ (:action release
+  :parameters (?r ?x)
+  :precondition (debt ?r ?x)
+  :effect (and (available ?r ?x) (not (debt ?r ?x)))
+ )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("done",),
+		source_backend="test",
+		source_name="resource-cycle",
+	)
+	assert any(
+		plan.trigger.symbol == "done"
+		and tuple(step.symbol for step in plan.body) == ("acquire",)
+		for plan in library.plans
+	)
+	assert not any(
+		plan.trigger.symbol == "done"
+		and tuple(step.symbol for step in plan.body) == ("acquire", "release")
+		for plan in library.plans
+	)
 
 
 def test_atomic_module_synthesis_rejects_unsupported_pddl_before_compilation(

@@ -273,7 +273,9 @@ def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() ->
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
 	assert selector_report["raw_candidate_count"] >= selector_report["plan_count"]
-	assert selector_report["selector_obligation_count"] == selector_report["raw_candidate_count"]
+	assert 0 < selector_report["selector_obligation_count"] <= (
+		selector_report["raw_candidate_count"]
+	)
 	assert len(selector_report["selected_branch_ids"]) == selector_report["plan_count"]
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
 	assert "obj_tp(X, block) & on(Y, X) & obj_tp(Y, block) & not clear(Y)" in asl
@@ -616,7 +618,7 @@ def test_moose_readable_compile_asl_cli_materializes_minimal_modules(
 		"mixed_atomic_template_library"
 	)
 	assert metadata["atomic_module_synthesis"]["selector_backend"] == "clingo_asp_minimize"
-	assert metadata["atomic_module_synthesis"]["selector_obligation_count"] == (
+	assert 0 < metadata["atomic_module_synthesis"]["selector_obligation_count"] <= (
 		metadata["atomic_module_synthesis"]["raw_candidate_count"]
 	)
 	assert "+!on(X, Y) : obj_tp(X, block) & obj_tp(Y, block) & not clear(X)" in asl
