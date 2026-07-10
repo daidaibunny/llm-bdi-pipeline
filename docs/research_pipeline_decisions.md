@@ -136,6 +136,48 @@ Depots `drop(?hoist, ?crate, ?surface, ?place)` with preconditions such as
 `lifting(?hoist, ?crate)`, `clear(?surface)`, `at(?hoist, ?place)`, and
 `at(?surface, ?place)`, and an add effect `on(?crate, ?surface)`.
 
+MOOSE is the only implemented and experimentally evaluated Evidence Module
+provider. `PolicyEvidenceProgram` is an extension interface: another provider
+may be added later if its adapter emits the same normalized singleton-goal
+rules and passes the same PDDL certificates. This interface does not imply that
+another provider has already been reproduced or has MOOSE-equivalent results.
+
+### MOOSE Parameter Provenance
+
+MOOSE-native settings and our compiler settings are reported separately. The
+MOOSE paper provides the following settings:
+
+- `num_permutations = 3` is the default effort parameter in Algorithm 1. It is
+  the maximum number of goal orderings sampled per training problem.
+- `goal_max_size = 1` is our artifact flag that enforces the paper algorithm's
+  singleton-goal step, where each relaxed subproblem has goal `{g_k}`. It is
+  not a compactness threshold for the final ASL library.
+- Generalized-plan synthesis receives 12 hours and 32 GB and is repeated five
+  times in the paper.
+- Test-time planning receives 1800 seconds and 8 GB. Up to five trained MOOSE
+  models correspond to the five synthesis repetitions.
+
+The batch runner now defaults to 43200 seconds for MOOSE training and 1800
+seconds for MOOSE test-time planning, and records `random_seed` so five runs can
+be aggregated. The repository-wide external-process guard remains 16 GiB; this
+is a declared reproduction deviation from the paper's 32-GB synthesis ceiling.
+`num_workers`, full-split flags such as `num_training = -1`, policy-dump and ASL
+append timeouts, Jason timeout, and VAL timeout are pipeline or hardware
+settings, not MOOSE method parameters.
+
+The compiler's schema-derived candidate language is also explicit. It contains:
+
+1. one direct target producer;
+2. one support producer followed by the target producer;
+3. one support producer, one bridge producer, and the target producer;
+4. one prefix producer before the support/bridge/target sequence; and
+5. optionally, one PDDL-certified resource-release action after any sequence.
+
+Thus a schema-derived candidate has at most five primitive actions. A validated
+Evidence Module macro may be longer and is not truncated by this bound. Clingo
+optimality is only within this finite generated candidate language. This is a
+method scope restriction, not a domain-name rule and not a MOOSE parameter.
+
 The compiler therefore does not simply rename objects from training instances
 into variables. It may add an internal module when the target action's
 precondition names a producible fluent. A producible fluent is a predicate that
@@ -207,6 +249,13 @@ does not fall, but the obstruction cone rooted at `X` falls when schema-derived
 guards prove `B != X`. This candidate certificate carries the explicit
 assumption that the relation is acyclic in all reachable states. It is selected
 only if the complete reachable module closure preserves the same anchored cone.
+
+Concretely, if one transition requires `supports(a,b)` and `supports(b,c)`, the
+support-depth order builds `supports(b,c)` first and then `supports(a,b)`. The
+assumption excludes any reachable cycle such as `supports(a,b) & supports(b,a)`:
+with a cycle there is no finite bottom support from which recursive progress can
+be ranked. The predicate name is irrelevant; the same test passes after
+renaming the relation and every action in the PDDL domain.
 
 Deleting one obstruction is not sufficient by itself. The compiler follows the
 selected module call graph and adds Clingo incompatibility constraints against
@@ -409,6 +458,11 @@ assumption over a certified relation, not a domain or predicate-name switch.
 All other incomplete or cyclic summaries remain unsupported. Multi-literal
 numeric guards without numeric effect-preservation certificates are also
 rejected.
+For example, singleton `fuel(vehicle)=0` can call one certified monotone numeric
+module. A transition requiring `at(package,destination) & fuel(vehicle)=3`
+needs an additional proof that repairing either conjunct preserves the other;
+the current temporal compiler does not yet have this mixed numeric/predicate
+preservation certificate and therefore fails closed.
 It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.
@@ -417,6 +471,10 @@ The completion observation boundary is appropriate for achievement transitions
 that are checked after an atomic module returns. It does not justify
 safety-sensitive LTLf formulas that must observe every primitive intermediate
 action; those require an external DFA controller and primitive-step monitor.
+For example, a macro may delete `safe(X)` in its first primitive action and
+restore it before the atomic subgoal returns. Completion-level checking can
+still certify an eventual achievement after return, but it cannot certify
+`G(safe(X))`, because that formula must inspect every intermediate state.
 
 ## Benchmark Scope
 

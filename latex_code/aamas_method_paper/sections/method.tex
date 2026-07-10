@@ -50,9 +50,10 @@ MOOSE is the first evidence provider we instantiate for positive singleton
 predicate templates because its synthesis algorithm decomposes training
 problems into singleton goal conditions and uses goal regression to learn
 lifted rules \cite{Chen2026Moose}. This directly matches our
-atomic-template interface. The compiler is not tied to MOOSE: another
-generalized-planning system can serve as an evidence provider if it emits the
-same evidence program and satisfies the same schema-level obligations.
+atomic-template interface. MOOSE is the only provider implemented and evaluated
+in this work. The normalized interface permits a future provider to emit the
+same evidence program and satisfy the same schema-level obligations, but we do
+not claim empirical provider interchangeability.
 
 Negative literal templates are not part of the current positive claim. If a
 training split requires them, they require a provider-side lifted rule and a
@@ -83,6 +84,14 @@ render as reusable agent code.
 The compiler constructs one candidate space containing validated provider
 macros, direct PDDL producers, recursive preparation branches, certified
 resource-release branches, and validated bounded-integer numeric branches.
+Schema-derived primitive sequences come from a fixed, domain-independent
+grammar: a direct producer; a support producer followed by the target producer;
+one optional bridge producer between them; one optional prefix producer before
+that bridge sequence; and one optional certified cleanup action. Consequently,
+schema-derived candidates contain at most five primitive actions. Validated
+provider macros are not truncated to this bound. The bound defines the searched
+hypothesis class and is recorded in artifact metadata; it is not presented as a
+MOOSE parameter or as completeness for arbitrary PDDL.
 Predicate and numeric evidence therefore enter the same Clingo solve rather
 than being selected and merged in separate phases. One Clingo program enforces evidence coverage and
 internal-module closure, maximizes compatible certified recursive capabilities,
@@ -159,15 +168,29 @@ producers delete only the same child's previous relation. This certificate assum
 acyclic in every reachable execution state; it records that assumption rather
 than claiming to derive it from arbitrary STRIPS schemas. Other incomplete or
 cyclic graphs are rejected.
+For example, requested atoms $r(a,b)$ and $r(b,c)$ are ordered as $r(b,c)$
+before $r(a,b)$. A reachable state containing both $r(a,b)$ and $r(b,a)$ is
+outside the assumption because recursive support depth would no longer be a
+well-founded ranking.
 This reordering is confined to literals on one DFA edge and therefore does not
 change temporal order between edges. Negative literals remain context guards
 and are never compiled as negative achievements.
+
+A singleton numeric transition such as $fuel(v)=0$ is supported when its
+selected module has a certified unit monotone effect. A mixed or multi-literal
+transition such as $at(p,d) \land fuel(v)=3$ is rejected: the temporal compiler
+does not yet prove that repairing one conjunct preserves the other's numeric
+value.
 
 The completion-level observation boundary is an explicit scope restriction.
 It is sound for the achievement-transition fragment evaluated here, where a
 transition guard is tested after an atomic subgoal returns. A formula whose
 safety semantics must inspect every primitive intermediate action requires an
 external DFA monitor and is outside this context-only wrapper claim.
+For example, a module may temporarily delete and then restore a fluent before
+returning; this is acceptable for an eventual achievement checked at return,
+but cannot establish a safety formula such as $G\,safe$ without observing
+every primitive successor state.
 
 \subsection{Controller State}
 

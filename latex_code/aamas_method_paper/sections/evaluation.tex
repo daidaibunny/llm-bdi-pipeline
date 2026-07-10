@@ -26,6 +26,18 @@ serialized-width split described in the repository benchmark strategy. The same
 split is used by the atomic-template backend selector and by the
 query-generation layer.
 
+MOOSE-native parameters follow its paper where applicable. Algorithm~1 uses
+three goal permutations by default. Generalized-plan synthesis is evaluated
+with a 12-hour, 32-GB budget and five repeated runs, while test-time planning
+uses 1800 seconds and 8 GB \cite{Chen2026Moose}. Our runner therefore defaults
+to 43200 seconds for MOOSE synthesis, 1800 seconds for MOOSE test-time planning,
+and records the random seed for each repetition. The repository safety profile
+caps any external learner at 16 GiB, so its synthesis memory ceiling is a
+declared reproduction deviation from the paper's 32-GB ceiling. Worker count,
+policy-dump timeout, AgentSpeak execution timeout, and VAL timeout are system
+parameters of our pipeline rather than MOOSE hyperparameters and are reported
+separately.
+
 \subsection{Checks}
 
 Each domain is evaluated through four checks.
