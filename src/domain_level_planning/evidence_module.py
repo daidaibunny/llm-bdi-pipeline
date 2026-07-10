@@ -118,8 +118,8 @@ class MooseReadableRule(PolicyEvidenceRule):
 
 
 @dataclass(frozen=True)
-class MooseAtomicLibraryQualityReport:
-	"""Structural quality report for direct MOOSE-to-ASL atomic libraries."""
+class AtomicMacroLibraryQualityReport:
+	"""Provider-neutral structural report for atomic macro libraries."""
 
 	plan_count: int
 	goal_symbol_count: int
@@ -153,6 +153,9 @@ class MooseAtomicLibraryQualityReport:
 			"plan_template_kind_counts": dict(self.plan_template_kind_counts),
 			"warnings": list(self.warnings),
 		}
+
+
+MooseAtomicLibraryQualityReport = AtomicMacroLibraryQualityReport
 
 
 @dataclass(frozen=True)
@@ -509,7 +512,7 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 			_deduplicate_agent_plans(library.plans),
 		),
 	)
-	macro_quality_report = audit_moose_atomic_library_quality(plans=macro_evidence.plans)
+	macro_quality_report = audit_atomic_macro_library_structure(plans=macro_evidence.plans)
 	library_quality = _evidence_compiler_library_quality(
 		plans=merged_plans,
 		macro_evidence_plan_count=len(macro_evidence.plans),
@@ -541,7 +544,7 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 				"selection_stage": "joint_clingo_certified_candidate_selection",
 			},
 			"library_quality": library_quality,
-			"moose_macro_library_quality": macro_quality_report.to_dict(),
+			"evidence_macro_library_quality": macro_quality_report.to_dict(),
 		},
 	)
 
@@ -621,9 +624,9 @@ def _compile_validated_policy_evidence_macro_plans(
 			deduplicated_macro_count=len(deduplicated),
 			merged_plan_count=len(deduplicated),
 				validation_basis=(
-					"MOOSE readable singleton goal rule supplies state context, goal, and macro action sequence",
+					"Evidence Module singleton-goal rule supplies state context, goal, and macro action sequence",
 					"PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
-					"MOOSE numeric equality goal evidence may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
+					"Evidence Module numeric equality goal rules may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
 					"PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
 					"Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
 					"PDDL constants are preserved as constants; negative precondition conflicts and positive preconditions that may alias prior deletes compile to explicit inequality guards when representable in the supported ASL subset",
@@ -673,7 +676,7 @@ def _evidence_compiler_library_quality(
 		"primitive_action_step_count": primitive_action_step_count,
 		"subgoal_step_count": subgoal_step_count,
 		"macro_evidence_plan_count": macro_evidence_plan_count,
-		"moose_macro_evidence_plan_count": macro_evidence_plan_count,
+		"evidence_macro_plan_count": macro_evidence_plan_count,
 		"validated_policy_rule_plan_count": macro_evidence_plan_count,
 		"compact_recursive_module_ready": subgoal_step_count > 0,
 		"schema_augmented_recursive_modules_ready": subgoal_step_count > 0,
@@ -1846,13 +1849,11 @@ def _deduplicate_strings(items: Sequence[str]) -> tuple[str, ...]:
 	return tuple(dict.fromkeys(item for item in items if item))
 
 
-def audit_moose_atomic_library_quality(
+def audit_atomic_macro_library_structure(
 	*,
 	plans: Sequence[AgentSpeakPlan],
-	max_compact_plan_count: int = 10,
-	max_macro_body_steps: int = 8,
-) -> MooseAtomicLibraryQualityReport:
-	"""Classify MOOSE output without mistaking decision-list macros for recursion."""
+) -> AtomicMacroLibraryQualityReport:
+	"""Report macro structure without provider-specific compactness thresholds."""
 
 	plan_tuple = tuple(plans or ())
 	plans_by_goal: dict[str, int] = {}
@@ -1867,40 +1868,27 @@ def audit_moose_atomic_library_quality(
 		subgoal_step_count += sum(1 for step in body if step.kind == "subgoal")
 	goal_symbols = tuple(sorted(plans_by_goal))
 	max_plans_per_goal_symbol = max(plans_by_goal.values(), default=0)
-	singleton_macro_library_ready = (
-		len(plan_tuple) <= max_compact_plan_count
-		and max_body_step_count <= max_macro_body_steps
+	singleton_macro_library_ready = bool(plan_tuple) and all(
+		plan.trigger.event_type == "achievement_goal"
+		and all(step.kind == "action" for step in tuple(plan.body or ()))
+		for plan in plan_tuple
 	)
-	compact_recursive_module_ready = (
-		singleton_macro_library_ready
-		and subgoal_step_count > 0
-	)
+	compact_recursive_module_ready = bool(plan_tuple) and subgoal_step_count > 0
 	faithful_decision_list_ready = bool(plan_tuple) and primitive_action_step_count > 0
 	artifact_classification = (
 		"atomic_template_library"
 		if plan_tuple
-		else "empty_or_unbound_moose_atomic_library"
+		else "empty_or_unbound_atomic_macro_library"
 	)
 	plan_template_kind_counts = _plan_template_kind_counts(plan_tuple)
 	warnings: list[str] = []
 	if subgoal_step_count == 0 and plan_tuple:
 		warnings.append(
-			"Direct MOOSE output contains primitive macro actions but no recursive "
+			"Direct action-only evidence contains primitive macro actions but no recursive "
 			"atomic subgoal calls; claim faithful decision-list compilation rather "
 			"than compact recursive module synthesis."
 		)
-	if len(plan_tuple) > max_compact_plan_count:
-		warnings.append(
-			"Plan count exceeds the compact-library threshold; this is acceptable "
-			"for faithful MOOSE decision-list compilation, but it is not a compact "
-			"recursive module artifact."
-		)
-	if max_body_step_count > max_macro_body_steps:
-		warnings.append(
-			"At least one plan body exceeds the compact macro threshold; inspect "
-			"whether raw trace replay leaked into the library."
-		)
-	return MooseAtomicLibraryQualityReport(
+	return AtomicMacroLibraryQualityReport(
 		plan_count=len(plan_tuple),
 		goal_symbol_count=len(goal_symbols),
 		goal_symbols=goal_symbols,
@@ -1916,6 +1904,15 @@ def audit_moose_atomic_library_quality(
 		plan_template_kind_counts=plan_template_kind_counts,
 		warnings=tuple(warnings),
 	)
+
+
+def audit_moose_atomic_library_quality(
+	*,
+	plans: Sequence[AgentSpeakPlan],
+) -> MooseAtomicLibraryQualityReport:
+	"""Report direct MOOSE macro structure using provider-neutral measurements."""
+
+	return audit_atomic_macro_library_structure(plans=plans)
 
 
 def _parse_optional_rule_block(block: str, *, index: int) -> MooseReadableRule | None:

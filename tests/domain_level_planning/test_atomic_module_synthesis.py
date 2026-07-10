@@ -297,6 +297,14 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	]
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
+	assert selector_report["schema_composition_action_bound"] == 5
+	assert selector_report["schema_composition_grammar"] == [
+		"direct producer",
+		"support producer then target producer",
+		"support producer then one bridge producer then target producer",
+		"one prefix producer then support producer then one bridge producer then target producer",
+		"optional one-step certified resource release after any producer sequence",
+	]
 	assert selector_report["selector_objective"] == [
 		"maximize compatible well-founded recursive capabilities",
 		"minimize selected branch count",

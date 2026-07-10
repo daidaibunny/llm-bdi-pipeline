@@ -44,6 +44,7 @@ from .dfa_controller import (
 	progress_transitions_from_dfa_state,
 )
 from .evidence_module import (
+	AtomicMacroLibraryQualityReport,
 	MooseAtomicLibraryQualityReport,
 	MooseAtom,
 	MooseReadableRule,
@@ -51,6 +52,7 @@ from .evidence_module import (
 	PolicyEvidenceProgram,
 	PolicyEvidenceReducerReport,
 	PolicyEvidenceRule,
+	audit_atomic_macro_library_structure,
 	audit_moose_atomic_library_quality,
 	compile_policy_evidence_program_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_minimal_module_asl_library,
@@ -118,6 +120,7 @@ __all__ = [
 	"ArchitectureDecision",
 	"ArchitectureGap",
 	"AtomicGoalTemplate",
+	"AtomicMacroLibraryQualityReport",
 	"AtomicModuleSynthesisReport",
 	"AtomicTemplateBackendDecision",
 	"BackendManifest",
@@ -158,6 +161,7 @@ __all__ = [
 	"adapt_dfa_guarded_transition_to_achievement_request",
 	"architecture_gap_summary",
 	"assert_compilable_pddl_files",
+	"audit_atomic_macro_library_structure",
 	"audit_domain_level_library_contract",
 	"audit_moose_atomic_library_quality",
 	"backend_audit_matrix",

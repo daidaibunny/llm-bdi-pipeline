@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 from domain_level_planning.evidence_module import (
+	PolicyEvidenceProgram,
 	audit_moose_atomic_library_quality,
 	compile_policy_evidence_program_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_minimal_module_asl_library,
@@ -219,7 +220,7 @@ def test_moose_readable_policy_compiles_to_atomic_asl_library() -> None:
 	assert library.metadata["library_quality"]["faithful_decision_list_ready"] is True
 
 
-def test_moose_quality_audit_flags_large_raw_macro_policies() -> None:
+def test_moose_quality_audit_reports_large_policy_without_arbitrary_threshold() -> None:
 	library = compile_moose_readable_policy_to_asl_library(
 		"\n\n".join(FERRY_READABLE_POLICY.strip() for _ in range(6)),
 		domain_name="ferry",
@@ -229,13 +230,14 @@ def test_moose_quality_audit_flags_large_raw_macro_policies() -> None:
 	report = audit_moose_atomic_library_quality(plans=library.plans)
 
 	assert report.plan_count == 12
-	assert report.singleton_macro_library_ready is False
+	assert report.singleton_macro_library_ready is True
 	assert report.compact_recursive_module_ready is False
 	assert report.faithful_decision_list_ready is True
 	assert report.artifact_classification == "atomic_template_library"
 	assert report.library_profile == "action_only_atomic_template_library"
 	assert report.plan_template_kind_counts == {"action_only_plan_template": 12}
-	assert any("Plan count exceeds" in warning for warning in report.warnings)
+	assert not any("threshold" in warning.lower() for warning in report.warnings)
+	assert not any("Plan count exceeds" in warning for warning in report.warnings)
 
 
 def test_moose_readable_policy_compiles_to_minimal_recursive_module_library() -> None:
@@ -321,6 +323,45 @@ def test_evidence_program_decouples_moose_adapter_from_compiler() -> None:
 	assert library.metadata["validated_policy_lifting"]["selection_stage"] == (
 		"joint_clingo_certified_candidate_selection"
 	)
+	assert "evidence_macro_library_quality" in library.metadata
+	assert "moose_macro_library_quality" not in library.metadata
+
+
+def test_policy_evidence_compiler_does_not_branch_on_provider_name() -> None:
+	moose_program = evidence_program_from_moose_readable_policy(
+		BLOCKS_READABLE_POLICY,
+		source_name="normalized-rules",
+	)
+	alternate_program = PolicyEvidenceProgram(
+		source_provider="alternate_provider",
+		source_name="normalized-rules",
+		representation="normalized_singleton_goal_rules",
+		rules=moose_program.rules,
+	)
+
+	moose_library = compile_policy_evidence_program_to_minimal_module_asl_library(
+		moose_program,
+		domain_file=BLOCKS_DOMAIN,
+		domain_name="blocksworld-tower",
+	)
+	library = compile_policy_evidence_program_to_minimal_module_asl_library(
+		alternate_program,
+		domain_file=BLOCKS_DOMAIN,
+		domain_name="blocksworld-tower",
+	)
+
+	assert library.metadata["evidence_module"]["source_provider"] == "alternate_provider"
+	assert library.metadata["evidence_macro_library_quality"]["plan_count"] == 1
+	assert library.metadata["library_quality"]["evidence_macro_plan_count"] == 1
+	assert "moose_macro_library_quality" not in library.metadata
+	assert "moose_macro_evidence_plan_count" not in library.metadata["library_quality"]
+	assert [
+		(plan.trigger, plan.context, plan.body)
+		for plan in library.plans
+	] == [
+		(plan.trigger, plan.context, plan.body)
+		for plan in moose_library.plans
+	]
 
 
 def test_evidence_compiler_preserves_validated_logistics_intermodal_macro() -> None:
@@ -350,7 +391,7 @@ def test_evidence_compiler_preserves_validated_logistics_intermodal_macro() -> N
 	assert library.metadata["library_quality"]["artifact_classification"] == (
 		"atomic_template_library"
 	)
-	assert library.metadata["moose_macro_library_quality"]["subgoal_step_count"] == 0
+	assert library.metadata["evidence_macro_library_quality"]["subgoal_step_count"] == 0
 	assert library.metadata["library_quality"]["subgoal_step_count"] > 0
 	assert library.metadata["library_quality"]["library_profile"] == (
 		"mixed_atomic_template_library"

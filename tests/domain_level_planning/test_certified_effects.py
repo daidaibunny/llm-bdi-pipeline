@@ -331,6 +331,108 @@ def test_threat_certificate_serializes_certified_acyclic_support_relation() -> N
 	)
 
 
+def test_support_depth_certificate_is_invariant_under_vocabulary_renaming(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "renamed-support-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain renamed-support)
+		 (:requirements :strips :negative-preconditions)
+		 (:predicates (supports ?child ?parent) (free ?item))
+		 (:action detach
+		  :parameters (?child ?parent)
+		  :precondition (and (supports ?child ?parent) (free ?child))
+		  :effect (and (free ?parent) (not (supports ?child ?parent)))
+		 )
+		 (:action attach
+		  :parameters (?child ?parent)
+		  :precondition (and (free ?child) (free ?parent))
+		  :effect (and (supports ?child ?parent) (not (free ?parent)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	recursive_certificate = {
+		"recursive_progress_certificate": {
+			"certificate_kind": "well_founded_relational_count_decrease",
+			"ranking_feature_kind": "global_dynamic_atom_count",
+			"relation_predicate": "supports",
+			"relation_arguments": ["Y", "X"],
+			"strictly_decreasing_actions": ["detach"],
+			"non_increasing_actions": [],
+		},
+	}
+	library = PlanLibrary(
+		domain_name="renamed-support",
+		plans=(
+			AgentSpeakPlan(
+				"free_already_true",
+				AgentSpeakTrigger("achievement_goal", "free", ("X",)),
+				("free(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"free_via_detach",
+				AgentSpeakTrigger("achievement_goal", "free", ("X",)),
+				("supports(Y, X)", "free(Y)"),
+				(AgentSpeakBodyStep("action", "detach", ("Y", "X")),),
+			),
+			AgentSpeakPlan(
+				"free_prepare_free",
+				AgentSpeakTrigger("achievement_goal", "free", ("X",)),
+				("supports(Y, X)", "not free(Y)"),
+				(
+					AgentSpeakBodyStep("subgoal", "free", ("Y",)),
+					AgentSpeakBodyStep("subgoal", "free", ("X",)),
+				),
+				binding_certificate=(recursive_certificate,),
+			),
+			AgentSpeakPlan(
+				"supports_via_attach",
+				AgentSpeakTrigger("achievement_goal", "supports", ("X", "Y")),
+				("free(X)", "free(Y)"),
+				(AgentSpeakBodyStep("action", "attach", ("X", "Y")),),
+			),
+			AgentSpeakPlan(
+				"supports_prepare_free_child",
+				AgentSpeakTrigger("achievement_goal", "supports", ("X", "Y")),
+				("not free(X)",),
+				(
+					AgentSpeakBodyStep("subgoal", "free", ("X",)),
+					AgentSpeakBodyStep("subgoal", "supports", ("X", "Y")),
+				),
+			),
+			AgentSpeakPlan(
+				"supports_prepare_free_parent",
+				AgentSpeakTrigger("achievement_goal", "supports", ("X", "Y")),
+				("not free(Y)",),
+				(
+					AgentSpeakBodyStep("subgoal", "free", ("Y",)),
+					AgentSpeakBodyStep("subgoal", "supports", ("X", "Y")),
+				),
+			),
+		),
+	)
+
+	order, certificate = threat_safe_positive_literal_order(
+		(
+			("supports", ("upper", "middle")),
+			("supports", ("middle", "lower")),
+		),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert order == (1, 0)
+	assert certificate.serialization_strategy == (
+		"assumption_bounded_support_depth_ranking"
+	)
+	assert certificate.ranking_relation == "supports"
+	assert certificate.ranking_relation_anchor_position == 1
+
+
 def _write_typed_transport_fragment(path: Path) -> Path:
 	path.write_text(
 		"""

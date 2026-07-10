@@ -32,6 +32,16 @@ from .pddl_support import assert_compilable_pddl_files
 from .pddl_types import type_closure
 
 
+SCHEMA_COMPOSITION_GRAMMAR = (
+	"direct producer",
+	"support producer then target producer",
+	"support producer then one bridge producer then target producer",
+	"one prefix producer then support producer then one bridge producer then target producer",
+	"optional one-step certified resource release after any producer sequence",
+)
+SCHEMA_COMPOSITION_ACTION_BOUND = 5
+
+
 @dataclass(frozen=True)
 class PDDLLiteralSchema:
 	"""One lifted predicate literal from an action schema."""
@@ -85,6 +95,8 @@ class AtomicModuleSynthesisReport:
 	predicate_roles: tuple[Mapping[str, object], ...]
 	branch_certification_rules: tuple[str, ...]
 	theoretical_basis: tuple[str, ...]
+	schema_composition_grammar: tuple[str, ...]
+	schema_composition_action_bound: int
 
 	def to_dict(self) -> dict[str, object]:
 		payload: dict[str, object] = {
@@ -121,6 +133,8 @@ class AtomicModuleSynthesisReport:
 			"predicate_roles": [dict(item) for item in self.predicate_roles],
 			"branch_certification_rules": list(self.branch_certification_rules),
 			"theoretical_basis": list(self.theoretical_basis),
+			"schema_composition_grammar": list(self.schema_composition_grammar),
+			"schema_composition_action_bound": self.schema_composition_action_bound,
 		}
 		return payload
 
@@ -3347,6 +3361,8 @@ def _module_synthesis_report(
 			"prove resource debt discharge plus target preservation",
 			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",
 		),
+		schema_composition_grammar=SCHEMA_COMPOSITION_GRAMMAR,
+		schema_composition_action_bound=SCHEMA_COMPOSITION_ACTION_BOUND,
 	)
 
 
