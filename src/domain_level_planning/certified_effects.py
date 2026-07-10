@@ -14,6 +14,7 @@ from utils.pddl_parser import PDDLDomain
 from .atomic_module_synthesis import _ParsedAction
 from .atomic_module_synthesis import _FunctionalPredicateGroup
 from .atomic_module_synthesis import _functional_predicate_groups
+from .atomic_module_synthesis import PDDLLiteralSchema
 from .pddl_types import parameter_type
 from .pddl_types import type_closure
 
@@ -77,6 +78,10 @@ class TransitionSerializationCertificate:
 	module_summaries_complete: bool
 	conditional_effects_checked: bool = True
 	functional_invariant_count: int = 0
+	observation_boundary: str = "atomic_module_completion"
+	serialization_strategy: str = "universal_acyclic_threat_order"
+	ranking_relation: str | None = None
+	ranking_assumptions: tuple[str, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
 		return {
@@ -88,6 +93,10 @@ class TransitionSerializationCertificate:
 			"module_summaries_complete": self.module_summaries_complete,
 			"conditional_effects_checked": self.conditional_effects_checked,
 			"functional_invariant_count": self.functional_invariant_count,
+			"observation_boundary": self.observation_boundary,
+			"serialization_strategy": self.serialization_strategy,
+			"ranking_relation": self.ranking_relation,
+			"ranking_assumptions": list(self.ranking_assumptions),
 		}
 
 
@@ -177,6 +186,22 @@ def threat_safe_positive_literal_order(
 				):
 					edges.add((achiever_index, protected_index))
 	ordered_indexes = _stable_topological_order(len(literal_tuple), edges)
+	serialization_strategy = "universal_acyclic_threat_order"
+	ranking_relation: str | None = None
+	ranking_assumptions: tuple[str, ...] = ()
+	if ordered_indexes is None:
+		support_ranking = _assumption_bounded_support_depth_order(
+			goal_atoms,
+			plan_library=plan_library,
+			actions=actions,
+		)
+		if support_ranking is not None:
+			ordered_indexes, ranking_relation = support_ranking
+			serialization_strategy = "assumption_bounded_support_depth_ranking"
+			ranking_assumptions = (
+				"the certified binary relation is acyclic in every reachable execution state",
+				"atomic modules are observed only at successful module completion",
+			)
 	if ordered_indexes is None:
 		raise ValueError(
 			"cyclic_conjunctive_transition_not_certified: selected atomic modules "
@@ -188,6 +213,9 @@ def threat_safe_positive_literal_order(
 		module_summaries_complete=True,
 		conditional_effects_checked=True,
 		functional_invariant_count=len(functional_groups),
+		serialization_strategy=serialization_strategy,
+		ranking_relation=ranking_relation,
+		ranking_assumptions=ranking_assumptions,
 	)
 	return ordered_indexes, certificate
 
@@ -379,6 +407,7 @@ def _module_delete_summary(
 				predicate_types=predicate_types,
 				type_tokens=type_tokens,
 			)
+			direct_effect_state: dict[EffectAtom, bool] = {}
 			for step in plan.body:
 				if step.kind == "action":
 					action = actions_by_name.get(step.symbol)
@@ -397,30 +426,21 @@ def _module_delete_summary(
 					)
 					action_binding = dict(zip(action.parameters, step_arguments))
 					for effect in action.delete_effects:
-						conditional_deletes.append(
-							_canonicalize_conditional_delete(
-								ConditionalDeleteEffect(
-									delete_atom=EffectAtom(
-										predicate=effect.predicate,
-										arguments=tuple(
-											action_binding.get(
-												argument,
-												EffectTerm(
-													argument,
-													variable_scope=local_scope,
-												),
-											)
-											for argument in effect.arguments
-										),
-									),
-									positive_context=branch_condition.positive_context,
-									negative_context=branch_condition.negative_context,
-									equalities=branch_condition.equalities,
-									disequalities=branch_condition.disequalities,
-								),
-								namespace="delete-effect",
-							),
-						)
+						direct_effect_state[
+							_mapped_effect_atom(
+								effect,
+								action_binding=action_binding,
+								scope=local_scope,
+							)
+						] = False
+					for effect in action.add_effects:
+						direct_effect_state[
+							_mapped_effect_atom(
+								effect,
+								action_binding=action_binding,
+								scope=local_scope,
+							)
+						] = True
 				elif step.kind == "subgoal":
 					subgoal_types = tuple(predicate_types.get(step.symbol, ()))
 					step_arguments = tuple(
@@ -437,19 +457,54 @@ def _module_delete_summary(
 						)
 						for position, argument in enumerate(step.arguments)
 					)
+					subgoal_atom = EffectAtom(step.symbol, step_arguments)
 					pending.append(
 						_canonicalize_effect_atom(
-							EffectAtom(step.symbol, step_arguments),
+							subgoal_atom,
 							namespace="module-call",
 						),
 					)
+					direct_effect_state[subgoal_atom] = True
 				else:
 					complete = False
+			for deleted, value in direct_effect_state.items():
+				if value:
+					continue
+				conditional_deletes.append(
+					_canonicalize_conditional_delete(
+						ConditionalDeleteEffect(
+							delete_atom=deleted,
+							positive_context=branch_condition.positive_context,
+							negative_context=branch_condition.negative_context,
+							equalities=branch_condition.equalities,
+							disequalities=branch_condition.disequalities,
+						),
+						namespace="delete-effect",
+					),
+				)
 		if not matched_plan:
 			complete = False
 	return AtomicModuleEffectSummary(
 		conditional_delete_effects=tuple(dict.fromkeys(conditional_deletes)),
 		complete=complete,
+	)
+
+
+def _mapped_effect_atom(
+	effect: PDDLLiteralSchema,
+	*,
+	action_binding: Mapping[str, EffectTerm],
+	scope: str,
+) -> EffectAtom:
+	return EffectAtom(
+		predicate=effect.predicate,
+		arguments=tuple(
+			action_binding.get(
+				argument,
+				EffectTerm(argument, variable_scope=scope),
+			)
+			for argument in effect.arguments
+		),
 	)
 
 
@@ -931,6 +986,102 @@ def _required_types_are_consistent(
 		for left in non_object
 		for right in non_object
 	)
+
+
+def _assumption_bounded_support_depth_order(
+	goal_atoms: Sequence[EffectAtom],
+	*,
+	plan_library: PlanLibrary,
+	actions: Sequence[_ParsedAction],
+) -> tuple[tuple[int, ...], str] | None:
+	"""Serialize one certified binary support relation from supports to dependants."""
+
+	atoms = tuple(goal_atoms or ())
+	if not atoms or len({atom.predicate for atom in atoms}) != 1:
+		return None
+	relation = atoms[0].predicate
+	if any(len(atom.arguments) != 2 for atom in atoms):
+		return None
+	if not _library_has_relational_decrease_certificate(
+		plan_library,
+		relation=relation,
+		actions=actions,
+	):
+		return None
+	child_parent_pairs = tuple((atom.arguments[0], atom.arguments[1]) for atom in atoms)
+	if not _relation_pairs_form_functional_acyclic_graph(child_parent_pairs):
+		return None
+	precedence_edges = {
+		(support_index, dependant_index)
+		for dependant_index, (_, required_support) in enumerate(child_parent_pairs)
+		for support_index, (supported_object, _) in enumerate(child_parent_pairs)
+		if dependant_index != support_index and required_support == supported_object
+	}
+	ordered = _stable_topological_order(len(atoms), precedence_edges)
+	if ordered is None:
+		return None
+	return ordered, relation
+
+
+def _library_has_relational_decrease_certificate(
+	plan_library: PlanLibrary,
+	*,
+	relation: str,
+	actions: Sequence[_ParsedAction],
+) -> bool:
+	actions_by_name = {action.name: action for action in tuple(actions or ())}
+	if not any(
+		effect.predicate == relation
+		for action in actions
+		for effect in action.add_effects
+	):
+		return False
+	for plan in tuple(plan_library.plans or ()):
+		for certificate in tuple(plan.binding_certificate or ()):
+			progress = certificate.get("recursive_progress_certificate")
+			if not isinstance(progress, Mapping):
+				continue
+			if progress.get("certificate_kind") != (
+				"well_founded_relational_count_decrease"
+			):
+				continue
+			if str(progress.get("relation_predicate") or "") != relation:
+				continue
+			strict_actions = tuple(progress.get("strictly_decreasing_actions") or ())
+			if not strict_actions:
+				continue
+			if all(
+				action_name in actions_by_name
+				and any(
+					effect.predicate == relation
+					for effect in actions_by_name[action_name].delete_effects
+				)
+				for action_name in strict_actions
+			):
+				return True
+	return False
+
+
+def _relation_pairs_form_functional_acyclic_graph(
+	pairs: Sequence[tuple[EffectTerm, EffectTerm]],
+) -> bool:
+	parent_by_child: dict[EffectTerm, EffectTerm] = {}
+	for child, parent in tuple(pairs or ()):
+		if child == parent:
+			return False
+		previous = parent_by_child.get(child)
+		if previous is not None and previous != parent:
+			return False
+		parent_by_child[child] = parent
+	for start in parent_by_child:
+		seen: set[EffectTerm] = set()
+		current = start
+		while current in parent_by_child:
+			if current in seen:
+				return False
+			seen.add(current)
+			current = parent_by_child[current]
+	return True
 
 
 def _stable_topological_order(

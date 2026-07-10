@@ -238,6 +238,10 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		"module_summaries_complete": True,
 		"conditional_effects_checked": True,
 		"functional_invariant_count": 0,
+		"observation_boundary": "atomic_module_completion",
+		"serialization_strategy": "universal_acyclic_threat_order",
+		"ranking_relation": None,
+		"ranking_assumptions": [],
 	}
 
 

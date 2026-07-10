@@ -4,12 +4,19 @@ from pathlib import Path
 
 import domain_level_planning.certified_effects as certified_effects
 import pytest
+
+from domain_level_planning.atomic_module_synthesis import (
+	synthesize_atomic_minimal_literal_module_library,
+)
 from domain_level_planning.certified_effects import threat_safe_positive_literal_order
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
 from utils.pddl_parser import PDDLParser
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_threat_certificate_rejects_sibling_type_false_unification(
@@ -239,6 +246,88 @@ def test_threat_certificate_rejects_functionally_inconsistent_goal_block(
 				"destination": "location",
 			},
 		)
+
+
+def test_threat_certificate_uses_module_completion_net_effects(tmp_path: Path) -> None:
+	domain_file = tmp_path / "restoring-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain restoring-fragment)
+		 (:requirements :strips)
+		 (:predicates (protected ?x) (held ?x) (done ?x))
+		 (:action consume
+		  :parameters (?x)
+		  :precondition (protected ?x)
+		  :effect (and (held ?x) (not (protected ?x)))
+		 )
+		 (:action restore
+		  :parameters (?x)
+		  :precondition (held ?x)
+		  :effect (and (done ?x) (protected ?x) (not (held ?x)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="restoring-fragment",
+		plans=(
+			AgentSpeakPlan(
+				"protected_already_true",
+				AgentSpeakTrigger("achievement_goal", "protected", ("X",)),
+				("protected(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"done_via_consume_restore",
+				AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				("protected(X)",),
+				(
+					AgentSpeakBodyStep("action", "consume", ("X",)),
+					AgentSpeakBodyStep("action", "restore", ("X",)),
+				),
+			),
+		),
+	)
+
+	order, certificate = threat_safe_positive_literal_order(
+		(("protected", ("item",)), ("done", ("item",))),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert order == (0, 1)
+	assert certificate.threat_edges == ()
+	assert certificate.observation_boundary == "atomic_module_completion"
+
+
+def test_threat_certificate_serializes_certified_acyclic_support_relation() -> None:
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("on",),
+		source_backend="test",
+		source_name="support-forest-certificate",
+	)
+
+	order, certificate = threat_safe_positive_literal_order(
+		(
+			("on", ("top", "middle")),
+			("on", ("middle", "bottom")),
+		),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert order == (1, 0)
+	assert certificate.serialization_strategy == (
+		"assumption_bounded_support_depth_ranking"
+	)
+	assert certificate.ranking_relation == "on"
+	assert certificate.ranking_assumptions == (
+		"the certified binary relation is acyclic in every reachable execution state",
+		"atomic modules are observed only at successful module completion",
+	)
 
 
 def _write_typed_transport_fragment(path: Path) -> Path:
