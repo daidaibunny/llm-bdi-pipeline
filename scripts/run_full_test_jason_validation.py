@@ -45,6 +45,9 @@ from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from plan_library.models import AgentSpeakPlan  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
+from domain_level_planning.certified_effects import (  # noqa: E402
+	threat_safe_positive_literal_order,
+)
 from utils.pddl_parser import PDDLFact  # noqa: E402
 from utils.pddl_parser import PDDLNumericAssignment  # noqa: E402
 from utils.pddl_parser import PDDLNumericCondition  # noqa: E402
@@ -521,6 +524,7 @@ def append_guard_transition_full_test_wrappers(
 	compact_completion_wrappers: bool = False,
 	wrapper_text_by_problem: Mapping[Path, str] | None = None,
 	appended_plan_count: int | None = None,
+	atomic_plan_library: PlanLibrary | None = None,
 ) -> dict[str, Any]:
 	"""Append one query-local guard-transition replay wrapper per test problem.
 
@@ -535,6 +539,7 @@ def append_guard_transition_full_test_wrappers(
 			domain=domain,
 			problem_files=problem_files,
 			domain_file=domain_file,
+			atomic_plan_library=atomic_plan_library,
 			compact_completion_wrappers=compact_completion_wrappers,
 		)
 	else:
@@ -587,14 +592,12 @@ def build_full_test_wrapper_texts(
 
 	wrapper_map: dict[Path, str] = {}
 	total_plan_count = 0
-	action_schemas = _runtime_action_schemas_for_domain(domain_file)
 	for index, problem_file in enumerate(problem_files, start=1):
 		wrapper_lines, wrapper_plan_count = full_test_wrapper_lines(
 			domain=domain,
 			index=index,
 			problem_file=problem_file,
 			domain_file=domain_file,
-			action_schemas=action_schemas,
 			atomic_plan_library=atomic_plan_library,
 			compact_completion_wrappers=compact_completion_wrappers,
 		)
@@ -611,7 +614,6 @@ def full_test_wrapper_lines(
 	compact_completion_wrappers: bool = False,
 	problem: Any | None = None,
 	domain_file: Path | None = None,
-	action_schemas: Sequence[RuntimeActionSchema] | None = None,
 	atomic_plan_library: PlanLibrary | None = None,
 ) -> tuple[tuple[str, ...], int]:
 	"""Return the query-local guard-transition replay wrapper for a test problem."""
@@ -627,13 +629,18 @@ def full_test_wrapper_lines(
 	numeric_goal_conditions = tuple(problem.numeric_goal_conditions or ())
 	if not goal_facts and not numeric_goal_conditions:
 		raise ValueError(f"{problem_file} contains no supported PDDL goal steps.")
+	for condition in numeric_goal_conditions:
+		if condition.comparator != "=":
+			raise ValueError(
+				"unsupported numeric goal comparator: only equality can compile to an "
+				"atomic numeric resource achievement.",
+			)
 	return guard_transition_replay_wrapper_lines(
 		domain=domain,
 		index=index,
 		problem_file=problem_file,
 		problem=problem,
 		domain_file=domain_file,
-		action_schemas=action_schemas,
 		atomic_plan_library=atomic_plan_library,
 	)
 
@@ -785,7 +792,6 @@ def guard_transition_replay_wrapper_lines(
 	problem_file: Path,
 	problem: Any | None = None,
 	domain_file: Path | None = None,
-	action_schemas: Sequence[RuntimeActionSchema] | None = None,
 	atomic_plan_library: PlanLibrary | None = None,
 ) -> tuple[tuple[str, ...], int]:
 	"""Return one conjunctive guard-transition replay wrapper."""
@@ -802,29 +808,24 @@ def guard_transition_replay_wrapper_lines(
 		raise ValueError(f"{problem_file} contains no supported PDDL goal steps.")
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
 	entry_proposition = query_entry_proposition(goal_name)
-	schemas = tuple(action_schemas or _runtime_action_schemas_for_domain(domain_file))
-	monotonic_certified = (
-		len(goal_facts) > 1
-		and schemas
-		and not numeric_goal_conditions
-		and (
-			_goal_predicates_are_globally_persistent(goal_facts, schemas)
-			or _atomic_modules_preserve_other_goals(
-				goal_facts=goal_facts,
-				action_schemas=schemas,
-				plan_library=atomic_plan_library,
+	ordered_goal_facts = goal_facts
+	if len(goal_facts) + len(numeric_goal_conditions) > 1:
+		if numeric_goal_conditions:
+			raise ValueError(
+				"uncertified_numeric_conjunctive_transition: full-test wrappers require "
+				"numeric effect-preservation certificates for mixed or multiple goals.",
 			)
-		)
-	)
-	if monotonic_certified:
-		ordered_goal_facts = goal_facts
-	else:
-		ordering_edges = _goal_threat_edges(
-			goal_facts,
-			schemas,
+		if domain_file is None or atomic_plan_library is None:
+			raise ValueError(
+				"uncertified_conjunctive_transition: domain PDDL and the selected atomic "
+				"plan library are required for threat-safe serialization.",
+			)
+		ordered_indexes, _ = threat_safe_positive_literal_order(
+			tuple((fact.predicate, tuple(fact.args)) for fact in goal_facts),
 			plan_library=atomic_plan_library,
+			domain=PDDLParser.parse_domain(domain_file),
 		)
-		ordered_goal_facts = _stable_topological_goal_order(goal_facts, ordering_edges)
+		ordered_goal_facts = tuple(goal_facts[index] for index in ordered_indexes)
 	atoms = _deduplicate_strings(
 		(
 			*(render_fact_atom(fact) for fact in ordered_goal_facts),
@@ -840,14 +841,6 @@ def guard_transition_replay_wrapper_lines(
 		),
 	)
 	transition_name = f"{goal_name}_trans_1"
-	if monotonic_certified:
-		return _monotonic_guard_transition_wrapper_lines(
-			goal_name=goal_name,
-			entry_proposition=entry_proposition,
-			transition_name=transition_name,
-			problem_file=problem_file,
-			atoms=atoms,
-		)
 	done_context = " & ".join((entry_proposition, *atoms))
 	lines: list[str] = [
 		f"/* full_test_problem={problem_file.name} */",

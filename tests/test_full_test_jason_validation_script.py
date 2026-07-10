@@ -3,6 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+from domain_level_planning.atomic_module_synthesis import (
+	synthesize_atomic_minimal_literal_module_library,
+)
 from scripts.run_full_test_jason_validation import append_guard_transition_full_test_wrappers
 from scripts.run_full_test_jason_validation import apply_validation_summaries
 from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
@@ -24,6 +29,18 @@ from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
 from utils.pddl_parser import PDDLFact
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _certified_library(domain_file: Path, *seed_predicates: str) -> PlanLibrary:
+	return synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=seed_predicates,
+		source_backend="test",
+		source_name="test",
+	)
 
 
 def test_resolve_batch_root_selects_latest_timestamp(tmp_path: Path) -> None:
@@ -109,10 +126,13 @@ def test_full_test_wrapper_uses_guard_transition_replay(tmp_path: Path) -> None:
 		encoding="utf-8",
 	)
 
+	domain_file = PROJECT_ROOT / "src" / "domains" / "ferry" / "domain.pddl"
 	record = append_guard_transition_full_test_wrappers(
 		domain="ferry",
 		plan_library_asl=asl_file,
 		problem_files=(problem_file,),
+		domain_file=domain_file,
+		atomic_plan_library=_certified_library(domain_file, "at"),
 		max_output_bytes=1024 * 1024,
 	)
 	text = asl_file.read_text(encoding="utf-8")
@@ -148,11 +168,14 @@ def test_full_test_wrapper_ignores_compact_flag_and_uses_guard_transition(
 		encoding="utf-8",
 	)
 
+	domain_file = PROJECT_ROOT / "src" / "domains" / "gripper" / "domain.pddl"
 	lines, plan_count = full_test_wrapper_lines(
 		domain="gripper",
 		index=1,
 		problem_file=problem_file,
 		compact_completion_wrappers=True,
+		domain_file=domain_file,
+		atomic_plan_library=_certified_library(domain_file, "at"),
 	)
 	text = "\n".join(lines)
 
@@ -180,10 +203,13 @@ def test_full_test_wrapper_uses_guard_transition_by_default(tmp_path: Path) -> N
 		encoding="utf-8",
 	)
 
+	domain_file = PROJECT_ROOT / "src" / "domains" / "gripper" / "domain.pddl"
 	lines, plan_count = full_test_wrapper_lines(
 		domain="gripper",
 		index=1,
 		problem_file=problem_file,
+		domain_file=domain_file,
+		atomic_plan_library=_certified_library(domain_file, "at"),
 	)
 	text = "\n".join(lines)
 
@@ -241,10 +267,13 @@ def test_full_test_wrapper_keeps_mixed_destination_goals_in_one_transition(tmp_p
 		encoding="utf-8",
 	)
 
+	domain_file = PROJECT_ROOT / "src" / "domains" / "ferry" / "domain.pddl"
 	lines, plan_count = full_test_wrapper_lines(
 		domain="ferry",
 		index=1,
 		problem_file=problem_file,
+		domain_file=domain_file,
+		atomic_plan_library=_certified_library(domain_file, "at"),
 	)
 	text = "\n".join(lines)
 
@@ -352,6 +381,7 @@ def test_full_test_wrapper_does_not_infer_semantics_from_argument_positions(
 		index=1,
 		problem_file=problem_file,
 		domain_file=domain_file,
+		atomic_plan_library=_certified_library(domain_file, "linked"),
 	)
 	text = "\n".join(lines)
 
@@ -417,6 +447,7 @@ def test_full_test_wrapper_finds_threats_beyond_two_producer_layers(
 		index=1,
 		problem_file=problem_file,
 		domain_file=domain_file,
+		atomic_plan_library=_certified_library(domain_file, "goal", "protected"),
 	)
 	text = "\n".join(lines)
 
@@ -514,7 +545,7 @@ def _blocks_fragment_atomic_library() -> PlanLibrary:
 	)
 
 
-def test_full_test_wrapper_uses_step_helpers_for_certified_monotonic_goals(
+def test_full_test_wrapper_uses_only_guard_transition_replay_for_monotonic_goals(
 	tmp_path: Path,
 ) -> None:
 	domain_file = tmp_path / "domain.pddl"
@@ -550,21 +581,16 @@ def test_full_test_wrapper_uses_step_helpers_for_certified_monotonic_goals(
 		index=1,
 		problem_file=problem_file,
 		domain_file=domain_file,
+		atomic_plan_library=_certified_library(domain_file, "at"),
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 6
-	assert "\t!g_delivery_fragment_test_1_trans_1_step_1." in text
+	assert plan_count == 4
+	assert "_step_" not in text
 	assert (
-		"+!g_delivery_fragment_test_1_trans_1_step_1 : "
-		"delivery_fragment_test_1 & at(item1, loc1) <-"
+		"+!g_delivery_fragment_test_1_trans_1 : delivery_fragment_test_1 "
+		"& at(item1, loc1) & at(item2, loc2) <-"
 	) in text
-	assert "\t!g_delivery_fragment_test_1_trans_1_step_2." in text
-	assert (
-		"+!g_delivery_fragment_test_1_trans_1_step_2 : "
-		"delivery_fragment_test_1 & not at(item2, loc2) <-"
-	) in text
-	assert "& at(item1, loc1) & at(item2, loc2) <-" not in text
 
 
 def test_full_test_wrapper_uses_module_local_delete_certificate(
@@ -618,8 +644,8 @@ def test_full_test_wrapper_uses_module_local_delete_certificate(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 6
-	assert "\t!g_relocation_fragment_test_1_trans_1_step_1." in text
+	assert plan_count == 4
+	assert "_step_" not in text
 
 	conflicting_problem_file = tmp_path / "p02.pddl"
 	conflicting_problem_file.write_text(
@@ -633,18 +659,14 @@ def test_full_test_wrapper_uses_module_local_delete_certificate(
 		""",
 		encoding="utf-8",
 	)
-	conflicting_lines, conflicting_plan_count = full_test_wrapper_lines(
-		domain="relocation-fragment",
-		index=2,
-		problem_file=conflicting_problem_file,
-		domain_file=domain_file,
-		atomic_plan_library=atomic_library,
-	)
-	conflicting_text = "\n".join(conflicting_lines)
-
-	assert conflicting_plan_count == 4
-	assert "_step_1" not in conflicting_text
-	assert "& at(item1, loc1) & at(item1, loc2) <-" in conflicting_text
+	with pytest.raises(ValueError, match="cyclic_conjunctive_transition_not_certified"):
+		full_test_wrapper_lines(
+			domain="relocation-fragment",
+			index=2,
+			problem_file=conflicting_problem_file,
+			domain_file=domain_file,
+			atomic_plan_library=atomic_library,
+		)
 
 
 def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None:
@@ -676,7 +698,7 @@ def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None
 	assert "\t!pogo_sticks_to_make(0);" in text
 
 
-def test_full_test_wrapper_accepts_mixed_predicate_and_numeric_equality_goal(
+def test_full_test_wrapper_rejects_uncertified_mixed_numeric_conjunction(
 	tmp_path: Path,
 ) -> None:
 	problem_file = tmp_path / "p01.pddl"
@@ -692,17 +714,12 @@ def test_full_test_wrapper_accepts_mixed_predicate_and_numeric_equality_goal(
 		encoding="utf-8",
 	)
 
-	lines, plan_count = full_test_wrapper_lines(
-		domain="numeric-transport",
-		index=1,
-		problem_file=problem_file,
-	)
-	text = "\n".join(lines)
-
-	assert plan_count == 4
-	assert "+!g_numeric_transport_test_1 : numeric_transport_test_1 <-" in text
-	assert "\t!in(package1, truck1);" in text
-	assert "\t!capacity(truck1, 1);" in text
+	with pytest.raises(ValueError, match="uncertified_numeric_conjunctive_transition"):
+		full_test_wrapper_lines(
+			domain="numeric-transport",
+			index=1,
+			problem_file=problem_file,
+		)
 
 
 def test_full_test_wrapper_rejects_unsupported_numeric_goal_comparator(

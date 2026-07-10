@@ -26,6 +26,7 @@ from .dfa_controller import inspect_progress_requests_from_dfa_state
 from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 from .pddl_support import assert_compilable_pddl_files
+from .certified_effects import threat_safe_positive_literal_order
 
 
 _DFA_GUARD_TRANSITION_WRAPPER_MODE = "dfa_guard_transition_replay"
@@ -220,6 +221,7 @@ def append_temporal_goal_to_library(
 		goal_name=goal_name,
 		transition_path=transition_path,
 		domain=domain,
+		plan_library=plan_library,
 	)
 	entry_proposition = _query_entry_proposition(goal_name)
 	append_record["wrapper_mode"] = _DFA_GUARD_TRANSITION_WRAPPER_MODE
@@ -506,6 +508,7 @@ def _guard_transition_wrapper_plans(
 		tuple[tuple[DFALiteral, ...], Mapping[str, str]]
 	],
 	domain: PDDLDomain,
+	plan_library: PlanLibrary,
 ) -> tuple[AgentSpeakPlan, ...]:
 	"""Compile every DFA progress edge into one query-local transition helper."""
 
@@ -544,6 +547,13 @@ def _guard_transition_wrapper_plans(
 		negative_literals = tuple(
 			literal for literal in literals if literal.polarity == "negative"
 		)
+		positive_literals, serialization_certificate = (
+			_certified_positive_literal_serialization(
+				positive_literals,
+				plan_library=plan_library,
+				domain=domain,
+			)
+		)
 		type_contexts = _guard_variable_type_contexts(literals, domain=domain)
 		guard_context = (
 			entry_proposition,
@@ -559,6 +569,7 @@ def _guard_transition_wrapper_plans(
 			"source_state": str(transition.get("source_state") or ""),
 			"target_state": str(transition.get("target_state") or ""),
 			"raw_label": str(transition.get("raw_label") or ""),
+			"serialization_certificate": serialization_certificate,
 		}
 		plans.append(
 			AgentSpeakPlan(
@@ -600,6 +611,43 @@ def _guard_transition_wrapper_plans(
 				),
 			)
 	return tuple(plans)
+
+
+def _certified_positive_literal_serialization(
+	literals: Sequence[DFALiteral],
+	*,
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+) -> tuple[tuple[DFALiteral, ...], Mapping[str, object]]:
+	literal_tuple = tuple(literals or ())
+	if len(literal_tuple) <= 1:
+		indexes = tuple(range(len(literal_tuple)))
+		return literal_tuple, {
+			"certificate_kind": "singleton_transition_identity_serialization",
+			"ordered_literal_indexes": list(indexes),
+			"threat_edges": [],
+			"module_summaries_complete": True,
+		}
+	declared_numeric_functions = {function.name for function in domain.functions}
+	numeric_literals = tuple(
+		literal
+		for literal in literal_tuple
+		if literal.predicate in declared_numeric_functions
+	)
+	if numeric_literals:
+		raise ValueError(
+			"uncertified_numeric_conjunctive_transition: numeric resource atoms in a "
+			"multi-literal DFA guard require numeric effect-preservation certificates.",
+		)
+	ordered_indexes, certificate = threat_safe_positive_literal_order(
+		tuple((literal.predicate, literal.arguments) for literal in literal_tuple),
+		plan_library=plan_library,
+		domain=domain,
+	)
+	return (
+		tuple(literal_tuple[index] for index in ordered_indexes),
+		certificate.to_dict(),
+	)
 
 
 def _guard_variable_type_contexts(

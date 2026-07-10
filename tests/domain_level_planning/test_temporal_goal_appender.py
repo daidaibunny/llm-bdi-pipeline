@@ -157,7 +157,23 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 	tmp_path: Path,
 ) -> None:
 	domain_file = _write_domain(tmp_path)
-	library = PlanLibrary(domain_name="tiny", plans=())
+	library = PlanLibrary(
+		domain_name="tiny",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="done_via_finish",
+				trigger=AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+				context=("ready(X)",),
+				body=(AgentSpeakBodyStep("action", "finish", ("X",)),),
+			),
+			AgentSpeakPlan(
+				plan_name="ready_via_reset",
+				trigger=AgentSpeakTrigger("achievement_goal", "ready", ("X",)),
+				context=("done(X)",),
+				body=(AgentSpeakBodyStep("action", "reset", ("X",)),),
+			),
+		),
+	)
 	dfa_payload = {
 		"initial_state": "q0",
 		"accepting_states": ["q2"],
@@ -183,24 +199,24 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		domain_file=domain_file,
 	)
 
-	assert updated.plans[0].body == (
+	assert updated.plans[2].body == (
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_2", ()),
 	)
-	assert updated.plans[1].context == (
+	assert updated.plans[3].context == (
 		"query_1",
 		"obj_tp(X, item)",
 		"obj_tp(Y, item)",
 		"done(X)",
 		"ready(Y)",
 	)
-	assert updated.plans[4].context == (
+	assert updated.plans[6].context == (
 		"query_1",
 		"obj_tp(Y, item)",
 		"done(Y)",
 		"not ready(Y)",
 	)
-	assert updated.plans[5].context == (
+	assert updated.plans[7].context == (
 		"query_1",
 		"obj_tp(Y, item)",
 		"not ready(Y)",
@@ -212,6 +228,70 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 			"progress_request_diagnostics"
 		]
 	)
+	certificate = updated.plans[3].binding_certificate[0]["serialization_certificate"]
+	assert certificate == {
+		"certificate_kind": "atomic_module_delete_effect_serialization",
+		"ordered_literal_indexes": [0, 1],
+		"threat_edges": [[0, 1]],
+		"module_summaries_complete": True,
+	}
+
+
+def test_append_temporal_goal_rejects_cyclic_conjunctive_threats(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "cyclic-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain cyclic)
+ (:requirements :strips)
+ (:predicates (left) (right) (seed))
+ (:action make-left
+  :parameters ()
+  :precondition (seed)
+  :effect (and (left) (not (right))))
+ (:action make-right
+  :parameters ()
+  :precondition (seed)
+  :effect (and (right) (not (left))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="cyclic",
+		plans=(
+			AgentSpeakPlan(
+				"left_via_make_left",
+				AgentSpeakTrigger("achievement_goal", "left", ()),
+				("seed",),
+				(AgentSpeakBodyStep("action", "make-left", ()),),
+			),
+			AgentSpeakPlan(
+				"right_via_make_right",
+				AgentSpeakTrigger("achievement_goal", "right", ()),
+				("seed",),
+				(AgentSpeakBodyStep("action", "make-right", ()),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "left & right"},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	with pytest.raises(ValueError, match="cyclic_conjunctive_transition_not_certified"):
+		append_temporal_goal_to_library(
+			plan_library=library,
+			goal_name="g_query_1",
+			dfa_payload=dfa_payload,
+			domain_file=domain_file,
+		)
 
 
 def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -> None:
@@ -499,11 +579,16 @@ def _write_domain(tmp_path: Path) -> Path:
 		 (:requirements :strips :typing)
 		 (:types item)
 		 (:predicates (ready ?x - item) (done ?x - item))
-		 (:action finish
+			 (:action finish
 		  :parameters (?x - item)
 		  :precondition (ready ?x)
-		  :effect (and (not (ready ?x)) (done ?x))
-		 )
+			  :effect (and (not (ready ?x)) (done ?x))
+			 )
+			 (:action reset
+			  :parameters (?x - item)
+			  :precondition (done ?x)
+			  :effect (ready ?x)
+			 )
 		)
 		""",
 		encoding="utf-8",
