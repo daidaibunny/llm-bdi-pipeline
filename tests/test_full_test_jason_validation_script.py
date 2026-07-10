@@ -19,6 +19,10 @@ from scripts.run_full_test_jason_validation import safe_path_fragment
 from scripts.run_full_test_jason_validation import validate_one_task
 from scripts.run_full_test_jason_validation import _jason_runtime_status_label
 from scripts.run_full_test_jason_validation import _plan_verifier_status_label
+from plan_library.models import AgentSpeakBodyStep
+from plan_library.models import AgentSpeakPlan
+from plan_library.models import AgentSpeakTrigger
+from plan_library.models import PlanLibrary
 from utils.pddl_parser import PDDLFact
 
 
@@ -417,6 +421,86 @@ def test_full_test_wrapper_uses_step_helpers_for_certified_monotonic_goals(
 	assert "& at(item1, loc1) & at(item2, loc2) <-" not in text
 
 
+def test_full_test_wrapper_uses_module_local_delete_certificate(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain relocation-fragment)
+		 (:requirements :strips)
+		 (:predicates (at ?x ?y))
+		 (:action relocate
+		  :parameters (?x ?from ?to)
+		  :precondition (at ?x ?from)
+		  :effect (and (at ?x ?to) (not (at ?x ?from)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain relocation-fragment)
+		 (:objects item1 item2 loc1 loc2)
+		 (:init (at item1 loc1) (at item2 loc1))
+		 (:goal (and (at item1 loc2) (at item2 loc2)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	atomic_library = PlanLibrary(
+		domain_name="relocation-fragment",
+		plans=(
+			AgentSpeakPlan(
+				plan_name="at_via_relocate",
+				trigger=AgentSpeakTrigger("achievement_goal", "at", ("X", "Y")),
+				context=("at(X, A)",),
+				body=(AgentSpeakBodyStep("action", "relocate", ("X", "A", "Y")),),
+			),
+		),
+	)
+
+	lines, plan_count = full_test_wrapper_lines(
+		domain="relocation-fragment",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		atomic_plan_library=atomic_library,
+	)
+	text = "\n".join(lines)
+
+	assert plan_count == 6
+	assert "\t!g_relocation_fragment_test_1_trans_1_step_1." in text
+
+	conflicting_problem_file = tmp_path / "p02.pddl"
+	conflicting_problem_file.write_text(
+		"""
+		(define (problem p02)
+		 (:domain relocation-fragment)
+		 (:objects item1 loc1 loc2)
+		 (:init (at item1 loc1))
+		 (:goal (and (at item1 loc1) (at item1 loc2)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	conflicting_lines, conflicting_plan_count = full_test_wrapper_lines(
+		domain="relocation-fragment",
+		index=2,
+		problem_file=conflicting_problem_file,
+		domain_file=domain_file,
+		atomic_plan_library=atomic_library,
+	)
+	conflicting_text = "\n".join(conflicting_lines)
+
+	assert conflicting_plan_count == 4
+	assert "_step_1" not in conflicting_text
+	assert "& at(item1, loc1) & at(item1, loc2) <-" in conflicting_text
+
+
 def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None:
 	problem_file = tmp_path / "p01.pddl"
 	problem_file.write_text(
@@ -637,6 +721,10 @@ def test_prepare_domain_can_filter_test_problem_names(
 		plan_dir = tmp_path / "run" / "domain_libraries" / "ferry"
 		plan_dir.mkdir(parents=True, exist_ok=True)
 		(plan_dir / "plan_library.asl").write_text("/* base */\n", encoding="utf-8")
+		(plan_dir / "plan_library.json").write_text(
+			json.dumps(PlanLibrary(domain_name="ferry", plans=()).to_dict()),
+			encoding="utf-8",
+		)
 
 		class Result:
 			success = True

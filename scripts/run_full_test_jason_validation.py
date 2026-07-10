@@ -42,6 +42,8 @@ from evaluation.jason_runtime.runner import PredicatePattern  # noqa: E402
 from evaluation.jason_runtime.runner import RuntimeActionSchema  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
+from plan_library.models import AgentSpeakPlan  # noqa: E402
+from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
 from utils.pddl_parser import PDDLFact  # noqa: E402
 from utils.pddl_parser import PDDLNumericAssignment  # noqa: E402
@@ -92,6 +94,7 @@ class JasonTask:
 	compact_completion_wrappers: bool
 	output_dir: Path
 	runtime_wrapper_text: str | None = None
+	atomic_plan_library: PlanLibrary | None = None
 
 
 def main() -> int:
@@ -399,6 +402,10 @@ def prepare_domain_for_full_test(
 			return record, ()
 
 		plan_library_asl = domain_output / "plan_library.asl"
+		plan_library_json = domain_output / "plan_library.json"
+		atomic_plan_library = PlanLibrary.from_dict(
+			json.loads(plan_library_json.read_text(encoding="utf-8")),
+		)
 		base_plan_library_asl = domain_output / "atomic_plan_library.asl"
 		shutil.copyfile(plan_library_asl, base_plan_library_asl)
 		base_plan_library_asl_text = plan_library_asl.read_text(encoding="utf-8").rstrip()
@@ -409,6 +416,7 @@ def prepare_domain_for_full_test(
 				domain=domain,
 				problem_files=test_instances,
 				domain_file=domain_file,
+				atomic_plan_library=atomic_plan_library,
 				compact_completion_wrappers=compact_completion_wrappers,
 			)
 			append_record = append_guard_transition_full_test_wrappers(
@@ -454,6 +462,7 @@ def prepare_domain_for_full_test(
 					/ f"test_{index:04d}_{safe_path_fragment(problem_file.stem)}"
 				),
 				runtime_wrapper_text=wrapper_text_by_problem.get(problem_file),
+				atomic_plan_library=atomic_plan_library,
 			)
 			for index, problem_file in enumerate(test_instances, start=1)
 		)
@@ -571,6 +580,7 @@ def build_full_test_wrapper_texts(
 	domain: str,
 	problem_files: Sequence[Path],
 	domain_file: Path | None = None,
+	atomic_plan_library: PlanLibrary | None = None,
 	compact_completion_wrappers: bool = False,
 ) -> tuple[dict[Path, str], int]:
 	"""Render each full-test query wrapper once, keyed by problem file."""
@@ -585,6 +595,7 @@ def build_full_test_wrapper_texts(
 			problem_file=problem_file,
 			domain_file=domain_file,
 			action_schemas=action_schemas,
+			atomic_plan_library=atomic_plan_library,
 			compact_completion_wrappers=compact_completion_wrappers,
 		)
 		wrapper_map[problem_file] = "\n".join(wrapper_lines).rstrip()
@@ -601,6 +612,7 @@ def full_test_wrapper_lines(
 	problem: Any | None = None,
 	domain_file: Path | None = None,
 	action_schemas: Sequence[RuntimeActionSchema] | None = None,
+	atomic_plan_library: PlanLibrary | None = None,
 ) -> tuple[tuple[str, ...], int]:
 	"""Return the query-local guard-transition replay wrapper for a test problem."""
 
@@ -622,6 +634,7 @@ def full_test_wrapper_lines(
 		problem=problem,
 		domain_file=domain_file,
 		action_schemas=action_schemas,
+		atomic_plan_library=atomic_plan_library,
 	)
 
 
@@ -773,6 +786,7 @@ def guard_transition_replay_wrapper_lines(
 	problem: Any | None = None,
 	domain_file: Path | None = None,
 	action_schemas: Sequence[RuntimeActionSchema] | None = None,
+	atomic_plan_library: PlanLibrary | None = None,
 ) -> tuple[tuple[str, ...], int]:
 	"""Return one conjunctive guard-transition replay wrapper."""
 
@@ -789,8 +803,24 @@ def guard_transition_replay_wrapper_lines(
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
 	entry_proposition = query_entry_proposition(goal_name)
 	schemas = tuple(action_schemas or _runtime_action_schemas_for_domain(domain_file))
-	ordering_edges = _goal_threat_edges(goal_facts, schemas, closure_depth=2)
-	ordered_goal_facts = _stable_topological_goal_order(goal_facts, ordering_edges)
+	monotonic_certified = (
+		len(goal_facts) > 1
+		and schemas
+		and not numeric_goal_conditions
+		and (
+			_goal_predicates_are_globally_persistent(goal_facts, schemas)
+			or _atomic_modules_preserve_other_goals(
+				goal_facts=goal_facts,
+				action_schemas=schemas,
+				plan_library=atomic_plan_library,
+			)
+		)
+	)
+	if monotonic_certified:
+		ordered_goal_facts = goal_facts
+	else:
+		ordering_edges = _goal_threat_edges(goal_facts, schemas, closure_depth=2)
+		ordered_goal_facts = _stable_topological_goal_order(goal_facts, ordering_edges)
 	atoms = _deduplicate_strings(
 		(
 			*(render_fact_atom(fact) for fact in ordered_goal_facts),
@@ -806,12 +836,7 @@ def guard_transition_replay_wrapper_lines(
 		),
 	)
 	transition_name = f"{goal_name}_trans_1"
-	if (
-		len(atoms) > 1
-		and schemas
-		and not numeric_goal_conditions
-		and _goal_predicates_are_globally_persistent(goal_facts, schemas)
-	):
+	if monotonic_certified:
 		return _monotonic_guard_transition_wrapper_lines(
 			goal_name=goal_name,
 			entry_proposition=entry_proposition,
@@ -860,6 +885,274 @@ def _goal_predicates_are_globally_persistent(
 		for pattern in _negative_patterns(action.effects)
 	}
 	return bool(goal_predicates) and goal_predicates.isdisjoint(deleted_predicates)
+
+
+@dataclass(frozen=True)
+class _ModuleDeleteSummary:
+	delete_patterns: tuple[_LiftedAtom, ...]
+	complete: bool
+
+
+def _atomic_modules_preserve_other_goals(
+	*,
+	goal_facts: Sequence[PDDLFact],
+	action_schemas: Sequence[RuntimeActionSchema],
+	plan_library: PlanLibrary | None,
+) -> bool:
+	"""Certify that each compiled atomic module preserves every sibling goal."""
+
+	if plan_library is None:
+		return False
+	facts = tuple(goal_facts or ())
+	plans_by_predicate: dict[str, list[AgentSpeakPlan]] = {}
+	for plan in plan_library.plans:
+		plans_by_predicate.setdefault(
+			sanitize_identifier(plan.trigger.symbol),
+			[],
+		).append(plan)
+	actions_by_name = {
+		sanitize_identifier(action.functor): action
+		for action in tuple(action_schemas or ())
+	}
+	goal_atoms = tuple(_lifted_atom_from_fact(fact) for fact in facts)
+	goal_indexes_by_predicate: dict[str, set[int]] = {}
+	goal_indexes_by_argument: dict[tuple[str, int, str], set[int]] = {}
+	for index, atom in enumerate(goal_atoms):
+		goal_indexes_by_predicate.setdefault(atom.predicate, set()).add(index)
+		for position, argument in enumerate(atom.arguments):
+			if argument.is_variable:
+				continue
+			goal_indexes_by_argument.setdefault(
+				(atom.predicate, position, argument.symbol),
+				set(),
+			).add(index)
+	max_depth = max(2, len(plans_by_predicate) + 1)
+	summary_cache: dict[tuple[str, int], tuple[_LiftedAtom, _ModuleDeleteSummary]] = {}
+	for achiever_index, achiever_atom in enumerate(goal_atoms):
+		cache_key = (achiever_atom.predicate, len(achiever_atom.arguments))
+		cached = summary_cache.get(cache_key)
+		if cached is None:
+			variable_scope = object()
+			generic_goal = _LiftedAtom(
+				predicate=achiever_atom.predicate,
+				arguments=tuple(
+					_LiftedTerm(f"head_{index}", variable_scope=variable_scope)
+					for index in range(len(achiever_atom.arguments))
+				),
+			)
+			generic_summary = _module_delete_summary(
+				goal=generic_goal,
+				plans_by_predicate=plans_by_predicate,
+				actions_by_name=actions_by_name,
+				depth=max_depth,
+				seen={},
+			)
+			cached = (generic_goal, generic_summary)
+			summary_cache[cache_key] = cached
+		generic_goal, generic_summary = cached
+		summary = _instantiate_module_delete_summary(
+			summary=generic_summary,
+			generic_goal=generic_goal,
+			ground_goal=achiever_atom,
+		)
+		if not summary.complete:
+			return False
+		for pattern in summary.delete_patterns:
+			candidate_indexes = _indexed_goal_candidates_for_delete_pattern(
+				pattern=pattern,
+				goal_indexes_by_predicate=goal_indexes_by_predicate,
+				goal_indexes_by_argument=goal_indexes_by_argument,
+			)
+			for protected_index in candidate_indexes:
+				if achiever_index == protected_index:
+					continue
+				if _lifted_atom_unifies(pattern, goal_atoms[protected_index]):
+					return False
+	return True
+
+
+def _instantiate_module_delete_summary(
+	*,
+	summary: _ModuleDeleteSummary,
+	generic_goal: _LiftedAtom,
+	ground_goal: _LiftedAtom,
+) -> _ModuleDeleteSummary:
+	binding = dict(zip(generic_goal.arguments, ground_goal.arguments))
+	return _ModuleDeleteSummary(
+		delete_patterns=tuple(
+			_LiftedAtom(
+				predicate=pattern.predicate,
+				arguments=tuple(
+					binding.get(argument, argument)
+					for argument in pattern.arguments
+				),
+			)
+			for pattern in summary.delete_patterns
+		),
+		complete=summary.complete,
+	)
+
+
+def _indexed_goal_candidates_for_delete_pattern(
+	*,
+	pattern: _LiftedAtom,
+	goal_indexes_by_predicate: Mapping[str, set[int]],
+	goal_indexes_by_argument: Mapping[tuple[str, int, str], set[int]],
+) -> set[int]:
+	candidates = goal_indexes_by_predicate.get(pattern.predicate, set())
+	constant_buckets = tuple(
+		goal_indexes_by_argument.get(
+			(pattern.predicate, position, argument.symbol),
+			set(),
+		)
+		for position, argument in enumerate(pattern.arguments)
+		if not argument.is_variable
+	)
+	if not constant_buckets:
+		return candidates
+	return min(constant_buckets, key=len)
+
+
+def _module_delete_summary(
+	*,
+	goal: _LiftedAtom,
+	plans_by_predicate: Mapping[str, Sequence[AgentSpeakPlan]],
+	actions_by_name: Mapping[str, RuntimeActionSchema],
+	depth: int,
+	seen: Mapping[tuple[str, tuple[str, ...]], _LiftedAtom],
+) -> _ModuleDeleteSummary:
+	if depth <= 0:
+		return _ModuleDeleteSummary((), False)
+	shape = (
+		goal.predicate,
+		tuple("*" if argument.is_variable else argument.symbol for argument in goal.arguments),
+	)
+	previous = seen.get(shape)
+	if previous is not None:
+		if previous == goal:
+			return _ModuleDeleteSummary((), True)
+		return _ModuleDeleteSummary(
+			(_generalized_recursive_delete_pattern(previous, goal),),
+			True,
+		)
+	plans = tuple(plans_by_predicate.get(goal.predicate, ()))
+	if not plans:
+		return _ModuleDeleteSummary((), False)
+	next_seen = dict(seen)
+	next_seen[shape] = goal
+	delete_patterns: list[_LiftedAtom] = []
+	complete = True
+	for plan in plans:
+		variable_scope = object()
+		binding = _bind_plan_trigger(
+			plan=plan,
+			goal=goal,
+			variable_scope=variable_scope,
+		)
+		if binding is None:
+			continue
+		for step in plan.body:
+			arguments = tuple(
+				_plan_argument_term(
+					argument,
+					binding=binding,
+					variable_scope=variable_scope,
+				)
+				for argument in step.arguments
+			)
+			if step.kind == "action":
+				action = actions_by_name.get(sanitize_identifier(step.symbol))
+				if action is None or len(action.parameters) != len(arguments):
+					complete = False
+					continue
+				action_binding = dict(zip(action.parameters, arguments))
+				for effect in _negative_patterns(action.effects):
+					delete_patterns.append(
+						_map_runtime_pattern(
+							effect,
+							binding=action_binding,
+							action_parameters=frozenset(action.parameters),
+						),
+					)
+				continue
+			if step.kind == "subgoal":
+				subgoal_summary = _module_delete_summary(
+					goal=_LiftedAtom(
+						predicate=sanitize_identifier(step.symbol),
+						arguments=arguments,
+					),
+					plans_by_predicate=plans_by_predicate,
+					actions_by_name=actions_by_name,
+					depth=depth - 1,
+					seen=next_seen,
+				)
+				delete_patterns.extend(subgoal_summary.delete_patterns)
+				complete = complete and subgoal_summary.complete
+				continue
+			complete = False
+	return _ModuleDeleteSummary(tuple(dict.fromkeys(delete_patterns)), complete)
+
+
+def _generalized_recursive_delete_pattern(
+	previous: _LiftedAtom,
+	current: _LiftedAtom,
+) -> _LiftedAtom:
+	variable_scope = object()
+	arguments: list[_LiftedTerm] = []
+	for index, (previous_argument, current_argument) in enumerate(
+		zip(previous.arguments, current.arguments),
+	):
+		if previous_argument == current_argument:
+			arguments.append(previous_argument)
+			continue
+		arguments.append(
+			_LiftedTerm(f"recursive_{index}", variable_scope=variable_scope),
+		)
+	return _LiftedAtom(predicate=current.predicate, arguments=tuple(arguments))
+
+
+def _bind_plan_trigger(
+	*,
+	plan: AgentSpeakPlan,
+	goal: _LiftedAtom,
+	variable_scope: object,
+) -> dict[str, _LiftedTerm] | None:
+	trigger_arguments = tuple(plan.trigger.arguments or ())
+	if len(trigger_arguments) != len(goal.arguments):
+		return None
+	binding: dict[str, _LiftedTerm] = {}
+	for trigger_argument, goal_argument in zip(trigger_arguments, goal.arguments):
+		if _is_plan_variable(trigger_argument):
+			previous = binding.get(trigger_argument)
+			if previous is not None and previous != goal_argument:
+				return None
+			binding[trigger_argument] = goal_argument
+			continue
+		if goal_argument.is_variable:
+			binding[trigger_argument] = goal_argument
+			continue
+		if sanitize_identifier(trigger_argument) != goal_argument.symbol:
+			return None
+	return binding
+
+
+def _plan_argument_term(
+	argument: str,
+	*,
+	binding: Mapping[str, _LiftedTerm],
+	variable_scope: object,
+) -> _LiftedTerm:
+	if _is_plan_variable(argument):
+		return binding.get(
+			argument,
+			_LiftedTerm(sanitize_identifier(argument), variable_scope=variable_scope),
+		)
+	return _LiftedTerm(sanitize_identifier(argument))
+
+
+def _is_plan_variable(argument: str) -> bool:
+	text = str(argument or "").strip()
+	return bool(text) and (text[0].isupper() or text[0] == "_")
 
 
 def _monotonic_guard_transition_wrapper_lines(
@@ -1214,6 +1507,7 @@ def render_runtime_asl_for_task(task: JasonTask, *, problem: Any | None = None) 
 			compact_completion_wrappers=task.compact_completion_wrappers,
 			problem=problem,
 			domain_file=task.domain_file,
+			atomic_plan_library=task.atomic_plan_library,
 		)
 		wrapper_text = "\n".join(wrapper_lines).rstrip()
 	else:
