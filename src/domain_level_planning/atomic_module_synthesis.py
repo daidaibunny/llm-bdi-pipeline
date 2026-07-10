@@ -87,7 +87,7 @@ class AtomicModuleSynthesisReport:
 	theoretical_basis: tuple[str, ...]
 
 	def to_dict(self) -> dict[str, object]:
-		return {
+		payload: dict[str, object] = {
 			"seed_predicates": list(self.seed_predicates),
 			"module_predicates": list(self.module_predicates),
 			"plan_count": self.plan_count,
@@ -122,6 +122,7 @@ class AtomicModuleSynthesisReport:
 			"branch_certification_rules": list(self.branch_certification_rules),
 			"theoretical_basis": list(self.theoretical_basis),
 		}
+		return payload
 
 
 @dataclass(frozen=True)
@@ -482,17 +483,22 @@ class _RecursiveProgressCertificate:
 	relation_arguments: tuple[str, ...]
 	strictly_decreasing_actions: tuple[str, ...]
 	non_increasing_actions: tuple[str, ...]
+	ranking_feature_kind: str = "global_dynamic_atom_count"
+	anchor_arguments: tuple[str, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
-		return {
+		payload: dict[str, object] = {
 			"certificate_kind": "well_founded_relational_count_decrease",
-			"ranking_feature_kind": "global_dynamic_atom_count",
+			"ranking_feature_kind": self.ranking_feature_kind,
 			"relation_predicate": self.relation_predicate,
 			"relation_arguments": list(self.relation_arguments),
 			"strictly_decreasing_actions": list(self.strictly_decreasing_actions),
 			"non_increasing_actions": list(self.non_increasing_actions),
 			"lower_bound": 0,
 		}
+		if self.anchor_arguments:
+			payload["anchor_arguments"] = list(self.anchor_arguments)
+		return payload
 
 
 def _producer_action_sequences(
@@ -2395,6 +2401,7 @@ def _recursive_progress_certificate(
 			continue
 		strictly_decreasing: list[str] = []
 		non_increasing: list[str] = []
+		relation_adds: list[PDDLLiteralSchema] = []
 		for call in sequence.body_actions:
 			variable_map = {
 				parameter: argument
@@ -2404,8 +2411,9 @@ def _recursive_progress_certificate(
 				add_effect.mapped(variable_map)
 				for add_effect in call.action.add_effects
 			)
-			if any(add.predicate == context_literal.predicate for add in mapped_adds):
-				break
+			relation_adds.extend(
+				add for add in mapped_adds if add.predicate == context_literal.predicate
+			)
 			mapped_deletes = tuple(
 				delete_effect.mapped(variable_map)
 				for delete_effect in call.action.delete_effects
@@ -2414,15 +2422,99 @@ def _recursive_progress_certificate(
 				strictly_decreasing.append(call.action.name)
 			else:
 				non_increasing.append(call.action.name)
-		else:
-			if strictly_decreasing:
-				return _RecursiveProgressCertificate(
-					relation_predicate=context_literal.predicate,
-					relation_arguments=context_literal.arguments,
-					strictly_decreasing_actions=tuple(strictly_decreasing),
-					non_increasing_actions=tuple(non_increasing),
-				)
+		if not strictly_decreasing:
+			continue
+		if not relation_adds:
+			return _RecursiveProgressCertificate(
+				relation_predicate=context_literal.predicate,
+				relation_arguments=context_literal.arguments,
+				strictly_decreasing_actions=tuple(strictly_decreasing),
+				non_increasing_actions=tuple(non_increasing),
+			)
+		anchor_arguments = _anchored_relation_cone_decrease(
+			context_literal=context_literal,
+			relation_adds=relation_adds,
+			head_variables=head_variables,
+			recursive_variables=recursive_variables,
+			guard_contexts=sequence.guard_contexts,
+		)
+		if anchor_arguments:
+			return _RecursiveProgressCertificate(
+				relation_predicate=context_literal.predicate,
+				relation_arguments=context_literal.arguments,
+				strictly_decreasing_actions=tuple(strictly_decreasing),
+				non_increasing_actions=tuple(non_increasing),
+				ranking_feature_kind="anchored_acyclic_relation_cone_count",
+				anchor_arguments=anchor_arguments,
+			)
 	return None
+
+
+def _anchored_relation_cone_decrease(
+	*,
+	context_literal: PDDLLiteralSchema,
+	relation_adds: Sequence[PDDLLiteralSchema],
+	head_variables: set[str],
+	recursive_variables: set[str],
+	guard_contexts: Sequence[str],
+) -> tuple[str, ...]:
+	"""Check relocation away from one query-anchored binary relation value."""
+
+	if len(context_literal.arguments) != 2:
+		return ()
+	anchor_positions = tuple(
+		index
+		for index, argument in enumerate(context_literal.arguments)
+		if argument in head_variables
+	)
+	recursive_positions = tuple(
+		index
+		for index, argument in enumerate(context_literal.arguments)
+		if argument in recursive_variables
+	)
+	if len(anchor_positions) != 1 or len(recursive_positions) != 1:
+		return ()
+	anchor_position = anchor_positions[0]
+	recursive_position = recursive_positions[0]
+	if anchor_position == recursive_position:
+		return ()
+	anchor = context_literal.arguments[anchor_position]
+	recursive_object = context_literal.arguments[recursive_position]
+	for add in relation_adds:
+		if len(add.arguments) != 2:
+			return ()
+		if add.arguments[recursive_position] != recursive_object:
+			return ()
+		new_anchor = add.arguments[anchor_position]
+		if not _contexts_prove_terms_distinct(
+			new_anchor,
+			anchor,
+			contexts=guard_contexts,
+		):
+			return ()
+	return (anchor,)
+
+
+def _contexts_prove_terms_distinct(
+	left: str,
+	right: str,
+	*,
+	contexts: Sequence[str],
+) -> bool:
+	if left == right:
+		return False
+	if not _is_agentspeak_variable(left) and not _is_agentspeak_variable(right):
+		return True
+	pairs = {(left, right), (right, left)}
+	for context in tuple(contexts or ()):
+		match = re.fullmatch(
+			r"\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?:\\==|!=)\s*"
+			r"([A-Za-z_][A-Za-z0-9_]*)\s*",
+			str(context or ""),
+		)
+		if match is not None and (match.group(1), match.group(2)) in pairs:
+			return True
+	return False
 
 
 def _recursive_progress_certificate_from_plan(
@@ -2440,10 +2532,16 @@ def _recursive_progress_certificate_from_plan(
 			strictly_decreasing_actions=tuple(
 				str(item) for item in payload["strictly_decreasing_actions"]
 			),
-			non_increasing_actions=tuple(
-				str(item) for item in payload["non_increasing_actions"]
-			),
-		)
+				non_increasing_actions=tuple(
+					str(item) for item in payload["non_increasing_actions"]
+				),
+				ranking_feature_kind=str(
+					payload.get("ranking_feature_kind") or "global_dynamic_atom_count"
+				),
+				anchor_arguments=tuple(
+					str(item) for item in tuple(payload.get("anchor_arguments") or ())
+				),
+			)
 	return None
 
 
@@ -3220,6 +3318,12 @@ def _module_synthesis_report(
 			"same-predicate recursive prepare branches require a non-negative "
 			"relational-count ranking feature that strictly decreases and is never increased",
 			(
+				"anchored relation-cone rankings may relocate an obstruction only when "
+				"schema guards prove the new relation value differs from the protected "
+				"anchor; Clingo rejects the capability if any selected reachable module "
+				"can increase that relation without the same certificate"
+			),
+			(
 				"resource-release cleanup branches require a schema certificate "
 				"that deletes a producer-created resource debt, restores a literal "
 				"deleted by the producer, preserves the protected target, and records "
@@ -3237,6 +3341,8 @@ def _module_synthesis_report(
 			"atomic subgoal calls instead of staying as long primitive macros",
 			"same-predicate recursive branches require a schema-level well-founded "
 			"relational-count progress certificate",
+			"a fixed domain-independent feature grammar includes global relation count "
+			"and query-anchored acyclic relation-cone count rankings",
 			"resource-release cleanup branches are accepted only when PDDL effects "
 			"prove resource debt discharge plus target preservation",
 			"Clingo/ASP selects a minimum branch set that covers all generated branch evidence",

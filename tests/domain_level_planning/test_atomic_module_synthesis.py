@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import domain_level_planning.atomic_module_synthesis as atomic_module_synthesis
 import pytest
 
 from domain_level_planning.atomic_module_synthesis import (
@@ -315,6 +316,12 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		(
 			"same-predicate recursive prepare branches require a non-negative "
 			"relational-count ranking feature that strictly decreases and is never increased"
+		),
+		(
+			"anchored relation-cone rankings may relocate an obstruction only when "
+			"schema guards prove the new relation value differs from the protected "
+			"anchor; Clingo rejects the capability if any selected reachable module "
+			"can increase that relation without the same certificate"
 		),
 		(
 			"resource-release cleanup branches require a schema certificate "
@@ -734,6 +741,66 @@ def test_depots_clear_keeps_every_schema_certified_resource_release() -> None:
 	assert truck != lift_step.arguments[0]
 	assert f"truck({truck})" in lift_load_plan.context
 	assert f"at({truck}, {location})" in lift_load_plan.context
+
+
+def test_depots_clear_uses_anchored_relation_cone_progress_certificate() -> None:
+	domain = atomic_module_synthesis.PDDLParser.parse_domain(
+		PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl",
+	)
+	actions = tuple(
+		atomic_module_synthesis._ParsedAction.from_pddl(action)
+		for action in domain.actions
+	)
+	module_predicates = atomic_module_synthesis._module_predicate_closure(
+		seeds=("on",),
+		actions=actions,
+		declared_predicates={predicate.name for predicate in domain.predicates},
+	)
+	candidates = atomic_module_synthesis._candidate_module_plans(
+		domain=domain,
+		actions=actions,
+		seed_predicates=("on",),
+		module_predicates=module_predicates,
+		source_backend="test",
+		source_name="anchored-cone-progress",
+		policy_file=None,
+	)
+	plan = next(
+		item
+		for item in candidates
+		if item.plan_name == "clear_prepare_clear_Z"
+		and item.binding_certificate[0]["recursive_progress_certificate"][
+			"ranking_feature_kind"
+		]
+		== "anchored_acyclic_relation_cone_count"
+	)
+	certificate = plan.binding_certificate[0]["recursive_progress_certificate"]
+
+	assert certificate["certificate_kind"] == (
+		"well_founded_relational_count_decrease"
+	)
+	assert certificate["ranking_feature_kind"] == (
+		"anchored_acyclic_relation_cone_count"
+	)
+	assert certificate["relation_predicate"] == "on"
+	assert certificate["relation_arguments"] == ["Z", "X"]
+	assert certificate["anchor_arguments"] == ["X"]
+	selected_library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl",
+		seed_predicates=("on",),
+		source_backend="test",
+		source_name="anchored-cone-progress",
+	)
+	assert not any(
+		item.plan_name == "clear_prepare_clear_Z"
+		for item in selected_library.plans
+	)
+	assert (
+		selected_library.metadata["atomic_module_synthesis"][
+			"ranking_incompatibility_count"
+		]
+		> 0
+	)
 
 
 def test_depots_lifting_target_is_not_forced_to_release_the_lifted_crate() -> None:
