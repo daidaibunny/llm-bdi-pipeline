@@ -324,6 +324,7 @@ def test_threat_certificate_serializes_certified_acyclic_support_relation() -> N
 		"assumption_bounded_support_depth_ranking"
 	)
 	assert certificate.ranking_relation == "on"
+	assert certificate.ranking_relation_anchor_position == 1
 	assert certificate.ranking_assumptions == (
 		"the certified binary relation is acyclic in every reachable execution state",
 		"atomic modules are observed only at successful module completion",

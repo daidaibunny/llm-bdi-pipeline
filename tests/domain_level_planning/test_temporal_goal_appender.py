@@ -241,6 +241,7 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		"observation_boundary": "atomic_module_completion",
 		"serialization_strategy": "universal_acyclic_threat_order",
 		"ranking_relation": None,
+		"ranking_relation_anchor_position": None,
 		"ranking_assumptions": [],
 	}
 

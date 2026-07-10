@@ -81,6 +81,7 @@ class TransitionSerializationCertificate:
 	observation_boundary: str = "atomic_module_completion"
 	serialization_strategy: str = "universal_acyclic_threat_order"
 	ranking_relation: str | None = None
+	ranking_relation_anchor_position: int | None = None
 	ranking_assumptions: tuple[str, ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
@@ -96,6 +97,7 @@ class TransitionSerializationCertificate:
 			"observation_boundary": self.observation_boundary,
 			"serialization_strategy": self.serialization_strategy,
 			"ranking_relation": self.ranking_relation,
+			"ranking_relation_anchor_position": self.ranking_relation_anchor_position,
 			"ranking_assumptions": list(self.ranking_assumptions),
 		}
 
@@ -188,6 +190,7 @@ def threat_safe_positive_literal_order(
 	ordered_indexes = _stable_topological_order(len(literal_tuple), edges)
 	serialization_strategy = "universal_acyclic_threat_order"
 	ranking_relation: str | None = None
+	ranking_relation_anchor_position: int | None = None
 	ranking_assumptions: tuple[str, ...] = ()
 	if ordered_indexes is None:
 		support_ranking = _assumption_bounded_support_depth_order(
@@ -196,7 +199,11 @@ def threat_safe_positive_literal_order(
 			actions=actions,
 		)
 		if support_ranking is not None:
-			ordered_indexes, ranking_relation = support_ranking
+			(
+				ordered_indexes,
+				ranking_relation,
+				ranking_relation_anchor_position,
+			) = support_ranking
 			serialization_strategy = "assumption_bounded_support_depth_ranking"
 			ranking_assumptions = (
 				"the certified binary relation is acyclic in every reachable execution state",
@@ -215,6 +222,7 @@ def threat_safe_positive_literal_order(
 		functional_invariant_count=len(functional_groups),
 		serialization_strategy=serialization_strategy,
 		ranking_relation=ranking_relation,
+		ranking_relation_anchor_position=ranking_relation_anchor_position,
 		ranking_assumptions=ranking_assumptions,
 	)
 	return ordered_indexes, certificate
@@ -993,7 +1001,7 @@ def _assumption_bounded_support_depth_order(
 	*,
 	plan_library: PlanLibrary,
 	actions: Sequence[_ParsedAction],
-) -> tuple[tuple[int, ...], str] | None:
+) -> tuple[tuple[int, ...], str, int] | None:
 	"""Serialize one certified binary support relation from supports to dependants."""
 
 	atoms = tuple(goal_atoms or ())
@@ -1002,13 +1010,18 @@ def _assumption_bounded_support_depth_order(
 	relation = atoms[0].predicate
 	if any(len(atom.arguments) != 2 for atom in atoms):
 		return None
-	if not _library_has_relational_decrease_certificate(
+	orientation = _certified_support_relation_orientation(
 		plan_library,
 		relation=relation,
 		actions=actions,
-	):
+	)
+	if orientation is None:
 		return None
-	child_parent_pairs = tuple((atom.arguments[0], atom.arguments[1]) for atom in atoms)
+	child_position, anchor_position = orientation
+	child_parent_pairs = tuple(
+		(atom.arguments[child_position], atom.arguments[anchor_position])
+		for atom in atoms
+	)
 	if not _relation_pairs_form_functional_acyclic_graph(child_parent_pairs):
 		return None
 	precedence_edges = {
@@ -1020,22 +1033,22 @@ def _assumption_bounded_support_depth_order(
 	ordered = _stable_topological_order(len(atoms), precedence_edges)
 	if ordered is None:
 		return None
-	return ordered, relation
+	return ordered, relation, anchor_position
 
 
-def _library_has_relational_decrease_certificate(
+def _certified_support_relation_orientation(
 	plan_library: PlanLibrary,
 	*,
 	relation: str,
 	actions: Sequence[_ParsedAction],
-) -> bool:
+) -> tuple[int, int] | None:
 	actions_by_name = {action.name: action for action in tuple(actions or ())}
 	if not any(
 		effect.predicate == relation
 		for action in actions
 		for effect in action.add_effects
 	):
-		return False
+		return None
 	for plan in tuple(plan_library.plans or ()):
 		for certificate in tuple(plan.binding_certificate or ()):
 			progress = certificate.get("recursive_progress_certificate")
@@ -1050,7 +1063,7 @@ def _library_has_relational_decrease_certificate(
 			strict_actions = tuple(progress.get("strictly_decreasing_actions") or ())
 			if not strict_actions:
 				continue
-			if all(
+			if not all(
 				action_name in actions_by_name
 				and any(
 					effect.predicate == relation
@@ -1058,8 +1071,113 @@ def _library_has_relational_decrease_certificate(
 				)
 				for action_name in strict_actions
 			):
-				return True
-	return False
+				continue
+			relation_arguments = tuple(
+				str(item) for item in tuple(progress.get("relation_arguments") or ())
+			)
+			if len(relation_arguments) != 2:
+				continue
+			trigger_arguments = tuple(plan.trigger.arguments or ())
+			anchor_positions = tuple(
+				index
+				for index, argument in enumerate(relation_arguments)
+				if argument in trigger_arguments
+			)
+			if len(anchor_positions) != 1:
+				continue
+			anchor_position = anchor_positions[0]
+			child_position = 1 - anchor_position
+			child_argument = relation_arguments[child_position]
+			if not any(
+				step.kind == "subgoal"
+				and step.symbol == plan.trigger.symbol
+				and child_argument in step.arguments
+				for step in plan.body
+			):
+				continue
+			if not _recursive_module_closure_preserves_relation(
+				plan,
+				plan_library=plan_library,
+				relation=relation,
+				actions_by_name=actions_by_name,
+			):
+				continue
+			if not _relation_producers_preserve_child_key(
+				plan_library,
+				relation=relation,
+				child_position=child_position,
+				actions_by_name=actions_by_name,
+			):
+				continue
+			return child_position, anchor_position
+	return None
+
+
+def _recursive_module_closure_preserves_relation(
+	certificate_plan: AgentSpeakPlan,
+	*,
+	plan_library: PlanLibrary,
+	relation: str,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> bool:
+	call_graph: dict[str, set[str]] = {}
+	for plan in tuple(plan_library.plans or ()):
+		call_graph.setdefault(plan.trigger.symbol, set()).update(
+			step.symbol for step in plan.body if step.kind == "subgoal"
+		)
+	reachable = {certificate_plan.trigger.symbol}
+	frontier = [certificate_plan.trigger.symbol]
+	while frontier:
+		current = frontier.pop()
+		for called in call_graph.get(current, set()):
+			if called in reachable:
+				continue
+			reachable.add(called)
+			frontier.append(called)
+	for plan in tuple(plan_library.plans or ()):
+		if plan.trigger.symbol not in reachable:
+			continue
+		for step in plan.body:
+			if step.kind != "action":
+				continue
+			action = actions_by_name.get(step.symbol)
+			if action is None:
+				return False
+			if any(effect.predicate == relation for effect in action.add_effects):
+				return False
+	return True
+
+
+def _relation_producers_preserve_child_key(
+	plan_library: PlanLibrary,
+	*,
+	relation: str,
+	child_position: int,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> bool:
+	for plan in tuple(plan_library.plans or ()):
+		if plan.trigger.symbol != relation:
+			continue
+		trigger_arguments = tuple(plan.trigger.arguments or ())
+		if len(trigger_arguments) != 2:
+			return False
+		for step in plan.body:
+			if step.kind != "action":
+				continue
+			action = actions_by_name.get(step.symbol)
+			if action is None or len(action.parameters) != len(step.arguments):
+				return False
+			binding = dict(zip(action.parameters, step.arguments))
+			for effect in (*action.add_effects, *action.delete_effects):
+				if effect.predicate != relation or len(effect.arguments) != 2:
+					continue
+				mapped_child = binding.get(
+					effect.arguments[child_position],
+					effect.arguments[child_position],
+				)
+				if mapped_child != trigger_arguments[child_position]:
+					return False
+	return True
 
 
 def _relation_pairs_form_functional_acyclic_graph(

@@ -618,7 +618,10 @@ def test_full_test_wrapper_uses_module_local_delete_certificate(
 		""",
 		encoding="utf-8",
 	)
-	with pytest.raises(ValueError, match="cyclic_conjunctive_transition_not_certified"):
+	with pytest.raises(
+		ValueError,
+		match="functionally_inconsistent_conjunctive_transition",
+	):
 		full_test_wrapper_lines(
 			domain="relocation-fragment",
 			index=2,

@@ -81,8 +81,10 @@ artifacts become evidence, while the compiler decides which evidence is safe to
 render as reusable agent code.
 
 The compiler constructs one candidate space containing validated provider
-macros, direct PDDL producers, recursive preparation branches, and certified
-resource-release branches. One Clingo program enforces evidence coverage and
+macros, direct PDDL producers, recursive preparation branches, certified
+resource-release branches, and validated bounded-integer numeric branches.
+Predicate and numeric evidence therefore enter the same Clingo solve rather
+than being selected and merged in separate phases. One Clingo program enforces evidence coverage and
 internal-module closure, maximizes compatible certified recursive capabilities,
 and then minimizes branch, context, and body cost. This use of answer-set
 optimization follows the general synthesis pattern used for learned planning
@@ -93,9 +95,15 @@ we do not claim optimality over all AgentSpeak programs or completeness for
 arbitrary PDDL domains.
 
 Every selected recursive branch requires a compile-time well-founded feature.
-The implemented feature family counts atoms of a dynamic relation. A recursive
-candidate is compatible only with selected branches that never increase this
-count, and at least one certified producer sequence must strictly decrease it.
+The fixed, domain-independent feature grammar currently contains (i) the
+global number of atoms of a dynamic relation and (ii) the number of relation
+atoms in the acyclic obstruction cone rooted at a query argument. The second
+feature permits a producer to relocate an obstruction while preserving the
+global atom count, but only when schema guards prove that the new relation
+value differs from the protected root. A recursive candidate is compatible
+only with selected branches whose reachable module closure does not increase
+its selected feature, and at least one certified producer sequence must
+strictly decrease it.
 The feature is metadata and is not emitted as an AgentSpeak belief. This design
 is related to feature-defined general policies \cite{Frances2021LearningGeneralPolicies},
 while restricting the claim to features whose changes can be certified from
@@ -126,19 +134,40 @@ are automaton plumbing and do not become atomic subgoals.
 
 For one positive literal $p(\bar{X})$, the helper has an already-satisfied
 branch and a repair branch that calls $p$ once and rechecks the same transition.
-For a conjunction, the compiler computes conservative may-delete summaries over
-the final selected atomic module call graph. It computes a relational fixed
-point over reachable module calls: query variables remain symbolic anchors,
-internal variables are alpha-normalized, and PDDL type constraints restrict
-unification. This covers parameter-changing recursion without a benchmark-specific
-depth bound and preserves shared-variable identity across guard literals.
+For a conjunction, the compiler computes conservative conditional may-delete
+summaries over the final selected atomic module call graph. Each delete retains
+the positive, negative, equality, and disequality context of its source branch.
+The summary records net effects at successful atomic-module completion, so a
+fact deleted and restored within one primitive macro is not treated as a final
+delete. It computes a relational fixed point over reachable module calls:
+query variables remain symbolic anchors, internal variables are
+alpha-normalized, PDDL type constraints restrict unification, and
+schema-derived single-valued invariants reject inconsistent conjunctive goals.
+This covers parameter-changing recursion without a benchmark-specific depth
+bound and preserves shared-variable identity across guard literals.
 An edge $G_j \rightarrow G_i$
 means that achieving $G_j$ may delete $G_i$, so $G_j$ must be repaired first.
-An acyclic graph is topologically serialized; an incomplete or cyclic graph is
-rejected unless a future transition-level ranking certificate is supplied.
+An acyclic graph is topologically serialized. One cyclic structural case is
+admitted by an assumption-bounded support-depth certificate: all positive
+literals must use the same certified binary relation, their requested relation
+graph must be functional and acyclic, and the selected library must contain a
+well-founded decrease certificate for that relation. The resulting order builds
+supports before dependants. The child/support argument orientation is derived
+from the recursive certificate; the compiler also verifies that the recursive
+module closure does not re-add the relation and that primitive relation
+producers delete only the same child's previous relation. This certificate assumes that the relation remains
+acyclic in every reachable execution state; it records that assumption rather
+than claiming to derive it from arbitrary STRIPS schemas. Other incomplete or
+cyclic graphs are rejected.
 This reordering is confined to literals on one DFA edge and therefore does not
 change temporal order between edges. Negative literals remain context guards
 and are never compiled as negative achievements.
+
+The completion-level observation boundary is an explicit scope restriction.
+It is sound for the achievement-transition fragment evaluated here, where a
+transition guard is tested after an atomic subgoal returns. A formula whose
+safety semantics must inspect every primitive intermediate action requires an
+external DFA monitor and is outside this context-only wrapper claim.
 
 \subsection{Controller State}
 

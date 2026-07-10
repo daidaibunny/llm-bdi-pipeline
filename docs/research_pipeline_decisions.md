@@ -192,19 +192,29 @@ asking Jason to achieve a relation over an unbound object.
 ### Well-Founded Relational Progress
 
 A same-predicate recursive preparation branch is admitted only when the
-compiler can construct a non-negative relational-count ranking feature. A
-ranking feature is compile-time metadata, not a new ASL fluent. For example,
-for `+!clear(X)` the schema can induce the feature `count(on)`, meaning the
+compiler can construct a non-negative feature from a fixed structural grammar.
+A ranking feature is compile-time metadata, not a new ASL fluent. The first
+feature is a global relational count. For example, for `+!clear(X)` the schema
+can induce `count(on)`, meaning the
 number of currently true atoms of the dynamic predicate used as the obstruction
 relation. The generated `unstack; put-down` sequence deletes one `on` atom and
 does not add any `on` atom, so the feature strictly decreases and is bounded
 below by zero.
 
+The second feature is an anchored acyclic relation-cone count. It applies when
+a sequence removes `relation(Z,X)` and may add `relation(Z,B)`: the global count
+does not fall, but the obstruction cone rooted at `X` falls when schema-derived
+guards prove `B != X`. This candidate certificate carries the explicit
+assumption that the relation is acyclic in all reachable states. It is selected
+only if the complete reachable module closure preserves the same anchored cone.
+
 Deleting one obstruction is not sufficient by itself. The compiler follows the
 selected module call graph and adds Clingo incompatibility constraints against
-any candidate branch that may add the ranking predicate. Thus a branch such as
-`unstack; stack`, which exchanges one `on` atom for another, cannot coexist
-with a recursion certified by `count(on)`. Navigation recursion such as moving
+any candidate branch that may increase the chosen feature. Thus a branch such
+as `unstack; stack`, which exchanges one `on` atom for another, cannot coexist
+with recursion certified by the global `count(on)`. For an anchored cone,
+relation-adding branches require their own compatible preservation proof.
+Navigation recursion such as moving
 between two rooms deletes and re-adds one location fluent, so no strict count
 decrease is available and that recursion is not selected. Predicate names and
 argument positions are not consulted; the feature and action effects come from
@@ -289,12 +299,17 @@ schemas, for example a complete Logistics package-delivery macro
 whose body calls internal subgoals, for example `!lifting(Z,X); !on(X,Y)`.
 
 Each MOOSE macro is an evidence obligation in the same Clingo program that
-selects direct producers, preparation branches, and resource-release branches.
-Coverage is accepted only for alpha-equivalent branches or identical bodies
-under a weaker conjunctive context; body-prefix similarity is not treated as
-semantic equivalence. Clingo also enforces internal-module closure and rejects
-simultaneously selected branches that invalidate a relational ranking
-certificate.
+selects direct producers, preparation branches, resource-release branches, and
+validated bounded-integer numeric branches. Numeric-only evidence therefore no
+longer bypasses Clingo. Coverage is accepted for alpha-equivalent branches,
+identical bodies under a weaker conjunctive context, or a weaker-context
+primitive producer whose PDDL-derived atomic target effect is preserved, whose
+net delete set is no larger, and whose numeric transformation is identical.
+The compiler compares complete parameterized resource-release certificates;
+predicate-name equality alone is not sufficient. Body-prefix similarity is not
+treated as semantic equivalence. Clingo also enforces internal-module closure
+and rejects simultaneously selected branches that invalidate a relational
+ranking certificate.
 
 ```asl
 /* broad repair branch tried too early */
@@ -358,28 +373,50 @@ Every progress edge on the accepted DFA path is compiled into one query-local
 `trans` helper. A singleton positive guard calls its atomic module once and
 rechecks the guard, which is action-equivalent to the former linear call while
 adding declarative completion checking. For a conjunctive guard, the compiler
-computes conservative may-delete summaries over the final selected atomic
-module call graph. The summary is a finite relational fixed point: root query
-arguments remain symbolic anchors, newly introduced module variables are
-alpha-normalized, and subgoal calls are expanded until no new predicate/argument
-shape is reachable. It therefore covers parameter-changing recursion such as
+computes conservative conditional may-delete summaries over the final selected
+atomic module call graph. Every delete retains its branch's positive, negative,
+equality, and disequality context. Effects are composed to successful
+atomic-module completion, so a primitive delete restored later in the same
+macro is not reported as a final delete. The summary is a finite relational
+fixed point: root query arguments remain symbolic anchors, newly introduced
+module variables are alpha-normalized, and subgoal calls are expanded until no
+new predicate/argument shape is reachable. It therefore covers parameter-changing recursion such as
 `at(X,Y) -> carry(X,Z) -> at(X,Z)` without a domain-specific depth bound. PDDL
 type constraints are part of unification, so deleting `at(Truck,L)` cannot
 falsely threaten `at(Package,L)` when `truck` and `package` are disjoint sibling
 types. Shared lifted variables retain one binding and the conjunction is
-rejected if their declared type requirements are inconsistent.
+rejected if their declared type requirements are inconsistent. Single-valued
+predicate invariants inferred from paired PDDL add/delete schemas also reject a
+guard that requests two provably different values for the same key.
 
 If achieving literal `G2` may delete literal `G1`, the certificate requires
 `G2` before `G1`. Only literals on the same DFA transition may be reordered;
 different transitions retain DFA order. The persisted certificate records the
-summary method as `pddl_typed_relational_fixed_point`, the ordered literal
-indexes, and all induced threat edges.
+summary method as `pddl_typed_conditional_relational_fixed_point`, the ordered
+literal indexes, all induced threat edges, the functional-invariant count, and
+the `atomic_module_completion` observation boundary.
 
-The serializer rejects incomplete summaries, cyclic threat graphs, and
-multi-literal numeric guards without numeric effect-preservation certificates.
+An acyclic threat graph uses universal topological serialization. A cyclic graph
+is accepted only by the narrow support-depth rule: every positive goal uses one
+binary relation with a compiler-generated relational decrease certificate, the
+requested relation graph is functional and acyclic, and supports can be ordered
+before dependants. The child/support argument orientation is inferred from the
+recursive certificate; the compiler additionally checks that the recursive
+module closure does not re-add the relation and that primitive relation
+producers delete only the same child's previous relation. This rule records the explicit paper assumption that the
+relation is acyclic in every reachable execution state. It is a structural
+assumption over a certified relation, not a domain or predicate-name switch.
+All other incomplete or cyclic summaries remain unsupported. Multi-literal
+numeric guards without numeric effect-preservation certificates are also
+rejected.
 It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.
+
+The completion observation boundary is appropriate for achievement transitions
+that are checked after an atomic module returns. It does not justify
+safety-sensitive LTLf formulas that must observe every primitive intermediate
+action; those require an external DFA controller and primitive-step monitor.
 
 ## Benchmark Scope
 

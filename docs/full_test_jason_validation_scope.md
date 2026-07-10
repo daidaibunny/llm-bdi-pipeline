@@ -462,6 +462,28 @@ cannot coexist with any candidate branch that may add `on`; for example,
 `unstack; stack` is incompatible because it exchanges one `on` fact for
 another. The compiler does not inspect domain, predicate, or action names.
 
+The fixed ranking grammar also contains
+`anchored_acyclic_relation_cone_count`. This feature counts relation atoms in
+the obstruction cone rooted at a query argument. It permits a cleanup sequence
+to delete `relation(Z,X)` and add `relation(Z,B)` without decreasing the global
+relation count only when generated inequality guards prove `B != X`. The local
+candidate is not enough by itself: Clingo follows the selected module call graph
+and excludes it if any reachable selected branch can increase the same anchored
+cone without a compatible certificate. Depots currently generates such a local
+candidate but fails this whole-library compatibility check, so the compiler
+correctly omits the recursive branch rather than claiming unsupported progress.
+
+At the DFA transition layer, a cyclic threat graph may use
+`assumption_bounded_support_depth_ranking` only when all positive goals use the
+same certified binary relation and the requested support graph is functional
+and acyclic. The child/support argument orientation comes from the recursive
+certificate, the recursive module closure must not re-add the relation, and
+primitive relation producers may delete only the same child's previous value.
+The persisted certificate explicitly assumes that this relation
+remains acyclic in every reachable state. Effects are observed at successful
+atomic-module completion; formulas requiring primitive-step safety monitoring
+remain outside this wrapper's scope.
+
 ## Current Benchmark Scope And Library Profiles
 
 The component between backend artifacts and ASL rendering is called the
