@@ -461,7 +461,7 @@ def _producer_action_sequences(
 			target_arguments=head_arguments,
 		):
 			continue
-		sequence = _finalize_sequence(
+		sequences.extend(_finalize_sequences(
 			actions=actions,
 			type_tokens=type_tokens,
 			functional_groups=functional_groups,
@@ -476,9 +476,7 @@ def _producer_action_sequences(
 				_action_call(final_action, variable_map),
 			),
 			producer_action_names=(final_action.name,),
-		)
-		if sequence is not None:
-			sequences.append(sequence)
+		))
 		for transient in transient_preconditions:
 			for support_action, support_effect in _producer_effects(actions, transient.predicate):
 				support_map = {
@@ -515,7 +513,7 @@ def _producer_action_sequences(
 					_action_call(support_action, support_map),
 					_action_call(final_action, variable_map),
 				)
-				sequence = _finalize_sequence(
+				sequences.extend(_finalize_sequences(
 					actions=actions,
 					type_tokens=type_tokens,
 					functional_groups=functional_groups,
@@ -525,9 +523,7 @@ def _producer_action_sequences(
 					context_literals=base_context_literals,
 					body_actions=base_body_actions,
 					producer_action_names=(support_action.name, final_action.name),
-				)
-				if sequence is not None:
-					sequences.append(sequence)
+				))
 				for bridge in _bridge_action_sequences(
 					actions=actions,
 					type_tokens=type_tokens,
@@ -540,7 +536,7 @@ def _producer_action_sequences(
 					target_arguments=head_arguments,
 					module_predicates=module_predicates,
 				):
-					sequence = _finalize_sequence(
+					sequences.extend(_finalize_sequences(
 						actions=actions,
 						type_tokens=type_tokens,
 						functional_groups=functional_groups,
@@ -550,9 +546,7 @@ def _producer_action_sequences(
 						context_literals=bridge.context_literals,
 						body_actions=bridge.body_actions,
 						producer_action_names=bridge.producer_action_names,
-					)
-					if sequence is not None:
-						sequences.append(sequence)
+					))
 	return tuple(_deduplicate_sequences(sequences))
 
 
@@ -838,7 +832,7 @@ def _should_compose_transient_precondition(
 	)
 
 
-def _finalize_sequence(
+def _finalize_sequences(
 	*,
 	actions: Sequence[_ParsedAction],
 	type_tokens: Sequence[str],
@@ -849,68 +843,93 @@ def _finalize_sequence(
 	context_literals: Sequence[PDDLLiteralSchema],
 	body_actions: Sequence[_ActionCall],
 	producer_action_names: tuple[str, ...],
-) -> _ProducerSequence | None:
+) -> tuple[_ProducerSequence, ...]:
 	if any(_same_literal(target_effect, literal) for literal in context_literals):
-		return None
-	sequence_body = tuple(body_actions)
-	sequence_contexts = tuple(context_literals)
-	guard_contexts: tuple[str, ...] = ()
-	resource_release_certificates: tuple[Mapping[str, object], ...] = ()
-	if not _action_calls_have_compatible_types(sequence_body, type_tokens):
-		return None
-	cleanup_extension = _cleanup_action_calls(
+		return ()
+	base_body = tuple(body_actions)
+	base_contexts = tuple(context_literals)
+	if not _action_calls_have_compatible_types(base_body, type_tokens):
+		return ()
+	cleanup_extensions = _cleanup_action_calls(
 		actions=actions,
 		type_tokens=type_tokens,
 		target_effect=target_effect,
 		target_arguments=target_arguments,
-		context_literals=sequence_contexts,
-		body_actions=sequence_body,
+		context_literals=base_contexts,
+		body_actions=base_body,
 	)
-	if cleanup_extension is not None:
-		sequence_body += cleanup_extension.body_actions
-		sequence_contexts += cleanup_extension.context_literals
-		guard_contexts = cleanup_extension.guard_contexts
-		resource_release_certificates = cleanup_extension.resource_release_certificates
+	variants: tuple[_CleanupExtension | None, ...] = cleanup_extensions or (None,)
+	sequences: list[_ProducerSequence] = []
+	for cleanup_extension in variants:
+		sequence_body = base_body
+		sequence_contexts = base_contexts
+		sequence_action_names = producer_action_names
+		guard_contexts: tuple[str, ...] = ()
+		resource_release_certificates: tuple[Mapping[str, object], ...] = ()
+		if cleanup_extension is not None:
+			sequence_body += cleanup_extension.body_actions
+			sequence_contexts += cleanup_extension.context_literals
+			guard_contexts = cleanup_extension.guard_contexts
+			resource_release_certificates = cleanup_extension.resource_release_certificates
+			sequence_action_names += cleanup_extension.producer_action_names
 		if not _action_calls_have_compatible_types(sequence_body, type_tokens):
-			return None
-		producer_action_names += cleanup_extension.producer_action_names
-	type_contexts = _obj_tp_contexts_for_action_calls(sequence_body, type_tokens)
-	if type_contexts is None:
-		return None
-	numeric_contexts = _numeric_contexts_for_action_calls(sequence_body)
-	deduplicated_contexts = _deduplicate_literals(sequence_contexts)
-	range_restricted_contexts = _range_restricted_context_literals(
-		context_literals=deduplicated_contexts,
-		head_arguments=target_arguments,
-		dynamic_predicates=dynamic_predicates,
-	)
-	if range_restricted_contexts is None:
-		return None
-	has_functional_conflict = _has_functional_context_conflict(
-		context_literals=range_restricted_contexts,
-		body_actions=sequence_body,
-		type_tokens=type_tokens,
-		functional_groups=functional_groups,
-	)
-	if has_functional_conflict and not resource_release_certificates:
-		return None
-	if not _symbolic_sequence_is_executable(
-		target_effect=target_effect,
-		context_literals=range_restricted_contexts,
-		body_actions=sequence_body,
-	):
-		return None
-	return _ProducerSequence(
-		target_predicate=target_effect.predicate,
-		target_arguments=target_arguments,
-		context_literals=range_restricted_contexts,
-		numeric_contexts=numeric_contexts,
-		guard_contexts=guard_contexts,
-		type_contexts=type_contexts,
-		body_actions=sequence_body,
-		producer_action_names=producer_action_names,
-		resource_release_certificates=resource_release_certificates,
-	)
+			continue
+		type_contexts = _obj_tp_contexts_for_action_calls(sequence_body, type_tokens)
+		if type_contexts is None:
+			continue
+		numeric_contexts = _numeric_contexts_for_action_calls(sequence_body)
+		deduplicated_contexts = _deduplicate_literals(sequence_contexts)
+		range_restricted_contexts = _range_restricted_context_literals(
+			context_literals=deduplicated_contexts,
+			head_arguments=target_arguments,
+			dynamic_predicates=dynamic_predicates,
+		)
+		if range_restricted_contexts is None:
+			continue
+		has_functional_conflict = _has_functional_context_conflict(
+			context_literals=range_restricted_contexts,
+			body_actions=sequence_body,
+			type_tokens=type_tokens,
+			functional_groups=functional_groups,
+		)
+		if has_functional_conflict and not resource_release_certificates:
+			continue
+		if resource_release_certificates:
+			execution_guards = _symbolic_sequence_execution_guards(
+				target_effect=target_effect,
+				context_literals=range_restricted_contexts,
+				body_actions=sequence_body,
+			)
+			if execution_guards is None:
+				continue
+			guard_contexts = _deduplicate((*guard_contexts, *execution_guards))
+			resource_release_certificates = tuple(
+				{
+					**dict(certificate),
+					"sequence_alias_guards": list(execution_guards),
+				}
+				for certificate in resource_release_certificates
+			)
+		elif not _symbolic_sequence_is_executable(
+			target_effect=target_effect,
+			context_literals=range_restricted_contexts,
+			body_actions=sequence_body,
+		):
+			continue
+		sequences.append(
+			_ProducerSequence(
+				target_predicate=target_effect.predicate,
+				target_arguments=target_arguments,
+				context_literals=range_restricted_contexts,
+				numeric_contexts=numeric_contexts,
+				guard_contexts=guard_contexts,
+				type_contexts=type_contexts,
+				body_actions=sequence_body,
+				producer_action_names=sequence_action_names,
+				resource_release_certificates=resource_release_certificates,
+			),
+		)
+	return tuple(_deduplicate_sequences(sequences))
 
 
 def _cleanup_action_calls(
@@ -921,9 +940,9 @@ def _cleanup_action_calls(
 	target_arguments: tuple[str, ...],
 	context_literals: tuple[PDDLLiteralSchema, ...],
 	body_actions: tuple[_ActionCall, ...],
-) -> _CleanupExtension | None:
+) -> tuple[_CleanupExtension, ...]:
 	if not body_actions:
-		return None
+		return ()
 	last_call = body_actions[-1]
 	last_map = {
 		parameter: argument
@@ -935,6 +954,7 @@ def _cleanup_action_calls(
 		context_literals=context_literals,
 		body_actions=body_actions,
 	)
+	extensions: list[_CleanupExtension] = []
 	for cleanup_action in actions:
 		if cleanup_action.name == last_call.action.name:
 			continue
@@ -1016,14 +1036,37 @@ def _cleanup_action_calls(
 				],
 				"target_preservation_guards": list(guard_contexts),
 			}
-			return _CleanupExtension(
-				context_literals=_deduplicate_literals(extra_contexts),
-				guard_contexts=guard_contexts,
-				body_actions=(cleanup_call,),
-				producer_action_names=(cleanup_action.name,),
-				resource_release_certificates=(resource_certificate,),
+			extensions.append(
+				_CleanupExtension(
+					context_literals=_deduplicate_literals(extra_contexts),
+					guard_contexts=guard_contexts,
+					body_actions=(cleanup_call,),
+					producer_action_names=(cleanup_action.name,),
+					resource_release_certificates=(resource_certificate,),
+				),
 			)
-	return None
+	return _deduplicate_cleanup_extensions(extensions)
+
+
+def _deduplicate_cleanup_extensions(
+	extensions: Sequence[_CleanupExtension],
+) -> tuple[_CleanupExtension, ...]:
+	seen: set[tuple[object, ...]] = set()
+	deduplicated: list[_CleanupExtension] = []
+	for extension in extensions:
+		key = (
+			tuple(literal.to_context() for literal in extension.context_literals),
+			extension.guard_contexts,
+			tuple(
+				(call.action.name, call.arguments)
+				for call in extension.body_actions
+			),
+		)
+		if key in seen:
+			continue
+		seen.add(key)
+		deduplicated.append(extension)
+	return tuple(deduplicated)
 
 
 def _positive_state_after_action_calls(
@@ -1072,20 +1115,21 @@ def _cleanup_variable_maps(
 			)
 			if variable_map is None:
 				continue
-			variable_map = _bind_cleanup_map_from_state(
+			partial_maps = _bind_cleanup_maps_from_state(
 				cleanup_action=cleanup_action,
 				variable_map=variable_map,
 				true_before_cleanup=true_before_cleanup,
 				protected_assignments=protected_assignments,
 			)
-			variable_map = _complete_cleanup_variable_map(
-				parameters=cleanup_action.parameters,
-				variable_map=variable_map,
-				protected_assignments=protected_assignments,
-				target_arguments=target_arguments,
-			)
-			candidates.append((variable_map, available))
-	return tuple(candidates)
+			for partial_map in partial_maps:
+				completed_map = _complete_cleanup_variable_map(
+					parameters=cleanup_action.parameters,
+					variable_map=partial_map,
+					protected_assignments=protected_assignments,
+					target_arguments=target_arguments,
+				)
+				candidates.append((completed_map, available))
+	return _deduplicate_cleanup_variable_maps(candidates)
 
 
 def _literal_schema_variable_map(
@@ -1114,17 +1158,21 @@ def _literal_schema_variable_map(
 	return variable_map
 
 
-def _bind_cleanup_map_from_state(
+def _bind_cleanup_maps_from_state(
 	*,
 	cleanup_action: _ParsedAction,
 	variable_map: Mapping[str, str],
 	true_before_cleanup: Sequence[PDDLLiteralSchema],
 	protected_assignments: Mapping[str, set[str]],
-) -> dict[str, str]:
-	bound = dict(variable_map)
-	changed = True
-	while changed:
-		changed = False
+) -> tuple[dict[str, str], ...]:
+	"""Enumerate every positive-state join while retaining unbound alternatives."""
+
+	bound_maps: list[dict[str, str]] = [dict(variable_map)]
+	seen = {_cleanup_variable_map_key(variable_map)}
+	index = 0
+	while index < len(bound_maps):
+		bound = bound_maps[index]
+		index += 1
 		for precondition in cleanup_action.preconditions:
 			if not precondition.is_positive:
 				continue
@@ -1138,12 +1186,32 @@ def _bind_cleanup_map_from_state(
 				)
 				if extended is None or extended == bound:
 					continue
-				bound = extended
-				changed = True
-				break
-			if changed:
-				break
-	return bound
+				key = _cleanup_variable_map_key(extended)
+				if key in seen:
+					continue
+				seen.add(key)
+				bound_maps.append(extended)
+	return tuple(bound_maps)
+
+
+def _deduplicate_cleanup_variable_maps(
+	candidates: Sequence[tuple[dict[str, str], PDDLLiteralSchema]],
+) -> tuple[tuple[dict[str, str], PDDLLiteralSchema], ...]:
+	seen: set[tuple[tuple[str, str], ...]] = set()
+	deduplicated: list[tuple[dict[str, str], PDDLLiteralSchema]] = []
+	for variable_map, available in candidates:
+		key = _cleanup_variable_map_key(variable_map)
+		if key in seen:
+			continue
+		seen.add(key)
+		deduplicated.append((variable_map, available))
+	return tuple(deduplicated)
+
+
+def _cleanup_variable_map_key(
+	variable_map: Mapping[str, str],
+) -> tuple[tuple[str, str], ...]:
+	return tuple(sorted(variable_map.items()))
 
 
 def _cleanup_state_binding_order(
@@ -1210,9 +1278,8 @@ def _complete_cleanup_variable_map(
 	for parameter in parameters:
 		if parameter in completed:
 			continue
-		avoid_variables = set()
+		avoid_variables = set(target_arguments)
 		if protected_assignments.get(parameter):
-			avoid_variables.update(target_arguments)
 			avoid_variables.update(protected_assignments[parameter])
 		next_index = 0
 		while (
@@ -1568,6 +1635,104 @@ def _symbolic_sequence_is_executable(
 		for effect in call.action.add_effects:
 			state[_atom_key(effect.mapped(variable_map))] = True
 	return state.get(_atom_key(target_effect)) is True
+
+
+def _symbolic_sequence_execution_guards(
+	*,
+	target_effect: PDDLLiteralSchema,
+	context_literals: Sequence[PDDLLiteralSchema],
+	body_actions: Sequence[_ActionCall],
+) -> tuple[str, ...] | None:
+	"""Certify every context-permitted aliasing of a symbolic action sequence."""
+
+	state: dict[tuple[str, tuple[str, ...]], bool] = {}
+	guards: list[str] = []
+	for literal in context_literals:
+		key = _atom_key(literal)
+		value = literal.is_positive
+		if key in state and state[key] != value:
+			return None
+		conflict_guards = _symbolic_alias_conflict_guards(
+			state=state,
+			literal=literal,
+			expected_value=value,
+		)
+		if conflict_guards is None:
+			return None
+		guards.extend(conflict_guards)
+		state[key] = value
+	for call in body_actions:
+		variable_map = {
+			parameter: argument
+			for parameter, argument in zip(call.action.parameters, call.arguments)
+		}
+		for precondition in call.action.preconditions:
+			mapped = precondition.mapped(variable_map)
+			current_value = state.get(_atom_key(mapped))
+			expected_value = mapped.is_positive
+			if current_value is not expected_value:
+				return None
+			conflict_guards = _symbolic_alias_conflict_guards(
+				state=state,
+				literal=mapped,
+				expected_value=expected_value,
+			)
+			if conflict_guards is None:
+				return None
+			guards.extend(conflict_guards)
+		for effect in call.action.delete_effects:
+			state[_atom_key(effect.mapped(variable_map))] = False
+		for effect in call.action.add_effects:
+			state[_atom_key(effect.mapped(variable_map))] = True
+	if state.get(_atom_key(target_effect)) is not True:
+		return None
+	target_guards = _symbolic_alias_conflict_guards(
+		state=state,
+		literal=target_effect,
+		expected_value=True,
+	)
+	if target_guards is None:
+		return None
+	guards.extend(target_guards)
+	return _deduplicate(tuple(guards))
+
+
+def _symbolic_alias_conflict_guards(
+	*,
+	state: Mapping[tuple[str, tuple[str, ...]], bool],
+	literal: PDDLLiteralSchema,
+	expected_value: bool,
+) -> tuple[str, ...] | None:
+	guards: list[str] = []
+	for (predicate, arguments), value in state.items():
+		if value is expected_value:
+			continue
+		if predicate != literal.predicate or len(arguments) != len(literal.arguments):
+			continue
+		guard = _exact_non_unification_guard(literal.arguments, arguments)
+		if guard is None:
+			return None
+		if guard:
+			guards.append(guard)
+	return _deduplicate(tuple(guards))
+
+
+def _exact_non_unification_guard(
+	left_arguments: Sequence[str],
+	right_arguments: Sequence[str],
+) -> str | None:
+	"""Return an exact conjunctive guard, or None when disjunction is required."""
+
+	differences: list[tuple[str, str]] = []
+	for left, right in zip(left_arguments, right_arguments):
+		if left == right:
+			continue
+		if not (_is_agentspeak_variable(left) or _is_agentspeak_variable(right)):
+			return ""
+		differences.append((left, right))
+	if len(differences) != 1:
+		return None
+	return _inequality_guard_text(*differences[0])
 
 
 def _atom_key(literal: PDDLLiteralSchema) -> tuple[str, tuple[str, ...]]:
@@ -2480,7 +2645,8 @@ def _module_synthesis_report(
 			(
 				"resource-release cleanup branches require a schema certificate "
 				"that deletes a producer-created resource debt, restores a lower-arity "
-				"availability literal, and preserves the protected target"
+				"availability literal, preserves the protected target, and records "
+				"all exact alias guards needed by later action preconditions"
 			),
 		),
 		theoretical_basis=(

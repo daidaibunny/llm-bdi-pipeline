@@ -198,7 +198,8 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		(
 			"resource-release cleanup branches require a schema certificate "
 			"that deletes a producer-created resource debt, restores a lower-arity "
-			"availability literal, and preserves the protected target"
+			"availability literal, preserves the protected target, and records "
+			"all exact alias guards needed by later action preconditions"
 		),
 	]
 	assert selector_report["raw_candidate_count"] >= len(library.plans)
@@ -438,7 +439,9 @@ def test_depots_clear_can_release_hoist_without_deleting_protected_clear() -> No
 	assert drop_step.arguments[:2] == lift_step.arguments[:2]
 	assert drop_step.arguments[3] == lift_step.arguments[3]
 	parking_surface = drop_step.arguments[2]
+	lifted_object = lift_step.arguments[1]
 	assert parking_surface != "X"
+	assert parking_surface != lifted_object
 	assert f"clear({parking_surface})" in plan.context
 	assert f"at({parking_surface}, {drop_step.arguments[3]})" in plan.context
 	assert any(
@@ -449,9 +452,55 @@ def test_depots_clear_can_release_hoist_without_deleting_protected_clear() -> No
 		)
 	)
 	assert any(
-		certificate.get("resource_release_certificates")
-		for certificate in plan.binding_certificate
+		context in plan.context
+		for context in (
+			f"{parking_surface} \\== {lifted_object}",
+			f"{lifted_object} \\== {parking_surface}",
+		)
 	)
+	resource_certificates = tuple(
+		resource_certificate
+		for certificate in plan.binding_certificate
+		for resource_certificate in certificate.get("resource_release_certificates", ())
+	)
+	assert resource_certificates
+	assert any(
+		guard in resource_certificates[0]["sequence_alias_guards"]
+		for guard in (
+			f"{parking_surface} \\== {lifted_object}",
+			f"{lifted_object} \\== {parking_surface}",
+		)
+	)
+
+
+def test_depots_clear_keeps_every_schema_certified_resource_release() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "depots" / "domain.pddl",
+		seed_predicates=("on",),
+		source_backend="moose_schema_minimal_modules",
+		source_name="depots-smoke",
+	)
+
+	release_action_sequences = {
+		tuple(step.symbol for step in plan.body)
+		for plan in library.plans
+		if plan.trigger.symbol == "clear"
+	}
+
+	assert ("lift", "drop") in release_action_sequences
+	assert ("lift", "load") in release_action_sequences
+	lift_load_plan = next(
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "clear"
+		and tuple(step.symbol for step in plan.body) == ("lift", "load")
+	)
+	lift_step, load_step = lift_load_plan.body
+	truck = load_step.arguments[2]
+	location = load_step.arguments[3]
+	assert truck != lift_step.arguments[0]
+	assert f"truck({truck})" in lift_load_plan.context
+	assert f"at({truck}, {location})" in lift_load_plan.context
 
 
 def test_depots_lifting_target_is_not_forced_to_release_the_lifted_crate() -> None:
