@@ -849,10 +849,21 @@ def _deduplicate_strings(values: Sequence[str]) -> tuple[str, ...]:
 
 
 @dataclass(frozen=True)
+class _LiftedTerm:
+	"""One threat-analysis term with explicit constant/variable identity."""
+
+	symbol: str
+	variable_scope: object | None = None
+
+	@property
+	def is_variable(self) -> bool:
+		return self.variable_scope is not None
+
+
+@dataclass(frozen=True)
 class _LiftedAtom:
 	predicate: str
-	arguments: tuple[str, ...]
-	variables: frozenset[str] = frozenset()
+	arguments: tuple[_LiftedTerm, ...]
 
 
 def _threat_ordered_goal_facts(
@@ -907,7 +918,10 @@ def _same_predicate_argument_dependency_edges(
 def _lifted_atom_from_fact(fact: PDDLFact) -> _LiftedAtom:
 	return _LiftedAtom(
 		predicate=sanitize_identifier(fact.predicate),
-		arguments=tuple(sanitize_identifier(argument) for argument in fact.args),
+		arguments=tuple(
+			_LiftedTerm(sanitize_identifier(argument))
+			for argument in fact.args
+		),
 	)
 
 
@@ -920,7 +934,10 @@ def _possible_delete_patterns_for_goal(
 ) -> tuple[_LiftedAtom, ...]:
 	if depth <= 0:
 		return ()
-	key = (goal.predicate, tuple("*" if arg in goal.variables else arg for arg in goal.arguments))
+	key = (
+		goal.predicate,
+		tuple("*" if argument.is_variable else argument.symbol for argument in goal.arguments),
+	)
 	if key in _seen:
 		return ()
 	next_seen = frozenset((*_seen, key))
@@ -941,7 +958,6 @@ def _possible_delete_patterns_for_goal(
 						delete_effect,
 						binding=binding,
 						action_parameters=action_parameters,
-						inherited_variables=goal.variables,
 					),
 				)
 			for precondition in _positive_patterns(action.preconditions):
@@ -949,7 +965,6 @@ def _possible_delete_patterns_for_goal(
 					precondition,
 					binding=binding,
 					action_parameters=action_parameters,
-					inherited_variables=goal.variables,
 				)
 				if not _has_producer_for_pattern(mapped_precondition, action_schemas):
 					continue
@@ -993,10 +1008,10 @@ def _unify_action_effect_with_goal(
 	effect: PredicatePattern,
 	action_parameters: frozenset[str],
 	goal: _LiftedAtom,
-) -> dict[str, str] | None:
+) -> dict[str, _LiftedTerm] | None:
 	if effect.predicate != goal.predicate or len(effect.args) != len(goal.arguments):
 		return None
-	binding: dict[str, str] = {}
+	binding: dict[str, _LiftedTerm] = {}
 	for effect_argument, goal_argument in zip(effect.args, goal.arguments):
 		if effect_argument in action_parameters:
 			previous = binding.get(effect_argument)
@@ -1004,56 +1019,66 @@ def _unify_action_effect_with_goal(
 				return None
 			binding[effect_argument] = goal_argument
 			continue
-		if goal_argument in goal.variables:
+		if goal_argument.is_variable:
 			continue
-		if effect_argument != goal_argument:
+		if effect_argument != goal_argument.symbol:
 			return None
+	variable_scope = object()
 	for parameter in action_parameters:
-		binding.setdefault(parameter, parameter)
+		binding.setdefault(
+			parameter,
+			_LiftedTerm(parameter, variable_scope=variable_scope),
+		)
 	return binding
 
 
 def _map_runtime_pattern(
 	pattern: PredicatePattern,
 	*,
-	binding: Mapping[str, str],
+	binding: Mapping[str, _LiftedTerm],
 	action_parameters: frozenset[str],
-	inherited_variables: frozenset[str],
 ) -> _LiftedAtom:
-	arguments: list[str] = []
-	variables: set[str] = set()
-	for argument in pattern.args:
-		value = binding.get(argument, argument) if argument in action_parameters else argument
-		arguments.append(value)
-		if value in action_parameters or value in inherited_variables:
-			variables.add(value)
+	arguments = tuple(
+		binding[argument]
+		if argument in action_parameters
+		else _LiftedTerm(argument)
+		for argument in pattern.args
+	)
 	return _LiftedAtom(
 		predicate=pattern.predicate,
-		arguments=tuple(arguments),
-		variables=frozenset(variables),
+		arguments=arguments,
 	)
 
 
 def _lifted_atom_unifies(left: _LiftedAtom, right: _LiftedAtom) -> bool:
 	if left.predicate != right.predicate or len(left.arguments) != len(right.arguments):
 		return False
-	bindings: dict[str, str] = {}
+	bindings: dict[_LiftedTerm, _LiftedTerm] = {}
 	for left_argument, right_argument in zip(left.arguments, right.arguments):
-		left_is_variable = left_argument in left.variables
-		right_is_variable = right_argument in right.variables
-		if left_is_variable and right_is_variable:
+		left_argument = _resolve_lifted_term(left_argument, bindings)
+		right_argument = _resolve_lifted_term(right_argument, bindings)
+		if left_argument == right_argument:
 			continue
-		if left_is_variable:
-			previous = bindings.get(left_argument)
-			if previous is not None and previous != right_argument:
-				return False
+		if left_argument.is_variable:
 			bindings[left_argument] = right_argument
 			continue
-		if right_is_variable:
+		if right_argument.is_variable:
+			bindings[right_argument] = left_argument
 			continue
-		if left_argument != right_argument:
-			return False
+		return False
 	return True
+
+
+def _resolve_lifted_term(
+	term: _LiftedTerm,
+	bindings: Mapping[_LiftedTerm, _LiftedTerm],
+) -> _LiftedTerm:
+	resolved = term
+	seen: set[_LiftedTerm] = set()
+	while resolved.is_variable and resolved in bindings and resolved not in seen:
+		seen.add(resolved)
+		resolved = bindings[resolved]
+	return resolved
 
 
 def _stable_topological_goal_order(

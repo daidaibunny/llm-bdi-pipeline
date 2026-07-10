@@ -306,6 +306,64 @@ def test_full_test_wrapper_orders_delete_threatening_goals_first(
 	assert "+!g_blocks_fragment_test_1_trans_1 : blocks_fragment_test_1 & on(middle, base) & on(top, middle) <-" in text
 
 
+def test_full_test_wrapper_keeps_ground_constants_distinct_from_schema_variables(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain blocks-fragment)
+		 (:requirements :strips)
+		 (:predicates
+		  (clear ?x)
+		  (holding ?x)
+		  (handempty)
+		  (on ?x ?y)
+		 )
+		 (:action stack
+		  :parameters (?x ?y)
+		  :precondition (and (holding ?x) (clear ?y))
+		  :effect (and (on ?x ?y) (clear ?x) (handempty)
+		   (not (holding ?x)) (not (clear ?y)))
+		 )
+		 (:action unstack
+		  :parameters (?x ?y)
+		  :precondition (and (on ?x ?y) (clear ?x) (handempty))
+		  :effect (and (holding ?x) (clear ?y) (not (on ?x ?y))
+		   (not (clear ?x)) (not (handempty)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain blocks-fragment)
+		 (:objects top x middle base)
+		 (:init (handempty) (clear top) (on top x) (clear base))
+		 (:goal (and (on top x) (on x middle) (on middle base)))
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	lines, plan_count = full_test_wrapper_lines(
+		domain="blocks-fragment",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+	)
+	text = "\n".join(lines)
+
+	assert plan_count == 5
+	assert (
+		"+!g_blocks_fragment_test_1_trans_1 : blocks_fragment_test_1 "
+		"& on(middle, base) & on(x, middle) & on(top, x) <-"
+	) in text
+
+
 def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None:
 	problem_file = tmp_path / "p01.pddl"
 	problem_file.write_text(
