@@ -48,11 +48,7 @@ def _render_plan(plan: AgentSpeakPlan) -> List[str]:
 	body_items = [_render_body_step(step) for step in plan.body]
 	if not body_items:
 		body_items = ["true"]
-	source_ids = ", ".join(plan.source_instruction_ids) if plan.source_instruction_ids else "none"
-	lines = [
-		f"/* plan={plan.plan_name} | source_instruction_ids={source_ids} */",
-		f"+!{trigger} : {context} <-",
-	]
+	lines = [f"+!{trigger} : {context} <-"]
 	for index, body_item in enumerate(body_items):
 		suffix = ";" if index < len(body_items) - 1 else "."
 		lines.append(f"\t{body_item}{suffix}")

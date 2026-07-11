@@ -7,6 +7,31 @@ from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTr
 from plan_library.rendering import render_plan_library_asl
 
 
+def test_render_plan_library_omits_redundant_per_plan_comments() -> None:
+	plan = AgentSpeakPlan(
+		plan_name="achieve_done",
+		trigger=AgentSpeakTrigger("achievement_goal", "done"),
+		context=("ready",),
+		body=(AgentSpeakBodyStep("action", "finish"),),
+		source_instruction_ids=("rule-17",),
+		binding_certificate=({"certificate_kind": "schema_executable"},),
+	)
+	plan_library = PlanLibrary(domain_name="generic", plans=(plan,))
+
+	asl = render_plan_library_asl(plan_library)
+	payload = plan_library.to_dict()
+
+	assert "/* Generated AgentSpeak(L) Plan Library */" in asl
+	assert "/* plan=" not in asl
+	assert "source_instruction_ids=" not in asl
+	assert "+!done : ready <-" in asl
+	assert payload["plans"][0]["plan_name"] == "achieve_done"
+	assert payload["plans"][0]["source_instruction_ids"] == ["rule-17"]
+	assert payload["plans"][0]["binding_certificate"] == [
+		{"certificate_kind": "schema_executable"},
+	]
+
+
 def test_render_plan_library_preserves_compound_context_expressions() -> None:
 	plan_library = PlanLibrary(
 		domain_name="generic",
