@@ -315,12 +315,25 @@ def _materialize_domain(spec: DomainSpec) -> None:
 		raise RuntimeError(
 			f"{spec.domain_id} has no benchmark instances in {spec.source_path}",
 		)
-	_copy_source_file(spec, spec.source_domain_file, domain_root / "domain.pddl")
+	domain_file = domain_root / "domain.pddl"
+	_copy_source_file(spec, spec.source_domain_file, domain_file)
+	expected_domain_name = _declared_domain_name(domain_file.read_text(encoding="utf-8"))
 	train_paths, test_paths = _split_problem_paths(spec, problem_paths)
+	normalized_domain_reference_count = 0
 	for source_problem in train_paths:
-		_copy_source_file(spec, source_problem, train_root / Path(source_problem).name)
+		normalized_domain_reference_count += _copy_problem_source_file(
+			spec,
+			source_problem,
+			train_root / Path(source_problem).name,
+			expected_domain_name=expected_domain_name,
+		)
 	for source_problem in test_paths:
-		_copy_source_file(spec, source_problem, test_root / Path(source_problem).name)
+		normalized_domain_reference_count += _copy_problem_source_file(
+			spec,
+			source_problem,
+			test_root / Path(source_problem).name,
+			expected_domain_name=expected_domain_name,
+		)
 	source = SOURCES[spec.source_id]
 	source_record = {
 		"source": source.name,
@@ -338,6 +351,7 @@ def _materialize_domain(spec: DomainSpec) -> None:
 		"train_count": len(train_paths),
 		"test_count": len(test_paths),
 		"split_policy": spec.split_policy,
+		"normalized_problem_domain_reference_count": normalized_domain_reference_count,
 	}
 	(domain_root / "source.json").write_text(
 		json.dumps(source_record, indent=2, sort_keys=True) + "\n",
@@ -443,6 +457,56 @@ def _instance_sort_key(path: str | Path) -> tuple[tuple[int, ...], str]:
 def _copy_source_file(spec: DomainSpec, relative_path: str, target_path: Path) -> None:
 	content = _read_source_file(spec, relative_path)
 	_write_pddl_snapshot(content, target_path)
+
+
+def _copy_problem_source_file(
+	spec: DomainSpec,
+	relative_path: str,
+	target_path: Path,
+	*,
+	expected_domain_name: str,
+) -> int:
+	content = _read_source_file(spec, relative_path)
+	normalized, changed = _normalize_problem_domain_reference(
+		content,
+		expected_domain_name=expected_domain_name,
+	)
+	_write_pddl_snapshot(normalized, target_path)
+	return int(changed)
+
+
+def _normalize_problem_domain_reference(
+	content: bytes,
+	*,
+	expected_domain_name: str,
+) -> tuple[bytes, bool]:
+	"""Make a materialized problem reference its actual materialized domain schema."""
+
+	name = str(expected_domain_name or "").strip().lower()
+	if not name or re.fullmatch(r"[^\s()]+", name) is None:
+		raise ValueError(f"Invalid materialized PDDL domain name {expected_domain_name!r}.")
+	text = content.decode("utf-8")
+	pattern = re.compile(r"(\(\s*:domain\s+)([^\s()]+)(\s*\))", flags=re.IGNORECASE)
+	matches = tuple(pattern.finditer(text))
+	if len(matches) != 1:
+		raise ValueError(
+			"A materialized PDDL problem must contain exactly one :domain reference; "
+			f"found {len(matches)}.",
+		)
+	current_name = matches[0].group(2)
+	if current_name.lower() == name:
+		return content, False
+	normalized = pattern.sub(lambda match: f"{match.group(1)}{name}{match.group(3)}", text)
+	return normalized.encode("utf-8"), True
+
+
+def _declared_domain_name(content: str) -> str:
+	matches = tuple(
+		re.finditer(r"\(\s*define\s*\(\s*domain\s+([^\s()]+)\s*\)", content, re.IGNORECASE),
+	)
+	if len(matches) != 1:
+		raise ValueError(f"Expected exactly one PDDL domain declaration; found {len(matches)}.")
+	return matches[0].group(1).lower()
 
 
 def _read_source_file(spec: DomainSpec, relative_path: str) -> bytes:

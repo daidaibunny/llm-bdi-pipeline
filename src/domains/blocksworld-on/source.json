@@ -2,6 +2,7 @@
   "instance_count": 180,
   "ipc_variant": "blocks_4_on_no_constants",
   "ipc_year": "KR 2025",
+  "normalized_problem_domain_reference_count": 0,
   "source": "bonetblai/learner-policies-from-examples",
   "source_commit": "9991926f7655c4b6c8dc2f0404123639e42056f2",
   "source_domain_file": "learning/benchmarks/tractable/blocks_4_on_no_constants/domain.pddl",

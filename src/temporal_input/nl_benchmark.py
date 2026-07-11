@@ -171,6 +171,14 @@ class GroundAction:
 
 
 @dataclass(frozen=True)
+class TraceReplay:
+	"""Certified PDDL replay of a concrete primitive-action sequence."""
+
+	actions: tuple[GroundAction, ...]
+	states: tuple[GroundState, ...]
+
+
+@dataclass(frozen=True)
 class VariableSpec:
 	"""One typed lifted parameter exposed in a natural-language query."""
 
@@ -303,6 +311,58 @@ class _GroundEvent:
 
 	def objects(self) -> frozenset[str]:
 		return frozenset(self.arguments)
+
+
+def replay_ground_action_trace(
+	*,
+	domain_file: str | Path,
+	problem_file: str | Path,
+	action_lines: Sequence[str],
+) -> TraceReplay:
+	"""Replay one concrete trace and fail at the first inapplicable PDDL action."""
+
+	catalog = _build_catalog(Path(domain_file))
+	problem = PDDLParser.parse_problem(problem_file)
+	if problem.domain_name not in {catalog.domain.name, "unknown_domain"}:
+		raise ValueError(
+			f"Problem domain {problem.domain_name!r} does not match {catalog.domain.name!r}.",
+		)
+	object_types = _all_object_types(catalog.domain, problem)
+	schema_by_name = {schema.name: schema for schema in catalog.actions}
+	state = _initial_state(problem)
+	states = [state]
+	actions: list[GroundAction] = []
+	for step_index, line in enumerate(action_lines, start=1):
+		name, arguments = _parse_ground_action_line(line)
+		schema = schema_by_name.get(name)
+		if schema is None:
+			raise ValueError(f"Trace step {step_index} uses unknown action {name!r}.")
+		if len(arguments) != len(schema.parameters):
+			raise ValueError(
+				f"Trace step {step_index} action {name!r} expects "
+				f"{len(schema.parameters)} arguments; received {len(arguments)}.",
+			)
+		binding = dict(zip(schema.parameters, arguments))
+		unknown_objects = [argument for argument in arguments if argument not in object_types]
+		if unknown_objects:
+			raise ValueError(
+				f"Trace step {step_index} references unknown objects {unknown_objects}.",
+			)
+		if not _binding_types_valid(schema, binding, catalog, object_types):
+			raise ValueError(f"Trace step {step_index} violates PDDL parameter types.")
+		if not _binding_satisfies(schema, binding, state):
+			raise ValueError(
+				f"Trace step {step_index} action {name!r} has an unsatisfied precondition.",
+			)
+		action = GroundAction(
+			name=name,
+			arguments=arguments,
+			binding_items=tuple(sorted(binding.items())),
+		)
+		state = _apply_action(catalog, state, action)
+		actions.append(action)
+		states.append(state)
+	return TraceReplay(actions=tuple(actions), states=tuple(states))
 
 
 def build_problem_candidates(
@@ -1361,6 +1421,17 @@ def _ground_literal(
 
 def _ground_term(term: str, binding: Mapping[str, str]) -> str:
 	return binding[term] if term.startswith("?") else term
+
+
+def _parse_ground_action_line(line: str) -> tuple[str, tuple[str, ...]]:
+	text = str(line or "").strip()
+	match = re.search(r"\(([^()]*)\)", text)
+	if match is None:
+		raise ValueError(f"Invalid PDDL plan action line: {line!r}.")
+	tokens = tuple(token.lower() for token in match.group(1).split() if token.strip())
+	if not tokens:
+		raise ValueError(f"Empty PDDL plan action line: {line!r}.")
+	return tokens[0], tokens[1:]
 
 
 def _evaluate_numeric_condition(

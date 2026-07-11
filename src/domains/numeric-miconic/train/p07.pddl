@@ -1,5 +1,5 @@
 (define (problem miconic_07-problem)
- (:domain miconic_07-domain)
+ (:domain numeric-miconic)
  (:objects
    p1 - passenger
    f1 f2 f3 - floor

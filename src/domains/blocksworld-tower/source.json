@@ -2,6 +2,7 @@
   "instance_count": 102,
   "ipc_variant": "blocks-strips-typed",
   "ipc_year": "2000",
+  "normalized_problem_domain_reference_count": 0,
   "source": "potassco/pddl-instances",
   "source_commit": "cf19edf7c53d1540ddbb396c642595e0926ee552",
   "source_domain_file": "ipc-2000/domains/blocks-strips-typed/domain.pddl",

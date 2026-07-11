@@ -46,7 +46,8 @@ certificate.
 | Atomic ASL library generation | Needs full rerun | Run the timestamped MOOSE-to-ASL batch for all 16 selected benchmark entries after this benchmark expansion. |
 | Jason plus VAL validation | Needs full rerun | Run full-test DFA-transition validation after the new ASL batch completes. Report per-domain Jason and VAL success, timeout, and failure categories. |
 | Numeric domains | Experimental | Keep numeric support marked experimental until numeric fluents have a complete executable semantics and full validation evidence. |
-| Temporal Input integration | External dependency | Consume provided lifted LTLf JSON only; do not regenerate language-model prompts in this repository unless explicitly requested. |
+| Temporal Input generation | Ready for model run | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are frozen. The colleague runs only the 475 Prompt-2 translations and returns canonical `translation_predictions.jsonl`. |
+| Temporal Goal Validation | Implemented; pending model artifact | Run `scripts/validate_temporal_goal_predictions.py` after predictions arrive. The batch checks the eight-key contract, exact gold/predicted DFA equivalence, all hidden witnesses, optional Jason traces with neutral-goal VAL, and gold-DFA acceptance. |
 
 ## Certified Generic Fixes
 
@@ -150,4 +151,16 @@ PYTHONDONTWRITEBYTECODE=1 uv run pytest -q \
   tests/domain_level_planning/test_atomic_module_synthesis.py \
   tests/domain_level_planning/test_evidence_module.py \
   tests/domain_level_planning/test_dfa_goal_adapter.py
+```
+
+Validate frozen lifted LTLf predictions and optionally matching execution
+traces named `<sample_id>.plan`:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run python \
+  scripts/validate_temporal_goal_predictions.py \
+  --handoff-root artifacts/temporal_nl_handoffs/temporal-nl-v1-20260711-final \
+  --benchmark-root artifacts/temporal_nl_benchmarks/temporal-nl-v1-20260711-final \
+  --predictions-file artifacts/temporal_predictions/translation_predictions.jsonl \
+  --output-dir artifacts/temporal_goal_validation/<run-id>
 ```
