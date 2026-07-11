@@ -27,6 +27,12 @@ This glossary is normative.
 | **Translation input signature** | A SHA-256 hash of the complete language-model input: the rendered domain system prompt plus `source_text`, declared parameters, constraints, and parameter semantics. Two rows may share this signature only when the model would receive byte-equivalent semantic inputs. |
 | **Translation worklist** | The deduplicated public call list containing one row per unique complete language-model input. Each row retains `member_sample_ids` so one prediction can be expanded back to every covered problem row. Version 1 has 475 rows and therefore requires 475 primary model calls. |
 | **Construction audit** | The private artifact containing `T_i`, `theta_i`, `pi_i`, and state fingerprints. It allows reproducibility checks without leaking answers to the translation model. |
+| **Smoke translation set** | Five pre-registered worklist rows, one for each supported formula profile, used to check model connectivity, prompt rendering, JSON capture, and public payload validation before continuing the primary run. These five calls are retained as part of the 475 primary calls; they are not rerun. |
+| **Prediction contract validation** | A fail-closed check of one model response against the public input and domain catalogue. It verifies the exact JSON shape, copied parameters and constraints, declared symbols, arities, types, atom table, and allowed operators. It does not inspect the hidden gold formula. |
+| **DFA language equivalence** | Exact comparison of the finite-trace languages accepted by the hidden gold deterministic finite automaton and predicted deterministic finite automaton. A product-state search either proves equality or returns a distinguishing finite valuation trace. |
+| **Hidden-witness acceptance** | Replay of the sealed PDDL action witness `pi_i`, followed by evaluation of both gold and predicted deterministic finite automata on the resulting state trace. It checks the prediction on every problem-level binding covered by a deduplicated translation. |
+| **Execution-trace validation** | Optional downstream validation of a generated primitive-action plan. Every action must replay legally from `P_i`, an independent PDDL plan verifier must accept it against a neutral final goal, and both gold and predicted deterministic finite automata must accept the complete state trace. |
+| **Validated append dataset** | One per-domain LTLf JSON artifact containing only predictions that passed the public payload contract, exact DFA language equivalence, and hidden-witness acceptance. It is the only prediction artifact eligible for later temporal-goal append. |
 | **Structured non-construction** | A retained row such as `source_witness_not_found`. A problem is never silently dropped. |
 
 Requirement words are normative:
@@ -38,7 +44,7 @@ Requirement words are normative:
 
 ## Scope and Handoff Boundary
 
-This repository owns exactly this construction path:
+This repository owns the benchmark-construction path:
 
 ```text
 PDDL domain D + held-out test problem P_i
@@ -51,12 +57,25 @@ PDDL domain D + held-out test problem P_i
 -> deduplicated translation worklist
 ```
 
-The public handoff has two required files. `natural_language_manifest.jsonl`
+It also owns the post-model validation path:
+
+```text
+canonical translation_predictions.jsonl
+-> public prediction-contract validation
+-> real LTLf2DFA/MONA compilation
+-> exact hidden-gold/predicted DFA language equivalence
+-> hidden PDDL witness replay and finite-trace acceptance
+-> optional execution trace + independent VAL + DFA acceptance
+-> validation reports + validated per-domain append datasets
+```
+
+The public input handoff has two required files. `natural_language_manifest.jsonl`
 retains all 1,228 problem rows for traceability and result expansion.
 `translation_worklist.jsonl` deduplicates those rows into 475 unique complete
-model inputs and is the only language-model call list. Model execution and all
-artifacts produced from its predictions are outside the local construction
-scope.
+model inputs and is the only language-model call list. The colleague owns the
+model calls and invokes the provided post-model validator after freezing all
+predictions. The hidden benchmark audit is local validation data and MUST never
+be included in a model message or retry.
 
 The local builder MUST NOT call a language model, classical planner, generalized
 planner, AgentSpeak runtime, or downstream temporal controller.
@@ -67,8 +86,14 @@ local construction scope.
 
 ## Colleague-Only Procedure
 
-This section is the complete operational handoff to the colleague. The
-colleague MUST:
+This section is the complete operational handoff to the colleague. It is split
+into preflight, a five-call smoke, the remaining primary calls, and post-freeze
+validation. Hidden validation results MUST NOT be used to edit a prediction,
+change a prompt, add a retry, or tune the model configuration.
+
+### Phase 0: Preflight
+
+The colleague MUST:
 
 1. Use the finalized public handoff directory
    `artifacts/temporal_nl_handoffs/temporal-nl-v1-20260711-final/` and verify
@@ -76,9 +101,10 @@ colleague MUST:
    `handoff_manifest.json`, `natural_language_manifest.jsonl`,
    `translation_worklist.jsonl`, and every referenced
    `domains/<domain>/catalog.json`.
-2. Treat `translation_worklist.jsonl` as the only primary model-call list. Its
-   475 rows require exactly 475 primary calls. Do not call the model once for
-   each of the 1,228 rows in `natural_language_manifest.jsonl`.
+2. Check out a new development branch from the latest `main`. Treat
+   `translation_worklist.jsonl` as the only primary model-call list. Its 475
+   rows require exactly 475 primary calls. Do not call the model once for each
+   of the 1,228 rows in `natural_language_manifest.jsonl`.
 3. For each worklist row, load its `catalog_file` relative to the handoff root,
    render the system message with `build_lifted_ltlf_system_prompt(catalog)`,
    and render the user message with `build_lifted_ltlf_user_prompt(row)`.
@@ -87,7 +113,8 @@ colleague MUST:
    settings and the prompt-source commit with every run. All 475 primary records
    MUST use the same `model_id`, `model_parameters`, and `prompt_config`, and
    `prompt_source_commit` MUST equal the commit sealed in `handoff_manifest.json`.
-5. Validate every response before acceptance: require the exact eight-key JSON
+5. Validate every response before acceptance with
+   `validate_prediction_payload(...)`: require the exact eight-key JSON
    payload, exact copied sample identifier/parameters/constraints, complete and
    nonredundant atom definitions, catalogue-valid symbols and arities,
    subtype-compatible arguments, integer numeric equalities, and only `F`, `X`,
@@ -96,7 +123,37 @@ colleague MUST:
    `build_retry_user_message(...)`. Network/model timeouts and
    LTLf2DFA/MONA/runtime failures are infrastructure outcomes, not instructions
    to simplify or change the query.
-7. Write exactly one canonical record per `translation_id` to
+
+### Phase 1: Five-call smoke
+
+7. Run exactly the following five pre-registered translation identifiers first.
+   They are the lexicographically first worklist rows for the five supported
+   formula profiles. The profile labels are local selection metadata and MUST
+   NOT be added to either model message:
+
+   ```text
+   tpl_000d5be64911d3435d804c820b5e75f6bdf448f34a6945ac022e6dbb4b0aaefb
+   tpl_001484b28b81589305521f6298a5d2686e2b18c17de5dd455e4c8233487c41c3
+   tpl_00b322960aee1adf91aabfa6876975d6d495a40c4c1aba230dc875cef4415863
+   tpl_01c942f143dae8d45b32837af9bc3b8e9a191bab11ac50f82f5be306cdb7c609
+   tpl_37c39e3e8fac0d969fcb37ff03757ddd556b1b13528423a5ca3b167914d65e38
+   ```
+
+8. For the smoke, inspect only infrastructure and public contract outcomes:
+   prompt rendering, model response capture, canonical record construction,
+   `validate_prediction_payload(...)`, and restricted-LTLf parsing. Do not run
+   hidden-gold equivalence on an incomplete five-row file and do not inspect the
+   private construction audit. If an implementation bug is found, discard the
+   incomplete run, fix it, and restart all five under one newly recorded run.
+   If the pipeline is sound, retain these exact five canonical records as the
+   first completed members of the primary run.
+
+### Phase 2: Complete and freeze all predictions
+
+9. Continue with the remaining 470 worklist rows using the identical model,
+   decoding parameters, prompt configuration, prompt-source commit, validation
+   code, and pre-registered retry budget. Do not rerun the five smoke calls.
+10. Write exactly one canonical record per `translation_id` to
    `translation_predictions.jsonl`. An accepted record has the following exact
    outer shape; `prediction` is the validated eight-key model payload and
    `raw_response` is the unmodified model response:
@@ -121,14 +178,60 @@ colleague MUST:
    and a non-null `terminal_error` object. Do not omit a failed worklist row.
    For an accepted record, parsing `raw_response` as JSON MUST reproduce
    `prediction` exactly; post-hoc edits are not accepted as the model response.
-8. Deliver the 475-row `translation_predictions.jsonl` without manually
+11. Require exactly 475 unique records and no missing worklist identifier.
+    Freeze the file before hidden validation and record its SHA-256 digest. Any
+    later correction is a new run with a new output directory; never edit the
+    frozen file in place.
+12. Retain the 475-row `translation_predictions.jsonl` without manually
    duplicating predictions. The local goal-validation batch uses
    `member_sample_ids` to expand it to all 1,228 problem rows after model output
    has been frozen; retries are reported separately from primary calls.
-9. Fail closed if the worklist does not contain 475 unique
+13. Fail closed if the worklist does not contain 475 unique
    `translation_input_signature` values, if its membership does not cover every
    manifest `sample_id` exactly once, if a referenced catalogue is missing, or
    if a response remains invalid after the pre-registered retry budget.
+
+### Phase 3: Run post-freeze temporal-goal validation
+
+14. After all 475 predictions are frozen, run:
+
+    ```bash
+    PYTHONDONTWRITEBYTECODE=1 uv run python \
+      scripts/validate_temporal_goal_predictions.py \
+      --handoff-root \
+        artifacts/temporal_nl_handoffs/temporal-nl-v1-20260711-final \
+      --benchmark-root \
+        artifacts/temporal_nl_benchmarks/temporal-nl-v1-20260711-final \
+      --predictions-file <run-dir>/translation_predictions.jsonl \
+      --output-dir <run-dir>/goal_validation
+    ```
+
+    This complete-coverage command intentionally rejects partial prediction
+    files. It validates 475 translation inputs, expands them through sealed
+    `member_sample_ids`, and validates all 1,228 problem rows.
+15. Treat `semantic_mismatch`, `witness_rejected`, terminal model failures, and
+    contract errors as measured outcomes. Do not feed hidden distinguishing
+    traces, hidden formulas, assignments, witnesses, or error details back to
+    the model. Treat MONA, malformed sealed audit, PDDL replay disagreement, or
+    missing dependency errors separately as infrastructure or benchmark errors.
+16. Deliver the frozen predictions and the complete validation directory:
+
+    ```text
+    <run-dir>/translation_predictions.jsonl
+    <run-dir>/goal_validation/summary.json
+    <run-dir>/goal_validation/translation_validation_results.jsonl
+    <run-dir>/goal_validation/problem_validation_results.jsonl
+    <run-dir>/goal_validation/validated_append_datasets/<domain>.json
+    ```
+
+    Also deliver the run configuration and SHA-256 digest of the predictions
+    file. The validation command may exit nonzero when measured model outcomes
+    fail; the generated reports remain required evidence and MUST be retained.
+17. If execution traces already exist, they MAY additionally be checked with
+    `--execution-traces-root <trace-dir>` and an available VAL command. This is
+    a separate downstream execution experiment, not a prerequisite for the
+    translation result. Absence of execution traces must be reported as
+    `not_attempted`, never as translation success or failure.
 
 The colleague MUST NOT put `profile`, `construction_tier`,
 `semantic_signature`, `translation_id`, `member_sample_ids`, benchmark-domain
@@ -137,9 +240,10 @@ formula, or construction audit into a model message. The prompt builders
 already enforce this boundary; deduplication metadata is used only for local
 bookkeeping and result expansion.
 
-The colleague handoff ends at `translation_predictions.jsonl`. Hidden-gold DFA
-equivalence, witness replay, execution-trace validation, and result expansion
-are performed locally after predictions are frozen and are not model inputs.
+The colleague's model-call responsibility ends when
+`translation_predictions.jsonl` is frozen. The colleague then invokes the
+repository's deterministic validator and returns its unedited reports; hidden
+validation remains local computation and is never a model input.
 
 ## Normative NL-to-Lifted-LTLf Prompt Handoff
 
@@ -728,11 +832,30 @@ tests/temporal_specification/test_prompts.py
 tests/temporal_specification/test_errors.py
 ```
 
+Post-model temporal-goal validation code:
+
+```text
+src/temporal_specification/prediction_validation.py
+src/evaluation/temporal_goal_validation.py
+src/evaluation/temporal_validation_batch.py
+src/evaluation/external_plan_verifier.py
+scripts/validate_temporal_goal_predictions.py
+tests/temporal_specification/test_prediction_validation.py
+tests/evaluation/test_temporal_goal_validation.py
+tests/evaluation/test_temporal_validation_batch.py
+tests/evaluation/test_external_plan_verifier.py
+```
+
 Construction may depend on `utils.pddl_parser`. Worklist deduplication depends
 on the normative system-prompt renderer because equality is defined over the
 actual model context, not approximate catalogue similarity. Neither path may
 depend on generalized planning backends, atomic-module synthesis, query
 wrappers, Jason, or VAL.
+
+Post-model validation is a separate path. It depends on the sealed private
+construction audit, the real LTLf2DFA/MONA toolchain, PDDL action replay, and,
+only when execution traces are supplied, an independent VAL-compatible plan
+verifier. It does not call the translation model or modify model responses.
 
 Public interfaces:
 
@@ -768,6 +891,23 @@ def write_translation_worklist(
     *,
     manifest_path: Path,
     output_path: Path,
+) -> dict[str, object]: ...
+
+def validate_prediction_payload(
+    payload: Mapping[str, object],
+    *,
+    expected_sample: Mapping[str, object],
+    catalog: Mapping[str, object],
+) -> ValidatedLTLfPrediction: ...
+
+def run_temporal_goal_validation_batch(
+    *,
+    handoff_root: Path,
+    benchmark_root: Path,
+    predictions_file: Path,
+    output_dir: Path,
+    project_root: Path,
+    domains_root: Path,
 ) -> dict[str, object]: ...
 ```
 
@@ -814,6 +954,34 @@ The implementation proves action applicability and state replay during
 construction, then independently evaluates the hidden formula abstract syntax
 tree on the replayed finite trace before accepting the candidate.
 
+After freezing `translation_predictions.jsonl`, the temporal-goal validator
+MUST additionally verify:
+
+- the predictions file has exactly one canonical record for every one of the
+  475 worklist identifiers and no additional identifier;
+- all records use one model identifier, one decoding-parameter object, the
+  `full` prompt configuration, and the prompt-source commit sealed in the
+  handoff manifest;
+- accepted `raw_response` text parses to exactly the stored prediction, with no
+  manual correction between the two fields;
+- every prediction passes the public payload, catalogue, arity, type, atom-table,
+  parameter, constraint, and restricted-operator checks;
+- the gold and predicted formulas are independently compiled by the real
+  LTLf2DFA/MONA toolchain and accept exactly the same finite-trace language;
+- each prediction is expanded through sealed membership to all covered problem
+  rows exactly once;
+- each hidden PDDL witness replays legally and is accepted by both the gold and
+  predicted deterministic finite automata;
+- only translation/problem pairs passing all required gates enter a validated
+  append dataset;
+- infrastructure and benchmark-consistency errors remain separate from model
+  contract errors and semantic mismatches.
+
+When an execution trace is supplied, execution success MUST additionally
+require legal PDDL replay, independent VAL acceptance against a neutral final
+goal, gold-DFA acceptance, and predicted-DFA acceptance. A trace that is absent
+or was not attempted does not affect the translation-only result.
+
 ## Failure Semantics
 
 | Code | Meaning |
@@ -826,6 +994,18 @@ tree on the replayed finite trace before accepting the candidate.
 
 No failure may be converted into a fabricated singleton query or a query based
 on the original PDDL goal.
+
+Post-model validation uses separate outcome classes:
+
+| Outcome | Meaning |
+| --- | --- |
+| `prediction_contract_error` | The model response violates the public JSON, catalogue, typing, parameter, atom-table, or formula-fragment contract. |
+| `semantic_mismatch` | Both formulas compiled, but exact DFA product search found a finite trace accepted by only one formula. |
+| `witness_rejected` | The prediction was language-equivalent at translation level only if this status cannot occur under a consistent audit; retain it as benchmark-consistency evidence rather than silently overriding it. |
+| `terminal_model_failure` | The pre-registered model/retry procedure did not produce an accepted payload. |
+| `validation_infrastructure_error` | MONA, LTLf2DFA, file, dependency, or other validation infrastructure failed; this is not model inaccuracy. |
+| `problem_validation_error` | A sealed problem, assignment, witness, PDDL replay, or benchmark linkage failed consistency checking. |
+| `execution_rejected` | An optional generated plan failed PDDL replay, independent VAL, gold-DFA acceptance, or predicted-DFA acceptance. |
 
 ## Metrics and Paper Claim
 
@@ -841,7 +1021,11 @@ Construction reports:
 
 Translation evaluation separately reports 475 unique-input results and their
 expanded 1,228 problem-row results. A model is called once per unique input;
-expansion does not create additional primary calls.
+expansion does not create additional primary calls. Required reporting includes
+contract-valid rate, exact DFA-equivalent rate, terminal model failures,
+infrastructure errors, hidden-witness acceptance, micro problem-row accuracy,
+and macro accuracy over unique translation inputs. Optional execution results
+are reported separately and never folded into translation accuracy.
 
 The defensible construction claim is:
 
@@ -859,4 +1043,9 @@ Non-claims:
 - version 1 does not cover unrestricted natural language or unrestricted LTLf;
 - duplicate semantic signatures may remain and must be macro-averaged;
 - successful construction does not establish model translation accuracy;
-- this document does not validate downstream planning or execution.
+- gold/predicted DFA equivalence establishes translation semantics, not that the
+  downstream controller can realize every binding;
+- hidden-witness acceptance proves one sealed realizable binding per problem,
+  not universal realizability for all type-compatible assignments;
+- downstream planning or execution is established only for supplied traces that
+  separately pass PDDL replay, independent VAL, and both DFA acceptance checks.
