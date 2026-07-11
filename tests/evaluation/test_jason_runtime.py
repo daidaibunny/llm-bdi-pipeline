@@ -101,15 +101,17 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert 'System.getProperty("jason.pipeline.planTraceEnabled", "true")' in source
 	assert "recordPlanAction(schema, action);" in source
 	assert "private void flushPlanTrace()" in source
-	assert "syncInitialPercepts();" in source
 	assert "EffectDelta delta = applyEffects(schema, bindings);" in source
-	assert "syncPerceptDelta(delta, schema.numericEffects.length > 0);" in source
-	assert "private final Map<String, Literal> literalCache = new HashMap<>();" in source
-	assert "removePercept(cachedLiteral(atom));" in source
-	assert "addPercept(cachedLiteral(atom));" in source
-	assert "private Literal cachedLiteral(String atom)" in source
-	assert "parsed = Literal.parseLiteral(atom);" in source
-	assert "return parsed.copy();" in source
+	assert "JasonPipelineIndexedBeliefBase.applyDynamicDelta(" in source
+	assert "delta.removed," in source
+	assert "delta.added" in source
+	assert "informAgsEnvironmentChanged();" in source
+	assert "syncInitialPercepts();" not in source
+	assert "syncPerceptDelta(" not in source
+	assert "addPercept(" not in source
+	assert "removePercept(" not in source
+	assert "clearPercepts(" not in source
+	assert "Literal.parseLiteral" not in source
 	assert '"runtime_summary".equals(action.getFunctor())' in source
 	assert "runtime env action count " in source
 	assert "actionTraceLimit" in source
@@ -262,10 +264,16 @@ def test_indexed_belief_base_indexes_bound_context_arguments() -> None:
 	assert "staticPredicateIndex" in source
 	assert "dynamicIndex" in source
 	assert "static_beliefs.txt" in source
+	assert "initial_percepts.txt" in source
 	assert "loadStaticBeliefs();" in source
+	assert "loadInitialDynamicBeliefs();" in source
+	assert "public static void applyDynamicDelta(" in source
+	assert "synchronized (instance.getLock())" in source
+	assert "applyDynamicRemoval(atom);" in source
+	assert "applyDynamicAddition(atom);" in source
 	assert "private boolean isLiveDynamicLiteral(Literal candidate)" in source
 	assert "public Iterator<Literal> getPercepts()" in source
-	assert "deindexDynamicLiteral(current);" in source
+	assert "return Collections.emptyIterator();" in source
 	assert "dynamicExactIndex.get(key)" in source
 	assert "dynamicPredicateIndex.get" in source
 	assert "bucket != null && bucket.contains(candidate)" in source

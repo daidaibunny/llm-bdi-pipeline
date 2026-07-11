@@ -996,6 +996,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
+	private static volatile JasonPipelineIndexedBeliefBase activeInstance;
 	private final Map<String, Map<Integer, Map<String, LinkedHashSet<Literal>>>> dynamicIndex =
 		new HashMap<>();
 	private final Map<String, LinkedHashSet<Literal>> dynamicPredicateIndex = new HashMap<>();
@@ -1004,12 +1005,30 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 		new HashMap<>();
 	private final Map<String, LinkedHashSet<Literal>> staticPredicateIndex = new HashMap<>();
 	private final Map<String, LinkedHashSet<Literal>> staticExactIndex = new HashMap<>();
+	private final Path initialDynamicBeliefsPath = Paths.get("initial_percepts.txt");
 	private final Path staticBeliefsPath = Paths.get("static_beliefs.txt");
 
 	@Override
 	public void init(Agent agent, String[] args) {
 		super.init(agent, args);
 		loadStaticBeliefs();
+		loadInitialDynamicBeliefs();
+		activeInstance = this;
+	}
+
+	public static void applyDynamicDelta(Set<String> removed, Set<String> added) {
+		JasonPipelineIndexedBeliefBase instance = activeInstance;
+		if (instance == null) {
+			throw new IllegalStateException("Jason indexed belief base is not initialized");
+		}
+		synchronized (instance.getLock()) {
+			for (String atom : removed) {
+				instance.applyDynamicRemoval(atom);
+			}
+			for (String atom : added) {
+				instance.applyDynamicAddition(atom);
+			}
+		}
 	}
 
 	@Override
@@ -1074,27 +1093,7 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 
 	@Override
 	public Iterator<Literal> getPercepts() {
-		Iterator<Literal> delegate = super.getPercepts();
-		return new Iterator<Literal>() {
-			private Literal current = null;
-
-			@Override
-			public boolean hasNext() {
-				return delegate != null && delegate.hasNext();
-			}
-
-			@Override
-			public Literal next() {
-				current = delegate.next();
-				return current;
-			}
-
-			@Override
-			public void remove() {
-				delegate.remove();
-				deindexDynamicLiteral(current);
-			}
-		};
+		return Collections.emptyIterator();
 	}
 
 	@Override
@@ -1191,6 +1190,26 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 
 	private void indexDynamicLiteral(Literal literal) {
 		indexLiteral(literal, dynamicIndex, dynamicExactIndex);
+	}
+
+	private void applyDynamicRemoval(String atom) {
+		if (atom == null || atom.isBlank()) {
+			return;
+		}
+		Literal literal = Literal.parseLiteral(atom);
+		if (super.remove(literal)) {
+			deindexDynamicLiteral(literal);
+		}
+	}
+
+	private void applyDynamicAddition(String atom) {
+		if (atom == null || atom.isBlank()) {
+			return;
+		}
+		Literal literal = Literal.parseLiteral(atom);
+		if (super.add(literal)) {
+			indexDynamicLiteral(literal);
+		}
 	}
 
 	private void indexStaticLiteral(Literal literal) {
@@ -1512,6 +1531,30 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 			);
 		}
 	}
+
+	private void loadInitialDynamicBeliefs() {
+		if (!Files.exists(initialDynamicBeliefsPath)) {
+			return;
+		}
+		try (BufferedReader reader = Files.newBufferedReader(
+			initialDynamicBeliefsPath,
+			StandardCharsets.UTF_8
+		)) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				String fact = line.trim();
+				if (!fact.isEmpty() && !fact.startsWith("#")) {
+					applyDynamicAddition(fact);
+				}
+			}
+		} catch (IOException error) {
+			throw new RuntimeException(
+				"Failed to load Jason initial dynamic beliefs from "
+					+ initialDynamicBeliefsPath.toAbsolutePath(),
+				error
+			);
+		}
+	}
 }
 """.strip() + "\n"
 
@@ -1535,7 +1578,6 @@ def _build_environment_java_source(
 	plan_trace_file = _java_quote(plan_trace_file_name)
 	pddl_symbol_map_file = _java_quote(pddl_symbol_map_file_name)
 	return f"""
-import jason.asSyntax.Literal;
 import jason.asSyntax.Structure;
 import jason.environment.Environment;
 
@@ -1650,10 +1692,8 @@ public class {class_name} extends Environment {{
 	}}
 
 	private final Set<String> world = new LinkedHashSet<>();
-	private final Set<String> perceived = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
 	private final Map<String, String> pddlSymbols = new HashMap<>();
-	private final Map<String, Literal> literalCache = new HashMap<>();
 	private final StringBuilder planTraceBuffer = new StringBuilder();
 	private boolean planTraceDirty = false;
 	private final Path initialPerceptsPath = Paths.get({initial_percepts_file});
@@ -1680,7 +1720,6 @@ public class {class_name} extends Environment {{
 		loadPddlSymbolMap();
 		resetPlanTrace();
 		loadActions();
-		syncInitialPercepts();
 		System.out.println("runtime env ready");
 	}}
 
@@ -1739,7 +1778,13 @@ public class {class_name} extends Environment {{
 		}}
 
 		EffectDelta delta = applyEffects(schema, bindings);
-		syncPerceptDelta(delta, schema.numericEffects.length > 0);
+		JasonPipelineIndexedBeliefBase.applyDynamicDelta(
+			delta.removed,
+			delta.added
+		);
+		if (delta.changed()) {{
+			informAgsEnvironmentChanged();
+		}}
 		actionCount += 1;
 		recordPlanAction(schema, action);
 		traceSuccessfulAction(schema, action);
@@ -2121,79 +2166,6 @@ public class {class_name} extends Environment {{
 		}}
 	}}
 
-	private void syncInitialPercepts() {{
-		clearPercepts();
-		perceived.clear();
-		for (String atom : initialPerceptFacts()) {{
-			if (world.contains(atom)) {{
-				addPercept(cachedLiteral(atom));
-				perceived.add(atom);
-			}}
-		}}
-		informAgsEnvironmentChanged();
-	}}
-
-	private Set<String> initialPerceptFacts() {{
-		Set<String> facts = new LinkedHashSet<>();
-		try (BufferedReader reader = Files.newBufferedReader(
-			initialPerceptsPath,
-			StandardCharsets.UTF_8
-		)) {{
-			String line;
-			while ((line = reader.readLine()) != null) {{
-				String fact = line.trim();
-				if (!fact.isEmpty() && !fact.startsWith("#")) {{
-					facts.add(fact);
-				}}
-			}}
-		}} catch (IOException error) {{
-			throw new RuntimeException(
-				"Failed to load Jason initial percepts from "
-					+ initialPerceptsPath.toAbsolutePath(),
-				error
-			);
-		}}
-		return facts;
-	}}
-
-	private void syncPerceptDelta(EffectDelta delta, boolean forceFullResync) {{
-		if (!delta.changed()) {{
-			return;
-		}}
-		if (forceFullResync) {{
-			Set<String> next = new LinkedHashSet<>(perceived);
-			next.removeAll(delta.removed);
-			next.addAll(delta.added);
-			clearPercepts();
-			for (String atom : next) {{
-				addPercept(cachedLiteral(atom));
-			}}
-			perceived.clear();
-			perceived.addAll(next);
-			informAgsEnvironmentChanged();
-			return;
-		}}
-		for (String atom : delta.removed) {{
-			if (perceived.remove(atom)) {{
-				removePercept(cachedLiteral(atom));
-			}}
-		}}
-		for (String atom : delta.added) {{
-			if (perceived.add(atom)) {{
-				addPercept(cachedLiteral(atom));
-			}}
-		}}
-		informAgsEnvironmentChanged();
-	}}
-
-	private Literal cachedLiteral(String atom) {{
-		Literal parsed = literalCache.get(atom);
-		if (parsed == null) {{
-			parsed = Literal.parseLiteral(atom);
-			literalCache.put(atom, parsed);
-		}}
-		return parsed.copy();
-	}}
 }}
 """.strip() + "\n"
 
