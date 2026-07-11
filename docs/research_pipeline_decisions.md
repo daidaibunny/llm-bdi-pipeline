@@ -546,6 +546,34 @@ It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.
 
+After certification fixes an order `L1, ..., Ln`, the appender compiles that
+order into a balanced transition repair tree. A transition repair tree is
+query-local AgentSpeak control structure: an internal helper for range `[i,j]`
+calls the two midpoint ranges, while a leaf has two mutually exclusive plans,
+one for `Li` already true and one that calls the selected atomic module for
+`Li`. The root then calls a separate done helper. The done helper returns only
+when the full positive conjunction and all negative guards hold in the same
+state; otherwise it re-enters the same transition. Thus balancing changes how
+Jason dispatches a certified serialization, not which serialization is used.
+
+This replaces the old one-sibling-plan-per-literal representation. For `N`
+positive literals, that representation gave one trigger `N` repair candidates
+and could repeat that candidate scan after each repair, yielding quadratic
+controller matching. The balanced tree has `O(N)` query-local nodes, maximum
+trigger fan-out two, `O(N)` visits per pass, and `O(log N)` nesting depth. The
+complete conjunction is checked once per pass. The compiler records
+`transition_controller_strategy=balanced_transition_repair_tree` so experiments
+cannot silently mix the two encodings. Tree helper names are not PDDL fluents,
+atomic modules, or exported actions.
+
+For a singleton transition, the tree has one leaf: if the literal is absent it
+calls the same atomic module once, and the done helper rechecks the same guard.
+It is therefore primitive-action equivalent to the previous singleton wrapper.
+For several DFA progress transitions, one independently generated tree is used
+per transition and the DFA path order is unchanged. The tree does not provide
+action batching, choose among atomic-module branches, or make an uncertified
+threat cycle safe. Those remain separate method obligations.
+
 The completion observation boundary is appropriate for achievement transitions
 that are checked after an atomic module returns. It does not justify
 safety-sensitive LTLf formulas that must observe every primitive intermediate

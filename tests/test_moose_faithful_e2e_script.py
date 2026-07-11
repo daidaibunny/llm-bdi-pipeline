@@ -161,7 +161,15 @@ def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) 
 	assert "numeric_minecraft_test_1." in asl
 	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in asl
 	assert "\t!g_numeric_minecraft_test_1_trans_1." in asl
-	assert "\t!pogo_sticks_to_make(0);" in asl
+	assert (
+		"+!g_numeric_minecraft_test_1_trans_1_repair_1_1 : "
+		"numeric_minecraft_test_1 & not pogo_sticks_to_make(0) <-"
+	) in asl
+	assert "\t!pogo_sticks_to_make(0)." in asl
+	assert (
+		"+!g_numeric_minecraft_test_1_trans_1_done : "
+		"numeric_minecraft_test_1 & pogo_sticks_to_make(0) <-"
+	) in asl
 	assert payload["initial_beliefs"] == ["numeric_minecraft_test_1"]
 	assert (
 		payload["metadata"]["evaluation_pddl_goal_wrapper_bridge"]["final_query_contract"]

@@ -45,7 +45,6 @@ def test_main_compiles_moose_atomic_library(tmp_path: Path) -> None:
 	metadata = json.loads(
 		Path(result["artifact_paths"]["artifact_metadata"]).read_text(encoding="utf-8"),
 	)
-
 	assert result["success"] is True
 	assert result["plan_count"] == 1
 	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "ferry"
@@ -95,7 +94,6 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	metadata = json.loads(
 		Path(result["artifact_paths"]["artifact_metadata"]).read_text(encoding="utf-8"),
 	)
-
 	assert result["success"] is True
 	assert result["plan_count"] >= 17
 	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "blocksworld-tower"
@@ -227,6 +225,10 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 		Path(result["artifact_paths"]["artifact_metadata"]).read_text(encoding="utf-8"),
 	)
 
+	library_payload = json.loads(
+		Path(result["artifact_paths"]["plan_library"]).read_text(encoding="utf-8"),
+	)
+
 	assert result["success"] is True
 	assert result["appended_query_count"] == 1
 	assert Path(result["artifact_paths"]["plan_library_asl"]).parent == library_root / "tiny"
@@ -241,9 +243,15 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert "query_1." in asl
 	assert "+!g_query_1 : query_1 <-" in asl
 	assert "\t!g_query_1_trans_1." in asl
-	assert "+!g_query_1_trans_1 : query_1 & done <-" in asl
-	assert "+!g_query_1_trans_1 : query_1 & not done <-" in asl
-	assert "\t!done;\n\t!g_query_1_trans_1." in asl
+	assert "+!g_query_1_trans_1_repair_1_1 : query_1 & done <-" in asl
+	assert "+!g_query_1_trans_1_repair_1_1 : query_1 & not done <-" in asl
+	assert "\t!done." in asl
+	assert "+!g_query_1_trans_1_done : query_1 & done <-" in asl
+	assert library_payload["metadata"]["temporal_goal_append"][
+		"transition_controller_strategy"
+	] == (
+		"balanced_transition_repair_tree"
+	)
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
 	assert "dfa_state" not in asl
@@ -348,7 +356,12 @@ def test_main_can_append_multiple_queries_to_same_domain_library(
 		record["goal_name"]
 		for record in library_json["metadata"]["temporal_goal_append_history"]
 	] == ["g_query_1", "g_query_2"]
-	assert second_result["plan_count"] == 7
+	assert second_result["plan_count"] == 13
+	assert library_json["metadata"]["temporal_goal_append"][
+		"transition_controller_strategy"
+	] == (
+		"balanced_transition_repair_tree"
+	)
 
 
 def test_main_rejects_noncanonical_output_root(tmp_path: Path) -> None:
