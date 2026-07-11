@@ -355,7 +355,7 @@ def build_problem_candidates(
 			continue
 		_validate_witness(
 			catalog=catalog,
-			problem=problem,
+			initial_state=initial,
 			object_types=object_types,
 			states=(initial, state_one),
 			actions=(first_action,),
@@ -427,7 +427,7 @@ def build_problem_candidates(
 				continue
 			_validate_witness(
 				catalog=catalog,
-				problem=problem,
+				initial_state=initial,
 				object_types=object_types,
 				states=(initial, state_one, state_two),
 				actions=(first_action, second_action),
@@ -519,7 +519,7 @@ def build_problem_candidates(
 				continue
 			_validate_witness(
 				catalog=catalog,
-				problem=problem,
+				initial_state=initial,
 				object_types=object_types,
 				states=(initial, state_one, state_two, state_three),
 				actions=(first_action, second_action, third_action),
@@ -1095,12 +1095,12 @@ def _lift_candidate(
 def _validate_witness(
 	*,
 	catalog: PDDLCatalog,
-	problem: PDDLProblem,
+	initial_state: GroundState,
 	object_types: Mapping[str, str],
 	states: tuple[GroundState, ...],
 	actions: tuple[GroundAction, ...],
 ) -> None:
-	if len(states) != len(actions) + 1 or states[0] != _initial_state(problem):
+	if len(states) != len(actions) + 1 or states[0] != initial_state:
 		raise ValueError("Witness states do not match the problem initial state and action count.")
 	if len(set(states)) != len(states):
 		raise ValueError("Witness contains a repeated complete state.")

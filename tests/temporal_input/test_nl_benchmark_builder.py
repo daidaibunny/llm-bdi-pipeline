@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import temporal_input.nl_benchmark as nl_benchmark
 from temporal_input.nl_benchmark import BuildConfig
 from temporal_input.nl_benchmark import build_domain_nl_manifest
 from temporal_input.nl_benchmark import build_problem_candidates
@@ -9,6 +10,28 @@ from temporal_input.nl_benchmark import build_problem_candidates
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DOMAINS_ROOT = PROJECT_ROOT / "src" / "domains"
+
+
+def test_problem_build_reuses_one_initial_state_for_all_witnesses(
+	monkeypatch,
+) -> None:
+	domain_dir = DOMAINS_ROOT / "blocksworld-on"
+	original = nl_benchmark._initial_state
+	call_count = 0
+
+	def counted_initial_state(problem):
+		nonlocal call_count
+		call_count += 1
+		return original(problem)
+
+	monkeypatch.setattr(nl_benchmark, "_initial_state", counted_initial_state)
+	build_problem_candidates(
+		domain_file=domain_dir / "domain.pddl",
+		problem_file=domain_dir / "test" / "p-50-0.pddl",
+		config=BuildConfig(),
+	)
+
+	assert call_count == 1
 
 
 def test_blocks_candidates_use_legal_non_repeating_two_step_witness() -> None:
