@@ -110,6 +110,12 @@ would reveal the target operator structure; the other fields are irrelevant to
 semantic translation. The builder also rejects non-constructed rows instead of
 asking the model to fabricate a formula.
 
+`externally_bound` denotes a parameterized formula schema. The schema can be
+instantiated with any assignment satisfying the declared PDDL types and
+constraints, but one later invocation supplies one concrete assignment. During
+translation `X` is therefore neither a problem object nor an LTLf-quantified
+variable; the model preserves `X` exactly and introduces no quantifier.
+
 ### Why the formula uses `a0`, `a1`, and so on
 
 PDDL atoms such as `on(X,Y)` contain uppercase parameters, parentheses, and

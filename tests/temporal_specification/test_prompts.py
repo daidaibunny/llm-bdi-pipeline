@@ -78,8 +78,49 @@ def test_full_system_prompt_defines_propositionalized_lifted_output(
 	assert '"kind": "numeric_equality"' in prompt
 	assert "Do not ground" in prompt
 	assert "binding" not in prompt.lower()
+	assert "parameterized formula schema" in prompt
+	assert "later invocation supplies" in prompt
+	assert "not an LTLf quantifier" in prompt
 	for foreign_domain_symbol in ("holding", "on(X,Y)", "contains(X,Y)"):
 		assert foreign_domain_symbol not in prompt
+
+
+def test_system_prompt_is_equivariant_under_catalogue_symbol_renaming() -> None:
+	original = {
+		"domain": "domain_alpha",
+		"type_parents": {"type_child_alpha": "type_root_alpha"},
+		"constants": [{"name": "constant_alpha", "pddl_type": "type_child_alpha"}],
+		"predicates": [
+			{"name": "predicate_alpha", "argument_types": ["type_child_alpha"]},
+		],
+		"numeric_functions": [
+			{"name": "function_alpha", "argument_types": ["type_child_alpha"]},
+		],
+	}
+	renamed = {
+		"domain": "domain_beta",
+		"type_parents": {"type_child_beta": "type_root_beta"},
+		"constants": [{"name": "constant_beta", "pddl_type": "type_child_beta"}],
+		"predicates": [
+			{"name": "predicate_beta", "argument_types": ["type_child_beta"]},
+		],
+		"numeric_functions": [
+			{"name": "function_beta", "argument_types": ["type_child_beta"]},
+		],
+	}
+
+	renamed_prompt = build_lifted_ltlf_system_prompt(renamed)
+	for beta, alpha in (
+		("predicate_beta", "predicate_alpha"),
+		("function_beta", "function_alpha"),
+		("constant_beta", "constant_alpha"),
+		("type_child_beta", "type_child_alpha"),
+		("type_root_beta", "type_root_alpha"),
+		("domain_beta", "domain_alpha"),
+	):
+		renamed_prompt = renamed_prompt.replace(beta, alpha)
+
+	assert renamed_prompt == build_lifted_ltlf_system_prompt(original)
 
 
 def test_system_prompt_restricts_benchmark_v1_operators(

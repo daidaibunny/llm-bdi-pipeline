@@ -113,6 +113,9 @@ def build_lifted_ltlf_system_prompt(
 		lines += [
 			"",
 			"LIFTED PARAMETER CONTRACT",
+			"- parameter_semantics externally_bound denotes a parameterized formula "
+			"schema: each parameter is not a grounded object and not an LTLf "
+			"quantifier; a later invocation supplies a type-compatible assignment.",
 			"- Copy declared_parameters and constraints byte-for-byte in meaning and "
 			"preserve each parameter's exact case-sensitive name.",
 			"- Every non-constant atom argument must be one declared parameter. Do not "
