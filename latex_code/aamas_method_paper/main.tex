@@ -51,8 +51,10 @@ singleton-goal evidence representation. We instantiate this interface with
 MOOSE, while keeping the compiler independent of that provider. A single
 Clingo program jointly selects validated evidence macros and schema-derived
 branches under executability, closure, recursive-progress, resource-restoration,
-and target-preservation certificates. Unsupported candidates and uncertified
-cyclic transition guards are rejected before library generation.
+and target-preservation certificates. Certified conjunctive DFA guards are
+executed through balanced query-local repair trees that bound AgentSpeak plan
+fan-out while preserving the certified literal order. Unsupported candidates
+and uncertified cyclic transition guards are rejected before library generation.
 \end{abstract}
 
 \ccsdesc[500]{Computing methodologies~Planning and scheduling}
@@ -114,7 +116,8 @@ The paper makes five contributions.
 	selects evidence and schema-derived atomic modules in a single Clingo
 	optimization problem.
 \item We restore an LTLf-to-DFA temporal layer whose conjunctive guards use
-	conservative summaries of selected-module effects.
+	conservative summaries of selected-module effects and balanced repair trees
+	with bounded trigger fan-out.
 \item We define a benchmark scope spanning classical, numeric, and
 	serialized-width domains.
 \end{enumerate}

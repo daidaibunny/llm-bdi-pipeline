@@ -54,8 +54,10 @@ certificate.
 - Temporal append now always calls the real `ltlf2dfa`/MONA converter. The
   removed ordered-sequence fast path can no longer bypass DFA construction.
   Every progress edge on the unique accepting path produces exactly one
-  query-local `trans` helper; singleton guards reduce to the former ordered
-  achievement behavior, while conjunctive guards are rechecked after repair.
+  query-local `trans` controller. Its certified literal order is compiled into
+  a balanced repair tree with maximum trigger fan-out two and logarithmic
+  nesting depth; singleton guards retain one atomic achievement call, while
+  conjunctive guards are checked together after each complete tree pass.
 - Validated MOOSE macros and PDDL-schema branches now enter one Clingo candidate
   space. Evidence coverage, internal-module closure, compatible recursive
   capabilities, branch count, context count, and body cost are decided in one
@@ -82,15 +84,16 @@ certificate.
   free/debt orientation cannot be inferred.
 - Same-predicate recursion requires a non-negative relational-count feature
   with a strict delete and no selected branch that can increase the feature.
-- Every positive DFA progress transition uses the same `trans` replay shape.
-  Singleton guards use identity serialization; conjunctions use certified
-  threat ordering. The old monotonic step-helper path is no longer selected.
+- Every positive DFA progress transition uses the same balanced `trans` repair
+  tree. Singleton guards use identity serialization; conjunctions use certified
+  threat ordering before tree construction. The old linear, sibling-replay,
+  and monotonic step-helper paths are no longer selected.
 - The implementation contains no domain-name routing for these rules. Synthetic
   regression domains cover constant/variable identity, alias-safe cleanup,
   persistent goals, and interfering goals.
 
-Current compiler acceptance gate (2026-07-10): full `ruff check .` passes;
-`pytest -q` reports 256 passed with only two third-party Lark deprecation
+Current compiler acceptance gate (2026-07-12): full `ruff check .` passes;
+`pytest -q` reports 325 passed with only two third-party Lark deprecation
 warnings; real `ltlf2dfa`/MONA builds the expected three-state, five-transition
 automaton for `F(a & X(F(b)))`; and the typed threat certificate processes the
 48,500-literal Gripper `p2_30` goal in about 11 seconds with one cached module
@@ -108,7 +111,7 @@ results:
 | `blocksworld-tower` instances 49 and 51 | `2/2` Jason plus VAL valid; both previously timed out. |
 | `rovers` official test split | `90/90` Jason plus VAL valid; restores the earlier `p0_14` and `p0_20` regressions. |
 | `gripper` `p1_30` | VAL valid, 3.365 seconds and 3,999 actions. |
-| `gripper` `p2_12` | VAL valid, 250.364 seconds and 85,999 actions; previously timed out at 1,800 seconds. |
+| `gripper` `p2_12` | VAL valid, 38.175 seconds and 85,999 actions with the balanced tree; the same delta-indexed runtime took 288.508 seconds with sibling replay. |
 | `depots` `p12` and `p20` | Invalid self-drop removed, but full goals still fail because the evidence/compiler lacks a certified cross-location transport continuation. |
 
 The remaining Depots gap must not be patched with domain-specific parking or

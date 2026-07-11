@@ -172,13 +172,53 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 		)
 	if role == "transition_done":
 		return not body and "_trans_" in plan.trigger.symbol
-	if role == "transition_positive_literal_repair":
+	transition_symbol = str(certificate.get("transition_symbol") or "").strip()
+	tree_root_symbol = str(certificate.get("tree_root_symbol") or "").strip()
+	done_symbol = str(certificate.get("done_symbol") or "").strip()
+	if role == "transition_repair_tree_entry":
 		return (
 			len(body) == 2
+			and plan.trigger.symbol == transition_symbol
+			and _is_nullary_subgoal(body[0], tree_root_symbol)
+			and _is_nullary_subgoal(body[1], done_symbol)
+		)
+	if role == "transition_repair_tree_internal":
+		left_symbol = str(certificate.get("left_child_symbol") or "").strip()
+		right_symbol = str(certificate.get("right_child_symbol") or "").strip()
+		return (
+			len(body) == 2
+			and _is_nullary_subgoal(body[0], left_symbol)
+			and _is_nullary_subgoal(body[1], right_symbol)
+		)
+	if role == "transition_repair_tree_leaf_satisfied":
+		literal_atom = str(certificate.get("literal_atom") or "").strip()
+		return bool(literal_atom) and literal_atom in context and not body
+	if role == "transition_repair_tree_leaf_achievement":
+		literal_atom = str(certificate.get("literal_atom") or "").strip()
+		achievement_symbol = str(certificate.get("achievement_symbol") or "").strip()
+		achievement_arguments = tuple(certificate.get("achievement_arguments") or ())
+		return (
+			bool(literal_atom)
+			and f"not {literal_atom}" in context
+			and len(body) == 1
 			and body[0].kind == "subgoal"
-			and body[0].symbol != plan.trigger.symbol
-			and body[1].kind == "subgoal"
-			and body[1].symbol == plan.trigger.symbol
-			and not tuple(body[1].arguments or ())
+			and body[0].symbol == achievement_symbol
+			and tuple(body[0].arguments or ()) == achievement_arguments
+		)
+	if role == "transition_repair_tree_done":
+		return plan.trigger.symbol == done_symbol and not body
+	if role == "transition_repair_tree_replay":
+		return (
+			plan.trigger.symbol == done_symbol
+			and len(body) == 1
+			and _is_nullary_subgoal(body[0], transition_symbol)
 		)
 	return False
+
+
+def _is_nullary_subgoal(step, symbol: str) -> bool:
+	return bool(symbol) and (
+		step.kind == "subgoal"
+		and step.symbol == symbol
+		and not tuple(step.arguments or ())
+	)

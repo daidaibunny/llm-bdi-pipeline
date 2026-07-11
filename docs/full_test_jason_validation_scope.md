@@ -12,14 +12,16 @@ Current full-test behavior:
    module call graph to a finite, alpha-normalized relational fixed point, with
    PDDL type constraints participating in unification.
 4. Serialize the guard only when those summaries are complete and the induced
-   delete-threat graph is acyclic.
-5. Run Jason against the generated atomic AgentSpeak(L) library plus that
+   delete-threat graph has a certified order or supported preservation proof.
+5. Compile that order into a balanced query-local transition repair tree.
+6. Run Jason against the generated atomic AgentSpeak(L) library plus that
    wrapper.
-6. Export every successful primitive action as a complete PDDL plan trace.
-7. For paper-quality runs, validate that exported trace with VAL or an IPC-style
+7. Export every successful primitive action as a complete PDDL plan trace.
+8. For paper-quality runs, validate that exported trace with VAL or an IPC-style
    plan verifier.
 
-The wrapper shape is a declarative `trans` replay controller:
+The wrapper shape is a declarative `trans` controller whose ordered literals are
+organized as a balanced repair tree:
 
 ```asl
 miconic_test_61.
@@ -27,19 +29,30 @@ miconic_test_61.
 +!g_miconic_test_61 : miconic_test_61 <-
 	!g_miconic_test_61_trans_1.
 
-+!g_miconic_test_61_trans_1 :
++!g_miconic_test_61_trans_1 : miconic_test_61 <-
+	!g_miconic_test_61_trans_1_repair_1_2;
+	!g_miconic_test_61_trans_1_done.
+
++!g_miconic_test_61_trans_1_repair_1_2 : miconic_test_61 <-
+	!g_miconic_test_61_trans_1_repair_1_1;
+	!g_miconic_test_61_trans_1_repair_2_2.
+
++!g_miconic_test_61_trans_1_repair_1_1 :
+	miconic_test_61 & not served(p1) <-
+	!served(p1).
+
++!g_miconic_test_61_trans_1_done :
 	miconic_test_61 & served(p1) & served(p2) <-
 	true.
 
-+!g_miconic_test_61_trans_1 : miconic_test_61 & not served(p1) <-
-	!served(p1);
++!g_miconic_test_61_trans_1_done : miconic_test_61 <-
 	!g_miconic_test_61_trans_1.
 ```
 
 This runner validates:
 
 ```text
-PDDL test conjunction -> certified guard serialization -> trans replay -> Jason execution
+PDDL test conjunction -> certified guard order -> balanced trans repair tree -> Jason execution
 -> exported PDDL plan trace -> VAL/IPC plan verification
 ```
 
@@ -50,7 +63,8 @@ natural language -> lifted LTLf JSON -> LTLf2DFA -> validated DFA -> ASL append
 ```
 
 Jason is not doing classical planning in this setup. It dispatches the selected
-atomic modules and repeatedly rechecks the transition guard. If achieving
+atomic modules and rechecks the complete transition guard after one tree pass.
+If achieving
 `G2` may delete `G1`, the serializer places `G2` before `G1`. This ordering is
 derived from PDDL effects and the selected ASL call graph, not predicate names,
 argument positions, or PDDL file order. If the universal graph is cyclic, the
@@ -96,12 +110,28 @@ query-local `trans` helper for every progress transition on the unique accepting
 path. A query entry proposition is a zero-arity belief that enables one query;
 for example, `miconic_test_61.` enables `+!g_miconic_test_61`.
 
-A singleton positive guard has identity serialization: the helper calls one
-atomic subgoal and rechecks itself. A conjunctive guard is serialized with the
-selected modules' delete-effect certificate and then replayed until every
-positive literal and every negative context guard holds together. Negative
+A singleton positive guard has identity serialization: its single leaf calls
+one atomic subgoal and the done helper rechecks the guard. A conjunctive guard
+is first serialized by the selected modules' delete-effect certificate, then
+compiled into a balanced binary tree over that fixed order. Every leaf checks
+one literal and calls its atomic module only when missing. The final done helper
+checks all positive literals and negative context guards together; if an atomic
+module invalidated an earlier literal, it replays the same transition. Negative
 literals are context checks, never negative achievement subgoals. The old
-linear body and monotonic step-helper paths are not selected.
+linear body, one-sibling-plan-per-literal replay, and monotonic step-helper paths
+are not selected.
+
+The balanced tree is a data-structure optimization over one DFA transition,
+not another planner. With `N` positive literals, the old sibling layout gave
+the same trigger `N` repair plans. Re-entering that trigger after each repair
+could inspect `N` candidates up to `N` times, giving quadratic controller work.
+The tree gives an internal trigger one dispatch plan and a leaf trigger two
+mutually exclusive plans: already satisfied or achieve. One pass visits `N`
+leaves, maximum trigger fan-out is two, and nesting depth is logarithmic. The
+complete conjunction is checked once at the end of a pass. The generated ASL
+contains more query-local helper plans, but it does not change the certified
+literal order, primitive action sequence chosen by an atomic module, or DFA
+transition boundaries.
 
 Branching or state-dependent DFA goals are not silently compiled to `tg_state`
 plans. They now fail with `nonlinear_temporal_goal_not_supported`. Those goals
@@ -648,72 +678,64 @@ the generated plan actually executes a very long primitive action sequence, as
 in large Gripper p2 instances, or that the atomic ASL library itself lacks a
 good executable branch.
 
-### Large Gripper p2 Runtime Boundary
+### Large Conjunction Controller Scalability
 
-The July 7, 2026 full-test run exposed a separate scalability boundary in
-Gripper p2. This is not the old oscillation bug. The current Gripper atomic
-library can generate VAL-valid traces for large p2 instances, but the parser-
-order diagnostic wrapper expands every PDDL goal literal into one sequential
-singleton subgoal.
+The July 2026 Gripper p2 cases isolate two different costs. The atomic module
+still moves one ball with a validated `pick; move; drop` macro, so a problem
+with 21,500 destination literals legitimately produces 85,999 primitive
+actions. That action cost is separate from the cost of dispatching the query
+controller.
 
-For `p2_10`, the wrapper contains 18,500 subgoals of the form
-`!at(ball_i, roomb)` and Jason produced a 73,999-action trace in 1686.9
-seconds; VAL accepted that trace. For `p2_11`, the wrapper contains 20,000
-such subgoals. The expected trace is about 79,999 actions, which crosses the
-current 1800-second per-case budget.
+The former sibling replay controller generated one plan with trigger `+!trans`
+for every missing literal. With `N` literals, Jason could inspect `N` sibling
+plans each time `!trans` was replayed. The done plan also contained all `N`
+literals and was considered at the same trigger. This made controller matching
+approximately quadratic even when every atomic module was correct.
 
-Current wrapper shape:
+The balanced transition repair tree replaces that fan-out:
 
 ```asl
-!g_gripper_test_71 : gripper_test_71 <-
-	!at(ball1, roomb);
-	!at(ball2, roomb);
-	...
-	!at(ball20000, roomb).
++!g_gripper_test_72_trans_1 : gripper_test_72 <-
+	!g_gripper_test_72_trans_1_repair_1_21500;
+	!g_gripper_test_72_trans_1_done.
+
++!g_gripper_test_72_trans_1_repair_1_21500 : gripper_test_72 <-
+	!g_gripper_test_72_trans_1_repair_1_10750;
+	!g_gripper_test_72_trans_1_repair_10751_21500.
+
++!g_gripper_test_72_trans_1_repair_1_1 :
+	gripper_test_72 & not at(ball1, roomb) <-
+	!at(ball1, roomb).
 ```
 
-Current singleton behavior moves each ball independently. After the first ball,
-each additional ball normally requires moving back to `rooma`, picking the ball,
-moving to `roomb`, and dropping it:
+This is a balanced binary tree in the ordinary data-structure sense. An
+internal range `[i,j]` is split near its midpoint and dispatches to two child
+ranges. A leaf represents exactly one ordered guard literal. Balance matters
+because the deepest helper chain grows as `log2(N)` rather than `N`; binary
+dispatch matters because no trigger has thousands of sibling candidates. One
+pass still visits every leaf, so controller work is linear rather than constant.
 
-```text
-move(roomb, rooma);
-pick(ball_i, rooma, left);
-move(rooma, roomb);
-drop(ball_i, roomb, left)
-```
-
-This means the primitive action count grows approximately as
-`4 * number_of_balls - 1`. The timeout threshold therefore appears exactly when
-the test instances move from 18,500 to 20,000 balls under a 1800-second cap.
+An isolated `p2_12` comparison used the same atomic library, one Jason worker,
+the same 64 MiB Java stack, and the same 85,999-action VAL-valid trace. The
+former sibling controller took about 288.5 seconds of Jason execution; the
+balanced tree took about 38.2 seconds. For `p2_01`, the corresponding times
+were about 12.9 and 3.2 seconds for the same 19,999 actions. The generated
+query-local ASL is larger because it explicitly names internal tree nodes:
+`p2_12` grew from roughly 107,643 to 279,647 lines. The measured trade-off is
+therefore more generated control code for substantially less runtime plan
+matching.
 
 The indexed belief base still uses bound variables first. For example, when
-checking `at(X,A)` inside a branch for `!at(ball123, roomb)`, the target ball is
-already bound, so candidate lookup can use the first-argument bucket for
-`ball123` instead of scanning all `at/2` facts. This is the intended binding-
-first behavior. The remaining cost comes from doing this tens of thousands of
-times while dynamic facts are updated after every primitive action.
+checking `at(X,A)` inside `!at(ball123,roomb)`, `ball123` is already bound, so
+the runtime uses that argument bucket rather than scanning all `at/2` facts.
+The tree complements that optimization by reducing trigger candidate fan-out;
+it does not alter belief indexing.
 
-The most important future method-level improvement is query-level batching for
-repeated goals. Gripper has two grippers, but the current diagnostic wrapper and
-atomic singleton library use the same one-ball pattern repeatedly. A better
-query controller could exploit both grippers:
-
-```text
-pick(ball_i, rooma, left);
-pick(ball_j, rooma, right);
-move(rooma, roomb);
-drop(ball_i, roomb, left);
-drop(ball_j, roomb, right)
-```
-
-That would reduce movement actions and move the query-level controller closer
-to a domain-level repeated-goal policy. It should not be hidden inside the
-atomic singleton compiler, because the optimization depends on grouping several
-same-target user goals together. It belongs in a future temporal/query
-composition layer with an explicit progress certificate: each batch must reduce
-the number of unsatisfied `at(B, roomb)` goals while preserving already achieved
-goals.
+The remaining primitive action count is not solved by this controller. A future
+set-level module could batch several homogeneous achievements when a certified
+resource-capacity policy exists, but such batching would change action choices
+and needs its own progress and preservation proof. It is intentionally not
+inferred from a predicate name such as `at` or a domain name such as Gripper.
 
 ### Domain-Long ASL Artifact Policy
 

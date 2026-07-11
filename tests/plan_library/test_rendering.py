@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from plan_library import rendering
 from plan_library.models import AgentSpeakBodyStep, AgentSpeakPlan, AgentSpeakTrigger, PlanLibrary
 from plan_library.rendering import render_plan_library_asl
 
@@ -124,6 +125,24 @@ def test_render_plan_library_places_bound_inequalities_after_type_guards() -> No
 		"& obj_tp(B, surface) & B \\== X & B \\== Z & clear(B) <-"
 		in asl
 	)
+
+
+def test_rendering_keeps_large_ground_transition_context_order_in_linear_work(
+	monkeypatch,
+) -> None:
+	context = ("query", *(f"at(item{index}, target)" for index in range(5000)))
+	original = rendering._parse_context_item_for_ordering
+	parse_count = 0
+
+	def counted(item: str):
+		nonlocal parse_count
+		parse_count += 1
+		return original(item)
+
+	monkeypatch.setattr(rendering, "_parse_context_item_for_ordering", counted)
+
+	assert rendering._ordered_context_items(context) == context
+	assert parse_count <= len(context)
 
 
 def test_render_plan_library_preserves_signed_numeric_terms() -> None:

@@ -206,6 +206,34 @@ This reordering is confined to literals on one DFA edge and therefore does not
 change temporal order between edges. Negative literals remain context guards
 and are never compiled as negative achievements.
 
+\subsubsection{Balanced transition repair tree.}
+Once certification fixes the positive-literal order
+$\langle L_1,\ldots,L_n\rangle$, the appender compiles it into a balanced
+query-local repair tree. Let $R(i,j)$ denote the helper for the contiguous
+range $L_i,\ldots,L_j$. A leaf $R(i,i)$ succeeds immediately when $L_i$ holds;
+otherwise it invokes the selected atomic module $!L_i$ once. An internal node
+with $m=\lfloor(i+j)/2\rfloor$ executes $R(i,m)$ followed by $R(m+1,j)$.
+After $R(1,n)$ returns, a distinct completion helper tests the entire positive
+conjunction together with every negative guard. It returns only when the guard
+holds in one state; otherwise it invokes the same transition controller again.
+
+This structure replaces a representation in which all $n$ repair plans shared
+one trigger. Re-entering that trigger after successive repairs could inspect
+$n$ sibling plans up to $n$ times. The tree contains $3n+2$ query-local plans:
+one entry, $n-1$ internal dispatch plans, two plans per leaf, and two completion
+plans. Its maximum trigger fan-out is two, one pass performs $O(n)$ controller
+dispatches plus one $O(n)$ final guard check, and its nesting depth is
+$O(\log n)$. The representation therefore trades linear generated program size
+for linear per-pass controller work instead of quadratic sibling-plan matching.
+It does not reduce primitive planning actions or choose the literal order.
+
+For $n=1$, the tree has one leaf that calls the same atomic module and then
+rechecks the same transition, so its primitive-action behavior is the singleton
+identity case. For $n>1$, leaf order is exactly the previously certified
+threat-safe order. Tree helper names are query-local AgentSpeak goals; they are
+not PDDL state fluents or exported actions. Each DFA progress edge receives its
+own tree, so balancing never moves an achievement across DFA edges.
+
 A singleton numeric transition such as $fuel(v)=0$ is supported when its
 selected module has a certified unit monotone effect. A mixed or multi-literal
 transition such as $at(p,d) \land fuel(v)=3$ is rejected: the temporal compiler

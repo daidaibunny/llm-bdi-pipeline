@@ -65,6 +65,8 @@ def _ordered_context_items(
 ) -> tuple[str, ...]:
 	"""Order context guards so cheap bound filters run before broad matchers."""
 
+	if _context_items_are_ground(context):
+		return context
 	remaining = list(enumerate(context))
 	ordered: list[str] = []
 	bound_variables = {
@@ -92,6 +94,21 @@ def _ordered_context_items(
 			if _is_agentspeak_variable(argument)
 		)
 	return tuple(ordered)
+
+
+def _context_items_are_ground(context: tuple[str, ...]) -> bool:
+	"""Return whether context ordering cannot gain bindings from any item."""
+
+	for item in context:
+		parsed = _parse_context_item_for_ordering(item)
+		if parsed is None:
+			return False
+		if any(
+			_is_agentspeak_variable(argument)
+			for argument in tuple(parsed["arguments"])
+		):
+			return False
+	return True
 
 
 def _context_item_order_key(
