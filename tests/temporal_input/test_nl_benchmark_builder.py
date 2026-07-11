@@ -82,6 +82,8 @@ def test_barman_candidate_uses_declared_subtypes_without_exposing_binding() -> N
 		item for item in candidates if item.profile == "persistence_until"
 	)
 	assert "at every state before the first state where" in persistence.source_text
+	assert "predicate clean holds for argument X" in persistence.source_text
+	assert "predicate contains holds for arguments X and Y" in persistence.source_text
 	assert "holds continues to hold" not in persistence.source_text
 	assert "holds holds" not in persistence.source_text
 

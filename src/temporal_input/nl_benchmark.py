@@ -1266,13 +1266,15 @@ def _render_atom(atom: TemporalAtom, *, negated: bool = False) -> str:
 	if atom.kind == "predicate":
 		verb = "does not hold" if negated else "holds"
 		if atom.arguments:
+			argument_label = "argument" if len(atom.arguments) == 1 else "arguments"
 			return (
-				f"predicate {atom.symbol} {verb} for arguments "
+				f"predicate {atom.symbol} {verb} for {argument_label} "
 				f"{_join_english(list(atom.arguments))}"
 			)
 		return f"zero-arity predicate {atom.symbol} {verb}"
 	arguments = (
-		f" for arguments {_join_english(list(atom.arguments))}"
+		f" for {'argument' if len(atom.arguments) == 1 else 'arguments'} "
+		f"{_join_english(list(atom.arguments))}"
 		if atom.arguments
 		else ""
 	)
