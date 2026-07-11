@@ -29,6 +29,8 @@ from .pddl_support import assert_compilable_pddl_files
 from .certified_effects import threat_safe_positive_literal_order
 from .certified_effects import preservation_safe_action_only_plan_selection
 from .certified_effects import query_local_preservation_alias_plans
+from .transition_repair_tree import TransitionRepairLiteral
+from .transition_repair_tree import compile_transition_repair_tree
 
 
 _DFA_GUARD_TRANSITION_WRAPPER_MODE = "dfa_guard_transition_replay"
@@ -227,6 +229,9 @@ def append_temporal_goal_to_library(
 	)
 	entry_proposition = _query_entry_proposition(goal_name)
 	append_record["wrapper_mode"] = _DFA_GUARD_TRANSITION_WRAPPER_MODE
+	append_record["transition_controller_strategy"] = (
+		"balanced_transition_repair_tree"
+	)
 	append_record["query_entry_proposition"] = entry_proposition
 	append_record["progress_plan_count"] = len(progress_plans)
 	append_record["progress_transition_count"] = len(transition_path)
@@ -580,49 +585,43 @@ def _guard_transition_wrapper_plans(
 			"raw_label": str(transition.get("raw_label") or ""),
 			"serialization_certificate": serialization_certificate,
 		}
-		plans.append(
-			AgentSpeakPlan(
-				plan_name=f"{transition_name}_done",
-				trigger=AgentSpeakTrigger("achievement_goal", transition_name, ()),
-				context=guard_context,
-				body=(),
-				binding_certificate=({**certificate, "wrapper_role": "transition_done"},),
-			),
-		)
-		for literal_index, literal in enumerate(positive_literals, start=1):
-			repair_symbol = preservation_helper_by_predicate.get(
-				literal.predicate,
-				literal.predicate,
-			)
+		if not positive_literals:
 			plans.append(
 				AgentSpeakPlan(
-					plan_name=(
-						f"{transition_name}_repair_{literal_index}_{literal.predicate}"
-					),
+					plan_name=f"{transition_name}_done",
 					trigger=AgentSpeakTrigger("achievement_goal", transition_name, ()),
-					context=(
-						entry_proposition,
-						*type_contexts,
-						*tuple(f"not {item.atom}" for item in negative_literals),
-						f"not {literal.atom}",
-					),
-					body=(
-						AgentSpeakBodyStep(
-							"subgoal",
-							repair_symbol,
-							literal.arguments,
-						),
-						AgentSpeakBodyStep("subgoal", transition_name, ()),
-					),
+					context=guard_context,
+					body=(),
 					binding_certificate=(
-						{
-							**certificate,
-							"wrapper_role": "transition_positive_literal_repair",
-							"positive_literal_index": literal_index,
-						},
+						{**certificate, "wrapper_role": "transition_done"},
 					),
 				),
 			)
+			continue
+		shared_context = (
+			entry_proposition,
+			*type_contexts,
+			*tuple(f"not {item.atom}" for item in negative_literals),
+		)
+		repair_literals = tuple(
+			TransitionRepairLiteral(
+				atom=literal.atom,
+				achievement_symbol=preservation_helper_by_predicate.get(
+					literal.predicate,
+					literal.predicate,
+				),
+				achievement_arguments=literal.arguments,
+			)
+			for literal in positive_literals
+		)
+		tree_compilation = compile_transition_repair_tree(
+			transition_symbol=transition_name,
+			shared_context=shared_context,
+			positive_literals=repair_literals,
+			final_guard_context=guard_context,
+			certificate=certificate,
+		)
+		plans.extend(tree_compilation.plans)
 	return tuple(plans)
 
 

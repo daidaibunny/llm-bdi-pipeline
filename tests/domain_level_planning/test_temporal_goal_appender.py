@@ -111,10 +111,16 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 	assert [plan.plan_name for plan in updated.plans] == [
 		"done_via_finish",
 		"g_query_1_trans_sequence",
-		"g_query_1_trans_1_done",
-		"g_query_1_trans_1_repair_1_done",
-		"g_query_1_trans_2_done",
-		"g_query_1_trans_2_repair_1_ready",
+		"g_query_1_trans_1_repair_tree",
+		"g_query_1_trans_1_repair_1_1_satisfied",
+		"g_query_1_trans_1_repair_1_1_achieve",
+		"g_query_1_trans_1_done_success",
+		"g_query_1_trans_1_done_replay",
+		"g_query_1_trans_2_repair_tree",
+		"g_query_1_trans_2_repair_1_1_satisfied",
+		"g_query_1_trans_2_repair_1_1_achieve",
+		"g_query_1_trans_2_done_success",
+		"g_query_1_trans_2_done_replay",
 	]
 	assert updated.plans[1].trigger.symbol == "g_query_1"
 	assert updated.plans[1].context == ("query_1",)
@@ -122,16 +128,24 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_2", ()),
 	)
-	assert updated.plans[2].context == ("query_1", "obj_tp(X, item)", "done(X)")
-	assert updated.plans[2].body == ()
+	assert updated.plans[2].context == ("query_1", "obj_tp(X, item)")
+	assert updated.plans[2].body == (
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1_repair_1_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1_done", ()),
+	)
 	assert updated.plans[3].context == (
+		"query_1",
+		"obj_tp(X, item)",
+		"done(X)",
+	)
+	assert updated.plans[3].body == ()
+	assert updated.plans[4].context == (
 		"query_1",
 		"obj_tp(X, item)",
 		"not done(X)",
 	)
-	assert updated.plans[3].body == (
+	assert updated.plans[4].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
-		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 	)
 	assert updated.initial_beliefs == ("query_1",)
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
@@ -139,6 +153,9 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		"dfa_guard_transition_replay"
 	)
 	assert updated.metadata["temporal_goal_append"]["progress_transition_count"] == 2
+	assert updated.metadata["temporal_goal_append"]["transition_controller_strategy"] == (
+		"balanced_transition_repair_tree"
+	)
 	assert (
 		updated.metadata["temporal_goal_append"]["query_entry_proposition"]
 		== "query_1"
@@ -203,20 +220,39 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_2", ()),
 	)
-	assert updated.plans[3].context == (
+	first_tree_entry = next(
+		plan for plan in updated.plans if plan.plan_name == "g_query_1_trans_1_repair_tree"
+	)
+	assert first_tree_entry.context == (
+		"query_1",
+		"obj_tp(X, item)",
+		"obj_tp(Y, item)",
+	)
+	first_done = next(
+		plan for plan in updated.plans if plan.plan_name == "g_query_1_trans_1_done_success"
+	)
+	assert first_done.context == (
 		"query_1",
 		"obj_tp(X, item)",
 		"obj_tp(Y, item)",
 		"done(X)",
 		"ready(Y)",
 	)
-	assert updated.plans[6].context == (
+	second_done = next(
+		plan for plan in updated.plans if plan.plan_name == "g_query_1_trans_2_done_success"
+	)
+	assert second_done.context == (
 		"query_1",
 		"obj_tp(Y, item)",
 		"done(Y)",
 		"not ready(Y)",
 	)
-	assert updated.plans[7].context == (
+	second_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.plan_name == "g_query_1_trans_2_repair_1_1_achieve"
+	)
+	assert second_leaf.context == (
 		"query_1",
 		"obj_tp(Y, item)",
 		"not ready(Y)",
@@ -228,7 +264,7 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 			"progress_request_diagnostics"
 		]
 	)
-	certificate = updated.plans[3].binding_certificate[0]["serialization_certificate"]
+	certificate = first_tree_entry.binding_certificate[0]["serialization_certificate"]
 	assert certificate == {
 		"certificate_kind": "atomic_module_delete_effect_serialization",
 		"effect_summary_method": "pddl_typed_conditional_relational_fixed_point",
@@ -409,14 +445,19 @@ def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -
 		domain_file=domain_file,
 	)
 
-	assert [plan.trigger.symbol for plan in after_second.plans] == [
-		"g_query_1",
-		"g_query_1_trans_1",
-		"g_query_1_trans_1",
-		"g_query_2",
-		"g_query_2_trans_1",
-		"g_query_2_trans_1",
-	]
+	assert [
+		plan.trigger.symbol
+		for plan in after_second.plans
+		if plan.plan_name.endswith("_trans_sequence")
+	] == ["g_query_1", "g_query_2"]
+	trigger_counts = {
+		plan.trigger.symbol: sum(
+			candidate.trigger.symbol == plan.trigger.symbol
+			for candidate in after_second.plans
+		)
+		for plan in after_second.plans
+	}
+	assert max(trigger_counts.values()) == 2
 	assert [
 		record["goal_name"]
 		for record in after_second.metadata["temporal_goal_append_history"]
@@ -474,8 +515,11 @@ def test_append_temporal_goal_allows_negative_waiting_self_loop(
 
 	assert [plan.plan_name for plan in updated.plans] == [
 		"g_query_1_trans_sequence",
-		"g_query_1_trans_1_done",
-		"g_query_1_trans_1_repair_1_done",
+		"g_query_1_trans_1_repair_tree",
+		"g_query_1_trans_1_repair_1_1_satisfied",
+		"g_query_1_trans_1_repair_1_1_achieve",
+		"g_query_1_trans_1_done_success",
+		"g_query_1_trans_1_done_replay",
 	]
 	assert updated.plans[0].context == ("query_1",)
 	assert updated.plans[0].body == (

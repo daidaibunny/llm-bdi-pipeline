@@ -47,6 +47,10 @@ from domain_level_planning.certified_effects import (  # noqa: E402
 	query_local_preservation_alias_plans,
 	threat_safe_positive_literal_order,
 )
+from domain_level_planning.transition_repair_tree import (  # noqa: E402
+	TransitionRepairLiteral,
+	compile_transition_repair_tree,
+)
 from utils.pddl_parser import PDDLFact  # noqa: E402
 from utils.pddl_parser import PDDLNumericAssignment  # noqa: E402
 from utils.pddl_parser import PDDLNumericCondition  # noqa: E402
@@ -422,6 +426,9 @@ def prepare_domain_for_full_test(
 			append_record = {
 				"success": True,
 				"wrapper_mode": "dfa_guard_transition_replay",
+				"transition_controller_strategy": (
+					"balanced_transition_repair_tree"
+				),
 				"query_count": len(test_instances),
 				"appended_plan_count": None,
 				"domain_long_asl_written": False,
@@ -509,7 +516,7 @@ def append_guard_transition_full_test_wrappers(
 	appended_plan_count: int | None = None,
 	atomic_plan_library: PlanLibrary | None = None,
 ) -> dict[str, Any]:
-	"""Append one query-local guard-transition replay wrapper per test problem.
+	"""Append one balanced guard-transition controller per test problem.
 
 	This validation runner intentionally writes only ASL. It avoids the canonical
 	``plan_library.json`` temporal metadata because full-test batches can contain
@@ -535,9 +542,10 @@ def append_guard_transition_full_test_wrappers(
 	with plan_library_asl.open("w", encoding="utf-8") as output:
 		output.write(base_text)
 		output.write(
-			"\n\n/* Full-test query-local guard-transition replay wrappers.\n"
+			"\n\n/* Full-test query-local guard-transition controllers.\n"
 			"   Each PDDL conjunctive goal is treated as one DFA-style transition\n"
-			"   guard whose positive achievement literals must hold together. */\n\n",
+			"   guard. Its certified literal order is executed by a balanced repair\n"
+			"   tree before the complete guard is rechecked. */\n\n",
 		)
 		for problem_file in problem_files:
 			for line in wrapper_map[problem_file].splitlines():
@@ -554,6 +562,7 @@ def append_guard_transition_full_test_wrappers(
 	return {
 		"success": True,
 		"wrapper_mode": "dfa_guard_transition_replay",
+		"transition_controller_strategy": "balanced_transition_repair_tree",
 		"query_count": len(problem_files),
 		"appended_plan_count": plan_count,
 		"line_count": line_count,
@@ -648,6 +657,12 @@ def guard_transition_replay_wrapper_lines(
 	ordered_goal_facts = goal_facts
 	preservation_alias_plans = ()
 	preservation_helper_by_predicate: Mapping[str, str] = {}
+	serialization_certificate: Mapping[str, object] = {
+		"certificate_kind": "singleton_transition_identity_serialization",
+		"ordered_literal_indexes": list(range(len(goal_facts))),
+		"threat_edges": [],
+		"module_summaries_complete": True,
+	}
 	if len(goal_facts) + len(numeric_goal_conditions) > 1:
 		if numeric_goal_conditions:
 			raise ValueError(
@@ -664,12 +679,13 @@ def guard_transition_replay_wrapper_lines(
 		)
 		domain_model = PDDLParser.parse_domain(domain_file)
 		try:
-			ordered_indexes, _ = threat_safe_positive_literal_order(
+			ordered_indexes, certificate = threat_safe_positive_literal_order(
 				literal_signatures,
 				plan_library=atomic_plan_library,
 				domain=domain_model,
 				object_types=problem.object_types,
 			)
+			serialization_certificate = certificate.to_dict()
 		except ValueError as error:
 			if not str(error).startswith("cyclic_conjunctive_transition_not_certified"):
 				raise
@@ -682,6 +698,7 @@ def guard_transition_replay_wrapper_lines(
 			if selection is None:
 				raise
 			ordered_indexes = selection.ordered_indexes
+			serialization_certificate = selection.certificate.to_dict()
 			(
 				preservation_alias_plans,
 				preservation_helper_by_predicate,
@@ -705,7 +722,6 @@ def guard_transition_replay_wrapper_lines(
 		),
 	)
 	transition_name = f"{goal_name}_trans_1"
-	done_context = " & ".join((entry_proposition, *atoms))
 	lines: list[str] = [
 		f"/* full_test_problem={problem_file.name} */",
 		f"{entry_proposition}.",
@@ -722,37 +738,70 @@ def guard_transition_replay_wrapper_lines(
 			f"+!{goal_name} : {entry_proposition} <-",
 			f"\t!{transition_name}.",
 			"",
-			f"/* plan={transition_name}_done | source_instruction_ids=none */",
-			f"+!{transition_name} : {done_context} <-",
-			"\ttrue.",
-			"",
 		),
 	)
 	goal_fact_by_atom = {
 		render_fact_atom(fact): fact for fact in ordered_goal_facts
 	}
+	repair_literals: list[TransitionRepairLiteral] = []
 	for atom in atoms:
 		fact = goal_fact_by_atom.get(atom)
-		repair_atom = atom
-		if fact is not None and fact.predicate in preservation_helper_by_predicate:
-			repair_atom = _render_call(
-				preservation_helper_by_predicate[fact.predicate],
-				fact.args,
-			)
-		lines.extend(
-			[
-				f"/* plan={transition_name}_repair_{safe_goal_fragment(atom)} | source_instruction_ids=none */",
-				f"+!{transition_name} : {entry_proposition} & not {atom} <-",
-					f"\t!{repair_atom};",
-				f"\t!{transition_name}.",
-				"",
-			],
+		predicate, arguments = _split_rendered_atom(atom)
+		repair_literals.append(
+			TransitionRepairLiteral(
+				atom=atom,
+				achievement_symbol=(
+					preservation_helper_by_predicate.get(fact.predicate, fact.predicate)
+					if fact is not None
+					else predicate
+				),
+				achievement_arguments=(tuple(fact.args) if fact is not None else arguments),
+			),
 		)
-	return tuple(lines), 2 + len(atoms) + len(preservation_alias_plans)
+	tree_compilation = compile_transition_repair_tree(
+		transition_symbol=transition_name,
+		shared_context=(entry_proposition,),
+		positive_literals=tuple(repair_literals),
+		final_guard_context=(entry_proposition, *atoms),
+		certificate={
+			"query_entry_proposition": entry_proposition,
+			"transition_index": 1,
+			"serialization_certificate": dict(serialization_certificate),
+		},
+	)
+	lines.extend(
+		(
+			*_render_plan_block(domain=domain, plans=tree_compilation.plans).splitlines(),
+			"",
+		),
+	)
+	return tuple(lines), 1 + len(preservation_alias_plans) + len(tree_compilation.plans)
 
 
 def _deduplicate_strings(values: Sequence[str]) -> tuple[str, ...]:
 	return tuple(dict.fromkeys(str(value) for value in tuple(values or ())))
+
+
+def _split_rendered_atom(atom: str) -> tuple[str, tuple[str, ...]]:
+	text = str(atom or "").strip()
+	match = re.fullmatch(r"([a-z][a-z0-9_]*)\((.*)\)", text)
+	if match is None:
+		if re.fullmatch(r"[a-z][a-z0-9_]*", text):
+			return text, ()
+		raise ValueError(f"unsupported rendered transition atom: {atom!r}")
+	arguments = tuple(
+		argument.strip()
+		for argument in match.group(2).split(",")
+		if argument.strip()
+	)
+	return match.group(1), arguments
+
+
+def _render_plan_block(*, domain: str, plans: Sequence[Any]) -> str:
+	rendered_lines = render_plan_library_asl(
+		PlanLibrary(domain_name=domain, plans=tuple(plans)),
+	).splitlines()
+	return "\n".join(rendered_lines[3:]).rstrip()
 
 
 def render_runtime_asl_for_task(task: JasonTask, *, problem: Any | None = None) -> str:

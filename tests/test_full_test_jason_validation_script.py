@@ -138,14 +138,17 @@ def test_full_test_wrapper_uses_guard_transition_replay(tmp_path: Path) -> None:
 	text = asl_file.read_text(encoding="utf-8")
 
 	assert record["wrapper_mode"] == "dfa_guard_transition_replay"
+	assert record["transition_controller_strategy"] == (
+		"balanced_transition_repair_tree"
+	)
 	assert "tg_state" not in text
 	assert "ferry_test_1." in text
 	assert "+!g_ferry_test_1 : ferry_test_1 <-" in text
 	assert "\t!g_ferry_test_1_trans_1." in text
-	assert "+!g_ferry_test_1_trans_1 : ferry_test_1 & at(car1, loc1) & at(car2, loc2) <-" in text
-	assert "+!g_ferry_test_1_trans_1 : ferry_test_1 & not at(car1, loc1) <-" in text
-	assert "\t!at(car1, loc1);" in text
-	assert "\t!g_ferry_test_1_trans_1." in text
+	assert "+!g_ferry_test_1_trans_1_done : ferry_test_1 & at(car1, loc1) & at(car2, loc2) <-" in text
+	assert "+!g_ferry_test_1_trans_1_repair_1_1 : ferry_test_1 & not at(car1, loc1) <-" in text
+	assert "\t!at(car1, loc1)." in text
+	assert "\t!g_ferry_test_1_trans_1_repair_1_2;" in text
 	assert "\t!at(X, loc1);" not in text
 
 
@@ -173,11 +176,11 @@ def test_full_test_wrapper_uses_guard_transition_by_default(tmp_path: Path) -> N
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 4
+	assert plan_count == 9
 	assert "+!g_gripper_test_1 : gripper_test_1 <-" in text
 	assert "\t!g_gripper_test_1_trans_1." in text
-	assert "\t!at(ball1, roomb);" in text
-	assert "\t!at(ball2, roomb);" in text
+	assert "\t!at(ball1, roomb)." in text
+	assert "\t!at(ball2, roomb)." in text
 	assert "not at(X, roomb)" not in text
 
 
@@ -204,12 +207,12 @@ def test_single_literal_guard_transition_matches_old_linear_effect(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 3
+	assert plan_count == 6
 	assert "+!g_miconic_test_1 : miconic_test_1 <-" in text
 	assert "\t!g_miconic_test_1_trans_1." in text
-	assert "+!g_miconic_test_1_trans_1 : miconic_test_1 & served(p1) <-" in text
-	assert "+!g_miconic_test_1_trans_1 : miconic_test_1 & not served(p1) <-" in text
-	assert "\t!served(p1);" in text
+	assert "+!g_miconic_test_1_trans_1_done : miconic_test_1 & served(p1) <-" in text
+	assert "+!g_miconic_test_1_trans_1_repair_1_1 : miconic_test_1 & not served(p1) <-" in text
+	assert "\t!served(p1)." in text
 
 
 def test_full_test_wrapper_keeps_mixed_destination_goals_in_one_transition(tmp_path: Path) -> None:
@@ -236,12 +239,12 @@ def test_full_test_wrapper_keeps_mixed_destination_goals_in_one_transition(tmp_p
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 4
+	assert plan_count == 9
 	assert "+!g_ferry_test_1 : ferry_test_1 <-" in text
 	assert "\t!g_ferry_test_1_trans_1." in text
-	assert "+!g_ferry_test_1_trans_1 : ferry_test_1 & at(car1, loc2) & at(car2, loc3) <-" in text
-	assert "\t!at(car1, loc2);" in text
-	assert "\t!at(car2, loc3);" in text
+	assert "+!g_ferry_test_1_trans_1_done : ferry_test_1 & at(car1, loc2) & at(car2, loc3) <-" in text
+	assert "\t!at(car1, loc2)." in text
+	assert "\t!at(car2, loc3)." in text
 
 
 def test_full_test_wrapper_orders_delete_threatening_goals_first(
@@ -294,9 +297,9 @@ def test_full_test_wrapper_orders_delete_threatening_goals_first(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 4
+	assert plan_count == 9
 	assert text.index("not on(middle, base)") < text.index("not on(top, middle)")
-	assert "+!g_blocks_fragment_test_1_trans_1 : blocks_fragment_test_1 & on(middle, base) & on(top, middle) <-" in text
+	assert "+!g_blocks_fragment_test_1_trans_1_done : blocks_fragment_test_1 & on(middle, base) & on(top, middle) <-" in text
 
 
 def test_full_test_wrapper_does_not_infer_semantics_from_argument_positions(
@@ -413,11 +416,11 @@ def test_full_test_wrapper_enforces_preservation_safe_action_only_branches(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 6
+	assert plan_count == 11
 	assert "finish_safely" in text
 	assert "finish_by_reusing" not in text
-	assert "!g_selection_test_1_trans_1_achieve_completed(first);" in text
-	assert "!g_selection_test_1_trans_1_achieve_completed(second);" in text
+	assert "!g_selection_test_1_trans_1_achieve_completed(first)." in text
+	assert "!g_selection_test_1_trans_1_achieve_completed(second)." in text
 
 
 def test_full_test_wrapper_finds_threats_beyond_two_producer_layers(
@@ -538,9 +541,9 @@ def test_full_test_wrapper_keeps_ground_constants_distinct_from_schema_variables
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 5
+	assert plan_count == 12
 	assert (
-		"+!g_blocks_fragment_test_1_trans_1 : blocks_fragment_test_1 "
+		"+!g_blocks_fragment_test_1_trans_1_done : blocks_fragment_test_1 "
 		"& on(middle, base) & on(x, middle) & on(top, x) <-"
 	) in text
 
@@ -617,10 +620,10 @@ def test_full_test_wrapper_uses_only_guard_transition_replay_for_monotonic_goals
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 4
-	assert "_step_" not in text
+	assert plan_count == 9
+	assert "_repair_1_2" in text
 	assert (
-		"+!g_delivery_fragment_test_1_trans_1 : delivery_fragment_test_1 "
+		"+!g_delivery_fragment_test_1_trans_1_done : delivery_fragment_test_1 "
 		"& at(item1, loc1) & at(item2, loc2) <-"
 	) in text
 
@@ -676,8 +679,8 @@ def test_full_test_wrapper_uses_module_local_delete_certificate(
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 4
-	assert "_step_" not in text
+	assert plan_count == 9
+	assert "_repair_1_2" in text
 
 	conflicting_problem_file = tmp_path / "p02.pddl"
 	conflicting_problem_file.write_text(
@@ -725,12 +728,12 @@ def test_full_test_wrapper_accepts_numeric_equality_goal(tmp_path: Path) -> None
 	)
 	text = "\n".join(lines)
 
-	assert plan_count == 3
+	assert plan_count == 6
 	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in text
 	assert "\t!g_numeric_minecraft_test_1_trans_1." in text
 	assert text.count("!pogo_sticks_to_make(0)") == 1
 	assert "pogo_sticks_to_make(0) <-" in text
-	assert "\t!pogo_sticks_to_make(0);" in text
+	assert "\t!pogo_sticks_to_make(0)." in text
 
 
 def test_full_test_wrapper_rejects_uncertified_mixed_numeric_conjunction(
@@ -1052,7 +1055,7 @@ def test_validate_one_task_embeds_runtime_asl_without_extra_plan_library_file(
 	assert not (output_dir / "plan_library.asl").exists()
 	assert validate_kwargs["plan_library_asl"] == plan_library_asl
 	assert "!g_gripper_test_1_trans_1." in validate_kwargs["plan_library_asl_text"]
-	assert "!at(ball1, roomb);" in validate_kwargs["plan_library_asl_text"]
+	assert "!at(ball1, roomb)." in validate_kwargs["plan_library_asl_text"]
 
 
 def test_run_jason_tasks_appends_progress_records_without_rewriting_summary(

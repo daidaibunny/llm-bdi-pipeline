@@ -8,9 +8,20 @@ from plan_library import (
 	PlanLibrary,
 )
 from plan_library.validation import build_library_validation_record
+from domain_level_planning.transition_repair_tree import TransitionRepairLiteral
+from domain_level_planning.transition_repair_tree import compile_transition_repair_tree
 
 
 def test_library_validation_accepts_current_atomic_and_temporal_contract() -> None:
+	tree = compile_transition_repair_tree(
+		transition_symbol="g_query_1_trans_1",
+		shared_context=("query_1",),
+		positive_literals=(
+			TransitionRepairLiteral("on(X, Y)", "on", ("X", "Y")),
+		),
+		final_guard_context=("query_1", "on(X, Y)"),
+		certificate={"query_entry_proposition": "query_1"},
+	)
 	plan_library = PlanLibrary(
 		domain_name="blocks",
 		initial_beliefs=("query_1",),
@@ -41,42 +52,7 @@ def test_library_validation_accepts_current_atomic_and_temporal_contract() -> No
 					},
 				),
 			),
-			AgentSpeakPlan(
-				plan_name="g_query_1_trans_1_done",
-				trigger=AgentSpeakTrigger(
-					event_type="achievement_goal",
-					symbol="g_query_1_trans_1",
-				),
-				context=("query_1", "on(X, Y)"),
-				binding_certificate=(
-					{
-						"artifact_family": "temporal_goal_dfa_append",
-						"wrapper_mode": "dfa_guard_transition_replay",
-						"wrapper_role": "transition_done",
-						"query_entry_proposition": "query_1",
-					},
-				),
-			),
-			AgentSpeakPlan(
-				plan_name="g_query_1_trans_1_repair_1_on",
-				trigger=AgentSpeakTrigger(
-					event_type="achievement_goal",
-					symbol="g_query_1_trans_1",
-				),
-				context=("query_1", "not on(X, Y)"),
-				body=(
-					AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
-					AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
-				),
-				binding_certificate=(
-					{
-						"artifact_family": "temporal_goal_dfa_append",
-						"wrapper_mode": "dfa_guard_transition_replay",
-						"wrapper_role": "transition_positive_literal_repair",
-						"query_entry_proposition": "query_1",
-					},
-				),
-			),
+			*tree.plans,
 		),
 	)
 
