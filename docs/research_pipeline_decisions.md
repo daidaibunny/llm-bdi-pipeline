@@ -48,8 +48,10 @@ space.
 
 The **Temporal Query Compiler** is the third production component. It consumes
 a validated lifted LTLf/DFA artifact and appends query-local `trans` wrappers
-that call the atomic library. The **Execution Validation Module** is a fourth,
-separate evaluation component that runs Jason and validates committed traces.
+that call the atomic library. The **Temporal Goal Validation Module** is a
+separate evaluation component. It validates a predicted lifted LTLf against the
+sealed gold temporal semantics, replays hidden source witnesses, and checks
+generated execution traces with both PDDL action semantics and DFA acceptance.
 
 This repository no longer builds a universal generalized planner and no longer
 routes domains by prior-paper taxonomy labels. The current strategy is to use
@@ -79,9 +81,65 @@ The architecture separates four modules.
    AgentSpeak(L) plans such as `+!at(X,Y)`.
 3. The Temporal Query Compiler consumes validated lifted LTLf/DFA query
    artifacts and appends query-local wrapper plans that call the atomic library.
-4. The Execution Validation Module runs the generated ASL in Jason, writes a
-   committed PDDL action trace only after Jason success, and validates that trace
-   with VAL or an equivalent verifier.
+4. The Temporal Goal Validation Module validates the model payload, proves or
+   refutes gold/predicted DFA language equivalence, checks the hidden source
+   witness, and consumes the committed trace produced by the separate Jason
+   runtime. It validates that trace independently with PDDL replay, VAL, and
+   gold-DFA acceptance.
+
+## Temporal Goal Validation Contract
+
+One benchmark record is
+`B_i = <D, P_i, q_i, T_i, theta_i, pi_i>`. Here `D` is the PDDL domain,
+`P_i` supplies the initial state and objects, `q_i` is the public controlled
+natural-language query, `T_i` is the sealed gold lifted LTLf, `theta_i` is the
+hidden variable-to-object assignment, and `pi_i` is a short legal witness
+trace. The original achievement goal in `P_i` is provenance only and is not a
+temporal success criterion.
+
+The validation module uses four independent gates:
+
+1. **Prediction contract validation** checks the exact eight-key model payload,
+   LTLf syntax and operator fragment, atom-table closure, catalogue vocabulary,
+   arity, subtype-compatible parameters, domain constants, and bounded integer
+   numeric equalities. It never repairs a response. A model-correctable failure
+   receives one stable `TranslationErrorCode`; an infrastructure failure is
+   recorded separately.
+2. **DFA language equivalence** first alpha-normalizes gold and predicted atom
+   tables by their PDDL semantic identity, for example
+   `(predicate,on,(X,Y),null)`, then invokes real LTLf2DFA/MONA on both
+   formulas. It explores the reachable product automaton over the complete
+   joint Boolean alphabet. If one DFA accepts and the other rejects, the
+   shortest discovered valuation sequence is persisted as a counterexample
+   certificate. Equality is semantic, not textual: `F(a & b)` and `F(b & a)`
+   pass when their atom tables denote the same PDDL atoms.
+3. **Hidden witness validation** grounds the accepted prediction with
+   `theta_i`, replays every primitive action in `pi_i` from the initial state,
+   checks the sealed state fingerprints, and requires both gold and predicted
+   DFAs to accept the resulting non-empty finite state trace. This is a data and
+   grounding consistency check; it does not replace language equivalence,
+   because an incorrectly weak formula may also hold on one witness.
+4. **Execution-trace validation** replays the Jason-exported primitive action
+   trace under the parsed PDDL action schemas. VAL receives a generated copy of
+   `P_i` in which only the original goal is replaced by the true empty
+   conjunction `(:goal (and))`, so VAL checks action legality without imposing
+   the unrelated achievement goal. The replayed state sequence must then be
+   accepted by the sealed gold DFA and the predicted DFA. End-to-end success
+   requires PDDL replay, VAL, gold acceptance, and prediction acceptance.
+
+The batch input is the 475-row `translation_predictions.jsonl`. Its results are
+expanded through the sealed worklist membership to all 1,228 problem rows. The
+validator writes separate translation-level and problem-level JSONL reports,
+an aggregate summary, optional execution-level evidence, and one validated
+append dataset per domain. A translation enters an append dataset only after
+payload validation, exact DFA equivalence, and hidden-witness acceptance.
+
+The exact DFA product is bounded by a declared maximum Boolean alphabet size,
+not by a domain or predicate name. Benchmark version 1 uses at most three
+temporal atoms per query. Exceeding the configured bound, MONA timeout, missing
+VAL, malformed sealed audit data, and PDDL replay disagreement fail closed as
+infrastructure or benchmark-consistency outcomes; they are never relabelled as
+model semantic errors.
 
 The compiler contract also includes a bounded integer numeric-resource fragment.
 A numeric resource is a declared PDDL function with an integer value in the
@@ -533,6 +591,15 @@ route or a duplicate-counting trick.
 
 The formal local corpus lives under `src/domains/<domain>/` with
 `domain.pddl`, `train/*.pddl`, `test/*.pddl`, and `source.json`.
+
+Materialization also checks referential PDDL validity. Every problem's
+`(:domain ...)` declaration is compared with the actual copied `domain.pddl`
+declaration and, when an upstream companion artifact retains an obsolete alias,
+is normalized to the actual declaration. The number of normalized files is
+recorded in `source.json`. This is a syntax-level, symbol-independent corpus
+repair applied to every domain; predicates, actions, initial states, goals, and
+split membership are unchanged. Validators do not silently accept mismatched
+domain references.
 
 The current split policy is:
 

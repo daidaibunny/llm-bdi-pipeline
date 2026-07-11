@@ -1,5 +1,5 @@
 (define (problem transport-problem)
- (:domain transport-domain)
+ (:domain numeric-transport)
  (:objects
    l1 l2 - location
    v1 - vehicle

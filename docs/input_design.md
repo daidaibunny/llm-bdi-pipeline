@@ -84,7 +84,9 @@ colleague MUST:
    and render the user message with `build_lifted_ltlf_user_prompt(row)`.
 4. Use one pre-registered model version, decoding configuration, full prompt
    configuration, and retry budget for the entire primary run. Record these
-   settings and the prompt-source commit with every run.
+   settings and the prompt-source commit with every run. All 475 primary records
+   MUST use the same `model_id`, `model_parameters`, and `prompt_config`, and
+   `prompt_source_commit` MUST equal the commit sealed in `handoff_manifest.json`.
 5. Validate every response before acceptance: require the exact eight-key JSON
    payload, exact copied sample identifier/parameters/constraints, complete and
    nonredundant atom definitions, catalogue-valid symbols and arities,
@@ -94,13 +96,35 @@ colleague MUST:
    `build_retry_user_message(...)`. Network/model timeouts and
    LTLf2DFA/MONA/runtime failures are infrastructure outcomes, not instructions
    to simplify or change the query.
-7. Store one accepted prediction or terminal failure per `translation_id`,
-   together with the representative `sample_id`, raw response, attempt count,
-   model settings, prompt configuration, and prompt-source commit.
-8. After translation, use `member_sample_ids` to map each worklist result back
-   to the corresponding rows in `natural_language_manifest.jsonl`. Report both
-   translation-level results over 475 unique inputs and problem-level results
-   over all 1,228 rows; retries are reported separately from primary calls.
+7. Write exactly one canonical record per `translation_id` to
+   `translation_predictions.jsonl`. An accepted record has the following exact
+   outer shape; `prediction` is the validated eight-key model payload and
+   `raw_response` is the unmodified model response:
+
+   ```json
+   {
+     "schema_version": 1,
+     "translation_id": "tpl_<sha256>",
+     "outcome": "accepted",
+     "attempt_count": 1,
+     "model_id": "<provider/model-version>",
+     "model_parameters": {"temperature": 0},
+     "prompt_config": "full",
+     "prompt_source_commit": "<git-commit>",
+     "raw_response": "<exact response text>",
+     "prediction": {"schema_version": 1},
+     "terminal_error": null
+   }
+   ```
+
+   A terminal failure uses `outcome: "terminal_failure"`, `prediction: null`,
+   and a non-null `terminal_error` object. Do not omit a failed worklist row.
+   For an accepted record, parsing `raw_response` as JSON MUST reproduce
+   `prediction` exactly; post-hoc edits are not accepted as the model response.
+8. Deliver the 475-row `translation_predictions.jsonl` without manually
+   duplicating predictions. The local goal-validation batch uses
+   `member_sample_ids` to expand it to all 1,228 problem rows after model output
+   has been frozen; retries are reported separately from primary calls.
 9. Fail closed if the worklist does not contain 475 unique
    `translation_input_signature` values, if its membership does not cover every
    manifest `sample_id` exactly once, if a referenced catalogue is missing, or
@@ -112,6 +136,10 @@ membership, the original PDDL goal, hidden assignment, witness trace, hidden
 formula, or construction audit into a model message. The prompt builders
 already enforce this boundary; deduplication metadata is used only for local
 bookkeeping and result expansion.
+
+The colleague handoff ends at `translation_predictions.jsonl`. Hidden-gold DFA
+equivalence, witness replay, execution-trace validation, and result expansion
+are performed locally after predictions are frozen and are not model inputs.
 
 ## Normative NL-to-Lifted-LTLf Prompt Handoff
 

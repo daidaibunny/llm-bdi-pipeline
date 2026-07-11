@@ -2,6 +2,7 @@
   "instance_count": 110,
   "ipc_variant": "transport",
   "ipc_year": "MOOSE 2026",
+  "normalized_problem_domain_reference_count": 0,
   "source": "DillonZChen/moose-dataset",
   "source_commit": "e00970516154e9042b783a4613a1ed7286c9beee",
   "source_domain_file": "transport/domain.pddl",

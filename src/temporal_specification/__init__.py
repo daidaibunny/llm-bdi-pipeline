@@ -16,6 +16,12 @@ from .prompts import (
 	build_lifted_ltlf_user_prompt,
 	build_retry_user_message,
 )
+from .prediction_validation import (
+	PredictionValidationError,
+	ValidatedLTLfPrediction,
+	ValidatedTemporalAtom,
+	validate_prediction_payload,
+)
 
 __all__ = [
 	"BASELINE_PROMPT_CONFIG",
@@ -23,11 +29,15 @@ __all__ = [
 	"NON_RETRYABLE_ERROR_CODES",
 	"PROMPT_COMPONENTS",
 	"PromptConfig",
+	"PredictionValidationError",
 	"RETRY_HINTS",
 	"TranslationErrorCode",
+	"ValidatedLTLfPrediction",
+	"ValidatedTemporalAtom",
 	"ablation_config",
 	"build_lifted_ltlf_system_prompt",
 	"build_lifted_ltlf_user_prompt",
 	"build_retry_feedback",
 	"build_retry_user_message",
+	"validate_prediction_payload",
 ]

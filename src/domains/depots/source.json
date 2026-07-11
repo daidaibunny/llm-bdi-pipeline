@@ -2,6 +2,7 @@
   "instance_count": 22,
   "ipc_variant": "depot",
   "ipc_year": "D2L",
+  "normalized_problem_domain_reference_count": 0,
   "source": "rleap-project/d2l",
   "source_commit": "0620e169c894d79b3c84f435dba1462996f7c270",
   "source_domain_file": "domains/depot/domain.pddl",

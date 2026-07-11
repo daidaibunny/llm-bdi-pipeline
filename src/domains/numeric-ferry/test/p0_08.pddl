@@ -1,5 +1,5 @@
 (define (problem p0_08)
- (:domain ferry)
+ (:domain numeric-ferry)
  (:objects
    car1 car2 car3 car4 car5 car6 - car
    loc1 loc2 loc3 loc4 loc5 loc6 loc7 - location

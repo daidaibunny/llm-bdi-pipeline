@@ -87,6 +87,9 @@ def test_compiler_rules_contain_no_benchmark_or_fluent_name_literals() -> None:
 		PROJECT_ROOT / "src" / "domain_level_planning" / "evidence_module.py",
 		PROJECT_ROOT / "src" / "domain_level_planning" / "certified_effects.py",
 		PROJECT_ROOT / "src" / "domain_level_planning" / "temporal_goal_appender.py",
+		PROJECT_ROOT / "src" / "temporal_specification" / "prediction_validation.py",
+		PROJECT_ROOT / "src" / "evaluation" / "temporal_goal_validation.py",
+		PROJECT_ROOT / "src" / "evaluation" / "temporal_validation_batch.py",
 	)
 	violations: list[str] = []
 	for path in compiler_paths:

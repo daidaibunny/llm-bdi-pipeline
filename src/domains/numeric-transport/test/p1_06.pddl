@@ -1,5 +1,5 @@
 (define (problem p1_06)
- (:domain transport)
+ (:domain numeric-transport)
  (:objects
    l22 l8 l17 l5 l23 l20 l1 l14 l7 l2 l10 l16 l4 l3 l9 l6 l19 l12 l11 l13 l15 l21 l18 - location
    v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 - vehicle
