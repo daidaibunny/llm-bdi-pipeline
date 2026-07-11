@@ -23,7 +23,9 @@ This glossary is normative.
 | **Propositional atom identifier** | A MONA-safe name such as `a0` used inside the LTLf formula. Its `atoms` entry reversibly maps it to a lifted PDDL atom such as `on(X,Y)`. |
 | **Predicted lifted LTLf payload** | The language model's self-contained JSON translation: an LTLf formula over `a0`, `a1`, and so on, plus the atom table that restores the lifted PDDL meaning. It contains no problem-object assignment. |
 | **Semantic signature** | A SHA-256 hash of the alpha-normalized profile, typed variable-sharing structure, atoms, constraints, and formula abstract syntax tree. Ground object names are absent, so alpha-equivalent samples share a signature. |
-| **Natural-language manifest** | The public handoff containing one row per test problem, with `q_i`, declared parameters, constraints, profile, and a reference to the domain catalogue. It contains no assignment, witness, or gold formula. |
+| **Natural-language manifest** | The problem-complete public handoff containing one row per test problem, with `q_i`, declared parameters, constraints, profile, and a reference to the domain catalogue. It contains no assignment, witness, or gold formula. Version 1 has 1,228 rows. |
+| **Translation input signature** | A SHA-256 hash of the complete language-model input: the rendered domain system prompt plus `source_text`, declared parameters, constraints, and parameter semantics. Two rows may share this signature only when the model would receive byte-equivalent semantic inputs. |
+| **Translation worklist** | The deduplicated public call list containing one row per unique complete language-model input. Each row retains `member_sample_ids` so one prediction can be expanded back to every covered problem row. Version 1 has 475 rows and therefore requires 475 primary model calls. |
 | **Construction audit** | The private artifact containing `T_i`, `theta_i`, `pi_i`, and state fingerprints. It allows reproducibility checks without leaking answers to the translation model. |
 | **Structured non-construction** | A retained row such as `source_witness_not_found`. A problem is never silently dropped. |
 
@@ -45,14 +47,16 @@ PDDL domain D + held-out test problem P_i
 -> deterministic profile/signature-balanced selection
 -> hidden lifted semantic oracle T_i + assignment theta_i + witness pi_i
 -> deterministic controlled-English query q_i
--> public natural-language manifest
+-> problem-complete natural-language manifest
+-> deduplicated translation worklist
 ```
 
-The public natural-language manifest is the final output of this document.
-The colleague starts from that manifest, calls the language model, and produces
-the predicted LTLf manifest. Model calls, predicted LTLf parsing, LTLf2DFA,
-MONA, DFA comparison, planning, AgentSpeak compilation, Jason, and VAL are
-outside this document's implementation scope.
+The public handoff has two required files. `natural_language_manifest.jsonl`
+retains all 1,228 problem rows for traceability and result expansion.
+`translation_worklist.jsonl` deduplicates those rows into 475 unique complete
+model inputs and is the only language-model call list. Model execution and all
+artifacts produced from its predictions are outside the local construction
+scope.
 
 The local builder MUST NOT call a language model, classical planner, generalized
 planner, AgentSpeak runtime, or downstream temporal controller.
@@ -60,6 +64,54 @@ planner, AgentSpeak runtime, or downstream temporal controller.
 This repository also provides the normative prompt builders that define the
 handoff contract. Providing prompt text does not move model execution into the
 local construction scope.
+
+## Colleague-Only Procedure
+
+This section is the complete operational handoff to the colleague. The
+colleague MUST:
+
+1. Use the finalized public handoff directory
+   `artifacts/temporal_nl_handoffs/temporal-nl-v1-20260711-final/` and verify
+   that it contains
+   `handoff_manifest.json`, `natural_language_manifest.jsonl`,
+   `translation_worklist.jsonl`, and every referenced
+   `domains/<domain>/catalog.json`.
+2. Treat `translation_worklist.jsonl` as the only primary model-call list. Its
+   475 rows require exactly 475 primary calls. Do not call the model once for
+   each of the 1,228 rows in `natural_language_manifest.jsonl`.
+3. For each worklist row, load its `catalog_file` relative to the handoff root,
+   render the system message with `build_lifted_ltlf_system_prompt(catalog)`,
+   and render the user message with `build_lifted_ltlf_user_prompt(row)`.
+4. Use one pre-registered model version, decoding configuration, full prompt
+   configuration, and retry budget for the entire primary run. Record these
+   settings and the prompt-source commit with every run.
+5. Validate every response before acceptance: require the exact eight-key JSON
+   payload, exact copied sample identifier/parameters/constraints, complete and
+   nonredundant atom definitions, catalogue-valid symbols and arities,
+   subtype-compatible arguments, integer numeric equalities, and only `F`, `X`,
+   `U`, `&`, and `!`.
+6. Retry only model-correctable failures using `build_retry_feedback(...)` and
+   `build_retry_user_message(...)`. Network/model timeouts and
+   LTLf2DFA/MONA/runtime failures are infrastructure outcomes, not instructions
+   to simplify or change the query.
+7. Store one accepted prediction or terminal failure per `translation_id`,
+   together with the representative `sample_id`, raw response, attempt count,
+   model settings, prompt configuration, and prompt-source commit.
+8. After translation, use `member_sample_ids` to map each worklist result back
+   to the corresponding rows in `natural_language_manifest.jsonl`. Report both
+   translation-level results over 475 unique inputs and problem-level results
+   over all 1,228 rows; retries are reported separately from primary calls.
+9. Fail closed if the worklist does not contain 475 unique
+   `translation_input_signature` values, if its membership does not cover every
+   manifest `sample_id` exactly once, if a referenced catalogue is missing, or
+   if a response remains invalid after the pre-registered retry budget.
+
+The colleague MUST NOT put `profile`, `construction_tier`,
+`semantic_signature`, `translation_id`, `member_sample_ids`, benchmark-domain
+membership, the original PDDL goal, hidden assignment, witness trace, hidden
+formula, or construction audit into a model message. The prompt builders
+already enforce this boundary; deduplication metadata is used only for local
+bookkeeping and result expansion.
 
 ## Normative NL-to-Lifted-LTLf Prompt Handoff
 
@@ -77,8 +129,8 @@ src/temporal_specification/errors.py
 ```
 
 There is no Prompt 1 language-model stage. `q_i` is already rendered
-deterministically by the local builder. The colleague uses only Prompt 2 to
-translate `q_i` into lifted LTLf.
+deterministically by the local builder. The operational model-call procedure is
+specified only in **Colleague-Only Procedure** above.
 
 ### Model-call input
 
@@ -188,9 +240,9 @@ Disjunction, global, release, weak-next, implication, equivalence, and
 quantifiers are out of scope. This restriction matches the formulas generated
 by the local benchmark; it is not a claim about unrestricted LTLf.
 
-### Required prediction validation
+### Prediction-validation contract
 
-Before accepting a model response, the colleague's implementation MUST check:
+An implementation accepting a model response MUST check:
 
 - exactly the eight required top-level keys and no prose;
 - exact `sample_id`, declared parameters, constraints, and parameter spelling;
@@ -263,14 +315,18 @@ structured diagnostic.
 ### Public output
 
 ```text
-artifacts/temporal_nl_benchmarks/<benchmark_id>/
-  manifest.json
+artifacts/temporal_nl_handoffs/<handoff_id>/
+  handoff_manifest.json
+  input_audit_report.json
   natural_language_manifest.jsonl
+  translation_worklist.jsonl
   domains/<domain>/catalog.json
   domains/<domain>/natural_language_manifest.json
 ```
 
-This is the only handoff to the colleague.
+Both JSONL files are required. The first is the problem-complete record and the
+second is its deduplicated model-call list. Neither contains private
+construction evidence.
 
 ### Private construction output
 
@@ -514,7 +570,7 @@ problem-level expansion. It is not the language-model call list.
 
 ## Deduplicated Translation Worklist
 
-The colleague MUST call the model from `translation_worklist.jsonl`, generated
+`translation_worklist.jsonl` is generated from the problem-complete manifest
 by:
 
 ```bash
@@ -580,9 +636,9 @@ For the final version-1 artifact:
 475 required primary language-model calls
 ```
 
-The membership list is sufficient for the colleague to expand each predicted
-translation back to its problem rows. Predicted LTLf generation and expansion
-remain separate artifacts and are not performed by the NL benchmark builder.
+The membership list is sufficient to expand each predicted translation back to
+its problem rows. Predicted LTLf generation and expansion remain separate
+artifacts and are not performed by the natural-language benchmark builder.
 
 ## Complete Test-Split Scope
 
@@ -714,6 +770,18 @@ Before publishing a manifest, the builder MUST verify:
 - irrelevant static-fluent injection does not alter action legality or selected semantics;
 - a second run with identical inputs produces byte-identical manifests.
 
+Before publishing the public handoff, the worklist builder MUST additionally
+verify:
+
+- every constructed manifest `sample_id` occurs in exactly one
+  `member_sample_ids` list;
+- every `translation_id` and `translation_input_signature` is unique;
+- every merged worklist row has one unambiguous `semantic_signature`;
+- every referenced catalogue exists under the handoff root;
+- regeneration from the same manifest and prompt source is byte-identical;
+- the finalized version-1 counts are 1,228 problem rows and 475 unique model
+  inputs.
+
 The implementation proves action applicability and state replay during
 construction, then independently evaluates the hidden formula abstract syntax
 tree on the replayed finite trace before accepting the candidate.
@@ -742,6 +810,10 @@ Construction reports:
 - witness action-length distribution;
 - construction time and failure code by problem;
 - micro row count and macro semantic-signature count.
+
+Translation evaluation separately reports 475 unique-input results and their
+expanded 1,228 problem-row results. A model is called once per unique input;
+expansion does not create additional primary calls.
 
 The defensible construction claim is:
 
