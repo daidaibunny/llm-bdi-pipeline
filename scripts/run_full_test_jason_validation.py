@@ -40,8 +40,11 @@ from evaluation.jason_runtime.runner import build_runtime_problem_artifacts  # n
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
+from plan_library.rendering import render_plan_library_asl  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
 from domain_level_planning.certified_effects import (  # noqa: E402
+	preservation_safe_action_only_plan_selection,
+	query_local_preservation_alias_plans,
 	threat_safe_positive_literal_order,
 )
 from utils.pddl_parser import PDDLFact  # noqa: E402
@@ -643,6 +646,8 @@ def guard_transition_replay_wrapper_lines(
 	goal_name = f"g_{safe_goal_fragment(domain)}_test_{index}"
 	entry_proposition = query_entry_proposition(goal_name)
 	ordered_goal_facts = goal_facts
+	preservation_alias_plans = ()
+	preservation_helper_by_predicate: Mapping[str, str] = {}
 	if len(goal_facts) + len(numeric_goal_conditions) > 1:
 		if numeric_goal_conditions:
 			raise ValueError(
@@ -654,12 +659,36 @@ def guard_transition_replay_wrapper_lines(
 				"uncertified_conjunctive_transition: domain PDDL and the selected atomic "
 				"plan library are required for threat-safe serialization.",
 			)
-		ordered_indexes, _ = threat_safe_positive_literal_order(
-			tuple((fact.predicate, tuple(fact.args)) for fact in goal_facts),
-			plan_library=atomic_plan_library,
-			domain=PDDLParser.parse_domain(domain_file),
-			object_types=problem.object_types,
+		literal_signatures = tuple(
+			(fact.predicate, tuple(fact.args)) for fact in goal_facts
 		)
+		domain_model = PDDLParser.parse_domain(domain_file)
+		try:
+			ordered_indexes, _ = threat_safe_positive_literal_order(
+				literal_signatures,
+				plan_library=atomic_plan_library,
+				domain=domain_model,
+				object_types=problem.object_types,
+			)
+		except ValueError as error:
+			if not str(error).startswith("cyclic_conjunctive_transition_not_certified"):
+				raise
+			selection = preservation_safe_action_only_plan_selection(
+				literal_signatures,
+				plan_library=atomic_plan_library,
+				domain=domain_model,
+				object_types=problem.object_types,
+			)
+			if selection is None:
+				raise
+			ordered_indexes = selection.ordered_indexes
+			(
+				preservation_alias_plans,
+				preservation_helper_by_predicate,
+			) = query_local_preservation_alias_plans(
+				selection,
+				helper_prefix=f"{goal_name}_trans_1",
+			)
 		ordered_goal_facts = tuple(goal_facts[index] for index in ordered_indexes)
 	atoms = _deduplicate_strings(
 		(
@@ -681,26 +710,45 @@ def guard_transition_replay_wrapper_lines(
 		f"/* full_test_problem={problem_file.name} */",
 		f"{entry_proposition}.",
 		"",
-		f"/* plan={goal_name}_trans_sequence | source_instruction_ids=none */",
-		f"+!{goal_name} : {entry_proposition} <-",
-		f"\t!{transition_name}.",
-		"",
-		f"/* plan={transition_name}_done | source_instruction_ids=none */",
-		f"+!{transition_name} : {done_context} <-",
-		"\ttrue.",
-		"",
 	]
+	if preservation_alias_plans:
+		alias_text = render_plan_library_asl(
+			PlanLibrary(domain_name=domain, plans=tuple(preservation_alias_plans)),
+		)
+		lines.extend(("/* query-local preservation-safe atomic branches */", alias_text, ""))
+	lines.extend(
+		(
+			f"/* plan={goal_name}_trans_sequence | source_instruction_ids=none */",
+			f"+!{goal_name} : {entry_proposition} <-",
+			f"\t!{transition_name}.",
+			"",
+			f"/* plan={transition_name}_done | source_instruction_ids=none */",
+			f"+!{transition_name} : {done_context} <-",
+			"\ttrue.",
+			"",
+		),
+	)
+	goal_fact_by_atom = {
+		render_fact_atom(fact): fact for fact in ordered_goal_facts
+	}
 	for atom in atoms:
+		fact = goal_fact_by_atom.get(atom)
+		repair_atom = atom
+		if fact is not None and fact.predicate in preservation_helper_by_predicate:
+			repair_atom = _render_call(
+				preservation_helper_by_predicate[fact.predicate],
+				fact.args,
+			)
 		lines.extend(
 			[
 				f"/* plan={transition_name}_repair_{safe_goal_fragment(atom)} | source_instruction_ids=none */",
 				f"+!{transition_name} : {entry_proposition} & not {atom} <-",
-				f"\t!{atom};",
+					f"\t!{repair_atom};",
 				f"\t!{transition_name}.",
 				"",
 			],
 		)
-	return tuple(lines), 2 + len(atoms)
+	return tuple(lines), 2 + len(atoms) + len(preservation_alias_plans)
 
 
 def _deduplicate_strings(values: Sequence[str]) -> tuple[str, ...]:

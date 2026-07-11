@@ -53,8 +53,13 @@ Jason is not doing classical planning in this setup. It dispatches the selected
 atomic modules and repeatedly rechecks the transition guard. If achieving
 `G2` may delete `G1`, the serializer places `G2` before `G1`. This ordering is
 derived from PDDL effects and the selected ASL call graph, not predicate names,
-argument positions, or PDDL file order. If the graph is cyclic, the diagnostic
-query is rejected instead of silently replaying an unproved order.
+argument positions, or PDDL file order. If the universal graph is cyclic, the
+runner may copy a certified preservation-safe subset of complete action-only
+atomic branches under a query-local helper and call that helper. The copied
+trigger enforces the branch proof at execution time; the runner does not merely
+assume that Jason will choose a safe branch from the original module. If neither
+this selection nor a supported ranking certificate exists, the diagnostic query
+is rejected instead of silently replaying an unproved order.
 
 The effect fixed point keeps query arguments as anchors and alpha-normalizes
 internal variables, so parameter-changing recursive calls are explored without
@@ -483,6 +488,19 @@ The persisted certificate explicitly assumes that this relation
 remains acyclic in every reachable state. Effects are observed at successful
 atomic-module completion; formulas requiring primitive-step safety monitoring
 remain outside this wrapper's scope.
+
+A second certified cyclic case uses
+`query_local_preservation_safe_action_only_branches`. The runner symbolically
+executes each selected finite primitive macro to module completion, filters out
+every branch whose conditional net delete can threaten a sibling goal, and
+copies all remaining branches under a query-local trigger. For example, if one
+generic achievement module contains both a producer macro and a resource-reuse
+macro that may delete another requested achievement, only the producer macro is
+callable through the query-local helper. Problem-object names are reduced to
+typed equality-pattern representatives so hundreds of structurally identical
+goal pairs share one proof; PDDL domain constants and lifted variable identity
+are preserved. This rule contains no benchmark, predicate, or action-name
+switch. It fails closed when no non-empty safe action-only branch exists.
 
 ## Current Benchmark Scope And Library Profiles
 

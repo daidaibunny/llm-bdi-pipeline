@@ -299,8 +299,89 @@ def test_append_temporal_goal_rejects_cyclic_conjunctive_threats(
 			plan_library=library,
 			goal_name="g_query_1",
 			dfa_payload=dfa_payload,
-			domain_file=domain_file,
-		)
+				domain_file=domain_file,
+			)
+
+
+def test_append_temporal_goal_enforces_preservation_safe_query_local_branches(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "selection-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain selection)
+ (:requirements :strips)
+ (:predicates (completed ?x) (ready ?x))
+ (:action finish-safely
+  :parameters (?x)
+  :precondition (ready ?x)
+  :effect (completed ?x))
+ (:action finish-by-reusing
+  :parameters (?x ?other)
+  :precondition (and (ready ?x) (completed ?other))
+  :effect (and (completed ?x) (not (completed ?other))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="selection",
+		plans=(
+			AgentSpeakPlan(
+				"completed_already_true",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("completed(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"completed_safe",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "finish-safely", ("X",)),),
+			),
+			AgentSpeakPlan(
+				"completed_unsafe",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("ready(X)", "completed(Y)"),
+				(AgentSpeakBodyStep("action", "finish-by-reusing", ("X", "Y")),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "completed(first) & completed(second)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	query_plans = tuple(plan for plan in updated.plans if plan.plan_name.startswith("g_query_1"))
+	query_bodies = tuple(
+		step.symbol for plan in query_plans for step in plan.body if step.kind == "action"
+	)
+	repair_subgoals = tuple(
+		step.symbol
+		for plan in query_plans
+		if "_repair_" in plan.plan_name
+		for step in plan.body
+		if step.kind == "subgoal"
+	)
+
+	assert "finish-safely" in query_bodies
+	assert "finish-by-reusing" not in query_bodies
+	assert "g_query_1_trans_1_achieve_completed" in repair_subgoals
 
 
 def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -> None:

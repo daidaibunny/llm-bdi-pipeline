@@ -347,6 +347,79 @@ def test_full_test_wrapper_does_not_infer_semantics_from_argument_positions(
 	assert text.index("not linked(a, b)") < text.index("not linked(b, c)")
 
 
+def test_full_test_wrapper_enforces_preservation_safe_action_only_branches(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain selection)
+		 (:requirements :strips)
+		 (:predicates (completed ?x) (ready ?x))
+		 (:action finish-safely
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (completed ?x))
+		 (:action finish-by-reusing
+		  :parameters (?x ?other)
+		  :precondition (and (ready ?x) (completed ?other))
+		  :effect (and (completed ?x) (not (completed ?other))))
+		)
+		""",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+		(define (problem p01)
+		 (:domain selection)
+		 (:objects first second)
+		 (:init (ready first) (ready second))
+		 (:goal (and (completed first) (completed second)))
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="selection",
+		plans=(
+			AgentSpeakPlan(
+				"completed_already_true",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("completed(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"completed_safe",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "finish-safely", ("X",)),),
+			),
+			AgentSpeakPlan(
+				"completed_unsafe",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("ready(X)", "completed(Y)"),
+				(AgentSpeakBodyStep("action", "finish-by-reusing", ("X", "Y")),),
+			),
+		),
+	)
+
+	lines, plan_count = full_test_wrapper_lines(
+		domain="selection",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		atomic_plan_library=library,
+	)
+	text = "\n".join(lines)
+
+	assert plan_count == 6
+	assert "finish_safely" in text
+	assert "finish_by_reusing" not in text
+	assert "!g_selection_test_1_trans_1_achieve_completed(first);" in text
+	assert "!g_selection_test_1_trans_1_achieve_completed(second);" in text
+
+
 def test_full_test_wrapper_finds_threats_beyond_two_producer_layers(
 	tmp_path: Path,
 ) -> None:

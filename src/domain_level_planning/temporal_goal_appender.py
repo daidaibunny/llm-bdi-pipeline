@@ -27,6 +27,8 @@ from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 from .pddl_support import assert_compilable_pddl_files
 from .certified_effects import threat_safe_positive_literal_order
+from .certified_effects import preservation_safe_action_only_plan_selection
+from .certified_effects import query_local_preservation_alias_plans
 
 
 _DFA_GUARD_TRANSITION_WRAPPER_MODE = "dfa_guard_transition_replay"
@@ -547,13 +549,20 @@ def _guard_transition_wrapper_plans(
 		negative_literals = tuple(
 			literal for literal in literals if literal.polarity == "negative"
 		)
-		positive_literals, serialization_certificate = (
+		(
+			positive_literals,
+			serialization_certificate,
+			preservation_alias_plans,
+			preservation_helper_by_predicate,
+		) = (
 			_certified_positive_literal_serialization(
 				positive_literals,
 				plan_library=plan_library,
 				domain=domain,
+				helper_prefix=transition_name,
 			)
 		)
+		plans.extend(preservation_alias_plans)
 		type_contexts = _guard_variable_type_contexts(literals, domain=domain)
 		guard_context = (
 			entry_proposition,
@@ -581,6 +590,10 @@ def _guard_transition_wrapper_plans(
 			),
 		)
 		for literal_index, literal in enumerate(positive_literals, start=1):
+			repair_symbol = preservation_helper_by_predicate.get(
+				literal.predicate,
+				literal.predicate,
+			)
 			plans.append(
 				AgentSpeakPlan(
 					plan_name=(
@@ -596,7 +609,7 @@ def _guard_transition_wrapper_plans(
 					body=(
 						AgentSpeakBodyStep(
 							"subgoal",
-							literal.predicate,
+							repair_symbol,
 							literal.arguments,
 						),
 						AgentSpeakBodyStep("subgoal", transition_name, ()),
@@ -618,16 +631,27 @@ def _certified_positive_literal_serialization(
 	*,
 	plan_library: PlanLibrary,
 	domain: PDDLDomain,
-) -> tuple[tuple[DFALiteral, ...], Mapping[str, object]]:
+	helper_prefix: str,
+) -> tuple[
+	tuple[DFALiteral, ...],
+	Mapping[str, object],
+	tuple[AgentSpeakPlan, ...],
+	Mapping[str, str],
+]:
 	literal_tuple = tuple(literals or ())
 	if len(literal_tuple) <= 1:
 		indexes = tuple(range(len(literal_tuple)))
-		return literal_tuple, {
-			"certificate_kind": "singleton_transition_identity_serialization",
-			"ordered_literal_indexes": list(indexes),
-			"threat_edges": [],
-			"module_summaries_complete": True,
-		}
+		return (
+			literal_tuple,
+			{
+				"certificate_kind": "singleton_transition_identity_serialization",
+				"ordered_literal_indexes": list(indexes),
+				"threat_edges": [],
+				"module_summaries_complete": True,
+			},
+			(),
+			{},
+		)
 	declared_numeric_functions = {function.name for function in domain.functions}
 	numeric_literals = tuple(
 		literal
@@ -639,14 +663,40 @@ def _certified_positive_literal_serialization(
 			"uncertified_numeric_conjunctive_transition: numeric resource atoms in a "
 			"multi-literal DFA guard require numeric effect-preservation certificates.",
 		)
-	ordered_indexes, certificate = threat_safe_positive_literal_order(
-		tuple((literal.predicate, literal.arguments) for literal in literal_tuple),
-		plan_library=plan_library,
-		domain=domain,
+	literal_signatures = tuple(
+		(literal.predicate, literal.arguments) for literal in literal_tuple
 	)
+	try:
+		ordered_indexes, certificate = threat_safe_positive_literal_order(
+			literal_signatures,
+			plan_library=plan_library,
+			domain=domain,
+		)
+	except ValueError as error:
+		if not str(error).startswith("cyclic_conjunctive_transition_not_certified"):
+			raise
+		selection = preservation_safe_action_only_plan_selection(
+			literal_signatures,
+			plan_library=plan_library,
+			domain=domain,
+		)
+		if selection is None:
+			raise
+		aliases, helper_by_predicate = query_local_preservation_alias_plans(
+			selection,
+			helper_prefix=helper_prefix,
+		)
+		return (
+			tuple(literal_tuple[index] for index in selection.ordered_indexes),
+			selection.certificate.to_dict(),
+			aliases,
+			helper_by_predicate,
+		)
 	return (
 		tuple(literal_tuple[index] for index in ordered_indexes),
 		certificate.to_dict(),
+		(),
+		{},
 	)
 
 

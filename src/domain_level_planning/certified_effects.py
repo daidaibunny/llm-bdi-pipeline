@@ -8,6 +8,7 @@ import re
 from typing import Mapping, Sequence
 
 from plan_library.models import AgentSpeakPlan
+from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
 from utils.pddl_parser import PDDLDomain
 
@@ -70,6 +71,15 @@ class _BranchCondition:
 
 
 @dataclass(frozen=True)
+class _ActionOnlyPlanEffectSummary:
+	"""Exact completion effects and branch condition for one finite primitive macro."""
+
+	conditional_deletes: tuple[ConditionalDeleteEffect, ...]
+	add_atoms: tuple[EffectAtom, ...]
+	branch_condition: _BranchCondition
+
+
+@dataclass(frozen=True)
 class TransitionSerializationCertificate:
 	"""Proof record for one conjunctive DFA guard serialization."""
 
@@ -83,9 +93,10 @@ class TransitionSerializationCertificate:
 	ranking_relation: str | None = None
 	ranking_relation_anchor_position: int | None = None
 	ranking_assumptions: tuple[str, ...] = ()
+	selected_branch_names_by_predicate: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
-		return {
+		payload: dict[str, object] = {
 			"certificate_kind": "atomic_module_delete_effect_serialization",
 			"effect_summary_method": "pddl_typed_conditional_relational_fixed_point",
 			"shared_query_variable_types_checked": True,
@@ -100,6 +111,68 @@ class TransitionSerializationCertificate:
 			"ranking_relation_anchor_position": self.ranking_relation_anchor_position,
 			"ranking_assumptions": list(self.ranking_assumptions),
 		}
+		if self.selected_branch_names_by_predicate:
+			payload["selected_branch_names_by_predicate"] = {
+				predicate: list(plan_names)
+				for predicate, plan_names in self.selected_branch_names_by_predicate
+			}
+		return payload
+
+
+@dataclass(frozen=True)
+class PreservationSafePlanSelection:
+	"""Query-local action-only branches that preserve every sibling achievement."""
+
+	ordered_indexes: tuple[int, ...]
+	plans_by_predicate: Mapping[str, tuple[AgentSpeakPlan, ...]]
+	certificate: TransitionSerializationCertificate
+
+
+def query_local_preservation_alias_plans(
+	selection: PreservationSafePlanSelection,
+	*,
+	helper_prefix: str,
+) -> tuple[tuple[AgentSpeakPlan, ...], Mapping[str, str]]:
+	"""Copy selected branches under query-local triggers that enforce the proof."""
+
+	aliases: list[AgentSpeakPlan] = []
+	helper_by_predicate: dict[str, str] = {}
+	for predicate, plans in selection.plans_by_predicate.items():
+		helper_symbol = _safe_agentspeak_identifier(f"{helper_prefix}_achieve_{predicate}")
+		helper_by_predicate[predicate] = helper_symbol
+		for branch_index, plan in enumerate(plans, start=1):
+			aliases.append(
+				AgentSpeakPlan(
+					plan_name=f"{helper_symbol}_branch_{branch_index}_{plan.plan_name}",
+					trigger=AgentSpeakTrigger(
+						plan.trigger.event_type,
+						helper_symbol,
+						plan.trigger.arguments,
+					),
+					context=plan.context,
+					body=plan.body,
+					source_instruction_ids=plan.source_instruction_ids,
+					binding_certificate=(
+						*plan.binding_certificate,
+						{
+							"artifact_family": "temporal_goal_dfa_append",
+							"wrapper_role": "query_local_preservation_safe_branch",
+							"source_atomic_plan": plan.plan_name,
+							"serialization_strategy": (
+								selection.certificate.serialization_strategy
+							),
+						},
+					),
+				),
+			)
+	return tuple(aliases), helper_by_predicate
+
+
+def _safe_agentspeak_identifier(value: str) -> str:
+	text = re.sub(r"[^A-Za-z0-9_]+", "_", str(value or "")).strip("_").lower()
+	if not text:
+		return "query_helper"
+	return f"q_{text}" if text[0].isdigit() else text
 
 
 def threat_safe_positive_literal_order(
@@ -156,6 +229,8 @@ def threat_safe_positive_literal_order(
 		tuple[EffectAtom, AtomicModuleEffectSummary],
 	] = {}
 	edges: set[tuple[int, int]] = set()
+	support_ranking_for_detected_cycle: tuple[tuple[int, ...], str, int] | None = None
+	support_ranking_checked = False
 	for achiever_index, goal_atom in enumerate(goal_atoms):
 		summary = _cached_module_delete_summary(
 			goal_atom,
@@ -186,18 +261,38 @@ def threat_safe_positive_literal_order(
 					functional_groups=functional_groups,
 					type_tokens=domain.types,
 				):
-					edges.add((achiever_index, protected_index))
+					edge = (achiever_index, protected_index)
+					edges.add(edge)
+					if (protected_index, achiever_index) not in edges:
+						continue
+					if not support_ranking_checked:
+						support_ranking_for_detected_cycle = (
+							_assumption_bounded_support_depth_order(
+								goal_atoms,
+								plan_library=plan_library,
+								actions=actions,
+							)
+						)
+						support_ranking_checked = True
+					if support_ranking_for_detected_cycle is None:
+						raise ValueError(
+							"cyclic_conjunctive_transition_not_certified: selected atomic "
+							"modules have a cyclic delete-threat graph and no transition "
+							"ranking certificate.",
+						)
 	ordered_indexes = _stable_topological_order(len(literal_tuple), edges)
 	serialization_strategy = "universal_acyclic_threat_order"
 	ranking_relation: str | None = None
 	ranking_relation_anchor_position: int | None = None
 	ranking_assumptions: tuple[str, ...] = ()
 	if ordered_indexes is None:
-		support_ranking = _assumption_bounded_support_depth_order(
-			goal_atoms,
-			plan_library=plan_library,
-			actions=actions,
-		)
+		support_ranking = support_ranking_for_detected_cycle
+		if not support_ranking_checked:
+			support_ranking = _assumption_bounded_support_depth_order(
+				goal_atoms,
+				plan_library=plan_library,
+				actions=actions,
+			)
 		if support_ranking is not None:
 			(
 				ordered_indexes,
@@ -226,6 +321,291 @@ def threat_safe_positive_literal_order(
 		ranking_assumptions=ranking_assumptions,
 	)
 	return ordered_indexes, certificate
+
+
+def preservation_safe_action_only_plan_selection(
+	literals: Sequence[tuple[str, tuple[str, ...]]],
+	*,
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+	object_types: Mapping[str, str] | None = None,
+) -> PreservationSafePlanSelection | None:
+	"""Select exact action-only branches whose net effects preserve sibling goals.
+
+	The returned plans are safe only when the caller enforces the selection, for
+	example by copying them under a query-local AgentSpeak trigger. Returning a
+	selection must never be treated as permission to call the original unfiltered
+	atomic module.
+	"""
+
+	literal_tuple = tuple(literals or ())
+	if len(literal_tuple) <= 1:
+		return None
+	actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
+	actions_by_name = {action.name: action for action in actions}
+	functional_groups = _functional_predicate_groups(actions, domain.types)
+	predicate_types = {
+		predicate.name: tuple(parameter_type(parameter) for parameter in predicate.parameters)
+		for predicate in domain.predicates
+	}
+	known_object_types = {**dict(domain.constant_types), **dict(object_types or {})}
+	query_variable_types = _query_variable_type_requirements(
+		literal_tuple,
+		predicate_types=predicate_types,
+		type_tokens=domain.types,
+	)
+	goal_atoms = tuple(
+		EffectAtom(
+			predicate=predicate,
+			arguments=tuple(
+				_query_term(
+					argument,
+					required_type=tuple(predicate_types.get(predicate, ()))[position]
+					if position < len(tuple(predicate_types.get(predicate, ())))
+					else "object",
+					known_object_types=known_object_types,
+					query_variable_types=query_variable_types,
+					type_tokens=domain.types,
+				)
+				for position, argument in enumerate(arguments)
+			),
+		)
+		for predicate, arguments in literal_tuple
+	)
+	_assert_functional_goal_consistency(goal_atoms, functional_groups=functional_groups)
+	pair_shapes_by_achiever: dict[str, set[tuple[EffectAtom, EffectAtom]]] = {}
+	for achiever_index, achiever in enumerate(goal_atoms):
+		for protected_index, protected in enumerate(goal_atoms):
+			if achiever_index == protected_index:
+				continue
+			pair_shapes_by_achiever.setdefault(achiever.predicate, set()).add(
+				_canonical_goal_pair_shape(
+					achiever,
+					protected,
+					domain_constants=frozenset(domain.constants),
+				),
+			)
+	plans_by_predicate = _plans_by_predicate(plan_library.plans)
+	selected: dict[str, tuple[AgentSpeakPlan, ...]] = {}
+	for predicate in dict.fromkeys(predicate for predicate, _arguments in literal_tuple):
+		pair_shapes = tuple(pair_shapes_by_achiever.get(predicate, ()))
+		if not pair_shapes:
+			return None
+		generic_goal = EffectAtom(
+			predicate,
+			tuple(
+				EffectTerm(
+					f"H{index}",
+					variable_scope="query",
+					required_types=argument.required_types,
+				)
+				for index, argument in enumerate(pair_shapes[0][0].arguments)
+			),
+		)
+		safe_plans: list[AgentSpeakPlan] = []
+		for plan_index, plan in enumerate(plans_by_predicate.get(predicate, ())):
+			if any(step.kind != "action" for step in plan.body):
+				continue
+			generic_summary = _action_only_plan_effect_summary(
+				plan,
+				goal=generic_goal,
+				plan_index=plan_index,
+				actions_by_name=actions_by_name,
+				predicate_types=predicate_types,
+				type_tokens=domain.types,
+			)
+			if generic_summary is None or not _action_only_summary_achieves_goal(
+				generic_summary,
+				goal=generic_goal,
+				body_is_empty=not plan.body,
+			):
+				continue
+			is_safe = True
+			for achiever, protected in pair_shapes:
+				head_binding = {
+					generic_argument.symbol: actual_argument
+					for generic_argument, actual_argument in zip(
+						generic_goal.arguments,
+						achiever.arguments,
+					)
+				}
+				effects = tuple(
+					_instantiate_conditional_delete(
+						effect,
+						head_binding=head_binding,
+					)
+					for effect in generic_summary.conditional_deletes
+				)
+				if any(
+					_conditional_delete_can_threaten(
+						effect,
+						protected=protected,
+						functional_groups=functional_groups,
+						type_tokens=domain.types,
+					)
+					for effect in effects
+				):
+					is_safe = False
+					break
+			if is_safe:
+				safe_plans.append(plan)
+		if not safe_plans or not any(plan.body for plan in safe_plans):
+			return None
+		selected[predicate] = tuple(safe_plans)
+	ordered_indexes = tuple(range(len(literal_tuple)))
+	certificate = TransitionSerializationCertificate(
+		ordered_indexes=ordered_indexes,
+		threat_edges=(),
+		module_summaries_complete=True,
+		conditional_effects_checked=True,
+		functional_invariant_count=len(functional_groups),
+		serialization_strategy="query_local_preservation_safe_action_only_branches",
+		selected_branch_names_by_predicate=tuple(
+			(predicate, tuple(plan.plan_name for plan in plans))
+			for predicate, plans in selected.items()
+		),
+	)
+	return PreservationSafePlanSelection(
+		ordered_indexes=ordered_indexes,
+		plans_by_predicate=selected,
+		certificate=certificate,
+	)
+
+
+def _canonical_goal_pair_shape(
+	achiever: EffectAtom,
+	protected: EffectAtom,
+	*,
+	domain_constants: frozenset[str],
+) -> tuple[EffectAtom, EffectAtom]:
+	"""Abstract problem-object names while preserving types and equality patterns."""
+
+	term_map: dict[tuple[str, str | None], EffectTerm] = {}
+	ground_index = 0
+	variable_index = 0
+
+	def canonical_term(term: EffectTerm) -> EffectTerm:
+		nonlocal ground_index, variable_index
+		if not term.is_variable and term.symbol in domain_constants:
+			return term
+		key = (term.symbol, term.variable_scope)
+		if key in term_map:
+			return term_map[key]
+		if term.is_variable:
+			canonical = EffectTerm(
+				f"Q{variable_index}",
+				variable_scope="query-pair-shape",
+				required_types=term.required_types,
+			)
+			variable_index += 1
+		else:
+			canonical = EffectTerm(
+				f"__object_{ground_index}",
+				required_types=term.required_types,
+			)
+			ground_index += 1
+		term_map[key] = canonical
+		return canonical
+
+	def canonical_atom(atom: EffectAtom) -> EffectAtom:
+		return EffectAtom(atom.predicate, tuple(canonical_term(term) for term in atom.arguments))
+
+	return canonical_atom(achiever), canonical_atom(protected)
+
+
+def _action_only_plan_effect_summary(
+	plan: AgentSpeakPlan,
+	*,
+	goal: EffectAtom,
+	plan_index: int,
+	actions_by_name: Mapping[str, _ParsedAction],
+	predicate_types: Mapping[str, Sequence[str]],
+	type_tokens: Sequence[str],
+) -> _ActionOnlyPlanEffectSummary | None:
+	"""Return exact completion effects for one action-only branch."""
+
+	binding = _bind_plan_trigger(plan, goal)
+	if binding is None or any(step.kind != "action" for step in plan.body):
+		return None
+	local_scope = f"{goal.predicate}:selected:{plan_index}"
+	branch_condition = _plan_branch_condition(
+		plan,
+		binding=binding,
+		scope=local_scope,
+		predicate_types=predicate_types,
+		type_tokens=type_tokens,
+	)
+	direct_effect_state: dict[EffectAtom, bool] = {}
+	for step in plan.body:
+		action = actions_by_name.get(step.symbol)
+		if action is None or len(action.parameters) != len(step.arguments):
+			return None
+		step_arguments = tuple(
+			_bound_term(
+				argument,
+				binding=binding,
+				scope=local_scope,
+				required_type=action.parameter_types.get(parameter, "object"),
+				type_tokens=type_tokens,
+			)
+			for parameter, argument in zip(action.parameters, step.arguments)
+		)
+		action_binding = dict(zip(action.parameters, step_arguments))
+		for effect in action.delete_effects:
+			direct_effect_state[
+				_mapped_effect_atom(
+					effect,
+					action_binding=action_binding,
+					scope=local_scope,
+				)
+			] = False
+		for effect in action.add_effects:
+			direct_effect_state[
+				_mapped_effect_atom(
+					effect,
+					action_binding=action_binding,
+					scope=local_scope,
+				)
+			] = True
+	return _ActionOnlyPlanEffectSummary(
+		conditional_deletes=tuple(
+			ConditionalDeleteEffect(
+				delete_atom=atom,
+				positive_context=branch_condition.positive_context,
+				negative_context=branch_condition.negative_context,
+				equalities=branch_condition.equalities,
+				disequalities=branch_condition.disequalities,
+			)
+			for atom, value in direct_effect_state.items()
+			if not value
+		),
+		add_atoms=tuple(atom for atom, value in direct_effect_state.items() if value),
+		branch_condition=branch_condition,
+	)
+
+
+def _action_only_summary_achieves_goal(
+	summary: _ActionOnlyPlanEffectSummary,
+	*,
+	goal: EffectAtom,
+	body_is_empty: bool,
+) -> bool:
+	candidates = (
+		summary.branch_condition.positive_context if body_is_empty else summary.add_atoms
+	)
+	return any(_effect_atom_has_same_identity(candidate, goal) for candidate in candidates)
+
+
+def _effect_atom_has_same_identity(left: EffectAtom, right: EffectAtom) -> bool:
+	return (
+		left.predicate == right.predicate
+		and len(left.arguments) == len(right.arguments)
+		and all(
+			(left_term.symbol, left_term.variable_scope)
+			== (right_term.symbol, right_term.variable_scope)
+			for left_term, right_term in zip(left.arguments, right.arguments)
+		)
+	)
 
 
 def _plans_by_predicate(

@@ -451,19 +451,34 @@ summary method as `pddl_typed_conditional_relational_fixed_point`, the ordered
 literal indexes, all induced threat edges, the functional-invariant count, and
 the `atomic_module_completion` observation boundary.
 
-An acyclic threat graph uses universal topological serialization. A cyclic graph
-is accepted only by the narrow support-depth rule: every positive goal uses one
-binary relation with a compiler-generated relational decrease certificate, the
-requested relation graph is functional and acyclic, and supports can be ordered
-before dependants. The child/support argument orientation is inferred from the
-recursive certificate; the compiler additionally checks that the recursive
-module closure does not re-add the relation and that primitive relation
-producers delete only the same child's previous relation. This rule records the explicit paper assumption that the
+An acyclic threat graph uses universal topological serialization. For a cyclic
+universal summary, the compiler first checks the narrow support-depth rule:
+every positive goal uses one binary relation with a compiler-generated
+relational decrease certificate, the requested relation graph is functional and
+acyclic, and supports can be ordered before dependants. The child/support
+argument orientation is inferred from the recursive certificate; the compiler
+additionally checks that the recursive module closure does not re-add the
+relation and that primitive relation producers delete only the same child's
+previous relation. This rule records the explicit paper assumption that the
 relation is acyclic in every reachable execution state. It is a structural
 assumption over a certified relation, not a domain or predicate-name switch.
-All other incomplete or cyclic summaries remain unsupported. Multi-literal
-numeric guards without numeric effect-preservation certificates are also
-rejected.
+
+If support-depth does not apply, the compiler may instead enforce a query-local
+preservation-safe action-only selection. An action-only branch is a selected
+atomic plan whose body is a finite sequence of primitive PDDL actions and has no
+internal achievement call. The compiler symbolically executes the whole branch,
+keeps only branches whose conditional net deletes cannot unify with any sibling
+goal, copies those branches under a query-local helper trigger, and makes every
+transition repair call the helper. Merely proving that a safe branch exists is
+not enough: copying the branch is what prevents Jason from selecting an unsafe
+sibling from the original atomic trigger. Ground object names are alpha-normalized
+to typed equality-pattern representatives during this check, while domain
+constants and shared query variables remain fixed. This is a proof-cost
+optimization and does not merge objects that may be equal in execution. The
+filter retains every certified safe action-only branch; it does not claim a new
+minimum-branch optimization. If no non-empty safe branch remains, the cycle is
+still rejected. Multi-literal numeric guards without numeric effect-preservation
+certificates are also rejected.
 For example, singleton `fuel(vehicle)=0` can call one certified monotone numeric
 module. A transition requiring `at(package,destination) & fuel(vehicle)=3`
 needs an additional proof that repairing either conjunct preserves the other;

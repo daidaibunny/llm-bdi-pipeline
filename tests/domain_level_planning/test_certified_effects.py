@@ -9,6 +9,9 @@ from domain_level_planning.atomic_module_synthesis import (
 	synthesize_atomic_minimal_literal_module_library,
 )
 from domain_level_planning.certified_effects import threat_safe_positive_literal_order
+from domain_level_planning.certified_effects import (
+	preservation_safe_action_only_plan_selection,
+)
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
@@ -222,6 +225,165 @@ def test_threat_certificate_uses_negative_branch_context_to_exclude_delete(
 	assert order == (0, 1)
 	assert certificate.threat_edges == ()
 	assert certificate.conditional_effects_checked is True
+
+
+@pytest.mark.parametrize(
+	("goal_predicate", "ready_predicate", "safe_action", "unsafe_action"),
+	(
+		("completed", "ready", "finish-safely", "finish-by-reusing"),
+		("sealed", "prepared", "close-without-touching", "close-by-reusing"),
+	),
+)
+def test_preservation_safe_selection_is_symbol_invariant(
+	tmp_path: Path,
+	goal_predicate: str,
+	ready_predicate: str,
+	safe_action: str,
+	unsafe_action: str,
+) -> None:
+	domain_file = tmp_path / f"{goal_predicate}-domain.pddl"
+	domain_file.write_text(
+		f"""
+		(define (domain selection-fragment)
+		 (:requirements :strips)
+		 (:predicates ({goal_predicate} ?x) ({ready_predicate} ?x))
+		 (:action {safe_action}
+		  :parameters (?x)
+		  :precondition ({ready_predicate} ?x)
+		  :effect ({goal_predicate} ?x)
+		 )
+		 (:action {unsafe_action}
+		  :parameters (?x ?other)
+		  :precondition (and ({ready_predicate} ?x) ({goal_predicate} ?other))
+		  :effect (and ({goal_predicate} ?x) (not ({goal_predicate} ?other)))
+		 )
+		 (:action preserve-without-achieving
+		  :parameters (?x)
+		  :precondition ({ready_predicate} ?x)
+		  :effect ({ready_predicate} ?x)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="selection-fragment",
+		plans=(
+			AgentSpeakPlan(
+				f"{goal_predicate}_already_true",
+				AgentSpeakTrigger("achievement_goal", goal_predicate, ("X",)),
+				(f"{goal_predicate}(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				f"{goal_predicate}_safe",
+				AgentSpeakTrigger("achievement_goal", goal_predicate, ("X",)),
+				(f"{ready_predicate}(X)",),
+				(AgentSpeakBodyStep("action", safe_action, ("X",)),),
+			),
+			AgentSpeakPlan(
+				f"{goal_predicate}_unsafe",
+				AgentSpeakTrigger("achievement_goal", goal_predicate, ("X",)),
+				(f"{ready_predicate}(X)", f"{goal_predicate}(Y)"),
+				(AgentSpeakBodyStep("action", unsafe_action, ("X", "Y")),),
+			),
+			AgentSpeakPlan(
+				f"{goal_predicate}_non_achieving",
+				AgentSpeakTrigger("achievement_goal", goal_predicate, ("X",)),
+				(f"{ready_predicate}(X)",),
+				(
+					AgentSpeakBodyStep(
+						"action",
+						"preserve-without-achieving",
+						("X",),
+					),
+				),
+			),
+		),
+	)
+
+	selection = preservation_safe_action_only_plan_selection(
+		((goal_predicate, ("first",)), (goal_predicate, ("second",))),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert selection is not None
+	assert selection.ordered_indexes == (0, 1)
+	assert tuple(plan.plan_name for plan in selection.plans_by_predicate[goal_predicate]) == (
+		f"{goal_predicate}_already_true",
+		f"{goal_predicate}_safe",
+	)
+	assert selection.certificate.serialization_strategy == (
+		"query_local_preservation_safe_action_only_branches"
+	)
+
+
+def test_preservation_safe_selection_reuses_typed_goal_pair_shapes(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	domain_file = tmp_path / "selection-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain selection-fragment)
+		 (:requirements :strips)
+		 (:predicates (completed ?x) (ready ?x))
+		 (:action finish-safely
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (completed ?x)
+		 )
+		 (:action finish-by-reusing
+		  :parameters (?x ?other)
+		  :precondition (and (ready ?x) (completed ?other))
+		  :effect (and (completed ?x) (not (completed ?other)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="selection-fragment",
+		plans=(
+			AgentSpeakPlan(
+				"completed_already_true",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("completed(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"completed_safe",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "finish-safely", ("X",)),),
+			),
+			AgentSpeakPlan(
+				"completed_unsafe",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("ready(X)", "completed(Y)"),
+				(AgentSpeakBodyStep("action", "finish-by-reusing", ("X", "Y")),),
+			),
+		),
+	)
+	original = certified_effects._conditional_delete_can_threaten
+	call_count = 0
+
+	def counted(*args, **kwargs):
+		nonlocal call_count
+		call_count += 1
+		return original(*args, **kwargs)
+
+	monkeypatch.setattr(certified_effects, "_conditional_delete_can_threaten", counted)
+
+	selection = preservation_safe_action_only_plan_selection(
+		tuple(("completed", (f"item{index}",)) for index in range(200)),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert selection is not None
+	assert call_count <= 2
 
 
 def test_threat_certificate_rejects_functionally_inconsistent_goal_block(
