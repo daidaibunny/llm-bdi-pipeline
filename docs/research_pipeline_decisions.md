@@ -486,11 +486,11 @@ Every progress edge on the accepted DFA path is compiled into one query-local
 `trans` helper. A singleton positive guard calls its atomic module once and
 rechecks the guard, which is action-equivalent to the former linear call while
 adding declarative completion checking. For a conjunctive guard, the compiler
-computes conservative conditional may-delete summaries over the final selected
-atomic module call graph. Every delete retains its branch's positive, negative,
-equality, and disequality context. Effects are composed to successful
-atomic-module completion, so a primitive delete restored later in the same
-macro is not reported as a final delete. The summary is a finite relational
+computes conservative conditional may-add and may-delete summaries over the
+final selected atomic module call graph. Every effect retains its branch's
+positive, negative, equality, and disequality context. Effects are composed to
+successful atomic-module completion, so a primitive add later deleted or a
+delete later restored is represented by its completion polarity. The summary is a finite relational
 fixed point: root query arguments remain symbolic anchors, newly introduced
 module variables are alpha-normalized, and subgoal calls are expanded until no
 new predicate/argument shape is reachable. It therefore covers parameter-changing recursion such as
@@ -526,7 +526,7 @@ preservation-safe action-only selection. An action-only branch is a selected
 atomic plan whose body is a finite sequence of primitive PDDL actions and has no
 internal achievement call. The compiler symbolically executes the whole branch,
 keeps only branches whose conditional net deletes cannot unify with any sibling
-goal, copies those branches under a query-local helper trigger, and makes every
+goal and whose net adds cannot unify with any negative guard, copies those branches under a query-local helper trigger, and makes every
 transition repair call the helper. Merely proving that a safe branch exists is
 not enough: copying the branch is what prevents Jason from selecting an unsafe
 sibling from the original atomic trigger. Ground object names are alpha-normalized
@@ -545,6 +545,26 @@ preservation certificate and therefore fails closed.
 It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.
+
+Negative predicates now carry a fail-closed completion certificate. For a guard
+such as `delivered(P) & not damaged(P)`, every feasible conditional `MayAdd`
+effect of the selected `!delivered(P)` module is type-unified with
+`damaged(P)`. A branch that may add the forbidden atom cannot enter the
+unfiltered transition. The compiler either enforces a query-local action-only
+selection containing only goal-achieving branches that preserve positive
+siblings and negative guards, or raises `negative_guard_not_preserved` before
+ASL rendering. The certificate records the concrete negative literals,
+preservation status, selected branch names, and the
+`atomic_module_completion` observation boundary. Predicate/action renaming and
+PDDL sibling types do not alter this rule.
+
+A negative-only edge is a context check: it succeeds only if the atom is
+already absent. No `!not_p(...)` achievement is synthesized, and no waiting for
+exogenous deletion is implied. Temporary addition followed by deletion before
+the atomic module returns is permitted by the completion summary. Mixed
+predicate/numeric or multi-literal numeric guards remain rejected because they
+lack a cross-literal numeric preservation certificate. Safety formulas that
+must observe every primitive state still require an external monitor.
 
 After certification fixes an order `L1, ..., Ln`, the appender compiles that
 order into a balanced transition repair tree. A transition repair tree is

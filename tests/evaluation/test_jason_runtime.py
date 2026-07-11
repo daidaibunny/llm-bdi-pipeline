@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
 from evaluation.jason_runtime import JasonPlanLibraryRunner
 from evaluation.jason_runtime.environment_adapter import JasonEnvironmentRuntimeAdapter
 from evaluation.jason_runtime.runner import _build_environment_java_source
@@ -23,6 +24,11 @@ from evaluation.jason_runtime.runner import _runtime_action_schema
 from evaluation.jason_runtime.runner import _seed_facts
 from evaluation.jason_runtime.runner import _scan_runtime_output_files
 from evaluation.jason_runtime.runner import _split_seed_facts_for_jason_runtime
+from plan_library.models import AgentSpeakBodyStep
+from plan_library.models import AgentSpeakPlan
+from plan_library.models import AgentSpeakTrigger
+from plan_library.models import PlanLibrary
+from plan_library.rendering import render_plan_library_asl
 from utils.pddl_parser import PDDLAction
 from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLFact
@@ -555,6 +561,103 @@ def test_jason_runner_executes_tiny_pddl_environment(tmp_path: Path) -> None:
 	assert 'world.add("ready")' not in Path(result.artifacts["environment_java"]).read_text(
 		encoding="utf-8",
 	)
+
+
+@pytest.mark.skipif(
+	not (shutil.which("java") and shutil.which("javac") and shutil.which("mvn")),
+	reason="real Jason validation requires java, javac, and Maven",
+)
+def test_jason_executes_only_negative_preserving_query_alias(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_file = tmp_path / "plan_library.asl"
+	output_dir = tmp_path / "jason"
+	domain_file.write_text(
+		"""
+(define (domain negative-selection)
+ (:requirements :strips)
+ (:predicates (ready ?x) (delivered ?x) (damaged ?x))
+ (:action deliver-safely
+  :parameters (?x)
+  :precondition (ready ?x)
+  :effect (and (delivered ?x) (not (ready ?x))))
+ (:action deliver-damaged
+  :parameters (?x)
+  :precondition (ready ?x)
+  :effect (and (delivered ?x) (damaged ?x) (not (ready ?x))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem negative-selection-problem)
+ (:domain negative-selection)
+ (:objects item)
+ (:init (ready item))
+ (:goal (and (delivered item) (not (damaged item))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	atomic_library = PlanLibrary(
+		domain_name="negative-selection",
+		plans=(
+			AgentSpeakPlan(
+				"delivered_already_true",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("delivered(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"delivered_safe",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "deliver-safely", ("X",)),),
+			),
+			AgentSpeakPlan(
+				"delivered_unsafe",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "deliver-damaged", ("X",)),),
+			),
+		),
+	)
+	updated = append_temporal_goal_to_library(
+		plan_library=atomic_library,
+		goal_name="g_query_1",
+		dfa_payload={
+			"initial_state": "q0",
+			"accepting_states": ["q1"],
+			"guarded_transitions": [
+				{
+					"source_state": "q0",
+					"target_state": "q1",
+					"raw_label": "delivered(item) & not damaged(item)",
+				},
+				{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+			],
+		},
+		domain_file=domain_file,
+	)
+	library_file.write_text(render_plan_library_asl(updated), encoding="utf-8")
+
+	result = JasonPlanLibraryRunner(timeout_seconds=20).validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=library_file,
+		goal_name="g_query_1",
+		output_dir=output_dir,
+	)
+
+	assert result.success is True, result.to_dict()
+	assert result.action_path == ("deliver-safely(item)",)
+	assert result.action_count == 1
+	assert Path(result.artifacts["committed_plan_trace"]).read_text(
+		encoding="utf-8",
+	) == "(deliver-safely item)\n"
 
 
 @pytest.mark.skipif(

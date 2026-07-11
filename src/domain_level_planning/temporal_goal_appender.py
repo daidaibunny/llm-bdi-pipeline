@@ -235,6 +235,16 @@ def append_temporal_goal_to_library(
 	append_record["query_entry_proposition"] = entry_proposition
 	append_record["progress_plan_count"] = len(progress_plans)
 	append_record["progress_transition_count"] = len(transition_path)
+	append_record["negative_guard_count"] = sum(
+		1
+		for literals, _transition in transition_path
+		for literal in literals
+		if literal.polarity == "negative"
+	)
+	append_record["negative_guard_policy"] = (
+		"completion_context_with_conditional_may_add_preservation"
+	)
+	append_record["negative_achievement_supported"] = False
 	append_record["accepting_plan_count"] = 0
 	append_record["progress_state_coverage"] = _progress_transition_state_coverage(
 		transition_path=transition_path,
@@ -562,6 +572,7 @@ def _guard_transition_wrapper_plans(
 		) = (
 			_certified_positive_literal_serialization(
 				positive_literals,
+				negative_literals=negative_literals,
 				plan_library=plan_library,
 				domain=domain,
 				helper_prefix=transition_name,
@@ -628,6 +639,7 @@ def _guard_transition_wrapper_plans(
 def _certified_positive_literal_serialization(
 	literals: Sequence[DFALiteral],
 	*,
+	negative_literals: Sequence[DFALiteral] = (),
 	plan_library: PlanLibrary,
 	domain: PDDLDomain,
 	helper_prefix: str,
@@ -638,7 +650,39 @@ def _certified_positive_literal_serialization(
 	Mapping[str, str],
 ]:
 	literal_tuple = tuple(literals or ())
-	if len(literal_tuple) <= 1:
+	negative_literal_tuple = tuple(negative_literals or ())
+	declared_numeric_functions = {function.name for function in domain.functions}
+	all_literals = (*literal_tuple, *negative_literal_tuple)
+	numeric_literals = tuple(
+		literal
+		for literal in all_literals
+		if literal.predicate in declared_numeric_functions
+	)
+	if numeric_literals and len(all_literals) > 1:
+		raise ValueError(
+			"uncertified_numeric_conjunctive_transition: numeric resource atoms in a "
+			"multi-literal DFA guard require numeric effect-preservation certificates.",
+		)
+	if not literal_tuple:
+		return (
+			(),
+			{
+				"certificate_kind": "negative_context_only_transition",
+				"ordered_literal_indexes": [],
+				"threat_edges": [],
+				"module_summaries_complete": True,
+				"negative_guard_count": len(negative_literal_tuple),
+				"negative_guard_literals": [
+					literal.atom for literal in negative_literal_tuple
+				],
+				"negative_guard_preservation_checked": True,
+				"negative_guard_preserved": True,
+				"negative_guard_threats": [],
+			},
+			(),
+			{},
+		)
+	if len(literal_tuple) <= 1 and not negative_literal_tuple:
 		indexes = tuple(range(len(literal_tuple)))
 		return (
 			literal_tuple,
@@ -651,33 +695,32 @@ def _certified_positive_literal_serialization(
 			(),
 			{},
 		)
-	declared_numeric_functions = {function.name for function in domain.functions}
-	numeric_literals = tuple(
-		literal
-		for literal in literal_tuple
-		if literal.predicate in declared_numeric_functions
-	)
-	if numeric_literals:
-		raise ValueError(
-			"uncertified_numeric_conjunctive_transition: numeric resource atoms in a "
-			"multi-literal DFA guard require numeric effect-preservation certificates.",
-		)
 	literal_signatures = tuple(
 		(literal.predicate, literal.arguments) for literal in literal_tuple
+	)
+	negative_literal_signatures = tuple(
+		(literal.predicate, literal.arguments) for literal in negative_literal_tuple
 	)
 	try:
 		ordered_indexes, certificate = threat_safe_positive_literal_order(
 			literal_signatures,
 			plan_library=plan_library,
 			domain=domain,
+			negative_literals=negative_literal_signatures,
 		)
 	except ValueError as error:
-		if not str(error).startswith("cyclic_conjunctive_transition_not_certified"):
+		if not str(error).startswith(
+			(
+				"cyclic_conjunctive_transition_not_certified",
+				"negative_guard_not_preserved",
+			),
+		):
 			raise
 		selection = preservation_safe_action_only_plan_selection(
 			literal_signatures,
 			plan_library=plan_library,
 			domain=domain,
+			negative_literals=negative_literal_signatures,
 		)
 		if selection is None:
 			raise
@@ -685,15 +728,23 @@ def _certified_positive_literal_serialization(
 			selection,
 			helper_prefix=helper_prefix,
 		)
+		certificate_payload = selection.certificate.to_dict()
+		certificate_payload["negative_guard_literals"] = [
+			literal.atom for literal in negative_literal_tuple
+		]
 		return (
 			tuple(literal_tuple[index] for index in selection.ordered_indexes),
-			selection.certificate.to_dict(),
+			certificate_payload,
 			aliases,
 			helper_by_predicate,
 		)
+	certificate_payload = certificate.to_dict()
+	certificate_payload["negative_guard_literals"] = [
+		literal.atom for literal in negative_literal_tuple
+	]
 	return (
 		tuple(literal_tuple[index] for index in ordered_indexes),
-		certificate.to_dict(),
+		certificate_payload,
 		(),
 		{},
 	)

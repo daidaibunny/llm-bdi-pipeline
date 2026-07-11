@@ -41,14 +41,19 @@ class EffectAtom:
 
 @dataclass(frozen=True)
 class AtomicModuleEffectSummary:
-	"""Conditional may-delete summary for selected branches of one module call."""
+	"""Conditional completion effects for selected branches of one module call."""
 
 	conditional_delete_effects: tuple["ConditionalDeleteEffect", ...]
+	conditional_add_effects: tuple["ConditionalAddEffect", ...]
 	complete: bool
 
 	@property
 	def delete_atoms(self) -> tuple[EffectAtom, ...]:
 		return tuple(effect.delete_atom for effect in self.conditional_delete_effects)
+
+	@property
+	def add_atoms(self) -> tuple[EffectAtom, ...]:
+		return tuple(effect.add_atom for effect in self.conditional_add_effects)
 
 
 @dataclass(frozen=True)
@@ -56,6 +61,17 @@ class ConditionalDeleteEffect:
 	"""One delete effect guarded by the relational context of its plan branch."""
 
 	delete_atom: EffectAtom
+	positive_context: tuple[EffectAtom, ...] = ()
+	negative_context: tuple[EffectAtom, ...] = ()
+	equalities: tuple[tuple[EffectTerm, EffectTerm], ...] = ()
+	disequalities: tuple[tuple[EffectTerm, EffectTerm], ...] = ()
+
+
+@dataclass(frozen=True)
+class ConditionalAddEffect:
+	"""One add effect guarded by the relational context of its plan branch."""
+
+	add_atom: EffectAtom
 	positive_context: tuple[EffectAtom, ...] = ()
 	negative_context: tuple[EffectAtom, ...] = ()
 	equalities: tuple[tuple[EffectTerm, EffectTerm], ...] = ()
@@ -94,10 +110,14 @@ class TransitionSerializationCertificate:
 	ranking_relation_anchor_position: int | None = None
 	ranking_assumptions: tuple[str, ...] = ()
 	selected_branch_names_by_predicate: tuple[tuple[str, tuple[str, ...]], ...] = ()
+	negative_guard_count: int = 0
+	negative_guard_preservation_checked: bool = False
+	negative_guard_preserved: bool = True
+	negative_guard_threats: tuple[tuple[int, int], ...] = ()
 
 	def to_dict(self) -> dict[str, object]:
 		payload: dict[str, object] = {
-			"certificate_kind": "atomic_module_delete_effect_serialization",
+			"certificate_kind": "atomic_module_effect_serialization",
 			"effect_summary_method": "pddl_typed_conditional_relational_fixed_point",
 			"shared_query_variable_types_checked": True,
 			"ordered_literal_indexes": list(self.ordered_indexes),
@@ -110,6 +130,14 @@ class TransitionSerializationCertificate:
 			"ranking_relation": self.ranking_relation,
 			"ranking_relation_anchor_position": self.ranking_relation_anchor_position,
 			"ranking_assumptions": list(self.ranking_assumptions),
+			"negative_guard_count": self.negative_guard_count,
+			"negative_guard_preservation_checked": (
+				self.negative_guard_preservation_checked
+			),
+			"negative_guard_preserved": self.negative_guard_preserved,
+			"negative_guard_threats": [
+				list(edge) for edge in self.negative_guard_threats
+			],
 		}
 		if self.selected_branch_names_by_predicate:
 			payload["selected_branch_names_by_predicate"] = {
@@ -181,11 +209,13 @@ def threat_safe_positive_literal_order(
 	plan_library: PlanLibrary,
 	domain: PDDLDomain,
 	object_types: Mapping[str, str] | None = None,
+	negative_literals: Sequence[tuple[str, tuple[str, ...]]] = (),
 ) -> tuple[tuple[int, ...], TransitionSerializationCertificate]:
-	"""Return a certified order; reject incomplete or cyclic conjunctive effects."""
+	"""Return an order that preserves positive siblings and negative guards."""
 
 	literal_tuple = tuple(literals or ())
-	if len(literal_tuple) <= 1:
+	negative_literal_tuple = tuple(negative_literals or ())
+	if len(literal_tuple) <= 1 and not negative_literal_tuple:
 		indexes = tuple(range(len(literal_tuple)))
 		return indexes, TransitionSerializationCertificate(indexes, (), True)
 	actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
@@ -198,7 +228,7 @@ def threat_safe_positive_literal_order(
 	}
 	known_object_types = {**dict(domain.constant_types), **dict(object_types or {})}
 	query_variable_types = _query_variable_type_requirements(
-		literal_tuple,
+		(*literal_tuple, *negative_literal_tuple),
 		predicate_types=predicate_types,
 		type_tokens=domain.types,
 	)
@@ -220,6 +250,24 @@ def threat_safe_positive_literal_order(
 		)
 		for predicate, arguments in literal_tuple
 	)
+	negative_guard_atoms = tuple(
+		EffectAtom(
+			predicate=predicate,
+			arguments=tuple(
+				_query_term(
+					argument,
+					required_type=tuple(predicate_types.get(predicate, ()))[position]
+					if position < len(tuple(predicate_types.get(predicate, ())))
+					else "object",
+					known_object_types=known_object_types,
+					query_variable_types=query_variable_types,
+					type_tokens=domain.types,
+				)
+				for position, argument in enumerate(arguments)
+			),
+		)
+		for predicate, arguments in negative_literal_tuple
+	)
 	_assert_functional_goal_consistency(goal_atoms, functional_groups=functional_groups)
 	goal_indexes_by_predicate, goal_indexes_by_constant, goal_indexes_by_variable = (
 		_index_goal_atoms(goal_atoms)
@@ -229,10 +277,11 @@ def threat_safe_positive_literal_order(
 		tuple[EffectAtom, AtomicModuleEffectSummary],
 	] = {}
 	edges: set[tuple[int, int]] = set()
+	negative_guard_threats: set[tuple[int, int]] = set()
 	support_ranking_for_detected_cycle: tuple[tuple[int, ...], str, int] | None = None
 	support_ranking_checked = False
 	for achiever_index, goal_atom in enumerate(goal_atoms):
-		summary = _cached_module_delete_summary(
+		summary = _cached_module_effect_summary(
 			goal_atom,
 			cache=summary_cache,
 			plans_by_predicate=plans_by_predicate,
@@ -245,6 +294,14 @@ def threat_safe_positive_literal_order(
 				"uncertified_conjunctive_transition: selected atomic module effect "
 				f"summary is incomplete for {literal_tuple[achiever_index][0]}.",
 			)
+		for conditional_add in summary.conditional_add_effects:
+			for negative_index, forbidden in enumerate(negative_guard_atoms):
+				if _conditional_add_can_violate_negative(
+					conditional_add,
+					forbidden=forbidden,
+					type_tokens=domain.types,
+				):
+					negative_guard_threats.add((achiever_index, negative_index))
 		for conditional_delete in summary.conditional_delete_effects:
 			deleted = conditional_delete.delete_atom
 			for protected_index in _indexed_goal_candidates(
@@ -280,6 +337,15 @@ def threat_safe_positive_literal_order(
 							"modules have a cyclic delete-threat graph and no transition "
 							"ranking certificate.",
 						)
+	if negative_guard_threats:
+		raised = ", ".join(
+			f"positive[{positive_index}]->negative[{negative_index}]"
+			for positive_index, negative_index in sorted(negative_guard_threats)
+		)
+		raise ValueError(
+			"negative_guard_not_preserved: selected atomic modules may add a "
+			f"forbidden negative-guard atom at module completion ({raised})."
+		)
 	ordered_indexes = _stable_topological_order(len(literal_tuple), edges)
 	serialization_strategy = "universal_acyclic_threat_order"
 	ranking_relation: str | None = None
@@ -319,6 +385,10 @@ def threat_safe_positive_literal_order(
 		ranking_relation=ranking_relation,
 		ranking_relation_anchor_position=ranking_relation_anchor_position,
 		ranking_assumptions=ranking_assumptions,
+		negative_guard_count=len(negative_guard_atoms),
+		negative_guard_preservation_checked=bool(negative_guard_atoms),
+		negative_guard_preserved=True,
+		negative_guard_threats=(),
 	)
 	return ordered_indexes, certificate
 
@@ -329,8 +399,9 @@ def preservation_safe_action_only_plan_selection(
 	plan_library: PlanLibrary,
 	domain: PDDLDomain,
 	object_types: Mapping[str, str] | None = None,
+	negative_literals: Sequence[tuple[str, tuple[str, ...]]] = (),
 ) -> PreservationSafePlanSelection | None:
-	"""Select exact action-only branches whose net effects preserve sibling goals.
+	"""Select exact action-only branches preserving siblings and negative guards.
 
 	The returned plans are safe only when the caller enforces the selection, for
 	example by copying them under a query-local AgentSpeak trigger. Returning a
@@ -339,7 +410,8 @@ def preservation_safe_action_only_plan_selection(
 	"""
 
 	literal_tuple = tuple(literals or ())
-	if len(literal_tuple) <= 1:
+	negative_literal_tuple = tuple(negative_literals or ())
+	if len(literal_tuple) <= 1 and not negative_literal_tuple:
 		return None
 	actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
 	actions_by_name = {action.name: action for action in actions}
@@ -350,7 +422,7 @@ def preservation_safe_action_only_plan_selection(
 	}
 	known_object_types = {**dict(domain.constant_types), **dict(object_types or {})}
 	query_variable_types = _query_variable_type_requirements(
-		literal_tuple,
+		(*literal_tuple, *negative_literal_tuple),
 		predicate_types=predicate_types,
 		type_tokens=domain.types,
 	)
@@ -372,24 +444,63 @@ def preservation_safe_action_only_plan_selection(
 		)
 		for predicate, arguments in literal_tuple
 	)
+	negative_guard_atoms = tuple(
+		EffectAtom(
+			predicate=predicate,
+			arguments=tuple(
+				_query_term(
+					argument,
+					required_type=tuple(predicate_types.get(predicate, ()))[position]
+					if position < len(tuple(predicate_types.get(predicate, ())))
+					else "object",
+					known_object_types=known_object_types,
+					query_variable_types=query_variable_types,
+					type_tokens=domain.types,
+				)
+				for position, argument in enumerate(arguments)
+			),
+		)
+		for predicate, arguments in negative_literal_tuple
+	)
 	_assert_functional_goal_consistency(goal_atoms, functional_groups=functional_groups)
-	pair_shapes_by_achiever: dict[str, set[tuple[EffectAtom, EffectAtom]]] = {}
+	positive_pair_shapes_by_achiever: dict[
+		str,
+		set[tuple[EffectAtom, EffectAtom]],
+	] = {}
+	negative_pair_shapes_by_achiever: dict[
+		str,
+		set[tuple[EffectAtom, EffectAtom]],
+	] = {}
 	for achiever_index, achiever in enumerate(goal_atoms):
 		for protected_index, protected in enumerate(goal_atoms):
 			if achiever_index == protected_index:
 				continue
-			pair_shapes_by_achiever.setdefault(achiever.predicate, set()).add(
+			positive_pair_shapes_by_achiever.setdefault(achiever.predicate, set()).add(
 				_canonical_goal_pair_shape(
 					achiever,
 					protected,
 					domain_constants=frozenset(domain.constants),
 				),
 			)
+		for forbidden in negative_guard_atoms:
+			negative_pair_shapes_by_achiever.setdefault(achiever.predicate, set()).add(
+				_canonical_goal_pair_shape(
+					achiever,
+					forbidden,
+					domain_constants=frozenset(domain.constants),
+				),
+			)
 	plans_by_predicate = _plans_by_predicate(plan_library.plans)
 	selected: dict[str, tuple[AgentSpeakPlan, ...]] = {}
 	for predicate in dict.fromkeys(predicate for predicate, _arguments in literal_tuple):
-		pair_shapes = tuple(pair_shapes_by_achiever.get(predicate, ()))
-		if not pair_shapes:
+		positive_pair_shapes = tuple(
+			positive_pair_shapes_by_achiever.get(predicate, ())
+		)
+		negative_pair_shapes = tuple(
+			negative_pair_shapes_by_achiever.get(predicate, ())
+		)
+		all_pair_shapes = (*positive_pair_shapes, *negative_pair_shapes)
+		if not all_pair_shapes:
 			return None
 		generic_goal = EffectAtom(
 			predicate,
@@ -399,7 +510,7 @@ def preservation_safe_action_only_plan_selection(
 					variable_scope="query",
 					required_types=argument.required_types,
 				)
-				for index, argument in enumerate(pair_shapes[0][0].arguments)
+				for index, argument in enumerate(all_pair_shapes[0][0].arguments)
 			),
 		)
 		safe_plans: list[AgentSpeakPlan] = []
@@ -421,7 +532,7 @@ def preservation_safe_action_only_plan_selection(
 			):
 				continue
 			is_safe = True
-			for achiever, protected in pair_shapes:
+			for achiever, protected in positive_pair_shapes:
 				head_binding = {
 					generic_argument.symbol: actual_argument
 					for generic_argument, actual_argument in zip(
@@ -447,6 +558,39 @@ def preservation_safe_action_only_plan_selection(
 				):
 					is_safe = False
 					break
+			if not is_safe:
+				continue
+			for achiever, forbidden in negative_pair_shapes:
+				head_binding = {
+					generic_argument.symbol: actual_argument
+					for generic_argument, actual_argument in zip(
+						generic_goal.arguments,
+						achiever.arguments,
+					)
+				}
+				conditional_adds = tuple(
+					_instantiate_conditional_add(
+						ConditionalAddEffect(
+							add_atom=atom,
+							positive_context=generic_summary.branch_condition.positive_context,
+							negative_context=generic_summary.branch_condition.negative_context,
+							equalities=generic_summary.branch_condition.equalities,
+							disequalities=generic_summary.branch_condition.disequalities,
+						),
+						head_binding=head_binding,
+					)
+					for atom in generic_summary.add_atoms
+				)
+				if any(
+					_conditional_add_can_violate_negative(
+						effect,
+						forbidden=forbidden,
+						type_tokens=domain.types,
+					)
+					for effect in conditional_adds
+				):
+					is_safe = False
+					break
 			if is_safe:
 				safe_plans.append(plan)
 		if not safe_plans or not any(plan.body for plan in safe_plans):
@@ -464,6 +608,10 @@ def preservation_safe_action_only_plan_selection(
 			(predicate, tuple(plan.plan_name for plan in plans))
 			for predicate, plans in selected.items()
 		),
+		negative_guard_count=len(negative_guard_atoms),
+		negative_guard_preservation_checked=bool(negative_guard_atoms),
+		negative_guard_preserved=True,
+		negative_guard_threats=(),
 	)
 	return PreservationSafePlanSelection(
 		ordered_indexes=ordered_indexes,
@@ -617,7 +765,7 @@ def _plans_by_predicate(
 	}
 
 
-def _cached_module_delete_summary(
+def _cached_module_effect_summary(
 	goal: EffectAtom,
 	*,
 	cache: dict[
@@ -646,7 +794,7 @@ def _cached_module_delete_summary(
 		)
 		cached = (
 			generic_goal,
-			_module_delete_summary(
+			_module_effect_summary(
 				goal=generic_goal,
 				plans_by_predicate=plans_by_predicate,
 				actions_by_name=actions_by_name,
@@ -664,6 +812,10 @@ def _cached_module_delete_summary(
 		conditional_delete_effects=tuple(
 			_instantiate_conditional_delete(effect, head_binding=head_binding)
 			for effect in generic_summary.conditional_delete_effects
+		),
+		conditional_add_effects=tuple(
+			_instantiate_conditional_add(effect, head_binding=head_binding)
+			for effect in generic_summary.conditional_add_effects
 		),
 		complete=generic_summary.complete,
 	)
@@ -700,6 +852,30 @@ def _instantiate_conditional_delete(
 
 	return ConditionalDeleteEffect(
 		delete_atom=atom(effect.delete_atom),
+		positive_context=tuple(atom(item) for item in effect.positive_context),
+		negative_context=tuple(atom(item) for item in effect.negative_context),
+		equalities=tuple((term(left), term(right)) for left, right in effect.equalities),
+		disequalities=tuple(
+			(term(left), term(right)) for left, right in effect.disequalities
+		),
+	)
+
+
+def _instantiate_conditional_add(
+	effect: ConditionalAddEffect,
+	*,
+	head_binding: Mapping[str, EffectTerm],
+) -> ConditionalAddEffect:
+	def atom(item: EffectAtom) -> EffectAtom:
+		return _instantiate_query_anchors(item, head_binding=head_binding)
+
+	def term(item: EffectTerm) -> EffectTerm:
+		if item.variable_scope == "query":
+			return head_binding.get(item.symbol, item)
+		return item
+
+	return ConditionalAddEffect(
+		add_atom=atom(effect.add_atom),
 		positive_context=tuple(atom(item) for item in effect.positive_context),
 		negative_context=tuple(atom(item) for item in effect.negative_context),
 		equalities=tuple((term(left), term(right)) for left, right in effect.equalities),
@@ -758,7 +934,7 @@ def _indexed_goal_candidates(
 	return candidates
 
 
-def _module_delete_summary(
+def _module_effect_summary(
 	*,
 	goal: EffectAtom,
 	plans_by_predicate: Mapping[str, Sequence[AgentSpeakPlan]],
@@ -769,6 +945,7 @@ def _module_delete_summary(
 	pending = [_canonicalize_effect_atom(goal, namespace="module-call")]
 	seen: set[EffectAtom] = set()
 	conditional_deletes: list[ConditionalDeleteEffect] = []
+	conditional_adds: list[ConditionalAddEffect] = []
 	complete = True
 	while pending:
 		current_goal = pending.pop()
@@ -855,13 +1032,25 @@ def _module_delete_summary(
 					direct_effect_state[subgoal_atom] = True
 				else:
 					complete = False
-			for deleted, value in direct_effect_state.items():
+			for effect_atom, value in direct_effect_state.items():
 				if value:
+					conditional_adds.append(
+						_canonicalize_conditional_add(
+							ConditionalAddEffect(
+								add_atom=effect_atom,
+								positive_context=branch_condition.positive_context,
+								negative_context=branch_condition.negative_context,
+								equalities=branch_condition.equalities,
+								disequalities=branch_condition.disequalities,
+							),
+							namespace="add-effect",
+						),
+					)
 					continue
 				conditional_deletes.append(
 					_canonicalize_conditional_delete(
 						ConditionalDeleteEffect(
-							delete_atom=deleted,
+							delete_atom=effect_atom,
 							positive_context=branch_condition.positive_context,
 							negative_context=branch_condition.negative_context,
 							equalities=branch_condition.equalities,
@@ -874,6 +1063,7 @@ def _module_delete_summary(
 			complete = False
 	return AtomicModuleEffectSummary(
 		conditional_delete_effects=tuple(dict.fromkeys(conditional_deletes)),
+		conditional_add_effects=tuple(dict.fromkeys(conditional_adds)),
 		complete=complete,
 	)
 
@@ -1003,6 +1193,41 @@ def _canonicalize_conditional_delete(
 
 	return ConditionalDeleteEffect(
 		delete_atom=atom(effect.delete_atom),
+		positive_context=tuple(atom(item) for item in effect.positive_context),
+		negative_context=tuple(atom(item) for item in effect.negative_context),
+		equalities=tuple((term(left), term(right)) for left, right in effect.equalities),
+		disequalities=tuple(
+			(term(left), term(right)) for left, right in effect.disequalities
+		),
+	)
+
+
+def _canonicalize_conditional_add(
+	effect: ConditionalAddEffect,
+	*,
+	namespace: str,
+) -> ConditionalAddEffect:
+	variable_map: dict[tuple[str, str], EffectTerm] = {}
+
+	def term(argument: EffectTerm) -> EffectTerm:
+		if not argument.is_variable or argument.variable_scope == "query":
+			return argument
+		key = (str(argument.variable_scope), argument.symbol)
+		variable_map.setdefault(
+			key,
+			EffectTerm(
+				f"V{len(variable_map)}",
+				variable_scope=namespace,
+				required_types=argument.required_types,
+			),
+		)
+		return variable_map[key]
+
+	def atom(item: EffectAtom) -> EffectAtom:
+		return EffectAtom(item.predicate, tuple(term(argument) for argument in item.arguments))
+
+	return ConditionalAddEffect(
+		add_atom=atom(effect.add_atom),
 		positive_context=tuple(atom(item) for item in effect.positive_context),
 		negative_context=tuple(atom(item) for item in effect.negative_context),
 		equalities=tuple((term(left), term(right)) for left, right in effect.equalities),
@@ -1204,6 +1429,39 @@ def _conditional_delete_can_threaten(
 			for group in functional_groups
 		):
 			return False
+	return True
+
+
+def _conditional_add_can_violate_negative(
+	effect: ConditionalAddEffect,
+	*,
+	forbidden: EffectAtom,
+	type_tokens: Sequence[str],
+) -> bool:
+	"""Return whether a feasible branch may add an atom required to stay absent."""
+
+	bindings = _atom_unification_bindings(
+		effect.add_atom,
+		forbidden,
+		type_tokens=type_tokens,
+	)
+	if bindings is None:
+		return False
+	if any(
+		_atoms_forced_equal(item, forbidden, bindings=bindings)
+		for item in effect.positive_context
+	):
+		return False
+	if any(
+		_terms_forced_equal(left, right, bindings=bindings)
+		for left, right in effect.disequalities
+	):
+		return False
+	if any(
+		_terms_forced_distinct(left, right, bindings=bindings)
+		for left, right in effect.equalities
+	):
+		return False
 	return True
 
 

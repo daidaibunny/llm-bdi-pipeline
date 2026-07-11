@@ -108,6 +108,44 @@ def test_library_validation_rejects_removed_linear_single_body_wrapper() -> None
 	assert record.checked_layers["context_driven_bodies"] is False
 
 
+def test_library_validation_rejects_uncertified_negative_guard_tree() -> None:
+	tree = compile_transition_repair_tree(
+		transition_symbol="g_query_1_trans_1",
+		shared_context=("query_1", "not blocked(X)"),
+		positive_literals=(TransitionRepairLiteral("done(X)", "done", ("X",)),),
+		final_guard_context=("query_1", "done(X)", "not blocked(X)"),
+		certificate={
+			"query_entry_proposition": "query_1",
+			"serialization_certificate": {
+				"negative_guard_count": 1,
+				"negative_guard_literals": ["blocked(X)"],
+				"negative_guard_preservation_checked": False,
+				"negative_guard_preserved": False,
+			},
+		},
+	)
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		initial_beliefs=("query_1",),
+		plans=tree.plans,
+	)
+
+	record = build_library_validation_record(
+		domain_name="generic",
+		plan_library=plan_library,
+		generation_summary=PlanGenerationSummary(
+			domain_name="generic",
+			dfa_count=1,
+			transition_count=1,
+			plans_generated=len(tree.plans),
+			initial_belief_count=1,
+		),
+	)
+
+	assert record.passed is False
+	assert record.checked_layers["context_driven_bodies"] is False
+
+
 def test_library_validation_rejects_exposed_dfa_state_belief() -> None:
 	plan_library = PlanLibrary(
 		domain_name="blocks",

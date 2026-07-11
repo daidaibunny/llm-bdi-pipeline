@@ -157,6 +157,22 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 	entry_proposition = str(certificate.get("query_entry_proposition") or "").strip()
 	context = tuple(plan.context or ())
 	body = tuple(plan.body or ())
+	serialization = certificate.get("serialization_certificate")
+	if isinstance(serialization, dict):
+		negative_guard_count = int(serialization.get("negative_guard_count") or 0)
+		if negative_guard_count:
+			negative_guard_literals = tuple(
+				str(item).strip()
+				for item in tuple(serialization.get("negative_guard_literals") or ())
+				if str(item).strip()
+			)
+			if not (
+				serialization.get("negative_guard_preservation_checked") is True
+				and serialization.get("negative_guard_preserved") is True
+				and len(negative_guard_literals) == negative_guard_count
+				and all(f"not {atom}" in context for atom in negative_guard_literals)
+			):
+				return False
 	if not entry_proposition or entry_proposition not in context:
 		return False
 	if role == "transition_sequence_entry":

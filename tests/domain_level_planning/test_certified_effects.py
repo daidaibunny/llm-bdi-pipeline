@@ -149,7 +149,7 @@ def test_threat_certificate_reuses_typed_summary_and_indexes_ground_anchors(
 	monkeypatch,
 ) -> None:
 	domain_file = _write_typed_transport_fragment(tmp_path / "domain.pddl")
-	original_summary = certified_effects._module_delete_summary
+	original_summary = certified_effects._module_effect_summary
 	original_unify = certified_effects._atoms_unify
 	counts = {"summary": 0, "unify": 0}
 
@@ -161,7 +161,7 @@ def test_threat_certificate_reuses_typed_summary_and_indexes_ground_anchors(
 		counts["unify"] += 1
 		return original_unify(*args, **kwargs)
 
-	monkeypatch.setattr(certified_effects, "_module_delete_summary", counted_summary)
+	monkeypatch.setattr(certified_effects, "_module_effect_summary", counted_summary)
 	monkeypatch.setattr(certified_effects, "_atoms_unify", counted_unify)
 	objects = {f"parcel{index}": "package" for index in range(200)}
 	objects["destination"] = "location"
@@ -317,6 +317,150 @@ def test_preservation_safe_selection_is_symbol_invariant(
 	assert selection.certificate.serialization_strategy == (
 		"query_local_preservation_safe_action_only_branches"
 	)
+
+
+@pytest.mark.parametrize(
+	("goal_predicate", "forbidden_predicate", "producer_action"),
+	(
+		("completed", "damaged", "finish-damaged"),
+		("sealed", "contaminated", "close-contaminated"),
+	),
+)
+def test_negative_guard_preservation_is_symbol_invariant(
+	tmp_path: Path,
+	goal_predicate: str,
+	forbidden_predicate: str,
+	producer_action: str,
+) -> None:
+	domain_file = tmp_path / f"{goal_predicate}-negative-domain.pddl"
+	domain_file.write_text(
+		f"""
+		(define (domain renamed-negative-fragment)
+		 (:requirements :strips)
+		 (:predicates (ready ?x) ({goal_predicate} ?x) ({forbidden_predicate} ?x))
+		 (:action {producer_action}
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (and ({goal_predicate} ?x) ({forbidden_predicate} ?x))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="renamed-negative-fragment",
+		plans=(
+			AgentSpeakPlan(
+				f"{goal_predicate}_unsafe",
+				AgentSpeakTrigger("achievement_goal", goal_predicate, ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", producer_action, ("X",)),),
+			),
+		),
+	)
+
+	with pytest.raises(ValueError, match="negative_guard_not_preserved"):
+		threat_safe_positive_literal_order(
+			((goal_predicate, ("item",)),),
+			negative_literals=((forbidden_predicate, ("item",)),),
+			plan_library=library,
+			domain=PDDLParser.parse_domain(domain_file),
+		)
+
+
+def test_negative_guard_uses_atomic_completion_net_effects(tmp_path: Path) -> None:
+	domain_file = tmp_path / "restored-negative-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain restored-negative)
+		 (:requirements :strips)
+		 (:predicates (ready ?x) (processing ?x) (completed ?x) (exposed ?x))
+		 (:action begin
+		  :parameters (?x)
+		  :precondition (ready ?x)
+		  :effect (and (processing ?x) (exposed ?x))
+		 )
+		 (:action finish
+		  :parameters (?x)
+		  :precondition (processing ?x)
+		  :effect (and (completed ?x) (not (processing ?x)) (not (exposed ?x)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="restored-negative",
+		plans=(
+			AgentSpeakPlan(
+				"completed_via_begin_finish",
+				AgentSpeakTrigger("achievement_goal", "completed", ("X",)),
+				("ready(X)",),
+				(
+					AgentSpeakBodyStep("action", "begin", ("X",)),
+					AgentSpeakBodyStep("action", "finish", ("X",)),
+				),
+			),
+		),
+	)
+
+	order, certificate = threat_safe_positive_literal_order(
+		(("completed", ("item",)),),
+		negative_literals=(("exposed", ("item",)),),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert order == (0,)
+	assert certificate.negative_guard_preservation_checked is True
+	assert certificate.negative_guard_preserved is True
+	assert certificate.negative_guard_count == 1
+
+
+def test_negative_guard_preservation_respects_disjoint_pddl_types(tmp_path: Path) -> None:
+	domain_file = tmp_path / "typed-negative-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain typed-negative)
+		 (:requirements :strips :typing)
+		 (:types locatable location - object package truck - locatable)
+		 (:predicates
+		  (ready ?item - package)
+		  (available ?vehicle - truck)
+		  (delivered ?item - package)
+		  (marked ?object - locatable)
+		 )
+		 (:action deliver
+		  :parameters (?item - package ?vehicle - truck)
+		  :precondition (and (ready ?item) (available ?vehicle))
+		  :effect (and (delivered ?item) (marked ?vehicle))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="typed-negative",
+		plans=(
+			AgentSpeakPlan(
+				"delivered_via_truck",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("ready(X)", "available(V)"),
+				(AgentSpeakBodyStep("action", "deliver", ("X", "V")),),
+			),
+		),
+	)
+
+	order, certificate = threat_safe_positive_literal_order(
+		(("delivered", ("parcel",)),),
+		negative_literals=(("marked", ("parcel",)),),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+		object_types={"parcel": "package"},
+	)
+
+	assert order == (0,)
+	assert certificate.negative_guard_preserved is True
 
 
 def test_preservation_safe_selection_reuses_typed_goal_pair_shapes(

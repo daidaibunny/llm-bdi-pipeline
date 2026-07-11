@@ -52,7 +52,10 @@ Each domain is evaluated through four checks.
 	payloads whose relevant transitions contain conjunction and negation only.
 	Each certified progress edge must produce one balanced repair tree with
 	maximum trigger fan-out two, logarithmic nesting depth, and one complete-guard
-	recheck after each pass.
+	recheck after each pass. Adversarial negative-guard checks require unsafe-only
+	producers to be rejected, safe action-only alternatives to be enforced under
+	query-local aliases, completion-restored and PDDL-type-disjoint effects to
+	avoid false threats, and the resulting Jason trace to satisfy VAL.
 \item Library maintenance: each accepted query appends one new top-level
 	\texttt{g\_query} goal to the same domain library without introducing
 	\texttt{achieve\_*}, \texttt{transition\_*}, or \texttt{dfa\_state} plan

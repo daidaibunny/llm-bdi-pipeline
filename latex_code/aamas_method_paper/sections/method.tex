@@ -157,12 +157,13 @@ are automaton plumbing and do not become atomic subgoals.
 
 For one positive literal $p(\bar{X})$, the helper has an already-satisfied
 branch and a repair branch that calls $p$ once and rechecks the same transition.
-For a conjunction, the compiler computes conservative conditional may-delete
-summaries over the final selected atomic module call graph. Each delete retains
-the positive, negative, equality, and disequality context of its source branch.
-The summary records net effects at successful atomic-module completion, so a
-fact deleted and restored within one primitive macro is not treated as a final
-delete. It computes a relational fixed point over reachable module calls:
+For a conjunction, the compiler computes conservative conditional may-add and
+may-delete summaries over the final selected atomic module call graph. Each
+effect retains the positive, negative, equality, and disequality context of its
+source branch. The summary records net effects at successful atomic-module
+completion, so a fact added and then deleted, or deleted and then restored,
+within one primitive macro is not reported with the wrong completion polarity.
+It computes a relational fixed point over reachable module calls:
 query variables remain symbolic anchors, internal variables are
 alpha-normalized, PDDL type constraints restrict unification, and
 schema-derived single-valued invariants reject inconsistent conjunctive goals.
@@ -172,9 +173,9 @@ The temporal compiler first summarizes every selected branch of each called
 module. If this universal summary is cyclic, it may enforce a query-local
 preservation selection over already certified action-only branches. An
 action-only branch is a finite body containing only primitive PDDL actions, so
-its net delete effects can be computed exactly at module completion. The
-compiler retains every such branch whose conditional net effects preserve every
-sibling achievement, copies the retained branches under a query-local helper,
+its net effects can be computed exactly at module completion. The compiler
+retains every such branch whose conditional net effects preserve every sibling
+achievement and every negative guard, copies the retained branches under a query-local helper,
 and makes the transition repair call that helper rather than the unfiltered
 atomic trigger. Thus the existential branch proof is enforced by the generated
 AgentSpeak program rather than assumed only by the analysis. Ground problem
@@ -203,8 +204,28 @@ before $r(a,b)$. A reachable state containing both $r(a,b)$ and $r(b,a)$ is
 outside the assumption because recursive support depth would no longer be a
 well-founded ranking.
 This reordering is confined to literals on one DFA edge and therefore does not
-change temporal order between edges. Negative literals remain context guards
-and are never compiled as negative achievements.
+change temporal order between edges.
+
+Let $N^-$ be the positive atoms occurring under literal negation in the same
+edge guard. Negative literals are context obligations, not achievement calls.
+For every positive repair module $M_i$, the compiler requires that no feasible
+conditional completion effect in $\operatorname{MayAdd}(M_i)$ type-unifies with
+an atom in $N^-$. A branch whose positive context already requires that
+forbidden atom is infeasible under the negative guard and does not constitute a
+threat. If the universal module summary violates this obligation, the
+query-local action-only selection described above is attempted with both
+constraints: no selected branch may delete a positive sibling or add a
+negative-guard atom. The selected branches are copied under an enforced helper;
+if no non-empty goal-achieving selection remains, compilation fails with
+\texttt{negative\_guard\_not\_preserved}.
+
+The persisted certificate records the negative literals, whether conditional
+may-add preservation was checked, and the enforced branch names. A negative-only
+edge performs a context check and advances only when the atom is already absent;
+the method does not synthesize a negative atomic goal or wait for an exogenous
+deletion. Completion summaries permit a primitive macro to add and subsequently
+delete an atom before return. This does not establish a safety formula that must
+observe every primitive state.
 
 \subsubsection{Balanced transition repair tree.}
 Once certification fixes the positive-literal order
@@ -236,9 +257,9 @@ own tree, so balancing never moves an achievement across DFA edges.
 
 A singleton numeric transition such as $fuel(v)=0$ is supported when its
 selected module has a certified unit monotone effect. A mixed or multi-literal
-transition such as $at(p,d) \land fuel(v)=3$ is rejected: the temporal compiler
-does not yet prove that repairing one conjunct preserves the other's numeric
-value.
+transition such as $at(p,d) \land fuel(v)=3$, including a predicate repair
+combined with a negated numeric atom, is rejected: the temporal compiler does
+not yet prove cross-literal numeric preservation.
 
 The completion-level observation boundary is an explicit scope restriction.
 It is sound for the achievement-transition fragment evaluated here, where a

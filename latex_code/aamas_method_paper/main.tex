@@ -51,7 +51,8 @@ singleton-goal evidence representation. We instantiate this interface with
 MOOSE, while keeping the compiler independent of that provider. A single
 Clingo program jointly selects validated evidence macros and schema-derived
 branches under executability, closure, recursive-progress, resource-restoration,
-and target-preservation certificates. Certified conjunctive DFA guards are
+and target-preservation certificates. Conditional completion effects certify
+both positive-sibling preservation and negative-guard non-addition. Certified conjunctive DFA guards are
 executed through balanced query-local repair trees that bound AgentSpeak plan
 fan-out while preserving the certified literal order. Unsupported candidates
 and uncertified cyclic transition guards are rejected before library generation.
@@ -116,8 +117,8 @@ The paper makes five contributions.
 	selects evidence and schema-derived atomic modules in a single Clingo
 	optimization problem.
 \item We restore an LTLf-to-DFA temporal layer whose conjunctive guards use
-	conservative summaries of selected-module effects and balanced repair trees
-	with bounded trigger fan-out.
+	conservative conditional add/delete summaries, enforced negative-guard
+	preservation, and balanced repair trees with bounded trigger fan-out.
 \item We define a benchmark scope spanning classical, numeric, and
 	serialized-width domains.
 \end{enumerate}
@@ -140,15 +141,18 @@ guards without numeric preservation certificates remain outside the claim.
 \label{sec:scope}
 
 The current method supports PDDL predicate goals and validated numeric fluent
-goals with lifted atomic templates. Unsupported negative literal templates,
-disjunctive goals, derived predicates, and conditional effects require
-additional semantics before they can enter the claim. Unsupported cases are
+goals with lifted atomic templates. Negated predicates are supported as
+completion-level context guards only when conditional may-add preservation is
+certified; negative achievement templates remain unsupported. Disjunctive
+goals, derived predicates, and conditional effects require additional semantics
+before they can enter the claim. Unsupported cases are
 rejected before compilation so that the generated library remains a
 domain-level program rather than an instance-specific trace.
 
 Temporal goals are compiled from LTLf into deterministic finite automata. DFA
 transition guards may contain conjunction and negation. Positive conjuncts call
-atomic modules; negative conjuncts remain context guards. A general DFA still requires an external
+atomic modules; negative conjuncts remain certified context guards and are never
+invented as negative achievement calls. A general DFA still requires an external
 reward-machine state unless the world state uniquely determines temporal
 progress. Ordinary classical \pddl{} goals define achievement goals; they do
 not define arbitrary temporal extended goals, although PDDL3 trajectory

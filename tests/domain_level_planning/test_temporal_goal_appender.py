@@ -153,6 +153,11 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		"dfa_guard_transition_replay"
 	)
 	assert updated.metadata["temporal_goal_append"]["progress_transition_count"] == 2
+	assert updated.metadata["temporal_goal_append"]["negative_guard_count"] == 0
+	assert updated.metadata["temporal_goal_append"]["negative_guard_policy"] == (
+		"completion_context_with_conditional_may_add_preservation"
+	)
+	assert updated.metadata["temporal_goal_append"]["negative_achievement_supported"] is False
 	assert updated.metadata["temporal_goal_append"]["transition_controller_strategy"] == (
 		"balanced_transition_repair_tree"
 	)
@@ -266,7 +271,7 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 	)
 	certificate = first_tree_entry.binding_certificate[0]["serialization_certificate"]
 	assert certificate == {
-		"certificate_kind": "atomic_module_delete_effect_serialization",
+		"certificate_kind": "atomic_module_effect_serialization",
 		"effect_summary_method": "pddl_typed_conditional_relational_fixed_point",
 		"shared_query_variable_types_checked": True,
 		"ordered_literal_indexes": [0, 1],
@@ -279,6 +284,11 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		"ranking_relation": None,
 		"ranking_relation_anchor_position": None,
 		"ranking_assumptions": [],
+		"negative_guard_count": 0,
+		"negative_guard_literals": [],
+		"negative_guard_preservation_checked": False,
+		"negative_guard_preserved": True,
+		"negative_guard_threats": [],
 	}
 
 
@@ -418,6 +428,259 @@ def test_append_temporal_goal_enforces_preservation_safe_query_local_branches(
 	assert "finish-safely" in query_bodies
 	assert "finish-by-reusing" not in query_bodies
 	assert "g_query_1_trans_1_achieve_completed" in repair_subgoals
+
+
+def test_append_temporal_goal_rejects_uncertified_negative_guard_preservation(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "negative-unsafe-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain negative-unsafe)
+ (:requirements :strips)
+ (:predicates (ready ?x) (delivered ?x) (damaged ?x))
+ (:action deliver-damaged
+  :parameters (?x)
+  :precondition (ready ?x)
+  :effect (and (delivered ?x) (damaged ?x)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="negative-unsafe",
+		plans=(
+			AgentSpeakPlan(
+				"delivered_via_damaged",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "deliver-damaged", ("X",)),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "delivered(item) & not damaged(item)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	with pytest.raises(ValueError, match="negative_guard_not_preserved"):
+		append_temporal_goal_to_library(
+			plan_library=library,
+			goal_name="g_query_1",
+			dfa_payload=dfa_payload,
+			domain_file=domain_file,
+		)
+
+
+def test_append_temporal_goal_compiles_negative_only_transition_as_context(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "negative-only-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain negative-only)
+ (:requirements :strips)
+ (:predicates (blocked ?x))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "not blocked(item)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="negative-only", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	transition = next(
+		plan for plan in updated.plans if plan.plan_name == "g_query_1_trans_1_done"
+	)
+	certificate = transition.binding_certificate[0]["serialization_certificate"]
+
+	assert transition.context == ("query_1", "not blocked(item)")
+	assert transition.body == ()
+	assert certificate == {
+		"certificate_kind": "negative_context_only_transition",
+		"ordered_literal_indexes": [],
+		"threat_edges": [],
+		"module_summaries_complete": True,
+		"negative_guard_count": 1,
+		"negative_guard_literals": ["blocked(item)"],
+		"negative_guard_preservation_checked": True,
+		"negative_guard_preserved": True,
+		"negative_guard_threats": [],
+	}
+
+
+def test_append_temporal_goal_rejects_uncertified_numeric_negative_conjunction(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "numeric-negative-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain numeric-negative)
+ (:requirements :strips :fluents)
+ (:predicates (ready) (done))
+ (:functions (fuel))
+ (:action finish
+  :parameters ()
+  :precondition (ready)
+  :effect (done))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="numeric-negative",
+		plans=(
+			AgentSpeakPlan(
+				"done_via_finish",
+				AgentSpeakTrigger("achievement_goal", "done", ()),
+				("ready",),
+				(AgentSpeakBodyStep("action", "finish", ()),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "done & not fuel(0)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	with pytest.raises(ValueError, match="uncertified_numeric_conjunctive_transition"):
+		append_temporal_goal_to_library(
+			plan_library=library,
+			goal_name="g_query_1",
+			dfa_payload=dfa_payload,
+			domain_file=domain_file,
+		)
+
+
+def test_append_temporal_goal_enforces_negative_preserving_query_local_branches(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "negative-selection-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain negative-selection)
+ (:requirements :strips)
+ (:predicates (ready ?x) (delivered ?x) (damaged ?x))
+ (:action deliver-safely
+  :parameters (?x)
+  :precondition (ready ?x)
+  :effect (delivered ?x))
+ (:action deliver-damaged
+  :parameters (?x)
+  :precondition (ready ?x)
+  :effect (and (delivered ?x) (damaged ?x)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="negative-selection",
+		plans=(
+			AgentSpeakPlan(
+				"delivered_already_true",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("delivered(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"delivered_safe",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "deliver-safely", ("X",)),),
+			),
+			AgentSpeakPlan(
+				"delivered_unsafe",
+				AgentSpeakTrigger("achievement_goal", "delivered", ("X",)),
+				("ready(X)",),
+				(AgentSpeakBodyStep("action", "deliver-damaged", ("X",)),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "delivered(item) & not damaged(item)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	query_plans = tuple(
+		plan for plan in updated.plans if plan.plan_name.startswith("g_query_1")
+	)
+	query_actions = tuple(
+		step.symbol
+		for plan in query_plans
+		for step in plan.body
+		if step.kind == "action"
+	)
+	repair = next(
+		plan
+		for plan in query_plans
+		if plan.plan_name == "g_query_1_trans_1_repair_1_1_achieve"
+	)
+	certificate = next(
+		plan
+		for plan in query_plans
+		if plan.plan_name == "g_query_1_trans_1_repair_tree"
+	).binding_certificate[0]["serialization_certificate"]
+
+	assert "deliver-safely" in query_actions
+	assert "deliver-damaged" not in query_actions
+	assert repair.body[0].symbol == "g_query_1_trans_1_achieve_delivered"
+	assert certificate["negative_guard_preservation_checked"] is True
+	assert certificate["negative_guard_preserved"] is True
+	assert certificate["negative_guard_count"] == 1
+	assert certificate["negative_guard_literals"] == ["damaged(item)"]
+	assert updated.metadata["temporal_goal_append"]["negative_guard_count"] == 1
+	assert certificate["serialization_strategy"] == (
+		"query_local_preservation_safe_action_only_branches"
+	)
 
 
 def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -> None:

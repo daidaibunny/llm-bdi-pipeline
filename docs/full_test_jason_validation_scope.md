@@ -121,6 +121,17 @@ literals are context checks, never negative achievement subgoals. The old
 linear body, one-sibling-plan-per-literal replay, and monotonic step-helper paths
 are not selected.
 
+Negative contexts are now certified before wrapper generation. The atomic call
+graph contributes conditional completion-level `MayAdd` as well as `MayDelete`
+effects. If a feasible positive repair branch may add an atom required absent by
+the same DFA guard, the appender either copies only action-only branches that
+achieve the positive literal while preserving every positive sibling and
+negative guard, or rejects the transition with
+`negative_guard_not_preserved`. The certificate stores the concrete forbidden
+atoms and the enforced branch names. A negative-only edge is only an immediate
+context check; it does not create a negative achievement module. Mixed numeric
+conjunctions remain outside the certificate.
+
 The balanced tree is a data-structure optimization over one DFA transition,
 not another planner. With `N` positive literals, the old sibling layout gave
 the same trigger `N` repair plans. Re-entering that trigger after each repair

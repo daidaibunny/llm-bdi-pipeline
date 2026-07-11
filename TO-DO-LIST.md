@@ -68,6 +68,12 @@ certificate.
   point over alpha-normalized subgoal-call shapes, so recursive parameter changes
   are included without a domain-specific depth bound. Incomplete summaries and
   cyclic threat graphs are rejected; parser order is not a fallback.
+- Negative DFA guards now require conditional completion-level `MayAdd`
+  preservation. Unsafe universal modules are replaced only when a query-local
+  action-only branch selection both achieves each positive literal and preserves
+  all positive siblings and forbidden negative atoms; otherwise compilation
+  fails with `negative_guard_not_preserved`. Negative-only edges remain context
+  checks and do not invent negative achievement goals.
 - MOOSE evidence variables are no longer made pairwise distinct by default.
   Inequality guards are emitted only when PDDL symbolic execution proves that
   aliasing would violate an action precondition or a prior delete effect.
@@ -93,7 +99,7 @@ certificate.
   persistent goals, and interfering goals.
 
 Current compiler acceptance gate (2026-07-12): full `ruff check .` passes;
-`pytest -q` reports 325 passed with only two third-party Lark deprecation
+`pytest -q` reports 336 passed with only two third-party Lark deprecation
 warnings; real `ltlf2dfa`/MONA builds the expected three-state, five-transition
 automaton for `F(a & X(F(b)))`; and the typed threat certificate processes the
 48,500-literal Gripper `p2_30` goal in about 11 seconds with one cached module
