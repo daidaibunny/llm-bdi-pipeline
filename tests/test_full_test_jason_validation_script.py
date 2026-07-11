@@ -1060,3 +1060,14 @@ def test_parser_order_batch_keeps_per_test_asl_without_domain_long_asl() -> None
 
 	assert "--write-per-test-runtime-asl" in script
 	assert "--write-domain-long-asl" not in script
+
+
+def test_parser_order_batch_defaults_match_paper_budget_and_local_parallelism() -> None:
+	script = Path("scripts/run_parser_order_full_val_batch.sh").read_text(encoding="utf-8")
+
+	assert 'WORKERS="${WORKERS:-12}"' in script
+	assert 'MOOSE_WORKERS="${MOOSE_WORKERS:-$WORKERS}"' in script
+	assert 'JASON_WORKERS="${JASON_WORKERS:-$WORKERS}"' in script
+	assert 'TRAIN_TIMEOUT_SECONDS="${TRAIN_TIMEOUT_SECONDS:-43200}"' in script
+	assert 'JASON_JAVA_STACK_SIZE="${JASON_JAVA_STACK_SIZE:-64m}"' in script
+	assert "moose_train_timeout_seconds=$TRAIN_TIMEOUT_SECONDS" in script
