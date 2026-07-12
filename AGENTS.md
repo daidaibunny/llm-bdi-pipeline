@@ -1,0 +1,352 @@
+# Project Instructions
+
+This repository is a PDDL-only, domain-level AgentSpeak(L) plan-library
+pipeline. The current research target changed on 2026-07-03.
+
+## Current Architecture
+
+Do not build a universal generalized planner inside this repository. Do not
+route a domain to a backend by assigning it to a prior paper taxonomy class.
+
+## Maintained Research Design Documents
+
+Three pre-paper documents are normative and must remain synchronized with the
+implementation and manuscript:
+
+- `docs/research_pipeline_decisions.md` records architecture, evidence/compiler
+  boundaries, benchmark scope, certificate requirements, supported fragments,
+  and explicit limitations. Update it in the same commit whenever a change
+  alters a research-facing claim.
+- `docs/input_design.md` records the complete natural-language-to-parametric-
+  LTLf contract, JSON artifacts, propositionization, real `ltlf2dfa`/MONA DFA
+  construction, benchmark generation, and independent DFA trace-validation
+  semantics. Update it in the same commit whenever an Input schema, parameter
+  semantic, DFA capability, query-wrapper contract, or temporal evaluation
+  oracle changes.
+- `docs/aaai_paper_narrative_outline.md` is the canonical AAAI manuscript
+  narrative, section contract, claim boundary, result-insertion contract, and
+  page-budget plan. Every paper update must follow this outline. When a better
+  writing strategy is adopted, update the outline in the same commit as the
+  manuscript rather than allowing the paper and plan to diverge.
+
+The canonical query semantics are typed, externally bound, parametric LTLf.
+For example, `phi(X,Y)` is compiled once and invoked under an assignment such
+as `X=b1, Y=b2`; it is neither existential nor universal quantification. PDDL
+objects must not be exhaustively grounded before DFA construction. A grounded
+formula is permitted only as a per-invocation validation projection. Do not
+claim first-order quantified LTLf unless a separate formal implementation and
+evaluation are added.
+
+The current architecture has two connected flows across four named modules:
+the Evidence Module, Validated Policy-Lifting Compiler, Temporal Query
+Compiler, and Execution Validation Module. Do not call these Layer A/B/C.
+
+```text
+PDDL domain + train split
+-> external generalized-planning evidence backend
+-> atomic minimal literal module synthesis
+-> compact lifted atomic AgentSpeak(L) library
+
+validated lifted LTLf JSON
+-> real ltlf2dfa/MONA DFA construction
+-> conjunctive guard-transition DFA validation
+-> append +!g_query wrapper plans to the same domain library
+```
+
+There must be exactly one maintained AgentSpeak(L) library per domain. New user
+queries append new top-level goals such as `g_query_17` to that library.
+The canonical maintained location is:
+
+```text
+artifacts/domain_libraries/<domain>/plan_library.json
+artifacts/domain_libraries/<domain>/plan_library.asl
+artifacts/domain_libraries/<domain>/artifact_metadata.json
+```
+
+The main CLI must reject non-canonical output roots and non-canonical append
+input files. Audit scripts may write snapshot artifacts, but those snapshots are
+not the maintained domain library.
+
+## Atomic Minimal Literal Module Library
+
+- Learn or import evidence for lifted atomic predicate/literal targets, for example
+  `+!on(X,Y)`, `+!clear(X)`, `+!at(P,L)`, or `+!served(P)`.
+- MOOSE is the first backend candidate for positive singleton predicate goals
+  because its paper method explicitly decomposes training problems into
+  singleton goal conditions and learns lifted rules by goal regression.
+- MOOSE readable artifacts produced by `policy <model> --dump-policy` are
+  consumed through `src/domain_level_planning/moose_policy_adapter.py`.
+- Raw MOOSE singleton macro policies are evidence, not automatically the final
+  domain-level library. When `--validated-policy-lifting` is used, the compiler
+  validates MOOSE policy-rule macros against PDDL schemas, lifts their variables,
+  preserves complete validated policy-rule branches, and uses MOOSE seed
+  predicates plus PDDL action schemas to synthesize schema-augmented recursive
+  modules when closure requires internal producible fluents.
+  `--minimal-modules` and `--post-moose-recursive` remain only as deprecated
+  compatibility aliases.
+  MOOSE seed predicates are not assumed to include all required internal
+  modules. For example, if MOOSE only saw singleton `on(X,Y)` goals in Blocks,
+  `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)` still enter the
+  library through PDDL add-effect/precondition closure when they are producible
+  fluents needed by recursive decomposition. Static predicates remain context
+  only. PDDL typing is compiled into the reserved static sort metadata predicate
+  `obj_tp(Object, Type)` when action schemas require subtype-safe binding. The
+  final ASL must not emit domain-specific `type_*` guards, and `obj_tp/2` must
+  remain context-only metadata that is never used as a subgoal or primitive
+  action.
+- Validated policy lifting with schema-augmented recursive module synthesis must
+  use a solver-backed branch selector rather than local hand-written pruning
+  when claiming paper-quality compactness. Prefer Clingo/ASP for the first
+  implementation because Learning Sketches uses ASP-style synthesis and because
+  our constraints are relational:
+  selected branches must cover candidate evidence, preserve required fallback
+  branch kinds, satisfy schema executability, keep producer modules emitted for
+  internal closure predicates, avoid synthetic goals, and minimize branch count,
+  context count, and body cost within the generated candidate space.
+- The Clingo/ASP selector is mandatory for `--validated-policy-lifting`; do not
+  add a silent local-pruning fallback. The selector treats each generated branch
+  as an evidence obligation. A selected branch may cover another branch only
+  when it has the same lifted trigger, no stronger context, and an equivalent or
+  explicitly recursive body coverage relation. This is meant to remove
+  redundant sibling branches while preserving necessary cases such as
+  already-true, direct producer, and recursive preparation branches.
+- Validated provider macros and schema-derived candidates must enter the same
+  Clingo solve. Do not select schema branches first and append MOOSE macros
+  afterward. Recursive branches require a non-negative relational ranking
+  certificate, and resource cleanup requires a causal keyed-capacity invariant.
+- MOOSE is not claimed to solve interacting conjunctive goals directly.
+  Blocks-style goals such as `on(X,Y) & on(Y,Z)` require the temporal wrapper or
+  another structural controller.
+- KR 2025 learner-policies-from-examples, D2L, learner-sketches, and
+  h-policy-learner remain audited fallback or comparison backends. A backend
+  artifact counts as a current atomic-library backend only after:
+
+```text
+parse -> LiftedPolicyProgram -> verified atomic action/subgoal binding -> ASL compilation -> held-out validation
+```
+
+At present, MOOSE readable-policy artifacts are the only implemented
+paper-backend-to-atomic-ASL compiler path. Do not classify whole domains by
+compiler outcome. The implemented structural labels are plan-template-level:
+`already_true_plan_template` for empty bodies, `action_only_plan_template` for
+bodies containing only primitive PDDL actions, and
+`subgoal_decomposed_plan_template` for bodies containing internal achievement
+subgoals such as `!clear(Y)`. A domain library may contain several template
+kinds at once, so metadata reports `library_profile` and
+`plan_template_kind_counts` only as diagnostics, not as a domain taxonomy or
+routing rule.
+
+Do not refer to the current method as Layer A, Layer B, or Layer C. Use
+`atomic minimal literal module library` for the compact low-level artifact and
+`temporal goal append` for query-specific DFA wrappers.
+
+- Negative literal templates are not supported unless a backend artifact gives a
+  validated implementation. Reject them with a structured diagnostic instead of
+  inventing synthetic subgoals.
+
+## Temporal Goal Append Layer
+
+- The external Input component produces lifted LTLf JSON. This repository must
+  consume that artifact, not reimplement the Input LLM workflow unless
+  explicitly requested.
+- The historical LTLf-to-DFA and logger code may be restored and refactored, but
+  it must be PDDL-only and must not reintroduce HDDL, HTN, or legacy event-to-
+  fluent mappings.
+- LTLf formulas must be converted through the real `ltlf2dfa` package and a
+  real MONA binary. Do not restore an ordered-sequence or linear-body fast path.
+- Every relevant DFA transition guard is interpreted as one query-local guard
+  block. A guard transition is the set of literals on one MONA/ltlf2dfa transition
+  guard; for example `on(X,Y) & not clear(Z)` is one block with positive
+  achievement `on(X,Y)` and negative context guard `not clear(Z)`.
+- Guard blocks may contain conjunction and negation only. Reject disjunctions,
+  implications, malformed atoms, undeclared predicates, and wrong arities with
+  precise diagnostics.
+- Negative waiting guards such as `not done` are valid DFA structure and should
+  not compile to atomic subgoals. Negative progress literals are compiled only
+  as ASL context guards; they are never compiled into negative achievement
+  subgoals unless a backend later provides a validated negative atomic template.
+- Every positive repair in a transition containing negative predicate guards
+  must carry a completion-level conditional `MayAdd` preservation certificate.
+  If an unfiltered atomic module may add a forbidden atom, enforce a query-local
+  action-only branch selection that preserves positive siblings and all negative
+  guards; if no non-empty goal-achieving selection remains, reject with
+  `negative_guard_not_preserved`. A negative-only edge checks that the atom is
+  already absent and does not wait or synthesize deletion behavior. Mixed
+  predicate/numeric preservation remains unsupported.
+- Accepting self-loops labelled `true` are allowed as DFA plumbing and should
+  not compile to atomic subgoals.
+- Every progress transition uses one query-local `trans` controller enabled by
+  a zero-arity query entry proposition. Its certified literal order is compiled
+  into a balanced binary repair tree. Internal tree nodes only dispatch to two
+  child ranges; each leaf either observes one satisfied literal or calls its
+  atomic module once. A separate `trans_done` helper checks the complete guard
+  and replays the same transition when an earlier achievement was invalidated.
+  The tree is query-local control structure, not a domain fluent or a second
+  temporal fast path.
+- The balanced tree bounds sibling-plan fan-out by two, visits all positive
+  literals in linear controller work per pass, and has logarithmic nesting
+  depth. It does not reduce primitive PDDL action count or choose the literal
+  order; threat and preservation certificates determine the order first.
+  A singleton transition is the identity case: one leaf calls one atomic module
+  and the done helper rechecks the same transition.
+
+```asl
+query.
+
++!g_query : query <- !g_query_trans_1.
++!g_query_trans_1 : query <-
+	!g_query_trans_1_repair_1_1;
+	!g_query_trans_1_done.
++!g_query_trans_1_repair_1_1 : query & on(X,Y) <- true.
++!g_query_trans_1_repair_1_1 : query & not on(X,Y) <- !on(X,Y).
++!g_query_trans_1_done : query & on(X,Y) <- true.
++!g_query_trans_1_done : query <- !g_query_trans_1.
+```
+
+- A conjunctive transition is serialized only from complete conservative
+  may-delete summaries of the final selected atomic modules. Reject incomplete
+  summaries, cyclic threat graphs, and uncertified numeric conjunctions; never
+  fall back to parser order or monotonic step helpers.
+- Branching or state-dependent temporal goals must be rejected with a structured
+  diagnostic unless an external DFA or reward-machine controller is present. Do
+  not reintroduce `tg_state` monitor beliefs in final ASL as a hidden fallback.
+
+## Temporal Goal Validation
+
+- Model predictions use the exact eight-key lifted LTLf payload defined by
+  `src/temporal_specification/prediction_validation.py`. Validation is
+  fail-closed over schema, atom-table closure, PDDL catalogue membership,
+  arity, parameter type, numeric equality, and the declared operator fragment.
+- Translation correctness is semantic rather than textual. Gold and predicted
+  atoms are canonicalized by PDDL semantic identity, compiled by the real
+  LTLf2DFA/MONA path, and checked for exact finite-trace language equivalence by
+  reachable product-automaton exploration. Persist a distinguishing valuation
+  trace when equivalence fails.
+- The sealed construction witness is a separate consistency check. Replay its
+  primitive PDDL actions, compare state fingerprints, ground with the hidden
+  assignment, and require both gold and predicted DFAs to accept. Witness
+  acceptance must not replace DFA language equivalence.
+- For generated execution traces, VAL checks action legality against a generated
+  copy of the PDDL problem whose original goal is replaced only by
+  `(:goal (and))`. Temporal success is decided independently by gold-DFA
+  acceptance over the complete replayed state trace. Do not use the original
+  PDDL achievement goal as a TEG success criterion.
+- Keep translation errors, validation infrastructure failures, benchmark-audit
+  inconsistencies, VAL failures, and DFA rejection as distinct report statuses.
+
+## Selected Benchmark Scope
+
+The domain groups are evaluation coverage, not backend-routing classes. The
+current scope includes every MOOSE companion benchmark domain that has a direct
+non-empty `training/` and `testing/` split, plus project-added
+feature-definable serialized-width benchmarks.
+
+| Group | Domains |
+| --- | --- |
+| ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` |
+| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` |
+| Feature-definable serialized-width domains | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` |
+
+Numeric MOOSE domains are included for MOOSE-faithful benchmark coverage and
+experimental compiler support. Treat their AgentSpeak(L) compilation as
+experimental until numeric fluents have a fully specified executable semantics.
+
+## Hard Constraints
+
+- PDDL only. Do not reintroduce HDDL or HTN code.
+- Do not emit synthetic achievement names such as `achieve_*`, `transition_*`,
+  or `dfa_state` in final ASL.
+- `obj_tp/2` is the only reserved non-PDDL context predicate allowed in final
+  ASL; it represents PDDL object type membership and must not appear in plan
+  bodies or exported PDDL action traces.
+- Query-specific names such as `g_query_17`, `g_query_17_trans_1`,
+  `g_query_17_trans_1_repair_1_8`, and `g_query_17_trans_1_done` are allowed
+  only as temporal wrapper goals. They must not be used as atomic domain
+  modules, world-state fluents, or exported PDDL actions.
+- Use stored or provided LTLf artifacts unless explicitly asked to regenerate
+  them with a language model.
+- Keep external generalized-planning code under `.external/`; do not vendor
+  paper implementations into `src/`.
+- Never run external generalized-planning learners without a hard memory guard.
+  Keep the default limit at or below `16GiB`.
+
+## Benchmark Data
+
+Formal data should live under:
+
+```text
+src/domains/<domain>/domain.pddl
+src/domains/<domain>/train/*.pddl
+src/domains/<domain>/test/*.pddl
+src/domains/<domain>/source.json
+```
+
+Use deterministic splits:
+
+```text
+MOOSE official domains = source training/ as train and testing/ as test
+blocksworld-clear and blocksworld-on = KR 2025 learner-policies official
+no-constants train/test folders
+blocksworld-tower = floor(1/4 * instance_count) train and remaining instances
+as test
+depots = floor(1/2 * instance_count) train and remaining instances as test,
+because the D2L source has only 22 instances and the compiler needs broader
+stacking/transport evidence
+```
+
+The current selected corpus is materialized from pinned sources through
+`scripts/materialize_achievement_benchmarks.py`. Do not add old generated
+12-family routing datasets back into `src/domains` unless the formal scope
+changes.
+
+## External Backend Notes
+
+Pinned backend code remains under `.external/gp-backends/` plus `.external/moose`.
+
+Useful audit commands:
+
+```bash
+bash scripts/setup_mona.sh
+uv run python scripts/gp_backend_audit.py status
+uv run python scripts/gp_backend_audit.py usage
+uv run python scripts/gp_backend_audit.py capability
+uv run python scripts/gp_backend_audit.py moose-atomic-command --domain-file src/domains/ferry/domain.pddl --training-dir src/domains/ferry/train --save-file tmp/moose-atomic/ferry.model --timeout-seconds 1800
+uv run python scripts/gp_backend_audit.py moose-readable-summary --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry
+uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file .external/moose/exact-runs/ferry-seed0.model.readable --domain-name ferry --output-dir tmp/moose-atomic/ferry-library
+uv run python scripts/gp_backend_audit.py moose-readable-compile-asl --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocksworld-tower/domain.pddl --domain-name blocksworld-tower --validated-policy-lifting --output-dir snapshots/moose_blocks_minimal_modules
+uv run python src/main.py compile-moose-atomic-library --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable --domain-file src/domains/blocksworld-tower/domain.pddl --domain-name blocksworld-tower --validated-policy-lifting
+uv run python src/main.py append-lifted-temporal-goal --domain-file src/domains/blocksworld-tower/domain.pddl --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json --query-id query_1
+```
+
+MOOSE local reproduction notes are historical evidence that Ferry can be
+reproduced with the official artifact. They do not prove that every selected
+domain has a final ASL compiler path.
+
+## Workflow
+
+- Use `uv` for Python commands.
+- Use test-driven changes for behavior changes.
+- Run relevant tests after changing generation, parsing, validation, benchmark
+  data, or AgentSpeak rendering.
+- Batch experiment scripts must not stay silent for long-running domain/test
+  loops. Follow the timestamped batch shell-script style: after each domain or
+  test instance finishes, print one concise terminal progress line with the
+  domain name, test identifier when applicable, status, and elapsed time or
+  artifact path.
+- Use `TO-DO-LIST.md` as the active progress tracker.
+- Do not create extra documentation files unless explicitly requested.
+- Do not delete files with recovery value without a clear git-backed reason.
+- When explaining architecture with dense research terms, define every term in
+  place and give a concrete example. This is mandatory for input/output lists,
+  pipeline diagrams, and module names. Do not only write
+  `MOOSE readable policy -> PDDL domain -> training problems -> CompactRecursiveModuleProgram`.
+  Instead, explain each item inline: a MOOSE readable policy is the
+  `policy --dump-policy` first-order decision-list artifact, for example a rule
+  whose goal condition is `(on block0 block1)` and whose action sequence is
+  `(pick-up block0) (stack block0 block1)`; a PDDL domain is the predicate and
+  action schema file, for example an action `stack(?x, ?y)` with preconditions
+  `holding(?x)` and `clear(?y)`; training problems are the PDDL instances used
+  by the backend as evidence, for example small Blocks problems containing
+  singleton `on(a,b)` goals; a CompactRecursiveModuleProgram is the selected
+  recursive atomic module set before AgentSpeak(L) rendering, for example
+  `+!on(X,Y)` calling `!clear(Y)` before `stack(X,Y)`.

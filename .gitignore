@@ -42,7 +42,6 @@ ENV/
 .env.local
 
 # Local agent instructions
-AGENTS.md
 agent.md
 Agent.md
 
