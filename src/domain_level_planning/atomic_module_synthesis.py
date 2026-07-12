@@ -8,6 +8,7 @@ into reusable predicate modules using PDDL action precondition/effect structure.
 
 from __future__ import annotations
 
+import heapq
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -405,6 +406,9 @@ def _candidate_module_plans(
 	policy_file: str | Path | None,
 ) -> tuple[AgentSpeakPlan, ...]:
 	module_set = set(module_predicates)
+	functional_predicates = {
+		group.predicate for group in _functional_predicate_groups(actions, domain.types)
+	}
 	plans: list[AgentSpeakPlan] = []
 	recursive_module_predicates = {
 		predicate
@@ -445,6 +449,7 @@ def _candidate_module_plans(
 					module_predicates=module_set,
 					recursive_module_predicates=recursive_module_predicates,
 					actions=actions,
+					functional_predicates=functional_predicates,
 					source_backend=source_backend,
 					source_name=source_name,
 					policy_file=policy_file,
@@ -2072,6 +2077,8 @@ def _is_public_positive_precondition(
 	module_predicates: set[str],
 	recursive_module_predicates: set[str],
 	actions: Sequence[_ParsedAction],
+	project_dynamic_siblings: bool,
+	projected_static_witnesses: Sequence[PDDLLiteralSchema],
 ) -> bool:
 	return (
 		literal.is_positive
@@ -2096,10 +2103,16 @@ def _is_public_positive_precondition(
 		and _precondition_has_range_safe_prepare_context(
 			sequence=sequence,
 			precondition=literal,
+			dynamic_predicates=_dynamic_predicates(actions),
+			project_dynamic_siblings=project_dynamic_siblings,
+			projected_static_witnesses=projected_static_witnesses,
 		)
 		and not _is_unbound_extra_variable_relation_binding(
 			literal=literal,
 			sequence=sequence,
+			dynamic_predicates=_dynamic_predicates(actions),
+			project_dynamic_siblings=project_dynamic_siblings,
+			projected_static_witnesses=projected_static_witnesses,
 		)
 	)
 
@@ -2108,6 +2121,9 @@ def _is_unbound_extra_variable_relation_binding(
 	*,
 	literal: PDDLLiteralSchema,
 	sequence: _ProducerSequence,
+	dynamic_predicates: set[str],
+	project_dynamic_siblings: bool,
+	projected_static_witnesses: Sequence[PDDLLiteralSchema],
 ) -> bool:
 	"""Return whether a relation literal should bind context, not become a goal."""
 
@@ -2115,6 +2131,9 @@ def _is_unbound_extra_variable_relation_binding(
 	return bool(extra_variables) and _prepare_precondition_binding_literals(
 		sequence=sequence,
 		precondition=literal,
+		dynamic_predicates=dynamic_predicates,
+		project_dynamic_siblings=project_dynamic_siblings,
+		projected_static_witnesses=projected_static_witnesses,
 	) is None
 
 
@@ -2122,10 +2141,16 @@ def _precondition_has_range_safe_prepare_context(
 	*,
 	sequence: _ProducerSequence,
 	precondition: PDDLLiteralSchema,
+	dynamic_predicates: set[str],
+	project_dynamic_siblings: bool,
+	projected_static_witnesses: Sequence[PDDLLiteralSchema],
 ) -> bool:
 	return _prepare_precondition_binding_literals(
 		sequence=sequence,
 		precondition=precondition,
+		dynamic_predicates=dynamic_predicates,
+		project_dynamic_siblings=project_dynamic_siblings,
+		projected_static_witnesses=projected_static_witnesses,
 	) is not None
 
 
@@ -2133,40 +2158,73 @@ def _prepare_precondition_binding_literals(
 	*,
 	sequence: _ProducerSequence,
 	precondition: PDDLLiteralSchema,
+	dynamic_predicates: set[str],
+	project_dynamic_siblings: bool,
+	projected_static_witnesses: Sequence[PDDLLiteralSchema],
 ) -> tuple[PDDLLiteralSchema, ...] | None:
-	"""Return positive contexts that bind a prepared precondition safely."""
+	"""Project producer context onto variables used by one prepared subgoal."""
 
 	head_variables = set(sequence.target_arguments)
 	extra_variables = set(precondition.arguments) - head_variables
 	positive_contexts = tuple(
 		literal
-		for literal in sequence.context_literals
+		for literal in (
+			*sequence.context_literals,
+			*(tuple(projected_static_witnesses) if project_dynamic_siblings else ()),
+		)
 		if literal.is_positive and not _same_literal(literal, precondition)
 	)
 	if not extra_variables:
-		return tuple(
-			literal
-			for literal in positive_contexts
-			if _shares_extra_variable(
-				literal=literal,
-				precondition=precondition,
-				head_arguments=sequence.target_arguments,
-			)
-		)
+		return ()
+	if not project_dynamic_siblings:
+		selected: list[PDDLLiteralSchema] = []
+		remaining = list(positive_contexts)
+		bound_variables = set(precondition.arguments) | head_variables
+		changed = True
+		while changed:
+			changed = False
+			for literal in tuple(remaining):
+				if not set(literal.arguments) & bound_variables:
+					continue
+				selected.append(literal)
+				remaining.remove(literal)
+				bound_variables.update(literal.arguments)
+				changed = True
+		if not extra_variables <= {
+			argument
+			for literal in selected
+			for argument in literal.arguments
+		} | head_variables:
+			return None
+		return _deduplicate_literals(tuple(selected))
 
-	selected: list[PDDLLiteralSchema] = []
-	remaining = list(positive_contexts)
-	bound_variables = set(precondition.arguments) | head_variables
+	selected_dynamic = tuple(
+		literal
+		for literal in positive_contexts
+		if literal.predicate in dynamic_predicates
+		and (
+			set(literal.arguments) & extra_variables
+			or (bool(literal.arguments) and set(literal.arguments) <= head_variables)
+		)
+	)
+	selected: list[PDDLLiteralSchema] = list(selected_dynamic)
+	connected_variables = set(precondition.arguments) | head_variables
+	for literal in selected_dynamic:
+		connected_variables.update(literal.arguments)
+	remaining_static = [
+		literal
+		for literal in positive_contexts
+		if literal.predicate not in dynamic_predicates
+	]
 	changed = True
 	while changed:
 		changed = False
-		for literal in tuple(remaining):
-			literal_variables = set(literal.arguments)
-			if not (literal_variables & bound_variables):
+		for literal in tuple(remaining_static):
+			if not set(literal.arguments) & connected_variables:
 				continue
 			selected.append(literal)
-			remaining.remove(literal)
-			bound_variables.update(literal_variables)
+			remaining_static.remove(literal)
+			connected_variables.update(literal.arguments)
 			changed = True
 	if not extra_variables <= {
 		argument
@@ -2194,16 +2252,6 @@ def _candidate_subgoal_has_progress_potential(
 	) or literal.predicate != sequence.target_predicate
 
 
-def _shares_extra_variable(
-	*,
-	literal: PDDLLiteralSchema,
-	precondition: PDDLLiteralSchema,
-	head_arguments: Sequence[str],
-) -> bool:
-	extra_variables = set(precondition.arguments) - set(head_arguments)
-	return bool(extra_variables and extra_variables & set(literal.arguments))
-
-
 def _action_call(
 	action: _ParsedAction,
 	variable_map: Mapping[str, str],
@@ -2214,16 +2262,139 @@ def _action_call(
 	)
 
 
+def _preparation_dependencies_are_acyclic(
+	*,
+	sequence: _ProducerSequence,
+	actions: Sequence[_ParsedAction],
+	module_predicates: set[str],
+	functional_predicates: set[str],
+) -> bool:
+	"""Check for an acyclic staged dependency through single-valued state."""
+
+	dynamic_predicates = _dynamic_predicates(actions)
+	prepared_predicates = {
+		literal.predicate
+		for literal in sequence.context_literals
+		if literal.is_positive
+		and literal.predicate in dynamic_predicates
+		and literal.predicate in module_predicates
+		and literal.predicate != sequence.target_predicate
+	}
+	if len(prepared_predicates) <= 1:
+		return False
+	dependency_graph: dict[str, set[str]] = {
+		predicate: set() for predicate in module_predicates
+	}
+	for predicate in module_predicates:
+		for producer, _effect in _producer_effects(actions, predicate):
+			dependency_graph[predicate].update(
+				precondition.predicate
+				for precondition in producer.preconditions
+				if precondition.is_positive
+				and precondition.predicate in dynamic_predicates
+				and precondition.predicate in module_predicates
+				and precondition.predicate != predicate
+			)
+	has_functional_dependency = False
+	for left in prepared_predicates:
+		left_reachable = _reachable_module_predicates(
+			{left},
+			call_graph=dependency_graph,
+		)
+		for right in prepared_predicates:
+			if left == right or right not in left_reachable:
+				continue
+			right_reachable = _reachable_module_predicates(
+				{right},
+				call_graph=dependency_graph,
+			)
+			if left in right_reachable:
+				return False
+			if right in functional_predicates:
+				has_functional_dependency = True
+	return has_functional_dependency
+
+
+def _projected_static_feasibility_witnesses(
+	*,
+	sequence: _ProducerSequence,
+	actions: Sequence[_ParsedAction],
+	module_predicates: set[str],
+) -> tuple[PDDLLiteralSchema, ...] | None:
+	"""Return static existence witnesses for every deferred dynamic obligation."""
+
+	dynamic_predicates = _dynamic_predicates(actions)
+	witnesses: list[PDDLLiteralSchema] = []
+	used_variables = set(sequence.target_arguments) | {
+		argument
+		for context_literal in sequence.context_literals
+		for argument in context_literal.arguments
+		if _is_agentspeak_variable(argument)
+	}
+	for literal in sequence.context_literals:
+		if (
+			not literal.is_positive
+			or literal.predicate not in dynamic_predicates
+			or literal.predicate not in module_predicates
+			or literal.predicate == sequence.target_predicate
+		):
+			continue
+		producers = tuple(_producer_effects(actions, literal.predicate))
+		if len(producers) != 1:
+			return None
+		producer, effect = producers[0]
+		variable_map = {
+			effect_argument: literal_argument
+			for effect_argument, literal_argument in zip(
+				effect.arguments,
+				literal.arguments,
+			)
+		}
+		variable_map = _complete_variable_map(
+			producer.parameters,
+			variable_map,
+			avoid_variables=used_variables,
+		)
+		used_variables.update(variable_map.values())
+		witnesses.extend(
+			precondition.mapped(variable_map)
+			for precondition in producer.preconditions
+			if precondition.is_positive
+			and precondition.predicate not in dynamic_predicates
+		)
+	return _deduplicate_literals(tuple(witnesses))
+
+
 def _sequence_module_plans(
 	*,
 	sequence: _ProducerSequence,
 	module_predicates: set[str],
 	recursive_module_predicates: set[str],
 	actions: Sequence[_ParsedAction],
+	functional_predicates: set[str],
 	source_backend: str,
 	source_name: str,
 	policy_file: str | Path | None,
 ) -> tuple[AgentSpeakPlan, ...]:
+	dynamic_predicates = _dynamic_predicates(actions)
+	project_dynamic_siblings = _preparation_dependencies_are_acyclic(
+		sequence=sequence,
+		actions=actions,
+		module_predicates=module_predicates,
+		functional_predicates=functional_predicates,
+	)
+	projected_static_witnesses = (
+		_projected_static_feasibility_witnesses(
+			sequence=sequence,
+			actions=actions,
+			module_predicates=module_predicates,
+		)
+		if project_dynamic_siblings
+		else ()
+	)
+	if projected_static_witnesses is None:
+		project_dynamic_siblings = False
+		projected_static_witnesses = ()
 	plans = [
 		_final_action_sequence_plan(
 			sequence=sequence,
@@ -2241,6 +2412,8 @@ def _sequence_module_plans(
 			module_predicates=module_predicates,
 			recursive_module_predicates=recursive_module_predicates,
 			actions=actions,
+			project_dynamic_siblings=project_dynamic_siblings,
+			projected_static_witnesses=projected_static_witnesses,
 		):
 			continue
 		progress_certificate = _recursive_progress_certificate(
@@ -2257,6 +2430,9 @@ def _sequence_module_plans(
 			_prepare_precondition_plan(
 				sequence=sequence,
 				precondition=literal,
+				dynamic_predicates=dynamic_predicates,
+				project_dynamic_siblings=project_dynamic_siblings,
+				projected_static_witnesses=projected_static_witnesses,
 				progress_certificate=progress_certificate,
 				source_backend=source_backend,
 				source_name=source_name,
@@ -2319,6 +2495,9 @@ def _prepare_precondition_plan(
 	*,
 	sequence: _ProducerSequence,
 	precondition: PDDLLiteralSchema,
+	dynamic_predicates: set[str],
+	project_dynamic_siblings: bool,
+	projected_static_witnesses: Sequence[PDDLLiteralSchema],
 	progress_certificate: _RecursiveProgressCertificate | None,
 	source_backend: str,
 	source_name: str,
@@ -2328,6 +2507,9 @@ def _prepare_precondition_plan(
 		_prepare_precondition_binding_literals(
 			sequence=sequence,
 			precondition=precondition,
+			dynamic_predicates=dynamic_predicates,
+			project_dynamic_siblings=project_dynamic_siblings,
+			projected_static_witnesses=projected_static_witnesses,
 		)
 		or ()
 	)
@@ -2366,6 +2548,12 @@ def _prepare_precondition_plan(
 				"artifact_family": "atomic_minimal_literal_module",
 				"rule_kind": "prepare_public_precondition",
 				"prepared_predicate": precondition.predicate,
+				"context_projection_certificate": {
+					"certificate_kind": "existential_precondition_context_projection",
+					"dynamic_sibling_projection": project_dynamic_siblings,
+					"retained_positive_context": list(binding_contexts),
+					"completion_recheck": True,
+				},
 				"recursive_progress_certificate": (
 					progress_certificate.to_dict()
 					if progress_certificate is not None
@@ -2634,10 +2822,15 @@ def _select_branches_with_clingo(
 		for group in recursive_capability_groups
 		if any(index in selected_index_set for index in group)
 	)
+	selected_plan_candidates = tuple(raw_plans[index] for index in selected_indexes)
+	preparation_priority = _certified_preparation_priority(selected_plan_candidates)
 	selected_plans = tuple(
 		sorted(
-			(raw_plans[index] for index in selected_indexes),
-			key=_runtime_plan_priority,
+			selected_plan_candidates,
+			key=lambda plan: _runtime_plan_priority(
+				plan,
+				preparation_priority=preparation_priority,
+			),
 		),
 	)
 	return _SelectedModulePlans(
@@ -2691,7 +2884,11 @@ def _select_branches_with_clingo(
 	)
 
 
-def _runtime_plan_priority(plan: AgentSpeakPlan) -> tuple[str, int, int, str]:
+def _runtime_plan_priority(
+	plan: AgentSpeakPlan,
+	*,
+	preparation_priority: Mapping[tuple[str, str], int] | None = None,
+) -> tuple[str, int, int, int, str]:
 	"""Order selected branches so executable producers run before preparation loops."""
 
 	rule_kind = _plan_rule_kind(plan)
@@ -2703,9 +2900,98 @@ def _runtime_plan_priority(plan: AgentSpeakPlan) -> tuple[str, int, int, str]:
 	return (
 		plan.trigger.symbol,
 		priority_by_kind.get(rule_kind, 9),
+		(preparation_priority or {}).get(
+			(plan.trigger.symbol, _prepared_predicate(plan)),
+			0,
+		),
 		len(plan.body),
 		plan.plan_name,
 	)
+
+
+def _certified_preparation_priority(
+	plans: Sequence[AgentSpeakPlan],
+) -> dict[tuple[str, str], int]:
+	"""Topologically order repair modules by their selected call dependencies."""
+
+	plan_tuple = tuple(plans or ())
+	call_graph: dict[str, set[str]] = {}
+	for plan in plan_tuple:
+		call_graph.setdefault(plan.trigger.symbol, set()).update(
+			step.symbol for step in plan.body if step.kind == "subgoal"
+		)
+	prepared_by_trigger: dict[str, set[str]] = {}
+	for plan in plan_tuple:
+		prepared = _prepared_predicate(plan)
+		if prepared and _plan_uses_dynamic_sibling_projection(plan):
+			prepared_by_trigger.setdefault(plan.trigger.symbol, set()).add(prepared)
+	ranks: dict[tuple[str, str], int] = {}
+	for trigger, prepared_predicates in prepared_by_trigger.items():
+		reachability = {
+			predicate: _reachable_module_predicates(
+				{predicate},
+				call_graph=call_graph,
+			)
+			for predicate in prepared_predicates
+		}
+		edges = {
+			(source, target)
+			for source in prepared_predicates
+			for target in prepared_predicates
+			if source != target
+			and target in reachability[source]
+			and source not in reachability[target]
+		}
+		ordered = _stable_symbol_topological_order(prepared_predicates, edges=edges)
+		if ordered is None:
+			raise AssertionError(
+				"Preparation SCC condensation unexpectedly retained a cycle for "
+				f"{trigger}.",
+			)
+		for rank, predicate in enumerate(ordered):
+			ranks[(trigger, predicate)] = rank
+	return ranks
+
+
+def _stable_symbol_topological_order(
+	symbols: set[str],
+	*,
+	edges: set[tuple[str, str]],
+) -> tuple[str, ...] | None:
+	successors = {symbol: set() for symbol in symbols}
+	indegree = {symbol: 0 for symbol in symbols}
+	for source, target in edges:
+		if target in successors[source]:
+			continue
+		successors[source].add(target)
+		indegree[target] += 1
+	ready = [symbol for symbol, degree in indegree.items() if degree == 0]
+	heapq.heapify(ready)
+	ordered: list[str] = []
+	while ready:
+		current = heapq.heappop(ready)
+		ordered.append(current)
+		for successor in sorted(successors[current]):
+			indegree[successor] -= 1
+			if indegree[successor] == 0:
+				heapq.heappush(ready, successor)
+	return tuple(ordered) if len(ordered) == len(symbols) else None
+
+
+def _prepared_predicate(plan: AgentSpeakPlan) -> str:
+	for certificate in tuple(plan.binding_certificate or ()):
+		if str(certificate.get("rule_kind") or "") != "prepare_public_precondition":
+			continue
+		return str(certificate.get("prepared_predicate") or "")
+	return ""
+
+
+def _plan_uses_dynamic_sibling_projection(plan: AgentSpeakPlan) -> bool:
+	for certificate in tuple(plan.binding_certificate or ()):
+		projection = certificate.get("context_projection_certificate")
+		if isinstance(projection, Mapping):
+			return bool(projection.get("dynamic_sibling_projection"))
+	return False
 
 
 def _plan_rule_kind(plan: AgentSpeakPlan) -> str:
@@ -3386,6 +3672,17 @@ def _module_synthesis_report(
 				"extra-variable prepared preconditions require a positive context "
 				"closure that binds every non-head variable before the negative guard"
 			),
+			(
+				"acyclic preparation dependencies through a schema-inferred functional "
+				"fluent may project unrelated dynamic sibling contexts only when every "
+				"projected sibling has one producer schema, all "
+				"of its static producer preconditions remain as feasibility witnesses, "
+				"nested variables are alpha-renamed, and target completion is rechecked"
+			),
+			(
+				"cyclic or producer-ambiguous preparation dependencies retain the full "
+				"connected positive context"
+			),
 			"same-predicate recursive prepare branches require a non-negative "
 			"relational-count ranking feature that strictly decreases and is never increased",
 			(
@@ -3410,6 +3707,8 @@ def _module_synthesis_report(
 			"Jason unification over inertial relations",
 			"range-safe extra-variable preconditions may be lifted into internal "
 			"atomic subgoal calls instead of staying as long primitive macros",
+			"existential context projection follows acyclic producer dependencies and "
+			"retains schema-derived static feasibility witnesses before recursive recheck",
 			"same-predicate recursive branches require a schema-level well-founded "
 			"relational-count progress certificate",
 			"a fixed domain-independent feature grammar includes global relation count "

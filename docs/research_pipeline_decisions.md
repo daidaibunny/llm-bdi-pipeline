@@ -480,6 +480,38 @@ multi-step release strategy, or if every available cleanup action would delete
 the protected target without a representable non-unification guard, the compiler
 should reject the branch rather than patching the domain by name.
 
+### Certified Existential Preparation Projection
+
+A producer action can require several dynamic preconditions that cannot all be
+true at the same location or process stage. Requiring every sibling
+precondition in the context of every preparation branch can therefore create a
+deadlock. The compiler now projects an unrelated dynamic sibling out of one
+preparation context only under all of these schema-derived conditions:
+
+- the producer-precondition dependency graph is acyclic and traverses a
+  schema-inferred single-valued fluent, such as one object's current location;
+- every projected sibling has exactly one PDDL producer schema;
+- the static preconditions of that producer remain in the context as
+  feasibility witnesses;
+- nested producer variables are alpha-renamed away from all outer variables;
+- the branch recursively rechecks the original atomic target before its
+  primitive producer can execute.
+
+For example, an image producer may require both `calibrated(C,R)` and
+`at(R,IW)`. Calibration itself may require visiting another waypoint. The
+calibration repair branch may omit the current dynamic `at(R,IW)` requirement,
+but it retains static facts establishing that `C` is on board `R`, supports the
+requested mode, has a calibration target, and that suitable waypoints are
+visible. After calibration, `!have_image(...)` is called again, so the final
+primitive image action still requires the full original producer context.
+
+If preparation dependencies are cyclic, or a projected obligation has several
+producer schemas, the compiler keeps the former full connected context. This
+is a fail-closed partial-order rule, not arbitrary schema regression. Plan
+priority is derived from the selected module call graph: if preparing `p` can
+call `q`, `q` is prepared before an independent later sibling. Strongly
+connected components are not internally ordered.
+
 ### Certified DFA Guard Serialization
 
 Every progress edge on the accepted DFA path is compiled into one query-local
@@ -510,19 +542,21 @@ literal indexes, all induced threat edges, the functional-invariant count, and
 the `atomic_module_completion` observation boundary.
 
 An acyclic threat graph uses universal topological serialization. For a cyclic
-universal summary, the compiler first checks the narrow support-depth rule:
+universal summary, the compiler may derive a candidate support-depth order:
 every positive goal uses one binary relation with a compiler-generated
 relational decrease certificate, the requested relation graph is functional and
-acyclic, and supports can be ordered before dependants. The child/support
-argument orientation is inferred from the recursive certificate; the compiler
-additionally checks that the recursive module closure does not re-add the
-relation and that primitive relation producers delete only the same child's
-previous relation. This rule records the explicit paper assumption that the
+acyclic, and supports can be ordered before dependants. That order is not by
+itself an execution certificate. Every selected branch must also preserve all
+earlier ranked achievements. A recursive repair is admitted only when it
+discharges one explicit negative context obligation, its preparation module has
+a complete summary, and its recursive self-call is rewritten to the enforced
+query-local alias. This rule records the explicit paper assumption that the
 relation is acyclic in every reachable execution state. It is a structural
-assumption over a certified relation, not a domain or predicate-name switch.
+assumption over PDDL effects and selected modules, not a domain or
+predicate-name switch.
 
-If support-depth does not apply, the compiler may instead enforce a query-local
-preservation-safe action-only selection. An action-only branch is a selected
+If the ranked portfolio cannot be certified, the compiler may instead enforce a
+query-local preservation-safe action-only selection. An action-only branch is a selected
 atomic plan whose body is a finite sequence of primitive PDDL actions and has no
 internal achievement call. The compiler symbolically executes the whole branch,
 keeps only branches whose conditional net deletes cannot unify with any sibling

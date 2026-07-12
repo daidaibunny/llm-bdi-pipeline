@@ -112,6 +112,32 @@ preservation, and alias guards refine the obligation. The current compiler does 
 long MOOSE macros equivalent to shorter recursive modules; such semantic macro
 compression is outside the present claim.
 
+Preparation branches may omit an unrelated dynamic sibling precondition only
+under an existential context-projection certificate. Let a producer for target
+$g$ require dynamic preconditions $p_1,\ldots,p_k$. The compiler builds the
+predicate-level producer-dependency graph induced by positive dynamic
+preconditions. Projection is admissible only when the prepared predicates are
+acyclic, at least one dependency traverses a schema-inferred single-valued
+fluent, and each omitted sibling has exactly one producer schema. The static
+preconditions of that schema are retained as feasibility witnesses, nested
+schema variables are alpha-renamed away from all outer variables, and the
+branch ends by recursively rechecking $g$. The primitive producer therefore
+remains guarded by its full context; projection changes only which obligation
+may be prepared first. For example, an imaging module may prepare camera
+calibration before requiring the rover to be at the image waypoint, while still
+retaining the camera-support, calibration-target, and visibility relations that
+prove a suitable calibration is possible. If the dependency graph is cyclic or
+a projected obligation has multiple producer schemas, the full connected
+positive context is retained. This is a conservative partial-order
+decomposition rule, not a claim of complete schema regression.
+
+Preparation branches are ordered by the condensation of the selected module
+call graph. If preparing $p$ can call $q$, then $q$ precedes independent later
+preparations for the same producer. Strongly connected components are not
+ordered internally, and their contexts are not projected. This rule is
+predicate-name invariant: it depends only on selected module calls and PDDL
+schemas.
+
 Every selected recursive branch requires a compile-time well-founded feature.
 The fixed, domain-independent feature grammar currently contains (i) the
 global number of atoms of a dynamic relation and (ii) the number of relation
@@ -171,34 +197,39 @@ This covers parameter-changing recursion without a benchmark-specific depth
 bound and preserves shared-variable identity across guard literals.
 The temporal compiler first summarizes every selected branch of each called
 module. If this universal summary is cyclic, it may enforce a query-local
-preservation selection over already certified action-only branches. An
-action-only branch is a finite body containing only primitive PDDL actions, so
-its net effects can be computed exactly at module completion. The compiler
-retains every such branch whose conditional net effects preserve every sibling
-achievement and every negative guard, copies the retained branches under a query-local helper,
-and makes the transition repair call that helper rather than the unfiltered
-atomic trigger. Thus the existential branch proof is enforced by the generated
-AgentSpeak program rather than assumed only by the analysis. Ground problem
+preservation selection. Its finite fallback contains action-only branches: a
+finite body contains only primitive PDDL actions, so its net effects can be
+computed exactly at module completion. A recursive context-discharge branch is
+also admissible when it has the form $!p;!g$, the negative context of the branch
+is exactly the missing $p$, the selected $p$ module has a complete summary, and
+that summary preserves all earlier ranked achievements and negative guards.
+The recursive call is rewritten to the query-local alias, so execution cannot
+escape to an unfiltered domain-level trigger. The compiler copies only the
+certified portfolio under this alias and makes transition repair call the alias
+rather than the original atomic trigger. Thus the existential branch proof is
+enforced by generated AgentSpeak code rather than assumed only by the analysis.
+Ground problem
 objects are alpha-normalized when checking sibling pairs, while PDDL types,
 argument-equality patterns, query-variable identity, and declared domain
 constants are preserved. This normalization changes proof cost, not the set of
 possible unifications.
 An edge $G_j \rightarrow G_i$
 means that achieving $G_j$ may delete $G_i$, so $G_j$ must be repaired first.
-An acyclic graph is topologically serialized. One cyclic structural case is
-admitted by an assumption-bounded support-depth certificate: all positive
+An acyclic graph is topologically serialized. One cyclic structural case may be
+considered by an assumption-bounded support-depth certificate: all positive
 literals must use the same certified binary relation, their requested relation
 graph must be functional and acyclic, and the selected library must contain a
 well-founded decrease certificate for that relation. The resulting order builds
 supports before dependants. The child/support argument orientation is derived
-from the recursive certificate; the compiler also verifies that the recursive
-module closure does not re-add the relation and that primitive relation
-producers delete only the same child's previous relation. This certificate
-assumes that the relation remains
-acyclic in every reachable execution state; it records that assumption rather
-than claiming to derive it from arbitrary STRIPS schemas. A remaining cycle is
-rejected when neither this ranking certificate nor an enforced preservation-safe
-action-only branch selection exists.
+from the recursive certificate. A support order alone is not an execution
+certificate: every enforced branch must additionally preserve all achievements
+earlier in that order, and every recursive preparation must satisfy the
+context-discharge condition above. The certificate assumes that the relation
+remains acyclic in every reachable execution state; it records that assumption
+rather than claiming to derive it from arbitrary STRIPS schemas. If branch-level
+noninterference cannot be proved, the support order is rejected even when the
+requested relation graph is acyclic. A remaining cycle is rejected when neither
+this ranked portfolio nor the finite preservation-safe fallback exists.
 For example, requested atoms $r(a,b)$ and $r(b,c)$ are ordered as $r(b,c)$
 before $r(a,b)$. A reachable state containing both $r(a,b)$ and $r(b,a)$ is
 outside the assumption because recursive support depth would no longer be a
@@ -213,7 +244,7 @@ conditional completion effect in $\operatorname{MayAdd}(M_i)$ type-unifies with
 an atom in $N^-$. A branch whose positive context already requires that
 forbidden atom is infeasible under the negative guard and does not constitute a
 threat. If the universal module summary violates this obligation, the
-query-local action-only selection described above is attempted with both
+query-local preservation selection described above is attempted with both
 constraints: no selected branch may delete a positive sibling or add a
 negative-guard atom. The selected branches are copied under an enforced helper;
 if no non-empty goal-achieving selection remains, compilation fails with

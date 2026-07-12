@@ -12,6 +12,8 @@ from domain_level_planning.certified_effects import threat_safe_positive_literal
 from domain_level_planning.certified_effects import (
 	preservation_safe_action_only_plan_selection,
 )
+from domain_level_planning.certified_effects import preservation_safe_plan_selection
+from domain_level_planning.certified_effects import query_local_preservation_alias_plans
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
@@ -737,6 +739,150 @@ def test_support_depth_certificate_is_invariant_under_vocabulary_renaming(
 	)
 	assert certificate.ranking_relation == "supports"
 	assert certificate.ranking_relation_anchor_position == 1
+
+
+def test_preservation_selection_keeps_certified_recursive_repair_under_noisy_macros(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "recursive-support-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain recursive-support)
+		 (:requirements :strips :negative-preconditions)
+		 (:predicates (supports ?child ?parent) (free ?item) (held ?item) (ready ?item))
+		 (:action detach
+		  :parameters (?child ?parent)
+		  :precondition (and (supports ?child ?parent) (free ?child))
+		  :effect (and (held ?child) (free ?parent) (not (supports ?child ?parent)))
+		 )
+		 (:action attach
+		  :parameters (?child ?parent)
+		  :precondition (and (held ?child) (ready ?parent))
+		  :effect (and (supports ?child ?parent) (free ?child) (not (held ?child)))
+		 )
+		 (:action make-ready
+		  :parameters (?item)
+		  :precondition (free ?item)
+		  :effect (ready ?item)
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	recursive_certificate = {
+		"recursive_progress_certificate": {
+			"certificate_kind": "well_founded_relational_count_decrease",
+			"ranking_feature_kind": "global_dynamic_atom_count",
+			"relation_predicate": "supports",
+			"relation_arguments": ["Y", "X"],
+			"strictly_decreasing_actions": ["detach"],
+			"non_increasing_actions": [],
+		},
+	}
+	library = PlanLibrary(
+		domain_name="recursive-support",
+		plans=(
+			AgentSpeakPlan(
+				"free_already_true",
+				AgentSpeakTrigger("achievement_goal", "free", ("X",)),
+				("free(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"free_via_detach",
+				AgentSpeakTrigger("achievement_goal", "free", ("X",)),
+				("supports(Y, X)", "free(Y)"),
+				(AgentSpeakBodyStep("action", "detach", ("Y", "X")),),
+			),
+			AgentSpeakPlan(
+				"free_prepare_free",
+				AgentSpeakTrigger("achievement_goal", "free", ("X",)),
+				("supports(Y, X)", "not free(Y)"),
+				(
+					AgentSpeakBodyStep("subgoal", "free", ("Y",)),
+					AgentSpeakBodyStep("subgoal", "free", ("X",)),
+				),
+				binding_certificate=(recursive_certificate,),
+			),
+			AgentSpeakPlan(
+				"ready_already_true",
+				AgentSpeakTrigger("achievement_goal", "ready", ("X",)),
+				("ready(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"ready_via_make_ready",
+				AgentSpeakTrigger("achievement_goal", "ready", ("X",)),
+				("free(X)",),
+				(AgentSpeakBodyStep("action", "make-ready", ("X",)),),
+			),
+			AgentSpeakPlan(
+				"supports_already_true",
+				AgentSpeakTrigger("achievement_goal", "supports", ("X", "Y")),
+				("supports(X, Y)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"supports_via_attach",
+				AgentSpeakTrigger("achievement_goal", "supports", ("X", "Y")),
+				("held(X)", "ready(Y)"),
+				(AgentSpeakBodyStep("action", "attach", ("X", "Y")),),
+			),
+			AgentSpeakPlan(
+				"supports_prepare_ready_parent",
+				AgentSpeakTrigger("achievement_goal", "supports", ("X", "Y")),
+				("not ready(Y)",),
+				(
+					AgentSpeakBodyStep("subgoal", "ready", ("Y",)),
+					AgentSpeakBodyStep("subgoal", "supports", ("X", "Y")),
+				),
+				binding_certificate=({"rule_kind": "prepare_public_precondition"},),
+			),
+			# This evidence macro changes another support edge. It must not globally
+			# invalidate a safe recursive branch portfolio for the query.
+			AgentSpeakPlan(
+				"supports_noisy_evidence_macro",
+				AgentSpeakTrigger("achievement_goal", "supports", ("X", "Y")),
+				("supports(Y, Z)", "free(Y)", "free(X)"),
+				(
+					AgentSpeakBodyStep("action", "detach", ("Y", "Z")),
+					AgentSpeakBodyStep("action", "attach", ("X", "Y")),
+				),
+			),
+		),
+	)
+
+	selection = preservation_safe_plan_selection(
+		(
+			("supports", ("upper", "middle")),
+			("supports", ("middle", "lower")),
+		),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert selection is not None
+	assert selection.ordered_indexes == (1, 0)
+	assert selection.certificate.serialization_strategy == (
+		"query_local_support_ranked_recursive_closure"
+	)
+	selected_names = {
+		plan.plan_name
+		for plans in selection.plans_by_predicate.values()
+		for plan in plans
+	}
+	assert "supports_prepare_ready_parent" in selected_names
+	assert "supports_noisy_evidence_macro" not in selected_names
+
+	aliases, helper_by_predicate = query_local_preservation_alias_plans(
+		selection,
+		helper_prefix="g_query_trans_1",
+	)
+	helper = helper_by_predicate["supports"]
+	recursive_alias = next(
+		plan for plan in aliases if plan.plan_name.endswith("supports_prepare_ready_parent")
+	)
+	assert recursive_alias.body[-1].symbol == helper
 
 
 def _write_typed_transport_fragment(path: Path) -> Path:

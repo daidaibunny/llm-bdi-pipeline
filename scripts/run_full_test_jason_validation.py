@@ -43,7 +43,7 @@ from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import render_plan_library_asl  # noqa: E402
 from plan_library.rendering import sanitize_identifier  # noqa: E402
 from domain_level_planning.certified_effects import (  # noqa: E402
-	preservation_safe_action_only_plan_selection,
+	preservation_safe_plan_selection,
 	query_local_preservation_alias_plans,
 	threat_safe_positive_literal_order,
 )
@@ -100,6 +100,40 @@ class JasonTask:
 	output_dir: Path
 	runtime_wrapper_text: str | None = None
 	atomic_plan_library: PlanLibrary | None = None
+
+
+def source_revision_metadata(project_root: Path) -> dict[str, Any]:
+	"""Capture the exact source revision used to start one validation run."""
+
+	try:
+		commit_result = subprocess.run(
+			("git", "rev-parse", "HEAD"),
+			cwd=project_root,
+			text=True,
+			capture_output=True,
+			check=True,
+		)
+		status_result = subprocess.run(
+			("git", "status", "--porcelain=v1", "--untracked-files=all"),
+			cwd=project_root,
+			text=True,
+			capture_output=True,
+			check=True,
+		)
+	except (OSError, subprocess.CalledProcessError) as error:
+		return {
+			"available": False,
+			"error": str(error),
+		}
+	status_lines = tuple(
+		line for line in status_result.stdout.splitlines() if line.strip()
+	)
+	return {
+		"available": True,
+		"commit": commit_result.stdout.strip(),
+		"tracked_changes": any(not line.startswith("??") for line in status_lines),
+		"untracked_files": any(line.startswith("??") for line in status_lines),
+	}
 
 
 def main() -> int:
@@ -230,6 +264,7 @@ def main() -> int:
 	summary: dict[str, Any] = {
 		"artifact_kind": "full_test_jason_validation_from_moose_asl_batch",
 		"created_at": datetime.now().isoformat(timespec="seconds"),
+		"source_revision": source_revision_metadata(PROJECT_ROOT),
 		"source_batch_id": batch_id,
 		"source_batch_root": str(batch_root),
 		"run_id": run_id,
@@ -689,7 +724,7 @@ def guard_transition_replay_wrapper_lines(
 		except ValueError as error:
 			if not str(error).startswith("cyclic_conjunctive_transition_not_certified"):
 				raise
-			selection = preservation_safe_action_only_plan_selection(
+			selection = preservation_safe_plan_selection(
 				literal_signatures,
 				plan_library=atomic_plan_library,
 				domain=domain_model,

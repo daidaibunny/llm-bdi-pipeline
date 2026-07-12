@@ -519,16 +519,32 @@ cone without a compatible certificate. Depots currently generates such a local
 candidate but fails this whole-library compatibility check, so the compiler
 correctly omits the recursive branch rather than claiming unsupported progress.
 
+For producer schemas with several staged dynamic preconditions, the compiler
+uses `existential_precondition_context_projection` only when the preparation
+dependency graph is acyclic and traverses a schema-inferred single-valued
+fluent. An omitted sibling must have exactly one producer
+schema, and that schema's static preconditions remain as feasibility witnesses.
+Nested producer variables are alpha-renamed against the outer producer
+variables. The repair body then calls the original target again, so the final
+primitive producer cannot run until its complete context has been re-established.
+If the dependency graph is cyclic or producer-ambiguous, the full connected
+context is retained. This prevents a domain-specific Rovers-style workaround:
+the same rule applies to any staged producer chain derived from PDDL schemas.
+
 At the DFA transition layer, a cyclic threat graph may use
-`assumption_bounded_support_depth_ranking` only when all positive goals use the
+`query_local_support_ranked_recursive_closure` only when all positive goals use the
 same certified binary relation and the requested support graph is functional
 and acyclic. The child/support argument orientation comes from the recursive
-certificate, the recursive module closure must not re-add the relation, and
-primitive relation producers may delete only the same child's previous value.
-The persisted certificate explicitly assumes that this relation
-remains acyclic in every reachable state. Effects are observed at successful
-atomic-module completion; formulas requiring primitive-step safety monitoring
-remain outside this wrapper's scope.
+certificate. The resulting order is only a candidate: every selected branch
+must preserve earlier ranked achievements, and every recursive branch must
+discharge one explicit missing context through a preparation module with a
+complete effect summary. Self-recursion is rewritten to a query-local alias so
+Jason cannot escape to an uncertified sibling branch. The persisted certificate
+explicitly assumes that the binary relation remains acyclic in every reachable
+state. If noninterference cannot be proved, compilation fails closed despite an
+acyclic requested support graph. Effects are observed at successful atomic-module
+completion; formulas requiring primitive-step safety monitoring remain outside
+this wrapper's scope.
 
 A second certified cyclic case uses
 `query_local_preservation_safe_action_only_branches`. The runner symbolically
@@ -541,7 +557,10 @@ callable through the query-local helper. Problem-object names are reduced to
 typed equality-pattern representatives so hundreds of structurally identical
 goal pairs share one proof; PDDL domain constants and lifted variable identity
 are preserved. This rule contains no benchmark, predicate, or action-name
-switch. It fails closed when no non-empty safe action-only branch exists.
+switch. It fails closed when no non-empty safe action-only branch exists. In
+particular, the current Tower and Depots libraries do not receive recursive
+query aliases when their recursive preparation footprints cannot prove sibling
+preservation; acyclicity alone is intentionally insufficient.
 
 ## Current Benchmark Scope And Library Profiles
 

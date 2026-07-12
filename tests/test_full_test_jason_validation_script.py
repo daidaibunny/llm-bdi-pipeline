@@ -21,6 +21,7 @@ from scripts.run_full_test_jason_validation import reported_action_count_fields
 from scripts.run_full_test_jason_validation import run_jason_tasks
 from scripts.run_full_test_jason_validation import safe_goal_fragment
 from scripts.run_full_test_jason_validation import safe_path_fragment
+from scripts.run_full_test_jason_validation import source_revision_metadata
 from scripts.run_full_test_jason_validation import validate_one_task
 from scripts.run_full_test_jason_validation import _jason_runtime_status_label
 from scripts.run_full_test_jason_validation import _plan_verifier_status_label
@@ -50,6 +51,45 @@ def test_resolve_batch_root_selects_latest_timestamp(tmp_path: Path) -> None:
 	resolved = resolve_batch_root(tmp_path, "latest")
 
 	assert resolved == tmp_path / "20260705-090000"
+
+
+def test_source_revision_metadata_distinguishes_tracked_and_untracked_changes(
+	tmp_path: Path,
+) -> None:
+	import subprocess
+
+	subprocess.run(("git", "init"), cwd=tmp_path, check=True, capture_output=True)
+	subprocess.run(
+		("git", "config", "user.email", "test@example.com"),
+		cwd=tmp_path,
+		check=True,
+	)
+	subprocess.run(
+		("git", "config", "user.name", "Test User"),
+		cwd=tmp_path,
+		check=True,
+	)
+	tracked_file = tmp_path / "tracked.txt"
+	tracked_file.write_text("baseline\n", encoding="utf-8")
+	subprocess.run(("git", "add", "tracked.txt"), cwd=tmp_path, check=True)
+	subprocess.run(
+		("git", "commit", "-m", "test baseline"),
+		cwd=tmp_path,
+		check=True,
+		capture_output=True,
+	)
+
+	clean = source_revision_metadata(tmp_path)
+	tracked_file.write_text("changed\n", encoding="utf-8")
+	(tmp_path / "untracked.txt").write_text("new\n", encoding="utf-8")
+	dirty = source_revision_metadata(tmp_path)
+
+	assert clean["available"] is True
+	assert clean["tracked_changes"] is False
+	assert clean["untracked_files"] is False
+	assert dirty["commit"] == clean["commit"]
+	assert dirty["tracked_changes"] is True
+	assert dirty["untracked_files"] is True
 
 
 def test_safe_goal_fragment_matches_existing_domain_goal_naming() -> None:

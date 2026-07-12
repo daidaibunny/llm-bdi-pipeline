@@ -274,15 +274,15 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			ArchitectureGap(
 				id="G1",
 				layer="atomic template backend",
-				gap="Selected-domain MOOSE training has not been run end to end in this turn.",
+				gap="The final paper matrix must be regenerated from one clean pinned revision.",
 				current_state=(
-					"The repository can print resource-guarded MOOSE train/dump "
-					"commands and can compile readable MOOSE policy artifacts into "
-					"domain-level atomic ASL libraries."
+					"Timestamped MOOSE train/dump batches and full Jason plus VAL "
+					"validation are implemented, and each validation summary records "
+					"its source revision and working-tree state."
 				),
 				required_improvement=(
-					"Run explicit-budget MOOSE training or provide readable policy "
-					"artifacts for each selected domain before claiming coverage."
+					"Regenerate every reported domain result from a clean commit using "
+					"the declared MOOSE, Jason, and VAL resource budgets."
 				),
 				status="open",
 			),
@@ -431,15 +431,24 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"heads": "declared PDDL predicate achievement goals and query-specific +!g_query",
 			"contexts": "PDDL state literals and validated conjunction-and-negation DFA guards",
 			"body_calls": "declared PDDL primitive actions or declared PDDL predicate subgoals",
-			"recursion": "each transition helper may repair one missing positive literal and recurse to itself",
+			"recursion": (
+				"atomic modules require progress certificates; query transitions use "
+				"balanced repair trees and one complete-guard recheck"
+			),
 		},
 		temporal_wrapper_language={
-			"rule_shape": "+!g_query context rules generated from DFA progress transitions",
-			"ordering_evidence": (
-				"DFA progress distance to accepting states",
-				"conjunctive guard-transition validation",
+			"rule_shape": (
+				"one +!g_query entry plus one balanced query-local repair tree per "
+				"certified DFA progress transition"
 			),
-			"runtime_gate": "validated prefix-literal context; external DFA state is reserved for ambiguous future cases",
+			"ordering_evidence": (
+				"DFA transition order on the unique certified accepting path",
+				"PDDL-typed conditional completion-effect serialization within one guard",
+			),
+			"runtime_gate": (
+				"complete transition guard recheck after one balanced repair-tree pass; "
+				"ambiguous branching DFA state remains unsupported"
+			),
 			"goal_dependency_scope": "temporal ordering expressed by lifted LTLf and DFA",
 		},
 		progress_language={
@@ -450,7 +459,8 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			),
 			"validation_scope": "selected PDDL train/test splits and supplied lifted LTLf cases",
 			"termination_checks": (
-				"DFA progress transitions must reduce distance to acceptance",
+				"DFA progress transitions follow the certified accepting path",
+				"recursive atomic modules require a well-founded ranking certificate",
 				"negative progress literals remain context-only",
 			),
 		},

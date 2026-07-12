@@ -51,7 +51,10 @@ singleton-goal evidence representation. We instantiate this interface with
 MOOSE, while keeping the compiler independent of that provider. A single
 Clingo program jointly selects validated evidence macros and schema-derived
 branches under executability, closure, recursive-progress, resource-restoration,
-and target-preservation certificates. Conditional completion effects certify
+and target-preservation certificates. Acyclic producer dependencies through
+schema-inferred single-valued fluents permit certified existential context
+projection, while cyclic or ambiguous
+dependencies retain their full preparation context. Conditional completion effects certify
 both positive-sibling preservation and negative-guard non-addition. Certified conjunctive DFA guards are
 executed through balanced query-local repair trees that bound AgentSpeak plan
 fan-out while preserving the certified literal order. Unsupported candidates
@@ -115,7 +118,8 @@ The paper makes five contributions.
 	singleton-goal evidence representation consumed by the compiler.
 \item We define one certificate-carrying policy-lifting compiler that jointly
 	selects evidence and schema-derived atomic modules in a single Clingo
-	optimization problem.
+	optimization problem, including acyclic existential preparation projection
+	with schema-derived feasibility witnesses.
 \item We restore an LTLf-to-DFA temporal layer whose conjunctive guards use
 	conservative conditional add/delete summaries, enforced negative-guard
 	preservation, and balanced repair trees with bounded trigger fan-out.
@@ -128,7 +132,8 @@ provider is state of the art for every planning problem, nor that context-only
 \asl{} can encode every temporal automaton without controller state.
 Unsupported negative achievement templates, disjunctive guards, cyclic
 delete-threat graphs without a certified ranking or the stated acyclic-support
-assumption, safety-sensitive formulas requiring primitive-step monitoring, and multi-literal numeric
+and branch-noninterference assumptions, safety-sensitive formulas requiring
+primitive-step monitoring, and multi-literal numeric
 guards without numeric preservation certificates remain outside the claim.
 
 \input{sections/related_work}

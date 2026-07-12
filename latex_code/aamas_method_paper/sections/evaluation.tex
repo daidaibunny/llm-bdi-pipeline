@@ -47,7 +47,11 @@ Each domain is evaluated through four checks.
 	polarity templates from the training split.
 \item Backend artifact acceptance: the selected backend artifact must parse,
 	bind to declared \pddl{} vocabulary, compile to \asl{}, and validate on held
-	out instances.
+	out instances. Metamorphic checks rename predicates and actions, permute
+	compatible parameters, and inject irrelevant fluents to detect hidden
+	benchmark-vocabulary rules. Context-projection tests additionally require
+	acyclic dependencies to retain static producer witnesses and cyclic
+	dependencies to retain their full connected contexts.
 \item Temporal append validation: generated LTLf JSON cases must compile to DFA
 	payloads whose relevant transitions contain conjunction and negation only.
 	Each certified progress edge must produce one balanced repair tree with
@@ -75,3 +79,8 @@ benchmark registry, generated ASL libraries, LTLf JSON cases, DFA validation
 diagnostics, and LaTeX result macros must be regenerated from tracked commands.
 Generated experiment outputs live under \path{tmp/paper-final-latest} and are
 treated as rebuildable artifacts.
+Every full-test summary records the Git commit observed when the run starts and
+separately records tracked modifications and untracked files. A result produced
+with tracked modifications is diagnostic evidence rather than a submission
+result; the final reported matrix must be regenerated from a clean pinned
+revision.

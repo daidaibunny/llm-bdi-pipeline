@@ -357,6 +357,14 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		"on",
 		"ontable",
 	}
+	assert not any(
+		bool(
+			dict(plan.binding_certificate[0].get("context_projection_certificate") or {}).get(
+				"dynamic_sibling_projection",
+			),
+		)
+		for plan in library.plans
+	)
 	assert library.metadata["generation_mode"] == "atomic_minimal_literal_module_library"
 	assert library.metadata["library_quality"]["compact_recursive_module_ready"] is True
 	assert library.metadata["atomic_module_synthesis"]["module_predicates"] == [
@@ -391,6 +399,17 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		(
 			"extra-variable prepared preconditions require a positive context "
 			"closure that binds every non-head variable before the negative guard"
+		),
+		(
+			"acyclic preparation dependencies through a schema-inferred functional "
+			"fluent may project unrelated dynamic sibling contexts only when every "
+			"projected sibling has one producer schema, all "
+			"of its static producer preconditions remain as feasibility witnesses, "
+			"nested variables are alpha-renamed, and target completion is rechecked"
+		),
+		(
+			"cyclic or producer-ambiguous preparation dependencies retain the full "
+			"connected positive context"
 		),
 		(
 			"same-predicate recursive prepare branches require a non-negative "
@@ -724,9 +743,12 @@ def test_depots_lifts_range_safe_extra_variable_precondition_to_subgoal() -> Non
 	assert plan.trigger.arguments == ("X", "Y")
 	assert "not lifting(Z, X)" in plan.context
 	assert "at(Z, A)" in plan.context
-	assert "at(Y, A)" in plan.context
 	assert "hoist(Z)" in plan.context
+	assert "at(Y, A)" in plan.context
 	assert "place(A)" in plan.context
+	assert plan.binding_certificate[0]["context_projection_certificate"][
+		"dynamic_sibling_projection"
+	] is False
 	assert plan.body == (
 		AgentSpeakBodyStep("subgoal", "lifting", ("Z", "X")),
 		AgentSpeakBodyStep("subgoal", "on", ("X", "Y")),
@@ -734,6 +756,122 @@ def test_depots_lifts_range_safe_extra_variable_precondition_to_subgoal() -> Non
 	assert "+!on(X, Y)" in asl
 	assert "\t!lifting(Z, X);\n\t!on(X, Y)." in asl
 	assert "type_" not in asl
+
+
+def test_prepare_context_projects_away_unrelated_producer_variables() -> None:
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=PROJECT_ROOT / "src" / "domains" / "rovers" / "domain.pddl",
+		seed_predicates=("communicated_image_data",),
+		source_backend="test",
+		source_name="projected-preparation-context",
+	)
+	plan = next(
+		item
+		for item in library.plans
+		if item.plan_name == "have_image_prepare_calibrated_B_X"
+	)
+
+	assert "on_board(B, X)" in plan.context
+	assert "supports(B, Z)" in plan.context
+	assert "not calibrated(B, X)" in plan.context
+	assert not any(context.startswith("at(X, ") for context in plan.context)
+	assert any(context.startswith("visible_from(Y, ") for context in plan.context)
+	assert "calibration_target(B, A)" not in plan.context
+	assert plan.body == (
+		AgentSpeakBodyStep("subgoal", "calibrated", ("B", "X")),
+		AgentSpeakBodyStep("subgoal", "have_image", ("X", "Y", "Z")),
+	)
+	assert plan.binding_certificate[0]["context_projection_certificate"][
+		"dynamic_sibling_projection"
+	] is True
+	plan_names = [item.plan_name for item in library.plans]
+	assert plan_names.index("have_image_prepare_calibrated_B_X") < plan_names.index(
+		"have_image_prepare_at_X_A"
+	)
+	assert plan_names.index(
+		"communicated_image_data_prepare_have_image_Z_X_Y"
+	) < plan_names.index("communicated_image_data_prepare_at_Z_B")
+	communication_repair = next(
+		item
+		for item in library.plans
+		if item.plan_name == "communicated_image_data_prepare_have_image_Z_X_Y"
+	)
+	assert "equipped_for_imaging(Z)" in communication_repair.context
+	assert any(
+		context.startswith("on_board(") and context.endswith(", Z)")
+		for context in communication_repair.context
+	)
+	assert any(
+		context.startswith("supports(") and context.endswith(", Y)")
+		for context in communication_repair.context
+	)
+
+
+def test_prepare_projection_is_invariant_to_domain_vocabulary(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain staged-fabrication)
+		 (:requirements :strips :typing)
+		 (:types worker tool item site)
+		 (:predicates
+		  (located ?w - worker ?s - site)
+		  (energized ?t - tool ?w - worker)
+		  (fabricated ?w - worker ?i - item)
+		  (mounted ?t - tool ?w - worker)
+		  (charger ?t - tool ?s - site)
+		  (compatible ?t - tool ?i - item)
+		  (worksite ?i - item ?s - site)
+		  (linked ?from - site ?to - site)
+		 )
+		 (:action travel
+		  :parameters (?w - worker ?from - site ?to - site)
+		  :precondition (and (located ?w ?from) (linked ?from ?to))
+		  :effect (and (located ?w ?to) (not (located ?w ?from)))
+		 )
+		 (:action energize
+		  :parameters (?t - tool ?w - worker ?s - site)
+		  :precondition (and (mounted ?t ?w) (charger ?t ?s) (located ?w ?s))
+		  :effect (energized ?t ?w)
+		 )
+		 (:action fabricate
+		  :parameters (?w - worker ?i - item ?t - tool ?s - site)
+		  :precondition
+		   (and (located ?w ?s) (worksite ?i ?s) (energized ?t ?w)
+		        (mounted ?t ?w) (compatible ?t ?i))
+		  :effect (and (fabricated ?w ?i) (not (energized ?t ?w)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("fabricated",),
+		source_backend="test",
+		source_name="renamed-staged-producer",
+	)
+	plan = next(
+		item
+		for item in library.plans
+		if item.trigger.symbol == "fabricated"
+		and item.binding_certificate[0].get("prepared_predicate") == "energized"
+	)
+
+	assert "not energized(Z, X)" in plan.context
+	assert "mounted(Z, X)" in plan.context
+	assert any(context.startswith("charger(Z, ") for context in plan.context)
+	assert not any(context.startswith("located(X, ") for context in plan.context)
+	assert plan.binding_certificate[0]["context_projection_certificate"][
+		"dynamic_sibling_projection"
+	] is True
+	assert plan.body == (
+		AgentSpeakBodyStep("subgoal", "energized", ("Z", "X")),
+		AgentSpeakBodyStep("subgoal", "fabricated", ("X", "Y")),
+	)
 
 
 def test_depots_clear_can_release_hoist_without_deleting_protected_clear() -> None:

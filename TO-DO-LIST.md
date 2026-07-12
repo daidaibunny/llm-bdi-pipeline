@@ -90,6 +90,16 @@ certificate.
   free/debt orientation cannot be inferred.
 - Same-predicate recursion requires a non-negative relational-count feature
   with a strict delete and no selected branch that can increase the feature.
+- Acyclic producer-precondition dependencies that traverse a schema-inferred
+  single-valued fluent may use existential context projection: unrelated
+  dynamic siblings are deferred, unique-producer static
+  feasibility witnesses are retained, nested variables are alpha-renamed, and
+  the complete producer context is rechecked before execution. Cyclic or
+  producer-ambiguous dependencies retain the full connected context.
+- Candidate support-depth ordering is enforced only through a query-local
+  branch portfolio whose recursive preparation summaries preserve earlier
+  ranked achievements. Acyclic requested relations without this branch-level
+  noninterference certificate remain unsupported.
 - Every positive DFA progress transition uses the same balanced `trans` repair
   tree. Singleton guards use identity serialization; conjunctions use certified
   threat ordering before tree construction. The old linear, sibling-replay,
@@ -99,7 +109,7 @@ certificate.
   persistent goals, and interfering goals.
 
 Current compiler acceptance gate (2026-07-12): full `ruff check .` passes;
-`pytest -q` reports 336 passed with only two third-party Lark deprecation
+`pytest -q` reports 340 passed with only two third-party Lark deprecation
 warnings; real `ltlf2dfa`/MONA builds the expected three-state, five-transition
 automaton for `F(a & X(F(b)))`; and the typed threat certificate processes the
 48,500-literal Gripper `p2_30` goal in about 11 seconds with one cached module
@@ -107,6 +117,14 @@ summary and zero threat edges. Representative real MOOSE readable-policy
 wrappers accept Numeric Minecraft, Blocksworld Clear, Gripper, Satellite,
 Rovers, and Logistics. Depots, Barman, and Blocksworld Tower remain explicit
 cyclic-threat rejections rather than falling back to an uncertified order.
+
+Diagnostic staged-precondition run (2026-07-12): the current compiler produced
+Jason- and VAL-valid traces for all 90 Rovers test instances, including the two
+previous regressions `p0_14` and `p0_19`. This run started from a working tree
+with tracked changes, so it is implementation evidence only; regenerate the
+final paper matrix from the committed clean revision. The current full-test
+runner records the source commit and separates tracked modifications from
+untracked files in `summary.json`.
 
 Previously recorded focused validation evidence. Rerun these probes after the
 current threat-ordering and temporal-append changes before using them as paper

@@ -27,7 +27,7 @@ from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
 from .pddl_support import assert_compilable_pddl_files
 from .certified_effects import threat_safe_positive_literal_order
-from .certified_effects import preservation_safe_action_only_plan_selection
+from .certified_effects import preservation_safe_plan_selection
 from .certified_effects import query_local_preservation_alias_plans
 from .transition_repair_tree import TransitionRepairLiteral
 from .transition_repair_tree import compile_transition_repair_tree
@@ -716,7 +716,7 @@ def _certified_positive_literal_serialization(
 			),
 		):
 			raise
-		selection = preservation_safe_action_only_plan_selection(
+		selection = preservation_safe_plan_selection(
 			literal_signatures,
 			plan_library=plan_library,
 			domain=domain,
