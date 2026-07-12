@@ -26,22 +26,22 @@ echo "[run] jason_timeout_seconds=$JASON_TIMEOUT_SECONDS val_timeout_seconds=$VA
 echo "[run] jason_java_stack_size=$JASON_JAVA_STACK_SIZE"
 echo "[run] validation=Jason + PDDL replay + neutral-goal VAL + gold/predicted DFA"
 
-DOMAIN_ARGS=()
+RUNNER_ARGS=(
+	scripts/run_temporal_goal_benchmark_execution.py
+	--run-id "$RUN_ID"
+	--batch-id "$ATOMIC_BATCH_ID"
+	--num-workers "$NUM_WORKERS"
+	--timeout-seconds "$JASON_TIMEOUT_SECONDS"
+	--plan-verifier-timeout-seconds "$VAL_TIMEOUT_SECONDS"
+	--jason-java-stack-size "$JASON_JAVA_STACK_SIZE"
+	--plan-verifier-command "$PLAN_VERIFIER_COMMAND"
+)
 for domain in "$@"; do
-	DOMAIN_ARGS+=(--domain "$domain")
+	RUNNER_ARGS+=(--domain "$domain")
 done
 
 set +e
-PYTHONDONTWRITEBYTECODE=1 MONA_BIN="$MONA_BIN" uv run python \
-	scripts/run_temporal_goal_benchmark_execution.py \
-	--run-id "$RUN_ID" \
-	--batch-id "$ATOMIC_BATCH_ID" \
-	--num-workers "$NUM_WORKERS" \
-	--timeout-seconds "$JASON_TIMEOUT_SECONDS" \
-	--plan-verifier-timeout-seconds "$VAL_TIMEOUT_SECONDS" \
-	--jason-java-stack-size "$JASON_JAVA_STACK_SIZE" \
-	--plan-verifier-command "$PLAN_VERIFIER_COMMAND" \
-	"${DOMAIN_ARGS[@]}"
+PYTHONDONTWRITEBYTECODE=1 MONA_BIN="$MONA_BIN" uv run python "${RUNNER_ARGS[@]}"
 EXIT_CODE=$?
 set -e
 
