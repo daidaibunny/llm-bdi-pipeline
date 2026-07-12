@@ -1,0 +1,127 @@
+{
+  "artifact_kind": "temporal_goal_benchmark_release_manifest",
+  "benchmark_file": "benchmark.json",
+  "benchmark_id": "temporal-nl-v1-20260711-final",
+  "benchmark_sha256": "0ab580ed45e3790bf986ab62b7f4e531ab6833c6182256284cf877b3861cacf8",
+  "counts": {
+    "domain_count": 16,
+    "execution_attempted_count": 0,
+    "problem_case_count": 1228,
+    "translation_equivalent_count": 475,
+    "unique_translation_input_count": 475,
+    "witness_accepted_count": 1228
+  },
+  "domain_datasets": [
+    {
+      "case_count": 90,
+      "domain": "barman",
+      "path": "domains/barman.json",
+      "sha256": "909c1a68672e92d86d50d3d5e7dc97f475e9bd2c066c18344c163ef62e58bd6a"
+    },
+    {
+      "case_count": 30,
+      "domain": "blocksworld-clear",
+      "path": "domains/blocksworld-clear.json",
+      "sha256": "c7c792491dd3597bf8454855d0a7e9144999de24a44d7f3a10e0795b7bab53b5"
+    },
+    {
+      "case_count": 30,
+      "domain": "blocksworld-on",
+      "path": "domains/blocksworld-on.json",
+      "sha256": "9f9073ec5448046b9dbc013a7ae390ea1a8df2b9c9ea3ba60d7de70c522a5cc2"
+    },
+    {
+      "case_count": 77,
+      "domain": "blocksworld-tower",
+      "path": "domains/blocksworld-tower.json",
+      "sha256": "b262c29c9974dcf458f3711b4170113e59f3654b413d3992b009feb1e874faa2"
+    },
+    {
+      "case_count": 11,
+      "domain": "depots",
+      "path": "domains/depots.json",
+      "sha256": "2d35cf6ffe1bc857e6c528a2759be0de123652efc392c2a7253e1d62552de225"
+    },
+    {
+      "case_count": 90,
+      "domain": "ferry",
+      "path": "domains/ferry.json",
+      "sha256": "0e6b24688377e381b56458c1c69b2bba44dc19f5c47d3fbe5a40d2ca003a0c04"
+    },
+    {
+      "case_count": 90,
+      "domain": "gripper",
+      "path": "domains/gripper.json",
+      "sha256": "e877e846b51c7d3655ed4b4917e09640fdc3c6f9d84d858b9fba73c44730f5fb"
+    },
+    {
+      "case_count": 90,
+      "domain": "logistics",
+      "path": "domains/logistics.json",
+      "sha256": "38f90c866115942f8cf6323ba28d23b0af81e20f5935776d35a2e00f6e139acc"
+    },
+    {
+      "case_count": 90,
+      "domain": "miconic",
+      "path": "domains/miconic.json",
+      "sha256": "937db0317c6ba4fdc3e49dc78ff94c2e4e34e8fb025e5aae5fe9685721937646"
+    },
+    {
+      "case_count": 90,
+      "domain": "numeric-ferry",
+      "path": "domains/numeric-ferry.json",
+      "sha256": "3d335ef62b91e11bf7e46b338c08182a1f877fb3b457790a920697ebcf836da2"
+    },
+    {
+      "case_count": 90,
+      "domain": "numeric-miconic",
+      "path": "domains/numeric-miconic.json",
+      "sha256": "b76858ec448b76a1cec35762868d2890adac9e19e8e6747718fbdc3af37beb3a"
+    },
+    {
+      "case_count": 90,
+      "domain": "numeric-minecraft",
+      "path": "domains/numeric-minecraft.json",
+      "sha256": "482e85ebf16a75d132ae60b8fdb09ccce37b651d444acbfbcb195deaf232b8ed"
+    },
+    {
+      "case_count": 90,
+      "domain": "numeric-transport",
+      "path": "domains/numeric-transport.json",
+      "sha256": "0260b45b32a14fccf9b5f223d8be865b2abf8c6b8a1ea9b5dd400d758fb055fe"
+    },
+    {
+      "case_count": 90,
+      "domain": "rovers",
+      "path": "domains/rovers.json",
+      "sha256": "ec684df14d83921417facfb1366a758565bce54ea63bf1bad57688955fd9744f"
+    },
+    {
+      "case_count": 90,
+      "domain": "satellite",
+      "path": "domains/satellite.json",
+      "sha256": "c027a4b0dc1940e9779ae2a04d79ba4c65f36fb4ded24cf46d90ec32260c72cd"
+    },
+    {
+      "case_count": 90,
+      "domain": "transport",
+      "path": "domains/transport.json",
+      "sha256": "39a70df2d6416e185f5c05840a0040c5e0f2bf3cf35d921b0904171ad65892af"
+    }
+  ],
+  "schema_version": 1,
+  "sealed_input_archives": {
+    "private_validation": {
+      "filename": "temporal-nl-v1-20260711-final-private-validation.tar.gz",
+      "sha256": "e54605eb9b2e3a50699133d5a3873725d589e17bbb62cedc84c119462291d1af"
+    },
+    "public_handoff": {
+      "filename": "temporal-nl-v1-20260711-final-public-handoff.tar.gz",
+      "sha256": "f41b6d53bedf3406235f3b1e02290db0fbf5c100fa255b372ce5baf343813c0c"
+    }
+  },
+  "source_delivery_archive": {
+    "filename": "temporal-nl-v1-20260712-145052-predictions-and-validation.tar.gz",
+    "sha256": "8cd7f9d92f6c19e304a5dea5e60e11cf02d30f6be00664aa7dd13669a6713033"
+  }
+}

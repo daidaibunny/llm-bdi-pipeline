@@ -44,6 +44,7 @@
   "commands": {
     "generate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest",
     "paper": "cd latex_code/aamas_method_paper && latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build main.tex",
+    "teg_benchmark_reproduce": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/build_temporal_goal_benchmark.py --delivery-archive paper_artifacts/temporal_goal_benchmark/v1/source/temporal-nl-v1-20260712-145052-predictions-and-validation.tar.gz --delivery-archive-sha256 8cd7f9d92f6c19e304a5dea5e60e11cf02d30f6be00664aa7dd13669a6713033 --public-handoff-archive paper_artifacts/temporal_goal_benchmark/v1/source/temporal-nl-v1-20260711-final-public-handoff.tar.gz --public-handoff-archive-sha256 f41b6d53bedf3406235f3b1e02290db0fbf5c100fa255b372ce5baf343813c0c --private-validation-archive paper_artifacts/temporal_goal_benchmark/v1/source/temporal-nl-v1-20260711-final-private-validation.tar.gz --private-validation-archive-sha256 e54605eb9b2e3a50699133d5a3873725d589e17bbb62cedc84c119462291d1af --benchmark-id temporal-nl-v1-20260711-final --run-id temporal-nl-v1-20260712-145052 --output-dir tmp/temporal-goal-benchmark-v1-reproduction --validation-implementation-commit 25be3041bc200cd95cd1d6667c578df3e97283f7",
     "tests": "PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q",
     "validate": "PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py --output-dir tmp/paper-final-latest --validate-only"
   },
@@ -199,6 +200,16 @@
     {
       "kind": "file",
       "path": "docs/input_design.md",
+      "tracked": true
+    },
+    {
+      "kind": "file",
+      "path": "scripts/build_temporal_goal_benchmark.py",
+      "tracked": true
+    },
+    {
+      "kind": "directory",
+      "path": "paper_artifacts/temporal_goal_benchmark/v1",
       "tracked": true
     },
     {

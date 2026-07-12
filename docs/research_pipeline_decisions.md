@@ -141,6 +141,40 @@ VAL, malformed sealed audit data, and PDDL replay disagreement fail closed as
 infrastructure or benchmark-consistency outcomes; they are never relabelled as
 model semantic errors.
 
+### Canonical TEG Benchmark Artifact
+
+The repository tracks the frozen release at
+`paper_artifacts/temporal_goal_benchmark/v1`. Its single canonical
+`benchmark.json` contains 16 domain partitions and 1,228 problem-level cases.
+A problem-level case is one tuple `(D, P_i, q_i, T_hat_i, theta_i)`: `D` is the
+PDDL domain, `P_i` is the held-out initial state, `q_i` is the controlled query,
+`T_hat_i` is the model-predicted lifted LTLf that passed exact language
+equivalence, and `theta_i` is the sealed typed binding used for this problem.
+The hidden oracle `T_i`, witness actions, and witness states are not copied into
+the released case.
+
+The bundle reports two evaluation units without conflating them. The 475
+unique translation inputs are the macro unit for model translation accuracy.
+The 1,228 expanded problem bindings are the micro unit for witness replay and
+grounding consistency. Expansion through `member_sample_ids` does not create
+additional model calls. The tracked result is 475/475 exact DFA-language
+equivalence and 1,228/1,228 hidden-witness acceptance.
+
+The 16 files under `domains/` are derived operational views, not separate
+benchmarks. They exist because the temporal appender consumes one domain at a
+time and every domain maintains one AgentSpeak library. The aggregate bundle
+records each view's SHA-256, and the release manifest records the aggregate
+bundle SHA-256. Consistently renaming PDDL symbols changes only corresponding
+case symbols; benchmark generation contains no domain-name, action-name, or
+fluent-name dispatch rule.
+
+Execution evaluation remains a separate stage. A case is not an end-to-end
+success until query append, Jason execution, primitive PDDL replay, independent
+VAL under the neutral goal, gold-DFA acceptance, and predicted-DFA acceptance
+all pass. The frozen version-1 release records execution as `not_attempted`.
+Future execution failures are reported by domain and formula profile and do not
+retroactively change the translation or witness metrics.
+
 The compiler contract also includes a bounded integer numeric-resource fragment.
 A numeric resource is a declared PDDL function with an integer value in the
 state, for example `(capacity ?vehicle)` or `(pogo_sticks_to_make)`. A numeric

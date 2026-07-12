@@ -1,0 +1,2928 @@
+{
+  "cases": {
+    "satellite_p0_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p0_01",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_01.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "dir3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p0_02",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p0_02.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type direction, and parameter A of PDDL type direction, where Y differs from Z, Y differs from A, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments X and Z; and at a strictly later state after that, predicate pointing holds for arguments X and A.",
+      "status": "supported"
+    },
+    "satellite_p0_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir3",
+        "Z": "dir1"
+      },
+      "goal_name": "g_satellite_p0_03",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_03.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p0_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p0_04.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "dir3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_05",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p0_05.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments X and A.",
+      "status": "supported"
+    },
+    "satellite_p0_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "ins2"
+      },
+      "goal_name": "g_satellite_p0_06",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_06.pddl",
+      "source_text": "Given parameter X of PDDL type satellite and parameter Y of PDDL type instrument, ensure that predicate power_avail holds for argument X at every state before the first state where predicate power_on holds for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p0_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "calibrated",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins1"
+      },
+      "goal_name": "g_satellite_p0_07",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_07.pddl",
+      "source_text": "Given parameter X of PDDL type instrument, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate calibrated holds for argument X.",
+      "status": "supported"
+    },
+    "satellite_p0_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins1",
+        "Y": "sat1"
+      },
+      "goal_name": "g_satellite_p0_08",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p0_08.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p0_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir2"
+      },
+      "goal_name": "g_satellite_p0_09",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_09.pddl",
+      "source_text": "Given parameter X of PDDL type satellite and parameter Y of PDDL type direction, ensure that predicate power_avail holds for argument X at every state before the first state where predicate pointing holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "satellite_p0_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_10",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p0_10.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type satellite, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "satellite_p0_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_11",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_11.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p0_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "dir4"
+      },
+      "goal_name": "g_satellite_p0_12",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p0_12.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat3",
+        "Y": "dir2",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_13",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_13.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p0_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A"
+          ],
+          "predicate": "power_on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "ins2",
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_14",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p0_14.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type instrument, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate power_on holds for argument A.",
+      "status": "supported"
+    },
+    "satellite_p0_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins2",
+        "Y": "ins1"
+      },
+      "goal_name": "g_satellite_p0_15",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_15.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type instrument, where X differs from Y, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate power_on holds for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p0_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins1",
+        "Y": "sat5"
+      },
+      "goal_name": "g_satellite_p0_16",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p0_16.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p0_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "B": "dir2",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_17",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p0_17.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type satellite, and parameter B of PDDL type direction, where X differs from Z, X differs from A, Y differs from B, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and B.",
+      "status": "supported"
+    },
+    "satellite_p0_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir1",
+        "Z": "ins4"
+      },
+      "goal_name": "g_satellite_p0_18",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_18.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p0_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "ins1"
+      },
+      "goal_name": "g_satellite_p0_19",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_19.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p0_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir1"
+      },
+      "goal_name": "g_satellite_p0_20",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p0_20.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "B",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "dir1",
+        "B": "sat3",
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_21",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p0_21.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type direction, and parameter B of PDDL type satellite, where X differs from Z, X differs from B, Y differs from A, and Z differs from B, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and A; and at a strictly later state after that, predicate pointing holds for arguments B and A.",
+      "status": "supported"
+    },
+    "satellite_p0_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "sat2",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p0_22",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_22.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type satellite, and parameter Z of PDDL type direction, where X differs from Y, ensure that predicate power_avail holds for argument X at every state before the first state where predicate pointing holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins1",
+        "Y": "sat1",
+        "Z": "dir1"
+      },
+      "goal_name": "g_satellite_p0_23",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_23.pddl",
+      "source_text": "Given parameter X of PDDL type instrument, parameter Y of PDDL type satellite, and parameter Z of PDDL type direction, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate pointing holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins1",
+        "Y": "sat1"
+      },
+      "goal_name": "g_satellite_p0_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p0_24.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p0_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "dir2",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_25",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_25.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "satellite_p0_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "dir1",
+        "X": "sat3",
+        "Y": "dir7",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_26",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_26.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "satellite_p0_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_27",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p0_27.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type satellite, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "satellite_p0_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir1"
+      },
+      "goal_name": "g_satellite_p0_28",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p0_28.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir3",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p0_29",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p0_29.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p0_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p0_30",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p0_30.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p1_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "B"
+          ],
+          "predicate": "power_on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "dir2",
+        "B": "ins1",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_01",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_01.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type direction, and parameter B of PDDL type instrument, where X differs from Z and Y differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and A; and at a strictly later state after that, predicate power_on holds for argument B.",
+      "status": "supported"
+    },
+    "satellite_p1_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins3",
+        "Y": "sat1"
+      },
+      "goal_name": "g_satellite_p1_02",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_02.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p1_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "B",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "dir2",
+        "B": "sat3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_03",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_03.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type direction, and parameter B of PDDL type satellite, where X differs from Z, X differs from B, Y differs from A, and Z differs from B, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and A; and at a strictly later state after that, predicate pointing holds for arguments B and Y.",
+      "status": "supported"
+    },
+    "satellite_p1_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins2",
+        "Y": "ins1"
+      },
+      "goal_name": "g_satellite_p1_04",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p1_04.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type instrument, where X differs from Y, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate power_on holds for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p1_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "calibrated",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir12",
+        "Z": "ins2"
+      },
+      "goal_name": "g_satellite_p1_05",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/satellite/test/p1_05.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate calibrated holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p1_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir11"
+      },
+      "goal_name": "g_satellite_p1_06",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_06.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p1_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat4",
+        "Y": "dir1",
+        "Z": "sat1"
+      },
+      "goal_name": "g_satellite_p1_07",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p1_07.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p1_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "B",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "dir2",
+        "B": "sat3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_08",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_08.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type direction, and parameter B of PDDL type satellite, where X differs from Z, X differs from B, Y differs from A, and Z differs from B, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and A; and at a strictly later state after that, predicate pointing holds for arguments B and A.",
+      "status": "supported"
+    },
+    "satellite_p1_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "calibrated",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins5"
+      },
+      "goal_name": "g_satellite_p1_09",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p1_09.pddl",
+      "source_text": "Given parameter X of PDDL type instrument, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate calibrated holds for argument X.",
+      "status": "supported"
+    },
+    "satellite_p1_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins2",
+        "Y": "sat5"
+      },
+      "goal_name": "g_satellite_p1_10",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_10.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p1_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A"
+          ],
+          "predicate": "power_on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "ins11",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_11",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_11.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type instrument, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate power_on holds for argument A.",
+      "status": "supported"
+    },
+    "satellite_p1_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "ins7"
+      },
+      "goal_name": "g_satellite_p1_12",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p1_12.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p1_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir11",
+        "Z": "ins13"
+      },
+      "goal_name": "g_satellite_p1_13",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p1_13.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p1_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "dir4"
+      },
+      "goal_name": "g_satellite_p1_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_14.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p1_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "B": "dir2",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_15",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_15.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type satellite, and parameter B of PDDL type direction, where X differs from Z, X differs from A, Y differs from B, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and B.",
+      "status": "supported"
+    },
+    "satellite_p1_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins21",
+        "Y": "sat1",
+        "Z": "dir1"
+      },
+      "goal_name": "g_satellite_p1_16",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p1_16.pddl",
+      "source_text": "Given parameter X of PDDL type instrument, parameter Y of PDDL type satellite, and parameter Z of PDDL type direction, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate pointing holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "satellite_p1_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "dir1",
+        "X": "sat2",
+        "Y": "dir23",
+        "Z": "sat1"
+      },
+      "goal_name": "g_satellite_p1_17",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p1_17.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "satellite_p1_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins2",
+        "Y": "sat1"
+      },
+      "goal_name": "g_satellite_p1_18",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_18.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p1_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "dir3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_19",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p1_19.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "satellite_p1_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "B"
+          ],
+          "predicate": "power_on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "dir1",
+        "B": "ins11",
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_20",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_20.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type direction, and parameter B of PDDL type instrument, where X differs from Z and Y differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and A; and at a strictly later state after that, predicate power_on holds for argument B.",
+      "status": "supported"
+    },
+    "satellite_p1_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir4",
+        "Z": "dir1"
+      },
+      "goal_name": "g_satellite_p1_21",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p1_21.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p1_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir15"
+      },
+      "goal_name": "g_satellite_p1_22",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_22.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p1_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_23",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_23.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type satellite, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "satellite_p1_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "calibrated",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins4"
+      },
+      "goal_name": "g_satellite_p1_24",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p1_24.pddl",
+      "source_text": "Given parameter X of PDDL type instrument, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate calibrated holds for argument X.",
+      "status": "supported"
+    },
+    "satellite_p1_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat4",
+        "Y": "dir2",
+        "Z": "sat1"
+      },
+      "goal_name": "g_satellite_p1_25",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p1_25.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p1_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins17",
+        "Y": "sat1"
+      },
+      "goal_name": "g_satellite_p1_26",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_26.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p1_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p1_27.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p1_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A"
+          ],
+          "predicate": "power_on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "ins4",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p1_28",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p1_28.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type instrument, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate power_on holds for argument A.",
+      "status": "supported"
+    },
+    "satellite_p1_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir25",
+        "Z": "ins13"
+      },
+      "goal_name": "g_satellite_p1_29",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p1_29.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p1_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir14"
+      },
+      "goal_name": "g_satellite_p1_30",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p1_30.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "B": "dir2",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_01",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p2_01.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type satellite, and parameter B of PDDL type direction, where X differs from Z, X differs from A, Y differs from B, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and B.",
+      "status": "supported"
+    },
+    "satellite_p2_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins10",
+        "Y": "ins5"
+      },
+      "goal_name": "g_satellite_p2_02",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_02.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type instrument, where X differs from Y, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate power_on holds for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p2_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "dir2",
+        "X": "sat3",
+        "Y": "dir32",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_03",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p2_03.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "satellite_p2_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins24",
+        "Y": "sat3"
+      },
+      "goal_name": "g_satellite_p2_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p2_04.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p2_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "ins16"
+      },
+      "goal_name": "g_satellite_p2_05",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_05.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p2_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir11",
+        "Z": "dir1"
+      },
+      "goal_name": "g_satellite_p2_06",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p2_06.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_07",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p2_07.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type satellite, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "satellite_p2_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir33"
+      },
+      "goal_name": "g_satellite_p2_08",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p2_08.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins9",
+        "Y": "sat1",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p2_09",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_09.pddl",
+      "source_text": "Given parameter X of PDDL type instrument, parameter Y of PDDL type satellite, and parameter Z of PDDL type direction, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate pointing holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A"
+          ],
+          "predicate": "power_on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "ins9",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_10",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p2_10.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type instrument, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate power_on holds for argument A.",
+      "status": "supported"
+    },
+    "satellite_p2_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir59",
+        "Z": "ins3"
+      },
+      "goal_name": "g_satellite_p2_11",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p2_11.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p2_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins26",
+        "Y": "sat4"
+      },
+      "goal_name": "g_satellite_p2_12",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p2_12.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p2_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "dir1",
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_13",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_13.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "satellite_p2_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "calibrated",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir15",
+        "Z": "ins14"
+      },
+      "goal_name": "g_satellite_p2_14",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/satellite/test/p2_14.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate calibrated holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p2_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "B": "dir2",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_15",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p2_15.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type satellite, and parameter B of PDDL type direction, where X differs from Z, X differs from A, Y differs from B, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and B.",
+      "status": "supported"
+    },
+    "satellite_p2_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir17"
+      },
+      "goal_name": "g_satellite_p2_16",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p2_16.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat7",
+        "Y": "dir1",
+        "Z": "sat1"
+      },
+      "goal_name": "g_satellite_p2_17",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p2_17.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p2_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_18",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_18.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type satellite, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate pointing holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "satellite_p2_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_19",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p2_19.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type satellite, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "satellite_p2_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins18",
+        "Y": "sat1"
+      },
+      "goal_name": "g_satellite_p2_20",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p2_20.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p2_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins4",
+        "Y": "ins6"
+      },
+      "goal_name": "g_satellite_p2_21",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_21.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type instrument, where X differs from Y, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate power_on holds for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p2_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "dir2",
+        "X": "sat2",
+        "Y": "dir77",
+        "Z": "sat1"
+      },
+      "goal_name": "g_satellite_p2_22",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p2_22.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type direction, where X differs from Z and Y differs from A, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "satellite_p2_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A"
+          ],
+          "predicate": "power_on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "ins6",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_23",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p2_23.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, and parameter A of PDDL type instrument, where X differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate power_on holds for argument A.",
+      "status": "supported"
+    },
+    "satellite_p2_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir2",
+        "Z": "dir8"
+      },
+      "goal_name": "g_satellite_p2_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p2_24.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that at some state, predicate pointing holds for arguments X and Y, while predicate pointing does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins26",
+        "Y": "sat1",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p2_25",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_25.pddl",
+      "source_text": "Given parameter X of PDDL type instrument, parameter Y of PDDL type satellite, and parameter Z of PDDL type direction, ensure that at some state, predicate power_on holds for argument X, and at a strictly later state, predicate pointing holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir84",
+        "Z": "dir2"
+      },
+      "goal_name": "g_satellite_p2_26",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p2_26.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type direction, where Y differs from Z, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate pointing holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "satellite_p2_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "pointing",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "sat3",
+        "B": "dir2",
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "sat2"
+      },
+      "goal_name": "g_satellite_p2_27",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/satellite/test/p2_27.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, parameter Z of PDDL type satellite, parameter A of PDDL type satellite, and parameter B of PDDL type direction, where X differs from Z, X differs from A, Y differs from B, and Z differs from A, ensure that at some state, predicate pointing holds for arguments X and Y; at a strictly later state, predicate pointing holds for arguments Z and Y; and at a strictly later state after that, predicate pointing holds for arguments A and B.",
+      "status": "supported"
+    },
+    "satellite_p2_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "power_on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "power_avail",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "ins16",
+        "Y": "sat5"
+      },
+      "goal_name": "g_satellite_p2_28",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/satellite/test/p2_28.pddl",
+      "source_text": "Given parameter X of PDDL type instrument and parameter Y of PDDL type satellite, ensure that at some state, predicate power_on holds for argument X, while predicate power_avail does not hold for argument Y.",
+      "status": "supported"
+    },
+    "satellite_p2_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat1",
+        "Y": "dir1",
+        "Z": "ins47"
+      },
+      "goal_name": "g_satellite_p2_29",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/satellite/test/p2_29.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that at some state, predicate pointing holds for arguments X and Y, and at a strictly later state, predicate power_on holds for argument Z.",
+      "status": "supported"
+    },
+    "satellite_p2_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "pointing",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "power_on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "sat2",
+        "Y": "dir90",
+        "Z": "ins9"
+      },
+      "goal_name": "g_satellite_p2_30",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/satellite/test/p2_30.pddl",
+      "source_text": "Given parameter X of PDDL type satellite, parameter Y of PDDL type direction, and parameter Z of PDDL type instrument, ensure that predicate pointing holds for arguments X and Y at every state before the first state where predicate power_on holds for argument Z.",
+      "status": "supported"
+    }
+  },
+  "domain": "satellite",
+  "goal_specification_kind": "temporal_extended_goal",
+  "schema_version": 1,
+  "temporal_logic": "LTLf"
+}

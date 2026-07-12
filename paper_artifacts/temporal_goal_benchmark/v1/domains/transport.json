@@ -1,0 +1,2987 @@
+{
+  "cases": {
+    "transport_p0_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v2",
+        "Y": "l5",
+        "Z": "l2"
+      },
+      "goal_name": "g_transport_p0_01",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p0_01.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type location, where Y differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "c2",
+        "X": "p1",
+        "Y": "v1",
+        "Z": "l2"
+      },
+      "goal_name": "g_transport_p0_02",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p0_02.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, parameter Z of PDDL type location, and parameter A of PDDL type size, ensure that at some state, predicate in holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Y and Z; and at a strictly later state after that, predicate capacity holds for arguments Y and A.",
+      "status": "supported"
+    },
+    "transport_p0_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p0_03",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p0_03.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type vehicle, where X differs from Z, ensure that at some state, predicate at holds for arguments X and Y, and at a strictly later state, predicate at holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "transport_p0_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v3",
+        "Y": "c1",
+        "Z": "c2"
+      },
+      "goal_name": "g_transport_p0_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p0_04.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type size, where Y differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, while predicate capacity does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "v2",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p0_05",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p0_05.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "c2",
+        "Z": "p2"
+      },
+      "goal_name": "g_transport_p0_06",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/transport/test/p0_06.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type package, ensure that predicate capacity holds for arguments X and Y at every state before the first state where predicate in holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "transport_p0_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p3",
+        "Y": "v2",
+        "Z": "l1"
+      },
+      "goal_name": "g_transport_p0_07",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p0_07.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type location, ensure that at some state, predicate in holds for arguments X and Y, while predicate at does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "c0",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p0_08",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p0_08.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, where X differs from Z, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p0_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "v1",
+        "Z": "l2"
+      },
+      "goal_name": "g_transport_p0_09",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p0_09.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type location, ensure that at some state, predicate in holds for arguments X and Y, and at a strictly later state, predicate at holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p5",
+        "Y": "v1",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p0_10",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p0_10.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "c1",
+        "Z": "p4"
+      },
+      "goal_name": "g_transport_p0_11",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p0_11.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type package, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate in holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "transport_p0_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p4",
+        "Y": "l9",
+        "Z": "v3"
+      },
+      "goal_name": "g_transport_p0_12",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p0_12.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, and parameter Z of PDDL type vehicle, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate in holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v3",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p0_13",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p0_13.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type vehicle, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate at holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "transport_p0_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "l1",
+        "Z": "l9"
+      },
+      "goal_name": "g_transport_p0_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p0_14.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type location, where Y differs from Z, ensure that at some state, predicate at holds for arguments X and Y, while predicate at does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p3",
+        "Y": "v2",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p0_15",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p0_15.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Z"
+          ],
+          "predicate": "in",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "p6",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p0_16",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p0_16.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type package, where X differs from Z, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate in holds for arguments A and Z.",
+      "status": "supported"
+    },
+    "transport_p0_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v3",
+        "Y": "c1",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p0_17",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p0_17.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type size, where Y differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p6",
+        "Y": "l2",
+        "Z": "v1"
+      },
+      "goal_name": "g_transport_p0_18",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p0_18.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, and parameter Z of PDDL type vehicle, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "transport_p0_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p2",
+        "Y": "v2",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p0_19",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p0_19.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, predicate in holds for arguments X and Y, while predicate capacity does not hold for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p4",
+        "Y": "v1",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p0_20",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p0_20.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "c0",
+        "X": "p1",
+        "Y": "l1",
+        "Z": "v1"
+      },
+      "goal_name": "g_transport_p0_21",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/transport/test/p0_21.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p0_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "c1",
+        "Z": "l2"
+      },
+      "goal_name": "g_transport_p0_22",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p0_22.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type location, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate at holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v3",
+        "B": "c1",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p0_23",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p0_23.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, parameter A of PDDL type vehicle, and parameter B of PDDL type size, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate capacity holds for arguments A and B.",
+      "status": "supported"
+    },
+    "transport_p0_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "l13",
+        "X": "v1",
+        "Y": "c0",
+        "Z": "p6"
+      },
+      "goal_name": "g_transport_p0_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p0_24.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type package, and parameter A of PDDL type location, ensure that at some state, predicate capacity holds for arguments X and Y, while predicate at does not hold for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p0_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p8",
+        "Y": "v5",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p0_25",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p0_25.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "v1",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p0_26",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p0_26.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, predicate in holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p0_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "c0",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p0_27",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p0_27.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, where X differs from Z, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate capacity holds for arguments X and A.",
+      "status": "supported"
+    },
+    "transport_p0_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "v2",
+        "X": "p2",
+        "Y": "l13",
+        "Z": "p1"
+      },
+      "goal_name": "g_transport_p0_28",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p0_28.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type package, and parameter A of PDDL type vehicle, where X differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate in holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p0_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "v3",
+        "Z": "l7"
+      },
+      "goal_name": "g_transport_p0_29",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p0_29.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type location, ensure that at some state, predicate in holds for arguments X and Y, while predicate at does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p0_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p12",
+        "Y": "v2",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p0_30",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p0_30.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p2",
+        "Y": "v4",
+        "Z": "p3"
+      },
+      "goal_name": "g_transport_p1_01",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p1_01.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type package, where X differs from Z, ensure that at some state, predicate in holds for arguments X and Y, and at a strictly later state, predicate in holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "transport_p1_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v2",
+        "Y": "l5",
+        "Z": "c2"
+      },
+      "goal_name": "g_transport_p1_02",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p1_02.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type size, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate capacity holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p1_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v3",
+        "B": "l2",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_03",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p1_03.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, parameter A of PDDL type vehicle, and parameter B of PDDL type location, where X differs from Z, X differs from A, Y differs from B, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate at holds for arguments A and B.",
+      "status": "supported"
+    },
+    "transport_p1_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v3",
+        "Y": "c3",
+        "Z": "c4"
+      },
+      "goal_name": "g_transport_p1_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p1_04.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type size, where Y differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, while predicate capacity does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p1_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p2",
+        "Y": "v9",
+        "Z": "c2"
+      },
+      "goal_name": "g_transport_p1_05",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p1_05.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "l1",
+        "Z": "p3"
+      },
+      "goal_name": "g_transport_p1_06",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p1_06.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type package, ensure that at some state, predicate at holds for arguments X and Y, and at a strictly later state, predicate in holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "transport_p1_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "in",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "p9",
+        "B": "v4",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_07",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p1_07.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, parameter A of PDDL type package, and parameter B of PDDL type vehicle, where X differs from Z, X differs from B, and Z differs from B, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate in holds for arguments A and B.",
+      "status": "supported"
+    },
+    "transport_p1_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "l1",
+        "X": "p1",
+        "Y": "l4",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_08",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p1_08.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type location, where Y differs from A, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p1_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "l1",
+        "Z": "l4"
+      },
+      "goal_name": "g_transport_p1_09",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p1_09.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type location, where Y differs from Z, ensure that at some state, predicate at holds for arguments X and Y, while predicate at does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p1_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "v3",
+        "Z": "c2"
+      },
+      "goal_name": "g_transport_p1_10",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p1_10.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "l1",
+        "X": "v3",
+        "Y": "c1",
+        "Z": "v1"
+      },
+      "goal_name": "g_transport_p1_11",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p1_11.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type vehicle, and parameter A of PDDL type location, where X differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate at holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p1_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "X"
+          ],
+          "predicate": "in",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "p18",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_12",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p1_12.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type package, where X differs from Z, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate in holds for arguments A and X.",
+      "status": "supported"
+    },
+    "transport_p1_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p5",
+        "Y": "l14",
+        "Z": "v5"
+      },
+      "goal_name": "g_transport_p1_13",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p1_13.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, and parameter Z of PDDL type vehicle, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate in holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p1_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p16",
+        "Y": "v1",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p1_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p1_14.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, predicate in holds for arguments X and Y, while predicate capacity does not hold for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p4",
+        "Y": "v1",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p1_15",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p1_15.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "l2",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_16",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p1_16.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type location, where X differs from Z and Y differs from A, ensure that at some state, predicate at holds for arguments X and Y, and at a strictly later state, predicate at holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p1_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v3",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_17",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p1_17.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type vehicle, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate at holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "transport_p1_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "v2",
+        "X": "p1",
+        "Y": "l16",
+        "Z": "p28"
+      },
+      "goal_name": "g_transport_p1_18",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p1_18.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type package, and parameter A of PDDL type vehicle, where X differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate in holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p1_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "l21",
+        "X": "v2",
+        "Y": "c0",
+        "Z": "p13"
+      },
+      "goal_name": "g_transport_p1_19",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p1_19.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type package, and parameter A of PDDL type location, ensure that at some state, predicate capacity holds for arguments X and Y, while predicate at does not hold for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p1_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p8",
+        "Y": "v6",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p1_20",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p1_20.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "l1",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p1_21",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p1_21.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type size, ensure that at some state, predicate at holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p1_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v3",
+        "B": "l2",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_22",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p1_22.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, parameter A of PDDL type vehicle, and parameter B of PDDL type location, where X differs from Z, X differs from A, Y differs from B, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate at holds for arguments A and B.",
+      "status": "supported"
+    },
+    "transport_p1_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p2",
+        "Y": "l2",
+        "Z": "v1"
+      },
+      "goal_name": "g_transport_p1_23",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p1_23.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, and parameter Z of PDDL type vehicle, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "transport_p1_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p19",
+        "Y": "v3",
+        "Z": "c2"
+      },
+      "goal_name": "g_transport_p1_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p1_24.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, predicate in holds for arguments X and Y, while predicate capacity does not hold for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p11",
+        "Y": "v2",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p1_25",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p1_25.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p1_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "c0",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v9"
+      },
+      "goal_name": "g_transport_p1_26",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p1_26.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, where X differs from Z, ensure that at some state, predicate at holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p1_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "in",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "p17",
+        "B": "v4",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_27",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p1_27.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, parameter A of PDDL type package, and parameter B of PDDL type vehicle, where X differs from Z, X differs from B, and Z differs from B, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate in holds for arguments A and B.",
+      "status": "supported"
+    },
+    "transport_p1_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "l1",
+        "X": "p1",
+        "Y": "l30",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p1_28",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p1_28.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type location, where Y differs from A, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p1_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v5",
+        "Y": "c0",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p1_29",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p1_29.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type size, where Y differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, while predicate capacity does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p1_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p19",
+        "Y": "v3",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p1_30",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p1_30.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p2_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "c8",
+        "X": "p10",
+        "Y": "v5",
+        "Z": "v7"
+      },
+      "goal_name": "g_transport_p2_01",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p2_01.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, where Y differs from Z, ensure that at some state, predicate in holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v4",
+        "B": "c1",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p2_02",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p2_02.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, parameter A of PDDL type vehicle, and parameter B of PDDL type size, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate capacity holds for arguments A and B.",
+      "status": "supported"
+    },
+    "transport_p2_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "c2",
+        "X": "p1",
+        "Y": "l45",
+        "Z": "v1"
+      },
+      "goal_name": "g_transport_p2_03",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/transport/test/p2_03.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "l1",
+        "Z": "l9"
+      },
+      "goal_name": "g_transport_p2_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p2_04.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, and parameter Z of PDDL type location, where Y differs from Z, ensure that at some state, predicate at holds for arguments X and Y, while predicate at does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p2_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p5",
+        "Y": "v5",
+        "Z": "c2"
+      },
+      "goal_name": "g_transport_p2_05",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p2_05.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p2_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "v1",
+        "X": "p31",
+        "Y": "v3",
+        "Z": "p6"
+      },
+      "goal_name": "g_transport_p2_06",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p2_06.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, parameter Z of PDDL type package, and parameter A of PDDL type vehicle, where X differs from Z and Y differs from A, ensure that at some state, predicate in holds for arguments X and Y, and at a strictly later state, predicate in holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v3",
+        "X": "v1",
+        "Y": "l1",
+        "Z": "v2"
+      },
+      "goal_name": "g_transport_p2_07",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p2_07.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type vehicle, where X differs from Z, X differs from A, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments Z and Y; and at a strictly later state after that, predicate at holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "transport_p2_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p6",
+        "Y": "l23",
+        "Z": "v5"
+      },
+      "goal_name": "g_transport_p2_08",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p2_08.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, and parameter Z of PDDL type vehicle, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate in holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p2_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p41",
+        "Y": "v1",
+        "Z": "l9"
+      },
+      "goal_name": "g_transport_p2_09",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p2_09.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type location, ensure that at some state, predicate in holds for arguments X and Y, while predicate at does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p2_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p7",
+        "Y": "v10",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p2_10",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p2_10.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p2_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v7",
+        "X": "v4",
+        "Y": "c1",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p2_11",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p2_11.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type size, and parameter A of PDDL type vehicle, where X differs from A and Y differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y; at a strictly later state, predicate capacity holds for arguments X and Z; and at a strictly later state after that, predicate capacity holds for arguments A and Y.",
+      "status": "supported"
+    },
+    "transport_p2_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "v8",
+        "X": "v3",
+        "Y": "c1",
+        "Z": "p13"
+      },
+      "goal_name": "g_transport_p2_12",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p2_12.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type package, and parameter A of PDDL type vehicle, where X differs from A, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate in holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "v4",
+        "X": "p1",
+        "Y": "l14",
+        "Z": "p15"
+      },
+      "goal_name": "g_transport_p2_13",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p2_13.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type package, and parameter A of PDDL type vehicle, where X differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate in holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "l26",
+        "X": "v18",
+        "Y": "c0",
+        "Z": "p20"
+      },
+      "goal_name": "g_transport_p2_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p2_14.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type package, and parameter A of PDDL type location, ensure that at some state, predicate capacity holds for arguments X and Y, while predicate at does not hold for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p24",
+        "Y": "v20",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p2_15",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p2_15.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p2_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "v12",
+        "X": "v5",
+        "Y": "c1",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p2_16",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p2_16.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type size, and parameter A of PDDL type vehicle, where X differs from A and Y differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y; at a strictly later state, predicate capacity holds for arguments X and Z; and at a strictly later state after that, predicate capacity holds for arguments A and Z.",
+      "status": "supported"
+    },
+    "transport_p2_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "c2",
+        "X": "v15",
+        "Y": "c1",
+        "Z": "v4"
+      },
+      "goal_name": "g_transport_p2_17",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p2_17.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, where X differs from Z and Y differs from A, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "c1",
+        "X": "p1",
+        "Y": "l30",
+        "Z": "v6"
+      },
+      "goal_name": "g_transport_p2_18",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/transport/test/p2_18.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v3",
+        "Y": "c0",
+        "Z": "c1"
+      },
+      "goal_name": "g_transport_p2_19",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p2_19.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type size, where Y differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, while predicate capacity does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p2_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p9",
+        "Y": "v1",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p2_20",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p2_20.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p2_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v1",
+        "Y": "c0",
+        "Z": "v11"
+      },
+      "goal_name": "g_transport_p2_21",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p2_21.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type vehicle, where X differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "transport_p2_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "B",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "c1",
+        "B": "v17",
+        "X": "v11",
+        "Y": "c0",
+        "Z": "v13"
+      },
+      "goal_name": "g_transport_p2_22",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p2_22.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type vehicle, parameter A of PDDL type size, and parameter B of PDDL type vehicle, where X differs from Z, X differs from B, Y differs from A, and Z differs from B, ensure that at some state, predicate capacity holds for arguments X and Y; at a strictly later state, predicate capacity holds for arguments Z and A; and at a strictly later state after that, predicate capacity holds for arguments B and A.",
+      "status": "supported"
+    },
+    "transport_p2_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p5",
+        "Y": "l73",
+        "Z": "v13"
+      },
+      "goal_name": "g_transport_p2_23",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/transport/test/p2_23.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, and parameter Z of PDDL type vehicle, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate in holds for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p2_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p75",
+        "Y": "v9",
+        "Z": "c2"
+      },
+      "goal_name": "g_transport_p2_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p2_24.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, predicate in holds for arguments X and Y, while predicate capacity does not hold for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p2_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p47",
+        "Y": "v7",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p2_25",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p2_25.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "transport_p2_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "A",
+            "B"
+          ],
+          "predicate": "in",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "p13",
+        "B": "v28",
+        "X": "v12",
+        "Y": "c0",
+        "Z": "v22"
+      },
+      "goal_name": "g_transport_p2_26",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/transport/test/p2_26.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, parameter Z of PDDL type vehicle, parameter A of PDDL type package, and parameter B of PDDL type vehicle, where X differs from Z, X differs from B, and Z differs from B, ensure that at some state, predicate capacity holds for arguments X and Y; at a strictly later state, predicate capacity holds for arguments Z and Y; and at a strictly later state after that, predicate in holds for arguments A and B.",
+      "status": "supported"
+    },
+    "transport_p2_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "v7",
+        "Y": "c0",
+        "Z": "v23"
+      },
+      "goal_name": "g_transport_p2_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/transport/test/p2_27.pddl",
+      "source_text": "Given parameter X of PDDL type vehicle, parameter Y of PDDL type size, and parameter Z of PDDL type vehicle, where X differs from Z, ensure that at some state, predicate capacity holds for arguments X and Y, and at a strictly later state, predicate capacity holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "transport_p2_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p13",
+        "Y": "v1",
+        "Z": "l78"
+      },
+      "goal_name": "g_transport_p2_28",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/transport/test/p2_28.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type location, ensure that at some state, predicate in holds for arguments X and Y, while predicate at does not hold for arguments X and Z.",
+      "status": "supported"
+    },
+    "transport_p2_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "c0",
+        "X": "p1",
+        "Y": "l18",
+        "Z": "v13"
+      },
+      "goal_name": "g_transport_p2_29",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/transport/test/p2_29.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type location, parameter Z of PDDL type vehicle, and parameter A of PDDL type size, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate capacity holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "transport_p2_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "in",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p72",
+        "Y": "v4",
+        "Z": "c0"
+      },
+      "goal_name": "g_transport_p2_30",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/transport/test/p2_30.pddl",
+      "source_text": "Given parameter X of PDDL type package, parameter Y of PDDL type vehicle, and parameter Z of PDDL type size, ensure that at some state, both predicate in holds for arguments X and Y and predicate capacity holds for arguments Y and Z.",
+      "status": "supported"
+    }
+  },
+  "domain": "transport",
+  "goal_specification_kind": "temporal_extended_goal",
+  "schema_version": 1,
+  "temporal_logic": "LTLf"
+}

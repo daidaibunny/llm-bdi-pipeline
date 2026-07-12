@@ -90,6 +90,8 @@ def test_compiler_rules_contain_no_benchmark_or_fluent_name_literals() -> None:
 		PROJECT_ROOT / "src" / "temporal_specification" / "prediction_validation.py",
 		PROJECT_ROOT / "src" / "evaluation" / "temporal_goal_validation.py",
 		PROJECT_ROOT / "src" / "evaluation" / "temporal_validation_batch.py",
+		PROJECT_ROOT / "src" / "evaluation" / "temporal_benchmark.py",
+		PROJECT_ROOT / "src" / "evaluation" / "temporal_benchmark_release.py",
 	)
 	violations: list[str] = []
 	for path in compiler_paths:

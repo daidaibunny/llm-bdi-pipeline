@@ -1,0 +1,2295 @@
+{
+  "cases": {
+    "blocksworld_tower_instance_100": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "q1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_100",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-100.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, predicate clear holds for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_101": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "x",
+        "Y": "h1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_101",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-101.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate clear holds for argument X; and at a strictly later state after that, predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_102": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "u"
+      },
+      "goal_name": "g_blocksworld_tower_instance_102",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-102.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, while predicate ontable does not hold for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "c",
+        "Y": "g",
+        "Z": "k"
+      },
+      "goal_name": "g_blocksworld_tower_instance_26",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-26.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "g",
+        "Y": "i"
+      },
+      "goal_name": "g_blocksworld_tower_instance_27",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-27.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "b"
+      },
+      "goal_name": "g_blocksworld_tower_instance_28",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-28.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, predicate ontable holds for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f",
+        "Y": "j"
+      },
+      "goal_name": "g_blocksworld_tower_instance_29",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-29.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate clear holds for argument X; and at a strictly later state after that, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "n"
+      },
+      "goal_name": "g_blocksworld_tower_instance_30",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-30.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, while predicate clear does not hold for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_31": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "e",
+        "Y": "j",
+        "Z": "i"
+      },
+      "goal_name": "g_blocksworld_tower_instance_31",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-31.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate ontable holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_32": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "m",
+        "Y": "o"
+      },
+      "goal_name": "g_blocksworld_tower_instance_32",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-32.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_33": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "o",
+        "Y": "h"
+      },
+      "goal_name": "g_blocksworld_tower_instance_33",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-33.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, predicate on holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_34": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "l",
+        "Y": "o"
+      },
+      "goal_name": "g_blocksworld_tower_instance_34",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-34.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate ontable holds for argument X; and at a strictly later state after that, predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_35": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "h",
+        "Y": "n"
+      },
+      "goal_name": "g_blocksworld_tower_instance_35",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-35.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X, while predicate on does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_36": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "k",
+        "X": "c",
+        "Y": "m",
+        "Z": "l"
+      },
+      "goal_name": "g_blocksworld_tower_instance_36",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-36.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, parameter Z of PDDL type block, and parameter A of PDDL type block, where X differs from Y, X differs from Z, X differs from A, Y differs from Z, Y differs from A, and Z differs from A, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_37": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "o",
+        "Y": "k"
+      },
+      "goal_name": "g_blocksworld_tower_instance_37",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-37.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_38": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "k",
+        "Y": "j",
+        "Z": "g"
+      },
+      "goal_name": "g_blocksworld_tower_instance_38",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-38.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate on holds for arguments X and Y; and at a strictly later state after that, predicate holding holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_39": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "s"
+      },
+      "goal_name": "g_blocksworld_tower_instance_39",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-39.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, zero-arity predicate handempty holds.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_40": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "b",
+        "Y": "o"
+      },
+      "goal_name": "g_blocksworld_tower_instance_40",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-40.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, while predicate on does not hold for arguments Y and X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_41": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "s",
+        "Y": "c",
+        "Z": "p"
+      },
+      "goal_name": "g_blocksworld_tower_instance_41",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-41.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_42": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "h",
+        "Y": "a"
+      },
+      "goal_name": "g_blocksworld_tower_instance_42",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-42.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_43": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "i"
+      },
+      "goal_name": "g_blocksworld_tower_instance_43",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-43.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate clear holds for argument X, while zero-arity predicate handempty does not hold.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_44": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "t",
+        "Y": "b"
+      },
+      "goal_name": "g_blocksworld_tower_instance_44",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-44.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, zero-arity predicate handempty holds; and at a strictly later state after that, predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_45": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "m"
+      },
+      "goal_name": "g_blocksworld_tower_instance_45",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-45.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, zero-arity predicate handempty holds.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_46": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "u",
+        "Y": "q",
+        "Z": "p"
+      },
+      "goal_name": "g_blocksworld_tower_instance_46",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-46.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate ontable holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_47": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "a",
+        "Y": "v"
+      },
+      "goal_name": "g_blocksworld_tower_instance_47",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-47.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_48": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "clear",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "q",
+        "Y": "u",
+        "Z": "a"
+      },
+      "goal_name": "g_blocksworld_tower_instance_48",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-48.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate on holds for arguments X and Y; and at a strictly later state after that, predicate clear holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_49": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "r"
+      },
+      "goal_name": "g_blocksworld_tower_instance_49",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-49.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, while zero-arity predicate handempty does not hold.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_50": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f",
+        "Y": "k"
+      },
+      "goal_name": "g_blocksworld_tower_instance_50",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-50.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_51": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "u",
+        "X": "v",
+        "Y": "c",
+        "Z": "a"
+      },
+      "goal_name": "g_blocksworld_tower_instance_51",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-51.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, parameter Z of PDDL type block, and parameter A of PDDL type block, where X differs from Y, X differs from Z, X differs from A, Y differs from Z, Y differs from A, and Z differs from A, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_52": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f",
+        "Y": "k"
+      },
+      "goal_name": "g_blocksworld_tower_instance_52",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-52.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_53": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "y",
+        "Y": "o"
+      },
+      "goal_name": "g_blocksworld_tower_instance_53",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-53.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, zero-arity predicate handempty holds; and at a strictly later state after that, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_54": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f",
+        "Y": "u"
+      },
+      "goal_name": "g_blocksworld_tower_instance_54",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-54.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_55": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "j",
+        "Y": "w"
+      },
+      "goal_name": "g_blocksworld_tower_instance_55",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-55.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, while predicate clear does not hold for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_56": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "n",
+        "Y": "y",
+        "Z": "h"
+      },
+      "goal_name": "g_blocksworld_tower_instance_56",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-56.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_57": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "o",
+        "Y": "t"
+      },
+      "goal_name": "g_blocksworld_tower_instance_57",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-57.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_58": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "w",
+        "Y": "a"
+      },
+      "goal_name": "g_blocksworld_tower_instance_58",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-58.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate ontable holds for argument X; and at a strictly later state after that, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_59": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "c1",
+        "Y": "p",
+        "Z": "w"
+      },
+      "goal_name": "g_blocksworld_tower_instance_59",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-59.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, predicate on holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_60": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "y"
+      },
+      "goal_name": "g_blocksworld_tower_instance_60",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-60.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, while predicate ontable does not hold for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_61": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "j",
+        "Y": "r",
+        "Z": "u"
+      },
+      "goal_name": "g_blocksworld_tower_instance_61",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-61.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate ontable holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_62": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "x",
+        "Y": "g"
+      },
+      "goal_name": "g_blocksworld_tower_instance_62",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-62.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_63": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "x",
+        "Y": "y"
+      },
+      "goal_name": "g_blocksworld_tower_instance_63",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-63.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X; at a strictly later state, zero-arity predicate handempty holds; and at a strictly later state after that, predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_64": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "z"
+      },
+      "goal_name": "g_blocksworld_tower_instance_64",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-64.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, predicate clear holds for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_65": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "t"
+      },
+      "goal_name": "g_blocksworld_tower_instance_65",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-65.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, while predicate clear does not hold for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_66": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "t",
+        "X": "h",
+        "Y": "b",
+        "Z": "i"
+      },
+      "goal_name": "g_blocksworld_tower_instance_66",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-66.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, parameter Z of PDDL type block, and parameter A of PDDL type block, where X differs from Y, X differs from Z, X differs from A, Y differs from Z, Y differs from A, and Z differs from A, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_67": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "l",
+        "Y": "u"
+      },
+      "goal_name": "g_blocksworld_tower_instance_67",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-67.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_68": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "e1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_68",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-68.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, predicate ontable holds for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_69": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "a1",
+        "Y": "c1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_69",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-69.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, while predicate on does not hold for arguments Y and X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_70": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "e1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_70",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-70.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate clear holds for argument X; at a strictly later state, zero-arity predicate handempty holds; and at a strictly later state after that, predicate holding holds for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_71": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "a1",
+        "Y": "q",
+        "Z": "i1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_71",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-71.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_72": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "d1",
+        "Y": "g1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_72",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-72.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_73": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "e1",
+        "Y": "j1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_73",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-73.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X; at a strictly later state, zero-arity predicate handempty holds; and at a strictly later state after that, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_74": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "j1",
+        "Y": "c1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_74",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-74.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, predicate on holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_75": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "n",
+        "Y": "x"
+      },
+      "goal_name": "g_blocksworld_tower_instance_75",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-75.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X, while predicate on does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_76": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "e",
+        "Y": "f",
+        "Z": "s"
+      },
+      "goal_name": "g_blocksworld_tower_instance_76",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-76.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate ontable holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_77": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "u",
+        "Y": "b1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_77",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-77.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_78": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "b",
+        "Y": "r"
+      },
+      "goal_name": "g_blocksworld_tower_instance_78",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-78.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate clear holds for argument X; and at a strictly later state after that, predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_79": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "b1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_79",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-79.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, and at a strictly later state, zero-arity predicate handempty holds.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_80": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "o"
+      },
+      "goal_name": "g_blocksworld_tower_instance_80",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-80.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate clear holds for argument X, while zero-arity predicate handempty does not hold.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_81": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "h",
+        "X": "o",
+        "Y": "j1",
+        "Z": "m"
+      },
+      "goal_name": "g_blocksworld_tower_instance_81",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-81.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, parameter Z of PDDL type block, and parameter A of PDDL type block, where X differs from Y, X differs from Z, X differs from A, Y differs from Z, Y differs from A, and Z differs from A, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_82": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "n",
+        "Y": "z"
+      },
+      "goal_name": "g_blocksworld_tower_instance_82",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-82.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_83": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "b",
+        "Y": "g1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_83",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-83.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate clear holds for argument X; and at a strictly later state after that, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_84": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "l1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_84",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-84.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, while zero-arity predicate handempty does not hold.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_85": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "i"
+      },
+      "goal_name": "g_blocksworld_tower_instance_85",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-85.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, zero-arity predicate handempty holds.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_86": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "k1",
+        "Y": "m1",
+        "Z": "n1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_86",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-86.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate ontable holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_87": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "m1",
+        "Y": "z"
+      },
+      "goal_name": "g_blocksworld_tower_instance_87",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-87.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_88": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "w",
+        "Y": "r"
+      },
+      "goal_name": "g_blocksworld_tower_instance_88",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-88.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X; at a strictly later state, predicate clear holds for argument Y; and at a strictly later state after that, predicate holding holds for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_89": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "e1",
+        "Y": "d1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_89",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-89.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_90": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "i",
+        "Y": "i1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_90",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-90.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, while predicate clear does not hold for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_91": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "g1",
+        "Y": "h",
+        "Z": "p1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_91",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-91.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_92": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "l1",
+        "Y": "o1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_92",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-92.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_93": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "q1",
+        "Y": "n1",
+        "Z": "o"
+      },
+      "goal_name": "g_blocksworld_tower_instance_93",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-93.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate on holds for arguments X and Y; and at a strictly later state after that, predicate holding holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_94": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "g",
+        "Y": "x"
+      },
+      "goal_name": "g_blocksworld_tower_instance_94",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-94.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_95": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "l1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_95",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-95.pddl",
+      "source_text": "Given parameter X of PDDL type block, ensure that at some state, predicate holding holds for argument X, while predicate clear does not hold for argument X.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_96": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "s1",
+        "X": "g1",
+        "Y": "q",
+        "Z": "v"
+      },
+      "goal_name": "g_blocksworld_tower_instance_96",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-96.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, parameter Z of PDDL type block, and parameter A of PDDL type block, where X differs from Y, X differs from Z, X differs from A, Y differs from Z, Y differs from A, and Z differs from A, ensure that predicate on holds for arguments X and Y at every state before the first state where predicate on holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_97": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "i1",
+        "Y": "o1"
+      },
+      "goal_name": "g_blocksworld_tower_instance_97",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-97.pddl",
+      "source_text": "Given parameter X of PDDL type block and parameter Y of PDDL type block, where X differs from Y, ensure that at some state, both predicate clear holds for argument X and predicate holding holds for argument Y.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_98": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "clear",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "m",
+        "Y": "m1",
+        "Z": "b"
+      },
+      "goal_name": "g_blocksworld_tower_instance_98",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-98.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate holding holds for argument X; at a strictly later state, predicate on holds for arguments X and Y; and at a strictly later state after that, predicate clear holds for argument Z.",
+      "status": "supported"
+    },
+    "blocksworld_tower_instance_99": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "l1",
+        "Y": "u1",
+        "Z": "p"
+      },
+      "goal_name": "g_blocksworld_tower_instance_99",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/blocksworld-tower/test/instance-99.pddl",
+      "source_text": "Given parameter X of PDDL type block, parameter Y of PDDL type block, and parameter Z of PDDL type block, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate clear holds for argument X, and at a strictly later state, predicate on holds for arguments Y and Z.",
+      "status": "supported"
+    }
+  },
+  "domain": "blocksworld-tower",
+  "goal_specification_kind": "temporal_extended_goal",
+  "schema_version": 1,
+  "temporal_logic": "LTLf"
+}

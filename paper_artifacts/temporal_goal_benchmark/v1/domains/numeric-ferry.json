@@ -1,0 +1,2656 @@
+{
+  "cases": {
+    "numeric_ferry_p0_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc5"
+      },
+      "goal_name": "g_numeric_ferry_p0_01",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_01.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate on holds for argument X.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc4",
+        "Y": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p0_02",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_02.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, and at a strictly later state, predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p0_03",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_03.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, numeric function ferry-capacity equals 3; and at a strictly later state after that, predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc6"
+      },
+      "goal_name": "g_numeric_ferry_p0_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_04.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, while predicate at-ferry does not hold for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1"
+      },
+      "goal_name": "g_numeric_ferry_p0_05",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_05.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p0_06",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_06.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car2",
+        "Y": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p0_07",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_07.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc1"
+      },
+      "goal_name": "g_numeric_ferry_p0_08",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_08.pddl",
+      "source_text": "Given parameter X of PDDL type location, ensure that at some state, predicate at-ferry holds for argument X, and at a strictly later state, numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc4",
+        "Y": "loc1"
+      },
+      "goal_name": "g_numeric_ferry_p0_09",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_09.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, while predicate at-ferry does not hold for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car2"
+      },
+      "goal_name": "g_numeric_ferry_p0_10",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_10.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "car6"
+      },
+      "goal_name": "g_numeric_ferry_p0_11",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_11.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type car, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate on holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car8"
+      },
+      "goal_name": "g_numeric_ferry_p0_12",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_12.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, numeric function ferry-capacity equals 3, and at a strictly later state, predicate on holds for argument X.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc6"
+      },
+      "goal_name": "g_numeric_ferry_p0_13",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_13.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc5",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p0_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_14.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, while predicate at-ferry does not hold for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car6"
+      },
+      "goal_name": "g_numeric_ferry_p0_15",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_15.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc4",
+        "Y": "car9"
+      },
+      "goal_name": "g_numeric_ferry_p0_16",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_16.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type car, ensure that at some state, predicate at-ferry holds for argument X, and at a strictly later state, predicate on holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car2",
+        "Y": "loc8"
+      },
+      "goal_name": "g_numeric_ferry_p0_17",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_17.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc2",
+        "Y": "car5",
+        "Z": "loc1"
+      },
+      "goal_name": "g_numeric_ferry_p0_18",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_18.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type car, and parameter Z of PDDL type location, where X differs from Z, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate on holds for argument Y; and at a strictly later state after that, predicate at-ferry holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car5",
+        "Y": "loc4"
+      },
+      "goal_name": "g_numeric_ferry_p0_19",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_19.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p0_20",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_20.pddl",
+      "source_text": "Given parameter X of PDDL type location, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, numeric function ferry-capacity equals 3; and at a strictly later state after that, numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car6"
+      },
+      "goal_name": "g_numeric_ferry_p0_21",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_21.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc8",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p0_22",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_22.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that predicate at-ferry holds for argument X at every state before the first state where predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p0_23",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_23.pddl",
+      "source_text": "Given parameter X of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, and at a strictly later state, predicate at-ferry holds for argument X.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc3",
+        "Y": "loc1"
+      },
+      "goal_name": "g_numeric_ferry_p0_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_24.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, while predicate at-ferry does not hold for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "loc5"
+      },
+      "goal_name": "g_numeric_ferry_p0_25",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_25.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type location, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate at-ferry holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car3"
+      },
+      "goal_name": "g_numeric_ferry_p0_26",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_26.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {},
+      "goal_name": "g_numeric_ferry_p0_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p0_27.pddl",
+      "source_text": "For the declared PDDL domain, ensure that at some state, numeric function ferry-capacity equals 3, and at a strictly later state, numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc1",
+        "Z": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p0_28",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_28.pddl",
+      "source_text": "Given parameter X of PDDL type car, parameter Y of PDDL type location, and parameter Z of PDDL type location, where Y differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at-ferry holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car3",
+        "Y": "loc13"
+      },
+      "goal_name": "g_numeric_ferry_p0_29",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p0_29.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p0_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc12",
+        "Z": "car7"
+      },
+      "goal_name": "g_numeric_ferry_p0_30",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/numeric-ferry/test/p0_30.pddl",
+      "source_text": "Given parameter X of PDDL type car, parameter Y of PDDL type location, and parameter Z of PDDL type car, where X differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate on holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car10"
+      },
+      "goal_name": "g_numeric_ferry_p1_01",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_01.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p1_02",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_02.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car6",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p1_03",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_03.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, and at a strictly later state, predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc2",
+        "Y": "loc22"
+      },
+      "goal_name": "g_numeric_ferry_p1_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_04.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, while predicate at-ferry does not hold for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car21"
+      },
+      "goal_name": "g_numeric_ferry_p1_05",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_05.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car6",
+        "Y": "loc1"
+      },
+      "goal_name": "g_numeric_ferry_p1_06",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_06.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate on holds for argument X.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc2",
+        "Y": "loc4"
+      },
+      "goal_name": "g_numeric_ferry_p1_07",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_07.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, and at a strictly later state, predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "car4"
+      },
+      "goal_name": "g_numeric_ferry_p1_08",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_08.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type car, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate on holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car23",
+        "Y": "loc4"
+      },
+      "goal_name": "g_numeric_ferry_p1_09",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_09.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car4"
+      },
+      "goal_name": "g_numeric_ferry_p1_10",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_10.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car19"
+      },
+      "goal_name": "g_numeric_ferry_p1_11",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_11.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, predicate on holds for argument X, and at a strictly later state, numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc13"
+      },
+      "goal_name": "g_numeric_ferry_p1_12",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_12.pddl",
+      "source_text": "Given parameter X of PDDL type location, ensure that predicate at-ferry holds for argument X at every state before the first state where numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "loc5"
+      },
+      "goal_name": "g_numeric_ferry_p1_13",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_13.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type location, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate at-ferry holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car33",
+        "Y": "loc8"
+      },
+      "goal_name": "g_numeric_ferry_p1_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_14.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc1"
+      },
+      "goal_name": "g_numeric_ferry_p1_15",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_15.pddl",
+      "source_text": "Given parameter X of PDDL type location, ensure that at some state, predicate at-ferry holds for argument X, and at a strictly later state, numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car39"
+      },
+      "goal_name": "g_numeric_ferry_p1_16",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_16.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc32",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p1_17",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_17.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that predicate at-ferry holds for argument X at every state before the first state where predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p1_18",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_18.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, numeric function ferry-capacity equals 3; and at a strictly later state after that, predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car17",
+        "Y": "loc14"
+      },
+      "goal_name": "g_numeric_ferry_p1_19",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_19.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car58"
+      },
+      "goal_name": "g_numeric_ferry_p1_20",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_20.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "car6"
+      },
+      "goal_name": "g_numeric_ferry_p1_21",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_21.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type car, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate on holds for argument Y; and at a strictly later state after that, numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car6",
+        "Y": "car39"
+      },
+      "goal_name": "g_numeric_ferry_p1_22",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_22.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type car, where X differs from Y, ensure that at some state, predicate on holds for argument X, and at a strictly later state, predicate on holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc20"
+      },
+      "goal_name": "g_numeric_ferry_p1_23",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_23.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car24",
+        "Y": "loc4"
+      },
+      "goal_name": "g_numeric_ferry_p1_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_24.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car23"
+      },
+      "goal_name": "g_numeric_ferry_p1_25",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_25.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc25",
+        "Y": "car59"
+      },
+      "goal_name": "g_numeric_ferry_p1_26",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_26.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type car, ensure that predicate at-ferry holds for argument X at every state before the first state where predicate on holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p1_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_27.pddl",
+      "source_text": "Given parameter X of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, and at a strictly later state, predicate at-ferry holds for argument X.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p1_28",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p1_28.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car62",
+        "Y": "loc42"
+      },
+      "goal_name": "g_numeric_ferry_p1_29",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_29.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p1_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car7",
+        "Y": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p1_30",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p1_30.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car20"
+      },
+      "goal_name": "g_numeric_ferry_p2_01",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_01.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car189"
+      },
+      "goal_name": "g_numeric_ferry_p2_02",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_02.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, numeric function ferry-capacity equals 3, and at a strictly later state, predicate on holds for argument X.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "car1"
+      },
+      "goal_name": "g_numeric_ferry_p2_03",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_03.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type car, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate on holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car182",
+        "Y": "loc64"
+      },
+      "goal_name": "g_numeric_ferry_p2_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_04.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car54"
+      },
+      "goal_name": "g_numeric_ferry_p2_05",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_05.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {},
+      "goal_name": "g_numeric_ferry_p2_06",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_06.pddl",
+      "source_text": "For the declared PDDL domain, ensure that at some state, numeric function ferry-capacity equals 3, and at a strictly later state, numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc66",
+        "Z": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p2_07",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_07.pddl",
+      "source_text": "Given parameter X of PDDL type car, parameter Y of PDDL type location, and parameter Z of PDDL type location, where Y differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at-ferry holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p2_08",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_08.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type location, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate at-ferry holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car396",
+        "Y": "loc27"
+      },
+      "goal_name": "g_numeric_ferry_p2_09",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_09.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car33"
+      },
+      "goal_name": "g_numeric_ferry_p2_10",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_10.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car448",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p2_11",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_11.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, and at a strictly later state, predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc165",
+        "Z": "car154"
+      },
+      "goal_name": "g_numeric_ferry_p2_12",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/numeric-ferry/test/p2_12.pddl",
+      "source_text": "Given parameter X of PDDL type car, parameter Y of PDDL type location, and parameter Z of PDDL type car, where X differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate on holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p2_13",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_13.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car66",
+        "Y": "loc58"
+      },
+      "goal_name": "g_numeric_ferry_p2_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_14.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car498"
+      },
+      "goal_name": "g_numeric_ferry_p2_15",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_15.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc68"
+      },
+      "goal_name": "g_numeric_ferry_p2_16",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_16.pddl",
+      "source_text": "Given parameter X of PDDL type location, ensure that predicate at-ferry holds for argument X at every state before the first state where numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc2",
+        "Y": "car6"
+      },
+      "goal_name": "g_numeric_ferry_p2_17",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_17.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type car, ensure that at some state, predicate at-ferry holds for argument X, and at a strictly later state, predicate on holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "loc3"
+      },
+      "goal_name": "g_numeric_ferry_p2_18",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_18.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type location, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate at-ferry holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car178",
+        "Y": "loc108"
+      },
+      "goal_name": "g_numeric_ferry_p2_19",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_19.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, predicate on holds for argument X, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car234"
+      },
+      "goal_name": "g_numeric_ferry_p2_20",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_20.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car148"
+      },
+      "goal_name": "g_numeric_ferry_p2_21",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_21.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, predicate on holds for argument X, and at a strictly later state, numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "2"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car1",
+        "Y": "loc306"
+      },
+      "goal_name": "g_numeric_ferry_p2_22",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_22.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that predicate at holds for arguments X and Y at every state before the first state where numeric function ferry-capacity equals 2.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "on",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2",
+        "Z": "car483"
+      },
+      "goal_name": "g_numeric_ferry_p2_23",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_23.pddl",
+      "source_text": "Given parameter X of PDDL type location, parameter Y of PDDL type location, and parameter Z of PDDL type car, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, predicate on holds for argument Z.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car307",
+        "Y": "loc29"
+      },
+      "goal_name": "g_numeric_ferry_p2_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_24.pddl",
+      "source_text": "Given parameter X of PDDL type car and parameter Y of PDDL type location, ensure that at some state, numeric function ferry-capacity equals 3, while predicate at does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car438"
+      },
+      "goal_name": "g_numeric_ferry_p2_25",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_25.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc199",
+        "Y": "car663"
+      },
+      "goal_name": "g_numeric_ferry_p2_26",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_26.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type car, ensure that predicate at-ferry holds for argument X at every state before the first state where predicate on holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc2",
+        "Y": "loc1"
+      },
+      "goal_name": "g_numeric_ferry_p2_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_27.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, and at a strictly later state, predicate at-ferry holds for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc2"
+      },
+      "goal_name": "g_numeric_ferry_p2_28",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/numeric-ferry/test/p2_28.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X; at a strictly later state, predicate at-ferry holds for argument Y; and at a strictly later state after that, numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "at-ferry",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "loc1",
+        "Y": "loc390"
+      },
+      "goal_name": "g_numeric_ferry_p2_29",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_29.pddl",
+      "source_text": "Given parameter X of PDDL type location and parameter Y of PDDL type location, where X differs from Y, ensure that at some state, predicate at-ferry holds for argument X, while predicate at-ferry does not hold for argument Y.",
+      "status": "supported"
+    },
+    "numeric_ferry_p2_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "3"
+          ],
+          "predicate": "ferry-capacity",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "car614"
+      },
+      "goal_name": "g_numeric_ferry_p2_30",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/numeric-ferry/test/p2_30.pddl",
+      "source_text": "Given parameter X of PDDL type car, ensure that at some state, both predicate on holds for argument X and numeric function ferry-capacity equals 3.",
+      "status": "supported"
+    }
+  },
+  "domain": "numeric-ferry",
+  "goal_specification_kind": "temporal_extended_goal",
+  "schema_version": 1,
+  "temporal_logic": "LTLf"
+}

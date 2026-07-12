@@ -1,0 +1,20 @@
+{
+  "completed_record_count": 475,
+  "frozen_at": "2026-07-12T14:59:37+0800",
+  "handoff_root": "/Users/phoenizard/Workplace/llm-bdi-pipeline/artifacts/temporal_nl_handoffs/temporal-nl-v1-20260711-final",
+  "max_semantic_retries": 3,
+  "model_id": "gpt-5.5",
+  "model_parameters": {
+    "max_tokens": 60000,
+    "response_format": "json_object",
+    "stream": true,
+    "temperature": 0,
+    "timeout_seconds": 1000
+  },
+  "prompt_config": "full",
+  "prompt_source_commit": "8804f7347f40c908d6a58c2141f91a77efbfdba8",
+  "started_at": "2026-07-12T14:50:53+0800",
+  "translation_predictions_sha256": "512c766b60e9c3d953d49b930a4845bfda6bceb9706675a2670084d45db47f41",
+  "updated_at": "2026-07-12T14:58:40+0800",
+  "worklist_row_count": 475
+}

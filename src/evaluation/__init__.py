@@ -7,9 +7,11 @@ from typing import Any
 __all__ = [
 	"DFABuilder",
 	"LTLfToDFA",
+	"build_temporal_goal_benchmark_bundle",
 	"compare_gold_and_prediction",
 	"build_dfa_from_ltlf",
 	"run_temporal_goal_validation_batch",
+	"validate_temporal_goal_benchmark_bundle",
 	"validate_execution_trace",
 	"validate_prediction_on_witness",
 ]
@@ -52,4 +54,19 @@ def __getattr__(name: str) -> Any:
 		from .temporal_validation_batch import run_temporal_goal_validation_batch
 
 		return run_temporal_goal_validation_batch
+	if name in {
+		"build_temporal_goal_benchmark_bundle",
+		"validate_temporal_goal_benchmark_bundle",
+	}:
+		from .temporal_benchmark import (
+			build_temporal_goal_benchmark_bundle,
+			validate_temporal_goal_benchmark_bundle,
+		)
+
+		return {
+			"build_temporal_goal_benchmark_bundle": build_temporal_goal_benchmark_bundle,
+			"validate_temporal_goal_benchmark_bundle": (
+				validate_temporal_goal_benchmark_bundle
+			),
+		}[name]
 	raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

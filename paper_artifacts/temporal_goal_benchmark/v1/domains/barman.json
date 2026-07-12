@@ -1,0 +1,2906 @@
+{
+  "cases": {
+    "barman_p0_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "ingredient1"
+      },
+      "goal_name": "g_barman_p0_01",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p0_01.pddl",
+      "source_text": "Given parameter X of PDDL type shot and parameter Y of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate contains holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "barman_p0_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_02",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p0_02.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p0_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2"
+      },
+      "goal_name": "g_barman_p0_03",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_03.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p0_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p0_04",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p0_04.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "ingredient1"
+      },
+      "goal_name": "g_barman_p0_05",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p0_05.pddl",
+      "source_text": "Given parameter X of PDDL type shot and parameter Y of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate used holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "barman_p0_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_06",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p0_06.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p0_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3"
+      },
+      "goal_name": "g_barman_p0_07",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_07.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p0_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p0_08",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p0_08.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "right"
+      },
+      "goal_name": "g_barman_p0_09",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p0_09.pddl",
+      "source_text": "Given parameter X of PDDL type shot and parameter Y of PDDL type hand, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and X.",
+      "status": "supported"
+    },
+    "barman_p0_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p0_10",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_10.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p0_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shot2",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_11",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p0_11.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p0_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_12",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p0_12.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p0_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "right"
+      },
+      "goal_name": "g_barman_p0_13",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p0_13.pddl",
+      "source_text": "Given parameter X of PDDL type shaker and parameter Y of PDDL type hand, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and X.",
+      "status": "supported"
+    },
+    "barman_p0_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p0_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_14.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p0_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shaker1",
+        "X": "left",
+        "Y": "shot2",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_15",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p0_15.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, parameter Z of PDDL type hand, and parameter A of PDDL type shaker, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p0_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_16",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p0_16.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p0_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot2",
+        "Y": "right",
+        "Z": "shot1"
+      },
+      "goal_name": "g_barman_p0_17",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p0_17.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type hand, and parameter Z of PDDL type shot, where X differs from Z, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2"
+      },
+      "goal_name": "g_barman_p0_18",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_18.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p0_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p0_19",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p0_19.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_20",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p0_20.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p0_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p0_21",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p0_21.pddl",
+      "source_text": "Given parameter X of PDDL type shaker, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3"
+      },
+      "goal_name": "g_barman_p0_22",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_22.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p0_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p0_23",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p0_23.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_24",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p0_24.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p0_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "right",
+        "Z": "shaker1"
+      },
+      "goal_name": "g_barman_p0_25",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p0_25.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type hand, and parameter Z of PDDL type shaker, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p0_26",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_26.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p0_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shot2",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p0_27.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p0_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p0_28",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p0_28.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p0_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "right",
+        "Z": "shot2"
+      },
+      "goal_name": "g_barman_p0_29",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p0_29.pddl",
+      "source_text": "Given parameter X of PDDL type shaker, parameter Y of PDDL type hand, and parameter Z of PDDL type shot, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p0_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p0_30",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p0_30.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p1_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shaker1",
+        "X": "left",
+        "Y": "shot2",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_01",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_01.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, parameter Z of PDDL type hand, and parameter A of PDDL type shaker, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p1_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_02",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_02.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot2",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p1_03",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p1_03.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, where X differs from Y, ensure that predicate clean holds for argument X at every state before the first state where predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p1_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2"
+      },
+      "goal_name": "g_barman_p1_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p1_04.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p1_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p1_05",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_05.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p1_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_06",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_06.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p1_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot2",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p1_07",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p1_07.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, where X differs from Y, ensure that predicate clean holds for argument X at every state before the first state where predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p1_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3"
+      },
+      "goal_name": "g_barman_p1_08",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p1_08.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2",
+        "Z": "ingredient2"
+      },
+      "goal_name": "g_barman_p1_09",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_09.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p1_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_10",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_10.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "shot1",
+        "Z": "ingredient2"
+      },
+      "goal_name": "g_barman_p1_11",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p1_11.pddl",
+      "source_text": "Given parameter X of PDDL type shaker, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p1_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p1_12",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p1_12.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shot2",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_13",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_13.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p1_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_14",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_14.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p1_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "ingredient1"
+      },
+      "goal_name": "g_barman_p1_15",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p1_15.pddl",
+      "source_text": "Given parameter X of PDDL type shot and parameter Y of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate contains holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "barman_p1_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p1_16",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p1_16.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p1_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shaker1",
+        "X": "left",
+        "Y": "shot2",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_17",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_17.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, parameter Z of PDDL type hand, and parameter A of PDDL type shaker, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p1_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_18",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_18.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "ingredient1"
+      },
+      "goal_name": "g_barman_p1_19",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p1_19.pddl",
+      "source_text": "Given parameter X of PDDL type shot and parameter Y of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate used holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "barman_p1_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2"
+      },
+      "goal_name": "g_barman_p1_20",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p1_20.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p1_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p1_21",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_21.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p1_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_22",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_22.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p1_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "right"
+      },
+      "goal_name": "g_barman_p1_23",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p1_23.pddl",
+      "source_text": "Given parameter X of PDDL type shot and parameter Y of PDDL type hand, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and X.",
+      "status": "supported"
+    },
+    "barman_p1_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3"
+      },
+      "goal_name": "g_barman_p1_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p1_24.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p1_25",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_25.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p1_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_26",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_26.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "X"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "right"
+      },
+      "goal_name": "g_barman_p1_27",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p1_27.pddl",
+      "source_text": "Given parameter X of PDDL type shaker and parameter Y of PDDL type hand, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and X.",
+      "status": "supported"
+    },
+    "barman_p1_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p1_28",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p1_28.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p1_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shot2",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_29",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p1_29.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p1_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p1_30",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p1_30.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot2",
+        "Y": "right",
+        "Z": "shot1"
+      },
+      "goal_name": "g_barman_p2_01",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p2_01.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type hand, and parameter Z of PDDL type shot, where X differs from Z, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p2_02",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_02.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shaker1",
+        "X": "left",
+        "Y": "shot2",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_03",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p2_03.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, parameter Z of PDDL type hand, and parameter A of PDDL type shaker, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p2_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_04",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p2_04.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p2_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p2_05",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p2_05.pddl",
+      "source_text": "Given parameter X of PDDL type shaker, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2"
+      },
+      "goal_name": "g_barman_p2_06",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_06.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p2_07",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p2_07.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_08",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p2_08.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p2_09",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p2_09.pddl",
+      "source_text": "Given parameter X of PDDL type shaker, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3"
+      },
+      "goal_name": "g_barman_p2_10",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_10.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p2_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2",
+        "Z": "ingredient2"
+      },
+      "goal_name": "g_barman_p2_11",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p2_11.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_12",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p2_12.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p2_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "right",
+        "Z": "shaker1"
+      },
+      "goal_name": "g_barman_p2_13",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p2_13.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type hand, and parameter Z of PDDL type shaker, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p2_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_14.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p2_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shot2",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_15",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p2_15.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p2_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_16",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p2_16.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot2",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p2_17",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p2_17.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, where X differs from Y, ensure that predicate clean holds for argument X at every state before the first state where predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p2_18",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_18.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "A": "shaker1",
+        "X": "left",
+        "Y": "shot2",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_19",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p2_19.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, parameter Z of PDDL type hand, and parameter A of PDDL type shaker, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate holding holds for arguments Z and A.",
+      "status": "supported"
+    },
+    "barman_p2_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_20",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p2_20.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p2_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot2",
+        "Y": "shot1",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p2_21",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p2_21.pddl",
+      "source_text": "Given parameter X of PDDL type shot, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, where X differs from Y, ensure that predicate clean holds for argument X at every state before the first state where predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2"
+      },
+      "goal_name": "g_barman_p2_22",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_22.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate handempty does not hold for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2",
+        "Z": "ingredient1"
+      },
+      "goal_name": "g_barman_p2_23",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p2_23.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate contains holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "handempty",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_24",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p2_24.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate handempty holds for argument X.",
+      "status": "supported"
+    },
+    "barman_p2_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shaker1",
+        "Y": "right",
+        "Z": "shot2"
+      },
+      "goal_name": "g_barman_p2_25",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/barman/test/p2_25.pddl",
+      "source_text": "Given parameter X of PDDL type shaker, parameter Y of PDDL type hand, and parameter Z of PDDL type shot, ensure that predicate clean holds for argument X at every state before the first state where predicate holding holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot3"
+      },
+      "goal_name": "g_barman_p2_26",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_26.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shot, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    },
+    "barman_p2_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "used",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shot2",
+        "Z": "ingredient2"
+      },
+      "goal_name": "g_barman_p2_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/barman/test/p2_27.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shot, and parameter Z of PDDL type ingredient, ensure that at some state, predicate holding holds for arguments X and Y, and at a strictly later state, predicate used holds for arguments Y and Z.",
+      "status": "supported"
+    },
+    "barman_p2_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "holding",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "shot1",
+        "X": "left",
+        "Y": "shaker1",
+        "Z": "right"
+      },
+      "goal_name": "g_barman_p2_28",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/barman/test/p2_28.pddl",
+      "source_text": "Given parameter X of PDDL type hand, parameter Y of PDDL type shaker, parameter Z of PDDL type hand, and parameter A of PDDL type shot, where X differs from Z, ensure that at some state, predicate holding holds for arguments X and Y; at a strictly later state, predicate holding holds for arguments Z and A; and at a strictly later state after that, predicate ontable holds for argument Y.",
+      "status": "supported"
+    },
+    "barman_p2_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clean",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "contains",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "shot1",
+        "Y": "ingredient1"
+      },
+      "goal_name": "g_barman_p2_29",
+      "ltlf_formula": "a0 U a1",
+      "problem_file": "src/domains/barman/test/p2_29.pddl",
+      "source_text": "Given parameter X of PDDL type shot and parameter Y of PDDL type ingredient, ensure that predicate clean holds for argument X at every state before the first state where predicate contains holds for arguments X and Y.",
+      "status": "supported"
+    },
+    "barman_p2_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "holding",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "ontable",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "left",
+        "Y": "shaker1"
+      },
+      "goal_name": "g_barman_p2_30",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/barman/test/p2_30.pddl",
+      "source_text": "Given parameter X of PDDL type hand and parameter Y of PDDL type shaker, ensure that at some state, predicate holding holds for arguments X and Y, while predicate ontable does not hold for argument Y.",
+      "status": "supported"
+    }
+  },
+  "domain": "barman",
+  "goal_specification_kind": "temporal_extended_goal",
+  "schema_version": 1,
+  "temporal_logic": "LTLf"
+}

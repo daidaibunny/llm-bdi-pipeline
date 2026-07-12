@@ -1,0 +1,2757 @@
+{
+  "cases": {
+    "miconic_p0_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p0_01",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_01.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument X.",
+      "status": "supported"
+    },
+    "miconic_p0_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f3",
+        "Y": "f1"
+      },
+      "goal_name": "g_miconic_p0_02",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p0_02.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f3",
+        "Y": "f4",
+        "Z": "f1"
+      },
+      "goal_name": "g_miconic_p0_03",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_03.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f2",
+        "Y": "f5"
+      },
+      "goal_name": "g_miconic_p0_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p0_04.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f3",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p0_05",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_05.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that predicate lift-at holds for argument X at every state before the first state where predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f4",
+        "Y": "p2",
+        "Z": "f5"
+      },
+      "goal_name": "g_miconic_p0_06",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_06.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f6",
+        "Y": "p2"
+      },
+      "goal_name": "g_miconic_p0_07",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p0_07.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type passenger, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f2",
+        "Y": "f5"
+      },
+      "goal_name": "g_miconic_p0_08",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p0_08.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f5"
+      },
+      "goal_name": "g_miconic_p0_09",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_09.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f8",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p0_10",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p0_10.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f9",
+        "Y": "f1",
+        "Z": "f3"
+      },
+      "goal_name": "g_miconic_p0_11",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_11.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f7"
+      },
+      "goal_name": "g_miconic_p0_12",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p0_12.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p0_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p2",
+        "Y": "f2",
+        "Z": "f6"
+      },
+      "goal_name": "g_miconic_p0_13",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_13.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f3",
+        "Y": "p3",
+        "Z": "p4"
+      },
+      "goal_name": "g_miconic_p0_14",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_14.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type passenger, and parameter Z of PDDL type passenger, where Y differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f11"
+      },
+      "goal_name": "g_miconic_p0_15",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p0_15.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f4",
+        "Y": "f3"
+      },
+      "goal_name": "g_miconic_p0_16",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p0_16.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p2",
+        "Y": "f9",
+        "Z": "f2"
+      },
+      "goal_name": "g_miconic_p0_17",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_17.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p6",
+        "Y": "p3"
+      },
+      "goal_name": "g_miconic_p0_18",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p0_18.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type passenger, where X differs from Y, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f4",
+        "Y": "p3"
+      },
+      "goal_name": "g_miconic_p0_19",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_19.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type passenger, ensure that predicate lift-at holds for argument X at every state before the first state where predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f4",
+        "Y": "f1"
+      },
+      "goal_name": "g_miconic_p0_20",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p0_20.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p4",
+        "Y": "f2",
+        "Z": "p1"
+      },
+      "goal_name": "g_miconic_p0_21",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_21.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f10",
+        "Z": "p6"
+      },
+      "goal_name": "g_miconic_p0_22",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_22.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f12",
+        "Y": "p6"
+      },
+      "goal_name": "g_miconic_p0_23",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p0_23.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type passenger, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f4",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p0_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p0_24.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "p6",
+        "Z": "f4"
+      },
+      "goal_name": "g_miconic_p0_25",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_25.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Y, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p0_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p6",
+        "Y": "f1"
+      },
+      "goal_name": "g_miconic_p0_26",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_26.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument X.",
+      "status": "supported"
+    },
+    "miconic_p0_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f8",
+        "Y": "f10"
+      },
+      "goal_name": "g_miconic_p0_27",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p0_27.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f5",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p0_28",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p0_28.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p3",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p0_29",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p0_29.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p0_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f15",
+        "Y": "f16",
+        "Z": "f1"
+      },
+      "goal_name": "g_miconic_p0_30",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p0_30.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f2",
+        "Y": "p1"
+      },
+      "goal_name": "g_miconic_p1_01",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_01.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type passenger, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f19",
+        "Y": "f17"
+      },
+      "goal_name": "g_miconic_p1_02",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_02.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f13",
+        "Y": "p8",
+        "Z": "f14"
+      },
+      "goal_name": "g_miconic_p1_03",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p1_03.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p20",
+        "Y": "f16"
+      },
+      "goal_name": "g_miconic_p1_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_04.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p1_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p26",
+        "Y": "f25"
+      },
+      "goal_name": "g_miconic_p1_05",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_05.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f11",
+        "Z": "f25"
+      },
+      "goal_name": "g_miconic_p1_06",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p1_06.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p26",
+        "Y": "p22"
+      },
+      "goal_name": "g_miconic_p1_07",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_07.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type passenger, where X differs from Y, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f1",
+        "Z": "p24"
+      },
+      "goal_name": "g_miconic_p1_08",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p1_08.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f8",
+        "Y": "f9",
+        "Z": "p19"
+      },
+      "goal_name": "g_miconic_p1_09",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p1_09.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p13",
+        "Y": "f24"
+      },
+      "goal_name": "g_miconic_p1_10",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_10.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p1_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p6",
+        "Y": "p32",
+        "Z": "p35"
+      },
+      "goal_name": "g_miconic_p1_11",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p1_11.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type passenger, and parameter Z of PDDL type passenger, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p5",
+        "Y": "f27"
+      },
+      "goal_name": "g_miconic_p1_12",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p1_12.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument X.",
+      "status": "supported"
+    },
+    "miconic_p1_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p38",
+        "Y": "p14"
+      },
+      "goal_name": "g_miconic_p1_13",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_13.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type passenger, where X differs from Y, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p38",
+        "Y": "f8"
+      },
+      "goal_name": "g_miconic_p1_14",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_14.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p1_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f35",
+        "Y": "p21",
+        "Z": "p29"
+      },
+      "goal_name": "g_miconic_p1_15",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p1_15.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type passenger, and parameter Z of PDDL type passenger, where Y differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p7",
+        "Y": "f4"
+      },
+      "goal_name": "g_miconic_p1_16",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p1_16.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f33",
+        "Y": "f35"
+      },
+      "goal_name": "g_miconic_p1_17",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_17.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p28",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p1_18",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_18.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p1_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p2",
+        "Y": "f15",
+        "Z": "f16"
+      },
+      "goal_name": "g_miconic_p1_19",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p1_19.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p37",
+        "Y": "f1"
+      },
+      "goal_name": "g_miconic_p1_20",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_20.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f8",
+        "Z": "f1"
+      },
+      "goal_name": "g_miconic_p1_21",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p1_21.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p33",
+        "Y": "f30"
+      },
+      "goal_name": "g_miconic_p1_22",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_22.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p1_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f40",
+        "Y": "p2",
+        "Z": "f42"
+      },
+      "goal_name": "g_miconic_p1_23",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p1_23.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f28",
+        "Z": "p6"
+      },
+      "goal_name": "g_miconic_p1_24",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p1_24.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p18",
+        "Y": "f1"
+      },
+      "goal_name": "g_miconic_p1_25",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_25.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p9",
+        "Y": "f25"
+      },
+      "goal_name": "g_miconic_p1_26",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_26.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p1_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p36",
+        "Y": "f43",
+        "Z": "f45"
+      },
+      "goal_name": "g_miconic_p1_27",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p1_27.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p1_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f3"
+      },
+      "goal_name": "g_miconic_p1_28",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p1_28.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f2",
+        "Y": "p44"
+      },
+      "goal_name": "g_miconic_p1_29",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p1_29.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type passenger, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p1_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p71",
+        "Y": "f27"
+      },
+      "goal_name": "g_miconic_p1_30",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p1_30.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p2_01": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p10",
+        "Y": "p28",
+        "Z": "f18"
+      },
+      "goal_name": "g_miconic_p2_01",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_01.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Y, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_02": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f228",
+        "Z": "f270"
+      },
+      "goal_name": "g_miconic_p2_02",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_02.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_03": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f95",
+        "Y": "f96"
+      },
+      "goal_name": "g_miconic_p2_03",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p2_03.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_04": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f2",
+        "Y": "f344"
+      },
+      "goal_name": "g_miconic_p2_04",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p2_04.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_05": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p40",
+        "Y": "f189",
+        "Z": "f191"
+      },
+      "goal_name": "g_miconic_p2_05",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_05.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_06": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p65",
+        "Y": "p75"
+      },
+      "goal_name": "g_miconic_p2_06",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p2_06.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type passenger, where X differs from Y, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_07": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f262",
+        "Z": "p5"
+      },
+      "goal_name": "g_miconic_p2_07",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_07.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_08": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p250",
+        "Y": "f528"
+      },
+      "goal_name": "g_miconic_p2_08",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p2_08.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p2_09": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p231",
+        "Y": "f108"
+      },
+      "goal_name": "g_miconic_p2_09",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p2_09.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_10": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f375",
+        "Y": "f376",
+        "Z": "p12"
+      },
+      "goal_name": "g_miconic_p2_10",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_10.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate lift-at holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_11": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f438",
+        "Z": "f4"
+      },
+      "goal_name": "g_miconic_p2_11",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_11.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f1",
+        "Y": "f404"
+      },
+      "goal_name": "g_miconic_p2_12",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p2_12.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p36",
+        "Y": "p402",
+        "Z": "f37"
+      },
+      "goal_name": "g_miconic_p2_13",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_13.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Y, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f1",
+        "Y": "p18"
+      },
+      "goal_name": "g_miconic_p2_14",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p2_14.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type passenger, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f521",
+        "Z": "p404"
+      },
+      "goal_name": "g_miconic_p2_15",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_15.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p429",
+        "Y": "f136"
+      },
+      "goal_name": "g_miconic_p2_16",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p2_16.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p2_17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "f502",
+        "Y": "p437",
+        "Z": "f2"
+      },
+      "goal_name": "g_miconic_p2_17",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_17.pddl",
+      "source_text": "Given parameter X of PDDL type floor, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Z, ensure that at some state, predicate lift-at holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f21",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p2_18",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p2_18.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate lift-at holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f59",
+        "Z": "p587"
+      },
+      "goal_name": "g_miconic_p2_19",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_19.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type passenger, where X differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f2",
+        "Y": "f27"
+      },
+      "goal_name": "g_miconic_p2_20",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p2_20.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p83",
+        "Y": "p158",
+        "Z": "f23"
+      },
+      "goal_name": "g_miconic_p2_21",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_21.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type passenger, and parameter Z of PDDL type floor, where X differs from Y, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p265",
+        "Y": "p235"
+      },
+      "goal_name": "g_miconic_p2_22",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p2_22.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type passenger, where X differs from Y, ensure that at some state, predicate boarded holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_23": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f316",
+        "Z": "f620"
+      },
+      "goal_name": "g_miconic_p2_23",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_23.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_24": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p507",
+        "Y": "f57"
+      },
+      "goal_name": "g_miconic_p2_24",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p2_24.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that at some state, predicate boarded holds for argument X, while predicate origin does not hold for arguments X and Y.",
+      "status": "supported"
+    },
+    "miconic_p2_25": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p56",
+        "Y": "p432",
+        "Z": "p656"
+      },
+      "goal_name": "g_miconic_p2_25",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_25.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type passenger, and parameter Z of PDDL type passenger, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_26": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f1",
+        "Y": "p464"
+      },
+      "goal_name": "g_miconic_p2_26",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/miconic/test/p2_26.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type passenger, ensure that at some state, predicate lift-at holds for argument X, and at a strictly later state, predicate boarded holds for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_27": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p1",
+        "Y": "f215",
+        "Z": "f1"
+      },
+      "goal_name": "g_miconic_p2_27",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_27.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type floor, and parameter Z of PDDL type floor, where Y differs from Z, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_28": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "f1",
+        "Y": "f843"
+      },
+      "goal_name": "g_miconic_p2_28",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/miconic/test/p2_28.pddl",
+      "source_text": "Given parameter X of PDDL type floor and parameter Y of PDDL type floor, where X differs from Y, ensure that at some state, predicate lift-at holds for argument X, while predicate lift-at does not hold for argument Y.",
+      "status": "supported"
+    },
+    "miconic_p2_29": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "boarded",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "boarded",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "boarded",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "X": "p42",
+        "Y": "p297",
+        "Z": "p434"
+      },
+      "goal_name": "g_miconic_p2_29",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/miconic/test/p2_29.pddl",
+      "source_text": "Given parameter X of PDDL type passenger, parameter Y of PDDL type passenger, and parameter Z of PDDL type passenger, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate boarded holds for argument X; at a strictly later state, predicate boarded holds for argument Y; and at a strictly later state after that, predicate boarded holds for argument Z.",
+      "status": "supported"
+    },
+    "miconic_p2_30": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "origin",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "lift-at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "p7",
+        "Y": "f2"
+      },
+      "goal_name": "g_miconic_p2_30",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/miconic/test/p2_30.pddl",
+      "source_text": "Given parameter X of PDDL type passenger and parameter Y of PDDL type floor, ensure that predicate origin holds for arguments X and Y at every state before the first state where predicate lift-at holds for argument Y.",
+      "status": "supported"
+    }
+  },
+  "domain": "miconic",
+  "goal_specification_kind": "temporal_extended_goal",
+  "schema_version": 1,
+  "temporal_logic": "LTLf"
+}

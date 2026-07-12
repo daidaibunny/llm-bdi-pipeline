@@ -46,8 +46,9 @@ certificate.
 | Atomic ASL library generation | Needs full rerun | Run the timestamped MOOSE-to-ASL batch for all 16 selected benchmark entries after this benchmark expansion. |
 | Jason plus VAL validation | Needs full rerun | Run full-test DFA-transition validation after the new ASL batch completes. Report per-domain Jason and VAL success, timeout, and failure categories. |
 | Numeric domains | Experimental | Keep numeric support marked experimental until numeric fluents have a complete executable semantics and full validation evidence. |
-| Temporal Input generation | Ready for model run | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are frozen. The colleague runs only the 475 Prompt-2 translations and returns canonical `translation_predictions.jsonl`. |
-| Temporal Goal Validation | Implemented; pending model artifact | Run `scripts/validate_temporal_goal_predictions.py` after predictions arrive. The batch checks the eight-key contract, exact gold/predicted DFA equivalence, all hidden witnesses, optional Jason traces with neutral-goal VAL, and gold-DFA acceptance. |
+| Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
+| Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
+| Temporal execution validation | Pending | Append the 16 domain views to regenerated atomic libraries and report query append, Jason, PDDL replay, neutral-goal VAL, gold-DFA, and predicted-DFA results separately. Do not relabel translation coverage as execution coverage. |
 | AAAI paper package | Narrative aligned; final matrix pending | Maintain the section responsibilities, claim boundaries, result-insertion contract, and page budget in `docs/aaai_paper_narrative_outline.md`. The manuscript uses the latest available official AAAI-26 author kit and states only implemented claims. Regenerate the final atomic and TEG matrices from one clean pinned revision before submission. |
 
 ## Certified Generic Fixes

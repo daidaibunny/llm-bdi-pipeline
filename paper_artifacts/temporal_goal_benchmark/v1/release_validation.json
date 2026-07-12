@@ -1,0 +1,29 @@
+{
+  "artifact_kind": "temporal_goal_benchmark_release_validation",
+  "benchmark_id": "temporal-nl-v1-20260711-final",
+  "benchmark_sha256": "0ab580ed45e3790bf986ab62b7f4e531ab6833c6182256284cf877b3861cacf8",
+  "delivered_validation_matches_independent": {
+    "domain_datasets_exact": true,
+    "normalized_summary_exact": true,
+    "problem_results_exact": true,
+    "translation_results_exact": true
+  },
+  "frozen_predictions_sha256": "512c766b60e9c3d953d49b930a4845bfda6bceb9706675a2670084d45db47f41",
+  "independent_summary": {
+    "artifact_kind": "temporal_goal_validation_report",
+    "execution_attempted_count": 0,
+    "execution_success_count": 0,
+    "problem_success_count": 1228,
+    "problem_total": 1228,
+    "schema_version": 1,
+    "translation_success_count": 475,
+    "translation_total": 475
+  },
+  "mona": {
+    "sha256": "7a25d22766e6f0d9db58fe6e1af7c37e8127242c539272d5d8f337b8b8fc0e2d",
+    "version": "MONA v1.4-18 for WS1S/WS2S"
+  },
+  "release_manifest_sha256": "abab2e51ead10748392b5937e0f9e1bc0b5099ddcdf72643af2e2da598960920",
+  "schema_version": 1,
+  "source_archive_sha256_verified": true
+}

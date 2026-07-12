@@ -1,0 +1,354 @@
+{
+  "cases": {
+    "depots_p12": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "lifting",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "available",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "hoist1",
+        "Y": "crate12"
+      },
+      "goal_name": "g_depots_p12",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/depots/test/p12.pddl",
+      "source_text": "Given parameter X of PDDL type object and parameter Y of PDDL type object, where X differs from Y, ensure that at some state, predicate lifting holds for arguments X and Y, and at a strictly later state, predicate available holds for argument X.",
+      "status": "supported"
+    },
+    "depots_p13": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "lifting",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "available",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "hoist0",
+        "Y": "crate3"
+      },
+      "goal_name": "g_depots_p13",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/depots/test/p13.pddl",
+      "source_text": "Given parameter X of PDDL type object and parameter Y of PDDL type object, where X differs from Y, ensure that at some state, predicate lifting holds for arguments X and Y, while predicate available does not hold for argument X.",
+      "status": "supported"
+    },
+    "depots_p14": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "pallet1",
+        "Y": "depot1"
+      },
+      "goal_name": "g_depots_p14",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/depots/test/p14.pddl",
+      "source_text": "Given parameter X of PDDL type object and parameter Y of PDDL type object, where X differs from Y, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate clear holds for argument X.",
+      "status": "supported"
+    },
+    "depots_p15": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "X",
+            "Z"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "X",
+            "A"
+          ],
+          "predicate": "at",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "depot2",
+        "X": "truck0",
+        "Y": "depot0",
+        "Z": "depot1"
+      },
+      "goal_name": "g_depots_p15",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/depots/test/p15.pddl",
+      "source_text": "Given parameter X of PDDL type object, parameter Y of PDDL type object, parameter Z of PDDL type object, and parameter A of PDDL type object, where X differs from Y, X differs from Z, X differs from A, Y differs from Z, Y differs from A, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate at holds for arguments X and Z; and at a strictly later state after that, predicate at holds for arguments X and A.",
+      "status": "supported"
+    },
+    "depots_p16": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "lifting",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "hoist0",
+        "Y": "crate5",
+        "Z": "crate2"
+      },
+      "goal_name": "g_depots_p16",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/depots/test/p16.pddl",
+      "source_text": "Given parameter X of PDDL type object, parameter Y of PDDL type object, and parameter Z of PDDL type object, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, both predicate lifting holds for arguments X and Y and predicate clear holds for argument Z.",
+      "status": "supported"
+    },
+    "depots_p17": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "lifting",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "hoist0",
+        "Y": "crate3"
+      },
+      "goal_name": "g_depots_p17",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/depots/test/p17.pddl",
+      "source_text": "Given parameter X of PDDL type object and parameter Y of PDDL type object, where X differs from Y, ensure that at some state, predicate lifting holds for arguments X and Y, and at a strictly later state, predicate clear holds for argument Y.",
+      "status": "supported"
+    },
+    "depots_p18": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X"
+          ],
+          "predicate": "clear",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "X"
+          ],
+          "predicate": "on",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "crate7",
+        "Y": "crate13"
+      },
+      "goal_name": "g_depots_p18",
+      "ltlf_formula": "F(a0 & !a1)",
+      "problem_file": "src/domains/depots/test/p18.pddl",
+      "source_text": "Given parameter X of PDDL type object and parameter Y of PDDL type object, where X differs from Y, ensure that at some state, predicate clear holds for argument X, while predicate on does not hold for arguments Y and X.",
+      "status": "supported"
+    },
+    "depots_p19": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "pallet1",
+        "Y": "depot1",
+        "Z": "truck0"
+      },
+      "goal_name": "g_depots_p19",
+      "ltlf_formula": "(a0 U a1)",
+      "problem_file": "src/domains/depots/test/p19.pddl",
+      "source_text": "Given parameter X of PDDL type object, parameter Y of PDDL type object, and parameter Z of PDDL type object, where X differs from Y, X differs from Z, and Y differs from Z, ensure that predicate at holds for arguments X and Y at every state before the first state where predicate at holds for arguments Z and Y.",
+      "status": "supported"
+    },
+    "depots_p20": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "at",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z",
+            "A"
+          ],
+          "predicate": "lifting",
+          "symbol": "a1"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "available",
+          "symbol": "a2"
+        }
+      ],
+      "bindings": {
+        "A": "crate13",
+        "X": "truck0",
+        "Y": "depot0",
+        "Z": "hoist0"
+      },
+      "goal_name": "g_depots_p20",
+      "ltlf_formula": "F(a0 & X(F(a1 & X(F(a2)))))",
+      "problem_file": "src/domains/depots/test/p20.pddl",
+      "source_text": "Given parameter X of PDDL type object, parameter Y of PDDL type object, parameter Z of PDDL type object, and parameter A of PDDL type object, where X differs from Y, X differs from Z, X differs from A, Y differs from Z, Y differs from A, and Z differs from A, ensure that at some state, predicate at holds for arguments X and Y; at a strictly later state, predicate lifting holds for arguments Z and A; and at a strictly later state after that, predicate available holds for argument Z.",
+      "status": "supported"
+    },
+    "depots_p21": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "lifting",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Z"
+          ],
+          "predicate": "clear",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "hoist1",
+        "Y": "crate0",
+        "Z": "pallet16"
+      },
+      "goal_name": "g_depots_p21",
+      "ltlf_formula": "F(a0 & a1)",
+      "problem_file": "src/domains/depots/test/p21.pddl",
+      "source_text": "Given parameter X of PDDL type object, parameter Y of PDDL type object, and parameter Z of PDDL type object, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, both predicate lifting holds for arguments X and Y and predicate clear holds for argument Z.",
+      "status": "supported"
+    },
+    "depots_p22": {
+      "atom_vocabulary": "pddl_fluents",
+      "atoms": [
+        {
+          "args": [
+            "X",
+            "Y"
+          ],
+          "predicate": "lifting",
+          "symbol": "a0"
+        },
+        {
+          "args": [
+            "Y",
+            "Z"
+          ],
+          "predicate": "in",
+          "symbol": "a1"
+        }
+      ],
+      "bindings": {
+        "X": "hoist0",
+        "Y": "crate10",
+        "Z": "truck3"
+      },
+      "goal_name": "g_depots_p22",
+      "ltlf_formula": "F(a0 & X(F(a1)))",
+      "problem_file": "src/domains/depots/test/p22.pddl",
+      "source_text": "Given parameter X of PDDL type object, parameter Y of PDDL type object, and parameter Z of PDDL type object, where X differs from Y, X differs from Z, and Y differs from Z, ensure that at some state, predicate lifting holds for arguments X and Y, and at a strictly later state, predicate in holds for arguments Y and Z.",
+      "status": "supported"
+    }
+  },
+  "domain": "depots",
+  "goal_specification_kind": "temporal_extended_goal",
+  "schema_version": 1,
+  "temporal_logic": "LTLf"
+}
