@@ -1,43 +1,47 @@
-\section{Related Work and Positioning}
+\section{Related Work}
 \label{sec:related-work}
 
-MOOSE learns first-order condition-to-action rules by goal regression from
-training plans \cite{Chen2026Moose}. Its synthesis algorithm decomposes
-training problems into singleton goal conditions, which makes it the closest
-match for our atomic-template component. The same theory also explains why
-MOOSE is not the whole solution for this project: strongly interacting multi-literal
-goals, such as Blocksworld tower goals, should be represented through an
-explicit temporal or structural controller rather than by assuming arbitrary
-goal independence.
-
-Generalized-policy learning with description-logic features studies policies
-that solve many instances of a domain using lifted symbolic features
+\paragraph{Generalized planning.}
+Generalized policies use compact relational structure to solve families of
+planning instances. Feature-based approaches learn abstractions, abstract
+actions, or policies from small examples
 \cite{Bonet2018Features,Frances2021LearningGeneralPolicies,
-Bonet2024GeneralPoliciesWidth}. D2L and the KR 2025 learner-policies-from-
-examples line are possible evidence providers for structural domains,
-especially when MOOSE-style singleton regression is not the right artifact. In
-this paper, such policies are useful only after their features can be bound to
-declared \pddl{} predicates, primitive actions, or predicate achievement goals.
-The Blocksworld part of the benchmark follows this literature-level family
-view: \texttt{QClear} isolates singleton \texttt{clear(X)} goals,
-\texttt{QOn} isolates singleton \texttt{on(X,Y)} goals, and the full
-Blocksworld arrangement family exposes support-dependent goal serialization.
+Bonet2024GeneralPoliciesWidth}. Policy sketches encode serialized subgoal
+structure, and answer-set optimization has been used to learn compact sketch
+rules \cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches}. Other
+representations include lifted decision lists in PG3 \cite{Yang2022PG3} and
+terminating planning programs in BFGP++ \cite{SegoviaAguas2022BFGPpp}.
+MOOSE learns lifted condition-to-macro rules through singleton-goal regression
+\cite{Chen2026Moose}. We do not replace these generalized planners. Our problem
+is downstream: compile their singleton-goal evidence, together with PDDL schema
+closure, into executable and maintainable AgentSpeak modules.
 
-Policy sketches express domain-general subgoal structure as qualitative feature
-rules \cite{Drexler2024SubgoalSketches}, and learner-sketches learns such rules
-automatically \cite{Drexler2022LearningSketches}. Sketches remain useful
-comparison artifacts and possible evidence outputs, but a raw sketch is not yet
-an \asl{} plan library. It normally guides a planner that fills in subproblems;
-our compiler must instead produce executable predicate-goal plans.
+\paragraph{Modular policies and BDI programs.}
+Policy-reuse languages permit one generalized policy to call another with
+parameters \cite{Bonet2024PolicyReuse}, which motivates internal atomic calls
+such as \texttt{!clear(Y)}. AgentSpeak supplies an executable BDI plan-library
+semantics \cite{Rao1996AgentSpeak}. Plan patterns for declarative AgentSpeak
+goals establish the principle that a plan should test the intended state at
+completion rather than equate procedural return with achievement
+\cite{Hubner2006DeclarativeGoals}. Our contribution is not a new BDI execution
+semantics; it is a compiler that generates such modules and completion patterns
+from generalized-planning evidence under PDDL-derived certificates.
 
-Lifted decision-list policies and planning-program synthesis provide additional
-generalized-planning baselines. PG3 searches over lifted decision-list policies
-\cite{Yang2022PG3}, while BFGP++ searches over terminating programs with loops
-\cite{SegoviaAguas2022BFGPpp}. These representations can be powerful, but they
-do not directly target maintained AgentSpeak(L) libraries with atomic predicate
-modules and query-specific temporal wrappers.
+\paragraph{Finite-trace temporal control.}
+\ltlf provides finite-trace semantics and admits automata-based reasoning
+\cite{DeGiacomoVardi2013}. Tools translate \ltlf specifications into
+deterministic finite automata, including the MONA-backed \texttt{ltlf2dfa}
+implementation used here \cite{Fuggitti2020LTLf2DFA}. Full temporal synthesis
+can maintain explicit automaton state; our implemented fragment is narrower.
+It compiles one certified accepting path into context-based AgentSpeak helpers
+and rejects automata whose progress cannot be inferred without an external
+monitor.
 
-Temporal extended goals are commonly represented with temporal logics or
-automata. We use LTLf and deterministic finite automata as an upper controller
-over the achievement-goal library. This separates the reusable domain-level
-atomic library from the query-specific temporal objective.
+\paragraph{Position of this work.}
+Prior generalized planners target policies, sketches, or programs; AgentSpeak
+work starts from programmer-supplied plans; temporal synthesis targets an
+automaton strategy. We connect these representations through a
+certificate-carrying compilation problem. The novelty claimed here is the
+joint, fail-closed construction of lifted AgentSpeak atomic modules and
+query-local DFA guard controllers, not the underlying goal-regression, answer-set
+solving, AgentSpeak semantics, or \ltlf-to-DFA translation.

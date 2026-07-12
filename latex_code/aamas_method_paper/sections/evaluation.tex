@@ -1,86 +1,116 @@
-\section{Evaluation}
+\section{Evaluation Protocol and Implementation Status}
 \label{sec:evaluation}
 
-The evaluation has two goals. First, it tests whether external generalized
-planners can produce lifted atomic templates that compile into a domain-level
-\asl{} library. Second, it tests whether lifted LTLf queries can append
-top-level temporal wrapper goals that call that atomic library.
+The complete benchmark matrix is intentionally left for the final clean rerun.
+This section fixes the questions, corpus, metrics, budgets, and validation chain
+implemented in the artifact; it reports only results already reproduced from a
+pinned clean revision.
 
-The current formal corpus contains the MOOSE direct train/test domains plus
-project-added feature-definable serialized-width domains, organized by the
-property coverage in Table~\ref{tab:benchmark-scope}. Each local snapshot
-contains:
+\subsection{Research Questions}
 
-\begin{verbatim}
-src/domains/<domain>/domain.pddl
-src/domains/<domain>/train/*.pddl
-src/domains/<domain>/test/*.pddl
-src/domains/<domain>/source.json
-\end{verbatim}
+\begin{description}
+\item[RQ1: Atomic compilation.] Does MOOSE evidence compile into a closed,
+lifted AgentSpeak library whose branches satisfy the declared certificates?
+\item[RQ2: Symbol invariance.] Do compiler decisions remain unchanged under
+predicate/action renaming, compatible parameter permutation, and irrelevant
+fluent injection?
+\item[RQ3: Temporal composition.] Does each supported DFA guard compile into a
+preservation-certified controller without changing order across DFA edges?
+\item[RQ4: Executable validity.] Does Jason produce a complete primitive-action
+trace that VAL accepts for the corresponding PDDL instance?
+\end{description}
 
-The split is deterministic: MOOSE domains use the official companion
-\texttt{training/} and \texttt{testing/} directories; Blocksworld Clear and
-Blocksworld On use the KR 2025 learner-policies no-constants train/test
-folders; Blocksworld Tower and Depots use the project feature-definable
-serialized-width split described in the repository benchmark strategy. The same
-split is used by the atomic-template backend selector and by the
-query-generation layer.
+\subsection{Benchmark Scope}
 
-MOOSE-native parameters follow its paper where applicable. Algorithm~1 uses
-three goal permutations by default. Generalized-plan synthesis is evaluated
-with a 12-hour, 32-GB budget and five repeated runs, while test-time planning
-uses a 30-minute, 8-GB budget \cite{Chen2026Moose}. Our runner therefore defaults
-to a 12-hour MOOSE synthesis limit and a 30-minute MOOSE test-time planning
-limit, and records the random seed for each repetition. The repository safety profile
-caps any external learner at 16 GiB, so its synthesis memory ceiling is a
-declared reproduction deviation from the paper's 32-GB ceiling. Worker count,
-policy-dump timeout, AgentSpeak execution timeout, and VAL timeout are system
-parameters of our pipeline rather than MOOSE hyperparameters and are reported
-separately.
+The corpus contains all MOOSE companion domains with direct nonempty train/test
+splits, plus project-added serialized-width families. The groups in
+Table~\ref{tab:benchmarks} describe evaluation properties; they do not route a
+domain to a different compiler.
 
-\subsection{Checks}
+\begin{table}[t]
+\centering
+\caption{Implemented benchmark corpus.}
+\label{tab:benchmarks}
+\begin{tabular}{p{0.26\columnwidth}p{0.63\columnwidth}}
+\toprule
+Property group & Domains \\
+\midrule
+Classical & Barman, Ferry, Gripper, Logistics, Miconic, Rovers, Satellite,
+Transport \\
+Numeric & Numeric Ferry, Numeric Miconic, Numeric Minecraft, Numeric Transport \\
+Serialized width & Blocksworld Clear, Blocksworld On, Blocksworld Tower, Depots \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Each domain is evaluated through four checks.
+MOOSE domains use the official companion \texttt{training/} and
+\texttt{testing/} directories. Blocksworld Clear and On use the published
+no-constants QClear/QOn splits. Blocksworld Tower uses the first quarter of its
+ordered instances for training; Depots uses the first half because its source
+contains only 22 instances. These deterministic project splits are fixed before
+execution and recorded in source metadata.
 
-\begin{enumerate}
-\item Atomic template extraction: the system extracts predicate, arity, and
-	polarity templates from the training split.
-\item Backend artifact acceptance: the selected backend artifact must parse,
-	bind to declared \pddl{} vocabulary, compile to \asl{}, and validate on held
-	out instances. Metamorphic checks rename predicates and actions, permute
-	compatible parameters, and inject irrelevant fluents to detect hidden
-	benchmark-vocabulary rules. Context-projection tests additionally require
-	acyclic dependencies to retain static producer witnesses and cyclic
-	dependencies to retain their full connected contexts.
-\item Temporal append validation: generated LTLf JSON cases must compile to DFA
-	payloads whose relevant transitions contain conjunction and negation only.
-	Each certified progress edge must produce one balanced repair tree with
-	maximum trigger fan-out two, logarithmic nesting depth, and one complete-guard
-	recheck after each pass. Adversarial negative-guard checks require unsafe-only
-	producers to be rejected, safe action-only alternatives to be enforced under
-	query-local aliases, completion-restored and PDDL-type-disjoint effects to
-	avoid false threats, and the resulting Jason trace to satisfy VAL.
-\item Library maintenance: each accepted query appends one new top-level
-	\texttt{g\_query} goal to the same domain library without introducing
-	\texttt{achieve\_*}, \texttt{transition\_*}, or \texttt{dfa\_state} plan
-	names.
-\end{enumerate}
+\subsection{Budgets and Systems}
 
-Classical planners may support external generalized-planning systems, artifact
-reproduction, and validation. They are not allowed to replace
-the maintained \asl{} library during execution; execution traces are produced
-by the generated agent program and then validated externally.
+MOOSE-native settings follow its paper where applicable: three goal
+permutations by default, five synthesis repetitions, a 12-hour/32-GB synthesis
+budget, and a 30-minute/8-GB test-planning budget
+\cite{Chen2026Moose}. The artifact keeps the 12-hour synthesis timeout but uses
+a 16-GiB external-process safety cap; this memory difference is a declared
+reproduction deviation. MOOSE, Jason, and validation worker counts are system
+parameters rather than generalized-planning hyperparameters. The batch scripts
+default to six workers, a 30-minute Jason timeout, a 30-minute VAL timeout, and
+a 64-MiB Java thread stack.
 
-\subsection{Reproducibility}
+The implemented toolchain uses the MOOSE readable-policy exporter, Clingo for
+branch selection, \texttt{ltlf2dfa} with a real MONA binary, Jason for
+AgentSpeak execution, and Dockerized VAL for independent PDDL validation. Every
+run records its Git commit and separately records tracked modifications and
+untracked files. Results from a tracked-dirty tree are diagnostic and are not
+eligible for the final matrix.
 
-The reproducibility artifact is the
-\path{final_paper_manifest.json} file under \path{paper_artifacts/}. Before submission, the
-benchmark registry, generated ASL libraries, LTLf JSON cases, DFA validation
-diagnostics, and LaTeX result macros must be regenerated from tracked commands.
-Generated experiment outputs live under \path{tmp/paper-final-latest} and are
-treated as rebuildable artifacts.
-Every full-test summary records the Git commit observed when the run starts and
-separately records tracked modifications and untracked files. A result produced
-with tracked modifications is diagnostic evidence rather than a submission
-result; the final reported matrix must be regenerated from a clean pinned
-revision.
+\subsection{Metrics and Validation}
+
+For each domain we record evidence parsing, atomic compilation, selected branch
+count, context/body size, and closure status. For each test problem we record
+Jason success, timeout or failure, primitive action count, VAL success, and
+wall-clock time. A problem counts as solved only when Jason emits its explicit
+success marker and VAL accepts the complete exported trace. Prefix actions from
+a failed or timed-out intention are diagnostic and are not counted as a plan.
+
+For temporal inputs we additionally record DFA construction, supported-fragment
+validation, transition count, serialization certificate, negative-guard
+preservation, and final finite-trace acceptance. Classical PDDL conjunctions
+are used as one-transition achievement guards for infrastructure validation;
+they are not presented as natural-language \ltlf predictions.
+
+The symbol-invariance suite uses synthetic domains whose vocabulary is renamed
+and whose irrelevant predicates are changed. The staged-preparation regression,
+for example, uses fabrication and tool predicates rather than any Rovers
+vocabulary while preserving the same PDDL dependency structure. This tests the
+claim that compiler rules depend on schemas rather than benchmark names.
+
+\subsection{Current Verified Checkpoint}
+
+At commit \texttt{ac934327}, the full Python suite contains 340 passing tests;
+the only warnings are two deprecations in the third-party Lark package. Ruff
+passes for the complete repository. A clean-revision Rovers run compiles one
+atomic library and obtains Jason- and VAL-valid traces for all 90 official test
+instances, including the two staged image-production regressions that motivated
+existential preparation projection. A clean Blocksworld-On regression produces
+a 30-action VAL-valid trace, confirming that the functional-fluent restriction
+does not retain the earlier over-broad branch reordering.
+
+These checks establish implementation behavior for the reported cases, not the
+final cross-domain coverage claim. The final paper table will be generated only
+after rerunning all domains from one clean pinned revision with the budgets
+above.
+
+\subsection{Reproducibility Artifacts}
+
+The repository contains a benchmark registry, pinned source metadata, canonical
+domain libraries, per-test AgentSpeak programs, exported PDDL traces, VAL
+records, DFA diagnostics, and timestamped summary JSON. The final-paper script
+regenerates result macros from these artifacts rather than transcribing numbers
+by hand. The submission package will include the official AAAI reproducibility
+checklist after the references.

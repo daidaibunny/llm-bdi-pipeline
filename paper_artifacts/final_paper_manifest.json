@@ -1,5 +1,5 @@
 {
-  "artifact_id": "aamas2026-domain-level-lifted-asl-final-data",
+  "artifact_id": "aaai-domain-level-lifted-asl-final-data",
   "atomic_artifact_smoke": {
     "evidence_provider": "moose",
     "domain_name": "ferry",
@@ -8,7 +8,7 @@
   },
   "benchmark_source": {
     "coverage": "all MOOSE direct train/test domains plus four feature-definable serialized-width planning-family entries",
-    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. MOOSE direct train/test domains use the official companion training/testing split; blocksworld-clear and blocksworld-on use the KR 2025 learner-policies official no-constants train/test folders; blocksworld-tower and depots use floor(1/4 * instance_count) training instances and the remainder as test.",
+    "local_snapshot_policy": "Each selected planning family is tracked under src/domains/<domain> with domain.pddl, train, test, and source.json. MOOSE direct train/test domains use the official companion training/testing split; blocksworld-clear and blocksworld-on use the KR 2025 learner-policies official no-constants train/test folders; blocksworld-tower uses floor(1/4 * instance_count) training instances and the remainder as test; depots uses floor(1/2 * instance_count) training instances and the remainder as test.",
     "name": "selected reputable generalized-planning benchmark sources"
   },
   "benchmark_sources": [
