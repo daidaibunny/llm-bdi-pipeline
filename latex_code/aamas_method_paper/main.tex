@@ -158,7 +158,9 @@ claim semantic equivalence between an arbitrary long evidence macro and a
 short recursive program.
 
 At the query layer, transition guards may use conjunction and literal negation.
-Negative literals are context obligations, not negative achievement calls.
+Negative literals are signed obligations, not negative achievement calls; a
+positive sibling branch may establish their absence when its certified PDDL net
+effect has the required exact delete.
 Mixed or multi-literal numeric guards remain unsupported because the compiler
 does not yet construct a cross-literal numeric preservation certificate.
 Branching automata whose progress cannot be inferred from world state require

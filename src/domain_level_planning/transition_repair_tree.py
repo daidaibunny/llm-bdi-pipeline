@@ -16,11 +16,12 @@ _CONTROLLER_STRATEGY = "balanced_transition_repair_tree"
 
 @dataclass(frozen=True)
 class TransitionRepairLiteral:
-	"""One ordered positive guard literal and its atomic achievement call."""
+	"""One ordered signed guard literal and its certified repair call."""
 
 	atom: str
-	achievement_symbol: str
+	achievement_symbol: str | None
 	achievement_arguments: tuple[str, ...] = ()
+	polarity: str = "positive"
 
 
 @dataclass(frozen=True)
@@ -73,7 +74,12 @@ def compile_transition_repair_tree(
 		"transition_symbol": transition,
 		"tree_root_symbol": root_symbol,
 		"done_symbol": done_symbol,
-		"positive_literal_count": len(literals),
+		"positive_literal_count": sum(
+			literal.polarity == "positive" for literal in literals
+		),
+		"negative_literal_count": sum(
+			literal.polarity == "negative" for literal in literals
+		),
 		"final_guard_recheck": True,
 	}
 	plans: list[AgentSpeakPlan] = [
@@ -153,32 +159,45 @@ def _append_tree_plans(
 	symbol = _range_symbol(transition_symbol, start, end)
 	if start == end:
 		literal = literals[start - 1]
+		if literal.polarity not in {"positive", "negative"}:
+			raise ValueError(
+				"transition_repair_literal_polarity_invalid: expected positive or negative."
+			)
+		satisfied_context = (
+			literal.atom if literal.polarity == "positive" else f"not {literal.atom}"
+		)
+		unmet_context = (
+			f"not {literal.atom}" if literal.polarity == "positive" else literal.atom
+		)
 		leaf_certificate = {
 			**dict(base_certificate),
 			"literal_index": start,
 			"literal_atom": literal.atom,
 			"achievement_symbol": literal.achievement_symbol,
 			"achievement_arguments": list(literal.achievement_arguments),
+			"literal_polarity": literal.polarity,
 			"tree_range": [start, end],
 		}
-		plans.extend(
-			(
-				AgentSpeakPlan(
-					plan_name=f"{symbol}_satisfied",
-					trigger=AgentSpeakTrigger("achievement_goal", symbol, ()),
-					context=(*shared_context, literal.atom),
-					body=(),
-					binding_certificate=(
-						{
-							**leaf_certificate,
-							"wrapper_role": "transition_repair_tree_leaf_satisfied",
-						},
-					),
+		plans.append(
+			AgentSpeakPlan(
+				plan_name=f"{symbol}_satisfied",
+				trigger=AgentSpeakTrigger("achievement_goal", symbol, ()),
+				context=(*shared_context, satisfied_context),
+				body=(),
+				binding_certificate=(
+					{
+						**leaf_certificate,
+						"wrapper_role": "transition_repair_tree_leaf_satisfied",
+					},
 				),
+			),
+		)
+		if literal.achievement_symbol:
+			plans.append(
 				AgentSpeakPlan(
 					plan_name=f"{symbol}_achieve",
 					trigger=AgentSpeakTrigger("achievement_goal", symbol, ()),
-					context=(*shared_context, f"not {literal.atom}"),
+					context=(*shared_context, unmet_context),
 					body=(
 						AgentSpeakBodyStep(
 							"subgoal",
@@ -194,7 +213,6 @@ def _append_tree_plans(
 					),
 				),
 			)
-		)
 		return 1
 	midpoint = (start + end) // 2
 	left_symbol = _range_symbol(transition_symbol, start, midpoint)

@@ -254,8 +254,11 @@ Schema-derived single-valued invariants also reject conjunctions that request
 different values for the same key.
 
 A negative guard $\neg N$ is not compiled as $!\neg N$. Every positive repair
-must instead prove that no feasible $\mayadd$ effect can unify with $N$. A
-negative-only edge is a context test and does not wait for an exogenous change.
+must prove that no feasible $\mayadd$ effect can unify with $N$. If $N$ is
+present, a signed negative leaf may call only a finite query-local branch whose
+net effect has an exact $\mathsf{MustDelete}(N)$, establishes one positive
+sibling, and preserves all other guard obligations. A negative-only edge remains
+a context test and does not wait for an exogenous change.
 
 \subsection{Cyclic Threats and Enforced Portfolios}
 
@@ -279,8 +282,10 @@ rejects.
 
 \subsection{Balanced Declarative Repair Trees}
 
-Given certified order $L_1,\ldots,L_n$, a leaf for $L_i$ succeeds when $L_i$
-already holds and otherwise calls its selected atomic module once. An internal
+Given certified order $L_1,\ldots,L_n$, signed negative obligations are visited
+before the ordered positive obligations. A positive leaf checks or achieves
+$L_i$; a negative leaf checks $\neg N_i$ and otherwise calls only its certified
+establishment helper, if one exists. An internal
 node recursively executes the left and right halves of a contiguous range.
 After one complete pass, a separate completion helper tests all positive and
 negative guard literals in one state; if the guard is still false, it repeats
@@ -339,16 +344,17 @@ programs or completeness of candidate generation.
 \paragraph{Supported-transition composition.}
 
 \textbf{Proposition 3.} Let $B=P^+\land\neg P^-$ be an accepted transition
-guard. If every negative obligation holds when the transition starts, and every
-selected atomic call terminates, establishes its positive literal, and
+guard. If every initially present negative atom has a selected establishment
+branch, and every selected call terminates, establishes its signed literal, and
 satisfies the certified preservation order for earlier positive and negative
 obligations, then one complete repair-tree pass establishes $B$.
 
 \textbf{Proof sketch.} Induct over the certified literal order. Each leaf makes
-its positive literal true. The completion summary of every later leaf excludes
+its signed literal. A negative establishment branch has an exact net delete.
+The completion summary of every later leaf excludes
 a delete of an earlier positive literal and an add of a forbidden negative
-atom. Consequently all previous positive obligations remain true and each
-initially absent negative atom remains absent. The final helper
+atom. Consequently all previous positive obligations remain true and negative
+atoms remain absent. The final helper
 checks the complete guard in one observable state. \hfill$\square$
 
 The claim applies at successful atomic-module boundaries. It does not cover a
@@ -356,12 +362,12 @@ safety formula that must be observed after every primitive action.
 
 \paragraph{Balanced-tree structure.}
 
-\textbf{Proposition 4.} For a certified order of $n$ positive literals, the
-generated tree contains $3n+2$ plans, has maximum trigger fan-out two and
+\textbf{Proposition 4.} For $n$ signed literals of which $e$ have a certified
+repair helper, the generated tree contains $2n+e+2$ plans, has maximum trigger fan-out two and
 nesting depth $O(\log n)$, visits $O(n)$ helpers per pass, and preserves the
 certified order.
 
-\textbf{Proof sketch.} There are $n$ leaves with two plans each, $n-1$
+\textbf{Proof sketch.} There are $n$ satisfied-leaf plans, $e$ repair-leaf plans, $n-1$
 internal nodes, one entry plan, and two completion plans. Midpoint splitting
 gives logarithmic depth. Induction over contiguous ranges shows that in-order
 traversal visits leaves in exactly the input order. \hfill$\square$

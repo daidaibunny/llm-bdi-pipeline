@@ -29,6 +29,7 @@ from .pddl_support import assert_compilable_pddl_files
 from .certified_effects import threat_safe_positive_literal_order
 from .certified_effects import preservation_safe_plan_selection
 from .certified_effects import query_local_preservation_alias_plans
+from .certified_effects import negative_guard_establishment_alias_plans
 from .transition_repair_tree import TransitionRepairLiteral
 from .transition_repair_tree import compile_transition_repair_tree
 
@@ -590,6 +591,8 @@ def _guard_transition_wrapper_plans(
 			serialization_certificate,
 			preservation_alias_plans,
 			preservation_helper_by_predicate,
+			negative_establishment_alias_plans,
+			negative_establishment_helper_by_index,
 		) = (
 			_certified_positive_literal_serialization(
 				positive_literals,
@@ -600,6 +603,7 @@ def _guard_transition_wrapper_plans(
 			)
 		)
 		plans.extend(preservation_alias_plans)
+		plans.extend(negative_establishment_alias_plans)
 		type_contexts = _guard_variable_type_contexts(literals, domain=domain)
 		guard_context = (
 			entry_proposition,
@@ -630,12 +634,21 @@ def _guard_transition_wrapper_plans(
 				),
 			)
 			continue
-		shared_context = (
-			entry_proposition,
-			*type_contexts,
-			*tuple(f"not {item.atom}" for item in negative_literals),
+		shared_context = (entry_proposition, *type_contexts)
+		negative_repair_literals = tuple(
+			TransitionRepairLiteral(
+				atom=literal.atom,
+				achievement_symbol=(
+					negative_establishment_helper_by_index.get(index, (None, ()))[0]
+				),
+				achievement_arguments=(
+					negative_establishment_helper_by_index.get(index, (None, ()))[1]
+				),
+				polarity="negative",
+			)
+			for index, literal in enumerate(negative_literals)
 		)
-		repair_literals = tuple(
+		positive_repair_literals = tuple(
 			TransitionRepairLiteral(
 				atom=literal.atom,
 				achievement_symbol=preservation_helper_by_predicate.get(
@@ -646,6 +659,7 @@ def _guard_transition_wrapper_plans(
 			)
 			for literal in positive_literals
 		)
+		repair_literals = (*negative_repair_literals, *positive_repair_literals)
 		tree_compilation = compile_transition_repair_tree(
 			transition_symbol=transition_name,
 			shared_context=shared_context,
@@ -669,6 +683,8 @@ def _certified_positive_literal_serialization(
 	Mapping[str, object],
 	tuple[AgentSpeakPlan, ...],
 	Mapping[str, str],
+	tuple[AgentSpeakPlan, ...],
+	Mapping[int, tuple[str, tuple[str, ...]]],
 ]:
 	literal_tuple = tuple(literals or ())
 	negative_literal_tuple = tuple(negative_literals or ())
@@ -702,6 +718,8 @@ def _certified_positive_literal_serialization(
 			},
 			(),
 			{},
+			(),
+			{},
 		)
 	if len(literal_tuple) <= 1 and not negative_literal_tuple:
 		indexes = tuple(range(len(literal_tuple)))
@@ -713,6 +731,8 @@ def _certified_positive_literal_serialization(
 				"threat_edges": [],
 				"module_summaries_complete": True,
 			},
+			(),
+			{},
 			(),
 			{},
 		)
@@ -753,21 +773,45 @@ def _certified_positive_literal_serialization(
 		certificate_payload["negative_guard_literals"] = [
 			literal.atom for literal in negative_literal_tuple
 		]
+		establishment_aliases, establishment_helpers, establishment = (
+			negative_guard_establishment_alias_plans(
+				literal_signatures,
+				negative_literals=negative_literal_signatures,
+				plan_library=plan_library,
+				domain=domain,
+				helper_prefix=helper_prefix,
+			)
+		)
+		certificate_payload.update(establishment)
 		return (
 			tuple(literal_tuple[index] for index in selection.ordered_indexes),
 			certificate_payload,
 			aliases,
 			helper_by_predicate,
+			establishment_aliases,
+			establishment_helpers,
 		)
 	certificate_payload = certificate.to_dict()
 	certificate_payload["negative_guard_literals"] = [
 		literal.atom for literal in negative_literal_tuple
 	]
+	establishment_aliases, establishment_helpers, establishment = (
+		negative_guard_establishment_alias_plans(
+			literal_signatures,
+			negative_literals=negative_literal_signatures,
+			plan_library=plan_library,
+			domain=domain,
+			helper_prefix=helper_prefix,
+		)
+	)
+	certificate_payload.update(establishment)
 	return (
 		tuple(literal_tuple[index] for index in ordered_indexes),
 		certificate_payload,
 		(),
 		{},
+		establishment_aliases,
+		establishment_helpers,
 	)
 
 

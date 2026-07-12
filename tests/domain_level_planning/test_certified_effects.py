@@ -14,6 +14,7 @@ from domain_level_planning.certified_effects import (
 )
 from domain_level_planning.certified_effects import preservation_safe_plan_selection
 from domain_level_planning.certified_effects import query_local_preservation_alias_plans
+from domain_level_planning.certified_effects import negative_guard_establishment_alias_plans
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
@@ -368,6 +369,92 @@ def test_negative_guard_preservation_is_symbol_invariant(
 			plan_library=library,
 			domain=PDDLParser.parse_domain(domain_file),
 		)
+
+
+@pytest.mark.parametrize(
+	("goal_predicate", "forbidden_predicate", "producer_action"),
+	(
+		("holding", "available", "acquire"),
+		("sealed", "open", "close"),
+	),
+)
+def test_negative_guard_establishment_is_symbol_invariant(
+	tmp_path: Path,
+	goal_predicate: str,
+	forbidden_predicate: str,
+	producer_action: str,
+) -> None:
+	domain_file = tmp_path / f"{goal_predicate}-establishment-domain.pddl"
+	domain_file.write_text(
+		f"""
+		(define (domain renamed-establishment-fragment)
+		 (:requirements :strips)
+		 (:predicates
+		  (ready ?actor ?item)
+		  ({goal_predicate} ?actor ?item)
+		  ({forbidden_predicate} ?actor)
+		 )
+		 (:action {producer_action}
+		  :parameters (?actor ?item)
+		  :precondition (and (ready ?actor ?item) ({forbidden_predicate} ?actor))
+		  :effect (and
+		   ({goal_predicate} ?actor ?item)
+		   (not ({forbidden_predicate} ?actor))
+		  )
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="renamed-establishment-fragment",
+		plans=(
+			AgentSpeakPlan(
+				f"{goal_predicate}_via_{producer_action}",
+				AgentSpeakTrigger(
+					"achievement_goal",
+					goal_predicate,
+					("Actor", "Item"),
+				),
+				(
+					"ready(Actor, Item)",
+					f"{forbidden_predicate}(Actor)",
+				),
+				(
+					AgentSpeakBodyStep(
+						"action",
+						producer_action,
+						("Actor", "Item"),
+					),
+				),
+			),
+		),
+	)
+
+	aliases, helpers, certificate = negative_guard_establishment_alias_plans(
+		((goal_predicate, ("agent", "item")),),
+		negative_literals=((forbidden_predicate, ("agent",)),),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+		helper_prefix="g_query_trans_1",
+	)
+
+	assert len(aliases) == 1
+	assert aliases[0].trigger.symbol == helpers[0][0]
+	assert aliases[0].trigger.arguments == ()
+	assert aliases[0].context == (
+		"ready(agent, item)",
+		f"{forbidden_predicate}(agent)",
+	)
+	assert aliases[0].body == (
+		AgentSpeakBodyStep("action", producer_action, ("agent", "item")),
+	)
+	assert helpers[0][1] == ()
+	assert certificate["negative_guard_establishment_checked"] is True
+	assert certificate["negative_guard_establishable"] is True
+	assert certificate["negative_guard_establishers"] == {
+		f"{forbidden_predicate}(agent)": [aliases[0].plan_name],
+	}
 
 
 def test_negative_guard_uses_atomic_completion_net_effects(tmp_path: Path) -> None:

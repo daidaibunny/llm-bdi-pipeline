@@ -127,8 +127,11 @@ effects. If a feasible positive repair branch may add an atom required absent by
 the same DFA guard, the appender either copies only action-only branches that
 achieve the positive literal while preserving every positive sibling and
 negative guard, or rejects the transition with
-`negative_guard_not_preserved`. The certificate stores the concrete forbidden
-atoms and the enforced branch names. A negative-only edge is only an immediate
+`negative_guard_not_preserved`. When a positive action-only branch has an exact
+PDDL net `MustDelete` for a currently present forbidden atom and preserves all
+positive siblings, the appender copies it under a query-local establishment
+helper. A signed negative leaf calls only that helper. The certificate stores
+the forbidden atoms and both preserving and establishing branch names. A negative-only edge is only an immediate
 context check; it does not create a negative achievement module. Mixed numeric
 conjunctions remain outside the certificate.
 
@@ -136,9 +139,9 @@ The balanced tree is a data-structure optimization over one DFA transition,
 not another planner. With `N` positive literals, the old sibling layout gave
 the same trigger `N` repair plans. Re-entering that trigger after each repair
 could inspect `N` candidates up to `N` times, giving quadratic controller work.
-The tree gives an internal trigger one dispatch plan and a leaf trigger two
-mutually exclusive plans: already satisfied or achieve. One pass visits `N`
-leaves, maximum trigger fan-out is two, and nesting depth is logarithmic. The
+The tree gives an internal trigger one dispatch plan and a repairable leaf two
+mutually exclusive plans: already satisfied or repair. One pass visits `N`
+signed leaves, maximum trigger fan-out is two, and nesting depth is logarithmic. The
 complete conjunction is checked once at the end of a pass. The generated ASL
 contains more query-local helper plans, but it does not change the certified
 literal order, primitive action sequence chosen by an atomic module, or DFA

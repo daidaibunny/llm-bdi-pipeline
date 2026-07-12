@@ -166,11 +166,16 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 				for item in tuple(serialization.get("negative_guard_literals") or ())
 				if str(item).strip()
 			)
+			establishment_valid = (
+				serialization.get("certificate_kind")
+				== "negative_context_only_transition"
+				or serialization.get("negative_guard_establishment_checked") is True
+			)
 			if not (
 				serialization.get("negative_guard_preservation_checked") is True
 				and serialization.get("negative_guard_preserved") is True
 				and len(negative_guard_literals) == negative_guard_count
-				and all(f"not {atom}" in context for atom in negative_guard_literals)
+				and establishment_valid
 			):
 				return False
 	if not entry_proposition or entry_proposition not in context:
@@ -208,14 +213,22 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 		)
 	if role == "transition_repair_tree_leaf_satisfied":
 		literal_atom = str(certificate.get("literal_atom") or "").strip()
-		return bool(literal_atom) and literal_atom in context and not body
+		literal_polarity = str(certificate.get("literal_polarity") or "positive")
+		expected_context = (
+			literal_atom if literal_polarity == "positive" else f"not {literal_atom}"
+		)
+		return bool(literal_atom) and expected_context in context and not body
 	if role == "transition_repair_tree_leaf_achievement":
 		literal_atom = str(certificate.get("literal_atom") or "").strip()
+		literal_polarity = str(certificate.get("literal_polarity") or "positive")
+		expected_context = (
+			f"not {literal_atom}" if literal_polarity == "positive" else literal_atom
+		)
 		achievement_symbol = str(certificate.get("achievement_symbol") or "").strip()
 		achievement_arguments = tuple(certificate.get("achievement_arguments") or ())
 		return (
 			bool(literal_atom)
-			and f"not {literal_atom}" in context
+			and expected_context in context
 			and len(body) == 1
 			and body[0].kind == "subgoal"
 			and body[0].symbol == achievement_symbol

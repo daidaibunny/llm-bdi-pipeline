@@ -161,17 +161,20 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
 - Guard blocks may contain conjunction and negation only. Reject disjunctions,
   implications, malformed atoms, undeclared predicates, and wrong arities with
   precise diagnostics.
-- Negative waiting guards such as `not done` are valid DFA structure and should
-  not compile to atomic subgoals. Negative progress literals are compiled only
-  as ASL context guards; they are never compiled into negative achievement
-  subgoals unless a backend later provides a validated negative atomic template.
+- Negative waiting guards such as `not done` are valid DFA structure and must
+  not compile to synthetic negative atomic subgoals. A signed negative leaf may
+  call a query-local positive-sibling branch only when PDDL symbolic execution
+  certifies an exact net `MustDelete` for the forbidden atom, achievement of its
+  positive trigger, preservation of all positive siblings, and no forbidden
+  completion `MayAdd`.
 - Every positive repair in a transition containing negative predicate guards
   must carry a completion-level conditional `MayAdd` preservation certificate.
   If an unfiltered atomic module may add a forbidden atom, enforce a query-local
   action-only branch selection that preserves positive siblings and all negative
   guards; if no non-empty goal-achieving selection remains, reject with
   `negative_guard_not_preserved`. A negative-only edge checks that the atom is
-  already absent and does not wait or synthesize deletion behavior. Mixed
+  already absent and does not wait or synthesize deletion behavior. A mixed
+  guard with no certified establisher has no unmet-case negative leaf plan. Mixed
   predicate/numeric preservation remains unsupported.
 - Accepting self-loops labelled `true` are allowed as DFA plumbing and should
   not compile to atomic subgoals.

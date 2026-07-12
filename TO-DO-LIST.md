@@ -71,11 +71,11 @@ certificate.
   are included without a domain-specific depth bound. Incomplete summaries and
   cyclic threat graphs are rejected; parser order is not a fallback.
 - Negative DFA guards now require conditional completion-level `MayAdd`
-  preservation. Unsafe universal modules are replaced only when a query-local
-  action-only branch selection both achieves each positive literal and preserves
-  all positive siblings and forbidden negative atoms; otherwise compilation
-  fails with `negative_guard_not_preserved`. Negative-only edges remain context
-  checks and do not invent negative achievement goals.
+  preservation and effect-certified establishment. A signed negative leaf may
+  call only a query-local action-only branch whose PDDL net effect has an exact
+  `MustDelete`, achieves a positive sibling, and preserves every other guard.
+  All 23 Barman same-state negation cases pass Jason, replay, VAL, and both DFAs
+  with one action each. Negative-only edges remain context checks.
 - MOOSE evidence variables are no longer made pairwise distinct by default.
   Inequality guards are emitted only when PDDL symbolic execution proves that
   aliasing would violate an action precondition or a prior delete effect.

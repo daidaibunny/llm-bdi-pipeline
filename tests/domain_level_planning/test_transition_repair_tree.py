@@ -107,3 +107,37 @@ def test_transition_tree_rechecks_the_complete_guard_once_before_returning() -> 
 	assert done_plans[1].binding_certificate[0]["wrapper_role"] == (
 		"transition_repair_tree_replay"
 	)
+
+
+def test_negative_guard_leaf_calls_only_a_certified_establishment_helper() -> None:
+	compilation = compile_transition_repair_tree(
+		transition_symbol="g_query_trans_1",
+		shared_context=("query",),
+		positive_literals=(
+			TransitionRepairLiteral(
+				atom="available(item)",
+				achievement_symbol="g_query_trans_1_establish_not_available_1",
+				polarity="negative",
+			),
+		),
+		final_guard_context=("query", "not available(item)"),
+		certificate={"serialization_certificate": {"negative_guard_count": 1}},
+	)
+
+	leaves = tuple(
+		plan
+		for plan in compilation.plans
+		if plan.trigger.symbol == "g_query_trans_1_repair_1_1"
+	)
+	assert len(leaves) == 2
+	assert leaves[0].context == ("query", "not available(item)")
+	assert leaves[0].body == ()
+	assert leaves[1].context == ("query", "available(item)")
+	assert leaves[1].body == (
+		AgentSpeakBodyStep(
+			"subgoal",
+			"g_query_trans_1_establish_not_available_1",
+			(),
+		),
+	)
+	assert leaves[1].binding_certificate[0]["literal_polarity"] == "negative"

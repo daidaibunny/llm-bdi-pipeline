@@ -205,6 +205,247 @@ def query_local_preservation_alias_plans(
 	return tuple(aliases), helper_by_predicate
 
 
+def negative_guard_establishment_alias_plans(
+	literals: Sequence[tuple[str, tuple[str, ...]]],
+	*,
+	negative_literals: Sequence[tuple[str, tuple[str, ...]]],
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+	helper_prefix: str,
+	object_types: Mapping[str, str] | None = None,
+) -> tuple[
+	tuple[AgentSpeakPlan, ...],
+	Mapping[int, tuple[str, tuple[str, ...]]],
+	Mapping[str, object],
+]:
+	"""Select finite branches whose net effects establish forbidden-atom absence."""
+
+	literal_tuple = tuple(literals or ())
+	negative_literal_tuple = tuple(negative_literals or ())
+	if not negative_literal_tuple:
+		return (), {}, {
+			"negative_guard_establishment_checked": False,
+			"negative_guard_establishable": True,
+			"negative_guard_establishers": {},
+		}
+	actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
+	actions_by_name = {action.name: action for action in actions}
+	functional_groups = _functional_predicate_groups(actions, domain.types)
+	predicate_types = {
+		predicate.name: tuple(parameter_type(parameter) for parameter in predicate.parameters)
+		for predicate in domain.predicates
+	}
+	known_object_types = {**dict(domain.constant_types), **dict(object_types or {})}
+	query_variable_types = _query_variable_type_requirements(
+		(*literal_tuple, *negative_literal_tuple),
+		predicate_types=predicate_types,
+		type_tokens=domain.types,
+	)
+	goal_atoms = _query_effect_atoms(
+		literal_tuple,
+		predicate_types=predicate_types,
+		known_object_types=known_object_types,
+		query_variable_types=query_variable_types,
+		type_tokens=domain.types,
+	)
+	forbidden_atoms = _query_effect_atoms(
+		negative_literal_tuple,
+		predicate_types=predicate_types,
+		known_object_types=known_object_types,
+		query_variable_types=query_variable_types,
+		type_tokens=domain.types,
+	)
+	plans_by_predicate = _plans_by_predicate(plan_library.plans)
+	query_arguments = tuple(
+		dict.fromkeys(
+			argument
+			for _predicate, arguments in (*literal_tuple, *negative_literal_tuple)
+			for argument in arguments
+			if _is_agentspeak_variable(argument)
+		)
+	)
+	aliases: list[AgentSpeakPlan] = []
+	helper_by_negative_index: dict[int, tuple[str, tuple[str, ...]]] = {}
+	establishers: dict[str, list[str]] = {}
+	for negative_index, forbidden in enumerate(forbidden_atoms):
+		helper_symbol = _safe_agentspeak_identifier(
+			f"{helper_prefix}_establish_not_{forbidden.predicate}_{negative_index + 1}"
+		)
+		selected_forbidden: list[AgentSpeakPlan] = []
+		for positive_index, (goal, literal_signature) in enumerate(
+			zip(goal_atoms, literal_tuple)
+		):
+			for plan_index, plan in enumerate(plans_by_predicate.get(goal.predicate, ())):
+				summary = _action_only_plan_effect_summary(
+					plan,
+					goal=goal,
+					plan_index=plan_index,
+					actions_by_name=actions_by_name,
+					predicate_types=predicate_types,
+					type_tokens=domain.types,
+				)
+				if summary is None or not plan.body:
+					continue
+				if not _action_only_summary_achieves_goal(
+					summary,
+					goal=goal,
+					body_is_empty=False,
+				):
+					continue
+				if not any(
+					_effect_atom_has_same_identity(effect.delete_atom, forbidden)
+					for effect in summary.conditional_deletes
+				):
+					continue
+				if _summary_may_add_any_forbidden(
+					summary,
+					forbidden_atoms=forbidden_atoms,
+					type_tokens=domain.types,
+				):
+					continue
+				if _summary_may_delete_positive_sibling(
+					summary,
+					goal_atoms=goal_atoms,
+					achiever_index=positive_index,
+					functional_groups=functional_groups,
+					type_tokens=domain.types,
+				):
+					continue
+				alias = _ground_establishment_alias(
+					plan,
+					helper_symbol=helper_symbol,
+					helper_arguments=query_arguments,
+					target_arguments=literal_signature[1],
+					negative_atom=_effect_atom_text(forbidden),
+				)
+				selected_forbidden.append(alias)
+		if selected_forbidden:
+			helper_by_negative_index[negative_index] = (
+				helper_symbol,
+				query_arguments,
+			)
+			aliases.extend(selected_forbidden)
+			establishers[_effect_atom_text(forbidden)] = [
+				plan.plan_name for plan in selected_forbidden
+			]
+	return tuple(aliases), helper_by_negative_index, {
+		"negative_guard_establishment_checked": True,
+		"negative_guard_establishable": (
+			len(helper_by_negative_index) == len(forbidden_atoms)
+		),
+		"negative_guard_establishers": establishers,
+	}
+
+
+def _summary_may_add_any_forbidden(
+	summary: _ActionOnlyPlanEffectSummary,
+	*,
+	forbidden_atoms: Sequence[EffectAtom],
+	type_tokens: Sequence[str],
+) -> bool:
+	return any(
+		_conditional_add_can_violate_negative(
+			ConditionalAddEffect(
+				add_atom=add_atom,
+				positive_context=summary.branch_condition.positive_context,
+				negative_context=summary.branch_condition.negative_context,
+				equalities=summary.branch_condition.equalities,
+				disequalities=summary.branch_condition.disequalities,
+			),
+			forbidden=forbidden,
+			type_tokens=type_tokens,
+		)
+		for add_atom in summary.add_atoms
+		for forbidden in forbidden_atoms
+	)
+
+
+def _summary_may_delete_positive_sibling(
+	summary: _ActionOnlyPlanEffectSummary,
+	*,
+	goal_atoms: Sequence[EffectAtom],
+	achiever_index: int,
+	functional_groups: Sequence[_FunctionalPredicateGroup],
+	type_tokens: Sequence[str],
+) -> bool:
+	return any(
+		_conditional_delete_can_threaten(
+			effect,
+			protected=protected,
+			functional_groups=functional_groups,
+			type_tokens=type_tokens,
+		)
+		for effect in summary.conditional_deletes
+		for protected_index, protected in enumerate(goal_atoms)
+		if protected_index != achiever_index
+	)
+
+
+def _ground_establishment_alias(
+	plan: AgentSpeakPlan,
+	*,
+	helper_symbol: str,
+	helper_arguments: tuple[str, ...],
+	target_arguments: tuple[str, ...],
+	negative_atom: str,
+) -> AgentSpeakPlan:
+	substitution = {
+		formal: actual
+		for formal, actual in zip(plan.trigger.arguments, target_arguments)
+		if _is_agentspeak_variable(formal)
+	}
+	return AgentSpeakPlan(
+		plan_name=f"{helper_symbol}_{plan.plan_name}",
+		trigger=AgentSpeakTrigger(
+			plan.trigger.event_type,
+			helper_symbol,
+			helper_arguments,
+		),
+		context=tuple(
+			_substitute_agentspeak_identifiers(item, substitution)
+			for item in plan.context
+		),
+		body=tuple(
+			AgentSpeakBodyStep(
+				step.kind,
+				step.symbol,
+				tuple(substitution.get(argument, argument) for argument in step.arguments),
+			)
+			for step in plan.body
+		),
+		source_instruction_ids=plan.source_instruction_ids,
+		binding_certificate=(
+			*plan.binding_certificate,
+			{
+				"artifact_family": "temporal_goal_dfa_append",
+				"wrapper_role": "query_local_negative_guard_establishment_branch",
+				"source_atomic_plan": plan.plan_name,
+				"established_negative_atom": negative_atom,
+				"certificate_kind": "pddl_net_must_delete_with_positive_preservation",
+			},
+		),
+	)
+
+
+def _substitute_agentspeak_identifiers(
+	text: str,
+	substitution: Mapping[str, str],
+) -> str:
+	if not substitution:
+		return text
+	pattern = re.compile(
+		r"(?<![A-Za-z0-9_])(" + "|".join(
+			re.escape(key) for key in sorted(substitution, key=len, reverse=True)
+		) + r")(?![A-Za-z0-9_])"
+	)
+	return pattern.sub(lambda match: substitution[match.group(1)], text)
+
+
+def _effect_atom_text(atom: EffectAtom) -> str:
+	arguments = ", ".join(argument.symbol for argument in atom.arguments)
+	return f"{atom.predicate}({arguments})" if arguments else atom.predicate
+
+
 def _safe_agentspeak_identifier(value: str) -> str:
 	text = re.sub(r"[^A-Za-z0-9_]+", "_", str(value or "")).strip("_").lower()
 	if not text:

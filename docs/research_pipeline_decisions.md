@@ -631,7 +631,8 @@ It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.
 
-Negative predicates now carry a fail-closed completion certificate. For a guard
+Negative predicates now carry fail-closed preservation and establishment
+certificates. For a guard
 such as `delivered(P) & not damaged(P)`, every feasible conditional `MayAdd`
 effect of the selected `!delivered(P)` module is type-unified with
 `damaged(P)`. A branch that may add the forbidden atom cannot enter the
@@ -643,6 +644,16 @@ preservation status, selected branch names, and the
 `atomic_module_completion` observation boundary. Predicate/action renaming and
 PDDL sibling types do not alter this rule.
 
+When a forbidden atom is present, the appender may repair its absence only
+through a positive sibling's finite action-only branch whose PDDL net effect
+has an exact `MustDelete` for that grounded atom. The branch must establish its
+positive trigger, preserve every other positive sibling, and have no completion
+`MayAdd` for any forbidden atom. For example, an arbitrary action that adds
+`holding(H,C)` and deletes `available(H)` certifies
+`holding(h,c) & not available(h)`; no predicate or action name is recognized by
+the algorithm. If no establisher exists, the signed negative leaf succeeds only
+when the atom is already absent rather than inventing a negative subgoal.
+
 A negative-only edge is a context check: it succeeds only if the atom is
 already absent. No `!not_p(...)` achievement is synthesized, and no waiting for
 exogenous deletion is implied. Temporary addition followed by deletion before
@@ -651,12 +662,13 @@ predicate/numeric or multi-literal numeric guards remain rejected because they
 lack a cross-literal numeric preservation certificate. Safety formulas that
 must observe every primitive state still require an external monitor.
 
-After certification fixes an order `L1, ..., Ln`, the appender compiles that
-order into a balanced transition repair tree. A transition repair tree is
+After certification fixes an order `L1, ..., Ln`, the appender prepends signed
+negative obligations and compiles the result into a balanced transition repair
+tree. A transition repair tree is
 query-local AgentSpeak control structure: an internal helper for range `[i,j]`
-calls the two midpoint ranges, while a leaf has two mutually exclusive plans,
-one for `Li` already true and one that calls the selected atomic module for
-`Li`. The root then calls a separate done helper. The done helper returns only
+calls the two midpoint ranges. A positive leaf checks or achieves `Li`; a
+negative leaf checks `not N` and, when available, calls only its certified
+`MustDelete(N)` helper. The root then calls a separate done helper. The done helper returns only
 when the full positive conjunction and all negative guards hold in the same
 state; otherwise it re-enters the same transition. Thus balancing changes how
 Jason dispatches a certified serialization, not which serialization is used.

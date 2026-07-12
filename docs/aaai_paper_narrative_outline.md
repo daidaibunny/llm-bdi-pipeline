@@ -184,8 +184,10 @@ library.
    controller.
 3. Treat a conjunction on one edge as one achievement block whose literals
    must hold in the same observable state.
-4. Treat a negative literal such as `not calibrated(C,R)` as a context and
-   preservation obligation, never as `!not_calibrated(C,R)`.
+4. Treat a negative literal such as `not calibrated(C,R)` as a signed context
+   obligation, never as `!not_calibrated(C,R)`. A query-local helper may
+   establish it only through a positive sibling branch with an exact PDDL net
+   `MustDelete`, sibling preservation, and no forbidden completion `MayAdd`.
 5. Build a threat graph from certified completion summaries. An edge
    `G_j -> G_i` means a module for `G_j` may delete `G_i`, so `G_j` must be
    repaired first.

@@ -255,12 +255,11 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 	second_leaf = next(
 		plan
 		for plan in updated.plans
-		if plan.plan_name == "g_query_1_trans_2_repair_1_1_achieve"
+		if plan.plan_name == "g_query_1_trans_2_repair_2_2_achieve"
 	)
 	assert second_leaf.context == (
 		"query_1",
 		"obj_tp(Y, item)",
-		"not ready(Y)",
 		"not done(Y)",
 	)
 	assert all(
@@ -289,6 +288,9 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		"negative_guard_preservation_checked": False,
 		"negative_guard_preserved": True,
 		"negative_guard_threats": [],
+		"negative_guard_establishment_checked": False,
+		"negative_guard_establishable": True,
+		"negative_guard_establishers": {},
 	}
 
 
@@ -662,7 +664,7 @@ def test_append_temporal_goal_enforces_negative_preserving_query_local_branches(
 	repair = next(
 		plan
 		for plan in query_plans
-		if plan.plan_name == "g_query_1_trans_1_repair_1_1_achieve"
+		if plan.plan_name == "g_query_1_trans_1_repair_2_2_achieve"
 	)
 	certificate = next(
 		plan
@@ -844,6 +846,102 @@ def test_append_temporal_goal_keeps_negative_progress_literal_as_context(tmp_pat
 		"not done(X)",
 	)
 	assert updated.plans[1].body == ()
+
+
+def test_append_temporal_goal_establishes_negative_guard_via_positive_side_effect(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "acquisition-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain acquisition)
+		 (:requirements :strips :typing)
+		 (:types actor item - object)
+		 (:predicates
+		  (ready ?actor - actor ?item - item)
+		  (available ?actor - actor)
+		  (holding ?actor - actor ?item - item)
+		 )
+		 (:action acquire
+		  :parameters (?actor - actor ?item - item)
+		  :precondition (and (ready ?actor ?item) (available ?actor))
+		  :effect (and (holding ?actor ?item) (not (available ?actor)))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="acquisition",
+		plans=(
+			AgentSpeakPlan(
+				"holding_already_true",
+				AgentSpeakTrigger("achievement_goal", "holding", ("X", "Y")),
+				("holding(X, Y)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"holding_via_acquire",
+				AgentSpeakTrigger("achievement_goal", "holding", ("X", "Y")),
+				("ready(X, Y)", "available(X)"),
+				(AgentSpeakBodyStep("action", "acquire", ("X", "Y")),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "holding(agent, item) & not available(agent)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	query_plans = tuple(
+		plan for plan in updated.plans if plan.plan_name.startswith("g_query_1")
+	)
+	negative_leaf = next(
+		plan
+		for plan in query_plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_polarity") == "negative"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	establishment_plan = next(
+		plan
+		for plan in query_plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("wrapper_role")
+		== "query_local_negative_guard_establishment_branch"
+	)
+
+	assert negative_leaf.context[-1] == "available(agent)"
+	assert negative_leaf.body[0].symbol == establishment_plan.trigger.symbol
+	assert establishment_plan.context == (
+		"ready(agent, item)",
+		"available(agent)",
+	)
+	assert establishment_plan.body == (
+		AgentSpeakBodyStep("action", "acquire", ("agent", "item")),
+	)
+	serialization = next(
+		plan.binding_certificate[0]["serialization_certificate"]
+		for plan in query_plans
+		if plan.plan_name == "g_query_1_trans_1_repair_tree"
+	)
+	assert serialization["negative_guard_establishment_checked"] is True
+	assert serialization["negative_guard_establishable"] is True
 
 
 def test_append_lifted_temporal_goal_case_uses_dfa_builder(tmp_path: Path) -> None:
