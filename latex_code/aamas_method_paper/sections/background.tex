@@ -1,4 +1,4 @@
-\section{Background and Problem Formulation}
+\section{Problem Formulation and Foundations}
 \label{sec:background}
 
 \subsection{Planning Domains and Generalized Evidence}
@@ -58,10 +58,11 @@ context obligations $P^-$ that must remain absent. Disjunction, ambiguous DFA
 progress, and primitive-step safety monitoring are outside the implemented
 fragment.
 
-\subsection{Compilation Problem}
+\subsection{Certified Compilation Problem}
 
-The compiler receives a domain $D$, its training split, normalized
-singleton-goal evidence $E$, and a lifted temporal query $\varphi$. It produces:
+\textbf{Compilation problem.} The compiler receives a domain $D$, its training
+split $\mathcal{I}_{\mathrm{train}}$, normalized singleton-goal evidence $E$,
+and a lifted temporal query $\varphi$. It produces:
 \begin{enumerate}
 \item one maintained domain library $\mathcal{L}_D$ containing lifted atomic
 achievement modules; and
@@ -71,3 +72,28 @@ following certified DFA progress transitions.
 The output must use declared PDDL fluents and actions, plus the reserved static
 type relation \texttt{obj\_tp/2} and query-local helper names. It must not encode
 training objects, synthetic domain achievements, or hidden DFA-state fluents.
+
+Table~\ref{tab:supported-fragment} fixes the implemented boundary. A positive
+atomic goal is a predicate or supported singleton numeric equality that one
+module must establish, such as \texttt{on(X,Y)}. A negative transition literal
+such as $\neg\mathit{holding}(X)$ is an absence and preservation condition; it
+is not a request to call a synthetic negative achievement.
+
+\begin{table}[t]
+\centering
+\caption{Implemented compilation boundary.}
+\label{tab:supported-fragment}
+\begin{tabular}{p{0.58\columnwidth}l}
+\toprule
+Construct & Status \\
+\midrule
+Positive predicate atomic module & supported \\
+Singleton certified numeric goal & supported \\
+Transition conjunction and negation & certified only \\
+Negative achievement call & rejected \\
+Disjunction or ambiguous progress & rejected \\
+Mixed/multi-literal numeric guard & rejected \\
+Primitive-state temporal safety & external monitor \\
+\bottomrule
+\end{tabular}
+\end{table}

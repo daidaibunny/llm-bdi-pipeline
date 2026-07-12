@@ -1,21 +1,14 @@
-\section{Certificate-Carrying Compilation}
+\section{Certified AgentSpeak Plan-Library Synthesis}
 \label{sec:method}
 
 \subsection{Method Overview}
 
-The method has two compilation stages:
-\[
-\begin{aligned}
-D,\mathcal{I}_{\mathrm{train}},E
-&\longrightarrow \mathcal{L}_D,\\
-\varphi,\mathcal{L}_D
-&\longrightarrow \mathcal{Q}_{\varphi}.
-\end{aligned}
-\]
-The atomic stage produces the reusable domain library $\mathcal{L}_D$. The
-temporal stage appends query-local plans $\mathcal{Q}_{\varphi}$; it never
-relearns or duplicates the atomic library. Algorithm~\ref{alg:atomic} shows the
-first stage at a high level.
+This stage implements
+$D,\mathcal{I}_{\mathrm{train}},E\longrightarrow\mathcal{L}_D$.
+It compiles one reusable domain library $\mathcal{L}_D$ from a PDDL domain,
+training split, and normalized generalized-planning evidence. Temporal queries
+do not enter this optimization and never cause the atomic library to be
+relearned. Algorithm~\ref{alg:atomic} gives the stage at a high level.
 
 \begin{algorithm}[t]
 \caption{Compile a Domain Atomic Library}
@@ -106,6 +99,25 @@ an exported action.
 Every candidate carries a machine-checkable contract. The following
 certificates are implemented.
 
+\begin{table}[t]
+\centering
+\caption{Compiler certificates and the failures they exclude.}
+\label{tab:certificates}
+\begin{tabular}{lp{0.56\columnwidth}}
+\toprule
+Certificate & Excluded failure \\
+\midrule
+Binding & unbound action or subgoal variable \\
+Execution & unsatisfied symbolic precondition \\
+Achievement & branch returns without its trigger \\
+Closure & selected call has no selected module \\
+Progress & recursive branch can oscillate \\
+Release & acquired resource remains occupied \\
+Preparation & staged repair destroys feasibility \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{Binding and schema execution.}
 Every primitive-action or subgoal variable must be bound by the trigger, a
 positive context literal, or \texttt{obj\_tp/2}. Negative contexts and
@@ -165,25 +177,6 @@ full connected context. Preparation priority is derived from the selected
 module call graph only for branches carrying this certificate; unrelated
 domains retain their original branch ordering.
 
-\paragraph{Local soundness.}
-Let $c$ be an emitted finite action candidate for trigger $p(\bar X)$.
-
-\textbf{Proposition 1.} If the certified context of $c$ holds under a
-type-consistent grounding, symbolic execution does not reject, and all called
-submodules satisfy their own contracts, then $c$ is executable and
-$p(\bar X)$ holds when $c$ returns.
-
-\textbf{Proof sketch.} The binding certificate grounds every action term.
-Induction over body steps uses symbolic progression to establish each next
-precondition. The achievement certificate establishes the trigger atom after
-the final step. A recursive step additionally relies on its well-founded
-ranking and the induction hypothesis for the called module. Context projection
-does not weaken the primitive producer because the recursive target recheck
-restores its complete context. \hfill$\square$
-
-This proposition is local to an applicable branch. It does not claim that the
-candidate generator finds a branch for every reachable state.
-
 \subsection{Joint Clingo Selection}
 
 Validated evidence macros and certified schema candidates enter one answer-set
@@ -204,15 +197,8 @@ the lexicographic objective
 where $R$ is the number of compatible certified recursive capabilities, $C$ is
 the number of context literals, and $B$ is the number of body steps.
 
-\textbf{Proposition 2.} If Clingo returns $S$, then every encoded evidence and
-closure obligation is satisfied, and $S$ is lexicographically optimal within
-the generated certified candidate space.
-
-This follows directly from the hard constraints and optimization priorities of
-the generated answer-set program. It does not imply optimality over all
-AgentSpeak programs or completeness of candidate generation.
-
-\subsection{DFA-Guided Query Compilation}
+\section{DFA-Guided Composition of Temporally Extended Goals}
+\label{sec:temporal-composition}
 
 The temporal input is a validated tuple
 $\langle q,g_q,\varphi_q,A_q,B_q\rangle$: a query identifier, a top-level
@@ -242,7 +228,7 @@ query-local transition controller.
 \end{algorithmic}
 \end{algorithm}
 
-\subsubsection{Conditional Completion Effects}
+\subsection{Conditional Completion Effects}
 
 A completion summary describes effects observable when an atomic module
 successfully returns. It is computed as a relational fixed point over the
@@ -263,7 +249,7 @@ A negative guard $\neg N$ is not compiled as $!\neg N$. Every positive repair
 must instead prove that no feasible $\mayadd$ effect can unify with $N$. A
 negative-only edge is a context test and does not wait for an exogenous change.
 
-\subsubsection{Cyclic Threats and Enforced Portfolios}
+\subsection{Cyclic Threats and Enforced Portfolios}
 
 An acyclic threat graph is topologically serialized. For a cyclic universal
 summary, the compiler may copy a certified subset of atomic branches under a
@@ -283,7 +269,7 @@ remains acyclic in reachable states. Acyclic requested data alone is
 insufficient; if branch-level noninterference cannot be proved, compilation
 rejects.
 
-\subsubsection{Balanced Declarative Repair Trees}
+\subsection{Balanced Declarative Repair Trees}
 
 Given certified order $L_1,\ldots,L_n$, a leaf for $L_i$ succeeds when $L_i$
 already holds and otherwise calls its selected atomic module once. An internal
@@ -292,15 +278,6 @@ After one complete pass, a separate completion helper tests all positive and
 negative guard literals in one state; if the guard is still false, it repeats
 the transition controller. This is a declarative goal plan pattern rather than
 an action planner.
-
-\textbf{Proposition 3.} The generated tree contains $3n+2$ plans, has maximum
-trigger fan-out two and nesting depth $O(\log n)$, visits $O(n)$ helpers per
-pass, and preserves the certified literal order.
-
-\textbf{Proof sketch.} There are $n$ leaves with two plans each, $n-1$ internal
-nodes, one entry plan, and two completion plans. Midpoint splitting gives
-logarithmic depth. An induction over ranges shows that in-order traversal visits
-leaves in exactly the input order. \hfill$\square$
 
 For $n=1$, the tree calls the same atomic module and rechecks the same guard, so
 its primitive-action behavior is the singleton case. A singleton numeric
@@ -316,3 +293,67 @@ AgentSpeak goals but never as PDDL fluents or exported plan actions. Jason
 executes the resulting program, the environment exports the complete primitive
 action trace, and VAL independently checks that trace against the PDDL problem
 \cite{Howey2004VAL}.
+
+\section{Formal Guarantees}
+\label{sec:guarantees}
+
+The guarantees are conditional on the generated candidate space and supported
+temporal fragment. They do not assert completeness for arbitrary PDDL domains,
+AgentSpeak programs, or DFA strategies.
+
+\paragraph{Atomic branch soundness.}
+Let $c$ be an emitted candidate for trigger $p(\bar X)$.
+
+\textbf{Proposition 1.} If the certified context of $c$ holds under a
+type-consistent grounding and every called module satisfies its contract, then
+$c$ is executable and $p(\bar X)$ holds when $c$ returns.
+
+\textbf{Proof sketch.} The binding certificate grounds each action term.
+Induction over body steps uses symbolic progression to establish the next
+precondition. The achievement certificate establishes the trigger after the
+final step. Recursive calls additionally rely on their well-founded ranking;
+staged preparation rechecks the complete producer context before execution.
+\hfill$\square$
+
+This is a local applicable-branch property. It does not claim that candidate
+generation finds an applicable branch in every reachable state.
+
+\paragraph{Candidate-space optimality.}
+
+\textbf{Proposition 2.} If Clingo returns $S$, every encoded evidence and
+closure obligation is satisfied, and $S$ is lexicographically optimal within
+the generated certified candidate space.
+
+This follows from the hard constraints and optimization priorities in the
+generated answer-set program. It does not imply optimality over all AgentSpeak
+programs or completeness of candidate generation.
+
+\paragraph{Supported-transition composition.}
+
+\textbf{Proposition 3.} Let $B=P^+\land\neg P^-$ be an accepted transition
+guard. If every negative obligation holds when the transition starts, and every
+selected atomic call terminates, establishes its positive literal, and
+satisfies the certified preservation order for earlier positive and negative
+obligations, then one complete repair-tree pass establishes $B$.
+
+\textbf{Proof sketch.} Induct over the certified literal order. Each leaf makes
+its positive literal true. The completion summary of every later leaf excludes
+a delete of an earlier positive literal and an add of a forbidden negative
+atom. Consequently all previous positive obligations remain true and each
+initially absent negative atom remains absent. The final helper
+checks the complete guard in one observable state. \hfill$\square$
+
+The claim applies at successful atomic-module boundaries. It does not cover a
+safety formula that must be observed after every primitive action.
+
+\paragraph{Balanced-tree structure.}
+
+\textbf{Proposition 4.} For a certified order of $n$ positive literals, the
+generated tree contains $3n+2$ plans, has maximum trigger fan-out two and
+nesting depth $O(\log n)$, visits $O(n)$ helpers per pass, and preserves the
+certified order.
+
+\textbf{Proof sketch.} There are $n$ leaves with two plans each, $n-1$
+internal nodes, one entry plan, and two completion plans. Midpoint splitting
+gives logarithmic depth. Induction over contiguous ranges shows that in-order
+traversal visits leaves in exactly the input order. \hfill$\square$

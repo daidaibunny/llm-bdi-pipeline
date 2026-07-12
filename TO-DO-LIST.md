@@ -48,7 +48,7 @@ certificate.
 | Numeric domains | Experimental | Keep numeric support marked experimental until numeric fluents have a complete executable semantics and full validation evidence. |
 | Temporal Input generation | Ready for model run | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are frozen. The colleague runs only the 475 Prompt-2 translations and returns canonical `translation_predictions.jsonl`. |
 | Temporal Goal Validation | Implemented; pending model artifact | Run `scripts/validate_temporal_goal_predictions.py` after predictions arrive. The batch checks the eight-key contract, exact gold/predicted DFA equivalence, all hidden witnesses, optional Jason traces with neutral-goal VAL, and gold-DFA acceptance. |
-| AAAI paper package | Structured draft; final matrix pending | The manuscript uses the latest available official AAAI-26 author kit as its format baseline, occupies six technical-content pages before references, includes the official reproducibility checklist, and states only implemented claims. Regenerate the final cross-domain matrix from one clean pinned revision before submission. |
+| AAAI paper package | Narrative aligned; final matrix pending | Maintain the section responsibilities, claim boundaries, result-insertion contract, and page budget in `docs/aaai_paper_narrative_outline.md`. The manuscript uses the latest available official AAAI-26 author kit and states only implemented claims. Regenerate the final atomic and TEG matrices from one clean pinned revision before submission. |
 
 ## Certified Generic Fixes
 

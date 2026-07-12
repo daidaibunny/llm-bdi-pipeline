@@ -22,8 +22,8 @@
 \pdfinfo{/TemplateVersion (2026.1)}
 \setcounter{secnumdepth}{2}
 
-\title{Compiling Generalized-Planning Evidence into Certified Temporal
-AgentSpeak Libraries}
+\title{From Generalized Planning to BDI Execution: Certified AgentSpeak Plan
+Libraries for Temporally Extended Goals}
 \author{Anonymous Submission}
 \affiliations{}
 
@@ -44,66 +44,97 @@ AgentSpeak Libraries}
 \maketitle
 
 \begin{abstract}
-Generalized planners synthesize reusable policies, whereas a
-Belief--Desire--Intention agent requires an executable plan library whose
-modules can be maintained and called by later goals. We present a
-certificate-carrying compiler that bridges these representations. A provider
-adapter first normalizes singleton-goal generalized-planning rules; our current
-implementation instantiates this interface with MOOSE. The compiler combines
-validated evidence macros with candidates derived from PDDL action schemas and
-uses Clingo to select a compact set of lifted AgentSpeak plans under explicit
-binding, executability, achievement, closure, recursive-progress, and
-resource-restoration constraints. Query-specific temporal goals are kept
-separate from this domain-level library. A real \ltlf-to-DFA toolchain converts
-each supported query into transition guards, and the compiler serializes
-conjunctive achievements only when conditional completion effects certify
-positive-goal and negative-guard preservation. Balanced query-local repair
-trees execute the resulting order with trigger fan-out at most two. The method
-is deliberately fail-closed: unsupported negative achievements, disjunctive or
+Generalized planners synthesize reusable policies, but a
+Belief--Desire--Intention (BDI) interpreter requires an executable plan library
+whose modules can be maintained, selected, and called by later intentions.
+Direct translation does not establish safe variable binding, internal-module
+closure, recursive progress, resource restoration, or preservation among
+interacting goals. We present a certificate-carrying compiler that bridges
+these representations. Its domain stage normalizes singleton-goal planning
+evidence, instantiated here by MOOSE, combines validated evidence macros with
+PDDL-schema candidates, and uses Clingo to select a compact lifted AgentSpeak
+library under explicit correctness obligations. Its query stage keeps
+temporally extended goals separate from reusable domain behavior: a real
+\ltlf-to-DFA toolchain produces transition guards, whose positive achievements
+and negative obligations are serialized only when certified completion effects
+establish preservation. The resulting query-local controllers use balanced
+declarative repair trees and execute over the same maintained domain library.
+The implementation is fail-closed: unsupported negative achievements,
 ambiguous automata, uncertified recursive interference, and mixed numeric
-conjunctions are rejected instead of being compiled heuristically.
+conjunctions are rejected rather than compiled heuristically.
 \end{abstract}
 
 \section{Introduction}
 
 A classical planner returns a plan for one grounded problem. A generalized
 planner instead seeks a policy or program reusable across a family of problems.
-A practical Belief--Desire--Intention agent needs a third artifact: a maintained
-plan library with lifted event triggers, belief contexts, primitive actions,
-and calls between achievement modules. Converting a generalized policy into
-such a library is not a formatting step. Variables must remain safely bound,
-called modules must be present, recursive branches must terminate, and an
-apparently shorter branch must not silently lose the behavior evidenced by the
-source policy.
+A practical Belief--Desire--Intention (BDI) agent needs a third artifact: a
+maintained plan library with lifted event triggers, belief contexts, primitive
+actions, and calls between achievement modules. Converting a generalized
+policy into such a library is not a formatting step. Variables must remain
+safely bound, called modules must be present, recursive branches must terminate,
+and an apparently shorter branch must not silently lose behavior evidenced by
+the source policy.
 
-Temporal user goals introduce a separate difficulty. A domain-level module such
-as \texttt{+!on(X,Y)} should be reusable, while a query requiring several facts
-in one state or across time needs query-specific control. Treating a conjunction
-as a sequence of independent achievement calls is unsound when a later call can
-delete an earlier result. Conversely, embedding each query into the static
-library would destroy the distinction between reusable domain behavior and
-temporal intent.
+Consider a generalized-planning rule for the singleton goal
+\texttt{on(X,Y)}. A finite evidence macro may apply \texttt{stack(X,Y)} when
+\texttt{holding(X)} and \texttt{clear(Y)} hold, but a reusable BDI module must
+also handle states in which \texttt{Y} is obstructed. The desired lifted
+structure can call an internal \texttt{!clear(Y)} module and retry
+\texttt{!on(X,Y)}. The helper may be absent from the evidence because
+\texttt{clear(X)} was never a training goal; it must instead enter through
+PDDL add-effect and precondition closure. This example exposes the central
+representation gap: evidence for grounded executions does not by itself define
+a closed, terminating AgentSpeak library.
 
-We address these problems with two explicit compilation stages. The first turns
-singleton-goal generalized-planning evidence and PDDL schemas into one lifted
-atomic-module library. The second compiles supported DFA transition guards into
-query-local controllers over that library. MOOSE supplies the evidence in our
-implementation, but MOOSE rules are treated as evidence rather than as the
-finished AgentSpeak program. All acceptance decisions after normalization are
-made from rule structure, PDDL schemas, and compiler certificates, not from
-domain or predicate names.
+Temporally extended goals (TEGs) introduce a separate difficulty: their truth
+depends on a finite state trace rather than only its final state. A domain-level
+module such as \texttt{+!on(X,Y)} should remain reusable, while a query such as
+$F(\mathit{on}(X,Y)\land X(F(\mathit{clear}(Z))))$ requires query-specific
+control. Treating a conjunction on one automaton transition as an unchecked
+sequence of achievement calls is unsound when a later call can delete an
+earlier result. Conversely, embedding each query into the static domain
+library would conflate reusable behavior with temporal intent.
 
-The contributions implemented in this work are:
+We address both gaps with the two-stage architecture in
+Figure~\ref{fig:architecture}. The first stage turns singleton-goal
+generalized-planning evidence and PDDL schemas into one lifted atomic-module
+library. The second compiles supported deterministic-finite-automaton (DFA)
+transition guards into query-local controllers over that library. MOOSE
+supplies the evidence in our implementation, but its rules are evidence rather
+than finished AgentSpeak code. After normalization, acceptance depends on rule
+structure, PDDL schemas, and compiler certificates, never on domain or
+predicate names.
+
+\begin{figure}[t]
+\centering
+\fbox{\begin{minipage}{0.92\columnwidth}
+\centering\small
+PDDL domain + training split $\longrightarrow$ MOOSE evidence\\
+$\downarrow$ certified domain compilation\\
+one maintained AgentSpeak domain library\\[2pt]
+validated lifted LTLf $\longrightarrow$ real DFA transitions\\
+$\downarrow$ certified query compilation\\
+query-local BDI controllers appended to the same library\\[2pt]
+Jason execution $\longrightarrow$ PDDL trace
+$\longrightarrow$ VAL + DFA validation
+\end{minipage}}
+\caption{The implemented representation bridge. Domain behavior is compiled
+once; temporally extended queries append only query-local controllers.}
+\label{fig:architecture}
+\end{figure}
+
+The implemented contributions are:
 \begin{itemize}
-\item a normalized singleton-goal evidence contract and a certificate-carrying
-compiler that jointly selects validated provider macros and schema-derived
-AgentSpeak modules in one Clingo optimization;
-\item domain-independent certificates for lifted binding, local schema
-execution, recursive relational progress, one-step resource release, and
-staged preparation through schema-inferred single-valued fluents; and
-\item a real \ltlf-to-DFA query compiler that derives conditional completion
-effects, rejects uncertified interference, and emits balanced declarative
-repair trees without adding DFA-state fluents to the domain library.
+\item a certificate-carrying plan-library compiler that jointly selects
+validated singleton-goal evidence and PDDL-schema modules in one Clingo
+optimization;
+\item domain-independent obligations for lifted binding, local execution,
+closure, recursive relational progress, one-step resource release, and staged
+preparation; and
+\item a real \ltlf-to-DFA query compiler that uses conditional completion
+effects to preserve positive and negative transition obligations, emitting
+balanced declarative BDI controllers without domain-level DFA-state fluents.
 \end{itemize}
 
 The claim is intentionally narrower than universal generalized planning or full
@@ -112,9 +143,9 @@ candidate space and the supported DFA fragment, and we report rejection when a
 required certificate cannot be constructed.
 
 \input{sections/background}
-\input{sections/related_work}
 \input{sections/method}
 \input{sections/evaluation}
+\input{sections/related_work}
 
 \section{Limitations and Scope}
 \label{sec:limitations}
@@ -134,6 +165,18 @@ Branching automata whose progress cannot be inferred from world state require
 an external DFA-state monitor. Formulas that constrain every primitive state,
 such as safety properties, also require such a monitor because the current
 effect boundary is successful atomic-module completion.
+
+\section{Conclusion}
+
+This work closes a representation gap between generalized planning and BDI
+execution. The compiler turns singleton-goal policy evidence and PDDL schemas
+into one maintained, lifted AgentSpeak domain library, while a separate
+\ltlf-to-DFA stage appends certified query-local controllers for supported
+temporally extended goals. The output can be executed by an unmodified Jason
+interpreter and independently checked through PDDL and finite-trace validation.
+The contribution is therefore not a new generalized planner or BDI semantics,
+but a fail-closed compilation problem that makes reusable planning evidence
+deployable as explicit BDI behavior.
 
 \bibliography{references}
 

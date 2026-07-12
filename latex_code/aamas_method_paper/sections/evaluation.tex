@@ -1,23 +1,27 @@
-\section{Evaluation Protocol and Implementation Status}
+\section{Experimental Evaluation}
 \label{sec:evaluation}
 
-The complete benchmark matrix is intentionally left for the final clean rerun.
-This section fixes the questions, corpus, metrics, budgets, and validation chain
-implemented in the artifact; it reports only results already reproduced from a
-pinned clean revision.
+This draft fixes the questions, corpus, metrics, budgets, and validation chain
+before the final clean rerun. It reports only checkpoints already reproduced
+from a pinned clean revision; aggregate atomic and TEG result tables will be
+generated from the final machine-readable artifacts rather than provisional
+diagnostic runs.
 
 \subsection{Research Questions}
 
 \begin{description}
 \item[RQ1: Atomic compilation.] Does MOOSE evidence compile into a closed,
 lifted AgentSpeak library whose branches satisfy the declared certificates?
-\item[RQ2: Symbol invariance.] Do compiler decisions remain unchanged under
+\item[RQ2: Compactness and invariance.] How much does joint selection reduce
+the certified candidate library, and do decisions remain unchanged under
 predicate/action renaming, compatible parameter permutation, and irrelevant
 fluent injection?
-\item[RQ3: Temporal composition.] Does each supported DFA guard compile into a
+\item[RQ3: Temporal correctness.] Does each supported DFA guard compile into a
 preservation-certified controller without changing order across DFA edges?
-\item[RQ4: Executable validity.] Does Jason produce a complete primitive-action
-trace that VAL accepts for the corresponding PDDL instance?
+\item[RQ4: End-to-end validity.] Does Jason produce a complete primitive-action
+trace that both VAL and the corresponding finite-trace DFA accept?
+\item[RQ5: Efficiency.] What are the costs of evidence synthesis, library
+compilation, query append, Jason execution, and independent validation?
 \end{description}
 
 \subsection{Benchmark Scope}
@@ -71,12 +75,15 @@ eligible for the final matrix.
 
 \subsection{Metrics and Validation}
 
-For each domain we record evidence parsing, atomic compilation, selected branch
-count, context/body size, and closure status. For each test problem we record
-Jason success, timeout or failure, primitive action count, VAL success, and
-wall-clock time. A problem counts as solved only when Jason emits its explicit
-success marker and VAL accepts the complete exported trace. Prefix actions from
-a failed or timed-out intention are diagnostic and are not counted as a plan.
+For each domain we record evidence parsing, atomic compilation, evidence and
+schema candidate counts, selected branch count, context/body size, library
+size, closure status, and stage runtimes. For each test problem we record Jason
+success, timeout or failure, primitive action count, VAL success, DFA acceptance
+where applicable, and wall-clock time. A classical problem counts as solved
+only when Jason emits its explicit success marker and VAL accepts the complete
+exported trace. A temporal problem additionally requires acceptance by its
+finite-trace DFA. Prefix actions from a failed or timed-out intention are
+diagnostic and are not counted as a plan.
 
 For temporal inputs we additionally record DFA construction, supported-fragment
 validation, transition count, serialization certificate, negative-guard
@@ -84,33 +91,36 @@ preservation, and final finite-trace acceptance. Classical PDDL conjunctions
 are used as one-transition achievement guards for infrastructure validation;
 they are not presented as natural-language \ltlf predictions.
 
+\subsection{Gold and Predicted Temporal Goals}
+
+The temporal evaluation separates compiler correctness from language-model
+translation quality. In the \emph{gold TEG} condition, the hidden structured
+\ltlf formula is supplied directly to the temporal compiler. This tests DFA
+construction, supported-fragment validation, query-controller compilation,
+Jason execution, and finite-trace acceptance without a translation model. In
+the \emph{predicted TEG} condition, a model translates controlled natural
+language into lifted \ltlf JSON. Exact language equivalence between the gold
+and predicted DFAs is checked before execution. A translation mismatch is not
+reported as a compiler or BDI execution failure.
+
+For both conditions we retain formula profile, JSON validity, DFA construction,
+controller acceptance or rejection, Jason status, VAL status, DFA-trace status,
+action count, and runtime. Translation errors, unsupported automata,
+certificate rejection, execution failure, timeout, VAL rejection, and DFA
+rejection remain distinct outcomes.
+
 The symbol-invariance suite uses synthetic domains whose vocabulary is renamed
 and whose irrelevant predicates are changed. The staged-preparation regression,
 for example, uses fabrication and tool predicates rather than any Rovers
 vocabulary while preserving the same PDDL dependency structure. This tests the
 claim that compiler rules depend on schemas rather than benchmark names.
 
-\subsection{Current Verified Checkpoint}
+\subsection{Verified Implementation Checkpoints}
 
 At commit \texttt{ac934327}, the full Python suite contains 340 passing tests;
-the only warnings are two deprecations in the third-party Lark package. Ruff
-passes for the complete repository. A clean-revision Rovers run compiles one
-atomic library and obtains Jason- and VAL-valid traces for all 90 official test
-instances, including the two staged image-production regressions that motivated
-existential preparation projection. A clean Blocksworld-On regression produces
-a 30-action VAL-valid trace, confirming that the functional-fluent restriction
-does not retain the earlier over-broad branch reordering.
-
-These checks establish implementation behavior for the reported cases, not the
-final cross-domain coverage claim. The final paper table will be generated only
-after rerunning all domains from one clean pinned revision with the budgets
-above.
-
-\subsection{Reproducibility Artifacts}
-
-The repository contains a benchmark registry, pinned source metadata, canonical
-domain libraries, per-test AgentSpeak programs, exported PDDL traces, VAL
-records, DFA diagnostics, and timestamped summary JSON. The final-paper script
-regenerates result macros from these artifacts rather than transcribing numbers
-by hand. The submission package will include the official AAAI reproducibility
-checklist after the references.
+and Ruff passes. A clean-revision Rovers run obtains Jason- and VAL-valid traces
+for all 90 official test instances, including the staged image-production
+regressions that motivated existential preparation projection. A clean
+Blocksworld-On probe produces a 30-action VAL-valid trace. These are
+implementation checkpoints, not the final cross-domain claim; final tables will
+be regenerated from one clean pinned revision with the budgets above.

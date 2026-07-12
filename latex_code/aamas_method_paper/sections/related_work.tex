@@ -23,9 +23,11 @@ such as \texttt{!clear(Y)}. AgentSpeak supplies an executable BDI plan-library
 semantics \cite{Rao1996AgentSpeak}. Plan patterns for declarative AgentSpeak
 goals establish the principle that a plan should test the intended state at
 completion rather than equate procedural return with achievement
-\cite{Hubner2006DeclarativeGoals}. Our contribution is not a new BDI execution
-semantics; it is a compiler that generates such modules and completion patterns
-from generalized-planning evidence under PDDL-derived certificates.
+\cite{Hubner2006DeclarativeGoals}. Work on BDI plan failure distinguishes a
+failed procedural attempt from the continued pursuit of its declarative goal
+\cite{Sardina2007PlanFailure}. Our contribution is not a new BDI execution
+semantics; it is a compiler that generates modules and completion patterns from
+generalized-planning evidence under PDDL-derived certificates.
 
 \paragraph{Finite-trace temporal control.}
 \ltlf provides finite-trace semantics and admits automata-based reasoning
@@ -35,7 +37,11 @@ implementation used here \cite{Fuggitti2020LTLf2DFA}. Full temporal synthesis
 can maintain explicit automaton state; our implemented fragment is narrower.
 It compiles one certified accepting path into context-based AgentSpeak helpers
 and rejects automata whose progress cannot be inferred without an external
-monitor.
+monitor. Temporally extended goals have also been integrated into agent
+programming languages as explicit goal semantics \cite{Hindriks2009TemporalGoals}.
+We instead preserve standard AgentSpeak execution and compile the supported
+automaton fragment into query-local intentions over a separately synthesized
+domain library.
 
 \paragraph{Position of this work.}
 Prior generalized planners target policies, sketches, or programs; AgentSpeak
