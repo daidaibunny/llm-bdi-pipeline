@@ -175,6 +175,23 @@ all pass. The frozen version-1 release records execution as `not_attempted`.
 Future execution failures are reported by domain and formula profile and do not
 retroactively change the translation or witness metrics.
 
+Each problem-level execution is one externally bound invocation. Before DFA
+guard atoms enter the query-local AgentSpeak wrapper, the compiler substitutes
+the case binding `theta_i`, for example `on(X,Y)` under `{X:b1,Y:b4}` becomes
+the wrapper subgoal `!on(b1,b4)`. The atomic domain module remains lifted as
+`+!on(X,Y)`; only the query wrapper is grounded. The runner rejects any mismatch
+between the released binding and the sealed construction-audit assignment.
+
+The paper execution entry point is
+`scripts/run_temporal_goal_benchmark_execution.sh`. It consumes a complete
+timestamped atomic-library batch without retraining MOOSE, compiles every case
+independently, and records query compilation, Jason, PDDL replay, neutral-goal
+VAL, gold-DFA, and predicted-DFA outcomes separately. Unsupported DFA structure
+and missing certificates are structured compiler rejections rather than Jason
+failures. Results are aggregated by domain and formula profile, while every
+case retains its DFA payload, Jason artifacts, committed trace, validator
+artifacts, and exact source revision.
+
 The compiler contract also includes a bounded integer numeric-resource fragment.
 A numeric resource is a declared PDDL function with an integer value in the
 state, for example `(capacity ?vehicle)` or `(pogo_sticks_to_make)`. A numeric

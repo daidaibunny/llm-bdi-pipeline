@@ -360,7 +360,15 @@ def _rewrite_dfa_payload_labels_from_lifted_atoms(
 ) -> dict[str, Any]:
 	"""Restore LTLf propositional labels into lifted PDDL literal labels."""
 
-	symbol_map = _lifted_atom_symbol_map(goal_case.atoms)
+	invocation_bindings = {
+		str(parameter).strip(): str(value).strip()
+		for parameter, value in dict(goal_case.bindings or {}).items()
+		if str(parameter).strip() and str(value).strip()
+	}
+	symbol_map = _lifted_atom_symbol_map(
+		goal_case.atoms,
+		invocation_bindings=invocation_bindings,
+	)
 	if not symbol_map:
 		return dict(dfa_payload)
 	rewritten_transitions: list[dict[str, Any]] = []
@@ -384,6 +392,7 @@ def _rewrite_dfa_payload_labels_from_lifted_atoms(
 	payload["lifted_atom_binding"] = {
 		"atom_count": len(goal_case.atoms),
 		"rewritten_transition_count": rewrite_count,
+		"invocation_bindings": invocation_bindings,
 		"symbols": sorted(
 			{
 				key
@@ -395,18 +404,30 @@ def _rewrite_dfa_payload_labels_from_lifted_atoms(
 	return payload
 
 
-def _lifted_atom_symbol_map(atoms: Sequence[LTLfAtomSpec]) -> dict[str, str]:
+def _lifted_atom_symbol_map(
+	atoms: Sequence[LTLfAtomSpec],
+	*,
+	invocation_bindings: Mapping[str, str],
+) -> dict[str, str]:
 	normalizer = SymbolNormalizer()
 	symbol_map: dict[str, str] = {}
 	for atom in tuple(atoms or ()):
 		predicate = str(atom.predicate or "").strip()
-		arguments = tuple(str(argument).strip() for argument in tuple(atom.args or ()) if str(argument).strip())
+		lifted_arguments = tuple(
+			str(argument).strip()
+			for argument in tuple(atom.args or ())
+			if str(argument).strip()
+		)
+		arguments = tuple(
+			invocation_bindings.get(argument, argument)
+			for argument in lifted_arguments
+		)
 		if not predicate:
 			continue
 		pddl_atom = _call(predicate, arguments)
 		candidates = {
 			str(atom.symbol or "").strip(),
-			_symbol_for(predicate, arguments),
+			_symbol_for(predicate, lifted_arguments),
 			pddl_atom,
 			pddl_atom.replace(" ", ""),
 		}

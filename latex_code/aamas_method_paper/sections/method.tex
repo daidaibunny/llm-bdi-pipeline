@@ -208,6 +208,14 @@ guards. Accepting self-loops labelled \texttt{true} are ignored as plumbing;
 every progress edge on the unique certified accepting path receives one
 query-local transition controller.
 
+One benchmark execution is an externally bound invocation. Before compiling
+guards, the case assignment $B_q$ substitutes lifted parameters in the
+query-local atoms; for example, $\mathit{on}(X,Y)$ under
+$\{X\mapsto b_1,Y\mapsto b_4\}$ invokes $!\mathit{on}(b_1,b_4)$. This does not
+ground the shared atomic library: its reusable trigger remains
+$+!\mathit{on}(X,Y)$. Execution is rejected if the released invocation binding
+differs from the sealed construction-audit assignment.
+
 \begin{algorithm}[t]
 \caption{Compile One Supported DFA Transition}
 \label{alg:transition}

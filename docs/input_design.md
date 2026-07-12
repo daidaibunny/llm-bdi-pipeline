@@ -296,6 +296,31 @@ execution metric. `benchmark.json` therefore records
 acceptance are reported separately and cannot alter the frozen translation
 scores.
 
+The canonical execution runner is:
+
+```bash
+NUM_WORKERS=8 bash scripts/run_temporal_goal_benchmark_execution.sh
+```
+
+It uses the latest complete timestamped atomic AgentSpeak library batch unless
+`ATOMIC_BATCH_ID` names one explicitly. Every problem row is compiled as a
+separate externally bound invocation: the lifted formula and atom table remain
+the translation unit, while the sealed case binding grounds only its
+query-local wrapper. For example, `on(X,Y)` with `X=b1,Y=b4` calls
+`!on(b1,b4)`; the shared atomic module remains `+!on(X,Y)`. A released binding
+that differs from the private construction-audit assignment aborts loading.
+
+For every selected case the runner records distinct statuses for DFA/controller
+compilation, Jason completion, PDDL replay, neutral-goal VAL, gold-DFA
+acceptance, and predicted-DFA acceptance. Unsupported temporal structure,
+numeric-preservation gaps, negative-guard failures, timeout, and validator
+infrastructure errors are not collapsed into one generic failure. The run root
+is `artifacts/temporal_goal_execution_runs/<run-id>/`; `summary.json` contains
+domain and formula-profile aggregates, while `cases/<domain>/<sample-id>/`
+contains the auditable per-case artifacts. A nonzero process exit means at least
+one selected case did not satisfy every end-to-end obligation; it does not
+discard the completed records.
+
 ## Normative NL-to-Lifted-LTLf Prompt Handoff
 
 The only authoritative prompt source on `main` is:

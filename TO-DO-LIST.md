@@ -48,7 +48,7 @@ certificate.
 | Numeric domains | Experimental | Keep numeric support marked experimental until numeric fluents have a complete executable semantics and full validation evidence. |
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
-| Temporal execution validation | Pending | Append the 16 domain views to regenerated atomic libraries and report query append, Jason, PDDL replay, neutral-goal VAL, gold-DFA, and predicted-DFA results separately. Do not relabel translation coverage as execution coverage. |
+| Temporal execution validation | Runner complete; full matrix pending | `scripts/run_temporal_goal_benchmark_execution.sh` executes externally bound cases against a complete atomic-library batch and reports query compilation, Jason, PDDL replay, neutral-goal VAL, gold-DFA, and predicted-DFA outcomes separately. Run the full 1,228-case matrix from a clean pinned revision; do not relabel translation coverage as execution coverage. |
 | AAAI paper package | Narrative aligned; final matrix pending | Maintain the section responsibilities, claim boundaries, result-insertion contract, and page budget in `docs/aaai_paper_narrative_outline.md`. The manuscript uses the latest available official AAAI-26 author kit and states only implemented claims. Regenerate the final atomic and TEG matrices from one clean pinned revision before submission. |
 
 ## Certified Generic Fixes

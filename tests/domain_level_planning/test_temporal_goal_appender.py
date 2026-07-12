@@ -910,6 +910,43 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 	)
 
 
+def test_append_lifted_temporal_goal_applies_external_invocation_bindings(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_blocks_domain(tmp_path)
+	library = PlanLibrary(domain_name="blocks", plans=())
+	case = LiftedLTLfGoalCase(
+		query_id="query_1",
+		goal_name="g_query_1",
+		problem_file="p01.pddl",
+		source_text="Eventually put X on Y.",
+		ltlf_formula="F(a0)",
+		atoms=(LTLfAtomSpec("a0", "on", ("X", "Y")),),
+		bindings={"X": "b1", "Y": "b4"},
+	)
+
+	updated, dfa_payload = append_lifted_temporal_goal_case_to_library(
+		plan_library=library,
+		goal_case=case,
+		domain_file=domain_file,
+		dfa_builder=_FakeEncodedDFABuilder(),
+	)
+
+	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "on(b1, b4)"
+	achieve_plan = next(
+		plan
+		for plan in updated.plans
+		if plan.plan_name == "g_query_1_trans_1_repair_1_1_achieve"
+	)
+	assert achieve_plan.body == (
+		AgentSpeakBodyStep("subgoal", "on", ("b1", "b4")),
+	)
+	assert dfa_payload["lifted_atom_binding"]["invocation_bindings"] == {
+		"X": "b1",
+		"Y": "b4",
+	}
+
+
 def test_append_lifted_temporal_goal_accepts_numeric_resource_function_atom(
 	tmp_path: Path,
 ) -> None:
