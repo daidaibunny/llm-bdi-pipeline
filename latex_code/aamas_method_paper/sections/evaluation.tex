@@ -1,209 +1,107 @@
 \section{Experimental Evaluation}
 \label{sec:evaluation}
 
-This section fixes the questions, corpus, metrics, budgets, and validation
-chain before interpreting results. The temporal execution matrix is generated
-from a pinned revision and machine-readable artifact. Atomic compactness and
-ablation tables remain outside this result insertion rather than being inferred
-from provisional diagnostic runs.
+\paragraph{Questions.}
+We ask whether readable MOOSE evidence compiles into closed certified libraries
+(RQ1), how much joint selection reduces their certified candidate spaces and
+whether selection is symbol invariant (RQ2), whether supported DFA guards
+compile without reordering DFA edges (RQ3), whether complete Jason traces pass
+VAL and temporal validation (RQ4), and what library and execution costs result
+(RQ5).
 
-\subsection{Research Questions}
+\paragraph{Corpus and protocol.}
+The corpus contains all eight MOOSE companion classical domains with nonempty
+official train/test splits \cite{Chen2026Moose}, four bounded-integer variants,
+and four serialized-width families. Blocksworld Clear and On use the published
+no-constants general-policy splits \cite{Frances2021LearningGeneralPolicies};
+Tower uses the first quarter of a pinned public PDDL corpus and Depots the first
+half of the D2L corpus \cite{Bonet2018Features}. These groups describe
+evaluation properties and never route compilation.
 
-\begin{description}
-\item[RQ1: Atomic compilation.] Does MOOSE evidence compile into a closed,
-lifted AgentSpeak library whose branches satisfy the declared certificates?
-\item[RQ2: Compactness and invariance.] How much does joint selection reduce
-the certified candidate library, and do decisions remain unchanged under
-predicate/action renaming, compatible parameter permutation, and irrelevant
-fluent injection?
-\item[RQ3: Temporal correctness.] Does each supported DFA guard compile into a
-preservation-certified controller without changing order across DFA edges?
-\item[RQ4: End-to-end validity.] Does Jason produce a complete primitive-action
-trace that both VAL and the corresponding finite-trace DFA accept?
-\item[RQ5: Efficiency.] What are the costs of evidence synthesis, library
-compilation, query append, Jason execution, and independent validation?
-\end{description}
+MOOSE evidence used seed 0, three goal permutations, six workers, a 12-hour
+timeout, and a 16-GiB guard. The paper reports 12 hours and 32 GB for synthesis,
+five repetitions, and 30 minutes and 8 GB for test-time planning
+\cite{Chen2026Moose}; our memory cap is a declared deviation. Temporal run
+\texttt{\TEGExecutionRunID} uses clean commit
+\texttt{\TEGExecutionCommit}, 12 workers, 30-minute Jason and VAL limits, and
+a 64-MiB Java stack. It records SHA-256 hashes of every atomic JSON/ASL input.
+The result generator rejects a changed benchmark hash, prediction hash, dirty
+tracked revision, missing case, or mismatched library hash.
 
-\subsection{Benchmark Scope}
+A nonempty execution succeeds only if Jason emits its explicit success marker,
+neutral-goal VAL accepts the complete primitive PDDL trace, and replayed states
+are accepted by both the gold and predicted DFAs. Failed prefixes are
+diagnostics, never plans. The released benchmark contains short state-changing
+witnesses: it evaluates the representation and execution chain, not solution of
+the original PDDL achievement goal.
 
-The corpus contains all MOOSE companion domains with direct nonempty train/test
-splits, plus project-added serialized-width families. The groups in
-Table~\ref{tab:benchmarks} describe evaluation properties; they do not route a
-domain to a different compiler.
+\paragraph{Gold and predicted conditions.}
+The model is called once for each of \TranslationInputCount{} deduplicated
+natural-language inputs. All \TranslationJSONValidCount{} predictions satisfy
+the JSON/PDDL contract, and exact reachable-product exploration finds all
+\TranslationEquivalentCount{} predicted DFAs language-equivalent to their gold
+DFAs. The frozen run uses GPT-5.5, temperature 0, JSON-object output, a 60,000-
+token ceiling, a 1,000-second request timeout, and at most three semantic
+retries under prompt commit \texttt{8804f734}. Those predictions expand to
+\TEGProblemCount{} bound query controllers.
+We execute each predicted controller once and evaluate its resulting trace
+against both automata. Thus gold-DFA and predicted-DFA acceptance are separate
+oracles on the same trace, not two duplicated execution runs. Translation
+failure would be recorded before controller execution and cannot be counted as
+a BDI failure.
 
-\begin{table}[t]
-\centering
-\caption{Implemented benchmark corpus.}
-\label{tab:benchmarks}
-\begin{tabular}{p{0.26\columnwidth}p{0.63\columnwidth}}
-\toprule
-Property group & Domains \\
-\midrule
-Classical & Barman, Ferry, Gripper, Logistics, Miconic, Rovers, Satellite,
-Transport \\
-Numeric & Numeric Ferry, Numeric Miconic, Numeric Minecraft, Numeric Transport \\
-Serialized width & Blocksworld Clear, Blocksworld On, Blocksworld Tower, Depots \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{sections/result_domain_table}
 
-MOOSE domains use the official companion \texttt{training/} and
-\texttt{testing/} directories. Blocksworld Clear and On use the published
-no-constants QClear/QOn splits. Blocksworld Tower uses the first quarter of its
-ordered instances for training; Depots uses the first half because its source
-contains only 22 instances. These deterministic project splits are fixed before
-execution and recorded in source metadata.
+\paragraph{RQ1--RQ2: atomic libraries.}
+Table~\ref{tab:domain-results} reports the exact hashed inputs used downstream.
+All \BenchmarkDomainCount{} libraries contain readable MOOSE evidence, pass
+PDDL support and module-closure checks, and record Clingo as the selector.
+Across domains, Clingo selects
+\AtomicSelectedBranchCount{} of \AtomicCandidateCount{} certified candidates,
+a reduction of \AtomicRemovedBranchCount{} branches
+(\AtomicReductionPercent\%), yielding \AtomicLibrarySizeKiB{} KiB of
+ASL. This modest reduction is the measured compactness result: we claim
+lexicographic optimality only inside each generated certified candidate space,
+not a globally minimal AgentSpeak program. Predicate/action renaming,
+type-compatible parameter permutation, irrelevant-fluent injection, and
+counterexample-domain tests pass in the symbol-invariance suite. The atomic
+generation batch did not record a clean source revision suitable for timing;
+we therefore report its hashed library structure but omit synthesis and
+compiler time from the formal runtime result.
 
-\subsection{Budgets and Systems}
+\input{sections/result_profile_table}
 
-MOOSE-native settings follow its paper where applicable: three goal
-permutations by default, five synthesis repetitions, a 12-hour/32-GB synthesis
-budget, and a 30-minute/8-GB test-planning budget
-\cite{Chen2026Moose}. The artifact keeps the 12-hour synthesis timeout but uses
-a 16-GiB external-process safety cap; this memory difference is a declared
-reproduction deviation. MOOSE, Jason, and validation worker counts are system
-parameters rather than generalized-planning hyperparameters. We execute five
-independent MOOSE repetitions with fixed seeds 0--4. Each repetition uses the
-complete train split, one internal synthesis worker, and isolated model, policy,
-library, and log roots. The single-worker restriction prevents the shared seeded
-goal-permutation generator in the current MOOSE implementation from being
-coupled to problem-thread scheduling. The five isolated seed processes may run
-concurrently, but their rules are never concatenated and no best-seed policy is
-selected. Each policy is compiled and evaluated separately; we report all five
-outcomes together with mean and sample standard deviation. Concurrent synthesis
-times measure batch throughput and are not used for cross-system runtime claims.
-Jason/VAL repetitions are sequential across seeds and use six per-test workers,
-a 30-minute timeout for each tool, and a 64-MiB Java thread stack. The
-independent TEG execution runner defaults to eight workers with the same
-per-case timeout and stack limits; worker count is recorded as execution
-provenance and does not change controller semantics.
+\paragraph{RQ3--RQ5: temporal execution.}
+Table~\ref{tab:profile-results} separates the five declared profiles. Every one
+of the \TEGProblemCount{} bound queries compiles and succeeds in Jason; all
+\TEGVALSuccessCount{} nonempty traces pass VAL, and both DFAs accept all
+\TEGGoldDFAAcceptCount{} traces. No translation/schema error, unsupported DFA,
+certificate rejection, Jason failure, timeout, VAL failure, or DFA rejection
+occurs in this pinned matrix. The median trace has \TEGMedianActionCount{}
+actions, median case runtime is \TEGMedianRuntimeSeconds{} seconds, and
+12-worker wall time is \TEGWallRuntimeMinutes{} minutes. Complete coverage
+supports the released formulas, bindings, and library hashes only; it is not an
+action-strategy completeness theorem for arbitrary PDDL--\ltlf products.
 
-The implemented toolchain uses the MOOSE readable-policy exporter, Clingo for
-branch selection, \texttt{ltlf2dfa} with a real MONA binary, Jason for
-AgentSpeak execution, and Dockerized VAL for independent PDDL validation. Every
-run records its Git commit and separately records tracked modifications and
-untracked files. Results from a tracked-dirty tree are diagnostic and are not
-eligible for the final matrix.
+\paragraph{Repetition boundary.}
+The registered atomic protocol fixes five independent seeds, one internal MOOSE
+worker, isolated outputs, and independent compilation and validation; it never
+unions evidence or selects the best seed. Those repetitions are not yet a clean
+result matrix. Table~\ref{tab:domain-results} therefore reports only the exact
+seed-0, six-worker libraries consumed by the pinned temporal run and makes no
+cross-seed or synthesis-time claim.
 
-\subsection{Metrics and Validation}
-
-For each domain we record evidence parsing, atomic compilation, evidence and
-schema candidate counts, selected branch count, context/body size, library
-size, closure status, and stage runtimes. For each test problem we record Jason
-success, timeout or failure, primitive action count, VAL success, DFA acceptance
-where applicable, and wall-clock time. A classical problem counts as solved
-only when Jason emits its explicit success marker and VAL accepts the complete
-exported trace. A temporal problem additionally requires acceptance by its
-finite-trace DFA. Prefix actions from a failed or timed-out intention are
-diagnostic and are not counted as a plan.
-
-For temporal inputs we additionally record DFA construction, supported-fragment
-validation, transition count, serialization certificate, negative-guard
-preservation, and final finite-trace acceptance. Classical PDDL conjunctions
-are used as one-transition achievement guards for infrastructure validation;
-they are not presented as natural-language \ltlf predictions.
-
-\subsection{Gold and Predicted Temporal Goals}
-
-The temporal evaluation separates compiler correctness from language-model
-translation quality. In the \emph{gold TEG} condition, the hidden structured
-\ltlf formula is supplied directly to the temporal compiler. This tests DFA
-construction, supported-fragment validation, query-controller compilation,
-Jason execution, and finite-trace acceptance without a translation model. In
-the \emph{predicted TEG} condition, a model translates controlled natural
-language into lifted \ltlf JSON. Exact language equivalence between the gold
-and predicted DFAs is checked before execution. A translation mismatch is not
-reported as a compiler or BDI execution failure.
-
-For both conditions we retain formula profile, JSON validity, DFA construction,
-controller acceptance or rejection, Jason status, VAL status, DFA-trace status,
-action count, and runtime. Translation errors, unsupported automata,
-certificate rejection, execution failure, timeout, VAL rejection, and DFA
-rejection remain distinct outcomes.
-
-\subsection{Semantic Conformance and Zero Actions}
-
-The versioned semantic-conformance suite is separate from the released
-1,228-case benchmark. Fourteen hand-specified positive and negative finite
-traces cover atoms, literal negation, same-state conjunction, Eventually,
-strong Next, and strong Until. Each expected truth value is checked by both a
-direct recursive semantics evaluator and the DFA produced by the real
-\texttt{ltlf2dfa}/MONA toolchain. Numeric equality is additionally checked at
-the PDDL-state projection boundary.
-
-Two integration cases are satisfied in the initial state, one by a predicate
-and one by an integer equality. A passing case requires Jason success, an empty
-committed action trace, zero replayed actions, one replayed state, and acceptance
-by both temporal automata. VAL 1.4 rejects an empty file as a malformed plan and
-provides no zero-action syntax. We therefore report VAL as not applicable and
-use successful PDDL initial-state replay as a vacuous action-legality
-certificate. We do not insert a noop or report external VAL acceptance. Every
-non-empty execution retains the independent VAL requirement. The sealed
-benchmark contains only non-empty state-changing witnesses, so this suite does
-not alter its denominator.
-
-The pinned conformance run from clean commit \texttt{67b82843} passes all 14
-formula-semantics cases and both zero-action integration cases. The release
-record stores the suite and fixture hashes, MONA and package versions, Java and
-Jason versions, runtime parameters, and every per-case outcome.
-
-The symbol-invariance suite uses synthetic domains whose vocabulary is renamed
-and whose irrelevant predicates are changed. The staged-preparation regression,
-for example, uses fabrication and tool predicates rather than any Rovers
-vocabulary while preserving the same PDDL dependency structure. This tests the
-claim that compiler rules depend on schemas rather than benchmark names.
-
-\subsection{Pinned Temporal Execution Matrix}
-
-Run \texttt{teg-paper-clean-e28bcea4} uses commit \texttt{e28bcea4} with no
-tracked source changes. It records SHA-256 hashes for every input atomic library,
-12 workers, 30-minute Jason and VAL limits per case, and a 64-MiB Java stack.
-The complete run took 16 minutes 20 seconds. Untracked workspace files were
-recorded by provenance but were not referenced by the runner or the hashed
-library inputs.
-
-Table~\ref{tab:teg-execution} reports the complete matrix. A success requires
-an explicit Jason success marker, neutral-goal VAL acceptance of the entire
-primitive PDDL trace, and acceptance of that trace by both the gold and
-predicted finite-trace automata. All 1,228 cases satisfy all four checks; there
-are no compiler rejections, execution failures, timeouts, VAL rejections, or
-DFA rejections in this run.
-
-\begin{table}[t]
-\centering
-\caption{Pinned end-to-end temporal execution coverage.}
-\label{tab:teg-execution}
-\begin{tabular}{lrr}
-\toprule
-Partition & Cases & All checks passed \\
-\midrule
-Classical domains & 720 & 720 \\
-Bounded-numeric domains & 360 & 360 \\
-Serialized-width domains & 148 & 148 \\
-\midrule
-Ordered two milestones & 273 & 273 \\
-Ordered three milestones & 272 & 272 \\
-Strong Until & 275 & 275 \\
-Same-state conjunction & 137 & 137 \\
-Same-state with negation & 271 & 271 \\
-\midrule
-Total & 1,228 & 1,228 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The 360/360 bounded-numeric result supports the implemented integer-equality
-fragment, not arbitrary arithmetic planning. Likewise, complete benchmark
-coverage demonstrates the absence of failures on these released bindings and
-atomic-library hashes; it is not a completeness theorem for arbitrary
-PDDL--LTLf products or all type-compatible assignments.
-
-\subsection{Verified Implementation Checkpoints}
-
-At commit \texttt{e28bcea4}, the full Python suite contains 377 passing tests,
-and Ruff passes. A clean-revision Rovers run obtains Jason- and VAL-valid traces
-for all 90 official test instances, including the staged image-production
-regressions that motivated existential preparation projection. A clean
-Blocksworld-On probe produces a 30-action VAL-valid trace. These are
-focused atomic-library checkpoints, not a substitute for the pending clean
-atomic compactness, library-size, and timing matrix.
+\paragraph{Independent semantic conformance.}
+A separate versioned suite checks hand-labelled positive and negative traces
+with both a direct recursive finite-trace evaluator and the real
+\texttt{ltlf2dfa}/MONA DFA. Clean run
+\texttt{\ConformanceRunID} passes
+\ConformanceSemanticSuccessCount{}/\ConformanceSemanticCaseCount{} formula
+cases and
+\ConformanceZeroActionSuccessCount{}/\ConformanceZeroActionCaseCount{}
+initial-state integration cases. A zero-action execution denotes the singleton
+trace $\langle s_0\rangle$ and commits an empty action file. VAL 1.4 has no
+zero-action syntax and rejects an empty file, so these two cases report VAL as
+not applicable and action legality as vacuous after PDDL initial-state replay;
+no noop is inserted. They remain outside the \TEGProblemCount{} nonempty-plan
+denominator.

@@ -49,7 +49,7 @@ certificate.
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
 | Temporal execution validation | Complete on pinned revision | `teg-paper-clean-e28bcea4` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. The run records commit `e28bcea4`, no tracked changes, every atomic-library input hash, 12 workers, 1,800-second Jason/VAL limits, and a 64-MiB Java stack. |
-| AAAI paper package | TEG matrix inserted; atomic matrix pending | Maintain the section responsibilities, claim boundaries, result-insertion contract, and page budget in `docs/aaai_paper_narrative_outline.md`. The manuscript uses the official AAAI-26 author kit and now reports the pinned TEG execution matrix. Regenerate the final atomic compactness and timing matrix before submission. |
+| AAAI paper package | Pinned structural and TEG matrices inserted | `scripts/generate_aaai_result_tables.py` now validates and generates all reported macros/tables from the frozen benchmark, predictions, clean TEG summary, and hash-locked atomic inputs. The draft fits seven technical pages. A clean atomic-generation timing run, ablations/baselines, stronger rejection coverage, and supplementary proofs remain submission gaps. |
 
 ## Certified Generic Fixes
 
@@ -131,7 +131,7 @@ certificate.
   persistent goals, and interfering goals.
 
 Current compiler acceptance gate (2026-07-13): full `ruff check .` passes;
-`pytest -q` reports 377 passed with only two third-party Lark deprecation
+`pytest -q` reports 412 passed with only two third-party Lark deprecation
 warnings; real `ltlf2dfa`/MONA builds the expected three-state, five-transition
 automaton for `F(a & X(F(b)))`; and the typed threat certificate processes the
 48,500-literal Gripper `p2_30` goal in about 11 seconds with one cached module

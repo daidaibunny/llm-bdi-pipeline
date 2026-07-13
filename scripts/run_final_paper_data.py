@@ -162,7 +162,6 @@ def validate_final_paper_package(
 		"architecture contract summary is current",
 	)
 	_validate_atomic_smoke(root, manifest_payload, require)
-	_validate_result_macros(comparison=comparison, require=require)
 	return {"check_count": len(checks), "checks": checks}
 
 
@@ -270,7 +269,6 @@ def _write_current_artifact_only_package(
 		"artifact_mode": "atomic_template_temporal_append",
 	}
 	_write_json(output_dir / "comparison.json", comparison)
-	_write_result_macros(comparison)
 	return comparison
 
 

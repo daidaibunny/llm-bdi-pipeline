@@ -1008,7 +1008,10 @@ input is recorded by SHA-256 hash in the run summary.
 
 All 1,228 cases have an explicit Jason success marker, a complete primitive
 PDDL action trace accepted by neutral-goal VAL, and acceptance by both the gold
-and predicted finite-trace automata. The domain totals are 720/720 classical,
+and predicted finite-trace automata. Each predicted formula is compiled and
+executed once; gold-DFA and predicted-DFA acceptance are two semantic checks on
+that same replayed state trace, not two independent controller executions. The
+domain totals are 720/720 classical,
 360/360 bounded-numeric, and 148/148 serialized-width cases. The formula-profile
 totals are 273/273 ordered-two, 272/272 ordered-three, 275/275 strong-Until,
 137/137 same-state conjunction, and 271/271 same-state-with-negation.
@@ -1018,6 +1021,18 @@ benchmark, supplied atomic-library hashes, and declared temporal and numeric
 fragments. It does not establish action-strategy completeness for arbitrary
 PDDL-times-LTLf products, arbitrary arithmetic planning, or universal
 realizability under every type-compatible parameter assignment.
+
+The paper-facing result generator is
+`scripts/generate_aaai_result_tables.py`. It validates the benchmark and frozen
+prediction hashes, requires a tracked-clean execution revision, requires exact
+coverage of all benchmark sample identifiers, and re-hashes every atomic JSON
+and ASL input before producing `result_macros.tex`, the per-domain table, the
+per-profile table, and `paper_results.json`. For the exact libraries used by
+the clean run, it records 1,568 joint certified candidates, 1,527 selected
+branches, and 638.4 KiB of ASL. These are hash-locked structural measurements.
+The earlier atomic generation batch did not record a clean source revision, so
+its synthesis and compiler runtimes are not paper-eligible and must not be
+inferred from timestamps or diagnostic logs.
 
 ## Temporal Semantic Conformance Suite
 

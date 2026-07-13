@@ -50,6 +50,16 @@ def test_format_comparison_latex_macros_is_artifact_only() -> None:
 	)
 
 
+def test_artifact_only_runner_does_not_own_paper_result_macros() -> None:
+	source = Path("scripts/run_final_paper_data.py").read_text(encoding="utf-8")
+	current_package_body = source.split(
+		"def _write_current_artifact_only_package(",
+		maxsplit=1,
+	)[1].split("def _validate_atomic_smoke(", maxsplit=1)[0]
+
+	assert "_write_result_macros(comparison)" not in current_package_body
+
+
 def test_load_final_paper_manifest_reads_tracked_contract() -> None:
 	manifest = load_final_paper_manifest()
 

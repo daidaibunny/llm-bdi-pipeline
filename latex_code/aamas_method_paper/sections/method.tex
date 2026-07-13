@@ -31,35 +31,24 @@ relearned. Algorithm~\ref{alg:atomic} gives the stage at a high level.
 
 \subsection{Evidence Normalization}
 
-A \texttt{PolicyEvidenceProgram} is the provider-neutral intermediate
-representation. It contains singleton-goal rules
+A \texttt{PolicyEvidenceProgram} is the provider-neutral intermediate. Its
+singleton-goal rules have form
 \[
 e=\langle \bar X,C_s,C_g,\bar a,\nu,\pi\rangle,
 \]
-where $\bar X$ are variables, $C_s$ is a partial state condition, $C_g$ is one
-goal atom, $\bar a$ is a finite PDDL action sequence, $\nu$ contains numeric
-guards or effects, and $\pi$ records provenance. For example, a MOOSE readable
-rule for an object-location goal can contain a state condition, the goal
-\texttt{at(P,L)}, and a \texttt{load; move; unload} macro. The adapter parses
-and normalizes this rule but does not decide whether it is safe AgentSpeak code.
-
-The implemented MOOSE adapter accepts only rules whose predicates, functions,
-actions, arities, and constants are declared by $D$. Variables are
-alpha-renamed so that two evidence rules cannot accidentally share local
-bindings. Positive singleton predicates seed the module vocabulary. Negative
-achievement evidence is rejected because the current provider contract does
-not establish a negative-achievement implementation.
+where $C_s$ is a partial state condition, $C_g$ one goal atom, $\bar a$ a PDDL
+action macro, $\nu$ numeric data, and $\pi$ provenance. For example,
+\texttt{at(P,L)} may carry a \texttt{load; move; unload} macro. The MOOSE adapter
+requires every symbol and arity to occur in $D$, alpha-renames local variables,
+and seeds modules from positive singleton goals. It rejects negative achievement
+evidence because the provider supplies no implementation contract for it.
 
 \subsection{Schema-Derived Candidate Space}
 
-The compiler classifies each declared predicate structurally. A \emph{static
-predicate} never appears in an action add or delete effect and may occur only in
-contexts. A \emph{producible fluent} appears in a positive add effect and enters
-the atomic candidate space even when it was never a training goal. This closure
-also runs when the provider supplied only numeric-goal evidence; numeric
-evidence must not suppress producible predicate modules. The same rule provides
-schema-required helpers without assuming that MOOSE observed each helper as a
-goal.
+Predicates are classified from effects: a static predicate appears in no add or
+delete effect and remains context-only; every positive add-effect predicate is
+a producible fluent and enters closure even if MOOSE never observed it as a
+goal. Numeric-only evidence does not suppress this predicate closure.
 
 For each target $p(\bar X)$, candidate generation searches the fixed grammar in
 Table~\ref{tab:grammar}. A \emph{producer} is an action whose add effects contain
@@ -83,16 +72,11 @@ Cleanup & any preceding sequence; one certified release \\
 \end{tabular}
 \end{table}
 
-Schema-derived candidates therefore contain at most five primitive actions.
-Validated evidence macros are not truncated to this bound. The bound defines
-the hypothesis class searched by the compiler; it is neither a MOOSE parameter
-nor a completeness claim for PDDL.
-
-PDDL typing is used during unification and action binding. When Jason needs
-runtime sort information, the compiler emits the reserved static context
-predicate \texttt{obj\_tp(Object,Type)}. It never emits domain-specific
-\texttt{type\_*} fluents, and \texttt{obj\_tp/2} is never an achievement call or
-an exported action.
+Schema candidates contain at most five primitive actions; evidence macros are
+not truncated. This is the compiler hypothesis class, not a PDDL completeness
+claim. Types constrain unification; required runtime sort membership uses only
+static \texttt{obj\_tp(Object,Type)}, never domain-specific type fluents,
+achievement calls, or exported actions.
 
 \subsection{Branch Certificates}
 
@@ -118,64 +102,35 @@ Preparation & staged repair destroys feasibility \\
 \end{tabular}
 \end{table}
 
-\paragraph{Binding and schema execution.}
-Every primitive-action or subgoal variable must be bound by the trigger, a
-positive context literal, or \texttt{obj\_tp/2}. Negative contexts and
-comparisons may filter existing bindings but may not introduce new variables.
-Symbolic progression checks each action precondition against the context and
-the effects of preceding actions. A finite action branch is accepted only when
-its completion establishes its trigger atom. We record that atom as
-$\mustadd$, and record conservative possible completion effects as $\mayadd$
-and $\maydelete$.
-
-\paragraph{Internal closure.}
-If a body contains $!q(\bar Y)$, the selected library must contain a module for
-$q$ whose trigger is type-compatible with the call. This closure obligation is
-part of selection, rather than a post-processing check.
+\paragraph{Binding, execution, and closure.}
+Action and subgoal variables must be bound by the trigger, positive context, or
+\texttt{obj\_tp/2}; negative contexts and comparisons only filter. Symbolic
+progression proves each precondition and final trigger achievement, recording
+$\mustadd$, $\mayadd$, and $\maydelete$. Every selected call $!q(\bar Y)$ must
+have a type-compatible selected module; closure is a solver obligation.
 
 \paragraph{Recursive progress.}
-A recursive branch is admitted only with a non-negative, well-founded ranking
-feature. The implemented relational feature grammar contains (i) the number of
-atoms of a dynamic relation and (ii) the number of relation atoms in an acyclic
-cone anchored at a query argument. The recursive body must strictly decrease
-the selected feature, no reachable selected branch may increase it, and a base
-or producer branch must remain available. The feature is compile-time metadata;
-it is not added as an AgentSpeak belief. This restriction follows the use of
-relational features as progress witnesses in general-policy learning
+A recursive branch requires a non-negative relation count or anchored acyclic-
+cone count that strictly decreases, is increased by no reachable selected
+branch, and has a base/producer exit. This compile-time feature never becomes a
+belief. The design follows relational progress witnesses in general-policy work
 \cite{Frances2021LearningGeneralPolicies} but claims only schema-certified
 features from this fixed grammar.
 
 \paragraph{Resource release.}
-The compiler identifies a resource debt from causal effects rather than fluent
-names. An acquire sequence deletes a key-only availability mode and adds a
-key-plus-occupant debt mode; a release action must reverse that transition,
-preserve the atomic target, and be symbolically executable. Required
-disequalities are generated only when unification would violate a later action
-precondition. The current search admits one release action and rejects
-multi-step parking.
+Effects, not names, identify resource debt: acquisition deletes key-only
+availability and adds a key--occupant mode; one executable release must reverse
+it and preserve the target. Disequalities arise only from precondition-
+violating unifications. Multi-step parking is rejected.
 
 \paragraph{Existential preparation projection.}
-Suppose one producer requires dynamic siblings $p_1,\ldots,p_k$. Requiring all
-siblings before preparing any one of them can deadlock when a preparation must
-temporarily change a single-valued state, such as an object's location. The
-compiler builds a predicate dependency graph from positive producer
-preconditions. It may defer an unrelated dynamic sibling from one preparation
-context only if:
-\begin{enumerate}
-\item the relevant dependency graph is acyclic and traverses a
-schema-inferred single-valued fluent;
-\item every deferred sibling has exactly one producer schema;
-\item that producer's static preconditions remain as feasibility witnesses;
-\item nested variables are alpha-renamed away from outer variables; and
-\item the branch calls the original target again, rechecking its complete
-producer context before any primitive producer executes.
-\end{enumerate}
-For instance, calibration may be prepared before the final image waypoint is
-re-established, while camera compatibility, calibration target, and visibility
-facts remain in context. Cyclic or producer-ambiguous dependencies keep the
-full connected context. Preparation priority is derived from the selected
-module call graph only for branches carrying this certificate; unrelated
-domains retain their original branch ordering.
+Preparing one of several dynamic preconditions may temporarily change another,
+such as an object's location. Projection may defer an unrelated sibling only
+across an acyclic dependency through a schema-inferred single-valued fluent,
+when every deferred sibling has one producer, all static feasibility witnesses
+remain, local variables are alpha-renamed, and the original target is retried
+before primitive production. Cyclic or producer-ambiguous dependencies retain
+the full context; only certified call-graph edges affect branch priority.
 
 \subsection{Joint Clingo Selection}
 
@@ -200,173 +155,97 @@ the number of context literals, and $B$ is the number of body steps.
 \section{DFA-Guided Composition of Temporally Extended Goals}
 \label{sec:temporal-composition}
 
-The temporal input is a validated tuple
-$\langle q,g_q,\varphi_q,A_q,B_q\rangle$: a query identifier, a top-level
-AgentSpeak goal, an \ltlf formula, declared atoms, and optional variable
-bindings. The real \texttt{ltlf2dfa}/MONA output is parsed into DFA states and
-guards. Accepting self-loops labelled \texttt{true} are ignored as plumbing;
-every edge that reduces graph distance to acceptance receives a query-local
-transition controller guarded by its runtime source-state belief. Valuation
-cubes with the same source and target share only their common achievement
-objective; the runtime monitor still evaluates every original complete cube.
+Input $\langle q,g_q,\varphi_q,A_q,B_q\rangle$ contains a query id, top-level
+goal, \ltlf formula, atom table, and bindings. The real
+\texttt{ltlf2dfa}/MONA output supplies states and guards. Accepting
+\texttt{true} self-loops are plumbing; each distance-reducing edge receives a
+source-state-guarded controller. Same-source/target valuation cubes share only
+their common achievement objective, while the monitor evaluates each full cube.
 
-One benchmark execution is an externally bound invocation. Before compiling
-guards, the case assignment $B_q$ substitutes lifted parameters in the
-query-local atoms; for example, $\mathit{on}(X,Y)$ under
-$\{X\mapsto b_1,Y\mapsto b_4\}$ invokes $!\mathit{on}(b_1,b_4)$. This does not
-ground the shared atomic library: its reusable trigger remains
-$+!\mathit{on}(X,Y)$. Execution is rejected if the released invocation binding
-differs from the sealed construction-audit assignment.
-
-\begin{algorithm}[t]
-\caption{Compile One Supported DFA Transition}
-\label{alg:transition}
-\begin{algorithmic}[1]
-\REQUIRE Guard $B=P^+\land\neg P^-$, selected library $\mathcal{L}_D$
-\ENSURE Query-local repair tree or a rejection diagnostic
-\STATE $\Sigma\leftarrow\textsc{CompletionSummaries}(P^+,\mathcal{L}_D)$
-\STATE $G\leftarrow\textsc{ThreatGraph}(P^+,P^-,\Sigma)$
-\IF{$G$ is acyclic}
-  \STATE $O\leftarrow\textsc{TopologicalOrder}(G)$
-\ELSE
-  \STATE $(O,S)\leftarrow\textsc{PreservingPortfolio}(G,\mathcal{L}_D)$
-  \IF{no such $(O,S)$ exists}
-    \STATE $(O,S)\leftarrow\textsc{WholeGuardAction}(B,D)$
-    \IF{no such $(O,S)$ exists}
-      \STATE \textbf{reject}
-    \ENDIF
-  \ENDIF
-\ENDIF
-\STATE \RETURN $\textsc{BalancedRepairTree}(O,P^-,S)$
-\end{algorithmic}
-\end{algorithm}
+Each execution externally binds $B_q$: $\mathit{on}(X,Y)$ under
+$X{=}b_1,Y{=}b_4$ calls $!\mathit{on}(b_1,b_4)$ without grounding the shared
+$+!\mathit{on}(X,Y)$ module. A mismatched sealed audit binding is rejected.
+For guard $P^+\land\neg P^-$, compilation computes completion summaries and a
+threat graph, topologically orders an acyclic graph, otherwise searches a
+preserving branch portfolio and then a whole-guard action; failure rejects.
+The certified order is rendered as a balanced repair tree.
 
 \subsection{Conditional Completion Effects}
 
-A completion summary describes effects observable when an atomic module
-successfully returns. It is computed as a relational fixed point over the
-selected module call graph. Query arguments remain symbolic anchors, local
-variables are alpha-normalized, and PDDL types restrict unification. Each effect
-retains the positive, negative, equality, and disequality conditions of the
-branch that produced it. Sequential composition records net completion
-polarity: an atom deleted and restored inside one macro is not reported as a
-completion delete.
+A relational fixed point over selected calls summarizes effects observable on
+module return. Query arguments remain anchors; locals are alpha-normalized and
+typed; effects retain branch conditions. Sequential composition records net
+polarity, so an internally deleted-and-restored atom is not a completion delete.
 
 For positive goals $G_i,G_j$, the threat graph contains edge
 $G_j\rightarrow G_i$ when a feasible $\maydelete$ effect of a module for $G_j$
 can unify with $G_i$. The edge requires $G_j$ to be repaired before $G_i$.
-Schema-derived single-valued invariants also reject conjunctions that request
-different values for the same key.
+Single-valued invariants reject conjunctions requesting two values for one key.
 
-A negative guard $\neg N$ is not compiled as $!\neg N$. Every positive repair
-must prove that no feasible $\mayadd$ effect can unify with $N$. If $N$ is
-present, a signed negative leaf may call only a finite query-local branch whose
-net effect has an exact $\mathsf{MustDelete}(N)$, establishes one positive
-sibling, and preserves all other guard obligations. A negative-only edge remains
-a context test and does not wait for an exogenous change. Free parameters of a
-direct deleter are unified with compatible positive-sibling add effects before
-range restriction, so both sides of a functional relocation are bound without
-recognizing the fluent name.
+A negative guard $\neg N$ never becomes $!\neg N$. Positive repairs must exclude
+feasible $\mayadd(N)$. If $N$ holds, a signed leaf may call only a finite branch
+with exact $\mathsf{MustDelete}(N)$ that establishes a positive sibling and
+preserves all obligations. A negative-only edge observes absence. Direct-
+deleter parameters bind through compatible sibling add effects before range
+restriction, without recognizing fluent names.
 
 \subsection{Cyclic Threats and Enforced Portfolios}
 
-An acyclic threat graph is topologically serialized. For a cyclic universal
-summary, the compiler may copy a certified subset of atomic branches under a
-query-local alias. Portfolio selection is scoped to each ordered literal
-occurrence, rather than only to its predicate symbol. Thus two occurrences of
-$p$ may receive different aliases when their already-established prefixes
-differ; identical selected branch sets may share one alias. This distinction is
-necessary because plan contexts are alternative applicability cases, not a
-conjunction that every preparation module must preserve simultaneously.
-Finite action-only branches are admitted when exact symbolic
-completion preserves earlier positive goals and all negative guards. A
-recursive branch of the form $!p;!g$ is admitted only when it discharges the
-explicit missing context $p$, the selected $p$ module has a complete summary,
-and that summary preserves earlier obligations. Its recursive call is rewritten
-to the query-local alias, preventing execution from escaping to an uncertified
-sibling branch. The certificate records source branch names by literal index
-and reports recursive closure only if a selected branch contains an internal
-achievement call.
-
-One additional ordering certificate applies to a functional, acyclic requested
-graph over a single binary relation. The child/support orientation must come
-from the recursive progress certificate, and every enforced branch must still
-preserve earlier ranked achievements. The method assumes that this relation
-remains acyclic in reachable states. Acyclic requested data alone is
-insufficient; if branch-level noninterference cannot be proved, compilation
-rejects.
+For a cycle, a query-local alias exposes only branches whose exact completion
+preserves prior positives and negatives. Portfolios are certified per ordered
+literal occurrence: two occurrences of $p$ may need different aliases when
+their protected prefixes differ, while identical branch sets may share one.
+Contexts remain alternative applicability cases, not simultaneous obligations.
+A recursive $!p;!g$ branch also requires a complete preserving summary for $p$
+and rewrites $!g$ to the alias. Certificates record source branches by literal
+index and claim recursive closure only when one was selected. A functional,
+acyclic binary request graph may follow its certified progress orientation,
+assuming reachable acyclicity, but every branch must still preserve earlier
+achievements; otherwise compilation rejects.
 
 \subsection{Numeric and Whole-Guard Certificates}
 
-A positive integer equality may use a query-local primitive action whose PDDL
-effect has a complete constant delta. Unit deltas are replayed only under a
-strict directional guard, while a larger delta requires the exact predecessor
-value. For a mixed Boolean/numeric guard, the compiler otherwise orders only
-complete action-only net-effect summaries. If these summaries induce a cycle,
-one primitive action is admitted only when symbolic execution proves all
-Boolean additions, negative deletions, and numeric target equalities in the
-same successor state. This bounded certificate does not claim arbitrary
-arithmetic planning. A negated numeric equality remains observation-only when
-no certified change-away action exists.
+A positive integer equality may call a complete constant-delta action: unit
+deltas require strict direction, larger deltas the exact predecessor. Mixed
+guards use complete action-only net effects; a cyclic guard admits one action
+only if symbolic execution establishes every Boolean, negative, and numeric
+obligation in the same successor. Negated equality is observation-only without
+a certified change-away action; arbitrary arithmetic is not claimed.
 
-When a numeric producer has an unsatisfied positive precondition, a preparation
-branch is admitted only if it strictly reduces the missing-precondition count,
-preserves the remaining producer conditions, and leaves the target numeric
-fluent unchanged. A constant-bounded numeric prerequisite is handled
-analogously by a support action whose constant delta strictly reduces the
-prerequisite deficit. These components form a lexicographic ranking; failure to
-construct it causes rejection rather than an unproved recursive repair.
+Numeric preparation must strictly reduce missing preconditions or a constant-
+bounded deficit, preserve other conditions, and leave the target fluent
+unchanged. These components form a lexicographic ranking; no proof means reject.
 
-For a strong-Until source state, we intersect the non-progress self-loop cubes
-and obtain source invariants. In the evaluated fragment each such state has one
-positive progress literal. We inspect every primitive prefix of an action-only
-macro. Before progress, no prefix may delete a positive source invariant or add
-a negative one. The establishing step may consume an invariant because the
-left operand of strong Until is required only at preceding trace positions. For
-repeated unit numeric progress, the compiler derives a non-unification guard
-separating the chosen action object from a protected object; an unavoidable
-consuming step is restricted to the exact predecessor value. An observed
-numeric-equality base case terminates recursive preparation.
+For strong Until, intersected non-progress self-loops define source invariants.
+Before the single progress literal, no action prefix may delete a positive
+invariant or add a negative one; the establishing step may consume the left
+operand. Repeated unit progress separates action and protected objects by a
+derived non-unification guard, and unavoidable consumption requires the exact
+predecessor. An observed target equality is the base case.
 
-Composition is capture avoiding. Before a support macro is inserted, its local
-variables are alpha-renamed away from query variables and from variables owned
-by the outer producer. Thus an accidental textual collision cannot force one
-symbol to satisfy unrelated PDDL type or equality constraints.
+Inserted support locals are alpha-renamed away from query and producer
+variables, preventing textual collisions from imposing unrelated constraints.
 
 \subsection{Balanced Declarative Repair Trees}
 
-Given certified order $L_1,\ldots,L_n$, the tree visits the signed obligations
-in that order. A positive leaf checks or achieves $L_i$; a negative leaf checks
-$\neg N_i$ and otherwise calls only its certified establishment helper, if one
-exists. An internal
-node recursively executes the left and right halves of a contiguous range.
-After one pass, a separate completion helper repeats the controller only while
-the runtime monitor remains in its source state. Once a primitive action moves
-the monitor away from that state, the helper returns and top-level dispatch
-continues from the actual DFA state. This is necessary when one atomic macro
-crosses several DFA edges before returning; requiring the immediately adjacent
-target would replay an already completed transition. A rejecting successor has
-no accepting shortcut and fails at top-level dispatch.
-
-For $n=1$, the tree calls the same atomic module and checks source-state exit,
-so its primitive-action behavior is the singleton case when one edge is crossed
-and remains correct when a macro crosses several edges.
+Given order $L_1,\ldots,L_n$, positive leaves check/achieve $L_i$, negative
+leaves check absence or call one certified helper, and internal nodes execute
+contiguous left/right halves. Completion repeats only while the monitor remains
+at the source; after any macro crosses one or more DFA edges, top-level dispatch
+resumes from the observed state. Rejecting successors fail. For $n=1$, one leaf
+calls the same atomic module and checks source exit.
 
 \subsection{Maintained Domain Library}
 
-Each domain has one canonical JSON/AgentSpeak library pair. An accepted query
-appends one top-level goal and its query-local helpers to this library. Atomic
-modules are not regenerated per query. Query helper names may appear as
-AgentSpeak goals but never as PDDL fluents or exported plan actions. Jason
-executes the resulting program, the environment exports the complete primitive
-action trace, and VAL independently checks that trace against the PDDL problem
+Each domain has one JSON/AgentSpeak pair. A query appends one top-level goal and
+helpers without regenerating atomic modules; helper goals are neither PDDL
+fluents nor exported actions. Jason exports the full primitive trace, which VAL
+checks against the PDDL problem
 \cite{Howey2004VAL}.
 
-The initial valuation is the first position of the finite trace. If it already
-moves the monitor to an accepting state, the top-level goal succeeds without a
-primitive action and the committed plan is empty. This is the identity case
-$\langle s_0\rangle$, not an empty LTLf trace and not an inserted noop. A noop
-would add an observation boundary and could change strong-Next or Until truth.
+If the initial valuation is accepting, the committed plan is empty and the
+trace is $\langle s_0\rangle$, not an empty trace or inserted noop; a noop could
+change strong-Next or Until truth.
 
 \section{Formal Guarantees}
 \label{sec:guarantees}
@@ -376,21 +255,12 @@ temporal fragment. They do not assert completeness for arbitrary PDDL domains,
 AgentSpeak programs, or DFA strategies.
 
 \paragraph{Atomic branch soundness.}
-Let $c$ be an emitted candidate for trigger $p(\bar X)$.
-
-\textbf{Proposition 1.} If the certified context of $c$ holds under a
-type-consistent grounding and every called module satisfies its contract, then
-$c$ is executable and $p(\bar X)$ holds when $c$ returns.
-
-\textbf{Proof sketch.} The binding certificate grounds each action term.
-Induction over body steps uses symbolic progression to establish the next
-precondition. The achievement certificate establishes the trigger after the
-final step. Recursive calls additionally rely on their well-founded ranking;
-staged preparation rechecks the complete producer context before execution.
-\hfill$\square$
-
-This is a local applicable-branch property. It does not claim that candidate
-generation finds an applicable branch in every reachable state.
+\textbf{Proposition 1.} If an emitted $p(\bar X)$ branch's context holds under a
+type-consistent grounding and called modules satisfy their contracts, the branch
+is executable and returns with $p(\bar X)$. Binding grounds each term; induction
+over symbolic progression establishes preconditions and final achievement;
+recursion uses its ranking and preparation rechecks the producer context.
+\hfill$\square$ This is local soundness, not reachable-state coverage.
 
 \paragraph{Candidate-space optimality.}
 
@@ -398,9 +268,8 @@ generation finds an applicable branch in every reachable state.
 closure obligation is satisfied, and $S$ is lexicographically optimal within
 the generated certified candidate space.
 
-This follows from the hard constraints and optimization priorities in the
-generated answer-set program. It does not imply optimality over all AgentSpeak
-programs or completeness of candidate generation.
+This follows from answer-set constraints and priorities, not from completeness
+of candidate generation or optimality over all AgentSpeak programs.
 
 \paragraph{Supported-transition composition.}
 
@@ -410,26 +279,16 @@ each selected call terminates, and later repairs preserve earlier obligations,
 then the controller either remains in the source state and retries or leaves it
 through an actual DFA edge enabled by the observed valuation.
 
-\textbf{Proof sketch.} Induct over the certified literal order. Each leaf makes
-its signed literal. A negative establishment branch has an exact net delete.
-The completion summary of every later leaf excludes a delete of an earlier
-positive literal and an add of a forbidden negative atom. The deterministic
-runtime monitor evaluates complete transition cubes after every primitive
-action. Therefore source-state exit is evidence of a real enabled DFA edge,
-including when it occurs inside an atomic macro; otherwise the controller
-retries from the same source. \hfill$\square$
-
-This is a soundness claim for the declared DFA fragment, not completeness of
-action-strategy synthesis for arbitrary PDDL--LTLf products.
+\textbf{Proof sketch.} Induct over the certified order: each leaf establishes
+its signed literal; later summaries exclude deleting prior positives or adding
+forbidden atoms. The monitor evaluates full cubes after every action, so source
+exit denotes a real DFA edge, including inside a macro; otherwise retry.
+\hfill$\square$ This does not imply complete action-strategy synthesis.
 
 \paragraph{Balanced-tree structure.}
 
-\textbf{Proposition 4.} For $n$ signed literals of which $e$ have a certified
-repair helper, the generated tree contains $2n+e+2$ plans, has maximum trigger fan-out two and
-nesting depth $O(\log n)$, visits $O(n)$ helpers per pass, and preserves the
-certified order.
-
-\textbf{Proof sketch.} There are $n$ satisfied-leaf plans, $e$ repair-leaf plans, $n-1$
-internal nodes, one entry plan, and two completion plans. Midpoint splitting
-gives logarithmic depth. Induction over contiguous ranges shows that in-order
-traversal visits leaves in exactly the input order. \hfill$\square$
+\textbf{Proposition 4.} For $n$ signed literals and $e$ repair helpers, the tree
+has $2n+e+2$ plans, fan-out two, depth $O(\log n)$, and $O(n)$ visits per pass,
+while preserving order. The count follows from $n$ satisfied leaves, $e$ repair
+leaves, $n-1$ internal nodes, one entry, and two completion plans; midpoint
+splitting and range induction establish depth and order. \hfill$\square$
