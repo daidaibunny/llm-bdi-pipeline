@@ -1,0 +1,2769 @@
+{
+  "domain_name": "satellite",
+  "initial_beliefs": [],
+  "metadata": {
+    "atomic_module_synthesis": {
+      "branch_certification_rules": [
+        "static context literals must be range-restricted by head variables or previous positive dynamic literals",
+        "negative context literals must be range-restricted and cannot bind new variables",
+        "extra-variable prepared preconditions require a positive context closure that binds every non-head variable before the negative guard",
+        "acyclic preparation dependencies through a schema-inferred functional fluent may project unrelated dynamic sibling contexts only when every projected sibling has one producer schema, all of its static producer preconditions remain as feasibility witnesses, nested variables are alpha-renamed, and target completion is rechecked",
+        "cyclic or producer-ambiguous preparation dependencies retain the full connected positive context",
+        "same-predicate recursive prepare branches require a non-negative relational-count ranking feature that strictly decreases and is never increased",
+        "anchored relation-cone rankings may relocate an obstruction only when schema guards prove the new relation value differs from the protected anchor; Clingo rejects the capability if any selected reachable module can increase that relation without the same certificate",
+        "resource-release cleanup branches require a schema certificate that deletes a producer-created resource debt, restores a literal deleted by the producer, preserves the protected target, and records all exact alias guards needed by later action preconditions"
+      ],
+      "branch_count_by_predicate": {
+        "calibrated": 7,
+        "have_image": 22,
+        "pointing": 3,
+        "power_avail": 4,
+        "power_on": 4
+      },
+      "candidate_source_counts": {
+        "joint_unique": 41,
+        "schema": 26,
+        "validated_evidence": 15
+      },
+      "evidence_obligation_count": 15,
+      "module_predicates": [
+        "calibrated",
+        "have_image",
+        "pointing",
+        "power_avail",
+        "power_on"
+      ],
+      "plan_count": 40,
+      "predicate_roles": [
+        {
+          "consumers": [
+            "take_image"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "switch_on"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "calibrated",
+          "producers": [
+            "calibrate"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "calibrate"
+          ],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": false,
+          "expected_module": false,
+          "predicate": "calibration_target",
+          "producers": [],
+          "role": "static_context",
+          "selected_for_module_generation": false
+        },
+        {
+          "consumers": [],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "have_image",
+          "producers": [
+            "take_image"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "switch_on",
+            "switch_off",
+            "calibrate",
+            "take_image"
+          ],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": false,
+          "expected_module": false,
+          "predicate": "on_board",
+          "producers": [],
+          "role": "static_context",
+          "selected_for_module_generation": false
+        },
+        {
+          "consumers": [
+            "turn_to",
+            "calibrate",
+            "take_image"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "turn_to"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "pointing",
+          "producers": [
+            "turn_to"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "switch_on"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "switch_on"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "power_avail",
+          "producers": [
+            "switch_off"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "switch_off",
+            "calibrate",
+            "take_image"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "switch_off"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "power_on",
+          "producers": [
+            "switch_on"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "take_image"
+          ],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": false,
+          "expected_module": false,
+          "predicate": "supports",
+          "producers": [],
+          "role": "static_context",
+          "selected_for_module_generation": false
+        }
+      ],
+      "producer_actions_by_predicate": {
+        "calibrated": [
+          "calibrate"
+        ],
+        "have_image": [
+          "take_image"
+        ],
+        "pointing": [
+          "turn_to"
+        ],
+        "power_avail": [
+          "switch_off"
+        ],
+        "power_on": [
+          "switch_on"
+        ]
+      },
+      "pruned_candidate_count": 1,
+      "ranking_incompatibility_count": 0,
+      "raw_candidate_count": 41,
+      "recursive_capability_obligation_count": 0,
+      "recursive_predicates": [
+        "calibrated",
+        "have_image",
+        "power_avail",
+        "power_on"
+      ],
+      "rejected_uncertified_candidate_count": 0,
+      "schema_composition_action_bound": 5,
+      "schema_composition_grammar": [
+        "direct producer",
+        "support producer then target producer",
+        "support producer then one bridge producer then target producer",
+        "one prefix producer then support producer then one bridge producer then target producer",
+        "optional one-step certified resource release after any producer sequence"
+      ],
+      "seed_predicates": [
+        "have_image",
+        "pointing"
+      ],
+      "selected_branch_ids": [
+        "b0",
+        "b1",
+        "b2",
+        "b3",
+        "b4",
+        "b5",
+        "b6",
+        "b7",
+        "b8",
+        "b9",
+        "b10",
+        "b11",
+        "b12",
+        "b13",
+        "b14",
+        "b15",
+        "b16",
+        "b17",
+        "b19",
+        "b20",
+        "b21",
+        "b22",
+        "b23",
+        "b24",
+        "b25",
+        "b26",
+        "b27",
+        "b28",
+        "b29",
+        "b30",
+        "b31",
+        "b32",
+        "b33",
+        "b34",
+        "b35",
+        "b36",
+        "b37",
+        "b38",
+        "b39",
+        "b40"
+      ],
+      "selected_recursive_capability_count": 0,
+      "selection_scope": "joint_schema_and_validated_evidence_candidates",
+      "selector_backend": "clingo_asp_minimize",
+      "selector_coverage_basis": [
+        "evidence obligations: alpha-equivalent trigger, context, and body",
+        "evidence obligations: identical primitive/subgoal body under a context subset implication",
+        "schema producer obligations only: a weaker-context primitive producer whose schema-derived positive postconditions refine the obligation without additional deletes and with an identical numeric transformation and a causally refining resource-release contract",
+        "arbitrary MOOSE macro-to-recursive-module semantic replacement is not certified",
+        "recursive body-prefix similarity is not accepted as semantic coverage"
+      ],
+      "selector_objective": [
+        "maximize compatible well-founded recursive capabilities",
+        "minimize selected branch count",
+        "then minimize selected context literal count",
+        "then minimize selected body step count"
+      ],
+      "selector_obligation_count": 40,
+      "selector_optimization_cost": [
+        40,
+        333,
+        87
+      ],
+      "theoretical_basis": [
+        "MOOSE singleton-goal regression supplies lifted target-predicate evidence",
+        "PDDL action schemas supply primitive producer/precondition structure",
+        "policy-reuse style predicate modules allow subgoal calls between atomic literals",
+        "PDDL typing is used internally to reject unobservable subtype role bindings",
+        "range-restricted static and negative contexts prevent unbounded Jason unification over inertial relations",
+        "range-safe extra-variable preconditions may be lifted into internal atomic subgoal calls instead of staying as long primitive macros",
+        "existential context projection follows acyclic producer dependencies and retains schema-derived static feasibility witnesses before recursive recheck",
+        "same-predicate recursive branches require a schema-level well-founded relational-count progress certificate",
+        "a fixed domain-independent feature grammar includes global relation count and query-anchored acyclic relation-cone count rankings",
+        "resource-release cleanup branches are accepted only when PDDL effects prove resource debt discharge plus target preservation",
+        "Clingo/ASP selects a minimum branch set that covers all generated branch evidence"
+      ]
+    },
+    "atomic_template_backend": "moose_validated_policy_lifting",
+    "evidence_macro_library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "compact_recursive_module_ready": false,
+      "faithful_decision_list_ready": true,
+      "goal_symbol_count": 2,
+      "goal_symbols": [
+        "have_image",
+        "pointing"
+      ],
+      "library_profile": "action_only_atomic_template_library",
+      "max_body_step_count": 5,
+      "max_plans_per_goal_symbol": 14,
+      "plan_count": 15,
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 15
+      },
+      "primitive_action_step_count": 51,
+      "singleton_macro_library_ready": true,
+      "subgoal_step_count": 0,
+      "warnings": [
+        "Direct action-only evidence contains primitive macro actions but no recursive atomic subgoal calls; claim faithful decision-list compilation rather than compact recursive module synthesis."
+      ]
+    },
+    "evidence_module": {
+      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+      "representation": "moose_readable_first_order_decision_list",
+      "rule_count": 15,
+      "source_name": "satellite",
+      "source_provider": "moose"
+    },
+    "generation_mode": "atomic_minimal_literal_module_library",
+    "library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "artifact_classification_basis": "generic artifact label; structural categories are plan-template-level, not domain-level",
+      "compact_recursive_module_ready": true,
+      "evidence_macro_plan_count": 15,
+      "library_profile": "mixed_atomic_template_library",
+      "macro_evidence_plan_count": 15,
+      "plan_count": 40,
+      "plan_template_classification_basis": "per plan template: numeric resource goal modules are classified by their numeric certificate, empty non-numeric bodies are already-true, bodies with only primitive actions are action-only, and bodies containing achievement subgoals are subgoal-decomposed",
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 23,
+        "already_true_plan_template": 5,
+        "subgoal_decomposed_plan_template": 12
+      },
+      "primitive_action_step_count": 63,
+      "schema_augmented_recursive_modules_ready": true,
+      "subgoal_step_count": 24,
+      "validated_macro_evidence_ready": true,
+      "validated_policy_lifting_ready": true,
+      "validated_policy_rule_plan_count": 15
+    },
+    "pddl_support": {
+      "domain_file": "src/domains/satellite/domain.pddl",
+      "fragment_assumptions": [
+        "classical finite-domain PDDL files parsed before lifted ASL synthesis",
+        "positive conjunctive predicate achievement goals only",
+        "bounded integer numeric equality goals may target declared numeric resource fluents",
+        "primitive action schemas with predicate preconditions and predicate effects",
+        "bounded integer numeric resource fluents may appear in action preconditions and effects",
+        "numeric effects are limited to constant integer increase/decrease updates",
+        "PDDL predicate and action symbols may be sanitized for AgentSpeak rendering",
+        "sanitized predicate and action functors must remain unique",
+        "metric-only action-costs functions are distinguished from logical numeric resources",
+        "typing, equality, and negative preconditions are accepted only inside the project parser subset",
+        "a :disjunctive-preconditions requirement declaration is accepted only when the parsed action and goal expressions contain no or operator",
+        "derived predicates, conditional effects, quantifiers, preferences, durative actions, arbitrary arithmetic expressions, non-integer numeric goals, and optimization metrics as goals remain unsupported"
+      ],
+      "is_compilable": true,
+      "known_unsupported_domain_blocks": [
+        ":constraints",
+        ":derived",
+        ":durative-action"
+      ],
+      "known_unsupported_requirement_set": [
+        ":adl",
+        ":conditional-effects",
+        ":derived-predicates",
+        ":durative-actions",
+        ":existential-preconditions",
+        ":preferences",
+        ":quantified-preconditions",
+        ":universal-preconditions"
+      ],
+      "logical_numeric_functions": [],
+      "metric_only_numeric_functions": [],
+      "numeric_functions": [],
+      "problem_files": [],
+      "requirements": [
+        ":strips",
+        ":typing",
+        ":negative-preconditions"
+      ],
+      "supported_requirement_set": [
+        ":action-costs",
+        ":disjunctive-preconditions",
+        ":equality",
+        ":fluents",
+        ":negative-preconditions",
+        ":numeric-fluents",
+        ":strips",
+        ":typing"
+      ],
+      "supported_requirements": [
+        ":strips",
+        ":typing",
+        ":negative-preconditions"
+      ],
+      "unsupported_blocks": [],
+      "unsupported_diagnostics": [],
+      "unsupported_expression_operators": [],
+      "unsupported_reasons": [],
+      "unsupported_requirements": []
+    },
+    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+    "source_name": "satellite",
+    "source_numeric_goal_functions": [],
+    "source_raw_rule_count": 15,
+    "source_seed_predicates": [
+      "have_image",
+      "pointing"
+    ],
+    "validated_policy_lifting": {
+      "deduplicated_macro_count": 15,
+      "invalid_macro_count": 0,
+      "merged_plan_count": 40,
+      "raw_numeric_goal_macro_count": 0,
+      "raw_singleton_macro_count": 15,
+      "selection_stage": "joint_clingo_certified_candidate_selection",
+      "validated_macro_count": 15,
+      "validated_numeric_macro_count": 0,
+      "validation_basis": [
+        "Evidence Module singleton-goal rule supplies state context, goal, and macro action sequence",
+        "PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
+        "Evidence Module numeric equality goal rules may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
+        "PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
+        "Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
+        "PDDL constants are preserved as constants; negative precondition conflicts and positive preconditions that may alias prior deletes compile to explicit inequality guards when representable in the supported ASL subset"
+      ]
+    }
+  },
+  "plans": [
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [],
+      "context": [
+        "calibrated(X)"
+      ],
+      "plan_name": "calibrated_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [],
+      "context": [
+        "have_image(X, Y)"
+      ],
+      "plan_name": "have_image_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [],
+      "context": [
+        "pointing(X, Y)"
+      ],
+      "plan_name": "pointing_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "pointing"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [],
+      "context": [
+        "power_avail(X)"
+      ],
+      "plan_name": "power_avail_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [],
+      "context": [
+        "power_on(X)"
+      ],
+      "plan_name": "power_on_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "calibrate"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "power_on(X)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_via_calibrate",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "switch_on",
+            "calibrate"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, A)",
+        "obj_tp(A, satellite)",
+        "power_avail(A)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_via_switch_on_then_calibrate",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "calibrate",
+            "take_image"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "A",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(Z, X)",
+        "obj_tp(Z, satellite)",
+        "on_board(A, Z)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, C)"
+      ],
+      "plan_name": "have_image_via_calibrate_then_take_image",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 1, 0, 0)",
+          "schema_binding_guards": [],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(A, X)",
+        "obj_tp(A, satellite)",
+        "on_board(Z, A)",
+        "obj_tp(Z, instrument)",
+        "supports(Z, Y)",
+        "calibrated(Z)",
+        "power_on(Z)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_1",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 2, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibrated(A)",
+        "power_on(A)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_3",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 2, 0, 0)",
+          "schema_binding_guards": [],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "A",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, instrument)",
+        "supports(Z, Y)",
+        "power_on(Z)",
+        "on_board(Z, A)",
+        "obj_tp(A, satellite)",
+        "pointing(A, X)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_4",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(A, X)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_5",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "A",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "A",
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(Z, X)",
+        "obj_tp(Z, instrument)",
+        "supports(Z, Y)",
+        "on_board(Z, A)",
+        "obj_tp(A, satellite)",
+        "pointing(A, X)",
+        "power_avail(A)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_6",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "power_on(A)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_7",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "B",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(B, Y)",
+        "obj_tp(B, instrument)",
+        "power_on(B)",
+        "calibration_target(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(B, C)",
+        "obj_tp(C, satellite)",
+        "pointing(C, A)",
+        "obj_tp(A, direction)",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_10",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(B, X)",
+        "obj_tp(B, satellite)",
+        "on_board(A, B)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_11",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(A, X)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "power_avail(B)",
+        "pointing(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_8",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, Z)",
+        "power_avail(B)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_9",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "B",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(B, Y)",
+        "obj_tp(B, instrument)",
+        "calibration_target(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(B, C)",
+        "obj_tp(C, satellite)",
+        "power_avail(C)",
+        "pointing(C, A)",
+        "obj_tp(A, direction)",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_12",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "A != B",
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        },
+        {
+          "arguments": [
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "C",
+            "B",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(B, Y)",
+        "obj_tp(B, instrument)",
+        "calibration_target(B, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z",
+        "on_board(B, C)",
+        "obj_tp(C, satellite)",
+        "pointing(C, Z)",
+        "on_board(A, C)",
+        "obj_tp(A, instrument)",
+        "A != B",
+        "power_on(A)"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_13",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "B",
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "A",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "B",
+            "X",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(B, X)",
+        "obj_tp(B, satellite)",
+        "power_avail(B)",
+        "on_board(A, B)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "calibration_target(A, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_14",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "A != B"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        },
+        {
+          "arguments": [
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        },
+        {
+          "arguments": [
+            "C",
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "calibrate"
+        },
+        {
+          "arguments": [
+            "C",
+            "X",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "take_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "calibration_target(B, X)",
+        "obj_tp(B, instrument)",
+        "supports(B, Y)",
+        "on_board(B, C)",
+        "obj_tp(C, satellite)",
+        "on_board(A, C)",
+        "obj_tp(A, instrument)",
+        "A != B",
+        "power_on(A)",
+        "pointing(C, Z)",
+        "obj_tp(Z, direction)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_15",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "Y \\== Z"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "turn_to"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "obj_tp(Y, direction)",
+        "not pointing(X, Y)",
+        "pointing(X, Z)",
+        "obj_tp(Z, direction)",
+        "Y \\== Z"
+      ],
+      "plan_name": "pointing_via_turn_to",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "pointing"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "precedence": "(1, 1, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z"
+          ],
+          "source_name": "satellite",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "turn_to"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "obj_tp(Y, direction)",
+        "pointing(X, Z)",
+        "obj_tp(Z, direction)",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_satellite_rule_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "pointing"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "switch_off"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "on_board(Y, X)",
+        "obj_tp(Y, instrument)",
+        "power_on(Y)"
+      ],
+      "plan_name": "power_avail_via_switch_off",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "X \\== Z"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "switch_on",
+            "switch_off"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "on_board(Y, X)",
+        "obj_tp(Y, instrument)",
+        "on_board(Y, Z)",
+        "obj_tp(Z, satellite)",
+        "X \\== Z",
+        "power_avail(Z)"
+      ],
+      "plan_name": "power_avail_via_switch_on_then_switch_off",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "switch_on"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "power_avail(Y)"
+      ],
+      "plan_name": "power_on_via_switch_on",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "X \\== Z"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "producer_actions": [
+            "switch_off",
+            "switch_on"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "switch_off"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "switch_on"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "on_board(Z, Y)",
+        "obj_tp(Z, instrument)",
+        "X \\== Z",
+        "power_on(Z)"
+      ],
+      "plan_name": "power_on_via_switch_off_then_switch_on",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on_board(X, Y)",
+              "calibration_target(X, Z)",
+              "power_on(X)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "pointing",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "power_on(X)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "not pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_prepare_pointing_Y_Z",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on_board(X, A)",
+              "power_avail(A)",
+              "on_board(X, Y)",
+              "calibration_target(X, Z)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "pointing",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, A)",
+        "obj_tp(A, satellite)",
+        "power_avail(A)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "not pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_prepare_pointing_Y_Z_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on_board(X, A)",
+              "on_board(X, Y)",
+              "calibration_target(X, Z)",
+              "pointing(Y, Z)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "power_avail",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_avail"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "calibration_target(X, Z)",
+        "obj_tp(Z, direction)",
+        "on_board(X, A)",
+        "obj_tp(A, satellite)",
+        "not power_avail(A)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "pointing(Y, Z)"
+      ],
+      "plan_name": "calibrated_prepare_power_avail_A",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "power_on",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "not power_on(X)"
+      ],
+      "plan_name": "calibrated_prepare_power_on_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "calibrated"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": true,
+            "retained_positive_context": [
+              "power_on(A)",
+              "on_board(A, Z)",
+              "supports(A, Y)",
+              "on_board(A, B)",
+              "calibration_target(A, C)",
+              "on_board(A, D)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "calibrated",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "calibrated"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "power_on(A)",
+        "not calibrated(A)",
+        "calibration_target(A, C)",
+        "on_board(A, B)",
+        "on_board(A, D)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)"
+      ],
+      "plan_name": "have_image_prepare_calibrated_A",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "supports(A, Y)",
+              "pointing(Z, X)",
+              "on_board(A, B)",
+              "calibration_target(A, C)",
+              "power_on(A)",
+              "on_board(A, Z)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "pointing",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "C"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(Z, X)",
+        "obj_tp(Z, satellite)",
+        "on_board(A, Z)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "not pointing(B, C)"
+      ],
+      "plan_name": "have_image_prepare_pointing_B_C",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": true,
+            "retained_positive_context": [
+              "on_board(A, Z)",
+              "supports(A, Y)",
+              "on_board(A, B)",
+              "calibration_target(A, C)",
+              "on_board(A, D)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "pointing",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibration_target(A, C)",
+        "on_board(A, B)",
+        "on_board(A, D)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)",
+        "not pointing(Z, X)"
+      ],
+      "plan_name": "have_image_prepare_pointing_Z_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on_board(A, Z)",
+              "supports(A, Y)",
+              "on_board(A, B)",
+              "calibration_target(A, C)",
+              "pointing(B, C)",
+              "power_on(A)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "pointing",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "pointing"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, C)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)",
+        "not pointing(Z, X)"
+      ],
+      "plan_name": "have_image_prepare_pointing_Z_X_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": true,
+            "retained_positive_context": [
+              "calibrated(A)",
+              "on_board(A, Z)",
+              "supports(A, Y)",
+              "on_board(A, B)",
+              "calibration_target(A, C)",
+              "on_board(A, D)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "power_on",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "supports(A, Y)",
+        "obj_tp(A, instrument)",
+        "calibrated(A)",
+        "not power_on(A)",
+        "calibration_target(A, C)",
+        "on_board(A, B)",
+        "on_board(A, D)",
+        "on_board(A, Z)",
+        "obj_tp(Z, satellite)"
+      ],
+      "plan_name": "have_image_prepare_power_on_A",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on_board(A, Z)",
+              "supports(A, Y)",
+              "pointing(Z, X)",
+              "on_board(A, B)",
+              "calibration_target(A, C)",
+              "pointing(B, C)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "power_on",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "have_image"
+        }
+      ],
+      "context": [
+        "obj_tp(X, direction)",
+        "obj_tp(Y, mode)",
+        "pointing(Z, X)",
+        "obj_tp(Z, satellite)",
+        "on_board(A, Z)",
+        "obj_tp(A, instrument)",
+        "supports(A, Y)",
+        "not power_on(A)",
+        "calibration_target(A, C)",
+        "obj_tp(C, direction)",
+        "on_board(A, B)",
+        "obj_tp(B, satellite)",
+        "pointing(B, C)"
+      ],
+      "plan_name": "have_image_prepare_power_on_A_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "have_image"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on_board(Y, X)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "power_on",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_avail"
+        }
+      ],
+      "context": [
+        "obj_tp(X, satellite)",
+        "on_board(Y, X)",
+        "obj_tp(Y, instrument)",
+        "not power_on(Y)"
+      ],
+      "plan_name": "power_avail_prepare_power_on_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_avail"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on_board(X, Y)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/satellite/satellite.model.readable",
+          "prepared_predicate": "power_avail",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "satellite"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_avail"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "power_on"
+        }
+      ],
+      "context": [
+        "obj_tp(X, instrument)",
+        "on_board(X, Y)",
+        "obj_tp(Y, satellite)",
+        "not power_avail(Y)"
+      ],
+      "plan_name": "power_on_prepare_power_avail_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "power_on"
+      }
+    }
+  ]
+}

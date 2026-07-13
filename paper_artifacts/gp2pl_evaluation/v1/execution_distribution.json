@@ -1,0 +1,21 @@
+{
+  "action_count": {
+    "first_quartile": 1.0,
+    "maximum": 4,
+    "mean": 1.745114006514658,
+    "median": 2.0,
+    "minimum": 1,
+    "sample_standard_deviation": 0.799969785512908,
+    "third_quartile": 2.0
+  },
+  "duration_seconds": {
+    "first_quartile": 4.277864551957464,
+    "maximum": 110.30992737493943,
+    "mean": 9.394454974782386,
+    "median": 5.488643437449355,
+    "minimum": 2.2896739169955254,
+    "sample_standard_deviation": 13.65691827218703,
+    "third_quartile": 8.492930738982977
+  },
+  "result_count": 1228
+}

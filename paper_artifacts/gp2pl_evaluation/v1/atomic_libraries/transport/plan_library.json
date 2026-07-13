@@ -1,0 +1,1346 @@
+{
+  "domain_name": "transport",
+  "initial_beliefs": [],
+  "metadata": {
+    "atomic_module_synthesis": {
+      "branch_certification_rules": [
+        "static context literals must be range-restricted by head variables or previous positive dynamic literals",
+        "negative context literals must be range-restricted and cannot bind new variables",
+        "extra-variable prepared preconditions require a positive context closure that binds every non-head variable before the negative guard",
+        "acyclic preparation dependencies through a schema-inferred functional fluent may project unrelated dynamic sibling contexts only when every projected sibling has one producer schema, all of its static producer preconditions remain as feasibility witnesses, nested variables are alpha-renamed, and target completion is rechecked",
+        "cyclic or producer-ambiguous preparation dependencies retain the full connected positive context",
+        "same-predicate recursive prepare branches require a non-negative relational-count ranking feature that strictly decreases and is never increased",
+        "anchored relation-cone rankings may relocate an obstruction only when schema guards prove the new relation value differs from the protected anchor; Clingo rejects the capability if any selected reachable module can increase that relation without the same certificate",
+        "resource-release cleanup branches require a schema certificate that deletes a producer-created resource debt, restores a literal deleted by the producer, preserves the protected target, and records all exact alias guards needed by later action preconditions"
+      ],
+      "branch_count_by_predicate": {
+        "at": 9,
+        "capacity": 4,
+        "in": 5
+      },
+      "candidate_source_counts": {
+        "joint_unique": 20,
+        "schema": 15,
+        "validated_evidence": 5
+      },
+      "evidence_obligation_count": 5,
+      "module_predicates": [
+        "at",
+        "capacity",
+        "in"
+      ],
+      "plan_count": 18,
+      "predicate_roles": [
+        {
+          "consumers": [
+            "drive",
+            "pick-up",
+            "drop"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "drive",
+            "pick-up"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "at",
+          "producers": [
+            "drive",
+            "drop"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "pick-up",
+            "drop"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "pick-up",
+            "drop"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "capacity",
+          "producers": [
+            "pick-up",
+            "drop"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "pick-up",
+            "drop"
+          ],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": false,
+          "expected_module": false,
+          "predicate": "capacity-predecessor",
+          "producers": [],
+          "role": "static_context",
+          "selected_for_module_generation": false
+        },
+        {
+          "consumers": [
+            "drop"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "drop"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "in",
+          "producers": [
+            "pick-up"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        }
+      ],
+      "producer_actions_by_predicate": {
+        "at": [
+          "drive",
+          "drop"
+        ],
+        "capacity": [
+          "pick-up",
+          "drop"
+        ],
+        "in": [
+          "pick-up"
+        ]
+      },
+      "pruned_candidate_count": 2,
+      "ranking_incompatibility_count": 5,
+      "raw_candidate_count": 20,
+      "recursive_capability_obligation_count": 1,
+      "recursive_predicates": [
+        "at",
+        "capacity",
+        "in"
+      ],
+      "rejected_uncertified_candidate_count": 0,
+      "schema_composition_action_bound": 5,
+      "schema_composition_grammar": [
+        "direct producer",
+        "support producer then target producer",
+        "support producer then one bridge producer then target producer",
+        "one prefix producer then support producer then one bridge producer then target producer",
+        "optional one-step certified resource release after any producer sequence"
+      ],
+      "seed_predicates": [
+        "at"
+      ],
+      "selected_branch_ids": [
+        "b0",
+        "b1",
+        "b4",
+        "b5",
+        "b6",
+        "b7",
+        "b8",
+        "b9",
+        "b10",
+        "b11",
+        "b12",
+        "b13",
+        "b14",
+        "b15",
+        "b16",
+        "b17",
+        "b18",
+        "b19"
+      ],
+      "selected_recursive_capability_count": 0,
+      "selection_scope": "joint_schema_and_validated_evidence_candidates",
+      "selector_backend": "clingo_asp_minimize",
+      "selector_coverage_basis": [
+        "evidence obligations: alpha-equivalent trigger, context, and body",
+        "evidence obligations: identical primitive/subgoal body under a context subset implication",
+        "schema producer obligations only: a weaker-context primitive producer whose schema-derived positive postconditions refine the obligation without additional deletes and with an identical numeric transformation and a causally refining resource-release contract",
+        "arbitrary MOOSE macro-to-recursive-module semantic replacement is not certified",
+        "recursive body-prefix similarity is not accepted as semantic coverage"
+      ],
+      "selector_objective": [
+        "maximize compatible well-founded recursive capabilities",
+        "minimize selected branch count",
+        "then minimize selected context literal count",
+        "then minimize selected body step count"
+      ],
+      "selector_obligation_count": 18,
+      "selector_optimization_cost": [
+        0,
+        18,
+        153,
+        30
+      ],
+      "theoretical_basis": [
+        "MOOSE singleton-goal regression supplies lifted target-predicate evidence",
+        "PDDL action schemas supply primitive producer/precondition structure",
+        "policy-reuse style predicate modules allow subgoal calls between atomic literals",
+        "PDDL typing is used internally to reject unobservable subtype role bindings",
+        "range-restricted static and negative contexts prevent unbounded Jason unification over inertial relations",
+        "range-safe extra-variable preconditions may be lifted into internal atomic subgoal calls instead of staying as long primitive macros",
+        "existential context projection follows acyclic producer dependencies and retains schema-derived static feasibility witnesses before recursive recheck",
+        "same-predicate recursive branches require a schema-level well-founded relational-count progress certificate",
+        "a fixed domain-independent feature grammar includes global relation count and query-anchored acyclic relation-cone count rankings",
+        "resource-release cleanup branches are accepted only when PDDL effects prove resource debt discharge plus target preservation",
+        "Clingo/ASP selects a minimum branch set that covers all generated branch evidence"
+      ]
+    },
+    "atomic_template_backend": "moose_validated_policy_lifting",
+    "evidence_macro_library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "compact_recursive_module_ready": false,
+      "faithful_decision_list_ready": true,
+      "goal_symbol_count": 1,
+      "goal_symbols": [
+        "at"
+      ],
+      "library_profile": "action_only_atomic_template_library",
+      "max_body_step_count": 4,
+      "max_plans_per_goal_symbol": 5,
+      "plan_count": 5,
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 5
+      },
+      "primitive_action_step_count": 14,
+      "singleton_macro_library_ready": true,
+      "subgoal_step_count": 0,
+      "warnings": [
+        "Direct action-only evidence contains primitive macro actions but no recursive atomic subgoal calls; claim faithful decision-list compilation rather than compact recursive module synthesis."
+      ]
+    },
+    "evidence_module": {
+      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+      "representation": "moose_readable_first_order_decision_list",
+      "rule_count": 5,
+      "source_name": "transport",
+      "source_provider": "moose"
+    },
+    "generation_mode": "atomic_minimal_literal_module_library",
+    "library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "artifact_classification_basis": "generic artifact label; structural categories are plan-template-level, not domain-level",
+      "compact_recursive_module_ready": true,
+      "evidence_macro_plan_count": 5,
+      "library_profile": "mixed_atomic_template_library",
+      "macro_evidence_plan_count": 5,
+      "plan_count": 18,
+      "plan_template_classification_basis": "per plan template: numeric resource goal modules are classified by their numeric certificate, empty non-numeric bodies are already-true, bodies with only primitive actions are action-only, and bodies containing achievement subgoals are subgoal-decomposed",
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 9,
+        "already_true_plan_template": 3,
+        "subgoal_decomposed_plan_template": 6
+      },
+      "primitive_action_step_count": 18,
+      "schema_augmented_recursive_modules_ready": true,
+      "subgoal_step_count": 12,
+      "validated_macro_evidence_ready": true,
+      "validated_policy_lifting_ready": true,
+      "validated_policy_rule_plan_count": 5
+    },
+    "pddl_support": {
+      "domain_file": "src/domains/transport/domain.pddl",
+      "fragment_assumptions": [
+        "classical finite-domain PDDL files parsed before lifted ASL synthesis",
+        "positive conjunctive predicate achievement goals only",
+        "bounded integer numeric equality goals may target declared numeric resource fluents",
+        "primitive action schemas with predicate preconditions and predicate effects",
+        "bounded integer numeric resource fluents may appear in action preconditions and effects",
+        "numeric effects are limited to constant integer increase/decrease updates",
+        "PDDL predicate and action symbols may be sanitized for AgentSpeak rendering",
+        "sanitized predicate and action functors must remain unique",
+        "metric-only action-costs functions are distinguished from logical numeric resources",
+        "typing, equality, and negative preconditions are accepted only inside the project parser subset",
+        "a :disjunctive-preconditions requirement declaration is accepted only when the parsed action and goal expressions contain no or operator",
+        "derived predicates, conditional effects, quantifiers, preferences, durative actions, arbitrary arithmetic expressions, non-integer numeric goals, and optimization metrics as goals remain unsupported"
+      ],
+      "is_compilable": true,
+      "known_unsupported_domain_blocks": [
+        ":constraints",
+        ":derived",
+        ":durative-action"
+      ],
+      "known_unsupported_requirement_set": [
+        ":adl",
+        ":conditional-effects",
+        ":derived-predicates",
+        ":durative-actions",
+        ":existential-preconditions",
+        ":preferences",
+        ":quantified-preconditions",
+        ":universal-preconditions"
+      ],
+      "logical_numeric_functions": [],
+      "metric_only_numeric_functions": [],
+      "numeric_functions": [],
+      "problem_files": [],
+      "requirements": [
+        ":typing"
+      ],
+      "supported_requirement_set": [
+        ":action-costs",
+        ":disjunctive-preconditions",
+        ":equality",
+        ":fluents",
+        ":negative-preconditions",
+        ":numeric-fluents",
+        ":strips",
+        ":typing"
+      ],
+      "supported_requirements": [
+        ":typing"
+      ],
+      "unsupported_blocks": [],
+      "unsupported_diagnostics": [],
+      "unsupported_expression_operators": [],
+      "unsupported_reasons": [],
+      "unsupported_requirements": []
+    },
+    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+    "source_name": "transport",
+    "source_numeric_goal_functions": [],
+    "source_raw_rule_count": 5,
+    "source_seed_predicates": [
+      "at"
+    ],
+    "validated_policy_lifting": {
+      "deduplicated_macro_count": 5,
+      "invalid_macro_count": 0,
+      "merged_plan_count": 18,
+      "raw_numeric_goal_macro_count": 0,
+      "raw_singleton_macro_count": 5,
+      "selection_stage": "joint_clingo_certified_candidate_selection",
+      "validated_macro_count": 5,
+      "validated_numeric_macro_count": 0,
+      "validation_basis": [
+        "Evidence Module singleton-goal rule supplies state context, goal, and macro action sequence",
+        "PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
+        "Evidence Module numeric equality goal rules may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
+        "PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
+        "Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
+        "PDDL constants are preserved as constants; negative precondition conflicts and positive preconditions that may alias prior deletes compile to explicit inequality guards when representable in the supported ASL subset"
+      ]
+    }
+  },
+  "plans": [
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [],
+      "context": [
+        "at(X, Y)"
+      ],
+      "plan_name": "at_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [],
+      "context": [
+        "capacity(X, Y)"
+      ],
+      "plan_name": "capacity_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [],
+      "context": [
+        "in(X, Y)"
+      ],
+      "plan_name": "in_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "Y \\== Z"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "producer_actions": [
+            "drive"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y \\== Z"
+      ],
+      "plan_name": "at_via_drive",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "precedence": "(1, 1, 0, 0)",
+          "schema_binding_guards": [],
+          "source_name": "transport",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "B",
+            "Y",
+            "X",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(B, Y)",
+        "obj_tp(B, vehicle)",
+        "in(X, B)",
+        "capacity(B, Z)",
+        "obj_tp(Z, size)",
+        "capacity-predecessor(Z, A)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "moose_reduced_transport_rule_1",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "precedence": "(1, 2, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z"
+          ],
+          "source_name": "transport",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "in(X, C)",
+        "obj_tp(C, vehicle)",
+        "at(C, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "capacity(C, A)",
+        "obj_tp(A, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(B, size)"
+      ],
+      "plan_name": "moose_reduced_transport_rule_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [
+            "C != X",
+            "Y != Z",
+            "A != B"
+          ],
+          "source_name": "transport",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "at(C, Z)",
+        "obj_tp(C, vehicle)",
+        "C != X",
+        "capacity(C, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)",
+        "A != B"
+      ],
+      "plan_name": "moose_reduced_transport_rule_3",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "D != X",
+            "Y != Z",
+            "A != Y",
+            "B != C"
+          ],
+          "source_name": "transport",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "D",
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "D",
+            "A",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "D",
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "D",
+            "Y",
+            "X",
+            "B",
+            "C"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(X, A)",
+        "obj_tp(A, location)",
+        "A != Y",
+        "at(D, Z)",
+        "obj_tp(D, vehicle)",
+        "obj_tp(Z, location)",
+        "A != Z",
+        "D != X",
+        "Y != Z",
+        "capacity(D, C)",
+        "obj_tp(C, size)",
+        "capacity-predecessor(B, C)",
+        "obj_tp(B, size)",
+        "B != C"
+      ],
+      "plan_name": "moose_reduced_transport_rule_4",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "C != X",
+            "A != B"
+          ],
+          "source_name": "transport",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        },
+        {
+          "arguments": [
+            "C",
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drive"
+        },
+        {
+          "arguments": [
+            "C",
+            "Y",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(C, Y)",
+        "obj_tp(C, vehicle)",
+        "C != X",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "Y != Z",
+        "capacity(C, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)",
+        "A != B"
+      ],
+      "plan_name": "moose_reduced_transport_rule_5",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "B \\== Y"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "producer_actions": [
+            "drop"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "A",
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "drop"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, size)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "capacity(X, B)",
+        "obj_tp(B, size)",
+        "B \\== Y",
+        "capacity-predecessor(B, Y)",
+        "in(A, X)",
+        "obj_tp(A, package)"
+      ],
+      "plan_name": "capacity_via_drop",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "B \\== Y"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "producer_actions": [
+            "pick-up"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z",
+            "A",
+            "Y",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, size)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "at(A, Z)",
+        "obj_tp(A, package)",
+        "capacity(X, B)",
+        "obj_tp(B, size)",
+        "B \\== Y",
+        "capacity-predecessor(Y, B)"
+      ],
+      "plan_name": "capacity_via_pick-up",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "producer_actions": [
+            "pick-up"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z",
+            "X",
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "pick-up"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "at(Y, Z)",
+        "capacity(Y, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "in_via_pick-up",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "at(Z, Y)",
+              "in(X, Z)",
+              "capacity-predecessor(A, B)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "prepared_predicate": "capacity",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "subgoal",
+          "symbol": "capacity"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(Z, Y)",
+        "obj_tp(Z, vehicle)",
+        "in(X, Z)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)",
+        "obj_tp(B, size)",
+        "not capacity(Z, A)"
+      ],
+      "plan_name": "at_prepare_capacity_Z_A",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "at(Z, Y)",
+              "capacity(Z, A)",
+              "capacity-predecessor(A, B)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "prepared_predicate": "in",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, location)",
+        "at(Z, Y)",
+        "obj_tp(Z, vehicle)",
+        "not in(X, Z)",
+        "capacity(Z, A)",
+        "obj_tp(A, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(B, size)"
+      ],
+      "plan_name": "at_prepare_in_X_Z",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "at"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "at(A, Z)",
+              "capacity-predecessor(Y, B)",
+              "capacity(X, B)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "prepared_predicate": "at",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "capacity"
+        }
+      ],
+      "context": [
+        "obj_tp(X, vehicle)",
+        "obj_tp(Y, size)",
+        "capacity(X, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(Y, B)",
+        "at(A, Z)",
+        "obj_tp(A, package)",
+        "obj_tp(Z, location)",
+        "not at(X, Z)"
+      ],
+      "plan_name": "capacity_prepare_at_X_Z",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "capacity"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "at(Y, Z)",
+              "capacity(Y, B)",
+              "capacity-predecessor(A, B)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "prepared_predicate": "at",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(Y, Z)",
+        "obj_tp(Z, location)",
+        "not at(X, Z)",
+        "capacity(Y, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "in_prepare_at_X_Z",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "at(X, Z)",
+              "capacity(Y, B)",
+              "capacity-predecessor(A, B)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "prepared_predicate": "at",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "subgoal",
+          "symbol": "at"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "not at(Y, Z)",
+        "capacity(Y, B)",
+        "obj_tp(B, size)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)"
+      ],
+      "plan_name": "in_prepare_at_Y_Z",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "at(Y, Z)",
+              "at(X, Z)",
+              "capacity-predecessor(A, B)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/transport/transport.model.readable",
+          "prepared_predicate": "capacity",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "transport"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "B"
+          ],
+          "kind": "subgoal",
+          "symbol": "capacity"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "in"
+        }
+      ],
+      "context": [
+        "obj_tp(X, package)",
+        "obj_tp(Y, vehicle)",
+        "at(X, Z)",
+        "obj_tp(Z, location)",
+        "at(Y, Z)",
+        "capacity-predecessor(A, B)",
+        "obj_tp(A, size)",
+        "obj_tp(B, size)",
+        "not capacity(Y, B)"
+      ],
+      "plan_name": "in_prepare_capacity_Y_B",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "in"
+      }
+    }
+  ]
+}

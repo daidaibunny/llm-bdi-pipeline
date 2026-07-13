@@ -1,0 +1,625 @@
+{
+  "artifact_contract": "domain-level lifted atomic AgentSpeak(L) library generated from MOOSE readable singleton-goal rules",
+  "atomic_module_synthesis": {
+    "branch_certification_rules": [
+      "static context literals must be range-restricted by head variables or previous positive dynamic literals",
+      "negative context literals must be range-restricted and cannot bind new variables",
+      "extra-variable prepared preconditions require a positive context closure that binds every non-head variable before the negative guard",
+      "acyclic preparation dependencies through a schema-inferred functional fluent may project unrelated dynamic sibling contexts only when every projected sibling has one producer schema, all of its static producer preconditions remain as feasibility witnesses, nested variables are alpha-renamed, and target completion is rechecked",
+      "cyclic or producer-ambiguous preparation dependencies retain the full connected positive context",
+      "same-predicate recursive prepare branches require a non-negative relational-count ranking feature that strictly decreases and is never increased",
+      "anchored relation-cone rankings may relocate an obstruction only when schema guards prove the new relation value differs from the protected anchor; Clingo rejects the capability if any selected reachable module can increase that relation without the same certificate",
+      "resource-release cleanup branches require a schema certificate that deletes a producer-created resource debt, restores a literal deleted by the producer, preserves the protected target, and records all exact alias guards needed by later action preconditions"
+    ],
+    "branch_count_by_predicate": {
+      "boarded": 3,
+      "lift-at": 3,
+      "served": 14
+    },
+    "candidate_source_counts": {
+      "joint_unique": 20,
+      "schema": 10,
+      "validated_evidence": 11
+    },
+    "evidence_obligation_count": 11,
+    "module_predicates": [
+      "boarded",
+      "lift-at",
+      "served"
+    ],
+    "plan_count": 20,
+    "predicate_roles": [
+      {
+        "consumers": [
+          "up",
+          "down"
+        ],
+        "coverage_status": "ok",
+        "deleters": [],
+        "emitted_module": false,
+        "expected_module": false,
+        "predicate": "above",
+        "producers": [],
+        "role": "static_context",
+        "selected_for_module_generation": false
+      },
+      {
+        "consumers": [
+          "depart"
+        ],
+        "coverage_status": "ok",
+        "deleters": [
+          "depart"
+        ],
+        "emitted_module": true,
+        "expected_module": true,
+        "predicate": "boarded",
+        "producers": [
+          "board"
+        ],
+        "role": "producible_fluent",
+        "selected_for_module_generation": true
+      },
+      {
+        "consumers": [
+          "depart"
+        ],
+        "coverage_status": "ok",
+        "deleters": [],
+        "emitted_module": false,
+        "expected_module": false,
+        "predicate": "destin",
+        "producers": [],
+        "role": "static_context",
+        "selected_for_module_generation": false
+      },
+      {
+        "consumers": [
+          "board",
+          "depart",
+          "up",
+          "down"
+        ],
+        "coverage_status": "ok",
+        "deleters": [
+          "up",
+          "down"
+        ],
+        "emitted_module": true,
+        "expected_module": true,
+        "predicate": "lift-at",
+        "producers": [
+          "up",
+          "down"
+        ],
+        "role": "producible_fluent",
+        "selected_for_module_generation": true
+      },
+      {
+        "consumers": [
+          "board"
+        ],
+        "coverage_status": "ok",
+        "deleters": [
+          "board"
+        ],
+        "emitted_module": false,
+        "expected_module": false,
+        "predicate": "origin",
+        "producers": [],
+        "role": "deleted_only_fluent",
+        "selected_for_module_generation": false
+      },
+      {
+        "consumers": [],
+        "coverage_status": "ok",
+        "deleters": [],
+        "emitted_module": true,
+        "expected_module": true,
+        "predicate": "served",
+        "producers": [
+          "depart"
+        ],
+        "role": "producible_fluent",
+        "selected_for_module_generation": true
+      }
+    ],
+    "producer_actions_by_predicate": {
+      "boarded": [
+        "board"
+      ],
+      "lift-at": [
+        "up",
+        "down"
+      ],
+      "served": [
+        "depart"
+      ]
+    },
+    "pruned_candidate_count": 0,
+    "ranking_incompatibility_count": 0,
+    "raw_candidate_count": 20,
+    "recursive_capability_obligation_count": 0,
+    "recursive_predicates": [
+      "boarded",
+      "served"
+    ],
+    "rejected_uncertified_candidate_count": 0,
+    "schema_composition_action_bound": 5,
+    "schema_composition_grammar": [
+      "direct producer",
+      "support producer then target producer",
+      "support producer then one bridge producer then target producer",
+      "one prefix producer then support producer then one bridge producer then target producer",
+      "optional one-step certified resource release after any producer sequence"
+    ],
+    "seed_predicates": [
+      "served"
+    ],
+    "selected_branch_ids": [
+      "b0",
+      "b1",
+      "b2",
+      "b3",
+      "b4",
+      "b5",
+      "b6",
+      "b7",
+      "b8",
+      "b9",
+      "b10",
+      "b11",
+      "b12",
+      "b13",
+      "b14",
+      "b15",
+      "b16",
+      "b17",
+      "b18",
+      "b19"
+    ],
+    "selected_recursive_capability_count": 0,
+    "selection_scope": "joint_schema_and_validated_evidence_candidates",
+    "selector_backend": "clingo_asp_minimize",
+    "selector_coverage_basis": [
+      "evidence obligations: alpha-equivalent trigger, context, and body",
+      "evidence obligations: identical primitive/subgoal body under a context subset implication",
+      "schema producer obligations only: a weaker-context primitive producer whose schema-derived positive postconditions refine the obligation without additional deletes and with an identical numeric transformation and a causally refining resource-release contract",
+      "arbitrary MOOSE macro-to-recursive-module semantic replacement is not certified",
+      "recursive body-prefix similarity is not accepted as semantic coverage"
+    ],
+    "selector_objective": [
+      "maximize compatible well-founded recursive capabilities",
+      "minimize selected branch count",
+      "then minimize selected context literal count",
+      "then minimize selected body step count"
+    ],
+    "selector_obligation_count": 20,
+    "selector_optimization_cost": [
+      20,
+      129,
+      44
+    ],
+    "theoretical_basis": [
+      "MOOSE singleton-goal regression supplies lifted target-predicate evidence",
+      "PDDL action schemas supply primitive producer/precondition structure",
+      "policy-reuse style predicate modules allow subgoal calls between atomic literals",
+      "PDDL typing is used internally to reject unobservable subtype role bindings",
+      "range-restricted static and negative contexts prevent unbounded Jason unification over inertial relations",
+      "range-safe extra-variable preconditions may be lifted into internal atomic subgoal calls instead of staying as long primitive macros",
+      "existential context projection follows acyclic producer dependencies and retains schema-derived static feasibility witnesses before recursive recheck",
+      "same-predicate recursive branches require a schema-level well-founded relational-count progress certificate",
+      "a fixed domain-independent feature grammar includes global relation count and query-anchored acyclic relation-cone count rankings",
+      "resource-release cleanup branches are accepted only when PDDL effects prove resource debt discharge plus target preservation",
+      "Clingo/ASP selects a minimum branch set that covers all generated branch evidence"
+    ]
+  },
+  "compiled_plan_count": 20,
+  "compiled_singleton_rule_count": 0,
+  "domain_file": "src/domains/miconic/domain.pddl",
+  "domain_name": "miconic",
+  "evidence_provider": "moose",
+  "library_metadata": {
+    "atomic_module_synthesis": {
+      "branch_certification_rules": [
+        "static context literals must be range-restricted by head variables or previous positive dynamic literals",
+        "negative context literals must be range-restricted and cannot bind new variables",
+        "extra-variable prepared preconditions require a positive context closure that binds every non-head variable before the negative guard",
+        "acyclic preparation dependencies through a schema-inferred functional fluent may project unrelated dynamic sibling contexts only when every projected sibling has one producer schema, all of its static producer preconditions remain as feasibility witnesses, nested variables are alpha-renamed, and target completion is rechecked",
+        "cyclic or producer-ambiguous preparation dependencies retain the full connected positive context",
+        "same-predicate recursive prepare branches require a non-negative relational-count ranking feature that strictly decreases and is never increased",
+        "anchored relation-cone rankings may relocate an obstruction only when schema guards prove the new relation value differs from the protected anchor; Clingo rejects the capability if any selected reachable module can increase that relation without the same certificate",
+        "resource-release cleanup branches require a schema certificate that deletes a producer-created resource debt, restores a literal deleted by the producer, preserves the protected target, and records all exact alias guards needed by later action preconditions"
+      ],
+      "branch_count_by_predicate": {
+        "boarded": 3,
+        "lift-at": 3,
+        "served": 14
+      },
+      "candidate_source_counts": {
+        "joint_unique": 20,
+        "schema": 10,
+        "validated_evidence": 11
+      },
+      "evidence_obligation_count": 11,
+      "module_predicates": [
+        "boarded",
+        "lift-at",
+        "served"
+      ],
+      "plan_count": 20,
+      "predicate_roles": [
+        {
+          "consumers": [
+            "up",
+            "down"
+          ],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": false,
+          "expected_module": false,
+          "predicate": "above",
+          "producers": [],
+          "role": "static_context",
+          "selected_for_module_generation": false
+        },
+        {
+          "consumers": [
+            "depart"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "depart"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "boarded",
+          "producers": [
+            "board"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "depart"
+          ],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": false,
+          "expected_module": false,
+          "predicate": "destin",
+          "producers": [],
+          "role": "static_context",
+          "selected_for_module_generation": false
+        },
+        {
+          "consumers": [
+            "board",
+            "depart",
+            "up",
+            "down"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "up",
+            "down"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "lift-at",
+          "producers": [
+            "up",
+            "down"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "board"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "board"
+          ],
+          "emitted_module": false,
+          "expected_module": false,
+          "predicate": "origin",
+          "producers": [],
+          "role": "deleted_only_fluent",
+          "selected_for_module_generation": false
+        },
+        {
+          "consumers": [],
+          "coverage_status": "ok",
+          "deleters": [],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "served",
+          "producers": [
+            "depart"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        }
+      ],
+      "producer_actions_by_predicate": {
+        "boarded": [
+          "board"
+        ],
+        "lift-at": [
+          "up",
+          "down"
+        ],
+        "served": [
+          "depart"
+        ]
+      },
+      "pruned_candidate_count": 0,
+      "ranking_incompatibility_count": 0,
+      "raw_candidate_count": 20,
+      "recursive_capability_obligation_count": 0,
+      "recursive_predicates": [
+        "boarded",
+        "served"
+      ],
+      "rejected_uncertified_candidate_count": 0,
+      "schema_composition_action_bound": 5,
+      "schema_composition_grammar": [
+        "direct producer",
+        "support producer then target producer",
+        "support producer then one bridge producer then target producer",
+        "one prefix producer then support producer then one bridge producer then target producer",
+        "optional one-step certified resource release after any producer sequence"
+      ],
+      "seed_predicates": [
+        "served"
+      ],
+      "selected_branch_ids": [
+        "b0",
+        "b1",
+        "b2",
+        "b3",
+        "b4",
+        "b5",
+        "b6",
+        "b7",
+        "b8",
+        "b9",
+        "b10",
+        "b11",
+        "b12",
+        "b13",
+        "b14",
+        "b15",
+        "b16",
+        "b17",
+        "b18",
+        "b19"
+      ],
+      "selected_recursive_capability_count": 0,
+      "selection_scope": "joint_schema_and_validated_evidence_candidates",
+      "selector_backend": "clingo_asp_minimize",
+      "selector_coverage_basis": [
+        "evidence obligations: alpha-equivalent trigger, context, and body",
+        "evidence obligations: identical primitive/subgoal body under a context subset implication",
+        "schema producer obligations only: a weaker-context primitive producer whose schema-derived positive postconditions refine the obligation without additional deletes and with an identical numeric transformation and a causally refining resource-release contract",
+        "arbitrary MOOSE macro-to-recursive-module semantic replacement is not certified",
+        "recursive body-prefix similarity is not accepted as semantic coverage"
+      ],
+      "selector_objective": [
+        "maximize compatible well-founded recursive capabilities",
+        "minimize selected branch count",
+        "then minimize selected context literal count",
+        "then minimize selected body step count"
+      ],
+      "selector_obligation_count": 20,
+      "selector_optimization_cost": [
+        20,
+        129,
+        44
+      ],
+      "theoretical_basis": [
+        "MOOSE singleton-goal regression supplies lifted target-predicate evidence",
+        "PDDL action schemas supply primitive producer/precondition structure",
+        "policy-reuse style predicate modules allow subgoal calls between atomic literals",
+        "PDDL typing is used internally to reject unobservable subtype role bindings",
+        "range-restricted static and negative contexts prevent unbounded Jason unification over inertial relations",
+        "range-safe extra-variable preconditions may be lifted into internal atomic subgoal calls instead of staying as long primitive macros",
+        "existential context projection follows acyclic producer dependencies and retains schema-derived static feasibility witnesses before recursive recheck",
+        "same-predicate recursive branches require a schema-level well-founded relational-count progress certificate",
+        "a fixed domain-independent feature grammar includes global relation count and query-anchored acyclic relation-cone count rankings",
+        "resource-release cleanup branches are accepted only when PDDL effects prove resource debt discharge plus target preservation",
+        "Clingo/ASP selects a minimum branch set that covers all generated branch evidence"
+      ]
+    },
+    "atomic_template_backend": "moose_validated_policy_lifting",
+    "evidence_macro_library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "compact_recursive_module_ready": false,
+      "faithful_decision_list_ready": true,
+      "goal_symbol_count": 1,
+      "goal_symbols": [
+        "served"
+      ],
+      "library_profile": "action_only_atomic_template_library",
+      "max_body_step_count": 4,
+      "max_plans_per_goal_symbol": 11,
+      "plan_count": 11,
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 11
+      },
+      "primitive_action_step_count": 35,
+      "singleton_macro_library_ready": true,
+      "subgoal_step_count": 0,
+      "warnings": [
+        "Direct action-only evidence contains primitive macro actions but no recursive atomic subgoal calls; claim faithful decision-list compilation rather than compact recursive module synthesis."
+      ]
+    },
+    "evidence_module": {
+      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
+      "representation": "moose_readable_first_order_decision_list",
+      "rule_count": 11,
+      "source_name": "miconic",
+      "source_provider": "moose"
+    },
+    "generation_mode": "atomic_minimal_literal_module_library",
+    "library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "artifact_classification_basis": "generic artifact label; structural categories are plan-template-level, not domain-level",
+      "compact_recursive_module_ready": true,
+      "evidence_macro_plan_count": 11,
+      "library_profile": "mixed_atomic_template_library",
+      "macro_evidence_plan_count": 11,
+      "plan_count": 20,
+      "plan_template_classification_basis": "per plan template: numeric resource goal modules are classified by their numeric certificate, empty non-numeric bodies are already-true, bodies with only primitive actions are action-only, and bodies containing achievement subgoals are subgoal-decomposed",
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 14,
+        "already_true_plan_template": 3,
+        "subgoal_decomposed_plan_template": 3
+      },
+      "primitive_action_step_count": 38,
+      "schema_augmented_recursive_modules_ready": true,
+      "subgoal_step_count": 6,
+      "validated_macro_evidence_ready": true,
+      "validated_policy_lifting_ready": true,
+      "validated_policy_rule_plan_count": 11
+    },
+    "pddl_support": {
+      "domain_file": "src/domains/miconic/domain.pddl",
+      "fragment_assumptions": [
+        "classical finite-domain PDDL files parsed before lifted ASL synthesis",
+        "positive conjunctive predicate achievement goals only",
+        "bounded integer numeric equality goals may target declared numeric resource fluents",
+        "primitive action schemas with predicate preconditions and predicate effects",
+        "bounded integer numeric resource fluents may appear in action preconditions and effects",
+        "numeric effects are limited to constant integer increase/decrease updates",
+        "PDDL predicate and action symbols may be sanitized for AgentSpeak rendering",
+        "sanitized predicate and action functors must remain unique",
+        "metric-only action-costs functions are distinguished from logical numeric resources",
+        "typing, equality, and negative preconditions are accepted only inside the project parser subset",
+        "a :disjunctive-preconditions requirement declaration is accepted only when the parsed action and goal expressions contain no or operator",
+        "derived predicates, conditional effects, quantifiers, preferences, durative actions, arbitrary arithmetic expressions, non-integer numeric goals, and optimization metrics as goals remain unsupported"
+      ],
+      "is_compilable": true,
+      "known_unsupported_domain_blocks": [
+        ":constraints",
+        ":derived",
+        ":durative-action"
+      ],
+      "known_unsupported_requirement_set": [
+        ":adl",
+        ":conditional-effects",
+        ":derived-predicates",
+        ":durative-actions",
+        ":existential-preconditions",
+        ":preferences",
+        ":quantified-preconditions",
+        ":universal-preconditions"
+      ],
+      "logical_numeric_functions": [],
+      "metric_only_numeric_functions": [],
+      "numeric_functions": [],
+      "problem_files": [],
+      "requirements": [
+        ":strips",
+        ":typing"
+      ],
+      "supported_requirement_set": [
+        ":action-costs",
+        ":disjunctive-preconditions",
+        ":equality",
+        ":fluents",
+        ":negative-preconditions",
+        ":numeric-fluents",
+        ":strips",
+        ":typing"
+      ],
+      "supported_requirements": [
+        ":strips",
+        ":typing"
+      ],
+      "unsupported_blocks": [],
+      "unsupported_diagnostics": [],
+      "unsupported_expression_operators": [],
+      "unsupported_reasons": [],
+      "unsupported_requirements": []
+    },
+    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
+    "source_name": "miconic",
+    "source_numeric_goal_functions": [],
+    "source_raw_rule_count": 11,
+    "source_seed_predicates": [
+      "served"
+    ],
+    "validated_policy_lifting": {
+      "deduplicated_macro_count": 11,
+      "invalid_macro_count": 0,
+      "merged_plan_count": 20,
+      "raw_numeric_goal_macro_count": 0,
+      "raw_singleton_macro_count": 11,
+      "selection_stage": "joint_clingo_certified_candidate_selection",
+      "validated_macro_count": 11,
+      "validated_numeric_macro_count": 0,
+      "validation_basis": [
+        "Evidence Module singleton-goal rule supplies state context, goal, and macro action sequence",
+        "PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
+        "Evidence Module numeric equality goal rules may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
+        "PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
+        "Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
+        "PDDL constants are preserved as constants; negative precondition conflicts and positive preconditions that may alias prior deletes compile to explicit inequality guards when representable in the supported ASL subset"
+      ]
+    }
+  },
+  "library_quality": {
+    "artifact_classification": "atomic_template_library",
+    "artifact_classification_basis": "generic artifact label; structural categories are plan-template-level, not domain-level",
+    "compact_recursive_module_ready": true,
+    "evidence_macro_plan_count": 11,
+    "library_profile": "mixed_atomic_template_library",
+    "macro_evidence_plan_count": 11,
+    "plan_count": 20,
+    "plan_template_classification_basis": "per plan template: numeric resource goal modules are classified by their numeric certificate, empty non-numeric bodies are already-true, bodies with only primitive actions are action-only, and bodies containing achievement subgoals are subgoal-decomposed",
+    "plan_template_kind_counts": {
+      "action_only_plan_template": 14,
+      "already_true_plan_template": 3,
+      "subgoal_decomposed_plan_template": 3
+    },
+    "primitive_action_step_count": 38,
+    "schema_augmented_recursive_modules_ready": true,
+    "subgoal_step_count": 6,
+    "validated_macro_evidence_ready": true,
+    "validated_policy_lifting_ready": true,
+    "validated_policy_rule_plan_count": 11
+  },
+  "minimal_modules": true,
+  "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
+  "policy_program_module_count": 11,
+  "policy_program_rule_count": 11,
+  "raw_rule_count": 11,
+  "source_name": "miconic",
+  "source_raw_rule_count": 11,
+  "source_seed_predicates": [
+    "served"
+  ],
+  "validated_policy_lifting": true,
+  "validated_policy_lifting_report": {
+    "deduplicated_macro_count": 11,
+    "invalid_macro_count": 0,
+    "merged_plan_count": 20,
+    "raw_numeric_goal_macro_count": 0,
+    "raw_singleton_macro_count": 11,
+    "selection_stage": "joint_clingo_certified_candidate_selection",
+    "validated_macro_count": 11,
+    "validated_numeric_macro_count": 0,
+    "validation_basis": [
+      "Evidence Module singleton-goal rule supplies state context, goal, and macro action sequence",
+      "PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
+      "Evidence Module numeric equality goal rules may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
+      "PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
+      "Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
+      "PDDL constants are preserved as constants; negative precondition conflicts and positive preconditions that may alias prior deletes compile to explicit inequality guards when representable in the supported ASL subset"
+    ]
+  }
+}

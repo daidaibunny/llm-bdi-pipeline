@@ -1,0 +1,6176 @@
+{
+  "domain_name": "blocksworld-on",
+  "initial_beliefs": [],
+  "metadata": {
+    "atomic_module_synthesis": {
+      "branch_certification_rules": [
+        "static context literals must be range-restricted by head variables or previous positive dynamic literals",
+        "negative context literals must be range-restricted and cannot bind new variables",
+        "extra-variable prepared preconditions require a positive context closure that binds every non-head variable before the negative guard",
+        "acyclic preparation dependencies through a schema-inferred functional fluent may project unrelated dynamic sibling contexts only when every projected sibling has one producer schema, all of its static producer preconditions remain as feasibility witnesses, nested variables are alpha-renamed, and target completion is rechecked",
+        "cyclic or producer-ambiguous preparation dependencies retain the full connected positive context",
+        "same-predicate recursive prepare branches require a non-negative relational-count ranking feature that strictly decreases and is never increased",
+        "anchored relation-cone rankings may relocate an obstruction only when schema guards prove the new relation value differs from the protected anchor; Clingo rejects the capability if any selected reachable module can increase that relation without the same certificate",
+        "resource-release cleanup branches require a schema certificate that deletes a producer-created resource debt, restores a literal deleted by the producer, preserves the protected target, and records all exact alias guards needed by later action preconditions"
+      ],
+      "branch_count_by_predicate": {
+        "arm-empty": 2,
+        "clear": 6,
+        "holding": 5,
+        "on": 61,
+        "on-table": 6
+      },
+      "candidate_source_counts": {
+        "joint_unique": 82,
+        "schema": 30,
+        "validated_evidence": 53
+      },
+      "evidence_obligation_count": 53,
+      "module_predicates": [
+        "arm-empty",
+        "clear",
+        "holding",
+        "on",
+        "on-table"
+      ],
+      "plan_count": 80,
+      "predicate_roles": [
+        {
+          "consumers": [
+            "pickup",
+            "unstack"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "pickup",
+            "unstack"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "arm-empty",
+          "producers": [
+            "putdown",
+            "stack"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "pickup",
+            "stack",
+            "unstack"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "pickup",
+            "stack",
+            "unstack"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "clear",
+          "producers": [
+            "putdown",
+            "stack",
+            "unstack"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "putdown",
+            "stack"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "putdown",
+            "stack"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "holding",
+          "producers": [
+            "pickup",
+            "unstack"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "unstack"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "unstack"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "on",
+          "producers": [
+            "stack"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        },
+        {
+          "consumers": [
+            "pickup"
+          ],
+          "coverage_status": "ok",
+          "deleters": [
+            "pickup"
+          ],
+          "emitted_module": true,
+          "expected_module": true,
+          "predicate": "on-table",
+          "producers": [
+            "putdown"
+          ],
+          "role": "producible_fluent",
+          "selected_for_module_generation": true
+        }
+      ],
+      "producer_actions_by_predicate": {
+        "arm-empty": [
+          "putdown",
+          "stack"
+        ],
+        "clear": [
+          "putdown",
+          "stack",
+          "unstack"
+        ],
+        "holding": [
+          "pickup",
+          "unstack"
+        ],
+        "on": [
+          "stack"
+        ],
+        "on-table": [
+          "putdown"
+        ]
+      },
+      "pruned_candidate_count": 2,
+      "ranking_incompatibility_count": 2,
+      "raw_candidate_count": 82,
+      "recursive_capability_obligation_count": 1,
+      "recursive_predicates": [
+        "clear",
+        "holding",
+        "on",
+        "on-table"
+      ],
+      "rejected_uncertified_candidate_count": 0,
+      "schema_composition_action_bound": 5,
+      "schema_composition_grammar": [
+        "direct producer",
+        "support producer then target producer",
+        "support producer then one bridge producer then target producer",
+        "one prefix producer then support producer then one bridge producer then target producer",
+        "optional one-step certified resource release after any producer sequence"
+      ],
+      "seed_predicates": [
+        "on"
+      ],
+      "selected_branch_ids": [
+        "b0",
+        "b1",
+        "b2",
+        "b3",
+        "b4",
+        "b5",
+        "b7",
+        "b8",
+        "b9",
+        "b10",
+        "b11",
+        "b12",
+        "b13",
+        "b14",
+        "b16",
+        "b17",
+        "b18",
+        "b19",
+        "b20",
+        "b21",
+        "b22",
+        "b23",
+        "b24",
+        "b25",
+        "b26",
+        "b27",
+        "b28",
+        "b29",
+        "b30",
+        "b31",
+        "b32",
+        "b33",
+        "b34",
+        "b35",
+        "b36",
+        "b37",
+        "b38",
+        "b39",
+        "b40",
+        "b41",
+        "b42",
+        "b43",
+        "b44",
+        "b45",
+        "b46",
+        "b47",
+        "b48",
+        "b49",
+        "b50",
+        "b51",
+        "b52",
+        "b53",
+        "b54",
+        "b55",
+        "b56",
+        "b57",
+        "b58",
+        "b59",
+        "b60",
+        "b61",
+        "b62",
+        "b63",
+        "b64",
+        "b65",
+        "b66",
+        "b67",
+        "b68",
+        "b69",
+        "b70",
+        "b71",
+        "b72",
+        "b73",
+        "b74",
+        "b75",
+        "b76",
+        "b77",
+        "b78",
+        "b79",
+        "b80",
+        "b81"
+      ],
+      "selected_recursive_capability_count": 1,
+      "selection_scope": "joint_schema_and_validated_evidence_candidates",
+      "selector_backend": "clingo_asp_minimize",
+      "selector_coverage_basis": [
+        "evidence obligations: alpha-equivalent trigger, context, and body",
+        "evidence obligations: identical primitive/subgoal body under a context subset implication",
+        "schema producer obligations only: a weaker-context primitive producer whose schema-derived positive postconditions refine the obligation without additional deletes and with an identical numeric transformation and a causally refining resource-release contract",
+        "arbitrary MOOSE macro-to-recursive-module semantic replacement is not certified",
+        "recursive body-prefix similarity is not accepted as semantic coverage"
+      ],
+      "selector_objective": [
+        "maximize compatible well-founded recursive capabilities",
+        "minimize selected branch count",
+        "then minimize selected context literal count",
+        "then minimize selected body step count"
+      ],
+      "selector_obligation_count": 81,
+      "selector_optimization_cost": [
+        -1,
+        80,
+        527,
+        348
+      ],
+      "theoretical_basis": [
+        "MOOSE singleton-goal regression supplies lifted target-predicate evidence",
+        "PDDL action schemas supply primitive producer/precondition structure",
+        "policy-reuse style predicate modules allow subgoal calls between atomic literals",
+        "PDDL typing is used internally to reject unobservable subtype role bindings",
+        "range-restricted static and negative contexts prevent unbounded Jason unification over inertial relations",
+        "range-safe extra-variable preconditions may be lifted into internal atomic subgoal calls instead of staying as long primitive macros",
+        "existential context projection follows acyclic producer dependencies and retains schema-derived static feasibility witnesses before recursive recheck",
+        "same-predicate recursive branches require a schema-level well-founded relational-count progress certificate",
+        "a fixed domain-independent feature grammar includes global relation count and query-anchored acyclic relation-cone count rankings",
+        "resource-release cleanup branches are accepted only when PDDL effects prove resource debt discharge plus target preservation",
+        "Clingo/ASP selects a minimum branch set that covers all generated branch evidence"
+      ]
+    },
+    "atomic_template_backend": "moose_validated_policy_lifting",
+    "evidence_macro_library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "compact_recursive_module_ready": false,
+      "faithful_decision_list_ready": true,
+      "goal_symbol_count": 1,
+      "goal_symbols": [
+        "on"
+      ],
+      "library_profile": "action_only_atomic_template_library",
+      "max_body_step_count": 10,
+      "max_plans_per_goal_symbol": 53,
+      "plan_count": 53,
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 53
+      },
+      "primitive_action_step_count": 310,
+      "singleton_macro_library_ready": true,
+      "subgoal_step_count": 0,
+      "warnings": [
+        "Direct action-only evidence contains primitive macro actions but no recursive atomic subgoal calls; claim faithful decision-list compilation rather than compact recursive module synthesis."
+      ]
+    },
+    "evidence_module": {
+      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+      "representation": "moose_readable_first_order_decision_list",
+      "rule_count": 53,
+      "source_name": "blocksworld-on",
+      "source_provider": "moose"
+    },
+    "generation_mode": "atomic_minimal_literal_module_library",
+    "library_quality": {
+      "artifact_classification": "atomic_template_library",
+      "artifact_classification_basis": "generic artifact label; structural categories are plan-template-level, not domain-level",
+      "compact_recursive_module_ready": true,
+      "evidence_macro_plan_count": 53,
+      "library_profile": "mixed_atomic_template_library",
+      "macro_evidence_plan_count": 53,
+      "plan_count": 80,
+      "plan_template_classification_basis": "per plan template: numeric resource goal modules are classified by their numeric certificate, empty non-numeric bodies are already-true, bodies with only primitive actions are action-only, and bodies containing achievement subgoals are subgoal-decomposed",
+      "plan_template_kind_counts": {
+        "action_only_plan_template": 63,
+        "already_true_plan_template": 5,
+        "subgoal_decomposed_plan_template": 12
+      },
+      "primitive_action_step_count": 324,
+      "schema_augmented_recursive_modules_ready": true,
+      "subgoal_step_count": 24,
+      "validated_macro_evidence_ready": true,
+      "validated_policy_lifting_ready": true,
+      "validated_policy_rule_plan_count": 53
+    },
+    "pddl_support": {
+      "domain_file": "src/domains/blocksworld-on/domain.pddl",
+      "fragment_assumptions": [
+        "classical finite-domain PDDL files parsed before lifted ASL synthesis",
+        "positive conjunctive predicate achievement goals only",
+        "bounded integer numeric equality goals may target declared numeric resource fluents",
+        "primitive action schemas with predicate preconditions and predicate effects",
+        "bounded integer numeric resource fluents may appear in action preconditions and effects",
+        "numeric effects are limited to constant integer increase/decrease updates",
+        "PDDL predicate and action symbols may be sanitized for AgentSpeak rendering",
+        "sanitized predicate and action functors must remain unique",
+        "metric-only action-costs functions are distinguished from logical numeric resources",
+        "typing, equality, and negative preconditions are accepted only inside the project parser subset",
+        "a :disjunctive-preconditions requirement declaration is accepted only when the parsed action and goal expressions contain no or operator",
+        "derived predicates, conditional effects, quantifiers, preferences, durative actions, arbitrary arithmetic expressions, non-integer numeric goals, and optimization metrics as goals remain unsupported"
+      ],
+      "is_compilable": true,
+      "known_unsupported_domain_blocks": [
+        ":constraints",
+        ":derived",
+        ":durative-action"
+      ],
+      "known_unsupported_requirement_set": [
+        ":adl",
+        ":conditional-effects",
+        ":derived-predicates",
+        ":durative-actions",
+        ":existential-preconditions",
+        ":preferences",
+        ":quantified-preconditions",
+        ":universal-preconditions"
+      ],
+      "logical_numeric_functions": [],
+      "metric_only_numeric_functions": [],
+      "numeric_functions": [],
+      "problem_files": [],
+      "requirements": [
+        ":strips"
+      ],
+      "supported_requirement_set": [
+        ":action-costs",
+        ":disjunctive-preconditions",
+        ":equality",
+        ":fluents",
+        ":negative-preconditions",
+        ":numeric-fluents",
+        ":strips",
+        ":typing"
+      ],
+      "supported_requirements": [
+        ":strips"
+      ],
+      "unsupported_blocks": [],
+      "unsupported_diagnostics": [],
+      "unsupported_expression_operators": [],
+      "unsupported_reasons": [],
+      "unsupported_requirements": []
+    },
+    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+    "source_name": "blocksworld-on",
+    "source_numeric_goal_functions": [],
+    "source_raw_rule_count": 53,
+    "source_seed_predicates": [
+      "on"
+    ],
+    "validated_policy_lifting": {
+      "deduplicated_macro_count": 53,
+      "invalid_macro_count": 0,
+      "merged_plan_count": 80,
+      "raw_numeric_goal_macro_count": 0,
+      "raw_singleton_macro_count": 53,
+      "selection_stage": "joint_clingo_certified_candidate_selection",
+      "validated_macro_count": 53,
+      "validated_numeric_macro_count": 0,
+      "validation_basis": [
+        "Evidence Module singleton-goal rule supplies state context, goal, and macro action sequence",
+        "PDDL action schemas validate every primitive action arity and symbolic precondition/effect transition",
+        "Evidence Module numeric equality goal rules may compile to bounded integer resource modules when the macro has a unit monotone numeric effect toward the target value",
+        "PDDL predicate and action parameter types compile to reserved obj_tp/2 context guards",
+        "Goal variables are alpha-normalized to X,Y,... and non-goal witnesses to fresh lifted variables",
+        "PDDL constants are preserved as constants; negative precondition conflicts and positive preconditions that may alias prior deletes compile to explicit inequality guards when representable in the supported ASL subset"
+      ]
+    }
+  },
+  "plans": [
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [],
+      "context": [
+        "arm-empty"
+      ],
+      "plan_name": "arm-empty_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "arm-empty"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [],
+      "context": [
+        "clear(X)"
+      ],
+      "plan_name": "clear_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "holding_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [],
+      "context": [
+        "on(X, Y)"
+      ],
+      "plan_name": "on_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "rule_kind": "already_true",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [],
+      "context": [
+        "on-table(X)"
+      ],
+      "plan_name": "on-table_already_true",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "putdown"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "arm-empty_via_putdown",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [],
+        "event_type": "achievement_goal",
+        "symbol": "arm-empty"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "putdown"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "clear_via_putdown",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "X \\== Y"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "unstack"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(Y, X)",
+        "X \\== Y",
+        "clear(Y)"
+      ],
+      "plan_name": "clear_via_unstack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "unstack",
+            "putdown"
+          ],
+          "resource_release_certificates": [
+            {
+              "capacity_key_arguments": [],
+              "certificate_kind": "causal_resource_capacity_invariant_discharge",
+              "occupancy_arguments": [
+                "Y"
+              ],
+              "orientation_basis": "producer consumes the key-only free mode and creates the key-plus-occupant debt mode; cleanup performs the inverse transition",
+              "producer_action": "unstack",
+              "release_action": "putdown",
+              "resource_debt_literal": "holding(Y)",
+              "resource_invariant_kind": "keyed_single_capacity_occupancy_transition",
+              "restored_literals": [
+                "clear(Y)",
+                "arm-empty"
+              ],
+              "sequence_alias_guards": [],
+              "target_preservation_guards": [],
+              "target_preserved": true
+            }
+          ],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "arm-empty",
+        "on(Y, X)",
+        "clear(Y)"
+      ],
+      "plan_name": "clear_via_unstack_then_putdown",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "pickup"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "holding_via_pickup",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "unstack"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "arm-empty",
+        "on(X, Y)"
+      ],
+      "plan_name": "holding_via_unstack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "stack"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "clear(Y)",
+        "holding(X)"
+      ],
+      "plan_name": "on_via_stack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "X \\== Y"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "pickup",
+            "stack"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X \\== Y",
+        "clear(X)",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "on_via_pickup_then_stack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [
+            "X \\== Y",
+            "Y \\== Z"
+          ],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "unstack",
+            "stack"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X \\== Y",
+        "clear(X)",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, Z)",
+        "Y \\== Z"
+      ],
+      "plan_name": "on_via_unstack_then_stack",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 2, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_2",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 2, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_3",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "on(X, A)",
+        "holding(Z)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_4",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "holding(Y)",
+        "on(X, Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_5",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "clear(Y)",
+        "on-table(X)",
+        "holding(Z)",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_6",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 3, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "holding(Y)",
+        "on-table(X)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_7",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Z, Y)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_10",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Z, X)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_11",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Z, Y)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_12",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_13",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Z, X)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_8",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 4, 0, 0)",
+          "schema_binding_guards": [
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_9",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "on(A, X)",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_14",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(Z, Y)",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_15",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "A != X",
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "on(X, B)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_16",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(Y)",
+        "on-table(X)",
+        "on(Z, X)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_17",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(Y)",
+        "on(X, A)",
+        "on(Z, X)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_18",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "on(X, A)",
+        "holding(Z)",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_19",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "A != X",
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "clear(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_20",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "clear(Y)",
+        "on-table(X)",
+        "holding(Z)",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_21",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 5, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_22",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "clear(A)",
+        "on(Z, Y)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_23",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "A != X",
+            "X != Z",
+            "A != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(X, Z)",
+        "X != Z",
+        "on(Z, Y)",
+        "clear(A)",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_24",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_25",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Z, Y)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_26",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(X, Z)",
+        "X != Z",
+        "on(Z, Y)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_27",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_28",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Z",
+            "A != X",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(X, B)",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_29",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "on(Z, X)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_30",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Y, Z)",
+        "X != Z",
+        "Y != Z",
+        "on(Z, X)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_31",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on(Y, X)",
+        "on-table(X)",
+        "arm-empty",
+        "on(Z, Y)",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_32",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 6, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "X != Y",
+            "X != Z"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "arm-empty",
+        "on(X, A)",
+        "on(Y, Z)",
+        "X != Z",
+        "Y != Z",
+        "on(Z, X)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_33",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "A != X",
+            "A != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on(A, Y)",
+        "A != X",
+        "on(X, A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_34",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "A != Z",
+            "A != X",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(A, Y)",
+        "A != X",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_35",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "A != B",
+            "B != Z",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "on(B, X)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_36",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "A != B",
+            "B != Z",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "on(A, Y)",
+        "A != X",
+        "clear(A)",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "clear(B)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_37",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "A != Z",
+            "A != Y",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(Y)",
+        "on-table(X)",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Z, A)",
+        "A != Z",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_38",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "A != Y",
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Y, A)",
+        "holding(Z)",
+        "A != Z",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_39",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "A != X",
+            "A != B",
+            "B != Z",
+            "B != X",
+            "X != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "holding(X)",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "clear(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_40",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 7, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "A != B",
+            "B != Z",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on-table(X)",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_41",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "B != Z",
+            "A != B",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(B, X)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "on(Z, Y)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_42",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "A != X",
+            "A != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(X, Z)",
+        "A != Z",
+        "X != Z",
+        "on(Z, A)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_43",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "A != Y",
+            "A != Z",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(Y)",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Y, Z)",
+        "A != Z",
+        "X != Z",
+        "Y != Z",
+        "on(Z, A)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_44",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "Y != Z",
+            "A != Z",
+            "A != Y",
+            "X != Y",
+            "X != Z",
+            "A != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, X)",
+        "A != X",
+        "A != Y",
+        "on(Y, A)",
+        "on(Z, Y)",
+        "A != Z",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_45",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "A != X",
+            "X != Z",
+            "A != Z",
+            "B != X",
+            "B != Z",
+            "A != B",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "Z",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "arm-empty",
+        "on(B, Y)",
+        "B != X",
+        "on(X, Z)",
+        "B != Z",
+        "X != Z",
+        "on(Z, B)",
+        "clear(A)",
+        "A != B",
+        "A != X",
+        "A != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_46",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "A != Z",
+            "A != X",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(X, A)",
+        "on(Z, X)",
+        "A != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_47",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "B != Z",
+            "A != B",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "clear(A)",
+        "on(Z, X)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_48",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 8, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "B != Z",
+            "A != B",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "clear(B)",
+        "on(Z, A)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_49",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 9, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "A != X",
+            "A != Z",
+            "B != X",
+            "A != B",
+            "B != Z",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "clear(X)",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "on(X, A)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_50",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 9, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "A != Y",
+            "Y != Z",
+            "A != B",
+            "B != Y",
+            "B != Z",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "on(A, Y)",
+        "A != X",
+        "A != Y",
+        "clear(A)",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "B != Y",
+        "on(Y, B)",
+        "holding(Z)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "Y != Z"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_51",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "schema_binding_guards": [
+            "X != Z",
+            "A != Z",
+            "A != X",
+            "B != Z",
+            "B != X",
+            "A != B",
+            "X != Y"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        },
+        {
+          "arguments": [
+            "A",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X",
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "arm-empty",
+        "on(B, Y)",
+        "B != X",
+        "on(A, B)",
+        "A != B",
+        "A != X",
+        "on(X, A)",
+        "on(Z, X)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_52",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "alias_guard_basis": "pddl_schema_symbolic_execution_only",
+          "artifact_family": "validated_policy_lifting_macro_rule",
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "precedence": "(1, 10, 0, 0)",
+          "schema_binding_guards": [
+            "A != Z",
+            "Y != Z",
+            "A != Y",
+            "B != Z",
+            "A != B",
+            "B != Y",
+            "X != Y",
+            "X != Z",
+            "A != X",
+            "B != X"
+          ],
+          "source_name": "blocksworld-on",
+          "source_provider": "moose",
+          "validation": "pddl_schema_symbolic_execution"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Z",
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Z"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "A",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "A"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "Y",
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "B",
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "B"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "pickup"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "stack"
+        }
+      ],
+      "context": [
+        "X != Y",
+        "on-table(X)",
+        "arm-empty",
+        "on(A, Y)",
+        "A != X",
+        "A != Y",
+        "on(B, X)",
+        "A != B",
+        "B != X",
+        "B != Y",
+        "on(Y, B)",
+        "on(Z, A)",
+        "A != Z",
+        "B != Z",
+        "X != Z",
+        "Y != Z",
+        "clear(Z)"
+      ],
+      "plan_name": "moose_reduced_blocksworld_on_rule_53",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "putdown"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "holding(X)"
+      ],
+      "plan_name": "on-table_via_putdown",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "guard_contexts": [],
+          "numeric_contexts": [],
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "producer_actions": [
+            "unstack",
+            "putdown"
+          ],
+          "resource_release_certificates": [],
+          "rule_kind": "producer_action_sequence",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "action",
+          "symbol": "unstack"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "action",
+          "symbol": "putdown"
+        }
+      ],
+      "context": [
+        "clear(X)",
+        "arm-empty",
+        "on(X, Y)"
+      ],
+      "plan_name": "on-table_via_unstack_then_putdown",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "arm-empty",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "clear_prepare_arm-empty_",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": [
+              "on(Y, X)"
+            ]
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "clear",
+          "recursive_progress_certificate": {
+            "certificate_kind": "well_founded_relational_count_decrease",
+            "lower_bound": 0,
+            "non_increasing_actions": [
+              "putdown"
+            ],
+            "ranking_feature_kind": "global_dynamic_atom_count",
+            "relation_arguments": [
+              "Y",
+              "X"
+            ],
+            "relation_predicate": "on",
+            "strictly_decreasing_actions": [
+              "unstack"
+            ]
+          },
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        }
+      ],
+      "context": [
+        "on(Y, X)",
+        "not clear(Y)"
+      ],
+      "plan_name": "clear_prepare_clear_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "clear"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "arm-empty",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "holding_prepare_arm-empty_",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "clear",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "holding_prepare_clear_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "holding"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "arm-empty",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "on_prepare_arm-empty_",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "clear",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on_prepare_clear_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "clear",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not clear(Y)"
+      ],
+      "plan_name": "on_prepare_clear_Y",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "holding",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not holding(X)"
+      ],
+      "plan_name": "on_prepare_holding_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "on-table",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        },
+        {
+          "arguments": [
+            "X",
+            "Y"
+          ],
+          "kind": "subgoal",
+          "symbol": "on"
+        }
+      ],
+      "context": [
+        "not on-table(X)"
+      ],
+      "plan_name": "on_prepare_on-table_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X",
+          "Y"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "arm-empty",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [],
+          "kind": "subgoal",
+          "symbol": "arm-empty"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not arm-empty"
+      ],
+      "plan_name": "on-table_prepare_arm-empty_",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "clear",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "clear"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not clear(X)"
+      ],
+      "plan_name": "on-table_prepare_clear_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    },
+    {
+      "binding_certificate": [
+        {
+          "artifact_family": "atomic_minimal_literal_module",
+          "context_projection_certificate": {
+            "certificate_kind": "existential_precondition_context_projection",
+            "completion_recheck": true,
+            "dynamic_sibling_projection": false,
+            "retained_positive_context": []
+          },
+          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-on/blocksworld-on.model.readable",
+          "prepared_predicate": "holding",
+          "recursive_progress_certificate": null,
+          "rule_kind": "prepare_public_precondition",
+          "source_backend": "moose_validated_policy_lifting",
+          "source_name": "blocksworld-on"
+        }
+      ],
+      "body": [
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "holding"
+        },
+        {
+          "arguments": [
+            "X"
+          ],
+          "kind": "subgoal",
+          "symbol": "on-table"
+        }
+      ],
+      "context": [
+        "not holding(X)"
+      ],
+      "plan_name": "on-table_prepare_holding_X",
+      "source_instruction_ids": [],
+      "trigger": {
+        "arguments": [
+          "X"
+        ],
+        "event_type": "achievement_goal",
+        "symbol": "on-table"
+      }
+    }
+  ]
+}
