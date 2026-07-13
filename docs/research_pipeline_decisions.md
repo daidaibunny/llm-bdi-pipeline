@@ -306,6 +306,17 @@ repetitions. Concurrent synthesis timings are throughput measurements; runtime
 claims against another system require a separately controlled non-contented
 timing run.
 
+The canonical entry point is `scripts/run_parser_order_full_val_batch.sh`.
+Without positional domain arguments it reads all 16 selected domain identifiers
+from `src/benchmark_registry/achievement_goals/registry.json`. Within each seed,
+`run_moose_faithful_e2e.py` traverses domains sequentially and passes
+`--num_workers 1` to every MOOSE training call. Across seeds, the shell runner
+starts at most five isolated processes by default. After synthesis, it validates
+the complete test split for one seed at a time and writes
+`five_seed_summary.json` with raw policy hashes, alpha-normalized rule-set
+hashes, compiled-library hashes, per-seed coverage, mean coverage, and sample
+standard deviation.
+
 The repository-wide external-process guard remains 16 GiB; this is a declared
 reproduction deviation from the paper's 32-GB synthesis ceiling.
 `num_workers`, outer seed-process parallelism, full-split flags such as

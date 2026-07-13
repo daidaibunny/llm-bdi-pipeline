@@ -136,7 +136,8 @@ software components.
 
 Define only concepts used by the algorithms:
 
-- a typed STRIPS/PDDL domain and its state-transition semantics;
+- a typed STRIPS/PDDL Boolean core, its bounded-integer resource extension, and
+  their state-transition semantics;
 - a generalized-planning task and readable MOOSE evidence;
 - an AgentSpeak achievement plan, a lifted module, and library closure;
 - an LTLf formula and its deterministic finite automaton (DFA);

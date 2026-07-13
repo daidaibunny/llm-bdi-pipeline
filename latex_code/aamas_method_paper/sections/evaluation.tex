@@ -18,14 +18,21 @@ Tower uses the first quarter of a pinned public PDDL corpus and Depots the first
 half of the D2L corpus \cite{Bonet2018Features}. These groups describe
 evaluation properties and never route compilation.
 
-MOOSE evidence used seed 0, three goal permutations, six workers, a 12-hour
-timeout, and a 16-GiB guard. The paper reports 12 hours and 32 GB for synthesis,
-five repetitions, and 30 minutes and 8 GB for test-time planning
-\cite{Chen2026Moose}; our memory cap is a declared deviation. Temporal run
-\texttt{\TEGExecutionRunID} uses clean commit
-\texttt{\TEGExecutionCommit}, 12 workers, 30-minute Jason and VAL limits, and
-a 64-MiB Java stack. It records SHA-256 hashes of every atomic JSON/ASL input.
-The result generator rejects a changed benchmark hash, prediction hash, dirty
+The registered atomic protocol uses the complete train split, singleton goals,
+three sampled goal orders, and fixed seeds 0--4. Each repetition has one
+internal MOOSE worker, a 12-hour timeout, a 16-GiB guard, and an isolated model,
+policy, library, and log root. The five operating-system processes may run
+concurrently, but their evidence is never merged and no best seed is selected.
+Each policy is compiled and evaluated independently; cross-seed Jason/VAL runs
+are sequential, with six per-test workers and 30-minute limits. We report every
+seed plus mean and sample standard deviation. MOOSE instead reports a 32-GB
+synthesis budget and five repetitions \cite{Chen2026Moose}; our memory cap and
+single-worker reproducibility constraint are declared reproduction choices.
+
+Temporal run \texttt{\TEGExecutionRunID} uses clean commit
+\texttt{\TEGExecutionCommit}, 12 workers, 30-minute Jason and VAL limits, and a
+64-MiB Java stack. It records SHA-256 hashes of every atomic JSON/ASL input. The
+result generator rejects a changed benchmark hash, prediction hash, dirty
 tracked revision, missing case, or mismatched library hash.
 
 A nonempty execution succeeds only if Jason emits its explicit success marker,
@@ -88,7 +95,8 @@ The registered atomic protocol fixes five independent seeds, one internal MOOSE
 worker, isolated outputs, and independent compilation and validation; it never
 unions evidence or selects the best seed. Those repetitions are not yet a clean
 result matrix. Table~\ref{tab:domain-results} therefore reports only the exact
-seed-0, six-worker libraries consumed by the pinned temporal run and makes no
+seed-0, six-worker libraries consumed by the pinned temporal run. That earlier
+artifact predates the registered one-worker repetition protocol and supports no
 cross-seed or synthesis-time claim.
 
 \paragraph{Independent semantic conformance.}

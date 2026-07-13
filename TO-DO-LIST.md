@@ -222,7 +222,16 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/materialize_achievement_benchmar
 Run the full benchmark ASL batch with the current default domain list:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 JASON_JAVA_STACK_SIZE=64m \
+PYTHONDONTWRITEBYTECODE=1 \
+RUN_ID=pddl-five-seed-$(date +%Y%m%d-%H%M%S) \
+MOOSE_SEEDS="0 1 2 3 4" \
+MOOSE_WORKERS=1 \
+MOOSE_SEED_PARALLELISM=5 \
+JASON_WORKERS=6 \
+TRAIN_TIMEOUT_SECONDS=43200 \
+JASON_TIMEOUT_SECONDS=1800 \
+VAL_TIMEOUT_SECONDS=1800 \
+JASON_JAVA_STACK_SIZE=64m \
 bash scripts/run_parser_order_full_val_batch.sh
 ```
 
