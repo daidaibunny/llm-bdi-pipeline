@@ -85,7 +85,7 @@ dmypy.json
 *.sublime-project
 *.sublime-workspace
 external/
-.external/
+.external
 dissertation/
 latex_code/*
 !latex_code/aamas_method_paper/
