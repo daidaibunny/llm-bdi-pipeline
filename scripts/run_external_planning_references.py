@@ -185,6 +185,27 @@ def model_file_for_domain(batch_root: str | Path, domain: str) -> Path:
 	return root / "run_logs" / domain / f"{domain}.model"
 
 
+def model_batch_manifest_metadata(batch_root: str | Path) -> dict[str, Any]:
+	"""Return the immutable seeded-training identity for one model batch."""
+
+	root = Path(batch_root).expanduser().resolve()
+	manifest_file = root / "batch_manifest.json"
+	if not manifest_file.is_file():
+		raise ValueError(f"MOOSE model batch has no manifest: {manifest_file}")
+	payload = json.loads(manifest_file.read_text(encoding="utf-8"))
+	if not isinstance(payload, Mapping):
+		raise ValueError(f"MOOSE model batch manifest is not an object: {manifest_file}")
+	settings = payload.get("settings")
+	if not isinstance(settings, Mapping):
+		raise ValueError(f"MOOSE model batch manifest has no settings: {manifest_file}")
+	return {
+		"file": str(manifest_file),
+		"sha256": _sha256(manifest_file),
+		"timestamp_id": str(payload.get("timestamp_id") or ""),
+		"settings": dict(settings),
+	}
+
+
 def parse_guard_failure(stderr_text: str) -> str:
 	"""Map the resource guard's explicit diagnostic to a stable status."""
 
@@ -255,6 +276,11 @@ def main() -> int:
 		if ExternalReferenceMethod.RAW_MOOSE in methods
 		else None
 	)
+	model_batch_manifest = (
+		model_batch_manifest_metadata(model_batch)
+		if model_batch is not None
+		else None
+	)
 	run_id = args.run_id or f"external-reference-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 	run_root = args.output_root.expanduser().resolve() / run_id
 	if run_root.exists() and not args.resume:
@@ -282,6 +308,7 @@ def main() -> int:
 		"variants": [method.value for method in methods],
 		"domains": list(domains),
 		"model_batch": str(model_batch) if model_batch is not None else None,
+		"model_batch_manifest": model_batch_manifest,
 		"parameters": {
 			"num_workers": int(args.num_workers),
 			"timeout_seconds": int(args.timeout_seconds),

@@ -8,6 +8,7 @@ from domain_level_planning import AtomicCompilerVariant
 from domain_level_planning import TemporalCompilerVariant
 from scripts.run_paired_compiler_experiments import build_atomic_run_command
 from scripts.run_paired_compiler_experiments import build_evidence_run_command
+from scripts.run_paired_compiler_experiments import build_registered_case_contract
 from scripts.run_paired_compiler_experiments import build_temporal_run_command
 from scripts.run_paired_compiler_experiments import apply_common_target_coverage
 from scripts.run_paired_compiler_experiments import atomic_library_metrics
@@ -15,6 +16,7 @@ from scripts.run_paired_compiler_experiments import execution_metrics
 from scripts.run_paired_compiler_experiments import pairing_outcome
 from scripts.run_paired_compiler_experiments import parse_seed_batch_assignments
 from scripts.run_paired_compiler_experiments import validate_atomic_pairing
+from scripts.run_paired_compiler_experiments import validate_seed_batch_manifest
 from scripts.run_paired_compiler_experiments import validate_temporal_pairing
 
 
@@ -27,6 +29,35 @@ def test_parse_seed_batch_assignments_requires_unique_integer_seeds() -> None:
 		parse_seed_batch_assignments(("0=batch-a", "0=batch-b"))
 	with pytest.raises(ValueError, match="SEED=BATCH_ID"):
 		parse_seed_batch_assignments(("batch-a",))
+
+
+def test_validate_seed_batch_manifest_rejects_mislabeled_seed(tmp_path: Path) -> None:
+	batch_root = tmp_path / "seed-zero"
+	batch_root.mkdir()
+	(batch_root / "batch_manifest.json").write_text(
+		"""
+{
+  "timestamp_id": "seed-zero",
+  "domains": ["ferry"],
+  "settings": {
+    "random_seed": 4,
+    "num_workers": 1,
+    "num_permutations": 3,
+    "goal_max_size": 1,
+    "train_timeout_seconds": 43200,
+    "max_rss_gb": 16.0
+  }
+}
+""".strip(),
+		encoding="utf-8",
+	)
+
+	with pytest.raises(ValueError, match="assigned seed 0"):
+		validate_seed_batch_manifest(
+			batch_root=batch_root,
+			seed=0,
+			domains=("ferry",),
+		)
 
 
 def test_atomic_command_selects_exact_registered_variant(tmp_path: Path) -> None:
@@ -89,6 +120,51 @@ def test_temporal_command_selects_exact_registered_variant(tmp_path: Path) -> No
 	assert command[command.index("--benchmark-root") + 1] == str(
 		tmp_path / "benchmark",
 	)
+
+
+def test_registered_case_contract_covers_all_selected_test_and_temporal_cases(
+	tmp_path: Path,
+) -> None:
+	for domain, domain_text, problem_name in (
+		(
+			"classical",
+			"(define (domain classical) (:requirements :strips) "
+			"(:predicates (done)) (:action finish :parameters () "
+			":precondition (and) :effect (done)))",
+			"p1.pddl",
+		),
+		(
+			"numeric",
+			"(define (domain numeric) (:requirements :strips :numeric-fluents) "
+			"(:predicates (done)) (:functions (level)) "
+			"(:action finish :parameters () :precondition (and) "
+			":effect (and (done) (increase (level) 1))))",
+			"n1.pddl",
+		),
+	):
+		domain_root = tmp_path / "src/domains" / domain
+		(domain_root / "test").mkdir(parents=True)
+		(domain_root / "domain.pddl").write_text(domain_text, encoding="utf-8")
+		(domain_root / "test" / problem_name).write_text("problem", encoding="utf-8")
+	benchmark_root = tmp_path / "benchmark"
+	benchmark_root.mkdir()
+	(benchmark_root / "benchmark.json").write_text(
+		'{"domains":{"classical":{"cases":{"s1":{}}},'
+		'"numeric":{"cases":{"s2":{}}}}}',
+		encoding="utf-8",
+	)
+
+	contract = build_registered_case_contract(
+		project_root=tmp_path,
+		benchmark_root=benchmark_root,
+		domains=("classical", "numeric"),
+	)
+
+	assert contract["achievement"]["count"] == 2
+	assert contract["temporal"]["count"] == 2
+	assert contract["external"]["raw_moose"]["count"] == 2
+	assert contract["external"]["lama"]["count"] == 1
+	assert contract["external"]["enhsp_hmrphj"]["count"] == 1
 
 
 def test_atomic_pairing_checks_readable_and_normalized_evidence_hashes() -> None:

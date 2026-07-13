@@ -39,9 +39,10 @@ closure can make branches mutually incompatible. \emph{Full Compiler} applies
 the compact Clingo objective to the same candidate universe and hard
 constraints. Consequently all four methods use the same evidence artifact,
 and Maximal Certified versus Full Compiler changes only the optimization
-objective. Certificate-family ablations remove progress-, resource-, or
-staged-preparation candidates and fail closed; they never emit an unchecked
-branch.
+objective. These four cumulative rows are the complete registered atomic
+matrix. We test individual progress, resource, preparation, and binding
+certificate boundaries in the fail-closed challenge matrix rather than
+disabling a certificate and emitting an unchecked branch.
 
 \paragraph{Temporal compiler baselines and ablations.}
 \emph{Unprotected DFA} uses the same real
@@ -54,12 +55,14 @@ control structure with the balanced binary repair tree. \emph{Completion
 Monitor} observes the DFA only when an atomic module returns, rather than after
 every primitive action. It retains completion-effect certification and balanced
 control but omits primitive-prefix source-invariant filtering because those
-intermediate states are outside its observation semantics. It is evaluated only
-on formulas with intermediate-state obligations. Signed-negative and
-bounded-numeric capability ablations retain
-the DFA and monitor but remove their respective certified establishment
-strategies. The removed historical sequence-only wrapper is not a production
-path; if reported, it is an evaluation-only weak reference.
+intermediate states are outside its observation semantics. It runs on the same
+complete paired benchmark, while observation-boundary effects are attributed
+only on formulas with intermediate-state obligations. These four rows are the
+complete registered temporal matrix. Signed-negative and bounded-numeric cases
+remain in the full benchmark with explicit support and failure statuses; we do
+not report unimplemented capability-switch rows. The removed historical
+sequence-only wrapper is not a production path; if reported, it is an
+evaluation-only weak reference.
 
 \begin{table*}[t]
 \centering
@@ -144,6 +147,16 @@ guarded transition graph; it excludes conversion timing, artifact paths, and DOT
 rendering. A separate controller hash covers each variant's settings and
 generated query-local plans, so controller differences cannot masquerade as
 different DFA inputs.
+The paired manifest also registers immutable identifier-set digests for all
+1,228 achievement cases, all 1,228 temporal cases, the 868 classical reference
+cases, and the 360 numeric reference cases. Final table generation recomputes
+each digest per method and seed, rejects duplicates and shared omissions, binds
+each Raw MOOSE result to the exact corresponding seed model-batch manifest, and
+requires all downstream summaries to share one clean source commit. It checks
+the registered six-worker, 30-minute, 64-MiB Java-stack, and 8-GiB external-
+planner budgets together with pinned tool hashes. The challenge input must
+contain all 13 unique registered cases successfully; otherwise no comparison
+table is emitted.
 Per-instance references receive 30 minutes and 8~GB per problem. For the direct
 temporal reference, FOND4LTLf compilation and LAMA search share that single
 30-minute deadline rather than receiving separate budgets. We report

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
 from evaluation.external_reference_planners import ExternalReferenceMethod
 from scripts.run_external_planning_references import build_moose_reference_arguments
+from scripts.run_external_planning_references import model_batch_manifest_metadata
 from scripts.run_external_planning_references import parse_guard_failure
 from scripts.run_external_planning_references import resolve_model_batch
 from scripts.run_external_planning_references import summarize_records
@@ -66,6 +68,32 @@ def test_resolve_model_batch_requires_every_selected_domain(tmp_path: Path) -> N
 	assert resolve_model_batch(tmp_path, "older", ("ferry",)) == older
 	with pytest.raises(ValueError, match="complete MOOSE model batch"):
 		resolve_model_batch(tmp_path, "older", ("ferry", "gripper"))
+
+
+def test_model_batch_manifest_metadata_records_seeded_training_contract(
+	tmp_path: Path,
+) -> None:
+	manifest = {
+		"timestamp_id": "seed-two",
+		"settings": {
+			"random_seed": 2,
+			"num_workers": 1,
+			"num_permutations": 3,
+			"goal_max_size": 1,
+			"train_timeout_seconds": 43200,
+			"max_rss_gb": 16.0,
+		},
+	}
+	(tmp_path / "batch_manifest.json").write_text(
+		json.dumps(manifest),
+		encoding="utf-8",
+	)
+
+	metadata = model_batch_manifest_metadata(tmp_path)
+
+	assert metadata["timestamp_id"] == "seed-two"
+	assert metadata["settings"]["random_seed"] == 2
+	assert len(metadata["sha256"]) == 64
 
 
 def test_parse_guard_failure_distinguishes_timeout_and_memory() -> None:

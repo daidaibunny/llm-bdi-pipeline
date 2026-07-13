@@ -33,6 +33,12 @@ from domain_level_planning import AtomicCompilerVariant  # noqa: E402
 from domain_level_planning import TemporalCompilerVariant  # noqa: E402
 from domain_level_planning import evidence_program_from_moose_readable_policy  # noqa: E402
 from domain_level_planning import policy_evidence_program_fingerprint  # noqa: E402
+from evaluation.external_reference_planners import (  # noqa: E402
+	ExternalReferenceMethod,
+)
+from evaluation.external_reference_planners import (  # noqa: E402
+	reference_methods_for_domain,
+)
 from scripts.run_full_test_jason_validation import source_revision_metadata  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 
@@ -71,6 +77,46 @@ def parse_seed_batch_assignments(values: Sequence[str]) -> dict[int, str]:
 			raise ValueError(f"duplicate seed batch assignment: {seed}")
 		assignments[seed] = batch_id.strip()
 	return assignments
+
+
+def validate_seed_batch_manifest(
+	*,
+	batch_root: Path,
+	seed: int,
+	domains: Sequence[str],
+) -> dict[str, Any]:
+	"""Validate one evidence batch against the registered seeded protocol."""
+
+	manifest_file = batch_root / "batch_manifest.json"
+	if not manifest_file.is_file():
+		raise ValueError(f"Seed {seed} batch has no manifest: {manifest_file}")
+	manifest = _read_json(manifest_file)
+	settings = manifest.get("settings")
+	if not isinstance(settings, Mapping):
+		raise ValueError(f"Seed {seed} batch manifest has no settings")
+	if int(settings.get("random_seed", -1)) != int(seed):
+		raise ValueError(f"Evidence batch does not use assigned seed {seed}")
+	expected_settings = {
+		"num_workers": 1,
+		"num_permutations": 3,
+		"goal_max_size": 1,
+		"train_timeout_seconds": 43200,
+	}
+	for key, value in expected_settings.items():
+		if int(settings.get(key) or 0) != value:
+			raise ValueError(f"Seed {seed} batch has nonregistered setting {key}")
+	if float(settings.get("max_rss_gb") or 0.0) != 16.0:
+		raise ValueError(f"Seed {seed} batch has nonregistered memory limit")
+	manifest_domains = tuple(str(domain) for domain in manifest.get("domains") or ())
+	if set(manifest_domains) != set(domains) or len(manifest_domains) != len(domains):
+		raise ValueError(f"Seed {seed} batch domain set does not match the experiment")
+	return {
+		"file": str(manifest_file),
+		"sha256": _sha256(manifest_file),
+		"timestamp_id": str(manifest.get("timestamp_id") or ""),
+		"settings": dict(settings),
+		"domains": list(manifest_domains),
+	}
 
 
 def build_evidence_run_command(
@@ -233,6 +279,75 @@ def build_challenge_run_command(
 		"--run-id",
 		run_id,
 	)
+
+
+def build_registered_case_contract(
+	*,
+	project_root: Path,
+	benchmark_root: Path,
+	domains: Sequence[str],
+) -> dict[str, Any]:
+	"""Fingerprint every registered held-out case before any method runs."""
+
+	achievement_cases: list[str] = []
+	external_cases: dict[str, list[str]] = {
+		ExternalReferenceMethod.RAW_MOOSE.value: [],
+		ExternalReferenceMethod.LAMA.value: [],
+		ExternalReferenceMethod.ENHSP_HMRPHJ.value: [],
+	}
+	benchmark_file = benchmark_root / "benchmark.json"
+	benchmark = _read_json(benchmark_file)
+	benchmark_domains = benchmark.get("domains")
+	if not isinstance(benchmark_domains, Mapping):
+		raise ValueError("Temporal benchmark has no domain case mapping.")
+	temporal_cases: list[str] = []
+	for domain in domains:
+		domain_root = project_root / "src/domains" / domain
+		domain_file = domain_root / "domain.pddl"
+		test_dir = domain_root / "test"
+		if not domain_file.is_file() or not test_dir.is_dir():
+			raise ValueError(f"Missing registered domain or test split: {domain}")
+		problem_files = tuple(sorted(test_dir.glob("*.pddl")))
+		if not problem_files:
+			raise ValueError(f"Registered domain has no held-out problems: {domain}")
+		applicable = set(reference_methods_for_domain(domain_file))
+		for problem_file in problem_files:
+			case_id = f"{domain}:{problem_file.name}"
+			achievement_cases.append(case_id)
+			for method in applicable:
+				external_cases[method.value].append(case_id)
+		domain_payload = benchmark_domains.get(domain)
+		if not isinstance(domain_payload, Mapping):
+			raise ValueError(f"Temporal benchmark is missing domain: {domain}")
+		cases = domain_payload.get("cases")
+		if not isinstance(cases, Mapping) or not cases:
+			raise ValueError(f"Temporal benchmark has no cases for domain: {domain}")
+		temporal_cases.extend(str(case_id) for case_id in cases)
+	return {
+		"achievement": _case_set_contract(achievement_cases),
+		"temporal": {
+			**_case_set_contract(temporal_cases),
+			"benchmark_sha256": _sha256(benchmark_file),
+		},
+		"external": {
+			method: _case_set_contract(case_ids)
+			for method, case_ids in external_cases.items()
+		},
+	}
+
+
+def _case_set_contract(case_ids: Sequence[str]) -> dict[str, Any]:
+	unique_ids = {str(case_id) for case_id in case_ids}
+	if len(unique_ids) != len(case_ids):
+		raise ValueError("Registered case set contains duplicate identifiers.")
+	encoded = json.dumps(
+		sorted(unique_ids),
+		separators=(",", ":"),
+	).encode("utf-8")
+	return {
+		"count": len(unique_ids),
+		"sha256": hashlib.sha256(encoded).hexdigest(),
+	}
 
 
 def validate_atomic_pairing(
@@ -726,6 +841,8 @@ def _normalize_temporal_summary(
 	return {
 		"variant": variant.value,
 		"method": variant.display_name,
+		"source_revision": dict(summary.get("source_revision") or {}),
+		"parameters": parameters,
 		"benchmark_sha256": summary.get("benchmark_sha256"),
 		"atomic_library_inputs": dict(summary.get("atomic_library_inputs") or {}),
 		"results": results,
@@ -812,6 +929,23 @@ def main() -> int:
 		temporal_batch_id = seed_batches.get(0)
 	if args.stage in {"temporal", "all"} and not temporal_batch_id:
 		raise ValueError("temporal stage requires --temporal-batch-id")
+	seed_batch_manifests = (
+		{}
+		if args.generate_evidence
+		else {
+			str(seed): validate_seed_batch_manifest(
+				batch_root=args.batch_root.expanduser().resolve() / batch_id,
+				seed=seed,
+				domains=domains,
+			)
+			for seed, batch_id in sorted(seed_batches.items())
+		}
+	)
+	case_contract = build_registered_case_contract(
+		project_root=project_root,
+		benchmark_root=args.benchmark_root.expanduser().resolve(),
+		domains=domains,
+	)
 
 	atomic_output_root = run_root / "atomic_runs"
 	temporal_output_root = run_root / "temporal_runs"
@@ -919,7 +1053,9 @@ def main() -> int:
 		"source_revision": source_revision_metadata(project_root),
 		"domains": list(domains),
 		"registered_seeds": list(REGISTERED_SEEDS),
+		"case_contract": case_contract,
 		"seed_batches": {str(seed): batch for seed, batch in seed_batches.items()},
+		"seed_batch_manifests": seed_batch_manifests,
 		"generate_evidence": bool(args.generate_evidence),
 		"temporal_batch_id": temporal_batch_id,
 		"num_workers": max(1, int(args.num_workers)),
@@ -1015,6 +1151,24 @@ def main() -> int:
 			)
 		else:
 			challenge_records.append(dict(summary))
+	if args.generate_evidence and not failed_input_batches:
+		try:
+			seed_batch_manifests = {
+				str(seed): validate_seed_batch_manifest(
+					batch_root=args.batch_root.expanduser().resolve() / batch_id,
+					seed=seed,
+					domains=domains,
+				)
+				for seed, batch_id in sorted(seed_batches.items())
+			}
+		except ValueError as error:
+			infrastructure_failures.append(
+				{
+					"stage": "Evidence",
+					"method": "Seed batch contract",
+					"error": str(error),
+				},
+			)
 	if atomic_records:
 		try:
 			atomic_records = apply_common_target_coverage(atomic_records)
@@ -1045,6 +1199,7 @@ def main() -> int:
 	)
 	result = {
 		**manifest,
+		"seed_batch_manifests": seed_batch_manifests,
 		"completed_at": datetime.now().isoformat(timespec="seconds"),
 		"atomic_pairing": atomic_pairing,
 		"temporal_pairing": temporal_pairing,

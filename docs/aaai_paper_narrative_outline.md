@@ -330,13 +330,20 @@ binding, and Jason runtime fixed:
 4. **Completion Monitor:** retain completion-effect certification and balanced
    control, observe the DFA only after an atomic module returns, and omit
    primitive-prefix source-invariant filtering because intermediate primitive
-   states are not observable under this ablation; compare it only on the
-   dedicated intermediate-state semantic challenge set.
+   states are not observable under this ablation. Run it on the complete paired
+   benchmark, but attribute observation-boundary effects only on cases with
+   intermediate-state obligations.
 
-Certificate-family ablations must remove the affected candidate family and fail
-closed. They must never disable a certificate and emit an unchecked branch.
-The historical sequence-only wrapper may appear only as an evaluation-only weak
-reference; it must not return as a production fast path.
+These four cumulative atomic rows are the complete registered matrix. Do not
+claim additional one-certificate-off experiments: retaining an uncertified
+branch would be unsound, while removing one candidate family changes closure
+feasibility rather than only one downstream mechanism. Use the 13-case
+fail-closed and symbol-invariance matrix to test the individual certificate
+families. Likewise, signed-negative and bounded-numeric cases stay in the full
+temporal benchmark with explicit support and failure statuses; do not invent
+unregistered capability-switch rows. The historical sequence-only wrapper may
+appear only as an evaluation-only weak reference; it must not return as a
+production fast path.
 
 The benchmark section records all 16 domain families and their pinned splits.
 The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
@@ -677,6 +684,16 @@ complete paired compiler result, Raw MOOSE summaries explicitly assigned to
 seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, and
 the challenge summary. The script must fail rather than render a partial table
 when a method, seed, case, hash pairing, or clean-source condition is missing.
+The final generator must fail closed over the registered corpus rather than
+only compare methods with each other. It recomputes immutable identifier-set
+digests for all 1,228 achievement cases, all 1,228 temporal cases, the 868
+classical LAMA cases, and the 360 numeric MRP+HJ cases; duplicates and shared
+omissions are invalid. It additionally requires the five Raw MOOSE runs to use
+the exact seed-specific model-batch manifests consumed by the paired compiler
+runs, one clean source commit for every downstream summary, the registered
+resource protocol, pinned external binaries, and exactly 13 unique successful
+challenge nodes. Report a failed contract as an infrastructure failure, never
+as a method score.
 
 ### TEG Table
 
