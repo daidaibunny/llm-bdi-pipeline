@@ -10,6 +10,7 @@ from scripts.run_external_planning_references import build_moose_reference_argum
 from scripts.run_external_planning_references import model_batch_manifest_metadata
 from scripts.run_external_planning_references import parse_guard_failure
 from scripts.run_external_planning_references import resolve_model_batch
+from scripts.run_external_planning_references import stage_raw_moose_model
 from scripts.run_external_planning_references import summarize_records
 
 
@@ -94,6 +95,25 @@ def test_model_batch_manifest_metadata_records_seeded_training_contract(
 	assert metadata["timestamp_id"] == "seed-two"
 	assert metadata["settings"]["random_seed"] == 2
 	assert len(metadata["sha256"]) == 64
+
+
+def test_stage_raw_moose_model_copies_external_batch_artifact(
+	tmp_path: Path,
+) -> None:
+	model_file = tmp_path / "external-batch" / "ferry.model"
+	model_file.parent.mkdir()
+	model_file.write_bytes(b"immutable model evidence")
+	compatibility_root = tmp_path / "case" / "moose_compatible_pddl"
+	compatibility_root.mkdir(parents=True)
+
+	staged = stage_raw_moose_model(
+		model_file=model_file,
+		compatibility_root=compatibility_root,
+	)
+
+	assert staged == compatibility_root / "ferry.model"
+	assert staged.read_bytes() == model_file.read_bytes()
+	assert staged.stat().st_size == model_file.stat().st_size
 
 
 def test_parse_guard_failure_distinguishes_timeout_and_memory() -> None:

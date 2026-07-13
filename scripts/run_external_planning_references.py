@@ -510,6 +510,7 @@ def reference_command(
 ) -> tuple[str, ...]:
 	"""Materialize compatibility inputs and return the native planner command."""
 
+	model_file = task.model_file
 	if task.method is ExternalReferenceMethod.ENHSP_HMRPHJ:
 		if not enhsp_jar.is_file():
 			raise FileNotFoundError(f"Missing pinned ENHSP jar: {enhsp_jar}")
@@ -534,6 +535,10 @@ def reference_command(
 			normalise_pddl_for_moose(task.problem_file.read_text(encoding="utf-8")),
 			encoding="utf-8",
 		)
+		model_file = stage_raw_moose_model(
+			model_file=task.model_file,
+			compatibility_root=compatibility_root,
+		)
 	else:
 		domain_file = task.domain_file
 		problem_file = task.problem_file
@@ -542,13 +547,32 @@ def reference_command(
 		domain_file=container_path(domain_file),
 		problem_file=container_path(problem_file),
 		plan_file=container_path(plan_file),
-		model_file=(container_path(task.model_file) if task.model_file is not None else None),
+		model_file=(container_path(model_file) if model_file is not None else None),
 	)
 	return moose_runtime_command(
 		arguments,
 		runtime="docker",
 		max_rss_gb=max_rss_gb,
 	)
+
+
+def stage_raw_moose_model(
+	*,
+	model_file: Path,
+	compatibility_root: Path,
+) -> Path:
+	"""Stage immutable policy evidence inside the Docker-mounted case directory."""
+
+	source = model_file.expanduser().resolve()
+	if not source.is_file():
+		raise FileNotFoundError(f"Missing Raw MOOSE model: {source}")
+	compatibility_root.mkdir(parents=True, exist_ok=True)
+	target = (compatibility_root / source.name).resolve()
+	if target != source:
+		shutil.copy2(source, target)
+	if _sha256(target) != _sha256(source):
+		raise OSError(f"Staged Raw MOOSE model hash mismatch: {source} -> {target}")
+	return target
 
 
 def run_guarded_command(
