@@ -466,42 +466,184 @@ are certified. Do not repeat the implementation inventory.
 
 ## Final Visual Program
 
-The main paper targets exactly four figures, four tables, and one algorithm.
-This follows the visual argument used by closely related planning papers:
-MOOSE combines an architecture figure, a full-width worked goal-regression
-example, synthesis tables, and cumulative coverage curves; AAAI-24 work on
-generalized planning with language models combines a pipeline, a main coverage
-table, runtime scaling, ablation, and failure analysis; temporal-planning work
-uses automaton diagrams together with coverage/runtime plots. Our figures must
-therefore explain the representation bridge and its certificates before they
-show aggregate success numbers.
+The main paper targets exactly four figures and one algorithm. Four tables are
+selected for the main paper after the registered matrices are complete; extra
+baseline and rejection tables move to the supplement. This follows the visual
+argument used by closely related planning papers: MOOSE combines an architecture
+figure, a full-width worked goal-regression example, synthesis tables, and
+cumulative coverage curves; AAAI-24 work on generalized planning with language
+models combines a pipeline, a main coverage table, runtime scaling, ablation,
+and failure analysis; temporal-planning work uses automaton diagrams together
+with coverage/runtime plots. Our figures must explain the representation bridge
+and its certificates before they show aggregate success numbers.
+
+### Figure Production Handoff Contract
+
+Figures 1--3 are conceptual method diagrams. Their labels and examples below
+come from the implemented architecture and PDDL schemas, not from estimated
+experimental measurements. Figure 4 is empirical: its axes may be laid out in
+advance, but every data mark must be generated from pinned JSON artifacts. No
+colleague or paper-writing agent may infer missing values from prose, terminal
+logs, an earlier run, or another method.
+
+Use one normalized coordinate system for all object specifications below:
+`x=0,y=0` is the top-left corner; `x`, `y`, `w`, and `h` are percentages of the
+complete slide. Snap objects to the specified coordinates within 0.5 percentage
+points. Captions are LaTeX text below the imported graphic and must not be drawn
+inside the PowerPoint slide.
+
+Canvas, PowerPoint, and export settings:
+
+- Figures 1 and 4 use a 13.333 by 5.000 inch export canvas. Figures 2 and 3 use
+  a 13.333 by 5.333 inch export canvas. Keep a white opaque background.
+- Use Arial 17 pt for normal labels, Arial Bold 20 pt for panel headings, and
+  Courier New 15 pt for PDDL, AgentSpeak, formulas encoded as text, and artifact
+  field names. These become approximately 8--10 pt after scaling to AAAI
+  `\textwidth`.
+- Use square or 0.06-inch-corner rectangles. Do not use shadows, gradients,
+  three-dimensional effects, icons, decorative illustrations, or screenshots.
+- Figures 1--3 share one editable source deck named
+  `latex_code/aamas_method_paper/figures/aaai_method_figures_source.pptx`, with
+  exactly one figure per slide and the slide order matching the figure number.
+  Figure 4 is produced by a checked-in plotting script, not by PowerPoint.
+- Final vector files are `fig1_architecture.pdf`, `fig2_policy_lifting.pdf`,
+  `fig3_dfa_controller.pdf`, and `fig4_evaluation.pdf`, under
+  `latex_code/aamas_method_paper/figures/` when delivered.
+- Embed fonts in the PDF, crop to the slide boundary, and verify all text at
+  `\includegraphics[width=\textwidth]`. Do not rasterize Figures 1--3.
+
+Use this exact color palette. Text is always `#1A1A1A` unless the fill is the
+dark Clingo box, in which case text is white.
+
+| Semantic role | Fill | Border |
+| --- | --- | --- |
+| Input or prior state | `#F2F2F2` | `#4D4D4D` |
+| External MOOSE evidence | `#FFF1CC` | `#B26A00` |
+| Our compiler operation | `#DDEBF7` | `#0072B2` |
+| Certified selected artifact | `#DDF2E9` | `#009E73` |
+| Runtime monitor or temporal observation | `#EEE4F2` | `#CC79A7` |
+| Fail-closed rejection | `#FBE3D5` | `#D55E00` |
+| Feasible but unselected candidate | `#FFFFFF` | `#9E9E9E` |
+
+Connector semantics are global and must not change between figures:
+
+- A 2.25 pt solid `#333333` line with a filled triangular arrowhead means
+  artifact, control, or action flow from source to target.
+- A 2.25 pt solid `#009E73` line with a filled triangular arrowhead is the
+  success-only form of the solid flow: use it only after certification or
+  acceptance has succeeded, never for an unproved candidate or replay path.
+- A 1.75 pt dashed `#0072B2` line with an open arrowhead means a compile-time
+  dependency, subgoal call, effect-summary use, or closure relation. Its label
+  must state which of those meanings applies.
+- A 1.75 pt dotted `#D55E00` line with a filled arrowhead means fail-closed
+  rejection. It always ends at a red rejection box.
+- A 1.75 pt dashed `#CC79A7` line with an open arrowhead means that a runtime
+  state valuation is observed by the deterministic finite automaton monitor.
+- A 1.0 pt solid `#B7B7B7` line without an arrowhead is only a panel boundary,
+  container boundary, table-like divider, or plot grid line.
+- An orange `#D55E00` solid directed edge labelled `may delete` is reserved for
+  a threat-graph ordering relation. It is not a rejection path.
+
+Every connector has exactly one semantic role. Avoid crossing connectors. When
+an elbow is necessary, use horizontal and vertical segments with a 0.08-inch
+corner radius. An outer container means containment; arrows must not be used to
+imply containment.
+
+Use this exact back-to-front layer order in PowerPoint's Selection Pane:
+
+1. opaque white slide background;
+2. lane and panel containers;
+3. panel dividers and plot grid lines;
+4. semantic connectors and arrow labels;
+5. operation, artifact, state, and code boxes;
+6. certificate badges, state circles, checks, and rejection marks;
+7. headings, annotations, and abbreviated-name notes.
+
+Name every shape with its object identifier below, for example `F1-D3` or
+`F3-B2`. Name a connector `<source>__to__<target>`, followed by its semantic
+role when two connectors share endpoints, for example
+`F3-B2__to__F3-B1__may_delete`. Group only a box with its own text, or a state
+circle with its own state label. Do not group an arrow with either endpoint;
+this preserves editable routing when a label changes.
 
 ### Figure 1: End-to-End Architecture
 
 Use a full-width `figure*` near the end of the Introduction. Replace the current
-text box; do not retain both. Draw three left-to-right horizontal lanes:
+text box; do not retain both. The figure contains three horizontal lane
+containers and one shared maintained-library container.
 
-1. **Reusable domain compilation.** A gray input box contains the PDDL domain
-   and complete train split. An amber box represents MOOSE readable singleton
-   policy evidence, for example an `on(X,Y)` rule with a finite action macro.
-   Four blue compiler boxes then show evidence normalization, PDDL producible
-   closure and candidate generation, certificate checking, and joint Clingo
-   selection. The lane ends in one green maintained AgentSpeak domain library.
-2. **Query-specific temporal compilation.** A gray box contains typed,
-   externally bound parametric LTLf JSON. Blue boxes show real
-   `ltlf2dfa`/MONA construction, signed transition-guard extraction,
-   threat/preservation certification, and balanced repair-tree compilation.
-   A downward append arrow enters the same green domain library; it must be
-   labelled “query-local controllers,” not a second library.
-3. **Execution and independent validation.** The combined library enters Jason.
-   The exported primitive PDDL trace fans out to neutral-goal VAL, gold-DFA
-   acceptance, and predicted-DFA acceptance. Red rejection exits leave any
-   compiler box when a required certificate cannot be constructed.
+Object placement and exact text:
 
-Use gray for inputs, amber for external evidence, blue for our compiler, green
-for certified artifacts, and red only for fail-closed rejection. Every color
-must also have a distinct border/shape so the figure remains meaningful in
-grayscale. Draft caption:
+- `F1-D0`: `x=1,y=3,w=78,h=27`. White outer lane with gray border. No title in
+  the border.
+- `F1-DL`: `x=2,y=6,w=9,h=21`. Gray title strip containing three centered lines:
+  `Reusable`, `domain`, `compilation`.
+- `F1-D1`: `x=13,y=9,w=12,h=14`. Gray box: `PDDL domain` on line 1 and
+  `+ complete train split` on line 2.
+- `F1-D2`: `x=28,y=9,w=12,h=14`. Amber box: `MOOSE readable` on line 1 and
+  `singleton policy evidence` on line 2.
+- `F1-D3`: `x=43,y=6,w=7,h=20`. Blue box: `Normalize` and `evidence`.
+- `F1-D4`: `x=52,y=6,w=8,h=20`. Blue box: `Producible closure` and
+  `+ candidates`.
+- `F1-D5`: `x=62,y=6,w=8,h=20`. Blue box: `Certify` and `branches`.
+- `F1-D6`: `x=72,y=6,w=7,h=20`. Blue box: `Joint Clingo` and `selection`.
+- `F1-T0`: `x=1,y=34,w=78,h=29`. White outer lane with gray border.
+- `F1-TL`: `x=2,y=38,w=9,h=21`. Gray title strip containing `Query-specific`,
+  `temporal`, `compilation`.
+- `F1-T1`: `x=13,y=41,w=12,h=14`. Gray box: `Typed, bound` and `LTLf JSON`.
+- `F1-T2`: `x=28,y=38,w=9,h=20`. Blue box: `ltlf2dfa` and `+ MONA`.
+- `F1-T3`: `x=39,y=38,w=9,h=20`. Blue box: `Signed DFA` and `guards`.
+- `F1-T4`: `x=50,y=38,w=10,h=20`. Blue box: `Threat +` on line 1,
+  `preservation` on line 2, and `certificate` on line 3.
+- `F1-T5`: `x=63,y=38,w=11,h=20`. Blue box: `Balanced repair` and `tree`.
+- `F1-L0`: `x=82,y=5,w=15,h=58`. Green outer container. Header at the top:
+  `One maintained domain library`.
+- `F1-L1`: `x=83.5,y=18,w=12,h=14`. White/green inner box: `Lifted atomic`
+  and `modules`.
+- `F1-L2`: `x=83.5,y=41,w=12,h=14`. White/green inner box:
+  `Appended query-local` and `controllers`.
+- Draw a gray horizontal containment divider from `x=83.5,y=36` to
+  `x=95.5,y=36`. Do not draw an arrow between `F1-L1` and `F1-L2`.
+- `F1-E0`: `x=1,y=70,w=96,h=27`. White outer execution lane.
+- `F1-EL`: `x=2,y=75,w=9,h=17`. Gray title strip: `Execution` and
+  `validation`.
+- `F1-R`: `x=34,y=78,w=16,h=12`. Red box: `Reject` on line 1 and
+  `structured diagnostic` on line 2.
+- `F1-E1`: `x=56,y=78,w=10,h=12`. Purple box: `Jason`.
+- `F1-E2`: `x=69,y=78,w=11,h=12`. Green box: `Committed` on line 1 and
+  `PDDL trace` on line 2.
+- `F1-E3`: `x=83,y=72,w=12,h=6`. Gray box: `Neutral-goal VAL`.
+- `F1-E4`: `x=83,y=81,w=12,h=6`. Purple box: `Gold-DFA acceptance`.
+- `F1-E5`: `x=83,y=90,w=12,h=6`. Purple box:
+  `Predicted-DFA acceptance`.
+- At `x=95.7,y=72,w=1.3,h=24`, draw a right-facing green brace joining
+  `F1-E3`, `F1-E4`, and `F1-E5`. Place a green check centred at `(98.2,84)`.
+  Place `end-to-end` and `success` on two centred lines at
+  `x=96.9,y=91,w=3,h=5` in 11 pt Arial. Nothing may extend beyond `x=100`.
+
+Draw these directed edges in this order:
+
+1. Solid flow: `F1-D1 -> F1-D2 -> F1-D3 -> F1-D4 -> F1-D5 -> F1-D6 -> F1-L1`.
+2. Solid flow: `F1-T1 -> F1-T2 -> F1-T3 -> F1-T4 -> F1-T5 -> F1-L2`.
+   Label only the last edge `append only; no relearning`.
+3. Dotted red rejection: `F1-D5 -> F1-R`, `F1-D6 -> F1-R`, and
+   `F1-T4 -> F1-R`. From `F1-D5`, leave through the bottom, move in the lane
+   gap at `y=32` to the empty vertical gutter at `x=61`, then descend to
+   `y=66`. From `F1-D6`, leave through the right edge into the gutter at
+   `x=80.0`, then descend to `y=66`. From `F1-T4`, descend directly to `y=66`.
+   Route the three paths independently along the empty `y=66` gutter to
+   `x=41.2`, `x=42.0`, and `x=42.8`, then down into the top of `F1-R`. Keep
+   0.8 percentage points between paths; do not merge them.
+4. Solid green-certified flow from the bottom center of `F1-L0` vertically to
+   `y=68`, left to `x=61`, then down into `F1-E1`. Label the horizontal segment
+   `execute combined library`.
+5. Solid flow `F1-E1 -> F1-E2`. Fan three solid arrows from `F1-E2` to
+   `F1-E3`, `F1-E4`, and `F1-E5`. The two DFA arrows must share the same source
+   trace and must not look like separate executions.
+
+Do not place `Layer A/B/C`, `tg_state`, a second domain library, or a language
+model inside this figure. The external Input component has already produced the
+validated LTLf JSON. Draft caption:
 
 > **Figure 1: End-to-end certified compilation and validation.** The reusable
 > domain stage compiles singleton-goal evidence and PDDL schemas once into one
@@ -512,26 +654,102 @@ grayscale. Draft caption:
 
 ### Figure 2: From Policy Evidence to a Lifted Atomic Module
 
-Use one full-width row with four labelled panels and one consistent Blocks
-example. This is a method explanation, not an empirical result.
+Use a full-width `figure*` immediately after the first paragraph of
+Section 3, before the candidate-language details. Use four equal-width panels.
+This is a method example, not an experimental result. It uses the repository's
+Blocks PDDL vocabulary. PDDL names retain hyphens; rendered AgentSpeak names
+use underscores.
 
-1. **(a) Evidence.** Show one readable MOOSE rule for singleton `on(X,Y)` with
-   its lifted context and finite action macro. Include a small training-instance
-   fragment to make clear that the policy is evidence rather than final ASL.
-2. **(b) Schema closure.** Show only the relevant PDDL `stack`, `unstack`, and
-   producer/precondition effects. Highlight that producible `clear/1` and
-   `holding/1` enter closure even when they never appeared as training goals;
-   static predicates remain context-only.
-3. **(c) Certification and selection.** Represent evidence macros and
-   schema-derived candidates entering one candidate set. Attach compact badges
-   for binding, symbolic execution, achievement, closure, progress, and resource
-   restoration. Show Clingo selecting the minimum-cost feasible subset inside
-   this certified space; do not label it globally minimal ASL.
-4. **(d) Executable module.** Show three short AgentSpeak branches: already
-   true, recursive preparation `!clear(Y); !on(X,Y)`, and direct `stack(X,Y)`.
-   Use variables, no training object names, and only PDDL fluents/actions.
+Panel containers and headings:
 
-Draft caption:
+- `(a)` is `x=1,y=2,w=23,h=96`, heading `Evidence`.
+- `(b)` is `x=26,y=2,w=23,h=96`, heading `PDDL closure`.
+- `(c)` is `x=51,y=2,w=24,h=96`, heading `Certification + selection`.
+- `(d)` is `x=77,y=2,w=22,h=96`, heading `Executable library`.
+- Each panel is white with a gray 1 pt border. Put the bold panel letter at
+  `x+1.5,y=4` and the heading centered at `y=5`.
+
+Panel (a) objects:
+
+- `F2-A1`: `x=4,y=17,w=17,h=20`. Gray box with exact text:
+  `Training singleton goals`, `on(b1,b2)`, and `on(b3,b1)`.
+- `F2-A2`: `x=3,y=49,w=19,h=31`. Amber box headed
+  `Normalized MOOSE evidence (schematic)`. Under the heading use Courier New:
+  `goal     on(X,Y)`, `context  holding(X), clear(Y)`, and
+  `macro    stack(X,Y)`.
+- Draw `F2-A1 -> F2-A2` as a solid flow arrow labelled
+  `MOOSE goal regression`. Do not depict the training object names inside
+  panel (d).
+
+Panel (b) objects use Courier New 14 pt inside blue boxes:
+
+- `F2-B1`: `x=28,y=16,w=19,h=27` with the exact schema excerpt:
+  `stack(X,Y)`, `pre: holding(X), clear(Y)`,
+  `add: on(X,Y), clear(X), arm-empty`, and
+  `del: holding(X), clear(Y)`.
+- `F2-B2`: `x=28,y=48,w=19,h=29` with:
+  `unstack(X,Y)`, `pre: on(X,Y), clear(X), arm-empty`,
+  `add: holding(X), clear(Y)`, and
+  `del: on(X,Y), clear(X), arm-empty`.
+- `F2-B3`: `x=28,y=82,w=19,h=12`. Green box headed
+  `Target-relevant producible closure` with
+  `on/2, clear/1, holding/1, arm_empty/0`.
+- Draw dashed blue arrows from `F2-B1` and `F2-B2` to `F2-B3`, both labelled
+  `add-effect / precondition closure`. Place one small gray note under `F2-B3`:
+  `Static predicates remain context only.`
+
+Panel (c) objects:
+
+- Draw a dashed blue container `F2-C0` at `x=52.5,y=15,w=15,h=45`, labelled
+  `Certified candidate space` in its top-left corner.
+- Inside it stack four candidate cards at `y=22,31,40,49`, each `w=13,h=7`.
+  Use amber for `E: validated stack macro`; blue for
+  `S1: direct stack producer`; blue for
+  `S2: !clear(Y); !on(X,Y)`; and white/gray for
+  `S3: longer feasible macro`.
+- At `x=68.5,y=17,w=5,h=42`, draw six small certificate badges:
+  `Bind`, `Execute`, `Achieve`, `Closure`, `Progress`, and `Resource`.
+  A green check means required and proved; gray `n/a` means the candidate does
+  not use that feature. Never mark an unproved obligation as `n/a`.
+- Draw dashed blue arrows from each candidate card to the badge rail labelled
+  `machine-checkable contract`.
+- `F2-C1`: `x=57,y=66,w=13,h=13`. Dark blue hexagon with white text:
+  `Clingo` and `lexicographic select`.
+- Draw solid arrows from every certificate-passing candidate to `F2-C1`.
+  Draw no arrow from a certificate-rejected candidate.
+- `F2-C2`: `x=54,y=84,w=18,h=8`. Green box:
+  `Minimum-cost feasible subset`.
+- Draw `F2-C1 -> F2-C2` as a solid green arrow. Put a gray 13 pt note below:
+  `Optimal only inside this generated certified space.`
+
+Panel (d) objects:
+
+- `F2-D0`: `x=78.5,y=14,w=19,h=76`. Green outer container headed
+  `One domain library`.
+- `F2-D1`: `x=80,y=23,w=16,h=49`. White code box containing exactly:
+
+```asl
++!on(X,Y) : on(X,Y) <- true.
+
++!on(X,Y) : clear(Y) & holding(X) <-
+    stack(X,Y).
+
++!on(X,Y) : not clear(Y) <-
+    !clear(Y);
+    !on(X,Y).
+```
+
+- `F2-D2`: `x=81,y=78,w=14,h=8`. Small green box:
+  `+!clear(...) module`.
+- Draw a dashed blue subgoal-call arrow from the `!clear(Y)` line in `F2-D1`
+  to `F2-D2`. Label it `internal closure`.
+- Draw a solid green arrow from `F2-C2` to the left border of `F2-D0`.
+- Put a gray footer inside `F2-D0`: `No training objects; no synthetic goals.`
+
+The code is an illustrative certificate-valid selection from the generated
+candidate language, not a verbatim claim that every seed selects these exact
+three branches. It demonstrates the added internal module and recursive
+structure. Draft caption:
 
 > **Figure 2: Certified lifting of singleton-goal policy evidence.** Provider
 > macros and PDDL-derived closure candidates enter the same certified candidate
@@ -541,30 +759,104 @@ Draft caption:
 
 ### Figure 3: DFA Transition Compilation and Runtime Monitoring
 
-Use a full-width four-panel figure tied to one conjunctive transition containing
-a negative obligation.
+Use a full-width `figure*` immediately after the first paragraph of
+Section 4, before the formal transition-compilation rules. Use four panels. The
+decoded MONA example is
+`phi = F(on(A,B) & on(B,C) & not holding(A))`. Define the complete progress
+guard once as `G`; all subsequent labels refer to that same guard. This is a
+semantic method example, not one measured benchmark trace.
 
-1. **(a) Formula and DFA.** Show a typed, bound LTLf example and the real MONA
-   deterministic finite automaton. Mark one distance-reducing edge and one
-   accepting `true` self-loop.
-2. **(b) Signed guard and threat graph.** Expand the selected edge into positive
-   achievements and negative absence obligations. Draw a directed threat edge
-   `G_j -> G_i` when completing `G_j` may delete `G_i`; annotate that this means
-   `G_j` is repaired first. A negative literal must be labelled “observe/exact
-   deleter,” never `!not_p`.
-3. **(c) Certified order and balanced tree.** Show the topologically certified
-   literal order feeding a balanced binary repair tree. Internal nodes dispatch
-   contiguous ranges; a leaf either observes its literal or invokes one
-   certified atomic module. Add a small singleton inset showing that one DFA
-   literal becomes one leaf and therefore has the same primitive-action behavior
-   as a direct atomic call.
-4. **(d) Primitive-step semantics.** Show each successful PDDL action updating
-   the runtime DFA monitor. Source-state exit returns to top-level dispatch;
-   `trans_done` replays only while the complete guard is not yet satisfied and
-   the monitor remains at the source. End at Jason trace, VAL, and both DFA
-   oracles.
+Panel containers:
 
-Draft caption:
+- `(a)` is `x=1,y=2,w=23,h=96`, heading `Real DFA transition`.
+- `(b)` is `x=26,y=2,w=21,h=96`, heading `Signed obligations`.
+- `(c)` is `x=49,y=2,w=27,h=96`, heading `Certified repair tree`.
+- `(d)` is `x=78,y=2,w=21,h=96`, heading `Primitive-step monitor`.
+
+Panel (a):
+
+- `F3-A1`: `x=3,y=16,w=19,h=17`. Gray formula box with Courier New:
+  `G = on(A,B) & on(B,C)` on line 1, `    & not holding(A)` on line 2,
+  and `phi = F(G)` on line 3.
+- Draw initial state `q0` as a blue single circle centred at `(7,61)`, diameter
+  5 percent. Draw accepting state `q1` as a green double circle centred at
+  `(19,61)`, diameter 5 percent. A short incoming arrow from the left points to
+  `q0`.
+- Draw a solid arrow `q0 -> q1` labelled `G`. Draw a loop on `q0` labelled
+  `not G` and a loop on `q1` labelled `true`.
+- Put `decoded real ltlf2dfa/MONA DFA` in gray 13 pt text at `x=4,y=88`.
+  Do not show a hand-authored ordered sequence or a `tg_state` belief.
+
+Panel (b):
+
+- `F3-B0`: `x=28,y=15,w=17,h=10`. Blue box: `Conditional completion` and
+  `effect summaries`.
+- `F3-B1`: `x=28,y=34,w=17,h=10`. Green box:
+  `G1 = on(A,B)  [positive]`.
+- `F3-B2`: `x=28,y=55,w=17,h=10`. Green box:
+  `G2 = on(B,C)  [positive]`.
+- `F3-B3`: `x=28,y=76,w=17,h=12`. Purple box:
+  `N1 = not holding(A)` and `observe or exact deleter`.
+- Draw dashed blue effect-summary arrows `F3-B0 -> F3-B1`,
+  `F3-B0 -> F3-B2`, and `F3-B0 -> F3-B3`.
+- Draw one orange directed threat edge from `F3-B2` to `F3-B1`, labelled
+  `may delete`. Place a note beside it: `therefore G2 before G1`.
+- Do not draw `!not_holding(A)`. The negative card is an absence obligation,
+  not an atomic negative achievement goal.
+
+Panel (c):
+
+- At `x=51,y=14,w=23,h=10`, draw a three-cell horizontal order strip:
+  `1  on(B,C)`, `2  on(A,B)`, and `3  not holding(A)`.
+- Put the heading `Sequential dispatch; not alternatives` directly below the
+  strip in gray 13 pt text.
+- At `x=52,y=31,w=21,h=7`, draw the wrapper body as
+  `trans_1 -> repair_1_3 -> trans_1_done`.
+- Tree node `repair_1_3` is centred at `(62,46)`. Its left child
+  `repair_1_2` is centred at `(57,61)`; its right child `repair_3_3` is centred
+  at `(69,61)`.
+- `repair_1_2` has children `repair_1_1` centred at `(53,77)` and
+  `repair_2_2` centred at `(61,77)`.
+- Use blue rounded rectangles, `w=8,h=7`, for the two internal nodes
+  `repair_1_3` and `repair_1_2`. Use green leaf boxes, `w=8,h=10`, for
+  `repair_1_1` with subtitle `observe or !on(B,C)` and `repair_2_2` with
+  subtitle `observe or !on(A,B)`. Use a purple leaf box, `w=8,h=10`, for
+  `repair_3_3` with subtitle `observe not holding(A)`.
+- Draw solid control arrows from `repair_1_3` to `repair_1_2` and then to
+  `repair_3_3`. Label them `1` and `then 2`. Draw solid control arrows from
+  `repair_1_2` to `repair_1_1` and then to `repair_2_2`, also labelled `1` and
+  `then 2`. These numbers are sequence positions, not branch alternatives.
+- Draw `trans_1_done` as a purple box at `x=65,y=88,w=9,h=7`. A solid dark
+  control arrow returns to `repair_1_3`, labelled `monitor still q0: replay`.
+  A solid green success arrow leaves panel (c), labelled
+  `monitor left q0: return to dispatcher`.
+- In a 12 pt gray inset at `x=50,y=95,w=14,h=3`, state:
+  `Singleton guard -> one leaf -> same primitive atomic call.` Keep it left of
+  `trans_1_done` and do not route the replay arrow through it.
+
+Panel (d):
+
+- Draw a horizontal state timeline from `x=80,y=49` to `x=97,y=49`.
+  State circles are `s0`, `s1`, `...`, and `sk`; action arrows between them are
+  `a1`, `a2`, `...`, and `ak`. A footer defines
+  `ai = one successful primitive PDDL action`.
+- Above `s0`, `s1`, and `...`, place purple monitor badges `q0`. Above `sk`,
+  place a green double badge `q1 accepting`.
+- Draw purple dashed observation arrows from every state circle to its monitor
+  badge. Label the first arrow `initial valuation` and the remaining group
+  `after every primitive action`.
+- Draw one purple dashed observation arrow from the monitor-badge group to the
+  right edge of `trans_1_done` in panel (c), labelled `current DFA state guard`.
+  Route it through the empty lower gutter so it does not cross the repair tree.
+- Draw a solid green arrow from the final `q1 accepting` badge to
+  `top-level DFA dispatch` at `x=83,y=76,w=13,h=10`.
+- Under the timeline, draw a gray bracket from `s0` through `sk` labelled
+  `one committed state trace`. Do not insert a noop before `s0`, and do not
+  imply that failed Jason prefixes are committed plans.
+
+All helper names in panel (c) omit the common prefix
+`g_query_17_trans_1_` only to remain legible; print this note in gray 12 pt at
+`x=65,y=95,w=10,h=3`, to the right of the singleton inset. Draft caption:
 
 > **Figure 3: Preservation-safe compilation of one DFA progress transition.**
 > Conditional module summaries induce a threat order over signed guard
@@ -575,33 +867,185 @@ Draft caption:
 
 ### Figure 4: Main Empirical Evidence
 
-Generate this figure from machine-readable JSON; do not draw empirical points
-manually in PowerPoint. Use one full-width row of three panels with a shared
-colorblind-safe domain/profile palette:
+Use a full-width `figure*` in Section 6 after the evaluation protocol and metric
+definitions, before any result table. This figure is generated from artifacts,
+not manually drawn. The colleague may reproduce the panel geometry and visual
+styles in a template, but a checked-in plotting script must place every point,
+interval, annotation, and curve.
 
-1. **(a) Atomic test coverage.** Horizontal dot-and-interval plot, one row per
-   domain. Plot all five single-worker seed values as faint points and the mean
-   with sample-standard-deviation interval as the primary mark. The x-axis is
-   Jason+VAL coverage in percent with 100% shown explicitly.
-2. **(b) Certified reduction.** Paired dots or a dumbbell for generated
-   certified candidates and selected branches per domain. Use a logarithmic
-   count axis only if the final range requires it. Annotate the percentage
-   reduction; do not compare raw library size across domains as if task counts
-   were equal.
-3. **(c) Temporal execution cost.** Empirical cumulative distribution of
-   per-query runtime, one curve per declared formula profile. Include the
-   1,800-second limit and distinguish curves by line style as well as color.
-   Since the pinned matrix has complete coverage, this distribution is more
-   informative than five identical 100% bars.
+The required generator is `scripts/generate_aaai_figures.py`. It must accept
+`--five-seed-summary`, `--paired-results`, and `--output-file` arguments, apply
+the gates below before reading plot values, and exit nonzero without creating a
+PDF when a gate fails. Until that script and complete gated artifacts exist,
+Figure 4 is specified but not release-ready. The colleague supplies styling,
+not numeric coordinates for data marks.
+
+Data-release gate:
+
+- Panel (a) reads
+  `artifacts/parser_order_full_val_logs/<RUN_ID>/five_seed_summary.json`.
+  Require `seeds == [0,1,2,3,4]`, five successful repetitions, MOOSE internal
+  workers equal to one, and all 16 domains in every repetition.
+- Panels (b) and (c) read
+  `artifacts/paired_compiler_experiments/<RUN_ID>/paired_results.json`.
+  Require `paper_matrix_complete`, `infrastructure_complete`,
+  `paired_inputs_verified`, `atomic_pairing.paired`, and
+  `temporal_pairing.paired` all true.
+- If any gate fails, do not render a partial panel and do not fall back to the
+  pinned seed-0 temporal run. Persist a machine-readable plotting diagnostic.
+
+Use an asymmetric layout: panel (a) occupies the full left half so 16 domain
+labels remain readable; panels (b) and (c) occupy the upper-right and
+lower-right quadrants.
+
+- `(a)` is `x=1,y=2,w=48,h=96`, heading
+  `Atomic held-out coverage across five seeds`.
+- `(b)` is `x=52,y=2,w=47,h=45`, heading
+  `Certified candidate reduction`.
+- `(c)` is `x=52,y=53,w=47,h=45`, heading
+  `Temporal cumulative solved fraction`.
+- Plot fonts are Arial 16 pt for axes and legends, Arial Bold 18 pt for panel
+  headings, and Arial 14 pt for annotations. Plot backgrounds are white; show
+  only light gray major grid lines.
+
+Panel (a) specification:
+
+- Y-axis order is fixed as: `barman`, `ferry`, `gripper`, `logistics`,
+  `miconic`, `rovers`, `satellite`, `transport`, then `numeric-ferry`,
+  `numeric-miconic`, `numeric-minecraft`, `numeric-transport`, then
+  `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots`.
+  Draw thin group separators after `transport` and `numeric-transport`.
+- X-axis is `Jason + VAL coverage (%)`, fixed from 0 to 100 with ticks at
+  0, 25, 50, 75, and 100. Draw a gray dashed reference line at 100.
+- For each domain, plot all five repetition coverages from
+  `repetitions[*].validation[domain].coverage` as open circles of diameter
+  4 pt with 35 percent opacity. Vertically jitter the five seeds by
+  `-0.12,-0.06,0,+0.06,+0.12` row units in seed order 0--4.
+- Plot `aggregate_domains[domain].mean_seed_coverage` as a filled diamond and
+  `sample_stddev_seed_coverage` as a horizontal capped interval. Convert both
+  from proportions to percentages.
+- Classical-domain marks use blue `#0072B2`; numeric-domain marks use amber
+  `#E69F00`; serialized-width marks use green `#009E73`. The legend explains
+  groups and separately explains `open circle = seed`,
+  `diamond +/- bar = mean +/- sample SD`.
+- Do not connect different domains and do not truncate a confidence interval at
+  a value other than the physical 0--100 percent boundary.
+
+Panel (b) specification:
+
+- Aggregate only the `Full Compiler` atomic runs from `atomic_runs`. For each
+  seed, sum `library_metrics.candidate_count` and
+  `library_metrics.selected_branch_count` within four rows: `Classical`,
+  `Numeric`, `Serialized-width`, and `All domains`.
+- X-axis is `Number of branches` on a base-10 logarithmic scale. Set its limits
+  from the smallest positive selected count rounded down to a power of ten to
+  the largest candidate count rounded up to a power of ten.
+- For each row, plot the five seed totals as small points. Plot candidate mean
+  plus/minus sample standard deviation as an open blue square; plot selected
+  mean plus/minus sample standard deviation as a filled green circle. Connect
+  the two means with a thin gray horizontal line.
+- At the right endpoint annotate the mean of the five per-seed reductions
+  `100 * (1 - selected/candidate)` as `reduction: XX.X%`. Do not compute the
+  annotation from the ratio of the two displayed means.
+- Legend: `open square = generated certified candidates` and
+  `filled circle = selected program`. Do not label unselected candidates as
+  invalid; they may be feasible but unnecessary under the objective.
+
+Panel (c) specification:
+
+- Use all records in `temporal_runs[*].results` for each of the four hash-paired
+  temporal variants. A query enters a curve at its recorded `duration_seconds`
+  only when both `success == true` and `status == "success"`. In the current
+  runner, this means Jason returned a committed trace, PDDL replay succeeded,
+  either VAL succeeded or the zero-action legality certificate applied, and
+  both the gold and predicted deterministic finite automata accepted. Failures
+  and timeouts remain in the denominator and therefore lower the final curve
+  endpoint.
+- `duration_seconds` starts before query-controller compilation and ends after
+  execution validation. It is therefore end-to-end query processing time, not
+  Jason-only search time. X-axis is `End-to-end query time (s)`, logarithmic
+  from 0.1 to 1,800. Y-axis is
+  `Fraction of all queries solved (%)`, linear from 0 to 100. Draw a vertical
+  gray timeout line at 1,800 seconds.
+- Draw right-continuous step curves with 2.25 pt strokes:
+  `Unprotected DFA` is gray `#7F7F7F`, dotted;
+  `Certified Flat` is amber `#E69F00`, dashed;
+  `Certified Balanced` is blue `#0072B2`, solid; and
+  `Completion Monitor` is purple `#CC79A7`, dash-dot.
+- Place the legend inside the lower-right only if it covers no curve; otherwise
+  place it in one horizontal row above the panel. Do not smooth or interpolate
+  the step curves.
+- This is a cumulative solved-fraction plot over all queries, not an empirical
+  cumulative distribution conditioned on successful queries. The endpoint is
+  therefore both a processing-time and coverage statement.
 
 Draft caption:
 
-> **Figure 4: Atomic robustness, certified reduction, and temporal execution
+> **Figure 4: Atomic robustness, certified reduction, and temporal processing
 > cost.** Panel (a) reports individual values and mean $\pm$ sample standard
 > deviation over five independently seeded, single-worker MOOSE runs. Panel (b)
-> compares certified candidates before and after joint Clingo selection. Panel
-> (c) is the empirical cumulative distribution of wall-clock runtime for the
-> pinned bound temporal queries; the vertical line marks the 1,800-second limit.
+> compares generated certified candidates with the Full Compiler's selected
+> program, aggregated by benchmark group. Panel (c) reports the fraction of all
+> hash-paired bound queries solved within each end-to-end processing time by
+> four temporal compiler variants; failed and timed-out queries remain in the
+> denominator, and the vertical line marks the 1,800-second limit.
+
+Before delivery, verify Figure 4 totals against the corresponding generated
+LaTeX tables. The figure and table must name the same run IDs and input hashes.
+The colleague must not copy values from a PDF table back into the plot source.
+
+### Figure Delivery and LaTeX Insertion Contract
+
+The colleague delivers the editable method deck and the three conceptual vector
+PDFs. The plotting script delivers the empirical vector PDF. The release bundle
+also contains
+`latex_code/aamas_method_paper/figures/aaai_figure_manifest.json`, with keys
+`schema_version`, `source_revision`, `exported_at`, `assets`, and `fonts`.
+Each `assets` entry records `file`, `width_inches`, `height_inches`, and
+`data_source`. Figures 1--3 use `data_source: "not_empirical"`; Figure 4 records
+both artifact run IDs, their input hashes, and the plotting-script revision. The
+`fonts` object maps each requested font to the embedded PDF font actually used;
+any substitution is a release blocker. The plotting script, not the colleague,
+owns Figure 4's numeric data.
+
+Use these exact LaTeX placements and labels after the assets exist:
+
+```latex
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig1_architecture.pdf}
+  \caption{<approved Figure 1 caption from this outline>}
+  \label{fig:architecture}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig2_policy_lifting.pdf}
+  \caption{<approved Figure 2 caption from this outline>}
+  \label{fig:policy-lifting}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig3_dfa_controller.pdf}
+  \caption{<approved Figure 3 caption from this outline>}
+  \label{fig:dfa-controller}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig4_evaluation.pdf}
+  \caption{<approved Figure 4 caption from this outline>}
+  \label{fig:evaluation-summary}
+\end{figure*}
+```
+
+The angle-bracket caption placeholders are instructions and must be replaced by
+the approved caption text before compilation. Never duplicate a caption inside
+the graphic. Inspect every exported PDF at 100 and 200 percent zoom, print one
+grayscale proof, and verify that line style and labels preserve every semantic
+distinction without color. Run `pdffonts` and require all fonts to report
+embedded. The final manuscript must cite each figure before it appears.
 
 ### Table 1: Supported Fragment and Rejection Boundary
 
