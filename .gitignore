@@ -87,6 +87,9 @@ dmypy.json
 external/
 .external
 dissertation/
+# Third-party PDDL is reconstructed from pinned upstream repositories.
+src/domains/*
+!src/domains/README.md
 latex_code/*
 !latex_code/aamas_method_paper/
 !latex_code/aamas_method_paper/**
