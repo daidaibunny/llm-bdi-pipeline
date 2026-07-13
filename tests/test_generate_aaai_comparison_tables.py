@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -29,6 +31,24 @@ TEMPORAL_VARIANTS = (
 BENCHMARK_HASH = "a" * 64
 ENHSP_REVISION = "537bed55a60d9456975c56afbadd50fc8acb1dc9"
 FOND4LTLF_REVISION = "011d9d9a5bfd6406d2c358faf8f63167f6c839bb"
+
+
+def test_comparison_table_cli_runs_from_script_path() -> None:
+	project_root = Path(__file__).resolve().parents[1]
+	completed = subprocess.run(
+		[
+			sys.executable,
+			str(project_root / "scripts/generate_aaai_comparison_tables.py"),
+			"--help",
+		],
+		cwd=project_root,
+		check=False,
+		capture_output=True,
+		text=True,
+	)
+
+	assert completed.returncode == 0, completed.stderr
+	assert "Validate final comparison artifacts" in completed.stdout
 
 
 def test_build_comparison_dataset_aggregates_registered_matrix(tmp_path: Path) -> None:

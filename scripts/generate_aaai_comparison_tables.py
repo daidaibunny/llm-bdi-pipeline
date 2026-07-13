@@ -9,16 +9,21 @@ import hashlib
 import json
 from pathlib import Path
 import statistics
+import sys
 from typing import Any
 from typing import Mapping
 from typing import Sequence
 
-from scripts.run_certificate_challenge_matrix import CHALLENGE_CASES
-from scripts.run_certificate_challenge_matrix import METAMORPHIC_CASES
-
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "latex_code/aamas_method_paper/sections"
+
+if str(PROJECT_ROOT) not in sys.path:
+	sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.run_certificate_challenge_matrix import CHALLENGE_CASES  # noqa: E402
+from scripts.run_certificate_challenge_matrix import METAMORPHIC_CASES  # noqa: E402
+
+
 REGISTERED_SEEDS = (0, 1, 2, 3, 4)
 REGISTERED_NUM_WORKERS = 6
 REGISTERED_TIMEOUT_SECONDS = 1800
