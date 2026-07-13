@@ -217,6 +217,71 @@ def test_validate_execution_trace_uses_neutral_goal_val_and_gold_dfa(
 	assert result.success is True
 
 
+def test_validate_execution_trace_accepts_zero_action_singleton_state(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	monkeypatch.setenv(
+		"MONA_BIN",
+		str(PROJECT_ROOT / ".external" / "mona-1.4" / "Front" / "mona"),
+	)
+	verifier_calls: list[dict[str, object]] = []
+	monkeypatch.setattr(
+		"evaluation.temporal_goal_validation.run_external_plan_verifier",
+		lambda **kwargs: verifier_calls.append(kwargs),
+	)
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	plan_file = tmp_path / "empty.plan"
+	domain_file.write_text(
+		"""
+(define (domain tiny)
+ (:requirements :strips :typing)
+ (:types item)
+ (:predicates (ready ?x - item))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem tiny-problem)
+ (:domain tiny)
+ (:objects object1 - item)
+ (:init (ready object1))
+ (:goal (and))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	plan_file.write_text("", encoding="utf-8")
+	audit = _audit_row(formula={"operator": "atom", "atom_id": "a0"})
+	prediction = _validated_prediction("a0")
+
+	result = validate_execution_trace(
+		audit_row=audit,
+		prediction=prediction,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_file=plan_file,
+		output_dir=tmp_path / "validation",
+		plan_verifier_command="Validate",
+	)
+
+	assert verifier_calls == []
+	assert result.action_count == 0
+	assert result.state_count == 1
+	assert result.replay_valid is True
+	assert result.val_attempted is False
+	assert result.val_success is None
+	assert result.gold_accepted is True
+	assert result.prediction_accepted is True
+	assert result.legality_certificate == "vacuous_zero_action_pddl_replay"
+	assert result.success is True
+
+
 def _audit_row(*, formula: dict[str, object]) -> dict[str, object]:
 	return {
 		"sample_id": "tiny_1",

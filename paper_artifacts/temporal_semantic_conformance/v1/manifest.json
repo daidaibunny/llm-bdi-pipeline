@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "temporal_semantic_conformance_suite",
+  "suite_id": "temporal-semantic-conformance-v1",
+  "files": {
+    "suite.json": "b6511e1b15ab6a84f8c8c650a3dcc8aa738f60c377961f9c528ad79ea18302ba",
+    "domain.pddl": "9af9ad5cc85213f9b6b2c548c708747b3c53c7b663553ee6a30f143f7642a864",
+    "problem.pddl": "6174dcf6f04bf68e98cd775021b109d14806955cc322db1e8000b8efa75786f7"
+  }
+}

@@ -642,10 +642,17 @@ def execution_status(payload: Mapping[str, Any]) -> str:
 
 	if payload.get("replay_valid") is not True:
 		return "pddl_replay_failed"
-	if payload.get("val_attempted") is not True:
-		return "val_unavailable"
-	if payload.get("val_success") is not True:
-		return "val_failed"
+	zero_action_certificate = (
+		payload.get("action_count") == 0
+		and payload.get("state_count") == 1
+		and payload.get("legality_certificate")
+		== "vacuous_zero_action_pddl_replay"
+	)
+	if not zero_action_certificate:
+		if payload.get("val_attempted") is not True:
+			return "val_unavailable"
+		if payload.get("val_success") is not True:
+			return "val_failed"
 	if payload.get("gold_accepted") is not True:
 		return "gold_dfa_rejected"
 	if payload.get("prediction_accepted") is not True:

@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "suite_id": "temporal-semantic-conformance-v1",
+  "declared_fragment": [
+    "atom",
+    "literal_negation",
+    "conjunction",
+    "eventually",
+    "strong_next",
+    "strong_until",
+    "numeric_equality_observation"
+  ],
+  "semantic_cases": [
+    {
+      "case_id": "atom_initial_true",
+      "requirement": "An atom is true exactly when it belongs to the current valuation.",
+      "ltlf_formula": "a0",
+      "formula_ast": {"operator": "atom", "atom_id": "a0"},
+      "trace": [{"a0": true}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "atom_initial_false",
+      "requirement": "An absent atom is false under the closed valuation.",
+      "ltlf_formula": "a0",
+      "formula_ast": {"operator": "atom", "atom_id": "a0"},
+      "trace": [{"a0": false}],
+      "expected_acceptance": false
+    },
+    {
+      "case_id": "literal_negation_initial",
+      "requirement": "Literal negation observes absence in the same state.",
+      "ltlf_formula": "!(a0)",
+      "formula_ast": {
+        "operator": "not",
+        "operand": {"operator": "atom", "atom_id": "a0"}
+      },
+      "trace": [{"a0": false}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "conjunction_same_state",
+      "requirement": "Conjuncts must hold in one state, not at separate positions.",
+      "ltlf_formula": "a0 & a1",
+      "formula_ast": {
+        "operator": "and",
+        "operands": [
+          {"operator": "atom", "atom_id": "a0"},
+          {"operator": "atom", "atom_id": "a1"}
+        ]
+      },
+      "trace": [{"a0": true, "a1": false}, {"a0": false, "a1": true}],
+      "expected_acceptance": false
+    },
+    {
+      "case_id": "conjunction_initial_true",
+      "requirement": "A same-state conjunction accepts when every conjunct is initially true.",
+      "ltlf_formula": "a0 & a1",
+      "formula_ast": {
+        "operator": "and",
+        "operands": [
+          {"operator": "atom", "atom_id": "a0"},
+          {"operator": "atom", "atom_id": "a1"}
+        ]
+      },
+      "trace": [{"a0": true, "a1": true}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "eventually_initial",
+      "requirement": "Eventually includes the current position.",
+      "ltlf_formula": "F(a0)",
+      "formula_ast": {
+        "operator": "eventually",
+        "operand": {"operator": "atom", "atom_id": "a0"}
+      },
+      "trace": [{"a0": true}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "eventually_delayed",
+      "requirement": "Eventually accepts when its operand holds at a later finite position.",
+      "ltlf_formula": "F(a0)",
+      "formula_ast": {
+        "operator": "eventually",
+        "operand": {"operator": "atom", "atom_id": "a0"}
+      },
+      "trace": [{"a0": false}, {"a0": true}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "eventually_never",
+      "requirement": "Eventually rejects when its operand never holds.",
+      "ltlf_formula": "F(a0)",
+      "formula_ast": {
+        "operator": "eventually",
+        "operand": {"operator": "atom", "atom_id": "a0"}
+      },
+      "trace": [{"a0": false}, {"a0": false}],
+      "expected_acceptance": false
+    },
+    {
+      "case_id": "strong_next_singleton_rejects",
+      "requirement": "Strong Next is false at the last position even when its operand holds there.",
+      "ltlf_formula": "X(a0)",
+      "formula_ast": {
+        "operator": "next",
+        "operand": {"operator": "atom", "atom_id": "a0"}
+      },
+      "trace": [{"a0": true}],
+      "expected_acceptance": false
+    },
+    {
+      "case_id": "strong_next_successor",
+      "requirement": "Strong Next observes the immediate successor position.",
+      "ltlf_formula": "X(a0)",
+      "formula_ast": {
+        "operator": "next",
+        "operand": {"operator": "atom", "atom_id": "a0"}
+      },
+      "trace": [{"a0": false}, {"a0": true}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "strong_until_immediate_right",
+      "requirement": "Strong Until accepts immediately when its right operand holds now.",
+      "ltlf_formula": "a0 U a1",
+      "formula_ast": {
+        "operator": "until",
+        "left": {"operator": "atom", "atom_id": "a0"},
+        "right": {"operator": "atom", "atom_id": "a1"}
+      },
+      "trace": [{"a0": false, "a1": true}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "strong_until_progress",
+      "requirement": "Strong Until requires its left operand before the right witness.",
+      "ltlf_formula": "a0 U a1",
+      "formula_ast": {
+        "operator": "until",
+        "left": {"operator": "atom", "atom_id": "a0"},
+        "right": {"operator": "atom", "atom_id": "a1"}
+      },
+      "trace": [{"a0": true, "a1": false}, {"a0": false, "a1": true}],
+      "expected_acceptance": true
+    },
+    {
+      "case_id": "strong_until_left_violation",
+      "requirement": "Strong Until rejects if the left operand fails before the right witness.",
+      "ltlf_formula": "a0 U a1",
+      "formula_ast": {
+        "operator": "until",
+        "left": {"operator": "atom", "atom_id": "a0"},
+        "right": {"operator": "atom", "atom_id": "a1"}
+      },
+      "trace": [{"a0": false, "a1": false}, {"a0": true, "a1": true}],
+      "expected_acceptance": false
+    },
+    {
+      "case_id": "strong_until_missing_right",
+      "requirement": "Strong Until rejects a finite trace with no right-operand witness.",
+      "ltlf_formula": "a0 U a1",
+      "formula_ast": {
+        "operator": "until",
+        "left": {"operator": "atom", "atom_id": "a0"},
+        "right": {"operator": "atom", "atom_id": "a1"}
+      },
+      "trace": [{"a0": true, "a1": false}, {"a0": true, "a1": false}],
+      "expected_acceptance": false
+    }
+  ],
+  "zero_action_cases": [
+    {
+      "case_id": "initial_predicate_eventually",
+      "requirement": "An initially true predicate can satisfy Eventually without a primitive action.",
+      "ltlf_formula": "F(a0)",
+      "formula_ast": {
+        "operator": "eventually",
+        "operand": {"operator": "atom", "atom_id": "a0"}
+      },
+      "atom": {
+        "symbol": "a0",
+        "kind": "predicate",
+        "name": "ready",
+        "arguments": ["X"],
+        "controller_arguments": ["X"]
+      },
+      "bindings": {"X": "item1"}
+    },
+    {
+      "case_id": "initial_numeric_equality",
+      "requirement": "An initially true integer equality can satisfy an atomic temporal formula without a primitive action.",
+      "ltlf_formula": "a0",
+      "formula_ast": {"operator": "atom", "atom_id": "a0"},
+      "atom": {
+        "symbol": "a0",
+        "kind": "numeric_equality",
+        "name": "level",
+        "arguments": [],
+        "controller_arguments": ["2"],
+        "value": 2
+      },
+      "bindings": {}
+    }
+  ]
+}

@@ -354,6 +354,12 @@ executes the resulting program, the environment exports the complete primitive
 action trace, and VAL independently checks that trace against the PDDL problem
 \cite{Howey2004VAL}.
 
+The initial valuation is the first position of the finite trace. If it already
+moves the monitor to an accepting state, the top-level goal succeeds without a
+primitive action and the committed plan is empty. This is the identity case
+$\langle s_0\rangle$, not an empty LTLf trace and not an inserted noop. A noop
+would add an observation boundary and could change strong-Next or Until truth.
+
 \section{Formal Guarantees}
 \label{sec:guarantees}
 

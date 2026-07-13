@@ -9,6 +9,7 @@ import pytest
 from scripts.run_temporal_goal_benchmark_execution import (
 	benchmark_prediction,
 )
+from scripts.run_temporal_goal_benchmark_execution import execution_status
 from scripts.run_temporal_goal_benchmark_execution import summarize_execution_records
 from scripts.run_temporal_goal_benchmark_execution import verify_invocation_binding
 
@@ -140,3 +141,20 @@ def test_summarize_execution_records_keeps_failure_stages_distinct() -> None:
 	}
 	assert summary["domains"]["tiny"]["success_count"] == 1
 	assert summary["profiles"]["persistence_until"]["success_count"] == 0
+
+
+def test_execution_status_accepts_only_certified_zero_action_without_val() -> None:
+	payload = {
+		"replay_valid": True,
+		"val_attempted": False,
+		"val_success": None,
+		"gold_accepted": True,
+		"prediction_accepted": True,
+		"action_count": 0,
+		"state_count": 1,
+		"legality_certificate": "vacuous_zero_action_pddl_replay",
+	}
+
+	assert execution_status(payload) == "success"
+	assert execution_status({**payload, "action_count": 1}) == "val_unavailable"
+	assert execution_status({**payload, "state_count": 2}) == "val_unavailable"

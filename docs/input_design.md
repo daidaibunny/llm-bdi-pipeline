@@ -1058,6 +1058,17 @@ require legal PDDL replay, independent VAL acceptance against a neutral final
 goal, gold-DFA acceptance, and predicted-DFA acceptance. A trace that is absent
 or was not attempted does not affect the translation-only result.
 
+The one explicit exception is a zero-action execution. LTLf is evaluated on a
+non-empty state trace, so zero actions produce the singleton trace containing
+only the PDDL initial state. VAL 1.4 has no accepted empty-plan syntax and
+reports a zero-byte plan as malformed. The validator MUST NOT insert a noop,
+because doing so would add a state transition and can change strong-Next and
+Until truth. Instead it MUST require successful zero-step PDDL replay, exactly
+one replayed state, gold- and predicted-DFA acceptance, and an explicit Jason
+success with an empty committed trace. It records the action-legality
+certificate as `vacuous_zero_action_pddl_replay` and records VAL as not
+applicable rather than successful. Non-empty traces still require VAL.
+
 The execution runner advances the same grounded deterministic finite automaton
 after the initial valuation and after every successful primitive PDDL action.
 Its query-local monitor-state and accepting beliefs select appended AgentSpeak
@@ -1154,6 +1165,13 @@ and acceptance by both gold and predicted DFAs. This is execution evidence for
 the released bindings and supplied atomic-library hashes; it is not additional
 translation-model calls and is not a claim of universal realizability for all
 type-compatible assignments.
+
+The separate temporal semantic conformance suite is tracked under
+`paper_artifacts/temporal_semantic_conformance/v1/`. It does not add or replace
+benchmark rows. Its manually specified valuation traces are checked by both a
+direct recursive evaluator and a real MONA-derived DFA. Two additional
+integration cases verify initial-state acceptance for a predicate and a numeric
+equality, including the zero-action singleton-state boundary described above.
 
 The defensible construction claim is:
 

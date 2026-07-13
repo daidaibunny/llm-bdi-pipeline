@@ -149,6 +149,15 @@ profile totals are 273 ordered-two, 272 ordered-three, 275 strong-Until, 137
 same-state conjunction, and 271 same-state-with-negation successes. The run is
 stored at `artifacts/temporal_goal_execution_runs/teg-paper-clean-e28bcea4`.
 
+Temporal semantic conformance (2026-07-13): a separate versioned suite now
+checks the declared finite-trace operators against both a direct recursive
+semantics evaluator and real MONA-derived DFAs. It also covers initial-state
+predicate and numeric-equality acceptance as zero-action singleton-state
+traces. VAL 1.4 cannot parse an empty plan, so these cases record vacuous PDDL
+replay legality and VAL not applicable; the non-empty 1,228-case matrix remains
+unchanged. Pin a clean-revision `release_validation.json` after the feature
+commit.
+
 Previously recorded focused validation evidence. Rerun these probes after the
 current threat-ordering and temporal-append changes before using them as paper
 results:

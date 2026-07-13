@@ -117,6 +117,27 @@ action count, and runtime. Translation errors, unsupported automata,
 certificate rejection, execution failure, timeout, VAL rejection, and DFA
 rejection remain distinct outcomes.
 
+\subsection{Semantic Conformance and Zero Actions}
+
+The versioned semantic-conformance suite is separate from the released
+1,228-case benchmark. Fourteen hand-specified positive and negative finite
+traces cover atoms, literal negation, same-state conjunction, Eventually,
+strong Next, and strong Until. Each expected truth value is checked by both a
+direct recursive semantics evaluator and the DFA produced by the real
+\texttt{ltlf2dfa}/MONA toolchain. Numeric equality is additionally checked at
+the PDDL-state projection boundary.
+
+Two integration cases are satisfied in the initial state, one by a predicate
+and one by an integer equality. A passing case requires Jason success, an empty
+committed action trace, zero replayed actions, one replayed state, and acceptance
+by both temporal automata. VAL 1.4 rejects an empty file as a malformed plan and
+provides no zero-action syntax. We therefore report VAL as not applicable and
+use successful PDDL initial-state replay as a vacuous action-legality
+certificate. We do not insert a noop or report external VAL acceptance. Every
+non-empty execution retains the independent VAL requirement. The sealed
+benchmark contains only non-empty state-changing witnesses, so this suite does
+not alter its denominator.
+
 The symbol-invariance suite uses synthetic domains whose vocabulary is renamed
 and whose irrelevant predicates are changed. The staged-preparation regression,
 for example, uses fabrication and tool predicates rather than any Rovers

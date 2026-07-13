@@ -982,6 +982,35 @@ fragments. It does not establish action-strategy completeness for arbitrary
 PDDL-times-LTLf products, arbitrary arithmetic planning, or universal
 realizability under every type-compatible parameter assignment.
 
+## Temporal Semantic Conformance Suite
+
+The versioned suite at
+`paper_artifacts/temporal_semantic_conformance/v1/suite.json` checks the
+declared finite-trace semantics independently of the 1,228-case execution
+benchmark. Its hand-specified positive and negative traces cover atoms,
+literal negation, same-state conjunction, Eventually, strong Next, strong
+Until, and numeric-equality observation. Every case must agree among the
+expected result, a direct recursive finite-trace evaluator, and the DFA
+constructed by the real `ltlf2dfa`/MONA path. This avoids using the same DFA
+implementation as both the system under test and its only semantic oracle.
+
+LTLf traces are non-empty state sequences. A zero-action execution is therefore
+the singleton trace containing the PDDL initial state, not an empty logical
+trace. The suite contains predicate and integer-equality cases that are already
+true initially. Both must produce an explicit Jason success marker, an empty
+committed PDDL action file, a replay with zero actions and one state, and gold
+and predicted DFA acceptance.
+
+VAL 1.4 rejects an empty plan file as a malformed plan and exposes no
+zero-action syntax. The validator therefore does not insert a synthetic noop
+or label such a case as VAL-accepted. For zero actions, PDDL replay establishes
+the initial state and action legality is vacuous; the result records
+`legality_certificate=vacuous_zero_action_pddl_replay`,
+`val_attempted=false`, and `val_success=null`. Every non-empty execution still
+requires independent neutral-goal VAL acceptance. The sealed execution
+benchmark contains only state-changing witnesses, so its 1,228 VAL results are
+unchanged.
+
 ## Sources
 
 - Dillon Z. Chen, Till Hofmann, Toryn Q. Klassen, and Sheila A. McIlraith.

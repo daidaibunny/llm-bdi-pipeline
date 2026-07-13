@@ -242,6 +242,9 @@ The main paper should contain:
 5. **Runtime-monitor trace fidelity:** monitor-state beliefs are the result of
    deterministic DFA transition evaluation after every primitive action, not a
    second planning semantics or a domain fluent.
+6. **Initial-state identity case:** zero primitive actions denote the singleton
+   trace containing the PDDL initial state. Initial DFA acceptance returns an
+   empty committed action trace; it never inserts a noop.
 
 Every theorem must state its assumptions next to the claim. Do not elevate
 candidate-generation completeness, arbitrary AgentSpeak optimality, arbitrary
@@ -279,6 +282,15 @@ The final paper must distinguish:
 
 Combining these two would make an LTLf translation error indistinguishable from
 a compiler or BDI execution error.
+
+Add a separate semantic-conformance paragraph before benchmark results. It must
+report agreement among hand-specified expected truth, an independent direct
+finite-trace evaluator, and the real MONA-derived DFA for every declared
+operator. It must separately report predicate and numeric zero-action
+integration. Because VAL 1.4 cannot parse an empty plan, report zero-action
+legality as vacuous after successful PDDL initial-state replay and VAL as not
+applicable, never as successful. Keep these cases outside the sealed 1,228-row
+benchmark totals.
 
 ### 7. Related Work and Positioning
 
@@ -382,6 +394,8 @@ The agent that receives the final TEG run must:
    coherent change;
 7. preserve the supported-fragment and observation-boundary assumptions even
    if an empirical case happens to pass outside them.
+8. retain the zero-action conformance result as a separate semantic boundary;
+   do not add a synthetic noop or merge it into the non-empty VAL denominator.
 
 ## Submission Readiness
 

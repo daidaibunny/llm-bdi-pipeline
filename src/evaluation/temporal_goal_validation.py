@@ -92,13 +92,20 @@ class ExecutionTraceValidationResult:
 	action_count: int
 	state_count: int
 	neutral_problem_file: str
+	legality_certificate: str
 	plan_verifier_error: str | None = None
 
 	@property
 	def success(self) -> bool:
 		return (
 			self.replay_valid
-			and self.val_success is True
+			and (
+				self.val_success is True
+				or (
+					self.action_count == 0
+					and self.legality_certificate == "vacuous_zero_action_pddl_replay"
+				)
+			)
 			and self.gold_accepted
 			and self.prediction_accepted
 		)
@@ -114,6 +121,7 @@ class ExecutionTraceValidationResult:
 			"action_count": self.action_count,
 			"state_count": self.state_count,
 			"neutral_problem_file": self.neutral_problem_file,
+			"legality_certificate": self.legality_certificate,
 			"plan_verifier_error": self.plan_verifier_error,
 		}
 
@@ -282,6 +290,15 @@ def compare_gold_and_prediction(
 	)
 
 
+def evaluate_ltlf_formula_on_trace(
+	formula: str,
+	trace: Sequence[Mapping[str, bool]],
+) -> bool:
+	"""Evaluate one propositional LTLf formula using the real MONA-derived DFA."""
+
+	return _compile_dfa(str(formula or "").strip()).accepts(trace)
+
+
 def validate_prediction_on_witness(
 	*,
 	audit_row: Mapping[str, Any],
@@ -380,8 +397,6 @@ def validate_execution_trace(
 		for line in plan_path.read_text(encoding="utf-8").splitlines()
 		if line.strip() and not line.lstrip().startswith(";")
 	)
-	if not action_lines:
-		raise TemporalGoalValidationError(f"Execution trace is empty: {plan_path}.")
 	replay = replay_ground_action_trace(
 		domain_file=domain_file,
 		problem_file=problem_file,
@@ -392,14 +407,30 @@ def validate_execution_trace(
 		problem_file,
 		output / "neutral_goal_problem.pddl",
 	)
-	verifier = run_external_plan_verifier(
-		domain_file=domain_file,
-		problem_file=neutral_problem,
-		plan_file=plan_path,
-		output_dir=output,
-		command=plan_verifier_command,
-		timeout_seconds=plan_verifier_timeout_seconds,
-	)
+	if action_lines:
+		verifier = run_external_plan_verifier(
+			domain_file=domain_file,
+			problem_file=neutral_problem,
+			plan_file=plan_path,
+			output_dir=output,
+			command=plan_verifier_command,
+			timeout_seconds=plan_verifier_timeout_seconds,
+		)
+		val_attempted = verifier.attempted
+		val_success = verifier.success
+		verifier_error = verifier.error
+		legality_certificate = "pddl_replay_and_external_val"
+	else:
+		(output / "plan_verifier_stdout.txt").write_text("", encoding="utf-8")
+		(output / "plan_verifier_stderr.txt").write_text(
+			"VAL has no empty-plan input syntax; zero-action legality is vacuous "
+			"after successful PDDL initial-state replay.\n",
+			encoding="utf-8",
+		)
+		val_attempted = False
+		val_success = None
+		verifier_error = None
+		legality_certificate = "vacuous_zero_action_pddl_replay"
 	gold_formula, prediction_formula, alphabet = _canonical_formula_pair(
 		audit_row=audit_row,
 		prediction=prediction,
@@ -423,14 +454,15 @@ def validate_execution_trace(
 	)
 	return ExecutionTraceValidationResult(
 		replay_valid=True,
-		val_attempted=verifier.attempted,
-		val_success=verifier.success,
+		val_attempted=val_attempted,
+		val_success=val_success,
 		gold_accepted=_compile_dfa(gold_formula).accepts(valuations),
 		prediction_accepted=_compile_dfa(prediction_formula).accepts(valuations),
 		action_count=len(replay.actions),
 		state_count=len(replay.states),
 		neutral_problem_file=str(neutral_problem),
-		plan_verifier_error=verifier.error,
+		legality_certificate=legality_certificate,
+		plan_verifier_error=verifier_error,
 	)
 
 
