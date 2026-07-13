@@ -23,7 +23,9 @@ from .atomic_backend_selector import (
 	select_atomic_template_backend,
 )
 from .atomic_module_synthesis import (
+	AtomicCandidateScope,
 	AtomicModuleSynthesisReport,
+	AtomicSelectionStrategy,
 	synthesize_atomic_minimal_literal_module_library,
 )
 from .benchmark_registry import (
@@ -44,6 +46,7 @@ from .dfa_controller import (
 	progress_transitions_from_dfa_state,
 )
 from .evidence_module import (
+	AtomicCompilerVariant,
 	AtomicMacroLibraryQualityReport,
 	MooseAtomicLibraryQualityReport,
 	MooseAtom,
@@ -60,6 +63,7 @@ from .evidence_module import (
 	evidence_program_from_moose_readable_policy,
 	load_moose_readable_policy,
 	parse_moose_readable_policy,
+	policy_evidence_program_fingerprint,
 	policy_program_from_moose_readable_policy,
 )
 from .gp_backends import (
@@ -120,8 +124,11 @@ __all__ = [
 	"ArchitectureDecision",
 	"ArchitectureGap",
 	"AtomicGoalTemplate",
+	"AtomicCandidateScope",
+	"AtomicCompilerVariant",
 	"AtomicMacroLibraryQualityReport",
 	"AtomicModuleSynthesisReport",
+	"AtomicSelectionStrategy",
 	"AtomicTemplateBackendDecision",
 	"BackendManifest",
 	"BenchmarkRecord",
@@ -185,6 +192,7 @@ __all__ = [
 	"parse_dlplan_policy",
 	"parse_lifted_ltlf_goal_dataset",
 	"parse_moose_readable_policy",
+	"policy_evidence_program_fingerprint",
 	"policy_program_from_moose_readable_policy",
 	"policy_program_from_sketch_policy",
 	"progress_requests_from_dfa_state",

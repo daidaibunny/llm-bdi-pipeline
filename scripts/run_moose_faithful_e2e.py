@@ -64,8 +64,14 @@ from utils.pddl_parser import PDDLParser  # noqa: E402
 from plan_library.models import AgentSpeakBodyStep  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import render_plan_library_asl  # noqa: E402
+from domain_level_planning.evidence_module import AtomicCompilerVariant  # noqa: E402
 from domain_level_planning.temporal_goal_appender import (  # noqa: E402
 	append_temporal_goal_to_library,
+)
+
+
+REGISTERED_ATOMIC_COMPILER_VARIANTS = tuple(
+	variant.value for variant in AtomicCompilerVariant
 )
 
 
@@ -148,6 +154,14 @@ def main() -> int:
 		),
 	)
 	parser.add_argument(
+		"--compiler-variant",
+		choices=REGISTERED_ATOMIC_COMPILER_VARIANTS,
+		help=(
+			"Registered validated compiler variant. Valid only with "
+			"--atomic-library-mode validated-policy-lifting; defaults to full."
+		),
+	)
+	parser.add_argument(
 		"--train-timeout-seconds",
 		type=int,
 		default=MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS,
@@ -215,6 +229,10 @@ def main() -> int:
 	)
 	args = parser.parse_args()
 	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
+	args.compiler_variant = normalise_compiler_variant(
+		atomic_library_mode=args.atomic_library_mode,
+		compiler_variant=args.compiler_variant,
+	)
 
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	output_root = args.output_root.expanduser().resolve()
@@ -229,6 +247,7 @@ def main() -> int:
 			"num_permutations": args.num_permutations,
 			"goal_max_size": args.goal_max_size,
 			"atomic_library_mode": args.atomic_library_mode,
+			"compiler_variant": args.compiler_variant,
 			"max_rss_gb": args.max_rss_gb,
 			"moose_runtime": args.moose_runtime,
 			"full_train_split": True,
@@ -378,6 +397,7 @@ def run_domain(
 				domain_name=domain_name,
 				library_root=args.library_root,
 				atomic_library_mode=args.atomic_library_mode,
+				compiler_variant=args.compiler_variant,
 			),
 			cwd=PROJECT_ROOT,
 			stdout_file=log_root / "compile_atomic_library.stdout.json",
@@ -506,6 +526,24 @@ def normalise_atomic_library_mode(mode: str) -> str:
 	return mode
 
 
+def normalise_compiler_variant(
+	*,
+	atomic_library_mode: str,
+	compiler_variant: str | None,
+) -> str | None:
+	"""Resolve a registered compiler variant without changing faithful adaptation."""
+
+	mode = normalise_atomic_library_mode(atomic_library_mode)
+	if mode != "validated-policy-lifting":
+		if compiler_variant is not None:
+			raise ValueError(
+				"compiler_variant_requires_validated_policy_lifting: registered "
+				"compiler variants cannot be applied to faithful raw adaptation.",
+			)
+		return None
+	return AtomicCompilerVariant(compiler_variant or AtomicCompilerVariant.FULL.value).value
+
+
 def compile_moose_atomic_library_command(
 	*,
 	readable_policy_file: Path,
@@ -513,6 +551,7 @@ def compile_moose_atomic_library_command(
 	domain_name: str,
 	library_root: Path,
 	atomic_library_mode: str,
+	compiler_variant: str | None = None,
 ) -> tuple[str, ...]:
 	"""Return the selected Evidence Module atomic library compilation command."""
 
@@ -532,6 +571,21 @@ def compile_moose_atomic_library_command(
 	]
 	if normalise_atomic_library_mode(atomic_library_mode) == "validated-policy-lifting":
 		command.append("--validated-policy-lifting")
+		command.extend(
+			(
+				"--compiler-variant",
+				normalise_compiler_variant(
+					atomic_library_mode=atomic_library_mode,
+					compiler_variant=compiler_variant,
+				)
+				or AtomicCompilerVariant.FULL.value,
+			),
+		)
+	elif compiler_variant is not None:
+		normalise_compiler_variant(
+			atomic_library_mode=atomic_library_mode,
+			compiler_variant=compiler_variant,
+		)
 	return tuple(command)
 
 

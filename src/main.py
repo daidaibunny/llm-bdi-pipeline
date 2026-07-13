@@ -15,6 +15,7 @@ if _src_dir not in sys.path:
 	sys.path.insert(0, _src_dir)
 
 from domain_level_planning import (  # noqa: E402
+	AtomicCompilerVariant,
 	append_lifted_temporal_goal_case_to_library,
 	compile_policy_evidence_program_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_asl_library,
@@ -91,6 +92,14 @@ Examples:
 			"intermediate representation, validate and lift it with the PDDL "
 			"schema, then compile the result into a domain-level atomic ASL "
 			"library."
+		),
+	)
+	moose_parser.add_argument(
+		"--compiler-variant",
+		choices=tuple(variant.value for variant in AtomicCompilerVariant),
+		help=(
+			"Registered validated compiler variant. Supplying this option implies "
+			"--validated-policy-lifting; the production default is full."
 		),
 	)
 	moose_parser.add_argument(
@@ -245,9 +254,16 @@ def main() -> None:
 
 def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 	policy_file = _require_existing_path(args.policy_file, label="MOOSE Policy File")
+	requested_compiler_variant = getattr(args, "compiler_variant", None)
 	use_validated_policy_lifting = bool(
 		getattr(args, "validated_policy_lifting", False)
-		or getattr(args, "minimal_modules", False),
+		or getattr(args, "minimal_modules", False)
+		or requested_compiler_variant,
+	)
+	compiler_variant = (
+		AtomicCompilerVariant(requested_compiler_variant or AtomicCompilerVariant.FULL.value)
+		if use_validated_policy_lifting
+		else None
 	)
 	domain_file = (
 		_require_existing_path(args.domain_file, label="Domain File")
@@ -281,6 +297,7 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 			evidence_program,
 			domain_file=str(domain_file),
 			domain_name=domain_name,
+			compiler_variant=compiler_variant or AtomicCompilerVariant.FULL,
 		)
 	else:
 		library = compile_moose_readable_policy_to_asl_library(
@@ -303,6 +320,9 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 			"pddl_domain_name": pddl_domain_name,
 			"minimal_modules": use_validated_policy_lifting,
 			"validated_policy_lifting": use_validated_policy_lifting,
+			"compiler_variant": (
+				compiler_variant.value if compiler_variant is not None else None
+			),
 			"evidence_provider_path": (
 				"validated_policy_lifting_and_asl_compilation"
 				if use_validated_policy_lifting
@@ -324,6 +344,9 @@ def _compile_moose_atomic_library(args: argparse.Namespace) -> dict[str, Any]:
 		"success": True,
 		"domain_name": library.domain_name,
 		"plan_count": len(library.plans),
+		"compiler_variant": (
+			compiler_variant.value if compiler_variant is not None else None
+		),
 		"artifact_paths": artifact_paths,
 	}
 

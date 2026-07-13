@@ -10,9 +10,12 @@ need to know which provider produced the evidence.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from dataclasses import dataclass
 from dataclasses import field
+from enum import Enum
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -27,6 +30,8 @@ from utils.pddl_parser import PDDLNumericExpression
 from utils.pddl_parser import PDDLParser
 
 from .atomic_module_synthesis import synthesize_atomic_minimal_literal_module_library
+from .atomic_module_synthesis import AtomicCandidateScope
+from .atomic_module_synthesis import AtomicSelectionStrategy
 from .atomic_module_synthesis import PDDLLiteralSchema
 from .atomic_module_synthesis import _ParsedAction
 from .atomic_module_synthesis import _numeric_condition_contexts
@@ -191,6 +196,61 @@ class _PolicyEvidencePlans:
 
 
 MooseMacroEvidenceReducerReport = PolicyEvidenceReducerReport
+
+
+class AtomicCompilerVariant(str, Enum):
+	"""Registered post-evidence compiler variants used in paired experiments."""
+
+	VALIDATED_EVIDENCE_ADAPTER = "validated_evidence_adapter"
+	ACTION_ONLY_CLOSURE = "action_only_closure"
+	MAXIMAL_CERTIFIED_PROGRAM = "maximal_certified_program"
+	FULL = "full"
+
+
+def policy_evidence_program_fingerprint(program: PolicyEvidenceProgram) -> str:
+	"""Hash one normalized evidence program independently of output variant."""
+
+	payload = {
+		"source_provider": program.source_provider,
+		"representation": program.representation,
+		"rules": [
+			{
+				"precedence": rule.precedence,
+				"variables": list(rule.variables),
+				"state_conditions": [
+					[atom.predicate, list(atom.arguments)]
+					for atom in rule.state_conditions
+				],
+				"goal_conditions": [
+					[atom.predicate, list(atom.arguments)]
+					for atom in rule.goal_conditions
+				],
+				"state_numeric_conditions": [
+					condition.to_signature()
+					for condition in rule.state_numeric_conditions
+				],
+				"goal_numeric_conditions": [
+					condition.to_signature()
+					for condition in rule.goal_numeric_conditions
+				],
+				"actions": [
+					[atom.predicate, list(atom.arguments)] for atom in rule.actions
+				],
+			}
+			for rule in program.rules
+		],
+	}
+	encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+	return hashlib.sha256(encoded).hexdigest()
+
+
+def _coerce_atomic_compiler_variant(
+	value: AtomicCompilerVariant | str,
+) -> AtomicCompilerVariant:
+	try:
+		return value if isinstance(value, AtomicCompilerVariant) else AtomicCompilerVariant(value)
+	except ValueError as error:
+		raise ValueError(f"atomic_compiler_variant_unknown: {value!r}") from error
 
 
 @dataclass(frozen=True)
@@ -427,6 +487,7 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 	*,
 	domain_file: str | Path,
 	domain_name: str,
+	compiler_variant: AtomicCompilerVariant | str = AtomicCompilerVariant.FULL,
 ) -> PlanLibrary:
 	"""Compile provider-neutral singleton evidence into an atomic ASL library.
 
@@ -435,6 +496,8 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 		validated policy-lifting compiler sees them.
 	"""
 
+	resolved_variant = _coerce_atomic_compiler_variant(compiler_variant)
+	evidence_fingerprint = policy_evidence_program_fingerprint(evidence_program)
 	pddl_support = assert_compilable_pddl_files(domain_file=domain_file)
 	rules = tuple(evidence_program.rules or ())
 	seed_predicates = tuple(
@@ -456,7 +519,14 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 		source_name=evidence_program.source_name,
 		policy_file=evidence_program.policy_file,
 	)
-	if seed_predicates or macro_evidence.plans:
+	if resolved_variant == AtomicCompilerVariant.VALIDATED_EVIDENCE_ADAPTER:
+		library = _validated_evidence_adapter_library(
+			domain=domain,
+			macro_evidence=macro_evidence,
+			evidence_program=evidence_program,
+		)
+	elif seed_predicates or macro_evidence.plans:
+		candidate_scope, selection_strategy = _atomic_synthesis_settings(resolved_variant)
 		library = synthesize_atomic_minimal_literal_module_library(
 			domain_file=domain_file,
 			seed_predicates=seed_predicates,
@@ -464,6 +534,8 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 			source_name=evidence_program.source_name,
 			policy_file=evidence_program.policy_file,
 			validated_evidence_candidates=macro_evidence.plans,
+			candidate_scope=candidate_scope,
+			selection_strategy=selection_strategy,
 		)
 	else:
 		library = PlanLibrary(
@@ -524,6 +596,13 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 		metadata={
 			**dict(library.metadata),
 			"pddl_support": pddl_support.to_dict(),
+			"experiment_contract": {
+				"compiler_variant": resolved_variant.value,
+				"evidence_program_fingerprint": evidence_fingerprint,
+				"paired_variant_contract": (
+					"same normalized evidence, PDDL domain, and validated macro set"
+				),
+			},
 			"evidence_module": {
 				"source_provider": evidence_program.source_provider,
 				"source_name": evidence_program.source_name,
@@ -541,10 +620,88 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 			"validated_policy_lifting": {
 				**macro_evidence.report.to_dict(),
 				"merged_plan_count": len(merged_plans),
-				"selection_stage": "joint_clingo_certified_candidate_selection",
+				"selection_stage": _selection_stage_for_variant(resolved_variant),
 			},
 			"library_quality": library_quality,
 			"evidence_macro_library_quality": macro_quality_report.to_dict(),
+		},
+	)
+
+
+def _atomic_synthesis_settings(
+	variant: AtomicCompilerVariant,
+) -> tuple[AtomicCandidateScope, AtomicSelectionStrategy]:
+	if variant == AtomicCompilerVariant.ACTION_ONLY_CLOSURE:
+		return AtomicCandidateScope.ACTION_ONLY, AtomicSelectionStrategy.RETAIN_ALL
+	if variant == AtomicCompilerVariant.MAXIMAL_CERTIFIED_PROGRAM:
+		return AtomicCandidateScope.FULL, AtomicSelectionStrategy.MAXIMAL_CERTIFIED
+	if variant == AtomicCompilerVariant.FULL:
+		return AtomicCandidateScope.FULL, AtomicSelectionStrategy.MINIMIZE
+	raise ValueError(
+		"atomic_compiler_variant_has_no_synthesis_settings: "
+		f"{variant.value}",
+	)
+
+
+def _selection_stage_for_variant(variant: AtomicCompilerVariant) -> str:
+	return {
+		AtomicCompilerVariant.VALIDATED_EVIDENCE_ADAPTER: (
+			"validated_evidence_adapter_no_schema_closure"
+		),
+		AtomicCompilerVariant.ACTION_ONLY_CLOSURE: (
+			"certificate_validated_action_only_closure_no_optimization"
+		),
+		AtomicCompilerVariant.MAXIMAL_CERTIFIED_PROGRAM: (
+			"joint_clingo_maximal_certified_program"
+		),
+		AtomicCompilerVariant.FULL: "joint_clingo_certified_candidate_selection",
+	}[variant]
+
+
+def _validated_evidence_adapter_library(
+	*,
+	domain: PDDLDomain,
+	macro_evidence: _PolicyEvidencePlans,
+	evidence_program: PolicyEvidenceProgram,
+) -> PlanLibrary:
+	"""Render only schema-validated evidence macros as the strong direct baseline."""
+
+	plans = _ensure_unique_plan_names(_deduplicate_agent_plans(macro_evidence.plans))
+	return PlanLibrary(
+		domain_name=domain.name,
+		plans=plans,
+		initial_beliefs=(),
+		metadata={
+			"generation_mode": "validated_evidence_adapter_library",
+			"atomic_template_provider": evidence_program.source_provider,
+			"atomic_template_backend": "validated_evidence_adapter",
+			"source_name": evidence_program.source_name,
+			"policy_file": (
+				str(evidence_program.policy_file)
+				if evidence_program.policy_file is not None
+				else None
+			),
+			"atomic_module_synthesis": {
+				"seed_predicates": [],
+				"module_predicates": sorted(
+					{plan.trigger.symbol for plan in plans}
+				),
+				"plan_count": len(plans),
+				"raw_candidate_count": len(plans),
+				"pruned_candidate_count": 0,
+				"selector_backend": "validated_evidence_adapter_no_selector",
+				"selector_objective": [],
+				"selected_branch_ids": [
+					f"b{index}" for index, _plan in enumerate(plans)
+				],
+				"selection_scope": "validated_evidence_candidates_only",
+				"candidate_source_counts": {
+					"schema": 0,
+					"validated_evidence": len(plans),
+					"joint_unique": len(plans),
+				},
+				"evidence_obligation_count": len(plans),
+			},
 		},
 	)
 

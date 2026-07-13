@@ -112,6 +112,61 @@ def test_main_compiles_moose_seeded_minimal_module_library(tmp_path: Path) -> No
 	assert "block0" not in asl
 
 
+def test_main_compiler_variant_implies_validated_policy_lifting(tmp_path: Path) -> None:
+	policy_file = tmp_path / "blocks-seed0.model.readable"
+	library_root = tmp_path / "domain_libraries"
+	policy_file.write_text(
+		"""
+		precedence : (1, 1, 0, 0)
+		      vars : block0 block1
+		    s_cond : (clear block0) (ontable block0) (handempty) (clear block1)
+		    g_cond : (on block0 block1)
+		   actions : (pick-up block0) (stack block0 block1)
+		""",
+		encoding="utf-8",
+	)
+
+	completed = subprocess.run(
+		[
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"compile-moose-atomic-library",
+			"--policy-file",
+			str(policy_file),
+			"--domain-file",
+			str(PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"),
+			"--domain-name",
+			"blocksworld-tower",
+			"--compiler-variant",
+			"validated_evidence_adapter",
+			"--library-root",
+			str(library_root),
+		],
+		cwd=PROJECT_ROOT,
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+	result = json.loads(completed.stdout)
+	library = json.loads(
+		Path(result["artifact_paths"]["plan_library"]).read_text(encoding="utf-8"),
+	)
+	metadata = json.loads(
+		Path(result["artifact_paths"]["artifact_metadata"]).read_text(encoding="utf-8"),
+	)
+
+	assert result["compiler_variant"] == "validated_evidence_adapter"
+	assert result["plan_count"] == 1
+	assert metadata["validated_policy_lifting"] is True
+	assert metadata["compiler_variant"] == "validated_evidence_adapter"
+	assert library["metadata"]["experiment_contract"]["compiler_variant"] == (
+		"validated_evidence_adapter"
+	)
+	assert len(
+		library["metadata"]["experiment_contract"]["evidence_program_fingerprint"],
+	) == 64
+
+
 def test_main_records_nonofficial_source_metadata_for_native_moose_compile(
 	tmp_path: Path,
 ) -> None:

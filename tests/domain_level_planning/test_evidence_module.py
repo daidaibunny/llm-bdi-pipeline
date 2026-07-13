@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 from domain_level_planning.evidence_module import (
+	AtomicCompilerVariant,
 	PolicyEvidenceProgram,
 	audit_moose_atomic_library_quality,
 	compile_policy_evidence_program_to_minimal_module_asl_library,
@@ -325,6 +326,74 @@ def test_evidence_program_decouples_moose_adapter_from_compiler() -> None:
 	)
 	assert "evidence_macro_library_quality" in library.metadata
 	assert "moose_macro_library_quality" not in library.metadata
+
+
+def test_atomic_compiler_variants_share_evidence_and_isolate_compiler_steps() -> None:
+	evidence_program = evidence_program_from_moose_readable_policy(
+		BLOCKS_READABLE_POLICY,
+		source_name="blocks-seed0",
+	)
+
+	libraries = {
+		variant: compile_policy_evidence_program_to_minimal_module_asl_library(
+			evidence_program,
+			domain_file=BLOCKS_DOMAIN,
+			domain_name="blocksworld-tower",
+			compiler_variant=variant,
+		)
+		for variant in AtomicCompilerVariant
+	}
+
+	evidence_only = libraries[AtomicCompilerVariant.VALIDATED_EVIDENCE_ADAPTER]
+	action_only = libraries[AtomicCompilerVariant.ACTION_ONLY_CLOSURE]
+	maximal = libraries[AtomicCompilerVariant.MAXIMAL_CERTIFIED_PROGRAM]
+	full = libraries[AtomicCompilerVariant.FULL]
+
+	assert len(evidence_only.plans) == 1
+	assert {plan.trigger.symbol for plan in evidence_only.plans} == {"on"}
+	assert all(step.kind == "action" for plan in action_only.plans for step in plan.body)
+	assert {plan.trigger.symbol for plan in action_only.plans} == {
+		"clear",
+		"handempty",
+		"holding",
+		"on",
+		"ontable",
+	}
+	assert any(step.kind == "subgoal" for plan in maximal.plans for step in plan.body)
+	assert len(maximal.plans) >= len(full.plans)
+	assert maximal.metadata["atomic_module_synthesis"]["selector_backend"] == (
+		"clingo_asp_maximal_certified"
+	)
+	assert full.metadata["atomic_module_synthesis"]["selector_backend"] == (
+		"clingo_asp_minimize"
+	)
+	assert {
+		library.metadata["experiment_contract"]["evidence_program_fingerprint"]
+		for library in libraries.values()
+	} == {next(iter(libraries.values())).metadata["experiment_contract"]["evidence_program_fingerprint"]}
+	assert {
+		library.metadata["experiment_contract"]["compiler_variant"]
+		for library in libraries.values()
+	} == {variant.value for variant in AtomicCompilerVariant}
+
+
+def test_atomic_compiler_variant_rejects_unknown_value() -> None:
+	evidence_program = evidence_program_from_moose_readable_policy(
+		BLOCKS_READABLE_POLICY,
+		source_name="blocks-seed0",
+	)
+
+	try:
+		compile_policy_evidence_program_to_minimal_module_asl_library(
+			evidence_program,
+			domain_file=BLOCKS_DOMAIN,
+			domain_name="blocksworld-tower",
+			compiler_variant="blocks-special-case",
+		)
+	except ValueError as error:
+		assert "atomic_compiler_variant_unknown" in str(error)
+	else:  # pragma: no cover - assertion guard.
+		raise AssertionError("Unknown compiler variant was accepted.")
 
 
 def test_policy_evidence_compiler_does_not_branch_on_provider_name() -> None:

@@ -21,6 +21,8 @@ try:
 	from run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
 	from run_moose_faithful_e2e import MOOSE_ROOT
 	from run_moose_faithful_e2e import PROJECT_ROOT
+	from run_moose_faithful_e2e import REGISTERED_ATOMIC_COMPILER_VARIANTS
+	from run_moose_faithful_e2e import normalise_compiler_variant
 except ModuleNotFoundError:  # pragma: no cover - used when imported by pytest.
 	from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS
 	from scripts.run_moose_faithful_e2e import MOOSE_PAPER_GOAL_PERMUTATIONS
@@ -30,6 +32,8 @@ except ModuleNotFoundError:  # pragma: no cover - used when imported by pytest.
 	from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
 	from scripts.run_moose_faithful_e2e import MOOSE_ROOT
 	from scripts.run_moose_faithful_e2e import PROJECT_ROOT
+	from scripts.run_moose_faithful_e2e import REGISTERED_ATOMIC_COMPILER_VARIANTS
+	from scripts.run_moose_faithful_e2e import normalise_compiler_variant
 
 
 DEFAULT_ARTIFACT_ROOT = PROJECT_ROOT / "artifacts" / "moose_asl_batches"
@@ -79,6 +83,13 @@ def main() -> int:
 			"Compile raw MOOSE decision-list macros faithfully, or validate and "
 			"lift MOOSE singleton policy evidence with the PDDL schema before "
 			"ASL rendering."
+		),
+	)
+	parser.add_argument(
+		"--compiler-variant",
+		choices=REGISTERED_ATOMIC_COMPILER_VARIANTS,
+		help=(
+			"Registered compiler variant for validated policy lifting; defaults to full."
 		),
 	)
 	parser.add_argument("--max-rss-gb", type=float, default=16.0)
@@ -143,6 +154,10 @@ def main() -> int:
 	)
 	args = parser.parse_args()
 	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
+	args.compiler_variant = normalise_compiler_variant(
+		atomic_library_mode=args.atomic_library_mode,
+		compiler_variant=args.compiler_variant,
+	)
 
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	timestamp_id = args.timestamp_id or datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -255,6 +270,9 @@ def build_moose_batch_command(
 		"--jason-plan-verifier-timeout-seconds",
 		str(getattr(args, "jason_plan_verifier_timeout_seconds", 1800)),
 	]
+	compiler_variant = _resolved_compiler_variant(args)
+	if compiler_variant is not None:
+		command.extend(("--compiler-variant", compiler_variant))
 	jason_plan_verifier_command = getattr(args, "jason_plan_verifier_command", None)
 	if jason_plan_verifier_command:
 		command.extend(("--jason-plan-verifier-command", jason_plan_verifier_command))
@@ -299,6 +317,7 @@ def batch_manifest(
 			"num_permutations": args.num_permutations,
 			"goal_max_size": args.goal_max_size,
 			"atomic_library_mode": args.atomic_library_mode,
+			"compiler_variant": _resolved_compiler_variant(args),
 			"max_rss_gb": args.max_rss_gb,
 			"train_timeout_seconds": args.train_timeout_seconds,
 			"run_jason_validation": bool(args.run_jason_validation),
@@ -322,6 +341,13 @@ def normalise_atomic_library_mode(mode: str) -> str:
 	"""Return the configured atomic library mode."""
 
 	return mode
+
+
+def _resolved_compiler_variant(args: argparse.Namespace) -> str | None:
+	return normalise_compiler_variant(
+		atomic_library_mode=args.atomic_library_mode,
+		compiler_variant=getattr(args, "compiler_variant", None),
+	)
 
 
 def write_manifest(batch_root: Path, manifest: dict[str, object]) -> None:

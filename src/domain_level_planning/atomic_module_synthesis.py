@@ -11,6 +11,7 @@ from __future__ import annotations
 import heapq
 import re
 from dataclasses import dataclass, replace
+from enum import Enum
 from pathlib import Path
 from typing import Callable
 from typing import Mapping, Sequence
@@ -39,6 +40,21 @@ SCHEMA_COMPOSITION_GRAMMAR = (
 	"optional acyclic causal resource-mode discharge after any producer sequence",
 )
 SCHEMA_COMPOSITION_ACTION_BOUND = None
+
+
+class AtomicCandidateScope(str, Enum):
+	"""Schema-derived candidate families admitted to one atomic compilation."""
+
+	ACTION_ONLY = "action_only"
+	FULL = "full"
+
+
+class AtomicSelectionStrategy(str, Enum):
+	"""Set-level selection objective applied after candidate certification."""
+
+	RETAIN_ALL = "retain_all"
+	MAXIMAL_CERTIFIED = "maximal_certified"
+	MINIMIZE = "minimize"
 
 
 @dataclass(frozen=True)
@@ -195,8 +211,21 @@ def synthesize_atomic_minimal_literal_module_library(
 	source_name: str,
 	policy_file: str | Path | None = None,
 	validated_evidence_candidates: Sequence[AgentSpeakPlan] = (),
+	candidate_scope: AtomicCandidateScope | str = AtomicCandidateScope.FULL,
+	selection_strategy: AtomicSelectionStrategy | str = AtomicSelectionStrategy.MINIMIZE,
 ) -> PlanLibrary:
 	"""Build compact recursive atomic modules for seed PDDL predicates."""
+
+	resolved_candidate_scope = _coerce_candidate_scope(candidate_scope)
+	resolved_selection_strategy = _coerce_selection_strategy(selection_strategy)
+	if (
+		resolved_selection_strategy == AtomicSelectionStrategy.RETAIN_ALL
+		and resolved_candidate_scope != AtomicCandidateScope.ACTION_ONLY
+	):
+		raise ValueError(
+			"atomic_retain_all_requires_action_only_scope: set-level recursive "
+			"compatibility must be solved before decomposed candidates are retained.",
+		)
 
 	pddl_support = assert_compilable_pddl_files(domain_file=domain_file)
 	domain = PDDLParser.parse_domain(domain_file)
@@ -229,15 +258,29 @@ def synthesize_atomic_minimal_literal_module_library(
 		source_name=source_name,
 		policy_file=policy_file,
 	)
+	if resolved_candidate_scope == AtomicCandidateScope.ACTION_ONLY:
+		schema_candidates = tuple(
+			plan
+			for plan in schema_candidates
+			if all(step.kind != "subgoal" for step in tuple(plan.body or ()))
+		)
 	raw_plans = tuple(
 		_deduplicate_plans((*schema_candidates, *evidence_candidates)),
 	)
-	selection = _select_branches_with_clingo(
-		raw_plans,
-		schema_candidates=schema_candidates,
-		evidence_obligations=evidence_candidates,
-		actions=parsed_actions,
-	)
+	if resolved_selection_strategy == AtomicSelectionStrategy.RETAIN_ALL:
+		selection = _retain_all_action_only_branches(
+			raw_plans,
+			schema_candidates=schema_candidates,
+			evidence_obligations=evidence_candidates,
+		)
+	else:
+		selection = _select_branches_with_clingo(
+			raw_plans,
+			schema_candidates=schema_candidates,
+			evidence_obligations=evidence_candidates,
+			actions=parsed_actions,
+			selection_strategy=resolved_selection_strategy,
+		)
 	plans = _ensure_unique_plan_names(selection.plans)
 	subgoal_step_count = sum(
 		1
@@ -267,6 +310,8 @@ def synthesize_atomic_minimal_literal_module_library(
 		metadata={
 			"pddl_support": pddl_support.to_dict(),
 			"generation_mode": "atomic_minimal_literal_module_library",
+			"atomic_candidate_scope": resolved_candidate_scope.value,
+			"atomic_selection_strategy": resolved_selection_strategy.value,
 			"atomic_template_backend": source_backend,
 			"source_name": source_name,
 			"policy_file": str(policy_file) if policy_file is not None else None,
@@ -297,6 +342,28 @@ def synthesize_atomic_minimal_literal_module_library(
 			"atomic_module_synthesis": report.to_dict(),
 		},
 	)
+
+
+def _coerce_candidate_scope(
+	value: AtomicCandidateScope | str,
+) -> AtomicCandidateScope:
+	try:
+		return value if isinstance(value, AtomicCandidateScope) else AtomicCandidateScope(value)
+	except ValueError as error:
+		raise ValueError(f"atomic_candidate_scope_unknown: {value!r}") from error
+
+
+def _coerce_selection_strategy(
+	value: AtomicSelectionStrategy | str,
+) -> AtomicSelectionStrategy:
+	try:
+		return (
+			value
+			if isinstance(value, AtomicSelectionStrategy)
+			else AtomicSelectionStrategy(value)
+		)
+	except ValueError as error:
+		raise ValueError(f"atomic_selection_strategy_unknown: {value!r}") from error
 
 
 def _plan_template_kind_counts(plans: Sequence[AgentSpeakPlan]) -> dict[str, int]:
@@ -3499,14 +3566,82 @@ def _recursive_progress_certificate_from_plan(
 	return None
 
 
+def _retain_all_action_only_branches(
+	plans: Sequence[AgentSpeakPlan],
+	*,
+	schema_candidates: Sequence[AgentSpeakPlan],
+	evidence_obligations: Sequence[AgentSpeakPlan],
+) -> _SelectedModulePlans:
+	"""Retain every individually certified action-only branch without optimization."""
+
+	raw_plans = tuple(plans)
+	if not raw_plans:
+		raise ValueError("No candidate branches were generated for action-only closure.")
+	if any(
+		step.kind == "subgoal"
+		for plan in raw_plans
+		for step in tuple(plan.body or ())
+	):
+		raise ValueError(
+			"atomic_action_only_retain_all_received_subgoal: decomposed candidates "
+			"require set-level compatibility selection.",
+		)
+	branch_ids = tuple(f"b{index}" for index, _plan in enumerate(raw_plans))
+	selected_plans = tuple(
+		sorted(raw_plans, key=lambda plan: _runtime_plan_priority(plan))
+	)
+	return _SelectedModulePlans(
+		plans=selected_plans,
+		report=_ClingoBranchSelectorReport(
+			backend="certificate_validated_retain_all",
+			raw_candidate_count=len(raw_plans),
+			selected_candidate_count=len(raw_plans),
+			obligation_count=len(tuple(schema_candidates))
+			+ len(tuple(evidence_obligations)),
+			optimization_cost=(),
+			selected_branch_ids=branch_ids,
+			objective=("retain every individually certified action-only branch",),
+			selection_scope=(
+				"joint_schema_and_validated_evidence_candidates"
+				if evidence_obligations
+				else "schema_candidates"
+			),
+			candidate_source_counts={
+				"schema": len(tuple(schema_candidates)),
+				"validated_evidence": len(tuple(evidence_obligations)),
+				"joint_unique": len(raw_plans),
+			},
+			evidence_obligation_count=len(tuple(evidence_obligations)),
+			coverage_basis=(
+				"all retained branches passed schema-local certification",
+				"action-only scope contains no internal-module closure obligation",
+			),
+			ranking_incompatibility_count=0,
+			recursive_capability_obligation_count=0,
+			selected_recursive_capability_count=0,
+			preparation_dependency_edge_count=0,
+			preparation_dependency_max_rank=0,
+		),
+	)
+
+
 def _select_branches_with_clingo(
 	plans: Sequence[AgentSpeakPlan],
 	*,
 	schema_candidates: Sequence[AgentSpeakPlan] = (),
 	evidence_obligations: Sequence[AgentSpeakPlan] = (),
 	actions: Sequence[_ParsedAction] = (),
+	selection_strategy: AtomicSelectionStrategy = AtomicSelectionStrategy.MINIMIZE,
 ) -> _SelectedModulePlans:
-	"""Select a minimum branch set that covers all generated branch evidence."""
+	"""Select one jointly certified branch set under the requested ASP objective."""
+
+	if selection_strategy not in {
+		AtomicSelectionStrategy.MINIMIZE,
+		AtomicSelectionStrategy.MAXIMAL_CERTIFIED,
+	}:
+		raise ValueError(
+			"clingo_selection_strategy_invalid: expected minimize or maximal_certified.",
+		)
 
 	raw_plans = tuple(plans)
 	if not raw_plans:
@@ -3542,6 +3677,7 @@ def _select_branches_with_clingo(
 			raw_plans,
 			actions=actions,
 		),
+		selection_strategy=selection_strategy,
 	)
 	control = clingo.Control(["--warn=none"])
 	control.add("base", [], program)
@@ -3597,18 +3733,30 @@ def _select_branches_with_clingo(
 	return _SelectedModulePlans(
 		plans=selected_plans,
 		report=_ClingoBranchSelectorReport(
-			backend="clingo_asp_minimize",
+			backend=(
+				"clingo_asp_maximal_certified"
+				if selection_strategy == AtomicSelectionStrategy.MAXIMAL_CERTIFIED
+				else "clingo_asp_minimize"
+			),
 			raw_candidate_count=len(raw_plans),
 			selected_candidate_count=len(selected_indexes),
 			obligation_count=len(obligation_groups),
 			optimization_cost=optimization_cost,
 			selected_branch_ids=selected_branch_ids,
 			objective=(
-				"maximize well-founded relational recursive capabilities",
-				"maximize compatible well-founded recursive capabilities",
-				"minimize selected branch count",
-				"then minimize selected context literal count",
-				"then minimize selected body step count",
+				(
+					"maximize well-founded relational recursive capabilities",
+					"maximize compatible well-founded recursive capabilities",
+					"maximize selected branch count subject to all hard certificates",
+				)
+				if selection_strategy == AtomicSelectionStrategy.MAXIMAL_CERTIFIED
+				else (
+					"maximize well-founded relational recursive capabilities",
+					"maximize compatible well-founded recursive capabilities",
+					"minimize selected branch count",
+					"then minimize selected context literal count",
+					"then minimize selected body step count",
+				)
 			),
 			selection_scope=(
 				"joint_schema_and_validated_evidence_candidates"
@@ -3894,6 +4042,7 @@ def _clingo_selector_program(
 	coverage_pairs: Sequence[tuple[int, int]],
 	recursive_capability_groups: Sequence[Sequence[int]],
 	ranking_incompatibility_pairs: Sequence[tuple[int, int]],
+	selection_strategy: AtomicSelectionStrategy,
 ) -> str:
 	lines: list[str] = [
 		"{ selected(Branch) } :- branch(Branch).",
@@ -3922,11 +4071,20 @@ def _clingo_selector_program(
 		":- obligation(Obligation), not covered(Obligation).",
 		"#maximize { 1@5,Capability : relational_covered(Capability) }.",
 		"#maximize { 1@4,Capability : recursive_covered(Capability) }.",
-		"#minimize { 1@3,Branch : selected(Branch) }.",
-		"#minimize { Cost@2,Branch : selected(Branch), context_cost(Branch, Cost) }.",
-		"#minimize { Cost@1,Branch : selected(Branch), body_cost(Branch, Cost) }.",
-		"#show selected/1.",
 	]
+	if selection_strategy == AtomicSelectionStrategy.MAXIMAL_CERTIFIED:
+		lines.append("#maximize { 1@3,Branch : selected(Branch) }.")
+	else:
+		lines.extend(
+			(
+				"#minimize { 1@3,Branch : selected(Branch) }.",
+				"#minimize { Cost@2,Branch : selected(Branch), "
+				"context_cost(Branch, Cost) }.",
+				"#minimize { Cost@1,Branch : selected(Branch), "
+				"body_cost(Branch, Cost) }.",
+			),
+		)
+	lines.append("#show selected/1.")
 	for index, plan in enumerate(plans):
 		branch_id = branch_ids[index]
 		lines.extend(

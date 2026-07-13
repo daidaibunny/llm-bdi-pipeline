@@ -25,49 +25,54 @@ ENHSP are reported separately as external task-level references; they cannot
 establish which part of our compiler is responsible for an improvement.
 
 \paragraph{Atomic compiler baselines and ablations.}
-The strongest atomic baseline, C0, is the \emph{validated evidence adapter}:
-it symbolically validates every provider macro against the PDDL action schemas
+The strongest atomic baseline, \emph{Evidence Adapter}, symbolically validates
+every provider macro against the PDDL action schemas
 and renders the surviving lifted rules as AgentSpeak, but performs no
 producible-fluent closure, internal-module synthesis, or branch optimization.
 It answers why validated generalized-planning evidence cannot simply be
-adapted to AgentSpeak. C1 adds action-only schema closure. C2 additionally
-generates all certificate-valid recursive preparation and resource-discharge
-candidates but retains every certified branch. C3 is the full compiler and
-runs the joint Clingo optimization over the same C2 candidate universe.
-Consequently C0--C3 use the same evidence artifact, and C2 versus C3 changes
-selection only. Certificate-family ablations remove progress-, resource-, or
+adapted to AgentSpeak. \emph{Action Closure} adds action-only schema closure.
+\emph{Maximal Certified} additionally generates recursive preparation and
+resource-discharge candidates, then retains a largest jointly compatible
+program under the hard certificate constraints. This is not the unchecked
+union of individually valid branches: recursive rankings and dependency
+closure can make branches mutually incompatible. \emph{Full Compiler} applies
+the compact Clingo objective to the same candidate universe and hard
+constraints. Consequently all four methods use the same evidence artifact,
+and Maximal Certified versus Full Compiler changes only the optimization
+objective. Certificate-family ablations remove progress-, resource-, or
 staged-preparation candidates and fail closed; they never emit an unchecked
 branch.
 
 \paragraph{Temporal compiler baselines and ablations.}
-T0 is a \emph{DFA-aware unprotected controller}: it uses the same real
+\emph{Unprotected DFA} uses the same real
 MONA-derived DFA and primitive-step runtime monitor as the full method, but
 serializes each conjunction in a deterministic canonical order without threat
-ordering or preservation-safe branch portfolios. T1 adds the complete
-effect-based ordering and portfolio certificates while retaining a flat
-sibling controller. T2 replaces only that control structure with the balanced
-binary repair tree. T3 observes the DFA only when an atomic module returns,
-rather than after every primitive action, and is evaluated on formulas with
-intermediate-state obligations. Signed-negative and bounded-numeric capability
-ablations retain the DFA and monitor but remove their respective certified
-establishment strategies. The removed historical sequence-only wrapper is not
-a production path; if reported, it is an evaluation-only weak reference.
+ordering or preservation-safe branch portfolios. \emph{Certified Flat} adds
+the complete effect-based ordering and portfolio certificates while retaining
+a flat sibling controller. \emph{Certified Balanced} replaces only that
+control structure with the balanced binary repair tree. \emph{Completion
+Monitor} observes the DFA only when an atomic module returns, rather than after
+every primitive action, and is evaluated on formulas with intermediate-state
+obligations. Signed-negative and bounded-numeric capability ablations retain
+the DFA and monitor but remove their respective certified establishment
+strategies. The removed historical sequence-only wrapper is not a production
+path; if reported, it is an evaluation-only weak reference.
 
 \begin{table*}[t]
 \centering
 \small
-\begin{tabular}{llllrrrr}
+\begin{tabular}{lllrrrr}
 \toprule
-Family & ID & Variant & Controlled difference & Valid & Coverage & Size & Time \\
+Stage & Method & Difference & Valid & Coverage & Size & Time \\
 \midrule
-Atomic & C0 & Validated evidence adapter & Evidence macros only & -- & -- & -- & -- \\
-Atomic & C1 & Action-only closure & C0 + PDDL producer closure & -- & -- & -- & -- \\
-Atomic & C2 & All certified candidates & C1 + decomposed candidates & -- & -- & -- & -- \\
-Atomic & C3 & Full compiler & C2 + joint Clingo selection & -- & -- & -- & -- \\
-Temporal & T0 & DFA-aware unprotected & Canonical unprotected order & -- & -- & -- & -- \\
-Temporal & T1 & Certified flat controller & Effect-safe order and portfolios & -- & -- & -- & -- \\
-Temporal & T2 & Full balanced controller & T1 + balanced repair tree & -- & -- & -- & -- \\
-Temporal & T3 & Completion-boundary monitor & T2 without primitive-step observation & -- & -- & -- & -- \\
+Atomic & Evidence Adapter & Evidence macros only & -- & -- & -- & -- \\
+Atomic & Action Closure & Add schema producers & -- & -- & -- & -- \\
+Atomic & Maximal Certified & Maximize compatible branches & -- & -- & -- & -- \\
+Atomic & Full Compiler & Minimize certified program & -- & -- & -- & -- \\
+Temporal & Unprotected DFA & Canonical unprotected order & -- & -- & -- & -- \\
+Temporal & Certified Flat & Threat-safe flat control & -- & -- & -- & -- \\
+Temporal & Certified Balanced & Add balanced repair tree & -- & -- & -- & -- \\
+Temporal & Completion Monitor & Observe module completions & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \caption{Registered primary baselines and ablations. Empty cells are populated
@@ -101,7 +106,7 @@ evaluation properties and never route compilation.
 
 Atomic experiments use five fixed independent MOOSE seeds and one internal
 MOOSE worker. Each seed produces one isolated evidence model; evidence is never
-unioned and a best seed is never selected. Every C0--C3 comparison is paired by
+unioned and a best seed is never selected. Every atomic comparison is paired by
 the SHA-256 hash of that exact normalized evidence program. Temporal variants
 are paired by atomic-library hash, lifted-LTLf JSON hash, binding, and DFA hash.
 Online methods receive 30 minutes and 8 GB per problem. Evidence synthesis,

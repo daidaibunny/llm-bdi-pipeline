@@ -289,25 +289,26 @@ no single global planner baseline. The final evaluation answers five questions:
 The registered atomic comparison is cumulative and paired on one exact
 normalized evidence hash:
 
-1. **C0 Validated Evidence Adapter:** schema-check and render provider macros;
+1. **Evidence Adapter:** schema-check and render provider macros;
    do not perform PDDL closure, internal-module synthesis, or optimization.
-2. **C1 Action-Only Closure:** add PDDL producer closure without decomposed
+2. **Action Closure:** add PDDL producer closure without decomposed
    subgoal candidates.
-3. **C2 All Certified Candidates:** add progress-, preparation-, and
-   resource-certified decomposed candidates and retain all certified branches.
-4. **C3 Full Compiler:** run the joint Clingo optimization over exactly the C2
-   candidate universe.
+3. **Maximal Certified:** add progress-, preparation-, and resource-certified
+   decomposed candidates, then maximize the jointly compatible branch set under
+   all hard certificates.
+4. **Full Compiler:** minimize branch, context, and body cost over exactly the
+   same candidate universe and hard constraints as Maximal Certified.
 
 The registered temporal comparison holds the DFA, atomic-library hash, query
 binding, and Jason runtime fixed:
 
-1. **T0 DFA-Aware Unprotected:** canonical within-edge serialization, real DFA,
+1. **Unprotected DFA:** canonical within-edge serialization, real DFA,
    and primitive-step monitor, but no threat ordering or preservation portfolio.
-2. **T1 Certified Flat:** add complete-effect threat ordering and preserving
+2. **Certified Flat:** add complete-effect threat ordering and preserving
    portfolios, retaining flat sibling control.
-3. **T2 Full Balanced:** replace only flat control with the balanced binary
+3. **Certified Balanced:** replace only flat control with the balanced binary
    repair tree.
-4. **T3 Completion-Boundary Monitor:** retain T2's selected behavior but observe
+4. **Completion Monitor:** retain Certified Balanced behavior but observe
    the DFA only after an atomic module returns, exposing intermediate-state
    violations on the dedicated semantic challenge set.
 
@@ -443,7 +444,8 @@ median runtime
 
 ### Atomic Baseline/Ablation Table
 
-Use rows C0--C3 and report paired results for every fixed evidence seed:
+Use short method names (Evidence Adapter, Action Closure, Maximal Certified,
+and Full Compiler) and report paired results for every fixed evidence seed:
 
 ```text
 compile/rejection status
@@ -457,7 +459,8 @@ compiler time
 
 ### Temporal Baseline/Ablation Table
 
-Use rows T0--T3 on the same query/DFA/library hashes:
+Use short method names (Unprotected DFA, Certified Flat, Certified Balanced,
+and Completion Monitor) on the same query/DFA/library hashes:
 
 ```text
 controller compiled/rejected
@@ -545,7 +548,7 @@ The paper is not ready for submission until it additionally contains:
    standard deviation, and non-contented timing evidence; the current table
    reports only the exact hash-locked seed-0 library structure consumed by the
    clean temporal run;
-2. completed C0--C3 and T0--T3 registered runs, plus the separately labelled
+2. completed registered atomic and temporal ablation runs, plus the separately labelled
    external references, with empty manuscript cells populated only from their
    machine-readable summaries;
 3. a rejection/failure analysis tied to stated assumptions; and

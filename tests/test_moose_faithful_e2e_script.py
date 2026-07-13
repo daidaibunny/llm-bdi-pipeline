@@ -421,10 +421,51 @@ def test_validated_policy_lifting_compile_command_uses_semantic_cli_flag(
 		domain_name="blocksworld-tower",
 		library_root=tmp_path / "libraries",
 		atomic_library_mode="validated-policy-lifting",
+		compiler_variant="maximal_certified_program",
 	)
 
 	assert "--validated-policy-lifting" in command
+	assert "--compiler-variant" in command
+	assert "maximal_certified_program" in command
 	assert "--minimal-modules" not in command
+
+
+def test_timestamped_batch_threads_registered_compiler_variant(tmp_path: Path) -> None:
+	class Args:
+		num_workers = 1
+		random_seed = 0
+		num_permutations = 3
+		goal_max_size = 1
+		atomic_library_mode = "validated-policy-lifting"
+		compiler_variant = "action_only_closure"
+		max_rss_gb = 16
+		train_timeout_seconds = 1800
+		dump_timeout_seconds = 300
+		append_timeout_seconds = 300
+		jason_timeout_seconds = 90
+		moose_plan_timeout_seconds = 120
+		moose_plan_bound = 5000
+		run_jason_validation = False
+		run_moose_policy_validation = False
+		skip_temporal_append = True
+
+	batch_root = tmp_path / "registered-variant"
+	command = build_moose_batch_command(
+		args=Args(),
+		domains=("blocksworld-tower",),
+		batch_root=batch_root,
+	)
+	manifest = batch_manifest(
+		args=Args(),
+		domains=("blocksworld-tower",),
+		timestamp_id="registered-variant",
+		batch_root=batch_root,
+		command=command,
+	)
+
+	assert "--compiler-variant" in command
+	assert "action_only_closure" in command
+	assert manifest["settings"]["compiler_variant"] == "action_only_closure"
 
 
 def test_normalise_pddl_for_moose_lowercases_keywords_and_adds_typing() -> None:

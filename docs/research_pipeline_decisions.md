@@ -99,17 +99,21 @@ Compiler. Baselines and ablations therefore match one module boundary at a time.
 All atomic variants consume the same serialized `PolicyEvidenceProgram`, PDDL
 domain, train/test split, and evidence hash.
 
-| ID | Variant | Native behavior |
-| --- | --- | --- |
-| `C0` | Validated Evidence Adapter | Validate each evidence macro by symbolic PDDL execution and render the surviving lifted macro plans. Do not add schema closure, internal subgoal modules, or branch optimization. |
-| `C1` | Action-Only Closure | Add every certificate-valid action-only PDDL producer candidate required by producible-fluent closure. Do not add subgoal-decomposed candidates. |
-| `C2` | All Certified Candidates | Add certificate-valid recursive preparation, staged preparation, and finite resource-discharge candidates and retain the complete certified candidate set. |
-| `C3` | Full Compiler | Run the joint Clingo selector over exactly the C2 candidate set and its evidence/closure obligations. |
+| Method | Native behavior |
+| --- | --- |
+| Evidence Adapter | Validate each evidence macro by symbolic PDDL execution and render the surviving lifted macro plans. Do not add schema closure, internal subgoal modules, or branch optimization. |
+| Action Closure | Add every certificate-valid action-only PDDL producer candidate required by producible-fluent closure. Do not add subgoal-decomposed candidates. |
+| Maximal Certified | Generate the full certified candidate universe and use Clingo to retain a largest jointly compatible program under the same closure, ranking, and resource constraints as the full method. This is not an unchecked union of individually certified branches. |
+| Full Compiler | Minimize branch, context, and body cost over the same candidate universe and hard certificate constraints used by Maximal Certified. |
 
-C0 is deliberately a strong baseline rather than an unchecked text translator.
+Evidence Adapter is deliberately a strong baseline rather than an unchecked text translator.
 It preserves all provider macros that meet the same schema validation used by
-the full method. C2 versus C3 changes only selection, so differences in output
-size and Jason matching cost can be attributed to Clingo. A certificate-family
+the full method. Maximal Certified versus Full Compiler changes only the
+optimization objective, so differences in output size and Jason matching cost
+can be attributed to compact selection. The machine-readable variant values are
+`validated_evidence_adapter`, `action_only_closure`,
+`maximal_certified_program`, and `full`; manuscript tables use the short names
+above. A certificate-family
 ablation removes the affected candidate family and records resulting rejections
 or coverage loss; it must not bypass the certificate and emit unsafe code.
 
@@ -118,14 +122,15 @@ or coverage loss; it must not bypass the certificate and emit unsafe code.
 All temporal variants consume the same atomic-library hash, validated lifted
 LTLf JSON, binding, real MONA-derived DFA, and Jason PDDL environment.
 
-| ID | Variant | Native behavior |
-| --- | --- | --- |
-| `T0` | DFA-Aware Unprotected | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or preserving branch portfolios. |
-| `T1` | Certified Flat | Use complete effect summaries, threat-safe order, and per-occurrence preservation portfolios, but compile literals as flat sibling plans. |
-| `T2` | Full Balanced | Compile T1's identical certified literal order and branch choices into the balanced binary repair tree. |
-| `T3` | Completion-Boundary Monitor | Retain T2's controller and choices but advance the DFA only when an atomic module returns, for the dedicated intermediate-state semantic challenge set. |
+| Method | Native behavior |
+| --- | --- |
+| Unprotected DFA | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or preserving branch portfolios. |
+| Certified Flat | Use complete effect summaries, threat-safe order, and per-occurrence preservation portfolios, but compile literals as flat sibling plans. |
+| Certified Balanced | Compile the identical certified literal order and branch choices into the balanced binary repair tree. |
+| Completion Monitor | Retain the Certified Balanced controller and choices but advance the DFA only when an atomic module returns, for the dedicated intermediate-state semantic challenge set. |
 
-T0 and T3 are evaluation modes, never production fallbacks. The historical
+Unprotected DFA and Completion Monitor are evaluation modes, never production
+fallbacks. The historical
 sequence-only PDDL-goal wrapper may be retained only as a weak evaluation
 reference in isolated artifacts; production temporal append always follows the
 real DFA transition path. Signed-negative and bounded-numeric capability
@@ -137,8 +142,8 @@ Raw MOOSE execution distinguishes evidence quality from compiler and
 AgentSpeak execution. LAMA for classical instances, ENHSP MRP+HJ for numeric
 instances, and a direct LTLf compilation with a fixed classical planner are
 external task-level references. Their outputs and cost structures differ from a
-reusable AgentSpeak library, so they are reported separately from C0--C3 and
-T0--T3. Plan4Past supplies the experimental design precedent of fixing the
+reusable AgentSpeak library, so they are reported separately from compiler and
+controller ablations. Plan4Past supplies the experimental design precedent of fixing the
 downstream planner while comparing temporal compilations; its pure-past input
 is not treated as directly interchangeable with our future LTLf input without a
 separately proved language-equivalent translation.
