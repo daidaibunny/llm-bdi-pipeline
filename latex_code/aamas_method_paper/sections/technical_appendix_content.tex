@@ -707,6 +707,22 @@ uv run python \
 \end{verbatim}
 \endgroup
 
+After the registered paired matrix completes, the empirical vector figure is
+regenerated directly from that single matrix rather than from manually copied
+table values:
+
+\begingroup
+\scriptsize
+\begin{verbatim}
+PAIRED=artifacts/paired_compiler_experiments/\
+<RUN_ID>/paired_results.json
+uv run python scripts/generate_aaai_figures.py \
+  --paired-results "$PAIRED" \
+  --output-file latex_code/aamas_method_paper/\
+figures/fig2_evaluation.pdf
+\end{verbatim}
+\endgroup
+
 The public release adds an Apache-2.0 code license, CC BY 4.0 data license,
 third-party notices, and a camera-ready repository link. During double-blind
 review, the same files are supplied as an anonymized code-and-data appendix and
