@@ -109,7 +109,7 @@ def test_render_result_macros_uses_machine_counts() -> None:
 	assert "\\newcommand{\\ConformanceZeroActionSuccessCount}{2}" in macros
 
 
-def test_render_domain_table_uses_readable_grouped_columns() -> None:
+def test_render_domain_table_uses_compact_two_panel_columns() -> None:
 	result = {
 		"domains": [
 			{
@@ -134,13 +134,15 @@ def test_render_domain_table_uses_readable_grouped_columns() -> None:
 
 	assert "\\begin{table*}[t]" in table
 	assert "\\tiny" not in table
-	assert "\\footnotesize" in table
-	assert "\\multicolumn{2}{c}{Corpus}" in table
-	assert "\\multicolumn{4}{c}{Atomic library}" in table
-	assert "\\multicolumn{2}{c}{Temporal execution}" in table
-	assert "End-to-end" in table
-	assert "toy & 1 & 2 & 3 & 4 & 5 & 1.0 & 2/2 & 1.5" in table
-	assert "Jason, neutral-goal VAL, gold-DFA acceptance, and predicted-DFA" in table
+	assert "\\scriptsize" in table
+	assert "lrrrrr@{\\hspace{10pt}}lrrrrr" in table
+	assert "fixed seed-0 BDI plan libraries" in table
+	assert "hash-locked" not in table
+	assert "Tr/Te" in table
+	assert "E/S" in table
+	assert "E2E" in table
+	assert "toy & 1/2 & 3/4 & 5 & 2/2 & 1.5" in table
+	assert "Jason, neutral-goal VAL, and both DFA checks" in table
 
 
 def test_render_profile_table_names_each_pipeline_oracle() -> None:
@@ -167,6 +169,7 @@ def test_render_profile_table_names_each_pipeline_oracle() -> None:
 	assert "\\begin{table*}[t]" in table
 	assert "\\tiny" not in table
 	assert "\\footnotesize" in table
+	assert "Bound-query evaluation" in table
 	assert "Eq./total" in table
 	assert "Controller" in table
 	assert "Jason" in table

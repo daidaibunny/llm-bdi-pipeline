@@ -6,118 +6,70 @@
 We use typed STRIPS PDDL plus a bounded-integer resource fragment
 \cite{McDermott1998PDDL}. A domain is
 $D=\langle\mathcal{P},\mathcal{F},\mathcal{A},\mathcal{T}\rangle$, where
-$\mathcal{P}$ contains predicate schemas, $\mathcal{F}$ integer-valued resource
-functions, $\mathcal{A}$ action schemas, and $\mathcal{T}$ a type hierarchy. A
-state combines a Boolean valuation $s_{\mathcal P}$ and an integer valuation
-$s_{\mathcal F}$. For the Boolean core, an action schema $a$ has preconditions
-$\mathit{pre}(a)$, add effects $\mathit{add}(a)$, and delete effects
-$\mathit{del}(a)$. A grounded action is applicable when its Boolean
-preconditions hold and its numeric comparisons are satisfied; its Boolean
+$\mathcal{P}$ and $\mathcal{F}$ contain predicate schemas and integer-valued
+resource functions, $\mathcal{A}$ contains action schemas, and $\mathcal{T}$ is
+a type hierarchy. A state $s=(s_{\mathcal P},s_{\mathcal F})$ combines Boolean
+and integer valuations. For an applicable grounded action $a$, the Boolean
 successor is
 \[
 \gamma_{\mathcal P}(s,a)=
 (s_{\mathcal P}\setminus\mathit{del}(a))\cup\mathit{add}(a).
 \]
-The numeric fragment admits finite integer initial values, comparisons against
-integer constants, and constant integer increase/decrease effects. Arbitrary
-arithmetic and continuous change are excluded. Thus a state may simultaneously
-record the Boolean fact \texttt{at(P,L)} and the integer value
-$\mathit{fuel}(V)=3$; both components are updated by the same grounded action.
-A generalized-planning task provides a training set and a test set of problems
-sharing $D$. MOOSE learns first-order condition-to-macro rules by solving
-singleton goal conditions and regressing their plans \cite{Chen2026Moose}. A
-readable MOOSE rule is therefore a tuple containing lifted variables, a partial
-state condition, one singleton goal condition, and a finite action sequence.
+The numeric component admits finite integer values, comparisons with constants,
+and constant integer increases or decreases; arbitrary arithmetic and
+continuous change are excluded. A generalized-planning task supplies training
+and test instances that share $D$. MOOSE solves singleton goal conditions and
+regresses the resulting plans into first-order condition-to-macro rules
+\cite{Chen2026Moose}. We treat these rules as \emph{evidence}: they demonstrate
+ways to achieve observed singleton goals, but need not constitute a closed or
+minimal BDI plan library.
 
-We call such provider output \emph{evidence}: it establishes observed ways to
-achieve singleton goals, but it is not assumed to be a complete or minimal
-AgentSpeak library. This distinction permits the compiler to retain validated
-macros while adding PDDL-derived internal modules required for closure.
+\subsection{BDI Plan Libraries and Their AgentSpeak(L) Realization}
 
-\subsection{AgentSpeak Achievement Modules}
-
-An AgentSpeak plan has a trigger, a context, and a body. We write an achievement
-plan as
+A procedural BDI plan rule has a triggering event, an applicability context,
+and a body. In the \asl{} notation used by our implementation
+\cite{Rao1996AgentSpeak}, an achievement plan is
 \[
 +!p(\bar X):C\leftarrow b_1;\ldots;b_m,
 \]
-where $C$ is a conjunction of beliefs and comparisons, and each body step is a
-PDDL action or an internal achievement call $!q(\bar Y)$. A domain library is
-\emph{lifted} when its reusable plans contain variables rather than
-training-instance object names. It is \emph{closed} when every internal
-achievement call has at least one selected module in the same library.
-
-AgentSpeak achievement goals are procedural by default, but plan patterns can
-enforce declarative completion by rechecking the intended state after a plan
-body returns \cite{Hubner2006DeclarativeGoals}. Our query controllers use this
-pattern: an achievement is not considered complete merely because its subgoal
-returned; the corresponding transition guard is tested again.
+where $C$ is a conjunction of beliefs and comparisons and each $b_i$ is a PDDL
+action or an internal achievement call $!q(\bar Y)$. A library is \emph{lifted}
+when plans contain variables rather than training objects, and \emph{closed}
+when every internal call has a selected implementation. Our certificates apply
+to this trigger--context--body model and to the PDDL semantics of primitive
+actions. We render the selected rules in \asl{} and execute them with Jason
+\cite{Bordini2007Jason}; another BDI language would require its own renderer and
+execution study. Query controllers also follow declarative goal patterns by
+rechecking their intended state after subsidiary plans return
+\cite{Hubner2006DeclarativeGoals}.
 
 \subsection{Finite-Trace Temporal Goals}
 
-An \ltlf formula is interpreted over a finite sequence of propositional states
-\cite{DeGiacomoVardi2013}. We use the real \texttt{ltlf2dfa}/MONA toolchain to
-construct a deterministic finite automaton (DFA) \cite{Fuggitti2020LTLf2DFA}.
-The implemented query fragment admits certified distance-reducing transitions
-whose progress guards contain conjunction and literal negation. A guard
+An \ltlf{} formula is interpreted over a finite state sequence
+\cite{DeGiacomoVardi2013}. We construct its deterministic finite automaton (DFA)
+with \texttt{ltlf2dfa} and MONA \cite{Fuggitti2020LTLf2DFA}. The implemented
+fragment admits certified distance-reducing transitions whose guards contain
+conjunction and literal negation. A guard
 \[
 B=P^+\land\neg P^-
 \]
-contains positive achievements $P^+$ that may call atomic modules and negative
-context obligations $P^-$ that must remain absent. Disjunction, ambiguous DFA
-progress without a certified action strategy, and arbitrary numeric arithmetic
-are outside the implemented fragment. A query-local monitor evaluates the DFA
-after the initial valuation and every successful primitive PDDL action.
+contains achievements $P^+$ and atoms $P^-$ that must remain absent. A
+query-local monitor evaluates the DFA initially and after every successful
+primitive PDDL action. Disjunction, arbitrary arithmetic, and progress without
+a certified action strategy are outside the implemented fragment.
 
 \subsection{Certified Compilation Problem}
 
-\textbf{Compilation problem.} The compiler receives a domain $D$, its training
-split $\mathcal{I}_{\mathrm{train}}$, normalized singleton-goal evidence $E$,
-and a lifted temporal query $\varphi$. It produces:
-\begin{enumerate}
-\item one maintained domain library $\mathcal{L}_D$ containing lifted atomic
-achievement modules; and
-\item query-local plans $\mathcal{Q}_{\varphi}$ that call $\mathcal{L}_D$ while
-following certified DFA progress transitions.
-\end{enumerate}
-The output must use declared PDDL fluents and actions, plus the reserved static
-type relation \texttt{obj\_tp/2} and query-local helper names. It must not encode
-training objects, synthetic domain achievements, or hidden DFA-state fluents.
-
-Table~\ref{tab:supported-fragment} fixes the implemented boundary. A positive
-atomic goal is a predicate or supported singleton numeric equality that one
-module must establish, such as \texttt{on(X,Y)}. A negative transition literal
-such as $\neg\mathit{holding}(X)$ is an absence and preservation condition; it
-is not a request to call a synthetic negative achievement.
-
-\begin{table}[t]
-\centering
-\footnotesize
-\setlength{\tabcolsep}{2.2pt}
-\caption{Implemented input fragment and fail-closed boundary. A construct is
-accepted only through the stated certified strategy.}
-\label{tab:supported-fragment}
-\begin{tabular}{
->{\raggedright\arraybackslash}p{0.29\columnwidth}
->{\raggedright\arraybackslash}p{0.34\columnwidth}
->{\raggedright\arraybackslash}p{0.25\columnwidth}}
-\toprule
-Construct & Accepted strategy & Rejection boundary \\
-\midrule
-Positive predicate & certified atomic module & no executable producer \\
-Numeric equality & certified constant-delta body & unsupported arithmetic \\
-Positive conjunction & preservation-safe order & incomplete or cyclic threats \\
-Negative literal & observe or exact deleter & no synthetic negative goal \\
-Mixed Boolean/numeric & whole-guard net effect & incomplete preservation \\
-Disjunction & none in version 1 & rejected at guard parsing \\
-Primitive-state safety & DFA runtime monitor & no macro-only checking \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The last condition is semantic rather than a domain label. For example, a
-transition requiring \texttt{at(P,L)} together with $\mathit{fuel}(V)=3$ is
-accepted only when one certified finite action body proves both facts in the
-same successor state. If its net Boolean effects or integer change are unknown,
-the compiler rejects the achievement strategy instead of assuming that the two
-conditions can be solved independently.
+\textbf{Compilation problem.} Given $D$, training instances
+$\mathcal{I}_{\mathrm{train}}$, singleton-goal evidence $E$, and a lifted query
+$\varphi$, compilation produces one domain library $\mathcal{L}_D$ of lifted
+atomic modules and query-local plans $\mathcal{Q}_{\varphi}$ that pursue
+certified DFA progress. Positive predicate goals and supported integer
+equalities require an executable achieving module. Negative literals denote
+absence and preservation, never synthetic negative achievement calls.
+Conjunctive guards require a preservation-safe order; mixed Boolean--numeric
+guards require complete net effects for a common final state. The compiler
+rejects unsupported arithmetic, disjunction, cyclic threats without a
+preserving strategy, and any obligation whose effects are incomplete. In the
+current rendering, only PDDL fluents and actions, static type facts
+\texttt{obj\_tp/2}, and query-local controller names may appear.

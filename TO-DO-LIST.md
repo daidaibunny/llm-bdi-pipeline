@@ -12,7 +12,8 @@ route whole domains by prior paper taxonomy classes. The current path is:
 PDDL domain + train split
 -> external generalized-planning evidence
 -> atomic minimal literal module synthesis
--> one maintained domain-level AgentSpeak(L) library
+-> one maintained domain-level BDI plan library
+-> AgentSpeak(L)/Jason realization used in the current implementation
 
 validated lifted LTLf JSON
 -> LTLf-to-DFA
@@ -49,7 +50,7 @@ certificate.
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
 | Temporal execution validation | Complete on pinned revision | `teg-paper-clean-e28bcea4` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. The run records commit `e28bcea4`, no tracked changes, every atomic-library input hash, 12 workers, 1,800-second Jason/VAL limits, and a 64-MiB Java stack. |
-| AAAI paper package | Figure briefs complete; baseline cells pending | The canonical outline fixes the conceptual and empirical figure contracts. `scripts/generate_aaai_result_tables.py` validates frozen full-system inputs. `scripts/generate_aaai_comparison_tables.py` fail-closes over every paired compiler variant, five Raw MOOSE seeds bound to the same model manifests, complete registered case-set digests, native instance planners, direct temporal planning, one clean source commit, pinned resource/tool protocols, and exactly 13 challenge cases. Populate figures and comparison cells only from hash-locked runs; never hand-edit numeric cells. |
+| AAAI paper package | Narrative revised; baseline results pending | The framework is formally named GP2PL (Generalized Planning to Plan Libraries), and the paper frames AgentSpeak(L) as its evaluated realization. Related Work precedes the method, contributions use prose, each experimental question has its own descriptive paragraph, and empty result placeholders have been removed. The canonical outline fixes the remaining figure and result-insertion contracts. `scripts/generate_aaai_result_tables.py` validates frozen full-system inputs, while `scripts/generate_aaai_comparison_tables.py` validates paired compiler and external-reference results before insertion. |
 | Atomic experiment harness | Native paired runner complete | Evidence Adapter, Action Closure, Maximal Certified, and Full Compiler consume byte-identical model/readable-policy evidence per seed; incomplete artifacts and matrices are rejected. Run the registered five-seed matrix before filling result cells. |
 | Temporal experiment harness | Native paired runner complete | Unprotected DFA, Certified Flat, Certified Balanced, and Completion Monitor consume the same-run seed-0 Full Compiler libraries, fixed benchmark, sample set, and DFA matrix. Run the registered matrix before filling result cells. |
 | External references | Native runners complete; full matrices pending | Raw MOOSE, LAMA, ENHSP MRP+HJ, and FOND4LTLf plus LAMA use pinned native tools, common resource guards, concise per-case logs, and independent validation. Run the registered full matrices before filling paper cells. |

@@ -10,6 +10,12 @@ parametric natural-language LTLf input and temporal evaluation is maintained in
 
 ## Canonical Terminology
 
+**GP2PL** expands to **Generalized Planning to Plan Libraries** and is the
+formal name of the complete four-module framework. The Evidence Module,
+Validated Policy-Lifting Compiler, Temporal Query Compiler, and Execution
+Validation Module retain their distinct scopes; GP2PL is not an alias for any
+single module. The paper title and prose use GP2PL for the complete method.
+
 **MOOSE evidence** is the readable first-order decision-list artifact emitted by
 `policy --dump-policy`. For example, one evidence rule may associate the
 singleton goal `at(package0,location2)` with the fixed primitive sequence
@@ -28,6 +34,15 @@ schema-closure candidates, checks binding and progress conditions, selects a
 compact candidate set, and renders the maintained atomic AgentSpeak(L) library.
 MOOSE and the compiler are upstream and downstream components rather than
 alternative planners.
+
+The scientific target is a procedural BDI plan library whose rules have a
+trigger, an applicability context, and a body of primitive actions or subsidiary
+achievement calls. AgentSpeak(L) is the implemented surface realization of that
+target, and Jason is the evaluated interpreter. The paper may therefore claim a
+certified BDI plan-library compilation problem, but it must state that execution
+has been implemented and evaluated only for the AgentSpeak(L)/Jason realization.
+It must not claim portability to another BDI language without a renderer and an
+execution study for that language.
 
 **Clingo** is the Answer Set Programming solver used for constrained branch
 selection. It does not plan in a PDDL state space and does not execute actions.

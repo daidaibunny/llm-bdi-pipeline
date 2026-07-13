@@ -40,6 +40,8 @@ evaluation are added.
 The current architecture has two connected flows across four named modules:
 the Evidence Module, Validated Policy-Lifting Compiler, Temporal Query
 Compiler, and Execution Validation Module. Do not call these Layer A/B/C.
+The complete framework is named **GP2PL** (Generalized Planning to Plan
+Libraries); GP2PL is not an alias for any one of the four modules.
 
 ```text
 PDDL domain + train split

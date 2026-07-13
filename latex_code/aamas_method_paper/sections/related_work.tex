@@ -1,8 +1,8 @@
-\section{Related Work}
+\section{Related Work and Positioning}
 \label{sec:related-work}
 
 \paragraph{Generalized planning.}
-Generalized policies use compact relational structure to solve families of
+Generalized planning seeks compact policies or programs that solve families of
 planning instances. Feature-based approaches learn abstractions, abstract
 actions, or policies from small examples
 \cite{Bonet2018Features,Frances2021LearningGeneralPolicies,
@@ -12,57 +12,52 @@ rules \cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches}. Other
 representations include lifted decision lists in PG3 \cite{Yang2022PG3} and
 terminating planning programs in BFGP++ \cite{SegoviaAguas2022BFGPpp}.
 MOOSE learns lifted condition-to-macro rules through singleton-goal regression
-\cite{Chen2026Moose}. We do not replace these generalized planners. Our problem
-is downstream: compile their singleton-goal evidence, together with PDDL schema
-closure, into executable and maintainable AgentSpeak modules.
-Accordingly, the primary empirical baseline is a validated direct adapter of
-the same normalized evidence, not an unrelated planner with a different output
-representation. Raw MOOSE and per-instance planners remain external references
-for evidence quality, coverage, and plan quality.
+\cite{Chen2026Moose}. These approaches address how reusable planning behavior is
+learned; they do not in general supply a closed BDI plan library. Our problem is
+downstream: we treat singleton-goal rules as evidence and compile them together
+with PDDL schema closure. A comparison with a direct evidence adapter therefore
+isolates the contribution of compilation, whereas raw MOOSE and per-instance
+planners serve as task-level references.
 
-\paragraph{Modular policies and BDI programs.}
-Policy-reuse languages permit one generalized policy to call another with
-parameters \cite{Bonet2024PolicyReuse}, which motivates internal atomic calls
-such as \texttt{!clear(Y)}. AgentSpeak supplies an executable BDI plan-library
-semantics \cite{Rao1996AgentSpeak}. Plan patterns for declarative AgentSpeak
-goals establish the principle that a plan should test the intended state at
-completion rather than equate procedural return with achievement
+\paragraph{Modular policies and BDI plan libraries.}
+Policy-reuse languages allow one generalized policy to invoke another with
+parameters \cite{Bonet2024PolicyReuse}, motivating internal calls such as
+\texttt{!clear(Y)}. Procedural BDI languages likewise organize behavior as
+event-triggered plans selected from a context-dependent library. \asl{} gives a
+formal language for such plans, and Jason supplies an executable extension
+\cite{Rao1996AgentSpeak,Bordini2007Jason}. Plan patterns for declarative goals
+establish that successful procedural return need not imply that the intended
+state still holds
 \cite{Hubner2006DeclarativeGoals}. Work on BDI plan failure distinguishes a
 failed procedural attempt from the continued pursuit of its declarative goal
-\cite{Sardina2007PlanFailure}. Our contribution is not a new BDI execution
-semantics; it is a compiler that generates modules and completion patterns from
-generalized-planning evidence under PDDL-derived certificates.
+\cite{Sardina2007PlanFailure}. We adopt these execution principles rather than
+introducing a new BDI semantics. The contribution lies in deriving certified
+modules and completion patterns from planning evidence and action schemas.
 
 \paragraph{Finite-trace temporal control.}
-\ltlf provides finite-trace semantics and admits automata-based reasoning
+\ltlf{} provides finite-trace semantics and admits automata-based reasoning
 \cite{DeGiacomoVardi2013}. Tools translate \ltlf specifications into
 deterministic finite automata, including the MONA-backed \texttt{ltlf2dfa}
 implementation used here \cite{Fuggitti2020LTLf2DFA}. Full temporal synthesis
-can maintain explicit automaton state; our implemented fragment is narrower.
-It compiles each certified distance-reducing edge into a source-state-dispatched
-AgentSpeak controller and embeds a query-local monitor that advances after every
-successful primitive PDDL action. It rejects transitions whose progress
-strategy cannot be established by the declared certificates. Temporally
-extended goals have also been integrated into agent
-programming languages as explicit goal semantics \cite{Hindriks2009TemporalGoals}.
-We instead preserve standard AgentSpeak execution and compile the supported
-automaton fragment into query-local intentions over a separately synthesized
-domain library.
-Plan4Past compares alternative temporal compilations while holding the
-downstream classical planner fixed \cite{Bonassi2023Plan4Past}. We adopt this
-comparison principle: our primary temporal baseline uses the same DFA, atomic
-library, monitor, and Jason runtime, and removes only effect-based preservation.
-Direct LTLf compilation plus a classical planner is reported separately because
-it solves each grounded query rather than producing a reusable BDI library.
-Our native reference uses the official FOND4LTLf compilation
+maintains an explicit automaton state and synthesizes a strategy over the
+product of the domain and automaton. Our setting is narrower: a query compiler
+composes certified progress transitions over an independently constructed BDI
+domain library. Temporally extended goals have also been integrated into agent
+programming languages as explicit goal semantics
+\cite{Hindriks2009TemporalGoals}; we instead retain standard plan-library
+execution and introduce a query-local monitor. Plan4Past compares temporal
+compilations while fixing the downstream planner \cite{Bonassi2023Plan4Past},
+which motivates our paired temporal comparisons. Direct temporal planning is a
+separate reference because it solves each grounded query instead of producing a
+reusable domain library; we use the official FOND4LTLf compilation
 \cite{DeGiacomoFuggitti2021FOND4LTLf} on the subset accepted by that tool and
-then fixes LAMA as the downstream planner.
+fix LAMA as its downstream planner.
 
 \paragraph{Position of this work.}
-Prior generalized planners target policies, sketches, or programs; AgentSpeak
-work starts from programmer-supplied plans; temporal synthesis targets an
-automaton strategy. We connect these representations through a
-certificate-carrying compilation problem. The novelty claimed here is the
-joint, fail-closed construction of lifted AgentSpeak atomic modules and
-query-local DFA guard controllers, not the underlying goal-regression, answer-set
-solving, AgentSpeak semantics, or \ltlf-to-DFA translation.
+Generalized planners target policies, sketches, or programs; BDI programming
+work usually assumes a programmer-supplied plan library; temporal synthesis
+targets an automaton strategy. We connect these representations through a
+certificate-carrying compilation problem. The claimed novelty is the joint
+construction of lifted BDI atomic modules and query-local DFA controllers under
+explicit proof obligations. Goal regression, answer-set solving, AgentSpeak
+semantics, and \ltlf-to-DFA translation remain prior components.

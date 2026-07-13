@@ -12,13 +12,20 @@ the manuscript.
 
 The preferred title is:
 
-> **From Generalized Planning to BDI Execution: Certified AgentSpeak Plan
-> Libraries for Temporally Extended Goals**
+> **GP2PL: From Generalized Planning Evidence to Certified BDI Plan Libraries
+> for Temporally Extended Goals**
 
-The title names the source representation, the deployment target, and the
-temporal scope without claiming that the system synthesizes an entire
-Belief--Desire--Intention (BDI) agent. The output is an AgentSpeak(L) plan
-library that a BDI interpreter such as Jason can execute.
+**GP2PL** expands to **Generalized Planning to Plan Libraries** and names the
+complete framework: evidence normalization, validated policy lifting, temporal
+query compilation, and execution validation. It does not rename any one of
+those modules in isolation.
+
+The title names the evidence source, the deployment target, the compilation
+contribution, and the temporal scope without claiming that the system
+synthesizes an entire Belief--Desire--Intention (BDI) agent. The scientific
+target is a trigger--context--body BDI plan library. AgentSpeak(L) is the
+concrete target-language realization used in this implementation, and Jason is
+the evaluated interpreter; neither name defines the upper-level contribution.
 
 The paper has one thesis:
 
@@ -31,8 +38,8 @@ A certificate is a compile-time, machine-checkable obligation. For example, a
 binding certificate proves that every variable in `stack(X,Y)` is supplied by
 the trigger or positive context; a completion-effect certificate proves which
 PDDL literals may be added or deleted when `!on(X,Y)` successfully returns.
-The compiler is fail-closed: it emits code only when its obligations are
-proved, and otherwise returns a structured rejection.
+The compiler accepts a candidate only when its obligations are proved and
+otherwise returns a structured rejection.
 
 ## AAAI Narrative Alignment
 
@@ -53,7 +60,8 @@ than treating the manuscript as a software-module report.
   figure, states soundness/completeness conditions separately, and organizes
   experiments by explicit questions. Our paper must separate domain-library
   synthesis from query compilation, place guarantees in their own section, and
-  make every result answer a declared research question.
+  make every result answer one clearly stated question. Use descriptive
+  paragraph headings rather than combined labels such as `RQ3--RQ5`.
 
 The BDI and temporal bridge must also be positioned against primary work on
 [declarative AgentSpeak goal patterns](https://doi.org/10.1145/1160633.1160869),
@@ -104,6 +112,16 @@ not present process scheduling, output-directory layout, command-line flags, or
 internal class names as contributions. Those details belong in the
 reproducibility artifact and `docs/research_pipeline_decisions.md`.
 
+Every paragraph must carry one identifiable argumentative role: motivate a
+problem, define a concept, state a method, justify a design choice, present
+evidence, or delimit a claim. Prefer concrete subjects and causal transitions
+over inventories of implementation components. Terms such as `pinned`,
+`hash-locked`, `pipeline`, and internal run identifiers belong in the
+reproducibility material unless they are indispensable to distinguish two
+experimental estimands. The Abstract and Introduction follow the narrative
+cadence of accepted AAAI planning papers: problem, limitation of existing
+representations, central idea, guarantee, and empirical result.
+
 Use one symbol-invariant example whenever a certificate would otherwise be
 opaque. For resource restoration, an illustrative acquisition deletes
 `free(R)` and adds `held(R,O)`; the method must state that names are placeholders
@@ -118,12 +136,12 @@ The abstract follows a five-part structure:
 
 1. **Problem:** generalized planners return reusable policies, while BDI agents
    require executable and maintainable plan libraries.
-2. **Gap:** direct policy-to-AgentSpeak translation does not establish binding,
+2. **Gap:** direct policy-to-BDI-plan translation does not establish binding,
    closure, recursive progress, resource restoration, or safe temporal
    composition.
 3. **Method:** jointly certify and select MOOSE evidence macros and PDDL-derived
-   atomic modules, then compile supported LTLf DFA transitions into query-local
-   controllers.
+   atomic modules, realize the selected BDI library in AgentSpeak(L), and compile
+   supported LTLf DFA transitions into query-local controllers.
 4. **Guarantee boundary:** state candidate-space optimality and supported-
    fragment soundness, together with fail-closed rejection.
 5. **Results:** after the clean final runs, report one atomic-compilation number,
@@ -144,7 +162,9 @@ software components.
    state trace, cannot generally be replaced by an arbitrary sequence of
    achievement calls.
 4. Introduce the Blocks running example.
-5. Present the two-stage architecture and three implemented contributions.
+5. Present the two-stage architecture and three implemented contributions in a
+   continuous paragraph. An itemized contribution list is not forbidden by the
+   AAAI template, but prose better matches this paper's short causal argument.
 6. End with the supported-fragment boundary rather than universal-planning or
    full-LTLf claims.
 
@@ -155,7 +175,10 @@ Define only concepts used by the algorithms:
 - a typed STRIPS/PDDL Boolean core, its bounded-integer resource extension, and
   their state-transition semantics;
 - a generalized-planning task and readable MOOSE evidence;
-- an AgentSpeak achievement plan, a lifted module, and library closure;
+- a trigger--context--body BDI plan rule, a lifted module, and library closure;
+- AgentSpeak(L) as the concrete rendering used by the implementation and Jason
+  as its evaluated interpreter, without claiming portability to unevaluated BDI
+  languages;
 - an LTLf formula and its deterministic finite automaton (DFA);
 - the compilation input `(D, I_train, E, phi)` and output `(L_D, Q_phi)`.
 
@@ -165,12 +188,32 @@ for example `+!g_query` and `+!g_query_trans_1`, appended for one temporal
 query. State the allowed output vocabulary and supported temporal fragment in
 this section.
 
-### 3. Certified AgentSpeak Plan-Library Synthesis
+### 3. Related Work and Positioning
 
-This section covers only the post-evidence, pre-AgentSpeak domain compiler.
+Place Related Work after the problem formulation and before the method. AAAI
+does not prescribe one location, and MOOSE places it near the end, but this
+paper connects three communities whose boundaries should be clear before the
+compiler is introduced. Organize the section by representation gap:
 
-1. Normalize provider output into the provider-neutral
-   `PolicyEvidenceProgram` representation.
+1. generalized planning, MOOSE, feature policies, and sketches;
+2. policy reuse and solver-backed compact rule selection;
+3. procedural BDI plan libraries, AgentSpeak declarative goal patterns, and
+   plan failure; and
+4. temporally extended BDI goals and LTLf-to-DFA synthesis.
+
+End with the exact novelty boundary: MOOSE goal regression, Clingo solving,
+AgentSpeak semantics, and LTLf-to-DFA translation are prior work. The
+contribution is their connection through a certificate-carrying compiler that
+constructs executable domain modules and query-local controllers.
+
+### 4. GP2PL Domain-Library Compilation
+
+This section covers only the post-evidence domain compiler. Its candidate and
+certificate representation is defined at the trigger--context--body BDI
+plan-rule level; the implemented final rendering targets AgentSpeak(L).
+
+1. Normalize provider output into a provider-neutral singleton-goal evidence
+   program. Do not expose an internal class name in the main narrative.
 2. Compute producible-fluent closure from PDDL add effects and positive
    preconditions. Static predicates remain contexts.
 3. Generate the finite schema-derived candidate language: direct producers;
@@ -189,15 +232,16 @@ This section covers only the post-evidence, pre-AgentSpeak domain compiler.
 5. Explain the joint Clingo optimization over evidence and schema candidates.
    The precise claim is global optimality only inside the generated certified
    candidate space.
-6. Render the selected modules into the one maintained AgentSpeak domain
-   library.
+6. Render the selected modules into the one maintained domain library. State
+   explicitly that AgentSpeak(L) is the implemented realization, not the
+   definition of the compilation contribution.
 
 Detailed certificate definitions may remain in the main paper when required to
 understand a contribution. Long proof steps and secondary implementation cases
 belong in supplementary material so that final results fit the seven-page AAAI
 technical-content limit.
 
-### 4. DFA-Guided Composition of Temporally Extended Goals
+### 5. DFA-Guided Composition of Temporally Extended Goals
 
 This section covers only query-specific control over the selected domain
 library.
@@ -246,7 +290,7 @@ library.
    edges; the top-level controller always dispatches from the actual monitor
    state.
 
-### 5. Formal Guarantees
+### 6. Formal Guarantees
 
 Keep guarantees separate from algorithm exposition, following the MOOSE
 presentation.
@@ -261,12 +305,12 @@ The main paper should contain:
    evidence and closure obligation and returns the lexicographic optimum inside
    the generated candidate space.
 3. **Supported-transition composition soundness:** if signed obligations are
-   initially satisfied or established by their certified helpers, selected
+   initially satisfied or established by their certified repair plans, selected
    modules terminate, and their certified completion effects preserve earlier
    positive and negative obligations, primitive-step monitor advancement leaves
    the source state only through a real DFA edge whose complete cube holds.
 4. **Balanced-tree structure:** for `n` signed literals and `e` certified repair
-   helpers, the generated query-local tree has `2n+e+2` plans, maximum trigger
+   plans, the generated query-local tree has `2n+e+2` plans, maximum trigger
    fan-out two, logarithmic nesting depth, linear work per pass, and the same
    certified literal order.
 5. **Runtime-monitor trace fidelity:** monitor-state beliefs are the result of
@@ -280,30 +324,31 @@ Every theorem must state its assumptions next to the claim. Do not elevate
 candidate-generation completeness, arbitrary AgentSpeak optimality, arbitrary
 DFA strategy synthesis, or primitive-state safety to a theorem.
 
-### 6. Experimental Evaluation
+### 7. Experimental Evaluation
 
 The evaluation must match the paper's actual contribution: MOOSE is one
 instantiated Evidence Module provider, while the proposed method is the
 post-evidence library compiler and temporal query compiler. There is therefore
-no single global planner baseline. The final evaluation answers five questions:
+no single global planner baseline. Present the five questions as separate
+descriptive paragraphs rather than numbered or combined RQ labels:
 
-- **RQ1 Evidence-to-library efficacy:** relative to validated direct adaptation
-  of the same normalized evidence, how much do schema-certified lifting and
-  internal closure improve module coverage and held-out execution?
-- **RQ2 Compiler contribution:** what are the separate effects of action-only
-  schema closure, decomposed recursive/resource/preparation candidate
-  generation, and joint Clingo selection on coverage, size, and runtime?
-- **RQ3 Temporal composition correctness:** relative to a controller using the
-  same real DFA, atomic library, monitor, and Jason runtime but no
-  effect-preservation reasoning, how much do threat ordering and preserving
-  branch portfolios improve VAL- and DFA-valid execution?
-- **RQ4 Structural efficiency:** what do joint selection and the balanced repair
-  tree change in branch count, controller plans, maximum trigger fan-out,
-  compilation/load time, and execution time without changing semantics?
-- **RQ5 End-to-end utility:** across domains, formula profiles, and evidence
-  seeds, how often does the full system produce Jason+VAL+DFA accepted traces,
-  and what reusable-library amortization is observed relative to raw MOOSE and
-  per-instance planning references?
+- **Evidence-to-library compilation.** Relative to validated direct adaptation
+  of the same normalized evidence, measure how schema-certified lifting and
+  internal closure change module coverage and held-out execution.
+- **Contributions of candidate generation and selection.** Separate the effects
+  of action-only schema closure, recursive/resource/preparation candidates, and
+  joint Clingo selection on coverage, size, and runtime.
+- **Preservation of temporal guards.** Against a controller with the same real
+  DFA, atomic library, monitor, and Jason runtime but no effect-preservation
+  reasoning, measure the effect of threat ordering and preserving portfolios on
+  VAL- and DFA-valid execution.
+- **Controller structure.** Compare flat and balanced repair controllers while
+  preserving literal order and branch portfolios; report controller size,
+  trigger fan-out, loading cost, and execution time without assigning semantic
+  credit to the tree.
+- **End-to-end behavior.** Across domains, formula profiles, and evidence seeds,
+  report valid traces and reusable-library amortization relative to raw MOOSE
+  and per-instance planning references.
 
 The registered atomic comparison is cumulative and paired on one exact
 normalized evidence hash:
@@ -438,21 +483,6 @@ The pinned insertion is run `temporal-conformance-paper-67b82843` from clean
 commit `67b82843`: 14/14 direct-semantics-versus-MONA cases and 2/2 zero-action
 Jason/PDDL-replay/DFA integration cases pass. Keep its 16 cases separate from
 the 1,228 benchmark denominator.
-
-### 7. Related Work and Positioning
-
-Place Related Work after the method and evaluation protocol so that the output
-artifact is already clear. Organize it by representation gap:
-
-1. generalized planning, MOOSE, feature policies, and sketches;
-2. policy reuse and solver-backed compact rule selection;
-3. AgentSpeak plan libraries, declarative goal patterns, and plan failure;
-4. temporally extended BDI goals and LTLf-to-DFA synthesis.
-
-End with the exact novelty boundary: MOOSE goal regression, Clingo solving,
-AgentSpeak semantics, and LTLf-to-DFA translation are prior work. The
-contribution is their fail-closed connection through a certificate-carrying
-compiler that emits executable domain modules and query-local controllers.
 
 ### 8. Limitations and Conclusion
 
@@ -653,15 +683,15 @@ validated LTLf JSON. Draft caption:
 
 > **Figure 1: End-to-end certified compilation and validation.** The reusable
 > domain stage compiles singleton-goal evidence and PDDL schemas once into one
-> maintained AgentSpeak library. Each temporal query contributes only
-> query-local controllers derived from real DFA transitions. Jason actions are
-> validated independently by VAL and both finite-trace automata; uncertified
-> compilation choices are rejected.
+> maintained BDI plan library, realized here in AgentSpeak(L). Each temporal
+> query contributes only query-local controllers derived from real DFA
+> transitions. Jason actions are validated independently by VAL and both
+> finite-trace automata; uncertified compilation choices are rejected.
 
 ### Figure 2: From Policy Evidence to a Lifted Atomic Module
 
 Use a full-width `figure*` immediately after the first paragraph of
-Section 3, before the candidate-language details. Use four equal-width panels.
+Section 4, before the candidate-language details. Use four equal-width panels.
 This is a method example, not an experimental result. It uses the repository's
 Blocks PDDL vocabulary. PDDL names retain hyphens; rendered AgentSpeak names
 use underscores.
@@ -759,14 +789,15 @@ structure. Draft caption:
 
 > **Figure 2: Certified lifting of singleton-goal policy evidence.** Provider
 > macros and PDDL-derived closure candidates enter the same certified candidate
-> space. The selected AgentSpeak module is lifted, internally closed, and may
-> introduce producible helper goals absent from the evidence; compactness is
-> optimal only within the generated candidate language.
+> space. The selected BDI module, shown in its AgentSpeak(L) realization, is
+> lifted, internally closed, and may introduce producible subsidiary goals
+> absent from the evidence; compactness is optimal only within the generated
+> candidate language.
 
 ### Figure 3: DFA Transition Compilation and Runtime Monitoring
 
 Use a full-width `figure*` immediately after the first paragraph of
-Section 4, before the formal transition-compilation rules. Use four panels. The
+Section 5, before the formal transition-compilation rules. Use four panels. The
 decoded MONA example is
 `phi = F(on(A,B) & on(B,C) & not holding(A))`. Define the complete progress
 guard once as `G`; all subsequent labels refer to that same guard. This is a
@@ -866,14 +897,14 @@ All helper names in panel (c) omit the common prefix
 
 > **Figure 3: Preservation-safe compilation of one DFA progress transition.**
 > Conditional module summaries induce a threat order over signed guard
-> obligations. A balanced AgentSpeak repair tree realizes that fixed order with
-> trigger fan-out at most two, while the real DFA monitor observes every
-> primitive action. Uncertified cyclic threats or negative-literal repairs are
-> rejected rather than serialized heuristically.
+> obligations. A balanced BDI repair tree, rendered here in AgentSpeak(L),
+> realizes that fixed order with trigger fan-out at most two, while the real DFA
+> monitor observes every primitive action. Uncertified cyclic threats or
+> negative-literal repairs are rejected rather than serialized heuristically.
 
 ### Figure 4: Main Empirical Evidence
 
-Use a full-width `figure*` in Section 6 after the evaluation protocol and metric
+Use a full-width `figure*` in Section 7 after the evaluation protocol and metric
 definitions, before any result table. This figure is generated from artifacts,
 not manually drawn. The colleague may reproduce the panel geometry and visual
 styles in a template, but a checked-in plotting script must place every point,
@@ -1172,9 +1203,9 @@ the best seed. Draft caption:
 > hoc.
 
 Until that result exists, `result_domain_table.tex` remains explicitly labelled
-as a hash-locked seed-0 conditional-input table. It must not be described as the
-five-seed result; move its detailed per-domain snapshot to supplementary
-material when Table 3 is inserted.
+as the fixed seed-0 input table for the temporal evaluation. It must not be
+described as the five-seed result; move its detailed per-domain snapshot to
+supplementary material when Table 3 is inserted.
 
 ### Table 4: Temporal Profile Evaluation
 
@@ -1271,17 +1302,17 @@ The paper is not ready for submission until it additionally contains:
 1. the registered five-seed atomic generation and independent Jason/VAL matrix,
    including a clean source revision, every seed result, mean and sample
    standard deviation, and non-contented timing evidence; the current table
-   reports only the exact hash-locked seed-0 library structure consumed by the
-   clean temporal run;
-2. completed registered atomic and temporal ablation runs, plus the separately labelled
-   external references, with empty manuscript cells populated only from their
+   reports only the fixed seed-0 library structure consumed by the temporal
+   run;
+2. completed registered atomic and temporal ablation runs, plus the separately
+   labelled external references, with result tables inserted only from their
    machine-readable summaries;
-3. a rejection/failure analysis tied to stated assumptions; and
+3. a rejection/failure analysis tied to stated assumptions;
 4. full or supplementary proofs for claims stronger than the current proof
    sketches; and
 5. final camera-ready author and artifact metadata. The current compiled draft
    places all technical content, including the Conclusion, within pages 1--7;
-   references begin later on page 7 and the checklist follows on pages 8--9.
+   references begin on page 8 and the checklist follows on pages 9--10.
 
 The TEG execution matrix exists at
 `artifacts/temporal_goal_execution_runs/teg-paper-clean-e28bcea4` and may be
@@ -1298,7 +1329,7 @@ Use the following target allocation:
 | --- | ---: |
 | Introduction and architecture | 0.8 |
 | Problem formulation and foundations | 0.8 |
-| Certified plan-library synthesis | 1.8 |
+| Certified BDI plan-library compilation | 1.8 |
 | DFA-guided TEG composition | 1.0 |
 | Formal guarantees | 0.5 |
 | Experimental evaluation | 1.6 |
