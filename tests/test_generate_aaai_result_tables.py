@@ -9,6 +9,7 @@ import pytest
 from scripts.generate_aaai_result_tables import (
 	build_paper_result_dataset,
 	render_domain_table,
+	render_profile_table,
 	render_result_macros,
 )
 
@@ -108,7 +109,7 @@ def test_render_result_macros_uses_machine_counts() -> None:
 	assert "\\newcommand{\\ConformanceZeroActionSuccessCount}{2}" in macros
 
 
-def test_render_domain_table_reports_each_validation_oracle() -> None:
+def test_render_domain_table_uses_readable_grouped_columns() -> None:
 	result = {
 		"domains": [
 			{
@@ -131,8 +132,48 @@ def test_render_domain_table_reports_each_validation_oracle() -> None:
 
 	table = render_domain_table(result)
 
-	assert "J/V/G/P" in table
-	assert "2/2/2/2" in table
+	assert "\\begin{table*}[t]" in table
+	assert "\\tiny" not in table
+	assert "\\footnotesize" in table
+	assert "\\multicolumn{2}{c}{Corpus}" in table
+	assert "\\multicolumn{4}{c}{Atomic library}" in table
+	assert "\\multicolumn{2}{c}{Temporal execution}" in table
+	assert "End-to-end" in table
+	assert "toy & 1 & 2 & 3 & 4 & 5 & 1.0 & 2/2 & 1.5" in table
+	assert "Jason, neutral-goal VAL, gold-DFA acceptance, and predicted-DFA" in table
+
+
+def test_render_profile_table_names_each_pipeline_oracle() -> None:
+	result = {
+		"profiles": [
+			{
+				"profile": "ordered_two_milestone",
+				"query_count": 4,
+				"translation_count": 2,
+				"dfa_equivalent_count": 2,
+				"controller_compiled_count": 4,
+				"jason_success_count": 4,
+				"val_success_count": 4,
+				"gold_dfa_accept_count": 4,
+				"prediction_dfa_accept_count": 4,
+				"median_action_count": 2,
+				"median_runtime_seconds": 1.5,
+			},
+		],
+	}
+
+	table = render_profile_table(result)
+
+	assert "\\begin{table*}[t]" in table
+	assert "\\tiny" not in table
+	assert "\\footnotesize" in table
+	assert "Eq./total" in table
+	assert "Controller" in table
+	assert "Jason" in table
+	assert "VAL" in table
+	assert "Gold DFA" in table
+	assert "Pred. DFA" in table
+	assert "Ordered-2 & 2/2 & 4 & 4 & 4 & 4 & 4 & 4 & 2 & 1.5" in table
 
 
 def _write_fixture(

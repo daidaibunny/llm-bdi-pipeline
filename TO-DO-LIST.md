@@ -49,7 +49,7 @@ certificate.
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
 | Temporal execution validation | Complete on pinned revision | `teg-paper-clean-e28bcea4` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. The run records commit `e28bcea4`, no tracked changes, every atomic-library input hash, 12 workers, 1,800-second Jason/VAL limits, and a 64-MiB Java stack. |
-| AAAI paper package | Pinned structural and TEG matrices inserted | `scripts/generate_aaai_result_tables.py` now validates and generates all reported macros/tables from the frozen benchmark, predictions, clean TEG summary, and hash-locked atomic inputs. The draft fits seven technical pages. A clean atomic-generation timing run, ablations/baselines, stronger rejection coverage, and supplementary proofs remain submission gaps. |
+| AAAI paper package | Pinned matrices inserted; final visuals specified | `scripts/generate_aaai_result_tables.py` validates the frozen inputs and now emits readable grouped result tables. The canonical outline specifies four final figures, four tables, and one algorithm. Conceptual figures, the five-seed atomic table/plot, ablations or baselines, stronger rejection coverage, and supplementary proofs remain submission gaps. |
 
 ## Certified Generic Fixes
 
