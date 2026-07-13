@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import subprocess
+import threading
+import time
 
 import pytest
 
@@ -23,6 +25,7 @@ from scripts.run_full_test_jason_validation import reported_action_count_fields
 from scripts.run_full_test_jason_validation import run_jason_tasks
 from scripts.run_full_test_jason_validation import safe_goal_fragment
 from scripts.run_full_test_jason_validation import safe_path_fragment
+from scripts.run_full_test_jason_validation import snapshot_jason_task_inputs
 from scripts.run_full_test_jason_validation import source_revision_metadata
 from scripts.run_full_test_jason_validation import validate_one_task
 from scripts.run_full_test_jason_validation import validation_input_fingerprint
@@ -1236,6 +1239,174 @@ def test_completed_validation_records_require_exact_input_fingerprint(
 	assert load_completed_validation_records((task,)) == {}
 
 
+def test_snapshot_jason_task_inputs_waits_for_transient_source_recovery(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "source/domain.pddl"
+	problem_file = tmp_path / "source/test/p01.pddl"
+	plan_library_asl = tmp_path / "plan_library.asl"
+	plan_library_asl.write_text("/* base */\n", encoding="utf-8")
+	task = JasonTask(
+		domain="ferry",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		plan_library_asl=plan_library_asl,
+		base_plan_library_asl_text="/* base */",
+		goal_name="g_ferry_test_1",
+		output_dir=tmp_path / "run/jason/ferry/test_0001_p01",
+	)
+
+	def restore_sources() -> None:
+		time.sleep(0.05)
+		domain_file.parent.mkdir(parents=True)
+		problem_file.parent.mkdir(parents=True)
+		domain_file.write_text("(define (domain ferry))\n", encoding="utf-8")
+		problem_file.write_text(
+			"(define (problem p01) (:domain ferry))\n",
+			encoding="utf-8",
+		)
+
+	restorer = threading.Thread(target=restore_sources)
+	restorer.start()
+	snapshots = snapshot_jason_task_inputs(
+		(task,),
+		run_root=tmp_path / "run",
+		recovery_timeout_seconds=1.0,
+		poll_interval_seconds=0.01,
+	)
+	restorer.join()
+
+	assert snapshots[0].domain_file.read_text(encoding="utf-8") == (
+		"(define (domain ferry))\n"
+	)
+	assert snapshots[0].problem_file.read_text(encoding="utf-8") == (
+		"(define (problem p01) (:domain ferry))\n"
+	)
+	assert snapshots[0].source_domain_file == domain_file
+	assert snapshots[0].source_problem_file == problem_file
+
+
+def test_snapshot_jason_task_inputs_reuses_manifest_when_sources_disappear(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "source/domain.pddl"
+	problem_file = tmp_path / "source/test/p01.pddl"
+	plan_library_asl = tmp_path / "plan_library.asl"
+	domain_file.parent.mkdir(parents=True)
+	problem_file.parent.mkdir(parents=True)
+	domain_file.write_text("(define (domain ferry))\n", encoding="utf-8")
+	problem_file.write_text("(define (problem p01) (:domain ferry))\n", encoding="utf-8")
+	plan_library_asl.write_text("/* base */\n", encoding="utf-8")
+	task = JasonTask(
+		domain="ferry",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		plan_library_asl=plan_library_asl,
+		base_plan_library_asl_text="/* base */",
+		goal_name="g_ferry_test_1",
+		output_dir=tmp_path / "run/jason/ferry/test_0001_p01",
+	)
+	run_root = tmp_path / "run"
+	first = snapshot_jason_task_inputs((task,), run_root=run_root)
+	domain_file.unlink()
+	problem_file.unlink()
+
+	second = snapshot_jason_task_inputs(
+		(task,),
+		run_root=run_root,
+		recovery_timeout_seconds=0.01,
+		poll_interval_seconds=0.001,
+	)
+
+	assert second[0].domain_file == first[0].domain_file
+	assert second[0].problem_file == first[0].problem_file
+	assert validation_input_fingerprint(second[0]) == validation_input_fingerprint(first[0])
+
+
+def test_snapshot_jason_task_inputs_rejects_tampered_snapshot(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "source/domain.pddl"
+	problem_file = tmp_path / "source/test/p01.pddl"
+	plan_library_asl = tmp_path / "plan_library.asl"
+	domain_file.parent.mkdir(parents=True)
+	problem_file.parent.mkdir(parents=True)
+	domain_file.write_text("(define (domain ferry))\n", encoding="utf-8")
+	problem_file.write_text("(define (problem p01) (:domain ferry))\n", encoding="utf-8")
+	plan_library_asl.write_text("/* base */\n", encoding="utf-8")
+	task = JasonTask(
+		domain="ferry",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		plan_library_asl=plan_library_asl,
+		base_plan_library_asl_text="/* base */",
+		goal_name="g_ferry_test_1",
+		output_dir=tmp_path / "run/jason/ferry/test_0001_p01",
+	)
+	run_root = tmp_path / "run"
+	snapshots = snapshot_jason_task_inputs((task,), run_root=run_root)
+	snapshots[0].problem_file.write_text("tampered\n", encoding="utf-8")
+
+	with pytest.raises(ValueError, match="content hash mismatch"):
+		snapshot_jason_task_inputs((task,), run_root=run_root)
+
+
+def test_run_jason_tasks_persists_worker_exception_without_aborting(
+	tmp_path: Path,
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	plan_library_asl = tmp_path / "plan_library.asl"
+	domain_file.write_text("(define (domain ferry))\n", encoding="utf-8")
+	problem_file.write_text("(define (problem p01) (:domain ferry))\n", encoding="utf-8")
+	plan_library_asl.write_text("/* base */\n", encoding="utf-8")
+	task = JasonTask(
+		domain="ferry",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		plan_library_asl=plan_library_asl,
+		base_plan_library_asl_text="/* base */",
+		goal_name="g_ferry_test_1",
+		output_dir=tmp_path / "jason/ferry/test_0001_p01",
+	)
+	monkeypatch.setattr(
+		"scripts.run_full_test_jason_validation.prepare_shared_jason_environments",
+		lambda **kwargs: {},
+	)
+	monkeypatch.setattr(
+		"scripts.run_full_test_jason_validation.validate_one_task",
+		lambda *args, **kwargs: (_ for _ in ()).throw(
+			FileNotFoundError("transient benchmark input disappearance"),
+		),
+	)
+
+	records = run_jason_tasks(
+		tasks=(task,),
+		classpath="fake-classpath",
+		run_root=tmp_path,
+		num_workers=1,
+		timeout_seconds=1,
+		jason_java_stack_size="64m",
+		plan_verifier_command=None,
+		require_plan_verifier=True,
+		plan_verifier_timeout_seconds=1,
+		write_per_test_runtime_asl=False,
+		summary={},
+		summary_file=tmp_path / "summary.json",
+	)
+
+	assert len(records) == 1
+	assert records[0]["success"] is False
+	assert records[0]["status"] == "input_infrastructure_error"
+	assert "transient benchmark input disappearance" in records[0]["error"]
+	assert task.output_dir.joinpath("validation_record.json").is_file()
+
+
 def test_parser_order_batch_allows_native_plan_verifier_command_override() -> None:
 	script = Path("scripts/run_parser_order_full_val_batch.sh").read_text(encoding="utf-8")
 
@@ -1247,6 +1418,7 @@ def test_parser_order_batch_keeps_per_test_asl_without_domain_long_asl() -> None
 	script = Path("scripts/run_parser_order_full_val_batch.sh").read_text(encoding="utf-8")
 
 	assert "--write-per-test-runtime-asl" in script
+	assert script.count("--resume") == 2
 	assert "--write-domain-long-asl" not in script
 
 

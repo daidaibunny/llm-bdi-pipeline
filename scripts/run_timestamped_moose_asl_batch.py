@@ -10,6 +10,8 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+from typing import Any
+from typing import Mapping
 from typing import Sequence
 
 try:
@@ -152,7 +154,17 @@ def main() -> int:
 		action="store_true",
 		help="Allow reusing an existing timestamp output directory.",
 	)
+	parser.add_argument(
+		"--resume",
+		action="store_true",
+		help=(
+			"Reuse an existing completed batch only when its full command, settings, "
+			"domain set, and expected ASL artifacts match this invocation exactly."
+		),
+	)
 	args = parser.parse_args()
+	if args.resume and args.overwrite:
+		parser.error("--resume and --overwrite are mutually exclusive")
 	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
 	args.compiler_variant = normalise_compiler_variant(
 		atomic_library_mode=args.atomic_library_mode,
@@ -162,12 +174,6 @@ def main() -> int:
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	timestamp_id = args.timestamp_id or datetime.now().strftime("%Y%m%d-%H%M%S")
 	batch_root = args.artifact_root.expanduser().resolve() / timestamp_id
-	preflight_errors = preflight(domains=domains, batch_root=batch_root, overwrite=args.overwrite)
-	if preflight_errors:
-		for error in preflight_errors:
-			print(f"preflight_error: {error}", file=sys.stderr)
-		return 2
-
 	command = build_moose_batch_command(args=args, domains=domains, batch_root=batch_root)
 	manifest = batch_manifest(
 		args=args,
@@ -176,6 +182,28 @@ def main() -> int:
 		batch_root=batch_root,
 		command=command,
 	)
+	if args.resume and batch_root.exists():
+		try:
+			existing_manifest = validate_completed_batch_for_resume(
+				manifest_file=batch_root / "batch_manifest.json",
+				expected_manifest=manifest,
+			)
+		except (OSError, ValueError) as error:
+			print(f"resume_error: {error}", file=sys.stderr)
+			return 2
+		print(
+			f"[moose-batch-resume] timestamp_id={timestamp_id} "
+			f"domains={len(domains)}",
+			flush=True,
+		)
+		print(json.dumps(existing_manifest, indent=2, sort_keys=True))
+		return 0
+	preflight_errors = preflight(domains=domains, batch_root=batch_root, overwrite=args.overwrite)
+	if preflight_errors:
+		for error in preflight_errors:
+			print(f"preflight_error: {error}", file=sys.stderr)
+		return 2
+
 	batch_root.mkdir(parents=True, exist_ok=True)
 	write_manifest(batch_root, manifest)
 	print(json.dumps(manifest, indent=2, sort_keys=True))
@@ -187,6 +215,42 @@ def main() -> int:
 	manifest["completed_at"] = datetime.now().isoformat(timespec="seconds")
 	write_manifest(batch_root, manifest)
 	return completed.returncode
+
+
+def validate_completed_batch_for_resume(
+	*,
+	manifest_file: Path,
+	expected_manifest: Mapping[str, Any],
+) -> dict[str, Any]:
+	"""Return an exact completed batch manifest or reject unsafe reuse."""
+
+	try:
+		loaded = json.loads(manifest_file.read_text(encoding="utf-8"))
+	except json.JSONDecodeError as error:
+		raise ValueError(f"invalid batch manifest JSON: {manifest_file}") from error
+	if not isinstance(loaded, Mapping):
+		raise ValueError("existing batch manifest is not an object")
+	manifest = dict(loaded)
+	for field in (
+		"artifact_kind",
+		"timestamp_id",
+		"batch_root",
+		"domains",
+		"expected_asl_files",
+		"settings",
+		"command",
+	):
+		if manifest.get(field) != expected_manifest.get(field):
+			raise ValueError(f"existing batch {field} does not match this invocation")
+	if manifest.get("completed_return_code") != 0:
+		raise ValueError("existing batch did not complete successfully")
+	expected_files = manifest.get("expected_asl_files")
+	if not isinstance(expected_files, list) or not expected_files:
+		raise ValueError("existing batch has no expected ASL artifacts")
+	missing = [path for path in expected_files if not Path(str(path)).is_file()]
+	if missing:
+		raise ValueError(f"existing batch is missing ASL artifact: {missing[0]}")
+	return manifest
 
 
 def preflight(*, domains: Sequence[str], batch_root: Path, overwrite: bool) -> list[str]:

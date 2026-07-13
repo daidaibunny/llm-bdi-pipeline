@@ -58,6 +58,16 @@ certificate.
 
 ## Certified Generic Fixes
 
+- Full-test validation freezes every selected domain and problem into a hashed,
+  run-local PDDL input snapshot before starting Jason workers. A transiently
+  absent or changing materialized source is retried for up to 15 minutes;
+  workers never reread the mutable benchmark tree after the snapshot. An
+  unexpected per-case infrastructure exception is persisted without aborting
+  sibling cases. Repeating the same run identifier reuses only exact-fingerprint
+  successes, and the outer five-seed script reuses a MOOSE batch only when its
+  complete command, settings, domain set, successful return code, and expected
+  atomic ASL files match exactly.
+
 - Temporal append now always calls the real `ltlf2dfa`/MONA converter. The
   removed ordered-sequence fast path can no longer bypass DFA construction.
   Every distance-reducing DFA edge produces a query-local `trans` controller.
