@@ -4,6 +4,12 @@ Synthesize compact recursive atomic literal modules from PDDL schemas.
 The synthesizer uses external generalized-planning artifacts as evidence for
 which atomic predicates matter, then compresses flat primitive macro evidence
 into reusable predicate modules using PDDL action precondition/effect structure.
+
+Paper correspondence: Section 4 defines producible closure, the finite
+schema-derived candidate language, branch certificates, and joint Clingo
+selection. The supplementary appendix states the formal candidate contract and
+proof obligations. This module must remain invariant to domain, predicate, and
+action names; tests under ``test_no_domain_hardcoding.py`` enforce that property.
 """
 
 from __future__ import annotations

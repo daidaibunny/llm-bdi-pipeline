@@ -5,6 +5,10 @@ The current framework keeps temporal controller state outside the ASL library.
 This module only identifies outgoing transitions that reduce graph distance to
 an accepting DFA state. It does not execute an old in-repository generalized
 planner or full-trace simulator.
+
+Paper correspondence: Section 5 defines distance-reducing automaton progress
+edges and top-level dispatch from the monitor's observed state. This module
+identifies those edges but does not synthesize their PDDL action strategy.
 """
 
 from __future__ import annotations

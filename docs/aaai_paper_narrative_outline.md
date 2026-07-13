@@ -122,6 +122,16 @@ experimental estimands. The Abstract and Introduction follow the narrative
 cadence of accepted AAAI planning papers: problem, limitation of existing
 representations, central idea, guarantee, and empirical result.
 
+The manuscript presents GP2PL as a theoretical representation-compilation
+framework, not as a software architecture report. Its primary objects are a
+normalized singleton-goal evidence relation, a finite set of certified lifted
+BDI branches, a constrained feasible-library selection problem, conditional
+completion summaries, and preservation-safe deterministic finite automaton
+guard composition. MOOSE, Clingo, AgentSpeak(L), and Jason instantiate the
+evidence, optimization, rendering, and execution interfaces respectively.
+Internal class names, path layouts, worker scheduling, hashes, and command-line
+flags belong in the technical or code-and-data appendix.
+
 Use one symbol-invariant example whenever a certificate would otherwise be
 opaque. For resource restoration, an illustrative acquisition deletes
 `free(R)` and adds `held(R,O)`; the method must state that names are placeholders
@@ -500,12 +510,55 @@ The Conclusion answers three questions only: what representation gap was
 closed, why the output can be executed by a BDI agent, and which temporal goals
 are certified. Do not repeat the implementation inventory.
 
+## Supplementary and Public Artifact Contract
+
+The standalone source
+`latex_code/aamas_method_paper/technical_appendix.tex` is the canonical
+technical appendix. It contains the full formal definitions, assumptions,
+proofs of every proposition, theory-to-code map, novel-data description,
+external-data provenance, final parameter table, development value ranges,
+hardware/software specification, distributional statistics, and checklist
+explanations. The main paper remains self-contained and includes the essential
+proof ideas required to assess the contribution.
+
+The versioned public evidence is split into:
+
+- `paper_artifacts/temporal_goal_benchmark/v1` for the novel controlled-language
+  and parametric LTLf dataset;
+- `paper_artifacts/temporal_semantic_conformance/v1` for operator-level semantic
+  checks; and
+- `paper_artifacts/gp2pl_evaluation/v1` for exact atomic libraries, compact
+  execution records, certificate challenges, distributions, and hashes.
+
+GP2PL code uses Apache-2.0 and original GP2PL data uses CC BY 4.0. External PDDL
+and MOOSE materials retain upstream rights. Three public benchmark repositories
+and MOOSE do not expose an explicit license; they must be fetched at pinned
+commits and cannot be represented as GP2PL-licensed source. Consequently the
+checklist remains `partial` for the criteria that all required external source
+is included and licensed, even though our complete source and data are released.
+
+AAAI review is double blind and forbids pointers to identifiable web material.
+The submission therefore uses an anonymized code-and-data archive and keeps the
+named repository link disabled. The camera-ready conditional enables
+`https://github.com/daidaibunny/gp2pl`. Never expose that URL in the anonymous
+PDF or supplementary review PDF.
+
+Checklist answers may change to `yes` only when the corresponding evidence is
+present in the paper, appendix, or submitted archive. The statistical-
+significance item remains `no` until the registered paired five-seed comparison
+is complete; a repository link or additional prose cannot substitute for that
+experiment.
+
 ## Final Visual Program
 
-The main paper targets exactly four figures and one algorithm. Four tables are
-selected for the main paper after the registered matrices are complete; extra
-baseline and rejection tables move to the supplement. This follows the visual
-argument used by closely related planning papers: MOOSE combines an architecture
+The main paper targets exactly four figures, one algorithm, and no more than
+four result tables after the registered matrices are complete. The current
+seven-page draft keeps one compact temporal-profile table in the main paper and
+moves the fixed per-domain library table, repeated oracle columns, certificate
+challenges, and complete distributions to the supplement. Registered comparison
+tables must replace provisional content rather than accumulate beyond the
+seven-page technical limit. This follows the visual argument used by closely
+related planning papers: MOOSE combines an architecture
 figure, a full-width worked goal-regression example, synthesis tables, and
 cumulative coverage curves; AAAI-24 work on generalized planning with language
 models combines a pipeline, a main coverage table, runtime scaling, ablation,

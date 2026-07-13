@@ -1,4 +1,10 @@
-"""Run current PDDL-only AgentSpeak(L) libraries in the Jason interpreter."""
+"""Run PDDL-only AgentSpeak(L) realizations and export committed action traces.
+
+Paper correspondence: Sections 5--7 use Jason as the concrete BDI interpreter.
+The generated environment applies PDDL action semantics, advances the query DFA
+at the declared observation boundary, and submits only a completed trace to VAL;
+failed prefixes remain diagnostic and are never counted as plans.
+"""
 
 from __future__ import annotations
 

@@ -349,6 +349,7 @@
       "prediction_dfa_accept_count": 272,
       "profile": "ordered_three_milestone",
       "query_count": 272,
+      "success_count": 272,
       "translation_count": 137,
       "val_success_count": 272
     },
@@ -363,6 +364,7 @@
       "prediction_dfa_accept_count": 273,
       "profile": "ordered_two_milestone",
       "query_count": 273,
+      "success_count": 273,
       "translation_count": 136,
       "val_success_count": 273
     },
@@ -377,6 +379,7 @@
       "prediction_dfa_accept_count": 275,
       "profile": "persistence_until",
       "query_count": 275,
+      "success_count": 275,
       "translation_count": 119,
       "val_success_count": 275
     },
@@ -391,6 +394,7 @@
       "prediction_dfa_accept_count": 137,
       "profile": "same_state_conjunction",
       "query_count": 137,
+      "success_count": 137,
       "translation_count": 19,
       "val_success_count": 137
     },
@@ -405,6 +409,7 @@
       "prediction_dfa_accept_count": 271,
       "profile": "same_state_with_negation",
       "query_count": 271,
+      "success_count": 271,
       "translation_count": 64,
       "val_success_count": 271
     }
@@ -412,7 +417,7 @@
   "provenance": {
     "execution_commit": "e28bcea453bc8279ee69a1b76a35c7e3fa9e75b6",
     "execution_run_id": "teg-paper-clean-e28bcea4",
-    "execution_summary_sha256": "a45d1f742690972e69d048b8e7589e1e832882f7ee8532bf8d2a4b151853a6ff",
+    "execution_summary_sha256": "84414aa4078b4124455608164b0acf5406b0c38548b9a4425474480d25d8f044",
     "model_id": "gpt-5.5",
     "prediction_sha256": "512c766b60e9c3d953d49b930a4845bfda6bceb9706675a2670084d45db47f41",
     "prompt_source_commit": "8804f7347f40c908d6a58c2141f91a77efbfdba8"

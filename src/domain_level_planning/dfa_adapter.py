@@ -1,5 +1,8 @@
-"""
-Adapt DFA transition guards into domain-level achievement-goal requests.
+"""Adapt real DFA transition guards into signed achievement obligations.
+
+Paper correspondence: Section 5 defines one guard cube as positive achievement
+literals plus negative absence literals. This adapter preserves that structure;
+it does not infer an ordered sequence or invent negative achievement goals.
 """
 
 from __future__ import annotations

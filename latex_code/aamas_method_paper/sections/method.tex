@@ -38,18 +38,19 @@ and execution study.
 
 \subsection{Evidence Normalization}
 
-The provider output is normalized into an evidence program whose singleton-goal
-rules have the form
+An evidence provider is admissible when its output can be normalized into a
+singleton-goal evidence program whose rules have the form
 \[
 e=\langle \bar X,C_s,C_g,\bar a,\nu,\pi\rangle,
 \]
 where $C_s$ is a partial state condition, $C_g$ is one goal atom, $\bar a$ is a
 PDDL action macro, $\nu$ records numeric conditions and effects, and $\pi$
 records provenance. For example, evidence for \texttt{at(P,L)} may contain a
-\texttt{load; move; unload} macro. The MOOSE adapter requires every symbol and
-arity to occur in $D$, alpha-renames local variables, and seeds modules from
-positive singleton goals. Negative achievement evidence is rejected because
-MOOSE supplies no action contract for achieving a negated literal.
+\texttt{load; move; unload} macro. Admissibility requires every symbol and arity
+to occur in $D$, capture-avoiding renaming of local variables, and a singleton
+positive goal contract. MOOSE supplies the present instantiation. Negative
+achievement evidence is rejected because the instantiated provider supplies no
+action contract for achieving a negated literal.
 
 \subsection{Schema-Derived Candidate Space}
 
@@ -73,10 +74,9 @@ shortest body is retained for an equivalent open-requirement and completion-
 effect contract. Every result is then replayed by symbolic progression. Evidence
 macros are not truncated. Cyclic dependencies require provider evidence or a
 separately certified recursive module. This defines a restricted candidate
-language rather than a complete PDDL planner. Types constrain unification;
-required runtime sort membership uses only static
-\texttt{obj\_tp(Object,Type)}, never domain-specific type fluents, achievement
-calls, or exported actions.
+language rather than a complete PDDL planner. Types constrain unification; a
+language realization may expose static sort membership in contexts, but never
+as an achievement call or exported action.
 
 \subsection{Branch Certificates}
 
@@ -120,10 +120,11 @@ without a progress proof \\
 
 \paragraph{Binding, execution, and closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
-\texttt{obj\_tp/2}; negative contexts and comparisons only filter. Symbolic
-progression proves each precondition and final trigger achievement, recording
-$\mustadd$, $\mayadd$, and $\maydelete$. Every selected call $!q(\bar Y)$ must
-have a type-compatible selected module; closure is a solver obligation.
+certified static sort membership; negative contexts and comparisons only
+filter. Symbolic progression proves each precondition and final trigger
+achievement, recording $\mustadd$, $\mayadd$, and $\maydelete$. Every selected
+call $!q(\bar Y)$ must have a type-compatible selected module; closure is a
+solver obligation.
 
 \paragraph{Recursive progress.}
 A same-predicate recursive branch requires a non-negative relation count or
@@ -182,6 +183,16 @@ where $R_{rel}$ counts compatible relation-ranked recursive capabilities,
 $R_{prep}$ counts compatible acyclic precondition-discharge capabilities, $C$
 is the number of context literals, and $B$ is the number of body steps. This is
 global optimality only inside the generated and certified candidate space.
+If $\mathcal{C}^{\checkmark}_D$ denotes candidates whose certificates hold and
+$\Omega_E$ the evidence and closure obligations, the construction is
+equivalently
+\[
+\operatorname*{lexmin}_{S\subseteq\mathcal{C}^{\checkmark}_D}
+\operatorname{cost}(S)
+\quad\text{subject to}\quad S\models\Omega_E.
+\]
+This constrained selection, rather than the surface AgentSpeak syntax, defines
+the reusable domain-library result.
 
 The compiler rejects an untyped predicate with several producers when their
 safe use requires different nested branch portfolios. For example, if one
@@ -342,3 +353,33 @@ has $2n+e+2$ plans, fan-out two, depth $O(\log n)$, and $O(n)$ visits per pass,
 while preserving order. The count follows from $n$ satisfied leaves, $e$ repair
 leaves, $n-1$ internal nodes, one entry, and two completion plans; midpoint
 splitting and range induction establish depth and order. \hfill$\square$
+
+\paragraph{Monitor trace fidelity.}
+
+\textbf{Proposition 5.} Let
+$s_0,a_1,s_1,\ldots,a_k,s_k$ be the PDDL execution recorded by the runtime, and
+let $q_0$ be the DFA state after evaluating $s_0$. After every successful
+primitive action $a_i$, the monitor belief equals
+$q_i=\delta(q_{i-1},\mathit{val}(s_i))$. Hence leaving a controller source state
+is exactly an exit in the real DFA run over the observed finite trace.
+
+The result follows by induction on primitive actions: the environment first
+applies the PDDL successor and then evaluates the deterministic transition
+function on the resulting valuation. Controller plans cannot write monitor
+beliefs. \hfill$\square$
+
+\paragraph{Initial-state identity.}
+
+\textbf{Proposition 6.} If the initial valuation is accepting, successful
+execution commits no primitive action and denotes the one-state finite trace
+$\langle s_0\rangle$. It is therefore equivalent to evaluating the query on the
+initial state and is not equivalent to inserting an arbitrary noop.
+
+This is immediate from finite-trace semantics and Proposition~5: the initial
+valuation is consumed before action execution, while a noop would introduce a
+second observed position and could change strong-Next or Until truth.
+\hfill$\square$
+
+The supplementary appendix supplies complete proofs, including the binding,
+symbolic-progression, relational-ranking, resource-discharge, and tree-order
+lemmas used by these propositions.

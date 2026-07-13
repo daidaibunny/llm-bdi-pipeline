@@ -145,12 +145,13 @@ def test_render_domain_table_uses_compact_two_panel_columns() -> None:
 	assert "Jason, neutral-goal VAL, and both DFA checks" in table
 
 
-def test_render_profile_table_names_each_pipeline_oracle() -> None:
+def test_render_profile_table_compacts_redundant_success_oracles() -> None:
 	result = {
 		"profiles": [
 			{
 				"profile": "ordered_two_milestone",
 				"query_count": 4,
+				"success_count": 4,
 				"translation_count": 2,
 				"dfa_equivalent_count": 2,
 				"controller_compiled_count": 4,
@@ -166,17 +167,14 @@ def test_render_profile_table_names_each_pipeline_oracle() -> None:
 
 	table = render_profile_table(result)
 
-	assert "\\begin{table*}[t]" in table
+	assert "\\begin{table}[t]" in table
 	assert "\\tiny" not in table
-	assert "\\footnotesize" in table
-	assert "Bound-query evaluation" in table
+	assert "\\scriptsize" in table
 	assert "Eq./total" in table
-	assert "Controller" in table
-	assert "Jason" in table
-	assert "VAL" in table
-	assert "Gold DFA" in table
-	assert "Pred. DFA" in table
-	assert "Ordered-2 & 2/2 & 4 & 4 & 4 & 4 & 4 & 4 & 2 & 1.5" in table
+	assert "E2E" in table
+	assert "Controller" not in table
+	assert "Pred. DFA" not in table
+	assert "Ordered-2 & 2/2 & 4/4 & 2 & 1.5" in table
 
 
 def _write_fixture(

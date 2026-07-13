@@ -3,6 +3,10 @@ Parser for lifted LTLf goal JSON produced by the external Input component.
 
 This module intentionally performs local file I/O and schema validation only.
 It does not call a language model.
+
+Paper correspondence: Section 5 receives a typed, externally bound parametric
+LTLf specification. Parameters are instantiated per invocation rather than
+quantified or exhaustively grounded before automaton construction.
 """
 
 from __future__ import annotations

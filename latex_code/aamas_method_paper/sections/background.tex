@@ -37,9 +37,14 @@ action or an internal achievement call $!q(\bar Y)$. A library is \emph{lifted}
 when plans contain variables rather than training objects, and \emph{closed}
 when every internal call has a selected implementation. Our certificates apply
 to this trigger--context--body model and to the PDDL semantics of primitive
-actions. We render the selected rules in \asl{} and execute them with Jason
+actions. Formally, a candidate branch is
+$b=\langle g,C,\beta,\Sigma\rangle$, where $g$ is one lifted achievement
+literal, $C$ is a conjunctive applicability condition, $\beta$ is a finite body
+of primitive actions and internal calls, and $\Sigma$ is a conservative
+conditional summary of effects observable when $\beta$ returns. We render
+selected branches in \asl{} and execute them with Jason
 \cite{Bordini2007Jason}; another BDI language would require its own renderer and
-execution study. Query controllers also follow declarative goal patterns by
+execution study. Query controllers follow declarative goal patterns by
 rechecking their intended state after subsidiary plans return
 \cite{Hubner2006DeclarativeGoals}.
 
@@ -71,5 +76,7 @@ Conjunctive guards require a preservation-safe order; mixed Boolean--numeric
 guards require complete net effects for a common final state. The compiler
 rejects unsupported arithmetic, disjunction, cyclic threats without a
 preserving strategy, and any obligation whose effects are incomplete. In the
-current rendering, only PDDL fluents and actions, static type facts
-\texttt{obj\_tp/2}, and query-local controller names may appear.
+current realization, static sort-membership beliefs may constrain PDDL type
+compatibility, but no domain-specific typing predicate becomes an achievement
+goal or primitive action. The formal definitions and supported-fragment
+assumptions are collected in the supplementary appendix.

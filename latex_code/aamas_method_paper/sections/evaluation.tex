@@ -35,33 +35,34 @@ cost. Raw MOOSE, LAMA, ENHSP, and FOND4LTLf followed by LAMA are task-level
 references because they solve different representation problems, not compiler
 ablations.
 
-Tables~\ref{tab:domain-results} and~\ref{tab:profile-results} report the
-per-domain and temporal-profile outcomes discussed in
-Section~\ref{sec:end-to-end-results}.
+Table~\ref{tab:profile-results} reports outcomes by temporal structure. The
+supplementary data appendix reports every domain library and per-domain result.
 
-\input{sections/result_domain_table}
 \input{sections/result_profile_table}
 
 \subsection{Benchmarks and Protocol}
 
 \paragraph{Corpus and repetitions.}
 The corpus contains eight classical MOOSE domains with official nonempty
-splits \cite{Chen2026Moose}, four bounded-integer variants, and four
-serialized-width families. Blocksworld Clear and On use published no-constants
-splits \cite{Frances2021LearningGeneralPolicies}; Tower uses the first quarter
-of a fixed public corpus, and Depots the first half of the 22-instance D2L
-corpus \cite{Bonet2018Features}. These groups organize reporting and never
-select compiler rules. The atomic study uses all training instances, three goal
-orders, and seeds 0--4. Each seed uses one internal MOOSE worker and is compiled
-and evaluated independently; runs are neither pooled nor selected by test
-performance. We report all repetitions, their mean, and sample standard
-deviation. Synthesis receives 12 hours and 16~GiB, and Jason and VAL receive 30
-minutes per test with six validation workers. MOOSE reports five repetitions
-and 32~GB \cite{Chen2026Moose}; our resource differences are explicit.
+splits \cite{Chen2026Moose,DillonZChenMooseDataset}, four bounded-integer
+variants, and four serialized-width families. Blocksworld Clear and On use
+published no-constants splits \cite{Frances2021LearningGeneralPolicies,
+BonetLearnerPoliciesRepository}; Tower uses the first quarter of a fixed IPC
+corpus \cite{PotasscoPDDLInstances}, and Depots the first half of the
+22-instance D2L corpus \cite{Bonet2018Features,RLeapD2LRepository}. These groups
+organize reporting and never select compiler rules. The registered atomic study
+uses all training instances, three goal orders, and seeds 0--4. Each seed uses
+one internal MOOSE worker and is compiled and evaluated independently; runs are
+neither pooled nor selected by test performance. Synthesis receives 12 hours
+and 16~GiB, while Jason and VAL receive 30 minutes per test. MOOSE reports five
+repetitions and 32~GB \cite{Chen2026Moose}; our resource differences are
+explicit. The supplementary data appendix gives every source revision, split,
+parameter, and distributional reporting rule.
 
 \paragraph{Controlled inputs and references.}
 Atomic variants share the normalized evidence for each seed; temporal variants
-share the library, binding, and DFA. Content hashes enforce these equalities.
+share the library, binding, and DFA. The release manifest verifies these paired
+inputs before aggregation.
 MOOSE execution reuses the corresponding learned model; LAMA and ENHSP MRP+HJ
 are the classical and numeric references used by MOOSE. The temporal reference
 uses FOND4LTLf v0.0.4 \cite{DeGiacomoFuggitti2021FOND4LTLf} and LAMA on the
@@ -78,27 +79,28 @@ trigger fan-out; plan length is compared only on jointly solved instances. A
 challenge suite tests certificate rejection and invariance under symbol
 renaming, compatible parameter permutation, and irrelevant fluents.
 
-Reusable compilation costs $T_E+T_C+k(T_A+T_X)$ for $k$ queries: evidence
-synthesis $T_E$ and domain compilation $T_C$ occur once, whereas query
-compilation $T_A$ and execution $T_X$ recur. We report a break-even point only
-when all terms are measured under comparable resources.
-
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}
 
 GPT-5.5 translates \TranslationInputCount{} deduplicated natural-language
 specifications. All outputs pass the JSON/PDDL contract and all predicted DFAs
 are language-equivalent to gold under reachable-product exploration. Their
-bindings yield \TEGProblemCount{} queries. Table~\ref{tab:domain-results}
-summarizes the fixed libraries; Clingo selects \AtomicSelectedBranchCount{} of
-\AtomicCandidateCount{} certified candidates.
+bindings yield \TEGProblemCount{} queries. The supplementary per-domain table
+summarizes the fixed libraries; overall,
+Clingo selects \AtomicSelectedBranchCount{} of \AtomicCandidateCount{}
+certified candidates.
 
 Table~\ref{tab:profile-results} separates the five formula profiles. Every
 query compiles and completes in Jason; all \TEGVALSuccessCount{} nonempty traces
 pass VAL and both DFAs accept all \TEGGoldDFAAcceptCount{} traces. The median
 trace contains \TEGMedianActionCount{} actions, median runtime is
 \TEGMedianRuntimeSeconds{} seconds, and the 12-worker run takes
-\TEGWallRuntimeMinutes{} minutes.
+\TEGWallRuntimeMinutes{} minutes. Runtime has interquartile range
+4.28--8.49 seconds and sample standard deviation 13.66 seconds; primitive-action
+count has interquartile range 1--2 and sample standard deviation 0.80. All 13
+registered rejection and symbol-invariance challenges pass, covering binding,
+preparation, progress, resource release, positive and negative preservation,
+bounded numeric progress, and six renaming or irrelevant-symbol transformations.
 
 These results condition on fixed seed-0 libraries from an earlier six-worker
 evidence run, not the five-seed protocol. They do not establish arbitrary

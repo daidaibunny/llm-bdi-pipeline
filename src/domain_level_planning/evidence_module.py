@@ -6,6 +6,10 @@ parse native artifacts, such as a MOOSE ``policy --dump-policy`` readable
 decision list, into a provider-neutral policy evidence program. The compiler
 then consumes that evidence program plus the PDDL domain schema; it does not
 need to know which provider produced the evidence.
+
+Paper correspondence: Section 4, "Evidence Normalization," defines the
+provider-neutral singleton-goal evidence relation. The supplementary appendix
+gives its symbol, arity, provenance, and macro-validation obligations.
 """
 
 from __future__ import annotations

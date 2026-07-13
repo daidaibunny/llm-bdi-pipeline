@@ -1,4 +1,10 @@
-"""Conservative effect certificates for selected atomic AgentSpeak modules."""
+"""Conservative completion-effect certificates for selected atomic BDI modules.
+
+Paper correspondence: Section 5 defines conditional completion summaries,
+positive-literal threats, negative preservation, and preserving branch
+portfolios. The supplementary appendix formalizes their sound use in one
+deterministic finite automaton transition guard.
+"""
 
 from __future__ import annotations
 

@@ -4,6 +4,11 @@ Append query-specific temporal goals to a domain-level atomic ASL library.
 The input side is expected to provide a validated LTLf JSON object and a DFA
 payload. This module only checks the DFA interface required by the ASL layer and
 turns progress transitions into calls to existing atomic predicate modules.
+
+Paper correspondence: Section 5 defines query-local deterministic finite
+automaton progress controllers, signed guard obligations, threat-safe
+serialization, bounded numeric progress, and primitive-step monitoring. The
+supplementary appendix states the supported fragment and rejection conditions.
 """
 
 from __future__ import annotations

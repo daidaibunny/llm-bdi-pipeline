@@ -68,6 +68,48 @@ separate evaluation component. It validates a predicted lifted LTLf against the
 sealed gold temporal semantics, replays hidden source witnesses, and checks
 generated execution traces with both PDDL action semantics and DFA acceptance.
 
+## Reproducibility and Public Artifact Contract
+
+The manuscript presents GP2PL as a theoretical representation-compilation
+framework. Its primary scientific objects are the normalized singleton-goal
+evidence relation, the finite certified candidate language, the feasible-library
+selection problem, conditional completion summaries, and preservation-safe DFA
+guard composition. MOOSE, Clingo, AgentSpeak(L), and Jason are the evaluated
+provider, optimizer, rendering language, and interpreter. Paths, worker
+scheduling, hashes, and command-line details belong in reproducibility material,
+not in the statement of the method.
+
+The canonical technical supplement is
+`latex_code/aamas_method_paper/technical_appendix.tex`. It contains the formal
+definitions, assumptions, complete proofs, theory-to-code map, data appendix,
+source provenance, experimental parameters, hardware/software environment,
+distributional statistics, and claim-to-test map. The versioned public evidence
+is maintained under:
+
+```text
+paper_artifacts/temporal_goal_benchmark/v1
+paper_artifacts/temporal_semantic_conformance/v1
+paper_artifacts/gp2pl_evaluation/v1
+```
+
+GP2PL source code is released under Apache-2.0, and original GP2PL temporal
+annotations, specifications, generated libraries, and result records are
+released under CC BY 4.0. Third-party PDDL and MOOSE materials retain upstream
+terms and are reconstructed from pinned sources. They must not be represented
+as GP2PL-licensed data. Because MOOSE and three public benchmark repositories do
+not expose explicit license files, the AAAI Checklist remains `partial` for the
+criteria requiring every experimental source dependency to be included and
+available under a research-use license.
+
+The camera-ready public repository is
+`https://github.com/daidaibunny/gp2pl`. The anonymous submission and technical
+supplement must not expose this identifying URL. The main LaTeX source therefore
+keeps the repository paragraph behind a camera-ready-only conditional. Review
+material uses an anonymized code-and-data archive. Checklist answers are changed
+to `yes` only when the paper, technical supplement, or submitted archive contains
+the corresponding evidence. Statistical significance remains `no` until the
+registered paired five-seed comparison is complete.
+
 This repository no longer builds a universal generalized planner and no longer
 routes domains by prior-paper taxonomy labels. The current strategy is to use
 an Evidence Module to import external generalized-planning artifacts, normalize

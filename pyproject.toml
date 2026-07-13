@@ -1,7 +1,7 @@
 [project]
-name = "llm-bdi-pipeline"
+name = "gp2pl"
 version = "0.1.0"
-description = "Language-model-assisted BDI plan-library generation and evaluation pipeline"
+description = "Certified compilation from generalized-planning evidence to BDI plan libraries"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -15,6 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
+gp2pl = "main:main"
 llm-bdi-pipeline = "main:main"
 
 [build-system]

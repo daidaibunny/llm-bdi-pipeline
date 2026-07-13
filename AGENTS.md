@@ -43,6 +43,25 @@ Compiler, and Execution Validation Module. Do not call these Layer A/B/C.
 The complete framework is named **GP2PL** (Generalized Planning to Plan
 Libraries); GP2PL is not an alias for any one of the four modules.
 
+The manuscript must present GP2PL as a theoretical representation-compilation
+framework rather than as a software architecture. Lead with the normalized
+evidence relation, certified candidate language, feasible-library optimization,
+conditional completion summaries, and preservation-safe DFA guard composition.
+MOOSE, Clingo, AgentSpeak(L), and Jason are concrete instantiations of those
+interfaces. Keep internal paths, command-line options, hashes, worker scheduling,
+and class names in the technical or code-and-data appendix.
+
+The canonical technical supplement is
+`latex_code/aamas_method_paper/technical_appendix.tex`. Public reproducibility
+evidence lives under `paper_artifacts/temporal_goal_benchmark/v1`,
+`paper_artifacts/temporal_semantic_conformance/v1`, and
+`paper_artifacts/gp2pl_evaluation/v1`. GP2PL code uses Apache-2.0 and original
+GP2PL data uses CC BY 4.0; third-party PDDL and MOOSE files retain upstream
+terms and must be fetched at pinned revisions. The camera-ready public repository
+is `https://github.com/daidaibunny/gp2pl`, but anonymous AAAI paper and supplement
+PDFs must not expose that identifying URL. Keep the main-paper artifact statement
+behind the camera-ready-only conditional.
+
 ```text
 PDDL domain + train split
 -> external generalized-planning evidence backend

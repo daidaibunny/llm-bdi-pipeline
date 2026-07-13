@@ -1,0 +1,695 @@
+\section{Formal Framework}
+\label{app:formal-framework}
+
+This appendix makes explicit the mathematical objects, assumptions, and proofs
+summarized in the main paper. The framework is defined at the level of typed
+planning transitions and trigger--context--body BDI rules. MOOSE, Clingo,
+AgentSpeak(L), and Jason instantiate four interfaces; none is built into the
+semantic definitions below.
+
+\subsection{Planning and Evidence}
+
+\begin{definition}[Typed planning domain]
+A domain is
+$D=\langle\mathcal P,\mathcal F,\mathcal A,\mathcal T\rangle$.
+$\mathcal P$ is a finite set of typed predicate schemas,
+$\mathcal F$ a finite set of integer-valued function schemas,
+$\mathcal A$ a finite set of deterministic action schemas, and
+$\mathcal T$ a finite type hierarchy. For a problem object set $O$, a state
+$s=(s_{\mathcal P},s_{\mathcal F})$ is a Boolean valuation of ground predicates
+and a bounded integer valuation of supported ground functions. An applicable
+ground action $a$ has successor $\gamma(s,a)$ given by its PDDL add, delete, and
+constant-integer effects.
+\end{definition}
+
+\begin{definition}[Singleton-goal evidence]
+A normalized evidence rule is
+\[
+e=\langle\bar X,C_s,g,\bar a,\nu,\pi\rangle.
+\]
+$\bar X$ are typed variables, $C_s$ is a partial state condition, $g$ is one
+positive predicate literal or supported integer equality, $\bar a$ is a finite
+PDDL action macro, $\nu$ records numeric conditions and effects, and $\pi$
+records provenance. A finite evidence program $E$ is admissible for $D$ only if
+all symbols, arities, types, and macro actions map to $D$, and symbolic execution
+under $C_s$ establishes $g$.
+\end{definition}
+
+MOOSE readable policies are the evaluated evidence instantiation. For example,
+a readable rule may associate the singleton goal $on(X,Y)$ with context
+$holding(X)\land clear(Y)$ and action $stack(X,Y)$. GP2PL does not assume that
+this evidence already implements $clear(Y)$ or covers every reachable context.
+
+\subsection{Candidate BDI Modules}
+
+\begin{definition}[Candidate branch]
+A lifted candidate branch is
+$b=\langle g,C,\beta,\Sigma,\pi_b\rangle$, where $g$ is one achievement
+literal, $C$ is a conjunction of typed positive and negative state literals,
+integer comparisons, and equality filters, $\beta$ is a finite sequence of
+primitive PDDL actions and internal achievement calls, $\Sigma$ is a
+conditional completion-effect summary, and $\pi_b$ records whether the branch
+came from provider evidence or PDDL schema construction.
+\end{definition}
+
+The context is an applicability condition, not a sequence of subgoals. Positive
+context literals and static sort facts may bind variables. Negative literals
+and comparisons only filter already bound variables. A plan such as
+\[
++!on(X,Y):\neg clear(Y)\leftarrow !clear(Y);!on(X,Y)
+\]
+is therefore admitted only when the call to $clear(Y)$ is closed by another
+selected module and the recursive call carries a well-founded progress proof.
+
+\begin{definition}[Branch certificate]
+For domain $D$, $\mathsf{Cert}_D(b)$ holds exactly when every obligation required
+by the structure of $b$ is established:
+\begin{enumerate}
+\item every action and subgoal variable is range restricted and type compatible;
+\item symbolic progression proves each primitive precondition;
+\item successful completion establishes the trigger goal $g$;
+\item every internal call can be closed by a type-compatible selected module;
+\item every recursion cycle has a non-negative ranking that strictly decreases;
+\item every temporary resource occupation has a finite, target-preserving
+discharge path; and
+\item $\Sigma$ conservatively contains every feasible completion add and delete
+effect, including effects propagated through internal calls.
+\end{enumerate}
+Obligations that do not arise in $b$, such as resource discharge for a direct
+producer that acquires no resource, are vacuous rather than unproved.
+\end{definition}
+
+\paragraph{Finite candidate language.}
+Let $\mathcal C_E$ be validated evidence macros. Let $\mathcal C_D$ contain
+direct producers, finite backward STRIPS regressions over acyclic
+producer--precondition dependencies, certified relational recursion, and finite
+causal resource-mode discharge. A regression state is an alpha-normalized tuple
+of open requirements, the selected producer role, and resource modes. A path
+stops before repeating such a state. Equivalent states retain only their
+shortest body for the same completion contract. This establishes finiteness
+without an arbitrary action-depth constant. Provider macros are validated but
+never truncated by this search rule.
+
+\begin{definition}[Evidence coverage]
+A certified candidate $b$ covers evidence obligation $e$ when their triggers are
+alpha equivalent and one of the following holds: their bodies and numeric
+contracts are alpha equivalent; $b$ has the same body under a logically weaker
+conjunctive context; or $b$ is a schema-producer refinement with the same
+$\mustadd$, no additional $\maydelete$, and equivalent numeric and keyed-resource
+contracts. Prefix similarity alone is not coverage.
+\end{definition}
+
+\begin{definition}[Feasible domain library]
+For certified space
+$\mathcal C_D^{\checkmark}=\{b\in\mathcal C_E\cup\mathcal C_D\mid
+\mathsf{Cert}_D(b)\}$, a selected set $S\subseteq\mathcal C_D^{\checkmark}$ is
+feasible when it covers every evidence obligation, includes an implementation
+for every selected internal call, preserves required producer exits, and admits
+the selected recursion and cross-module dependency ranks.
+\end{definition}
+
+GP2PL asks an answer-set optimizer for a feasible $S$ minimizing the
+lexicographic cost stated in the main paper. The result is globally optimal only
+over $\mathcal C_D^{\checkmark}$; candidate generation is not claimed complete
+for arbitrary planning programs.
+
+\subsection{Explicit Assumptions and Rejection Boundary}
+
+\begin{assumption}[Planning fragment]
+Boolean actions use deterministic typed STRIPS semantics. Numeric effects are
+constant integer increases or decreases over finite values. Arbitrary
+expressions, continuous change, conditional effects outside the parser's
+declared fragment, and probabilistic actions are rejected.
+\end{assumption}
+
+\begin{assumption}[Evidence boundary]
+Evidence is finite, singleton-goal, and schema mappable. It may be incomplete,
+but a provider macro accepted as evidence must pass symbolic PDDL execution.
+Negative achievement evidence without a validated action contract is rejected.
+\end{assumption}
+
+\begin{assumption}[Recursive progress]
+A same-predicate recursive branch is accepted only when a schema-derived
+non-negative relational feature strictly decreases until a producer or
+already-satisfied exit applies. An acyclic support-depth orientation additionally
+assumes that the grounded support relation remains acyclic in reachable states.
+Cross-predicate preparation uses a selected acyclic call graph with strictly
+decreasing natural-number dependency ranks.
+\end{assumption}
+
+\begin{assumption}[Resource discharge]
+A reusable-resource sequence is accepted only when effect unification identifies
+a stable capacity key, its abstract resource-mode graph is finite, and symbolic
+execution proves that the discharge removes occupation, restores availability,
+and preserves the atomic target. Ambiguous capacity roles are rejected.
+\end{assumption}
+
+\begin{assumption}[Temporal fragment]
+The input formula belongs to the implemented $F$, $X$, strong-$U$,
+conjunction, and literal-negation fragment and is translated by the real
+ltlf2dfa/MONA toolchain. A chosen progress edge has a conjunction of signed
+predicate literals and supported integer equalities. Disjunction requiring
+strategy choice and unsupported arithmetic are rejected.
+\end{assumption}
+
+\begin{assumption}[Observation boundary]
+The deterministic finite automaton consumes the initial valuation and every
+state produced by a successful primitive PDDL action. Only the environment can
+update query-local monitor beliefs. Atomic module return is not the semantic
+observation boundary of the full method.
+\end{assumption}
+
+\section{Complete Proofs}
+\label{app:proofs}
+
+\subsection{Atomic Compilation}
+
+\begin{lemma}[Range-restricted grounding]
+If the binding obligation for branch $b$ holds and its context is true under a
+type-consistent grounding $\theta$, then every variable in every primitive
+action and internal call of $\beta$ is grounded by $\theta$ or by a preceding
+positive context witness.
+\end{lemma}
+
+\begin{proof}
+The certificate constructs the bound-variable set from trigger variables,
+positive context literals, and certified static sort witnesses. A body term is
+accepted only if it is a constant or belongs to this set. Negative contexts and
+comparisons are checked after their arguments enter the set and never add a
+binding. Induction over body positions therefore yields a ground, type-compatible
+term tuple at every primitive action or call.
+\end{proof}
+
+\begin{lemma}[Symbolic progression soundness]
+Let $\beta=a_1;\ldots;a_m$ be an action-only body certified executable from
+context $C$. For every ground state $s\models C$ and compatible grounding
+$\theta$, each $a_i\theta$ is applicable in the state reached after the prefix,
+and the symbolic final facts and numeric values hold in the concrete successor.
+\end{lemma}
+
+\begin{proof}
+The symbolic state initially contains every positive fact and numeric equality
+required by $C\theta$. At step $i$, certification requires every positive,
+negative, equality, and numeric precondition of $a_i\theta$ in that symbolic
+state. The update removes delete effects, applies add effects, and applies each
+constant numeric delta, exactly matching $\gamma$. Induction on $i$ proves that
+the concrete and symbolic states agree on every tracked requirement. The final
+symbolic requirements therefore hold concretely.
+\end{proof}
+
+\begin{lemma}[Well-founded recursive calls]
+A selected recursive component satisfying either a strictly decreasing
+non-negative relational ranking or strictly decreasing natural-number module
+ranks cannot execute infinitely while remaining inside that component.
+\end{lemma}
+
+\begin{proof}
+For same-predicate recursion, every recursive return-to-trigger step decreases a
+value in $\mathbb N$ and no selected body can restore the protected portion of
+the ranked relation. An infinite descent in $\mathbb N$ is impossible. For
+cross-predicate preparation, every call edge decreases the sealed module rank,
+so a call cycle would imply $r_0>r_1>\cdots>r_0$, a contradiction. Each terminal
+rank has a direct producer, provider macro, or already-satisfied exit by closure.
+\end{proof}
+
+\begin{lemma}[Finite target-preserving resource discharge]
+If a resource-discharge certificate exists for a producer body, its cleanup
+sequence terminates, restores the keyed availability mode, removes the acquired
+occupation mode, and leaves the atomic target true.
+\end{lemma}
+
+\begin{proof}
+The abstract search state contains the capacity key and normalized occupation
+mode. The accepted path does not repeat a mode, so finiteness of the mode graph
+implies termination. Each edge is a PDDL action validated by symbolic
+progression. Acceptance explicitly requires deletion of the current occupation,
+restoration of the matched availability fluent, and absence of a delete effect
+on the established target. Lemma 2 transfers these properties to concrete
+execution.
+\end{proof}
+
+\begin{lemma}[Conservative completion summary]
+For a selected closed module call, every Boolean completion effect possible
+under a feasible selected branch is contained in its conditional $\mayadd$ or
+$\maydelete$ summary, and every $\mustadd$ effect holds for all feasible selected
+branches under the recorded condition.
+\end{lemma}
+
+\begin{proof}
+Primitive branch summaries are computed by exact sequential add/delete
+progression, so internally deleted-and-restored facts are not reported as final
+deletes. Internal-call summaries are propagated by a monotone fixed point over
+the finite selected call graph. Ranked recursion is summarized at the same
+trigger anchors, while acyclic cross-module calls terminate in dependency-rank
+order. Union over feasible alternatives is conservative for may effects;
+intersection under compatible branch conditions is conservative for must
+effects. The fixed point therefore cannot omit a feasible completion effect.
+\end{proof}
+
+\begin{proposition}[Atomic branch soundness]
+If an emitted branch for $p(\bar X)$ has a true context under a type-consistent
+grounding, and each called selected module satisfies its contract, then the
+branch is executable and successful return establishes $p(\bar X)$.
+\end{proposition}
+
+\begin{proof}
+Lemma 1 grounds every body element. Consider body positions in order. Primitive
+actions are executable and preserve the certified symbolic state by Lemma 2.
+For an internal call, the induction hypothesis on the closed module contract
+establishes its goal and its conservative completion summary updates the caller's
+symbolic state. Lemma 3 excludes infinite selected recursion, and Lemma 4
+discharges any accepted resource debt. The branch achievement obligation requires
+the grounded trigger in the final symbolic state; Lemma 2 and the call induction
+therefore establish it in the concrete return state.
+\end{proof}
+
+\begin{proposition}[Certified candidate-space optimality]
+If the answer-set optimizer returns $S$, then $S$ satisfies every encoded
+evidence, closure, producer-exit, progress, and resource obligation and is
+lexicographically optimal among feasible subsets of
+$\mathcal C_D^{\checkmark}$.
+\end{proposition}
+
+\begin{proof}
+Each candidate is admitted to the optimization instance only after
+$\mathsf{Cert}_D$ succeeds. Integrity constraints eliminate a model that leaves
+an evidence obligation uncovered, an internal call unimplemented, a required
+producer absent, a selected preparation graph cyclic, or a recursive/resource
+capability incompatible with its contract. Hence every answer set denotes a
+feasible library. Clingo's prioritized optimization compares answer sets by the
+declared cost tuple and returns an optimum at each priority. Therefore no
+feasible subset in the same grounded candidate instance has a lexicographically
+smaller cost. The proof says nothing about candidates not generated.
+\end{proof}
+
+\subsection{Temporal Composition}
+
+Let $A_\varphi=\langle Q,2^{AP},\delta,q_0,F\rangle$ be the deterministic finite
+automaton obtained from the real translation, and let a progress objective be
+$B=P^+\land\neg P^-$. A positive module portfolio assigns one or more certified
+branches to each $G_i\in P^+$. A negative literal is either observed absent or
+has an exact certified deleter; it never invokes a synthetic negative goal.
+
+\begin{definition}[Completion threat]
+For positive occurrences $G_i,G_j$, the threat relation contains
+$G_j\prec G_i$ when a feasible conditional $\maydelete$ effect of the selected
+portfolio for $G_j$ unifies with $G_i$. The ordering constraint requires $G_j$
+before $G_i$. A positive repair is inadmissible when a feasible $\mayadd$ effect
+unifies with a protected $N\in P^-$.
+\end{definition}
+
+\begin{lemma}[Signed serialization invariant]
+Suppose $L_1,\ldots,L_n$ is a topological order of the completion-threat
+relation, or an order equipped with per-occurrence preserving portfolios. After
+the repair of prefix $L_1,\ldots,L_i$ returns, every positive literal in the
+prefix holds and every protected negative literal is absent.
+\end{lemma}
+
+\begin{proof}
+The base case follows from observing or establishing $L_1$. Assume the invariant
+for $i-1$. If $L_i$ is positive, its selected branch establishes it by
+Proposition 1. Every feasible completion delete that could affect an earlier
+positive would induce a threat edge and hence contradict the order, unless the
+per-occurrence portfolio explicitly excludes that branch. Every feasible add of
+a protected negative is likewise excluded. If $L_i$ is negative, the leaf either
+observes absence or uses an exact finite deleter whose complete net effects
+preserve the prefix. Thus the invariant holds by induction.
+\end{proof}
+
+\begin{proposition}[Supported-transition composition]
+For an accepted objective $B$, assume every required repair has an applicable
+certified branch, every selected call terminates, and the completion portfolios
+satisfy the signed serialization invariant. The controller either remains at
+its source and retries or leaves it through an actual DFA edge whose complete
+guard is true in an observed state.
+\end{proposition}
+
+\begin{proof}
+Lemma 6 establishes the complete signed objective after one repair pass unless
+the primitive-step monitor has already left the source. After every successful
+primitive action, the monitor evaluates the original complete outgoing cubes,
+not the serialized approximation. If the source remains active, the done helper
+restarts the same objective, accommodating a branch whose completion did not
+establish an observation-only literal. If the source is left, deterministic
+transition evaluation identifies an actual enabled edge. A macro may cross more
+than one edge; top-level dispatch resumes from the observed monitor state. No
+controller statement can manufacture a state transition.
+\end{proof}
+
+\begin{proposition}[Balanced-tree structure]
+For $n\geq1$ signed literals and $e$ certified repair plans, midpoint splitting
+produces $2n+e+2$ query-local plans, trigger fan-out at most two, nesting depth
+$O(\log n)$, and $O(n)$ node visits per pass while preserving the certified
+literal order.
+\end{proposition}
+
+\begin{proof}
+There are $n$ satisfied-leaf plans, $e$ repair alternatives, $n-1$ internal
+binary nodes, one transition-entry plan, and two done plans, totaling
+$n+e+(n-1)+1+2=2n+e+2$. Each internal trigger has one dispatch plan and each leaf
+has at most the satisfied and repair alternatives counted above, so structural
+dispatch fan-out is two. Midpoint division yields height
+$\lceil\log_2 n\rceil$ up to constant entry and completion frames. Induction on
+a contiguous range shows that its left subtree completes before its right
+subtree, so an in-order traversal equals the certified sequence. Each node is
+visited once per pass, hence linear work.
+\end{proof}
+
+\begin{proposition}[Monitor trace fidelity]
+For concrete PDDL execution
+$s_0,a_1,s_1,\ldots,a_k,s_k$, the monitor state after $s_i$ is exactly the state
+obtained by running $A_\varphi$ on valuations
+$\mathit{val}(s_0),\ldots,\mathit{val}(s_i)$.
+\end{proposition}
+
+\begin{proof}
+The environment evaluates $\mathit{val}(s_0)$ before dispatch. Assume equality
+after $s_{i-1}$. The environment accepts $a_i$ only when its PDDL preconditions
+hold, computes $s_i=\gamma(s_{i-1},a_i)$, then replaces the monitor state by
+$\delta(q_{i-1},\mathit{val}(s_i))$. Determinism gives the unique automaton run.
+Monitor symbols are query-local and cannot be effects of a PDDL action or a BDI
+plan, so no other transition is possible.
+\end{proof}
+
+\begin{proposition}[Initial-state identity]
+If the automaton is accepting after the initial valuation, the committed action
+sequence is empty and its finite state trace is $\langle s_0\rangle$.
+\end{proposition}
+
+\begin{proof}
+By the observation assumption, $s_0$ is consumed before a controller requests a
+primitive action. Acceptance returns immediately and commits no action. A finite
+trace is a nonempty sequence of states, so the corresponding trace is
+$\langle s_0\rangle$. Adding a noop would append another position and is not
+semantically neutral for strong Next or Until.
+\end{proof}
+
+\subsection{Numeric and Negative Obligations}
+
+Positive numeric equality is an achievement only when symbolic execution proves
+constant integer progress toward the target. Unit changes require strict
+direction; a larger constant change requires the exact predecessor. Mixed
+Boolean--numeric objectives require one complete final-state proof. Negated
+numeric equality is observation-only unless a complete action proves a change
+away from the forbidden value. These restrictions reduce numeric reasoning to
+the same completion and preservation obligations as predicates; they do not
+claim arbitrary numeric planning.
+
+For strong Until, literals common to all non-progress source loops are source
+invariants. Every primitive prefix before progress must preserve them. This is
+why primitive-step monitoring and module-return monitoring are distinct
+experimental variants: the latter cannot justify an intermediate-state safety
+claim.
+
+\section{Algorithmic Correspondence}
+\label{app:code-map}
+
+Table~\ref{tab:code-map} maps each theoretical construction to the public
+implementation. Module docstrings repeat these references so that code and
+paper can be audited in both directions.
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Theory-to-code map for the new GP2PL methods.}
+\label{tab:code-map}
+\begin{tabular}{p{0.22\textwidth}p{0.39\textwidth}p{0.31\textwidth}}
+\toprule
+Formal construction & Principal public source & Verification \\
+\midrule
+Evidence normalization &
+\path{src/domain_level_planning/evidence_module.py} &
+Provider-name invariance, schema, arity, numeric, and macro tests \\
+Certified candidate language and selection &
+\path{src/domain_level_planning/atomic_module_synthesis.py} &
+Clingo coverage, refinement, closure, ranking, release, and renaming tests \\
+Conditional completion and threat relation &
+\path{src/domain_level_planning/certified_effects.py} &
+Typed unification, net effects, negative preservation, and portfolio tests \\
+DFA progress composition &
+\path{src/domain_level_planning/temporal_goal_appender.py} &
+Conjunction, cyclic rejection, Until, negative, mixed numeric, and alpha-renaming tests \\
+Balanced repair tree &
+\path{src/domain_level_planning/transition_repair_tree.py} &
+Plan count, depth, fan-out, order, negative leaf, and checkpoint tests \\
+Primitive-step execution and trace commit &
+\path{src/evaluation/jason_runtime/runner.py} &
+Real Jason, PDDL successor, numeric update, DFA monitor, trace, and VAL tests \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Empirical Checks of the Formal Claims}
+
+The proofs above establish the propositions for the declared formal objects.
+Table~\ref{tab:claim-checks} records separate empirical checks that exercise
+their implementations. These checks are falsification attempts, not substitutes
+for the proofs: a passing finite test set cannot establish a universal theorem.
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Empirical checks associated with the formal claims.}
+\label{tab:claim-checks}
+\begin{tabular}{p{0.14\textwidth}p{0.48\textwidth}p{0.29\textwidth}}
+\toprule
+Formal claim & Empirical falsification target & Released evidence \\
+\midrule
+Proposition 1 and Lemmas 1--4 &
+Reject unbound actions, cyclic producer dependencies, non-decreasing
+recursion, and ambiguous resource discharge; execute accepted branches under
+PDDL semantics &
+Binding, preparation, progress, and resource challenge cases; 1,228
+Jason/VAL-valid traces \\
+Proposition 2 &
+Reject uncovered evidence, open internal calls, incompatible producer exits,
+and non-optimal encoded branch subsets &
+Clingo coverage, closure, refinement, and objective tests; exact selected
+libraries for all 16 domains \\
+Proposition 3 and Lemmas 5--6 &
+Reject cyclic completion threats and forbidden negative completion additions;
+preserve accepted signed guards &
+Threat and negative-guard challenge cases; conjunction, negation, Until, and
+mixed-numeric executions \\
+Proposition 4 &
+Check exact plan count, fan-out, depth, and in-order leaf visitation over
+singleton and conjunctive guards &
+Balanced-tree structural and generated-controller tests \\
+Proposition 5 &
+Compare primitive-step monitor updates with an independent replay and direct
+finite-trace semantics &
+1,228 dual-DFA trace checks and 14 labelled semantic-conformance traces \\
+Proposition 6 &
+Accept an initially satisfied predicate or integer equality without inventing
+a primitive action &
+Two zero-action Jason and singleton-state replay cases \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Data Appendix}
+\label{app:data}
+
+\subsection{Novel Temporal-Goal Dataset}
+
+The novel GP2PL data release contains 475 deduplicated controlled-language
+specifications and 1,228 bound executions over 16 PDDL domains. Each record
+contains the source utterance, typed parameters, binding, atom table, gold
+parametric LTLf formula, model-produced JSON, language-equivalence result, and
+sealed construction-witness checks. Per-domain JSON files, the complete
+benchmark, model predictions, independent validation, source archives, and
+SHA-256 manifests are included in the code-and-data appendix under
+\path{paper_artifacts/temporal_goal_benchmark/v1}.
+
+Original natural-language annotations, temporal specifications, model outputs,
+generated plan libraries, and result records are released under CC BY 4.0. The
+GP2PL source is released under Apache-2.0. Third-party PDDL files retain their
+upstream terms and are reconstructed by pinned download scripts rather than
+relicensed as original GP2PL data.
+
+\subsection{PDDL Sources and Splits}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Public PDDL sources. Commits and deterministic split rules are part of
+the release manifest.}
+\label{tab:data-sources}
+\begin{tabular}{p{0.20\textwidth}p{0.18\textwidth}p{0.27\textwidth}p{0.27\textwidth}}
+\toprule
+Source & Domains & Split rule & Redistribution boundary \\
+\midrule
+MOOSE companion dataset, revision
+\texttt{e0097051} \cite{DillonZChenMooseDataset} &
+Eight classical and four numeric domains &
+Upstream \texttt{training/} and \texttt{testing/} directories &
+Publicly downloadable; no upstream license file detected, so fetched in place \\
+Learner-policies repository, revision
+\texttt{9991926f} \cite{BonetLearnerPoliciesRepository} &
+Blocksworld Clear and On &
+Published no-constants training and testing directories &
+Publicly downloadable; no upstream license file detected, so fetched in place \\
+PDDL Instances, revision
+\texttt{cf19edf7} \cite{PotasscoPDDLInstances} &
+Blocksworld Tower &
+First $\lfloor n/4\rfloor$ naturally sorted instances train; remainder test &
+Publicly downloadable; no upstream license file detected, so fetched in place \\
+D2L, revision \texttt{0620e169} \cite{RLeapD2LRepository} &
+Depots &
+First $\lfloor n/2\rfloor$ naturally sorted instances train; remainder test &
+GPL-3.0 upstream repository; original terms retained \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The choice of domains tests three structural sources of obligations: classical
+singleton-goal evidence, bounded integer effects, and feature-definable
+serialized subgoals. These are reporting groups, not domain routing classes.
+All compiler decisions are derived from schema symbols, types, preconditions,
+effects, evidence contracts, and selected completion summaries.
+
+\section{Computational Reproducibility}
+\label{app:reproducibility}
+
+\subsection{Hardware and Software}
+
+Experiments were conducted on an Apple M4 system with ten CPU cores and 24 GB
+unified memory, running macOS 26.4.1 on arm64. No GPU was used. The fixed
+software environment is Python 3.12.7, uv 0.8.19, Clingo 5.8.0, Tarski 0.9.1,
+ltlf2dfa 1.0.2, MONA 1.4-18, Jason 3.1.2, OpenJDK 24, Maven 3.9.11, Docker
+28.5.1, and VAL revision \texttt{3c7a1f3}; the complete revision is fixed in the
+release manifest. The Python dependency lockfile,
+external-revision setup scripts, and source commit accompany the artifact.
+
+\subsection{Parameters and Development Values}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Complete final parameters and values encountered during development.
+Method-defining constants were not selected on test performance.}
+\label{tab:parameters}
+\begin{tabular}{p{0.24\textwidth}p{0.18\textwidth}p{0.18\textwidth}p{0.31\textwidth}}
+\toprule
+Quantity & Development values & Final value & Selection criterion \\
+\midrule
+MOOSE goal size & 1 & 1 & Singleton-goal evidence definition \\
+MOOSE goal permutations & 3 & 3 & MOOSE Algorithm 1 default \\
+MOOSE repetition seed & 0--4 & 0,1,2,3,4 & Five independent repetitions; no pooling or best-seed choice \\
+Internal MOOSE workers & 1,6,12 & 1 & Remove concurrent access to the seeded permutation stream \\
+MOOSE synthesis limit & 30 minutes, 12 hours & 12 hours & Match the MOOSE synthesis protocol rather than its test-time cap \\
+MOOSE memory limit & 16 GiB & 16 GiB & Host-safe declared deviation from MOOSE's 32 GB allowance \\
+Schema action-depth bound & finite legacy probes, none & none & Termination by repeated normalized-state rejection \\
+Compiler selector & local legacy pruning, Clingo & Clingo 5.8.0 & Exact encoded constraints and lexicographic objective \\
+Repair-tree branching factor & 2 & 2 & Binary structural theorem; not empirically tuned \\
+Translation temperature & 0 & 0 & Deterministic structured translation \\
+Translation token limit & 60,000 & 60,000 & Accommodate the complete JSON response schema \\
+Semantic retries & 0--3 & at most 3 & Retry only structured validation failure \\
+Jason/VAL timeout & 30 minutes & 30 minutes each & Common per-instance evaluation cap \\
+Validation workers & 6,10,12,16 & 6 & Registered resource-isolation setting; not a method parameter \\
+Java thread stack & default, 64 MiB & 64 MiB & Prevent parser stack exhaustion on large query libraries \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+All five MOOSE seeds use one internal worker and are compiled independently.
+Seed processes may be launched concurrently in isolated operating-system
+processes, but their evidence is never concatenated. Cross-seed Jason/VAL runs
+are sequential; six workers parallelize test instances only within one seed.
+
+The fixed temporal release predates this five-seed protocol and conditions on
+one hash-identified seed-0 library set. Its 12-worker launch changes throughput,
+not query semantics, and does not support a five-seed robustness claim.
+
+\subsection{Metrics, Distribution, and Validation}
+
+\input{sections/result_domain_table}
+
+Atomic measures are producible-predicate trigger coverage, module closure,
+held-out Jason plus original-goal VAL success, selected branches, context and
+body cost, library bytes, and compilation time. Temporal success requires all
+of: controller acceptance, Jason completion, neutral-goal VAL acceptance,
+independent PDDL replay, gold-DFA acceptance, and predicted-DFA acceptance.
+Failed action prefixes are diagnostics and never plans.
+
+For the 1,228 fixed temporal cases, runtime has minimum 2.29, first quartile
+4.28, median 5.49, third quartile 8.49, maximum 110.31, mean 9.39, and sample
+standard deviation 13.66 seconds. Primitive-action count has minimum 1, first
+quartile 1, median 2, third quartile 2, maximum 4, mean 1.75, and sample standard
+deviation 0.80. The complete records, rather than only these summaries, are
+included.
+
+Thirteen registered challenge cases all pass. Seven exercise rejection or exact
+acceptance for binding, cyclic preparation, obstruction exchange, ambiguous
+resource capacity, cyclic transition threats, forbidden negative completion,
+and exact terminal numeric progress. Six test invariance under predicate/action
+renaming, action-parameter permutation, evidence-object renaming, irrelevant
+static vocabulary, negative-guard renaming, and progress-relation renaming.
+
+No statistically significant improvement between compiler variants is claimed
+from the present fixed temporal release. The registered paired five-seed matrix
+must complete before a Wilcoxon or equivalent paired test is justified. This is
+why the corresponding checklist item remains ``no'' rather than being changed
+by documentation alone.
+
+\subsection{Reproduction Commands and Artifact Map}
+
+The code-and-data appendix contains the complete GP2PL source, tests,
+preprocessing programs, lockfile, novel data, fixed generated libraries, compact
+execution records, and manifests. Third-party sources are installed at pinned
+revisions by the supplied scripts.
+
+\begingroup
+\scriptsize
+\begin{verbatim}
+uv sync
+bash scripts/setup_mona.sh
+bash scripts/setup_benchmark_sources.sh
+uv run python \
+  scripts/materialize_achievement_benchmarks.py
+uv run pytest -p no:cacheprovider -q
+uv run python \
+  scripts/run_certificate_challenge_matrix.py
+\end{verbatim}
+\endgroup
+
+The fixed paper tables are regenerated with:
+
+\begingroup
+\scriptsize
+\begin{verbatim}
+RELEASE=paper_artifacts/gp2pl_evaluation/v1
+uv run python \
+  scripts/generate_aaai_result_tables.py \
+  --execution-summary \
+  "$RELEASE/temporal_execution_summary.json" \
+  --atomic-library-root "$RELEASE/atomic_libraries"
+\end{verbatim}
+\endgroup
+
+The public release adds an Apache-2.0 code license, CC BY 4.0 data license,
+third-party notices, and a camera-ready repository link. During double-blind
+review, the same files are supplied as an anonymized code-and-data appendix and
+the identifying web link is disabled in the main-paper source.
+
+\section{Reproducibility Checklist}
+\label{app:checklist-explanation}
+
+The main checklist answers ``yes'' when the criterion is satisfied by the main
+paper together with this appendix and the submitted code-and-data archive.
+Specifically, this appendix supplies all formal assumptions and proofs; the
+novel dataset description and license; citations, revisions, and split rules for
+existing data; preprocessing and analysis code locations; complete parameters;
+hardware and software; distributional statistics; and a theory-to-code map.
+
+Two boundaries remain explicit. First, the checklist item requiring every
+source dependency to be available under a research-use license is ``partial'':
+the GP2PL code and original data have such licenses, but the public MOOSE and
+three benchmark repositories do not expose explicit license files that we are
+authorized to replace. Second, the statistical-significance item is ``no''
+until the registered five-seed paired comparison is complete. Neither limitation
+can be converted to ``yes'' merely by adding an appendix or repository link.

@@ -1,116 +1,139 @@
-# LLM BDI Pipeline
+# GP2PL
 
-This project studies domain-level lifted AgentSpeak(L) plan-library generation
-from PDDL domains. The current paper path is intentionally narrower than a
-universal generalized planner: it imports or learns atomic predicate/literal
-templates from external generalized-planning backends, then appends
-query-specific temporal wrappers from validated lifted LTLf goals.
+**GP2PL** (Generalized Planning to Plan Libraries) is a framework for compiling
+generalized-planning evidence into certified Belief--Desire--Intention (BDI)
+plan libraries and composing temporally extended goals over those libraries.
 
-The current architecture has two research-facing components:
+The framework addresses a representation problem. A generalized planner may
+return a lifted policy or macro rule, while a BDI interpreter requires a closed
+trigger--context--body library whose variables are bound, primitive actions are
+executable, internal achievement calls are implemented, and recursion has a
+progress argument. GP2PL treats those requirements as proof obligations rather
+than assuming that a policy can be transcribed directly.
 
-- Atomic minimal literal module generation: parse a PDDL domain and training
-  split, use a verified generalized-planning artifact as evidence for required
-  atomic predicates, synthesize compact lifted recursive modules from PDDL
-  action schemas, and validate without runtime full-trace planning.
-- Temporal append: consume lifted LTLf JSON from the external Input
-  component, compile it to a DFA, validate singleton-literal transition guards,
-  and append query-specific `+!g_query` wrappers to the same domain library.
+## Formal Interface
 
-## Core Flow
-
-1. Load the achievement-goal benchmark registry from
-   `src/benchmark_registry/achievement_goals`.
-2. Load a selected IPC PDDL domain from `src/domains/<domain>/domain.pddl`.
-3. Use the domain's `train` split to identify required atomic goal templates
-   and the `test` split as held-out goal-specification cases.
-4. Select an external generalized-planning backend by atomic template needs, not
-   by assigning the whole domain to a routing class.
-5. Normalize the backend artifact into `LiftedPolicyProgram` or use it as
-   target-predicate evidence for atomic minimal literal module synthesis.
-6. Compile accepted lifted atomic rules or synthesized minimal modules into an
-   AgentSpeak(L) library whose plan heads are PDDL predicate goals such as
-   `+!clear(X)` or `+!on(X,Y)`.
-7. Append lifted LTLf/DFA query wrappers only when each relevant DFA transition
-   guard is a singleton literal over the PDDL vocabulary.
-
-Generated domain-level libraries are maintained in one canonical directory per
-domain:
+The reusable domain compilation is
 
 ```text
-artifacts/domain_libraries/<domain>/plan_library.json
-artifacts/domain_libraries/<domain>/plan_library.asl
-artifacts/domain_libraries/<domain>/artifact_metadata.json
+PDDL domain + training instances + singleton-goal policy evidence
+-> certified lifted BDI domain plan library
 ```
 
-The main CLI refuses non-canonical output roots and non-canonical append input
-files. Query wrappers may introduce top-level names such as `g_query_17`, but
-generated ASL must not emit synthetic names such as `achieve_*`,
-`transition_*`, or exposed `dfa_state(...)` beliefs.
+A singleton-goal policy evidence rule is an externally supplied rule for one
+goal literal. For example, MOOSE may report that `stack(X,Y)` achieves
+`on(X,Y)` when `holding(X)` and `clear(Y)` hold. The compiler combines such
+evidence with PDDL action schemas, generates closure modules such as
+`clear(X)`, certifies candidate branches, and asks Clingo to select a
+minimum-cost feasible library within the generated candidate language.
 
-The older in-repository generalized-planning synthesizer and conjunctive-goal
-ordering path have been removed from the current code path. The current schema
-logic is narrower: it compresses verified singleton-goal backend evidence into
-atomic minimal literal modules; it is not a universal generalized planner.
+The query-specific temporal compilation is
 
-## Planner Use
-
-Classical planners may be used inside external generalized-planning backends,
-artifact reproduction, and validation. They are not the runtime low-level method
-for the final domain-level library claim, and this repository no longer carries
-an in-repository planner-trace synthesis path.
-
-## Benchmarks
-
-Formal achievement-goal benchmarks are materialized from pinned reputable
-generalized-planning benchmark sources: `potassco/pddl-instances`,
-`DillonZChen/moose-dataset`, `bonetblai/learner-policies-from-examples`, and
-`rleap-project/d2l`.
-
-The materialized benchmark corpus and current research decisions are described
-in `docs/research_pipeline_decisions.md`. The normative parametric
-natural-language LTLf input and evaluation contract is in
-`docs/input_design.md`.
-
-| Evaluation group | Target domains | Purpose |
-| --- | --- | --- |
-| ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | Check lifted atomic modules on the classical easy-to-solve, hard-to-optimise benchmark family used by MOOSE. |
-| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | Include MOOSE numeric train/test domains for experimental support. |
-| Feature-definable serialized-width domains | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` | Check feature-defined subgoal serialization and schema-derived internal atomic modules. |
-
-Each selected domain has `domain.pddl`, `train`, `test`, and `source.json`
-under `src/domains/<domain>`. MOOSE domains use the official companion
-`training/` and `testing/` split. `blocksworld-clear` and `blocksworld-on`
-use the KR 2025 learner-policies no-constants train/test folders.
-`blocksworld-tower` and `depots` use the project feature-definable
-serialized-width split described in `docs/research_pipeline_decisions.md`.
-
-## Usage
-
-```bash
-uv run python src/main.py compile-moose-atomic-library \
-  --policy-file tmp/moose-blocks-e2e/blocks-probe-first4.model.readable \
-  --domain-file src/domains/blocksworld-tower/domain.pddl \
-  --domain-name blocksworld-tower \
-  --validated-policy-lifting
-
-uv run python src/main.py append-lifted-temporal-goal \
-  --domain-file src/domains/blocksworld-tower/domain.pddl \
-  --ltlf-goal-json artifacts/input/blocksworld_lifted_ltlf.json \
-  --query-id query_1
-
-uv run python scripts/run_final_paper_data.py \
-  --output-dir tmp/paper-final-latest \
-  --config-only
+```text
+typed and bound LTLf specification + real ltlf2dfa/MONA automaton
+-> certified query-local BDI controllers appended to the domain library
 ```
 
-## Development
+A controller interprets one deterministic finite automaton transition guard as
+one signed state condition. Positive literals are achievement obligations;
+negative literals are absence obligations and never become synthetic negative
+goals. Completion-effect summaries determine a preservation-safe literal order,
+and a balanced binary repair tree bounds plan-trigger fan-out. A runtime monitor
+advances the real automaton after every successful primitive PDDL action.
 
-Run focused tests:
+The implementation renders the resulting BDI rules in AgentSpeak(L) and runs
+them with Jason. AgentSpeak(L) is the evaluated realization, not the definition
+of the framework.
+
+## Supported Scope
+
+- Typed STRIPS PDDL and a bounded constant-integer resource extension.
+- Positive singleton predicate goals and supported integer equalities for
+  reusable atomic modules.
+- LTLf formulas using `F`, `X`, strong `U`, conjunction, and literal negation,
+  provided that every required progress transition receives a certificate.
+- Fail-closed rejection for unresolved binding, closure, progress, resource,
+  preservation, or numeric obligations.
+
+The method does not claim complete planning for arbitrary PDDL-times-LTLf
+products, global optimality over all BDI programs, or support for arbitrary
+arithmetic and unrestricted disjunction.
+
+## Installation
+
+Python 3.12 and [`uv`](https://docs.astral.sh/uv/) are required.
 
 ```bash
+uv sync
+bash scripts/setup_mona.sh
+```
+
+Jason is resolved as Maven artifact `io.github.jason-lang:jason:3.1.2` when a
+runtime validation is first requested. Docker is required by the supplied VAL
+wrapper.
+
+## Benchmark Materialization
+
+The PDDL benchmarks are drawn from pinned public repositories. Because several
+upstream repositories do not declare redistribution licenses, the GP2PL public
+artifact does not relicense their files. Materialize exact local copies with:
+
+```bash
+bash scripts/setup_benchmark_sources.sh
+uv run python scripts/materialize_achievement_benchmarks.py
+```
+
+Every materialized domain records its source URL, source commit, and split
+policy in `src/domains/<domain>/source.json`.
+
+## Reproducing Reported Artifacts
+
+The versioned temporal benchmark is under
+`paper_artifacts/temporal_goal_benchmark/v1`. The fixed libraries, compact
+execution records, certificate challenges, distributions, and SHA-256 manifest
+are under `paper_artifacts/gp2pl_evaluation/v1`.
+
+Regenerate the manuscript result tables from those fixed records after
+materializing the PDDL corpus:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run python \
+  scripts/generate_aaai_result_tables.py \
+  --execution-summary \
+  paper_artifacts/gp2pl_evaluation/v1/temporal_execution_summary.json \
+  --atomic-library-root \
+  paper_artifacts/gp2pl_evaluation/v1/atomic_libraries
+```
+
+Run the certificate and symbol-invariance matrix:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run python \
+  scripts/run_certificate_challenge_matrix.py
+```
+
+The complete environment, parameters, source revisions, and experimental
+commands are listed in [REPRODUCING.md](REPRODUCING.md) and the manuscript's
+technical appendix.
+
+## Development Checks
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run ruff check src scripts tests
 PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q
-
-PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_final_paper_data.py \
-  --output-dir tmp/paper-final-latest \
-  --config-only
 ```
+
+## Paper and Public Artifact
+
+The manuscript source is in `latex_code/aamas_method_paper`. The public
+artifact is <https://github.com/daidaibunny/gp2pl>. The anonymous submission PDF
+does not display this identifying URL; the camera-ready source contains a
+conditional artifact statement.
+
+## Licensing
+
+GP2PL source code is licensed under Apache-2.0. Original benchmark annotations,
+temporal specifications, and generated result records are licensed under
+CC BY 4.0 as described in [DATA_LICENSE.md](DATA_LICENSE.md). Third-party PDDL,
+software, and papers retain their original terms; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

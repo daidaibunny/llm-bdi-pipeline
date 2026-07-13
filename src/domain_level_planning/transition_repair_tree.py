@@ -1,4 +1,10 @@
-"""Compile one certified conjunctive DFA transition into a balanced ASL repair tree."""
+"""Compile one certified conjunctive DFA transition into a balanced repair tree.
+
+Paper correspondence: Section 5 and Proposition 4 define this tree after the
+literal order and preserving branch portfolio have already been certified. The
+tree changes indexing and trigger fan-out only; it introduces no new planning or
+temporal semantics.
+"""
 
 from __future__ import annotations
 

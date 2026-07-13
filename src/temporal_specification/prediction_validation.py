@@ -1,4 +1,10 @@
-"""Fail-closed validation for model-generated lifted LTLf payloads."""
+"""Fail-closed validation for model-generated lifted LTLf payloads.
+
+Paper correspondence: Section 7 separates translation validity from execution.
+The validator enforces the declared schema, PDDL vocabulary, types, bindings,
+numeric atoms, and supported temporal operators before language equivalence is
+tested with the real automata.
+"""
 
 from __future__ import annotations
 
