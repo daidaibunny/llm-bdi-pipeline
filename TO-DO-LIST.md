@@ -48,8 +48,8 @@ certificate.
 | Numeric domains | Supported bounded fragment | Positive integer equalities, constant deltas, bounded prerequisite preparation, mixed Boolean/numeric preservation, Jason execution, VAL, and DFA trace validation are implemented. Keep arbitrary arithmetic and unrestricted numeric planning outside the claim. |
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
-| Temporal execution validation | Diagnostic matrix complete; clean rerun pending | `teg-paper-final-clean-20260713` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. Its source revision had tracked changes, so pin and rerun the committed revision before inserting the final paper matrix. |
-| AAAI paper package | Narrative aligned; final matrix pending | Maintain the section responsibilities, claim boundaries, result-insertion contract, and page budget in `docs/aaai_paper_narrative_outline.md`. The manuscript uses the latest available official AAAI-26 author kit and states only implemented claims. Regenerate the final atomic and TEG matrices from one clean pinned revision before submission. |
+| Temporal execution validation | Complete on pinned revision | `teg-paper-clean-e28bcea4` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. The run records commit `e28bcea4`, no tracked changes, every atomic-library input hash, 12 workers, 1,800-second Jason/VAL limits, and a 64-MiB Java stack. |
+| AAAI paper package | TEG matrix inserted; atomic matrix pending | Maintain the section responsibilities, claim boundaries, result-insertion contract, and page budget in `docs/aaai_paper_narrative_outline.md`. The manuscript uses the official AAAI-26 author kit and now reports the pinned TEG execution matrix. Regenerate the final atomic compactness and timing matrix before submission. |
 
 ## Certified Generic Fixes
 
@@ -123,8 +123,8 @@ certificate.
   regression domains cover constant/variable identity, alias-safe cleanup,
   persistent goals, and interfering goals.
 
-Current compiler acceptance gate (2026-07-12): full `ruff check .` passes;
-`pytest -q` reports 340 passed with only two third-party Lark deprecation
+Current compiler acceptance gate (2026-07-13): full `ruff check .` passes;
+`pytest -q` reports 377 passed with only two third-party Lark deprecation
 warnings; real `ltlf2dfa`/MONA builds the expected three-state, five-transition
 automaton for `F(a & X(F(b)))`; and the typed threat certificate processes the
 48,500-literal Gripper `p2_30` goal in about 11 seconds with one cached module
@@ -140,6 +140,14 @@ with tracked changes, so it is implementation evidence only; regenerate the
 final paper matrix from the committed clean revision. The current full-test
 runner records the source commit and separates tracked modifications from
 untracked files in `summary.json`.
+
+Pinned TEG execution run (2026-07-13): commit `e28bcea4` produced 1,228/1,228
+successful executions over all 16 domains. Every counted case has an explicit
+Jason success marker, a complete primitive PDDL action trace accepted by
+neutral-goal VAL, and acceptance by both gold and predicted DFAs. The five
+profile totals are 273 ordered-two, 272 ordered-three, 275 strong-Until, 137
+same-state conjunction, and 271 same-state-with-negation successes. The run is
+stored at `artifacts/temporal_goal_execution_runs/teg-paper-clean-e28bcea4`.
 
 Previously recorded focused validation evidence. Rerun these probes after the
 current threat-ordering and temporal-append changes before using them as paper

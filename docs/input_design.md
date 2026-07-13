@@ -1146,6 +1146,15 @@ infrastructure errors, hidden-witness acceptance, micro problem-row accuracy,
 and macro accuracy over unique translation inputs. Optional execution results
 are reported separately and never folded into translation accuracy.
 
+The pinned downstream execution result is
+`artifacts/temporal_goal_execution_runs/teg-paper-clean-e28bcea4`. At commit
+`e28bcea4`, all 1,228 released problem-level bindings obtained an explicit Jason
+success marker, a complete primitive PDDL trace accepted by neutral-goal VAL,
+and acceptance by both gold and predicted DFAs. This is execution evidence for
+the released bindings and supplied atomic-library hashes; it is not additional
+translation-model calls and is not a claim of universal realizability for all
+type-compatible assignments.
+
 The defensible construction claim is:
 
 > From each held-out PDDL initial state, the bounded symbol-independent builder

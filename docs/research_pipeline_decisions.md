@@ -942,10 +942,11 @@ The implemented pipeline now:
    trace justification.
 
 The deployed query path remains the temporal path:
-validated lifted LTLf JSON, then LTLf-to-DFA, then singleton-literal DFA
-validation, then AgentSpeak(L) append. Direct PDDL test-goal wrappers are only
-an evaluation bridge for benchmark smoke runs where the input is a PDDL problem
-file rather than a user query artifact. Those bridge plans are marked with
+validated lifted LTLf JSON, then LTLf-to-DFA, then conjunctive/negative/numeric
+guard validation, then AgentSpeak(L) append with a query-local primitive-step
+DFA monitor. Direct PDDL test-goal wrappers are only an evaluation bridge for
+benchmark smoke runs where the input is a PDDL problem file rather than a user
+query artifact. Those bridge plans are marked with
 `evaluation_pddl_goal_wrapper_bridge` metadata and must not be described as the
 final natural-language query interface.
 
@@ -953,6 +954,27 @@ Unsupported numeric cases include arbitrary arithmetic expressions, real-valued
 updates, optimization metrics as achievement goals, non-equality numeric goals,
 and numeric goals that require a recursive ranking proof not present in the
 validated evidence.
+
+## Pinned Temporal Execution Evidence
+
+The paper-eligible Temporal Extended Goal execution run is
+`teg-paper-clean-e28bcea4`. It executed the complete 1,228-case benchmark from
+commit `e28bcea4`, with no tracked source changes, 12 workers, 1,800-second
+Jason and VAL limits, and a 64-MiB Java stack. Every atomic AgentSpeak library
+input is recorded by SHA-256 hash in the run summary.
+
+All 1,228 cases have an explicit Jason success marker, a complete primitive
+PDDL action trace accepted by neutral-goal VAL, and acceptance by both the gold
+and predicted finite-trace automata. The domain totals are 720/720 classical,
+360/360 bounded-numeric, and 148/148 serialized-width cases. The formula-profile
+totals are 273/273 ordered-two, 272/272 ordered-three, 275/275 strong-Until,
+137/137 same-state conjunction, and 271/271 same-state-with-negation.
+
+This result establishes complete execution coverage only for the released
+benchmark, supplied atomic-library hashes, and declared temporal and numeric
+fragments. It does not establish action-strategy completeness for arbitrary
+PDDL-times-LTLf products, arbitrary arithmetic planning, or universal
+realizability under every type-compatible parameter assignment.
 
 ## Sources
 

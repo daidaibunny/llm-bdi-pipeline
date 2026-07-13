@@ -1,11 +1,11 @@
 \section{Experimental Evaluation}
 \label{sec:evaluation}
 
-This draft fixes the questions, corpus, metrics, budgets, and validation chain
-before the final clean rerun. It reports only checkpoints already reproduced
-from a pinned clean revision; aggregate atomic and TEG result tables will be
-generated from the final machine-readable artifacts rather than provisional
-diagnostic runs.
+This section fixes the questions, corpus, metrics, budgets, and validation
+chain before interpreting results. The temporal execution matrix is generated
+from a pinned revision and machine-readable artifact. Atomic compactness and
+ablation tables remain outside this result insertion rather than being inferred
+from provisional diagnostic runs.
 
 \subsection{Research Questions}
 
@@ -117,12 +117,57 @@ for example, uses fabrication and tool predicates rather than any Rovers
 vocabulary while preserving the same PDDL dependency structure. This tests the
 claim that compiler rules depend on schemas rather than benchmark names.
 
+\subsection{Pinned Temporal Execution Matrix}
+
+Run \texttt{teg-paper-clean-e28bcea4} uses commit \texttt{e28bcea4} with no
+tracked source changes. It records SHA-256 hashes for every input atomic library,
+12 workers, 30-minute Jason and VAL limits per case, and a 64-MiB Java stack.
+The complete run took 16 minutes 20 seconds. Untracked workspace files were
+recorded by provenance but were not referenced by the runner or the hashed
+library inputs.
+
+Table~\ref{tab:teg-execution} reports the complete matrix. A success requires
+an explicit Jason success marker, neutral-goal VAL acceptance of the entire
+primitive PDDL trace, and acceptance of that trace by both the gold and
+predicted finite-trace automata. All 1,228 cases satisfy all four checks; there
+are no compiler rejections, execution failures, timeouts, VAL rejections, or
+DFA rejections in this run.
+
+\begin{table}[t]
+\centering
+\caption{Pinned end-to-end temporal execution coverage.}
+\label{tab:teg-execution}
+\begin{tabular}{lrr}
+\toprule
+Partition & Cases & All checks passed \\
+\midrule
+Classical domains & 720 & 720 \\
+Bounded-numeric domains & 360 & 360 \\
+Serialized-width domains & 148 & 148 \\
+\midrule
+Ordered two milestones & 273 & 273 \\
+Ordered three milestones & 272 & 272 \\
+Strong Until & 275 & 275 \\
+Same-state conjunction & 137 & 137 \\
+Same-state with negation & 271 & 271 \\
+\midrule
+Total & 1,228 & 1,228 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 360/360 bounded-numeric result supports the implemented integer-equality
+fragment, not arbitrary arithmetic planning. Likewise, complete benchmark
+coverage demonstrates the absence of failures on these released bindings and
+atomic-library hashes; it is not a completeness theorem for arbitrary
+PDDL--LTLf products or all type-compatible assignments.
+
 \subsection{Verified Implementation Checkpoints}
 
-At commit \texttt{ac934327}, the full Python suite contains 340 passing tests;
+At commit \texttt{e28bcea4}, the full Python suite contains 377 passing tests,
 and Ruff passes. A clean-revision Rovers run obtains Jason- and VAL-valid traces
 for all 90 official test instances, including the staged image-production
 regressions that motivated existential preparation projection. A clean
 Blocksworld-On probe produces a 30-action VAL-valid trace. These are
-implementation checkpoints, not the final cross-domain claim; final tables will
-be regenerated from one clean pinned revision with the budgets above.
+focused atomic-library checkpoints, not a substitute for the pending clean
+atomic compactness, library-size, and timing matrix.

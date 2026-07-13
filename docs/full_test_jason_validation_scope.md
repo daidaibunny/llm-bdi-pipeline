@@ -429,7 +429,8 @@ transition as `pogo_sticks_to_make(0)` and compiles to the subgoal
 `!pogo_sticks_to_make(0)`. Direct PDDL test-goal wrappers are only an
 evaluation bridge for benchmark smoke runs where the input is a PDDL problem
 file. The final user-query path remains validated lifted LTLf JSON,
-LTLf-to-DFA, singleton-literal DFA validation, then AgentSpeak(L) append.
+LTLf-to-DFA, conjunctive/negative/numeric guard validation, then AgentSpeak(L)
+append with a query-local primitive-step DFA monitor.
 
 `unsupported_by_current_compiler` remains a boundary diagnosis, not a domain
 class. A graph-search-style domain such as `8puzzle-1tile` is an example when
@@ -546,8 +547,11 @@ Jason cannot escape to an uncertified sibling branch. The persisted certificate
 explicitly assumes that the binary relation remains acyclic in every reachable
 state. If noninterference cannot be proved, compilation fails closed despite an
 acyclic requested support graph. Effects are observed at successful atomic-module
-completion; formulas requiring primitive-step safety monitoring remain outside
-this wrapper's scope.
+completion for branch ordering, while the query-local DFA monitor observes the
+initial valuation and every successful primitive PDDL action. This supports the
+declared `F`, `X`, strong-`U`, conjunction, and literal-negation fragment but
+does not make action-strategy synthesis complete for arbitrary PDDL-times-LTLf
+products.
 
 A second certified cyclic case uses
 `query_local_preservation_safe_action_only_branches`. The runner symbolically

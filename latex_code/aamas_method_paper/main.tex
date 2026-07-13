@@ -63,7 +63,10 @@ The implementation is fail-closed: uncertified recursive interference and
 unproved action choices are rejected rather than compiled heuristically, while
 a query-local runtime monitor preserves the declared LTLf fragment's semantics
 at every primitive-action boundary. Bounded integer equalities use only
-constant-delta progress or complete single-action guard certificates.
+constant-delta progress or complete single-action guard certificates. On a
+pinned 16-domain evaluation, all 1,228 released temporal queries produced
+Jason-successful traces accepted by neutral-goal VAL and by both gold and
+predicted finite-trace automata.
 \end{abstract}
 
 \section{Introduction}
@@ -182,11 +185,14 @@ This work closes a representation gap between generalized planning and BDI
 execution. The compiler turns singleton-goal policy evidence and PDDL schemas
 into one maintained, lifted AgentSpeak domain library, while a separate
 \ltlf-to-DFA stage appends certified query-local controllers for supported
-temporally extended goals. The output can be executed by an unmodified Jason
-interpreter and independently checked through PDDL and finite-trace validation.
-The contribution is therefore not a new generalized planner or BDI semantics,
-but a fail-closed compilation problem that makes reusable planning evidence
-deployable as explicit BDI behavior.
+temporally extended goals and observes every primitive action. All 1,228
+released queries across 16 domains pass Jason, neutral-goal VAL, and both DFA
+checks under the declared Boolean and bounded-integer fragments. The
+contribution is not a new generalized planner or BDI semantics, but a
+fail-closed compilation problem that makes reusable planning evidence
+deployable as explicit BDI behavior. Broader provider evidence, longer schema
+composition, multi-step resource discharge, and more complete temporal action
+strategy synthesis remain future work.
 
 \bibliography{references}
 

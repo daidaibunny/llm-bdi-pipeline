@@ -383,25 +383,35 @@ The agent that receives the final TEG run must:
 7. preserve the supported-fragment and observation-boundary assumptions even
    if an empirical case happens to pass outside them.
 
-## Submission-Readiness Gaps
+## Submission Readiness
 
-The current method draft is structurally complete, but the paper is not ready
-for submission until it contains:
+The following result insertions are complete:
 
-1. a clean final 16-domain atomic-library and Jason/VAL matrix;
-2. separate gold-TEG and predicted-TEG results;
-3. finite-trace DFA acceptance for successful TEG executions;
-4. compactness, library-size, and timing measurements;
-5. executable experimental baselines or ablations that isolate the compiler
+1. the pinned gold-TEG and predicted-TEG execution result from commit
+   `e28bcea4`: 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA
+   successes;
+2. the five profile totals from that run: 273 ordered-two, 272 ordered-three,
+   275 strong-Until, 137 same-state conjunction, and 271 same-state with
+   negation; and
+3. the corresponding quantitative result in the Abstract.
+
+The paper is not ready for submission until it additionally contains:
+
+1. a clean final 16-domain atomic-library compactness, library-size, and timing
+   matrix;
+2. executable experimental baselines or ablations that isolate the compiler
    and temporal-controller contributions;
-6. a rejection/failure analysis tied to stated assumptions;
-7. full or supplementary proofs for claims stronger than the current proof
+3. a rejection/failure analysis tied to stated assumptions; and
+4. full or supplementary proofs for claims stronger than the current proof
    sketches; and
-8. quantitative results in the Abstract.
+5. compression to the AAAI technical-content limit. The current compiled draft
+   places the Conclusion on page 9 before the reproducibility checklist, so it
+   is not yet page-budget compliant.
 
-Until those artifacts exist, the manuscript may describe implemented methods,
-verified focused checkpoints, and the pre-registered evaluation protocol, but
-must not present a provisional diagnostic run as the final experiment matrix.
+The TEG execution matrix exists at
+`artifacts/temporal_goal_execution_runs/teg-paper-clean-e28bcea4` and may be
+reported. The manuscript must not present provisional atomic diagnostics as
+their final experiment matrices.
 
 ## Page Budget and Maintenance
 

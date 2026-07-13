@@ -35,9 +35,11 @@ generalized-planning evidence under PDDL-derived certificates.
 deterministic finite automata, including the MONA-backed \texttt{ltlf2dfa}
 implementation used here \cite{Fuggitti2020LTLf2DFA}. Full temporal synthesis
 can maintain explicit automaton state; our implemented fragment is narrower.
-It compiles one certified accepting path into context-based AgentSpeak helpers
-and rejects automata whose progress cannot be inferred without an external
-monitor. Temporally extended goals have also been integrated into agent
+It compiles each certified distance-reducing edge into a source-state-dispatched
+AgentSpeak controller and embeds a query-local monitor that advances after every
+successful primitive PDDL action. It rejects transitions whose progress
+strategy cannot be established by the declared certificates. Temporally
+extended goals have also been integrated into agent
 programming languages as explicit goal semantics \cite{Hindriks2009TemporalGoals}.
 We instead preserve standard AgentSpeak execution and compile the supported
 automaton fragment into query-local intentions over a separately synthesized

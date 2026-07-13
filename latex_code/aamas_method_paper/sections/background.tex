@@ -48,15 +48,16 @@ returned; the corresponding transition guard is tested again.
 An \ltlf formula is interpreted over a finite sequence of propositional states
 \cite{DeGiacomoVardi2013}. We use the real \texttt{ltlf2dfa}/MONA toolchain to
 construct a deterministic finite automaton (DFA) \cite{Fuggitti2020LTLf2DFA}.
-The implemented query fragment admits one certified accepting path whose
-progress guards contain conjunction and literal negation. A guard
+The implemented query fragment admits certified distance-reducing transitions
+whose progress guards contain conjunction and literal negation. A guard
 \[
 B=P^+\land\neg P^-
 \]
 contains positive achievements $P^+$ that may call atomic modules and negative
 context obligations $P^-$ that must remain absent. Disjunction, ambiguous DFA
-progress, and primitive-step safety monitoring are outside the implemented
-fragment.
+progress without a certified action strategy, and arbitrary numeric arithmetic
+are outside the implemented fragment. A query-local monitor evaluates the DFA
+after the initial valuation and every successful primitive PDDL action.
 
 \subsection{Certified Compilation Problem}
 
