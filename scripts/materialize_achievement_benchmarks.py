@@ -93,7 +93,7 @@ def main() -> None:
 
 	specs = _domain_specs()
 	_validate_source(specs)
-	_reset_directory(DOMAINS_ROOT)
+	_reset_directory(DOMAINS_ROOT, preserve_names=frozenset({"README.md"}))
 	for spec in specs:
 		_materialize_domain(spec)
 	_write_registry(specs)
@@ -119,10 +119,21 @@ def _validate_source(specs: tuple[DomainSpec, ...]) -> None:
 			)
 
 
-def _reset_directory(path: Path) -> None:
-	if path.exists():
-		shutil.rmtree(path)
-	path.mkdir(parents=True)
+def _reset_directory(
+	path: Path,
+	*,
+	preserve_names: frozenset[str] = frozenset(),
+) -> None:
+	"""Reset generated entries while retaining explicitly named root metadata."""
+
+	path.mkdir(parents=True, exist_ok=True)
+	for child in path.iterdir():
+		if child.name in preserve_names:
+			continue
+		if child.is_dir() and not child.is_symlink():
+			shutil.rmtree(child)
+		else:
+			child.unlink()
 
 
 def _domain_specs() -> tuple[DomainSpec, ...]:

@@ -2,7 +2,25 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.materialize_achievement_benchmarks import _normalize_problem_domain_reference
+from scripts.materialize_achievement_benchmarks import (
+	_normalize_problem_domain_reference,
+	_reset_directory,
+)
+
+
+def test_reset_directory_preserves_named_repository_metadata(tmp_path) -> None:
+	domains_root = tmp_path / "domains"
+	domains_root.mkdir()
+	readme = domains_root / "README.md"
+	readme.write_text("materialization instructions\n", encoding="utf-8")
+	stale_domain = domains_root / "stale-domain"
+	stale_domain.mkdir()
+	(stale_domain / "domain.pddl").write_text("stale\n", encoding="utf-8")
+
+	_reset_directory(domains_root, preserve_names=frozenset({"README.md"}))
+
+	assert readme.read_text(encoding="utf-8") == "materialization instructions\n"
+	assert not stale_domain.exists()
 
 
 def test_problem_domain_reference_is_normalized_from_actual_domain_schema() -> None:
