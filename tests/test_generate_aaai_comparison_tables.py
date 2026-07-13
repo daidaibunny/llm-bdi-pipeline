@@ -456,6 +456,40 @@ def test_build_comparison_dataset_rejects_raw_moose_from_different_seed_batch(
 		)
 
 
+def test_build_comparison_dataset_rejects_changed_raw_moose_artifacts(
+	tmp_path: Path,
+) -> None:
+	raw_summaries = []
+	for seed in range(5):
+		payload = _raw_fixture(seed)
+		if seed == 2:
+			payload["model_batch_manifest"]["artifact_sha256"] = "f" * 64
+		raw_summaries.append(
+			(seed, _write_json(tmp_path / f"raw-{seed}.json", payload)),
+		)
+
+	with pytest.raises(ValueError, match="Raw MOOSE seed 2.*evidence artifacts"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(
+				tmp_path / "paired.json",
+				_paired_fixture(),
+			),
+			raw_moose_summaries=tuple(raw_summaries),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				_instance_fixture(),
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				_direct_fixture(),
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
+
+
 def test_build_comparison_dataset_rejects_duplicate_temporal_sample_ids(
 	tmp_path: Path,
 ) -> None:
@@ -785,6 +819,7 @@ def _paired_fixture() -> dict[str, object]:
 		"seed_batch_manifests": {
 			str(seed): {
 				"sha256": str(seed) * 64,
+				"artifact_sha256": (str(seed) or "0") * 64,
 				"settings": {
 					"random_seed": seed,
 					"num_workers": 1,
@@ -859,6 +894,7 @@ def _raw_fixture(seed: int) -> dict[str, object]:
 		"toolchain": _external_toolchain(),
 		"model_batch_manifest": {
 			"sha256": str(seed) * 64,
+			"artifact_sha256": (str(seed) or "0") * 64,
 			"timestamp_id": f"seed-{seed}",
 			"settings": {
 				"random_seed": seed,

@@ -185,7 +185,11 @@ def model_file_for_domain(batch_root: str | Path, domain: str) -> Path:
 	return root / "run_logs" / domain / f"{domain}.model"
 
 
-def model_batch_manifest_metadata(batch_root: str | Path) -> dict[str, Any]:
+def model_batch_manifest_metadata(
+	batch_root: str | Path,
+	*,
+	domains: Sequence[str] | None = None,
+) -> dict[str, Any]:
 	"""Return the immutable seeded-training identity for one model batch."""
 
 	root = Path(batch_root).expanduser().resolve()
@@ -198,9 +202,43 @@ def model_batch_manifest_metadata(batch_root: str | Path) -> dict[str, Any]:
 	settings = payload.get("settings")
 	if not isinstance(settings, Mapping):
 		raise ValueError(f"MOOSE model batch manifest has no settings: {manifest_file}")
+	selected_domains = tuple(
+		sorted(str(domain) for domain in (domains or payload.get("domains") or ()))
+	)
+	if not selected_domains:
+		raise ValueError(f"MOOSE model batch manifest has no domains: {manifest_file}")
+	artifacts: list[dict[str, Any]] = []
+	for domain in selected_domains:
+		model_file = model_file_for_domain(root, domain)
+		readable_policy = Path(f"{model_file}.readable")
+		if not model_file.is_file() or model_file.stat().st_size <= 0:
+			raise ValueError(f"MOOSE model batch has no model for {domain}: {model_file}")
+		if not readable_policy.is_file() or readable_policy.stat().st_size <= 0:
+			raise ValueError(
+				f"MOOSE model batch has no readable policy for {domain}: "
+				f"{readable_policy}",
+			)
+		artifacts.append(
+			{
+				"domain": domain,
+				"model_file": str(model_file.relative_to(root)),
+				"model_sha256": _sha256(model_file),
+				"model_bytes": model_file.stat().st_size,
+				"readable_policy_file": str(readable_policy.relative_to(root)),
+				"readable_policy_sha256": _sha256(readable_policy),
+				"readable_policy_bytes": readable_policy.stat().st_size,
+			},
+		)
+	canonical_artifacts = json.dumps(
+		artifacts,
+		sort_keys=True,
+		separators=(",", ":"),
+	).encode("utf-8")
 	return {
 		"file": str(manifest_file),
 		"sha256": _sha256(manifest_file),
+		"artifact_sha256": hashlib.sha256(canonical_artifacts).hexdigest(),
+		"artifacts": artifacts,
 		"timestamp_id": str(payload.get("timestamp_id") or ""),
 		"settings": dict(settings),
 	}
@@ -277,7 +315,7 @@ def main() -> int:
 		else None
 	)
 	model_batch_manifest = (
-		model_batch_manifest_metadata(model_batch)
+		model_batch_manifest_metadata(model_batch, domains=domains)
 		if model_batch is not None
 		else None
 	)

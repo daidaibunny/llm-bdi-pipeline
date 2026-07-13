@@ -76,6 +76,7 @@ def test_model_batch_manifest_metadata_records_seeded_training_contract(
 ) -> None:
 	manifest = {
 		"timestamp_id": "seed-two",
+		"domains": ["ferry"],
 		"settings": {
 			"random_seed": 2,
 			"num_workers": 1,
@@ -89,12 +90,18 @@ def test_model_batch_manifest_metadata_records_seeded_training_contract(
 		json.dumps(manifest),
 		encoding="utf-8",
 	)
+	artifact_root = tmp_path / "run_logs/ferry"
+	artifact_root.mkdir(parents=True)
+	(artifact_root / "ferry.model").write_bytes(b"model")
+	(artifact_root / "ferry.model.readable").write_text("policy", encoding="utf-8")
 
 	metadata = model_batch_manifest_metadata(tmp_path)
 
 	assert metadata["timestamp_id"] == "seed-two"
 	assert metadata["settings"]["random_seed"] == 2
 	assert len(metadata["sha256"]) == 64
+	assert len(metadata["artifact_sha256"]) == 64
+	assert metadata["artifacts"][0]["domain"] == "ferry"
 
 
 def test_stage_raw_moose_model_copies_external_batch_artifact(

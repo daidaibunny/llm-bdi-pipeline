@@ -186,7 +186,9 @@ LAMA search share one 1,800-second, 8-GiB per-query budget. The setup contract i
 
 Five fixed MOOSE seeds are run independently with one internal MOOSE worker.
 Evidence is never unioned and a best seed is never selected. Every paired
-compiler comparison records the exact evidence hash; every paired temporal
+compiler comparison records both the seeded-training manifest and a canonical
+SHA-256 fingerprint of every per-domain `.model` and `.model.readable`
+artifact; every paired temporal
 comparison records the atomic-library, input, binding, and DFA hashes. Report
 each seed, mean and sample standard deviation, paired coverage differences,
 PAR-2 for timeouts, and plan length only on jointly solved instances. Keep
@@ -209,6 +211,12 @@ benchmark runners once per registered method. Atomic pairing requires the same
 raw readable-policy hash and normalized evidence-program fingerprint for every
 method at a given seed and domain. Temporal pairing requires the same benchmark,
 atomic-library, and DFA fingerprints and the same sample set for every method.
+For the registered `--stage all` release, all temporal variants consume the
+seed-0 Full Compiler libraries emitted earlier in that same run and source
+revision. They never consume ASL files opportunistically generated while the
+long-running evidence batch was in progress. A temporal-only diagnostic may use
+an explicit precompiled batch, but it is not substituted into the registered
+combined matrix.
 The DFA fingerprint covers the formula, atom binding, initial and accepting
 states, and guarded transition graph. It excludes conversion timings, artifact
 paths, and DOT rendering, which are provenance rather than paired semantic
@@ -245,7 +253,8 @@ numeric MRP+HJ cases. The generator recomputes the sorted identifier digest for
 every method and seed and rejects omissions, duplicates, or substitutions even
 if every compared method made the same mistake. It also requires every
 downstream summary to come from one clean source commit, binds each Raw MOOSE
-run to the exact model-batch manifest used by the corresponding compiler seed,
+run to both the exact model-batch manifest and the canonical model/readable-
+policy artifact fingerprint used by the corresponding compiler seed,
 checks the registered six-worker, 1,800-second, 64-MiB Java-stack, and 8-GiB
 external-planner protocol, and verifies pinned tool revisions and artifact
 hashes. The challenge input must contain exactly the 13 unique registered nodes

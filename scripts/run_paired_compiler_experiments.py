@@ -40,6 +40,9 @@ from evaluation.external_reference_planners import (  # noqa: E402
 	reference_methods_for_domain,
 )
 from scripts.run_full_test_jason_validation import source_revision_metadata  # noqa: E402
+from scripts.run_external_planning_references import (  # noqa: E402
+	model_batch_manifest_metadata,
+)
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 
 
@@ -55,6 +58,16 @@ class RegisteredRun:
 	summary_file: Path
 	seed: int | None = None
 	input_batch_id: str | None = None
+
+
+@dataclass(frozen=True)
+class TemporalAtomicInput:
+	"""Exact atomic-library root consumed by every temporal compiler variant."""
+
+	batch_root: Path
+	batch_id: str
+	evidence_batch_id: str
+	provenance: str
 
 
 def parse_seed_batch_assignments(values: Sequence[str]) -> dict[int, str]:
@@ -77,6 +90,45 @@ def parse_seed_batch_assignments(values: Sequence[str]) -> dict[int, str]:
 			raise ValueError(f"duplicate seed batch assignment: {seed}")
 		assignments[seed] = batch_id.strip()
 	return assignments
+
+
+def resolve_temporal_atomic_input(
+	*,
+	stage: str,
+	run_id: str,
+	atomic_output_root: Path,
+	evidence_batch_root: Path,
+	requested_batch_id: str | None,
+	seed_batches: Mapping[int, str],
+) -> TemporalAtomicInput:
+	"""Bind temporal variants to a current Full Compiler atomic artifact."""
+
+	if stage == "all":
+		if requested_batch_id:
+			raise ValueError(
+				"--temporal-batch-id is temporal-only; --stage all always consumes "
+				"the same-run seed-0 Full Compiler output.",
+			)
+		evidence_batch_id = seed_batches.get(0)
+		if not evidence_batch_id:
+			raise ValueError("--stage all requires the registered seed-0 evidence batch")
+		return TemporalAtomicInput(
+			batch_root=atomic_output_root,
+			batch_id=f"{run_id}-seed0-{AtomicCompilerVariant.FULL.value}",
+			evidence_batch_id=evidence_batch_id,
+			provenance="same_run_seed0_full_compiler",
+		)
+	if stage == "temporal":
+		batch_id = requested_batch_id or seed_batches.get(0)
+		if not batch_id:
+			raise ValueError("temporal stage requires --temporal-batch-id")
+		return TemporalAtomicInput(
+			batch_root=evidence_batch_root,
+			batch_id=batch_id,
+			evidence_batch_id=batch_id,
+			provenance="explicit_precompiled_batch",
+		)
+	raise ValueError(f"No temporal atomic input exists for stage {stage!r}")
 
 
 def validate_seed_batch_manifest(
@@ -110,13 +162,8 @@ def validate_seed_batch_manifest(
 	manifest_domains = tuple(str(domain) for domain in manifest.get("domains") or ())
 	if set(manifest_domains) != set(domains) or len(manifest_domains) != len(domains):
 		raise ValueError(f"Seed {seed} batch domain set does not match the experiment")
-	return {
-		"file": str(manifest_file),
-		"sha256": _sha256(manifest_file),
-		"timestamp_id": str(manifest.get("timestamp_id") or ""),
-		"settings": dict(settings),
-		"domains": list(manifest_domains),
-	}
+	metadata = model_batch_manifest_metadata(batch_root, domains=domains)
+	return {**metadata, "domains": list(manifest_domains)}
 
 
 def build_evidence_run_command(
@@ -874,7 +921,10 @@ def _parse_args() -> argparse.Namespace:
 	)
 	parser.add_argument(
 		"--temporal-batch-id",
-		help="Full Compiler atomic batch used unchanged by every temporal variant.",
+		help=(
+			"Precompiled atomic batch for --stage temporal. With --stage all, every "
+			"temporal variant consumes the same-run seed-0 Full Compiler output."
+		),
 	)
 	parser.add_argument("--batch-root", type=Path, default=DEFAULT_BATCH_ROOT)
 	parser.add_argument("--benchmark-root", type=Path, default=DEFAULT_BENCHMARK_ROOT)
@@ -924,11 +974,20 @@ def main() -> int:
 			)
 		if not seed_batches:
 			raise ValueError("atomic stage requires at least one --seed-batch SEED=BATCH_ID")
-	temporal_batch_id = args.temporal_batch_id
-	if args.stage in {"temporal", "all"} and not temporal_batch_id:
-		temporal_batch_id = seed_batches.get(0)
-	if args.stage in {"temporal", "all"} and not temporal_batch_id:
-		raise ValueError("temporal stage requires --temporal-batch-id")
+	atomic_output_root = run_root / "atomic_runs"
+	temporal_output_root = run_root / "temporal_runs"
+	temporal_atomic_input = (
+		resolve_temporal_atomic_input(
+			stage=args.stage,
+			run_id=run_id,
+			atomic_output_root=atomic_output_root,
+			evidence_batch_root=args.batch_root.expanduser().resolve(),
+			requested_batch_id=args.temporal_batch_id,
+			seed_batches=seed_batches,
+		)
+		if args.stage in {"temporal", "all"}
+		else None
+	)
 	seed_batch_manifests = (
 		{}
 		if args.generate_evidence
@@ -947,8 +1006,6 @@ def main() -> int:
 		domains=domains,
 	)
 
-	atomic_output_root = run_root / "atomic_runs"
-	temporal_output_root = run_root / "temporal_runs"
 	runs: list[RegisteredRun] = []
 	if args.generate_evidence:
 		for seed, batch_id in sorted(seed_batches.items()):
@@ -1002,6 +1059,7 @@ def main() -> int:
 					),
 				)
 	if args.stage in {"temporal", "all"}:
+		assert temporal_atomic_input is not None
 		for variant in TemporalCompilerVariant:
 			child_id = f"{run_id}-{variant.value}"
 			runs.append(
@@ -1010,12 +1068,12 @@ def main() -> int:
 					method=variant.display_name,
 					variant=variant.value,
 					run_id=child_id,
-					input_batch_id=str(temporal_batch_id),
+					input_batch_id=temporal_atomic_input.batch_id,
 					command=build_temporal_run_command(
 						project_root=project_root,
 						benchmark_root=args.benchmark_root.expanduser().resolve(),
-						batch_root=args.batch_root.expanduser().resolve(),
-						batch_id=str(temporal_batch_id),
+						batch_root=temporal_atomic_input.batch_root,
+						batch_id=temporal_atomic_input.batch_id,
 						output_root=temporal_output_root,
 						run_id=child_id,
 						variant=variant,
@@ -1057,7 +1115,19 @@ def main() -> int:
 		"seed_batches": {str(seed): batch for seed, batch in seed_batches.items()},
 		"seed_batch_manifests": seed_batch_manifests,
 		"generate_evidence": bool(args.generate_evidence),
-		"temporal_batch_id": temporal_batch_id,
+		"temporal_batch_id": (
+			temporal_atomic_input.batch_id if temporal_atomic_input is not None else None
+		),
+		"temporal_atomic_input": (
+			{
+				"batch_root": str(temporal_atomic_input.batch_root),
+				"batch_id": temporal_atomic_input.batch_id,
+				"evidence_batch_id": temporal_atomic_input.evidence_batch_id,
+				"provenance": temporal_atomic_input.provenance,
+			}
+			if temporal_atomic_input is not None
+			else None
+		),
 		"num_workers": max(1, int(args.num_workers)),
 		"timeout_seconds": max(1, int(args.timeout_seconds)),
 		"jason_java_stack_size": str(args.jason_java_stack_size),
@@ -1112,8 +1182,7 @@ def main() -> int:
 		)
 		allowed_return_codes = {0, 1} if run.stage in {"Atomic", "Temporal"} else {0}
 		if return_code not in allowed_return_codes or not run.summary_file.is_file():
-			if run.stage == "Evidence":
-				failed_input_batches.add(run.run_id)
+			failed_input_batches.add(run.run_id)
 			infrastructure_failures.append(
 				{
 					"stage": run.stage,

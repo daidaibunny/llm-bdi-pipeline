@@ -15,6 +15,7 @@ from scripts.run_paired_compiler_experiments import atomic_library_metrics
 from scripts.run_paired_compiler_experiments import execution_metrics
 from scripts.run_paired_compiler_experiments import pairing_outcome
 from scripts.run_paired_compiler_experiments import parse_seed_batch_assignments
+from scripts.run_paired_compiler_experiments import resolve_temporal_atomic_input
 from scripts.run_paired_compiler_experiments import validate_atomic_pairing
 from scripts.run_paired_compiler_experiments import validate_seed_batch_manifest
 from scripts.run_paired_compiler_experiments import validate_temporal_pairing
@@ -57,6 +58,79 @@ def test_validate_seed_batch_manifest_rejects_mislabeled_seed(tmp_path: Path) ->
 			batch_root=batch_root,
 			seed=0,
 			domains=("ferry",),
+		)
+
+
+def test_validate_seed_batch_manifest_fingerprints_complete_evidence(
+	tmp_path: Path,
+) -> None:
+	batch_root = tmp_path / "seed-zero"
+	artifact_root = batch_root / "run_logs/ferry"
+	artifact_root.mkdir(parents=True)
+	(batch_root / "batch_manifest.json").write_text(
+		"""
+{
+  "timestamp_id": "seed-zero",
+  "domains": ["ferry"],
+  "settings": {
+    "random_seed": 0,
+    "num_workers": 1,
+    "num_permutations": 3,
+    "goal_max_size": 1,
+    "train_timeout_seconds": 43200,
+    "max_rss_gb": 16.0
+  }
+}
+""".strip(),
+		encoding="utf-8",
+	)
+	(artifact_root / "ferry.model").write_bytes(b"model")
+
+	with pytest.raises(ValueError, match="readable policy"):
+		validate_seed_batch_manifest(
+			batch_root=batch_root,
+			seed=0,
+			domains=("ferry",),
+		)
+
+	(artifact_root / "ferry.model.readable").write_text("policy", encoding="utf-8")
+	metadata = validate_seed_batch_manifest(
+		batch_root=batch_root,
+		seed=0,
+		domains=("ferry",),
+	)
+
+	assert len(metadata["artifact_sha256"]) == 64
+	assert metadata["artifacts"][0]["domain"] == "ferry"
+	assert len(metadata["artifacts"][0]["model_sha256"]) == 64
+	assert len(metadata["artifacts"][0]["readable_policy_sha256"]) == 64
+
+
+def test_all_stage_temporal_input_is_current_seed_zero_full_compiler(
+	tmp_path: Path,
+) -> None:
+	input_record = resolve_temporal_atomic_input(
+		stage="all",
+		run_id="paper",
+		atomic_output_root=tmp_path / "atomic",
+		evidence_batch_root=tmp_path / "batches",
+		requested_batch_id=None,
+		seed_batches={0: "seed-zero", 1: "seed-one"},
+	)
+
+	assert input_record.batch_root == tmp_path / "atomic"
+	assert input_record.batch_id == "paper-seed0-full"
+	assert input_record.evidence_batch_id == "seed-zero"
+	assert input_record.provenance == "same_run_seed0_full_compiler"
+
+	with pytest.raises(ValueError, match="temporal-batch-id.*temporal-only"):
+		resolve_temporal_atomic_input(
+			stage="all",
+			run_id="paper",
+			atomic_output_root=tmp_path / "atomic",
+			evidence_batch_root=tmp_path / "batches",
+			requested_batch_id="stale-batch",
+			seed_batches={0: "seed-zero"},
 		)
 
 

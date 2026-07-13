@@ -321,6 +321,12 @@ normalized evidence hash:
 The registered temporal comparison holds the DFA, atomic-library hash, query
 binding, and Jason runtime fixed:
 
+For the final combined run, the shared atomic input is not copied from the
+long-running evidence batch. It is the seed-0 Full Compiler output produced by
+the atomic stage of the same clean source revision. The evidence batch supplies
+only the MOOSE model and readable policy. This prevents libraries compiled at
+different repository revisions from entering a paired temporal comparison.
+
 1. **Unprotected DFA:** canonical within-edge serialization, real DFA,
    and primitive-step monitor, but no threat ordering or preservation portfolio.
 2. **Certified Flat:** add complete-effect threat ordering and preserving
@@ -1133,11 +1139,12 @@ only compare methods with each other. It recomputes immutable identifier-set
 digests for all 1,228 achievement cases, all 1,228 temporal cases, the 868
 classical LAMA cases, and the 360 numeric MRP+HJ cases; duplicates and shared
 omissions are invalid. It additionally requires the five Raw MOOSE runs to use
-the exact seed-specific model-batch manifests consumed by the paired compiler
-runs, one clean source commit for every downstream summary, the registered
-resource protocol, pinned external binaries, and exactly 13 unique successful
-challenge nodes. Report a failed contract as an infrastructure failure, never
-as a method score.
+the exact seed-specific model-batch manifests and canonical hashes of every
+per-domain model/readable-policy pair consumed by the paired compiler runs, one
+clean source commit for every downstream summary, the registered resource
+protocol, pinned external binaries, and exactly 13 unique successful challenge
+nodes. Report a failed contract as an infrastructure failure, never as a method
+score.
 
 ### TEG Table
 

@@ -318,6 +318,12 @@ def _validate_raw_moose_runs(
 			raise ValueError(
 				f"Raw MOOSE seed {seed} does not use the paired model batch",
 			)
+		if str(
+			dict(summary["model_batch_manifest"]).get("artifact_sha256") or "",
+		) != str(paired_manifest.get("artifact_sha256") or ""):
+			raise ValueError(
+				f"Raw MOOSE seed {seed} does not use the paired evidence artifacts",
+			)
 		methods = {str(row.get("method") or "") for row in summary.get("results") or ()}
 		if methods != {"Raw MOOSE"}:
 			raise ValueError(f"Raw MOOSE seed {seed} contains methods {sorted(methods)}")
@@ -351,6 +357,8 @@ def _validate_seed_batch_contract(
 ) -> None:
 	if len(str(manifest.get("sha256") or "")) != 64:
 		raise ValueError(f"{label} has no model-batch manifest hash")
+	if len(str(manifest.get("artifact_sha256") or "")) != 64:
+		raise ValueError(f"{label} has no evidence-artifact hash")
 	settings = manifest.get("settings")
 	if not isinstance(settings, Mapping):
 		raise ValueError(f"{label} has no model-batch training settings")
