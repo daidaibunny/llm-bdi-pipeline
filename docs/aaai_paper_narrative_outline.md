@@ -65,7 +65,9 @@ than treating the manuscript as a software-module report.
 
 The BDI and temporal bridge must also be positioned against primary work on
 [declarative AgentSpeak goal patterns](https://doi.org/10.1145/1160633.1160869),
-[BDI plan failure](https://doi.org/10.1145/1329125.1329134), and
+[BDI plan failure](https://doi.org/10.1145/1329125.1329134),
+[BDI goal interference](https://www.ijcai.org/Proceedings/03/Papers/105.pdf),
+and
 [temporally extended agent goals](https://doi.org/10.65109/ttvp5714). These
 works supply execution semantics and design precedent; they do not implement
 our evidence-to-library compiler.
@@ -121,6 +123,16 @@ reproducibility material unless they are indispensable to distinguish two
 experimental estimands. The Abstract and Introduction follow the narrative
 cadence of accepted AAAI planning papers: problem, limitation of existing
 representations, central idea, guarantee, and empirical result.
+
+Apply citations at the sentence or tightly coupled claim cluster they support.
+External definitions, prior methods, software behavior, benchmark provenance,
+and baseline protocols require a verified primary source. GP2PL definitions,
+algorithms, theorems, and measured results instead point to the relevant
+internal figure, table, proposition, appendix, or released artifact; do not use
+an adjacent prior-work citation to imply that a new GP2PL claim is inherited.
+The abstract remains citation-free under the AAAI convention, but every
+externally attributable claim must be supported when it first appears in the
+main text.
 
 The manuscript presents GP2PL as a theoretical representation-compilation
 framework, not as a software architecture report. Its primary objects are a
@@ -207,14 +219,18 @@ compiler is introduced. Organize the section by representation gap:
 
 1. generalized planning, MOOSE, feature policies, and sketches;
 2. policy reuse and solver-backed compact rule selection;
-3. procedural BDI plan libraries, AgentSpeak declarative goal patterns, and
-   plan failure; and
-4. temporally extended BDI goals and LTLf-to-DFA synthesis.
+3. procedural BDI plan libraries, AgentSpeak declarative goal patterns, plan
+   failure, and definite/possible effect summaries for goal interference;
+4. temporally extended BDI goals and LTLf-to-DFA synthesis; and
+5. natural-language-to-temporal-logic systems and the stricter typed,
+   externally bound validation contract used here.
 
 End with the exact novelty boundary: MOOSE goal regression, Clingo solving,
-AgentSpeak semantics, and LTLf-to-DFA translation are prior work. The
-contribution is their connection through a certificate-carrying compiler that
-constructs executable domain modules and query-local controllers.
+AgentSpeak semantics, conditional effect summaries for BDI goal interference,
+and LTLf-to-DFA translation are prior work. The contribution is their connection
+through a certificate-carrying compiler that derives the summaries from
+generalized-planning evidence and PDDL schemas, constructs executable domain
+modules, and composes query-local controllers.
 
 ### 4. GP2PL Domain-Library Compilation
 
@@ -552,26 +568,28 @@ experiment.
 
 ## Final Visual Program
 
-The main paper targets exactly four figures, one algorithm, and no more than
+The main paper targets exactly two figures, one algorithm, and no more than
 four result tables after the registered matrices are complete. The current
 seven-page draft keeps one compact temporal-profile table in the main paper and
 moves the fixed per-domain library table, repeated oracle columns, certificate
 challenges, and complete distributions to the supplement. Registered comparison
 tables must replace provisional content rather than accumulate beyond the
 seven-page technical limit. This follows the visual argument used by closely
-related planning papers: MOOSE combines an architecture
-figure, a full-width worked goal-regression example, synthesis tables, and
-cumulative coverage curves; AAAI-24 work on generalized planning with language
-models combines a pipeline, a main coverage table, runtime scaling, ablation,
-and failure analysis; temporal-planning work uses automaton diagrams together
-with coverage/runtime plots. Our figures must explain the representation bridge
-and its certificates before they show aggregate success numbers.
+related planning papers: MOOSE uses one compact method overview and reserves its
+main empirical graphic for cumulative coverage over absolute time, while related
+generalized-planning papers place exact per-domain values in dense tables. Our
+main Figure 1 therefore explains the complete representation bridge, and main
+Figure 2 combines broad paired coverage, an executable coverage-size ablation,
+and all-query temporal scaling. The worked policy-lifting and DFA-controller
+diagrams remain Supplementary Figures S1 and S2, where they can support the
+formal method without consuming two additional main-paper floats.
 
 ### Figure Production Handoff Contract
 
-Figures 1--3 are conceptual method diagrams. Their labels and examples below
-come from the implemented architecture and PDDL schemas, not from estimated
-experimental measurements. Figure 4 is empirical: its axes may be laid out in
+Figure 1 and Supplementary Figures S1--S2 are conceptual method diagrams. Their
+labels and examples below come from the implemented architecture and PDDL
+schemas, not from estimated experimental measurements. Figure 2 is empirical:
+its axes may be laid out in
 advance, but every data mark must be generated from pinned JSON artifacts. No
 colleague or paper-writing agent may infer missing values from prose, terminal
 logs, an earlier run, or another method.
@@ -582,25 +600,28 @@ complete slide. Snap objects to the specified coordinates within 0.5 percentage
 points. Captions are LaTeX text below the imported graphic and must not be drawn
 inside the PowerPoint slide.
 
-Canvas, PowerPoint, and export settings:
+Canvas, PowerPoint, Python, and export settings:
 
-- Figures 1 and 4 use a 13.333 by 5.000 inch export canvas. Figures 2 and 3 use
-  a 13.333 by 5.333 inch export canvas. Keep a white opaque background.
+- Main Figure 1 uses a 13.333 by 5.000 inch PowerPoint export canvas.
+  Supplementary Figures S1 and S2 use a 13.333 by 5.333 inch PowerPoint canvas.
+  Main Figure 2 is generated by Matplotlib at 7.15 by 4.55 inches. Keep a white
+  opaque background.
 - Use Arial 17 pt for normal labels, Arial Bold 20 pt for panel headings, and
   Courier New 15 pt for PDDL, AgentSpeak, formulas encoded as text, and artifact
   field names. These become approximately 8--10 pt after scaling to AAAI
   `\textwidth`.
 - Use square or 0.06-inch-corner rectangles. Do not use shadows, gradients,
   three-dimensional effects, icons, decorative illustrations, or screenshots.
-- Figures 1--3 share one editable source deck named
+- Figure 1 and Supplementary Figures S1--S2 share one editable source deck named
   `latex_code/aamas_method_paper/figures/aaai_method_figures_source.pptx`, with
-  exactly one figure per slide and the slide order matching the figure number.
-  Figure 4 is produced by a checked-in plotting script, not by PowerPoint.
-- Final vector files are `fig1_architecture.pdf`, `fig2_policy_lifting.pdf`,
-  `fig3_dfa_controller.pdf`, and `fig4_evaluation.pdf`, under
+  exactly one figure per slide. Main Figure 2 is produced by the checked-in
+  Matplotlib script, not by PowerPoint.
+- Main vector files are `fig1_architecture.pdf` and `fig2_evaluation.pdf`.
+  Supplementary vector files are `figS1_policy_lifting.pdf` and
+  `figS2_dfa_controller.pdf`, all under
   `latex_code/aamas_method_paper/figures/` when delivered.
 - Embed fonts in the PDF, crop to the slide boundary, and verify all text at
-  `\includegraphics[width=\textwidth]`. Do not rasterize Figures 1--3.
+  `\includegraphics[width=\textwidth]`. Do not rasterize any figure.
 
 Use this exact color palette. Text is always `#1A1A1A` unless the fill is the
 dark Clingo box, in which case text is white.
@@ -742,13 +763,12 @@ validated LTLf JSON. Draft caption:
 > transitions. Jason actions are validated independently by VAL and both
 > finite-trace automata; uncertified compilation choices are rejected.
 
-### Figure 2: From Policy Evidence to a Lifted Atomic Module
+### Supplementary Figure S1: From Policy Evidence to a Lifted Atomic Module
 
-Use a full-width `figure*` immediately after the first paragraph of
-Section 4, before the candidate-language details. Use four equal-width panels.
-This is a method example, not an experimental result. It uses the repository's
-Blocks PDDL vocabulary. PDDL names retain hyphens; rendered AgentSpeak names
-use underscores.
+Place this full-width figure in the technical supplement beside the complete
+candidate-language definition. Use four equal-width panels. This is a method
+example, not an experimental result. It uses the repository's Blocks PDDL
+vocabulary. PDDL names retain hyphens; rendered AgentSpeak names use underscores.
 
 Panel containers and headings:
 
@@ -841,18 +861,18 @@ candidate language, not a verbatim claim that every seed selects these exact
 three branches. It demonstrates the added internal module and recursive
 structure. Draft caption:
 
-> **Figure 2: Certified lifting of singleton-goal policy evidence.** Provider
+> **Supplementary Figure S1: Certified lifting of singleton-goal policy
+> evidence.** Provider
 > macros and PDDL-derived closure candidates enter the same certified candidate
 > space. The selected BDI module, shown in its AgentSpeak(L) realization, is
 > lifted, internally closed, and may introduce producible subsidiary goals
 > absent from the evidence; compactness is optimal only within the generated
 > candidate language.
 
-### Figure 3: DFA Transition Compilation and Runtime Monitoring
+### Supplementary Figure S2: DFA Transition Compilation and Runtime Monitoring
 
-Use a full-width `figure*` immediately after the first paragraph of
-Section 5, before the formal transition-compilation rules. Use four panels. The
-decoded MONA example is
+Place this full-width figure in the technical supplement beside the formal
+transition-compilation rules. Use four panels. The decoded MONA example is
 `phi = F(on(A,B) & on(B,C) & not holding(A))`. Define the complete progress
 guard once as `G`; all subsequent labels refer to that same guard. This is a
 semantic method example, not one measured benchmark trace.
@@ -949,39 +969,39 @@ All helper names in panel (c) omit the common prefix
 `g_query_17_trans_1_` only to remain legible; print this note in gray 12 pt at
 `x=65,y=95,w=10,h=3`, to the right of the singleton inset. Draft caption:
 
-> **Figure 3: Preservation-safe compilation of one DFA progress transition.**
+> **Supplementary Figure S2: Preservation-safe compilation of one DFA progress
+> transition.**
 > Conditional module summaries induce a threat order over signed guard
 > obligations. A balanced BDI repair tree, rendered here in AgentSpeak(L),
 > realizes that fixed order with trigger fan-out at most two, while the real DFA
 > monitor observes every primitive action. Uncertified cyclic threats or
 > negative-literal repairs are rejected rather than serialized heuristically.
 
-### Figure 4: Main Empirical Evidence
+### Figure 2: Main Empirical Evidence
 
 Use a full-width `figure*` in Section 7 after the evaluation protocol and metric
 definitions, before any result table. This figure is generated from artifacts,
-not manually drawn. The colleague may reproduce the panel geometry and visual
-styles in a template, but a checked-in plotting script must place every point,
-interval, annotation, and curve.
+not manually drawn. The checked-in plotting script places every point, interval,
+annotation, and curve; PowerPoint must not be used to reconstruct the data marks.
 
 The required generator is `scripts/generate_aaai_figures.py`. It must accept
-`--five-seed-summary`, `--paired-results`, and `--output-file` arguments, apply
-the gates below before reading plot values, and exit nonzero without creating a
-PDF when a gate fails. Until that script and complete gated artifacts exist,
-Figure 4 is specified but not release-ready. The colleague supplies styling,
-not numeric coordinates for data marks.
+one `--paired-results` artifact and `--output-file`, apply the gates below before
+reading plot values, and exit nonzero without creating a new PDF when a gate
+fails. It writes a machine-readable diagnostic and provenance sidecar. The
+generator is implemented and tested; the release figure remains unavailable
+until the complete registered matrix exists.
 
 Data-release gate:
 
-- Panel (a) reads
-  `artifacts/parser_order_full_val_logs/<RUN_ID>/five_seed_summary.json`.
-  Require `seeds == [0,1,2,3,4]`, five successful repetitions, MOOSE internal
-  workers equal to one, and all 16 domains in every repetition.
-- Panels (b) and (c) read
+- All panels read exactly one
   `artifacts/paired_compiler_experiments/<RUN_ID>/paired_results.json`.
-  Require `paper_matrix_complete`, `infrastructure_complete`,
+  Cross-run stitching with a separate five-seed summary is forbidden.
+- Require `success`, `paper_matrix_complete`, `infrastructure_complete`,
   `paired_inputs_verified`, `atomic_pairing.paired`, and
-  `temporal_pairing.paired` all true.
+  `temporal_pairing.paired` all true; require a clean pinned source revision,
+  seeds 0--4, all 16 domains in every atomic run, all four atomic variants per
+  seed, all four temporal variants over the same sample identifiers, six
+  execution workers, a 1,800-second limit, and a 64-MiB Jason Java stack.
 - If any gate fails, do not render a partial panel and do not fall back to the
   pinned seed-0 temporal run. Persist a machine-readable plotting diagnostic.
 
@@ -989,15 +1009,15 @@ Use an asymmetric layout: panel (a) occupies the full left half so 16 domain
 labels remain readable; panels (b) and (c) occupy the upper-right and
 lower-right quadrants.
 
-- `(a)` is `x=1,y=2,w=48,h=96`, heading
-  `Atomic held-out coverage across five seeds`.
-- `(b)` is `x=52,y=2,w=47,h=45`, heading
-  `Certified candidate reduction`.
-- `(c)` is `x=52,y=53,w=47,h=45`, heading
-  `Temporal cumulative solved fraction`.
-- Plot fonts are Arial 16 pt for axes and legends, Arial Bold 18 pt for panel
-  headings, and Arial 14 pt for annotations. Plot backgrounds are white; show
-  only light gray major grid lines.
+- `(a)` spans the full left column and is headed `Paired atomic coverage`.
+- `(b)` occupies the upper-right and is headed
+  `Atomic coverage-size tradeoff`.
+- `(c)` occupies the lower-right and is headed
+  `Temporal cumulative coverage`.
+- Use Matplotlib's bundled DejaVu Sans font, embedded as TrueType in the PDF.
+  Plot backgrounds are white; show only light gray major grid lines. Use the
+  same colorblind-safe palette and redundant marker or line-style encodings as
+  the conceptual figure.
 
 Panel (a) specification:
 
@@ -1008,54 +1028,52 @@ Panel (a) specification:
   Draw thin group separators after `transport` and `numeric-transport`.
 - X-axis is `Jason + VAL coverage (%)`, fixed from 0 to 100 with ticks at
   0, 25, 50, 75, and 100. Draw a gray dashed reference line at 100.
-- For each domain, plot all five repetition coverages from
-  `repetitions[*].validation[domain].coverage` as open circles of diameter
-  4 pt with 35 percent opacity. Vertically jitter the five seeds by
-  `-0.12,-0.06,0,+0.06,+0.12` row units in seed order 0--4.
-- Plot `aggregate_domains[domain].mean_seed_coverage` as a filled diamond and
-  `sample_stddev_seed_coverage` as a horizontal capped interval. Convert both
-  from proportions to percentages.
-- Classical-domain marks use blue `#0072B2`; numeric-domain marks use amber
-  `#E69F00`; serialized-width marks use green `#009E73`. The legend explains
-  groups and separately explains `open circle = seed`,
-  `diamond +/- bar = mean +/- sample SD`.
-- Do not connect different domains and do not truncate a confidence interval at
-  a value other than the physical 0--100 percent boundary.
+- Compare only two endpoints under byte-identical per-seed evidence:
+  `Evidence Adapter` and `Full GP2PL`. The Evidence Adapter validates and renders
+  provider macros without PDDL-derived closure; Full GP2PL adds schema closure,
+  certificates, and solver-backed selection. This is a compiler contribution
+  comparison, not a claim that GP2PL is a faster task planner than MOOSE.
+- For every method and domain, plot all five seed coverages as small translucent
+  points and plot the mean plus or minus sample standard deviation as a larger
+  marker with a horizontal capped interval. Evidence Adapter is a gray open
+  circle; Full GP2PL is a filled blue diamond. A thin gray segment joins the two
+  method means for the same domain, making paired gains or losses visible.
+- Coverage is `100 * valid_trace_count / test_count` from that domain's original
+  held-out PDDL achievement tests. A valid trace requires Jason completion and
+  VAL acceptance. Do not pool domains before plotting and do not substitute
+  producible-predicate closure for executable held-out coverage.
 
 Panel (b) specification:
 
-- Aggregate only the `Full Compiler` atomic runs from `atomic_runs`. For each
-  seed, sum `library_metrics.candidate_count` and
-  `library_metrics.selected_branch_count` within four rows: `Classical`,
-  `Numeric`, `Serialized-width`, and `All domains`.
-- X-axis is `Number of branches` on a base-10 logarithmic scale. Set its limits
-  from the smallest positive selected count rounded down to a power of ten to
-  the largest candidate count rounded up to a power of ten.
-- For each row, plot the five seed totals as small points. Plot candidate mean
-  plus/minus sample standard deviation as an open blue square; plot selected
-  mean plus/minus sample standard deviation as a filled green circle. Connect
-  the two means with a thin gray horizontal line.
-- At the right endpoint annotate the mean of the five per-seed reductions
-  `100 * (1 - selected/candidate)` as `reduction: XX.X%`. Do not compute the
-  annotation from the ratio of the two displayed means.
-- Legend: `open square = generated certified candidates` and
-  `filled circle = selected program`. Do not label unselected candidates as
-  invalid; they may be feasible but unnecessary under the objective.
+- Every plotted point must represent an executable compiler output. Plot all
+  four paired atomic variants: `Evidence Adapter`, `Action Closure`,
+  `Maximal Certified`, and `Full GP2PL`. Do not plot the unselected candidate
+  pool as though it were an executable baseline.
+- For each variant and seed, the x coordinate is the total number of emitted
+  AgentSpeak plan branches across the 16 libraries, and the y coordinate is
+  `100 * total VAL-valid held-out cases / total held-out cases`. The x-axis uses
+  a base-10 logarithmic scale; the y-axis is linear from 0 to 100 percent.
+- Plot five translucent seed points per variant and one larger mean point with
+  horizontal and vertical sample-standard-deviation bars. Use gray circle,
+  amber square, green triangle, and blue diamond in the order above. Do not draw
+  a Pareto frontier or claim dominance unless the measured points establish it.
+- Candidate count and percentage branch reduction remain exact table or
+  supplementary metrics. This panel answers the stronger question: what
+  executable held-out coverage is obtained for the final emitted library size?
 
 Panel (c) specification:
 
 - Use all records in `temporal_runs[*].results` for each of the four hash-paired
   temporal variants. A query enters a curve at its recorded `duration_seconds`
-  only when both `success == true` and `status == "success"`. In the current
-  runner, this means Jason returned a committed trace, PDDL replay succeeded,
-  either VAL succeeded or the zero-action legality certificate applied, and
-  both the gold and predicted deterministic finite automata accepted. Failures
-  and timeouts remain in the denominator and therefore lower the final curve
-  endpoint.
+  only when Jason reports success and the execution-validation record confirms
+  PDDL replay, attempted and successful VAL validation, gold-DFA acceptance,
+  and predicted-DFA acceptance. Failures and timeouts remain in the denominator
+  and therefore lower the final curve endpoint.
 - `duration_seconds` starts before query-controller compilation and ends after
   execution validation. It is therefore end-to-end query processing time, not
   Jason-only search time. X-axis is `End-to-end query time (s)`, logarithmic
-  from 0.1 to 1,800. Y-axis is
+  from 0.1 through the 1,800-second deadline, with only a narrow right margin
+  beyond the deadline so its vertical line remains visible. Y-axis is
   `Fraction of all queries solved (%)`, linear from 0 to 100. Draw a vertical
   gray timeout line at 1,800 seconds.
 - Draw right-continuous step curves with 2.25 pt strokes:
@@ -1068,36 +1086,40 @@ Panel (c) specification:
   the step curves.
 - This is a cumulative solved-fraction plot over all queries, not an empirical
   cumulative distribution conditioned on successful queries. The endpoint is
-  therefore both a processing-time and coverage statement.
+  therefore both a processing-time and coverage statement. This follows the
+  absolute-time cumulative-coverage convention used by MOOSE while preserving
+  GP2PL's stricter end-to-end success oracle.
 
 Draft caption:
 
-> **Figure 4: Atomic robustness, certified reduction, and temporal processing
-> cost.** Panel (a) reports individual values and mean $\pm$ sample standard
-> deviation over five independently seeded, single-worker MOOSE runs. Panel (b)
-> compares generated certified candidates with the Full Compiler's selected
-> program, aggregated by benchmark group. Panel (c) reports the fraction of all
-> hash-paired bound queries solved within each end-to-end processing time by
-> four temporal compiler variants; failed and timed-out queries remain in the
-> denominator, and the vertical line marks the 1,800-second limit.
+> **Figure 2: Paired atomic and temporal evaluation.** Panel (a) compares the
+> Evidence Adapter with Full GP2PL on every held-out domain over five
+> independently seeded, single-worker MOOSE evidence runs; points are seeds and
+> larger markers report mean $\pm$ sample standard deviation. Panel (b) places
+> all four executable atomic compiler variants by emitted branches and VAL-valid
+> held-out coverage under identical per-seed evidence. Panel (c) reports the
+> fraction of all hash-paired temporal queries solved within each end-to-end
+> time; failed and timed-out queries remain in the denominator and the vertical
+> line marks the 1,800-second limit.
 
-Before delivery, verify Figure 4 totals against the corresponding generated
+Before delivery, verify Figure 2 totals against the corresponding generated
 LaTeX tables. The figure and table must name the same run IDs and input hashes.
-The colleague must not copy values from a PDF table back into the plot source.
+No one may copy values from a PDF table back into the plot source.
 
 ### Figure Delivery and LaTeX Insertion Contract
 
-The colleague delivers the editable method deck and the three conceptual vector
-PDFs. The plotting script delivers the empirical vector PDF. The release bundle
-also contains
+The colleague delivers the editable method deck, main Figure 1, and
+Supplementary Figures S1--S2. The plotting script delivers main Figure 2. The
+release bundle also contains
 `latex_code/aamas_method_paper/figures/aaai_figure_manifest.json`, with keys
 `schema_version`, `source_revision`, `exported_at`, `assets`, and `fonts`.
 Each `assets` entry records `file`, `width_inches`, `height_inches`, and
-`data_source`. Figures 1--3 use `data_source: "not_empirical"`; Figure 4 records
-both artifact run IDs, their input hashes, and the plotting-script revision. The
+`data_source`. Figure 1 and Supplementary Figures S1--S2 use
+`data_source: "not_empirical"`; Figure 2 records the single paired-result file,
+its SHA-256 hash, and the plotting-script revision. The
 `fonts` object maps each requested font to the embedded PDF font actually used;
 any substitution is a release blocker. The plotting script, not the colleague,
-owns Figure 4's numeric data.
+owns Figure 2's numeric data.
 
 Use these exact LaTeX placements and labels after the assets exist:
 
@@ -1111,25 +1133,15 @@ Use these exact LaTeX placements and labels after the assets exist:
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/fig2_policy_lifting.pdf}
+  \includegraphics[width=\textwidth]{figures/fig2_evaluation.pdf}
   \caption{<approved Figure 2 caption from this outline>}
-  \label{fig:policy-lifting}
-\end{figure*}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{figures/fig3_dfa_controller.pdf}
-  \caption{<approved Figure 3 caption from this outline>}
-  \label{fig:dfa-controller}
-\end{figure*}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{figures/fig4_evaluation.pdf}
-  \caption{<approved Figure 4 caption from this outline>}
   \label{fig:evaluation-summary}
 \end{figure*}
 ```
+
+The technical supplement inserts `figS1_policy_lifting.pdf` and
+`figS2_dfa_controller.pdf` with the approved supplementary captions above. They
+must not be renumbered as additional main-paper figures.
 
 The angle-bracket caption placeholders are instructions and must be replaced by
 the approved caption text before compilation. Never duplicate a caption inside
@@ -1306,8 +1318,9 @@ timed-out Jason action prefix is diagnostic evidence, not a successful plan.
   and mathematical symbols must remain readable in grayscale; never convey a
   certificate or failure state by color alone.
 - The final empirical figure must be regenerated by a checked-in script from
-  pinned JSON artifacts. PowerPoint is acceptable for conceptual Figures 1--3,
-  but not for manually placing result points.
+  one pinned paired-result JSON artifact. PowerPoint is acceptable for main
+  Figure 1 and Supplementary Figures S1--S2, but not for manually placing result
+  points in main Figure 2.
 
 ## Result-Insertion Contract for the TEG Agent
 

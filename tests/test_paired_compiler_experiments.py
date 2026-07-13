@@ -11,6 +11,7 @@ from scripts.run_paired_compiler_experiments import build_atomic_run_command
 from scripts.run_paired_compiler_experiments import build_evidence_run_command
 from scripts.run_paired_compiler_experiments import build_registered_case_contract
 from scripts.run_paired_compiler_experiments import build_temporal_run_command
+from scripts.run_paired_compiler_experiments import _normalize_atomic_summary
 from scripts.run_paired_compiler_experiments import RegisteredRun
 from scripts.run_paired_compiler_experiments import registered_run_summary_complete
 from scripts.run_paired_compiler_experiments import apply_common_target_coverage
@@ -634,3 +635,55 @@ def test_execution_metrics_use_par2_for_every_unsolved_case() -> None:
 	assert metrics["valid_trace_count"] == 1
 	assert metrics["par2_seconds"] == 12.0
 	assert metrics["median_action_count"] == 3
+
+
+def test_atomic_summary_persists_per_domain_execution_metrics() -> None:
+	summary = {
+		"domains": {
+			"ferry": {"compile_atomic_library": {"success": True}},
+			"gripper": {"compile_atomic_library": {"success": True}},
+		},
+		"settings": {"timeout_seconds": 10},
+		"validations": [
+			{
+				"domain": "ferry",
+				"success": True,
+				"plan_verifier_success": True,
+				"duration_seconds": 1.0,
+				"action_count": 2,
+			},
+			{
+				"domain": "ferry",
+				"success": False,
+				"plan_verifier_success": False,
+				"duration_seconds": 10.0,
+				"timed_out": True,
+			},
+			{
+				"domain": "gripper",
+				"success": True,
+				"plan_verifier_success": True,
+				"duration_seconds": 2.0,
+				"action_count": 4,
+			},
+		],
+	}
+
+	normalized = _normalize_atomic_summary(
+		seed=0,
+		variant=AtomicCompilerVariant.FULL,
+		summary=summary,
+	)
+
+	assert normalized["domains"]["ferry"]["execution_metrics"] == {
+		"test_count": 2,
+		"success_count": 1,
+		"valid_trace_count": 1,
+		"timeout_count": 1,
+		"status_counts": {"unknown": 2},
+		"median_action_count": 2,
+		"median_solved_seconds": 1.0,
+		"par2_seconds": 10.5,
+	}
+	assert normalized["domains"]["gripper"]["execution_metrics"]["test_count"] == 1
+	assert normalized["execution_metrics"]["test_count"] == 3

@@ -843,6 +843,14 @@ def _normalize_atomic_summary(
 	variant: AtomicCompilerVariant,
 	summary: Mapping[str, Any],
 ) -> dict[str, Any]:
+	validations = tuple(summary.get("validations") or ())
+	settings = dict(summary.get("settings") or {})
+	timeout_seconds = int(settings.get("timeout_seconds") or 1800)
+	validations_by_domain: dict[str, list[Mapping[str, Any]]] = {}
+	for validation in validations:
+		domain = str(validation.get("domain") or "")
+		if domain:
+			validations_by_domain.setdefault(domain, []).append(validation)
 	domains: dict[str, dict[str, Any]] = {}
 	for domain, raw_record in dict(summary.get("domains") or {}).items():
 		record = dict(raw_record or {})
@@ -872,15 +880,16 @@ def _normalize_atomic_summary(
 				"duration_seconds",
 			),
 			"validation_success": record.get("validation_success"),
+			"execution_metrics": execution_metrics(
+				validations_by_domain.get(str(domain), ()),
+				timeout_seconds=timeout_seconds,
+			),
 			"library_metrics": (
 				atomic_library_metrics(library_file, asl_file)
 				if library_file.is_file() and asl_file.is_file()
 				else None
 			),
 		}
-	validations = tuple(summary.get("validations") or ())
-	settings = dict(summary.get("settings") or {})
-	timeout_seconds = int(settings.get("timeout_seconds") or 1800)
 	return {
 		"seed": seed,
 		"variant": variant.value,
