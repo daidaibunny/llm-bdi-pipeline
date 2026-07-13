@@ -7,6 +7,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
 from dataclasses import dataclass
+from dataclasses import replace
 from datetime import datetime
 import hashlib
 import json
@@ -104,6 +105,8 @@ class JasonTask:
 	atomic_plan_library: PlanLibrary | None = None
 	base_plan_library_sha256: str | None = None
 	atomic_plan_library_sha256: str | None = None
+	source_problem_file: Path | None = None
+	source_domain_file: Path | None = None
 
 
 def source_revision_metadata(project_root: Path) -> dict[str, Any]:
@@ -175,6 +178,193 @@ def validation_input_fingerprint(task: JasonTask) -> str:
 	return hashlib.sha256(
 		json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
 	).hexdigest()
+
+
+def snapshot_jason_task_inputs(
+	tasks: Sequence[JasonTask],
+	*,
+	run_root: Path,
+	recovery_timeout_seconds: float = 900.0,
+	poll_interval_seconds: float = 0.25,
+) -> tuple[JasonTask, ...]:
+	"""Stage immutable PDDL inputs and return tasks bound to the snapshot.
+
+	The source benchmark tree is materialized data and may be replaced while a
+	long validation run is active. Every worker therefore reads a run-local copy.
+	A complete manifest makes the copy reusable even when the source tree is
+	temporarily unavailable during a later resume.
+	"""
+
+	all_tasks = tuple(tasks)
+	if not all_tasks:
+		return ()
+	if recovery_timeout_seconds <= 0 or poll_interval_seconds <= 0:
+		raise ValueError("input snapshot recovery timing must be positive")
+	snapshot_root = run_root / "input_snapshot"
+	manifest_file = snapshot_root / "manifest.json"
+	if manifest_file.is_file():
+		return _load_snapshotted_jason_tasks(
+			all_tasks,
+			run_root=run_root,
+			manifest_file=manifest_file,
+		)
+
+	deadline = time.monotonic() + float(recovery_timeout_seconds)
+	copied_files: dict[Path, tuple[Path, str]] = {}
+	snapshotted_tasks: list[JasonTask] = []
+	manifest_tasks: list[dict[str, Any]] = []
+	for task in all_tasks:
+		source_domain = (task.source_domain_file or task.domain_file).resolve()
+		source_problem = (task.source_problem_file or task.problem_file).resolve()
+		domain_target = snapshot_root / task.domain / "domain.pddl"
+		problem_target = snapshot_root / task.domain / "test" / source_problem.name
+		snapshot_domain, domain_sha256 = _snapshot_file_with_recovery(
+			source=source_domain,
+			target=domain_target,
+			deadline=deadline,
+			poll_interval_seconds=poll_interval_seconds,
+			cache=copied_files,
+		)
+		snapshot_problem, problem_sha256 = _snapshot_file_with_recovery(
+			source=source_problem,
+			target=problem_target,
+			deadline=deadline,
+			poll_interval_seconds=poll_interval_seconds,
+			cache=copied_files,
+		)
+		snapshotted_tasks.append(
+			replace(
+				task,
+				domain_file=snapshot_domain,
+				problem_file=snapshot_problem,
+				source_domain_file=source_domain,
+				source_problem_file=source_problem,
+			),
+		)
+		manifest_tasks.append(
+			{
+				"domain": task.domain,
+				"test_index": task.index,
+				"source_domain_file": str(source_domain),
+				"source_problem_file": str(source_problem),
+				"snapshot_domain_file": str(snapshot_domain.relative_to(run_root)),
+				"snapshot_problem_file": str(snapshot_problem.relative_to(run_root)),
+				"domain_sha256": domain_sha256,
+				"problem_sha256": problem_sha256,
+			},
+		)
+	manifest = {
+		"schema_version": 1,
+		"artifact_kind": "full_test_validation_input_snapshot",
+		"task_count": len(snapshotted_tasks),
+		"tasks": manifest_tasks,
+	}
+	_write_json_atomically(manifest_file, manifest)
+	return tuple(snapshotted_tasks)
+
+
+def _snapshot_file_with_recovery(
+	*,
+	source: Path,
+	target: Path,
+	deadline: float,
+	poll_interval_seconds: float,
+	cache: dict[Path, tuple[Path, str]],
+) -> tuple[Path, str]:
+	if source in cache:
+		return cache[source]
+	last_error: OSError | None = None
+	while True:
+		try:
+			before = source.stat()
+			content = source.read_bytes()
+			after = source.stat()
+			if (
+				before.st_size != after.st_size
+				or before.st_mtime_ns != after.st_mtime_ns
+				or len(content) != after.st_size
+			):
+				raise OSError(f"source changed while snapshotting: {source}")
+			target.parent.mkdir(parents=True, exist_ok=True)
+			temporary = target.with_name(f".{target.name}.snapshot.tmp")
+			temporary.write_bytes(content)
+			temporary.replace(target)
+			digest = hashlib.sha256(content).hexdigest()
+			cache[source] = (target, digest)
+			return target, digest
+		except OSError as error:
+			last_error = error
+			if time.monotonic() >= deadline:
+				raise TimeoutError(
+					"validation input did not become stable before the recovery "
+					f"deadline: {source}: {last_error}",
+				) from error
+			time.sleep(poll_interval_seconds)
+
+
+def _load_snapshotted_jason_tasks(
+	tasks: Sequence[JasonTask],
+	*,
+	run_root: Path,
+	manifest_file: Path,
+) -> tuple[JasonTask, ...]:
+	try:
+		manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+	except (OSError, json.JSONDecodeError) as error:
+		raise ValueError(f"invalid validation input snapshot manifest: {error}") from error
+	if not isinstance(manifest, Mapping) or manifest.get("schema_version") != 1:
+		raise ValueError("unsupported validation input snapshot manifest")
+	entries = manifest.get("tasks")
+	if not isinstance(entries, list) or len(entries) != len(tasks):
+		raise ValueError("validation input snapshot task set does not match the run")
+	entry_by_key = {
+		(str(entry.get("domain") or ""), int(entry.get("test_index") or -1)): entry
+		for raw_entry in entries
+		if isinstance(raw_entry, Mapping)
+		for entry in (dict(raw_entry),)
+	}
+	result: list[JasonTask] = []
+	for task in tasks:
+		entry = entry_by_key.get((task.domain, task.index))
+		if entry is None:
+			raise ValueError(
+				"validation input snapshot is missing "
+				f"{task.domain} test {task.index}",
+			)
+		source_domain = (task.source_domain_file or task.domain_file).resolve()
+		source_problem = (task.source_problem_file or task.problem_file).resolve()
+		if (
+			str(entry.get("source_domain_file") or "") != str(source_domain)
+			or str(entry.get("source_problem_file") or "") != str(source_problem)
+		):
+			raise ValueError("validation input snapshot source mapping changed")
+		snapshot_domain = run_root / str(entry.get("snapshot_domain_file") or "")
+		snapshot_problem = run_root / str(entry.get("snapshot_problem_file") or "")
+		if (
+			_sha256_file(snapshot_domain) != str(entry.get("domain_sha256") or "")
+			or _sha256_file(snapshot_problem) != str(entry.get("problem_sha256") or "")
+		):
+			raise ValueError("validation input snapshot content hash mismatch")
+		result.append(
+			replace(
+				task,
+				domain_file=snapshot_domain,
+				problem_file=snapshot_problem,
+				source_domain_file=source_domain,
+				source_problem_file=source_problem,
+			),
+		)
+	return tuple(result)
+
+
+def _write_json_atomically(path: Path, payload: Mapping[str, Any]) -> None:
+	path.parent.mkdir(parents=True, exist_ok=True)
+	temporary = path.with_name(f".{path.name}.tmp")
+	temporary.write_text(
+		json.dumps(payload, indent=2, sort_keys=True) + "\n",
+		encoding="utf-8",
+	)
+	temporary.replace(path)
 
 
 def load_completed_validation_records(
@@ -265,6 +455,15 @@ def main() -> int:
 	)
 	parser.add_argument("--num-workers", type=int, default=6)
 	parser.add_argument("--timeout-seconds", type=int, default=1800)
+	parser.add_argument(
+		"--input-recovery-timeout-seconds",
+		type=float,
+		default=900.0,
+		help=(
+			"Maximum infrastructure-only wait for materialized PDDL inputs to "
+			"become stable before creating the immutable run snapshot."
+		),
+	)
 	parser.add_argument(
 		"--jason-java-stack-size",
 		default="64m",
@@ -363,6 +562,8 @@ def main() -> int:
 		),
 	)
 	args = parser.parse_args()
+	if args.input_recovery_timeout_seconds <= 0:
+		parser.error("--input-recovery-timeout-seconds must be positive")
 	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
 	if args.atomic_library_mode == "faithful" and args.compiler_variant:
 		parser.error("--compiler-variant requires --atomic-library-mode validated-policy-lifting")
@@ -383,6 +584,7 @@ def main() -> int:
 		"domains": list(domains),
 		"num_workers": args.num_workers,
 		"timeout_seconds": args.timeout_seconds,
+		"input_recovery_timeout_seconds": args.input_recovery_timeout_seconds,
 		"jason_java_stack_size": args.jason_java_stack_size,
 		"plan_verifier_command": args.plan_verifier_command,
 		"require_plan_verifier": bool(args.require_plan_verifier),
@@ -486,6 +688,10 @@ def main() -> int:
 		require_plan_verifier=bool(args.require_plan_verifier),
 		plan_verifier_timeout_seconds=max(1, int(args.plan_verifier_timeout_seconds)),
 		write_per_test_runtime_asl=bool(args.write_per_test_runtime_asl),
+		input_recovery_timeout_seconds=max(
+			0.001,
+			float(args.input_recovery_timeout_seconds),
+		),
 		summary=summary,
 		summary_file=summary_file,
 		resume=bool(args.resume),
@@ -1214,10 +1420,31 @@ def run_jason_tasks(
 	summary: dict[str, Any],
 	summary_file: Path,
 	resume: bool = False,
+	input_recovery_timeout_seconds: float = 900.0,
 ) -> list[dict[str, Any]]:
 	"""Run Jason validation tasks in a bounded worker pool."""
 
-	all_tasks = tuple(tasks)
+	if tasks:
+		all_tasks = snapshot_jason_task_inputs(
+			tasks,
+			run_root=run_root,
+			recovery_timeout_seconds=input_recovery_timeout_seconds,
+		)
+		input_snapshot_manifest = run_root / "input_snapshot" / "manifest.json"
+		summary["input_snapshot"] = {
+			"success": True,
+			"manifest_file": str(input_snapshot_manifest),
+			"manifest_sha256": _sha256_file(input_snapshot_manifest),
+			"task_count": len(all_tasks),
+		}
+	else:
+		all_tasks = ()
+		summary["input_snapshot"] = {
+			"success": True,
+			"manifest_file": None,
+			"manifest_sha256": None,
+			"task_count": 0,
+		}
 	completed = load_completed_validation_records(all_tasks) if resume else {}
 	pending = tuple(
 		task for task in all_tasks if (task.domain, task.index) not in completed
@@ -1256,7 +1483,11 @@ def run_jason_tasks(
 			for task in pending
 		}
 		for future in as_completed(future_map):
-			record = future.result()
+			task = future_map[future]
+			try:
+				record = future.result()
+			except Exception as error:  # noqa: BLE001 - isolate worker failures.
+				record = validation_worker_exception_record(task, error)
 			records.append(record)
 			append_jsonl(results_jsonl, record)
 			status = "ok" if record.get("success") else "fail"
@@ -1323,10 +1554,11 @@ def validate_one_task(
 ) -> dict[str, Any]:
 	"""Run one Jason validation and return a compact record."""
 
-	input_fingerprint = validation_input_fingerprint(task)
 	start = time.perf_counter()
+	input_fingerprint: str | None = None
 	task.output_dir.mkdir(parents=True, exist_ok=True)
 	try:
+		input_fingerprint = validation_input_fingerprint(task)
 		runtime_artifacts = build_runtime_problem_artifacts(
 			domain_file=task.domain_file,
 			problem_file=task.problem_file,
@@ -1372,7 +1604,8 @@ def validate_one_task(
 		record = {
 			"domain": task.domain,
 			"test_index": task.index,
-			"problem_file": str(task.problem_file),
+			"problem_file": str(task.source_problem_file or task.problem_file),
+			"snapshot_problem_file": str(task.problem_file),
 			"goal_name": task.goal_name,
 			"input_fingerprint": input_fingerprint,
 			"success": bool(payload.get("success")),
@@ -1383,9 +1616,9 @@ def validate_one_task(
 			"plan_verifier_success": plan_verifier.get("success"),
 			"plan_verifier_attempted": plan_verifier.get("attempted"),
 			"plan_verifier_available": plan_verifier.get("available"),
-				"plan_trace": artifacts.get("plan_trace"),
-				"committed_plan_trace": artifacts.get("committed_plan_trace"),
-				"plan_verifier_stdout": artifacts.get("plan_verifier_stdout"),
+			"plan_trace": artifacts.get("plan_trace"),
+			"committed_plan_trace": artifacts.get("committed_plan_trace"),
+			"plan_verifier_stdout": artifacts.get("plan_verifier_stdout"),
 			"plan_verifier_stderr": artifacts.get("plan_verifier_stderr"),
 			"output_dir": str(task.output_dir),
 			"runtime_plan_library_asl": (
@@ -1399,14 +1632,20 @@ def validate_one_task(
 			"duration_seconds": time.perf_counter() - start,
 		}
 	except Exception as error:  # noqa: BLE001 - persisted for full-test diagnosis.
+		status = (
+			"input_infrastructure_error"
+			if isinstance(error, OSError)
+			else "exception"
+		)
 		record = {
 			"domain": task.domain,
 			"test_index": task.index,
-			"problem_file": str(task.problem_file),
+			"problem_file": str(task.source_problem_file or task.problem_file),
+			"snapshot_problem_file": str(task.problem_file),
 			"goal_name": task.goal_name,
 			"input_fingerprint": input_fingerprint,
 			"success": False,
-			"status": "exception",
+			"status": status,
 			"timed_out": False,
 			"exit_code": None,
 			"action_count": None,
@@ -1418,6 +1657,49 @@ def validate_one_task(
 			"error": str(error),
 			"duration_seconds": time.perf_counter() - start,
 		}
+	(task.output_dir / "validation_record.json").write_text(
+		json.dumps(record, indent=2, sort_keys=True) + "\n",
+		encoding="utf-8",
+	)
+	return record
+
+
+def validation_worker_exception_record(
+	task: JasonTask,
+	error: Exception,
+) -> dict[str, Any]:
+	"""Persist an unexpected worker failure without aborting sibling cases."""
+
+	try:
+		input_fingerprint: str | None = validation_input_fingerprint(task)
+	except Exception:  # noqa: BLE001 - recovery records must not rethrow.
+		input_fingerprint = None
+	status = (
+		"input_infrastructure_error"
+		if isinstance(error, OSError)
+		else "worker_infrastructure_error"
+	)
+	record = {
+		"domain": task.domain,
+		"test_index": task.index,
+		"problem_file": str(task.source_problem_file or task.problem_file),
+		"snapshot_problem_file": str(task.problem_file),
+		"goal_name": task.goal_name,
+		"input_fingerprint": input_fingerprint,
+		"success": False,
+		"status": status,
+		"timed_out": False,
+		"exit_code": None,
+		"action_count": None,
+		"observed_action_prefix_count": 0,
+		"plan_trace_action_count": 0,
+		"action_count_complete": False,
+		"action_count_source": "worker_exception",
+		"output_dir": str(task.output_dir),
+		"error": str(error),
+		"duration_seconds": 0.0,
+	}
+	task.output_dir.mkdir(parents=True, exist_ok=True)
 	(task.output_dir / "validation_record.json").write_text(
 		json.dumps(record, indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",

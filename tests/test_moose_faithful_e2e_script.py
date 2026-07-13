@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.run_moose_faithful_e2e import first_n_test_instances
 from scripts.run_moose_faithful_e2e import format_moose_domain_progress
 from scripts.run_moose_faithful_e2e import append_problem_goal_wrappers_to_library
@@ -22,6 +24,7 @@ from scripts.run_moose_faithful_e2e import sequential_eventually_formula
 from scripts.run_moose_faithful_e2e import write_test_goal_dataset
 from scripts.run_timestamped_moose_asl_batch import batch_manifest
 from scripts.run_timestamped_moose_asl_batch import build_moose_batch_command
+from scripts.run_timestamped_moose_asl_batch import validate_completed_batch_for_resume
 from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
@@ -417,6 +420,70 @@ def test_timestamped_batch_can_generate_atomic_libraries_without_first2_append(
 	assert "--skip-temporal-append" in command
 	assert manifest["settings"]["temporal_append_in_stage1"] is False
 	assert manifest["settings"]["test_query_count_per_domain"] == 0
+
+
+def test_completed_timestamped_batch_can_be_resumed_with_exact_manifest(
+	tmp_path: Path,
+) -> None:
+	batch_root = tmp_path / "seed0"
+	plan_library = batch_root / "domain_libraries/ferry/plan_library.asl"
+	plan_library.parent.mkdir(parents=True)
+	plan_library.write_text("/* atomic library */\n", encoding="utf-8")
+	expected = {
+		"artifact_kind": "timestamped_moose_native_asl_batch",
+		"timestamp_id": "seed0",
+		"batch_root": str(batch_root),
+		"domains": ["ferry"],
+		"expected_asl_files": [str(plan_library)],
+		"settings": {"random_seed": 0, "num_workers": 1},
+		"command": ["python", "run.py", "--random-seed", "0"],
+	}
+	completed = {
+		**expected,
+		"created_at": "2026-07-14T10:00:00",
+		"completed_at": "2026-07-14T11:00:00",
+		"completed_return_code": 0,
+	}
+	manifest_file = batch_root / "batch_manifest.json"
+	manifest_file.write_text(json.dumps(completed), encoding="utf-8")
+
+	loaded = validate_completed_batch_for_resume(
+		manifest_file=manifest_file,
+		expected_manifest=expected,
+	)
+
+	assert loaded == completed
+
+
+def test_completed_timestamped_batch_resume_rejects_setting_mismatch(
+	tmp_path: Path,
+) -> None:
+	batch_root = tmp_path / "seed0"
+	plan_library = batch_root / "domain_libraries/ferry/plan_library.asl"
+	plan_library.parent.mkdir(parents=True)
+	plan_library.write_text("/* atomic library */\n", encoding="utf-8")
+	expected = {
+		"artifact_kind": "timestamped_moose_native_asl_batch",
+		"timestamp_id": "seed0",
+		"batch_root": str(batch_root),
+		"domains": ["ferry"],
+		"expected_asl_files": [str(plan_library)],
+		"settings": {"random_seed": 0, "num_workers": 1},
+		"command": ["python", "run.py", "--random-seed", "0"],
+	}
+	completed = {
+		**expected,
+		"settings": {"random_seed": 4, "num_workers": 1},
+		"completed_return_code": 0,
+	}
+	manifest_file = batch_root / "batch_manifest.json"
+	manifest_file.write_text(json.dumps(completed), encoding="utf-8")
+
+	with pytest.raises(ValueError, match="settings"):
+		validate_completed_batch_for_resume(
+			manifest_file=manifest_file,
+			expected_manifest=expected,
+		)
 
 
 def test_validated_policy_lifting_compile_command_uses_semantic_cli_flag(

@@ -129,6 +129,7 @@ run_moose_seed() {
 		--random-seed "$seed" \
 		--atomic-library-mode validated-policy-lifting \
 		--skip-temporal-append \
+		--resume \
 		--train-timeout-seconds "$TRAIN_TIMEOUT_SECONDS" \
 		--dump-timeout-seconds "${DUMP_TIMEOUT_SECONDS:-300}" \
 		--append-timeout-seconds "${APPEND_TIMEOUT_SECONDS:-300}" \
@@ -252,6 +253,7 @@ run_validation_seed() {
 		--atomic-library-mode validated-policy-lifting \
 		--write-per-test-runtime-asl \
 		--suppress-final-summary-json \
+		--resume \
 		"${DOMAIN_ARGS[@]}"
 	exit_code="$?"
 	set -e
