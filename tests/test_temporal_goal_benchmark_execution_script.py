@@ -6,9 +6,16 @@ import subprocess
 
 import pytest
 
+from domain_level_planning import AtomicCompilerVariant
+from domain_level_planning import TemporalCompilerVariant
+from plan_library.models import AgentSpeakBodyStep
+from plan_library.models import AgentSpeakPlan
+from plan_library.models import AgentSpeakTrigger
+from plan_library.models import PlanLibrary
 from scripts.run_temporal_goal_benchmark_execution import (
 	benchmark_prediction,
 )
+from scripts.run_temporal_goal_benchmark_execution import controller_structure_metrics
 from scripts.run_temporal_goal_benchmark_execution import execution_status
 from scripts.run_temporal_goal_benchmark_execution import summarize_execution_records
 from scripts.run_temporal_goal_benchmark_execution import verify_invocation_binding
@@ -57,6 +64,57 @@ def test_shell_entrypoint_accepts_no_domain_arguments_on_bash_3(
 		"scripts/run_temporal_goal_benchmark_execution.py",
 	]
 	assert "--domain" not in arguments
+	assert arguments[arguments.index("--temporal-compiler-variant") + 1] == (
+		"certified_balanced"
+	)
+
+
+def test_registered_experiment_variants_have_short_report_names() -> None:
+	assert [variant.display_name for variant in AtomicCompilerVariant] == [
+		"Evidence Adapter",
+		"Action Closure",
+		"Maximal Certified",
+		"Full Compiler",
+	]
+
+
+def test_controller_structure_metrics_measure_only_appended_query_plans() -> None:
+	base_plan = AgentSpeakPlan(
+		"done_via_finish",
+		AgentSpeakTrigger("achievement_goal", "done", ("X",)),
+		("ready(X)",),
+		(AgentSpeakBodyStep("action", "finish", ("X",)),),
+	)
+	query_plans = (
+		AgentSpeakPlan(
+			"g_query_trans",
+			AgentSpeakTrigger("achievement_goal", "g_query_trans", ()),
+			("query",),
+			(AgentSpeakBodyStep("subgoal", "g_query_left", ()),),
+		),
+		AgentSpeakPlan(
+			"g_query_trans_done",
+			AgentSpeakTrigger("achievement_goal", "g_query_trans", ()),
+			("query", "done(a)"),
+			(),
+		),
+	)
+	base = PlanLibrary(domain_name="tiny", plans=(base_plan,))
+	updated = PlanLibrary(domain_name="tiny", plans=(base_plan, *query_plans))
+
+	metrics = controller_structure_metrics(base, updated)
+
+	assert metrics["controller_plan_count"] == 2
+	assert metrics["max_trigger_fanout"] == 2
+	assert metrics["controller_context_literal_count"] == 3
+	assert metrics["controller_body_step_count"] == 1
+	assert metrics["controller_asl_bytes"] > 0
+	assert [variant.display_name for variant in TemporalCompilerVariant] == [
+		"Unprotected DFA",
+		"Certified Flat",
+		"Certified Balanced",
+		"Completion Monitor",
+	]
 
 
 def test_benchmark_prediction_preserves_predicate_and_numeric_atoms() -> None:

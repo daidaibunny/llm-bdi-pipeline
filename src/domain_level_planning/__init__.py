@@ -117,6 +117,7 @@ from .temporal_goal_appender import (
 	TemporalMonitorObservationBoundary,
 	append_lifted_temporal_goal_case_to_library,
 	append_temporal_goal_to_library,
+	build_lifted_temporal_goal_case_dfa,
 	validate_guard_transition_dfa,
 )
 
@@ -168,6 +169,7 @@ __all__ = [
 	"TemporalMonitorObservationBoundary",
 	"append_lifted_temporal_goal_case_to_library",
 	"append_temporal_goal_to_library",
+	"build_lifted_temporal_goal_case_dfa",
 	"adapt_dfa_guard_to_achievement_request",
 	"adapt_dfa_guarded_transition_to_achievement_request",
 	"architecture_gap_summary",

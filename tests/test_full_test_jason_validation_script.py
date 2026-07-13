@@ -122,8 +122,24 @@ def test_full_test_compile_command_defaults_to_validated_policy_lifting(tmp_path
 		atomic_library_mode="validated-policy-lifting",
 	)
 
-	assert "--validated-policy-lifting" in command
+	assert command[-2:] == ("--compiler-variant", "full")
 	assert "--domain-file" in command
+
+
+def test_full_test_compile_command_registers_atomic_variant(tmp_path: Path) -> None:
+	command = build_compile_atomic_library_command(
+		readable_policy=tmp_path / "ferry.model.readable",
+		domain_file=tmp_path / "domain.pddl",
+		domain="ferry",
+		library_root=tmp_path / "libraries",
+		atomic_library_mode="validated-policy-lifting",
+		compiler_variant="validated_evidence_adapter",
+	)
+
+	assert command[-2:] == (
+		"--compiler-variant",
+		"validated_evidence_adapter",
+	)
 
 
 def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> None:
@@ -135,7 +151,7 @@ def test_full_test_compile_command_can_request_faithful_mode(tmp_path: Path) -> 
 		atomic_library_mode="faithful",
 	)
 
-	assert "--validated-policy-lifting" not in command
+	assert "--compiler-variant" not in command
 
 
 def test_validation_status_labels_split_jason_and_val_outcomes() -> None:
@@ -956,7 +972,16 @@ def test_prepare_domain_can_filter_test_problem_names(
 		encoding="utf-8",
 	)
 
-	def fake_command(*, readable_policy, domain_file, domain, library_root, atomic_library_mode):
+	def fake_command(
+		*,
+		readable_policy,
+		domain_file,
+		domain,
+		library_root,
+		atomic_library_mode,
+		compiler_variant,
+	):
+		assert compiler_variant is None
 		return ("true",)
 
 	def fake_run_logged_command(command, *, stdout_file, stderr_file, timeout_seconds):

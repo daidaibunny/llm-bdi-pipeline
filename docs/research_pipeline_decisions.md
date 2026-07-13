@@ -166,6 +166,31 @@ predicate/action/object renaming, compatible parameter permutation, and
 irrelevant-fluent injection. These are the empirical checks behind the
 domain-independent and fail-closed claims.
 
+The native paired harness is `scripts/run_paired_compiler_experiments.py`.
+It can generate five isolated MOOSE evidence batches or consume explicit
+`SEED=BATCH_ID` assignments, then invokes the production full-test and temporal
+benchmark runners once per registered method. Atomic pairing requires the same
+raw readable-policy hash and normalized evidence-program fingerprint for every
+method at a given seed and domain. Temporal pairing requires the same benchmark,
+atomic-library, and DFA fingerprints and the same sample set for every method.
+An evidence failure blocks its dependent runs, and an incomplete pairing is
+persisted as an infrastructure failure in `paired_results.json`; it is not
+silently dropped or interpreted as method failure.
+
+Machine-readable artifacts retain stable identifiers such as
+`validated_evidence_adapter` and `certified_balanced`. Manuscript tables and
+terminal summaries use short method names and short column phrases, for example
+`Evidence Adapter`, `Full Compiler`, `Valid Traces`, and `Time (s)`. Numeric
+labels such as `C0`, `T1`, or compressed slash-only headings are not used as
+paper table headers.
+
+The companion `scripts/run_certificate_challenge_matrix.py` executes the
+registered rejection and symbol-invariance cases against production compiler
+entry points through exact test nodes. It records the source revision, command,
+duration, stdout, stderr, and result for each case. A failed challenge is an
+infrastructure/claim failure for the paired experiment run, whereas an ordinary
+held-out planning failure remains a measured method outcome.
+
 ## Temporal Goal Validation Contract
 
 One benchmark record is

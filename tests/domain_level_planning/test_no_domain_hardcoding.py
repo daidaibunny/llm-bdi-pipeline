@@ -7,6 +7,9 @@ from pathlib import Path
 from domain_level_planning.atomic_module_synthesis import (
 	synthesize_atomic_minimal_literal_module_library,
 )
+from domain_level_planning.evidence_module import (
+	compile_moose_readable_policy_to_minimal_module_asl_library,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -228,6 +231,44 @@ def test_atomic_synthesis_ignores_unreferenced_static_vocabulary(tmp_path: Path)
 
 	assert _plan_structure_profile(base) == _plan_structure_profile(extended)
 	assert {plan.trigger.symbol for plan in extended.plans} == {"done"}
+
+
+def test_atomic_compilation_is_invariant_under_evidence_object_renaming(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_alpha_renamed_domain(
+		tmp_path / "object-renaming.pddl",
+		domain_name="object-renaming",
+		context_predicate="ready",
+		goal_predicate="done",
+		action_name="finish",
+	)
+	first_policy = """
+ precedence : (1, 1, 0, 0)
+       vars : item0
+     s_cond : (ready item0)
+     g_cond : (done item0)
+    actions : (finish item0)
+"""
+	second_policy = first_policy.replace("item0", "artifact_object_27")
+
+	first = compile_moose_readable_policy_to_minimal_module_asl_library(
+		first_policy,
+		domain_file=domain_file,
+		domain_name="object-renaming",
+		source_name="first-object-name",
+	)
+	second = compile_moose_readable_policy_to_minimal_module_asl_library(
+		second_policy,
+		domain_file=domain_file,
+		domain_name="object-renaming",
+		source_name="second-object-name",
+	)
+
+	assert _plan_structure_profile(first) == _plan_structure_profile(second)
+	assert first.metadata["atomic_module_synthesis"]["selector_optimization_cost"] == (
+		second.metadata["atomic_module_synthesis"]["selector_optimization_cost"]
+	)
 
 
 def _write_alpha_renamed_domain(

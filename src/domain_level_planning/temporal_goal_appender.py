@@ -52,6 +52,17 @@ class TemporalCompilerVariant(str, Enum):
 	CERTIFIED_BALANCED = "certified_balanced"
 	COMPLETION_BOUNDARY_MONITOR = "completion_boundary_monitor"
 
+	@property
+	def display_name(self) -> str:
+		"""Return the short method name used in papers and reports."""
+
+		return {
+			self.DFA_AWARE_UNPROTECTED: "Unprotected DFA",
+			self.CERTIFIED_FLAT: "Certified Flat",
+			self.CERTIFIED_BALANCED: "Certified Balanced",
+			self.COMPLETION_BOUNDARY_MONITOR: "Completion Monitor",
+		}[self]
+
 
 class TemporalMonitorObservationBoundary(str, Enum):
 	"""World-state boundary at which the runtime DFA consumes one valuation."""
@@ -418,9 +429,9 @@ def append_lifted_temporal_goal_case_to_library(
 ) -> tuple[PlanLibrary, Mapping[str, Any]]:
 	"""Compile one lifted LTLf goal case to DFA and append it to a library."""
 
-	dfa_payload = _rewrite_dfa_payload_labels_from_lifted_atoms(
-		dfa_builder.build(goal_case.ltlf_formula),
+	dfa_payload = build_lifted_temporal_goal_case_dfa(
 		goal_case=goal_case,
+		dfa_builder=dfa_builder,
 	)
 	updated = append_temporal_goal_to_library(
 		plan_library=plan_library,
@@ -430,6 +441,19 @@ def append_lifted_temporal_goal_case_to_library(
 		compiler_variant=compiler_variant,
 	)
 	return updated, dfa_payload
+
+
+def build_lifted_temporal_goal_case_dfa(
+	*,
+	goal_case: LiftedLTLfGoalCase,
+	dfa_builder: Any,
+) -> Mapping[str, Any]:
+	"""Build and bind one real MONA-derived DFA before variant-specific compilation."""
+
+	return _rewrite_dfa_payload_labels_from_lifted_atoms(
+		dfa_builder.build(goal_case.ltlf_formula),
+		goal_case=goal_case,
+	)
 
 
 def _has_existing_goal_trigger(plan_library: PlanLibrary, goal_name: str) -> bool:

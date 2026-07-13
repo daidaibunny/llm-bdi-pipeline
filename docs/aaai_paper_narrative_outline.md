@@ -461,6 +461,10 @@ ASL bytes
 compiler time
 ```
 
+Use short descriptive column phrases such as `Method`, `Coverage`, `Branches`,
+`Library Size`, and `Time (s)`. Keep stable experiment identifiers in the
+machine-readable artifact, not as `C0`/`C1`-style table labels.
+
 ### Temporal Baseline/Ablation Table
 
 Use short method names (Unprotected DFA, Certified Flat, Certified Balanced,
@@ -476,6 +480,9 @@ action count on jointly solved cases
 controller plan count
 maximum trigger fan-out
 ```
+
+Use the method names above directly. Do not replace them with numbered temporal
+variants or compressed one-letter oracle headings.
 
 Keep raw MOOSE, LAMA/ENHSP, and direct temporal planning in a separate external
 reference table. Do not mix their output representations or costs into the

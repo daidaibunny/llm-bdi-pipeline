@@ -36,7 +36,9 @@ if str(PROJECT_ROOT) not in sys.path:
 if str(SRC_ROOT) not in sys.path:
 	sys.path.insert(0, str(SRC_ROOT))
 
-from domain_level_planning import append_lifted_temporal_goal_case_to_library  # noqa: E402
+from domain_level_planning import TemporalCompilerVariant  # noqa: E402
+from domain_level_planning import append_temporal_goal_to_library  # noqa: E402
+from domain_level_planning import build_lifted_temporal_goal_case_dfa  # noqa: E402
 from domain_level_planning import load_lifted_ltlf_goal_dataset  # noqa: E402
 from evaluation.jason_runtime import JasonPlanLibraryRunner  # noqa: E402
 from evaluation.jason_runtime.runner import build_runtime_problem_artifacts  # noqa: E402
@@ -92,6 +94,14 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument("--plan-verifier-timeout-seconds", type=int, default=1800)
 	parser.add_argument("--jason-java-stack-size", default="64m")
 	parser.add_argument(
+		"--temporal-compiler-variant",
+		choices=tuple(variant.value for variant in TemporalCompilerVariant),
+		default=TemporalCompilerVariant.CERTIFIED_BALANCED.value,
+		help=(
+			"Registered query compiler variant. The default is Certified Balanced."
+		),
+	)
+	parser.add_argument(
 		"--plan-verifier-command",
 		default=f"bash {PROJECT_ROOT / 'scripts/validate_with_docker_val.sh'}",
 	)
@@ -108,6 +118,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
 	args = parse_args()
+	compiler_variant = TemporalCompilerVariant(args.temporal_compiler_variant)
 	benchmark_root = args.benchmark_root.expanduser().resolve()
 	bundle = _read_json(benchmark_root / "benchmark.json")
 	validate_release_inputs(benchmark_root=benchmark_root, bundle=bundle)
@@ -163,6 +174,8 @@ def main() -> int:
 		"atomic_library_inputs": atomic_library_input_metadata(batch_root, domains),
 		"selected_domains": list(domains),
 		"selected_case_count": len(tasks),
+		"temporal_compiler_variant": compiler_variant.value,
+		"method": compiler_variant.display_name,
 		"parameters": {
 			"num_workers": max(1, int(args.num_workers)),
 			"jason_timeout_seconds": max(1, int(args.timeout_seconds)),
@@ -172,6 +185,7 @@ def main() -> int:
 			),
 			"jason_java_stack_size": str(args.jason_java_stack_size),
 			"plan_verifier_command": str(args.plan_verifier_command),
+			"temporal_compiler_variant": compiler_variant.value,
 		},
 		"results": [],
 	}
@@ -205,6 +219,7 @@ def main() -> int:
 					1,
 					int(args.plan_verifier_timeout_seconds),
 				),
+				compiler_variant=compiler_variant,
 			): task
 			for task in pending
 		}
@@ -351,6 +366,7 @@ def validate_execution_task(
 	jason_java_stack_size: str,
 	plan_verifier_command: str,
 	plan_verifier_timeout_seconds: int,
+	compiler_variant: TemporalCompilerVariant,
 ) -> dict[str, Any]:
 	"""Compile and independently validate one benchmark invocation."""
 
@@ -363,16 +379,56 @@ def validate_execution_task(
 		"goal_name": task.goal_case.goal_name,
 		"problem_file": str(task.problem_file),
 		"output_dir": str(task.output_dir),
+		"temporal_compiler_variant": compiler_variant.value,
+		"method": compiler_variant.display_name,
 	}
 	try:
 		library = PlanLibrary.from_dict(_read_json(task.plan_library_json))
-		updated, dfa_payload = append_lifted_temporal_goal_case_to_library(
-			plan_library=library,
+		dfa_start = time.perf_counter()
+		dfa_payload = build_lifted_temporal_goal_case_dfa(
 			goal_case=task.goal_case,
-			domain_file=task.domain_file,
 			dfa_builder=DFABuilder(),
 		)
+		base.update(
+			{
+				"dfa_build_seconds": time.perf_counter() - dfa_start,
+				"atomic_library_fingerprint": _canonical_payload_fingerprint(
+					library.to_dict(),
+				),
+				"dfa_fingerprint": _canonical_payload_fingerprint(dfa_payload),
+			},
+		)
 		_write_json(task.output_dir / "dfa_payload.json", dfa_payload)
+		append_start = time.perf_counter()
+		updated = append_temporal_goal_to_library(
+			plan_library=library,
+			goal_name=task.goal_case.goal_name,
+			dfa_payload=dfa_payload,
+			domain_file=task.domain_file,
+			compiler_variant=compiler_variant,
+		)
+		append_metadata = _mapping(updated.metadata, "temporal_goal_append")
+		experiment_contract = _mapping(append_metadata, "experiment_contract")
+		if experiment_contract["atomic_library_fingerprint"] != base[
+			"atomic_library_fingerprint"
+		] or experiment_contract["dfa_fingerprint"] != base["dfa_fingerprint"]:
+			raise ValueError(
+				"temporal experiment contract changed its paired atomic-library or DFA "
+				"fingerprint during compilation.",
+			)
+		base.update(
+			{
+				"append_seconds": time.perf_counter() - append_start,
+				"atomic_library_fingerprint": experiment_contract[
+					"atomic_library_fingerprint"
+				],
+				"dfa_fingerprint": experiment_contract["dfa_fingerprint"],
+				"monitor_observation_boundary": append_metadata.get(
+					"monitor_observation_boundary",
+				),
+				**controller_structure_metrics(library, updated),
+			},
+		)
 	except Exception as error:  # noqa: BLE001 - structured compiler rejection.
 		record = {
 			**base,
@@ -408,6 +464,9 @@ def validate_execution_task(
 			output_dir=task.output_dir / "jason",
 			runtime_artifacts=runtime_artifacts,
 			temporal_dfa_payload=dfa_payload,
+			temporal_monitor_observation_boundary=str(
+				base["monitor_observation_boundary"],
+			),
 		)
 	except Exception as error:  # noqa: BLE001 - persisted as runtime infrastructure failure.
 		record = {
@@ -480,6 +539,37 @@ def validate_execution_task(
 		}
 	_write_json(task.output_dir / "result.json", record)
 	return record
+
+
+def controller_structure_metrics(
+	base_library: PlanLibrary,
+	updated_library: PlanLibrary,
+) -> dict[str, Any]:
+	"""Measure only query-local plans appended to an unchanged atomic library."""
+
+	base_plan_count = len(base_library.plans)
+	if tuple(updated_library.plans[:base_plan_count]) != tuple(base_library.plans):
+		raise ValueError("temporal append changed or reordered the atomic plan prefix")
+	query_plans = tuple(updated_library.plans[base_plan_count:])
+	trigger_counts = Counter(
+		(
+			plan.trigger.event_type,
+			plan.trigger.symbol,
+			plan.trigger.arguments,
+		)
+		for plan in query_plans
+	)
+	base_asl_bytes = len(render_plan_library_asl(base_library).encode("utf-8"))
+	updated_asl_bytes = len(render_plan_library_asl(updated_library).encode("utf-8"))
+	return {
+		"controller_plan_count": len(query_plans),
+		"max_trigger_fanout": max(trigger_counts.values(), default=0),
+		"controller_context_literal_count": sum(
+			len(plan.context) for plan in query_plans
+		),
+		"controller_body_step_count": sum(len(plan.body) for plan in query_plans),
+		"controller_asl_bytes": updated_asl_bytes - base_asl_bytes,
+	}
 
 
 def benchmark_prediction(
@@ -789,6 +879,16 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 		json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",
 	)
+
+
+def _canonical_payload_fingerprint(payload: object) -> str:
+	encoded = json.dumps(
+		payload,
+		sort_keys=True,
+		separators=(",", ":"),
+		default=str,
+	).encode("utf-8")
+	return hashlib.sha256(encoded).hexdigest()
 
 
 def _append_jsonl(path: Path, payload: Mapping[str, Any]) -> None:

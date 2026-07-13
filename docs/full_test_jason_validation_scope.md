@@ -110,18 +110,19 @@ DFA, preservation-certified balanced controller, primitive-step monitor, Jason,
 and VAL. Experimental modes are explicit, isolated output variants; none may be
 selected as a silent fallback.
 
-Atomic experiment modes share one normalized evidence artifact. The validated
-adapter mode renders only PDDL-validated evidence macros. Action-only closure
-adds certified PDDL producers but no internal subgoals. All-certified mode emits
-the complete certified candidate set without Clingo minimization. Full mode
-runs joint Clingo selection over that exact candidate set. This sequence
+Atomic experiment modes share one normalized evidence artifact. Evidence
+Adapter renders only PDDL-validated evidence macros. Action Closure adds
+certified PDDL producers but no internal subgoals. Maximal Certified selects a
+largest jointly compatible program from the full certified candidate universe.
+Full Compiler minimizes over that exact universe and the same hard constraints.
+This sequence
 separates evidence quality, schema closure, lifted decomposition, and selection.
 
 Temporal experiment modes share one DFA and atomic-library hash. The
 DFA-aware-unprotected mode uses canonical within-edge order without threat or
-preservation reasoning. Certified-flat mode uses the full selected order and
-branch portfolios but retains flat sibling controller plans. Full-balanced mode
-changes only the controller indexing structure. Completion-boundary monitoring
+preservation reasoning. Certified Flat uses the full selected order and branch
+portfolios but retains flat sibling controller plans. Certified Balanced changes
+only the controller indexing structure. Completion Monitor
 changes only when the real DFA is observed and is restricted to a semantic
 challenge suite with intermediate-state obligations.
 
@@ -131,6 +132,12 @@ Paper tables are generated from these summaries. A variant is paired only when
 all controlled hashes match. Raw MOOSE, LAMA/ENHSP, and direct temporal planning
 are external references and therefore use a separate report rather than being
 mixed into the compiler ablation matrix.
+
+The paper-facing names are `Evidence Adapter`, `Action Closure`, `Maximal
+Certified`, `Full Compiler`, `Unprotected DFA`, `Certified Flat`, `Certified
+Balanced`, and `Completion Monitor`. Stable snake-case identifiers remain in
+JSON and command-line arguments only. Tables use short descriptive headings,
+not numbered labels or compressed oracle initials.
 
 ## Temporal Wrapper Policy
 

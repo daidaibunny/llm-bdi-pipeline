@@ -37,6 +37,7 @@ from evaluation.jason_runtime.runner import _build_environment_java_source  # no
 from evaluation.jason_runtime.runner import _resolve_jason_classpath  # noqa: E402
 from evaluation.jason_runtime.runner import _runtime_action_schema  # noqa: E402
 from evaluation.jason_runtime.runner import build_runtime_problem_artifacts  # noqa: E402
+from domain_level_planning import AtomicCompilerVariant  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
@@ -209,6 +210,14 @@ def main() -> int:
 		),
 	)
 	parser.add_argument(
+		"--compiler-variant",
+		choices=tuple(variant.value for variant in AtomicCompilerVariant),
+		help=(
+			"Registered post-evidence compiler variant. Validated policy lifting "
+			"defaults to Full Compiler when omitted."
+		),
+	)
+	parser.add_argument(
 		"--write-domain-long-asl",
 		action="store_true",
 		help=(
@@ -250,6 +259,13 @@ def main() -> int:
 	)
 	args = parser.parse_args()
 	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
+	if args.atomic_library_mode == "faithful" and args.compiler_variant:
+		parser.error("--compiler-variant requires --atomic-library-mode validated-policy-lifting")
+	compiler_variant = (
+		AtomicCompilerVariant(args.compiler_variant or AtomicCompilerVariant.FULL.value)
+		if args.atomic_library_mode == "validated-policy-lifting"
+		else None
+	)
 
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	batch_root = resolve_batch_root(args.batch_root, args.batch_id)
@@ -278,6 +294,12 @@ def main() -> int:
 			"require_plan_verifier": bool(args.require_plan_verifier),
 			"plan_verifier_timeout_seconds": args.plan_verifier_timeout_seconds,
 			"atomic_library_mode": args.atomic_library_mode,
+			"compiler_variant": (
+				compiler_variant.value if compiler_variant is not None else None
+			),
+			"method": (
+				compiler_variant.display_name if compiler_variant is not None else "Raw MOOSE"
+			),
 			"prepare_only": bool(args.prepare_only),
 			"write_domain_long_asl": bool(args.write_domain_long_asl),
 			"write_per_test_runtime_asl": bool(args.write_per_test_runtime_asl),
@@ -298,6 +320,7 @@ def main() -> int:
 			run_root=run_root,
 			timeout_seconds=args.timeout_seconds,
 			atomic_library_mode=args.atomic_library_mode,
+			compiler_variant=compiler_variant,
 			write_domain_long_asl=bool(args.write_domain_long_asl),
 			max_domain_long_asl_bytes=max(1, int(args.max_domain_long_asl_mb)) * 1024 * 1024,
 			test_name_regex=args.test_name_regex,
@@ -380,6 +403,7 @@ def prepare_domain_for_full_test(
 	write_domain_long_asl: bool,
 	max_domain_long_asl_bytes: int,
 	test_name_regex: str | None = None,
+	compiler_variant: AtomicCompilerVariant | None = None,
 ) -> tuple[dict[str, Any], tuple[JasonTask, ...]]:
 	"""Compile atomic ASL, append every test goal, and return Jason tasks."""
 
@@ -394,8 +418,11 @@ def prepare_domain_for_full_test(
 		"domain": domain,
 		"domain_file": str(domain_file),
 		"readable_policy_file": str(readable_policy),
+		"plan_library_json": str(domain_output / "plan_library.json"),
 		"plan_library_asl": str(domain_output / "plan_library.asl"),
 		"atomic_library_mode": atomic_library_mode,
+		"compiler_variant": compiler_variant.value if compiler_variant else None,
+		"method": compiler_variant.display_name if compiler_variant else "Raw MOOSE",
 		"success": False,
 	}
 	try:
@@ -422,6 +449,7 @@ def prepare_domain_for_full_test(
 				domain=domain,
 				library_root=library_root,
 				atomic_library_mode=atomic_library_mode,
+				compiler_variant=compiler_variant,
 			),
 			stdout_file=log_dir / "compile_atomic_library.stdout.json",
 			stderr_file=log_dir / "compile_atomic_library.stderr.txt",
@@ -435,6 +463,12 @@ def prepare_domain_for_full_test(
 		plan_library_json = domain_output / "plan_library.json"
 		atomic_plan_library = PlanLibrary.from_dict(
 			json.loads(plan_library_json.read_text(encoding="utf-8")),
+		)
+		experiment_contract = dict(
+			atomic_plan_library.metadata.get("experiment_contract") or {},
+		)
+		record["evidence_program_fingerprint"] = experiment_contract.get(
+			"evidence_program_fingerprint",
 		)
 		base_plan_library_asl = domain_output / "atomic_plan_library.asl"
 		shutil.copyfile(plan_library_asl, base_plan_library_asl)
@@ -509,6 +543,7 @@ def build_compile_atomic_library_command(
 	domain: str,
 	library_root: Path,
 	atomic_library_mode: str,
+	compiler_variant: AtomicCompilerVariant | str | None = None,
 ) -> tuple[str, ...]:
 	"""Return the compile command used before full-test Jason validation."""
 
@@ -530,7 +565,16 @@ def build_compile_atomic_library_command(
 		"--overwrite",
 	]
 	if atomic_library_mode == "validated-policy-lifting":
-		command.append("--validated-policy-lifting")
+		resolved_variant = (
+			compiler_variant
+			if isinstance(compiler_variant, AtomicCompilerVariant)
+			else AtomicCompilerVariant(
+				compiler_variant or AtomicCompilerVariant.FULL.value,
+			)
+		)
+		command.extend(("--compiler-variant", resolved_variant.value))
+	elif compiler_variant is not None:
+		raise ValueError("compiler_variant requires validated-policy-lifting mode")
 	return tuple(command)
 
 

@@ -118,6 +118,16 @@ separately. We report every seed, mean and sample standard deviation, paired
 coverage differences, PAR-2 for timeouts, and plan length only on jointly solved
 instances. Runtime repetitions do not contend across seeds.
 
+The registered harness invokes the production compiler and execution runners
+rather than reimplementing either method. It rejects an atomic comparison unless
+all variants share the readable-policy and normalized-evidence hashes, and
+rejects a temporal comparison unless all variants share the benchmark,
+atomic-library, sample-set, and DFA hashes. Missing dependent runs and pairing
+violations remain explicit infrastructure failures in the machine-readable
+report. Tables use the short method names in
+Table~\ref{tab:registered-ablations} and descriptive column phrases; stable
+command-line identifiers are retained only in the artifact manifest.
+
 A nonempty execution succeeds only if Jason emits its explicit success marker,
 neutral-goal VAL accepts the complete primitive PDDL trace, and replayed states
 are accepted by both the gold and predicted DFAs. Failed prefixes are

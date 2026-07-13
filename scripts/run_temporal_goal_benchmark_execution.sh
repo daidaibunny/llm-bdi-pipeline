@@ -10,6 +10,7 @@ NUM_WORKERS="${NUM_WORKERS:-8}"
 JASON_TIMEOUT_SECONDS="${JASON_TIMEOUT_SECONDS:-1800}"
 VAL_TIMEOUT_SECONDS="${VAL_TIMEOUT_SECONDS:-1800}"
 JASON_JAVA_STACK_SIZE="${JASON_JAVA_STACK_SIZE:-64m}"
+TEMPORAL_COMPILER_VARIANT="${TEMPORAL_COMPILER_VARIANT:-certified_balanced}"
 MONA_BIN="${MONA_BIN:-$PROJECT_ROOT/.external/mona-1.4/Front/mona}"
 PLAN_VERIFIER_COMMAND="${PLAN_VERIFIER_COMMAND:-bash $PROJECT_ROOT/scripts/validate_with_docker_val.sh}"
 
@@ -22,6 +23,7 @@ fi
 echo "[run] id=$RUN_ID"
 echo "[run] benchmark=paper_artifacts/temporal_goal_benchmark/v1/benchmark.json"
 echo "[run] atomic_batch_id=$ATOMIC_BATCH_ID workers=$NUM_WORKERS"
+echo "[run] temporal_compiler_variant=$TEMPORAL_COMPILER_VARIANT"
 echo "[run] jason_timeout_seconds=$JASON_TIMEOUT_SECONDS val_timeout_seconds=$VAL_TIMEOUT_SECONDS"
 echo "[run] jason_java_stack_size=$JASON_JAVA_STACK_SIZE"
 echo "[run] validation=Jason + PDDL replay + neutral-goal VAL + gold/predicted DFA"
@@ -34,6 +36,7 @@ RUNNER_ARGS=(
 	--timeout-seconds "$JASON_TIMEOUT_SECONDS"
 	--plan-verifier-timeout-seconds "$VAL_TIMEOUT_SECONDS"
 	--jason-java-stack-size "$JASON_JAVA_STACK_SIZE"
+	--temporal-compiler-variant "$TEMPORAL_COMPILER_VARIANT"
 	--plan-verifier-command "$PLAN_VERIFIER_COMMAND"
 )
 for domain in "$@"; do

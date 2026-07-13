@@ -206,6 +206,17 @@ class AtomicCompilerVariant(str, Enum):
 	MAXIMAL_CERTIFIED_PROGRAM = "maximal_certified_program"
 	FULL = "full"
 
+	@property
+	def display_name(self) -> str:
+		"""Return the short method name used in papers and reports."""
+
+		return {
+			self.VALIDATED_EVIDENCE_ADAPTER: "Evidence Adapter",
+			self.ACTION_ONLY_CLOSURE: "Action Closure",
+			self.MAXIMAL_CERTIFIED_PROGRAM: "Maximal Certified",
+			self.FULL: "Full Compiler",
+		}[self]
+
 
 def policy_evidence_program_fingerprint(program: PolicyEvidenceProgram) -> str:
 	"""Hash one normalized evidence program independently of output variant."""
