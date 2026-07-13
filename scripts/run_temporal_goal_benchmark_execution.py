@@ -202,7 +202,11 @@ def main() -> int:
 		summary_file=summary_file,
 	)
 
-	existing = load_completed_records(tasks) if args.resume else {}
+	existing = (
+		load_completed_records(tasks, compiler_variant=compiler_variant)
+		if args.resume
+		else {}
+	)
 	records = list(existing.values())
 	pending = tuple(task for task in tasks if task.sample_id not in existing)
 	results_jsonl = run_root / "execution_results.jsonl"
@@ -234,6 +238,10 @@ def main() -> int:
 			_write_json(summary_file, summary)
 
 	sorted_records = sorted(records, key=_record_sort_key)
+	results_jsonl.write_text(
+		"".join(json.dumps(record, sort_keys=True) + "\n" for record in sorted_records),
+		encoding="utf-8",
+	)
 	summary["results"] = sorted_records
 	summary["aggregate"] = summarize_execution_records(sorted_records)
 	summary["completed_at"] = datetime.now().isoformat(timespec="seconds")
@@ -382,6 +390,10 @@ def validate_execution_task(
 		"output_dir": str(task.output_dir),
 		"temporal_compiler_variant": compiler_variant.value,
 		"method": compiler_variant.display_name,
+		"input_fingerprint": temporal_execution_input_fingerprint(
+			task,
+			compiler_variant=compiler_variant,
+		),
 	}
 	try:
 		library = PlanLibrary.from_dict(_read_json(task.plan_library_json))
@@ -817,17 +829,50 @@ def print_summary(summary: Mapping[str, Any], *, summary_file: Path) -> None:
 	print(f"[summary] file={summary_file}", flush=True)
 
 
+def temporal_execution_input_fingerprint(
+	task: TemporalExecutionTask,
+	*,
+	compiler_variant: TemporalCompilerVariant,
+) -> str:
+	"""Fingerprint every immutable input that determines one temporal case."""
+
+	payload = {
+		"domain": task.domain,
+		"sample_id": task.sample_id,
+		"profile": task.profile,
+		"domain_sha256": _sha256(task.domain_file),
+		"problem_sha256": _sha256(task.problem_file),
+		"plan_library_json_sha256": _sha256(task.plan_library_json),
+		"plan_library_asl_sha256": _sha256(task.plan_library_asl),
+		"goal_case": task.goal_case.to_dict(),
+		"benchmark_case": dict(task.benchmark_case),
+		"audit_row": dict(task.audit_row),
+		"temporal_compiler_variant": compiler_variant.value,
+	}
+	return _canonical_payload_fingerprint(payload)
+
+
 def load_completed_records(
 	tasks: Sequence[TemporalExecutionTask],
+	*,
+	compiler_variant: TemporalCompilerVariant,
 ) -> dict[str, Mapping[str, Any]]:
-	"""Load only complete per-case records for an explicit resumed run."""
+	"""Load only complete records whose exact temporal inputs still match."""
 
 	records: dict[str, Mapping[str, Any]] = {}
 	for task in tasks:
 		result_file = task.output_dir / "result.json"
 		if result_file.is_file():
 			record = _read_json(result_file)
-			if record.get("sample_id") == task.sample_id and "status" in record:
+			if (
+				record.get("sample_id") == task.sample_id
+				and "status" in record
+				and record.get("input_fingerprint")
+				== temporal_execution_input_fingerprint(
+					task,
+					compiler_variant=compiler_variant,
+				)
+			):
 				records[task.sample_id] = record
 	return records
 

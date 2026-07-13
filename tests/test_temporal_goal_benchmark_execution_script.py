@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 import subprocess
+from types import SimpleNamespace
 
 import pytest
 
@@ -17,7 +19,12 @@ from scripts.run_temporal_goal_benchmark_execution import (
 )
 from scripts.run_temporal_goal_benchmark_execution import controller_structure_metrics
 from scripts.run_temporal_goal_benchmark_execution import execution_status
+from scripts.run_temporal_goal_benchmark_execution import load_completed_records
 from scripts.run_temporal_goal_benchmark_execution import summarize_execution_records
+from scripts.run_temporal_goal_benchmark_execution import TemporalExecutionTask
+from scripts.run_temporal_goal_benchmark_execution import (
+	temporal_execution_input_fingerprint,
+)
 from scripts.run_temporal_goal_benchmark_execution import verify_invocation_binding
 
 
@@ -76,6 +83,53 @@ def test_registered_experiment_variants_have_short_report_names() -> None:
 		"Maximal Certified",
 		"Full Compiler",
 	]
+
+
+def test_temporal_resume_requires_exact_case_inputs(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_json = tmp_path / "plan_library.json"
+	library_asl = tmp_path / "plan_library.asl"
+	domain_file.write_text("domain", encoding="utf-8")
+	problem_file.write_text("problem", encoding="utf-8")
+	library_json.write_text("{}", encoding="utf-8")
+	library_asl.write_text("query.", encoding="utf-8")
+	goal_case = SimpleNamespace(to_dict=lambda: {"goal_name": "g_query"})
+	task = TemporalExecutionTask(
+		domain="tiny",
+		sample_id="tiny__p01__ordered_two",
+		profile="ordered_two",
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_json=library_json,
+		plan_library_asl=library_asl,
+		goal_case=goal_case,
+		benchmark_case={"problem_file": "problem.pddl"},
+		audit_row={"binding": {"X": "a"}},
+		output_dir=tmp_path / "case",
+	)
+	task.output_dir.mkdir()
+	variant = TemporalCompilerVariant.CERTIFIED_BALANCED
+	fingerprint = temporal_execution_input_fingerprint(
+		task,
+		compiler_variant=variant,
+	)
+	(task.output_dir / "result.json").write_text(
+		json.dumps(
+			{
+				"sample_id": task.sample_id,
+				"status": "success",
+				"input_fingerprint": fingerprint,
+			},
+		),
+		encoding="utf-8",
+	)
+
+	completed = load_completed_records((task,), compiler_variant=variant)
+	assert tuple(completed) == (task.sample_id,)
+
+	library_asl.write_text("changed.", encoding="utf-8")
+	assert load_completed_records((task,), compiler_variant=variant) == {}
 
 
 def test_controller_structure_metrics_measure_only_appended_query_plans() -> None:

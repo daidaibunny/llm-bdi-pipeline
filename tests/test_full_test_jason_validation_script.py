@@ -14,6 +14,7 @@ from scripts.run_full_test_jason_validation import apply_validation_summaries
 from scripts.run_full_test_jason_validation import build_compile_atomic_library_command
 from scripts.run_full_test_jason_validation import full_test_wrapper_lines
 from scripts.run_full_test_jason_validation import JasonTask
+from scripts.run_full_test_jason_validation import load_completed_validation_records
 from scripts.run_full_test_jason_validation import prepare_domain_for_full_test
 from scripts.run_full_test_jason_validation import query_entry_proposition
 from scripts.run_full_test_jason_validation import resolve_batch_root
@@ -24,6 +25,7 @@ from scripts.run_full_test_jason_validation import safe_goal_fragment
 from scripts.run_full_test_jason_validation import safe_path_fragment
 from scripts.run_full_test_jason_validation import source_revision_metadata
 from scripts.run_full_test_jason_validation import validate_one_task
+from scripts.run_full_test_jason_validation import validation_input_fingerprint
 from scripts.run_full_test_jason_validation import _jason_runtime_status_label
 from scripts.run_full_test_jason_validation import _plan_verifier_status_label
 from plan_library.models import AgentSpeakBodyStep
@@ -1191,6 +1193,47 @@ def test_run_jason_tasks_appends_progress_records_without_rewriting_summary(
 	assert json.loads(lines[0])["goal_name"] == "g_ferry_test_1"
 	assert summary["validation_results_jsonl"] == str(jsonl_file)
 	assert not summary_file.exists()
+
+
+def test_completed_validation_records_require_exact_input_fingerprint(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "p01.pddl"
+	plan_library_asl = tmp_path / "plan_library.asl"
+	domain_file.write_text("(define (domain ferry))\n", encoding="utf-8")
+	problem_file.write_text("(define (problem p01) (:domain ferry))\n", encoding="utf-8")
+	plan_library_asl.write_text("/* base */\n", encoding="utf-8")
+	task = JasonTask(
+		domain="ferry",
+		index=1,
+		problem_file=problem_file,
+		domain_file=domain_file,
+		plan_library_asl=plan_library_asl,
+		base_plan_library_asl_text="/* base */",
+		goal_name="g_ferry_test_1",
+		output_dir=tmp_path / "jason/ferry/test_0001_p01",
+		runtime_wrapper_text="ferry_test_1.\n+!g_ferry_test_1 : ferry_test_1 <- true.",
+	)
+	record = {
+		"domain": "ferry",
+		"test_index": 1,
+		"goal_name": "g_ferry_test_1",
+		"status": "success",
+		"success": True,
+		"input_fingerprint": validation_input_fingerprint(task),
+	}
+	task.output_dir.mkdir(parents=True)
+	(task.output_dir / "validation_record.json").write_text(
+		json.dumps(record),
+		encoding="utf-8",
+	)
+
+	completed = load_completed_validation_records((task,))
+	assert tuple(completed.values()) == (record,)
+
+	problem_file.write_text("(define (problem changed) (:domain ferry))\n", encoding="utf-8")
+	assert load_completed_validation_records((task,)) == {}
 
 
 def test_parser_order_batch_allows_native_plan_verifier_command_override() -> None:

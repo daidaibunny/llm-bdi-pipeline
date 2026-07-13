@@ -131,6 +131,54 @@ def resolve_temporal_atomic_input(
 	raise ValueError(f"No temporal atomic input exists for stage {stage!r}")
 
 
+def validate_resume_manifest(
+	previous: Mapping[str, Any],
+	current: Mapping[str, Any],
+) -> None:
+	"""Require an interrupted paired run to retain its exact registered contract."""
+
+	immutable_keys = (
+		"source_revision",
+		"domains",
+		"registered_seeds",
+		"case_contract",
+		"seed_batches",
+		"seed_batch_manifests",
+		"generate_evidence",
+		"temporal_atomic_input",
+		"num_workers",
+		"timeout_seconds",
+		"jason_java_stack_size",
+		"paper_matrix_complete",
+		"runs",
+	)
+	for key in immutable_keys:
+		if previous.get(key) != current.get(key):
+			raise ValueError(f"resume contract mismatch for {key}")
+
+
+def registered_run_summary_complete(
+	run: RegisteredRun,
+	*,
+	expected_revision: Mapping[str, Any],
+) -> bool:
+	"""Return whether a child summary is complete and from the registered revision."""
+
+	if run.stage == "Evidence" or not run.summary_file.is_file():
+		return False
+	payload = _read_json(run.summary_file)
+	child_revision = dict(payload.get("source_revision") or {})
+	if child_revision != dict(expected_revision):
+		raise ValueError(
+			f"completed child {run.run_id} has source revision {child_revision!r}, "
+			f"expected {dict(expected_revision)!r}",
+		)
+	if run.stage in {"Atomic", "Temporal"}:
+		return bool(payload.get("completed_at"))
+	case_count = int(payload.get("case_count") or 0)
+	return case_count > 0 and len(tuple(payload.get("records") or ())) == case_count
+
+
 def validate_seed_batch_manifest(
 	*,
 	batch_root: Path,
@@ -252,6 +300,7 @@ def build_atomic_run_command(
 		"--compiler-variant",
 		variant.value,
 		"--suppress-final-summary-json",
+		"--resume",
 	]
 	for domain in domains:
 		command.extend(("--domain", str(domain)))
@@ -302,6 +351,7 @@ def build_temporal_run_command(
 		str(plan_verifier_command),
 		"--temporal-compiler-variant",
 		variant.value,
+		"--resume",
 	]
 	for domain in domains:
 		command.extend(("--domain", str(domain)))
@@ -943,6 +993,14 @@ def _parse_args() -> argparse.Namespace:
 		action="store_true",
 		help="Permit fewer than five seeds for smoke runs; never use for paper tables.",
 	)
+	parser.add_argument(
+		"--resume",
+		action="store_true",
+		help=(
+			"Resume the same registered matrix. Completed child runs are reused only "
+			"when the immutable manifest and source revision match exactly."
+		),
+	)
 	parser.add_argument("--dry-run", action="store_true")
 	return parser.parse_args()
 
@@ -952,9 +1010,13 @@ def main() -> int:
 	project_root = PROJECT_ROOT
 	run_id = args.run_id or f"paired-compilers-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 	run_root = args.output_root.expanduser().resolve() / run_id
+	manifest_file = run_root / "manifest.json"
+	previous_manifest: dict[str, Any] | None = None
 	if run_root.exists():
-		raise ValueError(f"Output directory already exists: {run_root}")
-	run_root.mkdir(parents=True)
+		if not args.resume or not manifest_file.is_file():
+			raise ValueError(f"Output directory already exists: {run_root}")
+		previous_manifest = _read_json(manifest_file)
+	run_root.mkdir(parents=True, exist_ok=True)
 	domains = tuple(args.domain or DEFAULT_DOMAINS)
 	seed_batches = parse_seed_batch_assignments(args.seed_batch)
 	if args.generate_evidence:
@@ -1103,12 +1165,22 @@ def main() -> int:
 				summary_file=challenge_output_root / child_id / "summary.json",
 			),
 		)
+	current_revision = source_revision_metadata(project_root)
 	manifest = {
 		"schema_version": 1,
 		"artifact_kind": "paired_compiler_experiment_matrix",
 		"run_id": run_id,
-		"created_at": datetime.now().isoformat(timespec="seconds"),
-		"source_revision": source_revision_metadata(project_root),
+		"created_at": (
+			str(previous_manifest.get("created_at"))
+			if previous_manifest is not None
+			else datetime.now().isoformat(timespec="seconds")
+		),
+		"resumed_at": (
+			datetime.now().isoformat(timespec="seconds")
+			if previous_manifest is not None
+			else None
+		),
+		"source_revision": current_revision,
 		"domains": list(domains),
 		"registered_seeds": list(REGISTERED_SEEDS),
 		"case_contract": case_contract,
@@ -1146,9 +1218,11 @@ def main() -> int:
 			for run in runs
 		],
 	}
-	_write_json(run_root / "manifest.json", manifest)
+	if previous_manifest is not None:
+		validate_resume_manifest(previous_manifest, manifest)
+	_write_json(manifest_file, manifest)
 	if args.dry_run:
-		print(f"[run] dry-run manifest={run_root / 'manifest.json'}")
+		print(f"[run] dry-run manifest={manifest_file}")
 		return 0
 
 	atomic_records: list[dict[str, Any]] = []
@@ -1174,12 +1248,27 @@ def main() -> int:
 				flush=True,
 			)
 			continue
-		print(f"[run] stage={run.stage} method={run.method} seed={run.seed}", flush=True)
-		return_code = _run_registered_command(
+		reused = args.resume and registered_run_summary_complete(
 			run,
-			project_root=project_root,
-			log_root=run_root / "logs",
+			expected_revision=current_revision,
 		)
+		if reused:
+			print(
+				f"[resume] stage={run.stage} method={run.method} seed={run.seed} "
+				f"summary={run.summary_file}",
+				flush=True,
+			)
+			return_code = 0
+		else:
+			print(
+				f"[run] stage={run.stage} method={run.method} seed={run.seed}",
+				flush=True,
+			)
+			return_code = _run_registered_command(
+				run,
+				project_root=project_root,
+				log_root=run_root / "logs",
+			)
 		allowed_return_codes = {0, 1} if run.stage in {"Atomic", "Temporal"} else {0}
 		if return_code not in allowed_return_codes or not run.summary_file.is_file():
 			failed_input_batches.add(run.run_id)

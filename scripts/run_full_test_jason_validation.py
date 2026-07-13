@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
 from dataclasses import dataclass
 from datetime import datetime
+import hashlib
 import json
 import re
 import shutil
@@ -101,6 +102,8 @@ class JasonTask:
 	output_dir: Path
 	runtime_wrapper_text: str | None = None
 	atomic_plan_library: PlanLibrary | None = None
+	base_plan_library_sha256: str | None = None
+	atomic_plan_library_sha256: str | None = None
 
 
 def source_revision_metadata(project_root: Path) -> dict[str, Any]:
@@ -135,6 +138,100 @@ def source_revision_metadata(project_root: Path) -> dict[str, Any]:
 		"tracked_changes": any(not line.startswith("??") for line in status_lines),
 		"untracked_files": any(line.startswith("??") for line in status_lines),
 	}
+
+
+def validation_input_fingerprint(task: JasonTask) -> str:
+	"""Fingerprint the immutable inputs that determine one validation case."""
+
+	base_asl_sha256 = task.base_plan_library_sha256 or hashlib.sha256(
+		task.base_plan_library_asl_text.encode("utf-8"),
+	).hexdigest()
+	if task.atomic_plan_library_sha256:
+		atomic_library_sha256 = task.atomic_plan_library_sha256
+	elif task.atomic_plan_library is not None:
+		atomic_library_sha256 = hashlib.sha256(
+			json.dumps(
+				task.atomic_plan_library.to_dict(),
+				sort_keys=True,
+				separators=(",", ":"),
+			).encode("utf-8"),
+		).hexdigest()
+	else:
+		atomic_library_sha256 = "none"
+	wrapper_sha256 = (
+		hashlib.sha256(task.runtime_wrapper_text.encode("utf-8")).hexdigest()
+		if task.runtime_wrapper_text is not None
+		else "generated_from_registered_inputs"
+	)
+	payload = {
+		"domain": task.domain,
+		"domain_sha256": _sha256_file(task.domain_file),
+		"problem_sha256": _sha256_file(task.problem_file),
+		"goal_name": task.goal_name,
+		"base_plan_library_sha256": base_asl_sha256,
+		"atomic_plan_library_sha256": atomic_library_sha256,
+		"runtime_wrapper_sha256": wrapper_sha256,
+	}
+	return hashlib.sha256(
+		json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+	).hexdigest()
+
+
+def load_completed_validation_records(
+	tasks: Sequence[JasonTask],
+) -> dict[tuple[str, int], dict[str, Any]]:
+	"""Load only per-test records whose complete registered inputs still match."""
+
+	completed: dict[tuple[str, int], dict[str, Any]] = {}
+	for task in tasks:
+		record_file = task.output_dir / "validation_record.json"
+		if not record_file.is_file():
+			continue
+		try:
+			record = json.loads(record_file.read_text(encoding="utf-8"))
+		except (OSError, json.JSONDecodeError):
+			continue
+		if not isinstance(record, Mapping):
+			continue
+		if (
+			str(record.get("domain") or "") != task.domain
+			or int(record.get("test_index") or -1) != task.index
+			or str(record.get("goal_name") or "") != task.goal_name
+			or str(record.get("input_fingerprint") or "")
+			!= validation_input_fingerprint(task)
+		):
+			continue
+		completed[(task.domain, task.index)] = dict(record)
+	return completed
+
+
+def validate_full_test_resume_summary(
+	previous: Mapping[str, Any],
+	*,
+	source_revision: Mapping[str, Any],
+	batch_id: str,
+	settings: Mapping[str, Any],
+) -> None:
+	"""Reject a resume request that changes source, evidence, or run settings."""
+
+	if dict(previous.get("source_revision") or {}) != dict(source_revision):
+		raise ValueError("resume source revision does not match the original run")
+	if str(previous.get("source_batch_id") or "") != str(batch_id):
+		raise ValueError("resume evidence batch does not match the original run")
+	previous_settings = dict(previous.get("settings") or {})
+	for key, value in settings.items():
+		if key in {"resume_enabled", "suppress_final_summary_json"}:
+			continue
+		if previous_settings.get(key) != value:
+			raise ValueError(f"resume setting does not match the original run: {key}")
+
+
+def _sha256_file(path: Path) -> str:
+	hasher = hashlib.sha256()
+	with path.open("rb") as handle:
+		for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+			hasher.update(chunk)
+	return hasher.hexdigest()
 
 
 def main() -> int:
@@ -257,6 +354,14 @@ def main() -> int:
 			"still written; per-test status lines remain visible."
 		),
 	)
+	parser.add_argument(
+		"--resume",
+		action="store_true",
+		help=(
+			"Reuse completed per-test records only when their exact domain, problem, "
+			"atomic-library, and wrapper inputs still match."
+		),
+	)
 	args = parser.parse_args()
 	args.atomic_library_mode = normalise_atomic_library_mode(args.atomic_library_mode)
 	if args.atomic_library_mode == "faithful" and args.compiler_variant:
@@ -272,44 +377,72 @@ def main() -> int:
 	batch_id = batch_root.name
 	run_id = args.run_id or f"{batch_id}-full-test-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 	run_root = args.output_root.expanduser().resolve() / run_id
+	summary_file = run_root / "summary.json"
+	current_revision = source_revision_metadata(PROJECT_ROOT)
+	settings = {
+		"domains": list(domains),
+		"num_workers": args.num_workers,
+		"timeout_seconds": args.timeout_seconds,
+		"jason_java_stack_size": args.jason_java_stack_size,
+		"plan_verifier_command": args.plan_verifier_command,
+		"require_plan_verifier": bool(args.require_plan_verifier),
+		"plan_verifier_timeout_seconds": args.plan_verifier_timeout_seconds,
+		"atomic_library_mode": args.atomic_library_mode,
+		"compiler_variant": (
+			compiler_variant.value if compiler_variant is not None else None
+		),
+		"method": (
+			compiler_variant.display_name if compiler_variant is not None else "Raw MOOSE"
+		),
+		"prepare_only": bool(args.prepare_only),
+		"write_domain_long_asl": bool(args.write_domain_long_asl),
+		"write_per_test_runtime_asl": bool(args.write_per_test_runtime_asl),
+		"max_domain_long_asl_mb": args.max_domain_long_asl_mb,
+		"suppress_final_summary_json": bool(args.suppress_final_summary_json),
+		"resume_enabled": bool(args.resume),
+	}
+	previous_summary: dict[str, Any] | None = None
 	if run_root.exists():
-		print(f"output directory already exists: {run_root}", file=sys.stderr)
-		return 2
-	run_root.mkdir(parents=True)
+		if not args.resume or not summary_file.is_file():
+			print(f"output directory already exists: {run_root}", file=sys.stderr)
+			return 2
+		try:
+			loaded_summary = json.loads(summary_file.read_text(encoding="utf-8"))
+			if not isinstance(loaded_summary, Mapping):
+				raise ValueError("existing summary is not a JSON object")
+			validate_full_test_resume_summary(
+				loaded_summary,
+				source_revision=current_revision,
+				batch_id=batch_id,
+				settings=settings,
+			)
+			previous_summary = dict(loaded_summary)
+		except (OSError, json.JSONDecodeError, ValueError) as error:
+			print(f"cannot resume {run_root}: {error}", file=sys.stderr)
+			return 2
+	run_root.mkdir(parents=True, exist_ok=True)
 
 	summary: dict[str, Any] = {
 		"artifact_kind": "full_test_jason_validation_from_moose_asl_batch",
-		"created_at": datetime.now().isoformat(timespec="seconds"),
-		"source_revision": source_revision_metadata(PROJECT_ROOT),
+		"created_at": (
+			str(previous_summary.get("created_at"))
+			if previous_summary is not None
+			else datetime.now().isoformat(timespec="seconds")
+		),
+		"resumed_at": (
+			datetime.now().isoformat(timespec="seconds")
+			if previous_summary is not None
+			else None
+		),
+		"source_revision": current_revision,
 		"source_batch_id": batch_id,
 		"source_batch_root": str(batch_root),
 		"run_id": run_id,
 		"run_root": str(run_root),
-		"settings": {
-			"domains": list(domains),
-			"num_workers": args.num_workers,
-			"timeout_seconds": args.timeout_seconds,
-			"jason_java_stack_size": args.jason_java_stack_size,
-			"plan_verifier_command": args.plan_verifier_command,
-			"require_plan_verifier": bool(args.require_plan_verifier),
-			"plan_verifier_timeout_seconds": args.plan_verifier_timeout_seconds,
-			"atomic_library_mode": args.atomic_library_mode,
-			"compiler_variant": (
-				compiler_variant.value if compiler_variant is not None else None
-			),
-			"method": (
-				compiler_variant.display_name if compiler_variant is not None else "Raw MOOSE"
-			),
-			"prepare_only": bool(args.prepare_only),
-			"write_domain_long_asl": bool(args.write_domain_long_asl),
-			"write_per_test_runtime_asl": bool(args.write_per_test_runtime_asl),
-			"max_domain_long_asl_mb": args.max_domain_long_asl_mb,
-			"suppress_final_summary_json": bool(args.suppress_final_summary_json),
-		},
+		"settings": settings,
 		"domains": {},
 		"validations": [],
 	}
-	summary_file = run_root / "summary.json"
 	write_json(summary_file, summary)
 
 	tasks: list[JasonTask] = []
@@ -355,6 +488,7 @@ def main() -> int:
 		write_per_test_runtime_asl=bool(args.write_per_test_runtime_asl),
 		summary=summary,
 		summary_file=summary_file,
+		resume=bool(args.resume),
 	)
 	summary["validations"] = validation_records
 	apply_validation_summaries(
@@ -473,6 +607,10 @@ def prepare_domain_for_full_test(
 		base_plan_library_asl = domain_output / "atomic_plan_library.asl"
 		shutil.copyfile(plan_library_asl, base_plan_library_asl)
 		base_plan_library_asl_text = plan_library_asl.read_text(encoding="utf-8").rstrip()
+		base_plan_library_sha256 = hashlib.sha256(
+			base_plan_library_asl_text.encode("utf-8"),
+		).hexdigest()
+		atomic_plan_library_sha256 = _sha256_file(plan_library_json)
 		wrapper_text_by_problem: dict[Path, str] = {}
 		wrapper_plan_count: int | None = None
 		if write_domain_long_asl:
@@ -526,6 +664,8 @@ def prepare_domain_for_full_test(
 				),
 				runtime_wrapper_text=wrapper_text_by_problem.get(problem_file),
 				atomic_plan_library=atomic_plan_library,
+				base_plan_library_sha256=base_plan_library_sha256,
+				atomic_plan_library_sha256=atomic_plan_library_sha256,
 			)
 			for index, problem_file in enumerate(test_instances, start=1)
 		)
@@ -1073,11 +1213,22 @@ def run_jason_tasks(
 	write_per_test_runtime_asl: bool,
 	summary: dict[str, Any],
 	summary_file: Path,
+	resume: bool = False,
 ) -> list[dict[str, Any]]:
 	"""Run Jason validation tasks in a bounded worker pool."""
 
+	all_tasks = tuple(tasks)
+	completed = load_completed_validation_records(all_tasks) if resume else {}
+	pending = tuple(
+		task for task in all_tasks if (task.domain, task.index) not in completed
+	)
+	if resume:
+		print(
+			f"[resume] reused={len(completed)} pending={len(pending)}",
+			flush=True,
+		)
 	compiled_environment_dirs = prepare_shared_jason_environments(
-		tasks=tuple(tasks),
+		tasks=pending,
 		classpath=classpath,
 		run_root=run_root,
 		timeout_seconds=timeout_seconds,
@@ -1086,7 +1237,8 @@ def run_jason_tasks(
 	)
 	results_jsonl = run_root / "validation_results.jsonl"
 	summary["validation_results_jsonl"] = str(results_jsonl)
-	records: list[dict[str, Any]] = []
+	summary["resumed_validation_count"] = len(completed)
+	records: list[dict[str, Any]] = list(completed.values())
 	with ThreadPoolExecutor(max_workers=num_workers) as executor:
 		future_map = {
 			executor.submit(
@@ -1101,7 +1253,7 @@ def run_jason_tasks(
 				plan_verifier_timeout_seconds=plan_verifier_timeout_seconds,
 				write_per_test_runtime_asl=write_per_test_runtime_asl,
 			): task
-			for task in tasks
+			for task in pending
 		}
 		for future in as_completed(future_map):
 			record = future.result()
@@ -1117,7 +1269,15 @@ def run_jason_tasks(
 				f"status={record.get('status')}",
 				flush=True,
 			)
-	return sorted(records, key=lambda item: (str(item["domain"]), int(item["test_index"])))
+	ordered_records = sorted(
+		records,
+		key=lambda item: (str(item["domain"]), int(item["test_index"])),
+	)
+	results_jsonl.write_text(
+		"".join(json.dumps(record, sort_keys=True) + "\n" for record in ordered_records),
+		encoding="utf-8",
+	)
+	return ordered_records
 
 
 def _jason_runtime_status_label(record: Mapping[str, Any]) -> str:
@@ -1163,6 +1323,7 @@ def validate_one_task(
 ) -> dict[str, Any]:
 	"""Run one Jason validation and return a compact record."""
 
+	input_fingerprint = validation_input_fingerprint(task)
 	start = time.perf_counter()
 	task.output_dir.mkdir(parents=True, exist_ok=True)
 	try:
@@ -1213,6 +1374,7 @@ def validate_one_task(
 			"test_index": task.index,
 			"problem_file": str(task.problem_file),
 			"goal_name": task.goal_name,
+			"input_fingerprint": input_fingerprint,
 			"success": bool(payload.get("success")),
 			"status": payload.get("status"),
 			"timed_out": bool(payload.get("timed_out")),
@@ -1242,6 +1404,7 @@ def validate_one_task(
 			"test_index": task.index,
 			"problem_file": str(task.problem_file),
 			"goal_name": task.goal_name,
+			"input_fingerprint": input_fingerprint,
 			"success": False,
 			"status": "exception",
 			"timed_out": False,
