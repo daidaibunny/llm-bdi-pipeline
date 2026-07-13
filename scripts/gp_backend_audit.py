@@ -34,6 +34,13 @@ from domain_level_planning.evidence_module import (
 from domain_level_planning.policy_program import policy_program_from_sketch_policy
 from plan_library.rendering import render_plan_library_asl
 
+try:
+	from run_moose_faithful_e2e import MOOSE_REPRODUCTION_RANDOM_SEED
+	from run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
+except ModuleNotFoundError:  # pragma: no cover - used when imported by pytest.
+	from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_RANDOM_SEED
+	from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BACKENDS = tuple(PINNED_BACKENDS)
@@ -131,7 +138,17 @@ def main() -> int:
 		type=Path,
 		help="Output directory for commands that materialize project artifacts.",
 	)
-	parser.add_argument("--random-seed", type=int, default=0)
+	parser.add_argument(
+		"--random-seed",
+		type=int,
+		default=MOOSE_REPRODUCTION_RANDOM_SEED,
+	)
+	parser.add_argument(
+		"--num-workers",
+		type=int,
+		default=MOOSE_REPRODUCTION_SYNTHESIS_WORKERS,
+		help="MOOSE synthesis threads within the selected domain.",
+	)
 	parser.add_argument("--num-permutations", type=int, default=3)
 	parser.add_argument("--goal-max-size", type=int, default=1)
 	parser.add_argument(
@@ -213,6 +230,7 @@ def main() -> int:
 			training_dir=_required_path(args.training_dir, "--training-dir"),
 			save_file=_required_path(args.save_file, "--save-file"),
 			random_seed=args.random_seed,
+			num_workers=args.num_workers,
 			num_permutations=args.num_permutations,
 			goal_max_size=args.goal_max_size,
 			max_rss_gb=args.max_rss_gb,
@@ -464,6 +482,7 @@ def print_moose_atomic_command(
 	training_dir: Path,
 	save_file: Path,
 	random_seed: int,
+	num_workers: int,
 	num_permutations: int,
 	goal_max_size: int,
 	max_rss_gb: float,
@@ -489,6 +508,8 @@ def print_moose_atomic_command(
 					save_project_path,
 					"--random-seed",
 					str(random_seed),
+					"--num_workers",
+					str(num_workers),
 					"--num-permutations",
 					str(num_permutations),
 					"--goal-max-size",

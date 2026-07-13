@@ -362,6 +362,31 @@ def test_backend_audit_capability_cli_prints_paper_code_status(
 	assert "status: confirmed_competition_artifact_only" in result.stdout
 
 
+def test_moose_atomic_audit_command_pins_reproduction_seed_and_workers() -> None:
+	project_root = Path(__file__).resolve().parents[2]
+	script = project_root / "scripts" / "gp_backend_audit.py"
+
+	result = subprocess.run(
+		(
+			sys.executable,
+			str(script),
+			"moose-atomic-command",
+			"--domain-file",
+			str(project_root / "src" / "domains" / "ferry" / "domain.pddl"),
+			"--training-dir",
+			str(project_root / "src" / "domains" / "ferry" / "train"),
+			"--save-file",
+			str(project_root / "tmp" / "moose-audit-test.model"),
+		),
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+
+	assert "--random-seed 0" in result.stdout
+	assert "--num_workers 12" in result.stdout
+
+
 def test_install_moose_backend_uses_configured_backend_root(
 	tmp_path: Path,
 	monkeypatch: pytest.MonkeyPatch,
