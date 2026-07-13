@@ -6,6 +6,8 @@ import pytest
 
 from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
 from domain_level_planning.temporal_goal_appender import append_lifted_temporal_goal_case_to_library
+from domain_level_planning.temporal_goal_appender import DFALiteral
+from domain_level_planning.temporal_goal_appender import _ground_action_only_plan
 from domain_level_planning.temporal_goal_appender import validate_guard_transition_dfa
 from domain_level_planning.lifted_ltlf_goal_schema import LTLfAtomSpec
 from domain_level_planning.lifted_ltlf_goal_schema import LiftedLTLfGoalCase
@@ -110,7 +112,9 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 
 	assert [plan.plan_name for plan in updated.plans] == [
 		"done_via_finish",
-		"g_query_1_trans_sequence",
+		"g_query_1_monitor_accepting",
+		"g_query_1_trans_1_monitor_dispatch",
+		"g_query_1_trans_2_monitor_dispatch",
 		"g_query_1_trans_1_repair_tree",
 		"g_query_1_trans_1_repair_1_1_satisfied",
 		"g_query_1_trans_1_repair_1_1_achieve",
@@ -118,49 +122,61 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		"g_query_1_trans_1_done_replay",
 		"g_query_1_trans_2_repair_tree",
 		"g_query_1_trans_2_repair_1_1_satisfied",
-		"g_query_1_trans_2_repair_1_1_achieve",
 		"g_query_1_trans_2_done_success",
 		"g_query_1_trans_2_done_replay",
 	]
 	assert updated.plans[1].trigger.symbol == "g_query_1"
-	assert updated.plans[1].context == ("query_1",)
-	assert updated.plans[1].body == (
-		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
-		AgentSpeakBodyStep("subgoal", "g_query_1_trans_2", ()),
+	assert updated.plans[1].context == (
+		"query_1",
+		"g_query_1_monitor_accepting",
 	)
-	assert updated.plans[2].context == ("query_1", "obj_tp(X, item)")
+	assert updated.plans[2].context == (
+		"query_1",
+		"g_query_1_monitor_state_q0",
+	)
 	assert updated.plans[2].body == (
+		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
+	)
+	assert updated.plans[4].context == ("query_1", "obj_tp(X, item)")
+	assert updated.plans[4].body == (
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1_repair_1_1", ()),
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1_done", ()),
 	)
-	assert updated.plans[3].context == (
+	assert updated.plans[5].context == (
 		"query_1",
 		"obj_tp(X, item)",
 		"done(X)",
 	)
-	assert updated.plans[3].body == ()
-	assert updated.plans[4].context == (
+	assert updated.plans[5].body == ()
+	assert updated.plans[6].context == (
 		"query_1",
 		"obj_tp(X, item)",
 		"not done(X)",
 	)
-	assert updated.plans[4].body == (
+	assert updated.plans[6].body == (
 		AgentSpeakBodyStep("subgoal", "done", ("X",)),
 	)
 	assert updated.initial_beliefs == ("query_1",)
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
 	assert updated.metadata["temporal_goal_append"]["wrapper_mode"] == (
-		"dfa_guard_transition_replay"
+		"runtime_monitored_dfa_product"
 	)
 	assert updated.metadata["temporal_goal_append"]["progress_transition_count"] == 2
 	assert updated.metadata["temporal_goal_append"]["negative_guard_count"] == 0
 	assert updated.metadata["temporal_goal_append"]["negative_guard_policy"] == (
 		"completion_context_with_conditional_may_add_preservation"
 	)
-	assert updated.metadata["temporal_goal_append"]["negative_achievement_supported"] is False
-	assert updated.metadata["temporal_goal_append"]["transition_controller_strategy"] == (
-		"balanced_transition_repair_tree"
+	assert updated.metadata["temporal_goal_append"]["negative_atomic_module_supported"] is False
+	assert (
+		updated.metadata["temporal_goal_append"]
+		["negative_guard_establishment_supported"]
+		is True
 	)
+	assert updated.metadata["temporal_goal_append"]["transition_controller_strategy"] == (
+		"monitored_balanced_repair_tree"
+	)
+	assert updated.metadata["temporal_goal_append"]["runtime_monitor_required"] is True
 	assert (
 		updated.metadata["temporal_goal_append"]["query_entry_proposition"]
 		== "query_1"
@@ -221,9 +237,13 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		domain_file=domain_file,
 	)
 
-	assert updated.plans[2].body == (
+	assert updated.plans[3].body == (
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
+	)
+	assert updated.plans[4].body == (
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_2", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
 	first_tree_entry = next(
 		plan for plan in updated.plans if plan.plan_name == "g_query_1_trans_1_repair_tree"
@@ -240,8 +260,10 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 		"query_1",
 		"obj_tp(X, item)",
 		"obj_tp(Y, item)",
-		"done(X)",
-		"ready(Y)",
+		"not g_query_1_monitor_state_q0",
+	)
+	assert first_done.binding_certificate[0]["completion_condition"] == (
+		"source_state_exit"
 	)
 	second_done = next(
 		plan for plan in updated.plans if plan.plan_name == "g_query_1_trans_2_done_success"
@@ -249,8 +271,7 @@ def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
 	assert second_done.context == (
 		"query_1",
 		"obj_tp(Y, item)",
-		"done(Y)",
-		"not ready(Y)",
+		"not g_query_1_monitor_state_q1",
 	)
 	second_leaf = next(
 		plan
@@ -429,7 +450,7 @@ def test_append_temporal_goal_enforces_preservation_safe_query_local_branches(
 
 	assert "finish-safely" in query_bodies
 	assert "finish-by-reusing" not in query_bodies
-	assert "g_query_1_trans_1_achieve_completed" in repair_subgoals
+	assert "g_query_1_trans_1_selected_completed" in repair_subgoals
 
 
 def test_append_temporal_goal_rejects_uncertified_negative_guard_preservation(
@@ -521,7 +542,10 @@ def test_append_temporal_goal_compiles_negative_only_transition_as_context(
 	)
 	certificate = transition.binding_certificate[0]["serialization_certificate"]
 
-	assert transition.context == ("query_1", "not blocked(item)")
+	assert transition.context == (
+		"query_1",
+		"not g_query_1_monitor_state_q0",
+	)
 	assert transition.body == ()
 	assert certificate == {
 		"certificate_kind": "negative_context_only_transition",
@@ -533,10 +557,13 @@ def test_append_temporal_goal_compiles_negative_only_transition_as_context(
 		"negative_guard_preservation_checked": True,
 		"negative_guard_preserved": True,
 		"negative_guard_threats": [],
+		"negative_guard_establishment_checked": True,
+		"negative_guard_establishable": False,
+		"negative_guard_establishers": {},
 	}
 
 
-def test_append_temporal_goal_rejects_uncertified_numeric_negative_conjunction(
+def test_append_temporal_goal_observes_negative_numeric_equality_fail_closed(
 	tmp_path: Path,
 ) -> None:
 	domain_file = tmp_path / "numeric-negative-domain.pddl"
@@ -579,13 +606,210 @@ def test_append_temporal_goal_rejects_uncertified_numeric_negative_conjunction(
 		],
 	}
 
-	with pytest.raises(ValueError, match="uncertified_numeric_conjunctive_transition"):
-		append_temporal_goal_to_library(
-			plan_library=library,
-			goal_name="g_query_1",
-			dfa_payload=dfa_payload,
-			domain_file=domain_file,
-		)
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	numeric_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_atom") == "fuel(0)"
+	)
+	assert numeric_leaf.context[-1] == "not fuel(0)"
+	assert numeric_leaf.body == ()
+	assert (
+		numeric_leaf.binding_certificate[0]["serialization_certificate"]
+		["observation_only_negative_literals"]
+		== ["fuel(0)"]
+	)
+
+
+def test_numeric_conjunction_orders_effect_producer_before_numeric_observer(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "numeric-observer-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain numeric-observer)
+ (:requirements :strips :fluents)
+ (:predicates (ready ?x) (loaded ?x))
+ (:functions (level))
+ (:action load
+  :parameters (?x)
+  :precondition (and (ready ?x) (= (level) 1))
+  :effect (and (loaded ?x) (decrease (level) 1)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="numeric-observer",
+		plans=(
+			AgentSpeakPlan(
+				"loaded_already_true",
+				AgentSpeakTrigger("achievement_goal", "loaded", ("X",)),
+				("loaded(X)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"loaded_via_load",
+				AgentSpeakTrigger("achievement_goal", "loaded", ("X",)),
+				("ready(X)", "level(N)", "N == 1"),
+				(AgentSpeakBodyStep("action", "load", ("X",)),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "level(0) & loaded(item)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	leaves = tuple(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("wrapper_role")
+		in {
+			"transition_repair_tree_leaf_satisfied",
+			"transition_repair_tree_leaf_achievement",
+		}
+	)
+	loaded_leaf = next(
+		plan
+		for plan in leaves
+		if plan.binding_certificate[0].get("literal_atom") == "loaded(item)"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	numeric_leaves = tuple(
+		plan
+		for plan in leaves
+		if plan.binding_certificate[0].get("literal_atom") == "level(0)"
+	)
+
+	assert loaded_leaf.binding_certificate[0]["literal_index"] == 1
+	assert all(plan.binding_certificate[0]["literal_index"] == 2 for plan in numeric_leaves)
+	assert any(not plan.body for plan in numeric_leaves)
+	assert any(
+		plan.body and plan.body[0].kind == "subgoal"
+		for plan in numeric_leaves
+	)
+	serialization = loaded_leaf.binding_certificate[0]["serialization_certificate"]
+	assert serialization["certificate_kind"] == "mixed_boolean_numeric_effect_order"
+	assert serialization["threat_edges"] == [[1, 0]]
+
+
+def test_numeric_singleton_uses_schema_certified_unit_progress_action(
+	tmp_path: Path,
+) -> None:
+	domain_file = _write_numeric_resource_domain(tmp_path)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "pogo_sticks_to_make(0)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="numeric-resource", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	progress_plan = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("wrapper_role")
+		== "query_local_mixed_numeric_safe_branch"
+	)
+
+	assert progress_plan.context == (
+		"pogo_sticks_to_make(N)",
+		"N > 0",
+	)
+	assert progress_plan.body == (
+		AgentSpeakBodyStep("action", "craft_wooden_pogo", ()),
+	)
+	assert progress_plan.binding_certificate[0]["certificate_kind"] == (
+		"unit_monotone_numeric_progress"
+	)
+
+
+def test_numeric_action_side_effect_establishes_observation_only_boolean_sibling(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "numeric-side-effect-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain numeric-side-effect)
+ (:requirements :strips :fluents)
+ (:predicates (ready ?x) (opened ?x))
+ (:functions (count))
+ (:action open-and-count
+  :parameters (?x)
+  :precondition (ready ?x)
+  :effect (and (opened ?x) (increase (count) 1)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "opened(item) & count(1)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="numeric-side-effect", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	numeric_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_atom") == "count(1)"
+		and plan.body
+	)
+	serialization = numeric_leaf.binding_certificate[0]["serialization_certificate"]
+
+	assert numeric_leaf.binding_certificate[0]["literal_index"] == 1
+	assert serialization["side_effect_establishment_edges"] == [[1, 0]]
+	assert serialization["ordered_literal_indexes"] == [1, 0]
 
 
 def test_append_temporal_goal_enforces_negative_preserving_query_local_branches(
@@ -674,7 +898,7 @@ def test_append_temporal_goal_enforces_negative_preserving_query_local_branches(
 
 	assert "deliver-safely" in query_actions
 	assert "deliver-damaged" not in query_actions
-	assert repair.body[0].symbol == "g_query_1_trans_1_achieve_delivered"
+	assert repair.body[0].symbol == "g_query_1_trans_1_selected_delivered"
 	assert certificate["negative_guard_preservation_checked"] is True
 	assert certificate["negative_guard_preserved"] is True
 	assert certificate["negative_guard_count"] == 1
@@ -713,7 +937,7 @@ def test_append_temporal_goal_preserves_history_across_queries(tmp_path: Path) -
 	assert [
 		plan.trigger.symbol
 		for plan in after_second.plans
-		if plan.plan_name.endswith("_trans_sequence")
+		if plan.plan_name.endswith("_monitor_accepting")
 	] == ["g_query_1", "g_query_2"]
 	trigger_counts = {
 		plan.trigger.symbol: sum(
@@ -779,20 +1003,24 @@ def test_append_temporal_goal_allows_negative_waiting_self_loop(
 	)
 
 	assert [plan.plan_name for plan in updated.plans] == [
-		"g_query_1_trans_sequence",
+		"g_query_1_monitor_accepting",
+		"g_query_1_trans_1_monitor_dispatch",
 		"g_query_1_trans_1_repair_tree",
 		"g_query_1_trans_1_repair_1_1_satisfied",
-		"g_query_1_trans_1_repair_1_1_achieve",
 		"g_query_1_trans_1_done_success",
 		"g_query_1_trans_1_done_replay",
 	]
-	assert updated.plans[0].context == ("query_1",)
-	assert updated.plans[0].body == (
+	assert updated.plans[1].context == (
+		"query_1",
+		"g_query_1_monitor_state_q0",
+	)
+	assert updated.plans[1].body == (
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
 
 
-def test_append_temporal_goal_rejects_branching_dfa_without_external_controller(
+def test_append_temporal_goal_compiles_branching_dfa_with_runtime_monitor(
 	tmp_path: Path,
 ) -> None:
 	domain_file = _write_branching_domain(tmp_path)
@@ -809,13 +1037,115 @@ def test_append_temporal_goal_rejects_branching_dfa_without_external_controller(
 		],
 	}
 
-	with pytest.raises(ValueError, match="nonlinear_temporal_goal_not_supported"):
-		append_temporal_goal_to_library(
-			plan_library=library,
-			goal_name="g_query_1",
-			dfa_payload=dfa_payload,
-			domain_file=domain_file,
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	entry_plans = tuple(plan for plan in updated.plans if plan.trigger.symbol == "g_query_1")
+	assert any(
+		"g_query_1_monitor_accepting" in plan.context and not plan.body
+		for plan in entry_plans
+	)
+	assert {
+		context
+		for plan in entry_plans
+		for context in plan.context
+		if context.startswith("g_query_1_monitor_state_")
+	} == {
+		"g_query_1_monitor_state_q0",
+		"g_query_1_monitor_state_q1",
+		"g_query_1_monitor_state_q2",
+	}
+	assert updated.metadata["temporal_goal_append"]["wrapper_mode"] == (
+		"runtime_monitored_dfa_product"
+	)
+
+
+def test_until_progress_edges_merge_to_their_common_achievement_objective(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "until-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain until-fragment)
+		 (:requirements :strips)
+		 (:predicates (safe) (complete))
+		 (:action complete-now
+		  :parameters ()
+		  :precondition (safe)
+		  :effect (and (complete) (not (safe)))
+		 )
 		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="until-fragment",
+		plans=(
+			AgentSpeakPlan(
+				"complete_via_action",
+				AgentSpeakTrigger("achievement_goal", "complete", ()),
+				("safe",),
+				(AgentSpeakBodyStep("action", "complete-now", ()),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q0",
+				"raw_label": "safe & not complete",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "dead",
+				"raw_label": "not safe & not complete",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "safe & complete",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "not safe & complete",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+			{"source_state": "dead", "target_state": "dead", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	repair_leaves = tuple(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	assert len(repair_leaves) == 1
+	assert repair_leaves[0].body[0].kind == "subgoal"
+	assert repair_leaves[0].body[0].symbol.endswith("_source_safe_complete")
+	assert any(
+		plan.trigger.symbol == repair_leaves[0].body[0].symbol
+		and plan.body == (AgentSpeakBodyStep("action", "complete-now", ()),)
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "primitive_prefix_source_invariant_preservation"
+		for plan in updated.plans
+	)
+	assert repair_leaves[0].context[-1] == "not complete"
+	assert all("safe" not in plan.context for plan in repair_leaves)
 
 
 def test_append_temporal_goal_keeps_negative_progress_literal_as_context(tmp_path: Path) -> None:
@@ -837,15 +1167,79 @@ def test_append_temporal_goal_keeps_negative_progress_literal_as_context(tmp_pat
 	)
 
 	assert [plan.plan_name for plan in updated.plans] == [
-		"g_query_1_trans_sequence",
+		"g_query_1_monitor_accepting",
+		"g_query_1_trans_1_monitor_dispatch",
 		"g_query_1_trans_1_done",
 	]
-	assert updated.plans[1].context == (
+	assert updated.plans[2].context == (
 		"query_1",
 		"obj_tp(X, item)",
-		"not done(X)",
+		"not g_query_1_monitor_state_q0",
 	)
-	assert updated.plans[1].body == ()
+	assert updated.plans[2].body == ()
+
+
+def test_append_temporal_goal_establishes_negative_only_progress_from_pddl_delete(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "deactivation-domain.pddl"
+	domain_file.write_text(
+		"""
+		(define (domain deactivation)
+		 (:requirements :strips :typing)
+		 (:types item - object)
+		 (:predicates (active ?x - item))
+		 (:action deactivate
+		  :parameters (?x - item)
+		  :precondition (active ?x)
+		  :effect (not (active ?x))
+		 )
+		)
+		""",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(domain_name="deactivation", plans=())
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "not active(X)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	negative_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_polarity") == "negative"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	establisher = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "pddl_single_action_must_delete"
+	)
+
+	assert negative_leaf.context[-1] == "active(X)"
+	assert negative_leaf.body == (
+		AgentSpeakBodyStep("subgoal", establisher.trigger.symbol, ("X",)),
+	)
+	assert establisher.context == ("obj_tp(X, item)", "active(X)")
+	assert establisher.body == (AgentSpeakBodyStep("action", "deactivate", ("X",)),)
 
 
 def test_append_temporal_goal_establishes_negative_guard_via_positive_side_effect(
@@ -944,6 +1338,657 @@ def test_append_temporal_goal_establishes_negative_guard_via_positive_side_effec
 	assert serialization["negative_guard_establishable"] is True
 
 
+def test_single_action_whole_guard_certificate_needs_no_atomic_seed_module(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "conversion-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain conversion)
+ (:requirements :strips :typing)
+ (:types item - object)
+ (:predicates (located ?x - item) (raw ?x - item) (processed ?x - item))
+ (:action convert
+  :parameters (?x - item)
+  :precondition (and (located ?x) (raw ?x))
+  :effect (and (processed ?x) (not (raw ?x))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "processed(item) & not raw(item)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="conversion", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	helper = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "pddl_single_action_whole_guard"
+	)
+	positive_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_atom") == "processed(item)"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	negative_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_atom") == "raw(item)"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_satisfied"
+	)
+
+	assert helper.context == (
+		"obj_tp(item, item)",
+		"located(item)",
+		"raw(item)",
+	)
+	assert helper.body == (AgentSpeakBodyStep("action", "convert", ("item",)),)
+	assert positive_leaf.body == (
+		AgentSpeakBodyStep("subgoal", helper.trigger.symbol, ("item",)),
+	)
+	assert positive_leaf.binding_certificate[0]["literal_index"] == 1
+	assert negative_leaf.binding_certificate[0]["literal_index"] == 2
+
+
+def test_negative_establisher_binds_deleter_destination_from_positive_sibling(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "functional-location-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain functional-location)
+ (:requirements :strips :typing)
+ (:types location - object)
+ (:predicates (at ?x - location))
+ (:action relocate
+  :parameters (?from - location ?to - location)
+  :precondition (at ?from)
+  :effect (and (not (at ?from)) (at ?to)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="functional-location",
+		plans=(
+			AgentSpeakPlan(
+				"at_via_relocate",
+				AgentSpeakTrigger("achievement_goal", "at", ("X",)),
+				("at(Y)", "Y \\== X"),
+				(AgentSpeakBodyStep("action", "relocate", ("Y", "X")),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "at(destination) & not at(origin)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	establisher = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "pddl_single_action_must_delete"
+	)
+	negative_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_atom") == "at(origin)"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+
+	assert establisher.context == (
+		"obj_tp(origin, location)",
+		"obj_tp(destination, location)",
+		"at(origin)",
+	)
+	assert establisher.body == (
+		AgentSpeakBodyStep("action", "relocate", ("origin", "destination")),
+	)
+	assert negative_leaf.body == (
+		AgentSpeakBodyStep("subgoal", establisher.trigger.symbol, ()),
+	)
+
+
+def test_single_action_whole_guard_certifies_boolean_and_numeric_effects(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "mixed-effect-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain mixed-effect)
+ (:requirements :strips :typing :fluents)
+ (:types item - object)
+ (:predicates (ready ?x - item) (loaded ?x - item))
+ (:functions (capacity))
+ (:action load-one
+  :parameters (?x - item)
+  :precondition (and (ready ?x) (> (capacity) 0))
+  :effect (and (loaded ?x) (decrease (capacity) 1)))
+ (:action unload-one
+  :parameters (?x - item)
+  :precondition (loaded ?x)
+  :effect (and (not (loaded ?x)) (increase (capacity) 1)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "loaded(item) & capacity(3)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	library = PlanLibrary(
+		domain_name="mixed-effect",
+		plans=(
+			AgentSpeakPlan(
+				"loaded_via_load",
+				AgentSpeakTrigger("achievement_goal", "loaded", ("X",)),
+				("ready(X)", "capacity(N)", "N > 0"),
+				(AgentSpeakBodyStep("action", "load-one", ("X",)),),
+			),
+		),
+	)
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	helper = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "pddl_single_action_whole_guard"
+	)
+	serialization = helper.binding_certificate[-1]
+
+	assert helper.context == (
+		"obj_tp(item, item)",
+		"ready(item)",
+		"capacity(N)",
+		"N > 0",
+		"capacity(4)",
+	)
+	assert helper.body == (AgentSpeakBodyStep("action", "load-one", ("item",)),)
+	assert serialization["numeric_guard_literals"] == ["capacity(3)"]
+	assert serialization["numeric_predecessor_contexts"] == ["capacity(4)"]
+
+
+def test_grounded_whole_guard_actions_keep_pddl_subtype_contexts(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "typed-carrier-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain typed-carrier)
+ (:requirements :strips :typing)
+ (:types vehicle package location - object
+         truck airplane - vehicle)
+ (:predicates (at ?x - object ?l - location)
+              (in ?p - package ?v - vehicle))
+ (:action load-truck
+  :parameters (?p - package ?v - truck ?l - location)
+  :precondition (and (at ?p ?l) (at ?v ?l))
+  :effect (and (not (at ?p ?l)) (in ?p ?v)))
+ (:action load-airplane
+  :parameters (?p - package ?v - airplane ?l - location)
+  :precondition (and (at ?p ?l) (at ?v ?l))
+  :effect (and (not (at ?p ?l)) (in ?p ?v)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "in(parcel, plane) & not at(parcel, hub)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="typed-carrier", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	helpers = tuple(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "pddl_single_action_whole_guard"
+	)
+	contexts_by_action = {
+		plan.body[0].symbol: plan.context
+		for plan in helpers
+	}
+
+	assert "obj_tp(plane, truck)" in contexts_by_action["load-truck"]
+	assert "obj_tp(plane, airplane)" in contexts_by_action["load-airplane"]
+	assert "obj_tp(parcel, package)" in contexts_by_action["load-truck"]
+	assert "obj_tp(hub, location)" in contexts_by_action["load-truck"]
+
+
+def test_numeric_repair_precedes_negative_observation_when_final_action_establishes_both(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "numeric-carrier-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain numeric-carrier)
+ (:requirements :strips :typing :fluents)
+ (:types vehicle package location - object)
+ (:predicates (at ?x - object ?l - location))
+ (:functions (capacity ?v - vehicle))
+ (:action drive
+  :parameters (?v - vehicle ?from - location ?to - location)
+  :precondition (at ?v ?from)
+  :effect (and (not (at ?v ?from)) (at ?v ?to)))
+ (:action pick-up
+  :parameters (?v - vehicle ?l - location ?p - package)
+  :precondition (and (at ?v ?l) (at ?p ?l) (> (capacity ?v) 0))
+  :effect (and (not (at ?p ?l)) (decrease (capacity ?v) 1)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="numeric-carrier",
+		plans=(
+			AgentSpeakPlan(
+				"at_via_drive",
+				AgentSpeakTrigger("achievement_goal", "at", ("X", "Y")),
+				("at(X, A)", "A \\== Y"),
+				(AgentSpeakBodyStep("action", "drive", ("X", "A", "Y")),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "capacity(carrier, 3) & not at(parcel, hub)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	root = next(
+		plan for plan in updated.plans if plan.plan_name == "g_query_1_trans_1_repair_tree"
+	)
+	serialization = root.binding_certificate[0]["serialization_certificate"]
+	leaves = tuple(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("wrapper_role")
+		in {
+			"transition_repair_tree_leaf_satisfied",
+			"transition_repair_tree_leaf_achievement",
+		}
+	)
+
+	assert serialization["repair_positive_before_negative"] is True
+	assert any(
+		plan.binding_certificate[0].get("literal_atom") == "capacity(carrier, 3)"
+		and plan.binding_certificate[0].get("literal_index") == 1
+		for plan in leaves
+	)
+	assert any(
+		plan.binding_certificate[0].get("literal_atom") == "at(parcel, hub)"
+		and plan.binding_certificate[0].get("literal_index") == 2
+		for plan in leaves
+	)
+	assert any(
+		certificate.get("negative_guard_established_by_final_action") is True
+		for plan in updated.plans
+		for certificate in plan.binding_certificate
+	)
+
+
+def test_numeric_progress_alpha_renames_action_precondition_value_variables(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "numeric-production-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain numeric-production)
+ (:requirements :strips :fluents)
+ (:predicates (ready))
+ (:functions (raw_count) (product_count))
+	(:action harvest
+	 :parameters ()
+	 :precondition (ready)
+	 :effect (increase (raw_count) 1))
+ (:action produce
+  :parameters ()
+  :precondition (and (ready) (>= (raw_count) 1))
+  :effect (and (decrease (raw_count) 1) (increase (product_count) 4)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "product_count(4)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="numeric-production", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	progress = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "query_local_numeric_progress_branch"
+	)
+
+	assert "product_count(N)" in progress.context
+	assert "N == 0" in progress.context
+	assert "raw_count(M)" in progress.context
+	assert "M >= 1" in progress.context
+	preparation = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("certificate_kind")
+		== "lexicographic_numeric_requirement_preparation"
+	)
+	assert preparation.context[:4] == (
+		"product_count(N)",
+		"N == 0",
+		"raw_count(N0)",
+		"N0 < 1",
+	)
+	assert preparation.body[0] == AgentSpeakBodyStep("action", "harvest", ())
+	assert preparation.body[1].kind == "subgoal"
+	assert preparation.body[1].symbol.endswith("_repair_product_count_1")
+	assert preparation.body[1].arguments == ("4",)
+
+
+def test_numeric_until_separates_repeatable_preserving_and_exact_terminal_steps(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "numeric-loading-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain numeric-loading)
+ (:requirements :strips :typing :fluents)
+ (:types item location - object)
+ (:predicates (at ?x - item ?l - location) (carrier-at ?l - location))
+ (:functions (capacity))
+ (:action load
+  :parameters (?x - item ?l - location)
+  :precondition (and (at ?x ?l) (carrier-at ?l) (>= (capacity) 1))
+  :effect (and (not (at ?x ?l)) (decrease (capacity) 1)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q0",
+				"raw_label": "at(protected, hub) & not capacity(2)",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "at(protected, hub) & capacity(2)",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "not at(protected, hub) & capacity(2)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="numeric-loading", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	repeatable = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("certificate_kind")
+		== "repeatable_source_invariant_preserving_numeric_progress"
+	)
+	terminal = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("source_invariant_violation_only_at_target")
+		is True
+	)
+	base = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("certificate_kind")
+		== "observed_numeric_target_base_case"
+	)
+
+	assert any("\\== protected" in item for item in repeatable.context)
+	assert "capacity(N)" in terminal.context
+	assert "N == 3" in terminal.context
+	assert base.context == ("capacity(2)",)
+	assert base.body == ()
+
+
+def test_ground_action_only_plan_alpha_renames_outer_reserved_variables() -> None:
+	plan = AgentSpeakPlan(
+		"at_via_navigate",
+		AgentSpeakTrigger("achievement_goal", "at", ("X", "Y")),
+		("at(X, Z)", "Y \\== Z"),
+		(AgentSpeakBodyStep("action", "navigate", ("X", "Z", "Y")),),
+	)
+
+	context, body = _ground_action_only_plan(
+		plan,
+		goal=DFALiteral("at", ("rover1", "waypoint1")),
+		reserved_variables=("Z",),
+	)
+
+	assert context == ("at(rover1, Z0)", "waypoint1 \\== Z0")
+	assert body == (
+		AgentSpeakBodyStep("action", "navigate", ("rover1", "Z0", "waypoint1")),
+	)
+
+
+def test_until_repair_selects_only_primitive_prefix_source_invariant_safe_branches(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "until-carrier-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain until-carrier)
+ (:requirements :strips :typing)
+ (:types package vehicle location - object)
+ (:predicates
+  (at ?p - package ?l - location)
+  (staged ?p - package)
+  (in ?p - package ?v - vehicle))
+ (:action unsafe-stage
+  :parameters (?p - package ?l - location)
+  :precondition (at ?p ?l)
+  :effect (and (not (at ?p ?l)) (staged ?p)))
+ (:action finish-stage
+  :parameters (?p - package ?v - vehicle)
+  :precondition (staged ?p)
+  :effect (in ?p ?v))
+ (:action safe-load
+  :parameters (?p - package ?v - vehicle ?l - location)
+  :precondition (at ?p ?l)
+  :effect (and (not (at ?p ?l)) (in ?p ?v)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="until-carrier",
+		plans=(
+			AgentSpeakPlan(
+				"in_via_unsafe_staging",
+				AgentSpeakTrigger("achievement_goal", "in", ("X", "Y")),
+				("at(X, L)",),
+				(
+					AgentSpeakBodyStep("action", "unsafe-stage", ("X", "L")),
+					AgentSpeakBodyStep("action", "finish-stage", ("X", "Y")),
+				),
+			),
+			AgentSpeakPlan(
+				"in_via_safe_load",
+				AgentSpeakTrigger("achievement_goal", "in", ("X", "Y")),
+				("at(X, L)",),
+				(AgentSpeakBodyStep("action", "safe-load", ("X", "Y", "L")),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q0",
+				"raw_label": "at(parcel, origin) & not in(parcel, carrier)",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "at(parcel, origin) & in(parcel, carrier)",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "not at(parcel, origin) & in(parcel, carrier)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	source_safe_aliases = tuple(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "primitive_prefix_source_invariant_preservation"
+	)
+	achievement_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+
+	assert [plan.body[0].symbol for plan in source_safe_aliases] == ["safe-load"]
+	assert source_safe_aliases[0].binding_certificate[-1]["source_invariants"] == [
+		"at(parcel, origin)",
+	]
+	assert achievement_leaf.body == (
+		AgentSpeakBodyStep("subgoal", source_safe_aliases[0].trigger.symbol, ("parcel", "carrier")),
+	)
+
+
 def test_append_lifted_temporal_goal_case_uses_dfa_builder(tmp_path: Path) -> None:
 	domain_file = _write_domain(tmp_path)
 	library = PlanLibrary(domain_name="tiny", plans=())
@@ -965,7 +2010,7 @@ def test_append_lifted_temporal_goal_case_uses_dfa_builder(tmp_path: Path) -> No
 	)
 
 	assert dfa_payload["original_formula"] == "F(done(X))"
-	assert updated.plans[0].plan_name == "g_query_1_trans_sequence"
+	assert updated.plans[0].plan_name == "g_query_1_monitor_accepting"
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
 
 
@@ -973,7 +2018,17 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 	tmp_path: Path,
 ) -> None:
 	domain_file = _write_blocks_domain(tmp_path)
-	library = PlanLibrary(domain_name="blocks", plans=())
+	library = PlanLibrary(
+		domain_name="blocks",
+		plans=(
+			AgentSpeakPlan(
+				"on_via_action",
+				AgentSpeakTrigger("achievement_goal", "on", ("X", "Y")),
+				("clear(Y)",),
+				(AgentSpeakBodyStep("action", "place", ("X", "Y")),),
+			),
+		),
+	)
 	case = LiftedLTLfGoalCase(
 		query_id="query_1",
 		goal_name="g_query_1",
@@ -997,9 +2052,19 @@ def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 
 	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "on(X, Y)"
 	assert dfa_payload["guarded_transitions"][0]["original_raw_label"] == "on_x_y"
-	assert updated.plans[0].context == ("query_1",)
-	assert updated.plans[0].body == (
+	accepting = next(
+		plan for plan in updated.plans if plan.plan_name == "g_query_1_monitor_accepting"
+	)
+	assert accepting.context == (
+		"query_1",
+		"g_query_1_monitor_accepting",
+	)
+	dispatch = next(
+		plan for plan in updated.plans if plan.plan_name.endswith("_monitor_dispatch")
+	)
+	assert dispatch.body == (
 		AgentSpeakBodyStep("subgoal", "g_query_1_trans_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_1", ()),
 	)
 	assert (
 		updated.metadata["temporal_goal_append"]["progress_request_diagnostics"][0]
@@ -1012,7 +2077,17 @@ def test_append_lifted_temporal_goal_applies_external_invocation_bindings(
 	tmp_path: Path,
 ) -> None:
 	domain_file = _write_blocks_domain(tmp_path)
-	library = PlanLibrary(domain_name="blocks", plans=())
+	library = PlanLibrary(
+		domain_name="blocks",
+		plans=(
+			AgentSpeakPlan(
+				"on_via_action",
+				AgentSpeakTrigger("achievement_goal", "on", ("X", "Y")),
+				("clear(Y)",),
+				(AgentSpeakBodyStep("action", "place", ("X", "Y")),),
+			),
+		),
+	)
 	case = LiftedLTLfGoalCase(
 		query_id="query_1",
 		goal_name="g_query_1",
@@ -1070,9 +2145,16 @@ def test_append_lifted_temporal_goal_accepts_numeric_resource_function_atom(
 	)
 
 	assert dfa_payload["guarded_transitions"][0]["raw_label"] == "pogo_sticks_to_make(0)"
-	assert updated.plans[0].context == ("numeric_minecraft_test_1",)
-	assert updated.plans[0].body == (
+	assert updated.plans[0].context == (
+		"numeric_minecraft_test_1",
+		"g_numeric_minecraft_test_1_monitor_accepting",
+	)
+	dispatch = next(
+		plan for plan in updated.plans if plan.plan_name.endswith("_monitor_dispatch")
+	)
+	assert dispatch.body == (
 		AgentSpeakBodyStep("subgoal", "g_numeric_minecraft_test_1_trans_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_numeric_minecraft_test_1", ()),
 	)
 	assert (
 		updated.metadata["temporal_goal_append"]["progress_request_diagnostics"][0]

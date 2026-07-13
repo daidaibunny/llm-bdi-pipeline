@@ -241,17 +241,16 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert "teg_state" not in asl
 	assert "tg_state" not in asl
 	assert "query_1." in asl
-	assert "+!g_query_1 : query_1 <-" in asl
-	assert "\t!g_query_1_trans_1." in asl
+	assert "+!g_query_1 : query_1 & g_query_1_monitor_accepting <-" in asl
+	assert "+!g_query_1 : query_1 & g_query_1_monitor_state_" in asl
+	assert "\t!g_query_1_trans_1;" in asl
 	assert "+!g_query_1_trans_1_repair_1_1 : query_1 & done <-" in asl
 	assert "+!g_query_1_trans_1_repair_1_1 : query_1 & not done <-" in asl
 	assert "\t!done." in asl
-	assert "+!g_query_1_trans_1_done : query_1 & done <-" in asl
+	assert "+!g_query_1_trans_1_done : query_1 & not g_query_1_monitor_state_" in asl
 	assert library_payload["metadata"]["temporal_goal_append"][
 		"transition_controller_strategy"
-	] == (
-		"balanced_transition_repair_tree"
-	)
+	] == "monitored_balanced_repair_tree"
 	assert "achieve_" not in asl
 	assert "transition_" not in asl
 	assert "dfa_state" not in asl
@@ -350,18 +349,16 @@ def test_main_can_append_multiple_queries_to_same_domain_library(
 	assert "tg_state" not in asl
 	assert "query_1." in asl
 	assert "query_2." in asl
-	assert "+!g_query_1 : query_1 <-" in asl
-	assert "+!g_query_2 : query_2 <-" in asl
+	assert "+!g_query_1 : query_1 & g_query_1_monitor_accepting <-" in asl
+	assert "+!g_query_2 : query_2 & g_query_2_monitor_accepting <-" in asl
 	assert [
 		record["goal_name"]
 		for record in library_json["metadata"]["temporal_goal_append_history"]
 	] == ["g_query_1", "g_query_2"]
-	assert second_result["plan_count"] == 13
+	assert second_result["plan_count"] == 14
 	assert library_json["metadata"]["temporal_goal_append"][
 		"transition_controller_strategy"
-	] == (
-		"balanced_transition_repair_tree"
-	)
+	] == "monitored_balanced_repair_tree"
 
 
 def test_main_rejects_noncanonical_output_root(tmp_path: Path) -> None:

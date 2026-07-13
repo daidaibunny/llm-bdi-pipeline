@@ -460,6 +460,12 @@ def test_evidence_compiler_compiles_numeric_resource_goal_module() -> None:
 
 	assert "+!pogo_sticks_to_make(0) : pogo_sticks_to_make(N) & N == 0 <-" in asl
 	assert "+!pogo_sticks_to_make(0) :" in asl
+	assert "+!position(X) : position(X) <-" in asl
+	assert "+!position(X) :" in asl
+	assert "\ttp_to(" in asl
+	assert "+!air_cell(X) : air_cell(X) <-" in asl
+	assert "+!air_cell(X) :" in asl
+	assert "\tbreak(X)." in asl
 	assert "pogo_sticks_to_make(N)" in asl
 	assert "N > 0" in asl
 	assert "count_planks_in_inventory(M)" in asl
@@ -471,6 +477,12 @@ def test_evidence_compiler_compiles_numeric_resource_goal_module() -> None:
 	assert "pogo_sticks_to_make__ug" not in asl
 	assert library.metadata["source_seed_predicates"] == []
 	assert library.metadata["source_numeric_goal_functions"] == ["pogo_sticks_to_make"]
+	roles = {
+		row["predicate"]: row
+		for row in library.metadata["atomic_module_synthesis"]["predicate_roles"]
+	}
+	assert roles["position"]["coverage_status"] == "ok"
+	assert roles["air_cell"]["coverage_status"] == "ok"
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 	selector_report = library.metadata["atomic_module_synthesis"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
@@ -502,11 +514,14 @@ def test_numeric_macro_contexts_account_for_prior_numeric_effects() -> None:
 	assert "\tcraft_wooden_pogo." in asl
 	assert library.metadata["validated_policy_lifting"]["validated_numeric_macro_count"] == 1
 	assert library.metadata["library_quality"]["library_profile"] == (
-		"numeric_resource_atomic_template_library"
+		"mixed_atomic_template_library"
 	)
 	assert library.metadata["library_quality"]["plan_template_kind_counts"] == {
+		"action_only_plan_template": 2,
+		"already_true_plan_template": 2,
 		"numeric_already_true_plan_template": 1,
 		"numeric_resource_progress_plan_template": 1,
+		"subgoal_decomposed_plan_template": 1,
 	}
 
 

@@ -25,6 +25,56 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
 
 
+def test_non_seed_producible_module_uses_bounded_support_composition(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "non-seed-support.pddl"
+	domain_file.write_text(
+		"""
+(define (domain non-seed-support)
+ (:requirements :strips :typing)
+ (:types item - object)
+ (:predicates (raw ?x - item) (component ?x - item)
+              (intermediate ?x - item) (done ?x - item))
+ (:action make-component
+  :parameters (?x - item)
+  :precondition (raw ?x)
+  :effect (component ?x))
+ (:action make-intermediate
+  :parameters (?x - item)
+  :precondition (component ?x)
+  :effect (intermediate ?x))
+ (:action finish
+  :parameters (?x - item)
+  :precondition (intermediate ?x)
+  :effect (done ?x))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("done",),
+		source_backend="test",
+		source_name="non-seed-support",
+	)
+	intermediate_macros = tuple(
+		plan
+		for plan in library.plans
+		if plan.trigger.symbol == "intermediate"
+		and tuple(step.symbol for step in plan.body)
+		== ("make-component", "make-intermediate")
+	)
+
+	assert len(intermediate_macros) == 1
+	assert intermediate_macros[0].context == (
+		"obj_tp(X, item)",
+		"raw(X)",
+	)
+
+
 def test_context_order_uses_bound_goal_arguments_before_unbound_buckets() -> None:
 	context = _order_contexts_for_matching(
 		(
@@ -349,7 +399,6 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	)
 	asl = render_plan_library_asl(library)
 
-	assert 17 <= len(library.plans) <= 25
 	assert {plan.trigger.symbol for plan in library.plans} == {
 		"clear",
 		"handempty",
@@ -375,6 +424,8 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		"ontable",
 	]
 	selector_report = library.metadata["atomic_module_synthesis"]
+	assert len(library.plans) == selector_report["plan_count"]
+	assert len(library.plans) <= selector_report["raw_candidate_count"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
 	assert selector_report["schema_composition_action_bound"] == 5
 	assert selector_report["schema_composition_grammar"] == [
@@ -457,8 +508,14 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert "\t!holding(X);" in asl
 	assert "pick_up(X);\n\tunstack" not in asl
 	assert library.metadata["pddl_support"]["is_compilable"] is True
-	assert "obj_tp(X, block) & obj_tp(Y, block) & clear(X) & clear(Y) & ontable(X) & handempty" in asl
-	assert "obj_tp(X, block) & obj_tp(Y, block) & clear(X) & clear(Y) & handempty & on(X, Z) & obj_tp(Z, block)" in asl
+	assert (
+		"obj_tp(X, block) & obj_tp(Y, block) & X \\== Y & clear(X) & clear(Y) "
+		"& ontable(X) & handempty"
+	) in asl
+	assert (
+		"obj_tp(X, block) & obj_tp(Y, block) & X \\== Y & clear(X) & clear(Y) "
+		"& handempty & on(X, Z) & obj_tp(Z, block) & Y \\== Z"
+	) in asl
 	assert "\tunstack(X, Z);" in asl
 	assert "\tstack(X, Y)." in asl
 	assert "obj_tp(X, block) & handempty & on(Y, X) & obj_tp(Y, block) & clear(Y)" in asl
@@ -582,6 +639,107 @@ def test_resource_release_rejects_symmetric_modes_without_capacity_key(
 		plan.trigger.symbol == "done"
 		and tuple(step.symbol for step in plan.body) == ("acquire", "release")
 		for plan in library.plans
+	)
+
+
+def test_certified_cleanup_does_not_remove_original_producer_candidate(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain renamed-resource)
+ (:requirements :strips)
+ (:predicates
+  (idle ?r)
+  (engaged ?r ?x)
+  (linked ?r ?x)
+  (ready ?x)
+  (made ?x)
+ )
+ (:action produce
+  :parameters (?r ?x)
+  :precondition (and (linked ?r ?x) (idle ?r) (ready ?x))
+  :effect (and (made ?x) (engaged ?r ?x) (not (idle ?r)))
+ )
+ (:action reset
+  :parameters (?r ?x)
+  :precondition (engaged ?r ?x)
+  :effect (and (idle ?r) (not (engaged ?r ?x)))
+ )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("made",),
+		source_backend="test",
+		source_name="renamed-resource",
+	)
+	action_sequences = {
+		tuple(step.symbol for step in plan.body)
+		for plan in library.plans
+		if plan.trigger.symbol == "made"
+		and all(step.kind == "action" for step in plan.body)
+	}
+
+	assert ("produce",) in action_sequences
+	assert ("produce", "reset") in action_sequences
+
+
+def test_support_composition_establishes_persistent_precondition_with_alias_guard(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain renamed-persistent-support)
+ (:requirements :strips)
+ (:predicates
+  (ready ?x)
+  (free ?r)
+  (held ?r ?x)
+  (made ?x)
+ )
+ (:action acquire
+  :parameters (?r ?x)
+  :precondition (and (ready ?x) (free ?r))
+  :effect (and (held ?r ?x) (not (free ?r)))
+ )
+ (:action finish
+  :parameters (?r ?x ?spare)
+  :precondition (and (held ?r ?x) (free ?spare))
+  :effect (made ?x)
+ )
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("made",),
+		source_backend="test",
+		source_name="renamed-persistent-support",
+	)
+	plan = next(
+		item
+		for item in library.plans
+		if item.trigger.symbol == "made"
+		and tuple(step.symbol for step in item.body) == ("acquire", "finish")
+	)
+	acquire_step, finish_step = plan.body
+	resource = acquire_step.arguments[0]
+	spare = finish_step.arguments[2]
+
+	assert finish_step.arguments[:2] == acquire_step.arguments
+	assert any(
+		guard in plan.context
+		for guard in (f"{resource} \\== {spare}", f"{spare} \\== {resource}")
 	)
 
 
@@ -1128,7 +1286,7 @@ def test_gripper_rejects_unranked_same_predicate_navigation_recursion() -> None:
 	asl = render_plan_library_asl(library)
 
 	assert "+!at_robby(X) : at_robby(X)" in asl
-	assert "+!at_robby(X) : room(X) & at_robby(Y) & room(Y)" in asl
+	assert "+!at_robby(X) : room(X) & at_robby(Y) & X \\== Y & room(Y)" in asl
 	assert "move(Y, X)." in asl
 	assert "room(Y) & not at_robby(Y)" not in asl
 	assert "!at_robby(Y);\n\t!at_robby(X)." not in asl
@@ -1155,7 +1313,13 @@ def test_miconic_static_above_does_not_bind_unbounded_navigation_context() -> No
 	asl = render_plan_library_asl(library)
 
 	assert "+!lift_at(X) : lift_at(X)" in asl
-	assert "+!lift_at(X) : obj_tp(X, floor) & above(Y, X) & obj_tp(Y, floor) & lift_at(Y)" in asl
-	assert "+!lift_at(X) : obj_tp(X, floor) & above(X, Y) & obj_tp(Y, floor) & lift_at(Y)" in asl
+	assert (
+		"+!lift_at(X) : obj_tp(X, floor) & above(Y, X) & obj_tp(Y, floor) "
+		"& X \\== Y & lift_at(Y)"
+	) in asl
+	assert (
+		"+!lift_at(X) : obj_tp(X, floor) & above(X, Y) & obj_tp(Y, floor) "
+		"& X \\== Y & lift_at(Y)"
+	) in asl
 	assert "above(Y, X) & not lift_at(Y)" not in asl
 	assert "above(X, Y) & not lift_at(Y)" not in asl

@@ -16,6 +16,8 @@ from typing import Any, Iterable, Mapping, Sequence
 
 from domain_level_planning.pddl_types import obj_tp_atoms
 from domain_level_planning.pddl_types import parameter_name
+from domain_level_planning.temporal_goal_appender import dfa_monitor_accepting_belief
+from domain_level_planning.temporal_goal_appender import dfa_monitor_state_belief
 from plan_library.rendering import sanitize_identifier
 from utils.pddl_parser import PDDLAction
 from utils.pddl_parser import PDDLNumericAssignment
@@ -299,6 +301,7 @@ class JasonPlanLibraryRunner:
 		output_dir: str | Path,
 		plan_library_asl_text: str | None = None,
 		runtime_artifacts: RuntimeProblemArtifacts | None = None,
+		temporal_dfa_payload: Mapping[str, Any] | None = None,
 	) -> JasonValidationResult:
 		"""Run one canonical AgentSpeak(L) library with real Jason action semantics."""
 
@@ -319,6 +322,15 @@ class JasonPlanLibraryRunner:
 		action_schemas = artifacts.action_schemas
 		initial_percepts = artifacts.initial_percepts
 		static_beliefs = artifacts.static_beliefs
+		monitor_initial_beliefs = (
+			_temporal_monitor_initial_beliefs(
+				temporal_dfa_payload,
+				goal_name=goal_name,
+				initial_facts=artifacts.seed_facts,
+			)
+			if temporal_dfa_payload is not None
+			else ()
+		)
 		timing_profile["parse_seconds"] = (
 			artifacts.build_seconds
 			if runtime_artifacts is not None
@@ -373,6 +385,7 @@ class JasonPlanLibraryRunner:
 		initial_percepts_path = output_path / "initial_percepts.txt"
 		static_beliefs_path = output_path / "static_beliefs.txt"
 		pddl_symbol_map_path = output_path / "pddl_symbol_map.tsv"
+		temporal_monitor_path = output_path / "temporal_dfa_monitor.tsv"
 		logging_path = output_path / "logging.properties"
 		stdout_path = output_path / "jason_stdout.txt"
 		stderr_path = output_path / "jason_stderr.txt"
@@ -404,7 +417,8 @@ class JasonPlanLibraryRunner:
 			encoding="utf-8",
 		)
 		initial_percepts_path.write_text(
-			"\n".join(initial_percepts) + ("\n" if initial_percepts else ""),
+			"\n".join((*initial_percepts, *monitor_initial_beliefs))
+			+ ("\n" if initial_percepts or monitor_initial_beliefs else ""),
 			encoding="utf-8",
 		)
 		static_beliefs_path.write_text(
@@ -413,6 +427,16 @@ class JasonPlanLibraryRunner:
 		)
 		pddl_symbol_map_path.write_text(
 			artifacts.pddl_symbol_map,
+			encoding="utf-8",
+		)
+		temporal_monitor_path.write_text(
+			_render_temporal_monitor_config(
+				temporal_dfa_payload,
+				goal_name=goal_name,
+				initial_facts=artifacts.seed_facts,
+			)
+			if temporal_dfa_payload is not None
+			else "",
 			encoding="utf-8",
 		)
 		plan_trace_path.write_text("", encoding="utf-8")
@@ -469,6 +493,7 @@ class JasonPlanLibraryRunner:
 						initial_percepts_path=initial_percepts_path,
 						static_beliefs_path=static_beliefs_path,
 						pddl_symbol_map_path=pddl_symbol_map_path,
+						temporal_monitor_path=temporal_monitor_path,
 						plan_trace_path=plan_trace_path,
 						committed_plan_trace_path=committed_plan_trace_path,
 						plan_verifier_stdout_path=plan_verifier_stdout_path,
@@ -623,6 +648,7 @@ class JasonPlanLibraryRunner:
 				initial_percepts_path=initial_percepts_path,
 				static_beliefs_path=static_beliefs_path,
 				pddl_symbol_map_path=pddl_symbol_map_path,
+				temporal_monitor_path=temporal_monitor_path,
 				plan_trace_path=plan_trace_path,
 				committed_plan_trace_path=committed_plan_trace_path,
 				plan_verifier_stdout_path=plan_verifier_stdout_path,
@@ -1559,6 +1585,159 @@ public class JasonPipelineIndexedBeliefBase extends DefaultBeliefBase {
 """.strip() + "\n"
 
 
+def _render_temporal_monitor_config(
+	dfa_payload: Mapping[str, Any],
+	*,
+	goal_name: str,
+	initial_facts: Sequence[str] | None = None,
+) -> str:
+	"""Render a query-local deterministic DFA monitor consumed by the Java runtime."""
+
+	initial_state = str(dfa_payload.get("initial_state") or "").strip()
+	if not initial_state:
+		raise JasonValidationError("Temporal DFA monitor requires an initial state.")
+	accepting_states = tuple(
+		str(state).strip()
+		for state in tuple(dfa_payload.get("accepting_states") or ())
+		if str(state).strip()
+	)
+	transitions: list[tuple[str, str, str]] = []
+	states = {initial_state, *accepting_states}
+	for raw_transition in tuple(dfa_payload.get("guarded_transitions") or ()):
+		if not isinstance(raw_transition, Mapping):
+			raise JasonValidationError("Temporal DFA transition must be a JSON object.")
+		source = str(raw_transition.get("source_state") or "").strip()
+		target = str(raw_transition.get("target_state") or "").strip()
+		guard = _runtime_monitor_guard_text(
+			str(raw_transition.get("raw_label") or "true")
+		)
+		if not source or not target or "\t" in guard or "\n" in guard:
+			raise JasonValidationError("Temporal DFA transition is malformed.")
+		states.update((source, target))
+		transitions.append((source, target, guard))
+	current_state = (
+		_initial_temporal_monitor_state(dfa_payload, initial_facts=initial_facts)
+		if initial_facts is not None
+		else initial_state
+	)
+	lines = ["schema_version\t1", f"initial\t{current_state}"]
+	lines.extend(f"accepting\t{state}" for state in accepting_states)
+	lines.extend(
+		f"state\t{state}\t{dfa_monitor_state_belief(goal_name, state)}"
+		for state in sorted(states)
+	)
+	lines.append(f"accepting_belief\t{dfa_monitor_accepting_belief(goal_name)}")
+	lines.extend(
+		f"transition\t{source}\t{target}\t{guard}"
+		for source, target, guard in transitions
+	)
+	return "\n".join(lines) + "\n"
+
+
+def _temporal_monitor_initial_beliefs(
+	dfa_payload: Mapping[str, Any],
+	*,
+	goal_name: str,
+	initial_facts: Sequence[str],
+) -> tuple[str, ...]:
+	state = _initial_temporal_monitor_state(dfa_payload, initial_facts=initial_facts)
+	accepting = {
+		str(item).strip()
+		for item in tuple(dfa_payload.get("accepting_states") or ())
+		if str(item).strip()
+	}
+	beliefs = [dfa_monitor_state_belief(goal_name, state)]
+	if state in accepting:
+		beliefs.append(dfa_monitor_accepting_belief(goal_name))
+	return tuple(beliefs)
+
+
+def _initial_temporal_monitor_state(
+	dfa_payload: Mapping[str, Any],
+	*,
+	initial_facts: Sequence[str],
+) -> str:
+	initial_state = str(dfa_payload.get("initial_state") or "").strip()
+	world = {str(fact).strip() for fact in initial_facts if str(fact).strip()}
+	matches = [
+		str(transition.get("target_state") or "").strip()
+		for transition in tuple(dfa_payload.get("guarded_transitions") or ())
+		if isinstance(transition, Mapping)
+		and str(transition.get("source_state") or "").strip() == initial_state
+		and _runtime_monitor_guard_holds(
+			str(transition.get("raw_label") or "true"),
+			world=world,
+		)
+	]
+	if len(matches) != 1 or not matches[0]:
+		raise JasonValidationError(
+			"Temporal DFA must have exactly one transition for the initial valuation.",
+			metadata={"initial_state": initial_state, "matching_targets": matches},
+		)
+	return matches[0]
+
+
+def _runtime_monitor_guard_holds(raw_guard: str, *, world: set[str]) -> bool:
+	guard = str(raw_guard or "").strip()
+	if guard.lower() == "true":
+		return True
+	if not guard or guard.lower() == "false":
+		return False
+	for raw_literal in guard.split("&"):
+		literal = raw_literal.strip()
+		negative = False
+		for prefix in ("not ", "!", "~"):
+			if literal.lower().startswith(prefix):
+				negative = True
+				literal = literal[len(prefix) :].strip()
+				break
+		atom = _render_runtime_monitor_atom(literal)
+		if negative == (atom in world):
+			return False
+	return True
+
+
+def _runtime_monitor_guard_text(raw_guard: str) -> str:
+	"""Render one conjunctive PDDL guard in the runtime AgentSpeak vocabulary."""
+
+	guard = str(raw_guard or "").strip()
+	if guard.lower() in {"true", "false"}:
+		return guard.lower()
+	formatted: list[str] = []
+	for raw_literal in guard.split("&"):
+		literal = raw_literal.strip()
+		negative = False
+		for prefix in ("not ", "!", "~"):
+			if literal.lower().startswith(prefix):
+				negative = True
+				literal = literal[len(prefix) :].strip()
+				break
+		atom = _render_runtime_monitor_atom(literal)
+		formatted.append(f"not {atom}" if negative else atom)
+	return " & ".join(formatted)
+
+
+def _render_runtime_monitor_atom(atom: str) -> str:
+	"""Render DFA atoms while preserving numeric equality values as integers."""
+
+	text = str(atom or "").strip()
+	if "(" not in text or not text.endswith(")"):
+		return sanitize_identifier(text)
+	predicate, raw_args = text.split("(", 1)
+	arguments = tuple(
+		argument.strip()
+		for argument in raw_args[:-1].split(",")
+		if argument.strip()
+	)
+	rendered_arguments = tuple(
+		argument
+		if re.fullmatch(r"[+-]?\d+", argument)
+		else _render_runtime_term(argument)
+		for argument in arguments
+	)
+	return f"{sanitize_identifier(predicate)}({','.join(rendered_arguments)})"
+
+
 def _build_environment_java_source(
 	*,
 	class_name: str,
@@ -1587,8 +1766,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -1691,15 +1872,34 @@ public class {class_name} extends Environment {{
 		}}
 	}}
 
+	private static final class MonitorTransition {{
+		final String source;
+		final String target;
+		final String guard;
+
+		MonitorTransition(String source, String target, String guard) {{
+			this.source = source;
+			this.target = target;
+			this.guard = guard;
+		}}
+	}}
+
 	private final Set<String> world = new LinkedHashSet<>();
 	private final Map<String, ActionSchema> actions = new HashMap<>();
 	private final Map<String, String> pddlSymbols = new HashMap<>();
+	private final Map<String, List<MonitorTransition>> monitorTransitions = new HashMap<>();
+	private final Map<String, String> monitorStateBeliefs = new HashMap<>();
+	private final Set<String> monitorAcceptingStates = new LinkedHashSet<>();
 	private final StringBuilder planTraceBuffer = new StringBuilder();
 	private boolean planTraceDirty = false;
 	private final Path initialPerceptsPath = Paths.get({initial_percepts_file});
 	private final Path staticBeliefsPath = Paths.get("static_beliefs.txt");
 	private final Path planTracePath = Paths.get({plan_trace_file});
 	private final Path pddlSymbolMapPath = Paths.get({pddl_symbol_map_file});
+	private final Path temporalMonitorPath = Paths.get("temporal_dfa_monitor.tsv");
+	private String monitorState = null;
+	private String monitorAcceptingBelief = null;
+	private boolean temporalMonitorEnabled = false;
 	private final boolean planTraceEnabled = Boolean.parseBoolean(
 		System.getProperty("jason.pipeline.planTraceEnabled", "true")
 	);
@@ -1720,6 +1920,7 @@ public class {class_name} extends Environment {{
 		loadPddlSymbolMap();
 		resetPlanTrace();
 		loadActions();
+		loadTemporalMonitor();
 		System.out.println("runtime env ready");
 	}}
 
@@ -1778,6 +1979,7 @@ public class {class_name} extends Environment {{
 		}}
 
 		EffectDelta delta = applyEffects(schema, bindings);
+		boolean temporalMonitorValid = advanceTemporalMonitor(delta.removed, delta.added);
 		JasonPipelineIndexedBeliefBase.applyDynamicDelta(
 			delta.removed,
 			delta.added
@@ -1788,7 +1990,137 @@ public class {class_name} extends Environment {{
 		actionCount += 1;
 		recordPlanAction(schema, action);
 		traceSuccessfulAction(schema, action);
+		if (!temporalMonitorValid) {{
+			System.out.println("runtime env temporal monitor failed state=" + monitorState);
+			return false;
+		}}
 		return true;
+	}}
+
+	private void loadTemporalMonitor() {{
+		monitorTransitions.clear();
+		monitorStateBeliefs.clear();
+		monitorAcceptingStates.clear();
+		monitorState = null;
+		monitorAcceptingBelief = null;
+		temporalMonitorEnabled = false;
+		if (!Files.exists(temporalMonitorPath)) {{
+			return;
+		}}
+		try (BufferedReader reader = Files.newBufferedReader(
+			temporalMonitorPath,
+			StandardCharsets.UTF_8
+		)) {{
+			String line;
+			while ((line = reader.readLine()) != null) {{
+				String trimmed = line.trim();
+				if (trimmed.isEmpty() || trimmed.startsWith("#")) {{
+					continue;
+				}}
+				String[] parts = trimmed.split("\\t", 4);
+				if (parts.length >= 2 && "initial".equals(parts[0])) {{
+					monitorState = parts[1];
+				}} else if (parts.length >= 2 && "accepting".equals(parts[0])) {{
+					monitorAcceptingStates.add(parts[1]);
+				}} else if (parts.length >= 3 && "state".equals(parts[0])) {{
+					monitorStateBeliefs.put(parts[1], parts[2]);
+				}} else if (
+					parts.length >= 2 && "accepting_belief".equals(parts[0])
+				) {{
+					monitorAcceptingBelief = parts[1];
+				}} else if (parts.length == 4 && "transition".equals(parts[0])) {{
+					monitorTransitions
+						.computeIfAbsent(parts[1], ignored -> new ArrayList<>())
+						.add(new MonitorTransition(parts[1], parts[2], parts[3]));
+				}}
+			}}
+			temporalMonitorEnabled = monitorState != null && monitorAcceptingBelief != null;
+		}} catch (IOException error) {{
+			throw new RuntimeException(
+				"Failed to load temporal DFA monitor from "
+					+ temporalMonitorPath.toAbsolutePath(),
+				error
+			);
+		}}
+	}}
+
+	private boolean advanceTemporalMonitor(Set<String> removed, Set<String> added) {{
+		if (!temporalMonitorEnabled) {{
+			return true;
+		}}
+		List<MonitorTransition> matches = new ArrayList<>();
+		for (MonitorTransition transition : monitorTransitions.getOrDefault(
+			monitorState,
+			List.of()
+		)) {{
+			if (monitorGuardHolds(transition.guard)) {{
+				matches.add(transition);
+			}}
+		}}
+		if (matches.size() != 1) {{
+			removeMonitorBeliefs(removed);
+			monitorState = null;
+			return false;
+		}}
+		String previousState = monitorState;
+		removeMonitorBeliefs(removed);
+		monitorState = matches.get(0).target;
+		String stateBelief = monitorStateBeliefs.get(monitorState);
+		if (stateBelief != null) {{
+			added.add(stateBelief);
+			world.add(stateBelief);
+		}}
+		if (monitorAcceptingStates.contains(monitorState)) {{
+			added.add(monitorAcceptingBelief);
+			world.add(monitorAcceptingBelief);
+		}}
+		System.out.println(
+			"runtime env temporal monitor " + previousState + " -> " + monitorState
+		);
+		return true;
+	}}
+
+	private void removeMonitorBeliefs(Set<String> removed) {{
+		String stateBelief = monitorStateBeliefs.get(monitorState);
+		if (stateBelief != null) {{
+			removed.add(stateBelief);
+			world.remove(stateBelief);
+		}}
+		if (monitorAcceptingBelief != null) {{
+			removed.add(monitorAcceptingBelief);
+			world.remove(monitorAcceptingBelief);
+		}}
+	}}
+
+	private boolean monitorGuardHolds(String rawGuard) {{
+		String guard = rawGuard == null ? "" : rawGuard.trim();
+		if ("true".equalsIgnoreCase(guard)) {{
+			return true;
+		}}
+		if (guard.isEmpty() || "false".equalsIgnoreCase(guard)) {{
+			return false;
+		}}
+		for (String rawLiteral : guard.split("&")) {{
+			String literal = rawLiteral.trim();
+			boolean negative = false;
+			if (literal.startsWith("~") || literal.startsWith("!")) {{
+				negative = true;
+				literal = literal.substring(1).trim();
+			}} else if (literal.toLowerCase().startsWith("not ")) {{
+				negative = true;
+				literal = literal.substring(4).trim();
+			}}
+			String atom = normalizeMonitorAtom(literal);
+			boolean holds = world.contains(atom);
+			if (negative == holds) {{
+				return false;
+			}}
+		}}
+		return true;
+	}}
+
+	private String normalizeMonitorAtom(String atom) {{
+		return atom == null ? "" : atom.replaceAll("\\s+", "");
 	}}
 
 	private void seedInitialFacts() {{
@@ -2703,6 +3035,7 @@ def _artifact_paths(
 	initial_percepts_path: Path,
 	static_beliefs_path: Path,
 	pddl_symbol_map_path: Path,
+	temporal_monitor_path: Path,
 	plan_trace_path: Path,
 	committed_plan_trace_path: Path,
 	plan_verifier_stdout_path: Path,
@@ -2720,6 +3053,7 @@ def _artifact_paths(
 		"initial_percepts": str(initial_percepts_path),
 		"static_beliefs": str(static_beliefs_path),
 		"pddl_symbol_map": str(pddl_symbol_map_path),
+		"temporal_dfa_monitor": str(temporal_monitor_path),
 		"plan_trace": str(plan_trace_path),
 		"committed_plan_trace": str(committed_plan_trace_path),
 		"plan_verifier_stdout": str(plan_verifier_stdout_path),

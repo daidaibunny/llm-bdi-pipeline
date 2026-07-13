@@ -1058,6 +1058,49 @@ require legal PDDL replay, independent VAL acceptance against a neutral final
 goal, gold-DFA acceptance, and predicted-DFA acceptance. A trace that is absent
 or was not attempted does not affect the translation-only result.
 
+The execution runner advances the same grounded deterministic finite automaton
+after the initial valuation and after every successful primitive PDDL action.
+Its query-local monitor-state and accepting beliefs select appended AgentSpeak
+transition controllers; they are not PDDL fluents or hidden replacements for
+the formula. For same-source/same-target MONA valuation cubes, controller
+construction may use only their common achievement objective, while monitor
+advancement still evaluates each complete original cube. Positive, negative,
+and numeric atoms therefore retain finite-trace semantics at primitive-action
+boundaries. This execution contract does not imply that the controller can find
+an action strategy for every satisfiable PDDL-times-LTLf product. A syntactically
+and semantically valid query can still produce `execution_rejected` or timeout
+when the atomic library and schema certificates provide no applicable progress
+action; that outcome is not an input-translation error.
+
+A transition helper is complete when the runtime monitor leaves that helper's
+source state, not only when it equals the immediately adjacent target state.
+One atomic module may contain several primitive actions, and the monitor can
+therefore cross several deterministic finite automaton edges before the module
+returns. Source-state exit lets the top-level dispatcher continue from the
+actual monitored state and prevents replaying an already completed transition.
+A move to a rejecting state is not accepted by this rule: no accepting belief
+is emitted, and the top-level controller has no success plan for that state.
+
+Positive integer numeric equalities may receive a schema-derived one-action
+repair only under a constant-delta certificate. Unit changes use a strict
+directional comparison and may be replayed monotonically; larger changes require
+the exact predecessor value. A single action may establish a complete mixed
+Boolean/numeric guard only when symbolic execution proves every required net
+effect. Negated numeric equality remains an exact observation unless a separate
+certified change-away strategy exists.
+
+For Until profiles, literals common to every non-progress self-loop cube are
+treated as source-state invariants during strategy synthesis. The benchmark
+fragment has one positive progress literal per such state. Every primitive
+prefix of a selected action-only macro must preserve those invariants until the
+progress literal is established. Predicate preparation reduces the count of
+missing producer preconditions; numeric preparation reduces a constant-bounded
+prerequisite deficit without changing the target fluent. Repeated numeric steps
+use effect-derived non-unification guards to avoid protected objects, while an
+invariant-consuming terminal step is allowed only at the exact numeric
+predecessor. All nested module variables are alpha-renamed away from query and
+outer-producer variables before composition.
+
 ## Failure Semantics
 
 | Code | Meaning |

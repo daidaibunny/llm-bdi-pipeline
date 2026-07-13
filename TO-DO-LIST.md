@@ -31,7 +31,7 @@ entry may be a planning-family entry rather than a unique PDDL dynamics file.
 | Group | Domains | Split policy |
 | --- | --- | --- |
 | ESHO classical domains | `barman`, `ferry`, `gripper`, `logistics`, `miconic`, `rovers`, `satellite`, `transport` | MOOSE official `training/` as train and `testing/` as test. |
-| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | MOOSE official `training/` as train and `testing/` as test; ASL compilation remains experimental. |
+| Numeric fluent domains | `numeric-ferry`, `numeric-miconic`, `numeric-minecraft`, `numeric-transport` | MOOSE official `training/` as train and `testing/` as test; execution uses the declared bounded-integer fragment. |
 | Feature-definable serialized-width domains | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` | `blocksworld-clear/on` use KR 2025 learner-policies no-constants train/test folders; `blocksworld-tower` uses `floor(1/4 * instance_count)` train; `depots` uses `floor(1/2 * instance_count)` train because the D2L source has only 22 instances. |
 
 `8puzzle-1tile` is outside the selected benchmark scope because the current
@@ -45,21 +45,32 @@ certificate.
 | Full 16-domain benchmark materialization | Updated | Keep `scripts/materialize_achievement_benchmarks.py` as the single source of truth and rerun it after source-policy changes. |
 | Atomic ASL library generation | Needs full rerun | Run the timestamped MOOSE-to-ASL batch for all 16 selected benchmark entries after this benchmark expansion. |
 | Jason plus VAL validation | Needs full rerun | Run full-test DFA-transition validation after the new ASL batch completes. Report per-domain Jason and VAL success, timeout, and failure categories. |
-| Numeric domains | Experimental | Keep numeric support marked experimental until numeric fluents have a complete executable semantics and full validation evidence. |
+| Numeric domains | Supported bounded fragment | Positive integer equalities, constant deltas, bounded prerequisite preparation, mixed Boolean/numeric preservation, Jason execution, VAL, and DFA trace validation are implemented. Keep arbitrary arithmetic and unrestricted numeric planning outside the claim. |
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
-| Temporal execution validation | Runner complete; full matrix pending | `scripts/run_temporal_goal_benchmark_execution.sh` executes externally bound cases against a complete atomic-library batch and reports query compilation, Jason, PDDL replay, neutral-goal VAL, gold-DFA, and predicted-DFA outcomes separately. Run the full 1,228-case matrix from a clean pinned revision; do not relabel translation coverage as execution coverage. |
+| Temporal execution validation | Diagnostic matrix complete; clean rerun pending | `teg-paper-final-clean-20260713` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. Its source revision had tracked changes, so pin and rerun the committed revision before inserting the final paper matrix. |
 | AAAI paper package | Narrative aligned; final matrix pending | Maintain the section responsibilities, claim boundaries, result-insertion contract, and page budget in `docs/aaai_paper_narrative_outline.md`. The manuscript uses the latest available official AAAI-26 author kit and states only implemented claims. Regenerate the final atomic and TEG matrices from one clean pinned revision before submission. |
 
 ## Certified Generic Fixes
 
 - Temporal append now always calls the real `ltlf2dfa`/MONA converter. The
   removed ordered-sequence fast path can no longer bypass DFA construction.
-  Every progress edge on the unique accepting path produces exactly one
-  query-local `trans` controller. Its certified literal order is compiled into
-  a balanced repair tree with maximum trigger fan-out two and logarithmic
-  nesting depth; singleton guards retain one atomic achievement call, while
-  conjunctive guards are checked together after each complete tree pass.
+  Every distance-reducing DFA edge produces a query-local `trans` controller.
+  Its certified literal order is compiled into a balanced repair tree with
+  maximum trigger fan-out two and logarithmic nesting depth. Completion means
+  the primitive-step monitor left the controller's source state, so an atomic
+  macro that crosses several DFA edges is not replayed against an obsolete
+  intermediate target.
+- Atomic schema closure now runs even when backend evidence contains only a
+  numeric goal. Every PDDL positive add-effect predicate is treated as a
+  producible fluent, while static predicates remain context-only. This removes
+  the Numeric Minecraft coverage gap for `position/1` and `air_cell/1` without
+  recognizing their names.
+- Positive integer numeric equalities may use schema-certified constant-delta
+  repairs: unit effects require strict monotone progress, non-unit effects
+  require the exact predecessor value, and a mixed Boolean/numeric threat cycle
+  may use one primitive action only when its complete net effect establishes the
+  entire guard.
 - Validated MOOSE macros and PDDL-schema branches now enter one Clingo candidate
   space. Evidence coverage, internal-module closure, compatible recursive
   capabilities, branch count, context count, and body cost are decided in one
@@ -74,6 +85,8 @@ certificate.
   preservation and effect-certified establishment. A signed negative leaf may
   call only a query-local action-only branch whose PDDL net effect has an exact
   `MustDelete`, achieves a positive sibling, and preserves every other guard.
+  Direct deleters bind otherwise-free parameters through compatible positive
+  sibling add effects before range restriction.
   All 23 Barman same-state negation cases pass Jason, replay, VAL, and both DFAs
   with one action each. Negative-only edges remain context checks.
 - MOOSE evidence variables are no longer made pairwise distinct by default.

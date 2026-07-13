@@ -439,7 +439,7 @@ def test_negative_guard_establishment_is_symbol_invariant(
 		helper_prefix="g_query_trans_1",
 	)
 
-	assert len(aliases) == 1
+	assert len(aliases) == 2
 	assert aliases[0].trigger.symbol == helpers[0][0]
 	assert aliases[0].trigger.arguments == ()
 	assert aliases[0].context == (
@@ -449,11 +449,17 @@ def test_negative_guard_establishment_is_symbol_invariant(
 	assert aliases[0].body == (
 		AgentSpeakBodyStep("action", producer_action, ("agent", "item")),
 	)
+	assert {
+		plan.binding_certificate[-1]["certificate_kind"] for plan in aliases
+	} == {
+		"pddl_net_must_delete_with_positive_preservation",
+		"pddl_single_action_must_delete",
+	}
 	assert helpers[0][1] == ()
 	assert certificate["negative_guard_establishment_checked"] is True
 	assert certificate["negative_guard_establishable"] is True
 	assert certificate["negative_guard_establishers"] == {
-		f"{forbidden_predicate}(agent)": [aliases[0].plan_name],
+		f"{forbidden_predicate}(agent)": [plan.plan_name for plan in aliases],
 	}
 
 

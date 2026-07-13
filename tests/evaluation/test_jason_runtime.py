@@ -18,6 +18,7 @@ from evaluation.jason_runtime.runner import _parse_pddl_patterns
 from evaluation.jason_runtime.runner import _plan_verifier_output_success
 from evaluation.jason_runtime.runner import _plan_verifier_not_attempted
 from evaluation.jason_runtime.runner import _render_pddl_symbol_map
+from evaluation.jason_runtime.runner import _render_temporal_monitor_config
 from evaluation.jason_runtime.runner import _run_plan_verifier
 from evaluation.jason_runtime.runner import _run_process_streamed
 from evaluation.jason_runtime.runner import _runtime_action_schema
@@ -123,10 +124,45 @@ def test_environment_source_loads_initial_facts_from_data_file() -> None:
 	assert "actionTraceLimit" in source
 	assert '"jason.pipeline.actionTraceLimit",\n\t\t3' in source
 	assert "import java.util.Arrays;" not in source
+	assert 'Paths.get("temporal_dfa_monitor.tsv")' in source
+	assert "advanceTemporalMonitor(" in source
+	assert "runtime env temporal monitor failed" in source
 	assert "Arrays.stream" not in source
 	assert "new StringBuilder(predicate)" in source
 	assert "traceSuccessfulAction(schema, action);" in source
 	assert "traceSuccessfulAction(String tracedAction)" not in source
+
+
+def test_temporal_monitor_config_preserves_grounded_dfa_guards() -> None:
+	config = _render_temporal_monitor_config(
+		{
+			"initial_state": "q0",
+			"accepting_states": ["q1"],
+			"guarded_transitions": [
+				{
+					"source_state": "q0",
+					"target_state": "q0",
+					"raw_label": "safe(item) & not complete(item)",
+				},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "complete(item) & fuel-level(vehicle,0)",
+				},
+				{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+			],
+		},
+		goal_name="g_query_1",
+	)
+
+	assert "initial\tq0" in config
+	assert "accepting\tq1" in config
+	assert "state\tq0\tg_query_1_monitor_state_q0" in config
+	assert "accepting_belief\tg_query_1_monitor_accepting" in config
+	assert "safe(item)" in config
+	assert "complete(item)" in config
+	assert "fuel_level(vehicle,0)" in config
+	assert "fuel-level" not in config
 
 
 def test_plan_verifier_command_normalization_and_not_configured_result(tmp_path: Path) -> None:
@@ -625,21 +661,33 @@ def test_jason_executes_only_negative_preserving_query_alias(tmp_path: Path) -> 
 			),
 		),
 	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q0",
+				"raw_label": "not delivered(item)",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "delivered(item) & not damaged(item)",
+			},
+			{
+				"source_state": "q0",
+				"target_state": "dead",
+				"raw_label": "delivered(item) & damaged(item)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+			{"source_state": "dead", "target_state": "dead", "raw_label": "true"},
+		],
+	}
 	updated = append_temporal_goal_to_library(
 		plan_library=atomic_library,
 		goal_name="g_query_1",
-		dfa_payload={
-			"initial_state": "q0",
-			"accepting_states": ["q1"],
-			"guarded_transitions": [
-				{
-					"source_state": "q0",
-					"target_state": "q1",
-					"raw_label": "delivered(item) & not damaged(item)",
-				},
-				{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
-			],
-		},
+		dfa_payload=dfa_payload,
 		domain_file=domain_file,
 	)
 	library_file.write_text(render_plan_library_asl(updated), encoding="utf-8")
@@ -650,6 +698,7 @@ def test_jason_executes_only_negative_preserving_query_alias(tmp_path: Path) -> 
 		plan_library_asl=library_file,
 		goal_name="g_query_1",
 		output_dir=output_dir,
+		temporal_dfa_payload=dfa_payload,
 	)
 
 	assert result.success is True, result.to_dict()
@@ -658,6 +707,73 @@ def test_jason_executes_only_negative_preserving_query_alias(tmp_path: Path) -> 
 	assert Path(result.artifacts["committed_plan_trace"]).read_text(
 		encoding="utf-8",
 	) == "(deliver-safely item)\n"
+
+
+@pytest.mark.skipif(
+	not (shutil.which("java") and shutil.which("javac") and shutil.which("mvn")),
+	reason="real Jason validation requires java, javac, and Maven",
+)
+def test_jason_executes_certified_negative_only_deleter(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_file = tmp_path / "plan_library.asl"
+	output_dir = tmp_path / "jason"
+	domain_file.write_text(
+		"""
+(define (domain deactivation)
+ (:requirements :strips)
+ (:predicates (active ?x))
+ (:action deactivate
+  :parameters (?x)
+  :precondition (active ?x)
+  :effect (not (active ?x)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem deactivation-problem)
+ (:domain deactivation)
+ (:objects item)
+ (:init (active item))
+ (:goal (and)))
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "not active(item)"},
+			{"source_state": "q0", "target_state": "q0", "raw_label": "active(item)"},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="deactivation", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	library_file.write_text(render_plan_library_asl(updated), encoding="utf-8")
+
+	result = JasonPlanLibraryRunner(timeout_seconds=20).validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=library_file,
+		goal_name="g_query_1",
+		output_dir=output_dir,
+		temporal_dfa_payload=dfa_payload,
+	)
+
+	assert result.success is True, result.to_dict()
+	assert result.action_path == ("deactivate(item)",)
+	assert Path(result.artifacts["committed_plan_trace"]).read_text(
+		encoding="utf-8",
+	) == "(deactivate item)\n"
 
 
 @pytest.mark.skipif(

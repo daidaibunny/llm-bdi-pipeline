@@ -84,12 +84,15 @@ not the maintained domain library.
   modules when closure requires internal producible fluents.
   `--minimal-modules` and `--post-moose-recursive` remain only as deprecated
   compatibility aliases.
-  MOOSE seed predicates are not assumed to include all required internal
-  modules. For example, if MOOSE only saw singleton `on(X,Y)` goals in Blocks,
+  MOOSE seed predicates are not assumed to include all required atomic modules.
+  Every declared predicate that appears in a positive PDDL add effect enters
+  the same schema closure, including when the evidence contains only numeric
+  goals. For example, if MOOSE only saw singleton `on(X,Y)` goals in Blocks,
   `clear(X)`, `holding(X)`, `handempty`, and `ontable(X)` still enter the
-  library through PDDL add-effect/precondition closure when they are producible
-  fluents needed by recursive decomposition. Static predicates remain context
-  only. PDDL typing is compiled into the reserved static sort metadata predicate
+  library; if numeric evidence only targeted a resource function, producible
+  predicates such as `position(X)` still enter through their PDDL producers.
+  Static predicates remain context only. PDDL typing is compiled into the
+  reserved static sort metadata predicate
   `obj_tp(Object, Type)` when action schemas require subtype-safe binding. The
   final ASL must not emit domain-specific `type_*` guards, and `obj_tp/2` must
   remain context-only metadata that is never used as a subgoal or primitive
@@ -154,6 +157,8 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
   fluent mappings.
 - LTLf formulas must be converted through the real `ltlf2dfa` package and a
   real MONA binary. Do not restore an ordered-sequence or linear-body fast path.
+- Benchmark version 1 supports the explicit `F`, `X`, `U`, conjunction, and
+  literal-negation fragment. Do not describe this as unrestricted LTLf.
 - Every relevant DFA transition guard is interpreted as one query-local guard
   block. A guard transition is the set of literals on one MONA/ltlf2dfa transition
   guard; for example `on(X,Y) & not clear(Z)` is one block with positive
@@ -161,31 +166,59 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
 - Guard blocks may contain conjunction and negation only. Reject disjunctions,
   implications, malformed atoms, undeclared predicates, and wrong arities with
   precise diagnostics.
-- Negative waiting guards such as `not done` are valid DFA structure and must
-  not compile to synthetic negative atomic subgoals. A signed negative leaf may
-  call a query-local positive-sibling branch only when PDDL symbolic execution
-  certifies an exact net `MustDelete` for the forbidden atom, achievement of its
-  positive trigger, preservation of all positive siblings, and no forbidden
-  completion `MayAdd`.
+- Negative guards such as `not done` are valid DFA structure and must not
+  compile to synthetic negative atomic subgoals. A signed negative leaf may
+  call either a certified positive-sibling branch or a single PDDL deleter only
+  when symbolic execution proves an exact net `MustDelete` for the forbidden
+  atom, preservation of all positive siblings, and no forbidden completion
+  `MayAdd`. If no such branch exists, the literal remains observation-only.
 - Every positive repair in a transition containing negative predicate guards
   must carry a completion-level conditional `MayAdd` preservation certificate.
   If an unfiltered atomic module may add a forbidden atom, enforce a query-local
   action-only branch selection that preserves positive siblings and all negative
   guards; if no non-empty goal-achieving selection remains, reject with
-  `negative_guard_not_preserved`. A negative-only edge checks that the atom is
-  already absent and does not wait or synthesize deletion behavior. A mixed
-  guard with no certified establisher has no unmet-case negative leaf plan. Mixed
-  predicate/numeric preservation remains unsupported.
+  `negative_guard_not_preserved`. A negative-only edge may use the same
+  schema-certified single-action deleter; otherwise it only observes absence.
+- Mixed Boolean/numeric conjunctions use complete action-only net Boolean
+  effects and constant-integer numeric deltas. Helpers are indexed by the full
+  grounded/lifted literal, not only by predicate name. A literal without a
+  complete preserving branch is observation-only. Negated numeric equality is
+  monitored exactly but has no invented numeric-disequality achievement action.
+- Literals common to every waiting self-loop cube of an Until source state are
+  source invariants. In the supported benchmark fragment, such a state has one
+  positive progress literal. Query-local action-only branches must preserve the
+  source invariants at every primitive prefix until that progress literal is
+  established. Predicate preparation decreases missing producer preconditions;
+  numeric preparation decreases a constant-bounded prerequisite deficit while
+  leaving the target numeric fluent unchanged.
+- Repeated numeric progress that could consume a protected object must use a
+  schema-derived non-unification guard. An unavoidable consuming step is allowed
+  only at the exact target predecessor, and a query-local observed-equality base
+  case terminates recursion. All nested support variables must be alpha-renamed
+  away from query variables and outer-producer variables before composition.
+  Positive numeric equality may use a query-local PDDL action only when a
+  constant integer effect proves strict unit progress, or when a non-unit
+  effect is enabled at the exact predecessor value. If a single action proves
+  every Boolean and numeric obligation of a guard, that complete net-effect
+  certificate may discharge an otherwise cyclic mixed serialization.
 - Accepting self-loops labelled `true` are allowed as DFA plumbing and should
   not compile to atomic subgoals.
+- Jason's PDDL environment runs a query-local deterministic DFA monitor after
+  the initial valuation and after every successful primitive action. The
+  monitor exposes only query-local state and acceptance beliefs required by the
+  appended controller; these are not PDDL fluents, atomic modules, or exported
+  actions. This primitive-step boundary supports the benchmark's strong-until
+  semantics and detects intermediate violations.
 - Every progress transition uses one query-local `trans` controller enabled by
   a zero-arity query entry proposition. Its certified literal order is compiled
   into a balanced binary repair tree. Internal tree nodes only dispatch to two
   child ranges; each leaf either observes one satisfied literal or calls its
-  atomic module once. A separate `trans_done` helper checks the complete guard
-  and replays the same transition when an earlier achievement was invalidated.
-  The tree is query-local control structure, not a domain fluent or a second
-  temporal fast path.
+  atomic module once. A separate `trans_done` helper retries only while the
+  runtime monitor remains in that transition's source state. Leaving the source
+  state completes the helper, including when one atomic macro crosses more than
+  one DFA edge; the top-level dispatcher then follows the monitor's actual
+  state. The tree is query-local control structure, not a domain fluent or a
+  second temporal fast path.
 - The balanced tree bounds sibling-plan fan-out by two, visits all positive
   literals in linear controller work per pass, and has logarithmic nesting
   depth. It does not reduce primitive PDDL action count or choose the literal
@@ -196,13 +229,16 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
 ```asl
 query.
 
-+!g_query : query <- !g_query_trans_1.
++!g_query : query & g_query_monitor_accepting <- true.
++!g_query : query & g_query_monitor_state_q0 <-
+	!g_query_trans_1;
+	!g_query.
 +!g_query_trans_1 : query <-
 	!g_query_trans_1_repair_1_1;
 	!g_query_trans_1_done.
 +!g_query_trans_1_repair_1_1 : query & on(X,Y) <- true.
 +!g_query_trans_1_repair_1_1 : query & not on(X,Y) <- !on(X,Y).
-+!g_query_trans_1_done : query & on(X,Y) <- true.
++!g_query_trans_1_done : query & not g_query_monitor_state_q0 <- true.
 +!g_query_trans_1_done : query <- !g_query_trans_1.
 ```
 
@@ -210,9 +246,15 @@ query.
   may-delete summaries of the final selected atomic modules. Reject incomplete
   summaries, cyclic threat graphs, and uncertified numeric conjunctions; never
   fall back to parser order or monotonic step helpers.
-- Branching or state-dependent temporal goals must be rejected with a structured
-  diagnostic unless an external DFA or reward-machine controller is present. Do
-  not reintroduce `tg_state` monitor beliefs in final ASL as a hidden fallback.
+- Every distance-reducing DFA edge receives a query-local dispatch plan guarded
+  by the current runtime monitor state. Same-source/same-target MONA cubes are
+  grouped only by their common achievement objective; the runtime monitor still
+  evaluates the original complete cubes. This supports state-dependent DFA
+  execution without restoring legacy domain-level `tg_state` beliefs.
+- Runtime monitoring is semantically exact for the declared formula fragment;
+  action strategy synthesis is not complete for arbitrary PDDL-times-LTLf
+  products. A valid query may still fail or time out when no certified atomic or
+  schema action can establish a required progress objective.
 
 ## Temporal Goal Validation
 
@@ -251,8 +293,12 @@ feature-definable serialized-width benchmarks.
 | Feature-definable serialized-width domains | `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots` |
 
 Numeric MOOSE domains are included for MOOSE-faithful benchmark coverage and
-experimental compiler support. Treat their AgentSpeak(L) compilation as
-experimental until numeric fluents have a fully specified executable semantics.
+for the explicitly supported bounded-integer compiler fragment. This fragment
+has executable Jason belief updates, constant-integer numeric effects,
+schema-certified equality progress, primitive-step DFA monitoring, neutral-goal
+VAL validation, and independent DFA trace acceptance. Do not generalize this
+claim to arbitrary arithmetic expressions, continuous values, or unrestricted
+numeric planning.
 
 ## Hard Constraints
 

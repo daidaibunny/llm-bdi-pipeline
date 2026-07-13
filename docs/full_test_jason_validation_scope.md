@@ -595,10 +595,10 @@ small width.
 | `rovers` | ESHO classical domains | Communication goals such as `communicated_soil_data(W)` exercise sampling, imaging, and data transmission. |
 | `satellite` | ESHO classical domains | Pointing and image goals such as `have_image(D,M)` exercise instrument power, calibration, turning, and imaging. |
 | `transport` | ESHO classical domains | Package-location goals such as `at(P,L)` exercise capacity-aware loading, driving, and dropping. |
-| `numeric-ferry` | Numeric fluent domains | Numeric ferry variant included for experimental numeric evidence import. |
-| `numeric-miconic` | Numeric fluent domains | Numeric miconic variant included for experimental numeric evidence import. |
+| `numeric-ferry` | Numeric fluent domains | Numeric ferry variant exercises bounded integer state, schema-certified equality progress, and temporal trace monitoring. |
+| `numeric-miconic` | Numeric fluent domains | Numeric miconic variant exercises bounded integer state, schema-certified equality progress, and temporal trace monitoring. |
 | `numeric-minecraft` | Numeric fluent domains | Numeric resource-production goals such as reducing `pogo_sticks_to_make` to zero exercise non-predicate goal semantics. |
-| `numeric-transport` | Numeric fluent domains | Numeric transport variant included for experimental numeric evidence import. |
+| `numeric-transport` | Numeric fluent domains | Numeric transport variant exercises mixed Boolean/numeric guards and bounded numeric prerequisite preparation. |
 | `blocksworld-clear` | Feature-definable serialized-width domains | KR 2025 `QClear` family. Atomic `clear(X)` goals exercise recursive obstruction removal and internal modules such as `holding(X)`, `handempty`, and `ontable(X)`. |
 | `blocksworld-on` | Feature-definable serialized-width domains | KR 2025 `QOn` family. Atomic `on(X,Y)` goals exercise support preparation through `clear(X)`, `clear(Y)`, `holding(X)`, `handempty`, and `ontable(X)`. |
 | `blocksworld-tower` | Feature-definable serialized-width domains | Classical typed Blocksworld arrangement family. Multi-literal tower goals stress serialized support-dependent construction over the same atomic modules. |

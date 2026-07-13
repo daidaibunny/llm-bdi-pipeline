@@ -204,6 +204,17 @@ monotone numeric effect toward the target, for example
 `craft_wooden_pogo; !pogo_sticks_to_make(0)` after a `decrease` effect on
 `pogo_sticks_to_make`.
 
+Predicate closure does not disappear when backend evidence contains only a
+numeric goal. Every declared predicate occurring in a positive PDDL add effect
+is a producible fluent and enters the same schema candidate generation and
+Clingo selection. Predicates with no add effect remain static context. This
+ensures, for example, that a numeric resource policy can coexist with lifted
+`+!position(X)` and `+!air_cell(X)` modules derived from their schemas without
+recognizing those names. The compiler metadata already labels each omitted
+producible fluent as a coverage gap; the implementation therefore treats such
+an omission as an invalid incomplete library rather than a permitted numeric
+special case.
+
 The compiler does not use a domain-name switch and does not assign a whole
 domain to a compiler class. The structural labels are plan-template-level
 labels. A plan template is one AgentSpeak(L) plan branch, for example one
@@ -565,8 +576,9 @@ connected components are not internally ordered.
 
 ### Certified DFA Guard Serialization
 
-Every progress edge on the accepted DFA path is compiled into one query-local
-`trans` helper. A singleton positive guard calls its atomic module once and
+Every distance-reducing DFA progress edge is compiled into one query-local
+`trans` helper guarded by the current runtime monitor state. A singleton
+positive guard calls its atomic module once and
 rechecks the guard, which is action-equivalent to the former linear call while
 adding declarative completion checking. For a conjunctive guard, the compiler
 computes conservative conditional may-add and may-delete summaries over the
@@ -620,13 +632,53 @@ constants and shared query variables remain fixed. This is a proof-cost
 optimization and does not merge objects that may be equal in execution. The
 filter retains every certified safe action-only branch; it does not claim a new
 minimum-branch optimization. If no non-empty safe branch remains, the cycle is
-still rejected. Multi-literal numeric guards without numeric effect-preservation
-certificates are also rejected.
-For example, singleton `fuel(vehicle)=0` can call one certified monotone numeric
-module. A transition requiring `at(package,destination) & fuel(vehicle)=3`
-needs an additional proof that repairing either conjunct preserves the other;
-the current temporal compiler does not yet have this mixed numeric/predicate
-preservation certificate and therefore fails closed.
+still rejected. Mixed Boolean/numeric guards use exact action-only net Boolean
+effects and constant-integer numeric deltas. If repairing one literal changes a
+sibling numeric fluent, the compiler adds the corresponding ordering threat.
+Query-local helpers are indexed by complete literal atoms, so equal predicate
+names with different arguments or values cannot overwrite one another. A
+literal without a complete preserving action-only branch remains
+observation-only and cannot fall back to an uncertified atomic trigger.
+For example, `in(package,vehicle) & capacity(vehicle)=2` may call a certified
+pickup branch first and observe the resulting capacity equality second. This is
+a cross-literal preservation certificate, not a completeness claim for
+arbitrary numeric planning.
+For a positive numeric equality, the query compiler may additionally derive a
+one-action progress branch directly from a PDDL numeric effect. A unit delta is
+admitted only under a strict directional guard, such as `N>0` before a
+decrement toward zero, so each replay is monotone. A non-unit delta is admitted
+only at the exact predecessor value `target-delta`, which prevents overshoot.
+If the action has an unsatisfied producible predicate precondition or a
+constant-bounded numeric precondition, the query compiler may add a certified
+preparation branch. Predicate preparation strictly reduces the number of
+missing positive producer preconditions. Numeric preparation strictly reduces
+the prerequisite deficit, leaves the target numeric fluent unchanged, and
+preserves the producer's other preconditions. The resulting ranking is
+lexicographic and is persisted in the branch certificate; no fluent or action
+name is recognized.
+
+For an Until source state, literals common to all waiting self-loop cubes are
+source invariants. The current action-strategy fragment requires one positive
+progress literal for such a state. Every selected action-only macro is checked
+at each primitive prefix: a positive invariant cannot be deleted and a negative
+invariant cannot be added before the progress literal is established. The final
+establishing action may consume a source invariant because strong Until
+requires the left operand only at earlier positions. For a multi-step numeric
+target, repeatable steps instead carry schema-derived non-unification guards,
+for example `Other \== Protected`, while a step that must consume the protected
+object is restricted to the exact predecessor value. A query-local numeric base
+case observes the target equality and terminates recursive preparation.
+
+All query-local composition uses capture-avoiding substitution. Atomic-plan
+local variables are alpha-renamed away from both query variables and variables
+owned by an outer producer before contexts and bodies are combined. This
+prevents accidental constraints such as `Y \== Y` or one symbol being required
+to denote both a store and a waypoint.
+If independently summarized branches induce a conservative cycle, one
+primitive action may replace that serialization only when symbolic execution
+proves that its complete net effect establishes every Boolean and numeric
+literal in the guard. This is a whole-guard certificate, not a domain-specific
+numeric operator or an unrestricted arithmetic planner.
 It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.
@@ -644,23 +696,29 @@ preservation status, selected branch names, and the
 `atomic_module_completion` observation boundary. Predicate/action renaming and
 PDDL sibling types do not alter this rule.
 
-When a forbidden atom is present, the appender may repair its absence only
-through a positive sibling's finite action-only branch whose PDDL net effect
-has an exact `MustDelete` for that grounded atom. The branch must establish its
-positive trigger, preserve every other positive sibling, and have no completion
-`MayAdd` for any forbidden atom. For example, an arbitrary action that adds
-`holding(H,C)` and deletes `available(H)` certifies
-`holding(h,c) & not available(h)`; no predicate or action name is recognized by
-the algorithm. If no establisher exists, the signed negative leaf succeeds only
-when the atom is already absent rather than inventing a negative subgoal.
+When a forbidden atom is present, the appender may repair its absence through
+either a positive sibling's finite action-only branch or a directly matched
+single PDDL action. Both cases require an exact net `MustDelete`, preservation
+of every positive sibling, and no completion `MayAdd` for any forbidden atom.
+Extra action parameters must be range-restricted by positive PDDL preconditions
+or `obj_tp/2`. Free deleter parameters are first unified with compatible
+positive-sibling add effects. Thus a relocation action whose delete binds the
+origin and whose add binds the requested destination can establish
+`at(destination) & not at(origin)` without leaving the destination variable
+unconstrained. For example, an arbitrary action that adds `holding(H,C)` and
+deletes `available(H)` certifies `holding(h,c) & not available(h)`; a
+negative-only `not active(x)` may use a generic `deactivate(x)` schema for the
+same reason. No predicate or action name is recognized by the algorithm. If no
+establisher exists, the signed negative leaf succeeds only when the atom is
+already absent rather than inventing a negative subgoal.
 
-A negative-only edge is a context check: it succeeds only if the atom is
-already absent. No `!not_p(...)` achievement is synthesized, and no waiting for
-exogenous deletion is implied. Temporary addition followed by deletion before
-the atomic module returns is permitted by the completion summary. Mixed
-predicate/numeric or multi-literal numeric guards remain rejected because they
-lack a cross-literal numeric preservation certificate. Safety formulas that
-must observe every primitive state still require an external monitor.
+A negative-only edge succeeds when the atom is absent and may call only the
+single-action `MustDelete` helper described above when it is present. No
+`!not_p(...)` achievement is synthesized, and no waiting for exogenous deletion
+is implied. Temporary addition followed by deletion before atomic-module return
+is permitted by the completion summary. Negated numeric equality is checked by
+the runtime monitor; without a certified numeric change-away branch it remains
+observation-only rather than being rejected as malformed LTLf.
 
 After certification fixes an order `L1, ..., Ln`, the appender prepends signed
 negative obligations and compiles the result into a balanced transition repair
@@ -668,37 +726,51 @@ tree. A transition repair tree is
 query-local AgentSpeak control structure: an internal helper for range `[i,j]`
 calls the two midpoint ranges. A positive leaf checks or achieves `Li`; a
 negative leaf checks `not N` and, when available, calls only its certified
-`MustDelete(N)` helper. The root then calls a separate done helper. The done helper returns only
-when the full positive conjunction and all negative guards hold in the same
-state; otherwise it re-enters the same transition. Thus balancing changes how
-Jason dispatches a certified serialization, not which serialization is used.
+`MustDelete(N)` helper. The root then calls a separate done helper. The done
+helper re-enters the same transition only while the exact runtime monitor still
+reports its source state. Once the monitor leaves that source state, the helper
+returns and the top-level dispatcher follows the actual DFA state. This matters
+when one atomic macro contains several primitive actions and crosses several
+DFA edges before returning: requiring the immediately adjacent target state
+would incorrectly replay a transition that has already completed. Guard truth
+is still exact because only the runtime DFA can cause source-state exit; a
+rejecting successor has no accepting shortcut and fails at top-level dispatch.
+Thus balancing changes how Jason dispatches a certified serialization, not
+which serialization or temporal semantics is used.
 
 This replaces the old one-sibling-plan-per-literal representation. For `N`
 positive literals, that representation gave one trigger `N` repair candidates
 and could repeat that candidate scan after each repair, yielding quadratic
 controller matching. The balanced tree has `O(N)` query-local nodes, maximum
 trigger fan-out two, `O(N)` visits per pass, and `O(log N)` nesting depth. The
-complete conjunction is checked once per pass. The compiler records
-`transition_controller_strategy=balanced_transition_repair_tree` so experiments
+exact runtime monitor is consulted through the source-state completion belief
+after each pass. The compiler records
+`transition_controller_strategy=monitored_balanced_repair_tree` so experiments
 cannot silently mix the two encodings. Tree helper names are not PDDL fluents,
 atomic modules, or exported actions.
 
 For a singleton transition, the tree has one leaf: if the literal is absent it
-calls the same atomic module once, and the done helper rechecks the same guard.
-It is therefore primitive-action equivalent to the previous singleton wrapper.
+calls the same atomic module once, and the done helper checks whether the exact
+monitor left the source state. It is therefore primitive-action equivalent to
+the previous singleton wrapper when the module crosses one edge, while also
+remaining correct when one macro crosses multiple edges.
 For several DFA progress transitions, one independently generated tree is used
-per transition and the DFA path order is unchanged. The tree does not provide
-action batching, choose among atomic-module branches, or make an uncertified
-threat cycle safe. Those remain separate method obligations.
+per distance-reducing edge; the current runtime monitor state selects applicable
+dispatch plans. The tree does not provide action batching, make an uncertified
+threat cycle safe, or make action-strategy synthesis complete.
 
-The completion observation boundary is appropriate for achievement transitions
-that are checked after an atomic module returns. It does not justify
-safety-sensitive LTLf formulas that must observe every primitive intermediate
-action; those require an external DFA controller and primitive-step monitor.
-For example, a macro may delete `safe(X)` in its first primitive action and
-restore it before the atomic subgoal returns. Completion-level checking can
-still certify an eventual achievement after return, but it cannot certify
-`G(safe(X))`, because that formula must inspect every intermediate state.
+The execution environment advances the real deterministic finite automaton
+after the initial valuation and after every successful primitive PDDL action.
+It updates query-local monitor-state and accepting beliefs used by the top-level
+AgentSpeak controller. These beliefs are controller interface state, not domain
+fluents and not exported actions. Same-source/same-target MONA valuation cubes
+are grouped by their common achievement objective, while the monitor still
+evaluates every original cube. Consequently a strong-until formula detects an
+intermediate violation even when an atomic macro later restores the fluent.
+This gives exact trace observation for the declared `F`, `X`, `U`, conjunction,
+and literal-negation fragment. It does not prove that the generated action
+strategy solves every satisfiable PDDL-times-LTLf product; missing certified
+progress actions remain execution failure or timeout outcomes.
 
 ## Benchmark Scope
 

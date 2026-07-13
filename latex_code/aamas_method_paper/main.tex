@@ -59,9 +59,11 @@ temporally extended goals separate from reusable domain behavior: a real
 and negative obligations are serialized only when certified completion effects
 establish preservation. The resulting query-local controllers use balanced
 declarative repair trees and execute over the same maintained domain library.
-The implementation is fail-closed: unsupported negative achievements,
-ambiguous automata, uncertified recursive interference, and mixed numeric
-conjunctions are rejected rather than compiled heuristically.
+The implementation is fail-closed: uncertified recursive interference and
+unproved action choices are rejected rather than compiled heuristically, while
+a query-local runtime monitor preserves the declared LTLf fragment's semantics
+at every primitive-action boundary. Bounded integer equalities use only
+constant-delta progress or complete single-action guard certificates.
 \end{abstract}
 
 \section{Introduction}
@@ -134,7 +136,8 @@ closure, recursive relational progress, one-step resource release, and staged
 preparation; and
 \item a real \ltlf-to-DFA query compiler that uses conditional completion
 effects to preserve positive and negative transition obligations, emitting
-balanced declarative BDI controllers without domain-level DFA-state fluents.
+balanced declarative BDI controllers whose query-local DFA monitor advances
+after every primitive PDDL action.
 \end{itemize}
 
 The claim is intentionally narrower than universal generalized planning or full
@@ -161,12 +164,17 @@ At the query layer, transition guards may use conjunction and literal negation.
 Negative literals are signed obligations, not negative achievement calls; a
 positive sibling branch may establish their absence when its certified PDDL net
 effect has the required exact delete.
-Mixed or multi-literal numeric guards remain unsupported because the compiler
-does not yet construct a cross-literal numeric preservation certificate.
-Branching automata whose progress cannot be inferred from world state require
-an external DFA-state monitor. Formulas that constrain every primitive state,
-such as safety properties, also require such a monitor because the current
-effect boundary is successful atomic-module completion.
+Mixed Boolean/numeric guards are serialized only from complete action-only net
+Boolean effects and constant-integer numeric deltas. A negated numeric equality
+without a certified change-away branch remains observation-only. The integrated
+runtime advances the deterministic finite automaton after the initial valuation
+and every successful primitive PDDL action. Transition helpers complete on
+source-state exit, so one atomic macro may cross several DFA edges without
+replaying an obsolete transition. This exact observation boundary does not make
+action-strategy synthesis complete for arbitrary
+PDDL--LTLf products. The evaluated formula language is the declared
+$F$, $X$, $U$, conjunction, and literal-negation fragment, not unrestricted
+LTLf.
 
 \section{Conclusion}
 

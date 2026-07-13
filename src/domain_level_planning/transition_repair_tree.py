@@ -10,8 +10,8 @@ from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 
 
-_WRAPPER_MODE = "dfa_guard_transition_replay"
-_CONTROLLER_STRATEGY = "balanced_transition_repair_tree"
+_DEFAULT_WRAPPER_MODE = "dfa_guard_transition_replay"
+_DEFAULT_CONTROLLER_STRATEGY = "balanced_transition_repair_tree"
 
 
 @dataclass(frozen=True)
@@ -34,7 +34,7 @@ class TransitionRepairTreeCompilation:
 	done_symbol: str
 	literal_count: int
 	tree_height: int
-	controller_strategy: str = _CONTROLLER_STRATEGY
+	controller_strategy: str = _DEFAULT_CONTROLLER_STRATEGY
 
 
 def compile_transition_repair_tree(
@@ -42,8 +42,10 @@ def compile_transition_repair_tree(
 	transition_symbol: str,
 	shared_context: Sequence[str],
 	positive_literals: Sequence[TransitionRepairLiteral],
-	final_guard_context: Sequence[str],
+	completion_context: Sequence[str],
 	certificate: Mapping[str, object],
+	wrapper_mode: str = _DEFAULT_WRAPPER_MODE,
+	controller_strategy: str = _DEFAULT_CONTROLLER_STRATEGY,
 ) -> TransitionRepairTreeCompilation:
 	"""Compile ordered guard literals into a balanced, replaying transition controller.
 
@@ -61,16 +63,16 @@ def compile_transition_repair_tree(
 	if not transition:
 		raise ValueError("transition_symbol must not be empty")
 	shared = tuple(dict.fromkeys(str(item).strip() for item in shared_context if str(item).strip()))
-	final_context = tuple(
-		dict.fromkeys(str(item).strip() for item in final_guard_context if str(item).strip())
+	completion = tuple(
+		dict.fromkeys(str(item).strip() for item in completion_context if str(item).strip())
 	)
 	root_symbol = _range_symbol(transition, 1, len(literals))
 	done_symbol = f"{transition}_done"
 	base_certificate = {
 		**dict(certificate),
 		"artifact_family": "temporal_goal_dfa_append",
-		"wrapper_mode": _WRAPPER_MODE,
-		"controller_strategy": _CONTROLLER_STRATEGY,
+		"wrapper_mode": str(wrapper_mode),
+		"controller_strategy": str(controller_strategy),
 		"transition_symbol": transition,
 		"tree_root_symbol": root_symbol,
 		"done_symbol": done_symbol,
@@ -80,7 +82,7 @@ def compile_transition_repair_tree(
 		"negative_literal_count": sum(
 			literal.polarity == "negative" for literal in literals
 		),
-		"final_guard_recheck": True,
+		"completion_context_checked": True,
 	}
 	plans: list[AgentSpeakPlan] = [
 		AgentSpeakPlan(
@@ -113,7 +115,7 @@ def compile_transition_repair_tree(
 			AgentSpeakPlan(
 				plan_name=f"{done_symbol}_success",
 				trigger=AgentSpeakTrigger("achievement_goal", done_symbol, ()),
-				context=final_context,
+				context=completion,
 				body=(),
 				binding_certificate=(
 					{
@@ -143,6 +145,7 @@ def compile_transition_repair_tree(
 		done_symbol=done_symbol,
 		literal_count=len(literals),
 		tree_height=tree_height,
+		controller_strategy=str(controller_strategy),
 	)
 
 

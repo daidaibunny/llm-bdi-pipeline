@@ -459,8 +459,8 @@ def test_full_test_wrapper_enforces_preservation_safe_action_only_branches(
 	assert plan_count == 11
 	assert "finish_safely" in text
 	assert "finish_by_reusing" not in text
-	assert "!g_selection_test_1_trans_1_achieve_completed(first)." in text
-	assert "!g_selection_test_1_trans_1_achieve_completed(second)." in text
+	assert "!g_selection_test_1_trans_1_selected_completed(first)." in text
+	assert "!g_selection_test_1_trans_1_selected_completed(second)." in text
 
 
 def test_full_test_wrapper_finds_threats_beyond_two_producer_layers(

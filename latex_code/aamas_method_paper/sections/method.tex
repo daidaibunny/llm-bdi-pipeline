@@ -54,11 +54,11 @@ not establish a negative-achievement implementation.
 
 The compiler classifies each declared predicate structurally. A \emph{static
 predicate} never appears in an action add or delete effect and may occur only in
-contexts. A \emph{producible fluent} appears in an add effect and therefore
-receives an atomic module whenever it belongs to evidence or to the transitive
-precondition closure of another module. Thus an internal fluent may be compiled
-even when it was never a training goal. This is how a public module can call a
-schema-required helper without assuming that MOOSE observed that helper as a
+contexts. A \emph{producible fluent} appears in a positive add effect and enters
+the atomic candidate space even when it was never a training goal. This closure
+also runs when the provider supplied only numeric-goal evidence; numeric
+evidence must not suppress producible predicate modules. The same rule provides
+schema-required helpers without assuming that MOOSE observed each helper as a
 goal.
 
 For each target $p(\bar X)$, candidate generation searches the fixed grammar in
@@ -205,8 +205,10 @@ $\langle q,g_q,\varphi_q,A_q,B_q\rangle$: a query identifier, a top-level
 AgentSpeak goal, an \ltlf formula, declared atoms, and optional variable
 bindings. The real \texttt{ltlf2dfa}/MONA output is parsed into DFA states and
 guards. Accepting self-loops labelled \texttt{true} are ignored as plumbing;
-every progress edge on the unique certified accepting path receives one
-query-local transition controller.
+every edge that reduces graph distance to acceptance receives a query-local
+transition controller guarded by its runtime source-state belief. Valuation
+cubes with the same source and target share only their common achievement
+objective; the runtime monitor still evaluates every original complete cube.
 
 One benchmark execution is an externally bound invocation. Before compiling
 guards, the case assignment $B_q$ substitutes lifted parameters in the
@@ -229,7 +231,10 @@ differs from the sealed construction-audit assignment.
 \ELSE
   \STATE $(O,S)\leftarrow\textsc{PreservingPortfolio}(G,\mathcal{L}_D)$
   \IF{no such $(O,S)$ exists}
-    \STATE \textbf{reject}
+    \STATE $(O,S)\leftarrow\textsc{WholeGuardAction}(B,D)$
+    \IF{no such $(O,S)$ exists}
+      \STATE \textbf{reject}
+    \ENDIF
   \ENDIF
 \ENDIF
 \STATE \RETURN $\textsc{BalancedRepairTree}(O,P^-,S)$
@@ -258,7 +263,10 @@ must prove that no feasible $\mayadd$ effect can unify with $N$. If $N$ is
 present, a signed negative leaf may call only a finite query-local branch whose
 net effect has an exact $\mathsf{MustDelete}(N)$, establishes one positive
 sibling, and preserves all other guard obligations. A negative-only edge remains
-a context test and does not wait for an exogenous change.
+a context test and does not wait for an exogenous change. Free parameters of a
+direct deleter are unified with compatible positive-sibling add effects before
+range restriction, so both sides of a functional relocation are bound without
+recognizing the fluent name.
 
 \subsection{Cyclic Threats and Enforced Portfolios}
 
@@ -280,22 +288,61 @@ remains acyclic in reachable states. Acyclic requested data alone is
 insufficient; if branch-level noninterference cannot be proved, compilation
 rejects.
 
+\subsection{Numeric and Whole-Guard Certificates}
+
+A positive integer equality may use a query-local primitive action whose PDDL
+effect has a complete constant delta. Unit deltas are replayed only under a
+strict directional guard, while a larger delta requires the exact predecessor
+value. For a mixed Boolean/numeric guard, the compiler otherwise orders only
+complete action-only net-effect summaries. If these summaries induce a cycle,
+one primitive action is admitted only when symbolic execution proves all
+Boolean additions, negative deletions, and numeric target equalities in the
+same successor state. This bounded certificate does not claim arbitrary
+arithmetic planning. A negated numeric equality remains observation-only when
+no certified change-away action exists.
+
+When a numeric producer has an unsatisfied positive precondition, a preparation
+branch is admitted only if it strictly reduces the missing-precondition count,
+preserves the remaining producer conditions, and leaves the target numeric
+fluent unchanged. A constant-bounded numeric prerequisite is handled
+analogously by a support action whose constant delta strictly reduces the
+prerequisite deficit. These components form a lexicographic ranking; failure to
+construct it causes rejection rather than an unproved recursive repair.
+
+For a strong-Until source state, we intersect the non-progress self-loop cubes
+and obtain source invariants. In the evaluated fragment each such state has one
+positive progress literal. We inspect every primitive prefix of an action-only
+macro. Before progress, no prefix may delete a positive source invariant or add
+a negative one. The establishing step may consume an invariant because the
+left operand of strong Until is required only at preceding trace positions. For
+repeated unit numeric progress, the compiler derives a non-unification guard
+separating the chosen action object from a protected object; an unavoidable
+consuming step is restricted to the exact predecessor value. An observed
+numeric-equality base case terminates recursive preparation.
+
+Composition is capture avoiding. Before a support macro is inserted, its local
+variables are alpha-renamed away from query variables and from variables owned
+by the outer producer. Thus an accidental textual collision cannot force one
+symbol to satisfy unrelated PDDL type or equality constraints.
+
 \subsection{Balanced Declarative Repair Trees}
 
-Given certified order $L_1,\ldots,L_n$, signed negative obligations are visited
-before the ordered positive obligations. A positive leaf checks or achieves
-$L_i$; a negative leaf checks $\neg N_i$ and otherwise calls only its certified
-establishment helper, if one exists. An internal
+Given certified order $L_1,\ldots,L_n$, the tree visits the signed obligations
+in that order. A positive leaf checks or achieves $L_i$; a negative leaf checks
+$\neg N_i$ and otherwise calls only its certified establishment helper, if one
+exists. An internal
 node recursively executes the left and right halves of a contiguous range.
-After one complete pass, a separate completion helper tests all positive and
-negative guard literals in one state; if the guard is still false, it repeats
-the transition controller. This is a declarative goal plan pattern rather than
-an action planner.
+After one pass, a separate completion helper repeats the controller only while
+the runtime monitor remains in its source state. Once a primitive action moves
+the monitor away from that state, the helper returns and top-level dispatch
+continues from the actual DFA state. This is necessary when one atomic macro
+crosses several DFA edges before returning; requiring the immediately adjacent
+target would replay an already completed transition. A rejecting successor has
+no accepting shortcut and fails at top-level dispatch.
 
-For $n=1$, the tree calls the same atomic module and rechecks the same guard, so
-its primitive-action behavior is the singleton case. A singleton numeric
-equality is supported when its selected module has a certified unit monotone
-effect. Mixed predicate/numeric and multi-numeric guards are rejected.
+For $n=1$, the tree calls the same atomic module and checks source-state exit,
+so its primitive-action behavior is the singleton case when one edge is crossed
+and remains correct when a macro crosses several edges.
 
 \subsection{Maintained Domain Library}
 
@@ -344,21 +391,22 @@ programs or completeness of candidate generation.
 \paragraph{Supported-transition composition.}
 
 \textbf{Proposition 3.} Let $B=P^+\land\neg P^-$ be an accepted transition
-guard. If every initially present negative atom has a selected establishment
-branch, and every selected call terminates, establishes its signed literal, and
-satisfies the certified preservation order for earlier positive and negative
-obligations, then one complete repair-tree pass establishes $B$.
+objective. If each required signed repair has an applicable certified branch,
+each selected call terminates, and later repairs preserve earlier obligations,
+then the controller either remains in the source state and retries or leaves it
+through an actual DFA edge enabled by the observed valuation.
 
 \textbf{Proof sketch.} Induct over the certified literal order. Each leaf makes
 its signed literal. A negative establishment branch has an exact net delete.
-The completion summary of every later leaf excludes
-a delete of an earlier positive literal and an add of a forbidden negative
-atom. Consequently all previous positive obligations remain true and negative
-atoms remain absent. The final helper
-checks the complete guard in one observable state. \hfill$\square$
+The completion summary of every later leaf excludes a delete of an earlier
+positive literal and an add of a forbidden negative atom. The deterministic
+runtime monitor evaluates complete transition cubes after every primitive
+action. Therefore source-state exit is evidence of a real enabled DFA edge,
+including when it occurs inside an atomic macro; otherwise the controller
+retries from the same source. \hfill$\square$
 
-The claim applies at successful atomic-module boundaries. It does not cover a
-safety formula that must be observed after every primitive action.
+This is a soundness claim for the declared DFA fragment, not completeness of
+action-strategy synthesis for arbitrary PDDL--LTLf products.
 
 \paragraph{Balanced-tree structure.}
 

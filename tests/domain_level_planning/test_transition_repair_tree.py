@@ -21,7 +21,7 @@ def test_balanced_repair_tree_bounds_trigger_fanout_and_depth() -> None:
 		transition_symbol="g_query_trans_1",
 		shared_context=("query",),
 		positive_literals=literals,
-		final_guard_context=("query", *(literal.atom for literal in literals)),
+		completion_context=("query", *(literal.atom for literal in literals)),
 		certificate={"serialization_certificate": {"threat_edges": []}},
 	)
 
@@ -59,7 +59,7 @@ def test_singleton_transition_tree_preserves_atomic_achievement_call() -> None:
 				achievement_arguments=("X",),
 			),
 		),
-		final_guard_context=("query", "obj_tp(X, item)", "done(X)"),
+		completion_context=("query", "obj_tp(X, item)", "done(X)"),
 		certificate={"serialization_certificate": {"threat_edges": []}},
 	)
 
@@ -76,7 +76,7 @@ def test_singleton_transition_tree_preserves_atomic_achievement_call() -> None:
 	assert compilation.tree_height == 1
 
 
-def test_transition_tree_rechecks_the_complete_guard_once_before_returning() -> None:
+def test_transition_tree_checks_the_supplied_completion_context_before_returning() -> None:
 	literals = (
 		TransitionRepairLiteral("left", "left", ()),
 		TransitionRepairLiteral("right", "right", ()),
@@ -85,7 +85,7 @@ def test_transition_tree_rechecks_the_complete_guard_once_before_returning() -> 
 		transition_symbol="g_query_trans_1",
 		shared_context=("query", "not blocked"),
 		positive_literals=literals,
-		final_guard_context=("query", "left", "right", "not blocked"),
+		completion_context=("query", "left", "right", "not blocked"),
 		certificate={"serialization_certificate": {"threat_edges": [[0, 1]]}},
 	)
 
@@ -120,7 +120,7 @@ def test_negative_guard_leaf_calls_only_a_certified_establishment_helper() -> No
 				polarity="negative",
 			),
 		),
-		final_guard_context=("query", "not available(item)"),
+		completion_context=("query", "not available(item)"),
 		certificate={"serialization_certificate": {"negative_guard_count": 1}},
 	)
 

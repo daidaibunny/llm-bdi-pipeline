@@ -180,25 +180,41 @@ library.
 
 1. Parse validated lifted LTLf JSON with the real `ltlf2dfa` and MONA
    toolchain. Do not use the removed ordered-sequence fast path.
-2. Give every progress edge on the supported accepting path one transition
-   controller.
+2. Give every DFA edge that strictly reduces graph distance to acceptance one
+   transition controller guarded by the current query-local monitor state.
 3. Treat a conjunction on one edge as one achievement block whose literals
    must hold in the same observable state.
 4. Treat a negative literal such as `not calibrated(C,R)` as a signed context
    obligation, never as `!not_calibrated(C,R)`. A query-local helper may
-   establish it only through a positive sibling branch with an exact PDDL net
-   `MustDelete`, sibling preservation, and no forbidden completion `MayAdd`.
+   establish it only through a certified positive-sibling branch or single PDDL
+   action with exact net `MustDelete`, sibling preservation, and no forbidden
+   completion `MayAdd`.
 5. Build a threat graph from certified completion summaries. An edge
    `G_j -> G_i` means a module for `G_j` may delete `G_i`, so `G_j` must be
    repaired first.
 6. For a cyclic threat graph, use only a certified preserving portfolio or a
    supported ranking proof; otherwise reject.
-7. Compile the certified order into a balanced binary repair tree. The tree is
+7. For mixed Boolean/numeric guards, use complete action-only net Boolean
+   effects and constant-integer numeric deltas; index helper selection by the
+   full literal atom and leave uncertified literals observation-only. Explain
+   strict unit progress, exact non-unit predecessor guards, and the complete
+   single-action whole-guard certificate as three bounded strategies rather
+   than claiming arbitrary numeric planning.
+8. For an Until source state, extract common waiting-loop literals as source
+   invariants. Require primitive-prefix preservation until the single positive
+   progress literal is established. Explain lexicographic predicate/numeric
+   precondition preparation, repeatable non-unifying numeric steps, exact
+   terminal predecessors, and capture-avoiding composition.
+9. Compile the certified order into a balanced binary repair tree. The tree is
    an AgentSpeak indexing structure with trigger fan-out at most two; it does
    not reorder DFA transitions or add planning semantics.
-8. Explain the atomic-completion observation boundary. Properties that must
-   hold after every primitive action require an external DFA monitor and are
-   outside the current implementation.
+10. Advance the real deterministic finite automaton after the initial valuation
+   and every successful primitive PDDL action. Explain that the integrated
+   runtime monitor gives the declared formula fragment primitive-step trace
+   semantics, while action-strategy synthesis remains incomplete. A transition
+   helper returns on source-state exit so an atomic macro may cross several DFA
+   edges; the top-level controller always dispatches from the actual monitor
+   state.
 
 ### 5. Formal Guarantees
 
@@ -214,14 +230,18 @@ The main paper should contain:
 2. **Certified candidate-space optimality:** Clingo satisfies every encoded
    evidence and closure obligation and returns the lexicographic optimum inside
    the generated candidate space.
-3. **Supported-transition composition soundness:** if the negative obligations
-   hold when the transition starts, selected modules terminate, and their
-   certified completion effects preserve earlier positive and negative
-   obligations, one controller pass establishes the complete DFA transition
-   guard.
-4. **Balanced-tree structure:** for `n` literals, the generated query-local
-   tree has `3n+2` plans, maximum trigger fan-out two, logarithmic nesting depth,
-   linear work per pass, and the same certified literal order.
+3. **Supported-transition composition soundness:** if signed obligations are
+   initially satisfied or established by their certified helpers, selected
+   modules terminate, and their certified completion effects preserve earlier
+   positive and negative obligations, primitive-step monitor advancement leaves
+   the source state only through a real DFA edge whose complete cube holds.
+4. **Balanced-tree structure:** for `n` signed literals and `e` certified repair
+   helpers, the generated query-local tree has `2n+e+2` plans, maximum trigger
+   fan-out two, logarithmic nesting depth, linear work per pass, and the same
+   certified literal order.
+5. **Runtime-monitor trace fidelity:** monitor-state beliefs are the result of
+   deterministic DFA transition evaluation after every primitive action, not a
+   second planning semantics or a domain fluent.
 
 Every theorem must state its assumptions next to the claim. Do not elevate
 candidate-generation completeness, arbitrary AgentSpeak optimality, arbitrary
@@ -279,9 +299,10 @@ compiler that emits executable domain modules and query-local controllers.
 
 Limitations must correspond to observed rejection categories and implemented
 bounds: MOOSE is the only experimentally instantiated evidence provider; the
-schema grammar is bounded; cleanup admits one certified release; mixed numeric
-conjunctions and uncertified cycles are rejected; primitive-state safety needs
-an external monitor.
+schema grammar is bounded; cleanup admits one certified release; uncertified
+cycles are rejected; numeric disequality achievement remains observation-only
+without a certified change-away branch; and runtime monitoring does not make
+action-strategy synthesis complete for arbitrary PDDL-times-LTLf products.
 
 The Conclusion answers three questions only: what representation gap was
 closed, why the output can be executed by a BDI agent, and which temporal goals

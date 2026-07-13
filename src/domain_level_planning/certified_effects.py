@@ -17,6 +17,7 @@ from .atomic_module_synthesis import _ParsedAction
 from .atomic_module_synthesis import _FunctionalPredicateGroup
 from .atomic_module_synthesis import _functional_predicate_groups
 from .atomic_module_synthesis import PDDLLiteralSchema
+from .pddl_types import OBJ_TP_PREDICATE
 from .pddl_types import parameter_type
 from .pddl_types import type_closure
 
@@ -167,7 +168,7 @@ def query_local_preservation_alias_plans(
 	aliases: list[AgentSpeakPlan] = []
 	helper_by_predicate: dict[str, str] = {}
 	for predicate, plans in selection.plans_by_predicate.items():
-		helper_symbol = _safe_agentspeak_identifier(f"{helper_prefix}_achieve_{predicate}")
+		helper_symbol = _safe_agentspeak_identifier(f"{helper_prefix}_selected_{predicate}")
 		helper_by_predicate[predicate] = helper_symbol
 		for branch_index, plan in enumerate(plans, start=1):
 			rewritten_body = tuple(
@@ -319,6 +320,17 @@ def negative_guard_establishment_alias_plans(
 					negative_atom=_effect_atom_text(forbidden),
 				)
 				selected_forbidden.append(alias)
+		selected_forbidden.extend(
+			_direct_negative_action_establishers(
+				actions=actions,
+				forbidden=forbidden,
+				forbidden_atoms=forbidden_atoms,
+				goal_atoms=goal_atoms,
+				helper_symbol=helper_symbol,
+				helper_arguments=query_arguments,
+				type_tokens=domain.types,
+			),
+		)
 		if selected_forbidden:
 			helper_by_negative_index[negative_index] = (
 				helper_symbol,
@@ -335,6 +347,242 @@ def negative_guard_establishment_alias_plans(
 		),
 		"negative_guard_establishers": establishers,
 	}
+
+
+def _direct_negative_action_establishers(
+	*,
+	actions: Sequence[_ParsedAction],
+	forbidden: EffectAtom,
+	forbidden_atoms: Sequence[EffectAtom],
+	goal_atoms: Sequence[EffectAtom],
+	helper_symbol: str,
+	helper_arguments: tuple[str, ...],
+	type_tokens: Sequence[str],
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Compile one-step PDDL deleters whose net effects preserve the full guard."""
+
+	plans: list[AgentSpeakPlan] = []
+	for action_index, action in enumerate(actions, start=1):
+		for delete_index, delete_effect in enumerate(action.delete_effects, start=1):
+			binding = _bind_delete_schema_to_forbidden(
+				action=action,
+				delete_effect=delete_effect,
+				forbidden=forbidden,
+				preferred_add_atoms=goal_atoms,
+				type_tokens=type_tokens,
+			)
+			if binding is None:
+				continue
+			mapped_deletes = tuple(
+				_mapped_action_schema_atom(effect, binding=binding)
+				for effect in action.delete_effects
+			)
+			mapped_adds = tuple(
+				_mapped_action_schema_atom(effect, binding=binding)
+				for effect in action.add_effects
+			)
+			if not any(
+				_effect_atom_has_same_identity(effect, forbidden)
+				for effect in mapped_deletes
+			):
+				continue
+			if any(
+				_atoms_unify(effect, guarded, type_tokens=type_tokens)
+				for effect in mapped_adds
+				for guarded in forbidden_atoms
+			):
+				continue
+			if any(
+				_atoms_unify(effect, protected, type_tokens=type_tokens)
+				for effect in mapped_deletes
+				for protected in goal_atoms
+			):
+				continue
+			context = _direct_negative_action_context(
+				action=action,
+				binding=binding,
+			)
+			if context is None:
+				continue
+			plans.append(
+				AgentSpeakPlan(
+					plan_name=(
+						f"{helper_symbol}_{action.name}_{action_index}_{delete_index}"
+					),
+					trigger=AgentSpeakTrigger(
+						"achievement_goal",
+						helper_symbol,
+						helper_arguments,
+					),
+					context=context,
+					body=(
+						AgentSpeakBodyStep(
+							"action",
+							action.name,
+							tuple(binding[parameter].symbol for parameter in action.parameters),
+						),
+					),
+					binding_certificate=(
+						{
+							"artifact_family": "temporal_goal_dfa_append",
+							"wrapper_role": (
+								"query_local_negative_guard_establishment_branch"
+							),
+							"source_action": action.name,
+							"established_negative_atom": _effect_atom_text(forbidden),
+							"certificate_kind": "pddl_single_action_must_delete",
+							"positive_siblings_preserved": True,
+							"negative_siblings_preserved": True,
+						},
+					),
+				),
+			)
+	return tuple(plans)
+
+
+def _bind_delete_schema_to_forbidden(
+	*,
+	action: _ParsedAction,
+	delete_effect: PDDLLiteralSchema,
+	forbidden: EffectAtom,
+	preferred_add_atoms: Sequence[EffectAtom] = (),
+	type_tokens: Sequence[str],
+) -> dict[str, EffectTerm] | None:
+	if (
+		delete_effect.predicate != forbidden.predicate
+		or len(delete_effect.arguments) != len(forbidden.arguments)
+	):
+		return None
+	binding: dict[str, EffectTerm] = {}
+	for schema_argument, forbidden_term in zip(
+		delete_effect.arguments,
+		forbidden.arguments,
+	):
+		if schema_argument not in action.parameters:
+			if forbidden_term.is_variable or forbidden_term.symbol != schema_argument:
+				return None
+			continue
+		required_type = action.parameter_types.get(schema_argument, "object")
+		if not _required_types_are_consistent(
+			forbidden_term.required_types | frozenset((required_type,)),
+			type_tokens,
+		):
+			return None
+		previous = binding.get(schema_argument)
+		if previous is not None and previous != forbidden_term:
+			return None
+		binding[schema_argument] = forbidden_term
+	for preferred in preferred_add_atoms:
+		for add_effect in action.add_effects:
+			candidate = _extend_action_schema_effect_binding(
+				binding,
+				action=action,
+				schema=add_effect,
+				target=preferred,
+				type_tokens=type_tokens,
+			)
+			if candidate is not None:
+				binding = candidate
+				break
+	used_symbols = {term.symbol for term in binding.values()}
+	local_index = 0
+	local_scope = f"negative-deleter:{action.name}"
+	for parameter in action.parameters:
+		if parameter in binding:
+			continue
+		while f"V{local_index}" in used_symbols:
+			local_index += 1
+		symbol = f"V{local_index}"
+		local_index += 1
+		used_symbols.add(symbol)
+		binding[parameter] = EffectTerm(
+			symbol,
+			variable_scope=local_scope,
+			required_types=frozenset((action.parameter_types.get(parameter, "object"),)),
+		)
+	return binding
+
+
+def _extend_action_schema_effect_binding(
+	binding: Mapping[str, EffectTerm],
+	*,
+	action: _ParsedAction,
+	schema: PDDLLiteralSchema,
+	target: EffectAtom,
+	type_tokens: Sequence[str],
+) -> dict[str, EffectTerm] | None:
+	"""Bind free action parameters from a compatible query guard atom."""
+
+	if schema.predicate != target.predicate or len(schema.arguments) != len(
+		target.arguments
+	):
+		return None
+	result = dict(binding)
+	for schema_argument, target_term in zip(schema.arguments, target.arguments):
+		if schema_argument not in action.parameters:
+			if target_term.is_variable or target_term.symbol != schema_argument:
+				return None
+			continue
+		required_type = action.parameter_types.get(schema_argument, "object")
+		if not _required_types_are_consistent(
+			target_term.required_types | frozenset((required_type,)),
+			type_tokens,
+		):
+			return None
+		previous = result.get(schema_argument)
+		if previous is not None and previous != target_term:
+			return None
+		result[schema_argument] = target_term
+	return result
+
+
+def _mapped_action_schema_atom(
+	literal: PDDLLiteralSchema,
+	*,
+	binding: Mapping[str, EffectTerm],
+) -> EffectAtom:
+	return EffectAtom(
+		literal.predicate,
+		tuple(
+			binding.get(argument, EffectTerm(argument))
+			for argument in literal.arguments
+		),
+	)
+
+
+def _direct_negative_action_context(
+	*,
+	action: _ParsedAction,
+	binding: Mapping[str, EffectTerm],
+) -> tuple[str, ...] | None:
+	contexts: list[str] = []
+	positive_parameters = {
+		argument
+		for precondition in action.preconditions
+		if precondition.is_positive
+		for argument in precondition.arguments
+		if argument in action.parameters
+	}
+	for parameter in action.parameters:
+		term = binding[parameter]
+		if not term.is_variable or term.variable_scope == "query":
+			continue
+		required_type = action.parameter_types.get(parameter, "object")
+		if required_type == "object" and parameter not in positive_parameters:
+			return None
+	for parameter in action.parameters:
+		term = binding[parameter]
+		required_type = action.parameter_types.get(parameter, "object")
+		if required_type != "object":
+			contexts.append(f"{OBJ_TP_PREDICATE}({term.symbol}, {required_type})")
+	for precondition in (
+		*(item for item in action.preconditions if item.is_positive),
+		*(item for item in action.preconditions if not item.is_positive),
+	):
+		atom = _mapped_action_schema_atom(precondition, binding=binding)
+		call = _effect_atom_text(atom)
+		contexts.append(call if precondition.is_positive else f"not {call}")
+	return tuple(dict.fromkeys(contexts))
 
 
 def _summary_may_add_any_forbidden(

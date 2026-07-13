@@ -797,7 +797,7 @@ def guard_transition_replay_wrapper_lines(
 		transition_symbol=transition_name,
 		shared_context=(entry_proposition,),
 		positive_literals=tuple(repair_literals),
-		final_guard_context=(entry_proposition, *atoms),
+		completion_context=(entry_proposition, *atoms),
 		certificate={
 			"query_entry_proposition": entry_proposition,
 			"transition_index": 1,

@@ -159,8 +159,15 @@ def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) 
 	assert result["success"] is True
 	assert result["mode"] == "evaluation_pddl_goal_wrapper_bridge"
 	assert "numeric_minecraft_test_1." in asl
-	assert "+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 <-" in asl
-	assert "\t!g_numeric_minecraft_test_1_trans_1." in asl
+	assert (
+		"+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 & "
+		"g_numeric_minecraft_test_1_monitor_accepting <-"
+	) in asl
+	assert (
+		"+!g_numeric_minecraft_test_1 : numeric_minecraft_test_1 & "
+		"g_numeric_minecraft_test_1_monitor_state_"
+	) in asl
+	assert "\t!g_numeric_minecraft_test_1_trans_1;" in asl
 	assert (
 		"+!g_numeric_minecraft_test_1_trans_1_repair_1_1 : "
 		"numeric_minecraft_test_1 & not pogo_sticks_to_make(0) <-"
@@ -168,7 +175,8 @@ def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) 
 	assert "\t!pogo_sticks_to_make(0)." in asl
 	assert (
 		"+!g_numeric_minecraft_test_1_trans_1_done : "
-		"numeric_minecraft_test_1 & pogo_sticks_to_make(0) <-"
+		"numeric_minecraft_test_1 & not "
+		"g_numeric_minecraft_test_1_monitor_state_"
 	) in asl
 	assert payload["initial_beliefs"] == ["numeric_minecraft_test_1"]
 	assert (

@@ -146,7 +146,10 @@ def _guard_transition_certificate(plan) -> dict | None:
 		if (
 			isinstance(certificate, dict)
 			and certificate.get("artifact_family") == "temporal_goal_dfa_append"
-			and certificate.get("wrapper_mode") == "dfa_guard_transition_replay"
+			and certificate.get("wrapper_mode") in {
+				"dfa_guard_transition_replay",
+				"runtime_monitored_dfa_product",
+			}
 		):
 			return certificate
 	return None
@@ -190,6 +193,24 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 				and not tuple(step.arguments or ())
 				for step in body
 			)
+		)
+	if role == "runtime_monitor_accepting_entry":
+		return (
+			len(context) == 2
+			and context[0] == entry_proposition
+			and context[1].endswith("_monitor_accepting")
+			and not body
+		)
+	if role == "runtime_monitor_state_dispatch":
+		return (
+			len(context) == 2
+			and context[0] == entry_proposition
+			and "_monitor_state_" in context[1]
+			and len(body) == 2
+			and body[0].kind == "subgoal"
+			and body[0].symbol.startswith(f"{plan.trigger.symbol}_trans_")
+			and not tuple(body[0].arguments or ())
+			and _is_nullary_subgoal(body[1], plan.trigger.symbol)
 		)
 	if role == "transition_done":
 		return not body and "_trans_" in plan.trigger.symbol

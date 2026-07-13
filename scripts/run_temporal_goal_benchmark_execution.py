@@ -407,6 +407,7 @@ def validate_execution_task(
 			goal_name=task.goal_case.goal_name,
 			output_dir=task.output_dir / "jason",
 			runtime_artifacts=runtime_artifacts,
+			temporal_dfa_payload=dfa_payload,
 		)
 	except Exception as error:  # noqa: BLE001 - persisted as runtime infrastructure failure.
 		record = {

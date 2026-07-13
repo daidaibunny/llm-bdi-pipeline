@@ -25,6 +25,8 @@ from .lifted_ltlf_goal_schema import LTLfAtomSpec
 from .dfa_controller import inspect_progress_requests_from_dfa_state
 from .dfa_controller import progress_transitions_from_dfa_state
 from .lifted_ltlf_goal_schema import LiftedLTLfGoalCase
+from .atomic_module_synthesis import _ParsedAction
+from .atomic_module_synthesis import _numeric_condition_contexts
 from .pddl_support import assert_compilable_pddl_files
 from .certified_effects import threat_safe_positive_literal_order
 from .certified_effects import preservation_safe_plan_selection
@@ -34,7 +36,7 @@ from .transition_repair_tree import TransitionRepairLiteral
 from .transition_repair_tree import compile_transition_repair_tree
 
 
-_DFA_GUARD_TRANSITION_WRAPPER_MODE = "dfa_guard_transition_replay"
+_DFA_GUARD_TRANSITION_WRAPPER_MODE = "runtime_monitored_dfa_product"
 
 
 @dataclass(frozen=True)
@@ -62,6 +64,15 @@ class DFALiteral:
 	@property
 	def atom(self) -> str:
 		return _call(self.predicate, self.arguments)
+
+
+@dataclass(frozen=True)
+class _TemporalPlanEffects:
+	"""Net primitive effects of one action-only atomic branch."""
+
+	adds: frozenset[tuple[str, tuple[str, ...]]]
+	deletes: frozenset[tuple[str, tuple[str, ...]]]
+	numeric_deltas: tuple[tuple[str, tuple[str, ...], int], ...]
 
 
 def validate_guard_transition_dfa(
@@ -210,28 +221,23 @@ def append_temporal_goal_to_library(
 		),
 	}
 	plans = list(plan_library.plans)
-	transition_path = _unique_accepting_progress_path(
+	transition_path = _monitored_progress_objectives(
 		dfa_payload=dfa_payload,
 		declared_arities=declared_arities,
 	)
-	if transition_path is None:
-		raise ValueError(
-			"nonlinear_temporal_goal_not_supported: current ASL append emits a "
-			"sequence of query-local transition helpers and therefore supports only "
-			"one progress path from the initial DFA state to an "
-			"accepting state. Branching or state-dependent temporal goals require "
-			"an external DFA/reward-machine controller."
-		)
 	progress_plans = _guard_transition_wrapper_plans(
 		goal_name=goal_name,
 		transition_path=transition_path,
+		accepting_states=tuple(dfa_payload.get("accepting_states") or ()),
 		domain=domain,
 		plan_library=plan_library,
 	)
 	entry_proposition = _query_entry_proposition(goal_name)
 	append_record["wrapper_mode"] = _DFA_GUARD_TRANSITION_WRAPPER_MODE
-	append_record["transition_controller_strategy"] = (
-		"balanced_transition_repair_tree"
+	append_record["transition_controller_strategy"] = "monitored_balanced_repair_tree"
+	append_record["runtime_monitor_required"] = True
+	append_record["runtime_monitor_accepting_belief"] = (
+		dfa_monitor_accepting_belief(goal_name)
 	)
 	append_record["query_entry_proposition"] = entry_proposition
 	append_record["progress_plan_count"] = len(progress_plans)
@@ -245,8 +251,9 @@ def append_temporal_goal_to_library(
 	append_record["negative_guard_policy"] = (
 		"completion_context_with_conditional_may_add_preservation"
 	)
-	append_record["negative_achievement_supported"] = False
-	append_record["accepting_plan_count"] = 0
+	append_record["negative_atomic_module_supported"] = False
+	append_record["negative_guard_establishment_supported"] = True
+	append_record["accepting_plan_count"] = 1
 	append_record["progress_state_coverage"] = _progress_transition_state_coverage(
 		transition_path=transition_path,
 	)
@@ -498,46 +505,105 @@ def _symbol_for(predicate: str, args: Sequence[str]) -> str:
 	return "_".join(str(item).strip() for item in items if str(item).strip())
 
 
-def _unique_accepting_progress_path(
+def _monitored_progress_objectives(
 	*,
 	dfa_payload: Mapping[str, Any],
 	declared_arities: Mapping[str, int],
-) -> tuple[tuple[tuple[DFALiteral, ...], Mapping[str, str]], ...] | None:
-	"""Return the unique accepting-progress path represented by the DFA."""
+) -> tuple[tuple[tuple[DFALiteral, ...], Mapping[str, str]], ...]:
+	"""Group same-target progress edges into monitor-confirmed repair objectives."""
 
-	progress_transitions = _all_progress_transitions(dfa_payload)
-	if not progress_transitions:
-		return None
-	initial_state = _required_initial_state(dfa_payload)
-	accepting_states = frozenset(
-		str(state).strip()
-		for state in tuple(dfa_payload.get("accepting_states") or ())
-		if str(state).strip()
+	grouped: dict[tuple[str, str], list[dict[str, str]]] = {}
+	for transition in _all_progress_transitions(dfa_payload):
+		key = (transition["source_state"], transition["target_state"])
+		grouped.setdefault(key, []).append(transition)
+	objectives: list[tuple[tuple[DFALiteral, ...], Mapping[str, str]]] = []
+	for (source_state, target_state), transitions in grouped.items():
+		parsed = tuple(
+			_parse_guard_literals(transition["raw_label"])
+			for transition in transitions
+		)
+		for literals in parsed:
+			for literal in literals:
+				_validate_declared_literal(literal, declared_arities=declared_arities)
+		common = tuple(
+			literal
+			for literal in parsed[0]
+			if all(literal in literals for literals in parsed[1:])
+		)
+		source_invariants = _source_state_invariant_literals(
+			dfa_payload,
+			source_state=source_state,
+			progress_literals=common,
+		)
+		objectives.append(
+			(
+				common,
+				{
+					"source_state": source_state,
+					"target_state": target_state,
+					"raw_label": " & ".join(
+						(
+							literal.atom
+							if literal.polarity == "positive"
+							else f"not {literal.atom}"
+						)
+						for literal in common
+					) or "true",
+					"source_guard_labels": tuple(
+						transition["raw_label"] for transition in transitions
+					),
+					"source_invariant_literals": source_invariants,
+				},
+			)
+		)
+	return tuple(objectives)
+
+
+def _source_state_invariant_literals(
+	dfa_payload: Mapping[str, Any],
+	*,
+	source_state: str,
+	progress_literals: Sequence[DFALiteral],
+) -> tuple[DFALiteral, ...]:
+	"""Return literals common to all source-state waiting self-loop cubes."""
+
+	self_loop_cubes = tuple(
+		_parse_guard_literals(str(transition.get("raw_label") or ""))
+		for transition in tuple(dfa_payload.get("guarded_transitions") or ())
+		if str(transition.get("source_state") or "") == source_state
+		and str(transition.get("target_state") or "") == source_state
+		and str(transition.get("raw_label") or "").strip().lower() != "true"
 	)
-	if not accepting_states:
-		return None
-	transitions_by_source: dict[str, list[dict[str, str]]] = {}
-	for transition in progress_transitions:
-		transitions_by_source.setdefault(transition["source_state"], []).append(transition)
-	current_state = initial_state
-	visited: set[str] = set()
-	path: list[tuple[tuple[DFALiteral, ...], Mapping[str, str]]] = []
-	while current_state not in accepting_states:
-		if current_state in visited:
-			return None
-		visited.add(current_state)
-		outgoing = transitions_by_source.get(current_state) or []
-		if len(outgoing) != 1:
-			return None
-		transition = outgoing[0]
-		literals = _parse_guard_literals(transition["raw_label"])
-		for literal in literals:
-			_validate_declared_literal(literal, declared_arities=declared_arities)
-		path.append((literals, transition))
-		current_state = transition["target_state"]
-	if len(path) != len(progress_transitions):
-		return None
-	return tuple(path)
+	if not self_loop_cubes:
+		return ()
+	progress_atoms = {literal.atom for literal in progress_literals}
+	return tuple(
+		literal
+		for literal in self_loop_cubes[0]
+		if literal.atom not in progress_atoms
+		and all(literal in cube for cube in self_loop_cubes[1:])
+	)
+
+
+def dfa_monitor_state_belief(goal_name: str, state: object) -> str:
+	"""Return the reserved query-local percept for one runtime DFA state."""
+
+	goal = _safe_query_identifier(goal_name)
+	state_token = _safe_query_identifier(str(state or "state"))
+	return f"{goal}_monitor_state_{state_token}"
+
+
+def dfa_monitor_accepting_belief(goal_name: str) -> str:
+	"""Return the reserved query-local DFA acceptance percept."""
+
+	return f"{_safe_query_identifier(goal_name)}_monitor_accepting"
+
+
+def _safe_query_identifier(value: str) -> str:
+	text = re.sub(r"[^A-Za-z0-9_]+", "_", str(value or "")).strip("_").lower()
+	if not text:
+		return "query"
+	return f"q_{text}" if text[0].isdigit() else text
 
 
 def _guard_transition_wrapper_plans(
@@ -546,6 +612,7 @@ def _guard_transition_wrapper_plans(
 	transition_path: Sequence[
 		tuple[tuple[DFALiteral, ...], Mapping[str, str]]
 	],
+	accepting_states: Sequence[object],
 	domain: PDDLDomain,
 	plan_library: PlanLibrary,
 ) -> tuple[AgentSpeakPlan, ...]:
@@ -558,24 +625,51 @@ def _guard_transition_wrapper_plans(
 	)
 	plans: list[AgentSpeakPlan] = [
 		AgentSpeakPlan(
-			plan_name=f"{goal_name}_trans_sequence",
+			plan_name=f"{goal_name}_monitor_accepting",
 			trigger=AgentSpeakTrigger("achievement_goal", goal_name, ()),
-			context=(entry_proposition,),
-			body=tuple(
-				AgentSpeakBodyStep("subgoal", transition_name, ())
-				for transition_name in transition_names
-			),
+			context=(entry_proposition, dfa_monitor_accepting_belief(goal_name)),
+			body=(),
 			binding_certificate=(
 				{
 					"artifact_family": "temporal_goal_dfa_append",
 					"wrapper_mode": _DFA_GUARD_TRANSITION_WRAPPER_MODE,
-					"wrapper_role": "transition_sequence_entry",
+					"wrapper_role": "runtime_monitor_accepting_entry",
 					"query_entry_proposition": entry_proposition,
-					"progress_transition_count": len(transition_names),
+					"accepting_states": [str(state) for state in accepting_states],
 				},
 			),
 		),
 	]
+	for (literals, transition), transition_name in zip(
+		tuple(transition_path),
+		transition_names,
+	):
+		source_state = str(transition.get("source_state") or "")
+		plans.append(
+			AgentSpeakPlan(
+				plan_name=f"{transition_name}_monitor_dispatch",
+				trigger=AgentSpeakTrigger("achievement_goal", goal_name, ()),
+				context=(
+					entry_proposition,
+					dfa_monitor_state_belief(goal_name, source_state),
+				),
+				body=(
+					AgentSpeakBodyStep("subgoal", transition_name, ()),
+					AgentSpeakBodyStep("subgoal", goal_name, ()),
+				),
+				binding_certificate=(
+					{
+						"artifact_family": "temporal_goal_dfa_append",
+						"wrapper_mode": _DFA_GUARD_TRANSITION_WRAPPER_MODE,
+						"wrapper_role": "runtime_monitor_state_dispatch",
+						"query_entry_proposition": entry_proposition,
+						"source_state": source_state,
+						"target_state": str(transition.get("target_state") or ""),
+						"objective_literals": [literal.atom for literal in literals],
+					},
+				),
+			),
+		)
 	for transition_index, ((literals, transition), transition_name) in enumerate(
 		zip(tuple(transition_path), transition_names),
 		start=1,
@@ -597,6 +691,9 @@ def _guard_transition_wrapper_plans(
 			_certified_positive_literal_serialization(
 				positive_literals,
 				negative_literals=negative_literals,
+				source_invariants=tuple(
+					transition.get("source_invariant_literals") or ()
+				),
 				plan_library=plan_library,
 				domain=domain,
 				helper_prefix=transition_name,
@@ -605,11 +702,14 @@ def _guard_transition_wrapper_plans(
 		plans.extend(preservation_alias_plans)
 		plans.extend(negative_establishment_alias_plans)
 		type_contexts = _guard_variable_type_contexts(literals, domain=domain)
-		guard_context = (
+		source_state_belief = dfa_monitor_state_belief(
+			goal_name,
+			str(transition.get("source_state") or ""),
+		)
+		completion_context = (
 			entry_proposition,
 			*type_contexts,
-			*tuple(literal.atom for literal in positive_literals),
-			*tuple(f"not {literal.atom}" for literal in negative_literals),
+			f"not {source_state_belief}",
 		)
 		certificate = {
 			"artifact_family": "temporal_goal_dfa_append",
@@ -619,22 +719,10 @@ def _guard_transition_wrapper_plans(
 			"source_state": str(transition.get("source_state") or ""),
 			"target_state": str(transition.get("target_state") or ""),
 			"raw_label": str(transition.get("raw_label") or ""),
+			"completion_condition": "source_state_exit",
+			"completion_source_state_belief": source_state_belief,
 			"serialization_certificate": serialization_certificate,
 		}
-		if not positive_literals:
-			plans.append(
-				AgentSpeakPlan(
-					plan_name=f"{transition_name}_done",
-					trigger=AgentSpeakTrigger("achievement_goal", transition_name, ()),
-					context=guard_context,
-					body=(),
-					binding_certificate=(
-						{**certificate, "wrapper_role": "transition_done"},
-					),
-				),
-			)
-			continue
-		shared_context = (entry_proposition, *type_contexts)
 		negative_repair_literals = tuple(
 			TransitionRepairLiteral(
 				atom=literal.atom,
@@ -648,24 +736,63 @@ def _guard_transition_wrapper_plans(
 			)
 			for index, literal in enumerate(negative_literals)
 		)
+		if not positive_literals and not any(
+			literal.achievement_symbol for literal in negative_repair_literals
+		):
+			plans.append(
+				AgentSpeakPlan(
+					plan_name=f"{transition_name}_done",
+					trigger=AgentSpeakTrigger("achievement_goal", transition_name, ()),
+					context=completion_context,
+					body=(),
+					binding_certificate=(
+						{**certificate, "wrapper_role": "transition_done"},
+					),
+				),
+			)
+			continue
+		shared_context = (entry_proposition, *type_contexts)
 		positive_repair_literals = tuple(
 			TransitionRepairLiteral(
 				atom=literal.atom,
-				achievement_symbol=preservation_helper_by_predicate.get(
-					literal.predicate,
-					literal.predicate,
+				achievement_symbol=(
+					None
+					if literal.atom
+					in set(
+						serialization_certificate.get(
+							"observation_only_literals",
+							(),
+						)
+					)
+					else
+					preservation_helper_by_predicate.get(literal.atom)
+					or preservation_helper_by_predicate.get(literal.predicate)
+					or (
+						literal.predicate
+						if _literal_has_achievement_branch(
+							literal,
+							plan_library=plan_library,
+						)
+						else None
+					)
 				),
 				achievement_arguments=literal.arguments,
 			)
 			for literal in positive_literals
 		)
-		repair_literals = (*negative_repair_literals, *positive_repair_literals)
+		repair_literals = (
+			(*positive_repair_literals, *negative_repair_literals)
+			if serialization_certificate.get("repair_positive_before_negative") is True
+			else (*negative_repair_literals, *positive_repair_literals)
+		)
 		tree_compilation = compile_transition_repair_tree(
 			transition_symbol=transition_name,
 			shared_context=shared_context,
 			positive_literals=repair_literals,
-			final_guard_context=guard_context,
+			completion_context=completion_context,
 			certificate=certificate,
+			wrapper_mode=_DFA_GUARD_TRANSITION_WRAPPER_MODE,
+			controller_strategy="monitored_balanced_repair_tree",
 		)
 		plans.extend(tree_compilation.plans)
 	return tuple(plans)
@@ -675,6 +802,7 @@ def _certified_positive_literal_serialization(
 	literals: Sequence[DFALiteral],
 	*,
 	negative_literals: Sequence[DFALiteral] = (),
+	source_invariants: Sequence[DFALiteral] = (),
 	plan_library: PlanLibrary,
 	domain: PDDLDomain,
 	helper_prefix: str,
@@ -695,29 +823,125 @@ def _certified_positive_literal_serialization(
 		for literal in all_literals
 		if literal.predicate in declared_numeric_functions
 	)
-	if numeric_literals and len(all_literals) > 1:
-		raise ValueError(
-			"uncertified_numeric_conjunctive_transition: numeric resource atoms in a "
-			"multi-literal DFA guard require numeric effect-preservation certificates.",
+	literal_signatures = tuple(
+		(literal.predicate, literal.arguments) for literal in literal_tuple
+	)
+	negative_literal_signatures = tuple(
+		(literal.predicate, literal.arguments) for literal in negative_literal_tuple
+	)
+	if numeric_literals and literal_tuple:
+		try:
+			(
+				ordered_indexes,
+				certificate,
+				mixed_aliases,
+				mixed_helpers,
+			) = _mixed_numeric_literal_order(
+				literal_tuple,
+				negative_literals=negative_literal_tuple,
+				source_invariants=tuple(source_invariants),
+				plan_library=plan_library,
+				domain=domain,
+				helper_prefix=helper_prefix,
+			)
+		except ValueError as error:
+			if not str(error).startswith(
+				"cyclic_conjunctive_transition_not_certified"
+			):
+				raise
+			direct_guard = _single_action_whole_guard_plans(
+				literal_tuple,
+				negative_literals=negative_literal_tuple,
+				domain=domain,
+				helper_prefix=helper_prefix,
+			)
+			if direct_guard is None:
+				raise
+			(
+				ordered_indexes,
+				certificate_payload,
+				aliases,
+				helper_by_predicate,
+			) = direct_guard
+			return (
+				tuple(literal_tuple[index] for index in ordered_indexes),
+				certificate_payload,
+				aliases,
+				helper_by_predicate,
+				(),
+				{},
+			)
+		establishment_aliases, establishment_helpers, establishment = (
+			negative_guard_establishment_alias_plans(
+				literal_signatures,
+				negative_literals=negative_literal_signatures,
+				plan_library=plan_library,
+				domain=domain,
+				helper_prefix=helper_prefix,
+			)
+		)
+		certificate.update(establishment)
+		return (
+			tuple(literal_tuple[index] for index in ordered_indexes),
+			certificate,
+			mixed_aliases,
+			mixed_helpers,
+			establishment_aliases,
+			establishment_helpers,
 		)
 	if not literal_tuple:
+		establishment_aliases, establishment_helpers, establishment = (
+			negative_guard_establishment_alias_plans(
+				(),
+				negative_literals=negative_literal_signatures,
+				plan_library=plan_library,
+				domain=domain,
+				helper_prefix=helper_prefix,
+			)
+		)
+		certificate = {
+			"certificate_kind": "negative_context_only_transition",
+			"ordered_literal_indexes": [],
+			"threat_edges": [],
+			"module_summaries_complete": True,
+			"negative_guard_count": len(negative_literal_tuple),
+			"negative_guard_literals": [
+				literal.atom for literal in negative_literal_tuple
+			],
+			"negative_guard_preservation_checked": True,
+			"negative_guard_preserved": True,
+			"negative_guard_threats": [],
+		}
+		certificate.update(establishment)
 		return (
 			(),
-			{
-				"certificate_kind": "negative_context_only_transition",
-				"ordered_literal_indexes": [],
-				"threat_edges": [],
-				"module_summaries_complete": True,
-				"negative_guard_count": len(negative_literal_tuple),
-				"negative_guard_literals": [
-					literal.atom for literal in negative_literal_tuple
-				],
-				"negative_guard_preservation_checked": True,
-				"negative_guard_preserved": True,
-				"negative_guard_threats": [],
-			},
+			certificate,
 			(),
 			{},
+			establishment_aliases,
+			establishment_helpers,
+		)
+	if source_invariants and not numeric_literals:
+		if len(literal_tuple) != 1:
+			raise ValueError(
+				"source_invariant_conjunctive_progress_not_certified: primitive-prefix "
+				"preservation currently requires one positive progress literal.",
+			)
+		aliases, helper_by_predicate, source_certificate = (
+			_source_invariant_safe_alias_plans(
+				literal_tuple[0],
+				source_invariants=tuple(source_invariants),
+				completion_negative_literals=negative_literal_tuple,
+				plan_library=plan_library,
+				domain=domain,
+				helper_prefix=helper_prefix,
+			)
+		)
+		return (
+			literal_tuple,
+			source_certificate,
+			aliases,
+			helper_by_predicate,
 			(),
 			{},
 		)
@@ -736,12 +960,6 @@ def _certified_positive_literal_serialization(
 			(),
 			{},
 		)
-	literal_signatures = tuple(
-		(literal.predicate, literal.arguments) for literal in literal_tuple
-	)
-	negative_literal_signatures = tuple(
-		(literal.predicate, literal.arguments) for literal in negative_literal_tuple
-	)
 	try:
 		ordered_indexes, certificate = threat_safe_positive_literal_order(
 			literal_signatures,
@@ -752,11 +970,33 @@ def _certified_positive_literal_serialization(
 	except ValueError as error:
 		if not str(error).startswith(
 			(
+				"uncertified_conjunctive_transition",
 				"cyclic_conjunctive_transition_not_certified",
 				"negative_guard_not_preserved",
 			),
 		):
 			raise
+		direct_guard = _single_action_whole_guard_plans(
+			literal_tuple,
+			negative_literals=negative_literal_tuple,
+			domain=domain,
+			helper_prefix=helper_prefix,
+		)
+		if direct_guard is not None:
+			(
+				ordered_indexes,
+				certificate_payload,
+				aliases,
+				helper_by_predicate,
+			) = direct_guard
+			return (
+				tuple(literal_tuple[index] for index in ordered_indexes),
+				certificate_payload,
+				aliases,
+				helper_by_predicate,
+				(),
+				{},
+			)
 		selection = preservation_safe_plan_selection(
 			literal_signatures,
 			plan_library=plan_library,
@@ -813,6 +1053,2273 @@ def _certified_positive_literal_serialization(
 		establishment_aliases,
 		establishment_helpers,
 	)
+
+
+def _single_action_whole_guard_plans(
+	literals: Sequence[DFALiteral],
+	*,
+	negative_literals: Sequence[DFALiteral],
+	domain: PDDLDomain,
+	helper_prefix: str,
+) -> tuple[
+	tuple[int, ...],
+	dict[str, object],
+	tuple[AgentSpeakPlan, ...],
+	Mapping[str, str],
+] | None:
+	"""Find one PDDL action whose net effects establish an entire guard."""
+
+	positive_tuple = tuple(literals)
+	negative_tuple = tuple(negative_literals)
+	numeric_functions = {function.name for function in domain.functions}
+	boolean_positive_indexes = tuple(
+		index
+		for index, literal in enumerate(positive_tuple)
+		if literal.predicate not in numeric_functions
+	)
+	boolean_negative_tuple = tuple(
+		literal
+		for literal in negative_tuple
+		if literal.predicate not in numeric_functions
+	)
+	numeric_positive_tuple = tuple(
+		literal
+		for literal in positive_tuple
+		if literal.predicate in numeric_functions
+	)
+	numeric_negative_tuple = tuple(
+		literal
+		for literal in negative_tuple
+		if literal.predicate in numeric_functions
+	)
+	if not positive_tuple or not boolean_positive_indexes or numeric_negative_tuple:
+		return None
+	query_variables = {
+		argument
+		for literal in (*positive_tuple, *negative_tuple)
+		for argument in (
+			literal.arguments[:-1]
+			if literal.predicate in numeric_functions
+			else literal.arguments
+		)
+		if _is_agentspeak_variable(argument)
+	}
+	aliases_by_anchor: dict[int, list[AgentSpeakPlan]] = {}
+	numeric_contexts_by_anchor: dict[int, tuple[str, ...]] = {}
+	for action_index, pddl_action in enumerate(domain.actions, start=1):
+		action = _ParsedAction.from_pddl(pddl_action)
+		for anchor_index in boolean_positive_indexes:
+			anchor = positive_tuple[anchor_index]
+			if query_variables - set(anchor.arguments):
+				continue
+			for anchor_effect in action.add_effects:
+				binding = _extend_schema_binding(
+					{},
+					schema=anchor_effect,
+					literal=anchor,
+					action=action,
+				)
+				if binding is None:
+					continue
+				for sibling_index in boolean_positive_indexes:
+					if sibling_index == anchor_index:
+						continue
+					sibling = positive_tuple[sibling_index]
+					binding = _bind_literal_from_effects(
+						binding,
+						literal=sibling,
+						effects=action.add_effects,
+						action=action,
+					)
+					if binding is None:
+						break
+				if binding is None:
+					continue
+				for forbidden in boolean_negative_tuple:
+					candidate = _bind_literal_from_effects(
+						binding,
+						literal=forbidden,
+						effects=action.delete_effects,
+						action=action,
+					)
+					if candidate is not None:
+						binding = candidate
+				for numeric_literal in numeric_positive_tuple:
+					candidate = _compatible_numeric_effect_binding(
+						action=action,
+						literal=numeric_literal,
+						binding=binding,
+					)
+					if candidate is None:
+						binding = None
+						break
+					binding = candidate
+				if binding is None:
+					continue
+				binding = _complete_action_binding(action, binding)
+				adds = tuple(
+					_map_schema_literal(effect, binding=binding)
+					for effect in action.add_effects
+				)
+				deletes = tuple(
+					_map_schema_literal(effect, binding=binding)
+					for effect in action.delete_effects
+				)
+				if not all(
+					any(_same_dfa_atom(effect, literal) for effect in adds)
+					for index, literal in enumerate(positive_tuple)
+					if index in boolean_positive_indexes
+				):
+					continue
+				numeric_predecessor_contexts: list[str] = []
+				numeric_effects_certified = True
+				for numeric_literal in numeric_positive_tuple:
+					if (
+						not numeric_literal.arguments
+						or re.fullmatch(
+							r"[+-]?\d+",
+							numeric_literal.arguments[-1],
+						)
+						is None
+					):
+						numeric_effects_certified = False
+						break
+					target_value = int(numeric_literal.arguments[-1])
+					delta = _bound_numeric_effect_delta(
+						action=action,
+						binding=binding,
+						function=numeric_literal.predicate,
+						arguments=numeric_literal.arguments[:-1],
+					)
+					if delta is None or delta == 0:
+						numeric_effects_certified = False
+						break
+					numeric_predecessor_contexts.append(
+						_call(
+							numeric_literal.predicate,
+							(
+								*numeric_literal.arguments[:-1],
+								str(target_value - delta),
+							),
+						),
+					)
+				if not numeric_effects_certified:
+					continue
+				guards: list[str] = []
+				negative_established = True
+				for forbidden in boolean_negative_tuple:
+					if any(_same_dfa_atom(effect, forbidden) for effect in deletes):
+						pass
+					else:
+						negative_established = False
+						break
+					for effect in adds:
+						guard = _atom_non_unification_guard(effect, forbidden)
+						if guard is None:
+							negative_established = False
+							break
+						if guard:
+							guards.append(guard)
+					if not negative_established:
+						break
+				if not negative_established:
+					continue
+				context = _single_action_guard_context(
+					action=action,
+					binding=binding,
+					guards=guards,
+				)
+				if context is None:
+					continue
+				context = tuple(
+					dict.fromkeys((*context, *numeric_predecessor_contexts))
+				)
+				helper_symbol = _safe_query_identifier(
+					f"{helper_prefix}_establish_guard_{anchor.predicate}_{anchor_index + 1}"
+				)
+				aliases_by_anchor.setdefault(anchor_index, []).append(
+					AgentSpeakPlan(
+						plan_name=f"{helper_symbol}_{action.name}_{action_index}",
+						trigger=AgentSpeakTrigger(
+							"achievement_goal",
+							helper_symbol,
+							anchor.arguments,
+						),
+						context=context,
+						body=(
+							AgentSpeakBodyStep(
+								"action",
+								action.name,
+								tuple(binding[parameter] for parameter in action.parameters),
+							),
+						),
+						binding_certificate=(
+							{
+								"artifact_family": "temporal_goal_dfa_append",
+								"wrapper_role": "query_local_whole_guard_branch",
+								"certificate_kind": "pddl_single_action_whole_guard",
+								"source_action": action.name,
+								"positive_guard_literals": [
+									literal.atom for literal in positive_tuple
+								],
+								"negative_guard_literals": [
+									literal.atom for literal in negative_tuple
+								],
+								"numeric_guard_literals": [
+									literal.atom for literal in numeric_positive_tuple
+								],
+								"numeric_predecessor_contexts": list(
+									numeric_predecessor_contexts
+								),
+							},
+						),
+					),
+				)
+				numeric_contexts_by_anchor[anchor_index] = tuple(
+					numeric_predecessor_contexts
+				)
+	if not aliases_by_anchor:
+		return None
+	anchor_index = min(aliases_by_anchor)
+	aliases = tuple(aliases_by_anchor[anchor_index])
+	helper_symbol = aliases[0].trigger.symbol
+	ordered = (anchor_index, *tuple(
+		index for index in range(len(positive_tuple)) if index != anchor_index
+	))
+	return ordered, {
+		"certificate_kind": "pddl_single_action_whole_guard",
+		"ordered_literal_indexes": list(ordered),
+		"threat_edges": [],
+		"module_summaries_complete": True,
+		"negative_guard_count": len(negative_tuple),
+		"negative_guard_literals": [literal.atom for literal in negative_tuple],
+		"negative_guard_preservation_checked": True,
+		"negative_guard_preserved": True,
+		"negative_guard_threats": [],
+		"negative_guard_establishment_checked": True,
+		"negative_guard_establishable": True,
+		"negative_guard_establishers": {
+			literal.atom: [plan.plan_name for plan in aliases]
+			for literal in negative_tuple
+		},
+		"observation_only_literals": [
+			literal.atom
+			for index, literal in enumerate(positive_tuple)
+			if index != anchor_index
+		],
+		"repair_positive_before_negative": True,
+		"numeric_guard_literals": [literal.atom for literal in numeric_positive_tuple],
+		"numeric_predecessor_contexts": list(
+			numeric_contexts_by_anchor.get(anchor_index, ())
+		),
+	}, aliases, {positive_tuple[anchor_index].atom: helper_symbol}
+
+
+def _compatible_numeric_effect_binding(
+	*,
+	action: _ParsedAction,
+	literal: DFALiteral,
+	binding: Mapping[str, str],
+) -> dict[str, str] | None:
+	"""Extend a schema binding with one matching constant-delta numeric effect."""
+
+	for effect in action.numeric_effects:
+		candidate = _bind_numeric_effect_to_literal(
+			action=action,
+			effect=effect,
+			literal=literal,
+		)
+		if candidate is None:
+			continue
+		merged = dict(binding)
+		if any(
+			parameter in merged and merged[parameter] != argument
+			for parameter, argument in candidate.items()
+		):
+			continue
+		merged.update(candidate)
+		return merged
+	return None
+
+
+def _extend_schema_binding(
+	binding: Mapping[str, str],
+	*,
+	schema,
+	literal: DFALiteral,
+	action: _ParsedAction,
+) -> dict[str, str] | None:
+	if schema.predicate != literal.predicate or len(schema.arguments) != len(literal.arguments):
+		return None
+	result = dict(binding)
+	for schema_argument, literal_argument in zip(schema.arguments, literal.arguments):
+		if schema_argument not in action.parameters:
+			if schema_argument != literal_argument:
+				return None
+			continue
+		previous = result.get(schema_argument)
+		if previous is not None and previous != literal_argument:
+			return None
+		result[schema_argument] = literal_argument
+	return result
+
+
+def _bind_literal_from_effects(
+	binding: Mapping[str, str],
+	*,
+	literal: DFALiteral,
+	effects: Sequence,
+	action: _ParsedAction,
+) -> dict[str, str] | None:
+	for effect in effects:
+		candidate = _extend_schema_binding(
+			binding,
+			schema=effect,
+			literal=literal,
+			action=action,
+		)
+		if candidate is not None:
+			return candidate
+	return None
+
+
+def _complete_action_binding(
+	action: _ParsedAction,
+	binding: Mapping[str, str],
+) -> dict[str, str]:
+	result = dict(binding)
+	used = set(result.values())
+	index = 0
+	for parameter in action.parameters:
+		if parameter in result:
+			continue
+		while f"V{index}" in used:
+			index += 1
+		result[parameter] = f"V{index}"
+		used.add(result[parameter])
+		index += 1
+	return result
+
+
+def _map_schema_literal(schema, *, binding: Mapping[str, str]) -> DFALiteral:
+	return DFALiteral(
+		schema.predicate,
+		tuple(binding.get(argument, argument) for argument in schema.arguments),
+		"positive" if schema.is_positive else "negative",
+	)
+
+
+def _same_dfa_atom(left: DFALiteral, right: DFALiteral) -> bool:
+	return left.predicate == right.predicate and left.arguments == right.arguments
+
+
+def _atom_non_unification_guard(left: DFALiteral, right: DFALiteral) -> str | None:
+	if left.predicate != right.predicate or len(left.arguments) != len(right.arguments):
+		return ""
+	differences = [
+		(left_argument, right_argument)
+		for left_argument, right_argument in zip(left.arguments, right.arguments)
+		if left_argument != right_argument
+	]
+	if not differences:
+		return None
+	constant_difference = next(
+		(
+			pair
+			for pair in differences
+			if not _is_agentspeak_variable(pair[0])
+			and not _is_agentspeak_variable(pair[1])
+		),
+		None,
+	)
+	if constant_difference is not None:
+		return ""
+	variable_difference = next(
+		(
+			pair
+			for pair in differences
+			if _is_agentspeak_variable(pair[0])
+			or _is_agentspeak_variable(pair[1])
+		),
+		None,
+	)
+	if variable_difference is None:
+		return None
+	left_argument, right_argument = variable_difference
+	return f"{left_argument} \\== {right_argument}"
+
+
+def _single_action_guard_context(
+	*,
+	action: _ParsedAction,
+	binding: Mapping[str, str],
+	guards: Sequence[str],
+	reserved_variables: Sequence[str] = (),
+) -> tuple[str, ...] | None:
+	contexts: list[str] = []
+	for parameter in action.parameters:
+		argument = binding[parameter]
+		type_name = action.parameter_types.get(parameter, "object")
+		if type_name != "object":
+			contexts.append(f"obj_tp({argument}, {type_name})")
+	for precondition in action.preconditions:
+		literal = _map_schema_literal(precondition, binding=binding)
+		call = literal.atom
+		contexts.append(call if precondition.is_positive else f"not {call}")
+	used_numeric_variables = {
+		argument
+		for argument in binding.values()
+		if _is_agentspeak_variable(argument)
+	}
+	used_numeric_variables.update(reserved_variables)
+	for condition in action.numeric_preconditions:
+		contexts.extend(
+			_numeric_condition_contexts(
+				condition=condition,
+				variable_map=binding,
+				used_variables=used_numeric_variables,
+			),
+		)
+	contexts.extend(guard for guard in guards if guard)
+	bound = {
+		argument
+		for argument in binding.values()
+		if not _is_agentspeak_variable(argument)
+	}
+	for context in contexts:
+		if not context.startswith("not "):
+			bound.update(re.findall(r"\b[A-Z][A-Za-z0-9_]*\b", context))
+	if any(
+		_is_agentspeak_variable(argument) and argument not in bound
+		for argument in binding.values()
+	):
+		return None
+	return tuple(dict.fromkeys(contexts))
+
+
+def _mixed_numeric_literal_order(
+	literals: Sequence[DFALiteral],
+	*,
+	negative_literals: Sequence[DFALiteral],
+	source_invariants: Sequence[DFALiteral],
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+	helper_prefix: str,
+) -> tuple[
+	tuple[int, ...],
+	dict[str, object],
+	tuple[AgentSpeakPlan, ...],
+	Mapping[str, str],
+]:
+	"""Order mixed Boolean/numeric goals from complete primitive effect summaries."""
+
+	literal_tuple = tuple(literals)
+	negative_tuple = tuple(negative_literals)
+	numeric_functions = {function.name for function in domain.functions}
+	actions_by_name = {
+		action.name: _ParsedAction.from_pddl(action) for action in domain.actions
+	}
+	effects_by_literal: list[tuple[_TemporalPlanEffects, ...]] = []
+	selected_plans_by_literal: list[tuple[AgentSpeakPlan, ...]] = []
+	for literal in literal_tuple:
+		matching = tuple(
+			plan
+			for plan in plan_library.plans
+			if _plan_trigger_matches_literal(plan, literal)
+			and bool(plan.body)
+		)
+		numeric_candidates: tuple[AgentSpeakPlan, ...] = ()
+		if literal.predicate in numeric_functions:
+			numeric_candidates = _direct_numeric_progress_plans(
+				literal,
+				domain=domain,
+				plan_library=plan_library,
+				binding_literals=(
+					*tuple(source_invariants),
+					*tuple(negative_literals),
+				),
+				protected_literals=tuple(source_invariants),
+			)
+			matching = (
+				*matching,
+				*numeric_candidates,
+			)
+		effects: list[_TemporalPlanEffects] = []
+		selected_plans: list[AgentSpeakPlan] = []
+		for plan in matching:
+			summary = _action_only_temporal_effects(
+				plan,
+				literal=literal,
+				actions_by_name=actions_by_name,
+			)
+			if summary is None:
+				continue
+			if any(
+				_effects_may_establish_literal(
+					summary,
+					literal=forbidden,
+					numeric_functions=numeric_functions,
+				)
+				for forbidden in negative_tuple
+			):
+				continue
+			effects.append(summary)
+			selected_plans.append(plan)
+		if literal.predicate in numeric_functions and len(literal_tuple) == 1:
+			selected_plans.extend(
+				plan
+				for plan in numeric_candidates
+				if plan.binding_certificate
+				and plan.binding_certificate[0].get("certificate_kind")
+				in {
+					"lexicographic_numeric_precondition_preparation",
+					"lexicographic_numeric_requirement_preparation",
+					"repeatable_source_invariant_preserving_numeric_progress",
+				}
+			)
+		effects_by_literal.append(tuple(effects))
+		selected_plans_by_literal.append(tuple(selected_plans))
+
+	threat_edges: set[tuple[int, int]] = set()
+	establishment_edges: set[tuple[int, int]] = set()
+	for achiever_index, branch_effects in enumerate(effects_by_literal):
+		for protected_index, protected in enumerate(literal_tuple):
+			if achiever_index == protected_index:
+				continue
+			if any(
+				_effects_may_threaten_literal(
+					effects,
+					protected=protected,
+					numeric_functions=numeric_functions,
+				)
+				for effects in branch_effects
+			):
+				threat_edges.add((achiever_index, protected_index))
+			if (
+				not selected_plans_by_literal[protected_index]
+				and any(
+					_effects_may_establish_literal(
+						effects,
+						literal=protected,
+						numeric_functions=numeric_functions,
+					)
+					for effects in branch_effects
+				)
+			):
+				establishment_edges.add((achiever_index, protected_index))
+	ordering_edges = threat_edges | establishment_edges
+	ordered = _stable_literal_topological_order(len(literal_tuple), ordering_edges)
+	if ordered is None:
+		raise ValueError(
+			"cyclic_conjunctive_transition_not_certified: mixed Boolean/numeric "
+			"effect threats have no preservation-safe serialization.",
+		)
+	aliases, helper_by_predicate = _mixed_numeric_alias_plans(
+		literal_tuple,
+		selected_plans_by_literal=selected_plans_by_literal,
+		helper_prefix=helper_prefix,
+	)
+	repair_positive_before_negative = bool(negative_tuple) and any(
+		certificate.get("negative_guard_established") is True
+		or certificate.get("negative_guard_established_by_final_action") is True
+		for plans in selected_plans_by_literal
+		for plan in plans
+		for certificate in plan.binding_certificate
+	)
+	certificate = {
+		"certificate_kind": "mixed_boolean_numeric_effect_order",
+		"effect_summary_method": "pddl_action_only_net_boolean_and_integer_delta",
+		"ordered_literal_indexes": list(ordered),
+		"threat_edges": [list(edge) for edge in sorted(threat_edges)],
+		"side_effect_establishment_edges": [
+			list(edge) for edge in sorted(establishment_edges)
+		],
+		"module_summaries_complete": True,
+		"numeric_effects_checked": True,
+		"negative_guard_count": len(negative_tuple),
+		"negative_guard_literals": [literal.atom for literal in negative_tuple],
+		"negative_guard_preservation_checked": True,
+		"negative_guard_preserved": True,
+		"negative_guard_threats": [],
+		"repair_positive_before_negative": repair_positive_before_negative,
+		"observation_only_literals": [
+			literal.atom
+			for literal, plans in zip(literal_tuple, selected_plans_by_literal)
+			if not plans
+		],
+		"observation_only_negative_literals": [
+			literal.atom
+			for literal in negative_tuple
+			if literal.predicate in numeric_functions
+		],
+		"source_invariant_literals": [
+			literal.atom for literal in source_invariants
+		],
+		"selected_action_only_branches": {
+			literal.atom: [plan.plan_name for plan in plans]
+			for literal, plans in zip(literal_tuple, selected_plans_by_literal)
+		},
+	}
+	return ordered, certificate, aliases, helper_by_predicate
+
+
+def _direct_numeric_progress_plans(
+	literal: DFALiteral,
+	*,
+	domain: PDDLDomain,
+	plan_library: PlanLibrary,
+	binding_literals: Sequence[DFALiteral] = (),
+	protected_literals: Sequence[DFALiteral] = (),
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Compile schema-certified primitive progress toward one numeric equality."""
+
+	if not literal.arguments or re.fullmatch(r"[+-]?\d+", literal.arguments[-1]) is None:
+		return ()
+	target_arguments = literal.arguments[:-1]
+	target_value = int(literal.arguments[-1])
+	plans: list[AgentSpeakPlan] = []
+	for action_index, pddl_action in enumerate(domain.actions, start=1):
+		action = _ParsedAction.from_pddl(pddl_action)
+		for effect_index, effect in enumerate(action.numeric_effects, start=1):
+			binding = _bind_numeric_effect_to_literal(
+				action=action,
+				effect=effect,
+				literal=literal,
+			)
+			if binding is None:
+				continue
+			plans.extend(
+				_repeating_numeric_source_preserving_plans(
+					literal,
+					action=action,
+					base_binding=binding,
+					protected_literals=protected_literals,
+					binding_literals=binding_literals,
+					action_index=action_index,
+					effect_index=effect_index,
+				),
+			)
+			binding = _extend_action_binding_from_guard_literals(
+				action=action,
+				binding=binding,
+				literals=binding_literals,
+			)
+			binding = _complete_action_binding(action, binding)
+			negative_binding_literals = tuple(
+				item for item in binding_literals if item.polarity == "negative"
+			)
+			mapped_deletes = tuple(
+				_map_schema_literal(item, binding=binding)
+				for item in action.delete_effects
+			)
+			mapped_adds = tuple(
+				_map_schema_literal(item, binding=binding)
+				for item in action.add_effects
+			)
+			source_preservation_guards = _step_effect_preservation_guards(
+				protected_literals=protected_literals,
+				adds=mapped_adds,
+				deletes=mapped_deletes,
+				numeric_effects=action.numeric_effects,
+				binding=binding,
+				numeric_functions={function.name for function in domain.functions},
+			)
+			deletes_all_negative = all(
+				any(_same_dfa_atom(deleted, forbidden) for deleted in mapped_deletes)
+				for forbidden in negative_binding_literals
+			)
+			delta = _bound_numeric_effect_delta(
+				action=action,
+				binding=binding,
+				function=literal.predicate,
+				arguments=target_arguments,
+			)
+			if delta is None or delta == 0:
+				continue
+			used_variables = {
+				argument
+				for argument in binding.values()
+				if _is_agentspeak_variable(argument)
+			}
+			value_variable = _fresh_agentspeak_variable(used_variables, prefix="N")
+			reserved_variables = (
+				()
+				if _numeric_preconditions_reference_only_target_fluent(
+					action=action,
+					binding=binding,
+					function=literal.predicate,
+					arguments=target_arguments,
+				)
+				else (value_variable,)
+			)
+			numeric_progress_guard = _numeric_progress_guard(
+				value_variable=value_variable,
+				target_value=target_value,
+				delta=delta,
+				exact_step=bool(
+					protected_literals and source_preservation_guards is None
+				),
+			)
+			negative_guards = (
+				tuple(
+					f"not {forbidden.atom}"
+					for forbidden in negative_binding_literals
+				)
+				if not deletes_all_negative
+				else ()
+			)
+			context = _single_action_guard_context(
+				action=action,
+				binding=binding,
+				guards=(*negative_guards, *(source_preservation_guards or ())),
+				reserved_variables=reserved_variables,
+			)
+			if context is None:
+				continue
+			progress_context = (
+				_call(literal.predicate, (*target_arguments, value_variable)),
+				numeric_progress_guard,
+			)
+			plans.append(
+				AgentSpeakPlan(
+					plan_name=(
+						f"numeric_progress_{literal.predicate}_{action.name}_"
+						f"{action_index}_{effect_index}"
+					),
+					trigger=AgentSpeakTrigger(
+						"achievement_goal",
+						literal.predicate,
+						literal.arguments,
+					),
+					context=tuple(dict.fromkeys((*progress_context, *context))),
+					body=(
+						AgentSpeakBodyStep(
+							"action",
+							action.name,
+							tuple(binding[parameter] for parameter in action.parameters),
+						),
+					),
+					binding_certificate=(
+						{
+							"artifact_family": "temporal_goal_dfa_append",
+							"wrapper_role": "query_local_numeric_progress_branch",
+							"certificate_kind": (
+								"unit_monotone_numeric_progress"
+								if abs(delta) == 1
+								else "exact_numeric_predecessor"
+							),
+							"source_action": action.name,
+							"numeric_function": literal.predicate,
+							"target_value": target_value,
+							"net_delta": delta,
+							"completion_observer": "primitive_step_dfa_monitor",
+							"negative_guard_established": deletes_all_negative,
+							"source_invariant_preservation_guards": list(
+								source_preservation_guards or ()
+							),
+							"source_invariant_violation_only_at_target": bool(
+								protected_literals and source_preservation_guards is None
+							),
+						},
+					),
+				),
+			)
+			for precondition in action.preconditions:
+				if not precondition.is_positive:
+					continue
+				if negative_binding_literals and not deletes_all_negative:
+					continue
+				missing = _map_schema_literal(precondition, binding=binding)
+				if not _literal_has_achievement_branch(
+					missing,
+					plan_library=plan_library,
+				):
+					continue
+				for support_index, support_plan in enumerate(
+					(
+						plan
+						for plan in plan_library.plans
+						if _plan_trigger_matches_literal(plan, missing) and plan.body
+					),
+					start=1,
+				):
+					support_effects = _action_only_temporal_effects(
+						support_plan,
+						literal=missing,
+						actions_by_name={
+							item.name: _ParsedAction.from_pddl(item)
+							for item in domain.actions
+						},
+					)
+					if support_effects is None:
+						continue
+					if any(
+						function == literal.predicate
+						for function, _arguments, _delta in support_effects.numeric_deltas
+					):
+						continue
+					if not _effects_may_establish_literal(
+						support_effects,
+						literal=missing,
+						numeric_functions=set(),
+					):
+						continue
+					if any(
+						_action_only_plan_may_delete_literal(
+							support_plan,
+							goal=missing,
+							protected=protected,
+							domain=domain,
+						)
+						for protected in protected_literals
+					):
+						continue
+					grounded_context, grounded_body = _ground_action_only_plan(
+						support_plan,
+						goal=missing,
+						reserved_variables=tuple(binding.values()),
+					)
+					preparation_context = tuple(
+						dict.fromkeys(
+							(
+								*progress_context,
+								*(item.atom for item in negative_binding_literals),
+								*grounded_context,
+							)
+						)
+					)
+					plans.append(AgentSpeakPlan(
+						plan_name=(
+							f"numeric_prepare_{literal.predicate}_{missing.predicate}_"
+							f"{action_index}_{effect_index}_{support_index}"
+						),
+						trigger=AgentSpeakTrigger(
+							"achievement_goal",
+							literal.predicate,
+							literal.arguments,
+						),
+						context=preparation_context,
+						body=(
+							*grounded_body,
+							AgentSpeakBodyStep(
+								"subgoal",
+								literal.predicate,
+								literal.arguments,
+							),
+						),
+						binding_certificate=(
+							{
+								"artifact_family": "temporal_goal_dfa_append",
+								"wrapper_role": (
+									"query_local_numeric_precondition_preparation"
+								),
+								"certificate_kind": (
+									"lexicographic_numeric_precondition_preparation"
+								),
+								"prepared_literal": missing.atom,
+								"numeric_function": literal.predicate,
+								"numeric_distance_unchanged_by_preparation": True,
+								"negative_guard_established_by_final_action": (
+									deletes_all_negative
+								),
+								"ranking_components": [
+									"missing_positive_precondition_count",
+									"absolute_numeric_target_distance",
+								],
+							},
+						),
+					))
+			plans.extend(
+				_numeric_precondition_preparation_plans(
+					literal,
+					target_action=action,
+					target_binding=binding,
+					target_progress_context=progress_context,
+					domain=domain,
+					binding_literals=binding_literals,
+					protected_literals=protected_literals,
+					action_index=action_index,
+					effect_index=effect_index,
+				),
+			)
+	return tuple(plans)
+
+
+def _repeating_numeric_source_preserving_plans(
+	literal: DFALiteral,
+	*,
+	action: _ParsedAction,
+	base_binding: Mapping[str, str],
+	protected_literals: Sequence[DFALiteral],
+	binding_literals: Sequence[DFALiteral],
+	action_index: int,
+	effect_index: int,
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Compile a repeatable numeric step separated from protected source atoms."""
+
+	if not protected_literals:
+		return ()
+	binding = _complete_action_binding(action, base_binding)
+	target_arguments = literal.arguments[:-1]
+	target_value = int(literal.arguments[-1])
+	delta = _bound_numeric_effect_delta(
+		action=action,
+		binding=binding,
+		function=literal.predicate,
+		arguments=target_arguments,
+	)
+	if delta is None or delta == 0:
+		return ()
+	adds = tuple(
+		_map_schema_literal(item, binding=binding) for item in action.add_effects
+	)
+	deletes = tuple(
+		_map_schema_literal(item, binding=binding) for item in action.delete_effects
+	)
+	preservation_guards = _step_effect_preservation_guards(
+		protected_literals=protected_literals,
+		adds=adds,
+		deletes=deletes,
+		numeric_effects=action.numeric_effects,
+		binding=binding,
+		numeric_functions={literal.predicate},
+	)
+	if preservation_guards is None:
+		return ()
+	negative_literals = tuple(
+		item for item in binding_literals if item.polarity == "negative"
+	)
+	negative_guards = _step_effect_preservation_guards(
+		protected_literals=negative_literals,
+		adds=adds,
+		deletes=deletes,
+		numeric_effects=action.numeric_effects,
+		binding=binding,
+		numeric_functions={literal.predicate},
+	)
+	if negative_guards is None:
+		return ()
+	used_variables = {
+		argument for argument in binding.values() if _is_agentspeak_variable(argument)
+	}
+	value_variable = _fresh_agentspeak_variable(used_variables, prefix="N")
+	reserved_variables = (
+		()
+		if _numeric_preconditions_reference_only_target_fluent(
+			action=action,
+			binding=binding,
+			function=literal.predicate,
+			arguments=target_arguments,
+		)
+		else (value_variable,)
+	)
+	context = _single_action_guard_context(
+		action=action,
+		binding=binding,
+		guards=(*preservation_guards, *negative_guards),
+		reserved_variables=reserved_variables,
+	)
+	if context is None:
+		return ()
+	return (
+		AgentSpeakPlan(
+			plan_name=(
+				f"numeric_repeat_preserving_{literal.predicate}_{action.name}_"
+				f"{action_index}_{effect_index}"
+			),
+			trigger=AgentSpeakTrigger(
+				"achievement_goal",
+				literal.predicate,
+				literal.arguments,
+			),
+			context=tuple(dict.fromkeys((
+				_call(literal.predicate, (*target_arguments, value_variable)),
+				_numeric_progress_guard(
+					value_variable=value_variable,
+					target_value=target_value,
+					delta=delta,
+				),
+				*context,
+			))),
+			body=(
+				AgentSpeakBodyStep(
+					"action",
+					action.name,
+					tuple(binding[parameter] for parameter in action.parameters),
+				),
+				AgentSpeakBodyStep(
+					"subgoal",
+					literal.predicate,
+					literal.arguments,
+				),
+			),
+			binding_certificate=(
+				{
+					"artifact_family": "temporal_goal_dfa_append",
+					"wrapper_role": "query_local_numeric_progress_branch",
+					"certificate_kind": (
+						"repeatable_source_invariant_preserving_numeric_progress"
+					),
+					"source_action": action.name,
+					"numeric_function": literal.predicate,
+					"target_value": target_value,
+					"net_delta": delta,
+					"source_invariant_preservation_guards": list(
+						preservation_guards
+					),
+					"ranking_components": ["absolute_numeric_target_distance"],
+				},
+			),
+		),
+	)
+
+
+def _numeric_precondition_preparation_plans(
+	literal: DFALiteral,
+	*,
+	target_action: _ParsedAction,
+	target_binding: Mapping[str, str],
+	target_progress_context: Sequence[str],
+	domain: PDDLDomain,
+	binding_literals: Sequence[DFALiteral],
+	protected_literals: Sequence[DFALiteral],
+	action_index: int,
+	effect_index: int,
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Prepare monotone numeric prerequisites without changing the target fluent."""
+
+	numeric_functions = {function.name for function in domain.functions}
+	completion_negative_literals = tuple(
+		item for item in binding_literals if item.polarity == "negative"
+	)
+	plans: list[AgentSpeakPlan] = []
+	for condition_index, condition in enumerate(
+		target_action.numeric_preconditions,
+		start=1,
+	):
+		requirement = _constant_bound_numeric_requirement(
+			condition,
+			binding=target_binding,
+		)
+		if requirement is None:
+			continue
+		function, arguments, comparator, bound = requirement
+		if function == literal.predicate and tuple(arguments) == tuple(literal.arguments[:-1]):
+			continue
+		for support_action_index, pddl_support_action in enumerate(
+			domain.actions,
+			start=1,
+		):
+			support_action = _ParsedAction.from_pddl(pddl_support_action)
+			for support_effect_index, support_effect in enumerate(
+				support_action.numeric_effects,
+				start=1,
+			):
+				support_binding = _bind_numeric_effect_to_literal(
+					action=support_action,
+					effect=support_effect,
+					literal=DFALiteral(function, (*arguments, str(bound))),
+				)
+				if support_binding is None:
+					continue
+				support_binding = _complete_action_binding(
+					support_action,
+					support_binding,
+				)
+				delta = _bound_numeric_effect_delta(
+					action=support_action,
+					binding=support_binding,
+					function=function,
+					arguments=arguments,
+				)
+				if delta is None or not _delta_progresses_numeric_requirement(
+					comparator=comparator,
+					bound=bound,
+					delta=delta,
+				):
+					continue
+				if _bound_numeric_effect_delta(
+					action=support_action,
+					binding=support_binding,
+					function=literal.predicate,
+					arguments=literal.arguments[:-1],
+				) is not None:
+					continue
+				adds = tuple(
+					_map_schema_literal(item, binding=support_binding)
+					for item in support_action.add_effects
+				)
+				deletes = tuple(
+					_map_schema_literal(item, binding=support_binding)
+					for item in support_action.delete_effects
+				)
+				preservation_guards = _step_effect_preservation_guards(
+					protected_literals=(
+						*tuple(protected_literals),
+						*completion_negative_literals,
+					),
+					adds=adds,
+					deletes=deletes,
+					numeric_effects=support_action.numeric_effects,
+					binding=support_binding,
+					numeric_functions=numeric_functions,
+				)
+				if preservation_guards is None:
+					continue
+				mapped_target_preconditions = tuple(
+					_map_schema_literal(item, binding=target_binding)
+					for item in target_action.preconditions
+					if item.is_positive
+				)
+				if any(
+					deleted.predicate == protected.predicate
+					and _argument_tuples_may_unify(
+						deleted.arguments,
+						protected.arguments,
+					)
+					for deleted in deletes
+					for protected in mapped_target_preconditions
+				):
+					continue
+				used_variables = {
+					argument
+					for argument in support_binding.values()
+					if _is_agentspeak_variable(argument)
+				}
+				used_variables.update(
+					variable
+					for context_item in target_progress_context
+					for variable in re.findall(r"\b[A-Z][A-Za-z0-9_]*\b", context_item)
+				)
+				value_variable = _fresh_agentspeak_variable(
+					used_variables,
+					prefix="N",
+				)
+				progress_guard = _numeric_requirement_progress_guard(
+					value_variable=value_variable,
+					comparator=comparator,
+					bound=bound,
+					delta=delta,
+				)
+				if progress_guard is None:
+					continue
+				context = _single_action_guard_context(
+					action=support_action,
+					binding=support_binding,
+					guards=tuple(
+						(
+							*tuple(
+								item.atom
+								if item.polarity == "positive"
+								else f"not {item.atom}"
+								for item in protected_literals
+							),
+							*preservation_guards,
+						)
+					),
+					reserved_variables=(value_variable,),
+				)
+				if context is None:
+					continue
+				plans.append(AgentSpeakPlan(
+					plan_name=(
+						f"numeric_prepare_requirement_{literal.predicate}_{function}_"
+						f"{action_index}_{effect_index}_{condition_index}_"
+						f"{support_action_index}_{support_effect_index}"
+					),
+					trigger=AgentSpeakTrigger(
+						"achievement_goal",
+						literal.predicate,
+						literal.arguments,
+					),
+					context=tuple(dict.fromkeys((
+						*target_progress_context,
+						_call(function, (*arguments, value_variable)),
+						progress_guard,
+						*context,
+					))),
+					body=(
+						AgentSpeakBodyStep(
+							"action",
+							support_action.name,
+							tuple(
+								support_binding[parameter]
+								for parameter in support_action.parameters
+							),
+						),
+						AgentSpeakBodyStep(
+							"subgoal",
+							literal.predicate,
+							literal.arguments,
+						),
+					),
+					binding_certificate=(
+						{
+							"artifact_family": "temporal_goal_dfa_append",
+							"wrapper_role": (
+								"query_local_numeric_precondition_preparation"
+							),
+							"certificate_kind": (
+								"lexicographic_numeric_requirement_preparation"
+							),
+							"prepared_numeric_function": function,
+							"prepared_comparator": comparator,
+							"prepared_bound": bound,
+							"net_delta": delta,
+							"target_numeric_function_unchanged": True,
+							"source_invariants_preserved": True,
+							"ranking_components": [
+								"numeric_precondition_deficit",
+								"absolute_numeric_target_distance",
+							],
+						},
+					),
+				))
+	return tuple(plans)
+
+
+def _source_invariant_safe_alias_plans(
+	literal: DFALiteral,
+	*,
+	source_invariants: Sequence[DFALiteral],
+	completion_negative_literals: Sequence[DFALiteral],
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+	helper_prefix: str,
+) -> tuple[tuple[AgentSpeakPlan, ...], Mapping[str, str], dict[str, object]]:
+	"""Select action-only branches preserving a DFA source state until completion."""
+
+	actions_by_name = {
+		action.name: _ParsedAction.from_pddl(action) for action in domain.actions
+	}
+	numeric_functions = {function.name for function in domain.functions}
+	selected = tuple(
+		plan
+		for plan in plan_library.plans
+		if plan.body
+		and _plan_trigger_matches_literal(plan, literal)
+		and _plan_has_primitive_prefix_source_invariant_certificate(
+			plan,
+			goal=literal,
+			source_invariants=source_invariants,
+			completion_negative_literals=completion_negative_literals,
+			actions_by_name=actions_by_name,
+			numeric_functions=numeric_functions,
+		)
+	)
+	certificate: dict[str, object] = {
+		"certificate_kind": "primitive_prefix_source_invariant_preservation",
+		"ordered_literal_indexes": [0],
+		"threat_edges": [],
+		"module_summaries_complete": True,
+		"source_invariant_literals": [item.atom for item in source_invariants],
+		"source_invariant_safe_branches": {
+			literal.atom: [plan.plan_name for plan in selected],
+		},
+		"observation_only_literals": [] if selected else [literal.atom],
+	}
+	if not selected:
+		return (), {}, certificate
+	helper_symbol = _safe_query_identifier(
+		f"{helper_prefix}_source_safe_{literal.predicate}",
+	)
+	direct_aliases = tuple(
+		AgentSpeakPlan(
+			plan_name=f"{helper_symbol}_branch_{index}_{plan.plan_name}",
+			trigger=AgentSpeakTrigger(
+				plan.trigger.event_type,
+				helper_symbol,
+				plan.trigger.arguments,
+			),
+			context=plan.context,
+			body=plan.body,
+			source_instruction_ids=plan.source_instruction_ids,
+			binding_certificate=(
+				*plan.binding_certificate,
+				{
+					"artifact_family": "temporal_goal_dfa_append",
+					"wrapper_role": "query_local_source_invariant_safe_branch",
+					"certificate_kind": (
+						"primitive_prefix_source_invariant_preservation"
+					),
+					"source_atomic_plan": plan.plan_name,
+					"source_invariants": [item.atom for item in source_invariants],
+					"completion_negative_literals": [
+						item.atom for item in completion_negative_literals
+					],
+					"observation_boundary": "successful_primitive_action",
+				},
+			),
+		)
+		for index, plan in enumerate(selected, start=1)
+	)
+	preparation_aliases = _source_invariant_preparation_aliases(
+		literal,
+		direct_plans=selected,
+		helper_symbol=helper_symbol,
+		source_invariants=source_invariants,
+		completion_negative_literals=completion_negative_literals,
+		plan_library=plan_library,
+		domain=domain,
+		actions_by_name=actions_by_name,
+		numeric_functions=numeric_functions,
+	)
+	aliases = (*direct_aliases, *preparation_aliases)
+	certificate["source_invariant_preparation_branches"] = [
+		plan.plan_name for plan in preparation_aliases
+	]
+	return aliases, {literal.atom: helper_symbol}, certificate
+
+
+def _plan_has_primitive_prefix_source_invariant_certificate(
+	plan: AgentSpeakPlan,
+	*,
+	goal: DFALiteral,
+	source_invariants: Sequence[DFALiteral],
+	completion_negative_literals: Sequence[DFALiteral],
+	actions_by_name: Mapping[str, _ParsedAction],
+	numeric_functions: set[str],
+	allow_source_violation_on_goal_establishment: bool = True,
+) -> bool:
+	"""Prove that no primitive prefix leaves the DFA source state prematurely."""
+
+	trigger_binding = {
+		formal: actual
+		for formal, actual in zip(plan.trigger.arguments, goal.arguments)
+		if _is_agentspeak_variable(formal)
+	}
+	goal_established = False
+	for step in plan.body:
+		if step.kind != "action":
+			return False
+		action = actions_by_name.get(step.symbol)
+		if action is None or len(action.parameters) != len(step.arguments):
+			return False
+		step_arguments = tuple(
+			trigger_binding.get(argument, argument) for argument in step.arguments
+		)
+		binding = dict(zip(action.parameters, step_arguments))
+		adds = tuple(
+			_map_schema_literal(effect, binding=binding) for effect in action.add_effects
+		)
+		deletes = tuple(
+			_map_schema_literal(effect, binding=binding) for effect in action.delete_effects
+		)
+		step_establishes_goal = any(_same_dfa_atom(effect, goal) for effect in adds)
+		if not goal_established:
+			source_violated = any(
+				_step_effects_may_violate_literal(
+					invariant,
+					adds=adds,
+					deletes=deletes,
+					numeric_effects=action.numeric_effects,
+					binding=binding,
+					numeric_functions=numeric_functions,
+				)
+				for invariant in source_invariants
+			)
+			if source_violated and not (
+				allow_source_violation_on_goal_establishment
+				and step_establishes_goal
+			):
+				return False
+			if any(
+				_step_effects_may_violate_literal(
+					forbidden,
+					adds=adds,
+					deletes=deletes,
+					numeric_effects=action.numeric_effects,
+					binding=binding,
+					numeric_functions=numeric_functions,
+				)
+				for forbidden in completion_negative_literals
+			):
+				return False
+		goal_established = goal_established or step_establishes_goal
+	return goal_established
+
+
+def _source_invariant_preparation_aliases(
+	literal: DFALiteral,
+	*,
+	direct_plans: Sequence[AgentSpeakPlan],
+	helper_symbol: str,
+	source_invariants: Sequence[DFALiteral],
+	completion_negative_literals: Sequence[DFALiteral],
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+	actions_by_name: Mapping[str, _ParsedAction],
+	numeric_functions: set[str],
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Prepare one producer precondition under a strict lexicographic certificate."""
+
+	aliases: list[AgentSpeakPlan] = []
+	for direct_index, direct_plan in enumerate(direct_plans, start=1):
+		if len(direct_plan.body) != 1 or direct_plan.body[0].kind != "action":
+			continue
+		direct_step = direct_plan.body[0]
+		direct_action = actions_by_name.get(direct_step.symbol)
+		if direct_action is None:
+			continue
+		trigger_binding = {
+			formal: actual
+			for formal, actual in zip(direct_plan.trigger.arguments, literal.arguments)
+			if _is_agentspeak_variable(formal)
+		}
+		step_arguments = tuple(
+			trigger_binding.get(argument, argument) for argument in direct_step.arguments
+		)
+		binding = dict(zip(direct_action.parameters, step_arguments))
+		binding = _extend_action_binding_from_guard_literals(
+			action=direct_action,
+			binding=binding,
+			literals=source_invariants,
+		)
+		binding = _complete_action_binding(direct_action, binding)
+		mapped_preconditions = tuple(
+			_map_schema_literal(precondition, binding=binding)
+			for precondition in direct_action.preconditions
+		)
+		positive_preconditions = tuple(
+			item for item in mapped_preconditions if item.polarity == "positive"
+		)
+		known_source_atoms = {
+			item.atom for item in source_invariants if item.polarity == "positive"
+		}
+		for missing_index, missing in enumerate(positive_preconditions, start=1):
+			if missing.atom in known_source_atoms:
+				continue
+			other_preconditions = tuple(
+				item for item in positive_preconditions if item != missing
+			)
+			for support_index, support_plan in enumerate(
+				(
+					plan
+					for plan in plan_library.plans
+					if plan.body and _plan_trigger_matches_literal(plan, missing)
+				),
+				start=1,
+			):
+				if not _plan_has_primitive_prefix_source_invariant_certificate(
+					support_plan,
+					goal=missing,
+					source_invariants=source_invariants,
+					completion_negative_literals=completion_negative_literals,
+					actions_by_name=actions_by_name,
+					numeric_functions=numeric_functions,
+					allow_source_violation_on_goal_establishment=False,
+				):
+					continue
+				if any(
+					_action_only_plan_may_delete_literal(
+						support_plan,
+						goal=missing,
+						protected=protected,
+						domain=domain,
+					)
+					for protected in other_preconditions
+				):
+					continue
+				support_effects = _action_only_temporal_effects(
+					support_plan,
+					literal=missing,
+					actions_by_name=actions_by_name,
+				)
+				if support_effects is None:
+					continue
+				if _effects_may_establish_literal(
+					support_effects,
+					literal=literal,
+					numeric_functions=numeric_functions,
+				):
+					continue
+				if _support_changes_numeric_precondition_function(
+					support_effects,
+					direct_action=direct_action,
+				):
+					continue
+				grounded_context, grounded_body = _ground_action_only_plan(
+					support_plan,
+					goal=missing,
+					reserved_variables=tuple(binding.values()),
+				)
+				direct_context = _producer_preparation_context(
+					action=direct_action,
+					binding=binding,
+					missing=missing,
+					source_invariants=source_invariants,
+				)
+				aliases.append(AgentSpeakPlan(
+					plan_name=(
+						f"{helper_symbol}_prepare_{direct_index}_{missing_index}_"
+						f"{support_index}_{support_plan.plan_name}"
+					),
+					trigger=AgentSpeakTrigger(
+						"achievement_goal",
+						helper_symbol,
+						literal.arguments,
+					),
+					context=tuple(dict.fromkeys((*direct_context, *grounded_context))),
+					body=(
+						*grounded_body,
+						AgentSpeakBodyStep("subgoal", helper_symbol, literal.arguments),
+					),
+					binding_certificate=(
+						{
+							"artifact_family": "temporal_goal_dfa_append",
+							"wrapper_role": (
+								"query_local_source_invariant_preparation"
+							),
+							"certificate_kind": (
+								"lexicographic_source_invariant_preparation"
+							),
+							"prepared_literal": missing.atom,
+							"source_atomic_plan": support_plan.plan_name,
+							"ranking_components": [
+								"missing_positive_producer_precondition_count",
+							],
+							"other_producer_preconditions_preserved": True,
+							"source_invariants_preserved": True,
+						},
+					),
+				))
+	return tuple(aliases)
+
+
+def _producer_preparation_context(
+	*,
+	action: _ParsedAction,
+	binding: Mapping[str, str],
+	missing: DFALiteral,
+	source_invariants: Sequence[DFALiteral],
+) -> tuple[str, ...]:
+	contexts: list[str] = []
+	for parameter in action.parameters:
+		type_name = action.parameter_types.get(parameter, "object")
+		if type_name != "object":
+			contexts.append(f"obj_tp({binding[parameter]}, {type_name})")
+	for invariant in source_invariants:
+		contexts.append(
+			invariant.atom
+			if invariant.polarity == "positive"
+			else f"not {invariant.atom}"
+		)
+	contexts.append(f"not {missing.atom}")
+	for precondition in action.preconditions:
+		mapped = _map_schema_literal(precondition, binding=binding)
+		if mapped == missing:
+			continue
+		contexts.append(
+			mapped.atom if mapped.polarity == "positive" else f"not {mapped.atom}"
+		)
+	used_variables = {
+		argument for argument in binding.values() if _is_agentspeak_variable(argument)
+	}
+	for condition in action.numeric_preconditions:
+		contexts.extend(
+			_numeric_condition_contexts(
+				condition=condition,
+				variable_map=binding,
+				used_variables=used_variables,
+			),
+		)
+	return tuple(dict.fromkeys(contexts))
+
+
+def _support_changes_numeric_precondition_function(
+	effects: _TemporalPlanEffects,
+	*,
+	direct_action: _ParsedAction,
+) -> bool:
+	functions = {
+		str(expression.value).strip().lower()
+		for condition in direct_action.numeric_preconditions
+		for expression in (condition.left, condition.right)
+		if expression.kind != "constant"
+	}
+	return any(function in functions for function, _arguments, _delta in effects.numeric_deltas)
+
+
+def _step_effects_may_violate_literal(
+	literal: DFALiteral,
+	*,
+	adds: Sequence[DFALiteral],
+	deletes: Sequence[DFALiteral],
+	numeric_effects: Sequence[Any],
+	binding: Mapping[str, str],
+	numeric_functions: set[str],
+) -> bool:
+	if literal.predicate in numeric_functions:
+		arguments = literal.arguments[:-1]
+		return any(
+			str(effect.fluent.function).strip().lower() == literal.predicate
+			and _argument_tuples_may_unify(
+				tuple(
+					binding.get(argument, argument)
+					for argument in tuple(effect.fluent.args or ())
+				),
+				arguments,
+			)
+			for effect in numeric_effects
+		)
+	threatening = deletes if literal.polarity == "positive" else adds
+	return any(
+		effect.predicate == literal.predicate
+		and _argument_tuples_may_unify(effect.arguments, literal.arguments)
+		for effect in threatening
+	)
+
+
+def _step_effect_preservation_guards(
+	*,
+	protected_literals: Sequence[DFALiteral],
+	adds: Sequence[DFALiteral],
+	deletes: Sequence[DFALiteral],
+	numeric_effects: Sequence[Any],
+	binding: Mapping[str, str],
+	numeric_functions: set[str],
+) -> tuple[str, ...] | None:
+	"""Derive minimal non-unification guards for one primitive action."""
+
+	guards: list[str] = []
+	for protected in protected_literals:
+		if protected.predicate in numeric_functions:
+			protected_atom = DFALiteral(
+				protected.predicate,
+				protected.arguments[:-1],
+			)
+			threatening = tuple(
+				DFALiteral(
+					str(effect.fluent.function).strip().lower(),
+					tuple(
+						binding.get(argument, argument)
+						for argument in tuple(effect.fluent.args or ())
+					),
+				)
+				for effect in numeric_effects
+				if str(effect.fluent.function).strip().lower() == protected.predicate
+			)
+		else:
+			protected_atom = DFALiteral(protected.predicate, protected.arguments)
+			threatening = deletes if protected.polarity == "positive" else adds
+		for effect in threatening:
+			if effect.predicate != protected_atom.predicate:
+				continue
+			guard = _atom_non_unification_guard(effect, protected_atom)
+			if guard is None:
+				return None
+			if guard:
+				guards.append(guard)
+	return tuple(dict.fromkeys(guards))
+
+
+def _extend_action_binding_from_guard_literals(
+	*,
+	action: _ParsedAction,
+	binding: Mapping[str, str],
+	literals: Sequence[DFALiteral],
+) -> dict[str, str]:
+	"""Bind action parameters from source invariants and signed guard atoms."""
+
+	result = dict(binding)
+	for literal in literals:
+		schemas = (
+			action.delete_effects
+			if literal.polarity == "negative"
+			else tuple(item for item in action.preconditions if item.is_positive)
+		)
+		for schema in schemas:
+			candidate = _extend_schema_binding(
+				result,
+				schema=schema,
+				literal=DFALiteral(
+					literal.predicate,
+					literal.arguments,
+					"positive",
+				),
+				action=action,
+			)
+			if candidate is None:
+				relaxed = {
+					parameter: argument
+					for parameter, argument in result.items()
+					if not _is_agentspeak_variable(argument)
+				}
+				candidate = _extend_schema_binding(
+					relaxed,
+					schema=schema,
+					literal=DFALiteral(
+						literal.predicate,
+						literal.arguments,
+						"positive",
+					),
+					action=action,
+				)
+				if candidate is not None:
+					substitutions = {
+						result[parameter]: argument
+						for parameter, argument in candidate.items()
+						if parameter in result
+						and _is_agentspeak_variable(result[parameter])
+						and result[parameter] != argument
+					}
+					candidate = {
+						**{
+							parameter: substitutions.get(argument, argument)
+							for parameter, argument in result.items()
+						},
+						**candidate,
+					}
+			if candidate is not None:
+				result = candidate
+				break
+	return result
+
+
+def _ground_action_only_plan(
+	plan: AgentSpeakPlan,
+	*,
+	goal: DFALiteral,
+	reserved_variables: Sequence[str] = (),
+) -> tuple[tuple[str, ...], tuple[AgentSpeakBodyStep, ...]]:
+	"""Instantiate one lifted action-only plan at a query literal."""
+
+	trigger_variables = {
+		argument
+		for argument in plan.trigger.arguments
+		if _is_agentspeak_variable(argument)
+	}
+	all_variables = {
+		variable
+		for context in plan.context
+		for variable in re.findall(r"\b[A-Z][A-Za-z0-9_]*\b", context)
+	}
+	all_variables.update(
+		argument
+		for step in plan.body
+		for argument in step.arguments
+		if _is_agentspeak_variable(argument)
+	)
+	actual_variables = {
+		argument for argument in goal.arguments if _is_agentspeak_variable(argument)
+	}
+	reserved_variable_set = {
+		argument for argument in reserved_variables if _is_agentspeak_variable(argument)
+	}
+	used_variables = (
+		all_variables | actual_variables | trigger_variables | reserved_variable_set
+	)
+	local_renaming: dict[str, str] = {}
+	for variable in sorted(
+		(all_variables - trigger_variables)
+		& (actual_variables | reserved_variable_set),
+	):
+		local_renaming[variable] = _fresh_agentspeak_variable(
+			used_variables,
+			prefix=variable,
+		)
+		used_variables.add(local_renaming[variable])
+	renamed_contexts = tuple(
+		_substitute_agentspeak_variables(context, local_renaming)
+		for context in plan.context
+	)
+	renamed_body = tuple(
+		AgentSpeakBodyStep(
+			step.kind,
+			step.symbol,
+			tuple(local_renaming.get(argument, argument) for argument in step.arguments),
+		)
+		for step in plan.body
+	)
+	binding = {
+		formal: actual
+		for formal, actual in zip(plan.trigger.arguments, goal.arguments)
+		if _is_agentspeak_variable(formal)
+	}
+	contexts = tuple(
+		_substitute_agentspeak_variables(context, binding)
+		for context in renamed_contexts
+	)
+	body = tuple(
+		AgentSpeakBodyStep(
+			step.kind,
+			step.symbol,
+			tuple(binding.get(argument, argument) for argument in step.arguments),
+		)
+		for step in renamed_body
+	)
+	return contexts, body
+
+
+def _substitute_agentspeak_variables(
+	context: str,
+	binding: Mapping[str, str],
+) -> str:
+	result = context
+	for variable in sorted(binding, key=len, reverse=True):
+		result = re.sub(
+			rf"\b{re.escape(variable)}\b",
+			binding[variable],
+			result,
+		)
+	return result
+
+
+def _action_only_plan_may_delete_literal(
+	plan: AgentSpeakPlan,
+	*,
+	goal: DFALiteral,
+	protected: DFALiteral,
+	domain: PDDLDomain,
+) -> bool:
+	"""Check every primitive prefix for a delete that may hit a protected atom."""
+
+	binding = {
+		formal: actual
+		for formal, actual in zip(plan.trigger.arguments, goal.arguments)
+		if _is_agentspeak_variable(formal)
+	}
+	actions = {
+		action.name: _ParsedAction.from_pddl(action)
+		for action in domain.actions
+	}
+	for step in plan.body:
+		action = actions.get(step.symbol)
+		if step.kind != "action" or action is None:
+			return True
+		step_arguments = tuple(binding.get(argument, argument) for argument in step.arguments)
+		action_binding = dict(zip(action.parameters, step_arguments))
+		for effect in action.delete_effects:
+			deleted = _map_schema_literal(effect, binding=action_binding)
+			if _atom_non_unification_guard(deleted, protected) != "":
+				return True
+	return False
+
+
+def _bind_numeric_effect_to_literal(
+	*,
+	action: _ParsedAction,
+	effect,
+	literal: DFALiteral,
+) -> dict[str, str] | None:
+	if (
+		str(effect.fluent.function).strip().lower() != literal.predicate
+		or len(tuple(effect.fluent.args or ())) != len(literal.arguments) - 1
+		or effect.operator not in {"increase", "decrease"}
+		or effect.amount.kind != "constant"
+		or re.fullmatch(r"[+-]?\d+", str(effect.amount.value)) is None
+	):
+		return None
+	binding: dict[str, str] = {}
+	for schema_argument, query_argument in zip(
+		tuple(effect.fluent.args or ()),
+		literal.arguments[:-1],
+	):
+		if schema_argument not in action.parameters:
+			if schema_argument != query_argument:
+				return None
+			continue
+		previous = binding.get(schema_argument)
+		if previous is not None and previous != query_argument:
+			return None
+		binding[schema_argument] = query_argument
+	return binding
+
+
+def _bound_numeric_effect_delta(
+	*,
+	action: _ParsedAction,
+	binding: Mapping[str, str],
+	function: str,
+	arguments: Sequence[str],
+) -> int | None:
+	delta = 0
+	found = False
+	for effect in action.numeric_effects:
+		if effect.operator not in {"increase", "decrease"}:
+			return None
+		if effect.amount.kind != "constant" or re.fullmatch(
+			r"[+-]?\d+",
+			str(effect.amount.value),
+		) is None:
+			return None
+		mapped_arguments = tuple(
+			binding.get(argument, argument) for argument in tuple(effect.fluent.args or ())
+		)
+		if (
+			str(effect.fluent.function).strip().lower() != function
+			or mapped_arguments != tuple(arguments)
+		):
+			continue
+		amount = int(str(effect.amount.value))
+		delta += amount if effect.operator == "increase" else -amount
+		found = True
+	return delta if found else None
+
+
+def _numeric_preconditions_reference_only_target_fluent(
+	*,
+	action: _ParsedAction,
+	binding: Mapping[str, str],
+	function: str,
+	arguments: Sequence[str],
+) -> bool:
+	function_terms = tuple(
+		expression
+		for condition in action.numeric_preconditions
+		for expression in (condition.left, condition.right)
+		if expression.kind != "constant"
+	)
+	return bool(function_terms) and all(
+		str(expression.value).strip().lower() == function
+		and tuple(
+			binding.get(argument, argument)
+			for argument in tuple(expression.args or ())
+		) == tuple(arguments)
+		for expression in function_terms
+	)
+
+
+def _constant_bound_numeric_requirement(
+	condition: Any,
+	*,
+	binding: Mapping[str, str],
+) -> tuple[str, tuple[str, ...], str, int] | None:
+	left = condition.left
+	right = condition.right
+	comparator = str(condition.comparator)
+	if left.kind != "constant" and right.kind == "constant":
+		expression = left
+		bound_text = str(right.value)
+	elif left.kind == "constant" and right.kind != "constant":
+		expression = right
+		bound_text = str(left.value)
+		comparator = {
+			">": "<",
+			">=": "<=",
+			"<": ">",
+			"<=": ">=",
+		}.get(comparator, comparator)
+	else:
+		return None
+	if re.fullmatch(r"[+-]?\d+", bound_text) is None:
+		return None
+	return (
+		str(expression.value).strip().lower(),
+		tuple(
+			binding.get(argument, argument)
+			for argument in tuple(expression.args or ())
+		),
+		comparator,
+		int(bound_text),
+	)
+
+
+def _delta_progresses_numeric_requirement(
+	*,
+	comparator: str,
+	bound: int,
+	delta: int,
+) -> bool:
+	del bound
+	if comparator in {">", ">="}:
+		return delta > 0
+	if comparator in {"<", "<="}:
+		return delta < 0
+	return comparator == "=" and delta != 0
+
+
+def _numeric_requirement_progress_guard(
+	*,
+	value_variable: str,
+	comparator: str,
+	bound: int,
+	delta: int,
+) -> str | None:
+	if comparator == ">=":
+		return f"{value_variable} < {bound}" if delta > 0 else None
+	if comparator == ">":
+		return f"{value_variable} <= {bound}" if delta > 0 else None
+	if comparator == "<=":
+		return f"{value_variable} > {bound}" if delta < 0 else None
+	if comparator == "<":
+		return f"{value_variable} >= {bound}" if delta < 0 else None
+	if comparator == "=" and delta != 0:
+		return f"{value_variable} == {bound - delta}"
+	return None
+
+
+def _numeric_progress_guard(
+	*,
+	value_variable: str,
+	target_value: int,
+	delta: int,
+	exact_step: bool = False,
+) -> str:
+	if exact_step:
+		return f"{value_variable} == {target_value - delta}"
+	if delta == 1:
+		return f"{value_variable} < {target_value}"
+	if delta == -1:
+		return f"{value_variable} > {target_value}"
+	return f"{value_variable} == {target_value - delta}"
+
+
+def _fresh_agentspeak_variable(used: set[str], *, prefix: str) -> str:
+	if prefix not in used:
+		return prefix
+	index = 0
+	while f"{prefix}{index}" in used:
+		index += 1
+	return f"{prefix}{index}"
+
+
+def _mixed_numeric_alias_plans(
+	literals: Sequence[DFALiteral],
+	*,
+	selected_plans_by_literal: Sequence[Sequence[AgentSpeakPlan]],
+	helper_prefix: str,
+) -> tuple[tuple[AgentSpeakPlan, ...], Mapping[str, str]]:
+	aliases: list[AgentSpeakPlan] = []
+	helper_by_predicate: dict[str, str] = {}
+	for literal_index, (literal, selected_plans) in enumerate(
+		zip(literals, selected_plans_by_literal),
+		start=1,
+	):
+		plans = tuple(selected_plans)
+		if not plans:
+			continue
+		helper_symbol = _safe_query_identifier(
+			f"{helper_prefix}_repair_{literal.predicate}_{literal_index}"
+		)
+		helper_by_predicate[literal.atom] = helper_symbol
+		aliases.append(
+			AgentSpeakPlan(
+				plan_name=f"{helper_symbol}_already_satisfied",
+				trigger=AgentSpeakTrigger(
+					"achievement_goal",
+					helper_symbol,
+					literal.arguments,
+				),
+				context=(literal.atom,),
+				body=(),
+				binding_certificate=(
+					{
+						"artifact_family": "temporal_goal_dfa_append",
+						"wrapper_role": "query_local_numeric_completion_base",
+						"certificate_kind": "observed_numeric_target_base_case",
+						"observed_literal": literal.atom,
+					},
+				),
+			),
+		)
+		for branch_index, plan in enumerate(plans, start=1):
+			rewritten_body = tuple(
+				AgentSpeakBodyStep(step.kind, helper_symbol, step.arguments)
+				if step.kind == "subgoal"
+				and step.symbol == plan.trigger.symbol
+				and tuple(step.arguments) == tuple(plan.trigger.arguments)
+				else step
+				for step in plan.body
+			)
+			aliases.append(
+				AgentSpeakPlan(
+					plan_name=(
+						f"{helper_symbol}_branch_{branch_index}_{plan.plan_name}"
+					),
+					trigger=AgentSpeakTrigger(
+						plan.trigger.event_type,
+						helper_symbol,
+						plan.trigger.arguments,
+					),
+					context=plan.context,
+					body=rewritten_body,
+					source_instruction_ids=plan.source_instruction_ids,
+					binding_certificate=(
+						*plan.binding_certificate,
+						{
+							"artifact_family": "temporal_goal_dfa_append",
+							"wrapper_role": "query_local_mixed_numeric_safe_branch",
+							"source_atomic_plan": plan.plan_name,
+							"effect_summary_method": (
+								"pddl_action_only_net_boolean_and_integer_delta"
+							),
+						},
+					),
+				),
+			)
+	return tuple(aliases), helper_by_predicate
+
+
+def _literal_has_achievement_branch(
+	literal: DFALiteral,
+	*,
+	plan_library: PlanLibrary,
+) -> bool:
+	return any(
+		plan.body and _plan_trigger_matches_literal(plan, literal)
+		for plan in plan_library.plans
+	)
+
+
+def _plan_trigger_matches_literal(plan: AgentSpeakPlan, literal: DFALiteral) -> bool:
+	if (
+		plan.trigger.symbol != literal.predicate
+		or len(plan.trigger.arguments) != len(literal.arguments)
+	):
+		return False
+	binding: dict[str, str] = {}
+	for formal, actual in zip(plan.trigger.arguments, literal.arguments):
+		if _is_agentspeak_variable(formal):
+			previous = binding.get(formal)
+			if previous is not None and previous != actual:
+				return False
+			binding[formal] = actual
+		elif formal != actual:
+			return False
+	return True
+
+
+def _action_only_temporal_effects(
+	plan: AgentSpeakPlan,
+	*,
+	literal: DFALiteral,
+	actions_by_name: Mapping[str, _ParsedAction],
+) -> _TemporalPlanEffects | None:
+	trigger_binding = {
+		formal: actual
+		for formal, actual in zip(plan.trigger.arguments, literal.arguments)
+		if _is_agentspeak_variable(formal)
+	}
+	boolean_state: dict[tuple[str, tuple[str, ...]], bool] = {}
+	numeric_deltas: dict[tuple[str, tuple[str, ...]], int] = {}
+	for step in plan.body:
+		if step.kind != "action":
+			return None
+		action = actions_by_name.get(step.symbol)
+		if action is None or len(action.parameters) != len(step.arguments):
+			return None
+		step_arguments = tuple(trigger_binding.get(argument, argument) for argument in step.arguments)
+		binding = dict(zip(action.parameters, step_arguments))
+		for effect in action.delete_effects:
+			boolean_state[
+				(
+					effect.predicate,
+					tuple(binding.get(argument, argument) for argument in effect.arguments),
+				)
+			] = False
+		for effect in action.add_effects:
+			boolean_state[
+				(
+					effect.predicate,
+					tuple(binding.get(argument, argument) for argument in effect.arguments),
+				)
+			] = True
+		for effect in action.numeric_effects:
+			if (
+				effect.operator not in {"increase", "decrease"}
+				or effect.amount.kind != "constant"
+				or re.fullmatch(r"[+-]?\d+", str(effect.amount.value)) is None
+			):
+				return None
+			key = (
+				str(effect.fluent.function).strip().lower(),
+				tuple(
+					binding.get(argument, argument)
+					for argument in tuple(effect.fluent.args or ())
+				),
+			)
+			amount = int(str(effect.amount.value))
+			if effect.operator == "decrease":
+				amount = -amount
+			numeric_deltas[key] = numeric_deltas.get(key, 0) + amount
+	return _TemporalPlanEffects(
+		adds=frozenset(atom for atom, value in boolean_state.items() if value),
+		deletes=frozenset(atom for atom, value in boolean_state.items() if not value),
+		numeric_deltas=tuple(
+			sorted(
+				(function, arguments, delta)
+				for (function, arguments), delta in numeric_deltas.items()
+				if delta != 0
+			),
+		),
+	)
+
+
+def _effects_may_threaten_literal(
+	effects: _TemporalPlanEffects,
+	*,
+	protected: DFALiteral,
+	numeric_functions: set[str],
+) -> bool:
+	if protected.predicate in numeric_functions:
+		protected_key = protected.arguments[:-1]
+		return any(
+			function == protected.predicate
+			and _argument_tuples_may_unify(arguments, protected_key)
+			for function, arguments, _delta in effects.numeric_deltas
+		)
+	return any(
+		predicate == protected.predicate
+		and _argument_tuples_may_unify(arguments, protected.arguments)
+		for predicate, arguments in effects.deletes
+	)
+
+
+def _effects_may_establish_literal(
+	effects: _TemporalPlanEffects,
+	*,
+	literal: DFALiteral,
+	numeric_functions: set[str],
+) -> bool:
+	if literal.predicate in numeric_functions:
+		return any(
+			function == literal.predicate
+			and _argument_tuples_may_unify(arguments, literal.arguments[:-1])
+			for function, arguments, _delta in effects.numeric_deltas
+		)
+	return any(
+		predicate == literal.predicate
+		and _argument_tuples_may_unify(arguments, literal.arguments)
+		for predicate, arguments in effects.adds
+	)
+
+
+def _argument_tuples_may_unify(
+	left: Sequence[str],
+	right: Sequence[str],
+) -> bool:
+	if len(left) != len(right):
+		return False
+	return all(
+		left_argument == right_argument
+		or _is_agentspeak_variable(left_argument)
+		or _is_agentspeak_variable(right_argument)
+		for left_argument, right_argument in zip(left, right)
+	)
+
+
+def _stable_literal_topological_order(
+	literal_count: int,
+	edges: set[tuple[int, int]],
+) -> tuple[int, ...] | None:
+	incoming = {index: 0 for index in range(literal_count)}
+	outgoing = {index: set() for index in range(literal_count)}
+	for source, target in edges:
+		if target not in outgoing[source]:
+			outgoing[source].add(target)
+			incoming[target] += 1
+	ready = [index for index in range(literal_count) if incoming[index] == 0]
+	ordered: list[int] = []
+	while ready:
+		current = ready.pop(0)
+		ordered.append(current)
+		for target in sorted(outgoing[current]):
+			incoming[target] -= 1
+			if incoming[target] == 0:
+				ready.append(target)
+		ready.sort()
+	return tuple(ordered) if len(ordered) == literal_count else None
 
 
 def _guard_variable_type_contexts(

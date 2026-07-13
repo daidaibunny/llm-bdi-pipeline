@@ -207,14 +207,10 @@ def synthesize_atomic_minimal_literal_module_library(
 			"provided for atomic module synthesis.",
 		)
 	parsed_actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
-	module_predicates = (
-		_module_predicate_closure(
-			seeds=seeds,
-			actions=parsed_actions,
-			declared_predicates=declared_predicates,
-		)
-		if seeds
-		else ()
+	module_predicates = _module_predicate_closure(
+		seeds=seeds,
+		actions=parsed_actions,
+		declared_predicates=declared_predicates,
 	)
 	schema_candidates = _candidate_module_plans(
 		domain=domain,
@@ -435,14 +431,26 @@ def _candidate_module_plans(
 				),
 			),
 		)
-		for sequence in _producer_action_sequences(
+		sequences = _producer_action_sequences(
 			actions=actions,
 			type_tokens=domain.types,
 			seed_predicates=set(seed_predicates),
 			target_predicate=predicate.name,
 			module_predicates=module_set,
 			recursive_module_predicates=recursive_module_predicates,
-		):
+		)
+		release_extended_prefixes = {
+			tuple(
+				(call.action.name, call.arguments)
+				for call in sequence.body_actions[:-1]
+			)
+			for sequence in sequences
+			if sequence.resource_release_certificates and len(sequence.body_actions) > 1
+		}
+		for sequence in sequences:
+			sequence_key = tuple(
+				(call.action.name, call.arguments) for call in sequence.body_actions
+			)
 			plans.extend(
 				_sequence_module_plans(
 					sequence=sequence,
@@ -453,6 +461,10 @@ def _candidate_module_plans(
 					source_backend=source_backend,
 					source_name=source_name,
 					policy_file=policy_file,
+					allow_precondition_preparation=(
+						bool(sequence.resource_release_certificates)
+						or sequence_key not in release_extended_prefixes
+					),
 				),
 			)
 	return tuple(_deduplicate_plans(plans))
@@ -536,7 +548,7 @@ def _producer_action_sequences(
 		head_arguments, variable_map = _head_variable_map(effect)
 		variable_map = _complete_variable_map(final_action.parameters, variable_map)
 		mapped_effect = effect.mapped(variable_map)
-		transient_preconditions = _transient_preconditions(
+		composable_preconditions = _composable_positive_preconditions(
 			action=final_action,
 			variable_map=variable_map,
 			target_predicate=target_predicate,
@@ -567,7 +579,7 @@ def _producer_action_sequences(
 			),
 			producer_action_names=(final_action.name,),
 		))
-		for transient in transient_preconditions:
+		for transient in composable_preconditions:
 			for support_action, support_effect in _producer_effects(actions, transient.predicate):
 				support_map = {
 					raw_argument: mapped_argument
@@ -878,7 +890,7 @@ def _predicate_requires_recursive_module(
 	return False
 
 
-def _transient_preconditions(
+def _composable_positive_preconditions(
 	*,
 	action: _ParsedAction,
 	variable_map: Mapping[str, str],
@@ -887,7 +899,8 @@ def _transient_preconditions(
 	module_predicates: set[str],
 	recursive_module_predicates: set[str],
 ) -> tuple[PDDLLiteralSchema, ...]:
-	deleted = tuple(effect.mapped(variable_map) for effect in action.delete_effects)
+	"""Return producible positive preconditions eligible for bounded support composition."""
+
 	return tuple(
 		mapped
 		for precondition in action.preconditions
@@ -901,7 +914,6 @@ def _transient_preconditions(
 			module_predicates=module_predicates,
 			recursive_module_predicates=recursive_module_predicates,
 		)
-		and any(_same_atom(mapped, deleted_literal) for deleted_literal in deleted)
 	)
 
 
@@ -916,8 +928,7 @@ def _should_compose_transient_precondition(
 	if literal.predicate not in module_predicates:
 		return True
 	return (
-		target_predicate in seed_predicates
-		and literal.predicate != target_predicate
+		literal.predicate != target_predicate
 		and literal.predicate not in recursive_module_predicates
 	)
 
@@ -948,7 +959,10 @@ def _finalize_sequences(
 		context_literals=base_contexts,
 		body_actions=base_body,
 	)
-	variants: tuple[_CleanupExtension | None, ...] = cleanup_extensions or (None,)
+	# Resource release is an optional certified extension. Keep the executable
+	# producer itself in the candidate space so the selector can choose whether
+	# restoring the resource is necessary for the evidence obligation.
+	variants: tuple[_CleanupExtension | None, ...] = (None, *cleanup_extensions)
 	sequences: list[_ProducerSequence] = []
 	for cleanup_extension in variants:
 		sequence_body = base_body
@@ -984,15 +998,16 @@ def _finalize_sequences(
 		)
 		if has_functional_conflict and not resource_release_certificates:
 			continue
+		execution_guards = _symbolic_sequence_execution_guards(
+			target_effect=target_effect,
+			context_literals=range_restricted_contexts,
+			body_actions=sequence_body,
+			type_tokens=type_tokens,
+		)
+		if execution_guards is None:
+			continue
+		guard_contexts = _deduplicate((*guard_contexts, *execution_guards))
 		if resource_release_certificates:
-			execution_guards = _symbolic_sequence_execution_guards(
-				target_effect=target_effect,
-				context_literals=range_restricted_contexts,
-				body_actions=sequence_body,
-			)
-			if execution_guards is None:
-				continue
-			guard_contexts = _deduplicate((*guard_contexts, *execution_guards))
 			resource_release_certificates = tuple(
 				{
 					**dict(certificate),
@@ -1000,12 +1015,6 @@ def _finalize_sequences(
 				}
 				for certificate in resource_release_certificates
 			)
-		elif not _symbolic_sequence_is_executable(
-			target_effect=target_effect,
-			context_literals=range_restricted_contexts,
-			body_actions=sequence_body,
-		):
-			continue
 		sequences.append(
 			_ProducerSequence(
 				target_predicate=target_effect.predicate,
@@ -1719,48 +1728,18 @@ def _canonical_type_name(type_name: str) -> str:
 	return str(type_name or "").strip().lower() or "object"
 
 
-def _symbolic_sequence_is_executable(
-	*,
-	target_effect: PDDLLiteralSchema,
-	context_literals: Sequence[PDDLLiteralSchema],
-	body_actions: Sequence[_ActionCall],
-) -> bool:
-	state: dict[tuple[str, tuple[str, ...]], bool] = {}
-	for literal in context_literals:
-		key = _atom_key(literal)
-		value = literal.is_positive
-		if key in state and state[key] != value:
-			return False
-		state[key] = value
-	for call in body_actions:
-		variable_map = {
-			parameter: argument
-			for parameter, argument in zip(call.action.parameters, call.arguments)
-		}
-		for precondition in call.action.preconditions:
-			mapped = precondition.mapped(variable_map)
-			current_value = state.get(_atom_key(mapped))
-			if mapped.is_positive and current_value is not True:
-				return False
-			if not mapped.is_positive and current_value is not False:
-				return False
-		for effect in call.action.delete_effects:
-			state[_atom_key(effect.mapped(variable_map))] = False
-		for effect in call.action.add_effects:
-			state[_atom_key(effect.mapped(variable_map))] = True
-	return state.get(_atom_key(target_effect)) is True
-
-
 def _symbolic_sequence_execution_guards(
 	*,
 	target_effect: PDDLLiteralSchema,
 	context_literals: Sequence[PDDLLiteralSchema],
 	body_actions: Sequence[_ActionCall],
+	type_tokens: Sequence[str],
 ) -> tuple[str, ...] | None:
 	"""Certify every context-permitted aliasing of a symbolic action sequence."""
 
 	state: dict[tuple[str, tuple[str, ...]], bool] = {}
 	guards: list[str] = []
+	argument_types = _argument_required_types(body_actions)
 	for literal in context_literals:
 		key = _atom_key(literal)
 		value = literal.is_positive
@@ -1770,6 +1749,8 @@ def _symbolic_sequence_execution_guards(
 			state=state,
 			literal=literal,
 			expected_value=value,
+			argument_types=argument_types,
+			type_tokens=type_tokens,
 		)
 		if conflict_guards is None:
 			return None
@@ -1790,6 +1771,8 @@ def _symbolic_sequence_execution_guards(
 				state=state,
 				literal=mapped,
 				expected_value=expected_value,
+				argument_types=argument_types,
+				type_tokens=type_tokens,
 			)
 			if conflict_guards is None:
 				return None
@@ -1804,6 +1787,8 @@ def _symbolic_sequence_execution_guards(
 		state=state,
 		literal=target_effect,
 		expected_value=True,
+		argument_types=argument_types,
+		type_tokens=type_tokens,
 	)
 	if target_guards is None:
 		return None
@@ -1816,6 +1801,8 @@ def _symbolic_alias_conflict_guards(
 	state: Mapping[tuple[str, tuple[str, ...]], bool],
 	literal: PDDLLiteralSchema,
 	expected_value: bool,
+	argument_types: Mapping[str, set[str]],
+	type_tokens: Sequence[str],
 ) -> tuple[str, ...] | None:
 	guards: list[str] = []
 	for (predicate, arguments), value in state.items():
@@ -1823,12 +1810,44 @@ def _symbolic_alias_conflict_guards(
 			continue
 		if predicate != literal.predicate or len(arguments) != len(literal.arguments):
 			continue
+		if not _argument_tuples_may_unify_by_type(
+			arguments,
+			literal.arguments,
+			argument_types=argument_types,
+			type_tokens=type_tokens,
+		):
+			continue
 		guard = _exact_non_unification_guard(literal.arguments, arguments)
 		if guard is None:
 			return None
 		if guard:
 			guards.append(guard)
 	return _deduplicate(tuple(guards))
+
+
+def _argument_tuples_may_unify_by_type(
+	left_arguments: Sequence[str],
+	right_arguments: Sequence[str],
+	*,
+	argument_types: Mapping[str, set[str]],
+	type_tokens: Sequence[str],
+) -> bool:
+	"""Return whether corresponding symbolic arguments can denote the same objects."""
+
+	for left, right in zip(left_arguments, right_arguments):
+		if left == right:
+			continue
+		left_types = argument_types.get(left, set())
+		right_types = argument_types.get(right, set())
+		if not left_types or not right_types:
+			continue
+		if not any(
+			_types_are_compatible(left_type, right_type, type_tokens)
+			for left_type in left_types
+			for right_type in right_types
+		):
+			return False
+	return True
 
 
 def _exact_non_unification_guard(
@@ -2375,6 +2394,7 @@ def _sequence_module_plans(
 	source_backend: str,
 	source_name: str,
 	policy_file: str | Path | None,
+	allow_precondition_preparation: bool,
 ) -> tuple[AgentSpeakPlan, ...]:
 	dynamic_predicates = _dynamic_predicates(actions)
 	project_dynamic_siblings = _preparation_dependencies_are_acyclic(
@@ -2404,6 +2424,8 @@ def _sequence_module_plans(
 		),
 	]
 	if not sequence.target_arguments:
+		return tuple(plans)
+	if not allow_precondition_preparation:
 		return tuple(plans)
 	for literal in sequence.context_literals:
 		if not _is_public_positive_precondition(
