@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from scripts.run_moose_faithful_e2e import first_n_test_instances
+from scripts.run_moose_faithful_e2e import format_moose_domain_progress
 from scripts.run_moose_faithful_e2e import append_problem_goal_wrappers_to_library
 from scripts.run_moose_faithful_e2e import compile_moose_atomic_library_command
 from scripts.run_moose_faithful_e2e import materialize_moose_compatible_pddl
@@ -32,7 +33,22 @@ def test_moose_paper_budget_constants_match_official_experiment() -> None:
 	assert MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS == 12 * 60 * 60
 	assert MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS == 1800
 	assert MOOSE_REPRODUCTION_RANDOM_SEED == 0
-	assert MOOSE_REPRODUCTION_SYNTHESIS_WORKERS == 12
+	assert MOOSE_REPRODUCTION_SYNTHESIS_WORKERS == 1
+
+
+def test_moose_domain_progress_is_concise_and_identifies_artifact() -> None:
+	record = {
+		"domain": "logistics",
+		"success": True,
+		"canonical_library": {"asl": "/tmp/logistics/plan_library.asl"},
+	}
+
+	message = format_moose_domain_progress(record, elapsed_seconds=12.34)
+
+	assert message == (
+		"[moose-domain] domain=logistics status=ok elapsed=12.3s "
+		"artifact=/tmp/logistics/plan_library.asl"
+	)
 
 
 def test_natural_sort_selects_first_split_instances(tmp_path: Path) -> None:

@@ -62,17 +62,21 @@ budget, and a 30-minute/8-GB test-planning budget
 \cite{Chen2026Moose}. The artifact keeps the 12-hour synthesis timeout but uses
 a 16-GiB external-process safety cap; this memory difference is a declared
 reproduction deviation. MOOSE, Jason, and validation worker counts are system
-parameters rather than generalized-planning hyperparameters. The standard
-atomic-library batch fixes the MOOSE seed to zero and uses 12 synthesis threads
-inside each sequentially processed domain. Distinct seeds are independent
-repetitions whose learned policies are evaluated separately rather than
-concatenated. Because MOOSE shares seeded goal-permutation sampling across its
-problem threads, both the seed and synthesis-thread count are recorded as
-evidence provenance. Jason defaults to six workers, a 30-minute timeout, a
-30-minute VAL timeout, and a 64-MiB Java thread stack. The independent TEG
-execution runner defaults to eight workers with the same per-case timeout and
-stack limits; worker count is recorded as execution provenance and does not
-change controller semantics.
+parameters rather than generalized-planning hyperparameters. We execute five
+independent MOOSE repetitions with fixed seeds 0--4. Each repetition uses the
+complete train split, one internal synthesis worker, and isolated model, policy,
+library, and log roots. The single-worker restriction prevents the shared seeded
+goal-permutation generator in the current MOOSE implementation from being
+coupled to problem-thread scheduling. The five isolated seed processes may run
+concurrently, but their rules are never concatenated and no best-seed policy is
+selected. Each policy is compiled and evaluated separately; we report all five
+outcomes together with mean and sample standard deviation. Concurrent synthesis
+times measure batch throughput and are not used for cross-system runtime claims.
+Jason/VAL repetitions are sequential across seeds and use six per-test workers,
+a 30-minute timeout for each tool, and a 64-MiB Java thread stack. The
+independent TEG execution runner defaults to eight workers with the same
+per-case timeout and stack limits; worker count is recorded as execution
+provenance and does not change controller semantics.
 
 The implemented toolchain uses the MOOSE readable-policy exporter, Clingo for
 branch selection, \texttt{ltlf2dfa} with a real MONA binary, Jason for

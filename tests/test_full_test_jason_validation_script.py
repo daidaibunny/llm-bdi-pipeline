@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -1182,10 +1183,83 @@ def test_parser_order_batch_defaults_match_paper_budget_and_local_parallelism() 
 	script = Path("scripts/run_parser_order_full_val_batch.sh").read_text(encoding="utf-8")
 
 	assert 'WORKERS="${WORKERS:-6}"' in script
-	assert 'MOOSE_WORKERS="${MOOSE_WORKERS:-12}"' in script
-	assert 'MOOSE_RANDOM_SEED="${MOOSE_RANDOM_SEED:-0}"' in script
+	assert 'MOOSE_WORKERS="${MOOSE_WORKERS:-1}"' in script
+	assert 'MOOSE_SEEDS="${MOOSE_SEEDS:-0 1 2 3 4}"' in script
+	assert 'MOOSE_SEED_PARALLELISM="${MOOSE_SEED_PARALLELISM:-5}"' in script
 	assert 'JASON_WORKERS="${JASON_WORKERS:-$WORKERS}"' in script
-	assert '--random-seed "$MOOSE_RANDOM_SEED"' in script
+	assert 'seed_batch_id="${BATCH_ID}-seed${seed}"' in script
+	assert 'seed_validation_run_id="${VALIDATION_RUN_ID}-seed${seed}"' in script
+	assert '--random-seed "$seed"' in script
+	assert '--batch-id "$seed_batch_id"' in script
+	assert 'run_moose_seed "$seed" &' in script
+	assert 'run_validation_seed "$seed"' in script
+	assert 'run_validation_seed "$seed" &' not in script
+	assert '"evidence_merged": False' in script
 	assert 'TRAIN_TIMEOUT_SECONDS="${TRAIN_TIMEOUT_SECONDS:-43200}"' in script
 	assert 'JASON_JAVA_STACK_SIZE="${JASON_JAVA_STACK_SIZE:-64m}"' in script
 	assert "moose_train_timeout_seconds=$TRAIN_TIMEOUT_SECONDS" in script
+
+
+def test_parser_order_batch_has_valid_bash_syntax() -> None:
+	result = subprocess.run(
+		("bash", "-n", "scripts/run_parser_order_full_val_batch.sh"),
+		check=False,
+		capture_output=True,
+		text=True,
+	)
+
+	assert result.returncode == 0, result.stderr
+
+
+def test_parser_order_batch_rejects_internal_moose_parallelism() -> None:
+	result = subprocess.run(
+		("bash", "scripts/run_parser_order_full_val_batch.sh", "ferry"),
+		check=False,
+		capture_output=True,
+		text=True,
+		env={
+			"PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+			"MOOSE_WORKERS": "2",
+		},
+	)
+
+	assert result.returncode == 2
+	assert "MOOSE_WORKERS must be 1" in result.stderr
+
+
+@pytest.mark.parametrize(
+	("override", "expected_error"),
+	(
+		(
+			{"MOOSE_SEEDS": "0 1 2 3"},
+			"MOOSE_SEEDS must contain exactly five",
+		),
+		(
+			{"MOOSE_SEEDS": "0 1 2 3 3"},
+			"MOOSE_SEEDS must not contain duplicate seed 3",
+		),
+		(
+			{"MOOSE_RANDOM_SEED": "0"},
+			"MOOSE_RANDOM_SEED is obsolete",
+		),
+	),
+)
+def test_parser_order_batch_rejects_nonstandard_seed_protocol(
+	override: dict[str, str],
+	expected_error: str,
+) -> None:
+	environment = {
+		"PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+		**override,
+	}
+
+	result = subprocess.run(
+		("bash", "scripts/run_parser_order_full_val_batch.sh", "ferry"),
+		check=False,
+		capture_output=True,
+		text=True,
+		env=environment,
+	)
+
+	assert result.returncode == 2
+	assert expected_error in result.stderr

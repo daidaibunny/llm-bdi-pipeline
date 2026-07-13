@@ -384,7 +384,7 @@ def test_moose_atomic_audit_command_pins_reproduction_seed_and_workers() -> None
 	)
 
 	assert "--random-seed 0" in result.stdout
-	assert "--num_workers 12" in result.stdout
+	assert "--num_workers 1" in result.stdout
 
 
 def test_install_moose_backend_uses_configured_backend_root(

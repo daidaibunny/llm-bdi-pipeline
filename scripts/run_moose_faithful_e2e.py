@@ -38,7 +38,7 @@ MOOSE_PAPER_GOAL_PERMUTATIONS = 3
 MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS = 12 * 60 * 60
 MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS = 1800
 MOOSE_REPRODUCTION_RANDOM_SEED = 0
-MOOSE_REPRODUCTION_SYNTHESIS_WORKERS = 12
+MOOSE_REPRODUCTION_SYNTHESIS_WORKERS = 1
 
 
 def load_selected_benchmark_domain_ids() -> tuple[str, ...]:
@@ -239,16 +239,43 @@ def main() -> int:
 		},
 	}
 	for domain_name in domains:
+		domain_started = time.monotonic()
 		record = run_domain(domain_name, args=args, output_root=output_root)
+		record["duration_seconds"] = time.monotonic() - domain_started
 		summary["domains"].append(record)
 		(output_root / "summary.json").write_text(
 			json.dumps(summary, indent=2, sort_keys=True) + "\n",
 			encoding="utf-8",
 		)
+		print(
+			format_moose_domain_progress(
+				record,
+				elapsed_seconds=float(record["duration_seconds"]),
+			),
+			flush=True,
+		)
 		if args.fail_fast and not bool(record.get("success")):
 			break
 	print(json.dumps(summary, indent=2, sort_keys=True))
 	return 0 if all(bool(item.get("success")) for item in summary["domains"]) else 1
+
+
+def format_moose_domain_progress(
+	record: dict[str, Any],
+	*,
+	elapsed_seconds: float,
+) -> str:
+	"""Render one stable, concise terminal line after a domain finishes."""
+
+	library = record.get("canonical_library")
+	artifact = "not_generated"
+	if isinstance(library, dict):
+		artifact = str(library.get("asl") or artifact)
+	status = "ok" if bool(record.get("success")) else "fail"
+	return (
+		f"[moose-domain] domain={record.get('domain')} status={status} "
+		f"elapsed={max(0.0, float(elapsed_seconds)):.1f}s artifact={artifact}"
+	)
 
 
 def run_domain(

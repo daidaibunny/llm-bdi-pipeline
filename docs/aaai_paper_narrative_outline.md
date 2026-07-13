@@ -272,9 +272,14 @@ The final evaluation answers five questions:
 
 The benchmark section records all 16 domain families and their pinned splits.
 The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
-timeout, worker, and seed configuration. Deterministic coverage needs no
-statistical test; noisy runtime comparisons should report repeated-run median
-and dispersion.
+timeout, worker, and seed configuration. The atomic experiment uses five fixed
+independent seeds, one internal MOOSE worker per seed, and isolated policy and
+library roots. It must report every seed separately plus the mean and sample
+standard deviation; it must not union evidence or select a best seed. Outer
+seed-process concurrency is an execution setting, not a MOOSE hyperparameter.
+Cross-seed Jason/VAL runs remain sequential while per-test validation is
+parallel within one seed. Noisy runtime comparisons require controlled repeated
+runs and dispersion rather than timings collected under cross-seed contention.
 
 The final paper must distinguish:
 

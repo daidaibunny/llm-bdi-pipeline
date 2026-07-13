@@ -278,18 +278,39 @@ MOOSE paper provides the following settings:
   models correspond to the five synthesis repetitions.
 
 The batch runner defaults to 43200 seconds for MOOSE training and 1800 seconds
-for MOOSE test-time planning. A standard batch explicitly uses a fixed
-`random_seed` of `0` and 12 MOOSE synthesis threads within each domain; domains are
-processed sequentially. A different seed denotes an independent synthesis
-repetition. Its learned rules remain a separate policy and are never silently
-concatenated with another seed's evidence. The repository-wide external-process
-guard remains 16 GiB; this is a declared reproduction deviation from the
-paper's 32-GB synthesis ceiling. `num_workers`, full-split flags such as
+for MOOSE test-time planning. The paper protocol now executes five independent
+synthesis repetitions with fixed seeds `0, 1, 2, 3, 4`. Each repetition trains
+on the complete selected train split and has exactly one internal MOOSE worker.
+This single-worker restriction is a reproducibility choice, not a MOOSE method
+parameter: the current MOOSE implementation seeds one process-global random
+generator and calls goal-permutation sampling from problem threads, so changing
+thread scheduling can change which problem receives each random draw.
+
+The five seed repetitions may run concurrently as isolated operating-system
+processes because they share only read-only PDDL/backend inputs and use separate
+model, policy, library, and log roots. A same-seed Logistics `p03` smoke test
+produced the same 27-rule canonical policy hash in two concurrent isolated
+processes with one internal worker; seeds 0 and 1 produced different canonical
+policies on the same instance. This smoke test motivates process isolation but
+is not treated as a proof over all domains. Every completed repetition therefore
+records raw and canonical policy hashes so same-seed reproducibility remains
+auditable.
+
+Each seed policy is compiled and evaluated independently. Policies, rules, and
+ASL branches are never concatenated across seeds, and the evaluation never
+selects the best seed. Jason/VAL repetitions run sequentially across seeds to
+avoid cross-seed resource contention changing timeout outcomes; each repetition
+uses six per-test Jason workers by default. Reports retain every seed result and
+summarize coverage with the mean and sample standard deviation across completed
+repetitions. Concurrent synthesis timings are throughput measurements; runtime
+claims against another system require a separately controlled non-contented
+timing run.
+
+The repository-wide external-process guard remains 16 GiB; this is a declared
+reproduction deviation from the paper's 32-GB synthesis ceiling.
+`num_workers`, outer seed-process parallelism, full-split flags such as
 `num_training = -1`, policy-dump and ASL append timeouts, Jason timeout, and VAL
-timeout are pipeline or hardware settings, not MOOSE method parameters. MOOSE's
-current multithreaded learner shares its seeded random generator across problem
-threads, so both seed and synthesis-thread count are recorded as evidence
-provenance rather than being treated as performance-only settings.
+timeout are pipeline or hardware settings, not MOOSE method parameters.
 
 The compiler's schema-derived candidate language is also explicit. It contains:
 
