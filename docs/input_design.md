@@ -1172,6 +1172,9 @@ benchmark rows. Its manually specified valuation traces are checked by both a
 direct recursive evaluator and a real MONA-derived DFA. Two additional
 integration cases verify initial-state acceptance for a predicate and a numeric
 equality, including the zero-action singleton-state boundary described above.
+Pinned clean-commit run `temporal-conformance-paper-67b82843` passes all 14
+formula-semantics cases and both zero-action integration cases. Its complete
+provenance and records are stored in the suite's `release_validation.json`.
 
 The defensible construction claim is:
 

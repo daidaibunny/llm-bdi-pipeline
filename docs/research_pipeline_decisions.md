@@ -1011,6 +1011,13 @@ requires independent neutral-goal VAL acceptance. The sealed execution
 benchmark contains only state-changing witnesses, so its 1,228 VAL results are
 unchanged.
 
+Pinned run `temporal-conformance-paper-67b82843` was produced from clean commit
+`67b82843`. All 14 formula-semantics cases agree with their hand-specified
+expectations under both independent evaluators, and both zero-action integration
+cases pass Jason, singleton-state replay, and both DFA checks. Exact inputs,
+tool versions, hashes, and per-case records are stored in
+`paper_artifacts/temporal_semantic_conformance/v1/release_validation.json`.
+
 ## Sources
 
 - Dillon Z. Chen, Till Hofmann, Toryn Q. Klassen, and Sheila A. McIlraith.

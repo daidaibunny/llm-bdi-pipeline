@@ -292,6 +292,11 @@ legality as vacuous after successful PDDL initial-state replay and VAL as not
 applicable, never as successful. Keep these cases outside the sealed 1,228-row
 benchmark totals.
 
+The pinned insertion is run `temporal-conformance-paper-67b82843` from clean
+commit `67b82843`: 14/14 direct-semantics-versus-MONA cases and 2/2 zero-action
+Jason/PDDL-replay/DFA integration cases pass. Keep its 16 cases separate from
+the 1,228 benchmark denominator.
+
 ### 7. Related Work and Positioning
 
 Place Related Work after the method and evaluation protocol so that the output

@@ -138,6 +138,11 @@ non-empty execution retains the independent VAL requirement. The sealed
 benchmark contains only non-empty state-changing witnesses, so this suite does
 not alter its denominator.
 
+The pinned conformance run from clean commit \texttt{67b82843} passes all 14
+formula-semantics cases and both zero-action integration cases. The release
+record stores the suite and fixture hashes, MONA and package versions, Java and
+Jason versions, runtime parameters, and every per-case outcome.
+
 The symbol-invariance suite uses synthetic domains whose vocabulary is renamed
 and whose irrelevant predicates are changed. The staged-preparation regression,
 for example, uses fabrication and tool predicates rather than any Rovers

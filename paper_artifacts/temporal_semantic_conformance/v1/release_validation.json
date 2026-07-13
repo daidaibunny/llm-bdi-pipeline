@@ -1,0 +1,209 @@
+{
+  "artifact_kind": "temporal_semantic_conformance_result",
+  "completed_at": "2026-07-13T13:25:44",
+  "duration_seconds": 4.809145208913833,
+  "fixture_sha256": {
+    "domain.pddl": "9af9ad5cc85213f9b6b2c548c708747b3c53c7b663553ee6a30f143f7642a864",
+    "problem.pddl": "6174dcf6f04bf68e98cd775021b109d14806955cc322db1e8000b8efa75786f7",
+    "suite.json": "b6511e1b15ab6a84f8c8c650a3dcc8aa738f60c377961f9c528ad79ea18302ba"
+  },
+  "parameters": {
+    "external_val_policy": "not_applicable_for_zero_action_cases",
+    "jason_java_stack_size": "64m",
+    "jason_timeout_seconds": 180
+  },
+  "records": [
+    {
+      "case_id": "atom_initial_true",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "An atom is true exactly when it belongs to the current valuation.",
+      "state_count": 1,
+      "success": true
+    },
+    {
+      "case_id": "atom_initial_false",
+      "direct_semantics_acceptance": false,
+      "expected_acceptance": false,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": false,
+      "requirement": "An absent atom is false under the closed valuation.",
+      "state_count": 1,
+      "success": true
+    },
+    {
+      "case_id": "literal_negation_initial",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "Literal negation observes absence in the same state.",
+      "state_count": 1,
+      "success": true
+    },
+    {
+      "case_id": "conjunction_same_state",
+      "direct_semantics_acceptance": false,
+      "expected_acceptance": false,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": false,
+      "requirement": "Conjuncts must hold in one state, not at separate positions.",
+      "state_count": 2,
+      "success": true
+    },
+    {
+      "case_id": "conjunction_initial_true",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "A same-state conjunction accepts when every conjunct is initially true.",
+      "state_count": 1,
+      "success": true
+    },
+    {
+      "case_id": "eventually_initial",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "Eventually includes the current position.",
+      "state_count": 1,
+      "success": true
+    },
+    {
+      "case_id": "eventually_delayed",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "Eventually accepts when its operand holds at a later finite position.",
+      "state_count": 2,
+      "success": true
+    },
+    {
+      "case_id": "eventually_never",
+      "direct_semantics_acceptance": false,
+      "expected_acceptance": false,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": false,
+      "requirement": "Eventually rejects when its operand never holds.",
+      "state_count": 2,
+      "success": true
+    },
+    {
+      "case_id": "strong_next_singleton_rejects",
+      "direct_semantics_acceptance": false,
+      "expected_acceptance": false,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": false,
+      "requirement": "Strong Next is false at the last position even when its operand holds there.",
+      "state_count": 1,
+      "success": true
+    },
+    {
+      "case_id": "strong_next_successor",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "Strong Next observes the immediate successor position.",
+      "state_count": 2,
+      "success": true
+    },
+    {
+      "case_id": "strong_until_immediate_right",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "Strong Until accepts immediately when its right operand holds now.",
+      "state_count": 1,
+      "success": true
+    },
+    {
+      "case_id": "strong_until_progress",
+      "direct_semantics_acceptance": true,
+      "expected_acceptance": true,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": true,
+      "requirement": "Strong Until requires its left operand before the right witness.",
+      "state_count": 2,
+      "success": true
+    },
+    {
+      "case_id": "strong_until_left_violation",
+      "direct_semantics_acceptance": false,
+      "expected_acceptance": false,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": false,
+      "requirement": "Strong Until rejects if the left operand fails before the right witness.",
+      "state_count": 2,
+      "success": true
+    },
+    {
+      "case_id": "strong_until_missing_right",
+      "direct_semantics_acceptance": false,
+      "expected_acceptance": false,
+      "kind": "finite_trace_semantics",
+      "mona_dfa_acceptance": false,
+      "requirement": "Strong Until rejects a finite trace with no right-operand witness.",
+      "state_count": 2,
+      "success": true
+    },
+    {
+      "action_count": 0,
+      "case_id": "initial_predicate_eventually",
+      "committed_plan_is_empty": true,
+      "gold_dfa_acceptance": true,
+      "jason_success": true,
+      "kind": "zero_action_end_to_end",
+      "legality_certificate": "vacuous_zero_action_pddl_replay",
+      "prediction_dfa_acceptance": true,
+      "requirement": "An initially true predicate can satisfy Eventually without a primitive action.",
+      "state_count": 1,
+      "success": true,
+      "val_attempted": false,
+      "val_success": null
+    },
+    {
+      "action_count": 0,
+      "case_id": "initial_numeric_equality",
+      "committed_plan_is_empty": true,
+      "gold_dfa_acceptance": true,
+      "jason_success": true,
+      "kind": "zero_action_end_to_end",
+      "legality_certificate": "vacuous_zero_action_pddl_replay",
+      "prediction_dfa_acceptance": true,
+      "requirement": "An initially true integer equality can satisfy an atomic temporal formula without a primitive action.",
+      "state_count": 1,
+      "success": true,
+      "val_attempted": false,
+      "val_success": null
+    }
+  ],
+  "run_id": "temporal-conformance-paper-67b82843",
+  "schema_version": 1,
+  "semantic_case_count": 14,
+  "source_revision": {
+    "commit": "67b828432bd58d15736d5971fdf5fb9aa0a8ac86",
+    "tracked_changes": false
+  },
+  "started_at": "2026-07-13T13:25:39",
+  "success": true,
+  "success_count": 16,
+  "suite_file": "paper_artifacts/temporal_semantic_conformance/v1/suite.json",
+  "suite_id": "temporal-semantic-conformance-v1",
+  "suite_sha256": "b6511e1b15ab6a84f8c8c650a3dcc8aa738f60c377961f9c528ad79ea18302ba",
+  "toolchain": {
+    "jason_maven_artifact": "io.github.jason-lang:jason:3.1.2",
+    "java": "openjdk version \"24\" 2025-03-18",
+    "ltlf2dfa": "1.0.2",
+    "mona_binary": ".external/mona-1.4/Front/mona",
+    "mona_sha256": "7a25d22766e6f0d9db58fe6e1af7c37e8127242c539272d5d8f337b8b8fc0e2d",
+    "python": "3.12.7"
+  },
+  "zero_action_case_count": 2
+}

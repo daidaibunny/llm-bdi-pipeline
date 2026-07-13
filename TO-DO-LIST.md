@@ -155,8 +155,9 @@ semantics evaluator and real MONA-derived DFAs. It also covers initial-state
 predicate and numeric-equality acceptance as zero-action singleton-state
 traces. VAL 1.4 cannot parse an empty plan, so these cases record vacuous PDDL
 replay legality and VAL not applicable; the non-empty 1,228-case matrix remains
-unchanged. Pin a clean-revision `release_validation.json` after the feature
-commit.
+unchanged. Clean commit `67b82843` passes 14/14 formula-semantics cases and 2/2
+zero-action integration cases. The pinned record is
+`paper_artifacts/temporal_semantic_conformance/v1/release_validation.json`.
 
 Previously recorded focused validation evidence. Rerun these probes after the
 current threat-ordering and temporal-append changes before using them as paper

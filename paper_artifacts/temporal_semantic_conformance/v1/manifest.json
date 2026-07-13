@@ -6,5 +6,9 @@
     "suite.json": "b6511e1b15ab6a84f8c8c650a3dcc8aa738f60c377961f9c528ad79ea18302ba",
     "domain.pddl": "9af9ad5cc85213f9b6b2c548c708747b3c53c7b663553ee6a30f143f7642a864",
     "problem.pddl": "6174dcf6f04bf68e98cd775021b109d14806955cc322db1e8000b8efa75786f7"
+  },
+  "release_validation": {
+    "filename": "release_validation.json",
+    "sha256": "14c595539b9ae57deb5a6d6d146a66868d3abb342ea34673c6e8a070baf32460"
   }
 }
