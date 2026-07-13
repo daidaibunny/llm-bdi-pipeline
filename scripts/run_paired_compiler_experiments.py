@@ -314,23 +314,33 @@ def validate_temporal_pairing(
 		if any(not all(item) for item in library_hashes) or len(library_hashes) != 1:
 			raise ValueError(f"atomic library fingerprint mismatch for domain={domain}")
 	results_by_variant: dict[str, dict[str, str]] = {}
+	controller_fingerprints: set[str] = set()
 	for run in runs:
 		variant = str(run.get("variant") or "")
 		variant_results: dict[str, str] = {}
 		for record in tuple(run.get("results") or ()):
 			sample_id = str(record.get("sample_id") or "")
 			fingerprint = str(record.get("dfa_fingerprint") or "")
+			controller_fingerprint = str(
+				record.get("controller_fingerprint") or "",
+			)
 			if not sample_id:
 				raise ValueError(f"temporal result without sample id for variant={variant}")
 			if not fingerprint:
 				raise ValueError(
 					f"missing DFA fingerprint for variant={variant}, sample={sample_id}",
 				)
+			if not controller_fingerprint:
+				raise ValueError(
+					"missing controller fingerprint for "
+					f"variant={variant}, sample={sample_id}",
+				)
 			if sample_id in variant_results:
 				raise ValueError(
 					f"duplicate temporal sample for variant={variant}, sample={sample_id}",
 				)
 			variant_results[sample_id] = fingerprint
+			controller_fingerprints.add(controller_fingerprint)
 		results_by_variant[variant] = variant_results
 	reference_sample_ids = set(next(iter(results_by_variant.values())))
 	for variant, variant_results in results_by_variant.items():
@@ -351,6 +361,7 @@ def validate_temporal_pairing(
 		"paired": True,
 		"sample_count": len(reference_sample_ids),
 		"domain_count": len(domain_names),
+		"controller_fingerprint_count": len(controller_fingerprints),
 	}
 
 

@@ -139,6 +139,11 @@ evidence hashes, and rejects a temporal comparison unless every method shares
 the benchmark, atomic-library, sample-set, and DFA hashes. Missing runs and
 pairing violations remain explicit infrastructure failures. Evidence synthesis,
 domain compilation, query append, execution, and validation are timed separately.
+The DFA hash covers the formula, atom binding, initial and accepting states, and
+guarded transition graph; it excludes conversion timing, artifact paths, and DOT
+rendering. A separate controller hash covers each variant's settings and
+generated query-local plans, so controller differences cannot masquerade as
+different DFA inputs.
 Per-instance references receive 30 minutes and 8~GB per problem. For the direct
 temporal reference, FOND4LTLf compilation and LAMA search share that single
 30-minute deadline rather than receiving separate budgets. We report

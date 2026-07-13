@@ -39,6 +39,7 @@ if str(SRC_ROOT) not in sys.path:
 from domain_level_planning import TemporalCompilerVariant  # noqa: E402
 from domain_level_planning import append_temporal_goal_to_library  # noqa: E402
 from domain_level_planning import build_lifted_temporal_goal_case_dfa  # noqa: E402
+from domain_level_planning import dfa_semantic_fingerprint  # noqa: E402
 from domain_level_planning import load_lifted_ltlf_goal_dataset  # noqa: E402
 from evaluation.jason_runtime import JasonPlanLibraryRunner  # noqa: E402
 from evaluation.jason_runtime.runner import build_runtime_problem_artifacts  # noqa: E402
@@ -395,7 +396,7 @@ def validate_execution_task(
 				"atomic_library_fingerprint": _canonical_payload_fingerprint(
 					library.to_dict(),
 				),
-				"dfa_fingerprint": _canonical_payload_fingerprint(dfa_payload),
+				"dfa_fingerprint": dfa_semantic_fingerprint(dfa_payload),
 			},
 		)
 		_write_json(task.output_dir / "dfa_payload.json", dfa_payload)
@@ -423,6 +424,9 @@ def validate_execution_task(
 					"atomic_library_fingerprint"
 				],
 				"dfa_fingerprint": experiment_contract["dfa_fingerprint"],
+				"controller_fingerprint": experiment_contract[
+					"controller_fingerprint"
+				],
 				"monitor_observation_boundary": append_metadata.get(
 					"monitor_observation_boundary",
 				),

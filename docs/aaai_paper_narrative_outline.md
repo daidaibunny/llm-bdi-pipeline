@@ -389,6 +389,12 @@ standard deviation. A rejection challenge suite and symbol-renaming,
 parameter-permutation, object-renaming, and irrelevant-fluent metamorphic tests
 are mandatory evidence for fail-closed and domain-independent behavior.
 
+For temporal pairing, define the common DFA fingerprint over the formula, atom
+binding, initial state, accepting states, and guarded transition graph. Exclude
+conversion timing, artifact paths, and DOT text. Record a separate controller
+fingerprint over the variant settings and generated query-local plans so the
+paper can demonstrate identical DFA inputs without erasing controller changes.
+
 The final paper must distinguish:
 
 - **Gold semantic oracle:** the hidden structured LTLf formula defines the gold

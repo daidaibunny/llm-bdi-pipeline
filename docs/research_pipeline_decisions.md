@@ -197,6 +197,12 @@ benchmark runners once per registered method. Atomic pairing requires the same
 raw readable-policy hash and normalized evidence-program fingerprint for every
 method at a given seed and domain. Temporal pairing requires the same benchmark,
 atomic-library, and DFA fingerprints and the same sample set for every method.
+The DFA fingerprint covers the formula, atom binding, initial and accepting
+states, and guarded transition graph. It excludes conversion timings, artifact
+paths, and DOT rendering, which are provenance rather than paired semantic
+input. Each result separately records a controller fingerprint over the
+registered variant settings and generated query-local plans; controller
+fingerprints may differ and never substitute for the common DFA check.
 An evidence failure blocks its dependent runs, and an incomplete pairing is
 persisted as an infrastructure failure in `paired_results.json`; it is not
 silently dropped or interpreted as method failure.

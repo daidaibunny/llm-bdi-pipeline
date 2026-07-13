@@ -6,6 +6,7 @@ import pytest
 
 from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
 from domain_level_planning.temporal_goal_appender import append_lifted_temporal_goal_case_to_library
+from domain_level_planning.temporal_goal_appender import dfa_semantic_fingerprint
 from domain_level_planning.temporal_goal_appender import DFALiteral
 from domain_level_planning.temporal_goal_appender import TemporalCompilerVariant
 from domain_level_planning.temporal_goal_appender import _ground_action_only_plan
@@ -36,6 +37,26 @@ def test_validate_guard_transition_dfa_accepts_conjunction_and_negation() -> Non
 
 	assert diagnostic.valid is True
 	assert diagnostic.errors == ()
+
+
+def test_dfa_semantic_fingerprint_ignores_runtime_timing() -> None:
+	first_payload = {
+		"formula": "F(a0)",
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "done(X)"},
+		],
+		"timing_profile": {"convert_seconds": 0.1, "total_seconds": 0.2},
+	}
+	second_payload = {
+		**first_payload,
+		"timing_profile": {"convert_seconds": 4.0, "total_seconds": 5.0},
+	}
+
+	assert dfa_semantic_fingerprint(first_payload) == dfa_semantic_fingerprint(
+		second_payload,
+	)
 
 
 def test_validate_guard_transition_dfa_reports_domain_errors() -> None:
@@ -260,6 +281,9 @@ def test_temporal_compiler_variants_share_inputs_and_isolate_mechanisms(
 	assert {
 		contract["compiler_variant"] for contract in contracts.values()
 	} == {variant.value for variant in TemporalCompilerVariant}
+	assert len(
+		{contract["controller_fingerprint"] for contract in contracts.values()},
+	) == len(TemporalCompilerVariant)
 
 	unprotected = outputs[TemporalCompilerVariant.DFA_AWARE_UNPROTECTED]
 	assert any(plan.plan_name.endswith("_repair_1") for plan in unprotected.plans)

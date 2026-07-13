@@ -182,6 +182,7 @@ def test_temporal_pairing_checks_benchmark_library_and_dfa_hashes() -> None:
 			{
 				"sample_id": "ferry-1",
 				"dfa_fingerprint": "dfa",
+				"controller_fingerprint": "controller",
 			},
 		],
 	}
@@ -200,7 +201,11 @@ def test_temporal_pairing_checks_benchmark_library_and_dfa_hashes() -> None:
 				{
 					**other_runs[-1],
 					"results": [
-						{"sample_id": "ferry-1", "dfa_fingerprint": "different"},
+						{
+							"sample_id": "ferry-1",
+							"dfa_fingerprint": "different",
+							"controller_fingerprint": "controller",
+						},
 					],
 				},
 			),
@@ -222,7 +227,27 @@ def test_temporal_pairing_checks_benchmark_library_and_dfa_hashes() -> None:
 				{
 					**other_runs[-1],
 					"results": [
-						{"sample_id": "ferry-1", "dfa_fingerprint": None},
+						{
+							"sample_id": "ferry-1",
+							"dfa_fingerprint": None,
+							"controller_fingerprint": "controller",
+						},
+					],
+				},
+			),
+		)
+	with pytest.raises(ValueError, match="missing controller fingerprint"):
+		validate_temporal_pairing(
+			(
+				*other_runs[:-1],
+				{
+					**other_runs[-1],
+					"results": [
+						{
+							"sample_id": "ferry-1",
+							"dfa_fingerprint": "dfa",
+							"controller_fingerprint": None,
+						},
 					],
 				},
 			),

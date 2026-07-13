@@ -118,6 +118,7 @@ from .temporal_goal_appender import (
 	append_lifted_temporal_goal_case_to_library,
 	append_temporal_goal_to_library,
 	build_lifted_temporal_goal_case_dfa,
+	dfa_semantic_fingerprint,
 	validate_guard_transition_dfa,
 )
 
@@ -170,6 +171,7 @@ __all__ = [
 	"append_lifted_temporal_goal_case_to_library",
 	"append_temporal_goal_to_library",
 	"build_lifted_temporal_goal_case_dfa",
+	"dfa_semantic_fingerprint",
 	"adapt_dfa_guard_to_achievement_request",
 	"adapt_dfa_guarded_transition_to_achievement_request",
 	"architecture_gap_summary",

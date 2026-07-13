@@ -147,6 +147,35 @@ def _canonical_payload_fingerprint(payload: object) -> str:
 	return hashlib.sha256(encoded).hexdigest()
 
 
+_DFA_SEMANTIC_FINGERPRINT_FIELDS = (
+	"formula",
+	"free_variables",
+	"alphabet",
+	"initial_state",
+	"accepting_states",
+	"guarded_transitions",
+	"lifted_atom_binding",
+	"num_states",
+	"num_transitions",
+)
+
+
+def dfa_semantic_fingerprint(dfa_payload: Mapping[str, Any]) -> str:
+	"""Fingerprint the DFA contract while excluding runtime measurements.
+
+	The selected fields identify the formula, atom binding, and guarded state
+	graph consumed by every temporal compiler variant. Conversion timings,
+	artifact paths, and DOT rendering are provenance rather than DFA semantics.
+	"""
+
+	semantic_payload = {
+		field: dfa_payload[field]
+		for field in _DFA_SEMANTIC_FINGERPRINT_FIELDS
+		if field in dfa_payload
+	}
+	return _canonical_payload_fingerprint(semantic_payload)
+
+
 @dataclass(frozen=True)
 class GuardTransitionDFADiagnostic:
 	"""Validation result for the conjunctive DFA guard interface contract."""
@@ -370,7 +399,19 @@ def append_temporal_goal_to_library(
 		"atomic_library_fingerprint": _canonical_payload_fingerprint(
 			plan_library.to_dict(),
 		),
-		"dfa_fingerprint": _canonical_payload_fingerprint(dfa_payload),
+		"dfa_fingerprint": dfa_semantic_fingerprint(dfa_payload),
+		"controller_fingerprint": _canonical_payload_fingerprint(
+			{
+				"compiler_variant": settings.variant.value,
+				"controller_strategy": settings.controller_strategy,
+				"controller_structure": settings.controller_structure,
+				"monitor_observation_boundary": (
+					settings.monitor_observation_boundary.value
+				),
+				"entry_proposition": entry_proposition,
+				"progress_plans": [plan.to_dict() for plan in progress_plans],
+			},
+		),
 		"paired_variant_contract": (
 			"same atomic library, DFA, query binding, and Jason runtime"
 		),
