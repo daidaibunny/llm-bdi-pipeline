@@ -71,35 +71,36 @@ and both finite-trace automata.
 
 \section{Introduction}
 
-A classical planner returns an action sequence for one grounded problem,
-whereas a generalized planner seeks behavior reusable across a family of
-problems. A Belief--Desire--Intention (BDI) interpreter requires a different
-artifact: a plan library connecting events and belief contexts to actions and
-subsidiary goals. Converting a generalized policy into such a library is not a
-syntactic exercise. Variables must be bound, internal calls implemented,
-recursion well founded, and evidence-supported behavior retained.
+Classical PDDL planning returns action sequences for individual grounded
+problems \cite{McDermott1998PDDL}; generalized planning instead seeks reusable
+behavior across a family
+\cite{Srivastava2011DirectedSearch,Chen2026Moose}. A
+Belief--Desire--Intention (BDI) interpreter executes a plan library connecting
+events and belief contexts to actions and subgoals
+\cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. Conversion must
+therefore establish variable binding, internal-call closure, well-founded
+recursion, and evidence coverage.
 
-For example, evidence for \texttt{on(X,Y)} may prescribe
-\texttt{stack(X,Y)} when \texttt{holding(X)} and \texttt{clear(Y)} hold. A
-reusable module must also handle an obstructed \texttt{Y}, perhaps by invoking
-\texttt{!clear(Y)} before retrying \texttt{!on(X,Y)}. Yet the evidence may omit
-\texttt{clear} because it never appeared as a training goal. PDDL schemas must
-then supply the missing module and a progress argument for its recursion.
+For example, singleton-goal evidence for \texttt{on(X,Y)} may authorize
+\texttt{stack(X,Y)} under \texttt{holding(X)} and \texttt{clear(Y)}
+\cite{Chen2026Moose}. A reusable module must also clear an obstructed
+\texttt{Y}, although \texttt{clear} may be absent when it was never a training
+goal. PDDL schemas must then supply the module and certify recursive progress.
 
-Temporally extended goals add a distinct problem. The same domain module should
-serve many queries, while
-$F(\mathit{on}(X,Y)\land X(F(\mathit{clear}(Z))))$ imposes a query-specific
-order. Literals on one automaton transition must also hold in the same observed
-state, so a later module may not undo an earlier achievement. Temporal control
-must therefore be composed over, rather than learned into, the domain library.
+Temporally extended goals pose a separate problem
+\cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. The formula
+$F(\mathit{on}(X,Y)\land X(F(\mathit{clear}(Z))))$ imposes query-specific
+order over reusable modules. Conjunctive automaton-guard literals must hold in
+one observed state, so later modules cannot undo earlier achievements, a form
+of BDI goal interference \cite{Thangarajah2003GoalInterference}. Temporal
+control must therefore be composed over the fixed domain library.
 
 Figure~\ref{fig:architecture} presents \methodname{}. Domain compilation joins
-singleton-goal evidence with PDDL schemas to construct one lifted atomic-module
-library; query compilation turns supported deterministic finite automaton (DFA)
-transitions into controllers over that library. MOOSE supplies the present
-evidence, while \asl{} and Jason realize the BDI plan-library model. All
-certificates depend on rule structure and symbolic PDDL effects, never on a
-domain or predicate name.
+singleton-goal evidence with PDDL schemas once; query compilation turns
+supported deterministic finite automaton (DFA) transitions into controllers.
+We instantiate these interfaces with MOOSE evidence \cite{Chen2026Moose} and an
+\asl{}/Jason plan library \cite{Rao1996AgentSpeak,Bordini2007Jason}.
+Certificates use rule structure and symbolic PDDL effects, never names.
 
 \begin{figure}[t]
 \centering
@@ -119,19 +120,16 @@ once; temporally extended queries append only query-local controllers.}
 \label{fig:architecture}
 \end{figure}
 
-GP2PL makes three contributions. It first defines evidence-to-library conversion
-as constrained compilation with minimum-cost selection inside an explicit
-candidate language. It then introduces symbol-invariant proof obligations for
-binding, symbolic execution, achievement, recursive progress, module closure,
-and resource restoration. Finally, it defines a preservation relation for real
-\ltlf-to-DFA transition guards and realizes the certified order as a
-declarative controller under primitive-step monitoring. These guarantees are
-relative to the candidate language and temporal fragment: an unproved module or
-transition is rejected. Across \BenchmarkDomainCount{} domains, all
-\TEGProblemCount{} evaluated queries execute in Jason, pass VAL, and are
-accepted by both gold and predicted DFAs; this is coverage of the evaluated
-inputs, not completeness for arbitrary PDDL--\ltlf{} products. Complete proofs
-and the reproducibility specification appear in the supplementary appendix.
+GP2PL contributes (i) an explicit candidate language with minimum-cost
+evidence-to-library selection; (ii) symbol-invariant certificates for binding,
+execution, achievement, recursion, closure, and resource restoration; and
+(iii) preservation-safe \ltlf-to-DFA guard composition under primitive-step
+monitoring. Unproved modules and transitions are rejected. Across
+\BenchmarkDomainCount{} domains, all \TEGProblemCount{} evaluated queries
+execute in Jason, pass VAL, and are accepted by both gold and predicted DFAs.
+This is evaluated-input coverage, not completeness for arbitrary
+PDDL--\ltlf{} products; complete proofs and reproducibility details appear in
+the supplement.
 
 \input{sections/background}
 \input{sections/related_work}

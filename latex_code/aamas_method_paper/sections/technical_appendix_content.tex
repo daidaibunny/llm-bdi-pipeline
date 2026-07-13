@@ -3,7 +3,9 @@
 
 This appendix makes explicit the mathematical objects, assumptions, and proofs
 summarized in the main paper. The framework is defined at the level of typed
-planning transitions and trigger--context--body BDI rules. MOOSE, Clingo,
+planning transitions \cite{McDermott1998PDDL,FoxLong2003PDDL21} and
+trigger--context--body BDI rules
+\cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. MOOSE, Clingo,
 AgentSpeak(L), and Jason instantiate four interfaces; none is built into the
 semantic definitions below.
 
@@ -35,7 +37,8 @@ all symbols, arities, types, and macro actions map to $D$, and symbolic executio
 under $C_s$ establishes $g$.
 \end{definition}
 
-MOOSE readable policies are the evaluated evidence instantiation. For example,
+MOOSE readable policies \cite{Chen2026Moose} are the evaluated evidence
+instantiation. For example,
 a readable rule may associate the singleton goal $on(X,Y)$ with context
 $holding(X)\land clear(Y)$ and action $stack(X,Y)$. GP2PL does not assume that
 this evidence already implements $clear(Y)$ or covers every reachable context.
@@ -83,7 +86,9 @@ producer that acquires no resource, are vacuous rather than unproved.
 Let $\mathcal C_E$ be validated evidence macros. Let $\mathcal C_D$ contain
 direct producers, finite backward STRIPS regressions over acyclic
 producer--precondition dependencies, certified relational recursion, and finite
-causal resource-mode discharge. A regression state is an alpha-normalized tuple
+causal resource-mode discharge. The regression construction builds on
+goal-regression planning \cite{Fikes1972GeneralizedRobotPlans,Chen2026Moose}.
+A regression state is an alpha-normalized tuple
 of open requirements, the selected producer role, and resource modes. A path
 stops before repeating such a state. Equivalent states retain only their
 shortest body for the same completion contract. This establishes finiteness
@@ -108,7 +113,8 @@ for every selected internal call, preserves required producer exits, and admits
 the selected recursion and cross-module dependency ranks.
 \end{definition}
 
-GP2PL asks an answer-set optimizer for a feasible $S$ minimizing the
+GP2PL asks a Clingo answer-set optimizer \cite{Gebser2018Clingo} for a feasible
+$S$ minimizing the
 lexicographic cost stated in the main paper. The result is globally optimal only
 over $\mathcal C_D^{\checkmark}$; candidate generation is not claimed complete
 for arbitrary planning programs.
@@ -147,9 +153,10 @@ and preserves the atomic target. Ambiguous capacity roles are rejected.
 \begin{assumption}[Temporal fragment]
 The input formula belongs to the implemented $F$, $X$, strong-$U$,
 conjunction, and literal-negation fragment and is translated by the real
-ltlf2dfa/MONA toolchain. A chosen progress edge has a conjunction of signed
-predicate literals and supported integer equalities. Disjunction requiring
-strategy choice and unsupported arithmetic are rejected.
+ltlf2dfa/MONA toolchain
+\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. A chosen progress edge has a
+conjunction of signed predicate literals and supported integer equalities.
+Disjunction requiring strategy choice and unsupported arithmetic are rejected.
 \end{assumption}
 
 \begin{assumption}[Observation boundary]
@@ -285,10 +292,15 @@ smaller cost. The proof says nothing about candidates not generated.
 \subsection{Temporal Composition}
 
 Let $A_\varphi=\langle Q,2^{AP},\delta,q_0,F\rangle$ be the deterministic finite
-automaton obtained from the real translation, and let a progress objective be
+automaton obtained from the real translation
+\cite{DeGiacomoVardi2013,Fuggitti2020LTLf2DFA}, and let a progress objective be
 $B=P^+\land\neg P^-$. A positive module portfolio assigns one or more certified
 branches to each $G_i\in P^+$. A negative literal is either observed absent or
 has an exact certified deleter; it never invokes a synthetic negative goal.
+The conditional definite/potential completion summaries follow the goal-
+interference distinction used in BDI plan analysis
+\cite{Thangarajah2003GoalInterference}; GP2PL derives them by symbolic PDDL
+execution and propagates them through selected internal calls.
 
 \begin{definition}[Completion threat]
 For positive occurrences $G_i,G_j$, the threat relation contains
@@ -504,6 +516,8 @@ SHA-256 manifests are included in the code-and-data appendix under
 \path{paper_artifacts/temporal_goal_benchmark/v1}. This dataset evaluates
 translation equivalence and witness validity; the 1,228 Jason, VAL, and
 trace-automaton executions are reported in the separate evaluation release.
+The released predictions use GPT-5.5 \cite{OpenAI2026GPT55SystemCard}; the
+model identifier and complete request/response archives are retained.
 
 The dataset includes its own data dictionary, citation metadata, and integrity
 checker. Publication replaces three machine-local directory strings in the
@@ -566,13 +580,20 @@ effects, evidence contracts, and selected completion summaries.
 
 Experiments were conducted on an Apple M4 system with ten CPU cores and 24 GB
 unified memory, running macOS 26.4.1 on arm64. No GPU was used. The fixed
-software environment is Python 3.12.7, uv 0.8.19, Clingo 5.8.0, Tarski 0.9.1,
-ltlf2dfa 1.0.2, MONA 1.4-18, Jason 3.1.2, OpenJDK 24, Maven 3.9.11, Docker
-28.5.1, and VAL revision \texttt{3c7a1f3}; the complete revision is fixed in the
+software environment is Python 3.12.7, uv 0.8.19, Clingo 5.8.0
+\cite{Gebser2018Clingo}, Tarski 0.9.1 \cite{RamirezFrances2020Tarski},
+ltlf2dfa 1.0.2 \cite{Fuggitti2020LTLf2DFA}, MONA 1.4-18
+\cite{Henriksen1995MONA}, Jason 3.1.2 \cite{Bordini2007Jason}, OpenJDK 24,
+Maven 3.9.11, Docker 28.5.1, and VAL revision \texttt{3c7a1f3}
+\cite{Howey2004VAL}; the complete revision is fixed in the
 release manifest. The Python dependency lockfile,
 external-revision setup scripts, and source commit accompany the artifact.
 
 \subsection{Parameters and Development Values}
+
+MOOSE defaults and synthesis budgets follow its published algorithm and
+evaluation protocol \cite{Chen2026Moose}; declared deviations are shown rather
+than silently normalized.
 
 \begin{table*}[t]
 \centering
@@ -587,19 +608,25 @@ Quantity & Development values & Final value & Selection criterion \\
 \midrule
 MOOSE goal size & 1 & 1 & Singleton-goal evidence definition \\
 MOOSE goal permutations & 3 & 3 & MOOSE Algorithm 1 default \\
-MOOSE repetition seed & 0--4 & 0,1,2,3,4 & Five independent repetitions; no pooling or best-seed choice \\
+MOOSE repetition seed & 0--4 & 0,1,2,3,4 &
+Five independent repetitions; no pooling or best-seed choice \\
 Internal MOOSE workers & 1,6,12 & 1 & Remove concurrent access to the seeded permutation stream \\
-MOOSE synthesis limit & 30 minutes, 12 hours & 12 hours & Match the MOOSE synthesis protocol rather than its test-time cap \\
+MOOSE synthesis limit & 30 minutes, 12 hours & 12 hours &
+Match the MOOSE synthesis protocol rather than its test-time cap \\
 MOOSE memory limit & 16 GiB & 16 GiB & Host-safe declared deviation from MOOSE's 32 GB allowance \\
-Schema action-depth bound & finite legacy probes, none & none & Termination by repeated normalized-state rejection \\
-Compiler selector & local legacy pruning, Clingo & Clingo 5.8.0 & Exact encoded constraints and lexicographic objective \\
+Schema action-depth bound & finite legacy probes, none & none &
+Termination by repeated normalized-state rejection \\
+Compiler selector & local legacy pruning, Clingo & Clingo 5.8.0 &
+Exact encoded constraints and lexicographic objective \\
 Repair-tree branching factor & 2 & 2 & Binary structural theorem; not empirically tuned \\
 Translation temperature & 0 & 0 & Deterministic structured translation \\
 Translation token limit & 60,000 & 60,000 & Accommodate the complete JSON response schema \\
 Semantic retries & 0--3 & at most 3 & Retry only structured validation failure \\
 Jason/VAL timeout & 30 minutes & 30 minutes each & Common per-instance evaluation cap \\
-Validation workers & 6,10,12,16 & 6 & Registered resource-isolation setting; not a method parameter \\
-Java thread stack & default, 64 MiB & 64 MiB & Prevent parser stack exhaustion on large query libraries \\
+Validation workers & 6,10,12,16 & 6 &
+Registered resource-isolation setting; not a method parameter \\
+Java thread stack & default, 64 MiB & 64 MiB &
+Prevent parser stack exhaustion on large query libraries \\
 \bottomrule
 \end{tabular}
 \end{table*}

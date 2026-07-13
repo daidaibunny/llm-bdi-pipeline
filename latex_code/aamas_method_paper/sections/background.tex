@@ -4,7 +4,7 @@
 \subsection{Planning Domains and Generalized Evidence}
 
 We use typed STRIPS PDDL plus a bounded-integer resource fragment
-\cite{McDermott1998PDDL}. A domain is
+\cite{McDermott1998PDDL,FoxLong2003PDDL21}. A domain is
 $D=\langle\mathcal{P},\mathcal{F},\mathcal{A},\mathcal{T}\rangle$, where
 $\mathcal{P}$ and $\mathcal{F}$ contain predicate schemas and integer-valued
 resource functions, $\mathcal{A}$ contains action schemas, and $\mathcal{T}$ is
@@ -18,8 +18,9 @@ successor is
 The numeric component admits finite integer values, comparisons with constants,
 and constant integer increases or decreases; arbitrary arithmetic and
 continuous change are excluded. A generalized-planning task supplies training
-and test instances that share $D$. MOOSE solves singleton goal conditions and
-regresses the resulting plans into first-order condition-to-macro rules
+and test instances that share $D$. MOOSE applies classical goal-regression
+ideas \cite{Fikes1972GeneralizedRobotPlans} to singleton goal conditions and
+lifts the resulting plans into first-order condition-to-macro rules
 \cite{Chen2026Moose}. We treat these rules as \emph{evidence}: they demonstrate
 ways to achieve observed singleton goals, but need not constitute a closed or
 minimal BDI plan library.
@@ -27,8 +28,8 @@ minimal BDI plan library.
 \subsection{BDI Plan Libraries and Their AgentSpeak(L) Realization}
 
 A procedural BDI plan rule has a triggering event, an applicability context,
-and a body. In the \asl{} notation used by our implementation
-\cite{Rao1996AgentSpeak}, an achievement plan is
+and a body \cite{MeneguzziDeSilva2015PlanningBDI}. In the \asl{} notation used
+by our implementation \cite{Rao1996AgentSpeak}, an achievement plan is
 \[
 +!p(\bar X):C\leftarrow b_1;\ldots;b_m,
 \]
@@ -51,8 +52,10 @@ rechecking their intended state after subsidiary plans return
 \subsection{Finite-Trace Temporal Goals}
 
 An \ltlf{} formula is interpreted over a finite state sequence
-\cite{DeGiacomoVardi2013}. We construct its deterministic finite automaton (DFA)
-with \texttt{ltlf2dfa} and MONA \cite{Fuggitti2020LTLf2DFA}. The implemented
+\cite{DeGiacomoVardi2013}. Automata-theoretic planning uses a finite automaton
+to track temporal progress \cite{DeGiacomoRubin2018AutomataFOND}. We construct
+the deterministic finite automaton (DFA) with \texttt{ltlf2dfa} and MONA
+\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. The implemented
 fragment admits certified distance-reducing transitions whose guards contain
 conjunction and literal negation. A guard
 \[
