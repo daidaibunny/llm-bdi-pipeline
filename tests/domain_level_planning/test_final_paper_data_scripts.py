@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.run_final_paper_data import (
+	FINAL_PAPER_MANIFEST,
 	format_comparison_latex_macros,
 	load_final_paper_manifest,
 	validate_final_paper_package,
@@ -61,6 +64,8 @@ def test_artifact_only_runner_does_not_own_paper_result_macros() -> None:
 
 
 def test_load_final_paper_manifest_reads_tracked_contract() -> None:
+	if not FINAL_PAPER_MANIFEST.exists():
+		pytest.skip("optional pre-GP2PL internal paper manifest is not distributed")
 	manifest = load_final_paper_manifest()
 
 	assert manifest["paper_scope"] == "achievement_goal_atomic_templates_with_temporal_extended_goal_wrappers"

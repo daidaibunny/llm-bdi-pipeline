@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import tarfile
 from types import SimpleNamespace
 
 import pytest
@@ -15,6 +16,27 @@ from temporal_specification.prediction_validation import validate_prediction_pay
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PRIVATE_VALIDATION_ARCHIVE = (
+	PROJECT_ROOT
+	/ "paper_artifacts"
+	/ "temporal_goal_benchmark"
+	/ "v1"
+	/ "source"
+	/ "temporal-nl-v1-20260711-final-private-validation.tar.gz"
+)
+BLOCKSWORLD_ON_AUDIT_MEMBER = (
+	"artifacts/temporal_nl_benchmarks/temporal-nl-v1-20260711-final/"
+	"domains/blocksworld-on/construction_audit.jsonl"
+)
+
+
+def _released_blocksworld_on_audit() -> dict[str, object]:
+	"""Read one sealed construction witness from the versioned release archive."""
+
+	with tarfile.open(PRIVATE_VALIDATION_ARCHIVE, mode="r:gz") as archive:
+		member = archive.extractfile(BLOCKSWORLD_ON_AUDIT_MEMBER)
+		assert member is not None
+		return json.loads(member.readline().decode("utf-8"))
 
 
 def test_expand_translation_predictions_covers_each_problem_once() -> None:
@@ -134,16 +156,7 @@ def test_validate_prediction_on_real_hidden_witness(monkeypatch) -> None:
 		"MONA_BIN",
 		str(PROJECT_ROOT / ".external" / "mona-1.4" / "Front" / "mona"),
 	)
-	audit_path = (
-		PROJECT_ROOT
-		/ "artifacts"
-		/ "temporal_nl_benchmarks"
-		/ "temporal-nl-v1-20260711-final"
-		/ "domains"
-		/ "blocksworld-on"
-		/ "construction_audit.jsonl"
-	)
-	audit = json.loads(audit_path.read_text(encoding="utf-8").splitlines()[0])
+	audit = _released_blocksworld_on_audit()
 	prediction = _validated_prediction_from_audit(audit)
 
 	result = validate_prediction_on_witness(
@@ -189,13 +202,7 @@ def test_validate_execution_trace_uses_neutral_goal_val_and_gold_dfa(
 			error=None,
 		),
 	)
-	audit_path = (
-		PROJECT_ROOT
-		/ "artifacts/temporal_nl_benchmarks"
-		/ "temporal-nl-v1-20260711-final"
-		/ "domains/blocksworld-on/construction_audit.jsonl"
-	)
-	audit = json.loads(audit_path.read_text(encoding="utf-8").splitlines()[0])
+	audit = _released_blocksworld_on_audit()
 	prediction = _validated_prediction_from_audit(audit)
 	plan_file = tmp_path / "witness.plan"
 	plan_file.write_text("\n".join(audit["witness_actions"]) + "\n", encoding="utf-8")

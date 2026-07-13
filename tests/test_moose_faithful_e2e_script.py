@@ -209,7 +209,13 @@ def test_append_problem_goal_wrappers_handles_numeric_only_goal(tmp_path: Path) 
 	)
 
 
-def test_moose_train_command_uses_full_train_split(tmp_path: Path) -> None:
+def test_moose_train_command_uses_full_train_split(tmp_path: Path, monkeypatch) -> None:
+	moose_python = tmp_path / "moose-python"
+	monkeypatch.setattr(
+		"scripts.run_moose_faithful_e2e.moose_python",
+		lambda: moose_python,
+	)
+
 	command = moose_train_command(
 		domain_file=tmp_path / "domain.pddl",
 		train_dir=tmp_path / "train",
@@ -221,6 +227,7 @@ def test_moose_train_command_uses_full_train_split(tmp_path: Path) -> None:
 		runtime="local",
 	)
 
+	assert command[0] == str(moose_python)
 	assert str(tmp_path / "train") in command
 	assert "--num-training" in command
 	assert command[command.index("--num-training") + 1] == "-1"
