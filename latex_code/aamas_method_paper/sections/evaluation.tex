@@ -19,17 +19,20 @@ half of the D2L corpus \cite{Bonet2018Features}. These groups describe
 evaluation properties and never route compilation.
 
 The registered atomic protocol uses the complete train split, singleton goals,
-three sampled goal orders, and fixed seeds 0--4. Each repetition has one
-internal MOOSE worker, a 12-hour timeout, a 16-GiB guard, and an isolated model,
-policy, library, and log root. The five operating-system processes may run
-concurrently, but their evidence is never merged and no best seed is selected.
-Each policy is compiled and evaluated independently; cross-seed Jason/VAL runs
-are sequential, with six per-test workers and 30-minute limits. We report every
-seed plus mean and sample standard deviation. MOOSE instead reports a 32-GB
-synthesis budget and five repetitions \cite{Chen2026Moose}; our memory cap and
-single-worker reproducibility constraint are declared reproduction choices.
+three sampled goal orders, and fixed seeds 0--4. The five repetitions estimate
+sensitivity to MOOSE's randomized goal-order sampling. Each uses one internal
+MOOSE worker so training problems consume the seeded permutation stream
+sequentially rather than through schedule-dependent concurrent calls. Policies
+are compiled and evaluated separately, never pooled or selected post hoc. We
+report every repetition together with the mean and sample standard deviation.
+Each synthesis run has a 12-hour timeout and 16-GiB memory guard;
+Jason and VAL use 30-minute limits and six per-test workers. Independent seeds
+may be launched concurrently to reduce elapsed wall time, but contended timing
+is excluded from efficiency claims. MOOSE reports a 32-GB synthesis budget and
+five repetitions \cite{Chen2026Moose}; our lower memory guard and deterministic
+single-worker setting are declared reproduction choices.
 
-Temporal run \texttt{\TEGExecutionRunID} uses clean commit
+The separate pinned temporal experiment \texttt{\TEGExecutionRunID} uses clean commit
 \texttt{\TEGExecutionCommit}, 12 workers, 30-minute Jason and VAL limits, and a
 64-MiB Java stack. It records SHA-256 hashes of every atomic JSON/ASL input. The
 result generator rejects a changed benchmark hash, prediction hash, dirty
@@ -91,13 +94,17 @@ supports the released formulas, bindings, and library hashes only; it is not an
 action-strategy completeness theorem for arbitrary PDDL--\ltlf products.
 
 \paragraph{Repetition boundary.}
-The registered atomic protocol fixes five independent seeds, one internal MOOSE
-worker, isolated outputs, and independent compilation and validation; it never
-unions evidence or selects the best seed. Those repetitions are not yet a clean
-result matrix. Table~\ref{tab:domain-results} therefore reports only the exact
-seed-0, six-worker libraries consumed by the pinned temporal run. That earlier
-artifact predates the registered one-worker repetition protocol and supports no
-cross-seed or synthesis-time claim.
+The atomic and temporal experiments answer different questions. The registered
+five-seed matrix estimates variation in evidence discovery and downstream
+atomic-library coverage; it is not yet available as a clean result matrix. The
+recent temporal experiment instead holds its exact seed-0 atomic libraries
+fixed and tests translation, query compilation, execution, and trace semantics
+conditional on those SHA-256-identified inputs. Those libraries were generated
+with six internal MOOSE workers, so the temporal result remains a valid pinned
+conditional experiment but is not evidence for cross-seed robustness or
+single-worker synthesis time. Table~\ref{tab:domain-results} reports their
+structure only; the two experiments are neither pooled nor presented as the
+same estimator.
 
 \paragraph{Independent semantic conformance.}
 A separate versioned suite checks hand-labelled positive and negative traces

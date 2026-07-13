@@ -96,6 +96,22 @@ invariant to predicate and action renaming.
 
 ## Final Section Contract
 
+### Scientific Exposition Rule
+
+The main paper explains each mechanism through a research failure mode, a
+semantic condition, and the resulting guarantee or rejection boundary. It does
+not present process scheduling, output-directory layout, command-line flags, or
+internal class names as contributions. Those details belong in the
+reproducibility artifact and `docs/research_pipeline_decisions.md`.
+
+Use one symbol-invariant example whenever a certificate would otherwise be
+opaque. For resource restoration, an illustrative acquisition deletes
+`free(R)` and adds `held(R,O)`; the method must state that names are placeholders
+and that the certificate is inferred from shared arguments and PDDL effects. For
+a mixed transition such as `at(P,L) and fuel(V)=3`, explain that one symbolic
+effect proof must establish both conditions in the same state. Do not replace
+these semantics with labels such as `certificate-dependent`.
+
 ### Abstract
 
 The abstract follows a five-part structure:
@@ -280,14 +296,24 @@ The final evaluation answers five questions:
 
 The benchmark section records all 16 domain families and their pinned splits.
 The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
-timeout, worker, and seed configuration. The atomic experiment uses five fixed
-independent seeds, one internal MOOSE worker per seed, and isolated policy and
-library roots. It must report every seed separately plus the mean and sample
-standard deviation; it must not union evidence or select a best seed. Outer
-seed-process concurrency is an execution setting, not a MOOSE hyperparameter.
-Cross-seed Jason/VAL runs remain sequential while per-test validation is
-parallel within one seed. Noisy runtime comparisons require controlled repeated
-runs and dispersion rather than timings collected under cross-seed contention.
+timeout, worker, and seed configuration. The scientific purpose of the five
+fixed seeds is to estimate variation caused by MOOSE's randomized goal-order
+sampling. One internal MOOSE worker makes training problems consume the seeded
+permutation stream sequentially, removing concurrent access to that stream as a
+within-run confounder. Every seed is compiled and evaluated independently;
+report every result plus the mean and sample standard deviation, never evidence
+union or a best-seed result. Concurrent launch is only an artifact-level
+throughput choice, and contended wall time is not a method result. Cross-seed
+Jason/VAL runs remain sequential while per-test validation is parallel within
+one seed.
+
+Keep the two experimental estimands explicit. The five-seed atomic matrix
+measures variability of evidence discovery, compilation, and atomic achievement
+coverage. The pinned temporal matrix conditions on one exact SHA-256-identified
+atomic-library snapshot and measures translation, query-controller execution,
+and trace semantics. A recent conditional temporal result does not become
+invalid because its library was generated under a different worker protocol,
+but it cannot support a cross-seed atomic-robustness claim.
 
 The final paper must distinguish:
 

@@ -127,12 +127,17 @@ general-policy work \cite{Frances2021LearningGeneralPolicies} but claims only
 schema-certified features from the generated candidate language.
 
 \paragraph{Resource release.}
-Effects, not names, identify resource debt: acquisition deletes key-only
-availability and adds a key--occupant mode. A finite discharge path must delete
-each current mode without recreating it, retain the same inferred key/occupant
-roles, restore availability, and preserve the target. Repeated normalized modes
-are forbidden and every step is symbolically executable. Disequalities arise
-only from precondition-violating unifications.
+Effects, not predicate names, identify temporary occupation of a reusable
+resource. Suppose an acquisition action deletes an availability fact
+$\mathit{free}(R)$ and adds an occupancy relation $\mathit{held}(R,O)$. These
+names are illustrative: the compiler infers the shared resource argument $R$
+and occupant argument $O$ from the effect structure and obtains the same result
+after consistent symbol renaming. A discharge body is accepted only if symbolic
+execution removes the current occupancy mode, restores the corresponding
+availability fact, leaves the atomic target true, and does not recreate an
+earlier normalized mode. This yields a finite restoration path without assuming
+that release is one action. Disequalities arise only when unifying two roles
+would make a PDDL precondition false.
 
 \paragraph{Existential preparation projection.}
 Preparing one of several dynamic preconditions may temporarily change another,
@@ -229,10 +234,13 @@ achievements; otherwise compilation rejects.
 
 A positive integer equality may call a complete constant-delta action: unit
 deltas require strict direction, larger deltas the exact predecessor. Mixed
-guards use complete action-only net effects; a cyclic guard admits one action
-only if symbolic execution establishes every Boolean, negative, and numeric
-obligation in the same successor. Negated equality is observation-only without
-a certified change-away action; arbitrary arithmetic is not claimed.
+guards use complete action-only net effects. For example, a body for
+$\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
+$\mathit{at}(P,L)$ and the exact integer value 3 in its final state while
+preserving every other signed guard obligation. A cyclic guard admits one action
+only if the same proof covers the whole successor state. Negated equality is
+observation-only without a certified change-away action; arbitrary arithmetic
+and independent ``solve then hope'' composition are not claimed.
 
 Numeric preparation must strictly reduce missing preconditions or a constant-
 bounded deficit, preserve other conditions, and leave the target fluent

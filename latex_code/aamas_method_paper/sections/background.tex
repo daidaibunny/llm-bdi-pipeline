@@ -20,7 +20,9 @@ successor is
 \]
 The numeric fragment admits finite integer initial values, comparisons against
 integer constants, and constant integer increase/decrease effects. Arbitrary
-arithmetic and continuous change are excluded.
+arithmetic and continuous change are excluded. Thus a state may simultaneously
+record the Boolean fact \texttt{at(P,L)} and the integer value
+$\mathit{fuel}(V)=3$; both components are updated by the same grounded action.
 A generalized-planning task provides a training set and a test set of problems
 sharing $D$. MOOSE learns first-order condition-to-macro rules by solving
 singleton goal conditions and regressing their plans \cite{Chen2026Moose}. A
@@ -101,8 +103,15 @@ Singleton certified numeric goal & supported \\
 Transition conjunction and negation & certified only \\
 Negative achievement call & rejected \\
 Disjunction or ambiguous progress & rejected \\
-Mixed Boolean/numeric conjunction & certificate-dependent \\
+Mixed Boolean/numeric conjunction & whole-guard effect proof required \\
 Primitive-state temporal safety & external monitor \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+The last condition is semantic rather than a domain label. For example, a
+transition requiring \texttt{at(P,L)} together with $\mathit{fuel}(V)=3$ is
+accepted only when one certified finite action body proves both facts in the
+same successor state. If its net Boolean effects or integer change are unknown,
+the compiler rejects the achievement strategy instead of assuming that the two
+conditions can be solved independently.
