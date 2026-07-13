@@ -62,11 +62,17 @@ budget, and a 30-minute/8-GB test-planning budget
 \cite{Chen2026Moose}. The artifact keeps the 12-hour synthesis timeout but uses
 a 16-GiB external-process safety cap; this memory difference is a declared
 reproduction deviation. MOOSE, Jason, and validation worker counts are system
-parameters rather than generalized-planning hyperparameters. The batch scripts
-default to six workers, a 30-minute Jason timeout, a 30-minute VAL timeout, and
-a 64-MiB Java thread stack. The independent TEG execution runner defaults to
-eight workers with the same per-case timeout and stack limits; worker count is
-recorded as execution provenance and does not change controller semantics.
+parameters rather than generalized-planning hyperparameters. The standard
+atomic-library batch fixes the MOOSE seed to zero and uses 12 synthesis threads
+inside each sequentially processed domain. Distinct seeds are independent
+repetitions whose learned policies are evaluated separately rather than
+concatenated. Because MOOSE shares seeded goal-permutation sampling across its
+problem threads, both the seed and synthesis-thread count are recorded as
+evidence provenance. Jason defaults to six workers, a 30-minute timeout, a
+30-minute VAL timeout, and a 64-MiB Java thread stack. The independent TEG
+execution runner defaults to eight workers with the same per-case timeout and
+stack limits; worker count is recorded as execution provenance and does not
+change controller semantics.
 
 The implemented toolchain uses the MOOSE readable-policy exporter, Clingo for
 branch selection, \texttt{ltlf2dfa} with a real MONA binary, Jason for

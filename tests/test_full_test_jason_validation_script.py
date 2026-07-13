@@ -1182,8 +1182,10 @@ def test_parser_order_batch_defaults_match_paper_budget_and_local_parallelism() 
 	script = Path("scripts/run_parser_order_full_val_batch.sh").read_text(encoding="utf-8")
 
 	assert 'WORKERS="${WORKERS:-6}"' in script
-	assert 'MOOSE_WORKERS="${MOOSE_WORKERS:-$WORKERS}"' in script
+	assert 'MOOSE_WORKERS="${MOOSE_WORKERS:-12}"' in script
+	assert 'MOOSE_RANDOM_SEED="${MOOSE_RANDOM_SEED:-0}"' in script
 	assert 'JASON_WORKERS="${JASON_WORKERS:-$WORKERS}"' in script
+	assert '--random-seed "$MOOSE_RANDOM_SEED"' in script
 	assert 'TRAIN_TIMEOUT_SECONDS="${TRAIN_TIMEOUT_SECONDS:-43200}"' in script
 	assert 'JASON_JAVA_STACK_SIZE="${JASON_JAVA_STACK_SIZE:-64m}"' in script
 	assert "moose_train_timeout_seconds=$TRAIN_TIMEOUT_SECONDS" in script

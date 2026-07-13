@@ -37,6 +37,8 @@ MOOSE_ROOT = PROJECT_ROOT / ".external" / "moose"
 MOOSE_PAPER_GOAL_PERMUTATIONS = 3
 MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS = 12 * 60 * 60
 MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS = 1800
+MOOSE_REPRODUCTION_RANDOM_SEED = 0
+MOOSE_REPRODUCTION_SYNTHESIS_WORKERS = 12
 
 
 def load_selected_benchmark_domain_ids() -> tuple[str, ...]:
@@ -116,8 +118,18 @@ def main() -> int:
 		default=PROJECT_ROOT / "artifacts" / "domain_libraries",
 		help="Canonical per-domain ASL library root.",
 	)
-	parser.add_argument("--random-seed", type=int, default=0)
-	parser.add_argument("--num-workers", type=int, default=8)
+	parser.add_argument(
+		"--random-seed",
+		type=int,
+		default=MOOSE_REPRODUCTION_RANDOM_SEED,
+		help="Seed for this independent MOOSE synthesis repetition.",
+	)
+	parser.add_argument(
+		"--num-workers",
+		type=int,
+		default=MOOSE_REPRODUCTION_SYNTHESIS_WORKERS,
+		help="MOOSE synthesis threads within each sequentially processed domain.",
+	)
 	parser.add_argument(
 		"--num-permutations",
 		type=int,

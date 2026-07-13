@@ -277,13 +277,19 @@ MOOSE paper provides the following settings:
 - Test-time planning receives 1800 seconds and 8 GB. Up to five trained MOOSE
   models correspond to the five synthesis repetitions.
 
-The batch runner now defaults to 43200 seconds for MOOSE training and 1800
-seconds for MOOSE test-time planning, and records `random_seed` so five runs can
-be aggregated. The repository-wide external-process guard remains 16 GiB; this
-is a declared reproduction deviation from the paper's 32-GB synthesis ceiling.
-`num_workers`, full-split flags such as `num_training = -1`, policy-dump and ASL
-append timeouts, Jason timeout, and VAL timeout are pipeline or hardware
-settings, not MOOSE method parameters.
+The batch runner defaults to 43200 seconds for MOOSE training and 1800 seconds
+for MOOSE test-time planning. A standard batch explicitly uses a fixed
+`random_seed` of `0` and 12 MOOSE synthesis threads within each domain; domains are
+processed sequentially. A different seed denotes an independent synthesis
+repetition. Its learned rules remain a separate policy and are never silently
+concatenated with another seed's evidence. The repository-wide external-process
+guard remains 16 GiB; this is a declared reproduction deviation from the
+paper's 32-GB synthesis ceiling. `num_workers`, full-split flags such as
+`num_training = -1`, policy-dump and ASL append timeouts, Jason timeout, and VAL
+timeout are pipeline or hardware settings, not MOOSE method parameters. MOOSE's
+current multithreaded learner shares its seeded random generator across problem
+threads, so both seed and synthesis-thread count are recorded as evidence
+provenance rather than being treated as performance-only settings.
 
 The compiler's schema-derived candidate language is also explicit. It contains:
 

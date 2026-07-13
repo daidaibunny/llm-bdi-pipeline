@@ -9,7 +9,8 @@ BATCH_ID="${BATCH_ID:-$RUN_ID}"
 VALIDATION_RUN_ID="${VALIDATION_RUN_ID:-$RUN_ID-full-test}"
 
 WORKERS="${WORKERS:-6}"
-MOOSE_WORKERS="${MOOSE_WORKERS:-$WORKERS}"
+MOOSE_WORKERS="${MOOSE_WORKERS:-12}"
+MOOSE_RANDOM_SEED="${MOOSE_RANDOM_SEED:-0}"
 JASON_WORKERS="${JASON_WORKERS:-$WORKERS}"
 TRAIN_TIMEOUT_SECONDS="${TRAIN_TIMEOUT_SECONDS:-43200}"
 JASON_TIMEOUT_SECONDS="${JASON_TIMEOUT_SECONDS:-1800}"
@@ -50,7 +51,8 @@ done
 
 echo "[run] id=$RUN_ID"
 echo "[run] domains=${DOMAINS[*]}"
-echo "[run] moose_workers=$MOOSE_WORKERS jason_workers=$JASON_WORKERS"
+echo "[run] moose_synthesis_workers=$MOOSE_WORKERS moose_random_seed=$MOOSE_RANDOM_SEED"
+echo "[run] jason_workers=$JASON_WORKERS"
 echo "[run] moose_train_timeout_seconds=$TRAIN_TIMEOUT_SECONDS"
 echo "[run] jason_timeout_seconds=$JASON_TIMEOUT_SECONDS val_timeout_seconds=$VAL_TIMEOUT_SECONDS jason_java_stack_size=$JASON_JAVA_STACK_SIZE"
 echo "[run] plan_verifier_command=$PLAN_VERIFIER_COMMAND"
@@ -61,6 +63,7 @@ set +e
 PYTHONDONTWRITEBYTECODE=1 uv run python scripts/run_timestamped_moose_asl_batch.py \
 	--timestamp-id "$BATCH_ID" \
 	--num-workers "$MOOSE_WORKERS" \
+	--random-seed "$MOOSE_RANDOM_SEED" \
 	--atomic-library-mode validated-policy-lifting \
 	--skip-temporal-append \
 	--train-timeout-seconds "$TRAIN_TIMEOUT_SECONDS" \

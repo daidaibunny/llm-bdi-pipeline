@@ -17,6 +17,8 @@ try:
 	from run_moose_faithful_e2e import MOOSE_PAPER_GOAL_PERMUTATIONS
 	from run_moose_faithful_e2e import MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS
 	from run_moose_faithful_e2e import MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS
+	from run_moose_faithful_e2e import MOOSE_REPRODUCTION_RANDOM_SEED
+	from run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
 	from run_moose_faithful_e2e import MOOSE_ROOT
 	from run_moose_faithful_e2e import PROJECT_ROOT
 except ModuleNotFoundError:  # pragma: no cover - used when imported by pytest.
@@ -24,6 +26,8 @@ except ModuleNotFoundError:  # pragma: no cover - used when imported by pytest.
 	from scripts.run_moose_faithful_e2e import MOOSE_PAPER_GOAL_PERMUTATIONS
 	from scripts.run_moose_faithful_e2e import MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS
 	from scripts.run_moose_faithful_e2e import MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS
+	from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_RANDOM_SEED
+	from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
 	from scripts.run_moose_faithful_e2e import MOOSE_ROOT
 	from scripts.run_moose_faithful_e2e import PROJECT_ROOT
 
@@ -48,11 +52,16 @@ def main() -> int:
 		"--timestamp-id",
 		help="Stable output id. Defaults to local timestamp YYYYmmdd-HHMMSS.",
 	)
-	parser.add_argument("--num-workers", type=int, default=4)
+	parser.add_argument(
+		"--num-workers",
+		type=int,
+		default=MOOSE_REPRODUCTION_SYNTHESIS_WORKERS,
+		help="MOOSE synthesis threads within each sequentially processed domain.",
+	)
 	parser.add_argument(
 		"--random-seed",
 		type=int,
-		default=0,
+		default=MOOSE_REPRODUCTION_RANDOM_SEED,
 		help="One MOOSE synthesis repetition seed; paper results repeat five seeds.",
 	)
 	parser.add_argument(
@@ -297,6 +306,7 @@ def batch_manifest(
 			"temporal_append_in_stage1": not bool(args.skip_temporal_append),
 			"test_query_count_per_domain": 0 if args.skip_temporal_append else 2,
 			"domain_execution": "sequential",
+			"worker_scope": "per_domain_moose_synthesis_threads",
 			"moose_runtime": "docker_exact_apptainer",
 			"atomic_library_backend": (
 				"validated_policy_lifting_and_asl_compilation"

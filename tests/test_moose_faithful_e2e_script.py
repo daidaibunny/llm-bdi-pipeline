@@ -10,6 +10,8 @@ from scripts.run_moose_faithful_e2e import materialize_moose_compatible_pddl
 from scripts.run_moose_faithful_e2e import MOOSE_PAPER_GOAL_PERMUTATIONS
 from scripts.run_moose_faithful_e2e import MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS
 from scripts.run_moose_faithful_e2e import MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS
+from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_RANDOM_SEED
+from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
 from scripts.run_moose_faithful_e2e import moose_policy_command
 from scripts.run_moose_faithful_e2e import moose_train_command
 from scripts.run_moose_faithful_e2e import natural_sort_key
@@ -29,6 +31,8 @@ def test_moose_paper_budget_constants_match_official_experiment() -> None:
 	assert MOOSE_PAPER_GOAL_PERMUTATIONS == 3
 	assert MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS == 12 * 60 * 60
 	assert MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS == 1800
+	assert MOOSE_REPRODUCTION_RANDOM_SEED == 0
+	assert MOOSE_REPRODUCTION_SYNTHESIS_WORKERS == 12
 
 
 def test_natural_sort_selects_first_split_instances(tmp_path: Path) -> None:
@@ -307,6 +311,7 @@ def test_timestamped_batch_command_generates_isolated_library_root(
 		str(batch_root / "domain_libraries" / "depots" / "plan_library.asl"),
 	]
 	assert manifest["settings"]["domain_execution"] == "sequential"
+	assert manifest["settings"]["worker_scope"] == "per_domain_moose_synthesis_threads"
 	assert manifest["settings"]["random_seed"] == 4
 	assert manifest["settings"]["atomic_library_backend"] == "native_moose_train_dump_policy"
 

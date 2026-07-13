@@ -43,7 +43,7 @@ certificate.
 | Item | Status | Next step |
 | --- | --- | --- |
 | Full 16-domain benchmark materialization | Updated | Keep `scripts/materialize_achievement_benchmarks.py` as the single source of truth and rerun it after source-policy changes. |
-| Atomic ASL library generation | Needs full rerun | Run the timestamped MOOSE-to-ASL batch for all 16 selected benchmark entries after this benchmark expansion. |
+| Atomic ASL library generation | Needs full rerun | Run all 16 entries with the pinned standard configuration: seed 0 and 12 per-domain MOOSE synthesis threads. Keep additional seed repetitions as separate policies rather than merging their evidence. |
 | Jason plus VAL validation | Needs full rerun | Run full-test DFA-transition validation after the new ASL batch completes. Report per-domain Jason and VAL success, timeout, and failure categories. |
 | Numeric domains | Supported bounded fragment | Positive integer equalities, constant deltas, bounded prerequisite preparation, mixed Boolean/numeric preservation, Jason execution, VAL, and DFA trace validation are implemented. Keep arbitrary arithmetic and unrestricted numeric planning outside the claim. |
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
