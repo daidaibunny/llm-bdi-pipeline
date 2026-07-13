@@ -455,6 +455,115 @@ def test_completed_timestamped_batch_can_be_resumed_with_exact_manifest(
 	assert loaded == completed
 
 
+def test_completed_legacy_full_batch_can_be_resumed_with_explicit_full_variant(
+	tmp_path: Path,
+) -> None:
+	batch_root = tmp_path / "seed0"
+	plan_library = batch_root / "domain_libraries/ferry/plan_library.asl"
+	plan_library.parent.mkdir(parents=True)
+	plan_library.write_text("/* atomic library */\n", encoding="utf-8")
+	expected = {
+		"artifact_kind": "timestamped_moose_native_asl_batch",
+		"timestamp_id": "seed0",
+		"batch_root": str(batch_root),
+		"domains": ["ferry"],
+		"expected_asl_files": [str(plan_library)],
+		"settings": {
+			"random_seed": 0,
+			"num_workers": 1,
+			"atomic_library_mode": "validated-policy-lifting",
+			"compiler_variant": "full",
+		},
+		"command": [
+			"python",
+			"run.py",
+			"--atomic-library-mode",
+			"validated-policy-lifting",
+			"--compiler-variant",
+			"full",
+			"--random-seed",
+			"0",
+		],
+	}
+	completed = {
+		**expected,
+		"settings": {
+			"random_seed": 0,
+			"num_workers": 1,
+			"atomic_library_mode": "validated-policy-lifting",
+		},
+		"command": [
+			"python",
+			"run.py",
+			"--atomic-library-mode",
+			"validated-policy-lifting",
+			"--random-seed",
+			"0",
+		],
+		"completed_return_code": 0,
+	}
+	manifest_file = batch_root / "batch_manifest.json"
+	manifest_file.write_text(json.dumps(completed), encoding="utf-8")
+
+	loaded = validate_completed_batch_for_resume(
+		manifest_file=manifest_file,
+		expected_manifest=expected,
+	)
+
+	assert loaded == completed
+
+
+def test_completed_legacy_batch_resume_rejects_non_default_compiler_variant(
+	tmp_path: Path,
+) -> None:
+	batch_root = tmp_path / "seed0"
+	plan_library = batch_root / "domain_libraries/ferry/plan_library.asl"
+	plan_library.parent.mkdir(parents=True)
+	plan_library.write_text("/* atomic library */\n", encoding="utf-8")
+	expected = {
+		"artifact_kind": "timestamped_moose_native_asl_batch",
+		"timestamp_id": "seed0",
+		"batch_root": str(batch_root),
+		"domains": ["ferry"],
+		"expected_asl_files": [str(plan_library)],
+		"settings": {
+			"random_seed": 0,
+			"atomic_library_mode": "validated-policy-lifting",
+			"compiler_variant": "action_only_closure",
+		},
+		"command": [
+			"python",
+			"run.py",
+			"--atomic-library-mode",
+			"validated-policy-lifting",
+			"--compiler-variant",
+			"action_only_closure",
+		],
+	}
+	completed = {
+		**expected,
+		"settings": {
+			"random_seed": 0,
+			"atomic_library_mode": "validated-policy-lifting",
+		},
+		"command": [
+			"python",
+			"run.py",
+			"--atomic-library-mode",
+			"validated-policy-lifting",
+		],
+		"completed_return_code": 0,
+	}
+	manifest_file = batch_root / "batch_manifest.json"
+	manifest_file.write_text(json.dumps(completed), encoding="utf-8")
+
+	with pytest.raises(ValueError, match="settings"):
+		validate_completed_batch_for_resume(
+			manifest_file=manifest_file,
+			expected_manifest=expected,
+		)
+
+
 def test_completed_timestamped_batch_resume_rejects_setting_mismatch(
 	tmp_path: Path,
 ) -> None:

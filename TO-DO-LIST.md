@@ -66,7 +66,10 @@ certificate.
   sibling cases. Repeating the same run identifier reuses only exact-fingerprint
   successes, and the outer five-seed script reuses a MOOSE batch only when its
   complete command, settings, domain set, successful return code, and expected
-  atomic ASL files match exactly.
+  atomic ASL files match exactly. Pre-registry validated-policy-lifting manifests
+  may omit the compiler variant only when adding the historical `full` default to
+  both settings and command makes the invocation otherwise identical; registered
+  non-default variants remain fail-closed.
 
 - Temporal append now always calls the real `ltlf2dfa`/MONA converter. The
   removed ordered-sequence fast path can no longer bypass DFA construction.

@@ -231,6 +231,10 @@ def validate_completed_batch_for_resume(
 	if not isinstance(loaded, Mapping):
 		raise ValueError("existing batch manifest is not an object")
 	manifest = dict(loaded)
+	legacy_full_compiler_match = _legacy_full_compiler_manifest_matches(
+		manifest=manifest,
+		expected_manifest=expected_manifest,
+	)
 	for field in (
 		"artifact_kind",
 		"timestamp_id",
@@ -240,7 +244,10 @@ def validate_completed_batch_for_resume(
 		"settings",
 		"command",
 	):
-		if manifest.get(field) != expected_manifest.get(field):
+		if (
+			manifest.get(field) != expected_manifest.get(field)
+			and not (field in {"settings", "command"} and legacy_full_compiler_match)
+		):
 			raise ValueError(f"existing batch {field} does not match this invocation")
 	if manifest.get("completed_return_code") != 0:
 		raise ValueError("existing batch did not complete successfully")
@@ -251,6 +258,63 @@ def validate_completed_batch_for_resume(
 	if missing:
 		raise ValueError(f"existing batch is missing ASL artifact: {missing[0]}")
 	return manifest
+
+
+def _legacy_full_compiler_manifest_matches(
+	*,
+	manifest: Mapping[str, Any],
+	expected_manifest: Mapping[str, Any],
+) -> bool:
+	"""Recognize the pre-registry spelling of the default full compiler.
+
+	Before compiler variants were registered, validated policy lifting had one
+	implementation: the compiler now named ``full``. Reuse is safe only when
+	adding that exact default to both the settings and command makes the legacy
+	manifest byte-for-byte equivalent to the current invocation.
+	"""
+
+	legacy_settings = manifest.get("settings")
+	expected_settings = expected_manifest.get("settings")
+	legacy_command = manifest.get("command")
+	expected_command = expected_manifest.get("command")
+	if (
+		not isinstance(legacy_settings, Mapping)
+		or not isinstance(expected_settings, Mapping)
+		or not isinstance(legacy_command, list)
+		or not isinstance(expected_command, list)
+	):
+		return False
+	if "compiler_variant" in legacy_settings:
+		return False
+	if legacy_settings.get("atomic_library_mode") != "validated-policy-lifting":
+		return False
+	if expected_settings.get("compiler_variant") != "full":
+		return False
+
+	normalised_settings = dict(legacy_settings)
+	normalised_settings["compiler_variant"] = "full"
+	if normalised_settings != dict(expected_settings):
+		return False
+
+	variant_positions = [
+		index
+		for index, argument in enumerate(expected_command)
+		if argument == "--compiler-variant"
+	]
+	if len(variant_positions) != 1:
+		return False
+	variant_index = variant_positions[0]
+	if (
+		variant_index + 1 >= len(expected_command)
+		or expected_command[variant_index + 1] != "full"
+		or "--compiler-variant" in legacy_command
+	):
+		return False
+	legacy_spelling = [
+		*expected_command[:variant_index],
+		*expected_command[variant_index + 2 :],
+	]
+	return legacy_command == legacy_spelling
 
 
 def preflight(*, domains: Sequence[str], batch_root: Path, overwrite: bool) -> list[str]:
