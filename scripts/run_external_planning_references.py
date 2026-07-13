@@ -531,11 +531,14 @@ def run_guarded_command(
 	timeout_seconds: int,
 	max_rss_gb: float,
 	extra_env: Mapping[str, str] | None = None,
+	artifact_stem: str = "planner",
 ) -> GuardedCommandResult:
 	"""Run one planner under the shared hard process-tree resource guard."""
 
-	stdout_file = output_dir / "planner.stdout.txt"
-	stderr_file = output_dir / "planner.stderr.txt"
+	if not artifact_stem or any(character in artifact_stem for character in "/\\"):
+		raise ValueError("artifact_stem must be a non-empty file-name component")
+	stdout_file = output_dir / f"{artifact_stem}.stdout.txt"
+	stderr_file = output_dir / f"{artifact_stem}.stderr.txt"
 	guarded = (
 		sys.executable,
 		str(PROJECT_ROOT / "scripts/resource_guard.py"),

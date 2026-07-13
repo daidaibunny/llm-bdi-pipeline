@@ -187,7 +187,11 @@ def normalize_fond4ltlf_domain(domain_text: str) -> str:
 	"""Normalize only PDDL declarations unsupported by FOND4LTLf's own parser."""
 
 	normalized = str(domain_text).lower()
-	code = "\n".join(line.split(";", 1)[0] for line in normalized.splitlines())
+	code = re.sub(
+		r";[^\r\n]*",
+		lambda match: " " * len(match.group(0)),
+		normalized,
+	)
 	if re.search(r"\(\s*:functions\b", code) or re.search(
 		r"\(\s*(?:increase|decrease|assign|scale-up|scale-down)\b",
 		code,

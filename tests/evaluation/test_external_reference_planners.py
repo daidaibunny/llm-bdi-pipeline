@@ -177,6 +177,24 @@ def test_fond4ltlf_requirement_normalization_is_semantics_preserving() -> None:
 	assert ":precondition (not (p ?x))" in normalized
 
 
+def test_fond4ltlf_requirement_normalization_ignores_comment_text() -> None:
+	domain = """
+; source path includes (:requirements :fake) but is not PDDL syntax
+(define (domain d)
+ (:requirements :strips :negative-preconditions)
+ (:predicates (p))
+ (:action a :parameters () :precondition (not (p)) :effect (p)))
+""".strip()
+
+	normalized = normalize_fond4ltlf_domain(domain)
+
+	assert normalized.startswith(
+		"; source path includes (:requirements :fake) but is not pddl syntax",
+	)
+	assert "(:requirements :strips :adl)" in normalized
+	assert ":negative-preconditions" not in normalized.splitlines()[2]
+
+
 def test_fond4ltlf_requirement_normalization_rejects_numeric_pddl() -> None:
 	with pytest.raises(ValueError, match="numeric"):
 		normalize_fond4ltlf_domain(
