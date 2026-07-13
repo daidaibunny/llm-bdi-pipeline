@@ -115,6 +115,13 @@ certificate.
   branch portfolio whose recursive preparation summaries preserve earlier
   ranked achievements. Acyclic requested relations without this branch-level
   noninterference certificate remain unsupported.
+- Query-local preservation portfolios are selected per ordered literal
+  occurrence. Repeated uses of one predicate receive distinct aliases when
+  their protected prefixes require different branch sets; identical portfolios
+  are shared. Certificate metadata reports recursive closure only when a
+  recursive branch was actually selected. A real `blocksworld-tower`
+  `instance-26` probe changed from zero-action failure to a 34-action trace that
+  VAL accepts; this is probe evidence, not a full-domain result.
 - Every positive DFA progress transition uses the same balanced `trans` repair
   tree. Singleton guards use identity serialization; conjunctions use certified
   threat ordering before tree construction. The old linear, sibling-replay,

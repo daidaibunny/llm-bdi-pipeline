@@ -112,6 +112,10 @@ class TransitionSerializationCertificate:
 	ranking_relation_anchor_position: int | None = None
 	ranking_assumptions: tuple[str, ...] = ()
 	selected_branch_names_by_predicate: tuple[tuple[str, tuple[str, ...]], ...] = ()
+	selected_branch_names_by_literal: tuple[
+		tuple[int, str, tuple[str, ...]],
+		...,
+	] = ()
 	negative_guard_count: int = 0
 	negative_guard_preservation_checked: bool = False
 	negative_guard_preserved: bool = True
@@ -146,6 +150,15 @@ class TransitionSerializationCertificate:
 				predicate: list(plan_names)
 				for predicate, plan_names in self.selected_branch_names_by_predicate
 			}
+		if self.selected_branch_names_by_literal:
+			payload["selected_branch_names_by_literal"] = [
+				{
+					"literal_index": literal_index,
+					"literal": literal,
+					"plan_names": list(plan_names),
+				}
+				for literal_index, literal, plan_names in self.selected_branch_names_by_literal
+			]
 		return payload
 
 
@@ -154,7 +167,9 @@ class PreservationSafePlanSelection:
 	"""Query-local branch portfolio with an enforced preservation certificate."""
 
 	ordered_indexes: tuple[int, ...]
+	literals: tuple[tuple[str, tuple[str, ...]], ...]
 	plans_by_predicate: Mapping[str, tuple[AgentSpeakPlan, ...]]
+	plans_by_literal_index: Mapping[int, tuple[AgentSpeakPlan, ...]]
 	certificate: TransitionSerializationCertificate
 
 
@@ -166,10 +181,29 @@ def query_local_preservation_alias_plans(
 	"""Copy selected branches under query-local triggers that enforce the proof."""
 
 	aliases: list[AgentSpeakPlan] = []
-	helper_by_predicate: dict[str, str] = {}
-	for predicate, plans in selection.plans_by_predicate.items():
-		helper_symbol = _safe_agentspeak_identifier(f"{helper_prefix}_selected_{predicate}")
-		helper_by_predicate[predicate] = helper_symbol
+	helper_by_literal: dict[str, str] = {}
+	portfolio_keys_by_predicate: dict[str, set[tuple[str, ...]]] = {}
+	for literal_index, plans in selection.plans_by_literal_index.items():
+		predicate = selection.literals[literal_index][0]
+		portfolio_keys_by_predicate.setdefault(predicate, set()).add(
+			tuple(plan.plan_name for plan in plans),
+		)
+	emitted_helpers: set[str] = set()
+	for literal_index in selection.ordered_indexes:
+		predicate, arguments = selection.literals[literal_index]
+		plans = selection.plans_by_literal_index[literal_index]
+		is_shared_portfolio = len(portfolio_keys_by_predicate[predicate]) == 1
+		helper_symbol = _safe_agentspeak_identifier(
+			f"{helper_prefix}_selected_{predicate}"
+			if is_shared_portfolio
+			else f"{helper_prefix}_selected_{literal_index + 1}_{predicate}",
+		)
+		literal_text = predicate if not arguments else f"{predicate}({', '.join(arguments)})"
+		helper_by_literal[literal_text] = helper_symbol
+		helper_by_literal.setdefault(predicate, helper_symbol)
+		if helper_symbol in emitted_helpers:
+			continue
+		emitted_helpers.add(helper_symbol)
 		for branch_index, plan in enumerate(plans, start=1):
 			rewritten_body = tuple(
 				AgentSpeakBodyStep(step.kind, helper_symbol, step.arguments)
@@ -196,14 +230,20 @@ def query_local_preservation_alias_plans(
 							"artifact_family": "temporal_goal_dfa_append",
 							"wrapper_role": "query_local_preservation_safe_branch",
 							"source_atomic_plan": plan.plan_name,
+							"protected_literal_prefix_length": max(
+								selection.ordered_indexes.index(index)
+								for index in selection.ordered_indexes
+								if selection.literals[index][0] == predicate
+								and selection.plans_by_literal_index[index] == plans
+							),
 							"serialization_strategy": (
 								selection.certificate.serialization_strategy
 							),
 						},
 					),
 				),
-			)
-	return tuple(aliases), helper_by_predicate
+				)
+	return tuple(aliases), helper_by_literal
 
 
 def negative_guard_establishment_alias_plans(
@@ -1055,11 +1095,11 @@ def _preservation_safe_plan_selection(
 		return None
 	order_position = {literal_index: position for position, literal_index in enumerate(ordered_indexes)}
 	positive_pair_shapes_by_achiever: dict[
-		str,
+		int,
 		set[tuple[EffectAtom, EffectAtom]],
 	] = {}
 	negative_pair_shapes_by_achiever: dict[
-		str,
+		int,
 		set[tuple[EffectAtom, EffectAtom]],
 	] = {}
 	for achiever_index, achiever in enumerate(goal_atoms):
@@ -1070,7 +1110,7 @@ def _preservation_safe_plan_selection(
 				order_position[protected_index] >= order_position[achiever_index]
 			):
 				continue
-			positive_pair_shapes_by_achiever.setdefault(achiever.predicate, set()).add(
+			positive_pair_shapes_by_achiever.setdefault(achiever_index, set()).add(
 				_canonical_goal_pair_shape(
 					achiever,
 					protected,
@@ -1078,7 +1118,7 @@ def _preservation_safe_plan_selection(
 				),
 			)
 		for forbidden in negative_guard_atoms:
-			negative_pair_shapes_by_achiever.setdefault(achiever.predicate, set()).add(
+			negative_pair_shapes_by_achiever.setdefault(achiever_index, set()).add(
 				_canonical_goal_pair_shape(
 					achiever,
 					forbidden,
@@ -1086,21 +1126,37 @@ def _preservation_safe_plan_selection(
 				),
 			)
 	plans_by_predicate = _plans_by_predicate(plan_library.plans)
-	selected: dict[str, tuple[AgentSpeakPlan, ...]] = {}
+	selected_by_literal_index: dict[int, tuple[AgentSpeakPlan, ...]] = {}
+	portfolio_cache: dict[
+		tuple[
+			str,
+			frozenset[tuple[EffectAtom, EffectAtom]],
+			frozenset[tuple[EffectAtom, EffectAtom]],
+		],
+		tuple[AgentSpeakPlan, ...],
+	] = {}
 	summary_cache: dict[
 		tuple[str, tuple[tuple[str, ...], ...]],
 		tuple[EffectAtom, AtomicModuleEffectSummary],
 	] = {}
-	for predicate in dict.fromkeys(predicate for predicate, _arguments in literal_tuple):
+	for literal_index in ordered_indexes:
+		achiever_atom = goal_atoms[literal_index]
+		predicate = achiever_atom.predicate
 		positive_pair_shapes = tuple(
-			positive_pair_shapes_by_achiever.get(predicate, ())
+			positive_pair_shapes_by_achiever.get(literal_index, ())
 		)
 		negative_pair_shapes = tuple(
-			negative_pair_shapes_by_achiever.get(predicate, ())
+			negative_pair_shapes_by_achiever.get(literal_index, ())
 		)
-		all_pair_shapes = (*positive_pair_shapes, *negative_pair_shapes)
-		if not all_pair_shapes:
-			return None
+		portfolio_key = (
+			predicate,
+			frozenset(positive_pair_shapes),
+			frozenset(negative_pair_shapes),
+		)
+		cached_portfolio = portfolio_cache.get(portfolio_key)
+		if cached_portfolio is not None:
+			selected_by_literal_index[literal_index] = cached_portfolio
+			continue
 		generic_goal = EffectAtom(
 			predicate,
 			tuple(
@@ -1109,7 +1165,7 @@ def _preservation_safe_plan_selection(
 					variable_scope="query",
 					required_types=argument.required_types,
 				)
-				for index, argument in enumerate(all_pair_shapes[0][0].arguments)
+				for index, argument in enumerate(achiever_atom.arguments)
 			),
 		)
 		safe_plans: list[AgentSpeakPlan] = []
@@ -1212,10 +1268,30 @@ def _preservation_safe_plan_selection(
 			for plan in safe_plans
 		):
 			return None
-		selected[predicate] = _deduplicate_plans_by_name(safe_plans)
+		selected_by_literal_index[literal_index] = _deduplicate_plans_by_name(safe_plans)
+		portfolio_cache[portfolio_key] = selected_by_literal_index[literal_index]
+	selected: dict[str, tuple[AgentSpeakPlan, ...]] = {}
+	for predicate in dict.fromkeys(literal_tuple[index][0] for index in ordered_indexes):
+		portfolios = tuple(
+			selected_by_literal_index[index]
+			for index in ordered_indexes
+			if literal_tuple[index][0] == predicate
+		)
+		common_names = set(plan.plan_name for plan in portfolios[0])
+		for portfolio in portfolios[1:]:
+			common_names.intersection_update(plan.plan_name for plan in portfolio)
+		selected[predicate] = tuple(
+			plan for plan in portfolios[0] if plan.plan_name in common_names
+		)
 	strategy = "query_local_preservation_safe_action_only_branches"
 	ranking_assumptions: tuple[str, ...] = ()
-	if _include_guard_discharge_recursion:
+	selected_recursive_plan_count = sum(
+		1
+		for plans in selected_by_literal_index.values()
+		for plan in plans
+		if any(step.kind == "subgoal" for step in plan.body)
+	)
+	if selected_recursive_plan_count:
 		strategy = "query_local_support_ranked_recursive_closure"
 		ranking_assumptions = (
 			"the certified binary relation is acyclic in every reachable execution state",
@@ -1236,6 +1312,23 @@ def _preservation_safe_plan_selection(
 			(predicate, tuple(plan.plan_name for plan in plans))
 			for predicate, plans in selected.items()
 		),
+		selected_branch_names_by_literal=tuple(
+			(
+				literal_index,
+				(
+					literal_tuple[literal_index][0]
+					if not literal_tuple[literal_index][1]
+					else (
+						f"{literal_tuple[literal_index][0]}"
+						f"({', '.join(literal_tuple[literal_index][1])})"
+					)
+				),
+				tuple(
+					plan.plan_name for plan in selected_by_literal_index[literal_index]
+				),
+			)
+			for literal_index in ordered_indexes
+		),
 		negative_guard_count=len(negative_guard_atoms),
 		negative_guard_preservation_checked=bool(negative_guard_atoms),
 		negative_guard_preserved=True,
@@ -1243,7 +1336,9 @@ def _preservation_safe_plan_selection(
 	)
 	return PreservationSafePlanSelection(
 		ordered_indexes=ordered_indexes,
+		literals=literal_tuple,
 		plans_by_predicate=selected,
+		plans_by_literal_index=selected_by_literal_index,
 		certificate=certificate,
 	)
 
@@ -1443,14 +1538,6 @@ def _guard_discharge_recursive_plans(
 			type_tokens=type_tokens,
 		):
 			continue
-		if not _summary_preserves_discharge_guards(
-			summary,
-			generic_goal=generic_goal,
-			discharge_atoms=tuple(item[1] for item in patterns),
-			functional_groups=functional_groups,
-			type_tokens=type_tokens,
-		):
-			continue
 		selected.append(plan)
 	return tuple(selected)
 
@@ -1567,33 +1654,6 @@ def _summary_preserves_goal_pairs(
 				type_tokens=type_tokens,
 			)
 			for effect in summary.conditional_add_effects
-		):
-			return False
-	return True
-
-
-def _summary_preserves_discharge_guards(
-	summary: AtomicModuleEffectSummary,
-	*,
-	generic_goal: EffectAtom,
-	discharge_atoms: Sequence[EffectAtom],
-	functional_groups: Sequence[_FunctionalPredicateGroup],
-	type_tokens: Sequence[str],
-) -> bool:
-	for guarded in tuple(discharge_atoms or ()):
-		head_binding = {
-			argument.symbol: argument
-			for argument in generic_goal.arguments
-			if argument.variable_scope == "query"
-		}
-		if any(
-			_conditional_delete_can_threaten(
-				_instantiate_conditional_delete(effect, head_binding=head_binding),
-				protected=guarded,
-				functional_groups=functional_groups,
-				type_tokens=type_tokens,
-			)
-			for effect in summary.conditional_delete_effects
 		):
 			return False
 	return True

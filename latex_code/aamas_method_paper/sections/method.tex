@@ -272,13 +272,21 @@ recognizing the fluent name.
 
 An acyclic threat graph is topologically serialized. For a cyclic universal
 summary, the compiler may copy a certified subset of atomic branches under a
-query-local alias. Finite action-only branches are admitted when exact symbolic
+query-local alias. Portfolio selection is scoped to each ordered literal
+occurrence, rather than only to its predicate symbol. Thus two occurrences of
+$p$ may receive different aliases when their already-established prefixes
+differ; identical selected branch sets may share one alias. This distinction is
+necessary because plan contexts are alternative applicability cases, not a
+conjunction that every preparation module must preserve simultaneously.
+Finite action-only branches are admitted when exact symbolic
 completion preserves earlier positive goals and all negative guards. A
 recursive branch of the form $!p;!g$ is admitted only when it discharges the
 explicit missing context $p$, the selected $p$ module has a complete summary,
 and that summary preserves earlier obligations. Its recursive call is rewritten
 to the query-local alias, preventing execution from escaping to an uncertified
-sibling branch.
+sibling branch. The certificate records source branch names by literal index
+and reports recursive closure only if a selected branch contains an internal
+achievement call.
 
 One additional ordering certificate applies to a functional, acyclic requested
 graph over a single binary relation. The child/support orientation must come

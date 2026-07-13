@@ -624,6 +624,22 @@ relation is acyclic in every reachable execution state. It is a structural
 assumption over PDDL effects and selected modules, not a domain or
 predicate-name switch.
 
+The enforced portfolio is selected per ordered literal occurrence, not once per
+predicate symbol. A literal occurrence is one concrete position in the guard;
+for example, `on(middle,lower)` and `on(upper,middle)` are two occurrences of
+`on/2`. They have different protected prefixes after support-depth ordering, so
+the compiler independently certifies which `+!on/2` branches preserve the
+goals established before each position. Equivalent occurrence portfolios are
+shared under one helper only after their selected branch-name sets coincide.
+This prevents a branch unsafe for a late occurrence from globally removing a
+recursive branch that is safe and necessary at an earlier occurrence. Plan
+contexts such as `not clear(X)` and `not holding(X)` are alternative
+applicability cases; the compiler does not incorrectly require one preparation
+module to preserve every alternative context simultaneously. Persisted
+certificates therefore record selected branch names by literal index and report
+recursive closure only when at least one selected branch actually contains an
+internal achievement call.
+
 If the ranked portfolio cannot be certified, the compiler may instead enforce a
 query-local preservation-safe action-only selection. An action-only branch is a selected
 atomic plan whose body is a finite sequence of primitive PDDL actions and has no

@@ -978,6 +978,73 @@ def test_preservation_selection_keeps_certified_recursive_repair_under_noisy_mac
 	assert recursive_alias.body[-1].symbol == helper
 
 
+def test_preservation_certificate_reports_action_only_when_no_recursive_branch_selected() -> None:
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("on",),
+		source_backend="test",
+		source_name="truthful-recursive-certificate",
+	)
+
+	selection = preservation_safe_plan_selection(
+		(
+			("on", ("top", "middle")),
+			("on", ("middle", "bottom")),
+		),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert selection is not None
+	selected_plans = tuple(
+		plan
+		for plans in selection.plans_by_literal_index.values()
+		for plan in plans
+	)
+	assert selected_plans
+	if not any(any(step.kind == "subgoal" for step in plan.body) for plan in selected_plans):
+		assert selection.certificate.serialization_strategy == (
+			"query_local_preservation_safe_action_only_branches"
+		)
+
+
+def test_preservation_selection_is_occurrence_scoped_for_repeated_predicate_goals() -> None:
+	domain_file = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
+	library = synthesize_atomic_minimal_literal_module_library(
+		domain_file=domain_file,
+		seed_predicates=("on",),
+		source_backend="test",
+		source_name="occurrence-scoped-preservation",
+	)
+
+	selection = preservation_safe_plan_selection(
+		(
+			("on", ("upper", "middle")),
+			("on", ("middle", "lower")),
+		),
+		plan_library=library,
+		domain=PDDLParser.parse_domain(domain_file),
+	)
+
+	assert selection is not None
+	assert selection.ordered_indexes == (1, 0)
+	assert set(selection.plans_by_literal_index) == {0, 1}
+	first_occurrence = selection.plans_by_literal_index[1]
+	assert any(plan.plan_name == "on_prepare_clear_X" for plan in first_occurrence)
+
+	aliases, helper_by_literal = query_local_preservation_alias_plans(
+		selection,
+		helper_prefix="g_query_trans_1",
+	)
+	assert helper_by_literal["on(middle, lower)"] != helper_by_literal["on(upper, middle)"]
+	assert any(
+		plan.trigger.symbol == helper_by_literal["on(middle, lower)"]
+		and plan.plan_name.endswith("on_prepare_clear_X")
+		for plan in aliases
+	)
+
+
 def _write_typed_transport_fragment(path: Path) -> Path:
 	path.write_text(
 		"""

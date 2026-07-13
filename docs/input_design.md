@@ -1092,6 +1092,15 @@ actual monitored state and prevents replaying an already completed transition.
 A move to a rejecting state is not accepted by this rule: no accepting belief
 is emitted, and the top-level controller has no success plan for that state.
 
+For a cyclic threat resolved by an enforced atomic-branch portfolio, helper
+selection is scoped to each ordered guard-literal occurrence. Two occurrences
+of the same predicate may therefore call different query-local aliases when
+their already-established sibling sets differ. The appender may share an alias
+only when the certified branch portfolios are identical. Certificate metadata
+records the literal index, complete literal atom, and selected source branch
+names; a recursive strategy label is emitted only when the selected portfolio
+actually contains a recursive atomic branch.
+
 Positive integer numeric equalities may receive a schema-derived one-action
 repair only under a constant-delta certificate. Unit changes use a strict
 directional comparison and may be replayed monotonically; larger changes require

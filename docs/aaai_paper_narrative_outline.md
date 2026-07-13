@@ -193,7 +193,11 @@ library.
    `G_j -> G_i` means a module for `G_j` may delete `G_i`, so `G_j` must be
    repaired first.
 6. For a cyclic threat graph, use only a certified preserving portfolio or a
-   supported ranking proof; otherwise reject.
+   supported ranking proof; otherwise reject. Select the preserving portfolio
+   per ordered literal occurrence, because two occurrences of one predicate can
+   have different protected prefixes. Share query-local aliases only for
+   identical certified portfolios, and explain that alternative plan contexts
+   are not simultaneous obligations.
 7. For mixed Boolean/numeric guards, use complete action-only net Boolean
    effects and constant-integer numeric deltas; index helper selection by the
    full literal atom and leave uncertified literals observation-only. Explain
