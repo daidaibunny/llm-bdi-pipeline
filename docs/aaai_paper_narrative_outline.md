@@ -156,12 +156,19 @@ This section covers only the post-evidence, pre-AgentSpeak domain compiler.
    `PolicyEvidenceProgram` representation.
 2. Compute producible-fluent closure from PDDL add effects and positive
    preconditions. Static predicates remain contexts.
-3. Generate the bounded schema-derived candidate grammar: direct producer,
-   support, bridge, prefix, and one certified cleanup action. Validated evidence
-   macros are not truncated by this grammar.
+3. Generate the finite schema-derived candidate language: direct producers;
+   backward STRIPS regression over acyclic producer dependencies; and finite
+   causal resource-mode discharge. Regression unifies producer preconditions
+   with compatible open requirements before introducing fresh variables.
+   Termination comes from
+   forbidding repeated alpha-normalized requirement/producer roles and resource
+   modes, not from an arbitrary action-depth bound. Validated evidence macros
+   are never truncated. Cyclic dependencies require provider evidence or a
+   separately certified recursive module; this is not an instance-level planner.
 4. Summarize the implemented certificates in one table: binding, symbolic
-   executability, achievement, closure, recursive progress, resource release,
-   and staged preparation.
+   executability, achievement, closure, relation-ranked recursive progress,
+   finite resource-mode discharge, and Clingo-selected acyclic cross-predicate
+   preparation with strictly decreasing dependency ranks.
 5. Explain the joint Clingo optimization over evidence and schema candidates.
    The precise claim is global optimality only inside the generated certified
    candidate space.
@@ -330,11 +337,14 @@ compiler that emits executable domain modules and query-local controllers.
 ### 8. Limitations and Conclusion
 
 Limitations must correspond to observed rejection categories and implemented
-bounds: MOOSE is the only experimentally instantiated evidence provider; the
-schema grammar is bounded; cleanup admits one certified release; uncertified
-cycles are rejected; numeric disequality achievement remains observation-only
-without a certified change-away branch; and runtime monitoring does not make
-action-strategy synthesis complete for arbitrary PDDL-times-LTLf products.
+bounds: MOOSE is the only experimentally instantiated evidence provider;
+schema regression is restricted to finite acyclic producer dependencies;
+resource discharge requires a finite non-repeating keyed mode path; untyped
+overloaded producers that require different nested branch portfolios remain
+unsupported; uncertified cycles are rejected; numeric disequality achievement
+remains observation-only without a certified change-away branch; and runtime
+monitoring does not make action-strategy synthesis complete for arbitrary
+PDDL-times-LTLf products.
 
 The Conclusion answers three questions only: what representation gap was
 closed, why the output can be executed by a BDI agent, and which temporal goals

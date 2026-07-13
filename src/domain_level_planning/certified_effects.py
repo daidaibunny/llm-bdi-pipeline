@@ -16,6 +16,10 @@ from utils.pddl_parser import PDDLDomain
 from .atomic_module_synthesis import _ParsedAction
 from .atomic_module_synthesis import _FunctionalPredicateGroup
 from .atomic_module_synthesis import _functional_predicate_groups
+from .atomic_module_synthesis import _plan_directly_adds_predicate
+from .atomic_module_synthesis import _plan_preserves_anchored_relation_cone
+from .atomic_module_synthesis import _prepared_predicate
+from .atomic_module_synthesis import _recursive_progress_certificate_from_plan
 from .atomic_module_synthesis import PDDLLiteralSchema
 from .pddl_types import OBJ_TP_PREDICATE
 from .pddl_types import parameter_type
@@ -1509,10 +1513,9 @@ def _guard_discharge_recursive_plans(
 		if preparation_atom.predicate == generic_goal.predicate:
 			if not _plan_has_relational_progress_certificate(plan):
 				continue
-		elif _predicate_call_graph_reaches(
-			preparation_atom.predicate,
-			generic_goal.predicate,
-			plans_by_predicate=plans_by_predicate,
+		elif not _plan_has_selected_precondition_discharge_certificate(
+			plan,
+			prepared_predicate=preparation_atom.predicate,
 		):
 			continue
 		summary = _cached_module_effect_summary(
@@ -1600,27 +1603,31 @@ def _plan_has_relational_progress_certificate(plan: AgentSpeakPlan) -> bool:
 	)
 
 
-def _predicate_call_graph_reaches(
-	source: str,
-	target: str,
+def _plan_has_selected_precondition_discharge_certificate(
+	plan: AgentSpeakPlan,
 	*,
-	plans_by_predicate: Mapping[str, Sequence[AgentSpeakPlan]],
+	prepared_predicate: str,
 ) -> bool:
-	frontier = [source]
-	seen: set[str] = set()
-	while frontier:
-		current = frontier.pop()
-		if current in seen:
+	"""Check the sealed Clingo rank for one cross-predicate preparation."""
+
+	for certificate in tuple(plan.binding_certificate or ()):
+		progress = certificate.get("recursive_progress_certificate")
+		if not isinstance(progress, Mapping):
 			continue
-		seen.add(current)
-		for plan in tuple(plans_by_predicate.get(current, ())):
-			for step in plan.body:
-				if step.kind != "subgoal":
-					continue
-				if step.symbol == target:
-					return True
-				if step.symbol not in seen:
-					frontier.append(step.symbol)
+		if progress.get("certificate_kind") != "well_founded_precondition_discharge":
+			continue
+		if str(progress.get("prepared_predicate") or "") != prepared_predicate:
+			continue
+		if progress.get("dependency_order_status") != "clingo_selected_acyclic":
+			continue
+		caller_rank = progress.get("caller_dependency_rank")
+		callee_rank = progress.get("callee_dependency_rank")
+		if (
+			isinstance(caller_rank, int)
+			and isinstance(callee_rank, int)
+			and caller_rank > callee_rank >= 0
+		):
+			return True
 	return False
 
 
@@ -2759,11 +2766,20 @@ def _recursive_module_closure_preserves_relation(
 	relation: str,
 	actions_by_name: Mapping[str, _ParsedAction],
 ) -> bool:
+	progress = _recursive_progress_certificate_from_plan(certificate_plan)
+	if progress is None or progress.relation_predicate != relation:
+		return False
 	call_graph: dict[str, set[str]] = {}
 	for plan in tuple(plan_library.plans or ()):
-		call_graph.setdefault(plan.trigger.symbol, set()).update(
-			step.symbol for step in plan.body if step.kind == "subgoal"
-		)
+		prepared = _prepared_predicate(plan)
+		if not prepared or prepared == plan.trigger.symbol:
+			continue
+		if not _plan_has_selected_precondition_discharge_certificate(
+			plan,
+			prepared_predicate=prepared,
+		):
+			return False
+		call_graph.setdefault(plan.trigger.symbol, set()).add(prepared)
 	reachable = {certificate_plan.trigger.symbol}
 	frontier = [certificate_plan.trigger.symbol]
 	while frontier:
@@ -2776,14 +2792,19 @@ def _recursive_module_closure_preserves_relation(
 	for plan in tuple(plan_library.plans or ()):
 		if plan.trigger.symbol not in reachable:
 			continue
-		for step in plan.body:
-			if step.kind != "action":
-				continue
-			action = actions_by_name.get(step.symbol)
-			if action is None:
-				return False
-			if any(effect.predicate == relation for effect in action.add_effects):
-				return False
+		if not _plan_directly_adds_predicate(
+			plan,
+			predicate=relation,
+			actions_by_name=actions_by_name,
+		):
+			continue
+		if not _plan_preserves_anchored_relation_cone(
+			plan,
+			recursive_plan=certificate_plan,
+			certificate=progress,
+			actions_by_name=actions_by_name,
+		):
+			return False
 	return True
 
 

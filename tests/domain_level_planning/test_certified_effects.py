@@ -929,7 +929,20 @@ def test_preservation_selection_keeps_certified_recursive_repair_under_noisy_mac
 					AgentSpeakBodyStep("subgoal", "ready", ("Y",)),
 					AgentSpeakBodyStep("subgoal", "supports", ("X", "Y")),
 				),
-				binding_certificate=({"rule_kind": "prepare_public_precondition"},),
+				binding_certificate=(
+					{
+						"rule_kind": "prepare_public_precondition",
+						"recursive_progress_certificate": {
+							"certificate_kind": "well_founded_precondition_discharge",
+							"ranking_feature_kind": "unsatisfied_precondition_boolean",
+							"prepared_predicate": "ready",
+							"prepared_arguments": ["Y"],
+							"dependency_order_status": "clingo_selected_acyclic",
+							"caller_dependency_rank": 1,
+							"callee_dependency_rank": 0,
+						},
+					},
+				),
 			),
 			# This evidence macro changes another support edge. It must not globally
 			# invalidate a safe recursive branch portfolio for the query.

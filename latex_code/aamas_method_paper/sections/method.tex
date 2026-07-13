@@ -50,10 +50,13 @@ delete effect and remains context-only; every positive add-effect predicate is
 a producible fluent and enters closure even if MOOSE never observed it as a
 goal. Numeric-only evidence does not suppress this predicate closure.
 
-For each target $p(\bar X)$, candidate generation searches the fixed grammar in
+For each target $p(\bar X)$, candidate generation searches the finite language in
 Table~\ref{tab:grammar}. A \emph{producer} is an action whose add effects contain
-$p$; a \emph{support} or \emph{bridge} is a producer for a missing positive
-precondition of a later action. The grammar is domain independent but bounded.
+$p$. Backward STRIPS regression replaces one open positive precondition by a
+producer's preconditions and rejects a step whose deletes contradict another open
+requirement. Producer preconditions are first unified with compatible open
+requirements, after which only still-unbound parameters receive fresh variables.
+Search is enabled only when the reachable producer--precondition graph is acyclic.
 
 \begin{table}[t]
 \centering
@@ -61,22 +64,25 @@ precondition of a later action. The grammar is domain independent but bounded.
 \label{tab:grammar}
 \begin{tabular}{lp{0.57\columnwidth}}
 \toprule
-Candidate & Primitive-action shape \\
+Candidate & Certification condition \\
 \midrule
 Direct & target producer \\
-Support & support producer; target producer \\
-Bridge & support; bridge; target producer \\
-Prefix & prefix; support; bridge; target producer \\
-Cleanup & any preceding sequence; one certified release \\
+Regression & finite acyclic lifted producer path \\
+Discharge & finite acyclic resource-mode path after a producer \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Schema candidates contain at most five primitive actions; evidence macros are
-not truncated. This is the compiler hypothesis class, not a PDDL completeness
-claim. Types constrain unification; required runtime sort membership uses only
-static \texttt{obj\_tp(Object,Type)}, never domain-specific type fluents,
-achievement calls, or exported actions.
+Termination does not use an action-depth constant: a path cannot repeat an
+alpha-normalized requirement/producer step or resource mode, and only the
+shortest body is retained for an equivalent open-requirement and completion-
+effect contract. Every result is then replayed by symbolic progression. Evidence
+macros are not truncated. Cyclic dependencies require provider evidence or a
+separately certified recursive module. This remains a restricted candidate
+language, not a PDDL completeness claim or an instance-level planner. Types
+constrain unification; required runtime sort membership uses only static
+\texttt{obj\_tp(Object,Type)}, never domain-specific type fluents, achievement
+calls, or exported actions.
 
 \subsection{Branch Certificates}
 
@@ -97,7 +103,7 @@ Achievement & branch returns without its trigger \\
 Closure & selected call has no selected module \\
 Progress & recursive branch can oscillate \\
 Release & acquired resource remains occupied \\
-Preparation & staged repair destroys feasibility \\
+Preparation & selected cross-module calls form a cycle \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -110,27 +116,34 @@ $\mustadd$, $\mayadd$, and $\maydelete$. Every selected call $!q(\bar Y)$ must
 have a type-compatible selected module; closure is a solver obligation.
 
 \paragraph{Recursive progress.}
-A recursive branch requires a non-negative relation count or anchored acyclic-
-cone count that strictly decreases, is increased by no reachable selected
-branch, and has a base/producer exit. This compile-time feature never becomes a
-belief. The design follows relational progress witnesses in general-policy work
-\cite{Frances2021LearningGeneralPolicies} but claims only schema-certified
-features from this fixed grammar.
+A same-predicate recursive branch requires a non-negative relation count or
+anchored acyclic-cone count that strictly decreases and has a base/producer exit.
+Threats are checked over the preparation graph selected by Clingo, not over
+unselected candidates. A branch may add the ranked relation outside the
+protected cone only when its trigger preserves the same anchor and a guard proves
+that the new anchor differs from the protected one. This compile-time feature
+never becomes a belief. The design follows relational progress witnesses in
+general-policy work \cite{Frances2021LearningGeneralPolicies} but claims only
+schema-certified features from the generated candidate language.
 
 \paragraph{Resource release.}
 Effects, not names, identify resource debt: acquisition deletes key-only
-availability and adds a key--occupant mode; one executable release must reverse
-it and preserve the target. Disequalities arise only from precondition-
-violating unifications. Multi-step parking is rejected.
+availability and adds a key--occupant mode. A finite discharge path must delete
+each current mode without recreating it, retain the same inferred key/occupant
+roles, restore availability, and preserve the target. Repeated normalized modes
+are forbidden and every step is symbolically executable. Disequalities arise
+only from precondition-violating unifications.
 
 \paragraph{Existential preparation projection.}
 Preparing one of several dynamic preconditions may temporarily change another,
 such as an object's location. Projection may defer an unrelated sibling only
-across an acyclic dependency through a schema-inferred single-valued fluent,
-when every deferred sibling has one producer, all static feasibility witnesses
-remain, local variables are alpha-renamed, and the original target is retried
-before primitive production. Cyclic or producer-ambiguous dependencies retain
-the full context; only certified call-graph edges affect branch priority.
+through a schema-inferred single-valued fluent when every deferred sibling has
+one producer, all static feasibility witnesses remain, local variables are
+alpha-renamed, and the original target is retried before primitive production.
+Cross-predicate preparation candidates are optional. Clingo selects an acyclic
+subset and seals every selected edge with natural-number caller and callee ranks
+satisfying $r_{caller}>r_{callee}$. Same-predicate recursion instead requires the
+relational certificate above.
 
 \subsection{Joint Clingo Selection}
 
@@ -144,13 +157,22 @@ resource contracts. Syntactic body-prefix similarity is not treated as semantic
 equivalence.
 
 The solver enforces evidence coverage, internal closure, producer availability,
-and compatibility of recursive capabilities. Among feasible sets $S$, it uses
-the lexicographic objective
+acyclic ranked cross-predicate preparation, and compatibility of relation
+effects with recursive capabilities. Among feasible sets $S$, it uses the
+lexicographic objective
 \[
-\min_S\bigl\langle-R(S),\ |S|,\ C(S),\ B(S)\bigr\rangle,
+\min_S\bigl\langle-R_{rel}(S),\ -R_{prep}(S),\ |S|,\ C(S),\ B(S)\bigr\rangle,
 \]
-where $R$ is the number of compatible certified recursive capabilities, $C$ is
-the number of context literals, and $B$ is the number of body steps.
+where $R_{rel}$ counts compatible relation-ranked recursive capabilities,
+$R_{prep}$ counts compatible acyclic precondition-discharge capabilities, $C$
+is the number of context literals, and $B$ is the number of body steps. This is
+global optimality only inside the generated and certified candidate space.
+
+The compiler fails closed when an untyped predicate has several producers whose
+safe use requires different nested branch portfolios. For example, if one
+\texttt{at/2} producer preserves a ranked relation and another may increase it,
+static role names alone do not prove that their object sets are disjoint. The
+compiler neither recognizes those names nor assumes disjointness.
 
 \section{DFA-Guided Composition of Temporally Extended Goals}
 \label{sec:temporal-composition}

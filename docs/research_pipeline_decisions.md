@@ -312,18 +312,36 @@ reproduction deviation from the paper's 32-GB synthesis ceiling.
 `num_training = -1`, policy-dump and ASL append timeouts, Jason timeout, and VAL
 timeout are pipeline or hardware settings, not MOOSE method parameters.
 
-The compiler's schema-derived candidate language is also explicit. It contains:
+The compiler's schema-derived candidate language is explicit but no longer has
+an arbitrary primitive-action depth bound. It contains direct producers,
+finite backward STRIPS regressions over acyclic producible-precondition
+dependencies, and optional causal resource-mode discharge paths. Backward
+regression replaces an open requirement by the selected action's preconditions
+and rejects a step when its delete effects contradict another open requirement.
+An action's still-unbound parameters are first unified with compatible open
+positive requirements; only parameters that remain unbound receive fresh
+variables. Search terminates by forbidding a repeated alpha-normalized
+requirement/producer step and retaining only the shortest body for an equivalent
+requirement and completion-effect contract. This search is enabled only when
+the producer-precondition predicate graph reachable from the target is acyclic.
+Cyclic targets rely on validated provider macros and separately certified
+recursive modules rather than an unrestricted instance-level planner.
 
-1. one direct target producer;
-2. one support producer followed by the target producer;
-3. one support producer, one bridge producer, and the target producer;
-4. one prefix producer before the support/bridge/target sequence; and
-5. optionally, one PDDL-certified resource-release action after any sequence.
+Removing this acyclic gate is not an accepted fallback. Alpha-normalized cycle
+blocking makes the signature space finite but can still enumerate a
+combinatorial number of lifted requirement sets. A real Logistics probe exceeded
+600 seconds under that experimental configuration, whereas the retained
+acyclic compiler completed in seconds. Cyclic producer dependencies therefore
+require an evidence-guided mode-path or a separately proved lexicographic
+progress certificate before they enter the supported compiler fragment.
 
-Thus a schema-derived candidate has at most five primitive actions. A validated
-Evidence Module macro may be longer and is not truncated by this bound. Clingo
-optimality is only within this finite generated candidate language. This is a
-method scope restriction, not a domain-name rule and not a MOOSE parameter.
+Resource-mode discharge separately searches a finite symbolic mode graph and
+forbids repeated alpha-normalized resource modes. Consequently, a schema
+candidate may contain more than five actions, but every accepted path is finite
+and symbolically replayed. A validated Evidence Module macro is also never
+truncated. Clingo optimality remains only within this generated certified
+candidate language. These are structural scope restrictions, not domain-name
+rules and not MOOSE parameters.
 
 The compiler therefore does not simply rename objects from training instances
 into variables. It may add an internal module when the target action's
@@ -404,12 +422,24 @@ with a cycle there is no finite bottom support from which recursive progress can
 be ranked. The predicate name is irrelevant; the same test passes after
 renaming the relation and every action in the PDDL domain.
 
-Deleting one obstruction is not sufficient by itself. The compiler follows the
-selected module call graph and adds Clingo incompatibility constraints against
-any candidate branch that may increase the chosen feature. Thus a branch such
+Deleting one obstruction is not sufficient by itself. Clingo jointly selects
+the cross-predicate preparation graph and relation-preserving action branches.
+Cross-predicate preparation edges must form a directed acyclic graph. Each
+selected edge receives natural-number caller and callee ranks with
+`caller_rank > callee_rank`, while its local negative precondition guard falls
+from unsatisfied to satisfied before the original target is retried.
+Same-predicate recursion is exempt from this predicate-rank rule only when it
+has the separate relational decrease certificate above.
+
+Relation threats are evaluated over this selected preparation graph, not the
+larger raw candidate graph. A branch such
 as `unstack; stack`, which exchanges one `on` atom for another, cannot coexist
 with recursion certified by the global `count(on)`. For an anchored cone,
-relation-adding branches require their own compatible preservation proof.
+the compiler composes final PDDL effects and permits a relation add only when
+the branch trigger maps the same anchor argument and its guards prove that the
+new anchor differs from the protected anchor. The query compiler independently
+rechecks the same selected preparation edges and anchored effect condition from
+the final library rather than trusting metadata alone.
 Navigation recursion such as moving
 between two rooms deletes and re-adds one location fluent, so no strict count
 decrease is available and that recursion is not selected. Predicate names and
@@ -426,11 +456,13 @@ For example, in Depots the action `lift(H,C,S,P)` can achieve `clear(S)`, but
 it also creates `lifting(H,C)` and deletes `available(H)`. If the library stops
 there, later goals may fail because the hoist is still occupied.
 
-The compiler now accepts a one-step cleanup action only when the PDDL schema
-certifies all of the following facts:
+The compiler accepts a finite cleanup path only when the PDDL schema certifies
+all of the following facts:
 
-- the cleanup action deletes the producer-created debt, for example
-  `drop(H,C,B,P)` deletes `lifting(H,C)`;
+- each cleanup edge deletes the current producer-created debt mode without
+  immediately re-adding it, and the terminal edge restores the consumed free
+  mode; for example `drop(H,C,B,P)` deletes `lifting(H,C)` and restores
+  `available(H)`;
 - the producer consumes a key-only free mode and creates a key-plus-occupant
   debt mode, while the cleanup performs the inverse transition. For example,
   `available(H)` supplies key `H`, while `lifting(H,C)` adds occupant `C`;
@@ -480,10 +512,18 @@ changing the schema, the compiler cannot know which mode denotes availability;
 it rejects that cleanup unless provider evidence or a future explicit resource
 contract supplies the missing orientation.
 
-The current implementation is intentionally one-step. If a domain needs
-multi-step parking, such as releasing a resource only after moving a truck or
-finding a buffer through several actions, that remains a future compiler
-extension rather than an implicit hardcoded repair.
+Multi-step discharge is supported when every intermediate mode carries the same
+schema-derived capacity key and occupant roles, no normalized mode repeats,
+every action is symbolically executable, and the final state preserves the
+atomic target. The compiler also records the complete release-action path, not
+only its final action. It does not yet synthesize a query-local restricted
+portfolio for an overloaded producer predicate whose safe and unsafe branches
+are distinguished only by untyped static roles. In the untyped Depots PDDL,
+for example, `at/2` is produced by both `drive` and `drop`; schema syntax alone
+does not prove that `truck(B)` and `crate(B)` are disjoint. If a recursive
+resource preparation requires only the `drive` portfolio while `drop` would
+increase a protected support cone, the compiler rejects that closure instead
+of assuming role disjointness or recognizing either predicate name.
 
 ### Joint Certified Candidate Selection
 
@@ -510,8 +550,9 @@ and numeric effects introduce no new harm. Predicate-name
 equality and body-prefix similarity are not semantic evidence coverage. In
 particular, the current compiler does not yet prove that a short recursive
 module is equivalent to an arbitrary long MOOSE macro. Clingo also enforces
-internal-module closure and rejects simultaneously selected branches that
-invalidate a relational ranking certificate.
+internal-module closure, enforces an acyclic cross-predicate preparation graph,
+and rejects selected relation producers reachable from a ranking root unless
+their final effects preserve the certified anchored cone.
 
 ```asl
 /* broad repair branch tried too early */
@@ -526,9 +567,13 @@ invalidate a relational ranking certificate.
 	drop(X, Y).
 ```
 
-After selection, already-true branches are rendered first, complete action-only
-validated macros are rendered second, mixed bodies are rendered third, and
-recursive repair branches are rendered last:
+After selection, already-true branches are rendered first. A producer macro
+with a target-preserving causal resource-discharge certificate precedes a
+shorter producer that would leave the resource occupied. A preparation branch
+derived from that discharge path also precedes the outstanding-debt producer;
+ordinary complete action-only macros still precede ordinary recursive repair
+branches. This ordering changes neither branch contexts nor effects: an
+inapplicable discharge branch is skipped by normal AgentSpeak context matching.
 
 ```asl
 +!at(X, Y) : at(X, A) & at_robby(A) & free(Z) <-
@@ -542,10 +587,13 @@ recursive repair branches are rendered last:
 ```
 
 The optimization is lexicographic. Hard schema/evidence/closure obligations
-must first be satisfiable; then Clingo maximizes compatible well-founded
-recursive capabilities and minimizes branch count, context count, and body
-cost. Optimality is claimed only within the generated certified candidate
-space, not over all possible AgentSpeak programs.
+must first be satisfiable; then Clingo first maximizes relational recursive
+capabilities with strict well-founded certificates, next maximizes compatible
+acyclic precondition-discharge capabilities, and finally minimizes branch
+count, context count, and body cost. The first priority reflects unbounded
+structural generalization rather than a domain name or predicate name.
+Optimality is claimed only within the generated certified candidate space, not
+over all possible AgentSpeak programs.
 
 ### Current Alignment and Remaining Gap
 
@@ -562,12 +610,13 @@ role in these ways:
 - Clingo/ASP is the branch selector for compactness within the generated
   candidate space.
 
-The current implementation now supports one-step protected resource release
-when a cleanup action is certified directly by PDDL preconditions and effects.
-It is not yet complete for all possible parking cases. If a domain needs a
-multi-step release strategy, or if every available cleanup action would delete
-the protected target without a representable non-unification guard, the compiler
-should reject the branch rather than patching the domain by name.
+The current implementation supports finite acyclic protected resource-mode
+discharge when every step is certified directly by PDDL preconditions and
+effects. It is not complete for all parking cases. If a release path requires
+an overloaded untyped producer to be restricted to one context-dependent
+branch portfolio, or if every available cleanup path would delete the protected
+target without a representable non-unification guard, the compiler rejects the
+branch rather than patching the domain by name.
 
 ### Certified Existential Preparation Projection
 
@@ -594,12 +643,14 @@ requested mode, has a calibration target, and that suitable waypoints are
 visible. After calibration, `!have_image(...)` is called again, so the final
 primitive image action still requires the full original producer context.
 
-If preparation dependencies are cyclic, or a projected obligation has several
-producer schemas, the compiler keeps the former full connected context. This
-is a fail-closed partial-order rule, not arbitrary schema regression. Plan
-priority is derived from the selected module call graph: if preparing `p` can
-call `q`, `q` is prepared before an independent later sibling. Strongly
-connected components are not internally ordered.
+If projection dependencies are cyclic, or a projected obligation has several
+producer schemas, the candidate keeps the former full connected context. At
+selection time, cross-predicate preparation branches are optional recursive
+capabilities rather than mandatory evidence obligations. Clingo chooses an
+acyclic subset and seals each selected branch with its caller/callee dependency
+ranks. A cyclic subset is rejected; it is not retained as an unordered strongly
+connected component. This is a fail-closed compositional rule, not arbitrary
+schema planning.
 
 ### Certified DFA Guard Serialization
 

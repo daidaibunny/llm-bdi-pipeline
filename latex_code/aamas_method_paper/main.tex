@@ -156,8 +156,10 @@ bindings and exact hashed libraries, not arbitrary PDDL--\ltlf realizability.
 
 The implemented evidence provider is MOOSE; provider neutrality is an interface
 property, not an empirical claim about other backends. Schema-derived action
-sequences use a fixed grammar with at most five primitive actions, and resource
-cleanup contains at most one certified release action. The compiler does not
+sequences use finite acyclic STRIPS regression without an arbitrary action-depth
+bound. Resource cleanup may traverse a finite non-repeating keyed mode path.
+Ambiguous resource orientation and untyped overloaded producers that require
+different nested preservation portfolios are rejected. The compiler does not
 claim semantic equivalence between an arbitrary long evidence macro and a
 short recursive program.
 

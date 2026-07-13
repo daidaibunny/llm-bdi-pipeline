@@ -100,11 +100,26 @@ certificate.
   Threat ordering therefore remains sound even when an object is literally
   named `x`, `y`, or another schema-variable-like token.
 - Compiler-generated resource-release sequences require a causal keyed-capacity
-  invariant, inverse acquire/release effects, target preservation, and exact
-  alias guards. Structurally symmetric same-arity modes are rejected when their
-  free/debt orientation cannot be inferred.
+  invariant, a finite non-repeating path from acquired mode back to free mode,
+  target preservation, and exact alias guards. Every intermediate transition is
+  symbolically replayed. Structurally symmetric same-arity modes are rejected
+  when their free/debt orientation cannot be inferred.
+- Schema-derived macro generation is no longer truncated after five actions.
+  It performs finite backward STRIPS regression over an acyclic
+  producer-precondition graph, unifies producer preconditions with compatible
+  open requirements before introducing fresh variables, forbids repeated
+  alpha-normalized requirement/producer roles, retains the shortest body for an
+  equivalent completion contract, and symbolically replays every result. Cyclic
+  targets do not trigger an unrestricted instance-level planner.
 - Same-predicate recursion requires a non-negative relational-count feature
-  with a strict delete and no selected branch that can increase the feature.
+  with a strict delete and no selected reachable branch that can increase the
+  feature. Anchored relation cones permit an add only when the trigger preserves
+  the same anchor and a schema-derived guard proves that the new anchor differs.
+- Cross-predicate preparation candidates are optional Clingo capabilities. The
+  selected dependency edges must form a directed acyclic graph and are sealed
+  with caller/callee ranks satisfying `caller_rank > callee_rank`. Relation
+  threats are checked over this selected graph rather than over unused raw
+  candidates; the query compiler independently rechecks the final certificates.
 - Acyclic producer-precondition dependencies that traverse a schema-inferred
   single-valued fluent may use existential context projection: unrelated
   dynamic siblings are deferred, unique-producer static
@@ -131,14 +146,14 @@ certificate.
   persistent goals, and interfering goals.
 
 Current compiler acceptance gate (2026-07-13): full `ruff check .` passes;
-`pytest -q` reports 412 passed with only two third-party Lark deprecation
+`pytest -q` reports 418 passed with only two third-party Lark deprecation
 warnings; real `ltlf2dfa`/MONA builds the expected three-state, five-transition
 automaton for `F(a & X(F(b)))`; and the typed threat certificate processes the
 48,500-literal Gripper `p2_30` goal in about 11 seconds with one cached module
 summary and zero threat edges. Representative real MOOSE readable-policy
 wrappers accept Numeric Minecraft, Blocksworld Clear, Gripper, Satellite,
-Rovers, and Logistics. Depots, Barman, and Blocksworld Tower remain explicit
-cyclic-threat rejections rather than falling back to an uncertified order.
+Rovers, and Logistics. Unsupported cyclic or ambiguous closures are rejected
+rather than falling back to an uncertified order.
 
 Diagnostic staged-precondition run (2026-07-12): the current compiler produced
 Jason- and VAL-valid traces for all 90 Rovers test instances, including the two
@@ -176,12 +191,25 @@ results:
 | `rovers` official test split | `90/90` Jason plus VAL valid; restores the earlier `p0_14` and `p0_20` regressions. |
 | `gripper` `p1_30` | VAL valid, 3.365 seconds and 3,999 actions. |
 | `gripper` `p2_12` | VAL valid, 38.175 seconds and 85,999 actions with the balanced tree; the same delta-indexed runtime took 288.508 seconds with sibling replay. |
-| `depots` `p12` and `p20` | Invalid self-drop removed, but full goals still fail because the evidence/compiler lacks a certified cross-location transport continuation. |
+| `blocksworld-tower` `instance-26` | Final compiler probe is Jason plus VAL valid with 34 primitive actions. |
+| `depots` full test split | `7/11` Jason plus VAL valid. `p12`, `p15`, `p20`, and `p22` fail without a committed trace; every successful trace passes VAL. |
+| `logistics` `p1_19` | The acyclic compiler finishes in seconds and executes a 38-action diagnostic prefix, but no complete Jason trace is committed. The cyclic location/transport dependency remains unsupported. |
 
 The remaining Depots gap must not be patched with domain-specific parking or
-transport rules. A future implementation requires a bounded, evidence-backed
-schema-composition certificate; an unrestricted schema-regression planner would
-violate the repository scope and could regress already valid atomic modules.
+transport rules. The current schema language now supports arbitrary-length
+finite acyclic regression and multi-step resource-mode discharge. The remaining
+case needs a query-local nested branch portfolio when one untyped predicate has
+several producers with different preservation contracts. Such a portfolio must
+be selected from certified branch effects, or justified by a separately
+validated static role invariant; the compiler must not infer role disjointness
+from predicate names.
+
+An experimental removal of the acyclic producer-dependency gate made the real
+Logistics compiler exceed its 600-second probe budget. That search was not
+retained: alpha-normalized cycle blocking guarantees finiteness of signatures
+but does not prevent combinatorial enumeration. A future cyclic extension needs
+an evidence-guided mode-path or lexicographic progress certificate, not an
+unrestricted schema search.
 
 ## Commands
 
@@ -194,7 +222,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/materialize_achievement_benchmar
 Run the full benchmark ASL batch with the current default domain list:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 WORKERS=16 JASON_JAVA_STACK_SIZE=64m \
+PYTHONDONTWRITEBYTECODE=1 JASON_JAVA_STACK_SIZE=64m \
 bash scripts/run_parser_order_full_val_batch.sh
 ```
 
