@@ -66,6 +66,7 @@ Python 3.12 and [`uv`](https://docs.astral.sh/uv/) are required.
 ```bash
 uv sync
 bash scripts/setup_mona.sh
+bash scripts/setup_moose.sh
 ```
 
 Jason is resolved as Maven artifact `io.github.jason-lang:jason:3.1.2` when a

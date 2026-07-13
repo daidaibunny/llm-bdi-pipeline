@@ -32,12 +32,14 @@ memory bound, worker count, seed, and input hashes in every run manifest.
 ```bash
 uv sync
 bash scripts/setup_mona.sh
+bash scripts/setup_moose.sh
 bash scripts/setup_benchmark_sources.sh
 uv run python scripts/materialize_achievement_benchmarks.py
 ```
 
-The benchmark setup refuses a dirty upstream checkout and checks every pinned
-commit. The materializer deterministically reconstructs all train/test splits.
+The MOOSE and benchmark setup scripts refuse dirty upstream checkouts and check
+every pinned commit. The materializer deterministically reconstructs all
+train/test splits.
 
 For Jason and VAL execution, install Java, Maven, and Docker. Jason 3.1.2 is
 resolved from Maven. The VAL wrapper expects the pinned local VAL image or
@@ -121,8 +123,9 @@ PYTHONDONTWRITEBYTECODE=1 uv run python \
   --num-workers 6
 ```
 
-This requires the official MOOSE repository/artifact at the pinned revision and
-the planner environment described by `scripts/setup_external_planning_references.sh`.
+This requires the official MOOSE repository installed by
+`scripts/setup_moose.sh` and the planner environment described by
+`scripts/setup_external_planning_references.sh`.
 Incomplete smoke matrices are rejected as paper results unless the explicit
 development-only flag is supplied.
 

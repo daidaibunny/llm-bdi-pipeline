@@ -29,3 +29,6 @@ scope of the GP2PL code and data licenses.
 | [VAL](https://github.com/KCL-Planning/VAL) | `3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4` | Independent PDDL trace validation. |
 
 Consult each upstream project for its complete copyright and license terms.
+`scripts/setup_moose.sh` and `scripts/setup_benchmark_sources.sh` fetch these
+materials into `.external/` at the revisions above without changing their
+license status.
