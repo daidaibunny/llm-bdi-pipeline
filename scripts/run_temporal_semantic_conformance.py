@@ -6,10 +6,15 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 import hashlib
+import importlib.metadata
 import json
+import os
 from pathlib import Path
+import platform
+import shutil
 import subprocess
 import sys
+import time
 from typing import Any
 from typing import Mapping
 from typing import Sequence
@@ -58,6 +63,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
 	args = parse_args()
+	started_at = datetime.now().isoformat(timespec="seconds")
+	start = time.perf_counter()
 	suite_root = args.suite_root.expanduser().resolve()
 	verify_conformance_release(suite_root)
 	suite_file = suite_root / "suite.json"
@@ -92,11 +99,20 @@ def main() -> int:
 		"schema_version": 1,
 		"artifact_kind": "temporal_semantic_conformance_result",
 		"suite_id": suite["suite_id"],
-		"suite_file": str(suite_file),
+		"suite_file": _portable_path(suite_file),
 		"suite_sha256": _sha256(suite_file),
+		"fixture_sha256": _release_file_hashes(suite_root),
 		"source_revision": _source_revision(),
+		"toolchain": _toolchain_provenance(),
 		"run_id": run_id,
+		"started_at": started_at,
 		"completed_at": datetime.now().isoformat(timespec="seconds"),
+		"duration_seconds": time.perf_counter() - start,
+		"parameters": {
+			"jason_timeout_seconds": max(1, int(args.timeout_seconds)),
+			"jason_java_stack_size": str(args.jason_java_stack_size),
+			"external_val_policy": "not_applicable_for_zero_action_cases",
+		},
 		"semantic_case_count": len(semantic_records),
 		"zero_action_case_count": len(zero_action_records),
 		"success_count": sum(bool(record["success"]) for record in all_records),
@@ -417,6 +433,44 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 
 def _sha256(path: Path) -> str:
 	return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _release_file_hashes(suite_root: Path) -> dict[str, str]:
+	manifest = json.loads((suite_root / "manifest.json").read_text(encoding="utf-8"))
+	return {
+		str(filename): str(digest)
+		for filename, digest in _mapping(manifest.get("files"), "manifest files").items()
+	}
+
+
+def _toolchain_provenance() -> dict[str, Any]:
+	mona_candidate = str(os.getenv("MONA_BIN") or shutil.which("mona") or "").strip()
+	mona_path = Path(mona_candidate).expanduser().resolve() if mona_candidate else None
+	java = subprocess.run(
+		("java", "-version"),
+		capture_output=True,
+		text=True,
+		check=False,
+	)
+	java_output = (java.stderr or java.stdout).splitlines()
+	return {
+		"python": platform.python_version(),
+		"ltlf2dfa": importlib.metadata.version("ltlf2dfa"),
+		"mona_binary": _portable_path(mona_path) if mona_path is not None else None,
+		"mona_sha256": (
+			_sha256(mona_path) if mona_path is not None and mona_path.is_file() else None
+		),
+		"jason_maven_artifact": JasonPlanLibraryRunner.default_jason_maven_artifact,
+		"java": java_output[0] if java_output else None,
+	}
+
+
+def _portable_path(path: Path) -> str:
+	resolved = path.resolve()
+	try:
+		return str(resolved.relative_to(PROJECT_ROOT))
+	except ValueError:
+		return str(resolved)
 
 
 def _source_revision() -> dict[str, Any]:
