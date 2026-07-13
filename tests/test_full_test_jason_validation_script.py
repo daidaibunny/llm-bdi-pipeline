@@ -1033,6 +1033,9 @@ def test_docker_val_wrapper_builds_large_stack_validate_binary() -> None:
 	assert "YYMAXDEPTH" in script
 	assert "tmp/val-large-stack" in script
 	assert ".build.lock" in script
+	assert "VAL_SOURCE_ROOT" in script
+	assert '"$VAL_SOURCE_ROOT:/val-source:ro"' in script
+	assert "SOURCE_DIR=/val-source" in script
 
 
 def test_validate_one_task_embeds_runtime_asl_without_extra_plan_library_file(
