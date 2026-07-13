@@ -25,6 +25,80 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BLOCKS_DOMAIN = PROJECT_ROOT / "src" / "domains" / "blocksworld-tower" / "domain.pddl"
 
 
+def test_schema_regression_composes_acyclic_chain_without_action_depth_bound(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "long-schema-chain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain long-schema-chain)
+ (:requirements :strips :typing)
+ (:types item - object)
+ (:predicates
+  (ready ?x - item)
+  (stage1 ?x - item) (stage2 ?x - item) (stage3 ?x - item)
+  (stage4 ?x - item) (stage5 ?x - item) (stage6 ?x - item)
+  (completed ?x - item))
+ (:action advance1
+  :parameters (?x - item) :precondition (ready ?x) :effect (stage1 ?x))
+ (:action advance2
+  :parameters (?x - item) :precondition (stage1 ?x) :effect (stage2 ?x))
+ (:action advance3
+  :parameters (?x - item) :precondition (stage2 ?x) :effect (stage3 ?x))
+ (:action advance4
+  :parameters (?x - item) :precondition (stage3 ?x) :effect (stage4 ?x))
+ (:action advance5
+  :parameters (?x - item) :precondition (stage4 ?x) :effect (stage5 ?x))
+ (:action advance6
+  :parameters (?x - item) :precondition (stage5 ?x) :effect (stage6 ?x))
+ (:action finish
+  :parameters (?x - item) :precondition (stage6 ?x) :effect (completed ?x))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	domain = atomic_module_synthesis.PDDLParser.parse_domain(domain_file)
+	actions = tuple(
+		_ParsedAction.from_pddl(action)
+		for action in domain.actions
+	)
+
+	sequences = atomic_module_synthesis._producer_action_sequences(
+		actions=actions,
+		type_tokens=domain.types,
+		seed_predicates={"completed"},
+		target_predicate="completed",
+		module_predicates={
+			"ready",
+			"stage1",
+			"stage2",
+			"stage3",
+			"stage4",
+			"stage5",
+			"stage6",
+			"completed",
+		},
+		recursive_module_predicates=set(),
+	)
+
+	assert any(
+		tuple(call.action.name for call in sequence.body_actions)
+		== (
+			"advance1",
+			"advance2",
+			"advance3",
+			"advance4",
+			"advance5",
+			"advance6",
+			"finish",
+		)
+		and tuple(literal.to_context() for literal in sequence.context_literals)
+		== ("ready(X)",)
+		for sequence in sequences
+	)
+
+
 def test_non_seed_producible_module_uses_bounded_support_composition(
 	tmp_path: Path,
 ) -> None:
@@ -321,6 +395,127 @@ def test_resource_release_contract_preserves_release_action_and_argument_roles()
 	assert _resource_release_contract(release) != _resource_release_contract(swapped_roles)
 
 
+def test_resource_release_search_discharge_can_cross_multiple_causal_modes(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "multi-step-resource.pddl"
+	domain_file.write_text(
+		"""
+(define (domain multi-step-resource)
+ (:requirements :strips :typing)
+ (:types resource item - object)
+ (:predicates
+  (free ?r - resource)
+  (held ?r - resource ?x - item)
+  (staged ?r - resource ?x - item)
+  (completed ?x - item))
+ (:action produce
+  :parameters (?r - resource ?x - item)
+  :precondition (free ?r)
+  :effect (and (completed ?x) (held ?r ?x) (not (free ?r))))
+ (:action transfer
+  :parameters (?r - resource ?x - item)
+  :precondition (held ?r ?x)
+  :effect (and (staged ?r ?x) (not (held ?r ?x))))
+ (:action release
+  :parameters (?r - resource ?x - item)
+  :precondition (staged ?r ?x)
+  :effect (and (free ?r) (not (staged ?r ?x))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	domain = atomic_module_synthesis.PDDLParser.parse_domain(domain_file)
+	actions = tuple(_ParsedAction.from_pddl(action) for action in domain.actions)
+
+	sequences = atomic_module_synthesis._producer_action_sequences(
+		actions=actions,
+		type_tokens=domain.types,
+		seed_predicates={"completed"},
+		target_predicate="completed",
+		module_predicates={"free", "held", "staged", "completed"},
+		recursive_module_predicates=set(),
+	)
+	multi_step = next(
+		sequence
+		for sequence in sequences
+		if tuple(call.action.name for call in sequence.body_actions)
+		== ("produce", "transfer", "release")
+	)
+	certificate = multi_step.resource_release_certificates[0]
+
+	assert certificate["release_actions"] == ["transfer", "release"]
+	assert certificate["resource_debt_path"] == ["held(Y, X)", "staged(Y, X)"]
+	assert certificate["restored_literals"] == ["free(Y)"]
+	assert certificate["target_preserved"] is True
+
+
+def test_clingo_selects_only_acyclic_cross_predicate_preparation_capabilities() -> None:
+	def base_plan(predicate: str) -> AgentSpeakPlan:
+		return AgentSpeakPlan(
+			plan_name=f"{predicate}_already_true",
+			trigger=AgentSpeakTrigger("achievement_goal", predicate, ("X",)),
+			context=(f"{predicate}(X)",),
+			body=(),
+			binding_certificate=(
+				{
+					"rule_kind": "already_true",
+				},
+			),
+		)
+
+	def prepare_plan(caller: str, callee: str) -> AgentSpeakPlan:
+		return AgentSpeakPlan(
+			plan_name=f"{caller}_prepare_{callee}",
+			trigger=AgentSpeakTrigger("achievement_goal", caller, ("X",)),
+			context=(f"not {callee}(X)",),
+			body=(
+				AgentSpeakBodyStep("subgoal", callee, ("X",)),
+				AgentSpeakBodyStep("subgoal", caller, ("X",)),
+			),
+			binding_certificate=(
+				{
+					"rule_kind": "prepare_public_precondition",
+					"prepared_predicate": callee,
+					"recursive_progress_certificate": {
+						"certificate_kind": "well_founded_precondition_discharge",
+						"ranking_feature_kind": "unsatisfied_precondition_boolean",
+						"prepared_predicate": callee,
+						"prepared_arguments": ["X"],
+					},
+				},
+			),
+		)
+
+	plans = (
+		base_plan("alpha"),
+		base_plan("beta"),
+		prepare_plan("alpha", "beta"),
+		prepare_plan("beta", "alpha"),
+	)
+
+	selected = _select_branches_with_clingo(
+		plans,
+		schema_candidates=plans,
+	)
+	selected_prepare_plans = tuple(
+		plan
+		for plan in selected.plans
+		if plan.binding_certificate[0].get("rule_kind")
+		== "prepare_public_precondition"
+	)
+
+	assert len(selected_prepare_plans) == 1
+	progress = selected_prepare_plans[0].binding_certificate[0][
+		"recursive_progress_certificate"
+	]
+	assert progress["certificate_kind"] == "well_founded_precondition_discharge"
+	assert progress["caller_dependency_rank"] > progress["callee_dependency_rank"]
+	assert selected.report.preparation_dependency_edge_count == 1
+	assert selected.report.preparation_dependency_max_rank == 1
+
+
 def test_effect_refinement_rejects_different_resource_release_contracts() -> None:
 	def producer_plan(
 		*,
@@ -427,13 +622,11 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 	assert len(library.plans) == selector_report["plan_count"]
 	assert len(library.plans) <= selector_report["raw_candidate_count"]
 	assert selector_report["selector_backend"] == "clingo_asp_minimize"
-	assert selector_report["schema_composition_action_bound"] == 5
+	assert selector_report["schema_composition_action_bound"] is None
 	assert selector_report["schema_composition_grammar"] == [
 		"direct producer",
-		"support producer then target producer",
-		"support producer then one bridge producer then target producer",
-		"one prefix producer then support producer then one bridge producer then target producer",
-		"optional one-step certified resource release after any producer sequence",
+		"finite alpha-normalized acyclic schema regression over producible preconditions",
+		"optional acyclic causal resource-mode discharge after any producer sequence",
 	]
 	assert selector_report["selector_objective"] == [
 		"maximize compatible well-founded recursive capabilities",
@@ -465,6 +658,12 @@ def test_blocks_atomic_minimal_literal_modules_are_compact_recursive_and_lifted(
 		(
 			"same-predicate recursive prepare branches require a non-negative "
 			"relational-count ranking feature that strictly decreases and is never increased"
+		),
+		(
+			"cross-predicate prepare branches are optional Clingo capabilities; "
+			"their selected dependency graph must be acyclic, and each branch "
+			"records a strictly decreasing caller/callee dependency rank plus a "
+			"successful precondition-discharge recheck"
 		),
 		(
 			"anchored relation-cone rankings may relocate an obstruction only when "

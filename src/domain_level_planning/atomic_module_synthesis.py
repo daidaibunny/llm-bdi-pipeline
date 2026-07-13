@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import heapq
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable
 from typing import Mapping, Sequence
@@ -35,12 +35,10 @@ from .pddl_types import type_closure
 
 SCHEMA_COMPOSITION_GRAMMAR = (
 	"direct producer",
-	"support producer then target producer",
-	"support producer then one bridge producer then target producer",
-	"one prefix producer then support producer then one bridge producer then target producer",
-	"optional one-step certified resource release after any producer sequence",
+	"finite alpha-normalized acyclic schema regression over producible preconditions",
+	"optional acyclic causal resource-mode discharge after any producer sequence",
 )
-SCHEMA_COMPOSITION_ACTION_BOUND = 5
+SCHEMA_COMPOSITION_ACTION_BOUND = None
 
 
 @dataclass(frozen=True)
@@ -93,11 +91,13 @@ class AtomicModuleSynthesisReport:
 	ranking_incompatibility_count: int
 	recursive_capability_obligation_count: int
 	selected_recursive_capability_count: int
+	preparation_dependency_edge_count: int
+	preparation_dependency_max_rank: int
 	predicate_roles: tuple[Mapping[str, object], ...]
 	branch_certification_rules: tuple[str, ...]
 	theoretical_basis: tuple[str, ...]
 	schema_composition_grammar: tuple[str, ...]
-	schema_composition_action_bound: int
+	schema_composition_action_bound: int | None
 
 	def to_dict(self) -> dict[str, object]:
 		payload: dict[str, object] = {
@@ -130,6 +130,12 @@ class AtomicModuleSynthesisReport:
 			),
 			"selected_recursive_capability_count": (
 				self.selected_recursive_capability_count
+			),
+			"preparation_dependency_edge_count": (
+				self.preparation_dependency_edge_count
+			),
+			"preparation_dependency_max_rank": (
+				self.preparation_dependency_max_rank
 			),
 			"predicate_roles": [dict(item) for item in self.predicate_roles],
 			"branch_certification_rules": list(self.branch_certification_rules),
@@ -166,6 +172,8 @@ class _ClingoBranchSelectorReport:
 	ranking_incompatibility_count: int
 	recursive_capability_obligation_count: int
 	selected_recursive_capability_count: int
+	preparation_dependency_edge_count: int
+	preparation_dependency_max_rank: int
 
 
 @dataclass(frozen=True)
@@ -490,12 +498,34 @@ class _ProducerSequence:
 
 
 @dataclass(frozen=True)
+class _SchemaRegressionState:
+	"""One finite backward-regression state over lifted PDDL obligations."""
+
+	requirements: tuple[PDDLLiteralSchema, ...]
+	body_actions: tuple[_ActionCall, ...]
+	producer_action_names: tuple[str, ...]
+	used_step_signatures: frozenset[tuple[object, ...]]
+
+
+@dataclass(frozen=True)
 class _CleanupExtension:
 	context_literals: tuple[PDDLLiteralSchema, ...]
 	guard_contexts: tuple[str, ...]
 	body_actions: tuple[_ActionCall, ...]
 	producer_action_names: tuple[str, ...]
 	resource_release_certificates: tuple[Mapping[str, object], ...]
+
+
+@dataclass(frozen=True)
+class _ResourceDischargeSearchState:
+	"""One acyclic path through schema-derived occupied resource modes."""
+
+	current_debt_literal: PDDLLiteralSchema
+	extra_context_literals: tuple[PDDLLiteralSchema, ...]
+	cleanup_calls: tuple[_ActionCall, ...]
+	debt_path: tuple[PDDLLiteralSchema, ...]
+	used_mode_signatures: frozenset[tuple[object, ...]]
+	guard_contexts: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -561,8 +591,26 @@ def _producer_action_sequences(
 			target_effect=mapped_effect,
 			variable_map=variable_map,
 			target_arguments=head_arguments,
+			dynamic_predicates=dynamic_predicates,
 		):
 			continue
+		if target_predicate in seed_predicates and _schema_regression_dependencies_are_acyclic(
+			target_predicate,
+			actions=actions,
+		):
+			sequences.extend(
+				_acyclic_schema_regression_sequences(
+					actions=actions,
+					type_tokens=type_tokens,
+					functional_groups=functional_groups,
+					dynamic_predicates=dynamic_predicates,
+					target_effect=mapped_effect,
+					target_arguments=head_arguments,
+					final_action=final_action,
+					final_effect=effect,
+					final_map=variable_map,
+				),
+			)
 		sequences.extend(_finalize_sequences(
 			actions=actions,
 			type_tokens=type_tokens,
@@ -601,6 +649,7 @@ def _producer_action_sequences(
 					target_effect=support_effect_mapped,
 					variable_map=support_map,
 					target_arguments=head_arguments,
+					dynamic_predicates=dynamic_predicates,
 				):
 					continue
 				base_context_literals = tuple(
@@ -650,6 +699,343 @@ def _producer_action_sequences(
 						producer_action_names=bridge.producer_action_names,
 					))
 	return tuple(_deduplicate_sequences(sequences))
+
+
+def _schema_regression_dependencies_are_acyclic(
+	target_predicate: str,
+	*,
+	actions: Sequence[_ParsedAction],
+) -> bool:
+	"""Reject cyclic producer dependencies rather than embedding a planner search."""
+
+	producible_predicates = {
+		effect.predicate
+		for action in actions
+		for effect in action.add_effects
+	}
+	dependencies: dict[str, set[str]] = {}
+	for action in actions:
+		positive_dependencies = {
+			precondition.predicate
+			for precondition in action.preconditions
+			if precondition.is_positive
+			and precondition.predicate in producible_predicates
+		}
+		for effect in action.add_effects:
+			dependencies.setdefault(effect.predicate, set()).update(
+				positive_dependencies,
+			)
+	visiting: set[str] = set()
+	visited: set[str] = set()
+
+	def visit(predicate: str) -> bool:
+		if predicate in visiting:
+			return False
+		if predicate in visited:
+			return True
+		visiting.add(predicate)
+		for dependency in dependencies.get(predicate, ()):
+			if not visit(dependency):
+				return False
+		visiting.remove(predicate)
+		visited.add(predicate)
+		return True
+
+	return visit(target_predicate)
+
+
+def _acyclic_schema_regression_sequences(
+	*,
+	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
+	functional_groups: Sequence[_FunctionalPredicateGroup],
+	dynamic_predicates: set[str],
+	target_effect: PDDLLiteralSchema,
+	target_arguments: tuple[str, ...],
+	final_action: _ParsedAction,
+	final_effect: PDDLLiteralSchema,
+	final_map: Mapping[str, str],
+) -> tuple[_ProducerSequence, ...]:
+	"""Enumerate finite acyclic STRIPS regressions ending in one target producer."""
+
+	initial_requirements = tuple(
+		precondition.mapped(final_map)
+		for precondition in final_action.preconditions
+	)
+	initial_call = _action_call(final_action, final_map)
+	initial_signature = _regression_step_signature(
+		requirement=target_effect,
+		action=final_action,
+		effect=final_effect,
+		head_arguments=target_arguments,
+	)
+	initial_state = _SchemaRegressionState(
+			requirements=_deduplicate_literals(initial_requirements),
+			body_actions=(initial_call,),
+			producer_action_names=(final_action.name,),
+			used_step_signatures=frozenset((initial_signature,)),
+		)
+	frontier: list[tuple[int, int, _SchemaRegressionState]] = [(1, 0, initial_state)]
+	frontier_counter = 1
+	best_body_length_by_contract: dict[tuple[object, ...], int] = {}
+	sequences: list[_ProducerSequence] = []
+	while frontier:
+		_body_length, _sequence_number, state = heapq.heappop(frontier)
+		state_key = _regression_dominance_key(
+			state,
+			head_arguments=target_arguments,
+		)
+		best_body_length = best_body_length_by_contract.get(state_key)
+		if best_body_length is not None and best_body_length <= len(state.body_actions):
+			continue
+		best_body_length_by_contract[state_key] = len(state.body_actions)
+		sequences.extend(
+			_finalize_sequences(
+				actions=actions,
+				type_tokens=type_tokens,
+				functional_groups=functional_groups,
+				dynamic_predicates=dynamic_predicates,
+				target_effect=target_effect,
+				target_arguments=target_arguments,
+				context_literals=state.requirements,
+				body_actions=state.body_actions,
+				producer_action_names=state.producer_action_names,
+			),
+		)
+		for requirement in state.requirements:
+			if not requirement.is_positive:
+				continue
+			for producer, producer_effect in _producer_effects(
+				actions,
+				requirement.predicate,
+			):
+				step_signature = _regression_step_signature(
+					requirement=requirement,
+					action=producer,
+					effect=producer_effect,
+					head_arguments=target_arguments,
+				)
+				if step_signature in state.used_step_signatures:
+					continue
+				producer_map = _producer_map_for_regression_requirement(
+					action=producer,
+					effect=producer_effect,
+					requirement=requirement,
+					avoid_variables=_regression_state_variables(state),
+				)
+				if producer_map is None:
+					continue
+				producer_call = _action_call(producer, producer_map)
+				body_actions = (producer_call, *state.body_actions)
+				if not _action_calls_have_compatible_types(body_actions, type_tokens):
+					continue
+				regressed_requirements = _regress_literal_requirements(
+					requirements=state.requirements,
+					action=producer,
+					variable_map=producer_map,
+				)
+				if regressed_requirements is None:
+					continue
+				if _symbolic_sequence_execution_guards(
+					target_effect=target_effect,
+					context_literals=regressed_requirements,
+					body_actions=body_actions,
+					type_tokens=type_tokens,
+				) is None:
+					continue
+				next_state = _SchemaRegressionState(
+						requirements=regressed_requirements,
+						body_actions=body_actions,
+						producer_action_names=(
+							producer.name,
+							*state.producer_action_names,
+						),
+						used_step_signatures=(
+							state.used_step_signatures | {step_signature}
+						),
+					)
+				heapq.heappush(
+					frontier,
+					(len(body_actions), frontier_counter, next_state),
+				)
+				frontier_counter += 1
+	return tuple(_deduplicate_sequences(sequences))
+
+
+def _producer_map_for_regression_requirement(
+	*,
+	action: _ParsedAction,
+	effect: PDDLLiteralSchema,
+	requirement: PDDLLiteralSchema,
+	avoid_variables: set[str],
+) -> dict[str, str] | None:
+	if effect.predicate != requirement.predicate or len(effect.arguments) != len(
+		requirement.arguments,
+	):
+		return None
+	parameter_names = set(action.parameters)
+	variable_map: dict[str, str] = {}
+	for raw_argument, required_argument in zip(effect.arguments, requirement.arguments):
+		if raw_argument not in parameter_names:
+			if raw_argument != required_argument:
+				return None
+			continue
+		if raw_argument in variable_map and variable_map[raw_argument] != required_argument:
+			return None
+		variable_map[raw_argument] = required_argument
+	variable_map = _complete_variable_map(
+		action.parameters,
+		variable_map,
+		avoid_variables=avoid_variables - set(variable_map.values()),
+	)
+	if not _same_literal(effect.mapped(variable_map), requirement):
+		return None
+	return variable_map
+
+
+def _regress_literal_requirements(
+	*,
+	requirements: Sequence[PDDLLiteralSchema],
+	action: _ParsedAction,
+	variable_map: Mapping[str, str],
+) -> tuple[PDDLLiteralSchema, ...] | None:
+	mapped_adds = tuple(effect.mapped(variable_map) for effect in action.add_effects)
+	mapped_deletes = tuple(effect.mapped(variable_map) for effect in action.delete_effects)
+	remaining: list[PDDLLiteralSchema] = []
+	for requirement in requirements:
+		if requirement.is_positive:
+			if any(_same_atom(requirement, added) for added in mapped_adds):
+				continue
+			if any(_same_atom(requirement, deleted) for deleted in mapped_deletes):
+				return None
+		else:
+			if any(_same_atom(requirement, deleted) for deleted in mapped_deletes):
+				continue
+			if any(_same_atom(requirement, added) for added in mapped_adds):
+				return None
+		remaining.append(requirement)
+	preconditions = tuple(
+		precondition.mapped(variable_map)
+		for precondition in action.preconditions
+	)
+	return _deduplicate_literals((*preconditions, *remaining))
+
+
+def _regression_step_signature(
+	*,
+	requirement: PDDLLiteralSchema,
+	action: _ParsedAction,
+	effect: PDDLLiteralSchema,
+	head_arguments: Sequence[str],
+) -> tuple[object, ...]:
+	local_variables: dict[str, int] = {}
+	argument_shape: list[tuple[str, object]] = []
+	for argument in requirement.arguments:
+		if argument in head_arguments:
+			argument_shape.append(("head", tuple(head_arguments).index(argument)))
+		elif _is_agentspeak_variable(argument):
+			local_index = local_variables.setdefault(argument, len(local_variables))
+			argument_shape.append(("local", local_index))
+		else:
+			argument_shape.append(("constant", argument))
+	return (
+		action.name,
+		effect.predicate,
+		effect.arguments,
+		requirement.predicate,
+		requirement.is_positive,
+		tuple(argument_shape),
+	)
+
+
+def _regression_state_variables(state: _SchemaRegressionState) -> set[str]:
+	return {
+		argument
+		for literal in state.requirements
+		for argument in literal.arguments
+		if _is_agentspeak_variable(argument)
+	} | _body_action_variables(state.body_actions)
+
+
+def _regression_dominance_key(
+	state: _SchemaRegressionState,
+	*,
+	head_arguments: Sequence[str],
+) -> tuple[object, ...]:
+	"""Key equivalent requirements and completion effects for shortest-path pruning."""
+
+	head_positions = {argument: index for index, argument in enumerate(head_arguments)}
+	local_variables: dict[str, str] = {}
+
+	def normalize(argument: str) -> str:
+		if argument in head_positions:
+			return f"__head_{head_positions[argument]}"
+		if not _is_agentspeak_variable(argument):
+			return f"__constant_{argument}"
+		return local_variables.setdefault(argument, f"__local_{len(local_variables)}")
+
+	requirement_key = tuple(
+		sorted(
+			(
+				literal.predicate,
+				literal.is_positive,
+				tuple(normalize(argument) for argument in literal.arguments),
+			)
+			for literal in state.requirements
+		),
+	)
+	effect_state: dict[tuple[str, tuple[str, ...]], bool] = {}
+	numeric_delta: dict[tuple[str, tuple[str, ...]], int] = {}
+	for call in state.body_actions:
+		variable_map = dict(zip(call.action.parameters, call.arguments))
+		for effect in call.action.delete_effects:
+			mapped = effect.mapped(variable_map)
+			effect_state[(mapped.predicate, mapped.arguments)] = False
+		for effect in call.action.add_effects:
+			mapped = effect.mapped(variable_map)
+			effect_state[(mapped.predicate, mapped.arguments)] = True
+		for effect in call.action.numeric_effects:
+			if effect.operator not in {"increase", "decrease"}:
+				continue
+			if effect.amount.kind != "constant" or not re.fullmatch(
+				r"[+-]?\d+",
+				str(effect.amount.value),
+			):
+				continue
+			fluent = (
+				str(effect.fluent.function).strip().lower(),
+				tuple(variable_map.get(argument, argument) for argument in effect.fluent.args),
+			)
+			amount = int(str(effect.amount.value))
+			if effect.operator == "decrease":
+				amount = -amount
+			numeric_delta[fluent] = numeric_delta.get(fluent, 0) + amount
+	completion_key = tuple(
+		sorted(
+			(
+				predicate,
+				tuple(normalize(argument) for argument in arguments),
+				value,
+			)
+			for (predicate, arguments), value in effect_state.items()
+		),
+	)
+	numeric_key = tuple(
+		sorted(
+			(
+				function,
+				tuple(normalize(argument) for argument in arguments),
+				delta,
+			)
+			for (function, arguments), delta in numeric_delta.items()
+			if delta != 0
+		),
+	)
+	return (
+		requirement_key,
+		completion_key,
+		numeric_key,
+	)
 
 
 @dataclass(frozen=True)
@@ -1118,6 +1504,7 @@ def _cleanup_action_calls(
 				target_effect=target_effect,
 				variable_map=cleanup_map,
 				target_arguments=target_arguments,
+				dynamic_predicates=_dynamic_predicates(actions),
 			):
 				continue
 			cleanup_call = _action_call(cleanup_action, cleanup_map)
@@ -1153,7 +1540,249 @@ def _cleanup_action_calls(
 					resource_release_certificates=(resource_certificate,),
 				),
 			)
+	extensions.extend(
+		_multi_step_cleanup_action_calls(
+			actions=actions,
+			type_tokens=type_tokens,
+			target_effect=target_effect,
+			target_arguments=target_arguments,
+			context_literals=context_literals,
+			body_actions=body_actions,
+		),
+	)
 	return _deduplicate_cleanup_extensions(extensions)
+
+
+def _multi_step_cleanup_action_calls(
+	*,
+	actions: Sequence[_ParsedAction],
+	type_tokens: Sequence[str],
+	target_effect: PDDLLiteralSchema,
+	target_arguments: tuple[str, ...],
+	context_literals: tuple[PDDLLiteralSchema, ...],
+	body_actions: tuple[_ActionCall, ...],
+) -> tuple[_CleanupExtension, ...]:
+	"""Find acyclic multi-action paths that discharge one keyed resource debt."""
+
+	if not body_actions:
+		return ()
+	producer_call = body_actions[-1]
+	producer_map = dict(zip(producer_call.action.parameters, producer_call.arguments))
+	producer_adds = tuple(
+		effect.mapped(producer_map)
+		for effect in producer_call.action.add_effects
+	)
+	producer_deletes = tuple(
+		effect.mapped(producer_map)
+		for effect in producer_call.action.delete_effects
+	)
+	producer_preconditions = tuple(
+		precondition.mapped(producer_map)
+		for precondition in producer_call.action.preconditions
+	)
+	extensions: list[_CleanupExtension] = []
+	for initial_debt in producer_adds:
+		for restored_literal in producer_deletes:
+			capacity_invariant = _causal_resource_capacity_invariant(
+				resource_debt_literal=initial_debt,
+				restored_literals=(restored_literal,),
+				producer_preconditions=producer_preconditions,
+			)
+			if capacity_invariant is None:
+				continue
+			initial_signature = _resource_mode_signature(
+				initial_debt,
+				capacity_key_arguments=tuple(
+					str(argument)
+					for argument in capacity_invariant["capacity_key_arguments"]
+				),
+				occupancy_arguments=tuple(
+					str(argument)
+					for argument in capacity_invariant["occupancy_arguments"]
+				),
+			)
+			frontier = [
+				_ResourceDischargeSearchState(
+					current_debt_literal=initial_debt,
+					extra_context_literals=(),
+					cleanup_calls=(),
+					debt_path=(initial_debt,),
+					used_mode_signatures=frozenset((initial_signature,)),
+					guard_contexts=(),
+				),
+			]
+			visited: set[tuple[object, ...]] = set()
+			while frontier:
+				state = frontier.pop()
+				state_key = (
+					state.current_debt_literal.to_call(),
+					tuple(
+						literal.to_context()
+						for literal in state.extra_context_literals
+					),
+					state.used_mode_signatures,
+				)
+				if state_key in visited:
+					continue
+				visited.add(state_key)
+				true_before_step = _positive_state_after_action_calls(
+					context_literals=(
+						*context_literals,
+						*state.extra_context_literals,
+					),
+					body_actions=(*body_actions, *state.cleanup_calls),
+				)
+				for cleanup_action in actions:
+					if cleanup_action.name == producer_call.action.name:
+						continue
+					for cleanup_map, _matched_literal in _cleanup_variable_maps(
+						cleanup_action=cleanup_action,
+						available_literals=(state.current_debt_literal,),
+						true_before_cleanup=true_before_step,
+						target_effect=target_effect,
+						target_arguments=target_arguments,
+					):
+						mapped_preconditions = tuple(
+							precondition.mapped(cleanup_map)
+							for precondition in cleanup_action.preconditions
+						)
+						if any(not literal.is_positive for literal in mapped_preconditions):
+							continue
+						mapped_adds = tuple(
+							effect.mapped(cleanup_map)
+							for effect in cleanup_action.add_effects
+						)
+						mapped_deletes = tuple(
+							effect.mapped(cleanup_map)
+							for effect in cleanup_action.delete_effects
+						)
+						if not any(
+							_same_atom(state.current_debt_literal, deleted)
+							for deleted in mapped_deletes
+						):
+							continue
+						if any(
+							_same_atom(state.current_debt_literal, added)
+							for added in mapped_adds
+						):
+							continue
+						step_guards = _target_preservation_guards(
+							target_effect=target_effect,
+							mapped_deletes=mapped_deletes,
+						)
+						if step_guards is None:
+							continue
+						cleanup_call = _action_call(cleanup_action, cleanup_map)
+						cleanup_calls = (*state.cleanup_calls, cleanup_call)
+						if not _action_calls_have_compatible_types(
+							(*body_actions, *cleanup_calls),
+							type_tokens,
+						):
+							continue
+						extra_contexts = _deduplicate_literals(
+							(
+								*state.extra_context_literals,
+								*(
+									literal
+									for literal in mapped_preconditions
+									if not any(
+										_same_literal(literal, state_literal)
+										for state_literal in true_before_step
+									)
+								),
+							),
+						)
+						guard_contexts = _deduplicate(
+							(*state.guard_contexts, *step_guards),
+						)
+						if any(
+							_same_atom(restored_literal, added)
+							for added in mapped_adds
+						):
+							if len(cleanup_calls) < 2:
+								continue
+							resource_certificate = {
+								"certificate_kind": (
+									"causal_resource_capacity_invariant_discharge"
+								),
+								"producer_action": producer_call.action.name,
+								"release_action": cleanup_action.name,
+								"release_actions": [
+									call.action.name for call in cleanup_calls
+								],
+								"resource_debt_literal": initial_debt.to_call(),
+								"resource_debt_path": [
+									literal.to_call() for literal in state.debt_path
+								],
+								"restored_literals": [restored_literal.to_call()],
+								"target_preserved": True,
+								**capacity_invariant,
+								"target_preservation_guards": list(guard_contexts),
+							}
+							extensions.append(
+								_CleanupExtension(
+									context_literals=extra_contexts,
+									guard_contexts=guard_contexts,
+									body_actions=cleanup_calls,
+									producer_action_names=tuple(
+										call.action.name for call in cleanup_calls
+									),
+									resource_release_certificates=(resource_certificate,),
+								),
+							)
+							continue
+						for next_mode in mapped_adds:
+							if set(next_mode.arguments) != set(initial_debt.arguments):
+								continue
+							next_signature = _resource_mode_signature(
+								next_mode,
+								capacity_key_arguments=tuple(
+									str(argument)
+									for argument in capacity_invariant[
+										"capacity_key_arguments"
+									]
+								),
+								occupancy_arguments=tuple(
+									str(argument)
+									for argument in capacity_invariant[
+										"occupancy_arguments"
+									]
+								),
+							)
+							if next_signature in state.used_mode_signatures:
+								continue
+							frontier.append(
+								_ResourceDischargeSearchState(
+									current_debt_literal=next_mode,
+									extra_context_literals=extra_contexts,
+									cleanup_calls=cleanup_calls,
+									debt_path=(*state.debt_path, next_mode),
+									used_mode_signatures=(
+										state.used_mode_signatures | {next_signature}
+									),
+									guard_contexts=guard_contexts,
+								),
+							)
+	return _deduplicate_cleanup_extensions(extensions)
+
+
+def _resource_mode_signature(
+	literal: PDDLLiteralSchema,
+	*,
+	capacity_key_arguments: Sequence[str],
+	occupancy_arguments: Sequence[str],
+) -> tuple[object, ...]:
+	key_positions = tuple(
+		index
+		for index, argument in enumerate(literal.arguments)
+		if argument in capacity_key_arguments
+	)
+	occupancy_positions = tuple(
+		index
+		for index, argument in enumerate(literal.arguments)
+		if argument in occupancy_arguments
+	)
+	return (literal.predicate, key_positions, occupancy_positions)
 
 
 def _causal_resource_capacity_invariant(
@@ -2043,6 +2672,7 @@ def _has_arbitrary_extra_target_relation(
 	target_effect: PDDLLiteralSchema,
 	variable_map: Mapping[str, str],
 	target_arguments: Sequence[str],
+	dynamic_predicates: set[str],
 ) -> bool:
 	target_argument_set = set(target_arguments)
 	preconditions = tuple(precondition.mapped(variable_map) for precondition in action.preconditions)
@@ -2061,6 +2691,7 @@ def _has_arbitrary_extra_target_relation(
 				variables=extra_arguments,
 				preconditions=preconditions,
 				initial_bound_variables=target_argument_set,
+				dynamic_predicates=dynamic_predicates,
 			):
 				return True
 	return False
@@ -2071,6 +2702,7 @@ def _variables_are_bound_by_positive_precondition_chain(
 	variables: set[str],
 	preconditions: Sequence[PDDLLiteralSchema],
 	initial_bound_variables: set[str],
+	dynamic_predicates: set[str],
 ) -> bool:
 	"""Return whether variables are range-restricted by positive preconditions."""
 
@@ -2081,7 +2713,10 @@ def _variables_are_bound_by_positive_precondition_chain(
 		changed = False
 		for literal in tuple(remaining):
 			literal_variables = set(literal.arguments)
-			if not (literal_variables & bound_variables):
+			if (
+				literal.predicate not in dynamic_predicates
+				and not (literal_variables & bound_variables)
+			):
 				continue
 			bound_variables.update(literal_variables)
 			remaining.remove(literal)
@@ -2546,6 +3181,18 @@ def _prepare_precondition_plan(
 			initial_bound_variables=sequence.target_arguments,
 		),
 	)
+	progress_payload: Mapping[str, object] | None = (
+		progress_certificate.to_dict()
+		if progress_certificate is not None
+		else {
+			"certificate_kind": "well_founded_precondition_discharge",
+			"ranking_feature_kind": "unsatisfied_precondition_boolean",
+			"prepared_predicate": precondition.predicate,
+			"prepared_arguments": list(precondition.arguments),
+			"completion_recheck": True,
+			"dependency_order_status": "pending_clingo_selection",
+		}
+	)
 	return AgentSpeakPlan(
 		plan_name=(
 			f"{sequence.target_predicate}_prepare_{precondition.predicate}_"
@@ -2576,11 +3223,7 @@ def _prepare_precondition_plan(
 					"retained_positive_context": list(binding_contexts),
 					"completion_recheck": True,
 				},
-				"recursive_progress_certificate": (
-					progress_certificate.to_dict()
-					if progress_certificate is not None
-					else None
-				),
+				"recursive_progress_certificate": progress_payload,
 				"source_backend": source_backend,
 				"source_name": source_name,
 				"policy_file": str(policy_file) if policy_file is not None else None,
@@ -2844,7 +3487,15 @@ def _select_branches_with_clingo(
 		for group in recursive_capability_groups
 		if any(index in selected_index_set for index in group)
 	)
-	selected_plan_candidates = tuple(raw_plans[index] for index in selected_indexes)
+	selected_plan_candidates = _with_selected_preparation_dependency_certificates(
+		tuple(raw_plans[index] for index in selected_indexes),
+	)
+	preparation_dependency_ranks = _preparation_dependency_ranks(
+		selected_plan_candidates,
+	)
+	preparation_dependency_edges = _cross_preparation_dependency_edges(
+		selected_plan_candidates,
+	)
 	preparation_priority = _certified_preparation_priority(selected_plan_candidates)
 	selected_plans = tuple(
 		sorted(
@@ -2902,8 +3553,102 @@ def _select_branches_with_clingo(
 			),
 			recursive_capability_obligation_count=len(recursive_capability_groups),
 			selected_recursive_capability_count=selected_recursive_capability_count,
+			preparation_dependency_edge_count=len(preparation_dependency_edges),
+			preparation_dependency_max_rank=max(
+				preparation_dependency_ranks.values(),
+				default=0,
+			),
 		),
 	)
+
+
+def _cross_preparation_dependency_edges(
+	plans: Sequence[AgentSpeakPlan],
+) -> tuple[tuple[int, str, str], ...]:
+	"""Return selected cross-predicate preparation edges only."""
+
+	edges: list[tuple[int, str, str]] = []
+	for index, plan in enumerate(tuple(plans or ())):
+		prepared = _prepared_predicate(plan)
+		if not prepared or prepared == plan.trigger.symbol:
+			continue
+		edges.append((index, plan.trigger.symbol, prepared))
+	return tuple(edges)
+
+
+def _preparation_dependency_ranks(
+	plans: Sequence[AgentSpeakPlan],
+) -> dict[str, int]:
+	"""Assign a decreasing natural-number rank to an acyclic call graph."""
+
+	edges = _cross_preparation_dependency_edges(plans)
+	successors: dict[str, set[str]] = {}
+	for _index, caller, callee in edges:
+		successors.setdefault(caller, set()).add(callee)
+		successors.setdefault(callee, set())
+	visiting: set[str] = set()
+	ranks: dict[str, int] = {}
+
+	def rank(predicate: str) -> int:
+		if predicate in ranks:
+			return ranks[predicate]
+		if predicate in visiting:
+			raise AssertionError(
+				"Clingo selected a cyclic cross-predicate preparation graph.",
+			)
+		visiting.add(predicate)
+		value = 1 + max(
+			(rank(successor) for successor in successors.get(predicate, ())),
+			default=-1,
+		)
+		visiting.remove(predicate)
+		ranks[predicate] = value
+		return value
+
+	for predicate in sorted(successors):
+		rank(predicate)
+	return ranks
+
+
+def _with_selected_preparation_dependency_certificates(
+	plans: Sequence[AgentSpeakPlan],
+) -> tuple[AgentSpeakPlan, ...]:
+	"""Seal provisional precondition ranks after the joint Clingo solve."""
+
+	plan_tuple = tuple(plans or ())
+	ranks = _preparation_dependency_ranks(plan_tuple)
+	sealed: list[AgentSpeakPlan] = []
+	for plan in plan_tuple:
+		prepared = _prepared_predicate(plan)
+		if not prepared or prepared == plan.trigger.symbol:
+			sealed.append(plan)
+			continue
+		certificates: list[Mapping[str, object]] = []
+		for certificate in tuple(plan.binding_certificate or ()):
+			updated = dict(certificate)
+			progress = updated.get("recursive_progress_certificate")
+			if (
+				isinstance(progress, Mapping)
+				and progress.get("certificate_kind")
+				== "well_founded_precondition_discharge"
+			):
+				caller_rank = ranks[plan.trigger.symbol]
+				callee_rank = ranks[prepared]
+				if caller_rank <= callee_rank:
+					raise AssertionError(
+						"Selected preparation dependency rank does not decrease.",
+					)
+				updated["recursive_progress_certificate"] = {
+					**dict(progress),
+					"dependency_order_status": "clingo_selected_acyclic",
+					"caller_dependency_rank": caller_rank,
+					"callee_dependency_rank": callee_rank,
+				}
+			certificates.append(updated)
+		sealed.append(
+			replace(plan, binding_certificate=tuple(certificates)),
+		)
+	return tuple(sealed)
 
 
 def _runtime_plan_priority(
@@ -3039,6 +3784,12 @@ def _clingo_selector_program(
 		"provided(Predicate) :- selected(Branch), provides(Branch, Predicate).",
 		":- selected(Branch), calls(Branch, Predicate), not provided(Predicate).",
 		":- selected(Left), selected(Right), incompatible(Left, Right).",
+		"preparation_edge(Caller, Callee) :- selected(Branch), "
+		"prepares(Branch, Caller, Callee).",
+		"preparation_path(Caller, Callee) :- preparation_edge(Caller, Callee).",
+		"preparation_path(Caller, Descendant) :- preparation_path(Caller, Middle), "
+		"preparation_edge(Middle, Descendant).",
+		":- preparation_path(Predicate, Predicate).",
 		"covered(Obligation) :- selected(Branch), covers(Branch, Obligation).",
 		"recursive_covered(Capability) :- selected(Branch), "
 		"recursive_candidate(Capability, Branch).",
@@ -3083,6 +3834,12 @@ def _clingo_selector_program(
 			},
 		):
 			lines.append(f"calls({branch_id}, {predicate_ids[predicate]}).")
+		prepared = _prepared_predicate(plan)
+		if prepared and prepared != plan.trigger.symbol:
+			lines.append(
+				f"prepares({branch_id}, {predicate_ids[plan.trigger.symbol]}, "
+				f"{predicate_ids[prepared]}).",
+			)
 	for selected_index, obligation_index in coverage_pairs:
 		lines.append(
 			f"covers({branch_ids[selected_index]}, {obligation_ids[obligation_index]}).",
@@ -3107,7 +3864,7 @@ def _certified_branch_obligation_groups(
 	actions_by_name = {action.name: action for action in tuple(actions or ())}
 	groups: list[tuple[int, ...]] = []
 	for obligation in tuple(schema_candidates or ()):
-		if _recursive_progress_certificate_from_plan(obligation) is not None:
+		if _is_certified_recursive_preparation_plan(obligation):
 			continue
 		candidate_indexes = tuple(
 			index
@@ -3144,7 +3901,7 @@ def _recursive_capability_obligation_groups(
 	raw_tuple = tuple(raw_plans or ())
 	groups = []
 	for obligation in tuple(schema_candidates or ()):
-		if _recursive_progress_certificate_from_plan(obligation) is None:
+		if not _is_certified_recursive_preparation_plan(obligation):
 			continue
 		candidate_indexes = tuple(
 			index
@@ -3154,6 +3911,21 @@ def _recursive_capability_obligation_groups(
 		if candidate_indexes:
 			groups.append(candidate_indexes)
 	return tuple(dict.fromkeys(groups))
+
+
+def _is_certified_recursive_preparation_plan(plan: AgentSpeakPlan) -> bool:
+	if _plan_rule_kind(plan) != "prepare_public_precondition":
+		return False
+	for record in tuple(plan.binding_certificate or ()):
+		progress = record.get("recursive_progress_certificate")
+		if not isinstance(progress, Mapping):
+			continue
+		if progress.get("certificate_kind") in {
+			"well_founded_relational_count_decrease",
+			"well_founded_precondition_discharge",
+		}:
+			return True
+	return False
 
 
 def _candidate_achieves_schema_obligation(
@@ -3342,6 +4114,13 @@ def _resource_release_contract(plan: AgentSpeakPlan) -> tuple[object, ...]:
 				str(resource.get("certificate_kind") or ""),
 				str(resource.get("producer_action") or ""),
 				str(resource.get("release_action") or ""),
+				tuple(
+					str(action)
+					for action in tuple(
+						resource.get("release_actions")
+						or (resource.get("release_action"),)
+					)
+				),
 				canonical_text(resource.get("resource_debt_literal")),
 				tuple(
 					sorted(
@@ -3387,15 +4166,15 @@ def _resource_release_contract_refines(
 	for candidate_record, obligation_record in zip(candidate, obligation):
 		if not isinstance(candidate_record, tuple) or not isinstance(obligation_record, tuple):
 			return False
-		if len(candidate_record) != 11 or len(obligation_record) != 11:
+		if len(candidate_record) != 12 or len(obligation_record) != 12:
 			return False
 		if candidate_record[0:2] != obligation_record[0:2]:
 			return False
-		if candidate_record[3:9] != obligation_record[3:9]:
-			return False
-		if not set(candidate_record[9]) <= set(obligation_record[9]):
+		if candidate_record[4:10] != obligation_record[4:10]:
 			return False
 		if not set(candidate_record[10]) <= set(obligation_record[10]):
+			return False
+		if not set(candidate_record[11]) <= set(obligation_record[11]):
 			return False
 	return True
 
@@ -3681,6 +4460,12 @@ def _module_synthesis_report(
 		selected_recursive_capability_count=(
 			selection_report.selected_recursive_capability_count
 		),
+		preparation_dependency_edge_count=(
+			selection_report.preparation_dependency_edge_count
+		),
+		preparation_dependency_max_rank=(
+			selection_report.preparation_dependency_max_rank
+		),
 		predicate_roles=_predicate_role_report(
 			plans=plans,
 			module_predicates=module_predicates,
@@ -3708,6 +4493,12 @@ def _module_synthesis_report(
 			"same-predicate recursive prepare branches require a non-negative "
 			"relational-count ranking feature that strictly decreases and is never increased",
 			(
+				"cross-predicate prepare branches are optional Clingo capabilities; "
+				"their selected dependency graph must be acyclic, and each branch "
+				"records a strictly decreasing caller/callee dependency rank plus a "
+				"successful precondition-discharge recheck"
+			),
+			(
 				"anchored relation-cone rankings may relocate an obstruction only when "
 				"schema guards prove the new relation value differs from the protected "
 				"anchor; Clingo rejects the capability if any selected reachable module "
@@ -3733,6 +4524,8 @@ def _module_synthesis_report(
 			"retains schema-derived static feasibility witnesses before recursive recheck",
 			"same-predicate recursive branches require a schema-level well-founded "
 			"relational-count progress certificate",
+			"cross-predicate preparation uses a Clingo-selected acyclic module rank "
+			"and a local unsatisfied-precondition Boolean decrease",
 			"a fixed domain-independent feature grammar includes global relation count "
 			"and query-anchored acyclic relation-cone count rankings",
 			"resource-release cleanup branches are accepted only when PDDL effects "
