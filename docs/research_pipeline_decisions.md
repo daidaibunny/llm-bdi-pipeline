@@ -201,6 +201,13 @@ An evidence failure blocks its dependent runs, and an incomplete pairing is
 persisted as an infrastructure failure in `paired_results.json`; it is not
 silently dropped or interpreted as method failure.
 
+For every paired seed/domain group, producible-predicate coverage uses one
+PDDL-derived denominator: all predicate symbols in positive action effects, as
+reported by the Full Compiler's schema analysis. Each method is scored from the
+module triggers it actually emits. A reduced baseline cannot turn missing
+closure metadata into a vacuous `0/0`; a missing common denominator is an
+infrastructure failure.
+
 Machine-readable artifacts retain stable identifiers such as
 `validated_evidence_adapter` and `certified_balanced`. Manuscript tables and
 terminal summaries use short method names and short column phrases, for example

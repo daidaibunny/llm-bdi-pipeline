@@ -160,6 +160,10 @@ Jason+VAL coverage, selected branches, context literals, primitive and subgoal
 steps, ASL bytes, and compilation time. Temporal metrics are controller
 acceptance/rejection, Jason success, VAL validity, gold-DFA acceptance, action
 count, PAR-2 runtime, append time, controller plans, and maximum trigger fan-out.
+For each paired seed and domain, producible-predicate coverage uses one common
+denominator: all predicate symbols occurring in positive PDDL action effects.
+Each variant is scored by the module triggers it actually emits; missing
+closure metadata cannot reduce its denominator.
 A separate challenge suite measures false acceptance and false rejection for
 unbound variables, non-decreasing recursion, unreleased resource debt, cyclic
 threats, forbidden completion additions, and numeric overshoot. Predicate and

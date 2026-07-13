@@ -376,6 +376,11 @@ been proved language-equivalent.
 
 Atomic metrics are producible-predicate coverage, module closure, held-out
 Jason+VAL coverage, branch/context/body costs, ASL bytes, and compile time.
+Producible-predicate coverage has one paired denominator per seed/domain: all
+predicate symbols in positive PDDL action effects. Every method is scored by
+the module triggers it actually emits against that same set. Never let Evidence
+Adapter or another reduced variant redefine the denominator through absent
+closure metadata.
 Temporal metrics are compile/rejection status, Jason success, VAL validity,
 gold-DFA acceptance, action count, PAR-2 runtime, append time, controller size,
 and maximum trigger fan-out. Plan length is compared only on jointly solved

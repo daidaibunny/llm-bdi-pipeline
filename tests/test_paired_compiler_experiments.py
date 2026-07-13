@@ -9,6 +9,7 @@ from domain_level_planning import TemporalCompilerVariant
 from scripts.run_paired_compiler_experiments import build_atomic_run_command
 from scripts.run_paired_compiler_experiments import build_evidence_run_command
 from scripts.run_paired_compiler_experiments import build_temporal_run_command
+from scripts.run_paired_compiler_experiments import apply_common_target_coverage
 from scripts.run_paired_compiler_experiments import atomic_library_metrics
 from scripts.run_paired_compiler_experiments import execution_metrics
 from scripts.run_paired_compiler_experiments import pairing_outcome
@@ -263,16 +264,17 @@ def test_atomic_library_metrics_are_table_ready(tmp_path: Path) -> None:
     }
   ],
   "metadata": {
-    "atomic_module_synthesis": {
-      "raw_candidate_count": 5,
+		"atomic_module_synthesis": {
+			"raw_candidate_count": 5,
       "candidate_source_counts": {
         "validated_evidence": 2,
         "schema": 4
       },
-      "module_predicates": ["done"],
-      "predicate_roles": [
-        {
-          "role": "producible_fluent",
+			"module_predicates": ["done"],
+			"predicate_roles": [
+				{
+					"predicate": "done",
+					"role": "producible_fluent",
           "expected_module": true,
           "emitted_module": true
         }
@@ -294,6 +296,9 @@ def test_atomic_library_metrics_are_table_ready(tmp_path: Path) -> None:
 		"schema_candidate_count": 4,
 		"selected_branch_count": 2,
 		"module_count": 1,
+		"module_predicates": ("done",),
+		"declared_producible_target_predicates": ("done",),
+		"producible_target_denominator_available": True,
 		"producible_target_count": 1,
 		"covered_target_count": 1,
 		"module_closure_complete": True,
@@ -303,6 +308,66 @@ def test_atomic_library_metrics_are_table_ready(tmp_path: Path) -> None:
 		"subgoal_step_count": 1,
 		"asl_bytes": 30,
 	}
+
+
+def test_common_target_coverage_uses_full_compiler_pddl_denominator() -> None:
+	runs = []
+	for variant, modules, declared in (
+		("validated_evidence_adapter", ("at",), ()),
+		("action_only_closure", ("at", "free"), ()),
+		("maximal_certified_program", ("at", "free"), ()),
+		("full", ("at", "free"), ("at", "free")),
+	):
+		runs.append(
+			{
+				"seed": 0,
+				"variant": variant,
+				"domains": {
+					"toy": {
+						"library_metrics": {
+							"module_predicates": modules,
+							"declared_producible_target_predicates": declared,
+							"producible_target_denominator_available": variant == "full",
+						},
+					},
+				},
+			},
+		)
+
+	normalized = apply_common_target_coverage(runs)
+	by_variant = {row["variant"]: row for row in normalized}
+	evidence_metrics = by_variant["validated_evidence_adapter"]["domains"]["toy"][
+		"library_metrics"
+	]
+	full_metrics = by_variant["full"]["domains"]["toy"]["library_metrics"]
+
+	assert evidence_metrics["producible_target_count"] == 2
+	assert evidence_metrics["covered_target_count"] == 1
+	assert evidence_metrics["module_closure_complete"] is False
+	assert full_metrics["producible_target_count"] == 2
+	assert full_metrics["covered_target_count"] == 2
+	assert full_metrics["module_closure_complete"] is True
+
+
+def test_common_target_coverage_rejects_missing_full_denominator() -> None:
+	with pytest.raises(ValueError, match="missing full compiler target denominator"):
+		apply_common_target_coverage(
+			(
+				{
+					"seed": 0,
+					"variant": "full",
+					"domains": {
+						"toy": {
+							"library_metrics": {
+								"module_predicates": ("at",),
+								"declared_producible_target_predicates": (),
+								"producible_target_denominator_available": False,
+							},
+						},
+					},
+				},
+			),
+		)
 
 
 def test_execution_metrics_use_par2_for_every_unsolved_case() -> None:

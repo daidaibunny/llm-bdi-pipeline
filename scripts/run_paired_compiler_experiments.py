@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+import copy
 from dataclasses import dataclass
 from datetime import datetime
 import hashlib
@@ -388,7 +389,9 @@ def atomic_library_metrics(
 	metadata = dict(payload.get("metadata") or {})
 	synthesis = dict(metadata.get("atomic_module_synthesis") or {})
 	source_counts = dict(synthesis.get("candidate_source_counts") or {})
-	roles = tuple(synthesis.get("predicate_roles") or ())
+	raw_roles = synthesis.get("predicate_roles")
+	denominator_available = isinstance(raw_roles, (list, tuple))
+	roles = tuple(raw_roles or ())
 	producible_roles = tuple(
 		dict(role)
 		for role in roles
@@ -398,6 +401,16 @@ def atomic_library_metrics(
 	)
 	covered_roles = tuple(
 		role for role in producible_roles if bool(role.get("emitted_module"))
+	)
+	module_predicates = tuple(
+		sorted(str(item) for item in tuple(synthesis.get("module_predicates") or ()))
+	)
+	declared_producible_targets = tuple(
+		sorted(
+			str(role.get("predicate"))
+			for role in producible_roles
+			if str(role.get("predicate") or "").strip()
+		)
 	)
 	context_literal_count = 0
 	body_step_count = 0
@@ -421,7 +434,10 @@ def atomic_library_metrics(
 		),
 		"schema_candidate_count": int(source_counts.get("schema") or 0),
 		"selected_branch_count": len(plans),
-		"module_count": len(tuple(synthesis.get("module_predicates") or ())),
+		"module_count": len(module_predicates),
+		"module_predicates": module_predicates,
+		"declared_producible_target_predicates": declared_producible_targets,
+		"producible_target_denominator_available": denominator_available,
 		"producible_target_count": len(producible_roles),
 		"covered_target_count": len(covered_roles),
 		"module_closure_complete": len(covered_roles) == len(producible_roles),
@@ -431,6 +447,65 @@ def atomic_library_metrics(
 		"subgoal_step_count": subgoal_step_count,
 		"asl_bytes": asl_file.stat().st_size,
 	}
+
+
+def apply_common_target_coverage(
+	runs: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+	"""Apply one PDDL-derived target denominator to every paired atomic variant."""
+
+	normalized = copy.deepcopy(list(runs))
+	groups: dict[tuple[int, str], list[dict[str, Any]]] = {}
+	for run in normalized:
+		seed = int(run["seed"])
+		for domain, raw_record in dict(run.get("domains") or {}).items():
+			groups.setdefault((seed, str(domain)), []).append(dict(raw_record or {}))
+	for (seed, domain), records in groups.items():
+		full_record = next(
+			(
+				dict(run.get("domains") or {}).get(domain)
+				for run in normalized
+				if int(run["seed"]) == seed
+				and str(run.get("variant") or "") == AtomicCompilerVariant.FULL.value
+			),
+			None,
+		)
+		full_metrics = dict(dict(full_record or {}).get("library_metrics") or {})
+		if not bool(full_metrics.get("producible_target_denominator_available")):
+			raise ValueError(
+				"missing full compiler target denominator for "
+				f"seed={seed}, domain={domain}",
+			)
+		expected = tuple(
+			sorted(
+				str(item)
+				for item in tuple(
+					full_metrics.get("declared_producible_target_predicates") or (),
+				)
+			)
+		)
+		for run in normalized:
+			if int(run["seed"]) != seed:
+				continue
+			domain_record = dict(run.get("domains") or {}).get(domain)
+			if domain_record is None:
+				continue
+			metrics = dict(dict(domain_record).get("library_metrics") or {})
+			modules = {
+				str(item) for item in tuple(metrics.get("module_predicates") or ())
+			}
+			covered = tuple(item for item in expected if item in modules)
+			metrics.update(
+				{
+					"common_producible_target_predicates": expected,
+					"covered_producible_target_predicates": covered,
+					"producible_target_count": len(expected),
+					"covered_target_count": len(covered),
+					"module_closure_complete": len(covered) == len(expected),
+				},
+			)
+			domain_record["library_metrics"] = metrics
+	return normalized
 
 
 def execution_metrics(
@@ -929,6 +1004,17 @@ def main() -> int:
 			)
 		else:
 			challenge_records.append(dict(summary))
+	if atomic_records:
+		try:
+			atomic_records = apply_common_target_coverage(atomic_records)
+		except ValueError as error:
+			infrastructure_failures.append(
+				{
+					"stage": "Aggregation",
+					"method": "Atomic target coverage",
+					"error": str(error),
+				},
+			)
 	atomic_pairing, atomic_pairing_failure = pairing_outcome(
 		label="Atomic",
 		runs=atomic_records,
