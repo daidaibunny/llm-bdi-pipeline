@@ -7,5 +7,5 @@
   "schema_version": 1,
   "translation_success_count": 475,
   "translation_total": 475,
-  "validated_append_dataset_root": "/private/tmp/teg-release-repro-3/independent_validation/validated_append_datasets"
+  "validated_append_dataset_root": "domains"
 }

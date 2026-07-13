@@ -1,12 +1,21 @@
 {
   "artifact_kind": "temporal_goal_benchmark_release_validation",
   "benchmark_id": "temporal-nl-v1-20260711-final",
-  "benchmark_sha256": "0ab580ed45e3790bf986ab62b7f4e531ab6833c6182256284cf877b3861cacf8",
+  "benchmark_sha256": "ee94775ba695492d8d31242e6271afe14e5fa00cad29b910159737766d384e13",
   "delivered_validation_matches_independent": {
     "domain_datasets_exact": true,
     "normalized_summary_exact": true,
     "problem_results_exact": true,
     "translation_results_exact": true
+  },
+  "delivery_archive_normalization": {
+    "method": "release_relative_metadata_paths_v1",
+    "normalized_files": [
+      "artifacts/temporal_predictions/temporal-nl-v1-20260712-145052/goal_validation/summary.json",
+      "artifacts/temporal_predictions/temporal-nl-v1-20260712-145052/goal_validation_infra_error_mona_env/summary.json",
+      "artifacts/temporal_predictions/temporal-nl-v1-20260712-145052/run_config.json"
+    ],
+    "source_sha256": "8cd7f9d92f6c19e304a5dea5e60e11cf02d30f6be00664aa7dd13669a6713033"
   },
   "frozen_predictions_sha256": "512c766b60e9c3d953d49b930a4845bfda6bceb9706675a2670084d45db47f41",
   "independent_summary": {
@@ -23,7 +32,12 @@
     "sha256": "7a25d22766e6f0d9db58fe6e1af7c37e8127242c539272d5d8f337b8b8fc0e2d",
     "version": "MONA v1.4-18 for WS1S/WS2S"
   },
-  "release_manifest_sha256": "abab2e51ead10748392b5937e0f9e1bc0b5099ddcdf72643af2e2da598960920",
+  "published_source_archives": {
+    "temporal-nl-v1-20260711-final-private-validation.tar.gz": "e54605eb9b2e3a50699133d5a3873725d589e17bbb62cedc84c119462291d1af",
+    "temporal-nl-v1-20260711-final-public-handoff.tar.gz": "f41b6d53bedf3406235f3b1e02290db0fbf5c100fa255b372ce5baf343813c0c",
+    "temporal-nl-v1-20260712-145052-predictions-and-validation.tar.gz": "67497edf8ff9622e590aea8cbfc4fd8e4e8601751ecf0c6d77a37186077b37fd"
+  },
+  "release_manifest_sha256": "a2bb90ee69d106d5f2d611b067a5dc58c95fb349bdd3490b41effb62c08e98b3",
   "schema_version": 1,
   "source_archive_sha256_verified": true
 }

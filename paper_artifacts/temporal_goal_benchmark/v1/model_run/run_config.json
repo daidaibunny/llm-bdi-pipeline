@@ -1,7 +1,7 @@
 {
   "completed_record_count": 475,
   "frozen_at": "2026-07-12T14:59:37+0800",
-  "handoff_root": "/Users/phoenizard/Workplace/llm-bdi-pipeline/artifacts/temporal_nl_handoffs/temporal-nl-v1-20260711-final",
+  "handoff_root": "artifacts/temporal_nl_handoffs/temporal-nl-v1-20260711-final",
   "max_semantic_retries": 3,
   "model_id": "gpt-5.5",
   "model_parameters": {

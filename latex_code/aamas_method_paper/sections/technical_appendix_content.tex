@@ -495,13 +495,21 @@ Two zero-action Jason and singleton-state replay cases \\
 \subsection{Novel Temporal-Goal Dataset}
 
 The novel GP2PL data release contains 475 deduplicated controlled-language
-specifications and 1,228 bound executions over 16 PDDL domains. Each record
+specifications and 1,228 bound query cases over 16 PDDL domains. Each record
 contains the source utterance, typed parameters, binding, atom table, gold
 parametric LTLf formula, model-produced JSON, language-equivalence result, and
 sealed construction-witness checks. Per-domain JSON files, the complete
 benchmark, model predictions, independent validation, source archives, and
 SHA-256 manifests are included in the code-and-data appendix under
-\path{paper_artifacts/temporal_goal_benchmark/v1}.
+\path{paper_artifacts/temporal_goal_benchmark/v1}. This dataset evaluates
+translation equivalence and witness validity; the 1,228 Jason, VAL, and
+trace-automaton executions are reported in the separate evaluation release.
+
+The dataset includes its own data dictionary, citation metadata, and integrity
+checker. Publication replaces three machine-local directory strings in the
+model-delivery archive with release-relative paths. The release records the
+original archive digest and every normalized member; model responses and
+semantic-validation records are unchanged.
 
 Original natural-language annotations, temporal specifications, model outputs,
 generated plan libraries, and result records are released under CC BY 4.0. The

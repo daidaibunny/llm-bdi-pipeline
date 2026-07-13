@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import gzip
+import io
 import json
 import os
 import shutil
@@ -11,6 +13,7 @@ import tarfile
 import tempfile
 from contextlib import nullcontext
 from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Any
 from typing import Callable
 from typing import Mapping
@@ -23,6 +26,7 @@ def build_temporal_benchmark_release(
 	*,
 	delivery_archive: str | Path,
 	delivery_archive_sha256: str,
+	delivery_archive_origin_sha256: str | None = None,
 	public_handoff_archive: str | Path,
 	public_handoff_archive_sha256: str,
 	private_validation_archive: str | Path,
@@ -53,10 +57,33 @@ def build_temporal_benchmark_release(
 		"model_run",
 		"validation",
 		"release_validation.json",
+		"source",
 	):
 		if (output / reserved).exists():
 			raise ValueError(f"Refusing to overwrite existing release artifact: {output / reserved}")
 	output.mkdir(parents=True, exist_ok=True)
+	source_output = output / "source"
+	source_output.mkdir()
+	portable_delivery = source_output / delivery.name
+	normalization = write_portable_delivery_archive(
+		source_archive=delivery,
+		destination_archive=portable_delivery,
+		benchmark_id=benchmark_id,
+		run_id=run_id,
+	)
+	published_public = source_output / public.name
+	published_private = source_output / private.name
+	shutil.copyfile(public, published_public)
+	shutil.copyfile(private, published_private)
+	origin_sha256 = _validated_sha256(
+		delivery_archive_origin_sha256 or delivery_archive_sha256,
+		label="delivery_archive_origin_sha256",
+	)
+	published_archives = (portable_delivery, published_private, published_public)
+	(source_output / "SHA256SUMS").write_text(
+		"".join(f"{_sha256(path)}  {path.name}\n" for path in sorted(published_archives)),
+		encoding="utf-8",
+	)
 	mona = Path(mona_bin).resolve()
 	if not mona.is_file():
 		raise ValueError(f"MONA executable does not exist: {mona}")
@@ -69,7 +96,7 @@ def build_temporal_benchmark_release(
 	with workspace_context as temporary:
 		workspace = Path(temporary)
 		workspace.mkdir(parents=True, exist_ok=True)
-		for archive in (delivery, public, private):
+		for archive in published_archives:
 			safe_extract_tar(archive, workspace)
 		handoff_root = (
 			workspace / "artifacts/temporal_nl_handoffs" / benchmark_id
@@ -140,14 +167,22 @@ def build_temporal_benchmark_release(
 			),
 			domains_root=domains,
 			source_delivery_archive={
-				"filename": delivery.name,
-				"sha256": _sha256(delivery),
+				"filename": portable_delivery.name,
+				"sha256": _sha256(portable_delivery),
+				"normalization": {
+					"method": "release_relative_metadata_paths_v1",
+					"source_sha256": origin_sha256,
+					"normalized_files": normalization["normalized_files"],
+				},
 			},
 			sealed_input_archives={
-				"public_handoff": {"filename": public.name, "sha256": _sha256(public)},
+				"public_handoff": {
+					"filename": published_public.name,
+					"sha256": _sha256(published_public),
+				},
 				"private_validation": {
-					"filename": private.name,
-					"sha256": _sha256(private),
+					"filename": published_private.name,
+					"sha256": _sha256(published_private),
 				},
 			},
 			validation_implementation_commit=validation_implementation_commit,
@@ -158,24 +193,41 @@ def build_temporal_benchmark_release(
 		for filename in (
 			"translation_predictions.jsonl",
 			"translation_predictions.sha256",
-			"run_config.json",
 			"DELIVERY.md",
 		):
 			shutil.copyfile(delivery_root / filename, model_run_output / filename)
+		model_run_config = _portable_metadata_value(
+			_read_json(delivery_root / "run_config.json"),
+			member_name=f"artifacts/temporal_predictions/{run_id}/run_config.json",
+			benchmark_id=benchmark_id,
+		)
+		if not isinstance(model_run_config, Mapping):
+			raise ValueError("Published model run configuration must be an object.")
+		_write_json(model_run_output / "run_config.json", model_run_config)
 		validation_output = output / "validation"
 		validation_output.mkdir()
 		for filename in (
-			"summary.json",
 			"translation_validation_results.jsonl",
 			"problem_validation_results.jsonl",
 		):
 			shutil.copyfile(independent_output / filename, validation_output / filename)
+		published_summary = dict(summary)
+		published_summary["validated_append_dataset_root"] = "domains"
+		_write_json(validation_output / "summary.json", published_summary)
 
 		report = {
 			"schema_version": 1,
 			"artifact_kind": "temporal_goal_benchmark_release_validation",
 			"benchmark_id": benchmark_id,
 			"source_archive_sha256_verified": True,
+			"published_source_archives": {
+				path.name: _sha256(path) for path in published_archives
+			},
+			"delivery_archive_normalization": {
+				"method": "release_relative_metadata_paths_v1",
+				"source_sha256": origin_sha256,
+				"normalized_files": normalization["normalized_files"],
+			},
 			"frozen_predictions_sha256": prediction_sha256,
 			"delivered_validation_matches_independent": comparison,
 			"independent_summary": _normalized_summary(summary),
@@ -210,6 +262,242 @@ def safe_extract_tar(archive: str | Path, destination: str | Path) -> None:
 				raise ValueError(f"Archive links are not accepted: {member.name!r}.")
 			accepted_members.append(member)
 		bundle.extractall(destination_path, members=accepted_members, filter="data")
+
+
+def write_portable_delivery_archive(
+	*,
+	source_archive: str | Path,
+	destination_archive: str | Path,
+	benchmark_id: str,
+	run_id: str,
+) -> dict[str, object]:
+	"""Write a deterministic delivery archive with release-relative metadata paths."""
+
+	source = Path(source_archive).resolve()
+	destination = Path(destination_archive).resolve()
+	if not source.is_file():
+		raise ValueError(f"Delivery archive does not exist: {source}")
+	root = f"artifacts/temporal_predictions/{run_id}"
+	required_metadata = {
+		f"{root}/run_config.json",
+		f"{root}/goal_validation/summary.json",
+	}
+	destination.parent.mkdir(parents=True, exist_ok=True)
+	normalized_files: set[str] = set()
+	with tempfile.NamedTemporaryFile(
+		dir=destination.parent,
+		prefix=f".{destination.name}.",
+		delete=False,
+	) as temporary_file:
+		temporary_path = Path(temporary_file.name)
+	try:
+		with (
+			tarfile.open(source, mode="r:gz") as source_bundle,
+			temporary_path.open("wb") as raw_output,
+			gzip.GzipFile(
+				filename="",
+				mode="wb",
+				fileobj=raw_output,
+				mtime=0,
+			) as compressed_output,
+			tarfile.open(
+				fileobj=compressed_output,
+				mode="w",
+				format=tarfile.PAX_FORMAT,
+			) as destination_bundle,
+		):
+			for source_member in sorted(
+				source_bundle.getmembers(),
+				key=lambda member: member.name,
+			):
+				member_path = Path(source_member.name)
+				if _is_platform_metadata(member_path):
+					continue
+				if member_path.is_absolute() or ".." in member_path.parts:
+					raise ValueError(f"Unsafe archive member {source_member.name!r}.")
+				if source_member.issym() or source_member.islnk():
+					raise ValueError(
+						f"Archive links are not accepted: {source_member.name!r}.",
+					)
+				if not (source_member.isdir() or source_member.isfile()):
+					raise ValueError(
+						f"Unsupported archive member type: {source_member.name!r}.",
+					)
+				content = b""
+				if source_member.isfile():
+					extracted = source_bundle.extractfile(source_member)
+					if extracted is None:
+						raise ValueError(
+							f"Could not read archive member {source_member.name!r}.",
+						)
+					content = extracted.read()
+					if source_member.name.endswith((".json", ".jsonl")):
+						if source_member.name.endswith(".jsonl"):
+							portable_content = _portable_jsonl_metadata(
+								content,
+								member_name=source_member.name,
+								benchmark_id=benchmark_id,
+							)
+						else:
+							portable_content = _portable_json_metadata(
+								content,
+								member_name=source_member.name,
+								benchmark_id=benchmark_id,
+							)
+						if portable_content != content:
+							content = portable_content
+							normalized_files.add(source_member.name)
+						if _contains_portable_metadata_field(content, source_member.name):
+							normalized_files.add(source_member.name)
+					if source_member.name in required_metadata:
+						payload = json.loads(content.decode("utf-8"))
+						if not isinstance(payload, dict):
+							raise ValueError(
+								f"Expected JSON object in {source_member.name!r}.",
+							)
+						if source_member.name.endswith("run_config.json"):
+							expected = f"artifacts/temporal_nl_handoffs/{benchmark_id}"
+							if payload.get("handoff_root") != expected:
+								raise ValueError("Portable handoff_root normalization failed.")
+						elif Path(
+							str(payload.get("validated_append_dataset_root") or ""),
+						).is_absolute():
+							raise ValueError(
+								"Portable validation summary normalization failed.",
+							)
+						normalized_files.add(source_member.name)
+				member = tarfile.TarInfo(source_member.name)
+				member.type = source_member.type
+				member.mode = source_member.mode
+				member.size = len(content)
+				member.uid = 0
+				member.gid = 0
+				member.uname = ""
+				member.gname = ""
+				member.mtime = 0
+				destination_bundle.addfile(
+					member,
+					io.BytesIO(content) if source_member.isfile() else None,
+				)
+		missing = required_metadata.difference(normalized_files)
+		if missing:
+			raise ValueError(
+				"Delivery archive is missing required metadata: "
+				+ ", ".join(sorted(missing)),
+			)
+		os.replace(temporary_path, destination)
+	finally:
+		if temporary_path.exists():
+			temporary_path.unlink()
+	return {
+		"source_sha256": _sha256(source),
+		"published_sha256": _sha256(destination),
+		"normalized_files": sorted(normalized_files),
+	}
+
+
+def _portable_json_metadata(
+	content: bytes,
+	*,
+	member_name: str,
+	benchmark_id: str,
+) -> bytes:
+	payload = json.loads(content.decode("utf-8"))
+	portable = _portable_metadata_value(
+		payload,
+		member_name=member_name,
+		benchmark_id=benchmark_id,
+	)
+	if portable == payload:
+		return content
+	return (
+		json.dumps(portable, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+	).encode("utf-8")
+
+
+def _portable_jsonl_metadata(
+	content: bytes,
+	*,
+	member_name: str,
+	benchmark_id: str,
+) -> bytes:
+	lines = content.decode("utf-8").splitlines()
+	rows = [json.loads(line) for line in lines if line.strip()]
+	portable_rows = [
+		_portable_metadata_value(
+			row,
+			member_name=member_name,
+			benchmark_id=benchmark_id,
+		)
+		for row in rows
+	]
+	if portable_rows == rows:
+		return content
+	return "".join(
+		json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n"
+		for row in portable_rows
+	).encode("utf-8")
+
+
+def _portable_metadata_value(
+	value: object,
+	*,
+	member_name: str,
+	benchmark_id: str,
+) -> object:
+	if isinstance(value, Mapping):
+		portable: dict[str, object] = {}
+		for raw_key, item in value.items():
+			key = str(raw_key)
+			if key == "handoff_root" and isinstance(item, str) and Path(item).is_absolute():
+				portable[key] = f"artifacts/temporal_nl_handoffs/{benchmark_id}"
+			elif (
+				key == "validated_append_dataset_root"
+				and isinstance(item, str)
+				and Path(item).is_absolute()
+			):
+				portable[key] = str(
+					PurePosixPath(member_name).parent / "validated_append_datasets",
+				)
+			else:
+				portable[key] = _portable_metadata_value(
+					item,
+					member_name=member_name,
+					benchmark_id=benchmark_id,
+				)
+		return portable
+	if isinstance(value, list):
+		return [
+			_portable_metadata_value(
+				item,
+				member_name=member_name,
+				benchmark_id=benchmark_id,
+			)
+			for item in value
+		]
+	return value
+
+
+def _contains_portable_metadata_field(content: bytes, member_name: str) -> bool:
+	if member_name.endswith(".jsonl"):
+		payloads = [
+			json.loads(line)
+			for line in content.decode("utf-8").splitlines()
+			if line.strip()
+		]
+	else:
+		payloads = [json.loads(content.decode("utf-8"))]
+	return any(_contains_metadata_key(payload) for payload in payloads)
+
+
+def _contains_metadata_key(value: object) -> bool:
+	if isinstance(value, Mapping):
+		if {"handoff_root", "validated_append_dataset_root"}.intersection(value):
+			return True
+		return any(_contains_metadata_key(item) for item in value.values())
+	if isinstance(value, list):
+		return any(_contains_metadata_key(item) for item in value)
+	return False
 
 
 def compare_validation_outputs(
@@ -259,6 +547,13 @@ def _verified_file(path: str | Path, expected_sha256: str) -> Path:
 	if _sha256(file_path) != str(expected_sha256).strip().lower():
 		raise ValueError(f"Source archive SHA-256 mismatch: {file_path}")
 	return file_path
+
+
+def _validated_sha256(value: str, *, label: str) -> str:
+	digest = str(value or "").strip().lower()
+	if len(digest) != 64 or any(character not in "0123456789abcdef" for character in digest):
+		raise ValueError(f"{label} must be a SHA-256 digest.")
+	return digest
 
 
 def _validate_reusable_independent_output(output: Path) -> None:

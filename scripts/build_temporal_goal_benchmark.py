@@ -16,6 +16,7 @@ def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--delivery-archive", type=Path, required=True)
 	parser.add_argument("--delivery-archive-sha256", required=True)
+	parser.add_argument("--delivery-archive-origin-sha256")
 	parser.add_argument("--public-handoff-archive", type=Path, required=True)
 	parser.add_argument("--public-handoff-archive-sha256", required=True)
 	parser.add_argument("--private-validation-archive", type=Path, required=True)
@@ -39,6 +40,7 @@ def main() -> int:
 	report = build_temporal_benchmark_release(
 		delivery_archive=args.delivery_archive,
 		delivery_archive_sha256=args.delivery_archive_sha256,
+		delivery_archive_origin_sha256=args.delivery_archive_origin_sha256,
 		public_handoff_archive=args.public_handoff_archive,
 		public_handoff_archive_sha256=args.public_handoff_archive_sha256,
 		private_validation_archive=args.private_validation_archive,

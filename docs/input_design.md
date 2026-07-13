@@ -262,8 +262,11 @@ paper_artifacts/temporal_goal_benchmark/v1/
 ```
 
 These files have three distinct roles. The `source/` archives are immutable
-chain-of-custody evidence: the public handoff, sealed private construction
-audit, and colleague model-run delivery. `benchmark.json` is the canonical
+chain-of-custody evidence: the public handoff, construction audit sealed during
+model inference, and model-run delivery. Publication normalizes only
+machine-local directory fields in the delivery archive, records the original
+archive digest and the exact normalized members, and leaves predictions and
+semantic validation rows unchanged. `benchmark.json` is the canonical
 single-file research benchmark containing all 16 domains and 1,228 cases.
 `domains/<domain>.json` are byte-preserved operational views accepted by the
 existing single-domain temporal-goal appender. One aggregate file is therefore
@@ -295,6 +298,12 @@ execution metric. `benchmark.json` therefore records
 `execution_status: not_attempted`; later Jason, VAL, and execution-trace DFA
 acceptance are reported separately and cannot alter the frozen translation
 scores.
+
+The public dataset landing page is
+`paper_artifacts/temporal_goal_benchmark/v1/README.md`. Dataset-level CC BY 4.0
+and citation metadata are carried by `LICENSE.md` and `CITATION.cff`. The
+release is fail-closed under `scripts/verify_public_teg_dataset.py`, which checks
+counts, hashes, archive safety, and the absence of machine-local absolute paths.
 
 The canonical execution runner is:
 

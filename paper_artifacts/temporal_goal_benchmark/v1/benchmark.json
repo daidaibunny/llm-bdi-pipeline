@@ -90401,7 +90401,16 @@
     },
     "source_delivery_archive": {
       "filename": "temporal-nl-v1-20260712-145052-predictions-and-validation.tar.gz",
-      "sha256": "8cd7f9d92f6c19e304a5dea5e60e11cf02d30f6be00664aa7dd13669a6713033"
+      "normalization": {
+        "method": "release_relative_metadata_paths_v1",
+        "normalized_files": [
+          "artifacts/temporal_predictions/temporal-nl-v1-20260712-145052/goal_validation/summary.json",
+          "artifacts/temporal_predictions/temporal-nl-v1-20260712-145052/goal_validation_infra_error_mona_env/summary.json",
+          "artifacts/temporal_predictions/temporal-nl-v1-20260712-145052/run_config.json"
+        ],
+        "source_sha256": "8cd7f9d92f6c19e304a5dea5e60e11cf02d30f6be00664aa7dd13669a6713033"
+      },
+      "sha256": "67497edf8ff9622e590aea8cbfc4fd8e4e8601751ecf0c6d77a37186077b37fd"
     }
   },
   "schema_version": 1,

@@ -89,10 +89,18 @@ policy in `src/domains/<domain>/source.json`.
 
 ## Reproducing Reported Artifacts
 
-The versioned temporal benchmark is under
-`paper_artifacts/temporal_goal_benchmark/v1`. The fixed libraries, compact
+The versioned temporal benchmark has a dedicated
+[dataset landing page](paper_artifacts/temporal_goal_benchmark/v1/README.md)
+and a [versioned public release](https://github.com/daidaibunny/gp2pl/releases/tag/teg-benchmark-v1).
+The fixed libraries, compact
 execution records, certificate challenges, distributions, and SHA-256 manifest
 are under `paper_artifacts/gp2pl_evaluation/v1`.
+
+Verify the complete TEG dataset, including source archives and portability:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/verify_public_teg_dataset.py
+```
 
 Regenerate the manuscript result tables from those fixed records after
 materializing the PDDL corpus:

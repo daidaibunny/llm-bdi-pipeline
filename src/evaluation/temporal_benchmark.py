@@ -54,9 +54,9 @@ def build_temporal_goal_benchmark_bundle(
 	problem_results_file: str | Path,
 	validated_append_datasets_dir: str | Path,
 	domains_root: str | Path,
-	source_delivery_archive: Mapping[str, str],
+	source_delivery_archive: Mapping[str, object],
 	validation_implementation_commit: str,
-	sealed_input_archives: Mapping[str, Mapping[str, str]] | None = None,
+	sealed_input_archives: Mapping[str, Mapping[str, object]] | None = None,
 ) -> dict[str, object]:
 	"""Build one multi-domain benchmark from independently validated model output."""
 
@@ -548,12 +548,39 @@ def _problem_success(row: Mapping[str, Any]) -> None:
 		raise ValueError(f"Problem {_required_text(row, 'sample_id')!r} lacks a valid witness.")
 
 
-def _validated_archive_provenance(payload: Mapping[str, str]) -> dict[str, str]:
+def _validated_archive_provenance(payload: Mapping[str, object]) -> dict[str, object]:
 	filename = str(payload.get("filename") or "").strip()
 	sha256 = str(payload.get("sha256") or "").strip().lower()
 	if not filename or not _SHA256_RE.fullmatch(sha256):
 		raise ValueError("Source delivery archive requires filename and SHA-256.")
-	return {"filename": filename, "sha256": sha256}
+	result: dict[str, object] = {"filename": filename, "sha256": sha256}
+	normalization = payload.get("normalization")
+	if normalization is None:
+		return result
+	if not isinstance(normalization, Mapping):
+		raise ValueError("Archive normalization provenance must be an object.")
+	method = str(normalization.get("method") or "").strip()
+	source_sha256 = str(normalization.get("source_sha256") or "").strip().lower()
+	files = normalization.get("normalized_files")
+	if (
+		method != "release_relative_metadata_paths_v1"
+		or not _SHA256_RE.fullmatch(source_sha256)
+		or not isinstance(files, Sequence)
+		or isinstance(files, (str, bytes))
+	):
+		raise ValueError("Archive normalization provenance is malformed.")
+	normalized_files = sorted(str(path or "").strip() for path in files)
+	if not normalized_files or any(
+		not path or Path(path).is_absolute() or ".." in Path(path).parts
+		for path in normalized_files
+	):
+		raise ValueError("Archive normalization file paths must be non-empty and relative.")
+	result["normalization"] = {
+		"method": method,
+		"source_sha256": source_sha256,
+		"normalized_files": normalized_files,
+	}
+	return result
 
 
 def _unique_by(

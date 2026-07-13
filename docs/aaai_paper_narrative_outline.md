@@ -524,7 +524,8 @@ proof ideas required to assess the contribution.
 The versioned public evidence is split into:
 
 - `paper_artifacts/temporal_goal_benchmark/v1` for the novel controlled-language
-  and parametric LTLf dataset;
+  and parametric LTLf dataset, including its dataset-level README, CC BY 4.0
+  notice, citation metadata, portable source archives, and integrity verifier;
 - `paper_artifacts/temporal_semantic_conformance/v1` for operator-level semantic
   checks; and
 - `paper_artifacts/gp2pl_evaluation/v1` for exact atomic libraries, compact

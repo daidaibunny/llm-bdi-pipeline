@@ -50,6 +50,33 @@ def test_build_temporal_benchmark_preserves_semantics_without_hidden_gold(
 	assert '"state_fingerprints"' not in serialized
 
 
+def test_build_temporal_benchmark_preserves_archive_normalization_provenance(
+	tmp_path: Path,
+) -> None:
+	inputs = _benchmark_inputs(tmp_path)
+	normalization = {
+		"method": "release_relative_metadata_paths_v1",
+		"source_sha256": "d" * 64,
+		"normalized_files": [
+			"artifacts/temporal_predictions/run-1/run_config.json",
+		],
+	}
+
+	bundle = build_temporal_goal_benchmark_bundle(
+		**inputs,
+		source_delivery_archive={
+			"filename": "delivery.tar.gz",
+			"sha256": "a" * 64,
+			"normalization": normalization,
+		},
+		validation_implementation_commit="b" * 40,
+	)
+
+	assert bundle["provenance"]["source_delivery_archive"]["normalization"] == (
+		normalization
+	)
+
+
 def test_build_temporal_benchmark_fails_closed_on_incomplete_membership(
 	tmp_path: Path,
 ) -> None:

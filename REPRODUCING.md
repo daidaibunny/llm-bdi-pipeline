@@ -7,12 +7,14 @@ an execution guide, not part of the theoretical contribution.
 
 | Artifact | Path | Purpose |
 | --- | --- | --- |
-| Temporal-goal benchmark | `paper_artifacts/temporal_goal_benchmark/v1` | 475 unique natural-language translations and 1,228 bound query cases over 16 domains. |
+| Temporal-goal benchmark | [`paper_artifacts/temporal_goal_benchmark/v1`](paper_artifacts/temporal_goal_benchmark/v1/README.md) | 475 unique natural-language translations and 1,228 bound query cases over 16 domains. |
 | Semantic conformance suite | `paper_artifacts/temporal_semantic_conformance/v1` | Direct finite-trace semantics versus MONA-derived automata, including zero-action cases. |
 | Evaluation release | `paper_artifacts/gp2pl_evaluation/v1` | Exact atomic libraries, 1,228 compact execution records, 13 certificate challenges, distribution summaries, and SHA-256 manifest. |
 
-The release contains no machine-local absolute paths. Every included file is
-hashed in its `manifest.json`.
+The release contains no machine-local absolute paths. The canonical benchmark,
+per-domain views, frozen predictions, semantic validation rows, and source
+archives are hash-identified across `manifest.json` and
+`release_validation.json`.
 
 ## Tested Environment
 
@@ -48,14 +50,18 @@ binary configured by `scripts/validate_with_docker_val.sh`.
 ## Verify the Released Data
 
 ```bash
+PYTHONDONTWRITEBYTECODE=1 uv run python scripts/verify_public_teg_dataset.py
+
 PYTHONDONTWRITEBYTECODE=1 uv run pytest \
   tests/test_build_reproducibility_release.py \
   tests/test_generate_aaai_result_tables.py \
   tests/test_certificate_challenge_matrix.py -q
 ```
 
-The release manifest is also checked by the table generator. Regenerate the
-paper tables with:
+The TEG verifier checks every count and hash, scans both ordinary files and
+source archives for machine-local paths, and requires dataset-level license and
+citation metadata. The release manifest is also checked by the table generator.
+Regenerate the paper tables with:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run python \

@@ -92,6 +92,13 @@ paper_artifacts/temporal_semantic_conformance/v1
 paper_artifacts/gp2pl_evaluation/v1
 ```
 
+The temporal-goal dataset is independently citable through its own README,
+CC BY 4.0 notice, and `CITATION.cff`. Its 475 translation inputs and 1,228 bound
+query cases report exact automaton-language equivalence and sealed-witness
+acceptance. Runtime controller results remain a separate evaluation artifact.
+Publication metadata and source archives must pass the portable-path and hash
+checks in `scripts/verify_public_teg_dataset.py`.
+
 GP2PL source code is released under Apache-2.0, and original GP2PL temporal
 annotations, specifications, generated libraries, and result records are
 released under CC BY 4.0. Third-party PDDL and MOOSE materials retain upstream

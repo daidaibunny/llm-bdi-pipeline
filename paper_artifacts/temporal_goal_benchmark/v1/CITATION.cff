@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this dataset, please cite the GP2PL paper and dataset."
+title: "GP2PL Temporally Extended Goal Benchmark"
+type: dataset
+authors:
+  - name: "GP2PL Authors"
+version: 1.0.0
+date-released: 2026-07-14
+repository-code: "https://github.com/daidaibunny/gp2pl"
+url: "https://github.com/daidaibunny/gp2pl/releases/tag/teg-benchmark-v1"
+license: CC-BY-4.0
