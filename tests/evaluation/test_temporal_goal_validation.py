@@ -24,19 +24,26 @@ PRIVATE_VALIDATION_ARCHIVE = (
 	/ "source"
 	/ "temporal-nl-v1-20260711-final-private-validation.tar.gz"
 )
-BLOCKSWORLD_ON_AUDIT_MEMBER = (
+PRIVATE_VALIDATION_ROOT = (
 	"artifacts/temporal_nl_benchmarks/temporal-nl-v1-20260711-final/"
-	"domains/blocksworld-on/construction_audit.jsonl"
 )
+BLOCKSWORLD_ON_AUDIT_MEMBER = "domains/blocksworld-on/construction_audit.jsonl"
+
+
+def _released_private_member(relative_path: str) -> bytes:
+	"""Read one member from the immutable private-validation release archive."""
+
+	with tarfile.open(PRIVATE_VALIDATION_ARCHIVE, mode="r:gz") as archive:
+		member = archive.extractfile(f"{PRIVATE_VALIDATION_ROOT}{relative_path}")
+		assert member is not None
+		return member.read()
 
 
 def _released_blocksworld_on_audit() -> dict[str, object]:
 	"""Read one sealed construction witness from the versioned release archive."""
 
-	with tarfile.open(PRIVATE_VALIDATION_ARCHIVE, mode="r:gz") as archive:
-		member = archive.extractfile(BLOCKSWORLD_ON_AUDIT_MEMBER)
-		assert member is not None
-		return json.loads(member.readline().decode("utf-8"))
+	content = _released_private_member(BLOCKSWORLD_ON_AUDIT_MEMBER)
+	return json.loads(content.splitlines()[0])
 
 
 def test_expand_translation_predictions_covers_each_problem_once() -> None:
@@ -376,12 +383,7 @@ def _validated_prediction_from_audit(audit: dict[str, object]):
 			item["function"] = atom["function"]
 			item["value"] = atom["value"]
 		atoms.append(item)
-	catalog_path = (
-		PROJECT_ROOT
-		/ "artifacts/temporal_nl_benchmarks/temporal-nl-v1-20260711-final"
-		/ audit["catalog_file"]
-	)
-	catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+	catalog = json.loads(_released_private_member(str(audit["catalog_file"])))
 	payload = {
 		"schema_version": 1,
 		"sample_id": audit["sample_id"],
