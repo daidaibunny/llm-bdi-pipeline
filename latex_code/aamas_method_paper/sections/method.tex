@@ -50,28 +50,14 @@ delete effect and remains context-only; every positive add-effect predicate is
 a producible fluent and enters closure even if MOOSE never observed it as a
 goal. Numeric-only evidence does not suppress this predicate closure.
 
-For each target $p(\bar X)$, candidate generation searches the finite language in
-Table~\ref{tab:grammar}. A \emph{producer} is an action whose add effects contain
-$p$. Backward STRIPS regression replaces one open positive precondition by a
-producer's preconditions and rejects a step whose deletes contradict another open
-requirement. Producer preconditions are first unified with compatible open
-requirements, after which only still-unbound parameters receive fresh variables.
-Search is enabled only when the reachable producer--precondition graph is acyclic.
-
-\begin{table}[t]
-\centering
-\caption{Implemented schema-composition grammar.}
-\label{tab:grammar}
-\begin{tabular}{lp{0.57\columnwidth}}
-\toprule
-Candidate & Certification condition \\
-\midrule
-Direct & target producer \\
-Regression & finite acyclic lifted producer path \\
-Discharge & finite acyclic resource-mode path after a producer \\
-\bottomrule
-\end{tabular}
-\end{table}
+For each target $p(\bar X)$, candidate generation searches the finite language
+summarized in Table~\ref{tab:compiler-obligations}. A \emph{producer} is an
+action whose add effects contain $p$. Backward STRIPS regression replaces one
+open positive precondition by a producer's preconditions and rejects a step
+whose deletes contradict another open requirement. Producer preconditions are
+first unified with compatible open requirements, after which only still-unbound
+parameters receive fresh variables. Search is enabled only when the reachable
+producer--precondition graph is acyclic.
 
 Termination does not use an action-depth constant: a path cannot repeat an
 alpha-normalized requirement/producer step or resource mode, and only the
@@ -86,27 +72,43 @@ calls, or exported actions.
 
 \subsection{Branch Certificates}
 
-Every candidate carries a machine-checkable contract. The following
-certificates are implemented.
+Every candidate carries a machine-checkable contract. Table~\ref{tab:compiler-obligations}
+connects each generated family to its additional proof obligation and the
+failure it excludes.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\caption{Compiler certificates and the failures they exclude.}
-\label{tab:certificates}
-\begin{tabular}{lp{0.56\columnwidth}}
+\footnotesize
+\setlength{\tabcolsep}{3.0pt}
+\caption{Certified candidate language for atomic AgentSpeak modules. Every
+selected branch additionally satisfies typed binding, symbolic PDDL
+executability, target achievement on return, and internal-module closure.}
+\label{tab:compiler-obligations}
+\begin{tabular}{
+>{\raggedright\arraybackslash}p{0.17\textwidth}
+>{\raggedright\arraybackslash}p{0.42\textwidth}
+>{\raggedright\arraybackslash}p{0.32\textwidth}}
 \toprule
-Certificate & Excluded failure \\
+Candidate family & Additional acceptance obligation & Excluded failure \\
 \midrule
-Binding & unbound action or subgoal variable \\
-Execution & unsatisfied symbolic precondition \\
-Achievement & branch returns without its trigger \\
-Closure & selected call has no selected module \\
-Progress & recursive branch can oscillate \\
-Release & acquired resource remains occupied \\
-Preparation & selected cross-module calls form a cycle \\
+Validated evidence macro & every macro step maps to a PDDL action schema and
+symbolic execution establishes the singleton evidence target & invalid or
+misbound provider evidence \\
+Direct producer & one action adds the target under the certified context and
+preserves its completion contract & action chosen only by predicate name \\
+Acyclic regression & each open positive requirement is discharged without a
+repeated normalized producer role or conflicting delete effect & arbitrary
+depth cutoffs or cyclic schema search \\
+Relational recursion & a non-negative relation feature strictly decreases and
+a base or producer exit remains available & recursive oscillation \\
+Resource-mode discharge & a finite non-repeating mode path restores keyed
+availability while preserving the target & unreleased reusable resource \\
+Cross-module preparation & Clingo selects an acyclic call graph with strictly
+decreasing natural-number dependency ranks & mutually recursive preparation
+without a progress proof \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 \paragraph{Binding, execution, and closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
@@ -127,12 +129,17 @@ general-policy work \cite{Frances2021LearningGeneralPolicies} but claims only
 schema-certified features from the generated candidate language.
 
 \paragraph{Resource release.}
-Effects, not names, identify resource debt: acquisition deletes key-only
-availability and adds a key--occupant mode. A finite discharge path must delete
-each current mode without recreating it, retain the same inferred key/occupant
-roles, restore availability, and preserve the target. Repeated normalized modes
-are forbidden and every step is symbolically executable. Disequalities arise
-only from precondition-violating unifications.
+Effects, not predicate names, identify temporary occupation of a reusable
+resource. Suppose an acquisition action deletes an availability fact
+$\mathit{free}(R)$ and adds an occupancy relation $\mathit{held}(R,O)$. These
+names are illustrative: the compiler infers the shared resource argument $R$
+and occupant argument $O$ from the effect structure and obtains the same result
+after consistent symbol renaming. A discharge body is accepted only if symbolic
+execution removes the current occupancy mode, restores the corresponding
+availability fact, leaves the atomic target true, and does not recreate an
+earlier normalized mode. This yields a finite restoration path without assuming
+that release is one action. Disequalities arise only when unifying two roles
+would make a PDDL precondition false.
 
 \paragraph{Existential preparation projection.}
 Preparing one of several dynamic preconditions may temporarily change another,
@@ -233,10 +240,13 @@ achievements; otherwise compilation rejects.
 
 A positive integer equality may call a complete constant-delta action: unit
 deltas require strict direction, larger deltas the exact predecessor. Mixed
-guards use complete action-only net effects; a cyclic guard admits one action
-only if symbolic execution establishes every Boolean, negative, and numeric
-obligation in the same successor. Negated equality is observation-only without
-a certified change-away action; arbitrary arithmetic is not claimed.
+guards use complete action-only net effects. For example, a body for
+$\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
+$\mathit{at}(P,L)$ and the exact integer value 3 in its final state while
+preserving every other signed guard obligation. A cyclic guard admits one action
+only if the same proof covers the whole successor state. Negated equality is
+observation-only without a certified change-away action; arbitrary arithmetic
+and independent ``solve then hope'' composition are not claimed.
 
 Numeric preparation must strictly reduce missing preconditions or a constant-
 bounded deficit, preserve other conditions, and leave the target fluent

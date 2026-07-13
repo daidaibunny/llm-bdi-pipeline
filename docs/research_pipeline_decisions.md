@@ -140,13 +140,37 @@ ablations retain the DFA and remove only their certified establishment strategy.
 
 Raw MOOSE execution distinguishes evidence quality from compiler and
 AgentSpeak execution. LAMA for classical instances, ENHSP MRP+HJ for numeric
-instances, and a direct LTLf compilation with a fixed classical planner are
-external task-level references. Their outputs and cost structures differ from a
-reusable AgentSpeak library, so they are reported separately from compiler and
-controller ablations. Plan4Past supplies the experimental design precedent of fixing the
-downstream planner while comparing temporal compilations; its pure-past input
-is not treated as directly interchangeable with our future LTLf input without a
+instances, and FOND4LTLf plus LAMA for direct temporal planning are external
+task-level references. Their outputs and cost structures differ from a reusable
+AgentSpeak library, so they are reported separately from compiler and controller
+ablations. Plan4Past supplies the experimental design precedent of fixing the
+downstream planner while comparing temporal compilations; its pure-past input is
+not treated as directly interchangeable with our future LTLf input without a
 separately proved language-equivalent translation.
+
+The native achievement reference runner is
+`scripts/run_external_planning_references.py`. Raw MOOSE executes the exact
+learned model; LAMA is invoked as `search lama-first` from the official MOOSE
+artifact; ENHSP uses the pinned `sat-hmrphj` configuration. Every nonempty
+achievement plan must pass VAL against the original PDDL goal. The native direct
+temporal runner is `scripts/run_direct_temporal_reference.py`. It grounds only
+the declared invocation binding, invokes official FOND4LTLf v0.0.4, solves the
+compiled deterministic instance with the same LAMA backend, removes only the
+compiler's `trans-*` DFA-update actions, and submits the remaining original PDDL
+actions to replay, neutral-goal VAL, gold-DFA acceptance, and predicted-DFA
+acceptance. It does not consume an atomic ASL library.
+
+FOND4LTLf v0.0.4 is an explicit partial reference: it rejects numeric PDDL and
+numeric atoms, and its underscore atom encoding is accepted only when predicate
+and object identifiers are unambiguous. A semantics-preserving requirements
+normalization maps declarations such as `:negative-preconditions` to `:adl` for
+the tool parser without changing action formulas. Unsupported inputs are counted
+as outside tool applicability, not planner failures. FOND4LTLf compilation and
+LAMA search share one 1,800-second, 8-GiB per-query budget. The setup contract in
+`scripts/setup_external_planning_references.sh` pins ENHSP revision
+`537bed55a60d9456975c56afbadd50fc8acb1dc9`, FOND4LTLf revision
+`011d9d9a5bfd6406d2c358faf8f63167f6c839bb`, its Python dependencies, and MONA
+1.4-18; `--check` verifies all binaries and hashes without modifying them.
 
 Five fixed MOOSE seeds are run independently with one internal MOOSE worker.
 Evidence is never unioned and a best seed is never selected. Every paired
@@ -409,6 +433,17 @@ summarize coverage with the mean and sample standard deviation across completed
 repetitions. Concurrent synthesis timings are throughput measurements; runtime
 claims against another system require a separately controlled non-contented
 timing run.
+
+The canonical entry point is `scripts/run_parser_order_full_val_batch.sh`.
+Without positional domain arguments it reads all 16 selected domain identifiers
+from `src/benchmark_registry/achievement_goals/registry.json`. Within each seed,
+`run_moose_faithful_e2e.py` traverses domains sequentially and passes
+`--num_workers 1` to every MOOSE training call. Across seeds, the shell runner
+starts at most five isolated processes by default. After synthesis, it validates
+the complete test split for one seed at a time and writes
+`five_seed_summary.json` with raw policy hashes, alpha-normalized rule-set
+hashes, compiled-library hashes, per-seed coverage, mean coverage, and sample
+standard deviation.
 
 The repository-wide external-process guard remains 16 GiB; this is a declared
 reproduction deviation from the paper's 32-GB synthesis ceiling.

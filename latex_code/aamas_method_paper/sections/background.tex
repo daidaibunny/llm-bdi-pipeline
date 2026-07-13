@@ -3,16 +3,26 @@
 
 \subsection{Planning Domains and Generalized Evidence}
 
-We use the typed STRIPS fragment of PDDL \cite{McDermott1998PDDL}. A domain is
-$D=\langle\mathcal{P},\mathcal{A},\mathcal{T}\rangle$, where
-$\mathcal{P}$ is a set of predicate schemas, $\mathcal{A}$ is a set of action
-schemas, and $\mathcal{T}$ is a type hierarchy. An action schema $a$ has
-preconditions $\mathit{pre}(a)$, add effects $\mathit{add}(a)$, and delete
-effects $\mathit{del}(a)$. A grounded action is applicable in state $s$ when
-$\mathit{pre}(a)\subseteq s$, and its successor is
+We use typed STRIPS PDDL plus a bounded-integer resource fragment
+\cite{McDermott1998PDDL}. A domain is
+$D=\langle\mathcal{P},\mathcal{F},\mathcal{A},\mathcal{T}\rangle$, where
+$\mathcal{P}$ contains predicate schemas, $\mathcal{F}$ integer-valued resource
+functions, $\mathcal{A}$ action schemas, and $\mathcal{T}$ a type hierarchy. A
+state combines a Boolean valuation $s_{\mathcal P}$ and an integer valuation
+$s_{\mathcal F}$. For the Boolean core, an action schema $a$ has preconditions
+$\mathit{pre}(a)$, add effects $\mathit{add}(a)$, and delete effects
+$\mathit{del}(a)$. A grounded action is applicable when its Boolean
+preconditions hold and its numeric comparisons are satisfied; its Boolean
+successor is
 \[
-\gamma(s,a)=(s\setminus\mathit{del}(a))\cup\mathit{add}(a).
+\gamma_{\mathcal P}(s,a)=
+(s_{\mathcal P}\setminus\mathit{del}(a))\cup\mathit{add}(a).
 \]
+The numeric fragment admits finite integer initial values, comparisons against
+integer constants, and constant integer increase/decrease effects. Arbitrary
+arithmetic and continuous change are excluded. Thus a state may simultaneously
+record the Boolean fact \texttt{at(P,L)} and the integer value
+$\mathit{fuel}(V)=3$; both components are updated by the same grounded action.
 A generalized-planning task provides a training set and a test set of problems
 sharing $D$. MOOSE learns first-order condition-to-macro rules by solving
 singleton goal conditions and regressing their plans \cite{Chen2026Moose}. A
@@ -82,19 +92,32 @@ is not a request to call a synthetic negative achievement.
 
 \begin{table}[t]
 \centering
-\caption{Implemented compilation boundary.}
+\footnotesize
+\setlength{\tabcolsep}{2.2pt}
+\caption{Implemented input fragment and fail-closed boundary. A construct is
+accepted only through the stated certified strategy.}
 \label{tab:supported-fragment}
-\begin{tabular}{p{0.58\columnwidth}l}
+\begin{tabular}{
+>{\raggedright\arraybackslash}p{0.29\columnwidth}
+>{\raggedright\arraybackslash}p{0.34\columnwidth}
+>{\raggedright\arraybackslash}p{0.25\columnwidth}}
 \toprule
-Construct & Status \\
+Construct & Accepted strategy & Rejection boundary \\
 \midrule
-Positive predicate atomic module & supported \\
-Singleton certified numeric goal & supported \\
-Transition conjunction and negation & certified only \\
-Negative achievement call & rejected \\
-Disjunction or ambiguous progress & rejected \\
-Mixed/multi-literal numeric guard & rejected \\
-Primitive-state temporal safety & external monitor \\
+Positive predicate & certified atomic module & no executable producer \\
+Numeric equality & certified constant-delta body & unsupported arithmetic \\
+Positive conjunction & preservation-safe order & incomplete or cyclic threats \\
+Negative literal & observe or exact deleter & no synthetic negative goal \\
+Mixed Boolean/numeric & whole-guard net effect & incomplete preservation \\
+Disjunction & none in version 1 & rejected at guard parsing \\
+Primitive-state safety & DFA runtime monitor & no macro-only checking \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+The last condition is semantic rather than a domain label. For example, a
+transition requiring \texttt{at(P,L)} together with $\mathit{fuel}(V)=3$ is
+accepted only when one certified finite action body proves both facts in the
+same successor state. If its net Boolean effects or integer change are unknown,
+the compiler rejects the achievement strategy instead of assuming that the two
+conditions can be solved independently.

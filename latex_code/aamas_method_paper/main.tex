@@ -13,6 +13,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
@@ -123,12 +124,13 @@ once; temporally extended queries append only query-local controllers.}
 
 The implemented contributions are:
 \begin{itemize}
-\item a certificate-carrying plan-library compiler that jointly selects
-validated singleton-goal evidence and PDDL-schema modules in one Clingo
-optimization;
-\item domain-independent obligations for lifted binding, local execution,
-closure, recursive relational progress, one-step resource release, and staged
-preparation; and
+\item a compiler formulation that turns singleton-goal generalized-planning
+evidence and PDDL action schemas into a closed lifted AgentSpeak library, with
+minimum-cost selection inside an explicit certified candidate language;
+\item a symbol-invariant proof discipline that accepts a module only when its
+variables are bound, its body is symbolically executable, its target holds on
+return, its internal calls terminate, and any temporarily occupied reusable
+resource is restored; and
 \item a real \ltlf-to-DFA query compiler that uses conditional completion
 effects to preserve positive and negative transition obligations, emitting
 balanced declarative BDI controllers whose query-local DFA monitor advances
@@ -201,9 +203,10 @@ Jason, neutral-goal VAL, and both DFA checks under the declared Boolean and
 bounded-integer fragments. The
 contribution is not a new generalized planner or BDI semantics, but a
 fail-closed compilation problem that makes reusable planning evidence
-deployable as explicit BDI behavior. Broader provider evidence, longer schema
-composition, multi-step resource discharge, and more complete temporal action
-strategy synthesis remain future work.
+deployable as explicit BDI behavior. Empirical evidence from other generalized
+planners, cyclic producer dependencies without a relational progress proof,
+ambiguous resource-role structures, and complete action-strategy synthesis for
+arbitrary PDDL--LTLf products remain future work.
 
 \bibliography{references}
 

@@ -49,10 +49,10 @@ certificate.
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
 | Temporal execution validation | Complete on pinned revision | `teg-paper-clean-e28bcea4` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. The run records commit `e28bcea4`, no tracked changes, every atomic-library input hash, 12 workers, 1,800-second Jason/VAL limits, and a 64-MiB Java stack. |
-| AAAI paper package | Baseline/ablation protocol registered; result cells pending | The manuscript and normative design now define paired Evidence Adapter, Action Closure, Maximal Certified, and Full Compiler comparisons plus Unprotected DFA, Certified Flat, Certified Balanced, and Completion Monitor comparisons. Populate only from the machine-readable experiment runner after the current achievement rerun completes. |
+| AAAI paper package | Pinned matrices inserted; baseline cells pending | `scripts/generate_aaai_result_tables.py` validates frozen inputs and emits readable grouped result tables. The manuscript also registers paired Evidence Adapter, Action Closure, Maximal Certified, and Full Compiler comparisons plus Unprotected DFA, Certified Flat, Certified Balanced, and Completion Monitor comparisons. Populate empty comparison cells only from hash-locked runs. |
 | Atomic experiment harness | Native paired runner complete | Evidence Adapter, Action Closure, Maximal Certified, and Full Compiler consume hash-identical evidence per seed; incomplete matrices are persisted and rejected. Run the registered five-seed matrix before filling result cells. |
 | Temporal experiment harness | Native paired runner complete | Unprotected DFA, Certified Flat, Certified Balanced, and Completion Monitor consume one fixed benchmark, atomic library, sample set, and DFA matrix. Run the registered matrix before filling result cells. |
-| External references | In progress | Configure exact raw-MOOSE execution, LAMA classical, ENHSP MRP+HJ numeric, and a direct-LTLf planning reference on its declared supported subset; report them separately. |
+| External references | Native runners complete; full matrices pending | Raw MOOSE, LAMA, ENHSP MRP+HJ, and FOND4LTLf plus LAMA use pinned native tools, common resource guards, concise per-case logs, and independent validation. Run the registered full matrices before filling paper cells. |
 | Rejection and metamorphic matrix | Native runner complete | The machine-readable challenge runner covers registered certificate rejection plus vocabulary, object, and negative-guard renaming, parameter permutation, progress renaming, and irrelevant-fluent injection. Run it from the clean paper revision. |
 
 ## Certified Generic Fixes
@@ -226,7 +226,16 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/materialize_achievement_benchmar
 Run the full benchmark ASL batch with the current default domain list:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 JASON_JAVA_STACK_SIZE=64m \
+PYTHONDONTWRITEBYTECODE=1 \
+RUN_ID=pddl-five-seed-$(date +%Y%m%d-%H%M%S) \
+MOOSE_SEEDS="0 1 2 3 4" \
+MOOSE_WORKERS=1 \
+MOOSE_SEED_PARALLELISM=5 \
+JASON_WORKERS=6 \
+TRAIN_TIMEOUT_SECONDS=43200 \
+JASON_TIMEOUT_SECONDS=1800 \
+VAL_TIMEOUT_SECONDS=1800 \
+JASON_JAVA_STACK_SIZE=64m \
 bash scripts/run_parser_order_full_val_batch.sh
 ```
 

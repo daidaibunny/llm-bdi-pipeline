@@ -6,6 +6,7 @@ from pathlib import Path
 from evaluation.temporal_goal_validation import ExecutionTraceValidationResult
 from scripts.run_direct_temporal_reference import DirectTemporalTask
 from scripts.run_direct_temporal_reference import run_direct_temporal_task
+from scripts.run_direct_temporal_reference import stage_failure_status
 from scripts.run_direct_temporal_reference import summarize_temporal_reference_records
 from scripts.run_external_planning_references import GuardedCommandResult
 
@@ -44,6 +45,14 @@ def test_temporal_summary_separates_unsupported_cases_from_solver_failures() -> 
 	assert summary["coverage_on_supported"] == 0.5
 	assert summary["overall_coverage"] == 1 / 3
 	assert summary["par2_seconds_on_supported"] == 1801.0
+
+
+def test_temporal_stage_failure_uses_stage_specific_status(tmp_path: Path) -> None:
+	stderr_file = tmp_path / "stderr.txt"
+	stderr_file.write_text("native compiler exception", encoding="utf-8")
+
+	assert stage_failure_status("compiler", stderr_file) == "compiler_failed"
+	assert stage_failure_status("planner", stderr_file) == "planner_failed"
 
 
 def test_direct_temporal_runner_filters_compiler_actions_before_validation(
@@ -103,6 +112,7 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 		output_dir=tmp_path / "case",
 	)
 	commands: list[tuple[str, ...]] = []
+	timeouts: list[float] = []
 
 	def fake_run_guarded_command(
 		command,
@@ -113,7 +123,8 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 		extra_env=None,
 		artifact_stem="planner",
 	):
-		del timeout_seconds, max_rss_gb
+		timeouts.append(float(timeout_seconds))
+		del max_rss_gb
 		command_tuple = tuple(str(item) for item in command)
 		commands.append(command_tuple)
 		stdout_file = output_dir / f"{artifact_stem}.stdout.txt"
@@ -191,9 +202,12 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 	)
 
 	assert len(commands) == 2
+	assert timeouts == [1800.0, 1799.75]
 	assert record["method"] == "FOND4LTLf + LAMA"
 	assert record["supported"] is True
 	assert record["status"] == "valid"
 	assert record["success"] is True
 	assert record["action_count"] == 1
+	assert record["compiler_timeout_seconds"] == 1800.0
+	assert record["planner_timeout_seconds"] == 1799.75
 	assert Path(record["plan_file"]).read_text(encoding="utf-8") == "(place item)\n"

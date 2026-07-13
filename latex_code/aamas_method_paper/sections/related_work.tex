@@ -54,6 +54,9 @@ comparison principle: our primary temporal baseline uses the same DFA, atomic
 library, monitor, and Jason runtime, and removes only effect-based preservation.
 Direct LTLf compilation plus a classical planner is reported separately because
 it solves each grounded query rather than producing a reusable BDI library.
+Our native reference uses the official FOND4LTLf compilation
+\cite{DeGiacomoFuggitti2021FOND4LTLf} on the subset accepted by that tool and
+then fixes LAMA as the downstream planner.
 
 \paragraph{Position of this work.}
 Prior generalized planners target policies, sketches, or programs; AgentSpeak

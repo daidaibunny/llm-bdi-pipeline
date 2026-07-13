@@ -64,6 +64,12 @@ path; if reported, it is an evaluation-only weak reference.
 \begin{table*}[t]
 \centering
 \small
+\caption{Registered primary baselines and ablations. Empty cells are populated
+only from completed, hash-locked runs; no diagnostic value is inserted by
+hand. Valid denotes the relevant VAL and DFA oracle, coverage is paired
+held-out success, size is branches or controller plans, and time is PAR-2 or
+the declared compilation cost.}
+\label{tab:registered-ablations}
 \begin{tabular}{lllrrrr}
 \toprule
 Stage & Method & Difference & Valid & Coverage & Size & Time \\
@@ -78,12 +84,6 @@ Temporal & Certified Balanced & Add balanced repair tree & -- & -- & -- & -- \\
 Temporal & Completion Monitor & Observe module completions & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
-\caption{Registered primary baselines and ablations. Empty cells are populated
-only from completed, hash-locked runs; no diagnostic value is inserted by
-hand. Valid denotes the relevant VAL and DFA oracle, coverage is paired
-held-out success, size is branches or controller plans, and time is PAR-2 or
-the declared compilation cost.}
-\label{tab:registered-ablations}
 \end{table*}
 
 \paragraph{External references.}
@@ -91,12 +91,15 @@ The exact MOOSE executor is run on the same learned model to distinguish
 evidence quality from downstream compilation and AgentSpeak execution. LAMA is
 the classical per-instance reference, and ENHSP MRP+HJ is the numeric
 per-instance reference, matching the roles used in the MOOSE evaluation
-\cite{Chen2026Moose}. A direct LTLf-to-planning compilation with a fixed LAMA
-backend is evaluated only on its supported grounded Boolean subset. Plan4Past
-is not treated as directly interchangeable: it accepts pure-past formulas, and
-any future-to-past translation would first require exact DFA-language
-equivalence. Published numbers from different splits or hardware are related-
-work context, not entries in our paired result tables.
+\cite{Chen2026Moose}. The direct temporal reference uses the official
+FOND4LTLf v0.0.4 compilation \cite{DeGiacomoFuggitti2021FOND4LTLf}, then invokes
+the same fixed LAMA backend. It is evaluated only on its accepted grounded
+Boolean subset; numeric PDDL and identifiers incompatible with the tool's atom
+encoding are reported as unsupported rather than failed. Plan4Past is not
+treated as directly interchangeable: it accepts pure-past formulas, and any
+future-to-past translation would first require exact DFA-language equivalence.
+Published numbers from different splits or hardware are related-work context,
+not entries in our paired result tables.
 
 \paragraph{Corpus and registered protocol.}
 The corpus contains all eight MOOSE companion classical domains with nonempty
@@ -107,26 +110,41 @@ Tower uses the first quarter of a pinned public PDDL corpus and Depots the first
 half of the D2L corpus \cite{Bonet2018Features}. These groups describe
 evaluation properties and never route compilation.
 
-Atomic experiments use five fixed independent MOOSE seeds and one internal
-MOOSE worker. Each seed produces one isolated evidence model; evidence is never
-unioned and a best seed is never selected. Every atomic comparison is paired by
-the SHA-256 hash of that exact normalized evidence program. Temporal variants
-are paired by atomic-library hash, lifted-LTLf JSON hash, binding, and DFA hash.
-Online methods receive 30 minutes and 8 GB per problem. Evidence synthesis,
-domain compilation, query append, execution, and validation are timed
-separately. We report every seed, mean and sample standard deviation, paired
-coverage differences, PAR-2 for timeouts, and plan length only on jointly solved
-instances. Runtime repetitions do not contend across seeds.
+The registered atomic protocol uses the complete train split, singleton goals,
+three sampled goal orders, and fixed seeds 0--4. The five repetitions estimate
+sensitivity to MOOSE's randomized goal-order sampling. Each uses one internal
+MOOSE worker so training problems consume the seeded permutation stream
+sequentially rather than through schedule-dependent concurrent calls. Policies
+are compiled and evaluated separately, never pooled or selected post hoc. We
+report every repetition together with the mean and sample standard deviation.
+Each synthesis run has a 12-hour timeout and 16-GiB memory guard;
+Jason and VAL use 30-minute limits and six per-test workers. Independent seeds
+may be launched concurrently to reduce elapsed wall time, but contended timing
+is excluded from efficiency claims. MOOSE reports a 32-GB synthesis budget and
+five repetitions \cite{Chen2026Moose}; our lower memory guard and deterministic
+single-worker setting are declared reproduction choices.
 
-The registered harness invokes the production compiler and execution runners
-rather than reimplementing either method. It rejects an atomic comparison unless
-all variants share the readable-policy and normalized-evidence hashes, and
-rejects a temporal comparison unless all variants share the benchmark,
-atomic-library, sample-set, and DFA hashes. Missing dependent runs and pairing
-violations remain explicit infrastructure failures in the machine-readable
-report. Tables use the short method names in
-Table~\ref{tab:registered-ablations} and descriptive column phrases; stable
-command-line identifiers are retained only in the artifact manifest.
+The separate pinned temporal experiment \texttt{\TEGExecutionRunID} uses clean commit
+\texttt{\TEGExecutionCommit}, 12 workers, 30-minute Jason and VAL limits, and a
+64-MiB Java stack. It records SHA-256 hashes of every atomic JSON/ASL input. The
+result generator rejects a changed benchmark hash, prediction hash, dirty
+tracked revision, missing case, or mismatched library hash.
+
+Every atomic comparison is paired by the SHA-256 hash of its exact normalized
+evidence program. Temporal variants are paired by atomic-library, lifted-
+\ltlf JSON, binding, and DFA hashes. The registered harness invokes production
+compiler and execution paths rather than reimplementing them. It rejects an
+atomic comparison unless every method shares the readable-policy and normalized-
+evidence hashes, and rejects a temporal comparison unless every method shares
+the benchmark, atomic-library, sample-set, and DFA hashes. Missing runs and
+pairing violations remain explicit infrastructure failures. Evidence synthesis,
+domain compilation, query append, execution, and validation are timed separately.
+Per-instance references receive 30 minutes and 8~GB per problem. For the direct
+temporal reference, FOND4LTLf compilation and LAMA search share that single
+30-minute deadline rather than receiving separate budgets. We report
+paired coverage differences, PAR-2 for timeouts, and plan length only on jointly
+solved instances. Tables use short method names and descriptive column phrases;
+stable command-line identifiers remain only in machine-readable manifests.
 
 A nonempty execution succeeds only if Jason emits its explicit success marker,
 neutral-goal VAL accepts the complete primitive PDDL trace, and replayed states
@@ -170,6 +188,31 @@ cell in Table~\ref{tab:registered-ablations}.
 
 \input{sections/result_domain_table}
 \input{sections/result_profile_table}
+
+\paragraph{RQ3--RQ5: temporal execution.}
+Table~\ref{tab:profile-results} separates the five declared profiles. Every one
+of the \TEGProblemCount{} bound queries compiles and succeeds in Jason; all
+\TEGVALSuccessCount{} nonempty traces pass VAL, and both DFAs accept all
+\TEGGoldDFAAcceptCount{} traces. No translation/schema error, unsupported DFA,
+certificate rejection, Jason failure, timeout, VAL failure, or DFA rejection
+occurs in this pinned matrix. The median trace has \TEGMedianActionCount{}
+actions, median case runtime is \TEGMedianRuntimeSeconds{} seconds, and
+12-worker wall time is \TEGWallRuntimeMinutes{} minutes. Complete coverage
+supports the released formulas, bindings, and library hashes only; it is not an
+action-strategy completeness theorem for arbitrary PDDL--\ltlf products.
+
+\paragraph{Repetition boundary.}
+The atomic and temporal experiments answer different questions. The registered
+five-seed matrix estimates variation in evidence discovery and downstream
+atomic-library coverage; it is not yet available as a clean result matrix. The
+recent temporal experiment instead holds its exact seed-0 atomic libraries
+fixed and tests translation, query compilation, execution, and trace semantics
+conditional on those SHA-256-identified inputs. Those libraries were generated
+with six internal MOOSE workers, so the temporal result remains a valid pinned
+conditional experiment but is not evidence for cross-seed robustness or
+single-worker synthesis time. Table~\ref{tab:domain-results} reports their
+structure only; the two experiments are neither pooled nor presented as the
+same estimator.
 
 \paragraph{Independent semantic conformance.}
 A separate versioned suite checks hand-labelled positive and negative traces

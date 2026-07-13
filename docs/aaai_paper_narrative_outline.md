@@ -96,6 +96,22 @@ invariant to predicate and action renaming.
 
 ## Final Section Contract
 
+### Scientific Exposition Rule
+
+The main paper explains each mechanism through a research failure mode, a
+semantic condition, and the resulting guarantee or rejection boundary. It does
+not present process scheduling, output-directory layout, command-line flags, or
+internal class names as contributions. Those details belong in the
+reproducibility artifact and `docs/research_pipeline_decisions.md`.
+
+Use one symbol-invariant example whenever a certificate would otherwise be
+opaque. For resource restoration, an illustrative acquisition deletes
+`free(R)` and adds `held(R,O)`; the method must state that names are placeholders
+and that the certificate is inferred from shared arguments and PDDL effects. For
+a mixed transition such as `at(P,L) and fuel(V)=3`, explain that one symbolic
+effect proof must establish both conditions in the same state. Do not replace
+these semantics with labels such as `certificate-dependent`.
+
 ### Abstract
 
 The abstract follows a five-part structure:
@@ -136,7 +152,8 @@ software components.
 
 Define only concepts used by the algorithms:
 
-- a typed STRIPS/PDDL domain and its state-transition semantics;
+- a typed STRIPS/PDDL Boolean core, its bounded-integer resource extension, and
+  their state-transition semantics;
 - a generalized-planning task and readable MOOSE evidence;
 - an AgentSpeak achievement plan, a lifted module, and library closure;
 - an LTLf formula and its deterministic finite automaton (DFA);
@@ -323,19 +340,35 @@ reference; it must not return as a production fast path.
 
 The benchmark section records all 16 domain families and their pinned splits.
 The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
-timeout, worker, and seed configuration. The atomic experiment uses five fixed
-independent seeds, one internal MOOSE worker per seed, and isolated policy and
-library roots. It must report every seed separately plus the mean and sample
-standard deviation; it must not union evidence or select a best seed. Outer
-seed-process concurrency is an execution setting, not a MOOSE hyperparameter.
-Cross-seed Jason/VAL runs remain sequential while per-test validation is
-parallel within one seed. Noisy runtime comparisons require controlled repeated
-runs and dispersion rather than timings collected under cross-seed contention.
+timeout, worker, and seed configuration. The scientific purpose of the five
+fixed seeds is to estimate variation caused by MOOSE's randomized goal-order
+sampling. One internal MOOSE worker makes training problems consume the seeded
+permutation stream sequentially, removing concurrent access to that stream as a
+within-run confounder. Every seed is compiled and evaluated independently;
+report every result plus the mean and sample standard deviation, never evidence
+union or a best-seed result. Concurrent launch is only an artifact-level
+throughput choice, and contended wall time is not a method result. Cross-seed
+Jason/VAL runs remain sequential while per-test validation is parallel within
+one seed.
+
+Keep the two experimental estimands explicit. The five-seed atomic matrix
+measures variability of evidence discovery, compilation, and atomic achievement
+coverage. The pinned temporal matrix conditions on one exact SHA-256-identified
+atomic-library snapshot and measures translation, query-controller execution,
+and trace semantics. A recent conditional temporal result does not become
+invalid because its library was generated under a different worker protocol,
+but it cannot support a cross-seed atomic-robustness claim.
 
 Raw MOOSE, LAMA for classical planning, ENHSP MRP+HJ for numeric planning, and
-a direct LTLf compilation with a fixed classical planner are external
-task-level references, not primary compiler baselines. Published numbers from
-different splits or hardware may be cited as prior results but must not be
+FOND4LTLf v0.0.4 plus LAMA for its grounded Boolean temporal subset are external
+task-level references, not primary compiler baselines. Name these rows directly;
+do not replace them with numbered identifiers. All nonempty achievement traces
+require original-goal VAL. The direct temporal trace contains only projected
+original-domain actions and requires PDDL replay, neutral-goal VAL, gold-DFA
+acceptance, and predicted-DFA acceptance. FOND4LTLf compilation and LAMA search
+share one 1,800-second, 8-GiB deadline. Numeric inputs and identifiers incompatible
+with its underscore encoding are explicit unsupported cases. Published numbers
+from different splits or hardware may be cited as prior results but must not be
 inserted into paired experiment tables. Plan4Past is a design precedent for
 holding the downstream planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
@@ -413,38 +446,171 @@ The Conclusion answers three questions only: what representation gap was
 closed, why the output can be executed by a BDI agent, and which temporal goals
 are certified. Do not repeat the implementation inventory.
 
-## Required Final Tables and Figures
+## Final Visual Program
 
-### Architecture Figure
+The main paper targets exactly four figures, four tables, and one algorithm.
+This follows the visual argument used by closely related planning papers:
+MOOSE combines an architecture figure, a full-width worked goal-regression
+example, synthesis tables, and cumulative coverage curves; AAAI-24 work on
+generalized planning with language models combines a pipeline, a main coverage
+table, runtime scaling, ablation, and failure analysis; temporal-planning work
+uses automaton diagrams together with coverage/runtime plots. Our figures must
+therefore explain the representation bridge and its certificates before they
+show aggregate success numbers.
 
-Show two connected but separate flows:
+### Figure 1: End-to-End Architecture
+
+Use a full-width `figure*` near the end of the Introduction. Replace the current
+text box; do not retain both. Draw three left-to-right horizontal lanes:
+
+1. **Reusable domain compilation.** A gray input box contains the PDDL domain
+   and complete train split. An amber box represents MOOSE readable singleton
+   policy evidence, for example an `on(X,Y)` rule with a finite action macro.
+   Four blue compiler boxes then show evidence normalization, PDDL producible
+   closure and candidate generation, certificate checking, and joint Clingo
+   selection. The lane ends in one green maintained AgentSpeak domain library.
+2. **Query-specific temporal compilation.** A gray box contains typed,
+   externally bound parametric LTLf JSON. Blue boxes show real
+   `ltlf2dfa`/MONA construction, signed transition-guard extraction,
+   threat/preservation certification, and balanced repair-tree compilation.
+   A downward append arrow enters the same green domain library; it must be
+   labelled “query-local controllers,” not a second library.
+3. **Execution and independent validation.** The combined library enters Jason.
+   The exported primitive PDDL trace fans out to neutral-goal VAL, gold-DFA
+   acceptance, and predicted-DFA acceptance. Red rejection exits leave any
+   compiler box when a required certificate cannot be constructed.
+
+Use gray for inputs, amber for external evidence, blue for our compiler, green
+for certified artifacts, and red only for fail-closed rejection. Every color
+must also have a distinct border/shape so the figure remains meaningful in
+grayscale. Draft caption:
+
+> **Figure 1: End-to-end certified compilation and validation.** The reusable
+> domain stage compiles singleton-goal evidence and PDDL schemas once into one
+> maintained AgentSpeak library. Each temporal query contributes only
+> query-local controllers derived from real DFA transitions. Jason actions are
+> validated independently by VAL and both finite-trace automata; uncertified
+> compilation choices are rejected.
+
+### Figure 2: From Policy Evidence to a Lifted Atomic Module
+
+Use one full-width row with four labelled panels and one consistent Blocks
+example. This is a method explanation, not an empirical result.
+
+1. **(a) Evidence.** Show one readable MOOSE rule for singleton `on(X,Y)` with
+   its lifted context and finite action macro. Include a small training-instance
+   fragment to make clear that the policy is evidence rather than final ASL.
+2. **(b) Schema closure.** Show only the relevant PDDL `stack`, `unstack`, and
+   producer/precondition effects. Highlight that producible `clear/1` and
+   `holding/1` enter closure even when they never appeared as training goals;
+   static predicates remain context-only.
+3. **(c) Certification and selection.** Represent evidence macros and
+   schema-derived candidates entering one candidate set. Attach compact badges
+   for binding, symbolic execution, achievement, closure, progress, and resource
+   restoration. Show Clingo selecting the minimum-cost feasible subset inside
+   this certified space; do not label it globally minimal ASL.
+4. **(d) Executable module.** Show three short AgentSpeak branches: already
+   true, recursive preparation `!clear(Y); !on(X,Y)`, and direct `stack(X,Y)`.
+   Use variables, no training object names, and only PDDL fluents/actions.
+
+Draft caption:
+
+> **Figure 2: Certified lifting of singleton-goal policy evidence.** Provider
+> macros and PDDL-derived closure candidates enter the same certified candidate
+> space. The selected AgentSpeak module is lifted, internally closed, and may
+> introduce producible helper goals absent from the evidence; compactness is
+> optimal only within the generated candidate language.
+
+### Figure 3: DFA Transition Compilation and Runtime Monitoring
+
+Use a full-width four-panel figure tied to one conjunctive transition containing
+a negative obligation.
+
+1. **(a) Formula and DFA.** Show a typed, bound LTLf example and the real MONA
+   deterministic finite automaton. Mark one distance-reducing edge and one
+   accepting `true` self-loop.
+2. **(b) Signed guard and threat graph.** Expand the selected edge into positive
+   achievements and negative absence obligations. Draw a directed threat edge
+   `G_j -> G_i` when completing `G_j` may delete `G_i`; annotate that this means
+   `G_j` is repaired first. A negative literal must be labelled “observe/exact
+   deleter,” never `!not_p`.
+3. **(c) Certified order and balanced tree.** Show the topologically certified
+   literal order feeding a balanced binary repair tree. Internal nodes dispatch
+   contiguous ranges; a leaf either observes its literal or invokes one
+   certified atomic module. Add a small singleton inset showing that one DFA
+   literal becomes one leaf and therefore has the same primitive-action behavior
+   as a direct atomic call.
+4. **(d) Primitive-step semantics.** Show each successful PDDL action updating
+   the runtime DFA monitor. Source-state exit returns to top-level dispatch;
+   `trans_done` replays only while the complete guard is not yet satisfied and
+   the monitor remains at the source. End at Jason trace, VAL, and both DFA
+   oracles.
+
+Draft caption:
+
+> **Figure 3: Preservation-safe compilation of one DFA progress transition.**
+> Conditional module summaries induce a threat order over signed guard
+> obligations. A balanced AgentSpeak repair tree realizes that fixed order with
+> trigger fan-out at most two, while the real DFA monitor observes every
+> primitive action. Uncertified cyclic threats or negative-literal repairs are
+> rejected rather than serialized heuristically.
+
+### Figure 4: Main Empirical Evidence
+
+Generate this figure from machine-readable JSON; do not draw empirical points
+manually in PowerPoint. Use one full-width row of three panels with a shared
+colorblind-safe domain/profile palette:
+
+1. **(a) Atomic test coverage.** Horizontal dot-and-interval plot, one row per
+   domain. Plot all five single-worker seed values as faint points and the mean
+   with sample-standard-deviation interval as the primary mark. The x-axis is
+   Jason+VAL coverage in percent with 100% shown explicitly.
+2. **(b) Certified reduction.** Paired dots or a dumbbell for generated
+   certified candidates and selected branches per domain. Use a logarithmic
+   count axis only if the final range requires it. Annotate the percentage
+   reduction; do not compare raw library size across domains as if task counts
+   were equal.
+3. **(c) Temporal execution cost.** Empirical cumulative distribution of
+   per-query runtime, one curve per declared formula profile. Include the
+   1,800-second limit and distinguish curves by line style as well as color.
+   Since the pinned matrix has complete coverage, this distribution is more
+   informative than five identical 100% bars.
+
+Draft caption:
+
+> **Figure 4: Atomic robustness, certified reduction, and temporal execution
+> cost.** Panel (a) reports individual values and mean $\pm$ sample standard
+> deviation over five independently seeded, single-worker MOOSE runs. Panel (b)
+> compares certified candidates before and after joint Clingo selection. Panel
+> (c) is the empirical cumulative distribution of wall-clock runtime for the
+> pinned bound temporal queries; the vertical line marks the 1,800-second limit.
+
+### Table 1: Supported Fragment and Rejection Boundary
+
+Keep one compact single-column table with columns:
 
 ```text
-PDDL + training split -> MOOSE evidence -> certified domain compiler
-                                         -> one AgentSpeak domain library
-
-validated lifted LTLf -> real DFA -> certified transition controllers
-                                  -> append to the same domain library
-
-domain library + query controllers -> Jason -> PDDL trace -> VAL + DFA oracle
+Construct | Accepted strategy | Rejection boundary
 ```
 
-### Atomic-Library Table
+Rows cover positive predicates, numeric equalities, positive conjunctions,
+negative literals, mixed Boolean/numeric guards, disjunction, and primitive-
+state safety. This table answers what the method supports; it must not contain
+experimental success counts.
 
-One row per domain with at least:
+### Table 2: Certified Candidate Language
+
+Merge the previous schema-grammar and certificate tables into one full-width
+table with columns:
 
 ```text
-train/test counts
-MOOSE evidence status
-atomic compilation status
-evidence candidates
-schema candidates
-selected branches
-library size
-Jason successes
-VAL successes
-median runtime
+Candidate family | Additional acceptance obligation | Excluded failure
 ```
+
+Rows cover validated evidence macros, direct producers, acyclic regression,
+relational recursion, resource-mode discharge, and cross-module preparation.
+The caption states the obligations shared by every branch: typed binding,
+symbolic executability, target achievement, and internal closure.
 
 ### Atomic Baseline/Ablation Table
 
@@ -484,33 +650,93 @@ maximum trigger fan-out
 Use the method names above directly. Do not replace them with numbered temporal
 variants or compressed one-letter oracle headings.
 
-Keep raw MOOSE, LAMA/ENHSP, and direct temporal planning in a separate external
-reference table. Do not mix their output representations or costs into the
-compiler ablation table.
+Keep Raw MOOSE, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a separate external
+reference table with short columns such as `Method`, `Scope`, `Output`, `Oracle`,
+`Coverage`, `PAR-2`, and `Actions`. Do not mix their output representations or
+costs into the compiler ablation table. Do not spend main-paper space on an
+all-empty external-reference table: keep the registered design in this outline
+and insert the table only after the native runners produce a complete hash-locked
+matrix. If the final four-table budget is already occupied, place the full
+external table in the supplement and report only the paired headline comparison
+in the Evaluation text.
 
 ### TEG Table
 
-One row per formula profile or domain/profile group with at least:
+### Table 3: Five-Seed Atomic Evaluation
+
+The final main table replaces the current provisional seed-0 domain table when
+the registered five-seed matrix is complete. Use one row per domain and grouped
+headers:
 
 ```text
-query count
-JSON-contract valid
-DFA-language equivalent to gold
-supported-fragment accepted
-controller compiled
-Jason success
-VAL valid
-finite-trace DFA accepted
-median action count
-median runtime
+Domain | Train | Test | Evidence runs/5 | Compiled runs/5 |
+Jason+VAL coverage mean +/- sample SD | Certified candidates mean +/- sample SD |
+Selected branches mean +/- sample SD | Reduction % | ASL KiB mean +/- sample SD
 ```
 
-### Rejection Table
+Group classical, numeric, and serialized-width domains with `\midrule`, not
+background colors. A dash means not applicable, never zero. Do not pool or pick
+the best seed. Draft caption:
 
-Keep translation errors, schema validation errors, unsupported DFA structure,
-certificate rejection, Jason failure, timeout, VAL failure, and DFA-trace
-rejection as separate statuses. A failed or timed-out Jason action prefix is
-diagnostic evidence, not a successful plan.
+> **Table 3: Five-seed atomic-library synthesis and held-out execution.** Each
+> repetition trains MOOSE on the complete domain train split with one internal
+> worker and a predeclared seed, compiles its evidence independently, and tests
+> every atomic benchmark goal in Jason and VAL. Values are mean $\pm$ sample
+> standard deviation over seeds 0--4; runs are never pooled or selected post
+> hoc.
+
+Until that result exists, `result_domain_table.tex` remains explicitly labelled
+as a hash-locked seed-0 conditional-input table. It must not be described as the
+five-seed result; move its detailed per-domain snapshot to supplementary
+material when Table 3 is inserted.
+
+### Table 4: Temporal Profile Evaluation
+
+Use one full-width table with explicit columns:
+
+```text
+Profile | Equivalent translations / total | Bound queries | Controller compiled |
+Jason success | VAL success | Gold-DFA accepted | Predicted-DFA accepted |
+Median actions | Median seconds
+```
+
+Draft caption:
+
+> **Table 4: Translation and execution by temporal profile.** Equivalent
+> translations pass exact reachable-product gold/predicted DFA-language
+> equivalence. All remaining columns are counts over bound queries except the
+> median primitive-action and wall-clock costs.
+
+### Failure and Rejection Reporting
+
+Do not add a fifth main-paper table unless the final five-seed experiment has a
+nontrivial rejection distribution that cannot be summarized in Table 3. The
+supplementary artifact should always keep translation errors, schema validation
+errors, unsupported DFA structure, certificate rejection, Jason failure,
+timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or
+timed-out Jason action prefix is diagnostic evidence, not a successful plan.
+
+### AAAI Figure and Table Style Contract
+
+- Cite every figure or table in the body before it appears. Figure captions go
+  below figures; table captions remain above the tabular content through the
+  template's normal `\caption` placement.
+- A caption must define the population/denominator, aggregation over seeds,
+  timeout, and every abbreviation needed to read the visual independently. The
+  body explains interpretation rather than restating every cell.
+- Use `booktabs`, no vertical rules, no colored table cells, and bold only for a
+  genuine best comparable result. Use `--` for not applicable and never overload
+  zero. Avoid `\tiny`; final table text must remain at least 8 pt.
+- Use vector PDF for PowerPoint method figures with embedded fonts. Set the slide
+  canvas to the final aspect ratio, use 7--9 pt text at final printed size, and
+  export tightly cropped. Raster content, if unavoidable, must be at least
+  250 dpi at final size.
+- Use a colorblind-safe palette and redundant shape/line encodings. Figure text
+  and mathematical symbols must remain readable in grayscale; never convey a
+  certificate or failure state by color alone.
+- The final empirical figure must be regenerated by a checked-in script from
+  pinned JSON artifacts. PowerPoint is acceptable for conceptual Figures 1--3,
+  but not for manually placing result points.
 
 ## Result-Insertion Contract for the TEG Agent
 

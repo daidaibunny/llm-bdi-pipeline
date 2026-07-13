@@ -183,7 +183,7 @@ def main() -> int:
 		"selected_case_count": len(tasks),
 		"parameters": {
 			"num_workers": int(args.num_workers),
-			"timeout_seconds_per_compiler_or_planner": int(args.timeout_seconds),
+			"timeout_seconds_total_compile_and_plan": int(args.timeout_seconds),
 			"max_rss_gb": float(args.max_rss_gb),
 			"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
 			"plan_verifier_command": str(args.plan_verifier_command),
@@ -376,6 +376,7 @@ def run_direct_temporal_task(
 	record.update(
 		{
 			"compiler_command": list(compiler_result.command),
+			"compiler_timeout_seconds": float(timeout_seconds),
 			"compiler_exit_code": compiler_result.exit_code,
 			"compiler_seconds": compiler_result.elapsed_seconds,
 			"compiler_stdout": str(compiler_result.stdout_file),
@@ -391,6 +392,14 @@ def run_direct_temporal_task(
 		record.update(
 			status="compiler_failed",
 			error="FOND4LTLf exited successfully without both compiled PDDL files.",
+			elapsed_seconds=compiler_result.elapsed_seconds,
+		)
+		_write_json(task.output_dir / "result.json", record)
+		return record
+	remaining_planner_seconds = timeout_seconds - compiler_result.elapsed_seconds
+	if remaining_planner_seconds <= 0:
+		record.update(
+			status="planner_timeout",
 			elapsed_seconds=compiler_result.elapsed_seconds,
 		)
 		_write_json(task.output_dir / "result.json", record)
@@ -415,13 +424,14 @@ def run_direct_temporal_task(
 	planner_result = run_guarded_command(
 		planner_command,
 		output_dir=task.output_dir,
-		timeout_seconds=timeout_seconds,
+		timeout_seconds=remaining_planner_seconds,
 		max_rss_gb=max_rss_gb,
 		artifact_stem="planner",
 	)
 	record.update(
 		{
 			"planner_command": list(planner_result.command),
+			"planner_timeout_seconds": remaining_planner_seconds,
 			"planner_exit_code": planner_result.exit_code,
 			"planner_seconds": planner_result.elapsed_seconds,
 			"planner_stdout": str(planner_result.stdout_file),
@@ -519,6 +529,8 @@ def stage_failure_status(stage: str, stderr_file: Path) -> str:
 	failure = parse_guard_failure(
 		stderr_file.read_text(encoding="utf-8", errors="replace"),
 	)
+	if failure == "planner_failed":
+		return f"{stage}_failed"
 	return f"{stage}_{failure}"
 
 
