@@ -8,8 +8,11 @@ turns progress transitions into calls to existing atomic predicate modules.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -33,10 +36,104 @@ from .certified_effects import preservation_safe_plan_selection
 from .certified_effects import query_local_preservation_alias_plans
 from .certified_effects import negative_guard_establishment_alias_plans
 from .transition_repair_tree import TransitionRepairLiteral
+from .transition_repair_tree import compile_flat_transition_repair_controller
 from .transition_repair_tree import compile_transition_repair_tree
 
 
 _DFA_GUARD_TRANSITION_WRAPPER_MODE = "runtime_monitored_dfa_product"
+TEMPORAL_MONITOR_CHECKPOINT_ACTION = "temporal_monitor_checkpoint"
+
+
+class TemporalCompilerVariant(str, Enum):
+	"""Registered query-compiler variants for paired temporal experiments."""
+
+	DFA_AWARE_UNPROTECTED = "dfa_aware_unprotected"
+	CERTIFIED_FLAT = "certified_flat"
+	CERTIFIED_BALANCED = "certified_balanced"
+	COMPLETION_BOUNDARY_MONITOR = "completion_boundary_monitor"
+
+
+class TemporalMonitorObservationBoundary(str, Enum):
+	"""World-state boundary at which the runtime DFA consumes one valuation."""
+
+	PRIMITIVE_STEP = "primitive_step"
+	ATOMIC_MODULE_COMPLETION = "atomic_module_completion"
+
+
+@dataclass(frozen=True)
+class _TemporalCompilerSettings:
+	variant: TemporalCompilerVariant
+	certified_serialization: bool
+	controller_structure: str
+	controller_strategy: str
+	monitor_observation_boundary: TemporalMonitorObservationBoundary
+	enforce_primitive_prefix_invariants: bool
+
+
+def _temporal_compiler_settings(
+	variant: TemporalCompilerVariant | str,
+) -> _TemporalCompilerSettings:
+	try:
+		resolved = (
+			variant
+			if isinstance(variant, TemporalCompilerVariant)
+			else TemporalCompilerVariant(variant)
+		)
+	except ValueError as error:
+		raise ValueError(f"temporal_compiler_variant_unknown: {variant!r}") from error
+	if resolved == TemporalCompilerVariant.DFA_AWARE_UNPROTECTED:
+		return _TemporalCompilerSettings(
+			variant=resolved,
+			certified_serialization=False,
+			controller_structure="flat",
+			controller_strategy="monitored_unprotected_flat_replay",
+			monitor_observation_boundary=(
+				TemporalMonitorObservationBoundary.PRIMITIVE_STEP
+			),
+			enforce_primitive_prefix_invariants=False,
+		)
+	if resolved == TemporalCompilerVariant.CERTIFIED_FLAT:
+		return _TemporalCompilerSettings(
+			variant=resolved,
+			certified_serialization=True,
+			controller_structure="flat",
+			controller_strategy="monitored_certified_flat_replay",
+			monitor_observation_boundary=(
+				TemporalMonitorObservationBoundary.PRIMITIVE_STEP
+			),
+			enforce_primitive_prefix_invariants=True,
+		)
+	if resolved == TemporalCompilerVariant.CERTIFIED_BALANCED:
+		return _TemporalCompilerSettings(
+			variant=resolved,
+			certified_serialization=True,
+			controller_structure="balanced",
+			controller_strategy="monitored_balanced_repair_tree",
+			monitor_observation_boundary=(
+				TemporalMonitorObservationBoundary.PRIMITIVE_STEP
+			),
+			enforce_primitive_prefix_invariants=True,
+		)
+	return _TemporalCompilerSettings(
+		variant=resolved,
+		certified_serialization=True,
+		controller_structure="balanced",
+		controller_strategy="completion_monitored_balanced_repair_tree",
+		monitor_observation_boundary=(
+			TemporalMonitorObservationBoundary.ATOMIC_MODULE_COMPLETION
+		),
+		enforce_primitive_prefix_invariants=False,
+	)
+
+
+def _canonical_payload_fingerprint(payload: object) -> str:
+	encoded = json.dumps(
+		payload,
+		sort_keys=True,
+		separators=(",", ":"),
+		default=str,
+	).encode("utf-8")
+	return hashlib.sha256(encoded).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -73,6 +170,14 @@ class _TemporalPlanEffects:
 	adds: frozenset[tuple[str, tuple[str, ...]]]
 	deletes: frozenset[tuple[str, tuple[str, ...]]]
 	numeric_deltas: tuple[tuple[str, tuple[str, ...], int], ...]
+
+
+@dataclass(frozen=True)
+class _AchievementHelperCall:
+	"""One query-local helper call with its certificate-preserving arguments."""
+
+	symbol: str
+	arguments: tuple[str, ...]
 
 
 def validate_guard_transition_dfa(
@@ -186,9 +291,13 @@ def append_temporal_goal_to_library(
 	dfa_payload: Mapping[str, Any],
 	domain_file: str | Path,
 	allow_true_accepting_self_loops: bool = True,
+	compiler_variant: TemporalCompilerVariant | str = (
+		TemporalCompilerVariant.CERTIFIED_BALANCED
+	),
 ) -> PlanLibrary:
 	"""Append one query-specific temporal goal wrapper to an atomic ASL library."""
 
+	settings = _temporal_compiler_settings(compiler_variant)
 	if _has_existing_goal_trigger(plan_library, goal_name):
 		raise ValueError(
 			"duplicate_temporal_goal: Plan library already contains an "
@@ -231,10 +340,30 @@ def append_temporal_goal_to_library(
 		accepting_states=tuple(dfa_payload.get("accepting_states") or ()),
 		domain=domain,
 		plan_library=plan_library,
+		settings=settings,
 	)
 	entry_proposition = _query_entry_proposition(goal_name)
 	append_record["wrapper_mode"] = _DFA_GUARD_TRANSITION_WRAPPER_MODE
-	append_record["transition_controller_strategy"] = "monitored_balanced_repair_tree"
+	append_record["temporal_compiler_variant"] = settings.variant.value
+	append_record["transition_controller_strategy"] = settings.controller_strategy
+	append_record["controller_structure"] = settings.controller_structure
+	append_record["certified_serialization"] = settings.certified_serialization
+	append_record["monitor_observation_boundary"] = (
+		settings.monitor_observation_boundary.value
+	)
+	append_record["primitive_prefix_source_invariants_enforced"] = (
+		settings.enforce_primitive_prefix_invariants
+	)
+	append_record["experiment_contract"] = {
+		"compiler_variant": settings.variant.value,
+		"atomic_library_fingerprint": _canonical_payload_fingerprint(
+			plan_library.to_dict(),
+		),
+		"dfa_fingerprint": _canonical_payload_fingerprint(dfa_payload),
+		"paired_variant_contract": (
+			"same atomic library, DFA, query binding, and Jason runtime"
+		),
+	}
 	append_record["runtime_monitor_required"] = True
 	append_record["runtime_monitor_accepting_belief"] = (
 		dfa_monitor_accepting_belief(goal_name)
@@ -283,6 +412,9 @@ def append_lifted_temporal_goal_case_to_library(
 	goal_case: LiftedLTLfGoalCase,
 	domain_file: str | Path,
 	dfa_builder: Any,
+	compiler_variant: TemporalCompilerVariant | str = (
+		TemporalCompilerVariant.CERTIFIED_BALANCED
+	),
 ) -> tuple[PlanLibrary, Mapping[str, Any]]:
 	"""Compile one lifted LTLf goal case to DFA and append it to a library."""
 
@@ -295,6 +427,7 @@ def append_lifted_temporal_goal_case_to_library(
 		goal_name=goal_case.goal_name,
 		dfa_payload=dfa_payload,
 		domain_file=domain_file,
+		compiler_variant=compiler_variant,
 	)
 	return updated, dfa_payload
 
@@ -615,6 +748,7 @@ def _guard_transition_wrapper_plans(
 	accepting_states: Sequence[object],
 	domain: PDDLDomain,
 	plan_library: PlanLibrary,
+	settings: _TemporalCompilerSettings,
 ) -> tuple[AgentSpeakPlan, ...]:
 	"""Compile every DFA progress edge into one query-local transition helper."""
 
@@ -680,6 +814,13 @@ def _guard_transition_wrapper_plans(
 		negative_literals = tuple(
 			literal for literal in literals if literal.polarity == "negative"
 		)
+		if not settings.certified_serialization:
+			positive_literals = tuple(sorted(positive_literals, key=_canonical_literal_key))
+			negative_literals = tuple(sorted(negative_literals, key=_canonical_literal_key))
+		source_invariants = tuple(transition.get("source_invariant_literals") or ())
+		certified_source_invariants = (
+			source_invariants if settings.enforce_primitive_prefix_invariants else ()
+		)
 		(
 			positive_literals,
 			serialization_certificate,
@@ -688,15 +829,24 @@ def _guard_transition_wrapper_plans(
 			negative_establishment_alias_plans,
 			negative_establishment_helper_by_index,
 		) = (
-			_certified_positive_literal_serialization(
+			(
+				_certified_positive_literal_serialization(
+					positive_literals,
+					negative_literals=negative_literals,
+					source_invariants=certified_source_invariants,
+					plan_library=plan_library,
+					domain=domain,
+					helper_prefix=transition_name,
+				)
+				if settings.certified_serialization
+				else _canonical_unprotected_literal_serialization(
 				positive_literals,
 				negative_literals=negative_literals,
-				source_invariants=tuple(
-					transition.get("source_invariant_literals") or ()
-				),
+				source_invariants=certified_source_invariants,
 				plan_library=plan_library,
 				domain=domain,
 				helper_prefix=transition_name,
+			)
 			)
 		)
 		plans.extend(preservation_alias_plans)
@@ -722,6 +872,16 @@ def _guard_transition_wrapper_plans(
 			"completion_condition": "source_state_exit",
 			"completion_source_state_belief": source_state_belief,
 			"serialization_certificate": serialization_certificate,
+			"monitor_observation_boundary": (
+				settings.monitor_observation_boundary.value
+			),
+			"source_invariant_literals": [
+				literal.atom if isinstance(literal, DFALiteral) else str(literal)
+				for literal in source_invariants
+			],
+			"primitive_prefix_source_invariants_enforced": (
+				settings.enforce_primitive_prefix_invariants
+			),
 		}
 		negative_repair_literals = tuple(
 			TransitionRepairLiteral(
@@ -752,50 +912,138 @@ def _guard_transition_wrapper_plans(
 			)
 			continue
 		shared_context = (entry_proposition, *type_contexts)
-		positive_repair_literals = tuple(
-			TransitionRepairLiteral(
-				atom=literal.atom,
-				achievement_symbol=(
-					None
-					if literal.atom
-					in set(
-						serialization_certificate.get(
-							"observation_only_literals",
-							(),
-						)
-					)
-					else
-					preservation_helper_by_predicate.get(literal.atom)
-					or preservation_helper_by_predicate.get(literal.predicate)
-					or (
-						literal.predicate
-						if _literal_has_achievement_branch(
-							literal,
-							plan_library=plan_library,
-						)
-						else None
-					)
-				),
-				achievement_arguments=literal.arguments,
+		observation_only_literals = set(
+			serialization_certificate.get("observation_only_literals", ()),
+		)
+		positive_repair_literals: list[TransitionRepairLiteral] = []
+		for literal in positive_literals:
+			helper = (
+				preservation_helper_by_predicate.get(literal.atom)
+				or preservation_helper_by_predicate.get(literal.predicate)
 			)
-			for literal in positive_literals
-		)
+			if literal.atom in observation_only_literals:
+				achievement_symbol = None
+				achievement_arguments: tuple[str, ...] = ()
+			elif isinstance(helper, _AchievementHelperCall):
+				achievement_symbol = helper.symbol
+				achievement_arguments = helper.arguments
+			elif helper:
+				achievement_symbol = helper
+				achievement_arguments = literal.arguments
+			elif _literal_has_achievement_branch(
+				literal,
+				plan_library=plan_library,
+			):
+				achievement_symbol = literal.predicate
+				achievement_arguments = literal.arguments
+			else:
+				achievement_symbol = None
+				achievement_arguments = ()
+			positive_repair_literals.append(
+				TransitionRepairLiteral(
+					atom=literal.atom,
+					achievement_symbol=achievement_symbol,
+					achievement_arguments=achievement_arguments,
+				),
+			)
 		repair_literals = (
-			(*positive_repair_literals, *negative_repair_literals)
+			(*tuple(positive_repair_literals), *negative_repair_literals)
 			if serialization_certificate.get("repair_positive_before_negative") is True
-			else (*negative_repair_literals, *positive_repair_literals)
+			else (*negative_repair_literals, *tuple(positive_repair_literals))
 		)
-		tree_compilation = compile_transition_repair_tree(
-			transition_symbol=transition_name,
-			shared_context=shared_context,
-			positive_literals=repair_literals,
-			completion_context=completion_context,
-			certificate=certificate,
-			wrapper_mode=_DFA_GUARD_TRANSITION_WRAPPER_MODE,
-			controller_strategy="monitored_balanced_repair_tree",
+		monitor_checkpoint_action = (
+			TEMPORAL_MONITOR_CHECKPOINT_ACTION
+			if settings.monitor_observation_boundary
+			== TemporalMonitorObservationBoundary.ATOMIC_MODULE_COMPLETION
+			else None
 		)
-		plans.extend(tree_compilation.plans)
+		if settings.controller_structure == "flat":
+			controller_compilation = compile_flat_transition_repair_controller(
+				transition_symbol=transition_name,
+				shared_context=shared_context,
+				repair_literals=repair_literals,
+				completion_context=completion_context,
+				certificate=certificate,
+				wrapper_mode=_DFA_GUARD_TRANSITION_WRAPPER_MODE,
+				controller_strategy=settings.controller_strategy,
+				monitor_checkpoint_action=monitor_checkpoint_action,
+			)
+		else:
+			controller_compilation = compile_transition_repair_tree(
+				transition_symbol=transition_name,
+				shared_context=shared_context,
+				positive_literals=repair_literals,
+				completion_context=completion_context,
+				certificate=certificate,
+				wrapper_mode=_DFA_GUARD_TRANSITION_WRAPPER_MODE,
+				controller_strategy=settings.controller_strategy,
+				monitor_checkpoint_action=monitor_checkpoint_action,
+			)
+		plans.extend(controller_compilation.plans)
 	return tuple(plans)
+
+
+def _canonical_literal_key(literal: DFALiteral) -> tuple[str, tuple[str, ...]]:
+	return literal.predicate, literal.arguments
+
+
+def _canonical_unprotected_literal_serialization(
+	literals: Sequence[DFALiteral],
+	*,
+	negative_literals: Sequence[DFALiteral],
+	source_invariants: Sequence[DFALiteral],
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+	helper_prefix: str,
+) -> tuple[
+	tuple[DFALiteral, ...],
+	Mapping[str, object],
+	tuple[AgentSpeakPlan, ...],
+	Mapping[str, str | _AchievementHelperCall],
+	tuple[AgentSpeakPlan, ...],
+	Mapping[int, tuple[str, tuple[str, ...]]],
+]:
+	"""Build the evaluation-only canonical baseline without positive protection."""
+
+	literal_tuple = tuple(literals)
+	negative_literal_tuple = tuple(negative_literals)
+	establishment_aliases, establishment_helpers, establishment = (
+		negative_guard_establishment_alias_plans(
+			tuple((literal.predicate, literal.arguments) for literal in literal_tuple),
+			negative_literals=tuple(
+				(literal.predicate, literal.arguments)
+				for literal in negative_literal_tuple
+			),
+			plan_library=plan_library,
+			domain=domain,
+			helper_prefix=helper_prefix,
+		)
+	)
+	certificate: dict[str, object] = {
+		"certificate_kind": "evaluation_only_canonical_unprotected_serialization",
+		"ordered_literal_indexes": list(range(len(literal_tuple))),
+		"canonical_positive_literal_order": [literal.atom for literal in literal_tuple],
+		"canonical_negative_literal_order": [
+			literal.atom for literal in negative_literal_tuple
+		],
+		"threat_edges": [],
+		"module_summaries_complete": False,
+		"conditional_effects_checked": False,
+		"positive_sibling_preservation_checked": False,
+		"source_invariant_preservation_checked": False,
+		"source_invariant_count": len(tuple(source_invariants)),
+		"repair_positive_before_negative": True,
+		"evaluation_only": True,
+	}
+	certificate.update(establishment)
+	return (
+		literal_tuple,
+		certificate,
+		(),
+		{},
+		establishment_aliases,
+		establishment_helpers,
+	)
 
 
 def _certified_positive_literal_serialization(
@@ -810,7 +1058,7 @@ def _certified_positive_literal_serialization(
 	tuple[DFALiteral, ...],
 	Mapping[str, object],
 	tuple[AgentSpeakPlan, ...],
-	Mapping[str, str],
+	Mapping[str, str | _AchievementHelperCall],
 	tuple[AgentSpeakPlan, ...],
 	Mapping[int, tuple[str, tuple[str, ...]]],
 ]:
@@ -1065,7 +1313,7 @@ def _single_action_whole_guard_plans(
 	tuple[int, ...],
 	dict[str, object],
 	tuple[AgentSpeakPlan, ...],
-	Mapping[str, str],
+	Mapping[str, _AchievementHelperCall],
 ] | None:
 	"""Find one PDDL action whose net effects establish an entire guard."""
 
@@ -1302,17 +1550,22 @@ def _single_action_whole_guard_plans(
 			literal.atom: [plan.plan_name for plan in aliases]
 			for literal in negative_tuple
 		},
-		"observation_only_literals": [
-			literal.atom
-			for index, literal in enumerate(positive_tuple)
-			if index != anchor_index
+		"observation_only_literals": [],
+		"whole_guard_repair_literals": [
+			literal.atom for literal in positive_tuple
 		],
 		"repair_positive_before_negative": True,
 		"numeric_guard_literals": [literal.atom for literal in numeric_positive_tuple],
 		"numeric_predecessor_contexts": list(
 			numeric_contexts_by_anchor.get(anchor_index, ())
 		),
-	}, aliases, {positive_tuple[anchor_index].atom: helper_symbol}
+	}, aliases, {
+		literal.atom: _AchievementHelperCall(
+			symbol=helper_symbol,
+			arguments=positive_tuple[anchor_index].arguments,
+		)
+		for literal in positive_tuple
+	}
 
 
 def _compatible_numeric_effect_binding(

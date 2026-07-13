@@ -12,6 +12,7 @@ from plan_library.models import AgentSpeakTrigger
 
 _DEFAULT_WRAPPER_MODE = "dfa_guard_transition_replay"
 _DEFAULT_CONTROLLER_STRATEGY = "balanced_transition_repair_tree"
+_FLAT_CONTROLLER_STRATEGY = "monitored_certified_flat_replay"
 
 
 @dataclass(frozen=True)
@@ -46,6 +47,7 @@ def compile_transition_repair_tree(
 	certificate: Mapping[str, object],
 	wrapper_mode: str = _DEFAULT_WRAPPER_MODE,
 	controller_strategy: str = _DEFAULT_CONTROLLER_STRATEGY,
+	monitor_checkpoint_action: str | None = None,
 ) -> TransitionRepairTreeCompilation:
 	"""Compile ordered guard literals into a balanced, replaying transition controller.
 
@@ -83,6 +85,7 @@ def compile_transition_repair_tree(
 			literal.polarity == "negative" for literal in literals
 		),
 		"completion_context_checked": True,
+		"monitor_checkpoint_action": monitor_checkpoint_action,
 	}
 	plans: list[AgentSpeakPlan] = [
 		AgentSpeakPlan(
@@ -109,6 +112,7 @@ def compile_transition_repair_tree(
 		start=1,
 		end=len(literals),
 		base_certificate=base_certificate,
+		monitor_checkpoint_action=monitor_checkpoint_action,
 	)
 	plans.extend(
 		(
@@ -149,6 +153,115 @@ def compile_transition_repair_tree(
 	)
 
 
+def compile_flat_transition_repair_controller(
+	*,
+	transition_symbol: str,
+	shared_context: Sequence[str],
+	repair_literals: Sequence[TransitionRepairLiteral],
+	completion_context: Sequence[str],
+	certificate: Mapping[str, object],
+	wrapper_mode: str = _DEFAULT_WRAPPER_MODE,
+	controller_strategy: str = _FLAT_CONTROLLER_STRATEGY,
+	monitor_checkpoint_action: str | None = None,
+) -> TransitionRepairTreeCompilation:
+	"""Compile one ordered guard as flat same-trigger repair siblings.
+
+	This is an evaluation controller, not the historical sequence-only wrapper.
+	Every applicable sibling repairs exactly one unmet literal and then rechecks the
+	same monitored DFA transition.
+	"""
+
+	literals = tuple(repair_literals)
+	if not literals:
+		raise ValueError(
+		"flat_transition_repair_controller_requires_literal: negative-only "
+		"observation guards compile directly without a repair controller.",
+		)
+	transition = str(transition_symbol).strip()
+	if not transition:
+		raise ValueError("transition_symbol must not be empty")
+	shared = tuple(
+		dict.fromkeys(str(item).strip() for item in shared_context if str(item).strip())
+	)
+	completion = tuple(
+		dict.fromkeys(str(item).strip() for item in completion_context if str(item).strip())
+	)
+	base_certificate = {
+		**dict(certificate),
+		"artifact_family": "temporal_goal_dfa_append",
+		"wrapper_mode": str(wrapper_mode),
+		"controller_strategy": str(controller_strategy),
+		"transition_symbol": transition,
+		"positive_literal_count": sum(
+			literal.polarity == "positive" for literal in literals
+		),
+		"negative_literal_count": sum(
+			literal.polarity == "negative" for literal in literals
+		),
+		"completion_context_checked": True,
+		"monitor_checkpoint_action": monitor_checkpoint_action,
+	}
+	plans: list[AgentSpeakPlan] = [
+		AgentSpeakPlan(
+			plan_name=f"{transition}_done",
+			trigger=AgentSpeakTrigger("achievement_goal", transition, ()),
+			context=completion,
+			body=(),
+			binding_certificate=(
+				{**base_certificate, "wrapper_role": "transition_flat_done"},
+			),
+		),
+	]
+	for literal_index, literal in enumerate(literals, start=1):
+		if literal.polarity not in {"positive", "negative"}:
+			raise ValueError(
+				"transition_repair_literal_polarity_invalid: expected positive or negative."
+			)
+		if not literal.achievement_symbol:
+			continue
+		unmet_context = (
+			f"not {literal.atom}" if literal.polarity == "positive" else literal.atom
+		)
+		body = [
+			AgentSpeakBodyStep(
+				"subgoal",
+				literal.achievement_symbol,
+				literal.achievement_arguments,
+			),
+		]
+		if monitor_checkpoint_action:
+			body.append(AgentSpeakBodyStep("action", monitor_checkpoint_action, ()))
+		body.append(AgentSpeakBodyStep("subgoal", transition, ()))
+		plans.append(
+			AgentSpeakPlan(
+				plan_name=f"{transition}_repair_{literal_index}",
+				trigger=AgentSpeakTrigger("achievement_goal", transition, ()),
+				context=(*shared, unmet_context),
+				body=tuple(body),
+				binding_certificate=(
+					{
+						**base_certificate,
+						"wrapper_role": "transition_flat_repair",
+						"literal_index": literal_index,
+						"literal_atom": literal.atom,
+						"literal_polarity": literal.polarity,
+						"achievement_symbol": literal.achievement_symbol,
+						"achievement_arguments": list(literal.achievement_arguments),
+					},
+				),
+			),
+		)
+	return TransitionRepairTreeCompilation(
+		plans=tuple(plans),
+		transition_symbol=transition,
+		root_symbol=transition,
+		done_symbol=transition,
+		literal_count=len(literals),
+		tree_height=1,
+		controller_strategy=str(controller_strategy),
+	)
+
+
 def _append_tree_plans(
 	*,
 	plans: list[AgentSpeakPlan],
@@ -158,6 +271,7 @@ def _append_tree_plans(
 	start: int,
 	end: int,
 	base_certificate: Mapping[str, object],
+	monitor_checkpoint_action: str | None,
 ) -> int:
 	symbol = _range_symbol(transition_symbol, start, end)
 	if start == end:
@@ -207,6 +321,11 @@ def _append_tree_plans(
 							literal.achievement_symbol,
 							literal.achievement_arguments,
 						),
+						*(
+							(AgentSpeakBodyStep("action", monitor_checkpoint_action, ()),)
+							if monitor_checkpoint_action
+							else ()
+						),
 					),
 					binding_certificate=(
 						{
@@ -248,6 +367,7 @@ def _append_tree_plans(
 		start=start,
 		end=midpoint,
 		base_certificate=base_certificate,
+		monitor_checkpoint_action=monitor_checkpoint_action,
 	)
 	right_height = _append_tree_plans(
 		plans=plans,
@@ -257,6 +377,7 @@ def _append_tree_plans(
 		start=midpoint + 1,
 		end=end,
 		base_certificate=base_certificate,
+		monitor_checkpoint_action=monitor_checkpoint_action,
 	)
 	return 1 + max(left_height, right_height)
 

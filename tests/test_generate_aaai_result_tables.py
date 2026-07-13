@@ -131,7 +131,7 @@ def test_render_domain_table_reports_each_validation_oracle() -> None:
 
 	table = render_domain_table(result)
 
-	assert "J/V/G/P" in table
+	assert "Valid Traces" in table
 	assert "2/2/2/2" in table
 
 

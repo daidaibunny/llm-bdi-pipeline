@@ -7,6 +7,7 @@ import pytest
 from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
 from domain_level_planning.temporal_goal_appender import append_lifted_temporal_goal_case_to_library
 from domain_level_planning.temporal_goal_appender import DFALiteral
+from domain_level_planning.temporal_goal_appender import TemporalCompilerVariant
 from domain_level_planning.temporal_goal_appender import _ground_action_only_plan
 from domain_level_planning.temporal_goal_appender import validate_guard_transition_dfa
 from domain_level_planning.lifted_ltlf_goal_schema import LTLfAtomSpec
@@ -189,6 +190,110 @@ def test_append_temporal_goal_adds_query_specific_goal_plans(tmp_path: Path) -> 
 		record["goal_name"]
 		for record in updated.metadata["temporal_goal_append_history"]
 	] == ["g_query_1"]
+
+
+def test_temporal_compiler_variants_share_inputs_and_isolate_mechanisms(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "independent-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain independent)
+ (:requirements :strips)
+ (:predicates (seed) (left) (right))
+ (:action make-left :parameters () :precondition (seed) :effect (left))
+ (:action make-right :parameters () :precondition (seed) :effect (right))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="independent",
+		plans=(
+			AgentSpeakPlan(
+				"left_via_make_left",
+				AgentSpeakTrigger("achievement_goal", "left", ()),
+				("seed",),
+				(AgentSpeakBodyStep("action", "make-left", ()),),
+			),
+			AgentSpeakPlan(
+				"right_via_make_right",
+				AgentSpeakTrigger("achievement_goal", "right", ()),
+				("seed",),
+				(AgentSpeakBodyStep("action", "make-right", ()),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q1", "raw_label": "right & left"},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	outputs = {
+		variant: append_temporal_goal_to_library(
+			plan_library=library,
+			goal_name=f"g_{variant.value}",
+			dfa_payload=dfa_payload,
+			domain_file=domain_file,
+			compiler_variant=variant,
+		)
+		for variant in TemporalCompilerVariant
+	}
+
+	contracts = {
+		variant: output.metadata["temporal_goal_append"]["experiment_contract"]
+		for variant, output in outputs.items()
+	}
+	assert {contract["dfa_fingerprint"] for contract in contracts.values()} == {
+		contracts[TemporalCompilerVariant.CERTIFIED_BALANCED]["dfa_fingerprint"],
+	}
+	assert {contract["atomic_library_fingerprint"] for contract in contracts.values()} == {
+		contracts[TemporalCompilerVariant.CERTIFIED_BALANCED][
+			"atomic_library_fingerprint"
+		],
+	}
+	assert {
+		contract["compiler_variant"] for contract in contracts.values()
+	} == {variant.value for variant in TemporalCompilerVariant}
+
+	unprotected = outputs[TemporalCompilerVariant.DFA_AWARE_UNPROTECTED]
+	assert any(plan.plan_name.endswith("_repair_1") for plan in unprotected.plans)
+	assert not any("repair_1_2_dispatch" in plan.plan_name for plan in unprotected.plans)
+	unprotected_repair = next(
+		plan for plan in unprotected.plans if plan.plan_name.endswith("_repair_1")
+	)
+	assert unprotected_repair.binding_certificate[0]["serialization_certificate"][
+		"certificate_kind"
+	] == "evaluation_only_canonical_unprotected_serialization"
+
+	certified_flat = outputs[TemporalCompilerVariant.CERTIFIED_FLAT]
+	assert any(plan.plan_name.endswith("_repair_1") for plan in certified_flat.plans)
+	assert not any("repair_1_2_dispatch" in plan.plan_name for plan in certified_flat.plans)
+
+	balanced = outputs[TemporalCompilerVariant.CERTIFIED_BALANCED]
+	assert any("repair_1_2_dispatch" in plan.plan_name for plan in balanced.plans)
+	completion = outputs[TemporalCompilerVariant.COMPLETION_BOUNDARY_MONITOR]
+	completion_achievements = tuple(
+		plan
+		for plan in completion.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	assert completion_achievements
+	assert all(
+		plan.body[-1]
+		== AgentSpeakBodyStep("action", "temporal_monitor_checkpoint", ())
+		for plan in completion_achievements
+	)
+	assert completion.metadata["temporal_goal_append"][
+		"monitor_observation_boundary"
+	] == "atomic_module_completion"
 
 
 def test_append_temporal_goal_compiles_one_helper_per_conjunctive_transition(
@@ -1411,6 +1516,71 @@ def test_single_action_whole_guard_certificate_needs_no_atomic_seed_module(
 	)
 	assert positive_leaf.binding_certificate[0]["literal_index"] == 1
 	assert negative_leaf.binding_certificate[0]["literal_index"] == 2
+
+
+def test_whole_guard_action_is_reachable_from_every_positive_literal(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "joint-effect-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain joint-effect)
+ (:requirements :strips :typing)
+ (:types item - object)
+ (:predicates
+  (enabled ?x - item ?y - item)
+  (ready ?x - item ?y - item)
+  (done ?y - item))
+ (:action complete
+  :parameters (?x - item ?y - item)
+  :precondition (enabled ?x ?y)
+  :effect (and (ready ?x ?y) (done ?y)))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "ready(X,Y) & done(Y)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=PlanLibrary(domain_name="joint-effect", plans=()),
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	helper = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[-1].get("certificate_kind")
+		== "pddl_single_action_whole_guard"
+	)
+	achievement_leaves = {
+		plan.binding_certificate[0]["literal_atom"]: plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	}
+
+	assert set(achievement_leaves) == {"ready(X, Y)", "done(Y)"}
+	assert all(
+		plan.body
+		== (AgentSpeakBodyStep("subgoal", helper.trigger.symbol, ("X", "Y")),)
+		for plan in achievement_leaves.values()
+	)
+	assert helper.trigger.arguments == ("X", "Y")
 
 
 def test_negative_establisher_binds_deleter_destination_from_positive_sibling(

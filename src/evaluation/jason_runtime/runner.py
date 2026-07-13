@@ -18,6 +18,8 @@ from domain_level_planning.pddl_types import obj_tp_atoms
 from domain_level_planning.pddl_types import parameter_name
 from domain_level_planning.temporal_goal_appender import dfa_monitor_accepting_belief
 from domain_level_planning.temporal_goal_appender import dfa_monitor_state_belief
+from domain_level_planning.temporal_goal_appender import TEMPORAL_MONITOR_CHECKPOINT_ACTION
+from domain_level_planning.temporal_goal_appender import TemporalMonitorObservationBoundary
 from plan_library.rendering import sanitize_identifier
 from utils.pddl_parser import PDDLAction
 from utils.pddl_parser import PDDLNumericAssignment
@@ -302,9 +304,15 @@ class JasonPlanLibraryRunner:
 		plan_library_asl_text: str | None = None,
 		runtime_artifacts: RuntimeProblemArtifacts | None = None,
 		temporal_dfa_payload: Mapping[str, Any] | None = None,
+		temporal_monitor_observation_boundary: (
+			TemporalMonitorObservationBoundary | str
+		) = TemporalMonitorObservationBoundary.PRIMITIVE_STEP,
 	) -> JasonValidationResult:
 		"""Run one canonical AgentSpeak(L) library with real Jason action semantics."""
 
+		monitor_observation_boundary = _normalize_temporal_monitor_observation_boundary(
+			temporal_monitor_observation_boundary,
+		)
 		total_start = time.perf_counter()
 		timing_profile: dict[str, float] = {}
 		domain_path = Path(domain_file).expanduser().resolve()
@@ -430,11 +438,12 @@ class JasonPlanLibraryRunner:
 			encoding="utf-8",
 		)
 		temporal_monitor_path.write_text(
-			_render_temporal_monitor_config(
-				temporal_dfa_payload,
-				goal_name=goal_name,
-				initial_facts=artifacts.seed_facts,
-			)
+				_render_temporal_monitor_config(
+					temporal_dfa_payload,
+					goal_name=goal_name,
+					initial_facts=artifacts.seed_facts,
+					observation_boundary=monitor_observation_boundary,
+				)
 			if temporal_dfa_payload is not None
 			else "",
 			encoding="utf-8",
@@ -1590,9 +1599,15 @@ def _render_temporal_monitor_config(
 	*,
 	goal_name: str,
 	initial_facts: Sequence[str] | None = None,
+	observation_boundary: TemporalMonitorObservationBoundary | str = (
+		TemporalMonitorObservationBoundary.PRIMITIVE_STEP
+	),
 ) -> str:
 	"""Render a query-local deterministic DFA monitor consumed by the Java runtime."""
 
+	resolved_observation_boundary = _normalize_temporal_monitor_observation_boundary(
+		observation_boundary,
+	)
 	initial_state = str(dfa_payload.get("initial_state") or "").strip()
 	if not initial_state:
 		raise JasonValidationError("Temporal DFA monitor requires an initial state.")
@@ -1620,7 +1635,11 @@ def _render_temporal_monitor_config(
 		if initial_facts is not None
 		else initial_state
 	)
-	lines = ["schema_version\t1", f"initial\t{current_state}"]
+	lines = [
+		"schema_version\t1",
+		f"observation_boundary\t{resolved_observation_boundary}",
+		f"initial\t{current_state}",
+	]
 	lines.extend(f"accepting\t{state}" for state in accepting_states)
 	lines.extend(
 		f"state\t{state}\t{dfa_monitor_state_belief(goal_name, state)}"
@@ -1632,6 +1651,23 @@ def _render_temporal_monitor_config(
 		for source, target, guard in transitions
 	)
 	return "\n".join(lines) + "\n"
+
+
+def _normalize_temporal_monitor_observation_boundary(
+	value: TemporalMonitorObservationBoundary | str,
+) -> str:
+	try:
+		return (
+			value
+			if isinstance(value, TemporalMonitorObservationBoundary)
+			else TemporalMonitorObservationBoundary(value)
+		).value
+	except ValueError as error:
+		raise JasonValidationError(
+			"Temporal DFA monitor observation boundary must be primitive_step or "
+			"atomic_module_completion.",
+			metadata={"observation_boundary": str(value)},
+		) from error
 
 
 def _temporal_monitor_initial_beliefs(
@@ -1899,6 +1935,7 @@ public class {class_name} extends Environment {{
 	private final Path temporalMonitorPath = Paths.get("temporal_dfa_monitor.tsv");
 	private String monitorState = null;
 	private String monitorAcceptingBelief = null;
+	private String monitorObservationBoundary = "primitive_step";
 	private boolean temporalMonitorEnabled = false;
 	private final boolean planTraceEnabled = Boolean.parseBoolean(
 		System.getProperty("jason.pipeline.planTraceEnabled", "true")
@@ -1942,6 +1979,29 @@ public class {class_name} extends Environment {{
 			printRuntimeSummary();
 			return true;
 		}}
+		if (
+			{json.dumps(TEMPORAL_MONITOR_CHECKPOINT_ACTION)}.equals(action.getFunctor())
+			&& action.getArity() == 0
+		) {{
+			if (
+				!temporalMonitorEnabled
+				|| !"atomic_module_completion".equals(monitorObservationBoundary)
+			) {{
+				System.out.println("runtime env invalid temporal monitor checkpoint");
+				return false;
+			}}
+			Set<String> removed = new LinkedHashSet<>();
+			Set<String> added = new LinkedHashSet<>();
+			boolean valid = advanceTemporalMonitor(removed, added);
+			JasonPipelineIndexedBeliefBase.applyDynamicDelta(removed, added);
+			if (!removed.isEmpty() || !added.isEmpty()) {{
+				informAgsEnvironmentChanged();
+			}}
+			if (!valid) {{
+				System.out.println("runtime env temporal monitor failed state=" + monitorState);
+			}}
+			return valid;
+		}}
 		ActionSchema schema = actions.get(action.getFunctor());
 		if (schema == null) {{
 			System.out.println("runtime env unknown action " + action);
@@ -1979,7 +2039,10 @@ public class {class_name} extends Environment {{
 		}}
 
 		EffectDelta delta = applyEffects(schema, bindings);
-		boolean temporalMonitorValid = advanceTemporalMonitor(delta.removed, delta.added);
+		boolean temporalMonitorValid = true;
+		if ("primitive_step".equals(monitorObservationBoundary)) {{
+			temporalMonitorValid = advanceTemporalMonitor(delta.removed, delta.added);
+		}}
 		JasonPipelineIndexedBeliefBase.applyDynamicDelta(
 			delta.removed,
 			delta.added
@@ -2003,6 +2066,7 @@ public class {class_name} extends Environment {{
 		monitorAcceptingStates.clear();
 		monitorState = null;
 		monitorAcceptingBelief = null;
+		monitorObservationBoundary = "primitive_step";
 		temporalMonitorEnabled = false;
 		if (!Files.exists(temporalMonitorPath)) {{
 			return;
@@ -2018,7 +2082,11 @@ public class {class_name} extends Environment {{
 					continue;
 				}}
 				String[] parts = trimmed.split("\\t", 4);
-				if (parts.length >= 2 && "initial".equals(parts[0])) {{
+				if (
+					parts.length >= 2 && "observation_boundary".equals(parts[0])
+				) {{
+					monitorObservationBoundary = parts[1];
+				}} else if (parts.length >= 2 && "initial".equals(parts[0])) {{
 					monitorState = parts[1];
 				}} else if (parts.length >= 2 && "accepting".equals(parts[0])) {{
 					monitorAcceptingStates.add(parts[1]);
@@ -2033,6 +2101,15 @@ public class {class_name} extends Environment {{
 						.computeIfAbsent(parts[1], ignored -> new ArrayList<>())
 						.add(new MonitorTransition(parts[1], parts[2], parts[3]));
 				}}
+			}}
+			if (
+				!"primitive_step".equals(monitorObservationBoundary)
+				&& !"atomic_module_completion".equals(monitorObservationBoundary)
+			) {{
+				throw new RuntimeException(
+					"Unsupported temporal monitor observation boundary: "
+						+ monitorObservationBoundary
+				);
 			}}
 			temporalMonitorEnabled = monitorState != null && monitorAcceptingBelief != null;
 		}} catch (IOException error) {{

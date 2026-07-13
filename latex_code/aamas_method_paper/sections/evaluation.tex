@@ -52,8 +52,11 @@ the complete effect-based ordering and portfolio certificates while retaining
 a flat sibling controller. \emph{Certified Balanced} replaces only that
 control structure with the balanced binary repair tree. \emph{Completion
 Monitor} observes the DFA only when an atomic module returns, rather than after
-every primitive action, and is evaluated on formulas with intermediate-state
-obligations. Signed-negative and bounded-numeric capability ablations retain
+every primitive action. It retains completion-effect certification and balanced
+control but omits primitive-prefix source-invariant filtering because those
+intermediate states are outside its observation semantics. It is evaluated only
+on formulas with intermediate-state obligations. Signed-negative and
+bounded-numeric capability ablations retain
 the DFA and monitor but remove their respective certified establishment
 strategies. The removed historical sequence-only wrapper is not a production
 path; if reported, it is an evaluation-only weak reference.

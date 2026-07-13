@@ -113,6 +113,8 @@ from .pddl_support import (
 )
 from .temporal_goal_appender import (
 	GuardTransitionDFADiagnostic,
+	TemporalCompilerVariant,
+	TemporalMonitorObservationBoundary,
 	append_lifted_temporal_goal_case_to_library,
 	append_temporal_goal_to_library,
 	validate_guard_transition_dfa,
@@ -162,6 +164,8 @@ __all__ = [
 	"SketchFeature",
 	"SketchPolicy",
 	"SketchRule",
+	"TemporalCompilerVariant",
+	"TemporalMonitorObservationBoundary",
 	"append_lifted_temporal_goal_case_to_library",
 	"append_temporal_goal_to_library",
 	"adapt_dfa_guard_to_achievement_request",

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 
 from domain_level_planning.transition_repair_tree import TransitionRepairLiteral
+from domain_level_planning.transition_repair_tree import compile_flat_transition_repair_controller
 from domain_level_planning.transition_repair_tree import compile_transition_repair_tree
 from plan_library.models import AgentSpeakBodyStep
 
@@ -141,3 +142,60 @@ def test_negative_guard_leaf_calls_only_a_certified_establishment_helper() -> No
 		),
 	)
 	assert leaves[1].binding_certificate[0]["literal_polarity"] == "negative"
+
+
+def test_flat_transition_controller_uses_one_ordered_sibling_per_repair() -> None:
+	literals = (
+		TransitionRepairLiteral("first", "first", ()),
+		TransitionRepairLiteral("second(X)", "second", ("X",)),
+		TransitionRepairLiteral("blocked", None, (), polarity="negative"),
+	)
+	compilation = compile_flat_transition_repair_controller(
+		transition_symbol="g_query_trans_1",
+		shared_context=("query", "obj_tp(X, item)"),
+		repair_literals=literals,
+		completion_context=("query", "not g_query_monitor_state_q0"),
+		certificate={"serialization_certificate": {"ordered_literal_indexes": [0, 1]}},
+	)
+
+	assert [plan.plan_name for plan in compilation.plans] == [
+		"g_query_trans_1_done",
+		"g_query_trans_1_repair_1",
+		"g_query_trans_1_repair_2",
+	]
+	assert {plan.trigger.symbol for plan in compilation.plans} == {"g_query_trans_1"}
+	assert compilation.plans[1].context[-1] == "not first"
+	assert compilation.plans[1].body == (
+		AgentSpeakBodyStep("subgoal", "first", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_trans_1", ()),
+	)
+	assert compilation.plans[2].context[-1] == "not second(X)"
+	assert compilation.plans[2].body == (
+		AgentSpeakBodyStep("subgoal", "second", ("X",)),
+		AgentSpeakBodyStep("subgoal", "g_query_trans_1", ()),
+	)
+	assert compilation.literal_count == 3
+	assert compilation.tree_height == 1
+	assert compilation.controller_strategy == "monitored_certified_flat_replay"
+
+
+def test_balanced_tree_checkpoints_only_after_an_achievement_call() -> None:
+	compilation = compile_transition_repair_tree(
+		transition_symbol="g_query_trans_1",
+		shared_context=("query",),
+		positive_literals=(TransitionRepairLiteral("done", "done", ()),),
+		completion_context=("query", "not g_query_monitor_state_q0"),
+		certificate={"serialization_certificate": {"threat_edges": []}},
+		monitor_checkpoint_action="temporal_monitor_checkpoint",
+	)
+
+	leaves = tuple(
+		plan
+		for plan in compilation.plans
+		if plan.trigger.symbol == "g_query_trans_1_repair_1_1"
+	)
+	assert leaves[0].body == ()
+	assert leaves[1].body == (
+		AgentSpeakBodyStep("subgoal", "done", ()),
+		AgentSpeakBodyStep("action", "temporal_monitor_checkpoint", ()),
+	)

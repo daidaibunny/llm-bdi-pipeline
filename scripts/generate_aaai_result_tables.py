@@ -388,12 +388,12 @@ def render_domain_table(result: dict[str, Any]) -> str:
 		"\\tiny",
 		"\\setlength{\\tabcolsep}{1.2pt}",
 		"\\caption{Hashed atomic-library inputs and temporal execution by domain. "
-		"M/C records readable MOOSE evidence and certified compilation; J/V/G/P "
-		"records Jason, VAL, gold-DFA, and predicted-DFA successes.}",
+		"Build records readable evidence and certified compilation; valid traces "
+		"report Jason, VAL, gold-DFA, and predicted-DFA successes in that order.}",
 		"\\label{tab:domain-results}",
 		"\\begin{tabular}{lrrrrrr}",
 		"\\toprule",
-		"Domain & Tr/Te & M/C & Ev./Sch./Sel. & KiB & J/V/G/P & Med. s \\\\",
+		"Domain & Split & Build & Candidates & KiB & Valid Traces & Time (s) \\\\",
 		"\\midrule",
 	]
 	for row in result["domains"]:
@@ -432,13 +432,13 @@ def render_profile_table(result: dict[str, Any]) -> str:
 		"\\centering",
 		"\\scriptsize",
 		"\\setlength{\\tabcolsep}{2.7pt}",
-		"\\caption{Translation and execution by temporal profile. Eq. is exact "
-		"gold/predicted DFA-language equivalence; C/J/V/G/P are controller, Jason, "
-		"VAL, gold-DFA, and predicted-DFA successes.}",
+		"\\caption{Translation and execution by temporal profile. Translation "
+		"reports input and exact DFA-equivalent counts; execution reports controller, "
+		"Jason, VAL, gold-DFA, and predicted-DFA successes in that order.}",
 		"\\label{tab:profile-results}",
 		"\\begin{tabular}{lrrrrr}",
 		"\\toprule",
-		"Profile & Q & T/Eq. & C/J/V/G/P & Med. act. & Med. s \\\\",
+		"Profile & Queries & Translation & Execution & Actions & Time (s) \\\\",
 		"\\midrule",
 	]
 	for row in result["profiles"]:

@@ -16,6 +16,7 @@ if _src_dir not in sys.path:
 
 from domain_level_planning import (  # noqa: E402
 	AtomicCompilerVariant,
+	TemporalCompilerVariant,
 	append_lifted_temporal_goal_case_to_library,
 	compile_policy_evidence_program_to_minimal_module_asl_library,
 	compile_moose_readable_policy_to_asl_library,
@@ -147,6 +148,15 @@ Examples:
 		"--query-id",
 		action="append",
 		help="Query id to append. Repeat for multiple queries. Defaults to all cases.",
+	)
+	append_temporal_parser.add_argument(
+		"--temporal-compiler-variant",
+		choices=tuple(variant.value for variant in TemporalCompilerVariant),
+		default=TemporalCompilerVariant.CERTIFIED_BALANCED.value,
+		help=(
+			"Registered temporal compiler variant. The production default is "
+			"certified_balanced."
+		),
 	)
 	append_temporal_parser.add_argument(
 		"--library-root",
@@ -416,6 +426,7 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 	dfa_builder = DFABuilder()
 	dfa_payloads: dict[str, object] = {}
 	updated_library = library
+	temporal_compiler_variant = TemporalCompilerVariant(args.temporal_compiler_variant)
 	errors: list[dict[str, object]] = []
 	for case in selected_cases:
 		try:
@@ -424,6 +435,7 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 				goal_case=case,
 				domain_file=domain_file,
 				dfa_builder=dfa_builder,
+				compiler_variant=temporal_compiler_variant,
 			)
 			dfa_payloads[case.query_id] = dict(dfa_payload)
 		except Exception as error:  # noqa: BLE001 - returned as validator feedback.
@@ -454,6 +466,7 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 			"ltlf_goal_json": ltlf_goal_json,
 			"pddl_domain_name": domain.name,
 			"query_ids": [case.query_id for case in selected_cases],
+			"temporal_compiler_variant": temporal_compiler_variant.value,
 			"dfa_payloads": dfa_payloads,
 		},
 		allow_overwrite=True,
@@ -468,6 +481,7 @@ def _append_lifted_temporal_goal(args: argparse.Namespace) -> dict[str, Any]:
 	)
 	results = {
 		"success": True,
+		"temporal_compiler_variant": temporal_compiler_variant.value,
 		"domain_name": updated_library.domain_name,
 		"appended_query_count": len(selected_cases),
 		"plan_count": len(updated_library.plans),

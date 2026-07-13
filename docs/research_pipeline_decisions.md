@@ -127,7 +127,7 @@ LTLf JSON, binding, real MONA-derived DFA, and Jason PDDL environment.
 | Unprotected DFA | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or preserving branch portfolios. |
 | Certified Flat | Use complete effect summaries, threat-safe order, and per-occurrence preservation portfolios, but compile literals as flat sibling plans. |
 | Certified Balanced | Compile the identical certified literal order and branch choices into the balanced binary repair tree. |
-| Completion Monitor | Retain the Certified Balanced controller and choices but advance the DFA only when an atomic module returns, for the dedicated intermediate-state semantic challenge set. |
+| Completion Monitor | Retain completion-effect certification and the balanced controller, advance the DFA only when an atomic module returns, and omit primitive-prefix source-invariant filtering because intermediate primitive states are outside this ablation's observation semantics. |
 
 Unprotected DFA and Completion Monitor are evaluation modes, never production
 fallbacks. The historical
@@ -852,6 +852,11 @@ primitive action may replace that serialization only when symbolic execution
 proves that its complete net effect establishes every Boolean and numeric
 literal in the guard. This is a whole-guard certificate, not a domain-specific
 numeric operator or an unrestricted arithmetic planner.
+The query-local helper is callable from every positive guard literal established
+by that action. Every call carries the complete anchor argument tuple used by
+the symbolic binding certificate. Therefore an already-satisfied first literal
+cannot make the action unreachable while another established sibling remains
+false, and a sibling with fewer arguments cannot silently drop a query binding.
 It never falls back to parser order or a monotonic step-helper path. Negative
 guard literals remain context checks and are never converted into negative
 achievement subgoals.

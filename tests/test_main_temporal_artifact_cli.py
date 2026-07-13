@@ -311,6 +311,53 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert "dfa_state" not in asl
 
 
+def test_main_registers_temporal_compiler_variant_in_artifacts(tmp_path: Path) -> None:
+	domain_file, _ = _write_tiny_domain_and_problem(tmp_path)
+	library_root = tmp_path / "domain_libraries"
+	_write_atomic_library_json(library_root, domain_name="tiny")
+	goal_json = _write_lifted_ltlf_goal_json(tmp_path)
+
+	completed = subprocess.run(
+		[
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"append-lifted-temporal-goal",
+			"--domain-file",
+			str(domain_file),
+			"--ltlf-goal-json",
+			str(goal_json),
+			"--query-id",
+			"query_1",
+			"--temporal-compiler-variant",
+			"certified_flat",
+			"--library-root",
+			str(library_root),
+		],
+		cwd=PROJECT_ROOT,
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+	result = json.loads(completed.stdout)
+	library_payload = json.loads(
+		Path(result["artifact_paths"]["plan_library"]).read_text(encoding="utf-8"),
+	)
+	artifact_metadata = json.loads(
+		Path(result["artifact_paths"]["artifact_metadata"]).read_text(
+			encoding="utf-8",
+		),
+	)
+
+	assert result["temporal_compiler_variant"] == "certified_flat"
+	assert artifact_metadata["temporal_compiler_variant"] == "certified_flat"
+	assert library_payload["metadata"]["temporal_goal_append"][
+		"temporal_compiler_variant"
+	] == "certified_flat"
+	assert library_payload["metadata"]["temporal_goal_append"][
+		"controller_structure"
+	] == "flat"
+
+
 def test_main_can_append_multiple_queries_to_same_domain_library(
 	tmp_path: Path,
 ) -> None:

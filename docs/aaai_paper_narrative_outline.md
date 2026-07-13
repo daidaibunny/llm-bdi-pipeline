@@ -210,7 +210,9 @@ library.
    full literal atom and leave uncertified literals observation-only. Explain
    strict unit progress, exact non-unit predecessor guards, and the complete
    single-action whole-guard certificate as three bounded strategies rather
-   than claiming arbitrary numeric planning.
+   than claiming arbitrary numeric planning. A whole-guard helper must be
+   callable from every positive literal it establishes and must carry the
+   certificate's complete anchor arguments.
 8. For an Until source state, extract common waiting-loop literals as source
    invariants. Require primitive-prefix preservation until the single positive
    progress literal is established. Explain lexicographic predicate/numeric
@@ -308,9 +310,11 @@ binding, and Jason runtime fixed:
    portfolios, retaining flat sibling control.
 3. **Certified Balanced:** replace only flat control with the balanced binary
    repair tree.
-4. **Completion Monitor:** retain Certified Balanced behavior but observe
-   the DFA only after an atomic module returns, exposing intermediate-state
-   violations on the dedicated semantic challenge set.
+4. **Completion Monitor:** retain completion-effect certification and balanced
+   control, observe the DFA only after an atomic module returns, and omit
+   primitive-prefix source-invariant filtering because intermediate primitive
+   states are not observable under this ablation; compare it only on the
+   dedicated intermediate-state semantic challenge set.
 
 Certificate-family ablations must remove the affected candidate family and fail
 closed. They must never disable a certificate and emit an unchecked branch.

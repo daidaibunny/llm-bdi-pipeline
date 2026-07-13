@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
+from domain_level_planning.temporal_goal_appender import TemporalCompilerVariant
 from evaluation.jason_runtime import JasonPlanLibraryRunner
 from evaluation.jason_runtime.environment_adapter import JasonEnvironmentRuntimeAdapter
 from evaluation.jason_runtime.runner import _build_environment_java_source
@@ -163,6 +164,38 @@ def test_temporal_monitor_config_preserves_grounded_dfa_guards() -> None:
 	assert "complete(item)" in config
 	assert "fuel_level(vehicle,0)" in config
 	assert "fuel-level" not in config
+
+
+def test_temporal_monitor_config_and_runtime_support_module_completion_boundary() -> None:
+	config = _render_temporal_monitor_config(
+		{
+			"initial_state": "q0",
+			"accepting_states": ["q1"],
+			"guarded_transitions": [
+				{"source_state": "q0", "target_state": "q1", "raw_label": "done"},
+				{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+			],
+		},
+		goal_name="g_query_1",
+		observation_boundary="atomic_module_completion",
+	)
+	action = PDDLAction(
+		name="finish",
+		parameters=[],
+		preconditions="(ready)",
+		effects="(and (done) (not (ready)))",
+	)
+	source = _build_environment_java_source(
+		class_name="JasonPipelineEnvironment",
+		action_schemas=(_runtime_action_schema(action),),
+		seed_facts_file_name="initial_facts.txt",
+	)
+
+	assert "observation_boundary\tatomic_module_completion" in config
+	assert '"temporal_monitor_checkpoint".equals(action.getFunctor())' in source
+	assert '"primitive_step".equals(monitorObservationBoundary)' in source
+	assert '"atomic_module_completion".equals(monitorObservationBoundary)' in source
+	assert "recordPlanAction(schema, action);" in source
 
 
 def test_plan_verifier_command_normalization_and_not_configured_result(tmp_path: Path) -> None:
@@ -707,6 +740,104 @@ def test_jason_executes_only_negative_preserving_query_alias(tmp_path: Path) -> 
 	assert Path(result.artifacts["committed_plan_trace"]).read_text(
 		encoding="utf-8",
 	) == "(deliver-safely item)\n"
+
+
+@pytest.mark.skipif(
+	not (shutil.which("java") and shutil.which("javac") and shutil.which("mvn")),
+	reason="real Jason validation requires java, javac, and Maven",
+)
+def test_jason_completion_monitor_observes_after_atomic_module_return(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	library_file = tmp_path / "plan_library.asl"
+	domain_file.write_text(
+		"""
+(define (domain completion-boundary)
+ (:requirements :strips)
+ (:predicates (ready) (working) (done))
+ (:action begin
+  :parameters ()
+  :precondition (ready)
+  :effect (and (working) (not (ready))))
+ (:action finish
+  :parameters ()
+  :precondition (working)
+  :effect (and (done) (ready) (not (working))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem completion-boundary-problem)
+ (:domain completion-boundary)
+ (:init (ready))
+ (:goal (and)))
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{"source_state": "q0", "target_state": "q0", "raw_label": "ready & not done"},
+			{"source_state": "q0", "target_state": "q1", "raw_label": "done"},
+			{
+				"source_state": "q0",
+				"target_state": "dead",
+				"raw_label": "not ready & not done",
+			},
+			{"source_state": "q0", "target_state": "dead", "raw_label": "not ready & done"},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+			{"source_state": "dead", "target_state": "dead", "raw_label": "true"},
+		],
+	}
+	atomic_library = PlanLibrary(
+		domain_name="completion-boundary",
+		plans=(
+			AgentSpeakPlan(
+				"done_via_begin_finish",
+				AgentSpeakTrigger("achievement_goal", "done", ()),
+				("ready",),
+				(
+					AgentSpeakBodyStep("action", "begin", ()),
+					AgentSpeakBodyStep("action", "finish", ()),
+				),
+			),
+		),
+	)
+	updated = append_temporal_goal_to_library(
+		plan_library=atomic_library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+		compiler_variant=TemporalCompilerVariant.COMPLETION_BOUNDARY_MONITOR,
+	)
+	library_file.write_text(render_plan_library_asl(updated), encoding="utf-8")
+
+	result = JasonPlanLibraryRunner(timeout_seconds=20).validate(
+		domain_file=domain_file,
+		problem_file=problem_file,
+		plan_library_asl=library_file,
+		goal_name="g_query_1",
+		output_dir=tmp_path / "jason",
+		temporal_dfa_payload=dfa_payload,
+		temporal_monitor_observation_boundary="atomic_module_completion",
+	)
+
+	assert result.success is True, result.to_dict()
+	assert result.action_path == ("begin()", "finish()")
+	assert result.action_count == 2
+	assert Path(result.artifacts["committed_plan_trace"]).read_text(
+		encoding="utf-8",
+	) == "(begin)\n(finish)\n"
+	assert "observation_boundary\tatomic_module_completion" in Path(
+		result.artifacts["temporal_dfa_monitor"],
+	).read_text(encoding="utf-8")
 
 
 @pytest.mark.skipif(

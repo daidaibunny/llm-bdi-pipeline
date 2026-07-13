@@ -190,6 +190,10 @@ $+!\mathit{on}(X,Y)$ module. A mismatched sealed audit binding is rejected.
 For guard $P^+\land\neg P^-$, compilation computes completion summaries and a
 threat graph, topologically orders an acyclic graph, otherwise searches a
 preserving branch portfolio and then a whole-guard action; failure rejects.
+When one action establishes the complete guard, its helper is callable from
+every positive literal it establishes and carries the full certified anchor
+tuple. Thus an already-true first literal cannot hide the action from an unmet
+sibling or discard a query binding.
 The certified order is rendered as a balanced repair tree.
 
 \subsection{Conditional Completion Effects}
