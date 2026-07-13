@@ -665,6 +665,13 @@ matrix. If the final four-table budget is already occupied, place the full
 external table in the supplement and report only the paired headline comparison
 in the Evaluation text.
 
+Generate all three comparison tables with
+`scripts/generate_aaai_comparison_tables.py`. Its mandatory inputs are the
+complete paired compiler result, Raw MOOSE summaries explicitly assigned to
+seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, and
+the challenge summary. The script must fail rather than render a partial table
+when a method, seed, case, hash pairing, or clean-source condition is missing.
+
 ### TEG Table
 
 ### Table 3: Five-Seed Atomic Evaluation
@@ -763,6 +770,8 @@ The agent that receives the final TEG run must:
    if an empirical case happens to pass outside them.
 8. retain the zero-action conformance result as a separate semantic boundary;
    do not add a synthetic noop or merge it into the non-empty VAL denominator.
+9. generate baseline and ablation values from the checked comparison release;
+   do not hand-edit numeric LaTeX cells.
 
 ## Submission Readiness
 
