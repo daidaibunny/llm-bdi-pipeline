@@ -25,26 +25,26 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from language_model.openai_compatible import (
+from language_model.openai_compatible import (  # noqa: E402
 	create_openai_compatible_client,
 	create_openai_compatible_json_completion,
 )
-from temporal_specification.errors import (
+from temporal_specification.errors import (  # noqa: E402
 	NON_RETRYABLE_ERROR_CODES,
 	TranslationErrorCode,
 	build_retry_feedback,
 )
-from temporal_specification.prediction_validation import (
+from temporal_specification.prediction_validation import (  # noqa: E402
 	PredictionValidationError,
 	validate_prediction_payload,
 )
-from temporal_specification.prompts import (
+from temporal_specification.prompts import (  # noqa: E402
 	FULL_PROMPT_CONFIG,
 	build_lifted_ltlf_system_prompt,
 	build_lifted_ltlf_user_prompt,
 	build_retry_user_message,
 )
-from utils.config import get_config
+from utils.config import get_config  # noqa: E402
 
 DEFAULT_HANDOFF_ROOT = (
 	PROJECT_ROOT / "artifacts" / "temporal_nl_handoffs" / "temporal-nl-v1-20260711-final"
