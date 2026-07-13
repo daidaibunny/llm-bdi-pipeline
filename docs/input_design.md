@@ -1146,6 +1146,39 @@ Post-model validation uses separate outcome classes:
 | `problem_validation_error` | A sealed problem, assignment, witness, PDDL replay, or benchmark linkage failed consistency checking. |
 | `execution_rejected` | An optional generated plan failed PDDL replay, independent VAL, gold-DFA acceptance, or predicted-DFA acceptance. |
 
+## Temporal Compiler Comparison Protocol
+
+Temporal translation accuracy and temporal action-strategy compilation are
+different experiments. Translation compares predicted and sealed gold DFA
+languages before execution. Compiler ablations begin only after one validated
+lifted LTLf payload, binding, and real MONA-derived DFA have been fixed.
+
+The primary temporal baseline is `dfa_aware_unprotected`: it retains the real
+DFA, source-state dispatch, primitive-step monitor, and the same atomic-library
+hash, but serializes conjunction literals in a deterministic canonical order
+without completion-effect threat ordering or preservation-safe branch
+portfolios. It is an evaluation mode rather than a production fallback. The
+full method adds effect-certified ordering and branch portfolios. A second
+paired ablation changes only the AgentSpeak control structure from flat sibling
+plans to the balanced binary repair tree. A semantic-boundary ablation advances
+the monitor only when an atomic module returns and is evaluated against cases
+whose intermediate primitive states matter.
+
+Every temporal variant must record the validated input hash, binding, DFA hash,
+atomic JSON/ASL hashes, controller strategy, observation boundary, selected
+literal order, and selected preservation portfolios. Required outcomes are
+controller compilation or structured rejection, Jason success, neutral-goal
+VAL, gold-DFA acceptance, predicted-DFA acceptance, action count, append time,
+runtime or PAR-2, controller plan count, and maximum trigger fan-out. A failed
+variant cannot change the input formula, binding, DFA, atomic library, or timeout
+and retry under a different query.
+
+A direct LTLf planning compilation is an external reference on its supported
+grounded Boolean subset, not a replacement for this paired compiler ablation.
+Pure-past systems such as Plan4Past require an independently verified
+language-equivalent translation before their numbers can be compared. Existing
+published results over different formula sets are related-work evidence only.
+
 ## Metrics and Paper Claim
 
 Construction reports:

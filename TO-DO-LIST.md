@@ -49,7 +49,11 @@ certificate.
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. |
 | Temporal execution validation | Complete on pinned revision | `teg-paper-clean-e28bcea4` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. The run records commit `e28bcea4`, no tracked changes, every atomic-library input hash, 12 workers, 1,800-second Jason/VAL limits, and a 64-MiB Java stack. |
-| AAAI paper package | Pinned structural and TEG matrices inserted | `scripts/generate_aaai_result_tables.py` now validates and generates all reported macros/tables from the frozen benchmark, predictions, clean TEG summary, and hash-locked atomic inputs. The draft fits seven technical pages. A clean atomic-generation timing run, ablations/baselines, stronger rejection coverage, and supplementary proofs remain submission gaps. |
+| AAAI paper package | Baseline/ablation protocol registered; result cells pending | The manuscript and normative design now define paired C0--C3 atomic and T0--T3 temporal comparisons, separately labelled MOOSE/planner references, metrics, hashes, and statistics. Populate only from the machine-readable experiment runner after the current achievement rerun completes. |
+| Atomic experiment harness | In progress | Implement native validated-adapter, action-only-closure, all-certified, and full-Clingo compilation modes over one normalized evidence artifact, with isolated outputs and paired manifests. |
+| Temporal experiment harness | In progress | Implement native DFA-aware-unprotected, certified-flat, full-balanced, and completion-boundary monitor modes over one fixed query/DFA/library tuple. |
+| External references | In progress | Configure exact raw-MOOSE execution, LAMA classical, ENHSP MRP+HJ numeric, and a direct-LTLf planning reference on its declared supported subset; report them separately. |
+| Rejection and metamorphic matrix | In progress | Add a machine-readable challenge runner for certificate rejection, symbol renaming, compatible parameter permutation, object renaming, and irrelevant-fluent injection. |
 
 ## Certified Generic Fixes
 

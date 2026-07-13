@@ -15,6 +15,10 @@ MOOSE learns lifted condition-to-macro rules through singleton-goal regression
 \cite{Chen2026Moose}. We do not replace these generalized planners. Our problem
 is downstream: compile their singleton-goal evidence, together with PDDL schema
 closure, into executable and maintainable AgentSpeak modules.
+Accordingly, the primary empirical baseline is a validated direct adapter of
+the same normalized evidence, not an unrelated planner with a different output
+representation. Raw MOOSE and per-instance planners remain external references
+for evidence quality, coverage, and plan quality.
 
 \paragraph{Modular policies and BDI programs.}
 Policy-reuse languages permit one generalized policy to call another with
@@ -44,6 +48,12 @@ programming languages as explicit goal semantics \cite{Hindriks2009TemporalGoals
 We instead preserve standard AgentSpeak execution and compile the supported
 automaton fragment into query-local intentions over a separately synthesized
 domain library.
+Plan4Past compares alternative temporal compilations while holding the
+downstream classical planner fixed \cite{Bonassi2023Plan4Past}. We adopt this
+comparison principle: our primary temporal baseline uses the same DFA, atomic
+library, monitor, and Jason runtime, and removes only effect-based preservation.
+Direct LTLf compilation plus a classical planner is reported separately because
+it solves each grounded query rather than producing a reusable BDI library.
 
 \paragraph{Position of this work.}
 Prior generalized planners target policies, sketches, or programs; AgentSpeak

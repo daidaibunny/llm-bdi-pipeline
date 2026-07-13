@@ -87,6 +87,80 @@ The architecture separates four modules.
    runtime. It validates that trace independently with PDDL replay, VAL, and
    gold-DFA acceptance.
 
+## Experimental Comparison Contract
+
+The framework is not evaluated as though it were one more per-instance PDDL
+planner. MOOSE is one instantiated Evidence Module provider; the proposed
+components are the Validated Policy-Lifting Compiler and Temporal Query
+Compiler. Baselines and ablations therefore match one module boundary at a time.
+
+### Primary Atomic Comparison
+
+All atomic variants consume the same serialized `PolicyEvidenceProgram`, PDDL
+domain, train/test split, and evidence hash.
+
+| ID | Variant | Native behavior |
+| --- | --- | --- |
+| `C0` | Validated Evidence Adapter | Validate each evidence macro by symbolic PDDL execution and render the surviving lifted macro plans. Do not add schema closure, internal subgoal modules, or branch optimization. |
+| `C1` | Action-Only Closure | Add every certificate-valid action-only PDDL producer candidate required by producible-fluent closure. Do not add subgoal-decomposed candidates. |
+| `C2` | All Certified Candidates | Add certificate-valid recursive preparation, staged preparation, and finite resource-discharge candidates and retain the complete certified candidate set. |
+| `C3` | Full Compiler | Run the joint Clingo selector over exactly the C2 candidate set and its evidence/closure obligations. |
+
+C0 is deliberately a strong baseline rather than an unchecked text translator.
+It preserves all provider macros that meet the same schema validation used by
+the full method. C2 versus C3 changes only selection, so differences in output
+size and Jason matching cost can be attributed to Clingo. A certificate-family
+ablation removes the affected candidate family and records resulting rejections
+or coverage loss; it must not bypass the certificate and emit unsafe code.
+
+### Primary Temporal Comparison
+
+All temporal variants consume the same atomic-library hash, validated lifted
+LTLf JSON, binding, real MONA-derived DFA, and Jason PDDL environment.
+
+| ID | Variant | Native behavior |
+| --- | --- | --- |
+| `T0` | DFA-Aware Unprotected | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or preserving branch portfolios. |
+| `T1` | Certified Flat | Use complete effect summaries, threat-safe order, and per-occurrence preservation portfolios, but compile literals as flat sibling plans. |
+| `T2` | Full Balanced | Compile T1's identical certified literal order and branch choices into the balanced binary repair tree. |
+| `T3` | Completion-Boundary Monitor | Retain T2's controller and choices but advance the DFA only when an atomic module returns, for the dedicated intermediate-state semantic challenge set. |
+
+T0 and T3 are evaluation modes, never production fallbacks. The historical
+sequence-only PDDL-goal wrapper may be retained only as a weak evaluation
+reference in isolated artifacts; production temporal append always follows the
+real DFA transition path. Signed-negative and bounded-numeric capability
+ablations retain the DFA and remove only their certified establishment strategy.
+
+### External References and Fairness
+
+Raw MOOSE execution distinguishes evidence quality from compiler and
+AgentSpeak execution. LAMA for classical instances, ENHSP MRP+HJ for numeric
+instances, and a direct LTLf compilation with a fixed classical planner are
+external task-level references. Their outputs and cost structures differ from a
+reusable AgentSpeak library, so they are reported separately from C0--C3 and
+T0--T3. Plan4Past supplies the experimental design precedent of fixing the
+downstream planner while comparing temporal compilations; its pure-past input
+is not treated as directly interchangeable with our future LTLf input without a
+separately proved language-equivalent translation.
+
+Five fixed MOOSE seeds are run independently with one internal MOOSE worker.
+Evidence is never unioned and a best seed is never selected. Every paired
+compiler comparison records the exact evidence hash; every paired temporal
+comparison records the atomic-library, input, binding, and DFA hashes. Report
+each seed, mean and sample standard deviation, paired coverage differences,
+PAR-2 for timeouts, and plan length only on jointly solved instances. Keep
+evidence synthesis, domain compilation, query append, execution, and validation
+times separate. Published values obtained under other hardware, splits, or
+formula sets are related-work context and are not copied into result tables.
+
+The rejection suite is part of the evaluation rather than an implementation
+unit test only. It covers unbound variables, incomplete closure, non-decreasing
+recursion, unreleased resource debt, cyclic or incomplete completion threats,
+forbidden negative-guard `MayAdd`, and numeric overshoot. Metamorphic tests apply
+predicate/action/object renaming, compatible parameter permutation, and
+irrelevant-fluent injection. These are the empirical checks behind the
+domain-independent and fail-closed claims.
+
 ## Temporal Goal Validation Contract
 
 One benchmark record is

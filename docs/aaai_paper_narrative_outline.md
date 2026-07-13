@@ -263,19 +263,58 @@ DFA strategy synthesis, or primitive-state safety to a theorem.
 
 ### 6. Experimental Evaluation
 
-The final evaluation answers five questions:
+The evaluation must match the paper's actual contribution: MOOSE is one
+instantiated Evidence Module provider, while the proposed method is the
+post-evidence library compiler and temporal query compiler. There is therefore
+no single global planner baseline. The final evaluation answers five questions:
 
-- **RQ1 Atomic coverage:** how often does MOOSE evidence compile into a closed,
-  certified lifted AgentSpeak library?
-- **RQ2 Compactness and invariance:** how much does joint selection reduce the
-  candidate library, and do decisions survive vocabulary renaming, compatible
-  parameter permutation, and irrelevant-fluent injection?
-- **RQ3 Temporal correctness:** how often do supported DFA guards compile into
-  preservation-certified controllers without changing order across DFA edges?
-- **RQ4 End-to-end validity:** how often does Jason produce a complete action
-  trace that both VAL and the corresponding finite-trace DFA accept?
-- **RQ5 Efficiency:** what are synthesis, compilation, query-append, Jason, and
-  validation costs, and how do library/controller size affect them?
+- **RQ1 Evidence-to-library efficacy:** relative to validated direct adaptation
+  of the same normalized evidence, how much do schema-certified lifting and
+  internal closure improve module coverage and held-out execution?
+- **RQ2 Compiler contribution:** what are the separate effects of action-only
+  schema closure, decomposed recursive/resource/preparation candidate
+  generation, and joint Clingo selection on coverage, size, and runtime?
+- **RQ3 Temporal composition correctness:** relative to a controller using the
+  same real DFA, atomic library, monitor, and Jason runtime but no
+  effect-preservation reasoning, how much do threat ordering and preserving
+  branch portfolios improve VAL- and DFA-valid execution?
+- **RQ4 Structural efficiency:** what do joint selection and the balanced repair
+  tree change in branch count, controller plans, maximum trigger fan-out,
+  compilation/load time, and execution time without changing semantics?
+- **RQ5 End-to-end utility:** across domains, formula profiles, and evidence
+  seeds, how often does the full system produce Jason+VAL+DFA accepted traces,
+  and what reusable-library amortization is observed relative to raw MOOSE and
+  per-instance planning references?
+
+The registered atomic comparison is cumulative and paired on one exact
+normalized evidence hash:
+
+1. **C0 Validated Evidence Adapter:** schema-check and render provider macros;
+   do not perform PDDL closure, internal-module synthesis, or optimization.
+2. **C1 Action-Only Closure:** add PDDL producer closure without decomposed
+   subgoal candidates.
+3. **C2 All Certified Candidates:** add progress-, preparation-, and
+   resource-certified decomposed candidates and retain all certified branches.
+4. **C3 Full Compiler:** run the joint Clingo optimization over exactly the C2
+   candidate universe.
+
+The registered temporal comparison holds the DFA, atomic-library hash, query
+binding, and Jason runtime fixed:
+
+1. **T0 DFA-Aware Unprotected:** canonical within-edge serialization, real DFA,
+   and primitive-step monitor, but no threat ordering or preservation portfolio.
+2. **T1 Certified Flat:** add complete-effect threat ordering and preserving
+   portfolios, retaining flat sibling control.
+3. **T2 Full Balanced:** replace only flat control with the balanced binary
+   repair tree.
+4. **T3 Completion-Boundary Monitor:** retain T2's selected behavior but observe
+   the DFA only after an atomic module returns, exposing intermediate-state
+   violations on the dedicated semantic challenge set.
+
+Certificate-family ablations must remove the affected candidate family and fail
+closed. They must never disable a certificate and emit an unchecked branch.
+The historical sequence-only wrapper may appear only as an evaluation-only weak
+reference; it must not return as a production fast path.
 
 The benchmark section records all 16 domain families and their pinned splits.
 The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
@@ -287,6 +326,25 @@ seed-process concurrency is an execution setting, not a MOOSE hyperparameter.
 Cross-seed Jason/VAL runs remain sequential while per-test validation is
 parallel within one seed. Noisy runtime comparisons require controlled repeated
 runs and dispersion rather than timings collected under cross-seed contention.
+
+Raw MOOSE, LAMA for classical planning, ENHSP MRP+HJ for numeric planning, and
+a direct LTLf compilation with a fixed classical planner are external
+task-level references, not primary compiler baselines. Published numbers from
+different splits or hardware may be cited as prior results but must not be
+inserted into paired experiment tables. Plan4Past is a design precedent for
+holding the downstream planner fixed while comparing temporal compilations; it
+is not directly comparable until any future-LTLf-to-past-LTLf translation has
+been proved language-equivalent.
+
+Atomic metrics are producible-predicate coverage, module closure, held-out
+Jason+VAL coverage, branch/context/body costs, ASL bytes, and compile time.
+Temporal metrics are compile/rejection status, Jason success, VAL validity,
+gold-DFA acceptance, action count, PAR-2 runtime, append time, controller size,
+and maximum trigger fan-out. Plan length is compared only on jointly solved
+instances. Report paired coverage differences, every seed, mean and sample
+standard deviation. A rejection challenge suite and symbol-renaming,
+parameter-permutation, object-renaming, and irrelevant-fluent metamorphic tests
+are mandatory evidence for fail-closed and domain-independent behavior.
 
 The final paper must distinguish:
 
@@ -383,6 +441,39 @@ VAL successes
 median runtime
 ```
 
+### Atomic Baseline/Ablation Table
+
+Use rows C0--C3 and report paired results for every fixed evidence seed:
+
+```text
+compile/rejection status
+producible target coverage
+module closure
+held-out Jason+VAL coverage
+branch/context/body counts
+ASL bytes
+compiler time
+```
+
+### Temporal Baseline/Ablation Table
+
+Use rows T0--T3 on the same query/DFA/library hashes:
+
+```text
+controller compiled/rejected
+Jason success
+VAL validity
+gold-DFA acceptance
+PAR-2 runtime
+action count on jointly solved cases
+controller plan count
+maximum trigger fan-out
+```
+
+Keep raw MOOSE, LAMA/ENHSP, and direct temporal planning in a separate external
+reference table. Do not mix their output representations or costs into the
+compiler ablation table.
+
 ### TEG Table
 
 One row per formula profile or domain/profile group with at least:
@@ -454,8 +545,9 @@ The paper is not ready for submission until it additionally contains:
    standard deviation, and non-contented timing evidence; the current table
    reports only the exact hash-locked seed-0 library structure consumed by the
    clean temporal run;
-2. executable experimental baselines or ablations that isolate the compiler
-   and temporal-controller contributions;
+2. completed C0--C3 and T0--T3 registered runs, plus the separately labelled
+   external references, with empty manuscript cells populated only from their
+   machine-readable summaries;
 3. a rejection/failure analysis tied to stated assumptions; and
 4. full or supplementary proofs for claims stronger than the current proof
    sketches; and

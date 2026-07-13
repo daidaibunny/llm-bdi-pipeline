@@ -103,6 +103,35 @@ MOOSE paper's planning/instantiation comparison budget, not its separate
 generalised-plan synthesis budget. Debug runs may pass `--no-require-plan-verifier`,
 but those results are not paper-quality validation results.
 
+## Registered Experiment Modes
+
+The production path remains the validated policy-lifting compiler plus the real
+DFA, preservation-certified balanced controller, primitive-step monitor, Jason,
+and VAL. Experimental modes are explicit, isolated output variants; none may be
+selected as a silent fallback.
+
+Atomic experiment modes share one normalized evidence artifact. The validated
+adapter mode renders only PDDL-validated evidence macros. Action-only closure
+adds certified PDDL producers but no internal subgoals. All-certified mode emits
+the complete certified candidate set without Clingo minimization. Full mode
+runs joint Clingo selection over that exact candidate set. This sequence
+separates evidence quality, schema closure, lifted decomposition, and selection.
+
+Temporal experiment modes share one DFA and atomic-library hash. The
+DFA-aware-unprotected mode uses canonical within-edge order without threat or
+preservation reasoning. Certified-flat mode uses the full selected order and
+branch portfolios but retains flat sibling controller plans. Full-balanced mode
+changes only the controller indexing structure. Completion-boundary monitoring
+changes only when the real DFA is observed and is restricted to a semantic
+challenge suite with intermediate-state obligations.
+
+Each variant writes its strategy identifier, source revision, evidence/library/
+query/DFA hashes, settings, per-instance result records, and aggregate summary.
+Paper tables are generated from these summaries. A variant is paired only when
+all controlled hashes match. Raw MOOSE, LAMA/ENHSP, and direct temporal planning
+are external references and therefore use a separate report rather than being
+mixed into the compiler ablation matrix.
+
 ## Temporal Wrapper Policy
 
 The canonical appender uses the real `ltlf2dfa`/MONA automaton and emits one
