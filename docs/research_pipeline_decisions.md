@@ -251,8 +251,17 @@ as outside tool applicability, not planner failures. FOND4LTLf compilation and
 LAMA search share one 1,800-second, 8-GiB per-query budget. The setup contract in
 `scripts/setup_external_planning_references.sh` pins ENHSP revision
 `537bed55a60d9456975c56afbadd50fc8acb1dc9`, FOND4LTLf revision
-`011d9d9a5bfd6406d2c358faf8f63167f6c839bb`, its Python dependencies, and MONA
-1.4-18; `--check` verifies all binaries and hashes without modifying them.
+`011d9d9a5bfd6406d2c358faf8f63167f6c839bb`, VAL revision
+`3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4`, its Python dependencies, and
+MONA 1.4-18; `--check` verifies functional Java and MONA runtimes plus all
+pinned sources and artifact hashes without modifying them. The exact
+MOOSE-hosted LAMA runtime is non-reentrant: nested Apptainer uses host loop
+devices and MOOSE uses a shared `/work/out` directory. Raw MOOSE and LAMA calls
+therefore share one host-wide cross-process lock. Higher worker counts still
+parallelize ENHSP and FOND4LTLf compilation, but never overlap this runtime.
+Lock waiting is excluded from per-query planner time and recorded separately.
+`--resume` reuses scientific planner outcomes but retries infrastructure
+failures.
 
 Five fixed MOOSE seeds are run independently with one internal MOOSE worker.
 Evidence is never unioned and a best seed is never selected. Every paired

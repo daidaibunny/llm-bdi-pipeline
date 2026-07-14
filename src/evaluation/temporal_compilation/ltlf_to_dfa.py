@@ -135,9 +135,14 @@ class LTLfToDFA:
     MONA_TIMEOUT_SECONDS = 300
     DEFAULT_MONA_MEMORY_LIMIT_MIB = 16384
 
-    def __init__(self):
+    def __init__(self, mona_executable: str | Path | None = None):
         self.ltlf_parser = LTLfParser()
         self.encoder = PredicateToProposition()
+        self.mona_executable = (
+            Path(mona_executable).expanduser().resolve()
+            if mona_executable is not None
+            else None
+        )
 
     def convert(self, ltl_spec: Any) -> Tuple[str, Dict[str, Any]]:
         """
@@ -342,10 +347,11 @@ class LTLfToDFA:
         except subprocess.TimeoutExpired:
             pass
 
-    @staticmethod
-    def _resolve_mona_runtime() -> Tuple[str, Dict[str, str]]:
+    def _resolve_mona_runtime(self) -> Tuple[str, Dict[str, str]]:
         env = dict(os.environ)
-        explicit_mona = str(env.get("MONA_BIN") or "").strip()
+        explicit_mona = str(
+            self.mona_executable or env.get("MONA_BIN") or ""
+        ).strip()
         candidate_commands = [
             explicit_mona,
             shutil.which("mona") or "",
@@ -356,7 +362,7 @@ class LTLfToDFA:
             (
                 candidate
                 for candidate in candidate_commands
-                if candidate and Path(candidate).exists()
+                if candidate and Path(candidate).is_file()
             ),
             "",
         )
@@ -365,13 +371,12 @@ class LTLfToDFA:
                 "mona executable not found. Set MONA_BIN or add mona to PATH.",
             )
 
-        if shutil.which("mona") is None:
-            env["PATH"] = os.pathsep.join(
-                [
-                    str(Path(mona_command).resolve().parent),
-                    str(env.get("PATH") or "").strip(),
-                ],
-            ).strip(os.pathsep)
+        env["PATH"] = os.pathsep.join(
+            [
+                str(Path(mona_command).resolve().parent),
+                str(env.get("PATH") or "").strip(),
+            ],
+        ).strip(os.pathsep)
 
         library_dirs = [
             str(Path.home() / "Downloads" / "mona-1.4" / "Mem" / ".libs"),

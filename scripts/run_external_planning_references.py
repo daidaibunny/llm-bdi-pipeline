@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+import fcntl
 import hashlib
 import json
 import os
@@ -16,8 +18,10 @@ import shutil
 import statistics
 import subprocess
 import sys
+import tempfile
 import time
 from typing import Any
+from typing import Iterator
 from typing import Mapping
 from typing import Sequence
 
@@ -27,6 +31,9 @@ SRC_ROOT = PROJECT_ROOT / "src"
 DEFAULT_BATCH_ROOT = PROJECT_ROOT / "artifacts/moose_asl_batches"
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "artifacts/external_planning_references"
 DEFAULT_ENHSP_ROOT = PROJECT_ROOT / ".external/enhsp-socs24"
+MOOSE_RUNTIME_LOCK = (
+	Path(tempfile.gettempdir()) / "gp2pl-moose-exact-apptainer-runtime.lock"
+)
 
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
@@ -62,6 +69,7 @@ INFRASTRUCTURE_FAILURES = {
 	"plan_verifier_unavailable",
 	"runner_error",
 	"tool_unavailable",
+	"trace_validation_error",
 }
 
 
@@ -86,6 +94,7 @@ class GuardedCommandResult:
 	elapsed_seconds: float
 	stdout_file: Path
 	stderr_file: Path
+	runtime_lock_wait_seconds: float = 0.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -252,7 +261,56 @@ def parse_guard_failure(stderr_text: str) -> str:
 		return "timeout"
 	if "memory limit exceeded" in text:
 		return "memory_limit"
+	if "unable to locate a java runtime" in text:
+		return "tool_unavailable"
+	if (
+		"container creation failed" in text
+		or "failed to find loop device" in text
+		or ("filenotfounderror" in text and "/work/out/" in text)
+	):
+		return "runner_error"
 	return "planner_failed"
+
+
+def is_infrastructure_failure(status: object) -> bool:
+	"""Return whether a case must be retried instead of counted as planner evidence."""
+
+	value = str(status or "")
+	return value in INFRASTRUCTURE_FAILURES or value.endswith(
+		("_runner_error", "_tool_unavailable"),
+	)
+
+
+def reference_runtime_lock(method: ExternalReferenceMethod) -> Path | None:
+	"""Serialize methods hosted by the non-reentrant MOOSE Apptainer runtime."""
+
+	if method in {ExternalReferenceMethod.RAW_MOOSE, ExternalReferenceMethod.LAMA}:
+		return MOOSE_RUNTIME_LOCK
+	return None
+
+
+def validate_enhsp_runtime(enhsp_jar: str | Path) -> None:
+	"""Fail before scheduling when ENHSP has no usable Java runtime or pinned JAR."""
+
+	jar_file = Path(enhsp_jar).expanduser().resolve()
+	if not jar_file.is_file():
+		raise ValueError(f"Missing pinned ENHSP jar: {jar_file}")
+	java = shutil.which("java")
+	if java is None:
+		raise ValueError("ENHSP requires a working Java runtime; java was not found on PATH.")
+	completed = subprocess.run(
+		(java, "-version"),
+		capture_output=True,
+		text=True,
+		check=False,
+	)
+	if completed.returncode != 0:
+		detail = str(completed.stderr or completed.stdout or "").strip().splitlines()
+		suffix = f" Error: {detail[-1]}" if detail else ""
+		raise ValueError(
+			"ENHSP requires a working Java runtime; `java -version` failed."
+			+ suffix,
+		)
 
 
 def summarize_records(
@@ -309,6 +367,8 @@ def main() -> int:
 		raise ValueError("--max-rss-gb must be positive.")
 	if args.num_workers <= 0 or args.timeout_seconds <= 0:
 		raise ValueError("Worker and timeout values must be positive.")
+	if ExternalReferenceMethod.ENHSP_HMRPHJ in methods:
+		validate_enhsp_runtime(args.enhsp_jar)
 	model_batch = (
 		resolve_model_batch(args.batch_root, args.batch_id, domains)
 		if ExternalReferenceMethod.RAW_MOOSE in methods
@@ -353,6 +413,8 @@ def main() -> int:
 			"max_rss_gb": float(args.max_rss_gb),
 			"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
 			"plan_verifier_command": str(args.plan_verifier_command),
+			"moose_runtime_max_parallelism": 1,
+			"moose_runtime_lock_scope": "host",
 		},
 		"toolchain": toolchain_metadata(args.enhsp_jar),
 		"results": [],
@@ -396,7 +458,7 @@ def main() -> int:
 			"results": records,
 			"metrics": metrics,
 			"infrastructure_failure_count": sum(
-				1 for record in records if record.get("status") in INFRASTRUCTURE_FAILURES
+				1 for record in records if is_infrastructure_failure(record.get("status"))
 			),
 		}
 	)
@@ -486,6 +548,7 @@ def run_reference_task(
 		output_dir=task.output_dir,
 		timeout_seconds=timeout_seconds,
 		max_rss_gb=max_rss_gb,
+		exclusive_lock_file=reference_runtime_lock(task.method),
 	)
 	record.update(
 		{
@@ -494,6 +557,7 @@ def run_reference_task(
 			"elapsed_seconds": command_result.elapsed_seconds,
 			"planner_stdout": str(command_result.stdout_file),
 			"planner_stderr": str(command_result.stderr_file),
+			"runtime_lock_wait_seconds": command_result.runtime_lock_wait_seconds,
 		}
 	)
 	if command_result.exit_code != 0:
@@ -621,6 +685,7 @@ def run_guarded_command(
 	max_rss_gb: float,
 	extra_env: Mapping[str, str] | None = None,
 	artifact_stem: str = "planner",
+	exclusive_lock_file: Path | None = None,
 ) -> GuardedCommandResult:
 	"""Run one planner under the shared hard process-tree resource guard."""
 
@@ -640,26 +705,48 @@ def run_guarded_command(
 		"--",
 		*tuple(str(item) for item in command),
 	)
-	started = time.monotonic()
-	with stdout_file.open("w", encoding="utf-8") as stdout_handle, stderr_file.open(
-		"w",
-		encoding="utf-8",
-	) as stderr_handle:
-		completed = subprocess.run(
-			guarded,
-			cwd=PROJECT_ROOT,
-			env={**os.environ, **dict(extra_env or {})},
-			stdout=stdout_handle,
-			stderr=stderr_handle,
-			check=False,
-		)
+	lock_started = time.monotonic()
+	with exclusive_runtime_slot(exclusive_lock_file):
+		lock_wait_seconds = time.monotonic() - lock_started
+		started = time.monotonic()
+		with stdout_file.open("w", encoding="utf-8") as stdout_handle, stderr_file.open(
+			"w",
+			encoding="utf-8",
+		) as stderr_handle:
+			completed = subprocess.run(
+				guarded,
+				cwd=PROJECT_ROOT,
+				env={**os.environ, **dict(extra_env or {})},
+				stdout=stdout_handle,
+				stderr=stderr_handle,
+				check=False,
+			)
+		elapsed_seconds = time.monotonic() - started
 	return GuardedCommandResult(
 		command=tuple(str(item) for item in command),
 		exit_code=completed.returncode,
-		elapsed_seconds=time.monotonic() - started,
+		elapsed_seconds=elapsed_seconds,
 		stdout_file=stdout_file,
 		stderr_file=stderr_file,
+		runtime_lock_wait_seconds=lock_wait_seconds,
 	)
+
+
+@contextmanager
+def exclusive_runtime_slot(lock_file: Path | None) -> Iterator[None]:
+	"""Hold one host-wide advisory lock around a non-reentrant native runtime."""
+
+	if lock_file is None:
+		yield
+		return
+	path = Path(lock_file).expanduser().resolve()
+	path.parent.mkdir(parents=True, exist_ok=True)
+	with path.open("a+", encoding="utf-8") as handle:
+		fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+		try:
+			yield
+		finally:
+			fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def plan_action_lines(plan_file: Path) -> tuple[str, ...]:
@@ -716,6 +803,7 @@ def load_completed_records(tasks: Sequence[ReferenceTask]) -> dict[str, dict[str
 			and record.get("test") == task.problem_file.stem
 			and record.get("domain_sha256") == _sha256(task.domain_file)
 			and record.get("problem_sha256") == _sha256(task.problem_file)
+			and not is_infrastructure_failure(record.get("status"))
 		):
 			completed[task_key(task)] = record
 	return completed

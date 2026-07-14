@@ -53,11 +53,20 @@ certificate.
 | AAAI paper package | Theoretical framework, source-verified citation audit, supplement, and all-yes claim-scoped checklist complete; paired results pending | The manuscript presents GP2PL as a certificate-carrying representation-compilation framework and AgentSpeak(L)/Jason as its evaluated realization. External definitions, prior methods, software, benchmark provenance, prompt programming, and natural-language specification claims carry sentence-local primary citations; GP2PL claims use internal propositions, tables, appendices, and released artifacts. The standalone technical supplement contains formal assumptions, complete proofs, a theory-to-code map, the paper-facing frozen natural-language-to-LTLf prompt, the novel-data appendix, source provenance, parameters, environment, distributions, and Checklist evidence. The checklist now records complete authored-code and novel-data publication; its statistical `yes` means the paper makes no untested inferential comparison. The anonymous PDF keeps the named public repository disabled. The registered five-seed compiler, temporal-ablation, and external-reference matrices still must complete before comparative or significance claims are inserted. |
 | Atomic experiment harness | Native paired runner complete | Evidence Only, Action Closure, Maximal Certified, and Full GP2PL consume byte-identical model/readable-policy evidence per seed; incomplete artifacts and matrices are rejected. Run the registered five-seed matrix before filling result cells. |
 | Temporal experiment harness | Native paired runner complete | Unprotected DFA, Certified Flat, Certified Balanced, and Completion Monitor consume the same-run seed-0 Full GP2PL libraries, fixed benchmark, sample set, and DFA matrix. Run the registered matrix before filling result cells. |
-| External references | Native runners complete; full matrices pending | Raw MOOSE, LAMA, ENHSP MRP+HJ, and FOND4LTLf plus LAMA use pinned native tools, common resource guards, concise per-case logs, and independent validation. Run the registered full matrices before filling paper cells. |
+| External references | Portable runtime fixes complete; full matrices pending | Raw MOOSE, LAMA, ENHSP MRP+HJ, and FOND4LTLf plus LAMA use pinned native tools, common resource guards, concise per-case logs, and independent validation. Setup now rejects a macOS Java launcher without a JDK, passes the pinned MONA executable into internal DFA validation, pins VAL, and serializes the non-reentrant MOOSE-hosted LAMA runtime across processes. Rerun the registered full matrices from new output roots before filling paper cells. |
 | Rejection and metamorphic matrix | Complete on clean revision | All 13 registered certificate rejection and symbol-invariance cases pass on clean commit `46c5af1e`. The portable summary is released under `paper_artifacts/gp2pl_evaluation/v1`; rerun only when a certificate implementation changes. |
 | Main empirical figure | Generator complete; final data pending | `scripts/generate_aaai_figures.py` renders the two-figure paper's empirical Figure 2 from one complete `paired_results.json`. It rejects dirty, incomplete, or unpaired matrices and writes no release PDF until the registered five-seed atomic and four-variant temporal matrix is complete. |
 
 ## Certified Generic Fixes
+
+- External-reference setup now probes a working Java runtime and MONA binary,
+  verifies the exact MOOSE artifact digest, and checks out pinned VAL source.
+  Direct temporal validation receives the selected MONA executable explicitly;
+  it no longer depends on the parent shell's `PATH`. MOOSE-hosted Raw MOOSE and
+  LAMA calls share one host-wide lock because the exact nested Apptainer runtime
+  uses global loop devices and a shared `/work/out` directory. Scientific
+  planner failures remain resumable results, while infrastructure failures are
+  retried by `--resume`.
 
 - Full-test validation freezes every selected domain and problem into a hashed,
   run-local PDDL input snapshot before starting Jason workers. A transiently
