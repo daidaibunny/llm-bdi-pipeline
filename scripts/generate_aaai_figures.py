@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the gated GP2PL empirical figure from one paired experiment."""
+"""Generate gated GP2PL empirical figures from frozen experiment artifacts."""
 
 from __future__ import annotations
 
@@ -31,6 +31,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_FILE = (
 	PROJECT_ROOT / "latex_code/aamas_method_paper/figures/fig2_evaluation.pdf"
 )
+DEFAULT_VALIDATION_RUN_ROOT = PROJECT_ROOT / "artifacts/jason_full_test_runs"
 REGISTERED_SEEDS = (0, 1, 2, 3, 4)
 REGISTERED_NUM_WORKERS = 6
 REGISTERED_TIMEOUT_SECONDS = 1800
@@ -57,6 +58,11 @@ DOMAIN_ORDER = (
 	"blocksworld-on",
 	"blocksworld-tower",
 	"depots",
+)
+BENCHMARK_GROUPS = (
+	("classical", "Classical", DOMAIN_ORDER[:8]),
+	("numeric", "Numeric", DOMAIN_ORDER[8:12]),
+	("serialized_width", "Serialized-width", DOMAIN_ORDER[12:]),
 )
 ATOMIC_VARIANTS = (
 	("validated_evidence_adapter", "Evidence Only"),
@@ -91,6 +97,11 @@ TEMPORAL_STYLES = {
 	"certified_flat": (COLORS["orange"], "--", "s"),
 	"certified_balanced": (COLORS["blue"], "-", "D"),
 	"completion_boundary_monitor": (COLORS["purple"], "-.", "^"),
+}
+GROUP_STYLES = {
+	"classical": (COLORS["blue"], "o"),
+	"numeric": (COLORS["green"], "s"),
+	"serialized_width": (COLORS["orange"], "D"),
 }
 
 
@@ -210,6 +221,307 @@ def cumulative_solved_fraction(
 	return x_values, y_values
 
 
+def build_five_seed_figure_dataset(
+	payload: Mapping[str, Any],
+	*,
+	run_summaries: Mapping[int, Mapping[str, Any]],
+	run_seconds: Mapping[int, Mapping[tuple[str, int], float]],
+) -> dict[str, Any]:
+	"""Validate five Full GP2PL runs and derive coverage and runtime curves."""
+
+	_validate_five_seed_result_gate(payload)
+	protocol = _mapping_field(payload, "protocol", label="five-seed result")
+	source_aggregate = _mapping_field(
+		payload,
+		"source_aggregate",
+		label="five-seed result",
+	)
+	seeds = tuple(int(seed) for seed in protocol["seeds"])
+	if set(run_summaries) != set(seeds) or set(run_seconds) != set(seeds):
+		raise ValueError("five-seed figure inputs do not cover every registered seed")
+
+	domain_rows = {
+		str(row.get("domain") or ""): row
+		for row in tuple(payload.get("domains") or ())
+		if isinstance(row, Mapping)
+	}
+	if set(domain_rows) != set(DOMAIN_ORDER):
+		raise ValueError("five-seed result does not contain the registered 16 domains")
+	domain_coverage: dict[str, list[float]] = {}
+	for domain in DOMAIN_ORDER:
+		rates = tuple(domain_rows[domain].get("success_rates") or ())
+		if len(rates) != len(seeds):
+			raise ValueError(f"domain {domain} does not contain five seed rates")
+		domain_coverage[domain] = [100.0 * float(rate) for rate in rates]
+
+	seed_result_rows = {
+		int(row.get("seed", -1)): row
+		for row in tuple(payload.get("seed_results") or ())
+		if isinstance(row, Mapping)
+	}
+	if set(seed_result_rows) != set(seeds):
+		raise ValueError("five-seed result has incomplete seed summaries")
+
+	validated_rows: dict[int, list[dict[str, Any]]] = {}
+	observed_worker_counts: set[int] = set()
+	observed_source_commits: set[str] = set()
+	pooled_success_count = 0
+	pooled_evaluation_count = 0
+	for seed_index, seed in enumerate(seeds):
+		summary = run_summaries[seed]
+		seed_result = seed_result_rows[seed]
+		_validate_five_seed_child_summary(
+			summary,
+			seed=seed,
+			expected_run_id=str(seed_result.get("run_id") or ""),
+			expected_source_commit=str(seed_result.get("source_commit") or ""),
+		)
+		settings = _mapping_field(summary, "settings", label=f"seed {seed} summary")
+		observed_worker_counts.add(int(settings.get("num_workers") or 0))
+		observed_source_commits.add(
+			str(_mapping_field(summary, "source_revision", label=f"seed {seed}").get(
+				"commit",
+			)
+			or ""),
+		)
+
+		rows: list[dict[str, Any]] = []
+		domain_success = {domain: 0 for domain in DOMAIN_ORDER}
+		domain_total = {domain: 0 for domain in DOMAIN_ORDER}
+		seen_cases: set[tuple[str, int]] = set()
+		for raw_record in tuple(summary.get("validations") or ()):
+			if not isinstance(raw_record, Mapping):
+				raise ValueError(f"seed {seed} has a malformed validation record")
+			domain = str(raw_record.get("domain") or "")
+			test_index = int(raw_record.get("test_index") or 0)
+			case_key = (domain, test_index)
+			if domain not in domain_total or test_index <= 0 or case_key in seen_cases:
+				raise ValueError(f"seed {seed} has an invalid case identifier {case_key}")
+			seen_cases.add(case_key)
+			domain_total[domain] += 1
+			success = raw_record.get("success") is True
+			if success:
+				if (
+					raw_record.get("status") != "success"
+					or raw_record.get("plan_verifier_attempted") is not True
+					or raw_record.get("plan_verifier_success") is not True
+				):
+					raise ValueError(
+						f"seed {seed} case {case_key} lacks Jason and VAL acceptance",
+					)
+				if case_key not in run_seconds[seed]:
+					raise ValueError(f"seed {seed} case {case_key} has no Jason runtime")
+				duration = float(run_seconds[seed][case_key])
+				if duration < 0.0 or duration > REGISTERED_TIMEOUT_SECONDS:
+					raise ValueError(
+						f"seed {seed} case {case_key} runtime is outside the deadline",
+					)
+				domain_success[domain] += 1
+			else:
+				duration = None
+			rows.append(
+				{
+					"domain": domain,
+					"test_index": test_index,
+					"success": success,
+					"run_seconds": duration,
+				},
+			)
+
+		for domain in DOMAIN_ORDER:
+			expected_total = int(domain_rows[domain].get("test_count") or 0)
+			expected_successes = tuple(
+				int(value) for value in domain_rows[domain].get("success_counts") or ()
+			)
+			if len(expected_successes) != len(seeds):
+				raise ValueError(f"domain {domain} has incomplete success counts")
+			if domain_total[domain] != expected_total:
+				raise ValueError(f"seed {seed} domain {domain} test count disagrees")
+			if domain_success[domain] != expected_successes[seed_index]:
+				raise ValueError(f"seed {seed} domain {domain} coverage disagrees")
+		seed_success_count = sum(row["success"] for row in rows)
+		if seed_success_count != int(seed_result.get("success_count") or -1):
+			raise ValueError(f"seed {seed} success count disagrees")
+		if len(rows) != int(seed_result.get("evaluation_count") or -1):
+			raise ValueError(f"seed {seed} evaluation count disagrees")
+		validated_rows[seed] = rows
+		pooled_success_count += seed_success_count
+		pooled_evaluation_count += len(rows)
+
+	if len(observed_worker_counts) != 1 or next(iter(observed_worker_counts)) <= 0:
+		raise ValueError("five seed runs do not share one positive Jason worker count")
+	observed_worker_count = next(iter(observed_worker_counts))
+	if observed_worker_count != int(protocol.get("validation_workers") or 0):
+		raise ValueError("five seed worker count disagrees with the frozen protocol")
+	freeze = _mapping_field(payload, "compiler_freeze", label="five-seed result")
+	formal_revisions = {str(value) for value in freeze.get("formal_run_revisions") or ()}
+	if observed_source_commits != formal_revisions:
+		raise ValueError("five seed source revisions disagree with the compiler freeze")
+
+	aggregate = _mapping_field(payload, "aggregate", label="five-seed result")
+	if pooled_success_count != int(aggregate.get("pooled_success_count") or -1):
+		raise ValueError("five-seed pooled success count disagrees")
+	if pooled_evaluation_count != int(aggregate.get("pooled_evaluation_count") or -1):
+		raise ValueError("five-seed pooled evaluation count disagrees")
+
+	group_curves = {
+		group_key: _five_seed_group_curve(
+			validated_rows,
+			seeds=seeds,
+			domains=set(domains),
+		)
+		for group_key, _label, domains in BENCHMARK_GROUPS
+	}
+	return {
+		"domain_coverage": domain_coverage,
+		"group_curves": group_curves,
+		"seeds": list(seeds),
+		"jason_workers": observed_worker_count,
+		"source_revisions": sorted(observed_source_commits),
+		"compiler_closure_sha256": str(freeze.get("closure_sha256") or ""),
+		"source_aggregate_run_id": str(source_aggregate.get("run_id") or ""),
+		"source_aggregate_sha256": str(source_aggregate.get("sha256") or ""),
+		"pooled_success_count": pooled_success_count,
+		"pooled_evaluation_count": pooled_evaluation_count,
+		"mean_success_percent": 100.0 * float(aggregate["mean_success_rate"]),
+		"sample_sd_success_percent": (
+			100.0 * float(aggregate["sample_sd_success_rate"])
+		),
+		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
+	}
+
+
+def _validate_five_seed_result_gate(payload: Mapping[str, Any]) -> None:
+	if payload.get("artifact_kind") != (
+		"gp2pl_five_seed_full_compiler_submission_result"
+	):
+		raise ValueError("unsupported five-seed result artifact")
+	if int(payload.get("schema_version") or 0) != 1:
+		raise ValueError("unsupported five-seed result schema")
+	protocol = _mapping_field(payload, "protocol", label="five-seed result")
+	expected_protocol = {
+		"method": "Full GP2PL",
+		"compiler_variant": "full",
+		"atomic_library_mode": "validated-policy-lifting",
+		"independent_seed_runs": True,
+		"evidence_union": False,
+		"best_seed_selection": False,
+	}
+	for key, expected in expected_protocol.items():
+		if protocol.get(key) != expected:
+			raise ValueError(f"five-seed result has unexpected {key}")
+	if tuple(protocol.get("seeds") or ()) != REGISTERED_SEEDS:
+		raise ValueError("five-seed result must contain seeds 0--4")
+	if int(protocol.get("domain_count") or 0) != len(DOMAIN_ORDER):
+		raise ValueError("five-seed result must contain 16 domains")
+	source_aggregate = _mapping_field(
+		payload,
+		"source_aggregate",
+		label="five-seed result",
+	)
+	if source_aggregate.get("verified_against_child_runs") is not True:
+		raise ValueError("five-seed result has an unverified source aggregate")
+	if len(str(source_aggregate.get("sha256") or "")) != 64:
+		raise ValueError("five-seed result source aggregate has no SHA-256")
+	expected_source_protocol = {
+		"moose_internal_workers": 1,
+		"moose_seed_parallelism": len(REGISTERED_SEEDS),
+		"cross_seed_jason_parallelism": 1,
+		"jason_workers_per_repetition": int(
+			protocol.get("validation_workers") or 0,
+		),
+	}
+	for key, expected in expected_source_protocol.items():
+		if source_aggregate.get(key) != expected:
+			if key == "jason_workers_per_repetition":
+				raise ValueError(
+					"five seed worker count disagrees with source aggregate",
+				)
+			raise ValueError(
+				f"five-seed result source aggregate has unexpected {key}",
+			)
+	freeze = _mapping_field(payload, "compiler_freeze", label="five-seed result")
+	if freeze.get("byte_identical_to_formal_run_revisions") is not True:
+		raise ValueError("five-seed result lacks a byte-identical compiler freeze")
+	if len(str(freeze.get("closure_sha256") or "")) < 16:
+		raise ValueError("five-seed result lacks a compiler closure hash")
+
+
+def _validate_five_seed_child_summary(
+	summary: Mapping[str, Any],
+	*,
+	seed: int,
+	expected_run_id: str,
+	expected_source_commit: str,
+) -> None:
+	if summary.get("artifact_kind") != (
+		"full_test_jason_validation_from_moose_asl_batch"
+	):
+		raise ValueError(f"seed {seed} has the wrong validation artifact kind")
+	if str(summary.get("run_id") or "") != expected_run_id:
+		raise ValueError(f"seed {seed} validation run id disagrees")
+	settings = _mapping_field(summary, "settings", label=f"seed {seed} summary")
+	expected_settings = {
+		"atomic_library_mode": "validated-policy-lifting",
+		"compiler_variant": "full",
+		"method": "Full Compiler",
+		"require_plan_verifier": True,
+		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
+		"plan_verifier_timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
+		"jason_java_stack_size": REGISTERED_JAVA_STACK_SIZE,
+	}
+	for key, expected in expected_settings.items():
+		if settings.get(key) != expected:
+			raise ValueError(f"seed {seed} has unexpected {key}")
+	revision = _mapping_field(summary, "source_revision", label=f"seed {seed}")
+	if str(revision.get("commit") or "") != expected_source_commit:
+		raise ValueError(f"seed {seed} source revision disagrees")
+
+
+def _five_seed_group_curve(
+	validated_rows: Mapping[int, Sequence[Mapping[str, Any]]],
+	*,
+	seeds: Sequence[int],
+	domains: set[str],
+) -> dict[str, Any]:
+	seed_success_times: dict[int, list[float]] = {}
+	seed_totals: dict[int, int] = {}
+	all_times = {MINIMUM_LOG_SECONDS, float(REGISTERED_TIMEOUT_SECONDS)}
+	for seed in seeds:
+		relevant = [row for row in validated_rows[seed] if row["domain"] in domains]
+		seed_totals[seed] = len(relevant)
+		times = sorted(
+			max(MINIMUM_LOG_SECONDS, float(row["run_seconds"]))
+			for row in relevant
+			if row["success"]
+		)
+		seed_success_times[seed] = times
+		all_times.update(times)
+	if len(set(seed_totals.values())) != 1 or not seed_totals:
+		raise ValueError("benchmark group has inconsistent seed denominators")
+	x_values = sorted(all_times)
+	seed_curves = {
+		seed: [
+			100.0 * bisect_right(seed_success_times[seed], value) / seed_totals[seed]
+			for value in x_values
+		]
+		for seed in seeds
+	}
+	columns = tuple(zip(*(seed_curves[seed] for seed in seeds), strict=True))
+	mean_values = [statistics.mean(column) for column in columns]
+	minimum_values = [min(column) for column in columns]
+	maximum_values = [max(column) for column in columns]
+	return {
+		"x_seconds": x_values,
+		"mean_percent": mean_values,
+		"minimum_percent": minimum_values,
+		"maximum_percent": maximum_values,
+		"seed_percent": seed_curves,
+		"case_count_per_seed": next(iter(seed_totals.values())),
+		"final_percent": mean_values[-1],
+	}
+
+
 def generate_empirical_figure(
 	*,
 	paired_results_file: str | Path,
@@ -229,8 +541,8 @@ def generate_empirical_figure(
 			{
 				"artifact_kind": "gp2pl_empirical_figure_diagnostic",
 				"success": False,
-				"source_file": str(input_path),
-				"output_file_untouched": str(output_path),
+				"source_file": _portable_artifact_path(input_path),
+				"output_file_untouched": _portable_artifact_path(output_path),
 				"error": str(error),
 			},
 		)
@@ -243,10 +555,10 @@ def generate_empirical_figure(
 	metadata = {
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_empirical_figure",
-		"source_file": str(input_path),
+		"source_file": _portable_artifact_path(input_path),
 		"source_sha256": _sha256(input_path),
 		"source_revision": dict(dataset["source_revision"]),
-		"output_file": str(output_path),
+		"output_file": _portable_artifact_path(output_path),
 		"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
 		"atomic_seed_count": len(REGISTERED_SEEDS),
 		"atomic_domain_count": len(DOMAIN_ORDER),
@@ -265,11 +577,159 @@ def generate_empirical_figure(
 		{
 			"artifact_kind": "gp2pl_empirical_figure_diagnostic",
 			"success": True,
-			"source_file": str(input_path),
-			"output_file": str(output_path),
+			"source_file": _portable_artifact_path(input_path),
+			"output_file": _portable_artifact_path(output_path),
 		},
 	)
 	return metadata
+
+
+def generate_five_seed_empirical_figure(
+	*,
+	five_seed_results_file: str | Path,
+	validation_run_root: str | Path,
+	output_file: str | Path,
+) -> dict[str, Any]:
+	"""Render the main five-seed coverage figure from frozen, hashed inputs."""
+
+	input_path = Path(five_seed_results_file).expanduser().resolve()
+	run_root = Path(validation_run_root).expanduser().resolve()
+	output_path = Path(output_file).expanduser().resolve()
+	diagnostic_path = output_path.with_suffix(".diagnostic.json")
+	try:
+		payload = _read_json(input_path)
+		run_summaries, run_seconds, child_hashes = _load_five_seed_run_inputs(
+			payload,
+			validation_run_root=run_root,
+		)
+		dataset = build_five_seed_figure_dataset(
+			payload,
+			run_summaries=run_summaries,
+			run_seconds=run_seconds,
+		)
+	except (OSError, TypeError, ValueError) as error:
+		_write_json(
+			diagnostic_path,
+			{
+				"artifact_kind": "gp2pl_five_seed_figure_diagnostic",
+				"success": False,
+				"source_file": _portable_artifact_path(input_path),
+				"output_file_untouched": _portable_artifact_path(output_path),
+				"error": str(error),
+			},
+		)
+		raise
+
+	pdf_bytes = _render_five_seed_figure(dataset)
+	output_path.parent.mkdir(parents=True, exist_ok=True)
+	output_path.write_bytes(pdf_bytes)
+	metadata = {
+		"schema_version": 1,
+		"artifact_kind": "gp2pl_five_seed_empirical_figure",
+		"source_file": _portable_artifact_path(input_path),
+		"source_sha256": _sha256(input_path),
+		"source_aggregate_run_id": dataset["source_aggregate_run_id"],
+		"source_aggregate_sha256": dataset["source_aggregate_sha256"],
+		"child_summary_sha256": child_hashes,
+		"output_file": _portable_artifact_path(output_path),
+		"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+		"seed_count": len(dataset["seeds"]),
+		"domain_count": len(DOMAIN_ORDER),
+		"benchmark_group_count": len(BENCHMARK_GROUPS),
+		"pooled_success_count": int(dataset["pooled_success_count"]),
+		"pooled_evaluation_count": int(dataset["pooled_evaluation_count"]),
+		"mean_success_percent": float(dataset["mean_success_percent"]),
+		"sample_sd_success_percent": float(
+			dataset["sample_sd_success_percent"],
+		),
+		"jason_workers": int(dataset["jason_workers"]),
+		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
+		"runtime_measure": "jason_timing_profile.run_seconds",
+		"compiler_closure_sha256": dataset["compiler_closure_sha256"],
+		"source_revisions": dataset["source_revisions"],
+		"figure_width_inches": FIGURE_WIDTH_INCHES,
+		"figure_height_inches": FIGURE_HEIGHT_INCHES,
+	}
+	_write_json(output_path.with_suffix(".metadata.json"), metadata)
+	_write_json(
+		diagnostic_path,
+		{
+			"artifact_kind": "gp2pl_five_seed_figure_diagnostic",
+			"success": True,
+			"source_file": _portable_artifact_path(input_path),
+			"output_file": _portable_artifact_path(output_path),
+		},
+	)
+	return metadata
+
+
+def _load_five_seed_run_inputs(
+	payload: Mapping[str, Any],
+	*,
+	validation_run_root: Path,
+) -> tuple[
+	dict[int, dict[str, Any]],
+	dict[int, dict[tuple[str, int], float]],
+	dict[str, str],
+]:
+	seed_rows = tuple(payload.get("seed_results") or ())
+	run_summaries: dict[int, dict[str, Any]] = {}
+	run_seconds: dict[int, dict[tuple[str, int], float]] = {}
+	child_hashes: dict[str, str] = {}
+	for seed_row in seed_rows:
+		if not isinstance(seed_row, Mapping):
+			raise ValueError("five-seed result contains a malformed seed row")
+		seed = int(seed_row.get("seed", -1))
+		run_id = str(seed_row.get("run_id") or "")
+		run_dir = validation_run_root / run_id
+		summary_file = run_dir / "summary.json"
+		observed_hash = _sha256(summary_file)
+		expected_hash = str(seed_row.get("summary_sha256") or "")
+		if observed_hash != expected_hash:
+			raise ValueError(f"seed {seed} child summary hash disagrees")
+		summary = _read_json(summary_file)
+		run_summaries[seed] = summary
+		child_hashes[str(seed)] = observed_hash
+		seed_times: dict[tuple[str, int], float] = {}
+		for validation in tuple(summary.get("validations") or ()):
+			if not isinstance(validation, Mapping) or validation.get("success") is not True:
+				continue
+			domain = str(validation.get("domain") or "")
+			test_index = int(validation.get("test_index") or 0)
+			runtime_file = _resolve_jason_validation_file(
+				validation,
+				run_dir=run_dir,
+			)
+			runtime_payload = _read_json(runtime_file)
+			timing = _mapping_field(
+				runtime_payload,
+				"timing_profile",
+				label=f"seed {seed} case {(domain, test_index)}",
+			)
+			raw_seconds = timing.get("run_seconds")
+			if raw_seconds is None:
+				raise ValueError(
+					f"seed {seed} case {(domain, test_index)} has no run_seconds",
+				)
+			seed_times[(domain, test_index)] = float(raw_seconds)
+		run_seconds[seed] = seed_times
+	return run_summaries, run_seconds, child_hashes
+
+
+def _resolve_jason_validation_file(
+	validation: Mapping[str, Any],
+	*,
+	run_dir: Path,
+) -> Path:
+	output_dir = Path(str(validation.get("output_dir") or ""))
+	direct_path = output_dir / "jason_validation.json"
+	if direct_path.is_file():
+		return direct_path
+	domain = str(validation.get("domain") or "")
+	portable_path = run_dir / "jason" / domain / output_dir.name / "jason_validation.json"
+	if portable_path.is_file():
+		return portable_path
+	raise ValueError(f"missing Jason timing artifact for {domain}/{output_dir.name}")
 
 
 def _validate_release_gate(payload: Mapping[str, Any]) -> None:
@@ -512,6 +972,207 @@ def _temporal_result_is_valid(record: Mapping[str, Any]) -> bool:
 	if not all(validation.get(key) is True for key in required):
 		raise ValueError("successful temporal query lacks an end-to-end success oracle")
 	return True
+
+
+def _render_five_seed_figure(dataset: Mapping[str, Any]) -> bytes:
+	rc_parameters = {
+		"font.family": "DejaVu Sans",
+		"font.size": 6.0,
+		"font.weight": "normal",
+		"axes.titlesize": 6.8,
+		"axes.titleweight": "normal",
+		"axes.labelsize": 6.0,
+		"axes.labelweight": "normal",
+		"xtick.labelsize": 5.4,
+		"ytick.labelsize": 5.4,
+		"legend.fontsize": 5.2,
+		"axes.edgecolor": COLORS["gray"],
+		"axes.linewidth": 0.5,
+		"text.color": COLORS["text"],
+		"axes.labelcolor": COLORS["text"],
+		"xtick.color": COLORS["text"],
+		"ytick.color": COLORS["text"],
+		"pdf.fonttype": 42,
+		"ps.fonttype": 42,
+		"savefig.transparent": False,
+	}
+	with matplotlib.rc_context(rc_parameters):
+		figure, axes = plt.subplots(
+			1,
+			2,
+			figsize=(FIGURE_WIDTH_INCHES, FIGURE_HEIGHT_INCHES),
+			gridspec_kw={"width_ratios": (1.05, 1.35)},
+			facecolor="white",
+		)
+		coverage_axis, runtime_axis = axes
+		figure.subplots_adjust(
+			left=0.16,
+			right=0.985,
+			top=0.925,
+			bottom=0.16,
+			wspace=0.36,
+		)
+		_plot_five_seed_domain_coverage(coverage_axis, dataset)
+		_plot_five_seed_runtime_groups(runtime_axis, dataset)
+		buffer = io.BytesIO()
+		fixed_date = datetime(2000, 1, 1, tzinfo=timezone.utc)
+		figure.savefig(
+			buffer,
+			format="pdf",
+			metadata={
+				"Title": "GP2PL five-seed held-out evaluation",
+				"Author": "Anonymous",
+				"Creator": "GP2PL Matplotlib figure generator",
+				"CreationDate": fixed_date,
+				"ModDate": fixed_date,
+			},
+		)
+		plt.close(figure)
+	return buffer.getvalue()
+
+
+def _plot_five_seed_domain_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
+	coverage = _mapping_field(dataset, "domain_coverage", label="figure dataset")
+	seed_jitter = (-0.08, -0.04, 0.0, 0.04, 0.08)
+	for domain_index, domain in enumerate(DOMAIN_ORDER):
+		y_value = len(DOMAIN_ORDER) - 1 - domain_index
+		values = [float(value) for value in coverage[domain]]
+		for seed_index, value in enumerate(values):
+			axis.scatter(
+				value,
+				y_value + seed_jitter[seed_index],
+				s=6.0,
+				color=COLORS["blue"],
+				alpha=0.28,
+				edgecolors="none",
+				zorder=2,
+			)
+		mean_value = statistics.mean(values)
+		standard_deviation = statistics.stdev(values)
+		axis.errorbar(
+			mean_value,
+			y_value,
+			xerr=standard_deviation,
+			fmt="D",
+			markersize=3.2,
+			color=COLORS["blue"],
+			markerfacecolor=COLORS["blue"],
+			markeredgecolor="white",
+			markeredgewidth=0.35,
+			elinewidth=0.65,
+			capsize=1.4,
+			zorder=4,
+		)
+		if standard_deviation > 0.0:
+			axis.text(
+				mean_value - 2.0,
+				y_value + 0.16,
+				f"{mean_value:.1f}",
+				ha="right",
+				va="bottom",
+				fontsize=5.0,
+				color=COLORS["text"],
+			)
+	for boundary_after in (7, 11):
+		boundary_y = len(DOMAIN_ORDER) - 1 - boundary_after - 0.5
+		axis.axhline(boundary_y, color=COLORS["light_gray"], linewidth=0.55)
+	axis.axvline(100.0, color=COLORS["gray"], linewidth=0.55, linestyle="--")
+	axis.set_xlim(0.0, 102.0)
+	axis.set_xticks((0, 25, 50, 75, 100))
+	axis.set_yticks(
+		list(reversed(range(len(DOMAIN_ORDER)))),
+		labels=DOMAIN_ORDER,
+	)
+	axis.set_ylim(-0.8, len(DOMAIN_ORDER) - 0.35)
+	axis.set_xlabel("Jason + VAL coverage (%)", labelpad=2.0)
+	axis.set_title("(a) Five-seed held-out coverage", loc="left", pad=2.5)
+	axis.grid(axis="x", color="#E8E8E8", linewidth=0.45)
+	axis.set_axisbelow(True)
+	_style_axis(axis)
+
+
+def _plot_five_seed_runtime_groups(axis: Any, dataset: Mapping[str, Any]) -> None:
+	curves = _mapping_field(dataset, "group_curves", label="figure dataset")
+	marker_seconds = (1.0, 10.0, 100.0, 1800.0)
+	legend_handles = []
+	for group_key, group_label, _domains in BENCHMARK_GROUPS:
+		curve = _mapping_field(curves, group_key, label=f"group {group_key}")
+		color, marker = GROUP_STYLES[group_key]
+		x_values = tuple(float(value) for value in curve["x_seconds"])
+		mean_values = tuple(float(value) for value in curve["mean_percent"])
+		minimum_values = tuple(float(value) for value in curve["minimum_percent"])
+		maximum_values = tuple(float(value) for value in curve["maximum_percent"])
+		axis.fill_between(
+			x_values,
+			minimum_values,
+			maximum_values,
+			step="post",
+			color=color,
+			alpha=0.1,
+			linewidth=0.0,
+		)
+		axis.step(
+			x_values,
+			mean_values,
+			where="post",
+			color=color,
+			linewidth=1.15,
+		)
+		marker_values = _step_values_at(x_values, mean_values, marker_seconds)
+		axis.plot(
+			marker_seconds,
+			marker_values,
+			linestyle="none",
+			marker=marker,
+			markersize=2.8,
+			color=color,
+			markeredgecolor="white",
+			markeredgewidth=0.3,
+		)
+		legend_handles.append(
+			Line2D(
+				[],
+				[],
+				color=color,
+				marker=marker,
+				markersize=2.8,
+				linewidth=1.15,
+				label=group_label,
+			),
+		)
+	axis.axvline(
+		REGISTERED_TIMEOUT_SECONDS,
+		color=COLORS["gray"],
+		linewidth=0.55,
+		linestyle="--",
+	)
+	axis.set_xscale("log")
+	axis.set_xlim(0.5, 2000.0)
+	axis.set_ylim(-2.0, 102.0)
+	axis.set_yticks((0, 25, 50, 75, 100))
+	axis.xaxis.set_major_locator(FixedLocator((0.5, 1.0, 10.0, 100.0, 1800.0)))
+	axis.xaxis.set_major_formatter(FuncFormatter(lambda value, _position: f"{value:g}"))
+	axis.set_xlabel("Jason execution time (s, log scale)", labelpad=2.0)
+	axis.set_ylabel("VAL-valid cases solved (%)")
+	axis.set_title(
+		"(b) Time-to-valid-trace by benchmark group",
+		loc="left",
+		pad=2.5,
+	)
+	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
+	axis.set_axisbelow(True)
+	_style_axis(axis)
+	axis.legend(
+		handles=legend_handles,
+		loc="lower right",
+		bbox_to_anchor=(0.955, 0.015),
+		frameon=False,
+		ncol=1,
+		borderaxespad=0.15,
+		handlelength=1.6,
+		handletextpad=0.35,
+		labelspacing=0.28,
+	)
 
 
 def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
@@ -880,6 +1541,16 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 	)
 
 
+def _portable_artifact_path(path: Path) -> str:
+	"""Return a repository-relative path without exposing a local home directory."""
+
+	resolved_path = path.expanduser().resolve()
+	try:
+		return resolved_path.relative_to(PROJECT_ROOT).as_posix()
+	except ValueError:
+		return str(resolved_path)
+
+
 def _sha256(path: Path) -> str:
 	hasher = hashlib.sha256()
 	with path.open("rb") as handle:
@@ -890,7 +1561,14 @@ def _sha256(path: Path) -> str:
 
 def _parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description=__doc__)
-	parser.add_argument("--paired-results", type=Path, required=True)
+	input_group = parser.add_mutually_exclusive_group(required=True)
+	input_group.add_argument("--paired-results", type=Path)
+	input_group.add_argument("--five-seed-results", type=Path)
+	parser.add_argument(
+		"--validation-run-root",
+		type=Path,
+		default=DEFAULT_VALIDATION_RUN_ROOT,
+	)
 	parser.add_argument("--output-file", type=Path, default=DEFAULT_OUTPUT_FILE)
 	return parser.parse_args()
 
@@ -898,10 +1576,17 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
 	args = _parse_args()
 	try:
-		metadata = generate_empirical_figure(
-			paired_results_file=args.paired_results,
-			output_file=args.output_file,
-		)
+		if args.five_seed_results is not None:
+			metadata = generate_five_seed_empirical_figure(
+				five_seed_results_file=args.five_seed_results,
+				validation_run_root=args.validation_run_root,
+				output_file=args.output_file,
+			)
+		else:
+			metadata = generate_empirical_figure(
+				paired_results_file=args.paired_results,
+				output_file=args.output_file,
+			)
 	except (OSError, TypeError, ValueError) as error:
 		print(f"[fail] empirical_figure error={error}", file=sys.stderr)
 		return 2

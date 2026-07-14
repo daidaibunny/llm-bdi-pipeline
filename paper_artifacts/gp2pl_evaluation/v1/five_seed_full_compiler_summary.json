@@ -1,0 +1,829 @@
+{
+  "aggregate": {
+    "all_seed_failure_case_count": 2,
+    "all_seed_success_case_count": 1180,
+    "at_least_one_seed_success_case_count": 1226,
+    "failure_count": 81,
+    "mean_success_count": 1211.8,
+    "mean_success_rate": 0.9868078175895766,
+    "nonzero_exit_count": 0,
+    "pooled_evaluation_count": 6140,
+    "pooled_success_count": 6059,
+    "sample_sd_success_count": 15.896540504147435,
+    "sample_sd_success_rate": 0.012945065557123325,
+    "seed_sensitive_case_count": 46,
+    "successful_trace_val_count": 6059,
+    "timeout_count": 0
+  },
+  "artifact_kind": "gp2pl_five_seed_full_compiler_submission_result",
+  "case_outcomes": {
+    "pattern_counts": {
+      "00000": 2,
+      "01111": 2,
+      "10000": 2,
+      "10001": 4,
+      "10101": 1,
+      "11001": 10,
+      "11011": 23,
+      "11101": 4,
+      "11111": 1180
+    },
+    "persistent_failures": [
+      {
+        "domain": "depots",
+        "test_id": "p12"
+      },
+      {
+        "domain": "depots",
+        "test_id": "p20"
+      }
+    ],
+    "seed_sensitive_cases": [
+      {
+        "domain": "depots",
+        "pattern": "11001",
+        "test_id": "p13"
+      },
+      {
+        "domain": "depots",
+        "pattern": "10000",
+        "test_id": "p15"
+      },
+      {
+        "domain": "depots",
+        "pattern": "10000",
+        "test_id": "p22"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "01111",
+        "test_id": "p0_07"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "01111",
+        "test_id": "p0_23"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_02"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_03"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "10101",
+        "test_id": "p1_06"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_07"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_10"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_12"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11101",
+        "test_id": "p1_14"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_16"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_17"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_18"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "10001",
+        "test_id": "p1_19"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_20"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11101",
+        "test_id": "p1_22"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p1_23"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_25"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_26"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_29"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p1_30"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11101",
+        "test_id": "p2_02"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_04"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_08"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_09"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "10001",
+        "test_id": "p2_10"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_11"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_12"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_13"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_14"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11101",
+        "test_id": "p2_15"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_16"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "10001",
+        "test_id": "p2_17"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "10001",
+        "test_id": "p2_18"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_20"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_21"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_22"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_23"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_24"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_26"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_27"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_28"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11001",
+        "test_id": "p2_29"
+      },
+      {
+        "domain": "logistics",
+        "pattern": "11011",
+        "test_id": "p2_30"
+      }
+    ]
+  },
+  "compiler_freeze": {
+    "byte_identical_to_formal_run_revisions": true,
+    "closure_file_count": 29,
+    "closure_files": {
+      "scripts/run_full_test_jason_validation.py": "77b8e0cae5dd3e3fa303165256cae4b2364daa0419f3c2d0f96cd097afc7c041",
+      "scripts/run_moose_faithful_e2e.py": "cc7995ed4861f694b725d96c7af802a30c59f6465b0c7c57c5feb913590943fc",
+      "src/domain_level_planning/__init__.py": "152a7776c840fc2d5baaeaf30f7c8a49692b831b547f60c1e00a4454e2869442",
+      "src/domain_level_planning/architecture_contract.py": "4084deee7ee0732b8ee832db2814f689e01b9e2bb4c6db83185432e4789f024c",
+      "src/domain_level_planning/atomic_backend_selector.py": "951389113b559409d378ac61a7a3f6a2eb0c3693bde388a63240181c054059c8",
+      "src/domain_level_planning/atomic_module_synthesis.py": "e1bfdf8c91f377d28b3dff49f0100f09aa7a50891b2b679c4a8030eab2d7c159",
+      "src/domain_level_planning/benchmark_registry.py": "715afd5465290aa24b2bdb1cab38b52a00d77804c9ed3769d44231bb4b6265f0",
+      "src/domain_level_planning/certified_effects.py": "f35a16fba20b43678bd7e9c1eefa2b5ce263bb1301c2c330b60d01eb773f63bc",
+      "src/domain_level_planning/dfa_adapter.py": "6dcb763d6e22337114cc3fb783e8c212f70001bc6c80272fcd8d482f87efef93",
+      "src/domain_level_planning/dfa_controller.py": "17074673401bda113856c214bd2ebf57b3ed19c911f019b3411bc25450858e96",
+      "src/domain_level_planning/evidence_module.py": "eb93a036be1cb2359c5f978d351de6853ddca98b8857674bb1af3d67330485aa",
+      "src/domain_level_planning/gp_backends.py": "961b2379eccd27b1ee409f19b4fa4fce14430ddb42af3ce70cf9750479a7db17",
+      "src/domain_level_planning/library_contract.py": "6c11a32f1623227e09b98377af328ab12f6357c51d43b40990dea3f326115a0c",
+      "src/domain_level_planning/lifted_ltlf_goal_schema.py": "8c9c85ff4379413c844ac9542c57801831f5915e49c9e1b0bdee67e8dfa30893",
+      "src/domain_level_planning/pddl_support.py": "d5357e38dfa05ae93775f4270a76d5a5044870ca096e53bc09cabe184be7c17f",
+      "src/domain_level_planning/pddl_types.py": "222d5ac132a94f7af7a838bd6610ca3f8cea1cd13e515ccfbb016d184f7680d9",
+      "src/domain_level_planning/policy_program.py": "d719d0ba656eea6d4b63d954a21af1c56f2374aba08be9a33e3558bc1b2e9f13",
+      "src/domain_level_planning/temporal_goal_appender.py": "29a26150695e21fed9ab3ad95a4f8feed3394f42ec47b2b6ea24f7876be2754c",
+      "src/domain_level_planning/transition_repair_tree.py": "094298b6f3fc327fbbd2af7de17a0200e548c970a5b0f27fa40d3809febd0850",
+      "src/evaluation/jason_runtime/__init__.py": "f38fc6349cb92423435dafcdce44a2582b17e218234fb3b5261fd7cd3999499b",
+      "src/evaluation/jason_runtime/environment_adapter.py": "a6660cce6f0f2fc82d99197cc051c20be2d4b396ef2aaae2d93bd5a173789cf6",
+      "src/evaluation/jason_runtime/runner.py": "19822255868e9e71cb4381f95a77255c6c4d551a86e71d396dc350fec760a2fd",
+      "src/main.py": "864f929a03df07a52bcb0991e1b184176699f9203aec77e24e8bf898c94c2ee8",
+      "src/plan_library/__init__.py": "7e5573249a1c384e8e8faea861df1749b84e13263733b73294281ad0e65257ac",
+      "src/plan_library/models.py": "b60a48f4adc923285f21413e30e3b9120a8ab6f1426686218348d7869f68ed47",
+      "src/plan_library/rendering.py": "3106348de5a848794032da54b26586cfdd0d606f29042f03ce4fa8e51ffa5023",
+      "src/plan_library/set_semantics.py": "f0539137b0f67cbb65ce4f36895ad5b2acad8f8e5546a0283ca51e61d5ae0a73",
+      "src/plan_library/validation.py": "7b4b5382eb445587f5bd19cd703bf75d77667ee9d6c383794209c243400bfde4",
+      "src/utils/pddl_parser.py": "a61948ef56831541af5a023a83569d04a3f32429e650609617cd099fbd6bd847"
+    },
+    "closure_paths": [
+      "src/domain_level_planning",
+      "src/evaluation/jason_runtime",
+      "src/plan_library",
+      "src/utils/pddl_parser.py",
+      "src/main.py",
+      "scripts/run_full_test_jason_validation.py",
+      "scripts/run_moose_faithful_e2e.py",
+      "scripts/run_moose_asl_batch.sh",
+      "scripts/run_pddl_five_seed_full_test.sh"
+    ],
+    "closure_sha256": "cc78013f34d012e32e0ee450a7477912a620982e98eb32a9f915fae99fa9729a",
+    "formal_run_revisions": [
+      "0fbfff65c2ea7b46f2f1d1726af0da4da3becfa1",
+      "6247f2964781e28feae2b4edf6038808230f0fa0",
+      "72b0604fe324f10d8c78e821eb25265c7665240d"
+    ],
+    "revision": "5e632fb5f26865e0c3bca0420cd00dea529eb6bb",
+    "semantic_changes_after_freeze_permitted": false
+  },
+  "domains": [
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "barman",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 30,
+      "domain": "blocksworld-clear",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 30
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 30,
+      "domain": "blocksworld-on",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 30
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 77,
+      "domain": "blocksworld-tower",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        77,
+        77,
+        77,
+        77,
+        77
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 77
+    },
+    {
+      "all_seed_failure_case_count": 2,
+      "all_seed_success_case_count": 6,
+      "domain": "depots",
+      "mean_success_rate": 0.6363636363636364,
+      "sample_sd_success_rate": 0.11134044285378086,
+      "seed_sensitive_case_count": 3,
+      "success_counts": [
+        9,
+        7,
+        6,
+        6,
+        7
+      ],
+      "success_rates": [
+        0.8181818181818182,
+        0.6363636363636364,
+        0.5454545454545454,
+        0.5454545454545454,
+        0.6363636363636364
+      ],
+      "test_count": 11
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "ferry",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "gripper",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 47,
+      "domain": "logistics",
+      "mean_success_rate": 0.8644444444444445,
+      "sample_sd_success_rate": 0.1671105200935175,
+      "seed_sensitive_case_count": 43,
+      "success_counts": [
+        88,
+        85,
+        54,
+        72,
+        90
+      ],
+      "success_rates": [
+        0.9777777777777777,
+        0.9444444444444444,
+        0.6,
+        0.8,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "miconic",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "numeric-ferry",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "numeric-miconic",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "numeric-minecraft",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "numeric-transport",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "rovers",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "satellite",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    },
+    {
+      "all_seed_failure_case_count": 0,
+      "all_seed_success_case_count": 90,
+      "domain": "transport",
+      "mean_success_rate": 1.0,
+      "sample_sd_success_rate": 0.0,
+      "seed_sensitive_case_count": 0,
+      "success_counts": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "success_rates": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "test_count": 90
+    }
+  ],
+  "failure_diagnostics": [
+    {
+      "count": 81,
+      "diagnostic": "execution success marker not found in runtime output"
+    }
+  ],
+  "protocol": {
+    "atomic_library_mode": "validated-policy-lifting",
+    "best_seed_selection": false,
+    "case_count_per_seed": 1228,
+    "compiler_variant": "full",
+    "domain_count": 16,
+    "evidence_union": false,
+    "fresh_validation": true,
+    "independent_seed_runs": true,
+    "input_snapshot_manifest_sha256": "beaa7be1faa1a5e47f7bfa3dbed286931e7322303e4a9f50cced3920e8a6df46",
+    "jason_java_stack_size": "64m",
+    "jason_timeout_seconds": 1800,
+    "method": "Full GP2PL",
+    "plan_verifier_timeout_seconds": 1800,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "source_method_label": "Full Compiler",
+    "success_contract": "Jason completion plus original-goal VAL acceptance",
+    "tracked_change_seed_exceptions": [
+      4
+    ],
+    "validation_workers": 8
+  },
+  "released_at": "2026-07-14T13:56:59",
+  "schema_version": 1,
+  "seed_results": [
+    {
+      "completed_at": "2026-07-14T04:11:07",
+      "evaluation_count": 1228,
+      "failure_count": 4,
+      "run_id": "pddl-five-seed-20260713-153900-full-test-seed0",
+      "seed": 0,
+      "source_commit": "72b0604fe324f10d8c78e821eb25265c7665240d",
+      "status_counts": {
+        "failed": 4,
+        "success": 1224
+      },
+      "success_count": 1224,
+      "summary_sha256": "874cb87bb137547fcf61c693ba39c0e127db4af7a0167b3ec8950236fcee2585",
+      "tracked_source_changes": false,
+      "val_success_count": 1224
+    },
+    {
+      "completed_at": "2026-07-14T06:16:06",
+      "evaluation_count": 1228,
+      "failure_count": 9,
+      "run_id": "pddl-five-seed-20260713-153900-full-test-seed1",
+      "seed": 1,
+      "source_commit": "6247f2964781e28feae2b4edf6038808230f0fa0",
+      "status_counts": {
+        "failed": 9,
+        "success": 1219
+      },
+      "success_count": 1219,
+      "summary_sha256": "0554e6fdb6c04477d1f1e114e28c646ff8ea096a400466f161bca7ca9d1be8e8",
+      "tracked_source_changes": false,
+      "val_success_count": 1219
+    },
+    {
+      "completed_at": "2026-07-14T08:19:04",
+      "evaluation_count": 1228,
+      "failure_count": 41,
+      "run_id": "pddl-five-seed-20260713-153900-full-test-seed2",
+      "seed": 2,
+      "source_commit": "6247f2964781e28feae2b4edf6038808230f0fa0",
+      "status_counts": {
+        "failed": 41,
+        "success": 1187
+      },
+      "success_count": 1187,
+      "summary_sha256": "dd8081f308a3488db401bd0f0cd13012c1ecc30270fd02cad9d811af3963d032",
+      "tracked_source_changes": false,
+      "val_success_count": 1187
+    },
+    {
+      "completed_at": "2026-07-14T11:31:27",
+      "evaluation_count": 1228,
+      "failure_count": 23,
+      "run_id": "pddl-five-seed-20260713-153900-full-test-seed3",
+      "seed": 3,
+      "source_commit": "6247f2964781e28feae2b4edf6038808230f0fa0",
+      "status_counts": {
+        "failed": 23,
+        "success": 1205
+      },
+      "success_count": 1205,
+      "summary_sha256": "96c355e7856b8dd1ff0ef5f89d52854affc8bf823adb8f04bfdd39dff2a24cdb",
+      "tracked_source_changes": false,
+      "val_success_count": 1205
+    },
+    {
+      "completed_at": "2026-07-14T13:56:59",
+      "evaluation_count": 1228,
+      "failure_count": 4,
+      "run_id": "pddl-five-seed-20260713-153900-full-test-seed4",
+      "seed": 4,
+      "source_commit": "0fbfff65c2ea7b46f2f1d1726af0da4da3becfa1",
+      "status_counts": {
+        "failed": 4,
+        "success": 1224
+      },
+      "success_count": 1224,
+      "summary_sha256": "8918ab478efde644788da176964f7308ba327e74ab090a23670ea5b47fc1c57d",
+      "tracked_source_changes": true,
+      "val_success_count": 1224
+    }
+  ],
+  "source_aggregate": {
+    "artifact_kind": "gp2pl_five_seed_runner_aggregate_provenance",
+    "cross_seed_jason_parallelism": 1,
+    "jason_workers_per_repetition": 8,
+    "moose_internal_workers": 1,
+    "moose_seed_parallelism": 5,
+    "path": "artifacts/parser_order_full_val_logs/pddl-five-seed-20260713-153900/five_seed_summary.json",
+    "protocol": "five_independent_moose_synthesis_repetitions",
+    "run_id": "pddl-five-seed-20260713-153900",
+    "schema_version": 1,
+    "sha256": "34abe658b832318b0c09cce66aca40132fe6e89fd646d157482769735ae2cacb",
+    "verified_against_child_runs": true
+  }
+}

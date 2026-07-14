@@ -1,0 +1,35 @@
+{
+  "artifact_kind": "gp2pl_five_seed_empirical_figure",
+  "benchmark_group_count": 3,
+  "child_summary_sha256": {
+    "0": "874cb87bb137547fcf61c693ba39c0e127db4af7a0167b3ec8950236fcee2585",
+    "1": "0554e6fdb6c04477d1f1e114e28c646ff8ea096a400466f161bca7ca9d1be8e8",
+    "2": "dd8081f308a3488db401bd0f0cd13012c1ecc30270fd02cad9d811af3963d032",
+    "3": "96c355e7856b8dd1ff0ef5f89d52854affc8bf823adb8f04bfdd39dff2a24cdb",
+    "4": "8918ab478efde644788da176964f7308ba327e74ab090a23670ea5b47fc1c57d"
+  },
+  "compiler_closure_sha256": "cc78013f34d012e32e0ee450a7477912a620982e98eb32a9f915fae99fa9729a",
+  "domain_count": 16,
+  "figure_height_inches": 3.0,
+  "figure_width_inches": 7.0,
+  "generated_at": "2026-07-14T07:32:20+00:00",
+  "jason_workers": 8,
+  "mean_success_percent": 98.68078175895766,
+  "output_file": "latex_code/aamas_method_paper/figures/fig2_evaluation.pdf",
+  "pooled_evaluation_count": 6140,
+  "pooled_success_count": 6059,
+  "runtime_measure": "jason_timing_profile.run_seconds",
+  "sample_sd_success_percent": 1.2945065557123325,
+  "schema_version": 1,
+  "seed_count": 5,
+  "source_aggregate_run_id": "pddl-five-seed-20260713-153900",
+  "source_aggregate_sha256": "34abe658b832318b0c09cce66aca40132fe6e89fd646d157482769735ae2cacb",
+  "source_file": "paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json",
+  "source_revisions": [
+    "0fbfff65c2ea7b46f2f1d1726af0da4da3becfa1",
+    "6247f2964781e28feae2b4edf6038808230f0fa0",
+    "72b0604fe324f10d8c78e821eb25265c7665240d"
+  ],
+  "source_sha256": "c144db9efe9e7c0c639e1a3e001244d948d9ba24aa44a0748a034e833e032d78",
+  "timeout_seconds": 1800
+}

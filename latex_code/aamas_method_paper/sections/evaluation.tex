@@ -61,32 +61,62 @@ accepts the full primitive trace against a neutral PDDL goal
 prefixes are diagnostic; atomic validation uses the original PDDL goal. We
 report closure, held-out success, size, runtime, actions, and trigger fan-out;
 plan length uses jointly solved instances. The challenge suite tests rejection
-and symbol invariance. Following MOOSE's absolute-time presentation
-\cite{Chen2026Moose}, all queries remain in the runtime denominator.
+and symbol invariance. Figure~\ref{fig:evaluation-summary} follows MOOSE's
+absolute-time presentation \cite{Chen2026Moose}: a case enters a runtime curve
+only after its committed trace passes VAL, and all failures remain in the
+denominator.
 
 \IfFileExists{\gpplfiguretwopath}{%
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{\gpplfiguretwopath}
-\caption{Paired atomic and temporal evaluation. Panel (a) compares Evidence
-Only with Full GP2PL on every held-out domain over five independently seeded,
-single-worker MOOSE evidence runs; small points are seeds and larger markers
-report mean $\pm$ sample standard deviation. Panel (b) places all four
-executable atomic compiler variants by emitted branches and VAL-valid held-out
-coverage under identical per-seed evidence. Panel (c) reports the fraction of
-all hash-paired temporal queries solved within each end-to-end time; failed and
-timed-out queries remain in the denominator, and the vertical line marks the
-1,800-second limit.}
+\caption{Five-seed held-out execution. Panel (a) gives per-domain
+Jason-plus-VAL coverage for five independently seeded, single-worker MOOSE
+evidence runs; points are seeds and diamonds with bars show mean $\pm$ sample
+standard deviation. Panel (b) gives mean cumulative VAL-valid coverage over
+Jason execution time for three predeclared benchmark groups; bands span the
+seed minimum and maximum. Failures remain in the denominator, and the dashed
+line marks the 1,800-second deadline.}
 \label{fig:evaluation-summary}
 \end{figure*}
 }{%
-\PackageWarning{gp2pl}{Figure 2 omitted: complete paired result matrix unavailable}%
+\PackageWarning{gp2pl}{Five-seed result figure unavailable}%
 }
 
-Table~\ref{tab:profile-results} reports temporal profiles; complete domain-level
-results appear in the Technical Supplement, Sec.~5.3.
+\subsection{Five-Seed Atomic Results}
+\label{sec:atomic-results}
 
-\input{sections/result_profile_table}
+The five independently compiled libraries solve, for seeds 0--4,
+\AtomicSeedZeroSuccessCount{}, \AtomicSeedOneSuccessCount{},
+\AtomicSeedTwoSuccessCount{}, \AtomicSeedThreeSuccessCount{}, and
+\AtomicSeedFourSuccessCount{} of \AtomicFiveSeedCaseCount{} held-out cases.
+Their mean is \AtomicFiveSeedMeanSuccessPercent{}\% $\pm$
+\AtomicFiveSeedSampleSDPercent{} percentage points. All
+\AtomicFiveSeedPooledSuccessCount{} successful traces pass original-goal VAL,
+with no timeout or nonzero exit. Fourteen domains are complete,
+\AtomicFiveSeedAllSuccessCount{} distinct cases succeed for every seed,
+\AtomicFiveSeedSensitiveCount{} are seed-sensitive, and only
+\AtomicFiveSeedPersistentFailureCount{} fail for all five. The pooled
+\AtomicFiveSeedPooledSuccessCount{}/\AtomicFiveSeedPooledEvaluationCount{}
+count comprises repeated outcomes, not independent cases. Figure~
+\ref{fig:evaluation-summary} includes every domain and the three predeclared
+groups, never a post-hoc domain subset.
+
+Variation is localized: Logistics ranges from 54/90 to 90/90 because seeded
+goal order changes available cross-mode provider macros, while schema closure
+rejects the cyclic \texttt{at}/\texttt{in} dependency without a decreasing
+certificate. Depots obtains 63.64\% $\pm$ 11.13 points; \texttt{p12} and
+\texttt{p20} require a nested support-resource choice beyond the already-bound
+capacity certificate. These are limits of the certified candidate language,
+not invalid successful traces. We freeze the compiler instead of adding
+post-hoc domain rules that would invalidate the protocol. Tables~
+\ref{tab:five-seed-atomic} and \ref{tab:five-seed-atomic-domains} give the
+compact and complete counts; the Technical Supplement, Sec.~5.3 gives full
+provenance and failure diagnostics.
+
+\input{sections/result_five_seed_atomic_table}
+
+\input{sections/result_five_seed_atomic_domain_table}
 
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}
@@ -98,8 +128,7 @@ The controlled source utterances specify the evaluation distribution rather
 than a required user grammar. GPT-5.5 \cite{OpenAI2026GPT55SystemCard}
 translates \TranslationInputCount{} deduplicated specifications. Every output
 satisfies the JSON/PDDL contract and exact DFA-language equivalence, yielding
-\TEGProblemCount{} bound queries.
-Clingo selects
+\TEGProblemCount{} bound queries. Clingo selects
 \AtomicSelectedBranchCount{} of \AtomicCandidateCount{} certified candidates.
 
 Table~\ref{tab:profile-results} separates five formula profiles. Every query
@@ -108,10 +137,27 @@ DFAs accept all \TEGGoldDFAAcceptCount{} traces. Runtime is
 \TEGMedianRuntimeSeconds{} seconds median (IQR 4.28--8.49; SD 13.66), and action
 count is \TEGMedianActionCount{} median (IQR 1--2; SD 0.80); the 12-worker run
 takes \TEGWallRuntimeMinutes{} minutes. All 13 rejection and symbol-invariance
-challenges pass.
+challenges pass. Table~\ref{tab:domain-results} gives the fixed seed-0
+domain-library and execution breakdown.
 
 The temporal study uses a fixed seed-0 library snapshot obtained under a
 six-worker MOOSE configuration, distinct from the five-seed atomic protocol; it
 supports neither cross-seed robustness nor arbitrary PDDL--\ltlf{} completeness.
 Both evaluators agree on 14/14 labelled and 2/2 initial-state cases. A zero-action
-case is $\langle s_0\rangle$; VAL 1.4 does not parse an empty plan.
+case is $\langle s_0\rangle$; VAL 1.4 does not parse an empty plan. The Technical
+Supplement, Sec.~5.3 gives the complete distributions and provenance.
+
+\input{sections/result_profile_table}
+
+\input{sections/result_domain_table}
+
+% Flush empirical floats before the conclusion. On a float-only page, keep the
+% AAAI-style top alignment instead of LaTeX's vertically centered default.
+% Page-budget consolidation is deliberately deferred.
+\makeatletter
+\begingroup
+\setlength{\@fptop}{0pt}
+\setlength{\@dblfptop}{0pt}
+\clearpage
+\endgroup
+\makeatother

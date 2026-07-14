@@ -205,9 +205,10 @@ def test_render_profile_table_compacts_redundant_success_oracles() -> None:
 
 	table = render_profile_table(result)
 
-	assert "\\begin{table}[t]" in table
+	assert "\\begin{table*}[t]" in table
 	assert "\\tiny" not in table
 	assert "\\scriptsize" in table
+	assert "\\end{table*}" in table
 	assert "Eq./total" in table
 	assert "E2E" in table
 	assert "Controller" not in table

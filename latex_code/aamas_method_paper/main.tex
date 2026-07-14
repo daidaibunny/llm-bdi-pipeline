@@ -42,6 +42,7 @@ Libraries for Temporally Extended Goals}
 \newcommand{\gpplartifacturl}{https://github.com/daidaibunny/gp2pl}
 
 \input{sections/result_macros}
+\input{sections/result_five_seed_atomic_macros}
 
 \begin{document}
 \maketitle
@@ -63,11 +64,13 @@ Theorems establish local module soundness, candidate-space optimality,
 transition-composition soundness, and trace-faithful monitoring for the declared
 fragment; obligations lacking the required certificates are rejected. We
 instantiate the framework with MOOSE evidence, Clingo selection, and an
-\asl{}/Jason realization. Across
-\BenchmarkDomainCount{} domains, all \TranslationEquivalentCount{}
-model-produced specifications are language-equivalent to their gold formulas,
-and all \TEGProblemCount{} bound queries produce traces accepted by Jason, VAL,
-and both finite-trace automata.
+\asl{}/Jason realization. Across \BenchmarkDomainCount{} domains, five
+independently seeded atomic libraries obtain
+\AtomicFiveSeedMeanSuccessPercent{}\% mean held-out Jason-plus-VAL coverage
+(\AtomicFiveSeedSampleSDPercent{} percentage-point sample standard deviation).
+All \TranslationEquivalentCount{} model-produced specifications are
+language-equivalent to their gold formulas, and all \TEGProblemCount{} bound
+queries produce traces accepted by Jason, VAL, and both finite-trace automata.
 \end{abstract}
 
 \section{Introduction}
@@ -126,11 +129,13 @@ selection; (ii) symbol-invariant certificates for binding, execution,
 achievement, recursion, closure, and resource restoration; and (iii)
 preservation-safe \ltlf-to-DFA guard composition under primitive-step monitoring.
 Uncertified modules and transitions are rejected. Across
-\BenchmarkDomainCount{} domains, all \TEGProblemCount{} evaluated queries
-execute in Jason, pass VAL, and are accepted by both gold and predicted DFAs.
-This is evaluated-input coverage, not completeness for arbitrary
-PDDL--\ltlf{} products; complete proofs and the reproducibility protocol appear
-in the Technical Supplement, Secs.~2 and~5.
+\BenchmarkDomainCount{} domains, independent atomic libraries average
+\AtomicFiveSeedMeanSuccessPercent{}\% held-out Jason-plus-VAL coverage over
+five MOOSE goal-order seeds, while all \TEGProblemCount{} fixed-snapshot
+temporal queries pass Jason, VAL, and both DFAs. These are evaluated-input
+coverage results, not completeness for arbitrary PDDL--\ltlf{} products;
+complete proofs and the reproducibility protocol appear in the Technical
+Supplement, Secs.~2 and~5.
 
 \input{sections/background}
 \input{sections/related_work}
@@ -140,11 +145,10 @@ in the Technical Supplement, Secs.~2 and~5.
 \section{Conclusion}
 
 GP2PL compiles generalized-planning evidence into certified BDI plan libraries
-and composes finite-trace DFA progress over them. Its \asl{}/Jason realization
-passes Jason, neutral-goal VAL, and both DFA checks on all \TEGProblemCount{}
-queries in \BenchmarkDomainCount{} domains. Guarantees remain conditional on the
-candidate language and declared \ltlf{} fragment; uncertified strategies are
-rejected.
+and finite-trace controllers. Five-seed atomic coverage averages
+\AtomicFiveSeedMeanSuccessPercent{}\%; the fixed temporal study solves
+\TEGProblemCount{}/\TEGProblemCount{}. Guarantees remain conditional on the
+certified candidate language and declared \ltlf{} fragment.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

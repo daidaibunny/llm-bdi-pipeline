@@ -584,8 +584,9 @@ auditable.
 Each seed policy is compiled and evaluated independently. Policies, rules, and
 ASL branches are never concatenated across seeds, and the evaluation never
 selects the best seed. Jason/VAL repetitions run sequentially across seeds to
-avoid cross-seed resource contention changing timeout outcomes; each repetition
-uses six per-test Jason workers by default. Reports retain every seed result and
+avoid cross-seed resource contention changing timeout outcomes. The runner
+default remains six per-test workers; the frozen submission runs explicitly use
+eight, as recorded in every summary. Reports retain every seed result and
 summarize coverage with the mean and sample standard deviation across completed
 repetitions. Concurrent synthesis timings are throughput measurements; runtime
 claims against another system require a separately controlled non-contented
@@ -1349,6 +1350,38 @@ Unsupported numeric cases include arbitrary arithmetic expressions, real-valued
 updates, optimization metrics as achievement goals, non-equality numeric goals,
 and numeric goals that require a recursive ranking proof not present in the
 validated evidence.
+
+## Pinned Five-Seed Full Compiler Evidence
+
+The final submitted compiler is the Full GP2PL variant with validated policy
+lifting and Clingo selection. Its method-defining source closure is frozen at
+revision `5e632fb5` with SHA-256
+`cc78013f34d012e32e0ee450a7477912a620982e98eb32a9f915fae99fa9729a`.
+The same 29-file closure is byte-identical at the three source commits recorded
+by the five formal runs. Subsequent paper or experiment-orchestration edits do
+not authorize a semantic compiler change for this submission.
+
+The five independent 1,228-case runs for seeds 0--4 obtain 1,224, 1,219,
+1,187, 1,205, and 1,224 Jason-plus-original-goal-VAL successes. The per-seed
+mean is 98.68% and the sample standard deviation is 1.29 percentage points.
+All 6,059 successful traces pass VAL; none of the 6,140 repeated evaluations
+times out or exits nonzero. Among the 1,228 distinct cases, 1,180 succeed for
+all seeds, 46 are seed-sensitive, and only Depots `p12` and `p20` fail for all
+five. Fourteen domains are complete under every seed. Logistics varies from
+54/90 to 90/90 because randomized evidence order changes availability of long
+cross-mode provider macros while the certified schema constructor rejects the
+cyclic `at`/`in` dependency. Depots needs a nested typed support-resource choice
+beyond the current already-bound capacity-discharge certificate.
+
+The compact record is
+`paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json`.
+It stores the five source summary hashes, common input-snapshot hash, exact
+outcome patterns, per-domain counts, failure diagnostic, and compiler closure.
+Seed 4 truthfully retains `tracked_source_changes=true`; the record does not
+claim that all five repository states were clean. Eligibility rests on sealed
+scientific inputs and outputs plus the byte-identical committed method closure.
+Cross-seed timing is excluded because unrelated workloads overlapped the runs.
+Evidence is not pooled and seed 4 is not selected as a best-seed result.
 
 ## Pinned Temporal Execution Evidence
 

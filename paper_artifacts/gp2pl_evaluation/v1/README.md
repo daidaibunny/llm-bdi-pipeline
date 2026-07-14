@@ -5,6 +5,10 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
 
 - `atomic_libraries/` contains the exact structured and AgentSpeak(L) libraries.
 - `temporal_execution_summary.json` contains one record for every bound query.
+- `five_seed_full_compiler_summary.json` records all five independent Full
+  GP2PL held-out matrices, per-domain variation, failure patterns, source
+  summaries, the verified source-runner aggregate hash, and the frozen
+  compiler/runtime source closure.
 - `certificate_challenge_summary.json` records fail-closed and renaming tests.
 - `execution_distribution.json` records distributional execution statistics.
 - `benchmark_compatibility.json` proves that the execution-time and portable
