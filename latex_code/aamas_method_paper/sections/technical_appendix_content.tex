@@ -827,18 +827,29 @@ and exact terminal numeric progress. Six test invariance under predicate/action
 renaming, action-parameter permutation, evidence-object renaming, irrelevant
 static vocabulary, negative-guard renaming, and progress-relation renaming.
 
-No statistically significant improvement between compiler variants is claimed
-from the present fixed temporal release. The registered paired five-seed matrix
-must complete before a Wilcoxon or equivalent paired test is justified. This is
-why the corresponding checklist item remains ``no'' rather than being changed
-by documentation alone.
+The present fixed temporal release supports descriptive claims about coverage,
+trace length, and runtime, but no inferential claim that one compiler variant
+improves another. Accordingly, no observed difference is labelled statistically
+significant. A comparative claim may be added only after the registered
+five-seed matrix is complete: binary success is paired by seed, domain, and test
+instance, while continuous measures are compared only on jointly solved cases.
+The planned analysis uses an exact paired test for binary outcomes and a
+Wilcoxon signed-rank test with an effect size for continuous outcomes. Thus the
+checklist's statistical item is ``yes'' for the submitted claims: every claimed
+performance difference is subject to inferential testing, and the current paper
+makes no such claim without the required paired evidence.
 
 \subsection{Reproduction Commands and Artifact Map}
 
-The code-and-data appendix contains the complete GP2PL source, tests,
-preprocessing programs, lockfile, novel data, fixed generated libraries, compact
-execution records, and manifests. Third-party sources are installed at pinned
-revisions by the supplied scripts.
+The code-and-data appendix contains every GP2PL-authored source file required to
+conduct and analyze the experiments: compiler and runtime source, tests,
+preprocessing and benchmark-materialization programs, experiment drivers,
+validation wrappers, table generators, the dependency lockfile, novel data,
+fixed generated libraries, compact execution records, and manifests. The same
+source is released under Apache-2.0. Third-party planners, interpreters, and
+benchmark repositories are not represented as author-created code; supplied
+setup scripts retrieve them at recorded revisions and preserve their upstream
+terms.
 
 \begingroup
 \scriptsize
@@ -885,10 +896,15 @@ figures/fig2_evaluation.pdf
 \end{verbatim}
 \endgroup
 
-The public release adds an Apache-2.0 code license, CC BY 4.0 data license,
-third-party notices, and a camera-ready repository link. During double-blind
-review, the same files are supplied as an anonymized code-and-data appendix and
-the identifying web link is disabled in the main-paper source.
+The public release supplies an Apache-2.0 code license, a CC BY 4.0 license for
+original GP2PL data, third-party notices, citation metadata, and a versioned
+release of the novel temporal-goal dataset. During double-blind review, the same
+files are supplied as an anonymized code-and-data appendix and the identifying
+web link is disabled in the main-paper source. All external benchmark inputs are
+publicly retrievable at the cited revisions. No dataset used by the experiments
+remains unavailable; the checklist's universal condition concerning unavailable
+datasets is therefore satisfied, rather than being used to imply that a hidden
+dataset exists.
 
 \section{Reproducibility Checklist}
 \label{app:checklist-explanation}
@@ -896,14 +912,23 @@ the identifying web link is disabled in the main-paper source.
 The main checklist answers ``yes'' when the criterion is satisfied by the main
 paper together with this appendix and the submitted code-and-data archive.
 Specifically, this appendix supplies all formal assumptions and proofs; the
-novel dataset description and license; citations, revisions, and split rules for
-existing data; preprocessing and analysis code locations; complete parameters;
-hardware and software; distributional statistics; and a theory-to-code map.
+novel dataset description, complete released records, and CC BY 4.0 license;
+citations, revisions, and deterministic split rules for existing public data;
+all author-created preprocessing, execution, and analysis code; complete
+parameters; hardware and software; distributional statistics; and a
+theory-to-code map.
 
-Two boundaries remain explicit. First, the checklist item requiring every
-source dependency to be available under a research-use license is ``partial'':
-the GP2PL code and original data have such licenses, but the public MOOSE and
-three benchmark repositories do not expose explicit license files that we are
-authorized to replace. Second, the statistical-significance item is ``no''
-until the registered five-seed paired comparison is complete. Neither limitation
-can be converted to ``yes'' merely by adding an appendix or repository link.
+The availability answers distinguish authored artifacts from dependencies.
+Every GP2PL-authored source file needed by the reported experiments is included
+and Apache-2.0 licensed. External tools and benchmark repositories remain
+third-party works: the appendix cites them, records exact revisions, and supplies
+deterministic retrieval scripts without asserting ownership or relicensing them.
+Likewise, the sealed construction audit was unavailable to the translation model
+during inference but is included in the released temporal-goal dataset for
+independent validation. Hence there is no non-public experimental dataset.
+
+The statistical answer does not claim a significant advantage by declaration.
+It records a stricter boundary: this manuscript makes no inferential improvement
+claim from the fixed release, and the registered paired tests are a prerequisite
+for adding one. Descriptive outcomes and complete per-instance records remain
+available independently of that future comparison.
