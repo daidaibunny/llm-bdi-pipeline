@@ -18,8 +18,8 @@ behavior. Recent BDI integrations instead invoke a classical planner at run
 time \cite{Xu2024OperationalSemantics} or use generalized planning directly for
 means--ends reasoning \cite{Meneguzzi2025GeneralisedBDIPlanning}. GP2PL instead
 addresses the representation-compilation problem of transforming
-singleton-goal evidence, together with PDDL schema closure, into a persistent
-plan library.
+singleton-goal evidence, together with PDDL schema closure, into a query-independent
+atomic module core $\mathcal M_D$ that can be extended by later queries.
 
 \paragraph{Modular policies and BDI plan libraries.}
 Policy-reuse languages allow one generalized policy to invoke another with
@@ -71,7 +71,7 @@ connects them through certificate-carrying compilation. The broader
 proof-carrying principle attaches machine-checkable evidence to executable
 artifacts
 \cite{Necula1997ProofCarryingCode}; GP2PL's certificates are narrower symbolic
-planning contracts. Its novelty is joint construction of lifted BDI modules and
-query-local DFA controllers under explicit obligations; goal regression,
-answer-set solving, AgentSpeak semantics, and \ltlf-to-DFA translation remain
-prior components.
+planning contracts. GP2PL contributes the certified construction of a reusable
+atomic module core together with preservation-safe query plans in the maintained
+BDI library $\mathcal L_D^{[k]}$; goal regression, answer-set solving,
+AgentSpeak semantics, and \ltlf-to-DFA translation remain prior components.

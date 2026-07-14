@@ -273,6 +273,14 @@ existing single-domain temporal-goal appender. One aggregate file is therefore
 the paper benchmark, while domain views preserve the invariant that one domain
 has one maintained AgentSpeak library.
 
+The manuscript denotes the query-independent atomic module core by
+`M_D` and the plans generated for one bound query `q` by `Q_q`. For an ordered
+sequence `q_1, ..., q_k`, the sole maintained library is
+`L_D^[k] = M_D union (union_{i=1}^k Q_{q_i})`; appending a new query `q` yields
+`L_D^[k+1] = L_D^[k] union Q_q`. These symbols distinguish semantic roles; they
+do not introduce separate persisted libraries. The operational domain view
+continues to append `Q_q` to the same per-domain AgentSpeak file.
+
 Every canonical case contains the public query, profile, lifted formula,
 typed parameters, explicit predicate or `numeric_equality` atom kind, one
 sealed problem binding, translation membership, and validation certificates.

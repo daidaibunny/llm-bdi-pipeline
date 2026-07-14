@@ -83,12 +83,16 @@ def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
 	assert "Depots & 1 & 0 & 0.0 $\\pm$ 0.0" in main_table
 	assert "Seed 0" not in main_table
 	assert "sample standard deviation (SD)" in main_table
+	assert "atomic cores compiled independently from predeclared evidence seeds" in (
+		main_table
+	)
 	assert "Domain & Test & Seed 0 & Seed 1 & Seed 2 & Seed 3 & Seed 4" in domain_table
 	assert "Coverage (\\%)" in domain_table
 	assert "Mean (\\%)" not in domain_table
 	assert "SD (pp)" not in domain_table
 	assert "logistics & 1 & 1 & 1 & 0 & 1 & 1 & 80.0 $\\pm$ 44.7" in domain_table
 	assert "$n=5$" in domain_table
+	assert "independently compiled atomic cores" in domain_table
 	for table in (main_table, domain_table):
 		assert "[htbp]" in table
 		assert "\\small" in table

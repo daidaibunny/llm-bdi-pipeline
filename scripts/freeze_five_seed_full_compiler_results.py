@@ -646,8 +646,9 @@ def render_main_table(result: Mapping[str, Any]) -> str:
 			"\\bottomrule",
 			"\\end{tabular}",
 			(
-				"\\caption{Full GP2PL atomic held-out coverage over $n=5$ "
-				"independently compiled evidence-seed libraries. Coverage is mean "
+				"\\caption{Full GP2PL atomic held-out coverage over $n=5$ atomic "
+				"cores compiled independently from predeclared evidence seeds. "
+				"Coverage is mean "
 				"$\\pm$ sample standard deviation (SD) across seeds; Valid/seed "
 				"gives the raw minimum--"
 				"maximum count. Domains complete in every seed are aggregated, and every "
@@ -690,8 +691,8 @@ def render_domain_table(result: Mapping[str, Any]) -> str:
 			(
 				"\\caption{Complete Full GP2PL atomic held-out successes by independent "
 				"MOOSE goal-order seed. Coverage is mean $\\pm$ sample standard "
-				"deviation (SD) for $n=5$ "
-				"independently compiled libraries; no evidence is pooled and no "
+				"deviation (SD) for $n=5$ independently compiled atomic cores; no "
+				"evidence is pooled and no "
 				"best seed is selected.}"
 			),
 			"\\label{tab:five-seed-atomic-domains}",

@@ -31,7 +31,7 @@ a macro, whereas `!clear(Y); !on(X,Y)` is a recursive subgoal decomposition.
 The **Validated Policy-Lifting Compiler** consumes provider-neutral evidence
 and the PDDL action schemas. It validates action sequences, generates required
 schema-closure candidates, checks binding and progress conditions, selects a
-compact candidate set, and renders the maintained atomic AgentSpeak(L) library.
+compact candidate set, and renders the certified atomic module core.
 MOOSE and the compiler are upstream and downstream components rather than
 alternative planners.
 
@@ -43,6 +43,19 @@ certified BDI plan-library compilation problem, but it must state that execution
 has been implemented and evaluated only for the AgentSpeak(L)/Jason realization.
 It must not claim portability to another BDI language without a renderer and an
 execution study for that language.
+
+The paper denotes the query-independent **certified atomic module core** by
+`M_D`. It is the selected set of atomic achievement branches, for example
+`+!on(X,Y)` and its closed internal `+!clear(Y)` module. For temporal query `q`,
+`Q_q` is the query-local plan set containing the top-level goal, DFA dispatch,
+and transition-repair plans. For an ordered sequence of appended queries
+`q_1, ..., q_k`, the only maintained library is
+`L_D^[k] = M_D union (union_{i=1}^k Q_{q_i})`, with `L_D^[0] = M_D`. Appending
+a new query `q` gives `L_D^[k+1] = L_D^[k] union Q_q`. `M_D` and `Q_q` are
+logical subsets of this one persisted AgentSpeak(L) library, not separate
+library files. Code and internal metadata may retain established field names
+such as `atomic_library`, but the manuscript uses this notation to separate
+mathematical roles from storage layout.
 
 **Clingo** is the Answer Set Programming solver used for constrained branch
 selection. It does not plan in a PDDL state space and does not execute actions.
@@ -62,11 +75,13 @@ hard certificate obligations hold and only within the generated candidate
 space.
 
 The **Temporal Query Compiler** is the third production component. It consumes
-a validated lifted LTLf/DFA artifact and appends query-local `trans` wrappers
-that call the atomic library. The **Temporal Goal Validation Module** is a
-separate evaluation component. It validates a predicted lifted LTLf against the
-sealed gold temporal semantics, replays hidden source witnesses, and checks
-generated execution traces with both PDDL action semantics and DFA acceptance.
+a validated lifted LTLf/DFA artifact and derives `Q_q`, whose plans call modules
+in `M_D` and update `L_D^[k]` to `L_D^[k+1]`. The concrete AgentSpeak
+realization uses query-local `trans` goals. The **Temporal Goal Validation
+Module** is a separate evaluation component. It validates a predicted lifted
+LTLf against the sealed gold temporal semantics, replays hidden source
+witnesses, and checks generated execution traces with both PDDL action
+semantics and DFA acceptance.
 
 ## Reproducibility and Public Artifact Contract
 
@@ -124,12 +139,12 @@ fixed-release differences remain descriptive, and any future improvement claim
 is gated on the registered paired five-seed analysis.
 
 This repository no longer builds a universal generalized planner and no longer
-routes domains by prior-paper taxonomy labels. The current strategy is to use
-an Evidence Module to import external generalized-planning artifacts, normalize
-them into provider-neutral singleton-goal evidence, then compile the accepted
-evidence into one maintained domain-level AgentSpeak(L) library per domain.
-MOOSE is the current Evidence Module provider for positive singleton PDDL
-predicate goals; it is not the name of the framework module.
+routes domains by prior-paper taxonomy labels. The Evidence Module imports
+external generalized-planning artifacts and normalizes them into provider-neutral
+singleton-goal evidence. The compiler constructs `M_D` from accepted evidence;
+later queries contribute `Q_q` to the same maintained `L_D^[k]`. MOOSE is the
+current Evidence Module provider for positive singleton PDDL predicate goals;
+it is not the name of the framework module.
 
 ## Compiler Contract
 
@@ -148,9 +163,11 @@ The architecture separates four modules.
    effects, and delete effects. The compiler checks that evidence actions replay
    through those schemas, lifts object names to variables, adds required
    PDDL-schema closure modules, selects a compact branch set, and renders
-   AgentSpeak(L) plans such as `+!at(X,Y)`.
+   the certified atomic module core `M_D`, including plans such as
+   `+!at(X,Y)`.
 3. The Temporal Query Compiler consumes validated lifted LTLf/DFA query
-   artifacts and appends query-local wrapper plans that call the atomic library.
+   artifacts, constructs the query-local plan set `Q_q`, and appends it to the
+   maintained library, updating `L_D^[k]` to `L_D^[k+1]`.
 4. The Temporal Goal Validation Module validates the model payload, proves or
    refutes gold/predicted DFA language equivalence, checks the hidden source
    witness, and consumes the committed trace produced by the separate Jason

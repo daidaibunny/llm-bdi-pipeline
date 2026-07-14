@@ -189,7 +189,12 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 	)
 	figure_one_position = main_source.index("\\label{fig:architecture}")
 	figure_two_position = main_source.index("\\label{fig:policy-lifting-example}")
+	abstract_end_position = main_source.index("\\end{abstract}")
+	introduction_position = main_source.index("\\section{Introduction}")
+	example_position = main_source.index("Singleton-goal evidence for")
 	background_position = main_source.index("\\input{sections/background}")
+	assert abstract_end_position < introduction_position < example_position
+	assert example_position < figure_one_position
 	assert figure_one_position < figure_two_position < background_position
 	assert "\\begin{figure}[htbp]" in main_source
 	assert "\\begin{figure*}[htbp]" in main_source
@@ -202,3 +207,71 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 		evaluation_source
 	)
 	assert "\\label{fig:evaluation-summary}" in evaluation_source
+
+
+def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	background_source = (LATEX_ROOT / "sections/background.tex").read_text(
+		encoding="utf-8",
+	)
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+
+	assert "certified atomic module core $\\mathcal{M}_D$" in background_source
+	assert "query-local plan set $\\mathcal{Q}_q$" in background_source
+	assert "\\mathcal{L}_D^{[k]}" in background_source
+	assert "\\mathcal{L}_D^{[0]}=\\mathcal{M}_D" in background_source
+	assert "\\bigcup_{i=1}^{k}\\mathcal{Q}_{q_i}" in background_source
+	assert "\\mathcal{L}_D^{(q)}" not in background_source
+	assert "\\mathcal L_D^{(q)}" not in method_source
+	assert "\\mathcal L_D^{(q)}" not in supplement_source
+	assert "\\ENSURE Certified atomic module core $\\mathcal M_D$" in method_source
+	assert "selected atomic core $\\mathcal M_D$" in method_source
+	assert "query-local plan set $\\mathcal Q_q$" in method_source
+	assert "The certified atomic module core is the feasible selected set" in (
+		supplement_source
+	)
+	assert "$\\mathcal M_D:=S$" in supplement_source
+	assert "does not define the core" in supplement_source
+	assert re.search(
+		r"maintained domain library\s+\$\\mathcal L_D\^\{\[k\]\}\$",
+		supplement_source,
+	)
+
+	figure_caption = re.search(
+		r"\\caption\{GP2PL compiles(.*?)\}\s*"
+		r"\\label\{fig:architecture\}",
+		main_source,
+		re.DOTALL,
+	)
+	assert figure_caption is not None
+	caption_text = " ".join(figure_caption.group(1).split())
+	assert "atomic module core" in caption_text
+	assert "$\\mathcal M_D=\\mathcal L_D^{[0]}$" in caption_text
+	assert "controller plans" in caption_text
+	assert "$\\mathcal Q_q$" in caption_text
+	assert "one maintained BDI library" in caption_text
+	assert "$\\mathcal L_D^{[k+1]}=\\mathcal L_D^{[k]}\\cup\\mathcal Q_q$" in caption_text
+
+
+def test_main_paper_keeps_serialization_details_in_the_supplement() -> None:
+	main_paper_sources = (
+		LATEX_ROOT / "main.tex",
+		LATEX_ROOT / "sections/background.tex",
+		LATEX_ROOT / "sections/related_work.tex",
+		LATEX_ROOT / "sections/method.tex",
+		LATEX_ROOT / "sections/evaluation.tex",
+	)
+	combined_source = "\n".join(
+		path.read_text(encoding="utf-8") for path in main_paper_sources
+	)
+	for engineering_phrase in (
+		"serialized artifact has exactly eight fields",
+		"exact eight-key JSON",
+		"six-worker MOOSE configuration",
+		"the 12-worker run takes",
+		"fixed seed-0 library snapshot",
+	):
+		assert engineering_phrase not in combined_source

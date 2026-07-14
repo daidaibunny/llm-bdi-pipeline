@@ -47,27 +47,24 @@ Libraries for Temporally Extended Goals}
 \maketitle
 
 \begin{abstract}
-Generalized-planning policies transfer across related instances, but are not
-automatically executable plan libraries for Belief--Desire--Intention (BDI)
-agents. Direct transcription does not establish range restriction, internal-call
-closure, recursive progress, resource restoration, or compatibility among
-temporal achievements. We formulate \methodname{} (Generalized Planning to Plan
-Libraries), a certificate-carrying compilation framework for this representation
-gap. At the domain level, it combines singleton-goal policy evidence with PDDL
-action schemas and selects a compact, closed set of lifted BDI modules under
-binding, execution, completion, progress, and resource-restoration obligations.
-At the query level, it derives controllers from deterministic automata constructed
-by \texttt{ltlf2dfa} and MONA, admitting only transition strategies that preserve
-signed guard obligations.
-Theorems establish local module soundness, candidate-space optimality,
-transition-composition soundness, and trace-faithful monitoring for the declared
-fragment; obligations lacking the required certificates are rejected. We
-instantiate the framework with MOOSE evidence, Clingo selection, and an
-\asl{}/Jason realization. Across \BenchmarkDomainCount{} domains, five
-independently seeded atomic libraries obtain
+Generalized-planning policies are not directly executable as
+Belief--Desire--Intention (BDI) plan libraries: transcription alone does not
+establish variable binding, internal-call closure, recursive progress, resource
+restoration, or temporal compatibility. We introduce
+\methodname{} (Generalized Planning to Plan Libraries), a certificate-carrying
+compiler that closes this representation gap. Domain compilation combines
+singleton-goal policy evidence with PDDL action schemas into a certified atomic
+module core; query compilation composes preservation-safe plans from
+deterministic-automaton guards without relearning that core. For the declared
+candidate language and temporal fragment, we prove local module soundness,
+candidate-space optimality, transition-composition soundness, and trace-faithful
+primitive-step monitoring; obligations without the required certificates are
+rejected. The evaluated instantiation combines MOOSE, Clingo,
+\texttt{ltlf2dfa}/MONA, and \asl{}/Jason. Across \BenchmarkDomainCount{}
+domains, five independently seeded atomic cores obtain
 \AtomicFiveSeedMeanSuccessPercent{}\% mean held-out Jason-plus-VAL coverage
 (\AtomicFiveSeedSampleSDPercent{} percentage-point sample standard deviation).
-All \TranslationEquivalentCount{} model-produced specifications are
+All \TranslationEquivalentCount{} translated specifications are
 language-equivalent to their gold formulas, and all \TEGProblemCount{} bound
 queries produce traces accepted by Jason, VAL, and both finite-trace automata.
 \end{abstract}
@@ -84,11 +81,30 @@ events and belief contexts to actions and subgoals
 therefore establish variable binding, internal-call closure, well-founded
 recursion, and evidence coverage.
 
-For example, singleton-goal evidence for \texttt{on(X,Y)} may authorize
-\texttt{stack(X,Y)} under \texttt{holding(X)} and \texttt{clear(Y)}
-\cite{Chen2026Moose}. A reusable module must also clear an obstructed
-\texttt{Y}, although \texttt{clear} may be absent when it was never a training
-goal. PDDL schemas must then supply the module and certify recursive progress.
+Singleton-goal evidence for \texttt{on(X,Y)} may authorize
+\texttt{stack(X,Y)} under \texttt{holding(X)} and \texttt{clear(Y)} while
+omitting \texttt{clear} as a target \cite{Chen2026Moose}. GP2PL derives an
+internal \texttt{clear} module from action-schema closure and accepts recursive
+use only with a decreasing relational ranking.
+
+\begin{figure}[htbp]
+\centering
+\IfFileExists{\gpplfigureonepath}{%
+\includegraphics[width=\columnwidth]{\gpplfigureonepath}%
+}{%
+\fbox{\parbox[c][1.40in][c]{0.92\columnwidth}{\centering
+Figure 1 artwork placeholder\\[5pt]
+Single-column GP2PL overview\\
+Domain compilation $+$ query-specific temporal compilation}}
+}
+\caption{GP2PL compiles domain model $D$ and singleton-goal policy evidence $E$
+once into the certified atomic module core
+$\mathcal M_D=\mathcal L_D^{[0]}$. Each bound temporal query $q$ contributes
+controller plans $\mathcal Q_q$ without relearning, updating the one maintained
+BDI library by
+$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
+\label{fig:architecture}
+\end{figure}
 
 Temporally extended goals pose a separate problem
 \cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. The formula
@@ -98,32 +114,13 @@ one observed state, so later modules cannot undo earlier achievements, a form
 of BDI goal interference \cite{Thangarajah2003GoalInterference}. Temporal
 control must therefore be composed over the fixed domain library.
 
-Figure~\ref{fig:architecture} presents \methodname{}. Domain compilation joins
-singleton-goal evidence with PDDL schemas once; query compilation turns
-supported deterministic finite automaton (DFA) transitions into controllers.
-We instantiate these interfaces with MOOSE evidence \cite{Chen2026Moose} and an
-\asl{}/Jason plan library \cite{Rao1996AgentSpeak,Bordini2007Jason}.
-Certificates use rule structure and symbolic PDDL effects, never names.
-
-\begin{figure}[htbp]
-\centering
-\IfFileExists{\gpplfigureonepath}{%
-\includegraphics[width=\columnwidth]{\gpplfigureonepath}%
-}{%
-\fbox{\parbox[c][2.00in][c]{0.92\columnwidth}{\centering
-Figure 1 artwork placeholder\\[5pt]
-Single-column GP2PL overview\\
-Domain compilation $+$ query-specific temporal compilation}}
-}
-\caption{The GP2PL representation bridge. Domain-level evidence is compiled
-once into a maintained plan library; each bound temporally extended query
-appends only a query-local controller that reuses the certified atomic modules.}
-\label{fig:architecture}
-\end{figure}
-
-Figure~\ref{fig:policy-lifting-example} follows one atomic target through
-evidence normalization, schema closure, certificate checking, feasible-library
-selection, and construction of the certified atomic module core.
+Figure~\ref{fig:architecture} separates the one-time atomic module core
+$\mathcal M_D$ from successive query-local additions. After $k$ appends, a new
+bound query $q$ updates the unique library by
+$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$. Both stages are
+symbol-invariant under consistent renaming: domain certificates depend on
+action-schema structure and symbolic effects, while query certificates depend
+on signed DFA guards and conditional module summaries.
 
 \begin{figure*}[htbp]
 \centering
@@ -141,7 +138,8 @@ module core $\mathcal M_D$. Left: normalized evidence for \texttt{on(X,Y)} and
 target-relevant PDDL schema closure generate evidence-backed and schema-derived
 candidates. Middle: candidates pass binding, executability, achievement,
 closure, progress, and resource-restoration certificates before joint Clingo
-selection of a minimum-cost evidence-covering subset. Right: branch provenance
+selection of a lexicographically optimal evidence-covering subset. Right:
+branch provenance
 is preserved in the \asl{} realization of $\mathcal M_D$, containing
 already-satisfied and direct-producer cases plus recursive preparation through
 the generated \texttt{clear/1} module. Optimality is relative to the generated
@@ -149,14 +147,19 @@ certified candidate space.}
 \label{fig:policy-lifting-example}
 \end{figure*}
 
-GP2PL contributes (i) a candidate language with minimum-cost evidence-to-library
-selection; (ii) symbol-invariant certificates for binding, execution,
+Figure~\ref{fig:policy-lifting-example} follows one atomic target through
+evidence normalization, schema closure, certificate checking, feasible-library
+selection, and construction of the certified atomic module core.
+
+GP2PL contributes (i) a finite candidate language with lexicographically
+optimal evidence-to-core selection inside that language; (ii) symbol-invariant
+certificates for binding, execution,
 achievement, recursion, closure, and resource restoration; and (iii)
 preservation-safe \ltlf-to-DFA guard composition under primitive-step monitoring.
 Uncertified modules and transitions are rejected. Across
-\BenchmarkDomainCount{} domains, independent atomic libraries average
+\BenchmarkDomainCount{} domains, independent atomic cores average
 \AtomicFiveSeedMeanSuccessPercent{}\% held-out Jason-plus-VAL coverage over
-five MOOSE goal-order seeds, while all \TEGProblemCount{} fixed-snapshot
+five MOOSE goal-order seeds, while all \TEGProblemCount{} predeclared
 temporal queries pass Jason, VAL, and both DFAs. These are evaluated-input
 coverage results, not completeness for arbitrary PDDL--\ltlf{} products;
 complete proofs and the reproducibility protocol appear in the Technical
@@ -169,9 +172,10 @@ Supplement, Secs.~2 and~5.
 
 \section{Conclusion}
 
-GP2PL compiles generalized-planning evidence into certified BDI plan libraries
-and finite-trace controllers. Five-seed atomic coverage averages
-\AtomicFiveSeedMeanSuccessPercent{}\%; the fixed temporal study solves
+GP2PL compiles generalized-planning evidence into a certified atomic module core
+and appends finite-trace query plans to the unique maintained BDI domain library.
+Five-seed atomic coverage averages
+\AtomicFiveSeedMeanSuccessPercent{}\%; the predeclared temporal study solves
 \TEGProblemCount{}/\TEGProblemCount{}. Guarantees remain conditional on the
 certified candidate language and declared \ltlf{} fragment.
 

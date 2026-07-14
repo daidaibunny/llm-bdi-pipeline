@@ -202,13 +202,17 @@ Define only concepts used by the algorithms:
   as its evaluated interpreter, without claiming portability to unevaluated BDI
   languages;
 - an LTLf formula and its deterministic finite automaton (DFA);
-- the compilation input `(D, I_train, E, phi)` and output `(L_D, Q_phi)`.
+- the domain-compilation input `(D, I_train, E)` and atomic-core output `M_D`;
+- the per-query input `(M_D, tau_q, B_q)` and query-plan output `Q_q`; and
+- the sole maintained library after an ordered sequence `q_1, ..., q_k`,
+  `L_D^[k] = M_D union (union_{i=1}^k Q_{q_i})`, with `L_D^[0] = M_D`.
 
-`L_D` is the one maintained domain library. For example, it contains reusable
-`+!on(X,Y)` and `+!clear(X)` modules. `Q_phi` is the set of query-local plans,
-for example `+!g_query` and `+!g_query_trans_1`, appended for one temporal
-query. State the allowed output vocabulary and supported temporal fragment in
-this section.
+`M_D` is the certified atomic module core: the query-independent selected BDI
+branches, such as `+!on(X,Y)` and `+!clear(X)`. `Q_q` is the query-local plan set,
+including `+!g_query` and `+!g_query_trans_1`. Appending it changes
+`L_D^[k]` to `L_D^[k+1] = L_D^[k] union Q_q`. These are logical subsets of the
+one maintained library, not separately maintained files. State the allowed
+output vocabulary and supported temporal fragment in this section.
 
 ### 3. Related Work and Positioning
 
@@ -233,7 +237,7 @@ through a certificate-carrying compiler that derives the summaries from
 generalized-planning evidence and PDDL schemas, constructs executable domain
 modules, and composes query-local controllers.
 
-### 4. GP2PL Domain-Library Compilation
+### 4. Certified Atomic-Module Compilation
 
 This section covers only the post-evidence domain compiler. Its candidate and
 certificate representation is defined at the trigger--context--body BDI
@@ -259,9 +263,10 @@ plan-rule level; the implemented final rendering targets AgentSpeak(L).
 5. Explain the joint Clingo optimization over evidence and schema candidates.
    The precise claim is global optimality only inside the generated certified
    candidate space.
-6. Render the selected modules into the one maintained domain library. State
+6. Render the selected modules as the certified atomic module core `M_D`. State
    explicitly that AgentSpeak(L) is the evaluated realization, not the
-   definition of the compilation contribution.
+   definition of the compilation contribution and not a second maintained
+   library.
 
 Detailed certificate definitions may remain in the main paper when required to
 understand a contribution. Long proof steps and secondary implementation cases
@@ -270,8 +275,8 @@ technical-content limit.
 
 ### 5. DFA-Guided Composition of Temporally Extended Goals
 
-This section covers only query-specific control over the selected domain
-library. Open by defining the semantic input boundary rather than prescribing a
+This section covers only query-specific control over the selected atomic core
+`M_D`. Open by defining the semantic input boundary rather than prescribing a
 surface grammar for users. The evaluated front end receives a source utterance,
 the public PDDL symbol catalogue, declared typed parameters, and binding
 constraints; it returns the exact eight-key lifted LTLf artifact. Explain its
@@ -737,35 +742,45 @@ role when two connectors share endpoints, for example
 circle with its own state label. Do not group an arrow with either endpoint;
 this preserves editable routing when a label changes.
 
-### Figure 1: End-to-End Architecture
+### Figure 1: GP2PL Representation Bridge
 
-Use a single-column `figure[htbp]` in the first page's right column. The source
-appears in the Introduction immediately after its first citation. Its final
-artwork is inserted at `\columnwidth`; the placeholder reserves 2.00 inches of
-artwork height before the caption. The figure is a problem-level overview, not
-a software-component inventory.
+Use a single-column `figure[htbp]` in the first page's right column. Place its
+source after the Introduction's compact singleton-goal example and before the
+temporal-goal motivation. In the AAAI two-column layout, this leaves the
+abstract and opening domain-compilation motivation in the left column while the
+overview occupies the top of the right column without forced placement. Its
+final artwork is inserted at
+`\columnwidth`; the placeholder reserves 1.40 inches of artwork height before
+the caption. The figure is a problem-level overview, not a software-component
+inventory.
 
-Use two horizontal flows feeding one maintained-library container:
+Use a compact vertical flow with one side input and one final library artifact:
 
-- Top flow: `Domain model D` and `Policy evidence E` enter `(1) Lift and
-  certify modules`, producing `Lifted atomic modules`.
-- Bottom flow: bound query `$\langle\tau_q,B_q\rangle$` enters `(2) Compose
-  controller`, producing query-local controller `$\mathcal Q_q$`.
-- The two output boxes are visibly contained in one green container labelled
-  `One maintained plan library $\mathcal L_D$`.
-- Draw a dashed blue dependency from the atomic modules to query composition to
-  mean that the query compiler reuses certified module contracts. It is not an
-  execution arrow and does not create another library.
+- `Domain model D` and `GP policy evidence E` converge on `(1) Lift + certify
+  once`, producing `Certified atomic module core $\mathcal M_D$`.
+- Draw one solid reuse arrow from `$\mathcal M_D$` to `(2) Compose + append`.
+  A side input `Bound temporal query $\langle\varphi_q,B_q\rangle$` enters this
+  second operation.
+- Label the output arrow `query plans $\mathcal Q_q$`; do not draw
+  `$\mathcal Q_q$` as a separately maintained component.
+- End at one emphasized stacked-document artifact labelled
+  `Executable BDI domain library $\mathcal L_D^{[k]}$`. Place the append equation
+  `$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$` beside the output
+  arrow rather than drawing a second library artifact.
+- Do not use a dashed outer library container or the implementation-level
+  `reuse module contracts` feedback connector.
 
 Do not place PDDL syntax, MOOSE, Clingo, MONA, Jason, VAL, certificate tables,
 `Layer A/B/C`, `tg_state`, a second domain library, or a language model inside
 Figure 1. Those details belong in Figure 2, the algorithms, and Evaluation.
 Draft caption:
 
-> **Figure 1: The GP2PL representation bridge.** Domain-level evidence is
-> compiled once into a maintained plan library; each bound temporally extended
-> query appends only a query-local controller that reuses the certified atomic
-> modules.
+> **Figure 1:** GP2PL compiles domain model $D$ and singleton-goal policy
+> evidence $E$ once into the certified atomic module core
+> $\mathcal M_D=\mathcal L_D^{[0]}$. Each bound temporal query $q$ contributes
+> controller plans $\mathcal Q_q$ without relearning, updating the one maintained
+> BDI library by
+> $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
 
 ### Figure 2: From Policy Evidence to a Certified Atomic Core
 
@@ -892,7 +907,8 @@ recursive internal closure. Approved caption:
 > target-relevant PDDL schema closure generate evidence-backed and schema-derived
 > candidates. Middle: candidates pass binding, executability, achievement,
 > closure, progress, and resource-restoration certificates before joint Clingo
-> selection of a minimum-cost evidence-covering subset. Right: branch provenance
+> selection of a lexicographically optimal evidence-covering subset. Right:
+> branch provenance
 > is preserved in the AgentSpeak(L) realization of $\mathcal M_D$, containing
 > already-satisfied and direct-producer cases plus recursive preparation through
 > the generated `clear/1` module. Optimality is relative to the generated

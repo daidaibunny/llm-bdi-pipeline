@@ -10,8 +10,8 @@ and timing boundary are defined below.
 \centering
 \includegraphics[width=\textwidth]{\gpplfigurethreepath}
 \caption{Five-seed held-out execution. Panel (a) gives per-domain
-Jason-plus-VAL coverage for five independently seeded, single-worker MOOSE
-evidence runs; points are seeds and diamonds with bars show mean $\pm$ sample
+Jason-plus-VAL coverage for five independently seeded MOOSE evidence runs;
+points are seeds and diamonds with bars show mean $\pm$ sample
 standard deviation. Panel (b) gives mean cumulative VAL-valid coverage over
 Jason execution time for three predeclared benchmark groups; bands span the
 seed minimum and maximum. Failures remain in the denominator, and the dashed
@@ -30,7 +30,7 @@ retains them without PDDL-derived closure. \emph{Action Closure} adds action-onl
 producers; \emph{Maximal Certified} also retains compatible recursive preparation
 and resource-restoration candidates; and \emph{Full GP2PL} applies the Clingo
 objective to the same space. Their paired comparison measures closure, held-out
-execution, and compact selection.
+execution, and compact selection of the atomic core.
 
 \paragraph{Temporal composition.}
 \emph{Unprotected DFA} uses the same automaton, library, and primitive-step
@@ -66,8 +66,8 @@ Source revisions and splits appear in the Technical Supplement, Sec.~4.3;
 parameters and reporting rules appear in Secs.~5.2--5.3.
 
 \paragraph{Controlled inputs and references.}
-Atomic variants share each seed's evidence; temporal variants share the library,
-binding, and DFA, with pairing established by input fingerprints. MOOSE reuses
+Atomic variants share each seed's evidence; temporal variants share the atomic
+core, binding, and DFA, with pairing established by input fingerprints. MOOSE reuses
 its learned model; LAMA
 \cite{RichterWestphal2010LAMA} and ENHSP MRP+HJ
 \cite{Scala2020NumericSubgoaling} are the classical and numeric references used
@@ -88,14 +88,14 @@ only after its committed trace passes VAL, and all failures remain in the
 denominator. Tables~\ref{tab:five-seed-atomic} and
 \ref{tab:profile-results} report the compact atomic and temporal-profile
 outcomes. The Technical Supplement reports every domain--seed cell and the
-fixed seed-0 domain-library inputs used by the temporal study. The result
+fixed seed-0 atomic-core inputs used by the temporal study. The result
 subsections interpret these preregistered views without selecting domains after
 execution.
 
 \subsection{Five-Seed Atomic Results}
 \label{sec:atomic-results}
 
-The five independently compiled libraries solve, for seeds 0--4,
+The five independently compiled atomic cores solve, for seeds 0--4,
 \AtomicSeedZeroSuccessCount{}, \AtomicSeedOneSuccessCount{},
 \AtomicSeedTwoSuccessCount{}, \AtomicSeedThreeSuccessCount{}, and
 \AtomicSeedFourSuccessCount{} of \AtomicFiveSeedCaseCount{} held-out cases.
@@ -116,9 +116,10 @@ goal order changes available cross-mode provider macros, while schema closure
 rejects the cyclic \texttt{at}/\texttt{in} dependency without a decreasing
 certificate. Depots obtains 63.64\% $\pm$ 11.13 points; \texttt{p12} and
 \texttt{p20} require a nested support-resource choice beyond the already-bound
-capacity certificate. These are limits of the certified candidate language,
-not invalid successful traces. We freeze the compiler instead of adding
-post-hoc domain rules that would invalidate the protocol.
+capacity certificate. The Logistics and Depots failures therefore mark the
+boundary of the certified candidate language; every reported success remains a
+VAL-valid trace. No domain-specific rule was introduced after observing
+held-out outcomes.
 Table~\ref{tab:five-seed-atomic} gives the non-pooled five-seed summary; the
 Technical Supplement, Sec.~5.3 gives every domain--seed count, provenance, and
 failure diagnostic.
@@ -128,30 +129,28 @@ failure diagnostic.
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}
 
-A frozen protocol exposes only the public PDDL catalogue, typed parameters, and
-binding constraints; permits $F$, $X$, strong $U$, conjunction, and literal
-negation; and requires exact eight-key JSON (Technical Supplement, Sec.~4.2).
-The controlled source utterances specify the evaluation distribution rather
-than a required user grammar. GPT-5.5 \cite{OpenAI2026GPT55SystemCard}
-translates \TranslationInputCount{} deduplicated specifications. Every output
-satisfies the JSON/PDDL contract and exact DFA-language equivalence, yielding
-\TEGProblemCount{} bound queries. Clingo selects
-\AtomicSelectedBranchCount{} of \AtomicCandidateCount{} certified candidates.
+The temporal protocol exposes the public PDDL vocabulary, typed parameters, and
+binding constraints; it admits $F$, $X$, strong $U$, conjunction, and literal
+negation. The controlled source utterances specify the evaluation distribution,
+not a required user grammar. GPT-5.5 \cite{OpenAI2026GPT55SystemCard}
+translates \TranslationInputCount{} deduplicated specifications. Every accepted
+translation satisfies the typed structural contract and exact DFA-language
+equivalence, yielding \TEGProblemCount{} bound queries. The serialized schema
+and validation protocol appear in the Technical Supplement, Sec.~4.2.
 
 Table~\ref{tab:profile-results} separates five formula profiles. Every query
 completes in Jason; all \TEGVALSuccessCount{} nonempty traces pass VAL, and both
 DFAs accept all \TEGGoldDFAAcceptCount{} traces. Runtime is
-\TEGMedianRuntimeSeconds{} seconds median (IQR 4.28--8.49; SD 13.66), and action
-count is \TEGMedianActionCount{} median (IQR 1--2; SD 0.80); the 12-worker run
-takes \TEGWallRuntimeMinutes{} minutes. All 13 rejection and symbol-invariance
-challenges pass.
+\TEGMedianRuntimeSeconds{} seconds median (IQR 4.28--8.49), and action count is
+\TEGMedianActionCount{} median (IQR 1--2). All 13 rejection and
+symbol-invariance challenges pass.
 
 \input{sections/result_profile_table}
 
-The temporal study uses a fixed seed-0 library snapshot obtained under a
-six-worker MOOSE configuration, distinct from the five-seed atomic protocol; it
-supports neither cross-seed robustness nor arbitrary PDDL--\ltlf{} completeness.
-Both evaluators agree on 14/14 labelled and 2/2 initial-state cases. A zero-action
-case is $\langle s_0\rangle$; VAL 1.4 does not parse an empty plan. The Technical
-Supplement, Sec.~5.3 gives the fixed-input domain breakdown, complete
+The temporal study fixes one preregistered seed-0 atomic core per domain,
+separately from the five-seed sensitivity study; it supports neither
+cross-seed claims nor arbitrary PDDL--\ltlf{} completeness. Gold and predicted
+DFAs agree on all 14 labelled and both initial-state cases. Initial-state
+acceptance is the one-state trace $\langle s_0\rangle$ with zero actions. The
+Technical Supplement, Sec.~5.3 gives the fixed-input domain breakdown, complete
 distributions, and provenance.

@@ -104,13 +104,34 @@ $\mustadd$, no additional $\maydelete$, and equivalent numeric and keyed-resourc
 contracts. Prefix similarity alone is not coverage.
 \end{definition}
 
-\begin{definition}[Feasible domain library]
+\begin{definition}[Feasible atomic module core]
 For certified space
 $\mathcal C_D^{\checkmark}=\{b\in\mathcal C_E\cup\mathcal C_D\mid
 \mathsf{Cert}_D(b)\}$, a selected set $S\subseteq\mathcal C_D^{\checkmark}$ is
 feasible when it covers every evidence obligation, includes a selected module
 for every internal call, preserves required producer exits, and admits
 the selected recursion and cross-module dependency ranks.
+\end{definition}
+
+The certified atomic module core is the feasible selected set
+$\mathcal M_D:=S$, represented by BDI trigger--context--body rules. It is
+query-independent, closed under its internal achievement calls, and contains
+no query identifier, DFA state, or monitor symbol. The evaluated AgentSpeak(L)
+realization preserves these rules but does not define the core.
+
+\begin{definition}[Maintained domain library]
+For temporal query $q$, let $\mathcal Q_q$ contain its top-level goal, DFA
+dispatcher, and certified transition-repair plans. For an ordered sequence of
+appended queries $q_1,\ldots,q_k$, the maintained domain library
+$\mathcal L_D^{[k]}$ is
+\[
+\mathcal L_D^{[0]}=\mathcal M_D,
+\qquad
+\mathcal L_D^{[k]}=
+\mathcal M_D\cup\bigcup_{i=1}^{k}\mathcal Q_{q_i}.
+\]
+$\mathcal M_D$ and $\mathcal Q_{q_i}$ are logical subsets of this one library, not
+separately maintained plan-library artifacts.
 \end{definition}
 
 GP2PL asks a Clingo answer-set optimizer \cite{Gebser2018Clingo} for a feasible

@@ -177,7 +177,7 @@ def test_render_domain_table_uses_readable_single_column_rows() -> None:
 	assert table.index("\\caption{") > table.index("\\end{tabular}")
 	assert "\\begin{tabular}{lrrrrr}" in table
 	assert "@{\\hspace" not in table
-	assert "fixed seed-0 BDI plan libraries" in table
+	assert "fixed seed-0 atomic cores" in table
 	assert "hash-locked" not in table
 	assert "Tr/Te" in table
 	assert "E/S" in table

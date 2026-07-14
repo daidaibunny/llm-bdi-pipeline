@@ -1,21 +1,21 @@
-\section{GP2PL Domain-Library Compilation}
+\section{Certified Atomic-Module Compilation}
 \label{sec:method}
 
 \subsection{Method Overview}
 
 GP2PL first maps
-$D,\mathcal{I}_{\mathrm{train}},E\longrightarrow\mathcal{L}_D$,
-compiling one reusable domain library from a PDDL domain, training split, and
-normalized generalized-planning evidence. Temporal queries do not enter this
-optimization, so later queries reuse $\mathcal{L}_D$.
+$D,\mathcal{I}_{\mathrm{train}},E\longrightarrow\mathcal{M}_D$,
+compiling the query-independent certified atomic module core from a PDDL domain,
+training split, and normalized generalized-planning evidence. Temporal queries
+do not enter this optimization; every later query reuses $\mathcal M_D$.
 Algorithm~\ref{alg:atomic} summarizes the procedure.
 
 \begin{algorithm}[htbp]
-\caption{Compile a BDI Domain Plan Library}
+\caption{Compile the Certified Atomic Module Core}
 \label{alg:atomic}
 \begin{algorithmic}[1]
 \REQUIRE PDDL domain $D$, training split $\mathcal{I}$, provider output $A$
-\ENSURE Lifted BDI plan library $\mathcal{L}_D$ or a rejection diagnostic
+\ENSURE Certified atomic module core $\mathcal M_D$ or a rejection diagnostic
 \STATE $E\leftarrow\textsc{NormalizeEvidence}(A,D,\mathcal{I})$
 \STATE $T\leftarrow\textsc{ProducibleClosure}(E,D)$
 \STATE $C_E\leftarrow\textsc{ValidateEvidenceMacros}(E,D)$
@@ -25,16 +25,16 @@ Algorithm~\ref{alg:atomic} summarizes the procedure.
 \IF{$S=\bot$ because no set satisfies coverage, closure, and certificates}
   \STATE \textbf{reject}
 \ENDIF
-\RETURN $\textsc{RenderAgentSpeak}(S)$
+\RETURN $\mathcal M_D\leftarrow S$
 \end{algorithmic}
 \end{algorithm}
 
-The certification and selection steps operate on trigger--context--body plan
-rules before surface rendering. The final line is the language-specific step:
-the evaluated realization maps $S$ to \asl{}, but the contribution is the
-certified construction of the BDI plan library rather than a new AgentSpeak
-semantics. The guarantees do not transfer to another BDI language without a
-semantics-preserving translation and an independent execution study.
+Certification and selection operate on trigger--context--body rules before
+surface rendering. AgentSpeak(L) rendering preserves the selected triggers,
+contexts, bodies, and internal-call relation in $\mathcal M_D$; it is the
+evaluated realization, not the definition of the compilation problem. Claims
+for another BDI language would require a semantics-preserving rendering and an
+independent execution study.
 Table~\ref{tab:supported-fragment} states the exact compilation boundary used
 throughout the formal claims and experiments.
 
@@ -81,10 +81,9 @@ PDDL action macro, $\nu$ records numeric conditions and effects, and $\pi$
 records provenance. For example, evidence for \texttt{at(P,L)} may contain a
 \texttt{load; move; unload} macro. Admissibility requires every symbol and arity
 to occur in $D$, capture-avoiding renaming of local variables, and a singleton
-positive goal contract. MOOSE supplies the present instantiation
-\cite{Chen2026Moose}. Negative
-achievement evidence is rejected because the instantiated provider supplies no
-action contract for achieving a negated literal.
+positive goal contract. In the experiments, $E$ is obtained from MOOSE readable
+policies \cite{Chen2026Moose}. Negative achievement evidence is rejected because
+those policies provide no action contract for achieving a negated literal.
 
 \subsection{Schema-Derived Candidate Space}
 
@@ -109,10 +108,10 @@ alpha-normalized requirement/producer step or resource mode, and only the
 shortest body is retained for an equivalent open-requirement and completion-
 effect contract. Every candidate is then verified by symbolic progression.
 Evidence macros are not truncated. Cyclic dependencies require provider
-evidence or a separately certified recursive module. This defines a restricted candidate
-language rather than a complete PDDL planner. Types constrain unification; a
-\asl{} realization may expose static sort membership in contexts, but never
-as an achievement call or exported action.
+evidence or a separately certified recursive module. The resulting candidate
+language is finite but not complete for PDDL planning. Types constrain
+unification; an \asl{} realization may expose static sort membership in
+contexts, but never as an achievement call or exported action.
 
 \subsection{Branch Certificates}
 
@@ -168,10 +167,11 @@ anchored acyclic-cone count that strictly decreases and has a base/producer exit
 Threats are checked over the preparation graph selected by Clingo, not over
 unselected candidates. A branch may add the ranked relation outside the
 protected cone only when its trigger preserves the same anchor and a guard proves
-that the new anchor differs from the protected one. This certificate feature
-never becomes an agent belief. The design follows relational progress witnesses
-in general-policy work \cite{Frances2021LearningGeneralPolicies} but claims only
-schema-certified features from the generated candidate language.
+that the new anchor differs from the protected one. The ranking feature is used
+only in certification and never becomes an agent belief. The construction
+follows relational progress witnesses in general-policy work
+\cite{Frances2021LearningGeneralPolicies}, but claims only schema-certified
+features from the generated candidate language.
 
 \paragraph{Resource release.}
 Effects, not predicate names, identify temporary occupation of a reusable
@@ -182,9 +182,9 @@ and occupant argument $O$ from the effect structure and obtains the same result
 after consistent symbol renaming. A discharge body is accepted only if symbolic
 execution removes the current occupancy mode, restores the corresponding
 availability fact, leaves the atomic target true, and does not recreate an
-earlier normalized mode. This yields a finite restoration path without assuming
-that release is one action. Disequalities arise only when unifying two roles
-would make a PDDL precondition false.
+earlier normalized mode. Excluding repeated modes makes the restoration search
+finite without assuming that release is one action. Disequalities arise only
+when unifying two roles would make a PDDL precondition false.
 
 \paragraph{Existential preparation projection.}
 Preparing one of several dynamic preconditions may temporarily change another,
@@ -227,8 +227,8 @@ equivalently
 \operatorname{cost}(S)
 \quad\text{subject to}\quad S\models\Omega_E.
 \]
-This constrained selection, rather than the surface AgentSpeak syntax, defines
-the reusable domain-library result.
+The selected set $S$, rather than its AgentSpeak rendering, defines the
+certified atomic module core $\mathcal M_D$.
 
 The compiler rejects an untyped predicate with several producers when their
 safe use requires different nested branch portfolios. For example, if one
@@ -247,16 +247,13 @@ produces a structured specification
 $\tau_q=\langle id_q,\varphi_q,A_q,P_q,C_q\rangle$, where $\varphi_q$ is an
 \ltlf{} formula over proposition symbols, $A_q$ maps each symbol to a lifted
 PDDL predicate or integer equality, $P_q$ declares the parameters, and $C_q$
-constrains their bindings. The serialized artifact has exactly eight fields:
-three fixed metadata fields for schema version, sample identity, and temporal
-logic; the formula and atom table; the parameter declarations and constraints;
-and a support-status field. Before automaton construction, the validator rejects
-rather than repairs an artifact unless every formula symbol has exactly one
-atom-table entry, no entry is unused, every symbol belongs to the PDDL catalogue,
-and all arities, types, numeric values, and temporal operators satisfy the
-declared fragment. The controlled utterances in our released benchmark define
-the evaluated input distribution, not a user-facing query syntax. The frozen
-prompt and complete JSON schema appear in the Technical Supplement, Sec.~4.2.
+constrains their bindings. Before automaton construction, validation requires a
+bijective formula-to-atom mapping, membership in the domain vocabulary, and
+correct arities, types, numeric values, and temporal operators. Invalid
+specifications are rejected rather than repaired. The controlled utterances in
+the released benchmark define the evaluation distribution, not a required
+user-facing grammar; the serialized schema and translation protocol appear in
+the Technical Supplement, Sec.~4.2.
 
 A temporal query is represented by
 $\langle q,g_q,\varphi_q,A_q,B_q\rangle$: a query identifier, top-level goal,
@@ -330,11 +327,12 @@ $\mathit{at}(P,L)$ and the exact integer value 3 in its final state while
 preserving every other signed guard obligation. A cyclic guard admits one action
 only if the same proof covers the whole successor state. Negated equality is
 observation-only without a certified change-away action; arbitrary arithmetic
-and independent ``solve then hope'' composition are not claimed.
+and uncertified sequential composition are outside the supported fragment.
 
 Numeric preparation must strictly reduce missing preconditions or a constant-
 bounded deficit, preserve other conditions, and leave the target fluent
-unchanged. These components form a lexicographic ranking; no proof means reject.
+unchanged. Their tuple forms a lexicographic ranking; compilation rejects the
+candidate when no decreasing tuple can be certified.
 
 For strong Until, intersected non-progress self-loops define source invariants.
 Before the single progress literal, no action prefix may delete a positive
@@ -352,15 +350,19 @@ Let $L=(L_1,\ldots,L_n)$ be the certified signed-literal order and let $\rho_i$
 be the optional certified repair call for occurrence $L_i$. A positive leaf
 observes or achieves its atom; a negative leaf observes absence or invokes its
 exact certified deleter. The tree indexes these occurrences, not DFA states or
-primitive actions.
+primitive actions. For query $q$, let $\mathcal T_{q_s,B}$ denote the plans for
+one source-state objective and let the query-local plan set $\mathcal Q_q$
+contain the top-level dispatcher together with every accepted
+$\mathcal T_{q_s,B}$. Algorithm~\ref{alg:temporal} constructs one such
+transition plan set.
 
 \begin{algorithm}[htbp]
 \caption{Compile a Certified DFA Progress Controller}
 \label{alg:temporal}
 \begin{algorithmic}[1]
-\REQUIRE DFA source $q_s$, signed objective $B$, selected library $\mathcal L_D$
-\ENSURE Query-local controller $\mathcal Q_{q_s,B}$ or rejection
-\STATE $\Sigma\leftarrow\textsc{CompletionSummaries}(\mathcal L_D)$
+\REQUIRE DFA source $q_s$, signed objective $B$, selected atomic core $\mathcal M_D$
+\ENSURE Transition plan set $\mathcal T_{q_s,B}$ or rejection
+\STATE $\Sigma\leftarrow\textsc{CompletionSummaries}(\mathcal M_D)$
 \STATE $(L,\rho)\leftarrow\textsc{CertifySerialization}(B,\Sigma)$
 \IF{$(L,\rho)=\bot$}
   \STATE \textbf{reject}
@@ -379,7 +381,7 @@ primitive actions.
 \ENDIF
 \STATE \textbf{end procedure}; $\textsc{Build}(1,n)$
 \STATE emit ordered $done$: return if monitor $\ne q_s$; otherwise call $!t$
-\RETURN $\mathcal Q_{q_s,B}$
+\RETURN $\mathcal T_{q_s,B}$
 \end{algorithmic}
 \end{algorithm}
 
@@ -397,8 +399,9 @@ uncertified action. Every primitive suffix action is observed by the same DFA,
 so it may traverse further actual edges, including a rejecting edge, but cannot
 manufacture a transition or report false acceptance. Only after the suffix
 finishes does $done$ return to top-level dispatch at the current state or replay
-when that state is still $q_s$. This is fail-closed trace safety, not a claim
-that the suffix is a complete strategy for a newly reached state.
+when that state is still $q_s$. Consequently, the controller cannot report an
+accepting transition that the monitor did not take. The suffix need not be a
+complete strategy for a newly reached state.
 
 For $n=1$, $R[1,1]$ is one leaf followed by the same completion test. Balancing
 does not choose the certified order or reduce primitive action count; it bounds
@@ -407,14 +410,24 @@ work per pass. The repeated state check is an instance of the declarative goal
 plan pattern \cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure
 is GP2PL's controller realization.
 
-\subsection{Persistent Domain Library}
+\subsection{Maintained Domain Library}
 
-Compilation yields one persistent library $\mathcal{L}_D$ and one \asl{}
-realization per domain. Each query extends $\mathcal{L}_D$ with one top-level
-goal and its local controllers without reconstructing the atomic modules;
-controller goals are neither PDDL fluents nor exported actions. Jason records
-the complete primitive trace, which VAL checks against the PDDL problem
-\cite{Howey2004VAL}.
+The atomic compiler constructs $\mathcal M_D$ once. Temporal compilation for a
+query $q_i$ unions its dispatcher and transition plan sets into
+$\mathcal Q_{q_i}$. For an ordered sequence $q_1,\ldots,q_k$, the sole
+maintained library is
+\[
+\mathcal L_D^{[k]}=
+\mathcal M_D\cup\bigcup_{i=1}^{k}\mathcal Q_{q_i},
+\qquad
+\mathcal L_D^{[0]}=\mathcal M_D.
+\]
+The \asl{} realization serializes $\mathcal L_D^{[k]}$ as one per-domain plan
+library; $\mathcal M_D$ is its stable query-independent subset, not a second
+library. Appending $\mathcal Q_{q_i}$ neither reconstructs nor reoptimizes the
+atomic core. Query-local goals are control symbols, not PDDL fluents or exported
+actions. Jason records the complete primitive trace, which VAL checks against
+the PDDL problem \cite{Howey2004VAL}.
 
 If the initial valuation is accepting, the committed plan is empty and the
 trace is $\langle s_0\rangle$, not an empty trace or inserted noop; a noop could
@@ -434,7 +447,8 @@ type-consistent grounding and called modules satisfy their contracts, the branch
 is executable and returns with $p(\bar X)$. Binding grounds each term; induction
 over symbolic progression establishes preconditions and final achievement;
 recursion uses its ranking and preparation rechecks the producer context.
-\hfill$\square$ This is local soundness, not reachable-state coverage.
+\hfill$\square$ The proposition establishes local soundness, not
+reachable-state coverage.
 
 \paragraph{Candidate-space optimality.}
 

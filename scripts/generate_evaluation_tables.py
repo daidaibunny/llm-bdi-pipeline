@@ -432,7 +432,7 @@ def render_domain_table(result: dict[str, Any]) -> str:
 		[
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{Per-domain fixed seed-0 BDI plan libraries and temporal "
+			"\\caption{Per-domain fixed seed-0 atomic cores and temporal "
 			"execution. Tr/Te denotes train/test instances; E/S denotes "
 			"evidence/schema candidates; Sel. denotes selected branches; E2E "
 			"requires Jason, neutral-goal VAL, and both DFA checks; s is median "

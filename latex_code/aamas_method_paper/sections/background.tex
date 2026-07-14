@@ -24,7 +24,7 @@ goal conditions and
 lifts the resulting plans into first-order condition-to-macro rules
 \cite{Chen2026Moose}. We treat these rules as \emph{evidence}: they demonstrate
 ways to achieve observed singleton goals, but need not constitute a closed or
-minimal BDI plan library.
+lexicographically selected atomic module core.
 
 \subsection{BDI Plan Libraries and Their AgentSpeak(L) Realization}
 
@@ -70,17 +70,29 @@ a certified action strategy are outside this fragment.
 \subsection{Certified Compilation Problem}
 
 \textbf{Compilation problem.} Given $D$, training instances
-$\mathcal{I}_{\mathrm{train}}$, singleton-goal evidence $E$, and a lifted query
-$\varphi$, compilation produces one domain library $\mathcal{L}_D$ of lifted
-atomic modules and query-local plans $\mathcal{Q}_{\varphi}$ that pursue
-certified DFA progress. Positive predicate goals and supported integer
-equalities require an executable achieving module. Negative literals denote
-absence and preservation, never synthetic negative achievement calls.
-Conjunctive guards require a preservation-safe order; mixed Boolean--numeric
-guards require complete net effects for a common final state. The compiler
-rejects unsupported arithmetic, disjunction, cyclic threats without a
-preserving strategy, and any obligation whose effects are incomplete. In the
-\asl{} realization, static sort-membership beliefs may constrain PDDL type
-compatibility, but no domain-specific typing predicate becomes an achievement
-goal or primitive action. Formal definitions and supported-fragment assumptions
-appear in the Technical Supplement, Sec.~1.
+$\mathcal{I}_{\mathrm{train}}$, and singleton-goal evidence $E$, domain
+compilation produces the certified atomic module core $\mathcal{M}_D$: the
+query-independent set of selected branches whose triggers are singleton
+achievements. For a validated bound temporal query $q$, query compilation
+produces the query-local plan set $\mathcal{Q}_q$, comprising its top-level goal,
+DFA dispatch, and transition-repair plans. For an ordered sequence of appended
+queries $q_1,\ldots,q_k$, the one maintained domain library is
+\[
+\mathcal{L}_D^{[0]}=\mathcal{M}_D,
+\qquad
+\mathcal{L}_D^{[k]}=
+\mathcal{M}_D\cup\bigcup_{i=1}^{k}\mathcal{Q}_{q_i}.
+\]
+Thus $\mathcal M_D$ is the stable logical core of $\mathcal L_D^{[k]}$, not a
+second persisted library.
+
+Positive predicate goals and supported integer equalities require an executable
+achieving module. Negative literals denote absence and preservation, never
+synthetic negative achievement calls. Conjunctive guards require a
+preservation-safe order; mixed Boolean--numeric guards require complete net
+effects for a common final state. Compilation rejects unsupported arithmetic,
+disjunction, cyclic threats without a preserving strategy, and any obligation
+whose effects are incomplete. In the \asl{} realization, static sort-membership
+beliefs may constrain PDDL type compatibility, but no domain-specific typing
+predicate becomes an achievement goal or primitive action. Formal definitions
+and supported-fragment assumptions appear in the Technical Supplement, Sec.~1.
