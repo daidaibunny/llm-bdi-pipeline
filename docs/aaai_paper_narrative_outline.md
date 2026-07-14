@@ -767,81 +767,83 @@ Draft caption:
 > query appends only a query-local controller that reuses the certified atomic
 > modules.
 
-### Figure 2: From Policy Evidence to a Lifted Atomic Module
+### Figure 2: From Policy Evidence to a Certified Atomic Core
 
 Place this full-width `figure*[htbp]` immediately after Figure 1 in the
 Introduction source so the two-column float is eligible for the top of page 2.
 The placeholder reserves 2.75 inches of artwork height before its caption. This
-is a method example, not an experimental result. It uses the repository's Blocks PDDL
-vocabulary. PDDL names retain hyphens; rendered AgentSpeak names use underscores.
+is one continuous method example, not an architecture inventory or an
+experimental result. It must let the reader trace one `on(X,Y)` target from
+evidence and action schemas to individual selected AgentSpeak(L) branches. Use
+the repository's Blocks vocabulary. Render PDDL and AgentSpeak identifiers with
+the spellings used by the corresponding artifact.
 
-Panel containers and headings:
+Use three horizontal panels with aligned semantic rows:
 
-- `(a)` is `x=1,y=2,w=23,h=96`, heading `Evidence`.
-- `(b)` is `x=26,y=2,w=23,h=96`, heading `PDDL closure`.
-- `(c)` is `x=51,y=2,w=24,h=96`, heading `Certification + selection`.
-- `(d)` is `x=77,y=2,w=22,h=96`, heading `Executable library`.
-- Each panel is white with a gray 1 pt border. Put the regular-weight panel letter at
-  `x+1.5,y=4` and the heading centered at `y=5`.
+- `(a)` occupies 30 percent of the width and is headed `Evidence + schema
+  closure`.
+- `(b)` occupies 39 percent and is headed `Certification + selection`.
+- `(c)` occupies 31 percent and is headed
+  `Certified atomic module core $\mathcal M_D$`.
+- Candidate identifiers and row positions must remain aligned from their source
+  in (a), through certification in (b), to their emitted branch in (c). This
+  correspondence, rather than panel borders, is the visual argument.
+- Use a 7.0 by approximately 3.0 inch final canvas. At final print size all body
+  text is at least 8 pt and panel headings use regular weight. Inputs are
+  rectangles, transformations are rounded rectangles or a hexagon, and emitted
+  program fragments are code boxes, so the figure remains readable in
+  grayscale.
 
-Panel (a) objects:
+Panel (a) combines evidence and closure rather than presenting them as two
+unrelated stacked panels:
 
-- `F2-A1`: `x=4,y=17,w=17,h=20`. Gray box with exact text:
-  `Training singleton goals`, `on(b1,b2)`, and `on(b3,b1)`.
-- `F2-A2`: `x=3,y=49,w=19,h=31`. Amber box headed
-  `Normalized MOOSE evidence (schematic)`. Under the heading use Courier New:
-  `goal     on(X,Y)`, `context  holding(X), clear(Y)`, and
-  `macro    stack(X,Y)`.
-- Draw `F2-A1 -> F2-A2` as a solid flow arrow labelled
-  `MOOSE goal regression`. Do not depict the training object names inside
-  panel (d).
+- At the top, show two small grounded singleton goals, `on(b1,b2)` and
+  `on(b3,b1)`, flowing to a normalized provider-evidence card `E_on`:
+  `goal on(X,Y)`, `context holding(X), clear(Y)`, and `body stack(X,Y)`.
+  The card may carry a small `provider macro` provenance tag; the panel heading
+  must not make the representation-compilation method appear MOOSE-specific.
+- Below, show only the target-relevant portions of two action schemas:
+  `stack(X,Y)` requires `holding(X), clear(Y)` and adds `on(X,Y)`;
+  `unstack(Z,Y)` requires `on(Z,Y), clear(Z), arm_empty` and adds
+  `holding(Z), clear(Y)`.
+- Summarize closure as the dependency
+  `on/2 -> {holding/1, clear/1}` and mark `clear/1` as producible through
+  `unstack`. Do not use an unconnected predicate list.
+- Route three noncrossing provenance connectors into panel (b): normalized
+  evidence to the evidence-backed direct candidate, `stack` to the direct
+  producer candidate, and the `clear/1` dependency to the recursive-preparation
+  candidate. Label the connectors `E`, `S1`, and `S2`; color reinforces these
+  labels but never replaces them.
 
-Panel (b) objects use Courier New 18 pt inside blue boxes:
+Panel (b) makes the optimization result visible rather than drawing four cards
+that all appear selected:
 
-- `F2-B1`: `x=28,y=16,w=19,h=27` with the exact schema excerpt:
-  `stack(X,Y)`, `pre: holding(X), clear(Y)`,
-  `add: on(X,Y), clear(X), arm-empty`, and
-  `del: holding(X), clear(Y)`.
-- `F2-B2`: `x=28,y=48,w=19,h=29` with:
-  `unstack(X,Y)`, `pre: on(X,Y), clear(X), arm-empty`,
-  `add: holding(X), clear(Y)`, and
-  `del: on(X,Y), clear(X), arm-empty`.
-- `F2-B3`: `x=28,y=82,w=19,h=12`. Green box headed
-  `Target-relevant producible closure` with
-  `on/2, clear/1, holding/1, arm_empty/0`.
-- Draw dashed blue arrows from `F2-B1` and `F2-B2` to `F2-B3`, both labelled
-  `add-effect / precondition closure`. Place one small gray note under `F2-B3`:
-  `Static predicates remain context only.`
+- Align four candidate rows: `C0 already satisfied`, `C1 validated direct
+  producer`, `C2 recursive prepare clear(Y)`, and `C3 longer feasible macro`.
+  Attach source tags such as `evidence`, `schema`, or `closure` to each row.
+- Use one shared certificate header or compact matrix for `Bind`, `Execute`,
+  `Achieve`, `Closure`, `Progress`, and `Resource`; do not repeat six miniature
+  tables whose labels become unreadable. A check means required and proved, a
+  dash means the obligation is not triggered, and rejection is shown explicitly
+  rather than as `n/a`.
+- At the right edge of each row show the optimization outcome. In the
+  illustrative feasible selection, `C0`, `C1`, and `C2` are selected; `C3` is
+  feasible but omitted at higher lexicographic cost. If an evidence and schema
+  candidate normalize to the same branch, show both provenance tags on `C1`
+  instead of drawing duplicate candidates.
+- Send the certificate-passing rows to one compact `Clingo: lexicographic
+  selection` node, then to `selected {C0,C1,C2}`. Place
+  `optimal only in the generated certified space` immediately below this node.
+- Solid arrows denote candidate generation, selection, and emission. Dashed
+  arrows are reserved for an internal subgoal call in panel (c); do not use a
+  dashed outer candidate-space container as a decorative border.
 
-Panel (c) objects:
+Panel (c) removes the empty `One domain library` container. Figure 1 already
+establishes that exactly one domain library is maintained; Figure 2 should show
+the selected atomic module core $\mathcal M_D$ that forms its reusable part:
 
-- Draw a dashed blue container `F2-C0` at `x=52.5,y=15,w=15,h=45`, labelled
-  `Certified candidate space` in its top-left corner.
-- Inside it stack four candidate cards at `y=22,31,40,49`, each `w=13,h=7`.
-  Use amber for `E: validated stack macro`; blue for
-  `S1: direct stack producer`; blue for
-  `S2: !clear(Y); !on(X,Y)`; and white/gray for
-  `S3: longer feasible macro`.
-- At `x=68.5,y=17,w=5,h=42`, draw six small certificate badges:
-  `Bind`, `Execute`, `Achieve`, `Closure`, `Progress`, and `Resource`.
-  A green check means required and proved; gray `n/a` means the candidate does
-  not use that feature. Never mark an unproved obligation as `n/a`.
-- Draw dashed blue arrows from each candidate card to the badge rail labelled
-  `machine-checkable contract`.
-- `F2-C1`: `x=57,y=66,w=13,h=13`. Dark blue hexagon with white text:
-  `Clingo` and `lexicographic select`.
-- Draw solid arrows from every certificate-passing candidate to `F2-C1`.
-  Draw no arrow from a certificate-rejected candidate.
-- `F2-C2`: `x=54,y=84,w=18,h=8`. Green box:
-  `Minimum-cost feasible subset`.
-- Draw `F2-C1 -> F2-C2` as a solid green arrow. Put a gray 18 pt note below:
-  `Optimal only inside this generated certified space.`
-
-Panel (d) objects:
-
-- `F2-D0`: `x=78.5,y=14,w=19,h=76`. Green outer container headed
-  `One domain library`.
-- `F2-D1`: `x=80,y=23,w=16,h=49`. White code box containing exactly:
+- Put one code box headed `on/2 module` containing three branch rows. Prefix
+  them with the same `C0`, `C1`, and `C2` identifiers used in panel (b):
 
 ```asl
 +!on(X,Y) : on(X,Y) <- true.
@@ -854,25 +856,47 @@ Panel (d) objects:
     !on(X,Y).
 ```
 
-- `F2-D2`: `x=81,y=78,w=14,h=8`. Small green box:
-  `+!clear(...) module`.
-- Draw a dashed blue subgoal-call arrow from the `!clear(Y)` line in `F2-D1`
-  to `F2-D2`. Label it `internal closure`.
-- Draw a solid green arrow from `F2-C2` to the left border of `F2-D0`.
-- Put a gray footer inside `F2-D0`: `No training objects; no synthetic goals.`
+- Below it, use the previously empty space for a second code box headed
+  `clear/1 module excerpt`:
+
+```asl
++!clear(Y) : clear(Y) <- true.
+
++!clear(Y) : arm_empty & on(Z,Y) & clear(Z) <-
+    unstack(Z,Y);
+    putdown(Z).
+
++!clear(Y) : on(Z,Y) & not clear(Z) <-
+    !clear(Z);
+    !clear(Y).
+```
+
+- Draw one dashed arrow from the `!clear(Y)` occurrence in the `on/2` code box
+  to the `clear/1` box, labelled `internal module call`. This arrow is the
+  concrete visualization of internal closure and arbitrary-depth recursive
+  preparation.
+- Draw thin provenance links from `C0`, `C1`, and `C2` in panel (b) to the
+  matching branch labels in the `on/2` code box. Keep these links horizontal by
+  aligning rows across the two panels.
+- End the panel with `lifted variables only; no training objects; no synthetic
+  goals`. Use one `... omitted selected branches` note only if needed; never use
+  a standalone `......` line.
 
 The code is an illustrative certificate-valid selection from the generated
 candidate language, not a verbatim claim that every seed selects these exact
-three branches. It demonstrates the added internal module and recursive
-structure. Draft caption:
+branches. It demonstrates branch provenance, a selected direct producer, and
+recursive internal closure. Approved caption:
 
-> **Figure 2: Certified lifting of singleton-goal policy
-> evidence.** Provider
-> macros and PDDL-derived closure candidates enter the same certified candidate
-> space. The selected BDI module, shown in its AgentSpeak(L) realization, is
-> lifted, internally closed, and may introduce producible subsidiary goals
-> absent from the evidence; compactness is optimal only within the generated
-> candidate language.
+> Figure 2: Certified lifting from singleton-goal evidence to a recursive
+> atomic module core $\mathcal M_D$. Left: normalized evidence for `on(X,Y)` and
+> target-relevant PDDL schema closure generate evidence-backed and schema-derived
+> candidates. Middle: candidates pass binding, executability, achievement,
+> closure, progress, and resource-restoration certificates before joint Clingo
+> selection of a minimum-cost evidence-covering subset. Right: branch provenance
+> is preserved in the AgentSpeak(L) realization of $\mathcal M_D$, containing
+> already-satisfied and direct-producer cases plus recursive preparation through
+> the generated `clear/1` module. Optimality is relative to the generated
+> certified candidate space.
 
 ### Supplementary Figure S1: DFA Transition Compilation and Runtime Monitoring
 

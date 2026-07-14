@@ -123,7 +123,7 @@ appends only a query-local controller that reuses the certified atomic modules.}
 
 Figure~\ref{fig:policy-lifting-example} follows one atomic target through
 evidence normalization, schema closure, certificate checking, feasible-library
-selection, and emission into the maintained domain library.
+selection, and construction of the certified atomic module core.
 
 \begin{figure*}[htbp]
 \centering
@@ -134,16 +134,18 @@ selection, and emission into the maintained domain library.
 Figure 2 artwork placeholder\\[8pt]
 (a) Evidence and schema closure\qquad
 (b) Certified candidate selection\qquad
-(c) One maintained plan library}}
+(c) Certified atomic module core}}
 }
-\caption{Certified policy lifting illustrated with \texttt{on(X,Y)}.
-Panel (a) combines normalized singleton-goal evidence with target-relevant
-schema closure. Panel (b) admits candidate branches only after machine-checkable
-binding, execution, achievement, internal-closure, progress, and resource
-restoration obligations, then performs lexicographic feasible-library
-selection. Panel (c) shows representative selected \asl{} modules in the one
-maintained domain library. The excerpt is not the complete library; optimality
-is relative to the generated certified candidate space.}
+\caption{Certified lifting from singleton-goal evidence to a recursive atomic
+module core $\mathcal M_D$. Left: normalized evidence for \texttt{on(X,Y)} and
+target-relevant PDDL schema closure generate evidence-backed and schema-derived
+candidates. Middle: candidates pass binding, executability, achievement,
+closure, progress, and resource-restoration certificates before joint Clingo
+selection of a minimum-cost evidence-covering subset. Right: branch provenance
+is preserved in the \asl{} realization of $\mathcal M_D$, containing
+already-satisfied and direct-producer cases plus recursive preparation through
+the generated \texttt{clear/1} module. Optimality is relative to the generated
+certified candidate space.}
 \label{fig:policy-lifting-example}
 \end{figure*}
 
