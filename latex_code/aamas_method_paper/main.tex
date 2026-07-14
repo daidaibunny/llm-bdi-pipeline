@@ -35,7 +35,9 @@ Libraries for Temporally Extended Goals}
 \newcommand{\maydelete}{\ensuremath{\mathsf{MayDelete}}}
 \newcommand{\mayadd}{\ensuremath{\mathsf{MayAdd}}}
 \newcommand{\methodname}{GP2PL}
-\providecommand{\gpplfiguretwopath}{figures/fig2_evaluation.pdf}
+\providecommand{\gpplfigureonepath}{figures/fig1_architecture.pdf}
+\providecommand{\gpplfiguretwopath}{figures/fig2_policy_lifting.pdf}
+\providecommand{\gpplfigurethreepath}{figures/fig2_evaluation.pdf}
 \newif\ifgpplpublicartifact
 % Keep false for anonymous review; set true only in the camera-ready source.
 \gpplpublicartifactfalse
@@ -108,21 +110,45 @@ Certificates use rule structure and symbolic PDDL effects, never names.
 
 \begin{figure}[htbp]
 \centering
-{\small
-\fbox{\begin{tabular}{@{}c@{}}
-PDDL domain + training split $\longrightarrow$ MOOSE evidence\\
-$\downarrow$ certified domain compilation\\
-one persistent BDI domain plan library\\[2pt]
-validated lifted LTLf $\longrightarrow$ MONA-derived DFA transitions\\
-$\downarrow$ certified query compilation\\
-query-local BDI controllers appended to the same library\\[2pt]
-AgentSpeak(L)/Jason realization $\longrightarrow$ PDDL trace\\
-$\longrightarrow$ VAL + DFA validation
-\end{tabular}}}
-\caption{The certified representation bridge. Domain behavior is compiled
-once; temporally extended queries append only query-local controllers.}
+\IfFileExists{\gpplfigureonepath}{%
+\includegraphics[width=\columnwidth]{\gpplfigureonepath}%
+}{%
+\fbox{\parbox[c][2.00in][c]{0.92\columnwidth}{\centering
+Figure 1 artwork placeholder\\[5pt]
+Single-column GP2PL overview\\
+Domain compilation $+$ query-specific temporal compilation}}
+}
+\caption{The GP2PL representation bridge. Domain-level evidence is compiled
+once into a maintained plan library; each bound temporally extended query
+appends only a query-local controller that reuses the certified atomic modules.}
 \label{fig:architecture}
 \end{figure}
+
+Figure~\ref{fig:policy-lifting-example} follows one atomic target through
+evidence normalization, schema closure, certificate checking, feasible-library
+selection, and emission into the maintained domain library.
+
+\begin{figure*}[htbp]
+\centering
+\IfFileExists{\gpplfiguretwopath}{%
+\includegraphics[width=\textwidth]{\gpplfiguretwopath}%
+}{%
+\fbox{\parbox[c][2.75in][c]{0.96\textwidth}{\centering
+Figure 2 artwork placeholder\\[8pt]
+(a) Evidence and schema closure\qquad
+(b) Certified candidate selection\qquad
+(c) One maintained plan library}}
+}
+\caption{Certified policy lifting illustrated with \texttt{on(X,Y)}.
+Panel (a) combines normalized singleton-goal evidence with target-relevant
+schema closure. Panel (b) admits candidate branches only after machine-checkable
+binding, execution, achievement, internal-closure, progress, and resource
+restoration obligations, then performs lexicographic feasible-library
+selection. Panel (c) shows representative selected \asl{} modules in the one
+maintained domain library. The excerpt is not the complete library; optimality
+is relative to the generated certified candidate space.}
+\label{fig:policy-lifting-example}
+\end{figure*}
 
 GP2PL contributes (i) a candidate language with minimum-cost evidence-to-library
 selection; (ii) symbol-invariant certificates for binding, execution,

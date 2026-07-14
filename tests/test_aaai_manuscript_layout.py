@@ -119,3 +119,38 @@ def test_temporal_result_tables_follow_their_result_subsection() -> None:
 		"\\input{sections/result_domain_table}",
 	):
 		assert evaluation_source.index(table_input) > temporal_results_position
+
+
+def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+
+	assert (
+		"\\providecommand{\\gpplfigureonepath}{figures/fig1_architecture.pdf}"
+		in main_source
+	)
+	assert (
+		"\\providecommand{\\gpplfiguretwopath}{figures/fig2_policy_lifting.pdf}"
+		in main_source
+	)
+	assert (
+		"\\providecommand{\\gpplfigurethreepath}{figures/fig2_evaluation.pdf}"
+		in main_source
+	)
+	figure_one_position = main_source.index("\\label{fig:architecture}")
+	figure_two_position = main_source.index("\\label{fig:policy-lifting-example}")
+	background_position = main_source.index("\\input{sections/background}")
+	assert figure_one_position < figure_two_position < background_position
+	assert "\\begin{figure}[htbp]" in main_source
+	assert "\\begin{figure*}[htbp]" in main_source
+	assert "\\IfFileExists{\\gpplfigureonepath}" in main_source
+	assert "\\IfFileExists{\\gpplfiguretwopath}" in main_source
+	assert "Figure 1 artwork placeholder" in main_source
+	assert "Figure 2 artwork placeholder" in main_source
+	assert "\\IfFileExists{\\gpplfigurethreepath}" in evaluation_source
+	assert "\\includegraphics[width=\\textwidth]{\\gpplfigurethreepath}" in (
+		evaluation_source
+	)
+	assert "\\label{fig:evaluation-summary}" in evaluation_source

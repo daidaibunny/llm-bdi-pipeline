@@ -150,7 +150,7 @@ def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
 	).read_text()
 
 	assert (
-		"\\providecommand{\\gpplfiguretwopath}{figures/fig2_evaluation.pdf}"
+		"\\providecommand{\\gpplfigurethreepath}{figures/fig2_evaluation.pdf}"
 		in main_text
 	)
 	figure_position = evaluation_text.index("\\begin{figure*}[htbp]")
@@ -160,8 +160,8 @@ def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
 	assert figure_position < evaluation_text.index(
 		"\\subsection{Five-Seed Atomic Results}",
 	)
-	assert "\\IfFileExists{\\gpplfiguretwopath}" in evaluation_text
-	assert "\\includegraphics[width=\\textwidth]{\\gpplfiguretwopath}" in (
+	assert "\\IfFileExists{\\gpplfigurethreepath}" in evaluation_text
+	assert "\\includegraphics[width=\\textwidth]{\\gpplfigurethreepath}" in (
 		evaluation_text
 	)
 	assert "\\label{fig:evaluation-summary}" in evaluation_text
@@ -174,7 +174,7 @@ def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
 		assert table_input in evaluation_text
 		assert table_input not in supplement_text
 	assert "\\clearpage" not in evaluation_text
-	assert "\\IfFileExists{\\gpplfiguretwopath}" not in supplement_text
+	assert "\\IfFileExists{\\gpplfigurethreepath}" not in supplement_text
 	result_float_specs = {
 		"result_five_seed_atomic_table.tex": "\\begin{table}[htbp]",
 		"result_five_seed_atomic_domain_table.tex": "\\begin{table*}[htbp]",
