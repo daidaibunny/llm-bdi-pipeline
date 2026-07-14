@@ -2,18 +2,20 @@
 \begin{table}[htbp]
 \centering
 \small
-\setlength{\tabcolsep}{2.5pt}
+\setlength{\tabcolsep}{1.7pt}
 \begin{tabular}{lrrrr}
 \toprule
-Profile & Eq./total & E2E & Act. & s \\
+Profile & DFA equiv. & E2E valid & Med. act. & Med. s \\
 \midrule
 Ordered-3 & 137/137 & 272/272 & 3 & 5.4 \\
 Ordered-2 & 136/136 & 273/273 & 2 & 5.6 \\
 Strong Until & 119/119 & 275/275 & 1 & 5.4 \\
 Conjunction & 19/19 & 137/137 & 1 & 5.4 \\
 Conj.+negation & 64/64 & 271/271 & 1 & 5.6 \\
+\midrule
+All & 475/475 & 1,228/1,228 & 2 & 5.5 \\
 \bottomrule
 \end{tabular}
-\caption{Temporal-profile results. Eq. is exact DFA-language equivalence; E2E requires the controller, Jason, VAL, and both DFA checks. Act. and s are median primitive actions and seconds.}
+\caption{Translation and execution by temporal profile. DFA equiv. is exact gold/predicted DFA-language equivalence. E2E valid requires controller compilation, Jason completion, neutral-goal VAL, and both DFA trace checks. Medians are primitive actions and wall-clock seconds; the All-row medians are pooled across all bound queries.}
 \label{tab:profile-results}
 \end{table}

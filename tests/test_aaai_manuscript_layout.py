@@ -12,6 +12,28 @@ def _manuscript_sources() -> tuple[Path, ...]:
 	return tuple(sorted(LATEX_ROOT.rglob("*.tex")))
 
 
+def test_manuscript_uses_the_official_aaai_2027_style() -> None:
+	assert (LATEX_ROOT / "aaai2027.sty").is_file()
+	assert (LATEX_ROOT / "aaai2027.bst").is_file()
+	for source_path in (
+		LATEX_ROOT / "main.tex",
+		LATEX_ROOT / "technical_appendix.tex",
+		LATEX_ROOT / "sections/reproducibility_checklist.tex",
+	):
+		source = source_path.read_text(encoding="utf-8")
+		assert "\\usepackage[submission]{aaai2027}" in source
+		assert "aaai2026" not in source
+		for forbidden_font_package in ("times", "helvet", "courier"):
+			assert f"\\usepackage{{{forbidden_font_package}}}" not in source
+	for source_path in (
+		LATEX_ROOT / "main.tex",
+		LATEX_ROOT / "technical_appendix.tex",
+	):
+		assert "/TemplateVersion (2027.1)" in source_path.read_text(
+			encoding="utf-8",
+		)
+
+
 def test_figures_and_tables_use_flexible_aaai_placement_without_forced_flushes() -> None:
 	float_pattern = re.compile(
 		r"\\begin\{(?:(?:figure|table)\*?|algorithm)\}"
@@ -111,14 +133,40 @@ def test_temporal_result_tables_follow_their_result_subsection() -> None:
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
 	temporal_results_position = evaluation_source.index(
 		"\\subsection{End-to-End Temporal Results}",
 	)
-	for table_input in (
-		"\\input{sections/result_profile_table}",
-		"\\input{sections/result_domain_table}",
-	):
-		assert evaluation_source.index(table_input) > temporal_results_position
+	assert evaluation_source.index("\\input{sections/result_profile_table}") > (
+		temporal_results_position
+	)
+	assert "\\input{sections/result_domain_table}" not in evaluation_source
+	assert "\\input{sections/result_domain_table}" in supplement_source
+
+
+def test_main_and_supplement_use_the_approved_table_split() -> None:
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+
+	assert "\\label{tab:supported-fragment}" in method_source
+	assert "\\label{tab:compiler-obligations}" in method_source
+	assert "\\input{sections/result_five_seed_atomic_table}" in evaluation_source
+	assert "\\input{sections/result_profile_table}" in evaluation_source
+	assert "\\input{sections/result_five_seed_atomic_domain_table}" not in (
+		evaluation_source
+	)
+	assert "\\input{sections/result_domain_table}" not in evaluation_source
+	assert "\\input{sections/result_five_seed_atomic_domain_table}" in (
+		supplement_source
+	)
+	assert "\\input{sections/result_domain_table}" in supplement_source
 
 
 def test_main_paper_reserves_the_three_figure_program_in_order() -> None:

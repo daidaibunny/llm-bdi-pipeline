@@ -35,6 +35,39 @@ the evaluated realization maps $S$ to \asl{}, but the contribution is the
 certified construction of the BDI plan library rather than a new AgentSpeak
 semantics. The guarantees do not transfer to another BDI language without a
 semantics-preserving translation and an independent execution study.
+Table~\ref{tab:supported-fragment} states the exact compilation boundary used
+throughout the formal claims and experiments.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}
+>{\raggedright\arraybackslash}p{0.22\columnwidth}
+>{\raggedright\arraybackslash}p{0.31\columnwidth}
+>{\raggedright\arraybackslash}p{0.39\columnwidth}@{}}
+\toprule
+Construct & Accepted strategy & Rejection boundary \\
+\midrule
+Positive predicate & Certified atomic module & No executable achieving branch \\
+Numeric equality & Bounded constant-integer progress & Unsupported arithmetic or
+incomplete numeric effect \\
+Positive conjunction & Threat-safe serialization & Incomplete effects or cyclic
+threats \\
+Negative predicate & Observe absence or use an exact certified deleter & Synthetic
+negated achievement or possible re-addition \\
+Mixed Boolean and numeric guard & Complete net-effect and preservation certificate &
+Incomplete mixed contract \\
+Disjunction & Not admitted in the declared fragment & Any disjunctive guard \\
+Primitive-state safety & DFA monitor after every primitive action & Completion-only
+observation \\
+\bottomrule
+\end{tabular}
+\caption{Supported compilation fragment and fail-closed boundary. Rejection
+means that GP2PL emits a structured diagnostic rather than an uncertified
+controller or synthetic atomic goal.}
+\label{tab:supported-fragment}
+\end{table}
 
 \subsection{Evidence Normalization}
 

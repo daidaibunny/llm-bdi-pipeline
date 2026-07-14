@@ -1,6 +1,27 @@
 \section{Experimental Evaluation}
 \label{sec:evaluation}
 
+Figure~\ref{fig:evaluation-summary} summarizes the complete five-seed held-out
+matrix and its predeclared benchmark groups; the estimands, validation oracles,
+and timing boundary are defined below.
+
+\IfFileExists{\gpplfigurethreepath}{%
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=\textwidth]{\gpplfigurethreepath}
+\caption{Five-seed held-out execution. Panel (a) gives per-domain
+Jason-plus-VAL coverage for five independently seeded, single-worker MOOSE
+evidence runs; points are seeds and diamonds with bars show mean $\pm$ sample
+standard deviation. Panel (b) gives mean cumulative VAL-valid coverage over
+Jason execution time for three predeclared benchmark groups; bands span the
+seed minimum and maximum. Failures remain in the denominator, and the dashed
+line marks the 1,800-second deadline.}
+\label{fig:evaluation-summary}
+\end{figure*}
+}{%
+\PackageWarning{gp2pl}{Five-seed result figure unavailable}%
+}
+
 \subsection{Questions and Comparisons}
 
 \paragraph{Atomic compilation.}
@@ -65,31 +86,11 @@ and symbol invariance. Figure~\ref{fig:evaluation-summary} follows MOOSE's
 absolute-time presentation \cite{Chen2026Moose}: a case enters a runtime curve
 only after its committed trace passes VAL, and all failures remain in the
 denominator. Tables~\ref{tab:five-seed-atomic} and
-\ref{tab:five-seed-atomic-domains} report the compact and complete atomic
-outcomes; Tables~\ref{tab:profile-results} and \ref{tab:domain-results} report
-the temporal profile and domain breakdown. The result subsections interpret
-these preregistered views without selecting domains after execution.
-
-\IfFileExists{\gpplfigurethreepath}{%
-\begin{figure*}[htbp]
-\centering
-\includegraphics[width=\textwidth]{\gpplfigurethreepath}
-\caption{Five-seed held-out execution. Panel (a) gives per-domain
-Jason-plus-VAL coverage for five independently seeded, single-worker MOOSE
-evidence runs; points are seeds and diamonds with bars show mean $\pm$ sample
-standard deviation. Panel (b) gives mean cumulative VAL-valid coverage over
-Jason execution time for three predeclared benchmark groups; bands span the
-seed minimum and maximum. Failures remain in the denominator, and the dashed
-line marks the 1,800-second deadline.}
-\label{fig:evaluation-summary}
-\end{figure*}
-}{%
-\PackageWarning{gp2pl}{Five-seed result figure unavailable}%
-}
-
-\input{sections/result_five_seed_atomic_table}
-
-\input{sections/result_five_seed_atomic_domain_table}
+\ref{tab:profile-results} report the compact atomic and temporal-profile
+outcomes. The Technical Supplement reports every domain--seed cell and the
+fixed seed-0 domain-library inputs used by the temporal study. The result
+subsections interpret these preregistered views without selecting domains after
+execution.
 
 \subsection{Five-Seed Atomic Results}
 \label{sec:atomic-results}
@@ -117,10 +118,12 @@ certificate. Depots obtains 63.64\% $\pm$ 11.13 points; \texttt{p12} and
 \texttt{p20} require a nested support-resource choice beyond the already-bound
 capacity certificate. These are limits of the certified candidate language,
 not invalid successful traces. We freeze the compiler instead of adding
-post-hoc domain rules that would invalidate the protocol. Tables~
-\ref{tab:five-seed-atomic} and \ref{tab:five-seed-atomic-domains} give the
-compact and complete counts; the Technical Supplement, Sec.~5.3 gives full
-provenance and failure diagnostics.
+post-hoc domain rules that would invalidate the protocol.
+Table~\ref{tab:five-seed-atomic} gives the non-pooled five-seed summary; the
+Technical Supplement, Sec.~5.3 gives every domain--seed count, provenance, and
+failure diagnostic.
+
+\input{sections/result_five_seed_atomic_table}
 
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}
@@ -145,14 +148,10 @@ challenges pass.
 
 \input{sections/result_profile_table}
 
-Table~\ref{tab:domain-results} gives the fixed seed-0 domain-library and
-execution breakdown.
-
-\input{sections/result_domain_table}
-
 The temporal study uses a fixed seed-0 library snapshot obtained under a
 six-worker MOOSE configuration, distinct from the five-seed atomic protocol; it
 supports neither cross-seed robustness nor arbitrary PDDL--\ltlf{} completeness.
 Both evaluators agree on 14/14 labelled and 2/2 initial-state cases. A zero-action
 case is $\langle s_0\rangle$; VAL 1.4 does not parse an empty plan. The Technical
-Supplement, Sec.~5.3 gives the complete distributions and provenance.
+Supplement, Sec.~5.3 gives the fixed-input domain breakdown, complete
+distributions, and provenance.

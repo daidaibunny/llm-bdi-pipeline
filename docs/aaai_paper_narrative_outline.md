@@ -620,14 +620,13 @@ During result insertion, empirical completeness takes priority over the
 seven-page limit. The main paper uses exactly three planned figures: the
 single-column framework overview as Figure 1 on the first page's right column,
 the full-width policy-lifting example as Figure 2 at the top of page 2, and the
-five-seed empirical result as Figure 3. It also retains the algorithm, the
-certificate table, and all four generated result tables: compact and complete
-five-seed atomic tables plus temporal-profile and fixed seed-0 per-domain
-tables. Page-budget pruning is a later editorial step and must not silently
-remove evidence while the result narrative is still being checked. The detailed
-DFA-controller diagram remains a supplementary asset. The Technical Supplement
-retains proofs, provenance, failure mechanisms, and reproduction detail without
-duplicating the main empirical tables or figures.
+five-seed empirical result as Figure 3. The main paper contains exactly four
+core tables: the supported fragment and rejection boundary, the certified
+candidate language, a compact five-seed atomic summary, and the temporal-profile
+summary. The complete domain--seed matrix and fixed seed-0 temporal input table
+belong in the Technical Supplement, where they preserve every audit value
+without duplicating the headline main-paper views. The detailed DFA-controller
+diagram also remains a supplementary asset.
 
 ### Figure Production Handoff Contract
 
@@ -1044,7 +1043,7 @@ Panel (a) specification:
 - For every domain, plot all five Full GP2PL seed coverages as small translucent
   blue points. Plot their mean as a filled blue diamond with a horizontal capped
   sample-standard-deviation interval. Annotate only domains with nonzero seed
-  variation; the complete numeric table follows in the main paper.
+  variation; the complete numeric table follows in the Technical Supplement.
 - Coverage is `100 * valid_trace_count / test_count` from that domain's original
   held-out PDDL achievement tests. A valid trace requires Jason completion and
   VAL acceptance. Do not pool domains before plotting and do not substitute
@@ -1248,63 +1247,60 @@ score.
 
 ### TEG Table
 
-### Main Five-Seed Atomic Tables
+### Main Five-Seed Atomic Table
 
-The main paper includes both the compact seed-total table and the complete
-per-domain table, in addition to reporting the mean, sample standard deviation,
-and localized failures in prose. Use one row per domain and grouped headers:
+The main paper reports one compact, non-pooled table:
 
 ```text
-Domain | Train | Test | Evidence runs/5 | Compiled runs/5 |
-Jason+VAL coverage mean +/- sample SD | Certified candidates mean +/- sample SD |
-Selected branches mean +/- sample SD | Reduction % | ASL KiB mean +/- sample SD
+Scope | Cases per seed | Success-count range per seed |
+Coverage mean +/- sample standard deviation
 ```
 
-Group classical, numeric, and serialized-width domains with `\midrule`, not
-background colors. A dash means not applicable, never zero. Do not pool or pick
-the best seed. Draft caption:
+Rows contain the complete 16-domain corpus, the transparent aggregate of
+domains that complete in every seed, and every remaining varying domain
+individually. The complete-domain set and varying-domain rows are computed from
+the frozen matrix rather than named in the generator. Values are mean $\pm$
+sample standard deviation over five independently compiled libraries
+($n=5$); the success range preserves the raw minimum and maximum. Figure 3
+retains all five per-domain seed points, so the compact table does not hide the
+within-domain distribution.
 
-> **Table 3: Five-seed atomic-library synthesis and held-out execution.** Each
-> repetition trains MOOSE on the complete domain train split with one internal
-> worker and a predeclared seed, compiles its evidence independently, and tests
-> every atomic benchmark goal in Jason and VAL. Values are mean $\pm$ sample
-> standard deviation over seeds 0--4; runs are never pooled or selected post
-> hoc.
-
-`result_domain_table.tex` remains explicitly labelled as the fixed seed-0 input
-table for the temporal evaluation. It must not be described as the five-seed
-result. Both detailed tables are temporarily retained in the main paper until
-the later page-budget edit.
+The Technical Supplement contains `result_five_seed_atomic_domain_table.tex`,
+with raw Seed 0--4 counts and one combined mean $\pm$ sample-standard-deviation
+coverage column. It also contains `result_domain_table.tex`, explicitly
+labelled as the fixed seed-0 input table for the separate temporal evaluation.
+The latter must never be described as a five-seed robustness result.
 
 ### Main Temporal Profile Table
 
-Use one full-width table with explicit columns:
+Use one compact single-column table with explicit columns:
 
 ```text
-Profile | Equivalent translations / total | Bound queries | Controller compiled |
-Jason success | VAL success | Gold-DFA accepted | Predicted-DFA accepted |
+Profile | DFA-equivalent translations / total | End-to-end valid / bound queries |
 Median actions | Median seconds
 ```
 
-Draft caption:
-
-> **Table 4: Translation and execution by temporal profile.** Equivalent
-> translations pass exact reachable-product gold/predicted DFA-language
-> equivalence. All remaining columns are counts over bound queries except the
-> median primitive-action and wall-clock costs.
+Add an `All` row computed from the aggregate machine record. The caption defines
+end-to-end validity as controller compilation, Jason completion, neutral-goal
+VAL, and both DFA trace checks. Per-profile and all-query runtime/action values
+remain medians; they must not be converted to mean $\pm$ standard deviation.
 
 ### Failure and Rejection Reporting
 
-All four currently generated empirical tables stay in the main paper during
-result verification. A later page-budget edit may consolidate them only after
-preserving every value in a submitted artifact. The supplementary artifact
-should always keep translation errors, schema validation
+The main paper keeps only the compact five-seed and temporal-profile empirical
+tables. The Technical Supplement and machine-readable artifact preserve all raw
+domain--seed and fixed-input values. The supplementary artifact should always
+keep translation errors, schema validation
 errors, unsupported DFA structure, certificate rejection, Jason failure,
 timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or
 timed-out Jason action prefix is diagnostic evidence, not a successful plan.
 
 ### AAAI Figure and Table Style Contract
 
+- Use the official AAAI-27 author kit files `aaai2027.sty` and
+  `aaai2027.bst` without locally redefining margins, fonts, caption spacing,
+  or bibliography style. The style loads its required fonts; do not add legacy
+  `times`, `helvet`, or `courier` packages.
 - Retain the Author Kit's required `\usepackage{caption}` declaration; do not
   load packages or define commands that override float placement or caption
   spacing.

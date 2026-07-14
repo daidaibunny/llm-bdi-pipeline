@@ -139,7 +139,7 @@ def test_generate_empirical_figure_writes_vector_pdf_and_provenance(
 	assert output_file.with_suffix(".metadata.json").is_file()
 
 
-def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
+def test_manuscript_places_headline_results_in_main_and_details_in_supplement() -> None:
 	main_text = (PROJECT_ROOT / "latex_code/aamas_method_paper/main.tex").read_text()
 	evaluation_text = (
 		PROJECT_ROOT / "latex_code/aamas_method_paper/sections/evaluation.tex"
@@ -154,11 +154,11 @@ def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
 		in main_text
 	)
 	figure_position = evaluation_text.index("\\begin{figure*}[htbp]")
-	assert evaluation_text.index("\\paragraph{Validation and measures.}") < (
+	assert evaluation_text.index("\\section{Experimental Evaluation}") < (
 		figure_position
 	)
 	assert figure_position < evaluation_text.index(
-		"\\subsection{Five-Seed Atomic Results}",
+		"\\subsection{Questions and Comparisons}",
 	)
 	assert "\\IfFileExists{\\gpplfigurethreepath}" in evaluation_text
 	assert "\\includegraphics[width=\\textwidth]{\\gpplfigurethreepath}" in (
@@ -167,12 +167,16 @@ def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
 	assert "\\label{fig:evaluation-summary}" in evaluation_text
 	for table_input in (
 		"\\input{sections/result_five_seed_atomic_table}",
-		"\\input{sections/result_five_seed_atomic_domain_table}",
 		"\\input{sections/result_profile_table}",
-		"\\input{sections/result_domain_table}",
 	):
 		assert table_input in evaluation_text
 		assert table_input not in supplement_text
+	for table_input in (
+		"\\input{sections/result_five_seed_atomic_domain_table}",
+		"\\input{sections/result_domain_table}",
+	):
+		assert table_input not in evaluation_text
+		assert table_input in supplement_text
 	assert "\\clearpage" not in evaluation_text
 	assert "\\IfFileExists{\\gpplfigurethreepath}" not in supplement_text
 	result_float_specs = {

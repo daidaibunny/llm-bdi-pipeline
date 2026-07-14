@@ -188,6 +188,16 @@ def test_render_domain_table_uses_readable_single_column_rows() -> None:
 
 def test_render_profile_table_compacts_redundant_success_oracles() -> None:
 	result = {
+		"benchmark": {"problem_count": 4},
+		"translation": {
+			"total": 2,
+			"dfa_equivalent_count": 2,
+		},
+		"execution": {
+			"success_count": 4,
+			"median_action_count": 2,
+			"median_runtime_seconds": 1.5,
+		},
 		"profiles": [
 			{
 				"profile": "ordered_two_milestone",
@@ -214,11 +224,15 @@ def test_render_profile_table_compacts_redundant_success_oracles() -> None:
 	assert "\\small" in table
 	assert "\\end{table}" in table
 	assert table.index("\\caption{") > table.index("\\end{tabular}")
-	assert "Eq./total" in table
-	assert "E2E" in table
+	assert "DFA equiv." in table
+	assert "E2E valid" in table
+	assert "Med. act." in table
+	assert "Med. s" in table
 	assert "Controller" not in table
 	assert "Pred. DFA" not in table
 	assert "Ordered-2 & 2/2 & 4/4 & 2 & 1.5" in table
+	assert "All & 2/2 & 4/4 & 2 & 1.5" in table
+	assert "pooled across all bound queries" in table
 
 
 def _write_fixture(
