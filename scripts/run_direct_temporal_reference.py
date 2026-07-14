@@ -49,10 +49,12 @@ from evaluation.external_reference_planners import (  # noqa: E402
 )
 from evaluation.temporal_goal_validation import validate_execution_trace  # noqa: E402
 from scripts.run_external_planning_references import (  # noqa: E402
+	MOOSE_RUNTIME_LOCK,
 	build_moose_reference_arguments,
+	is_infrastructure_failure,
+	parse_guard_failure,
+	run_guarded_command,
 )
-from scripts.run_external_planning_references import parse_guard_failure  # noqa: E402
-from scripts.run_external_planning_references import run_guarded_command  # noqa: E402
 from scripts.run_full_test_jason_validation import (  # noqa: E402
 	source_revision_metadata,
 )
@@ -76,12 +78,6 @@ from utils.pddl_parser import PDDLParser  # noqa: E402
 
 
 METHOD = ExternalReferenceMethod.FOND4LTLF_LAMA
-INFRASTRUCTURE_FAILURES = {
-	"input_error",
-	"runner_error",
-	"tool_unavailable",
-	"trace_validation_error",
-}
 
 
 @dataclass(frozen=True)
@@ -187,6 +183,8 @@ def main() -> int:
 			"max_rss_gb": float(args.max_rss_gb),
 			"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
 			"plan_verifier_command": str(args.plan_verifier_command),
+			"moose_runtime_max_parallelism": 1,
+			"moose_runtime_lock_scope": "host",
 		},
 		"toolchain": temporal_toolchain_metadata(
 			args.fond4ltlf_executable,
@@ -236,7 +234,9 @@ def main() -> int:
 			"results": records,
 			"metrics": metrics,
 			"infrastructure_failure_count": sum(
-				1 for record in records if record.get("status") in INFRASTRUCTURE_FAILURES
+				1
+				for record in records
+				if is_infrastructure_failure(record.get("status"))
 			),
 		}
 	)
@@ -427,6 +427,7 @@ def run_direct_temporal_task(
 		timeout_seconds=remaining_planner_seconds,
 		max_rss_gb=max_rss_gb,
 		artifact_stem="planner",
+		exclusive_lock_file=MOOSE_RUNTIME_LOCK,
 	)
 	record.update(
 		{
@@ -436,6 +437,7 @@ def run_direct_temporal_task(
 			"planner_seconds": planner_result.elapsed_seconds,
 			"planner_stdout": str(planner_result.stdout_file),
 			"planner_stderr": str(planner_result.stderr_file),
+			"runtime_lock_wait_seconds": planner_result.runtime_lock_wait_seconds,
 			"elapsed_seconds": (
 				compiler_result.elapsed_seconds + planner_result.elapsed_seconds
 			),
@@ -490,6 +492,7 @@ def run_direct_temporal_task(
 			output_dir=task.output_dir / "temporal_validation",
 			plan_verifier_command=plan_verifier_command,
 			plan_verifier_timeout_seconds=plan_verifier_timeout_seconds,
+			mona_executable=mona_executable,
 		)
 		execution_payload = execution.to_dict()
 		record.update(
@@ -500,7 +503,7 @@ def run_direct_temporal_task(
 				"action_count": execution.action_count,
 			}
 		)
-	except ValueError as error:
+	except (OSError, RuntimeError, ValueError) as error:
 		message = str(error)
 		status = "pddl_replay_failed" if "Trace step " in message else "trace_validation_error"
 		record.update(status=status, error=message)
@@ -605,6 +608,7 @@ def load_completed_records(
 			and record.get("sample_id") == task.sample_id
 			and record.get("domain_sha256") == _sha256(task.domain_file)
 			and record.get("problem_sha256") == _sha256(task.problem_file)
+			and not is_infrastructure_failure(record.get("status"))
 		):
 			completed[task.sample_id] = record
 	return completed

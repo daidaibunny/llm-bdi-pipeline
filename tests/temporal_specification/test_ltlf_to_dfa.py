@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from evaluation.temporal_compilation.ltlf_to_dfa import LTLfToDFA
 
 
@@ -22,3 +24,13 @@ def test_mona_guard_cubes_expand_into_conjunctive_transition_labels() -> None:
 		"~do_put_on_b1_b2 & do_clear_b3",
 	]
 	assert "|" not in dot
+
+
+def test_explicit_mona_executable_does_not_depend_on_parent_path(tmp_path: Path) -> None:
+	mona = tmp_path / "mona"
+	mona.write_text("#!/bin/sh\n", encoding="utf-8")
+
+	command, environment = LTLfToDFA(mona_executable=mona)._resolve_mona_runtime()
+
+	assert command == str(mona.resolve())
+	assert environment["PATH"].split(":")[0] == str(tmp_path)

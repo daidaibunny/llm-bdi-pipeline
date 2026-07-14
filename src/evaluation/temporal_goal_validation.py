@@ -388,6 +388,7 @@ def validate_execution_trace(
 	output_dir: str | Path,
 	plan_verifier_command: Sequence[str] | str | None = None,
 	plan_verifier_timeout_seconds: int = 1800,
+	mona_executable: str | Path | None = None,
 ) -> ExecutionTraceValidationResult:
 	"""Validate one generated trace with PDDL replay, VAL, and both temporal DFAs."""
 
@@ -452,12 +453,17 @@ def validate_execution_trace(
 		)
 		for state in replay.states
 	)
+	mona_path = (
+		str(Path(mona_executable).expanduser().resolve())
+		if mona_executable is not None
+		else None
+	)
 	return ExecutionTraceValidationResult(
 		replay_valid=True,
 		val_attempted=val_attempted,
 		val_success=val_success,
-		gold_accepted=_compile_dfa(gold_formula).accepts(valuations),
-		prediction_accepted=_compile_dfa(prediction_formula).accepts(valuations),
+		gold_accepted=_compile_dfa(gold_formula, mona_path).accepts(valuations),
+		prediction_accepted=_compile_dfa(prediction_formula, mona_path).accepts(valuations),
 		action_count=len(replay.actions),
 		state_count=len(replay.states),
 		neutral_problem_file=str(neutral_problem),
@@ -567,8 +573,11 @@ def _rewrite_formula_symbols(formula: str, symbols: Mapping[str, str]) -> str:
 
 
 @lru_cache(maxsize=4096)
-def _compile_dfa(formula: str) -> _CompiledDFA:
-	_, metadata = LTLfToDFA().convert(formula)
+def _compile_dfa(
+	formula: str,
+	mona_executable: str | None = None,
+) -> _CompiledDFA:
+	_, metadata = LTLfToDFA(mona_executable=mona_executable).convert(formula)
 	initial_state = str(metadata.get("initial_state") or "").strip()
 	accepting_states = frozenset(str(item) for item in metadata.get("accepting_states") or ())
 	free_variables = tuple(str(item) for item in metadata.get("free_variables") or ())

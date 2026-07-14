@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 from pathlib import Path
 
 from evaluation.temporal_goal_validation import ExecutionTraceValidationResult
 from scripts.run_direct_temporal_reference import DirectTemporalTask
+from scripts.run_direct_temporal_reference import load_completed_records
 from scripts.run_direct_temporal_reference import run_direct_temporal_task
 from scripts.run_direct_temporal_reference import stage_failure_status
 from scripts.run_direct_temporal_reference import summarize_temporal_reference_records
 from scripts.run_external_planning_references import GuardedCommandResult
+from scripts.run_external_planning_references import MOOSE_RUNTIME_LOCK
 
 
 def test_temporal_summary_separates_unsupported_cases_from_solver_failures() -> None:
@@ -113,6 +117,7 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 	)
 	commands: list[tuple[str, ...]] = []
 	timeouts: list[float] = []
+	locks: list[Path | None] = []
 
 	def fake_run_guarded_command(
 		command,
@@ -122,8 +127,10 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 		max_rss_gb,
 		extra_env=None,
 		artifact_stem="planner",
+		exclusive_lock_file=None,
 	):
 		timeouts.append(float(timeout_seconds))
+		locks.append(exclusive_lock_file)
 		del max_rss_gb
 		command_tuple = tuple(str(item) for item in command)
 		commands.append(command_tuple)
@@ -162,6 +169,7 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 
 	def fake_validate_execution_trace(**kwargs):
 		assert Path(kwargs["plan_file"]).read_text(encoding="utf-8") == "(place item)\n"
+		assert kwargs["mona_executable"] == mona_executable
 		return ExecutionTraceValidationResult(
 			replay_valid=True,
 			val_attempted=True,
@@ -203,6 +211,7 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 
 	assert len(commands) == 2
 	assert timeouts == [1800.0, 1799.75]
+	assert locks == [None, MOOSE_RUNTIME_LOCK]
 	assert record["method"] == "FOND4LTLf + LAMA"
 	assert record["supported"] is True
 	assert record["status"] == "valid"
@@ -211,3 +220,47 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 	assert record["compiler_timeout_seconds"] == 1800.0
 	assert record["planner_timeout_seconds"] == 1799.75
 	assert Path(record["plan_file"]).read_text(encoding="utf-8") == "(place item)\n"
+
+
+def test_direct_resume_retries_infrastructure_results(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "problem.pddl"
+	domain_file.write_text("(define (domain d))", encoding="utf-8")
+	problem_file.write_text("(define (problem p) (:domain d))", encoding="utf-8")
+
+	def task_for(sample_id: str) -> DirectTemporalTask:
+		return DirectTemporalTask(
+			domain="d",
+			sample_id=sample_id,
+			profile="eventually",
+			domain_file=domain_file,
+			problem_file=problem_file,
+			benchmark_case={},
+			audit_row={},
+			output_dir=tmp_path / sample_id,
+		)
+
+	infra_task = task_for("infra")
+	planner_task = task_for("planner")
+	for task, status in ((infra_task, "planner_runner_error"), (planner_task, "planner_failed")):
+		task.output_dir.mkdir()
+		(task.output_dir / "result.json").write_text(
+			json.dumps(
+				{
+					"variant": "fond4ltlf_lama",
+					"sample_id": task.sample_id,
+					"domain_sha256": hashlib.sha256(
+						domain_file.read_bytes(),
+					).hexdigest(),
+					"problem_sha256": hashlib.sha256(
+						problem_file.read_bytes(),
+					).hexdigest(),
+					"status": status,
+				},
+			),
+			encoding="utf-8",
+		)
+
+	completed = load_completed_records((infra_task, planner_task))
+
+	assert set(completed) == {"planner"}

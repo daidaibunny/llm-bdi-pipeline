@@ -7,6 +7,7 @@ ENHSP_ROOT="${EXTERNAL_DIR}/enhsp-socs24"
 FOND4LTLF_ROOT="${EXTERNAL_DIR}/fond4ltlf-0.0.4"
 MONA_EXECUTABLE="${EXTERNAL_DIR}/mona-1.4/Front/mona"
 MOOSE_ROOT="${EXTERNAL_DIR}/moose"
+VAL_ROOT="${EXTERNAL_DIR}/VAL"
 
 ENHSP_URL="https://github.com/hstairs/jpddlplus.git"
 ENHSP_REVISION="537bed55a60d9456975c56afbadd50fc8acb1dc9"
@@ -19,6 +20,9 @@ CLICK_VERSION="8.4.2"
 PLY_VERSION="3.11"
 LTLF2DFA_VERSION="1.0.2"
 MOOSE_DOCKER_IMAGE="moose-exact-ubuntu22:local"
+MOOSE_ARTIFACT_SHA256="ab342530125b2ae73a72086b702d417dfa1677d55041907a24b67e160b67742f"
+VAL_URL="https://github.com/KCL-Planning/VAL.git"
+VAL_REVISION="3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4"
 
 MODE="setup"
 if [[ "${1:-}" == "--check" ]]; then
@@ -85,6 +89,11 @@ checkout_pinned_repository() {
 verify_installation() {
 	verify_revision "${ENHSP_ROOT}" "${ENHSP_REVISION}" "ENHSP"
 	verify_revision "${FOND4LTLF_ROOT}" "${FOND4LTLF_REVISION}" "FOND4LTLf"
+	verify_revision "${VAL_ROOT}" "${VAL_REVISION}" "VAL"
+	if ! java -version >/dev/null 2>&1; then
+		printf '[external-reference] java exists but no working Java runtime is installed\n' >&2
+		exit 1
+	fi
 	if [[ ! -f "${ENHSP_ROOT}/enhsp.jar" ]]; then
 		printf '[external-reference] missing ENHSP jar\n' >&2
 		exit 1
@@ -105,8 +114,19 @@ verify_installation() {
 		printf '[external-reference] missing MONA executable: %s\n' "${MONA_EXECUTABLE}" >&2
 		exit 1
 	fi
+	if ! "${MONA_EXECUTABLE}" -v >/dev/null 2>&1; then
+		printf '[external-reference] MONA executable failed its version probe\n' >&2
+		exit 1
+	fi
 	if [[ ! -f "${MOOSE_ROOT}/moose.sif" ]]; then
 		printf '[external-reference] missing official MOOSE artifact\n' >&2
+		exit 1
+	fi
+	local moose_sha
+	moose_sha="$(sha256_file "${MOOSE_ROOT}/moose.sif")"
+	if [[ "${moose_sha}" != "${MOOSE_ARTIFACT_SHA256}" ]]; then
+		printf '[external-reference] MOOSE artifact digest mismatch: %s\n' \
+			"${moose_sha}" >&2
 		exit 1
 	fi
 	if ! docker image inspect "${MOOSE_DOCKER_IMAGE}" >/dev/null 2>&1; then
@@ -133,6 +153,8 @@ if [[ "${MODE}" == "setup" ]]; then
 		"${ENHSP_ROOT}" "${ENHSP_URL}" "${ENHSP_REVISION}" "ENHSP"
 	checkout_pinned_repository \
 		"${FOND4LTLF_ROOT}" "${FOND4LTLF_URL}" "${FOND4LTLF_REVISION}" "FOND4LTLf"
+	checkout_pinned_repository \
+		"${VAL_ROOT}" "${VAL_URL}" "${VAL_REVISION}" "VAL"
 	if [[ ! -x "${FOND4LTLF_ROOT}/.venv/bin/python" ]]; then
 		uv venv --python "${FOND_PYTHON}" "${FOND4LTLF_ROOT}/.venv"
 	fi

@@ -454,8 +454,11 @@ require original-goal VAL. The direct temporal trace contains only projected
 original-domain actions and requires PDDL replay, neutral-goal VAL, gold-DFA
 acceptance, and predicted-DFA acceptance. FOND4LTLf compilation and LAMA search
 share one 1,800-second, 8-GiB deadline. Numeric inputs and identifiers incompatible
-with its underscore encoding are explicit unsupported cases. Published numbers
-from different splits or hardware may be cited as prior results but must not be
+with its underscore encoding are explicit unsupported cases. The exact MOOSE-hosted
+LAMA runtime is serialized across processes because its nested Apptainer and shared
+work directory are non-reentrant; ENHSP and FOND4LTLf compilation may still use the
+declared worker pool. Queue waiting is recorded separately from planner runtime. Published
+numbers from different splits or hardware may be cited as prior results but must not be
 inserted into paired experiment tables. Plan4Past is a design precedent for
 holding the task-level planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
