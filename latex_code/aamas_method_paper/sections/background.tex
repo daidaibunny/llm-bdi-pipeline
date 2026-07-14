@@ -29,25 +29,25 @@ minimal BDI plan library.
 \subsection{BDI Plan Libraries and Their AgentSpeak(L) Realization}
 
 A procedural BDI plan rule has a triggering event, an applicability context,
-and a body \cite{MeneguzziDeSilva2015PlanningBDI}. In the \asl{} notation used
-by our implementation \cite{Rao1996AgentSpeak}, an achievement plan is
+and a body \cite{MeneguzziDeSilva2015PlanningBDI}. In the \asl{} realization
+evaluated here \cite{Rao1996AgentSpeak}, an achievement plan is
 \[
 +!p(\bar X):C\leftarrow b_1;\ldots;b_m,
 \]
 where $C$ is a conjunction of beliefs and comparisons and each $b_i$ is a PDDL
 action or an internal achievement call $!q(\bar Y)$. A library is \emph{lifted}
 when plans contain variables rather than training objects, and \emph{closed}
-when every internal call has a selected implementation. Our certificates apply
+when every internal call resolves to a selected module. Our certificates apply
 to this trigger--context--body model and to the PDDL semantics of primitive
 actions. Formally, a candidate branch is
 $b=\langle g,C,\beta,\Sigma\rangle$, where $g$ is one lifted achievement
 literal, $C$ is a conjunctive applicability condition, $\beta$ is a finite body
 of primitive actions and internal calls, and $\Sigma$ is a conservative
-conditional summary of effects observable when $\beta$ returns. We render
-selected branches in \asl{} and execute them with Jason
-\cite{Bordini2007Jason}; another BDI language would require its own renderer and
-execution study. Query controllers follow declarative goal patterns by
-rechecking their intended state after subsidiary plans return
+conditional summary of effects observable when $\beta$ returns. We map selected
+branches to \asl{} and evaluate them with Jason \cite{Bordini2007Jason}; claims
+about another BDI language would require a semantics-preserving translation and
+an independent execution study. Query controllers follow declarative goal
+patterns by rechecking their intended state after subsidiary plans return
 \cite{Hubner2006DeclarativeGoals}.
 
 \subsection{Finite-Trace Temporal Goals}
@@ -56,7 +56,7 @@ An \ltlf{} formula is interpreted over a finite state sequence
 \cite{DeGiacomoVardi2013}. Automata-theoretic planning uses a finite automaton
 to track temporal progress \cite{DeGiacomoRubin2018AutomataFOND}. We construct
 the deterministic finite automaton (DFA) with \texttt{ltlf2dfa} and MONA
-\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. The implemented
+\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. The supported
 fragment admits certified distance-reducing transitions whose guards contain
 conjunction and literal negation. A guard
 \[
@@ -65,7 +65,7 @@ B=P^+\land\neg P^-
 contains achievements $P^+$ and atoms $P^-$ that must remain absent. A
 query-local monitor evaluates the DFA initially and after every successful
 primitive PDDL action. Disjunction, arbitrary arithmetic, and progress without
-a certified action strategy are outside the implemented fragment.
+a certified action strategy are outside this fragment.
 
 \subsection{Certified Compilation Problem}
 
@@ -80,7 +80,7 @@ Conjunctive guards require a preservation-safe order; mixed Boolean--numeric
 guards require complete net effects for a common final state. The compiler
 rejects unsupported arithmetic, disjunction, cyclic threats without a
 preserving strategy, and any obligation whose effects are incomplete. In the
-current realization, static sort-membership beliefs may constrain PDDL type
+\asl{} realization, static sort-membership beliefs may constrain PDDL type
 compatibility, but no domain-specific typing predicate becomes an achievement
-goal or primitive action. The formal definitions and supported-fragment
-assumptions are collected in the supplementary appendix.
+goal or primitive action. Formal definitions and supported-fragment assumptions
+appear in the Technical Supplement, Sec.~1.

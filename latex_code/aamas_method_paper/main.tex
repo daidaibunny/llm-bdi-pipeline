@@ -46,23 +46,23 @@ Libraries for Temporally Extended Goals}
 \maketitle
 
 \begin{abstract}
-Generalized planning seeks behavior that transfers across related planning
-instances, but its policies are not automatically executable plan libraries for
-Belief--Desire--Intention (BDI) agents. Direct transcription leaves open whether
-variables are bound, subsidiary goals are implemented, recursion progresses,
-resources are restored, and temporally related achievements remain compatible.
-We formulate \methodname{} (Generalized Planning to Plan Libraries), a
-certificate-carrying compilation framework for this representation gap. At the
-domain level, \methodname{} combines singleton-goal policy evidence with PDDL
-action schemas and selects a compact, closed set of lifted BDI modules subject
-to binding, executability, completion, progress, and resource-restoration
-conditions. At the query level, it derives controllers from real
-\texttt{ltlf2dfa}/MONA automata and admits a transition strategy only when its
-signed guard can be established without invalidating protected obligations.
+Generalized-planning policies transfer across related instances, but are not
+automatically executable plan libraries for Belief--Desire--Intention (BDI)
+agents. Direct transcription does not establish range restriction, internal-call
+closure, recursive progress, resource restoration, or compatibility among
+temporal achievements. We formulate \methodname{} (Generalized Planning to Plan
+Libraries), a certificate-carrying compilation framework for this representation
+gap. At the domain level, it combines singleton-goal policy evidence with PDDL
+action schemas and selects a compact, closed set of lifted BDI modules under
+binding, execution, completion, progress, and resource-restoration obligations.
+At the query level, it derives controllers from deterministic automata constructed
+by \texttt{ltlf2dfa} and MONA, admitting only transition strategies that preserve
+signed guard obligations.
 Theorems establish local module soundness, candidate-space optimality,
 transition-composition soundness, and trace-faithful monitoring for the declared
-fragment; unproved cases are rejected. We instantiate the framework with MOOSE
-evidence, Clingo selection, and an \asl{}/Jason realization. Across
+fragment; obligations lacking the required certificates are rejected. We
+instantiate the framework with MOOSE evidence, Clingo selection, and an
+\asl{}/Jason realization. Across
 \BenchmarkDomainCount{} domains, all \TranslationEquivalentCount{}
 model-produced specifications are language-equivalent to their gold formulas,
 and all \TEGProblemCount{} bound queries produce traces accepted by Jason, VAL,
@@ -108,8 +108,8 @@ Certificates use rule structure and symbolic PDDL effects, never names.
 \centering\small
 PDDL domain + training split $\longrightarrow$ MOOSE evidence\\
 $\downarrow$ certified domain compilation\\
-one maintained BDI domain plan library\\[2pt]
-validated lifted LTLf $\longrightarrow$ real DFA transitions\\
+one persistent BDI domain plan library\\[2pt]
+validated lifted LTLf $\longrightarrow$ MONA-derived DFA transitions\\
 $\downarrow$ certified query compilation\\
 query-local BDI controllers appended to the same library\\[2pt]
 AgentSpeak(L)/Jason realization $\longrightarrow$ PDDL trace
@@ -120,16 +120,16 @@ once; temporally extended queries append only query-local controllers.}
 \label{fig:architecture}
 \end{figure}
 
-GP2PL contributes (i) an explicit candidate language with minimum-cost
-evidence-to-library selection; (ii) symbol-invariant certificates for binding,
-execution, achievement, recursion, closure, and resource restoration; and
-(iii) preservation-safe \ltlf-to-DFA guard composition under primitive-step
-monitoring. Unproved modules and transitions are rejected. Across
+GP2PL contributes (i) a candidate language with minimum-cost evidence-to-library
+selection; (ii) symbol-invariant certificates for binding, execution,
+achievement, recursion, closure, and resource restoration; and (iii)
+preservation-safe \ltlf-to-DFA guard composition under primitive-step monitoring.
+Uncertified modules and transitions are rejected. Across
 \BenchmarkDomainCount{} domains, all \TEGProblemCount{} evaluated queries
 execute in Jason, pass VAL, and are accepted by both gold and predicted DFAs.
 This is evaluated-input coverage, not completeness for arbitrary
-PDDL--\ltlf{} products; complete proofs and reproducibility details appear in
-the supplement.
+PDDL--\ltlf{} products; complete proofs and the reproducibility protocol appear
+in the Technical Supplement, Secs.~2 and~5.
 
 \input{sections/background}
 \input{sections/related_work}
@@ -138,12 +138,12 @@ the supplement.
 
 \section{Conclusion}
 
-GP2PL gives certificate conditions for compiling generalized-planning evidence
-into reusable BDI plan libraries and composing finite-trace DFA progress over
-them. Its \asl{}/Jason realization passes Jason, neutral-goal VAL, and both DFA
-checks on all \TEGProblemCount{} queries in \BenchmarkDomainCount{} domains.
-The guarantees are limited to the certified candidate language and declared
-\ltlf{} fragment; unproved strategies are rejected rather than assumed sound.
+GP2PL compiles generalized-planning evidence into certified BDI plan libraries
+and composes finite-trace DFA progress over them. Its \asl{}/Jason realization
+passes Jason, neutral-goal VAL, and both DFA checks on all \TEGProblemCount{}
+queries in \BenchmarkDomainCount{} domains. Guarantees remain conditional on the
+candidate language and declared \ltlf{} fragment; uncertified strategies are
+rejected.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

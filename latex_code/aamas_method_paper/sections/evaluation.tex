@@ -3,62 +3,56 @@
 
 \subsection{Questions and Comparisons}
 
-\paragraph{How does compilation change the evidence program?}
-The \emph{Evidence Adapter} validates and renders provider macros but adds no
-PDDL-derived modules. Its paired comparison with GP2PL measures gains in module
-coverage and held-out execution.
+\paragraph{Atomic compilation.}
+\emph{Evidence Only} validates provider macros against the PDDL schemas and
+retains them without PDDL-derived closure. \emph{Action Closure} adds action-only
+producers; \emph{Maximal Certified} also retains compatible recursive preparation
+and resource-restoration candidates; and \emph{Full GP2PL} applies the Clingo
+objective to the same space. Their paired comparison measures closure, held-out
+execution, and compact selection.
 
-\paragraph{Which compiler stages matter?}
-\emph{Action Closure} adds action-only producers. \emph{Maximal Certified}
-also retains compatible recursive preparation and resource-restoration
-candidates. \emph{Full GP2PL} applies the Clingo objective to that same space,
-isolating compact selection.
-
-\paragraph{What preserves a conjunctive DFA guard?}
+\paragraph{Temporal composition.}
 \emph{Unprotected DFA} uses the same automaton, library, and primitive-step
 monitor without effect analysis. \emph{Certified Flat} adds threat ordering and
-preserving portfolios. A \emph{Completion Monitor} observes only on module
-return, testing whether primitive-state observation is necessary.
+preserving portfolios; \emph{Certified Balanced} changes only flat control to the
+binary repair tree. A \emph{Completion Monitor} observes only on module return,
+testing the primitive-step observation boundary.
 
-\paragraph{What does the balanced controller change?}
-\emph{Certified Balanced} replaces the flat sibling controller with the binary
-repair tree while fixing the order, portfolio, library, and DFA; only loading
-and execution cost differ.
-
-\paragraph{How does the complete system behave?}
+\paragraph{End-to-end references.}
 End-to-end evaluation measures valid traces and amortized compilation. Raw
 MOOSE, LAMA, ENHSP, and FOND4LTLf with LAMA
 \cite{Chen2026Moose,RichterWestphal2010LAMA,
 Scala2020NumericSubgoaling,DeGiacomoFuggitti2021FOND4LTLf} are task-level
 references, not compiler ablations.
 
-Table~\ref{tab:profile-results} reports temporal profiles; the supplement gives
-every domain library and per-domain result.
+Table~\ref{tab:profile-results} reports temporal profiles; complete domain-level
+results appear in the Technical Supplement, Sec.~5.3.
 
 \input{sections/result_profile_table}
 
 \subsection{Benchmarks and Protocol}
 
 \paragraph{Corpus and repetitions.}
-The corpus contains eight classical and four bounded-integer MOOSE domains with
-official nonempty splits \cite{Chen2026Moose,DillonZChenMooseDataset}, plus four
+The corpus comprises eight classical and four bounded-integer MOOSE domains with
+official splits \cite{Chen2026Moose,DillonZChenMooseDataset}, plus four
 serialized-width families \cite{LipovetzkyGeffner2012Width}. Blocksworld Clear
-and On use
-published no-constants splits \cite{Frances2021LearningGeneralPolicies,
+and On use published no-constants splits
+\cite{Frances2021LearningGeneralPolicies,
 BonetLearnerPoliciesRepository}; Tower uses the first quarter of a fixed IPC
 corpus \cite{Bacchus2001AIPS00,PotasscoPDDLInstances}, and Depots the first half
-of the
-22-instance D2L corpus \cite{Bonet2018Features,RLeapD2LRepository}. Groups never
-select rules. Following MOOSE \cite{Chen2026Moose}, the atomic study uses every
-training instance, three goal orders, 12 hours, and seeds 0--4. Seeds use one
-internal worker and are never pooled or selected by test performance. We allow
-16~GiB rather than MOOSE's 32~GB; Jason and VAL receive 30 minutes per test. The
-supplement gives revisions, splits, parameters, and reporting rules.
+of the 22-instance D2L corpus
+\cite{Bonet2018Features,RLeapD2LRepository}. Groups are used only for reporting.
+Following MOOSE \cite{Chen2026Moose}, the atomic study uses all training
+instances, three goal orders, 12 hours, and seeds 0--4. Each seed runs with one
+internal worker and is analyzed independently. Our 16~GiB cap differs from
+MOOSE's 32~GB; Jason and VAL receive 30 minutes per test.
+Source revisions and splits appear in the Technical Supplement, Sec.~4.3;
+parameters and reporting rules appear in Secs.~5.2--5.3.
 
 \paragraph{Controlled inputs and references.}
-Atomic variants share each seed's evidence; temporal variants share the
-library, binding, and DFA. The manifest verifies pairing. MOOSE execution
-reuses its learned model; LAMA
+Atomic variants share each seed's evidence; temporal variants share the library,
+binding, and DFA, with pairing established by input fingerprints. MOOSE reuses
+its learned model; LAMA
 \cite{RichterWestphal2010LAMA} and ENHSP MRP+HJ
 \cite{Scala2020NumericSubgoaling} are the classical and numeric references used
 by MOOSE \cite{Chen2026Moose}. FOND4LTLf v0.0.4
@@ -66,40 +60,37 @@ by MOOSE \cite{Chen2026Moose}. FOND4LTLf v0.0.4
 Boolean subset. References receive 30 minutes and 8~GB per instance.
 
 \paragraph{Validation and measures.}
-A nonempty temporal run succeeds only if Jason completes
-\cite{Bordini2007Jason}, VAL accepts the full primitive trace against a neutral
-PDDL goal \cite{Howey2004VAL}, and independent replay is accepted
-by both DFAs. Failed prefixes are diagnostic; atomic validation uses the
-original PDDL goal. Measures include closure, held-out success, size, runtime,
-actions, and trigger fan-out; plan length uses jointly solved instances. The
-challenge suite tests rejection and symbol invariance. The main summary reports
-all seeds and plots only executable variants for coverage versus library size.
-Following the absolute-time cumulative-coverage presentation of MOOSE
-\cite{Chen2026Moose}, every registered temporal query remains in the runtime
-curve denominator, so failures lower its endpoint.
+A temporal run succeeds only if Jason completes \cite{Bordini2007Jason}, VAL
+accepts the full primitive trace against a neutral PDDL goal
+\cite{Howey2004VAL}, and independent replay is accepted by both DFAs. Failed
+prefixes are diagnostic; atomic validation uses the original PDDL goal. We
+report closure, held-out success, size, runtime, actions, and trigger fan-out;
+plan length uses jointly solved instances. The challenge suite tests rejection
+and symbol invariance. Following MOOSE's absolute-time presentation
+\cite{Chen2026Moose}, all queries remain in the runtime denominator.
 
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}
 
-GPT-5.5 \cite{OpenAI2026GPT55SystemCard}, under the frozen prompt reproduced in
-the technical supplement, translates
-\TranslationInputCount{} deduplicated specifications. All outputs pass the
-JSON/PDDL contract and exact DFA-language equivalence; their bindings yield
-\TEGProblemCount{} queries. Overall, Clingo selects
+A frozen protocol exposes only the public PDDL catalogue, typed parameters, and
+binding constraints; permits $F$, $X$, strong $U$, conjunction, and literal
+negation; and requires exact eight-key JSON (Technical Supplement, Sec.~4.2).
+GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates \TranslationInputCount{}
+deduplicated specifications. Every output satisfies the JSON/PDDL contract and
+exact DFA-language equivalence, yielding \TEGProblemCount{} bound queries.
+Clingo selects
 \AtomicSelectedBranchCount{} of \AtomicCandidateCount{} certified candidates.
 
 Table~\ref{tab:profile-results} separates five formula profiles. Every query
-completes in Jason; all \TEGVALSuccessCount{} nonempty traces pass VAL and both
-DFAs accept all \TEGGoldDFAAcceptCount{} traces. Median trace length is
-\TEGMedianActionCount{} actions, median runtime is
-\TEGMedianRuntimeSeconds{} seconds, and the 12-worker run takes
-\TEGWallRuntimeMinutes{} minutes. Runtime has interquartile range
-4.28--8.49 seconds and sample standard deviation 13.66; action count has
-interquartile range 1--2 and sample standard deviation 0.80. All 13 rejection
-and symbol-invariance challenges pass.
+completes in Jason; all \TEGVALSuccessCount{} nonempty traces pass VAL, and both
+DFAs accept all \TEGGoldDFAAcceptCount{} traces. Runtime is
+\TEGMedianRuntimeSeconds{} seconds median (IQR 4.28--8.49; SD 13.66), and action
+count is \TEGMedianActionCount{} median (IQR 1--2; SD 0.80); the 12-worker run
+takes \TEGWallRuntimeMinutes{} minutes. All 13 rejection and symbol-invariance
+challenges pass.
 
-These results condition on earlier six-worker seed-0 libraries, not the
-five-seed protocol, and do not establish arbitrary PDDL--\ltlf{} completeness.
-Both finite-trace evaluators also agree on 14/14 labelled and 2/2 initial-state
-cases. A zero-action case is $\langle s_0\rangle$; pinned VAL 1.4 cannot parse
-an empty plan.
+The temporal study uses a fixed seed-0 library snapshot obtained under a
+six-worker MOOSE configuration, distinct from the five-seed atomic protocol; it
+supports neither cross-seed robustness nor arbitrary PDDL--\ltlf{} completeness.
+Both evaluators agree on 14/14 labelled and 2/2 initial-state cases. A zero-action
+case is $\langle s_0\rangle$; VAL 1.4 does not parse an empty plan.

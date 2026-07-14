@@ -31,10 +31,10 @@ Algorithm~\ref{alg:atomic} summarizes the procedure.
 
 The certification and selection steps operate on trigger--context--body plan
 rules before surface rendering. The final line is the language-specific step:
-our implementation renders $S$ in \asl{}, but the contribution is the certified
-construction of the BDI plan library rather than a new AgentSpeak semantics. No
-portability claim is made for a BDI language without a corresponding renderer
-and execution study.
+the evaluated realization maps $S$ to \asl{}, but the contribution is the
+certified construction of the BDI plan library rather than a new AgentSpeak
+semantics. The guarantees do not transfer to another BDI language without a
+semantics-preserving translation and an independent execution study.
 
 \subsection{Evidence Normalization}
 
@@ -74,11 +74,11 @@ producer--precondition graph is acyclic.
 Termination does not use an action-depth constant: a path cannot repeat an
 alpha-normalized requirement/producer step or resource mode, and only the
 shortest body is retained for an equivalent open-requirement and completion-
-effect contract. Every result is then replayed by symbolic progression. Evidence
-macros are not truncated. Cyclic dependencies require provider evidence or a
-separately certified recursive module. This defines a restricted candidate
+effect contract. Every candidate is then verified by symbolic progression.
+Evidence macros are not truncated. Cyclic dependencies require provider
+evidence or a separately certified recursive module. This defines a restricted candidate
 language rather than a complete PDDL planner. Types constrain unification; a
-language realization may expose static sort membership in contexts, but never
+\asl{} realization may expose static sort membership in contexts, but never
 as an achievement call or exported action.
 
 \subsection{Branch Certificates}
@@ -135,9 +135,9 @@ anchored acyclic-cone count that strictly decreases and has a base/producer exit
 Threats are checked over the preparation graph selected by Clingo, not over
 unselected candidates. A branch may add the ranked relation outside the
 protected cone only when its trigger preserves the same anchor and a guard proves
-that the new anchor differs from the protected one. This compile-time feature
-never becomes a belief. The design follows relational progress witnesses in
-general-policy work \cite{Frances2021LearningGeneralPolicies} but claims only
+that the new anchor differs from the protected one. This certificate feature
+never becomes an agent belief. The design follows relational progress witnesses
+in general-policy work \cite{Frances2021LearningGeneralPolicies} but claims only
 schema-certified features from the generated candidate language.
 
 \paragraph{Resource release.}
@@ -305,13 +305,13 @@ an instance of the declarative goal plan pattern
 \cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure is GP2PL's
 controller realization.
 
-\subsection{Maintained Domain Library}
+\subsection{Persistent Domain Library}
 
-Each domain has one maintained machine-readable library and one \asl{}
-realization. A query appends one top-level goal and its local controllers without
-regenerating atomic modules; controller goals are neither PDDL fluents nor
-exported actions. Jason records the complete primitive trace, which VAL checks
-against the PDDL problem
+Compilation yields one persistent library $\mathcal{L}_D$ and one \asl{}
+realization per domain. Each query extends $\mathcal{L}_D$ with one top-level
+goal and its local controllers without reconstructing the atomic modules;
+controller goals are neither PDDL fluents nor exported actions. Jason records
+the complete primitive trace, which VAL checks against the PDDL problem
 \cite{Howey2004VAL}.
 
 If the initial valuation is accepting, the committed plan is empty and the
@@ -354,7 +354,8 @@ through an actual DFA edge enabled by the observed valuation.
 \textbf{Proof sketch.} Induct over the certified order: each leaf establishes
 its signed literal; later summaries exclude deleting prior positives or adding
 forbidden atoms. The monitor evaluates full cubes after every action, so source
-exit denotes a real DFA edge, including inside a macro; otherwise retry.
+exit denotes an edge of the constructed DFA, including when a module traverses
+that edge before returning; otherwise the controller retries.
 \hfill$\square$ This does not imply complete action-strategy synthesis.
 
 \paragraph{Balanced-tree structure.}
@@ -368,11 +369,12 @@ splitting and range induction establish depth and order. \hfill$\square$
 \paragraph{Monitor trace fidelity.}
 
 \textbf{Proposition 5.} Let
-$s_0,a_1,s_1,\ldots,a_k,s_k$ be the PDDL execution recorded by the runtime, and
+$s_0,a_1,s_1,\ldots,a_k,s_k$ be the PDDL execution observed by the monitor, and
 let $q_0$ be the DFA state after evaluating $s_0$. After every successful
 primitive action $a_i$, the monitor belief equals
 $q_i=\delta(q_{i-1},\mathit{val}(s_i))$. Hence leaving a controller source state
-is exactly an exit in the real DFA run over the observed finite trace.
+is exactly an exit in the deterministic automaton run over the observed finite
+trace.
 
 The result follows by induction on primitive actions: the environment first
 applies the PDDL successor and then evaluates the deterministic transition
@@ -391,6 +393,6 @@ valuation is consumed before action execution, while a noop would introduce a
 second observed position and could change strong-Next or Until truth.
 \hfill$\square$
 
-The supplementary appendix supplies complete proofs, including the binding,
-symbolic-progression, relational-ranking, resource-discharge, and tree-order
-lemmas used by these propositions.
+Complete proofs, including the binding, symbolic-progression,
+relational-ranking, resource-discharge, and tree-order lemmas used by these
+propositions, appear in the Technical Supplement, Sec.~2.
