@@ -517,15 +517,15 @@ def _temporal_result_is_valid(record: Mapping[str, Any]) -> bool:
 def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
 	rc_parameters = {
 		"font.family": "DejaVu Sans",
-		"font.size": 5.8,
+		"font.size": 6.0,
 		"font.weight": "normal",
 		"axes.titlesize": 6.8,
 		"axes.titleweight": "normal",
-		"axes.labelsize": 5.8,
+		"axes.labelsize": 6.0,
 		"axes.labelweight": "normal",
-		"xtick.labelsize": 5.1,
-		"ytick.labelsize": 5.1,
-		"legend.fontsize": 4.7,
+		"xtick.labelsize": 5.4,
+		"ytick.labelsize": 5.4,
+		"legend.fontsize": 5.0,
 		"axes.edgecolor": COLORS["gray"],
 		"axes.linewidth": 0.5,
 		"text.color": COLORS["text"],
@@ -551,10 +551,10 @@ def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
 		tradeoff_axis = figure.add_subplot(grid[0, 1])
 		temporal_axis = figure.add_subplot(grid[1, 1])
 		figure.subplots_adjust(
-			left=0.16,
+			left=0.165,
 			right=0.99,
 			top=0.935,
-			bottom=0.14,
+			bottom=0.145,
 			wspace=0.4,
 			hspace=0.64,
 		)
@@ -650,8 +650,10 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 			[],
 			[],
 			marker="o",
+			markersize=3.1,
 			color=COLORS["gray"],
 			markerfacecolor="white",
+			markeredgewidth=0.6,
 			linewidth=0,
 			label="Evidence Only",
 		),
@@ -659,8 +661,10 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 			[],
 			[],
 			marker="D",
+			markersize=3.1,
 			color=COLORS["blue"],
 			markerfacecolor=COLORS["blue"],
+			markeredgewidth=0.6,
 			linewidth=0,
 			label="Full GP2PL",
 		),
@@ -682,13 +686,16 @@ def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
 	for variant, method in ATOMIC_VARIANTS:
 		color, marker = ATOMIC_STYLES[variant]
 		face_color = "white" if variant == "validated_evidence_adapter" else color
+		mean_edge_color = (
+			color if variant == "validated_evidence_adapter" else "white"
+		)
 		points = tuple(tradeoff[variant])
 		x_values = [float(point["selected_branch_count"]) for point in points]
 		y_values = [float(point["coverage_percent"]) for point in points]
 		axis.scatter(
 			x_values,
 			y_values,
-			s=8,
+			s=9,
 			marker=marker,
 			facecolors=face_color,
 			edgecolors=color,
@@ -709,9 +716,9 @@ def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
 			xerr=((x_mean - x_lower,), (x_upper - x_mean,)),
 			yerr=y_sd,
 			fmt=marker,
-			markersize=3.7,
+			markersize=3.9,
 			markerfacecolor=face_color,
-			markeredgecolor="white",
+			markeredgecolor=mean_edge_color,
 			markeredgewidth=0.45,
 			ecolor=color,
 			elinewidth=0.65,
@@ -767,7 +774,7 @@ def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 			marker_values,
 			linestyle="none",
 			marker=marker,
-			markersize=2.4,
+			markersize=2.6,
 			markerfacecolor=color,
 			markeredgecolor="white",
 			markeredgewidth=0.3,
@@ -848,6 +855,12 @@ def _style_axis(axis: Any) -> None:
 		length=2.2,
 		width=0.5,
 		pad=1.8,
+	)
+	axis.tick_params(
+		axis="both",
+		which="minor",
+		length=1.2,
+		width=0.35,
 	)
 
 

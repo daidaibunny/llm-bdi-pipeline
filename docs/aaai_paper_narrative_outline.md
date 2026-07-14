@@ -671,7 +671,7 @@ Canvas, PowerPoint, Python, and export settings:
 - Embed fonts in the PDF, crop to the slide boundary, and verify all text at
   `\includegraphics[width=\textwidth]`. Do not rasterize any figure.
 - Main Figure 2 uses regular-weight DejaVu Sans throughout: 6.8-pt panel
-  headings, 5.8-pt axis labels, and 5.1-pt tick and domain labels. Do not use
+  headings, 6.0-pt axis labels, and 5.4-pt tick and domain labels. Do not use
   bold text inside the data figure. Hide the top and right spines, retain only
   light-gray major grid lines, and preserve redundant color plus marker or line
   encodings for grayscale printing.
@@ -1199,6 +1199,13 @@ Use these exact LaTeX placements and labels after the assets exist:
   \label{fig:evaluation-summary}
 \end{figure*}
 ```
+
+The manuscript source already contains the Figure 2 `figure*` placement after
+the evaluation protocol and metric definitions. Until the complete registered
+paired matrix passes the plotting gate, `\IfFileExists` omits the figure and
+emits a package warning; no synthetic or partial empirical graphic is allowed
+to enter the review PDF. A layout-only preview may override
+`\gpplfiguretwopath` in an untracked build, but it is never a paper artifact.
 
 The technical supplement inserts `figS1_policy_lifting.pdf` and
 `figS2_dfa_controller.pdf` with the approved supplementary captions above. They

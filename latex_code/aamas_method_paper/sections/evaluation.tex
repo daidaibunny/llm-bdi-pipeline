@@ -25,11 +25,6 @@ MOOSE, LAMA, ENHSP, and FOND4LTLf with LAMA
 Scala2020NumericSubgoaling,DeGiacomoFuggitti2021FOND4LTLf} are task-level
 references, not compiler ablations.
 
-Table~\ref{tab:profile-results} reports temporal profiles; complete domain-level
-results appear in the Technical Supplement, Sec.~5.3.
-
-\input{sections/result_profile_table}
-
 \subsection{Benchmarks and Protocol}
 
 \paragraph{Corpus and repetitions.}
@@ -68,6 +63,30 @@ report closure, held-out success, size, runtime, actions, and trigger fan-out;
 plan length uses jointly solved instances. The challenge suite tests rejection
 and symbol invariance. Following MOOSE's absolute-time presentation
 \cite{Chen2026Moose}, all queries remain in the runtime denominator.
+
+\IfFileExists{\gpplfiguretwopath}{%
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{\gpplfiguretwopath}
+\caption{Paired atomic and temporal evaluation. Panel (a) compares Evidence
+Only with Full GP2PL on every held-out domain over five independently seeded,
+single-worker MOOSE evidence runs; small points are seeds and larger markers
+report mean $\pm$ sample standard deviation. Panel (b) places all four
+executable atomic compiler variants by emitted branches and VAL-valid held-out
+coverage under identical per-seed evidence. Panel (c) reports the fraction of
+all hash-paired temporal queries solved within each end-to-end time; failed and
+timed-out queries remain in the denominator, and the vertical line marks the
+1,800-second limit.}
+\label{fig:evaluation-summary}
+\end{figure*}
+}{%
+\PackageWarning{gp2pl}{Figure 2 omitted: complete paired result matrix unavailable}%
+}
+
+Table~\ref{tab:profile-results} reports temporal profiles; complete domain-level
+results appear in the Technical Supplement, Sec.~5.3.
+
+\input{sections/result_profile_table}
 
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}

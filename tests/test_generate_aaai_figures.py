@@ -11,6 +11,7 @@ from scripts.generate_aaai_figures import ATOMIC_VARIANTS
 from scripts.generate_aaai_figures import DOMAIN_ORDER
 from scripts.generate_aaai_figures import FIGURE_HEIGHT_INCHES
 from scripts.generate_aaai_figures import FIGURE_WIDTH_INCHES
+from scripts.generate_aaai_figures import PROJECT_ROOT
 from scripts.generate_aaai_figures import TEMPORAL_VARIANTS
 from scripts.generate_aaai_figures import build_figure_dataset
 from scripts.generate_aaai_figures import cumulative_solved_fraction
@@ -127,6 +128,28 @@ def test_generate_empirical_figure_writes_vector_pdf_and_provenance(
 	assert metadata["figure_width_inches"] == 7.0
 	assert metadata["figure_height_inches"] == 3.0
 	assert output_file.with_suffix(".metadata.json").is_file()
+
+
+def test_manuscript_places_gated_empirical_figure_after_protocol() -> None:
+	main_text = (PROJECT_ROOT / "latex_code/aamas_method_paper/main.tex").read_text()
+	evaluation_text = (
+		PROJECT_ROOT / "latex_code/aamas_method_paper/sections/evaluation.tex"
+	).read_text()
+
+	assert (
+		"\\providecommand{\\gpplfiguretwopath}{figures/fig2_evaluation.pdf}"
+		in main_text
+	)
+	figure_position = evaluation_text.index("\\begin{figure*}[t]")
+	assert evaluation_text.index("\\paragraph{Validation and measures.}") < figure_position
+	assert figure_position < evaluation_text.index(
+		"\\input{sections/result_profile_table}",
+	)
+	assert "\\IfFileExists{\\gpplfiguretwopath}" in evaluation_text
+	assert "\\includegraphics[width=\\textwidth]{\\gpplfiguretwopath}" in (
+		evaluation_text
+	)
+	assert "\\label{fig:evaluation-summary}" in evaluation_text
 
 
 def test_generate_empirical_figure_fails_closed_with_diagnostic(
