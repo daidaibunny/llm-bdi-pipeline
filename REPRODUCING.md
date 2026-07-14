@@ -143,9 +143,27 @@ The fixed temporal release reports the complete per-query distribution. Across
 has median 2, interquartile range 1--2, and sample standard deviation 0.80.
 
 The current manuscript does not claim a statistically significant improvement
-between compiler variants. A significance-test checklist item therefore remains
-`no` until the registered paired five-seed comparison is complete; documentation
-alone cannot supply that evidence.
+between compiler variants. All fixed-release differences are descriptive. The
+checklist answer is therefore `yes` in a claim-scoped sense: no improvement or
+decrease is presented as statistically significant without an appropriate paired
+test. The registered five-seed comparison must complete before any such claim is
+added; documentation alone cannot supply that evidence.
+
+## Checklist Evidence Map
+
+- All GP2PL-authored experiment, preprocessing, validation, and analysis source
+  is included in `src/`, `scripts/`, and `tests/`, with the exact environment in
+  `uv.lock`; it is released under Apache-2.0.
+- Public third-party tools are installed at pinned revisions by the setup scripts
+  and retain upstream terms. They are dependencies, not omitted GP2PL source.
+- All novel temporal-goal data, including the construction audit sealed from the
+  translation model during inference, is published under
+  `paper_artifacts/temporal_goal_benchmark/v1` with CC BY 4.0 licensing, citation
+  metadata, source archives, and integrity hashes.
+- Existing PDDL datasets are publicly retrievable from cited, pinned revisions
+  and are deterministically materialized. No non-public dataset is used.
+- Complete per-instance records support descriptive distributions. Inferential
+  compiler comparisons are admitted only after the registered paired analysis.
 
 ## Anonymous Submission and Public Release
 

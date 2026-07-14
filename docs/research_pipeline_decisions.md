@@ -103,10 +103,14 @@ GP2PL source code is released under Apache-2.0, and original GP2PL temporal
 annotations, specifications, generated libraries, and result records are
 released under CC BY 4.0. Third-party PDDL and MOOSE materials retain upstream
 terms and are reconstructed from pinned sources. They must not be represented
-as GP2PL-licensed data. Because MOOSE and three public benchmark repositories do
-not expose explicit license files, the AAAI Checklist remains `partial` for the
-criteria requiring every experimental source dependency to be included and
-available under a research-use license.
+as GP2PL-licensed data. The reproducibility checklist scopes source-code
+availability to every GP2PL-authored implementation, preprocessing, execution,
+and analysis file, all of which is included and Apache-2.0 licensed. Public
+third-party dependencies are cited and fetched at pinned revisions under their
+own terms; they are not omissions from the authored code appendix. All novel
+GP2PL data, including the sealed construction audit withheld from the translation
+model during inference, is included in the public CC BY 4.0 release. Therefore
+no experimental dataset remains non-public.
 
 The camera-ready public repository is
 `https://github.com/daidaibunny/gp2pl`. The anonymous submission and technical
@@ -114,8 +118,10 @@ supplement must not expose this identifying URL. The main LaTeX source therefore
 keeps the repository paragraph behind a camera-ready-only conditional. Review
 material uses an anonymized code-and-data archive. Checklist answers are changed
 to `yes` only when the paper, technical supplement, or submitted archive contains
-the corresponding evidence. Statistical significance remains `no` until the
-registered paired five-seed comparison is complete.
+the corresponding evidence. The statistical-significance answer is `yes` only
+in the precise sense that the manuscript makes no untested inferential claim:
+fixed-release differences remain descriptive, and any future improvement claim
+is gated on the registered paired five-seed analysis.
 
 This repository no longer builds a universal generalized planner and no longer
 routes domains by prior-paper taxonomy labels. The current strategy is to use

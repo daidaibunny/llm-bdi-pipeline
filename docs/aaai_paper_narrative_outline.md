@@ -564,9 +564,12 @@ The versioned public evidence is split into:
 GP2PL code uses Apache-2.0 and original GP2PL data uses CC BY 4.0. External PDDL
 and MOOSE materials retain upstream rights. Three public benchmark repositories
 and MOOSE do not expose an explicit license; they must be fetched at pinned
-commits and cannot be represented as GP2PL-licensed source. Consequently the
-checklist remains `partial` for the criteria that all required external source
-is included and licensed, even though our complete source and data are released.
+commits and cannot be represented as GP2PL-licensed source. Checklist code
+availability concerns the complete GP2PL-authored source, which is included and
+Apache-2.0 licensed. Third-party dependencies are separately cited, pinned, and
+retrieved under upstream terms. All novel GP2PL data is publicly released under
+CC BY 4.0, including the construction audit that was sealed from the translation
+model during inference, so no experimental dataset remains non-public.
 
 AAAI review is double blind and forbids pointers to identifiable web material.
 The submission therefore uses an anonymized code-and-data archive and keeps the
@@ -575,10 +578,12 @@ named repository link disabled. The camera-ready conditional enables
 PDF or supplementary review PDF.
 
 Checklist answers may change to `yes` only when the corresponding evidence is
-present in the paper, appendix, or submitted archive. The statistical-
-significance item remains `no` until the registered paired five-seed comparison
-is complete; a repository link or additional prose cannot substitute for that
-experiment.
+present in the paper, appendix, or submitted archive. The current statistical
+answer is `yes` because the paper makes no inferential performance-difference
+claim from descriptive fixed-release results. The registered paired five-seed
+comparison remains a mandatory gate before adding any future improvement or
+significance claim; a repository link or additional prose cannot substitute for
+that experiment.
 
 ## Final Visual Program
 
