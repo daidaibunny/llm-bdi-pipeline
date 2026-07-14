@@ -80,8 +80,14 @@ def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
 	assert "Seed & Valid/2 & Logistics & Depots" in main_table
 	assert "0 & 1/2 & 1/1 & 0/1" in main_table
 	assert "The other 0 domains complete for all seeds" in main_table
+	assert "Mean (\\%)" not in main_table
 	assert "Domain & Test & Seed 0 & Seed 1 & Seed 2 & Seed 3 & Seed 4" in domain_table
 	assert "logistics & 1 & 1 & 1 & 0 & 1 & 1" in domain_table
+	for table in (main_table, domain_table):
+		assert "[htbp]" in table
+		assert "\\small" in table
+		assert "\\scriptsize" not in table
+		assert table.index("\\caption{") > table.index("\\end{tabular}")
 
 
 def test_validate_source_aggregate_matches_five_child_runs(tmp_path: Path) -> None:

@@ -64,10 +64,14 @@ plan length uses jointly solved instances. The challenge suite tests rejection
 and symbol invariance. Figure~\ref{fig:evaluation-summary} follows MOOSE's
 absolute-time presentation \cite{Chen2026Moose}: a case enters a runtime curve
 only after its committed trace passes VAL, and all failures remain in the
-denominator.
+denominator. Tables~\ref{tab:five-seed-atomic} and
+\ref{tab:five-seed-atomic-domains} report the compact and complete atomic
+outcomes; Tables~\ref{tab:profile-results} and \ref{tab:domain-results} report
+the temporal profile and domain breakdown. The result subsections interpret
+these preregistered views without selecting domains after execution.
 
 \IfFileExists{\gpplfiguretwopath}{%
-\begin{figure*}[t]
+\begin{figure*}[htbp]
 \centering
 \includegraphics[width=\textwidth]{\gpplfiguretwopath}
 \caption{Five-seed held-out execution. Panel (a) gives per-domain
@@ -82,6 +86,10 @@ line marks the 1,800-second deadline.}
 }{%
 \PackageWarning{gp2pl}{Five-seed result figure unavailable}%
 }
+
+\input{sections/result_five_seed_atomic_table}
+
+\input{sections/result_five_seed_atomic_domain_table}
 
 \subsection{Five-Seed Atomic Results}
 \label{sec:atomic-results}
@@ -114,10 +122,6 @@ post-hoc domain rules that would invalidate the protocol. Tables~
 compact and complete counts; the Technical Supplement, Sec.~5.3 gives full
 provenance and failure diagnostics.
 
-\input{sections/result_five_seed_atomic_table}
-
-\input{sections/result_five_seed_atomic_domain_table}
-
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}
 
@@ -137,8 +141,14 @@ DFAs accept all \TEGGoldDFAAcceptCount{} traces. Runtime is
 \TEGMedianRuntimeSeconds{} seconds median (IQR 4.28--8.49; SD 13.66), and action
 count is \TEGMedianActionCount{} median (IQR 1--2; SD 0.80); the 12-worker run
 takes \TEGWallRuntimeMinutes{} minutes. All 13 rejection and symbol-invariance
-challenges pass. Table~\ref{tab:domain-results} gives the fixed seed-0
-domain-library and execution breakdown.
+challenges pass.
+
+\input{sections/result_profile_table}
+
+Table~\ref{tab:domain-results} gives the fixed seed-0 domain-library and
+execution breakdown.
+
+\input{sections/result_domain_table}
 
 The temporal study uses a fixed seed-0 library snapshot obtained under a
 six-worker MOOSE configuration, distinct from the five-seed atomic protocol; it
@@ -146,18 +156,3 @@ supports neither cross-seed robustness nor arbitrary PDDL--\ltlf{} completeness.
 Both evaluators agree on 14/14 labelled and 2/2 initial-state cases. A zero-action
 case is $\langle s_0\rangle$; VAL 1.4 does not parse an empty plan. The Technical
 Supplement, Sec.~5.3 gives the complete distributions and provenance.
-
-\input{sections/result_profile_table}
-
-\input{sections/result_domain_table}
-
-% Flush empirical floats before the conclusion. On a float-only page, keep the
-% AAAI-style top alignment instead of LaTeX's vertically centered default.
-% Page-budget consolidation is deliberately deferred.
-\makeatletter
-\begingroup
-\setlength{\@fptop}{0pt}
-\setlength{\@dblfptop}{0pt}
-\clearpage
-\endgroup
-\makeatother

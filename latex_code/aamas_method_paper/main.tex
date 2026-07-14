@@ -106,19 +106,19 @@ We instantiate these interfaces with MOOSE evidence \cite{Chen2026Moose} and an
 \asl{}/Jason plan library \cite{Rao1996AgentSpeak,Bordini2007Jason}.
 Certificates use rule structure and symbolic PDDL effects, never names.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\fbox{\begin{minipage}{0.92\columnwidth}
-\centering\small
+{\small
+\fbox{\begin{tabular}{@{}c@{}}
 PDDL domain + training split $\longrightarrow$ MOOSE evidence\\
 $\downarrow$ certified domain compilation\\
 one persistent BDI domain plan library\\[2pt]
 validated lifted LTLf $\longrightarrow$ MONA-derived DFA transitions\\
 $\downarrow$ certified query compilation\\
 query-local BDI controllers appended to the same library\\[2pt]
-AgentSpeak(L)/Jason realization $\longrightarrow$ PDDL trace
+AgentSpeak(L)/Jason realization $\longrightarrow$ PDDL trace\\
 $\longrightarrow$ VAL + DFA validation
-\end{minipage}}
+\end{tabular}}}
 \caption{The certified representation bridge. Domain behavior is compiled
 once; temporally extended queries append only query-local controllers.}
 \label{fig:architecture}

@@ -38,7 +38,10 @@ REGISTERED_TIMEOUT_SECONDS = 1800
 REGISTERED_JAVA_STACK_SIZE = "64m"
 MINIMUM_LOG_SECONDS = 0.1
 FIGURE_WIDTH_INCHES = 7.0
-FIGURE_HEIGHT_INCHES = 3.0
+FIGURE_HEIGHT_INCHES = 4.25
+FIGURE_FONT_FAMILY = "Helvetica"
+MINIMUM_FIGURE_TEXT_POINTS = 9.0
+FIGURE_COLOR_MODE = "grayscale"
 TEMPORAL_MARKER_SECONDS = (1.0, 10.0, 100.0, 1800.0)
 
 DOMAIN_ORDER = (
@@ -78,13 +81,13 @@ TEMPORAL_VARIANTS = (
 )
 
 COLORS = {
-	"blue": "#0072B2",
-	"orange": "#E69F00",
-	"green": "#009E73",
-	"purple": "#CC79A7",
-	"gray": "#7F7F7F",
-	"light_gray": "#D9D9D9",
-	"text": "#1A1A1A",
+	"blue": "0.15",
+	"orange": "0.45",
+	"green": "0.30",
+	"purple": "0.60",
+	"gray": "0.45",
+	"light_gray": "0.80",
+	"text": "0.10",
 }
 ATOMIC_STYLES = {
 	"validated_evidence_adapter": (COLORS["gray"], "o"),
@@ -570,6 +573,9 @@ def generate_empirical_figure(
 		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
 		"figure_width_inches": FIGURE_WIDTH_INCHES,
 		"figure_height_inches": FIGURE_HEIGHT_INCHES,
+		"font_family": FIGURE_FONT_FAMILY,
+		"minimum_text_size_points": MINIMUM_FIGURE_TEXT_POINTS,
+		"color_mode": FIGURE_COLOR_MODE,
 	}
 	_write_json(output_path.with_suffix(".metadata.json"), metadata)
 	_write_json(
@@ -649,6 +655,9 @@ def generate_five_seed_empirical_figure(
 		"source_revisions": dataset["source_revisions"],
 		"figure_width_inches": FIGURE_WIDTH_INCHES,
 		"figure_height_inches": FIGURE_HEIGHT_INCHES,
+		"font_family": FIGURE_FONT_FAMILY,
+		"minimum_text_size_points": MINIMUM_FIGURE_TEXT_POINTS,
+		"color_mode": FIGURE_COLOR_MODE,
 	}
 	_write_json(output_path.with_suffix(".metadata.json"), metadata)
 	_write_json(
@@ -976,16 +985,16 @@ def _temporal_result_is_valid(record: Mapping[str, Any]) -> bool:
 
 def _render_five_seed_figure(dataset: Mapping[str, Any]) -> bytes:
 	rc_parameters = {
-		"font.family": "DejaVu Sans",
-		"font.size": 6.0,
+		"font.family": FIGURE_FONT_FAMILY,
+		"font.size": MINIMUM_FIGURE_TEXT_POINTS,
 		"font.weight": "normal",
-		"axes.titlesize": 6.8,
+		"axes.titlesize": MINIMUM_FIGURE_TEXT_POINTS,
 		"axes.titleweight": "normal",
-		"axes.labelsize": 6.0,
+		"axes.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
 		"axes.labelweight": "normal",
-		"xtick.labelsize": 5.4,
-		"ytick.labelsize": 5.4,
-		"legend.fontsize": 5.2,
+		"xtick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"ytick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"legend.fontsize": MINIMUM_FIGURE_TEXT_POINTS,
 		"axes.edgecolor": COLORS["gray"],
 		"axes.linewidth": 0.5,
 		"text.color": COLORS["text"],
@@ -1006,11 +1015,11 @@ def _render_five_seed_figure(dataset: Mapping[str, Any]) -> bytes:
 		)
 		coverage_axis, runtime_axis = axes
 		figure.subplots_adjust(
-			left=0.16,
+			left=0.19,
 			right=0.985,
-			top=0.925,
-			bottom=0.16,
-			wspace=0.36,
+			top=0.94,
+			bottom=0.14,
+			wspace=0.46,
 		)
 		_plot_five_seed_domain_coverage(coverage_axis, dataset)
 		_plot_five_seed_runtime_groups(runtime_axis, dataset)
@@ -1070,7 +1079,7 @@ def _plot_five_seed_domain_coverage(axis: Any, dataset: Mapping[str, Any]) -> No
 				f"{mean_value:.1f}",
 				ha="right",
 				va="bottom",
-				fontsize=5.0,
+				fontsize=MINIMUM_FIGURE_TEXT_POINTS,
 				color=COLORS["text"],
 			)
 	for boundary_after in (7, 11):
@@ -1086,7 +1095,7 @@ def _plot_five_seed_domain_coverage(axis: Any, dataset: Mapping[str, Any]) -> No
 	axis.set_ylim(-0.8, len(DOMAIN_ORDER) - 0.35)
 	axis.set_xlabel("Jason + VAL coverage (%)", labelpad=2.0)
 	axis.set_title("(a) Five-seed held-out coverage", loc="left", pad=2.5)
-	axis.grid(axis="x", color="#E8E8E8", linewidth=0.45)
+	axis.grid(axis="x", color="0.91", linewidth=0.45)
 	axis.set_axisbelow(True)
 	_style_axis(axis)
 
@@ -1159,7 +1168,7 @@ def _plot_five_seed_runtime_groups(axis: Any, dataset: Mapping[str, Any]) -> Non
 		loc="left",
 		pad=2.5,
 	)
-	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
+	axis.grid(which="major", color="0.91", linewidth=0.45)
 	axis.set_axisbelow(True)
 	_style_axis(axis)
 	axis.legend(
@@ -1177,16 +1186,16 @@ def _plot_five_seed_runtime_groups(axis: Any, dataset: Mapping[str, Any]) -> Non
 
 def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
 	rc_parameters = {
-		"font.family": "DejaVu Sans",
-		"font.size": 6.0,
+		"font.family": FIGURE_FONT_FAMILY,
+		"font.size": MINIMUM_FIGURE_TEXT_POINTS,
 		"font.weight": "normal",
-		"axes.titlesize": 6.8,
+		"axes.titlesize": MINIMUM_FIGURE_TEXT_POINTS,
 		"axes.titleweight": "normal",
-		"axes.labelsize": 6.0,
+		"axes.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
 		"axes.labelweight": "normal",
-		"xtick.labelsize": 5.4,
-		"ytick.labelsize": 5.4,
-		"legend.fontsize": 5.0,
+		"xtick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"ytick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"legend.fontsize": MINIMUM_FIGURE_TEXT_POINTS,
 		"axes.edgecolor": COLORS["gray"],
 		"axes.linewidth": 0.5,
 		"text.color": COLORS["text"],

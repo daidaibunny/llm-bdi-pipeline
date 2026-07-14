@@ -739,6 +739,11 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert "FOND4LTLf + LAMA" in external
 	assert "C0" not in combined
 	assert "T0" not in combined
+	for table in (atomic, temporal, external):
+		assert "\\begin{table*}[htbp]" in table
+		assert "\\small" in table
+		assert "\\footnotesize" not in table
+		assert table.index("\\caption{") > table.index("\\end{tabular}")
 
 
 def _paired_fixture() -> dict[str, object]:

@@ -122,16 +122,20 @@ def test_generate_empirical_figure_writes_vector_pdf_and_provenance(
 	pdf_bytes = output_file.read_bytes()
 	assert pdf_bytes.startswith(b"%PDF")
 	assert FIGURE_WIDTH_INCHES == 7.0
-	assert FIGURE_HEIGHT_INCHES == 3.0
-	assert b"/MediaBox [ 0 0 504 216 ]" in pdf_bytes
-	assert b"DejaVuSans-Bold" not in pdf_bytes
+	assert FIGURE_HEIGHT_INCHES == 4.25
+	assert b"/MediaBox [ 0 0 504 306 ]" in pdf_bytes
+	assert b"DejaVuSans" not in pdf_bytes
+	assert b"Helvetica" in pdf_bytes
 	assert metadata["artifact_kind"] == "gp2pl_empirical_figure"
 	assert metadata["source_sha256"]
 	assert metadata["atomic_seed_count"] == 5
 	assert metadata["atomic_domain_count"] == 16
 	assert metadata["temporal_sample_count"] == 3
 	assert metadata["figure_width_inches"] == 7.0
-	assert metadata["figure_height_inches"] == 3.0
+	assert metadata["figure_height_inches"] == 4.25
+	assert metadata["font_family"] == "Helvetica"
+	assert metadata["minimum_text_size_points"] == 9.0
+	assert metadata["color_mode"] == "grayscale"
 	assert output_file.with_suffix(".metadata.json").is_file()
 
 
@@ -149,7 +153,7 @@ def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
 		"\\providecommand{\\gpplfiguretwopath}{figures/fig2_evaluation.pdf}"
 		in main_text
 	)
-	figure_position = evaluation_text.index("\\begin{figure*}[t]")
+	figure_position = evaluation_text.index("\\begin{figure*}[htbp]")
 	assert evaluation_text.index("\\paragraph{Validation and measures.}") < (
 		figure_position
 	)
@@ -169,15 +173,13 @@ def test_manuscript_places_all_empirical_floats_in_main_paper() -> None:
 	):
 		assert table_input in evaluation_text
 		assert table_input not in supplement_text
-	assert evaluation_text.rindex("\\clearpage") > evaluation_text.rindex(
-		"\\input{sections/result_domain_table}",
-	)
+	assert "\\clearpage" not in evaluation_text
 	assert "\\IfFileExists{\\gpplfiguretwopath}" not in supplement_text
 	result_float_specs = {
-		"result_five_seed_atomic_table.tex": "\\begin{table}[t]",
-		"result_five_seed_atomic_domain_table.tex": "\\begin{table*}[t]",
-		"result_profile_table.tex": "\\begin{table*}[t]",
-		"result_domain_table.tex": "\\begin{table*}[t]",
+		"result_five_seed_atomic_table.tex": "\\begin{table}[htbp]",
+		"result_five_seed_atomic_domain_table.tex": "\\begin{table*}[htbp]",
+		"result_profile_table.tex": "\\begin{table}[htbp]",
+		"result_domain_table.tex": "\\begin{table}[htbp]",
 	}
 	for filename, expected_float in result_float_specs.items():
 		float_text = (
@@ -321,14 +323,18 @@ def test_generate_five_seed_empirical_figure_writes_real_result_shape(
 
 	pdf_bytes = output_file.read_bytes()
 	assert pdf_bytes.startswith(b"%PDF")
-	assert b"/MediaBox [ 0 0 504 216 ]" in pdf_bytes
-	assert b"DejaVuSans-Bold" not in pdf_bytes
+	assert b"/MediaBox [ 0 0 504 306 ]" in pdf_bytes
+	assert b"DejaVuSans" not in pdf_bytes
+	assert b"Helvetica" in pdf_bytes
 	assert metadata["artifact_kind"] == "gp2pl_five_seed_empirical_figure"
 	assert metadata["domain_count"] == 16
 	assert metadata["seed_count"] == 5
 	assert metadata["pooled_success_count"] == 79
 	assert metadata["runtime_measure"] == "jason_timing_profile.run_seconds"
 	assert metadata["figure_height_inches"] == FIGURE_HEIGHT_INCHES
+	assert metadata["font_family"] == "Helvetica"
+	assert metadata["minimum_text_size_points"] == 9.0
+	assert metadata["color_mode"] == "grayscale"
 	assert metadata["source_aggregate_run_id"] == "five-seed-fixture"
 	assert metadata["source_aggregate_sha256"] == "a" * 64
 

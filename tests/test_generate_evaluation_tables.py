@@ -147,7 +147,7 @@ def test_render_result_macros_uses_machine_counts(tmp_path: Path) -> None:
 	assert not (tmp_path / "paper_results.json").exists()
 
 
-def test_render_domain_table_uses_compact_two_panel_columns() -> None:
+def test_render_domain_table_uses_readable_single_column_rows() -> None:
 	result = {
 		"domains": [
 			{
@@ -170,10 +170,13 @@ def test_render_domain_table_uses_compact_two_panel_columns() -> None:
 
 	table = render_domain_table(result)
 
-	assert "\\begin{table*}[t]" in table
+	assert "\\begin{table}[htbp]" in table
 	assert "\\tiny" not in table
-	assert "\\scriptsize" in table
-	assert "lrrrrr@{\\hspace{10pt}}lrrrrr" in table
+	assert "\\scriptsize" not in table
+	assert "\\small" in table
+	assert table.index("\\caption{") > table.index("\\end{tabular}")
+	assert "\\begin{tabular}{lrrrrr}" in table
+	assert "@{\\hspace" not in table
 	assert "fixed seed-0 BDI plan libraries" in table
 	assert "hash-locked" not in table
 	assert "Tr/Te" in table
@@ -205,10 +208,12 @@ def test_render_profile_table_compacts_redundant_success_oracles() -> None:
 
 	table = render_profile_table(result)
 
-	assert "\\begin{table*}[t]" in table
+	assert "\\begin{table}[htbp]" in table
 	assert "\\tiny" not in table
-	assert "\\scriptsize" in table
-	assert "\\end{table*}" in table
+	assert "\\scriptsize" not in table
+	assert "\\small" in table
+	assert "\\end{table}" in table
+	assert table.index("\\caption{") > table.index("\\end{tabular}")
 	assert "Eq./total" in table
 	assert "E2E" in table
 	assert "Controller" not in table
