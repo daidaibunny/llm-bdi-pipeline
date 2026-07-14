@@ -17,10 +17,10 @@ from scripts.run_certificate_challenge_matrix import METAMORPHIC_CASES
 
 
 ATOMIC_VARIANTS = (
-	("validated_evidence_adapter", "Evidence Adapter"),
+	("validated_evidence_adapter", "Evidence Only"),
 	("action_only_closure", "Action Closure"),
 	("maximal_certified_program", "Maximal Certified"),
-	("full", "Full Compiler"),
+	("full", "Full GP2PL"),
 )
 TEMPORAL_VARIANTS = (
 	("dfa_aware_unprotected", "Unprotected DFA"),
@@ -733,7 +733,7 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert "Method & Compiled & Targets & Valid & Branches & KiB & Compile s" in atomic
 	assert "Method & Built & Valid & PAR-2 s & Actions & Plans & Fan-out" in temporal
 	assert "Method & Scope & Valid & Unsupported & PAR-2 s" in external
-	assert "Evidence Adapter" in atomic
+	assert "Evidence Only" in atomic
 	assert "Certified Balanced" in temporal
 	assert "FOND4LTLf + LAMA" in external
 	assert "C0" not in combined

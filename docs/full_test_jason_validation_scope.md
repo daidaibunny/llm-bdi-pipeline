@@ -110,11 +110,11 @@ DFA, preservation-certified balanced controller, primitive-step monitor, Jason,
 and VAL. Experimental modes are explicit, isolated output variants; none may be
 selected as a silent fallback.
 
-Atomic experiment modes share one normalized evidence artifact. Evidence
-Adapter renders only PDDL-validated evidence macros. Action Closure adds
+Atomic experiment modes share one normalized evidence artifact. Evidence Only
+renders only PDDL-validated evidence macros. Action Closure adds
 certified PDDL producers but no internal subgoals. Maximal Certified selects a
 largest jointly compatible program from the full certified candidate universe.
-Full Compiler minimizes over that exact universe and the same hard constraints.
+Full GP2PL minimizes over that exact universe and the same hard constraints.
 This sequence
 separates evidence quality, schema closure, lifted decomposition, and selection.
 
@@ -133,8 +133,8 @@ all controlled hashes match. Raw MOOSE, LAMA/ENHSP, and direct temporal planning
 are external references and therefore use a separate report rather than being
 mixed into the compiler ablation matrix.
 
-The paper-facing names are `Evidence Adapter`, `Action Closure`, `Maximal
-Certified`, `Full Compiler`, `Unprotected DFA`, `Certified Flat`, `Certified
+The paper-facing names are `Evidence Only`, `Action Closure`, `Maximal
+Certified`, `Full GP2PL`, `Unprotected DFA`, `Certified Flat`, `Certified
 Balanced`, and `Completion Monitor`. Stable snake-case identifiers remain in
 JSON and command-line arguments only. Tables use short descriptive headings,
 not numbered labels or compressed oracle initials.

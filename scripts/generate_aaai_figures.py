@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_right
 from datetime import datetime
 from datetime import timezone
 import hashlib
@@ -35,6 +36,9 @@ REGISTERED_NUM_WORKERS = 6
 REGISTERED_TIMEOUT_SECONDS = 1800
 REGISTERED_JAVA_STACK_SIZE = "64m"
 MINIMUM_LOG_SECONDS = 0.1
+FIGURE_WIDTH_INCHES = 7.0
+FIGURE_HEIGHT_INCHES = 3.0
+TEMPORAL_MARKER_SECONDS = (1.0, 10.0, 100.0, 1800.0)
 
 DOMAIN_ORDER = (
 	"barman",
@@ -55,7 +59,7 @@ DOMAIN_ORDER = (
 	"depots",
 )
 ATOMIC_VARIANTS = (
-	("validated_evidence_adapter", "Evidence Adapter"),
+	("validated_evidence_adapter", "Evidence Only"),
 	("action_only_closure", "Action Closure"),
 	("maximal_certified_program", "Maximal Certified"),
 	("full", "Full GP2PL"),
@@ -83,10 +87,10 @@ ATOMIC_STYLES = {
 	"full": (COLORS["blue"], "D"),
 }
 TEMPORAL_STYLES = {
-	"dfa_aware_unprotected": (COLORS["gray"], ":"),
-	"certified_flat": (COLORS["orange"], "--"),
-	"certified_balanced": (COLORS["blue"], "-"),
-	"completion_boundary_monitor": (COLORS["purple"], "-."),
+	"dfa_aware_unprotected": (COLORS["gray"], ":", "o"),
+	"certified_flat": (COLORS["orange"], "--", "s"),
+	"certified_balanced": (COLORS["blue"], "-", "D"),
+	"completion_boundary_monitor": (COLORS["purple"], "-.", "^"),
 }
 
 
@@ -252,6 +256,8 @@ def generate_empirical_figure(
 			next(iter(temporal_curves.values()))["sample_count"],
 		),
 		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
+		"figure_width_inches": FIGURE_WIDTH_INCHES,
+		"figure_height_inches": FIGURE_HEIGHT_INCHES,
 	}
 	_write_json(output_path.with_suffix(".metadata.json"), metadata)
 	_write_json(
@@ -511,15 +517,17 @@ def _temporal_result_is_valid(record: Mapping[str, Any]) -> bool:
 def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
 	rc_parameters = {
 		"font.family": "DejaVu Sans",
-		"font.size": 6.5,
-		"axes.titlesize": 8.0,
-		"axes.titleweight": "bold",
-		"axes.labelsize": 6.5,
-		"xtick.labelsize": 5.8,
-		"ytick.labelsize": 5.8,
-		"legend.fontsize": 5.4,
+		"font.size": 5.8,
+		"font.weight": "normal",
+		"axes.titlesize": 6.8,
+		"axes.titleweight": "normal",
+		"axes.labelsize": 5.8,
+		"axes.labelweight": "normal",
+		"xtick.labelsize": 5.1,
+		"ytick.labelsize": 5.1,
+		"legend.fontsize": 4.7,
 		"axes.edgecolor": COLORS["gray"],
-		"axes.linewidth": 0.6,
+		"axes.linewidth": 0.5,
 		"text.color": COLORS["text"],
 		"axes.labelcolor": COLORS["text"],
 		"xtick.color": COLORS["text"],
@@ -529,23 +537,26 @@ def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
 		"savefig.transparent": False,
 	}
 	with matplotlib.rc_context(rc_parameters):
-		figure = plt.figure(figsize=(7.15, 4.55), facecolor="white")
+		figure = plt.figure(
+			figsize=(FIGURE_WIDTH_INCHES, FIGURE_HEIGHT_INCHES),
+			facecolor="white",
+		)
 		grid = figure.add_gridspec(
 			2,
 			2,
-			width_ratios=(1.12, 1.0),
-			height_ratios=(1.0, 1.0),
+			width_ratios=(1.08, 1.0),
+			height_ratios=(0.9, 1.1),
 		)
 		atomic_axis = figure.add_subplot(grid[:, 0])
 		tradeoff_axis = figure.add_subplot(grid[0, 1])
 		temporal_axis = figure.add_subplot(grid[1, 1])
 		figure.subplots_adjust(
-			left=0.165,
-			right=0.985,
-			top=0.94,
-			bottom=0.105,
-			wspace=0.42,
-			hspace=0.48,
+			left=0.16,
+			right=0.99,
+			top=0.935,
+			bottom=0.14,
+			wspace=0.4,
+			hspace=0.64,
 		)
 		_plot_atomic_coverage(atomic_axis, dataset)
 		_plot_atomic_tradeoff(tradeoff_axis, dataset)
@@ -569,8 +580,8 @@ def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
 
 def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 	coverage = dict(dataset["atomic_domain_coverage"])
-	seed_jitter = (-0.04, -0.02, 0.0, 0.02, 0.04)
-	method_offsets = {"evidence_adapter": 0.13, "full": -0.13}
+	seed_jitter = (-0.035, -0.0175, 0.0, 0.0175, 0.035)
+	method_offsets = {"evidence_adapter": 0.11, "full": -0.11}
 	method_styles = {
 		"evidence_adapter": (COLORS["gray"], "o", "white"),
 		"full": (COLORS["blue"], "D", COLORS["blue"]),
@@ -586,12 +597,12 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 				axis.scatter(
 					value,
 					y_mean + seed_jitter[seed_index],
-					s=8,
+					s=5.5,
 					marker=marker,
 					facecolors=face_color,
 					edgecolors=color,
-					linewidths=0.45,
-					alpha=0.38,
+					linewidths=0.35,
+					alpha=0.32,
 					zorder=2,
 				)
 			mean_value = statistics.mean(values)
@@ -602,37 +613,38 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 				y_mean,
 				xerr=standard_deviation,
 				fmt=marker,
-				markersize=3.6,
+				markersize=3.1,
 				markerfacecolor=face_color,
 				markeredgecolor=color,
-				markeredgewidth=0.7,
+				markeredgewidth=0.6,
 				ecolor=color,
-				elinewidth=0.8,
-				capsize=1.6,
+				elinewidth=0.65,
+				capsize=1.3,
 				zorder=4,
 			)
 		axis.plot(
 			[means["evidence_adapter"][0], means["full"][0]],
 			[means["evidence_adapter"][1], means["full"][1]],
 			color=COLORS["light_gray"],
-			linewidth=0.6,
+			linewidth=0.45,
 			zorder=1,
 		)
 	for boundary_after in (7, 11):
 		boundary_y = len(DOMAIN_ORDER) - 1 - boundary_after - 0.5
-		axis.axhline(boundary_y, color=COLORS["light_gray"], linewidth=0.7)
-	axis.axvline(100.0, color=COLORS["gray"], linewidth=0.7, linestyle="--")
-	axis.set_xlim(0.0, 102.0)
+		axis.axhline(boundary_y, color=COLORS["light_gray"], linewidth=0.55)
+	axis.axvline(100.0, color=COLORS["gray"], linewidth=0.55, linestyle="--")
+	axis.set_xlim(0.0, 101.8)
 	axis.set_xticks((0, 25, 50, 75, 100))
 	axis.set_yticks(
 		list(reversed(range(len(DOMAIN_ORDER)))),
 		labels=DOMAIN_ORDER,
 	)
-	axis.set_ylim(-1.1, len(DOMAIN_ORDER) - 0.45)
-	axis.set_xlabel("Held-out Jason + VAL coverage (%)")
-	axis.set_title("(a) Paired atomic coverage", loc="left", pad=5)
-	axis.grid(axis="x", color="#E6E6E6", linewidth=0.55)
+	axis.set_ylim(-1.2, len(DOMAIN_ORDER) - 0.45)
+	axis.set_xlabel("Jason + VAL coverage (%)", labelpad=2.0)
+	axis.set_title("(a) Paired atomic coverage", loc="left", pad=2.5)
+	axis.grid(axis="x", color="#E8E8E8", linewidth=0.45)
 	axis.set_axisbelow(True)
+	_style_axis(axis)
 	legend_handles = (
 		Line2D(
 			[],
@@ -641,7 +653,7 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 			color=COLORS["gray"],
 			markerfacecolor="white",
 			linewidth=0,
-			label="Evidence Adapter",
+			label="Evidence Only",
 		),
 		Line2D(
 			[],
@@ -658,9 +670,10 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 		loc="lower left",
 		ncol=2,
 		frameon=False,
-		borderaxespad=0.2,
-		handletextpad=0.35,
-		columnspacing=0.8,
+		borderaxespad=0.15,
+		handlelength=1.0,
+		handletextpad=0.3,
+		columnspacing=0.65,
 	)
 
 
@@ -668,17 +681,19 @@ def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
 	tradeoff = dict(dataset["atomic_tradeoff"])
 	for variant, method in ATOMIC_VARIANTS:
 		color, marker = ATOMIC_STYLES[variant]
+		face_color = "white" if variant == "validated_evidence_adapter" else color
 		points = tuple(tradeoff[variant])
 		x_values = [float(point["selected_branch_count"]) for point in points]
 		y_values = [float(point["coverage_percent"]) for point in points]
 		axis.scatter(
 			x_values,
 			y_values,
-			s=14,
+			s=8,
 			marker=marker,
-			color=color,
-			alpha=0.45,
-			linewidths=0.4,
+			facecolors=face_color,
+			edgecolors=color,
+			alpha=0.34,
+			linewidths=0.3,
 			label=method,
 			zorder=2,
 		)
@@ -694,36 +709,44 @@ def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
 			xerr=((x_mean - x_lower,), (x_upper - x_mean,)),
 			yerr=y_sd,
 			fmt=marker,
-			markersize=5.0,
-			markerfacecolor=color,
+			markersize=3.7,
+			markerfacecolor=face_color,
 			markeredgecolor="white",
-			markeredgewidth=0.6,
+			markeredgewidth=0.45,
 			ecolor=color,
-			elinewidth=0.9,
-			capsize=1.7,
+			elinewidth=0.65,
+			capsize=1.3,
 			zorder=4,
 		)
 	axis.set_xscale("log")
-	axis.set_ylim(0.0, 102.0)
+	axis.set_ylim(-2.0, 102.0)
+	axis.set_yticks((0, 25, 50, 75, 100))
 	axis.set_ylabel("Held-out coverage (%)")
-	axis.set_xlabel("Total emitted branches (log scale)")
-	axis.set_title("(b) Atomic coverage-size tradeoff", loc="left", pad=5)
-	axis.grid(which="major", color="#E6E6E6", linewidth=0.55)
+	axis.set_xlabel("Emitted branches (log scale)", labelpad=2.0)
+	axis.set_title("(b) Atomic coverage-size tradeoff", loc="left", pad=2.5)
+	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
 	axis.set_axisbelow(True)
+	_style_axis(axis)
+	handles, labels = axis.get_legend_handles_labels()
+	legend_order = (0, 2, 1, 3)
 	axis.legend(
-		loc="best",
+		handles=[handles[index] for index in legend_order],
+		labels=[labels[index] for index in legend_order],
+		loc="lower left",
 		ncol=2,
 		frameon=False,
-		borderaxespad=0.1,
-		handletextpad=0.35,
-		columnspacing=0.7,
+		borderaxespad=0.12,
+		handlelength=1.0,
+		handletextpad=0.25,
+		columnspacing=0.55,
+		labelspacing=0.25,
 	)
 
 
 def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 	curves = dict(dataset["temporal_curves"])
 	for variant, method in TEMPORAL_VARIANTS:
-		color, line_style = TEMPORAL_STYLES[variant]
+		color, line_style, marker = TEMPORAL_STYLES[variant]
 		curve = dict(curves[variant])
 		axis.step(
 			curve["x_seconds"],
@@ -731,37 +754,100 @@ def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 			where="post",
 			color=color,
 			linestyle=line_style,
-			linewidth=1.25,
+			linewidth=1.05,
 			label=method,
+		)
+		marker_values = _step_values_at(
+			curve["x_seconds"],
+			curve["solved_percent"],
+			TEMPORAL_MARKER_SECONDS,
+		)
+		axis.plot(
+			TEMPORAL_MARKER_SECONDS,
+			marker_values,
+			linestyle="none",
+			marker=marker,
+			markersize=2.4,
+			markerfacecolor=color,
+			markeredgecolor="white",
+			markeredgewidth=0.3,
+			zorder=3,
 		)
 	axis.axvline(
 		REGISTERED_TIMEOUT_SECONDS,
 		color=COLORS["gray"],
-		linewidth=0.7,
+		linewidth=0.55,
 		linestyle="--",
 	)
 	axis.set_xscale("log")
 	axis.set_xlim(MINIMUM_LOG_SECONDS, 2000.0)
-	axis.set_ylim(0.0, 102.0)
+	axis.set_ylim(-2.0, 102.0)
+	axis.set_yticks((0, 25, 50, 75, 100))
 	axis.xaxis.set_major_locator(
 		FixedLocator((0.1, 1.0, 10.0, 100.0, 1800.0)),
 	)
 	axis.xaxis.set_major_formatter(
 		FuncFormatter(lambda value, _position: f"{value:g}"),
 	)
-	axis.set_ylabel("All-query solved fraction (%)")
-	axis.set_xlabel("End-to-end query time (s, log scale)")
-	axis.set_title("(c) Temporal cumulative coverage", loc="left", pad=5)
-	axis.grid(which="major", color="#E6E6E6", linewidth=0.55)
+	axis.set_ylabel("All queries solved (%)")
+	axis.set_xlabel("End-to-end time (s, log scale)", labelpad=2.0)
+	axis.set_title("(c) Temporal cumulative coverage", loc="left", pad=2.5)
+	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
 	axis.set_axisbelow(True)
+	_style_axis(axis)
+	legend_handles = tuple(
+		Line2D(
+			[],
+			[],
+			color=TEMPORAL_STYLES[variant][0],
+			linestyle=TEMPORAL_STYLES[variant][1],
+			marker=TEMPORAL_STYLES[variant][2],
+			markersize=2.5,
+			linewidth=1.05,
+			label=method,
+		)
+		for variant, method in TEMPORAL_VARIANTS
+	)
+	legend_order = (0, 2, 1, 3)
 	axis.legend(
+		handles=tuple(legend_handles[index] for index in legend_order),
 		loc="lower right",
 		ncol=2,
 		frameon=False,
-		borderaxespad=0.1,
-		handlelength=2.2,
-		handletextpad=0.4,
-		columnspacing=0.7,
+		borderaxespad=0.12,
+		handlelength=1.7,
+		handletextpad=0.3,
+		columnspacing=0.65,
+		labelspacing=0.25,
+	)
+
+
+def _step_values_at(
+	x_values: Sequence[float],
+	y_values: Sequence[float],
+	checkpoints: Sequence[float],
+) -> tuple[float, ...]:
+	"""Return right-continuous step values at shared time checkpoints."""
+
+	if len(x_values) != len(y_values) or not x_values:
+		raise ValueError("step curve coordinates must be non-empty and aligned")
+	return tuple(
+		float(y_values[max(0, bisect_right(x_values, checkpoint) - 1)])
+		for checkpoint in checkpoints
+	)
+
+
+def _style_axis(axis: Any) -> None:
+	"""Apply print-safe academic axis styling without changing plotted data."""
+
+	axis.spines["top"].set_visible(False)
+	axis.spines["right"].set_visible(False)
+	axis.tick_params(
+		axis="both",
+		direction="out",
+		length=2.2,
+		width=0.5,
+		pad=1.8,
 	)
 
 

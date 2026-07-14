@@ -9,10 +9,13 @@ import pytest
 
 from scripts.generate_aaai_figures import ATOMIC_VARIANTS
 from scripts.generate_aaai_figures import DOMAIN_ORDER
+from scripts.generate_aaai_figures import FIGURE_HEIGHT_INCHES
+from scripts.generate_aaai_figures import FIGURE_WIDTH_INCHES
 from scripts.generate_aaai_figures import TEMPORAL_VARIANTS
 from scripts.generate_aaai_figures import build_figure_dataset
 from scripts.generate_aaai_figures import cumulative_solved_fraction
 from scripts.generate_aaai_figures import generate_empirical_figure
+from scripts.generate_aaai_figures import _step_values_at
 
 
 def test_build_figure_dataset_uses_paired_atomic_and_temporal_matrix() -> None:
@@ -59,6 +62,16 @@ def test_cumulative_solved_fraction_keeps_failures_in_denominator() -> None:
 	assert max(y_values) < 100.0
 
 
+def test_step_values_at_uses_right_continuous_value_for_shared_checkpoints() -> None:
+	values = _step_values_at(
+		(0.1, 1.0, 1.0, 1800.0),
+		(0.0, 25.0, 50.0, 50.0),
+		(0.5, 1.0, 10.0, 1800.0),
+	)
+
+	assert values == (0.0, 50.0, 50.0, 50.0)
+
+
 @pytest.mark.parametrize(
 	("mutator", "message"),
 	(
@@ -100,12 +113,19 @@ def test_generate_empirical_figure_writes_vector_pdf_and_provenance(
 		output_file=output_file,
 	)
 
-	assert output_file.read_bytes().startswith(b"%PDF")
+	pdf_bytes = output_file.read_bytes()
+	assert pdf_bytes.startswith(b"%PDF")
+	assert FIGURE_WIDTH_INCHES == 7.0
+	assert FIGURE_HEIGHT_INCHES == 3.0
+	assert b"/MediaBox [ 0 0 504 216 ]" in pdf_bytes
+	assert b"DejaVuSans-Bold" not in pdf_bytes
 	assert metadata["artifact_kind"] == "gp2pl_empirical_figure"
 	assert metadata["source_sha256"]
 	assert metadata["atomic_seed_count"] == 5
 	assert metadata["atomic_domain_count"] == 16
 	assert metadata["temporal_sample_count"] == 3
+	assert metadata["figure_width_inches"] == 7.0
+	assert metadata["figure_height_inches"] == 3.0
 	assert output_file.with_suffix(".metadata.json").is_file()
 
 

@@ -35,10 +35,10 @@ REGISTERED_CHALLENGE_NODE_IDS = tuple(
 	case.node_id for case in (*CHALLENGE_CASES, *METAMORPHIC_CASES)
 )
 ATOMIC_METHODS = (
-	("validated_evidence_adapter", "Evidence Adapter"),
+	("validated_evidence_adapter", "Evidence Only"),
 	("action_only_closure", "Action Closure"),
 	("maximal_certified_program", "Maximal Certified"),
-	("full", "Full Compiler"),
+	("full", "Full GP2PL"),
 )
 TEMPORAL_METHODS = (
 	("dfa_aware_unprotected", "Unprotected DFA"),
