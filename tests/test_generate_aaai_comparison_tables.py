@@ -195,7 +195,7 @@ def test_build_comparison_dataset_rejects_external_resource_protocol_drift(
 		)
 
 
-def test_build_comparison_dataset_rejects_mixed_source_revisions(
+def test_build_comparison_dataset_accepts_mixed_clean_source_revisions(
 	tmp_path: Path,
 ) -> None:
 	challenge = _challenge_fixture()
@@ -204,29 +204,30 @@ def test_build_comparison_dataset_rejects_mixed_source_revisions(
 		"commit": "fedcba9876543210",
 	}
 
-	with pytest.raises(ValueError, match="same source revision"):
-		build_comparison_dataset(
-			paired_results_file=_write_json(
-				tmp_path / "paired.json",
-				_paired_fixture(),
-			),
-			raw_moose_summaries=tuple(
-				(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
-				for seed in range(5)
-			),
-			instance_reference_summary_file=_write_json(
-				tmp_path / "instances.json",
-				_instance_fixture(),
-			),
-			direct_temporal_summary_file=_write_json(
-				tmp_path / "direct.json",
-				_direct_fixture(),
-			),
-			challenge_summary_file=_write_json(
-				tmp_path / "challenge.json",
-				challenge,
-			),
-		)
+	result = build_comparison_dataset(
+		paired_results_file=_write_json(
+			tmp_path / "paired.json",
+			_paired_fixture(),
+		),
+		raw_moose_summaries=tuple(
+			(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+			for seed in range(5)
+		),
+		instance_reference_summary_file=_write_json(
+			tmp_path / "instances.json",
+			_instance_fixture(),
+		),
+		direct_temporal_summary_file=_write_json(
+			tmp_path / "direct.json",
+			_direct_fixture(),
+		),
+		challenge_summary_file=_write_json(
+			tmp_path / "challenge.json",
+			challenge,
+		),
+	)
+
+	assert result["external"]
 
 
 def test_build_comparison_dataset_rejects_child_run_protocol_drift(

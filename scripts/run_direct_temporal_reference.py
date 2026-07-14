@@ -15,6 +15,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 from typing import Any
 from typing import Mapping
 from typing import Sequence
@@ -26,6 +27,9 @@ DEFAULT_BENCHMARK_ROOT = PROJECT_ROOT / "paper_artifacts/temporal_goal_benchmark
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "artifacts/direct_temporal_references"
 DEFAULT_FOND4LTLF_ROOT = PROJECT_ROOT / ".external/fond4ltlf-0.0.4"
 DEFAULT_MONA_EXECUTABLE = PROJECT_ROOT / ".external/mona-1.4/Front/mona"
+FOND4LTLF_COMPILER_LOCK = (
+	Path(tempfile.gettempdir()) / "gp2pl-fond4ltlf-ltlf2dfa-runtime.lock"
+)
 
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
@@ -183,6 +187,8 @@ def main() -> int:
 			"max_rss_gb": float(args.max_rss_gb),
 			"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
 			"plan_verifier_command": str(args.plan_verifier_command),
+			"fond4ltlf_compiler_max_parallelism": 1,
+			"fond4ltlf_compiler_lock_scope": "host",
 			"moose_runtime_max_parallelism": 1,
 			"moose_runtime_lock_scope": "host",
 		},
@@ -372,6 +378,7 @@ def run_direct_temporal_task(
 			+ os.environ.get("PATH", ""),
 		},
 		artifact_stem="compiler",
+		exclusive_lock_file=FOND4LTLF_COMPILER_LOCK,
 	)
 	record.update(
 		{
@@ -381,6 +388,9 @@ def run_direct_temporal_task(
 			"compiler_seconds": compiler_result.elapsed_seconds,
 			"compiler_stdout": str(compiler_result.stdout_file),
 			"compiler_stderr": str(compiler_result.stderr_file),
+			"compiler_lock_wait_seconds": (
+				compiler_result.runtime_lock_wait_seconds
+			),
 		}
 	)
 	if compiler_result.exit_code != 0:

@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import tempfile
 
 from evaluation.temporal_goal_validation import ExecutionTraceValidationResult
 from scripts.run_direct_temporal_reference import DirectTemporalTask
@@ -165,6 +166,7 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 			elapsed_seconds=0.25,
 			stdout_file=stdout_file,
 			stderr_file=stderr_file,
+			runtime_lock_wait_seconds=(0.5 if artifact_stem == "compiler" else 0.25),
 		)
 
 	def fake_validate_execution_trace(**kwargs):
@@ -211,13 +213,18 @@ def test_direct_temporal_runner_filters_compiler_actions_before_validation(
 
 	assert len(commands) == 2
 	assert timeouts == [1800.0, 1799.75]
-	assert locks == [None, MOOSE_RUNTIME_LOCK]
+	expected_compiler_lock = (
+		Path(tempfile.gettempdir()) / "gp2pl-fond4ltlf-ltlf2dfa-runtime.lock"
+	)
+	assert locks == [expected_compiler_lock, MOOSE_RUNTIME_LOCK]
 	assert record["method"] == "FOND4LTLf + LAMA"
 	assert record["supported"] is True
 	assert record["status"] == "valid"
 	assert record["success"] is True
 	assert record["action_count"] == 1
 	assert record["compiler_timeout_seconds"] == 1800.0
+	assert record["compiler_lock_wait_seconds"] == 0.5
+	assert record["runtime_lock_wait_seconds"] == 0.25
 	assert record["planner_timeout_seconds"] == 1799.75
 	assert Path(record["plan_file"]).read_text(encoding="utf-8") == "(place item)\n"
 

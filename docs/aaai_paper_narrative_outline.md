@@ -470,7 +470,9 @@ acceptance, and predicted-DFA acceptance. FOND4LTLf compilation and LAMA search
 share one 1,800-second, 8-GiB deadline. Numeric inputs and identifiers incompatible
 with its underscore encoding are explicit unsupported cases. The exact MOOSE-hosted
 LAMA runtime is serialized across processes because its nested Apptainer and shared
-work directory are non-reentrant; ENHSP and FOND4LTLf compilation may still use the
+work directory are non-reentrant. FOND4LTLf compilation is independently serialized
+because pinned `ltlf2dfa` uses one package-local scratch file; the compiler and LAMA
+locks are distinct, so separate pipeline stages may overlap. ENHSP may still use the
 declared worker pool. Queue waiting is recorded separately from planner runtime. Published
 numbers from different splits or hardware may be cited as prior results but must not be
 inserted into paired experiment tables. Plan4Past is a design precedent for
@@ -1299,6 +1301,8 @@ complete paired compiler result, Raw MOOSE summaries explicitly assigned to
 seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, and
 the challenge summary. The script must fail rather than render a partial table
 when a method, seed, case, hash pairing, or clean-source condition is missing.
+Each input must identify a clean source commit, while commits may differ across
+independently executed experiment groups.
 The final generator must fail closed over the registered corpus rather than
 only compare methods with each other. It recomputes immutable identifier-set
 digests for all 1,228 achievement cases, all 1,228 temporal cases, the 868

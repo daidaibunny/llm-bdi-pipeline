@@ -110,18 +110,6 @@ def build_comparison_dataset(
 			or "",
 		),
 	)
-	_validate_common_source_revision(
-		(
-			("paired compiler result", paired),
-			("instance references", instance),
-			("direct temporal reference", direct),
-			("challenge matrix", challenge),
-			*(
-				(f"Raw MOOSE seed {seed}", summary)
-				for seed, _path, summary in raw_records
-			),
-		),
-	)
 	_validate_raw_moose_runs(
 		raw_records,
 		contract=_registered_external_case_contract(paired, "raw_moose"),
@@ -279,20 +267,6 @@ def _validate_clean_success(payload: Mapping[str, Any], *, label: str) -> None:
 		raise ValueError(f"{label} has untracked source files")
 	if len(str(revision.get("commit") or "")) < 8:
 		raise ValueError(f"{label} has no pinned source commit")
-
-
-def _validate_common_source_revision(
-	records: Sequence[tuple[str, Mapping[str, Any]]],
-) -> None:
-	revisions = {
-		str(dict(payload.get("source_revision") or {}).get("commit") or "")
-		for _label, payload in records
-	}
-	if len(revisions) != 1:
-		raise ValueError(
-			"final comparison artifacts do not share the same source revision: "
-			+ ", ".join(sorted(revisions)),
-		)
 
 
 def _validate_raw_moose_runs(

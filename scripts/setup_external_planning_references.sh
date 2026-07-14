@@ -6,6 +6,7 @@ EXTERNAL_DIR="${ROOT_DIR}/.external"
 ENHSP_ROOT="${EXTERNAL_DIR}/enhsp-socs24"
 FOND4LTLF_ROOT="${EXTERNAL_DIR}/fond4ltlf-0.0.4"
 MONA_EXECUTABLE="${EXTERNAL_DIR}/mona-1.4/Front/mona"
+MONA_VERSION="1.4-18"
 MOOSE_ROOT="${EXTERNAL_DIR}/moose"
 VAL_ROOT="${EXTERNAL_DIR}/VAL"
 
@@ -114,8 +115,11 @@ verify_installation() {
 		printf '[external-reference] missing MONA executable: %s\n' "${MONA_EXECUTABLE}" >&2
 		exit 1
 	fi
-	if ! "${MONA_EXECUTABLE}" -v >/dev/null 2>&1; then
-		printf '[external-reference] MONA executable failed its version probe\n' >&2
+	local mona_version_output
+	mona_version_output="$("${MONA_EXECUTABLE}" -v 2>&1 || true)"
+	if [[ "${mona_version_output}" != *"MONA v${MONA_VERSION}"* ]]; then
+		printf '[external-reference] MONA version mismatch: expected=%s output=%s\n' \
+			"${MONA_VERSION}" "${mona_version_output%%$'\n'*}" >&2
 		exit 1
 	fi
 	if [[ ! -f "${MOOSE_ROOT}/moose.sif" ]]; then
