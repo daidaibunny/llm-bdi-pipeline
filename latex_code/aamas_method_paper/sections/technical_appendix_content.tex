@@ -108,8 +108,8 @@ contracts. Prefix similarity alone is not coverage.
 For certified space
 $\mathcal C_D^{\checkmark}=\{b\in\mathcal C_E\cup\mathcal C_D\mid
 \mathsf{Cert}_D(b)\}$, a selected set $S\subseteq\mathcal C_D^{\checkmark}$ is
-feasible when it covers every evidence obligation, includes an implementation
-for every selected internal call, preserves required producer exits, and admits
+feasible when it covers every evidence obligation, includes a selected module
+for every internal call, preserves required producer exits, and admits
 the selected recursion and cross-module dependency ranks.
 \end{definition}
 
@@ -124,8 +124,8 @@ for arbitrary planning programs.
 \begin{assumption}[Planning fragment]
 Boolean actions use deterministic typed STRIPS semantics. Numeric effects are
 constant integer increases or decreases over finite values. Arbitrary
-expressions, continuous change, conditional effects outside the parser's
-declared fragment, and probabilistic actions are rejected.
+expressions, continuous change, conditional effects outside the supported PDDL
+fragment, and probabilistic actions are rejected.
 \end{assumption}
 
 \begin{assumption}[Evidence boundary]
@@ -151,9 +151,9 @@ and preserves the atomic target. Ambiguous capacity roles are rejected.
 \end{assumption}
 
 \begin{assumption}[Temporal fragment]
-The input formula belongs to the implemented $F$, $X$, strong-$U$,
-conjunction, and literal-negation fragment and is translated by the real
-ltlf2dfa/MONA toolchain
+The input formula belongs to the supported $F$, $X$, strong-$U$,
+conjunction, and literal-negation fragment and is translated by the
+\texttt{ltlf2dfa}/MONA construction
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. A chosen progress edge has a
 conjunction of signed predicate literals and supported integer equalities.
 Disjunction requiring strategy choice and unsupported arithmetic are rejected.
@@ -292,7 +292,7 @@ smaller cost. The proof says nothing about candidates not generated.
 \subsection{Temporal Composition}
 
 Let $A_\varphi=\langle Q,2^{AP},\delta,q_0,F\rangle$ be the deterministic finite
-automaton obtained from the real translation
+automaton obtained from the MONA-backed translation
 \cite{DeGiacomoVardi2013,Fuggitti2020LTLf2DFA}, and let a progress objective be
 $B=P^+\land\neg P^-$. A positive module portfolio assigns one or more certified
 branches to each $G_i\in P^+$. A negative literal is either observed absent or
@@ -424,7 +424,8 @@ paper can be audited in both directions.
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
-\caption{Theory-to-code map for the new GP2PL methods.}
+\caption{Correspondence between formal GP2PL constructions and their public
+realizations.}
 \label{tab:code-map}
 \begin{tabular}{p{0.22\textwidth}p{0.39\textwidth}p{0.31\textwidth}}
 \toprule
@@ -447,7 +448,7 @@ Balanced repair tree &
 Plan count, depth, fan-out, order, negative leaf, and checkpoint tests \\
 Primitive-step execution and trace commit &
 \path{src/evaluation/jason_runtime/runner.py} &
-Real Jason, PDDL successor, numeric update, DFA monitor, trace, and VAL tests \\
+Jason execution, PDDL successor, numeric update, DFA monitor, trace, and VAL tests \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -534,11 +535,11 @@ relicensed as original GP2PL data.
 \subsection{Frozen Natural-Language Translation Prompt}
 \label{app:translation-prompt}
 
-Natural-language translation is an evaluated input front end, not the policy-
-lifting algorithm. Its only role is to map one controlled-language
+The natural-language translation protocol is an evaluated input condition,
+separate from the policy-lifting method. Its role is to map one controlled-language
 specification to typed, externally bound parametric \ltlf{} JSON. It cannot
 choose PDDL actions, objects, bindings, or domain-library modules. The full
-prompt configuration enables five declared components: a normal-form guide,
+protocol comprises five declared components: a normal-form guide,
 schematic few-shot examples, lifted-variable rules, an operator whitelist, and
 model-correctable retry guidance. The PDDL catalogue and public sample row are
 deterministic substitutions. Hidden profile labels, object bindings, gold
@@ -686,9 +687,10 @@ constraints. Return the same eight-key JSON only.
 
 Prompt acceptance is not the semantic oracle. The model output first passes
 the exact eight-key schema, atom-table closure, PDDL vocabulary, arity, type,
-parameter, and operator checks. It is then compiled through the real
-\texttt{ltlf2dfa}/MONA path and required to be finite-trace language-equivalent
-to the hidden gold formula. Retries receive only model-correctable diagnostics;
+parameter, and operator checks. It is then converted to a deterministic
+automaton by \texttt{ltlf2dfa} and MONA and required to be finite-trace
+language-equivalent to the hidden gold formula. Retries receive only
+model-correctable diagnostics;
 infrastructure failures never alter the requested semantics. This separation
 lets the experiment evaluate prompt-based translation without trusting a
 well-formed string as a correct temporal specification.

@@ -260,7 +260,7 @@ plan-rule level; the implemented final rendering targets AgentSpeak(L).
    The precise claim is global optimality only inside the generated certified
    candidate space.
 6. Render the selected modules into the one maintained domain library. State
-   explicitly that AgentSpeak(L) is the implemented realization, not the
+   explicitly that AgentSpeak(L) is the evaluated realization, not the
    definition of the compilation contribution.
 
 Detailed certificate definitions may remain in the main paper when required to
@@ -273,8 +273,8 @@ technical-content limit.
 This section covers only query-specific control over the selected domain
 library.
 
-1. Parse validated lifted LTLf JSON with the real `ltlf2dfa` and MONA
-   toolchain. Do not use the removed ordered-sequence fast path.
+1. Construct the deterministic automaton for validated lifted LTLf JSON with
+   `ltlf2dfa` and MONA. Do not use an ordered-sequence approximation.
 2. Give every DFA edge that strictly reduces graph distance to acceptance one
    transition controller guarded by the current query-local monitor state.
 3. Treat a conjunction on one edge as one achievement block whose literals
@@ -335,7 +335,8 @@ The main paper should contain:
    initially satisfied or established by their certified repair plans, selected
    modules terminate, and their certified completion effects preserve earlier
    positive and negative obligations, primitive-step monitor advancement leaves
-   the source state only through a real DFA edge whose complete cube holds.
+   the source state only through an edge of the constructed DFA whose complete
+   cube holds.
 4. **Balanced-tree structure:** for `n` signed literals and `e` certified repair
    plans, the generated query-local tree has `2n+e+2` plans, maximum trigger
    fan-out two, logarithmic nesting depth, linear work per pass, and the same
@@ -380,26 +381,27 @@ descriptive paragraphs rather than numbered or combined RQ labels:
 The registered atomic comparison is cumulative and paired on one exact
 normalized evidence hash:
 
-1. **Evidence Adapter:** schema-check and render provider macros;
-   do not perform PDDL closure, internal-module synthesis, or optimization.
+1. **Evidence Only:** validate provider macros against the PDDL schemas and
+   retain them without PDDL closure, internal-module synthesis, or optimization.
 2. **Action Closure:** add PDDL producer closure without decomposed
    subgoal candidates.
 3. **Maximal Certified:** add progress-, preparation-, and resource-certified
    decomposed candidates, then maximize the jointly compatible branch set under
    all hard certificates.
-4. **Full Compiler:** minimize branch, context, and body cost over exactly the
+4. **Full GP2PL:** minimize branch, context, and body cost over exactly the
    same candidate universe and hard constraints as Maximal Certified.
 
 The registered temporal comparison holds the DFA, atomic-library hash, query
 binding, and Jason runtime fixed:
 
 For the final combined run, the shared atomic input is not copied from the
-long-running evidence batch. It is the seed-0 Full Compiler output produced by
+long-running evidence batch. It is the seed-0 Full GP2PL output produced by
 the atomic stage of the same clean source revision. The evidence batch supplies
 only the MOOSE model and readable policy. This prevents libraries compiled at
 different repository revisions from entering a paired temporal comparison.
 
-1. **Unprotected DFA:** canonical within-edge serialization, real DFA,
+1. **Unprotected DFA:** canonical within-edge serialization, the same
+   MONA-derived DFA,
    and primitive-step monitor, but no threat ordering or preservation portfolio.
 2. **Certified Flat:** add complete-effect threat ordering and preserving
    portfolios, retaining flat sibling control.
@@ -415,13 +417,13 @@ different repository revisions from entering a paired temporal comparison.
 These four cumulative atomic rows are the complete registered matrix. Do not
 claim additional one-certificate-off experiments: retaining an uncertified
 branch would be unsound, while removing one candidate family changes closure
-feasibility rather than only one downstream mechanism. Use the 13-case
+feasibility rather than isolating a single subsequent mechanism. Use the 13-case
 fail-closed and symbol-invariance matrix to test the individual certificate
 families. Likewise, signed-negative and bounded-numeric cases stay in the full
 temporal benchmark with explicit support and failure statuses; do not invent
-unregistered capability-switch rows. The historical sequence-only wrapper may
-appear only as an evaluation-only weak reference; it must not return as a
-production fast path.
+unregistered capability-switch rows. The historical sequence-only controller
+may appear only as an evaluation-only weak reference; it must not return as an
+operational shortcut.
 
 The benchmark section records all 16 domain families and their pinned splits.
 The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
@@ -455,7 +457,7 @@ share one 1,800-second, 8-GiB deadline. Numeric inputs and identifiers incompati
 with its underscore encoding are explicit unsupported cases. Published numbers
 from different splits or hardware may be cited as prior results but must not be
 inserted into paired experiment tables. Plan4Past is a design precedent for
-holding the downstream planner fixed while comparing temporal compilations; it
+holding the task-level planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
 been proved language-equivalent.
 
@@ -464,7 +466,7 @@ Jason+VAL coverage, branch/context/body costs, ASL bytes, and compile time.
 Producible-predicate coverage has one paired denominator per seed/domain: all
 predicate symbols in positive PDDL action effects. Every method is scored by
 the module triggers it actually emits against that same set. Never let Evidence
-Adapter or another reduced variant redefine the denominator through absent
+Only or another reduced variant redefine the denominator through absent
 closure metadata.
 Temporal metrics are compile/rejection status, Jason success, VAL validity,
 gold-DFA acceptance, action count, PAR-2 runtime, append time, controller size,
@@ -551,6 +553,14 @@ specification, distributional statistics, and checklist explanations. The main
 paper remains self-contained and includes the essential proof ideas required
 to assess the contribution.
 
+Cross-document references in the main paper use explicit textual locations,
+such as `Technical Supplement, Sec. 4.2`; they are not bibliography citations.
+Keep Sec. 1 for definitions and assumptions, Sec. 2 for complete proofs,
+Sec. 4.2 for the frozen prompt, Sec. 4.3 for benchmark provenance, and
+Secs. 5.2--5.3 for parameters and reporting. Do not use a vague `the
+supplement`, an external web link, or a fragile cross-PDF LaTeX reference. The
+main paper must remain self-contained when the supplement is not consulted.
+
 The versioned public evidence is split into:
 
 - `paper_artifacts/temporal_goal_benchmark/v1` for the novel controlled-language
@@ -591,7 +601,8 @@ The main paper targets exactly two figures, one algorithm, and no more than
 four result tables after the registered matrices are complete. The current
 seven-page draft keeps one compact temporal-profile table in the main paper and
 moves the fixed per-domain library table, repeated oracle columns, certificate
-challenges, and complete distributions to the supplement. Registered comparison
+challenges, and complete distributions to Technical Supplement, Sec.~5.3.
+Registered comparison
 tables must replace provisional content rather than accumulate beyond the
 seven-page technical limit. This follows the visual argument used by closely
 related planning papers: MOOSE uses one compact method overview and reserves its
@@ -778,7 +789,7 @@ validated LTLf JSON. Draft caption:
 > **Figure 1: End-to-end certified compilation and validation.** The reusable
 > domain stage compiles singleton-goal evidence and PDDL schemas once into one
 > maintained BDI plan library, realized here in AgentSpeak(L). Each temporal
-> query contributes only query-local controllers derived from real DFA
+> query contributes only query-local controllers derived from MONA-derived DFA
 > transitions. Jason actions are validated independently by VAL and both
 > finite-trace automata; uncertified compilation choices are rejected.
 
@@ -898,7 +909,7 @@ semantic method example, not one measured benchmark trace.
 
 Panel containers:
 
-- `(a)` is `x=1,y=2,w=23,h=96`, heading `Real DFA transition`.
+- `(a)` is `x=1,y=2,w=23,h=96`, heading `MONA-derived DFA transition`.
 - `(b)` is `x=26,y=2,w=21,h=96`, heading `Signed obligations`.
 - `(c)` is `x=49,y=2,w=27,h=96`, heading `Certified repair tree`.
 - `(d)` is `x=78,y=2,w=21,h=96`, heading `Primitive-step monitor`.
@@ -992,7 +1003,7 @@ All helper names in panel (c) omit the common prefix
 > transition.**
 > Conditional module summaries induce a threat order over signed guard
 > obligations. A balanced BDI repair tree, rendered here in AgentSpeak(L),
-> realizes that fixed order with trigger fan-out at most two, while the real DFA
+> realizes that fixed order with trigger fan-out at most two, while the DFA
 > monitor observes every primitive action. Uncertified cyclic threats or
 > negative-literal repairs are rejected rather than serialized heuristically.
 
@@ -1048,13 +1059,13 @@ Panel (a) specification:
 - X-axis is `Jason + VAL coverage (%)`, fixed from 0 to 100 with ticks at
   0, 25, 50, 75, and 100. Draw a gray dashed reference line at 100.
 - Compare only two endpoints under byte-identical per-seed evidence:
-  `Evidence Adapter` and `Full GP2PL`. The Evidence Adapter validates and renders
-  provider macros without PDDL-derived closure; Full GP2PL adds schema closure,
+  `Evidence Only` and `Full GP2PL`. Evidence Only validates provider macros
+  against the PDDL schemas without PDDL-derived closure; Full GP2PL adds closure,
   certificates, and solver-backed selection. This is a compiler contribution
   comparison, not a claim that GP2PL is a faster task planner than MOOSE.
 - For every method and domain, plot all five seed coverages as small translucent
   points and plot the mean plus or minus sample standard deviation as a larger
-  marker with a horizontal capped interval. Evidence Adapter is a gray open
+  marker with a horizontal capped interval. Evidence Only is a gray open
   circle; Full GP2PL is a filled blue diamond. A thin gray segment joins the two
   method means for the same domain, making paired gains or losses visible.
 - Coverage is `100 * valid_trace_count / test_count` from that domain's original
@@ -1065,7 +1076,7 @@ Panel (a) specification:
 Panel (b) specification:
 
 - Every plotted point must represent an executable compiler output. Plot all
-  four paired atomic variants: `Evidence Adapter`, `Action Closure`,
+  four paired atomic variants: `Evidence Only`, `Action Closure`,
   `Maximal Certified`, and `Full GP2PL`. Do not plot the unselected candidate
   pool as though it were an executable baseline.
 - For each variant and seed, the x coordinate is the total number of emitted
@@ -1112,7 +1123,7 @@ Panel (c) specification:
 Draft caption:
 
 > **Figure 2: Paired atomic and temporal evaluation.** Panel (a) compares the
-> Evidence Adapter with Full GP2PL on every held-out domain over five
+> Evidence Only with Full GP2PL on every held-out domain over five
 > independently seeded, single-worker MOOSE evidence runs; points are seeds and
 > larger markers report mean $\pm$ sample standard deviation. Panel (b) places
 > all four executable atomic compiler variants by emitted branches and VAL-valid
@@ -1198,8 +1209,8 @@ symbolic executability, target achievement, and internal closure.
 
 ### Atomic Baseline/Ablation Table
 
-Use short method names (Evidence Adapter, Action Closure, Maximal Certified,
-and Full Compiler) and report paired results for every fixed evidence seed:
+Use short method names (Evidence Only, Action Closure, Maximal Certified, and
+Full GP2PL) and report paired results for every fixed evidence seed:
 
 ```text
 compile/rejection status
@@ -1241,8 +1252,8 @@ costs into the compiler ablation table. Do not spend main-paper space on an
 all-empty external-reference table: keep the registered design in this outline
 and insert the table only after the native runners produce a complete hash-locked
 matrix. If the final four-table budget is already occupied, place the full
-external table in the supplement and report only the paired headline comparison
-in the Evaluation text.
+external table in Technical Supplement, Sec.~5.3, and report only the paired
+headline comparison in the Evaluation text.
 
 Generate all three comparison tables with
 `scripts/generate_aaai_comparison_tables.py`. Its mandatory inputs are the
@@ -1257,7 +1268,7 @@ classical LAMA cases, and the 360 numeric MRP+HJ cases; duplicates and shared
 omissions are invalid. It additionally requires the five Raw MOOSE runs to use
 the exact seed-specific model-batch manifests and canonical hashes of every
 per-domain model/readable-policy pair consumed by the paired compiler runs, one
-clean source commit for every downstream summary, the registered resource
+clean source commit for every derived result summary, the registered resource
 protocol, pinned external binaries, and exactly 13 unique successful challenge
 nodes. Report a failed contract as an infrastructure failure, never as a method
 score.
