@@ -206,6 +206,25 @@ compiler neither recognizes those names nor assumes disjointness.
 \section{DFA-Guided Composition of Temporally Extended Goals}
 \label{sec:temporal-composition}
 
+\paragraph{Validated parametric input.}
+GP2PL does not prescribe a controlled surface grammar for user requests. In the
+evaluated front end, a source utterance is accompanied by the public PDDL symbol
+catalogue, declared typed parameters, and binding constraints. Translation
+produces a structured specification
+$\tau_q=\langle id_q,\varphi_q,A_q,P_q,C_q\rangle$, where $\varphi_q$ is an
+\ltlf{} formula over proposition symbols, $A_q$ maps each symbol to a lifted
+PDDL predicate or integer equality, $P_q$ declares the parameters, and $C_q$
+constrains their bindings. The serialized artifact has exactly eight fields:
+three fixed metadata fields for schema version, sample identity, and temporal
+logic; the formula and atom table; the parameter declarations and constraints;
+and a support-status field. Before automaton construction, the validator rejects
+rather than repairs an artifact unless every formula symbol has exactly one
+atom-table entry, no entry is unused, every symbol belongs to the PDDL catalogue,
+and all arities, types, numeric values, and temporal operators satisfy the
+declared fragment. The controlled utterances in our released benchmark define
+the evaluated input distribution, not a user-facing query syntax. The frozen
+prompt and complete JSON schema appear in the Technical Supplement, Sec.~4.2.
+
 A temporal query is represented by
 $\langle q,g_q,\varphi_q,A_q,B_q\rangle$: a query identifier, top-level goal,
 \ltlf{} formula, atom table, and parameter binding. The

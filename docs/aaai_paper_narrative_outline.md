@@ -271,29 +271,43 @@ technical-content limit.
 ### 5. DFA-Guided Composition of Temporally Extended Goals
 
 This section covers only query-specific control over the selected domain
-library.
+library. Open by defining the semantic input boundary rather than prescribing a
+surface grammar for users. The evaluated front end receives a source utterance,
+the public PDDL symbol catalogue, declared typed parameters, and binding
+constraints; it returns the exact eight-key lifted LTLf artifact. Explain its
+formula, atom-table, parameter, constraint, metadata, and support-status fields
+as one parametric specification. Parameters are externally bound at invocation,
+not quantified or exhaustively grounded. The controlled utterances in the
+released benchmark define the evaluated distribution rather than a required
+user syntax. Keep the frozen prompt and field-by-field schema in the Technical
+Supplement and public artifact.
 
-1. Construct the deterministic automaton for validated lifted LTLf JSON with
+1. Validate the structured artifact fail-closed, meaning rejection rather than
+   silent repair. Require the exact schema; exactly one atom-table entry for
+   every formula symbol and no unused entry; PDDL catalogue membership; valid
+   arities, parameter types, numeric values, and temporal operators. Gold-formula
+   equivalence is an evaluation oracle, not a deployment-time input requirement.
+2. Construct the deterministic automaton for validated lifted LTLf JSON with
    `ltlf2dfa` and MONA. Do not use an ordered-sequence approximation.
-2. Give every DFA edge that strictly reduces graph distance to acceptance one
+3. Give every DFA edge that strictly reduces graph distance to acceptance one
    transition controller guarded by the current query-local monitor state.
-3. Treat a conjunction on one edge as one achievement block whose literals
+4. Treat a conjunction on one edge as one achievement block whose literals
    must hold in the same observable state.
-4. Treat a negative literal such as `not calibrated(C,R)` as a signed context
+5. Treat a negative literal such as `not calibrated(C,R)` as a signed context
    obligation, never as `!not_calibrated(C,R)`. A query-local helper may
    establish it only through a certified positive-sibling branch or single PDDL
    action with exact net `MustDelete`, sibling preservation, and no forbidden
    completion `MayAdd`.
-5. Build a threat graph from certified completion summaries. An edge
+6. Build a threat graph from certified completion summaries. An edge
    `G_j -> G_i` means a module for `G_j` may delete `G_i`, so `G_j` must be
    repaired first.
-6. For a cyclic threat graph, use only a certified preserving portfolio or a
+7. For a cyclic threat graph, use only a certified preserving portfolio or a
    supported ranking proof; otherwise reject. Select the preserving portfolio
    per ordered literal occurrence, because two occurrences of one predicate can
    have different protected prefixes. Share query-local aliases only for
    identical certified portfolios, and explain that alternative plan contexts
    are not simultaneous obligations.
-7. For mixed Boolean/numeric guards, use complete action-only net Boolean
+8. For mixed Boolean/numeric guards, use complete action-only net Boolean
    effects and constant-integer numeric deltas; index helper selection by the
    full literal atom and leave uncertified literals observation-only. Explain
    strict unit progress, exact non-unit predecessor guards, and the complete
@@ -301,15 +315,15 @@ library.
    than claiming arbitrary numeric planning. A whole-guard helper must be
    callable from every positive literal it establishes and must carry the
    certificate's complete anchor arguments.
-8. For an Until source state, extract common waiting-loop literals as source
+9. For an Until source state, extract common waiting-loop literals as source
    invariants. Require primitive-prefix preservation until the single positive
    progress literal is established. Explain lexicographic predicate/numeric
    precondition preparation, repeatable non-unifying numeric steps, exact
    terminal predecessors, and capture-avoiding composition.
-9. Compile the certified order into a balanced binary repair tree. The tree is
+10. Compile the certified order into a balanced binary repair tree. The tree is
    an AgentSpeak indexing structure with trigger fan-out at most two; it does
    not reorder DFA transitions or add planning semantics.
-10. Advance the real deterministic finite automaton after the initial valuation
+11. Advance the real deterministic finite automaton after the initial valuation
    and every successful primitive PDDL action. Explain that the integrated
    runtime monitor gives the declared formula fragment primitive-step trace
    semantics, while action-strategy synthesis remains incomplete. A transition

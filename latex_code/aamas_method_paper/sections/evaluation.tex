@@ -75,9 +75,11 @@ and symbol invariance. Following MOOSE's absolute-time presentation
 A frozen protocol exposes only the public PDDL catalogue, typed parameters, and
 binding constraints; permits $F$, $X$, strong $U$, conjunction, and literal
 negation; and requires exact eight-key JSON (Technical Supplement, Sec.~4.2).
-GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates \TranslationInputCount{}
-deduplicated specifications. Every output satisfies the JSON/PDDL contract and
-exact DFA-language equivalence, yielding \TEGProblemCount{} bound queries.
+The controlled source utterances specify the evaluation distribution rather
+than a required user grammar. GPT-5.5 \cite{OpenAI2026GPT55SystemCard}
+translates \TranslationInputCount{} deduplicated specifications. Every output
+satisfies the JSON/PDDL contract and exact DFA-language equivalence, yielding
+\TEGProblemCount{} bound queries.
 Clingo selects
 \AtomicSelectedBranchCount{} of \AtomicCandidateCount{} certified candidates.
 
