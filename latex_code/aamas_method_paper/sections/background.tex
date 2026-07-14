@@ -4,7 +4,7 @@
 \subsection{Planning Domains and Generalized Evidence}
 
 We use typed STRIPS PDDL plus a bounded-integer resource fragment
-\cite{McDermott1998PDDL,FoxLong2003PDDL21}. A domain is
+\cite{FikesNilsson1971STRIPS,McDermott1998PDDL,FoxLong2003PDDL21}. A domain is
 $D=\langle\mathcal{P},\mathcal{F},\mathcal{A},\mathcal{T}\rangle$, where
 $\mathcal{P}$ and $\mathcal{F}$ contain predicate schemas and integer-valued
 resource functions, $\mathcal{A}$ contains action schemas, and $\mathcal{T}$ is
@@ -19,7 +19,8 @@ The numeric component admits finite integer values, comparisons with constants,
 and constant integer increases or decreases; arbitrary arithmetic and
 continuous change are excluded. A generalized-planning task supplies training
 and test instances that share $D$. MOOSE applies classical goal-regression
-ideas \cite{Fikes1972GeneralizedRobotPlans} to singleton goal conditions and
+ideas \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton
+goal conditions and
 lifts the resulting plans into first-order condition-to-macro rules
 \cite{Chen2026Moose}. We treat these rules as \emph{evidence}: they demonstrate
 ways to achieve observed singleton goals, but need not constitute a closed or

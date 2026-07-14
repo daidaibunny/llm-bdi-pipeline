@@ -3,7 +3,9 @@
 
 \paragraph{Generalized planning.}
 Generalized planning seeks compact policies or programs that solve families of
-planning instances \cite{Srivastava2011DirectedSearch,Chen2026Moose}.
+planning instances
+\cite{Jimenez2019ReviewGeneralizedPlanning,Srivastava2011DirectedSearch,
+Chen2026Moose}.
 Feature approaches learn abstractions or policies from small examples
 \cite{Bonet2018Features,Frances2021LearningGeneralPolicies,
 Bonet2024GeneralPoliciesWidth}. Policy sketches encode serialized subgoal
@@ -12,17 +14,19 @@ structure, with answer-set optimization used to learn compact rules
 decision lists \cite{Yang2022PG3}, and BFGP++ uses terminating programs
 \cite{SegoviaAguas2022BFGPpp}. MOOSE learns lifted condition-to-macro rules by
 singleton-goal regression \cite{Chen2026Moose}. These methods learn reusable
-behavior, whereas BDI work treats closed-library construction and execution as
-a distinct problem \cite{MeneguzziDeSilva2015PlanningBDI}. GP2PL is downstream:
-it compiles singleton-goal evidence with PDDL schema closure.
+behavior. Recent BDI integrations instead invoke a classical planner at run
+time \cite{Xu2024OperationalSemantics} or use generalized planning directly for
+means--ends reasoning \cite{Meneguzzi2025GeneralisedBDIPlanning}. GP2PL is
+downstream: it compiles singleton-goal evidence with PDDL schema closure into a
+persistent plan library.
 
 \paragraph{Modular policies and BDI plan libraries.}
 Policy-reuse languages allow one generalized policy to invoke another with
 parameters \cite{Bonet2024PolicyReuse}, motivating internal calls such as
 \texttt{!clear(Y)}. Procedural BDI languages likewise organize behavior as
 event-triggered plans selected from a context-dependent library
-\cite{MeneguzziDeSilva2015PlanningBDI}; \asl{} formalizes these plans and Jason
-executes an extension
+\cite{MeneguzziDeSilva2015PlanningBDI,DeSilva2020BDIArchitectures}; \asl{}
+formalizes these plans and Jason executes an extension
 \cite{Rao1996AgentSpeak,Bordini2007Jason}. Plan patterns for declarative goals
 recheck intended states after procedural return \cite{Hubner2006DeclarativeGoals};
 plan-failure work separates a failed attempt from continued goal pursuit
@@ -50,9 +54,14 @@ accepted subset, with LAMA fixed downstream.
 Prior systems map natural-language instructions to temporal logic through
 extensible pattern libraries \cite{FuggittiChakraborti2023NL2LTL}, lifted
 language-to-logic translation \cite{Chen2023NL2TL}, or modular grounding in new
-environments \cite{Liu2023Lang2LTL}. GP2PL instead validates typed, externally
-bound parametric \ltlf{} by exact finite-trace language equivalence before
-library compilation.
+environments \cite{Liu2023Lang2LTL}; related planning work extracts ordering and
+blocking constraints into solver specifications \cite{Guo2025CaStL}. Prompt
+programs can constrain structured outputs \cite{BeurerKellner2023Prompting},
+but prompt-based semantic parsers remain sensitive to input perturbations
+\cite{Zhuo2023RobustSemanticParsing}. Our evaluated input front end therefore
+uses a frozen schema- and vocabulary-constrained prompt, then validates typed,
+externally bound parametric \ltlf{} by exact finite-trace language equivalence
+before GP2PL compilation. The prompt is reproduced in the supplement.
 
 \paragraph{Position of this work.}
 Generalized planners target policies or programs, BDI programming assumes a

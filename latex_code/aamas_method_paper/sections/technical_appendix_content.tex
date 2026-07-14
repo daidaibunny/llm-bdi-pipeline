@@ -531,6 +531,168 @@ GP2PL source is released under Apache-2.0. Third-party PDDL files retain their
 upstream terms and are reconstructed by pinned download scripts rather than
 relicensed as original GP2PL data.
 
+\subsection{Frozen Natural-Language Translation Prompt}
+\label{app:translation-prompt}
+
+Natural-language translation is an evaluated input front end, not the policy-
+lifting algorithm. Its only role is to map one controlled-language
+specification to typed, externally bound parametric \ltlf{} JSON. It cannot
+choose PDDL actions, objects, bindings, or domain-library modules. The full
+prompt configuration enables five declared components: a normal-form guide,
+schematic few-shot examples, lifted-variable rules, an operator whitelist, and
+model-correctable retry guidance. The PDDL catalogue and public sample row are
+deterministic substitutions. Hidden profile labels, object bindings, gold
+formulas, and construction witnesses are not model-visible.
+
+The following is the semantically complete paper-facing template. Line wrapping
+is typographic, and angle-bracket fields denote deterministic catalogue or
+sample substitutions. The release retains the exact rendered requests,
+responses, model identifier, prompt-source revision, and validation records.
+
+\begingroup
+\scriptsize
+\begin{verbatim}
+SYSTEM
+You translate one controlled natural-language
+temporal goal into lifted Linear Temporal Logic
+on finite traces (LTLf).
+Planning domain: <domain>
+Your only task is semantic translation. Do not
+plan or execute actions. Do not ground lifted
+parameters or choose problem objects.
+
+PUBLIC PDDL CATALOGUE
+Predicates:
+  <name(argument types), one per line>
+Numeric functions:
+  <name(argument types), one per line>
+Domain constants:
+  <constant : type, one per line>
+Type hierarchy (child <: parent):
+  <child <: parent, one per line>
+
+ATOM TABLE CONTRACT
+- The formula uses only a0, a1, a2, ... .
+- Define each symbol exactly once in atoms, in
+  first-formula-occurrence order. Define no
+  unused atom.
+- Predicate entry keys: symbol, kind,
+  predicate, args.
+- Numeric-equality entry keys: symbol, kind,
+  function, args, value. Value is an explicitly
+  requested integer.
+- Use only listed PDDL symbols, constants,
+  parameter names, and arities.
+
+LIFTED PARAMETER CONTRACT
+- parameter_semantics externally_bound means a
+  parameterized formula schema. Parameters are
+  neither grounded objects nor LTLf quantifiers;
+  an invocation supplies a type-safe assignment.
+- Copy declared_parameters and constraints
+  without changing their meaning. Preserve exact,
+  case-sensitive parameter names.
+- Every non-constant argument is one declared
+  parameter. Do not invent, omit, rename, merge,
+  or ground parameters.
+- Check PDDL argument types and subtypes.
+- Constraints restrict later assignments. Copy
+  them as metadata, not LTLf propositions.
+
+BENCHMARK-V1 OPERATOR CONTRACT
+- Allowed operators are exactly F, X, U, &, !.
+- F is eventuality; X is immediate next state;
+  U is strong until and requires its right side.
+- Parenthesize grouping explicitly.
+- Do not use |, G, R, WX, implication,
+  equivalence, quantifiers, or other operators.
+
+BENCHMARK-V1 TEMPORAL STRUCTURES
+- Same-state conjunction: F(a0 & a1).
+- Positive plus negative: F(a0 & !a1).
+- Ordered two: F(a0 & X(F(a1))).
+- Ordered three:
+  F(a0 & X(F(a1 & X(F(a2))))).
+- Persistence through the first milestone:
+  a0 U a1.
+- "Strictly later" requires X; do not weaken it
+  to F(a0 & F(a1)).
+
+SCHEMATIC EXAMPLES
+- "At some state, both conditions" ->
+  F(a0 & a1).
+- "First, then strictly later second" ->
+  F(a0 & X(F(a1))).
+- "First continues until second" -> a0 U a1.
+The atom table supplies exact current-domain
+PDDL symbols.
+
+OUTPUT CONTRACT
+Return JSON only with exactly these eight keys:
+schema_version, sample_id, temporal_logic,
+ltlf_formula, atoms, declared_parameters,
+constraints, status.
+Use schema_version 1, temporal_logic LTLf, and
+status supported.
+Predicate atom:
+{"symbol":"a0", "kind":"predicate",
+ "predicate":"<listed name>",
+ "args":["<parameter or constant>"]}
+Numeric atom:
+{"symbol":"a0", "kind":"numeric_equality",
+ "function":"<listed name>",
+ "args":["<parameter or constant>"],
+ "value":1}
+Copy sample_id, declared_parameters, and
+constraints from the user message. Choose only
+ltlf_formula and its atoms table. Add no prose,
+markdown, explanations, object names, or keys.
+
+RETRY CONTRACT
+A later user message may supply the previous
+formula and one model-correctable schema, syntax,
+vocabulary, arity, type, parameter, operator,
+atom-table, or semantic error. Correct only that
+translation and return the same eight-key JSON.
+Infrastructure failures are not instructions.
+
+USER
+Translate this public benchmark row. The source
+text is the sole source of temporal structure;
+omitted metadata must not be inferred.
+{
+  "sample_id": "<sample identifier>",
+  "source_text": "<controlled-language goal>",
+  "declared_parameters": <typed parameters>,
+  "constraints": <binding constraints>,
+  "parameter_semantics": "externally_bound"
+}
+Return the required eight-key JSON object now.
+
+RETRY USER MESSAGE, ONLY AFTER A CORRECTABLE ERROR
+The previous translation failed a model-
+correctable validation check:
+{
+  "previous_ltlf": "<previous formula>",
+  "error_type": "<validator category>",
+  "error_detail": "<precise diagnostic>",
+  "hint": "<allowed correction>",
+  "attempt": <positive integer>
+}
+Preserve the source query, parameters, and
+constraints. Return the same eight-key JSON only.
+\end{verbatim}
+\endgroup
+
+Prompt acceptance is not the semantic oracle. The model output first passes
+the exact eight-key schema, atom-table closure, PDDL vocabulary, arity, type,
+parameter, and operator checks. It is then compiled through the real
+\texttt{ltlf2dfa}/MONA path and required to be finite-trace language-equivalent
+to the hidden gold formula. Retries receive only model-correctable diagnostics;
+infrastructure failures never alter the requested semantics. This separation
+lets the experiment evaluate prompt-based translation without trusting a
+well-formed string as a correct temporal specification.
+
 \subsection{PDDL Sources and Splits}
 
 \begin{table*}[t]
@@ -555,7 +717,7 @@ Blocksworld Clear and On &
 Published no-constants training and testing directories &
 Publicly downloadable; no upstream license file detected, so fetched in place \\
 PDDL Instances, revision
-\texttt{cf19edf7} \cite{PotasscoPDDLInstances} &
+\texttt{cf19edf7} \cite{Bacchus2001AIPS00,PotasscoPDDLInstances} &
 Blocksworld Tower &
 First $\lfloor n/4\rfloor$ naturally sorted instances train; remainder test &
 Publicly downloadable; no upstream license file detected, so fetched in place \\

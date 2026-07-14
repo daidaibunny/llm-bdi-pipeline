@@ -222,8 +222,9 @@ compiler is introduced. Organize the section by representation gap:
 3. procedural BDI plan libraries, AgentSpeak declarative goal patterns, plan
    failure, and definite/possible effect summaries for goal interference;
 4. temporally extended BDI goals and LTLf-to-DFA synthesis; and
-5. natural-language-to-temporal-logic systems and the stricter typed,
-   externally bound validation contract used here.
+5. natural-language-to-temporal-logic and planning-constraint translation,
+   structured prompt programming, prompt-based semantic-parser robustness, and
+   the stricter typed, externally bound validation contract used here.
 
 End with the exact novelty boundary: MOOSE goal regression, Clingo solving,
 AgentSpeak semantics, conditional effect summaries for BDI goal interference,
@@ -489,6 +490,18 @@ The final paper must distinguish:
   equivalence, the predicted formula is compiled into the query controller and
   executed once. The resulting trace is checked by both DFAs.
 
+The natural-language front end uses one frozen full prompt configuration. The
+technical supplement must reproduce a semantically complete paper-facing
+template containing the public PDDL catalogue, atom-table contract,
+externally-bound parameter contract, allowed operator fragment, normal forms,
+schematic examples, exact eight-key JSON output, public user payload, and
+model-correctable retry message. State that catalogue/sample placeholders are
+deterministic substitutions and that the artifact retains the exact rendered
+requests and responses. Prompt compliance is not a semantic oracle: exact
+schema/PDDL validation and reachable-product DFA-language equivalence remain
+separate gates. Treat this translation protocol as an evaluated input front
+end, not as the policy-lifting contribution.
+
 The pinned version-1 artifact is not two duplicated execution runs. Gold-DFA
 and predicted-DFA acceptance are separate semantic oracles over the same trace.
 Do not describe this result as an independently executed gold-controller matrix.
@@ -532,10 +545,11 @@ The standalone source
 `latex_code/aamas_method_paper/technical_appendix.tex` is the canonical
 technical appendix. It contains the full formal definitions, assumptions,
 proofs of every proposition, theory-to-code map, novel-data description,
-external-data provenance, final parameter table, development value ranges,
-hardware/software specification, distributional statistics, and checklist
-explanations. The main paper remains self-contained and includes the essential
-proof ideas required to assess the contribution.
+the frozen natural-language-to-LTLf prompt template, external-data provenance,
+final parameter table, development value ranges, hardware/software
+specification, distributional statistics, and checklist explanations. The main
+paper remains self-contained and includes the essential proof ideas required
+to assess the contribution.
 
 The versioned public evidence is split into:
 

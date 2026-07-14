@@ -42,10 +42,12 @@ every domain library and per-domain result.
 \paragraph{Corpus and repetitions.}
 The corpus contains eight classical and four bounded-integer MOOSE domains with
 official nonempty splits \cite{Chen2026Moose,DillonZChenMooseDataset}, plus four
-serialized-width families. Blocksworld Clear and On use
+serialized-width families \cite{LipovetzkyGeffner2012Width}. Blocksworld Clear
+and On use
 published no-constants splits \cite{Frances2021LearningGeneralPolicies,
 BonetLearnerPoliciesRepository}; Tower uses the first quarter of a fixed IPC
-corpus \cite{PotasscoPDDLInstances}, and Depots the first half of the
+corpus \cite{Bacchus2001AIPS00,PotasscoPDDLInstances}, and Depots the first half
+of the
 22-instance D2L corpus \cite{Bonet2018Features,RLeapD2LRepository}. Groups never
 select rules. Following MOOSE \cite{Chen2026Moose}, the atomic study uses every
 training instance, three goal orders, 12 hours, and seeds 0--4. Seeds use one
@@ -79,7 +81,8 @@ curve denominator, so failures lower its endpoint.
 \subsection{End-to-End Temporal Results}
 \label{sec:end-to-end-results}
 
-GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates
+GPT-5.5 \cite{OpenAI2026GPT55SystemCard}, under the frozen prompt reproduced in
+the technical supplement, translates
 \TranslationInputCount{} deduplicated specifications. All outputs pass the
 JSON/PDDL contract and exact DFA-language equivalence; their bindings yield
 \TEGProblemCount{} queries. Overall, Clingo selects
