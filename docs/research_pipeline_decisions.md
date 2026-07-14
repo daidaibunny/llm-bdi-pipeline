@@ -1123,16 +1123,25 @@ query-local AgentSpeak control structure: an internal helper for range `[i,j]`
 calls the two midpoint ranges. A positive leaf checks or achieves `Li`; a
 negative leaf checks `not N` and, when available, calls only its certified
 `MustDelete(N)` helper. The root then calls a separate done helper. The done
-helper re-enters the same transition only while the exact runtime monitor still
-reports its source state. Once the monitor leaves that source state, the helper
-returns and the top-level dispatcher follows the actual DFA state. This matters
+helper runs only after the root has completed one full left-to-right repair pass.
+It re-enters the same transition only while the exact runtime monitor still
+reports its source state; otherwise it returns and the top-level dispatcher
+follows the actual DFA state. Source-state exit does not interrupt an already
+invoked atomic module or short-circuit the remaining tree ranges. This matters
 when one atomic macro contains several primitive actions and crosses several
 DFA edges before returning: requiring the immediately adjacent target state
-would incorrectly replay a transition that has already completed. Guard truth
-is still exact because only the runtime DFA can cause source-state exit; a
-rejecting successor has no accepting shortcut and fails at top-level dispatch.
-Thus balancing changes how Jason dispatches a certified serialization, not
-which serialization or temporal semantics is used.
+would incorrectly replay a transition that has already completed.
+
+The post-exit suffix remains fail-closed. Each remaining leaf either observes a
+signed literal or calls only its preselected certified repair. An applicable
+repair is PDDL-executable and preserves the established signed prefix at module
+return; an unavailable repair fails without inserting a replacement action.
+Every primitive suffix action is consumed by the runtime DFA, so the suffix may
+cross further actual edges, including a rejecting edge, but cannot fabricate a
+transition or report false acceptance. This is trace safety, not a claim that
+the suffix is a complete strategy for the newly reached state. Thus balancing
+changes how Jason dispatches a certified serialization, not which serialization
+or temporal semantics is used.
 
 This replaces the old one-sibling-plan-per-literal representation. For `N`
 positive literals, that representation gave one trigger `N` repair candidates

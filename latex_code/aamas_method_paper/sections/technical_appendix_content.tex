@@ -310,6 +310,21 @@ before $G_i$. A positive repair is inadmissible when a feasible $\mayadd$ effect
 unifies with a protected $N\in P^-$.
 \end{definition}
 
+\begin{definition}[Complete repair pass]
+For a certified order $L_1,\ldots,L_n$, let
+\[
+\begin{aligned}
+R[i,i]&=\mathsf{Leaf}(L_i),\\
+R[i,j]&=R[i,m];R[m+1,j] && (i<j),\\
+m&=\lfloor(i+j)/2\rfloor.
+\end{aligned}
+\]
+A complete repair pass invokes $R[1,n]$ and then the $done$ helper. Each leaf
+observes its signed literal or invokes its optional certified repair call. The
+runtime monitor advances at every primitive action, but $done$ tests whether the
+monitor still equals the source state only after $R[1,n]$ returns.
+\end{definition}
+
 \begin{lemma}[Signed serialization invariant]
 Suppose $L_1,\ldots,L_n$ is a topological order of the completion-threat
 relation, or an order equipped with per-occurrence preserving portfolios. After
@@ -328,23 +343,49 @@ observes absence or uses an exact finite deleter whose complete net effects
 preserve the prefix. Thus the invariant holds by induction.
 \end{proof}
 
+\begin{lemma}[Post-exit suffix safety]
+Suppose the monitor leaves source state $q_s$ during the repair call for
+$L_i$. After that call returns, the remaining suffix of the complete pass can
+commit only PDDL-executable actions from certified repairs, preserves the signed
+serialization prefix at module-return boundaries, and induces only transitions
+of the runtime DFA. An unavailable repair, illegal primitive action, or rejecting
+monitor state cannot be converted into controller success.
+\end{lemma}
+
+\begin{proof}
+Proceed over suffix occurrences $L_{i+1},\ldots,L_n$. A satisfied leaf commits
+no action. An unmet leaf either has no repair and fails closed, or selects an
+applicable certified repair. Atomic branch soundness gives PDDL executability and
+establishment of that occurrence; the signed-serialization invariant excludes
+completion effects that violate the established prefix. This argument depends
+on the branch context and symbolic effects, not on the monitor remaining at
+$q_s$. By the observation-boundary assumption, every committed primitive action
+updates the DFA from its actual current state, and no controller plan can write
+that state. The suffix can therefore traverse further real edges, but no hidden
+or fabricated edge. A rejecting state lacks an accepting top-level plan, so any
+such trace fails rather than being relabelled successful.
+\end{proof}
+
 \begin{proposition}[Supported-transition composition]
 For an accepted objective $B$, assume every required repair has an applicable
 certified branch, every selected call terminates, and the completion portfolios
-satisfy the signed serialization invariant. The controller either remains at
-its source and retries or leaves it through an actual DFA edge whose complete
-guard is true in an observed state.
+satisfy the signed serialization invariant. At the end of a complete pass, the
+controller retries if the monitor reports its source state and otherwise returns
+to top-level dispatch at the current state. Every monitor transition during the
+pass is an actual DFA edge whose complete guard is true in an observed state;
+a rejecting state cannot report success.
 \end{proposition}
 
 \begin{proof}
-Lemma 6 establishes the complete signed objective after one repair pass unless
-the primitive-step monitor has already left the source. After every successful
-primitive action, the monitor evaluates the original complete outgoing cubes,
-not the serialized approximation. If the source remains active, the done helper
-restarts the same objective, accommodating a branch whose completion did not
-establish an observation-only literal. If the source is left, deterministic
-transition evaluation identifies an actual enabled edge. A macro may cross more
-than one edge; top-level dispatch resumes from the observed monitor state. No
+The signed-serialization lemma establishes every repaired prefix, independently
+of whether the primitive-step monitor remains at the source. If it leaves during
+a repair, the post-exit suffix lemma covers the rest of the complete pass. After
+every successful primitive action, the monitor evaluates the original complete
+outgoing cubes, not the serialized approximation. When $R[1,n]$ returns, the
+$done$ helper reads the current state: it restarts the same objective exactly
+when that state is the source and otherwise returns to top-level dispatch. A
+macro and the remaining suffix may cross several edges, but each is an actual
+deterministic transition and a rejecting state has no accepting shortcut. No
 controller statement can manufacture a state transition.
 \end{proof}
 

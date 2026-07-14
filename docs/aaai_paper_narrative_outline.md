@@ -322,14 +322,19 @@ Supplement and public artifact.
    terminal predecessors, and capture-avoiding composition.
 10. Compile the certified order into a balanced binary repair tree. The tree is
    an AgentSpeak indexing structure with trigger fan-out at most two; it does
-   not reorder DFA transitions or add planning semantics.
+   not reorder DFA transitions or add planning semantics. Include a compact
+   construction algorithm defining the signed leaves, midpoint range recursion,
+   transition entry, and two completion alternatives.
 11. Advance the real deterministic finite automaton after the initial valuation
    and every successful primitive PDDL action. Explain that the integrated
    runtime monitor gives the declared formula fragment primitive-step trace
-   semantics, while action-strategy synthesis remains incomplete. A transition
-   helper returns on source-state exit so an atomic macro may cross several DFA
-   edges; the top-level controller always dispatches from the actual monitor
-   state.
+   semantics, while action-strategy synthesis remains incomplete. Source-state
+   exit is tested only by the done helper after one full repair pass; it does not
+   interrupt an atomic call or the remaining tree ranges. Prove that the suffix
+   contains only observations or certified, prefix-preserving repairs and that
+   every primitive suffix action remains visible to the same DFA. It may cross
+   further actual edges, including rejection, but cannot manufacture acceptance.
+   The top-level controller then dispatches from the actual monitor state.
 
 ### 6. Formal Guarantees
 
@@ -348,9 +353,11 @@ The main paper should contain:
 3. **Supported-transition composition soundness:** if signed obligations are
    initially satisfied or established by their certified repair plans, selected
    modules terminate, and their certified completion effects preserve earlier
-   positive and negative obligations, primitive-step monitor advancement leaves
-   the source state only through an edge of the constructed DFA whose complete
-   cube holds.
+   positive and negative obligations, a complete repair pass retries exactly
+   when the monitor still reports its source state. If the source is left during
+   a call, the remaining suffix stays PDDL-executable and prefix-preserving at
+   module returns, while primitive-step monitoring makes every later transition
+   an actual DFA edge; rejection fails rather than becoming false success.
 4. **Balanced-tree structure:** for `n` signed literals and `e` certified repair
    plans, the generated query-local tree has `2n+e+2` plans, maximum trigger
    fan-out two, logarithmic nesting depth, linear work per pass, and the same

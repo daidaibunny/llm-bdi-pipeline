@@ -89,10 +89,12 @@ certificate.
   removed ordered-sequence fast path can no longer bypass DFA construction.
   Every distance-reducing DFA edge produces a query-local `trans` controller.
   Its certified literal order is compiled into a balanced repair tree with
-  maximum trigger fan-out two and logarithmic nesting depth. Completion means
-  the primitive-step monitor left the controller's source state, so an atomic
-  macro that crosses several DFA edges is not replayed against an obsolete
-  intermediate target.
+  maximum trigger fan-out two and logarithmic nesting depth. One full repair
+  pass completes before `done` tests the current monitor state. A post-exit
+  suffix contains only observations or already certified, prefix-preserving
+  repairs; every primitive action remains DFA-observed, so rejection fails
+  closed and a macro that crosses several DFA edges is not replayed against an
+  obsolete intermediate target.
 - Atomic schema closure now runs even when backend evidence contains only a
   numeric goal. Every PDDL positive add-effect predicate is treated as a
   producible fluent, while static predicates remain context-only. This removes

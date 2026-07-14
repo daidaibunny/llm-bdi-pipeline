@@ -1092,14 +1092,20 @@ and semantically valid query can still produce `execution_rejected` or timeout
 when the atomic library and schema certificates provide no applicable progress
 action; that outcome is not an input-translation error.
 
-A transition helper is complete when the runtime monitor leaves that helper's
-source state, not only when it equals the immediately adjacent target state.
-One atomic module may contain several primitive actions, and the monitor can
-therefore cross several deterministic finite automaton edges before the module
-returns. Source-state exit lets the top-level dispatcher continue from the
-actual monitored state and prevents replaying an already completed transition.
-A move to a rejecting state is not accepted by this rule: no accepting belief
-is emitted, and the top-level controller has no success plan for that state.
+A transition helper checks completion after one full balanced-tree repair pass.
+It returns when the runtime monitor then differs from that helper's source state,
+not only when it equals the immediately adjacent target state; otherwise it
+replays the same transition. One atomic module may contain several primitive
+actions, and the monitor can therefore cross several deterministic finite
+automaton edges before the module returns. Source-state exit does not interrupt
+that module or the certified suffix of the current pass. Every suffix leaf is
+either an observation or a previously certified repair that preserves the
+established signed prefix, and every primitive suffix action advances the exact
+runtime monitor. The suffix may therefore reach a rejecting state, but it cannot
+hide that transition or manufacture success: no accepting belief is emitted,
+and the top-level controller has no success plan for that state. After the pass,
+source-state exit lets the top-level dispatcher continue from the actual
+monitored state and prevents replaying an already completed transition.
 
 For a cyclic threat resolved by an enforced atomic-branch portfolio, helper
 selection is scoped to each ordered guard-literal occurrence. Two occurrences

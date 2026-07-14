@@ -22,10 +22,10 @@ Algorithm~\ref{alg:atomic} summarizes the procedure.
 \STATE $C_D\leftarrow\textsc{GenerateSchemaCandidates}(T,D)$
 \STATE $C\leftarrow\textsc{Certify}(C_E\cup C_D,D)$
 \STATE $S\leftarrow\textsc{ClingoSelect}(C,E)$
-\IF{$S$ violates coverage, closure, or a certificate obligation}
+\IF{$S=\bot$ because no set satisfies coverage, closure, and certificates}
   \STATE \textbf{reject}
 \ENDIF
-\STATE \RETURN $\textsc{RenderAgentSpeak}(S)$
+\RETURN $\textsc{RenderAgentSpeak}(S)$
 \end{algorithmic}
 \end{algorithm}
 
@@ -284,7 +284,8 @@ When one action establishes the complete guard, its repair plan is callable from
 every positive literal it establishes and carries the full certified anchor
 tuple. Thus an already-true first literal cannot hide the action from an unmet
 sibling or discard a query binding.
-The certified order is rendered as a balanced repair tree.
+The certified order is rendered as a balanced repair tree by
+Algorithm~\ref{alg:temporal}.
 
 \subsection{Conditional Completion Effects}
 
@@ -347,15 +348,64 @@ variables, preventing textual collisions from imposing unrelated constraints.
 
 \subsection{Balanced Declarative Repair Trees}
 
-Given order $L_1,\ldots,L_n$, positive leaves check or achieve $L_i$, negative
-leaves check absence or call one certified repair plan, and internal nodes execute
-contiguous left/right halves. Completion repeats only while the monitor remains
-at the source; after any macro crosses one or more DFA edges, top-level dispatch
-resumes from the observed state. Rejecting successors fail. For $n=1$, one leaf
-calls the same atomic module and checks source exit. The repeated state check is
-an instance of the declarative goal plan pattern
-\cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure is GP2PL's
-controller realization.
+Let $L=(L_1,\ldots,L_n)$ be the certified signed-literal order and let $\rho_i$
+be the optional certified repair call for occurrence $L_i$. A positive leaf
+observes or achieves its atom; a negative leaf observes absence or invokes its
+exact certified deleter. The tree indexes these occurrences, not DFA states or
+primitive actions.
+
+\begin{algorithm}[htbp]
+\caption{Compile a Certified DFA Progress Controller}
+\label{alg:temporal}
+\begin{algorithmic}[1]
+\REQUIRE DFA source $q_s$, signed objective $B$, selected library $\mathcal L_D$
+\ENSURE Query-local controller $\mathcal Q_{q_s,B}$ or rejection
+\STATE $\Sigma\leftarrow\textsc{CompletionSummaries}(\mathcal L_D)$
+\STATE $(L,\rho)\leftarrow\textsc{CertifySerialization}(B,\Sigma)$
+\IF{$(L,\rho)=\bot$}
+  \STATE \textbf{reject}
+\ENDIF
+\STATE emit entry $t\leftarrow !R[1,n];!done$
+\STATE \textbf{procedure} $\textsc{Build}(i,j)$
+\IF{$i=j$}
+  \STATE emit the satisfied plan for signed literal $L_i$
+  \IF{$\rho_i$ exists}
+    \STATE emit the unmet plan calling $\rho_i$
+  \ENDIF
+\ELSE
+  \STATE $m\leftarrow\lfloor(i+j)/2\rfloor$
+  \STATE emit $R[i,j]\leftarrow !R[i,m];!R[m+1,j]$
+  \STATE $\textsc{Build}(i,m);\ \textsc{Build}(m+1,j)$
+\ENDIF
+\STATE \textbf{end procedure}; $\textsc{Build}(1,n)$
+\STATE emit ordered $done$: return if monitor $\ne q_s$; otherwise call $!t$
+\RETURN $\mathcal Q_{q_s,B}$
+\end{algorithmic}
+\end{algorithm}
+
+A \emph{repair pass} is the complete left-to-right traversal of $R[1,n]$
+followed by $done$. The monitor still advances after every primitive action, but
+the controller tests source-state exit only after the whole pass. It does not
+interrupt an atomic call or short-circuit the remaining ranges.
+
+Suppose the monitor leaves $q_s$ while $\rho_i$ executes. After that call
+returns, every suffix leaf either observes its literal without acting or invokes
+only its already certified $\rho_j$. Applicability is rechecked at invocation;
+an applicable call is PDDL-executable and preserves the established signed
+prefix at module return, while a missing call fails without inserting an
+uncertified action. Every primitive suffix action is observed by the same DFA,
+so it may traverse further actual edges, including a rejecting edge, but cannot
+manufacture a transition or report false acceptance. Only after the suffix
+finishes does $done$ return to top-level dispatch at the current state or replay
+when that state is still $q_s$. This is fail-closed trace safety, not a claim
+that the suffix is a complete strategy for a newly reached state.
+
+For $n=1$, $R[1,1]$ is one leaf followed by the same completion test. Balancing
+does not choose the certified order or reduce primitive action count; it bounds
+trigger fan-out by two and nesting depth logarithmically while retaining linear
+work per pass. The repeated state check is an instance of the declarative goal
+plan pattern \cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure
+is GP2PL's controller realization.
 
 \subsection{Persistent Domain Library}
 
@@ -400,15 +450,21 @@ of candidate generation or optimality over all AgentSpeak programs.
 \textbf{Proposition 3.} Let $B=P^+\land\neg P^-$ be an accepted transition
 objective. If each required signed repair has an applicable certified branch,
 each selected call terminates, and later repairs preserve earlier obligations,
-then the controller either remains in the source state and retries or leaves it
-through an actual DFA edge enabled by the observed valuation.
+then at the end of a complete pass the controller retries exactly when the
+monitor reports the source state; otherwise it returns to dispatch at the
+current state. Every intervening state change is an actual DFA edge enabled by
+the observed valuation, and a rejecting state cannot report success.
 
 \textbf{Proof sketch.} Induct over the certified order: each leaf establishes
 its signed literal; later summaries exclude deleting prior positives or adding
-forbidden atoms. The monitor evaluates full cubes after every action, so source
-exit denotes an edge of the constructed DFA, including when a module traverses
-that edge before returning; otherwise the controller retries.
-\hfill$\square$ This does not imply complete action-strategy synthesis.
+forbidden atoms. If the source is left during a call, the remaining suffix still
+contains only these certified calls and observations, so it preserves the prefix
+at return boundaries. The monitor evaluates full cubes after every action and
+cannot be written by the controller; the suffix can therefore cause only real,
+fully observed DFA transitions. After the full pass, $done$ tests the current
+state and either retries or returns to top-level dispatch.
+\hfill$\square$ This does not imply complete action-strategy synthesis or
+guarantee that a post-exit suffix avoids a rejecting state.
 
 \paragraph{Balanced-tree structure.}
 
