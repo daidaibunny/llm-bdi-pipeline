@@ -1,11 +1,13 @@
 {
   "artifact_kind": "gp2pl_reproducibility_release",
+  "benchmark_compatibility": "release_provenance_replacement_v1",
   "benchmark_file": "paper_artifacts/temporal_goal_benchmark/v1/benchmark.json",
-  "benchmark_sha256": "0ab580ed45e3790bf986ab62b7f4e531ab6833c6182256284cf877b3861cacf8",
+  "benchmark_sha256": "ee94775ba695492d8d31242e6271afe14e5fa00cad29b910159737766d384e13",
   "challenge_case_count": 13,
   "domain_count": 16,
+  "execution_benchmark_sha256": "0ab580ed45e3790bf986ab62b7f4e531ab6833c6182256284cf877b3861cacf8",
   "files": {
-    "README.md": "1d9a8c87319323e19acb19f0b9df1618c00beabd80350fc91f1d85ca4a6cc9f0",
+    "README.md": "946af4b1b35466bb377a400e49becb54ca73d9fcb90daa823fd838ea4a6c617a",
     "atomic_libraries/barman/atomic_library_metadata.json": "3e76ea8fa2e15a3af7005c7ec84cfcd20da4a3cf0414abeb94b4fb9e00457117",
     "atomic_libraries/barman/plan_library.asl": "9a985a6cb2b5e69a4ed830a85446384a01dd100f88484b981207944d1c0480aa",
     "atomic_libraries/barman/plan_library.json": "15c76519ce3c664972ed78feb4de469639985e6da22a68a61475bbeee45c7ba0",
@@ -54,6 +56,7 @@
     "atomic_libraries/transport/atomic_library_metadata.json": "f2eccc8cf823856790d36405c625a04729eefcf2ebf258d66bdc874ed777f450",
     "atomic_libraries/transport/plan_library.asl": "bd97e20326d8b4984c989341b1d358b417843cc2288efbff4af27d4c951153dd",
     "atomic_libraries/transport/plan_library.json": "bf5ea79b7f9d88b0f68b195ee18604f6d18f3c5cb1f1e360c0393201680e59af",
+    "benchmark_compatibility.json": "c8d731f9fc37bd18b1f97830d2863c28c92d8921edda5e20f9e000a56baba96d",
     "certificate_challenge_summary.json": "a6198e7cb46ecc7ca771b230b734c5a0349c485feabd9afd74ec6dc7fe7c239d",
     "execution_distribution.json": "c02ee471c4241678a3beabe872f9c0f59bdfd481960952ea53d18a23161a7b30",
     "temporal_execution_summary.json": "84414aa4078b4124455608164b0acf5406b0c38548b9a4425474480d25d8f044"

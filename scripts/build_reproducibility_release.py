@@ -9,10 +9,19 @@ import json
 from pathlib import Path
 import shutil
 import statistics
+import sys
 from typing import Any, Mapping, Sequence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+	sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.generate_evaluation_tables import (  # noqa: E402
+	certify_benchmark_compatibility,
+)
+
+
 ATOMIC_LIBRARY_FILENAMES = (
 	"plan_library.asl",
 	"plan_library.json",
@@ -33,6 +42,7 @@ def build_reproducibility_release(
 	atomic_library_root: Path,
 	challenge_summary_file: Path,
 	benchmark_file: Path,
+	benchmark_compatibility_file: Path | None = None,
 	output_dir: Path,
 ) -> dict[str, Any]:
 	"""Write a path-portable result bundle without copying transient run logs.
@@ -47,12 +57,30 @@ def build_reproducibility_release(
 	atomic_root = atomic_library_root.expanduser().resolve()
 	challenge_path = challenge_summary_file.expanduser().resolve()
 	benchmark_path = benchmark_file.expanduser().resolve()
+	compatibility_path = (
+		benchmark_compatibility_file.expanduser().resolve()
+		if benchmark_compatibility_file is not None
+		else None
+	)
 	release_root = output_dir.expanduser().resolve()
 	if release_root.exists():
 		raise ValueError(f"Reproducibility release output already exists: {release_root}")
 
 	execution = _read_json(execution_path)
 	challenge = _read_json(challenge_path)
+	benchmark = _read_json(benchmark_path)
+	if execution.get("benchmark_id") != benchmark.get("benchmark_id"):
+		raise ValueError("Execution and release benchmark identifiers differ.")
+	execution_benchmark_sha256 = str(execution.get("benchmark_sha256") or "")
+	if not execution_benchmark_sha256:
+		raise ValueError("Execution summary does not identify its benchmark hash.")
+	current_benchmark_sha256 = _sha256(benchmark_path)
+	benchmark_compatibility = certify_benchmark_compatibility(
+		benchmark=benchmark,
+		current_benchmark_sha256=current_benchmark_sha256,
+		execution_benchmark_sha256=execution_benchmark_sha256,
+		compatibility_file=compatibility_path,
+	)
 	atomic_inputs = dict(execution.get("atomic_library_inputs") or {})
 	if not atomic_inputs:
 		raise ValueError("Execution summary does not identify atomic library inputs.")
@@ -84,12 +112,17 @@ def build_reproducibility_release(
 	portable_challenge = _portable_payload(challenge, project_root=root)
 	_write_json(release_root / "temporal_execution_summary.json", portable_execution)
 	_write_json(release_root / "certificate_challenge_summary.json", portable_challenge)
+	if benchmark_compatibility is not None:
+		if compatibility_path is None:  # pragma: no cover - guarded by certification.
+			raise AssertionError("Certified compatibility artifact path is missing.")
+		shutil.copy2(compatibility_path, release_root / "benchmark_compatibility.json")
 
 	distribution = _execution_distribution(tuple(execution.get("results") or ()))
 	_write_json(release_root / "execution_distribution.json", distribution)
 	(release_root / "README.md").write_text(
 		_release_readme(
 			benchmark_file=_repository_relative_path(benchmark_path, project_root=root),
+			has_benchmark_compatibility=benchmark_compatibility is not None,
 		),
 		encoding="utf-8",
 	)
@@ -103,7 +136,9 @@ def build_reproducibility_release(
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_reproducibility_release",
 		"benchmark_file": _repository_relative_path(benchmark_path, project_root=root),
-		"benchmark_sha256": _sha256(benchmark_path),
+		"benchmark_sha256": current_benchmark_sha256,
+		"execution_benchmark_sha256": execution_benchmark_sha256,
+		"benchmark_compatibility": benchmark_compatibility,
 		"domain_count": len(atomic_inputs),
 		"result_count": len(tuple(execution.get("results") or ())),
 		"challenge_case_count": len(tuple(challenge.get("records") or ())),
@@ -182,17 +217,27 @@ def _distribution(values: Sequence[float | int]) -> dict[str, float | int | None
 	}
 
 
-def _release_readme(*, benchmark_file: str) -> str:
+def _release_readme(
+	*,
+	benchmark_file: str,
+	has_benchmark_compatibility: bool,
+) -> str:
+	compatibility_line = (
+		"- `benchmark_compatibility.json` proves that the execution-time and portable\n"
+		"  benchmarks differ only in named release-provenance metadata.\n"
+		if has_benchmark_compatibility
+		else ""
+	)
 	return f"""# GP2PL Evaluation Release
 
 This directory contains the fixed atomic libraries and compact result records
-used by the manuscript tables. The temporal benchmark is `{benchmark_file}`.
+used by the reported evaluation. The temporal benchmark is `{benchmark_file}`.
 
 - `atomic_libraries/` contains the exact structured and AgentSpeak(L) libraries.
 - `temporal_execution_summary.json` contains one record for every bound query.
 - `certificate_challenge_summary.json` records fail-closed and renaming tests.
 - `execution_distribution.json` records distributional execution statistics.
-- `manifest.json` fixes every included file by SHA-256.
+{compatibility_line}- `manifest.json` fixes every included file by SHA-256.
 
 Transient Jason logs and machine-local paths are intentionally excluded. The
 public reproduction commands regenerate those diagnostics when required.
@@ -221,6 +266,7 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument("--atomic-library-root", type=Path, required=True)
 	parser.add_argument("--challenge-summary", type=Path, required=True)
 	parser.add_argument("--benchmark-file", type=Path, required=True)
+	parser.add_argument("--benchmark-compatibility", type=Path)
 	parser.add_argument("--output-dir", type=Path, required=True)
 	return parser.parse_args()
 
@@ -233,6 +279,7 @@ def main() -> int:
 		atomic_library_root=args.atomic_library_root,
 		challenge_summary_file=args.challenge_summary,
 		benchmark_file=args.benchmark_file,
+		benchmark_compatibility_file=args.benchmark_compatibility,
 		output_dir=args.output_dir,
 	)
 	print(

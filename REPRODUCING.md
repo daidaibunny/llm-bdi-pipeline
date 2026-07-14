@@ -54,23 +54,36 @@ PYTHONDONTWRITEBYTECODE=1 uv run python scripts/verify_public_teg_dataset.py
 
 PYTHONDONTWRITEBYTECODE=1 uv run pytest \
   tests/test_build_reproducibility_release.py \
-  tests/test_generate_aaai_result_tables.py \
+  tests/test_generate_evaluation_tables.py \
   tests/test_certificate_challenge_matrix.py -q
 ```
 
 The TEG verifier checks every count and hash, scans both ordinary files and
 source archives for machine-local paths, and requires dataset-level license and
-citation metadata. The release manifest is also checked by the table generator.
-Regenerate the paper tables with:
+citation metadata. The release manifest is also checked by the conference-neutral
+table generator. Regenerate the reported tables with:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run python \
-  scripts/generate_aaai_result_tables.py \
+  scripts/generate_evaluation_tables.py \
   --execution-summary \
   paper_artifacts/gp2pl_evaluation/v1/temporal_execution_summary.json \
+  --benchmark-compatibility \
+  paper_artifacts/gp2pl_evaluation/v1/benchmark_compatibility.json \
   --atomic-library-root \
-  paper_artifacts/gp2pl_evaluation/v1/atomic_libraries
+  paper_artifacts/gp2pl_evaluation/v1/atomic_libraries \
+  --output-dir artifacts/evaluation_tables
 ```
+
+The output directory contains `evaluation_results.json`, `result_macros.tex`,
+`result_domain_table.tex`, and `result_profile_table.tex`. The generator rejects
+dirty or hash-inconsistent inputs and incomplete benchmark coverage rather than
+silently producing a partial table.
+
+The compatibility certificate is limited to explicitly named fields below the
+benchmark's `provenance` object. It reconstructs the benchmark hash stored by the
+execution record and cannot change domains, formulas, bindings, or expected
+semantics.
 
 ## Registered Experimental Parameters
 

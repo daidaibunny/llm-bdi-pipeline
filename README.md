@@ -92,9 +92,9 @@ policy in `src/domains/<domain>/source.json`.
 The versioned temporal benchmark has a dedicated
 [dataset landing page](paper_artifacts/temporal_goal_benchmark/v1/README.md)
 and a [versioned public release](https://github.com/daidaibunny/gp2pl/releases/tag/teg-benchmark-v1).
-The fixed libraries, compact
-execution records, certificate challenges, distributions, and SHA-256 manifest
-are under `paper_artifacts/gp2pl_evaluation/v1`.
+The fixed libraries, compact execution records, certificate challenges,
+benchmark-provenance compatibility certificate, distributions, and SHA-256
+manifest are under `paper_artifacts/gp2pl_evaluation/v1`.
 
 Verify the complete TEG dataset, including source archives and portability:
 
@@ -107,11 +107,14 @@ materializing the PDDL corpus:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run python \
-  scripts/generate_aaai_result_tables.py \
+  scripts/generate_evaluation_tables.py \
   --execution-summary \
   paper_artifacts/gp2pl_evaluation/v1/temporal_execution_summary.json \
+  --benchmark-compatibility \
+  paper_artifacts/gp2pl_evaluation/v1/benchmark_compatibility.json \
   --atomic-library-root \
-  paper_artifacts/gp2pl_evaluation/v1/atomic_libraries
+  paper_artifacts/gp2pl_evaluation/v1/atomic_libraries \
+  --output-dir artifacts/evaluation_tables
 ```
 
 Run the certificate and symbol-invariance matrix:

@@ -868,19 +868,28 @@ uv run python \
 \end{verbatim}
 \endgroup
 
-The fixed paper tables are regenerated with:
+The fixed evaluation tables are regenerated with the conference-neutral
+generator:
 
 \begingroup
 \scriptsize
 \begin{verbatim}
 RELEASE=paper_artifacts/gp2pl_evaluation/v1
 uv run python \
-  scripts/generate_aaai_result_tables.py \
+  scripts/generate_evaluation_tables.py \
   --execution-summary \
   "$RELEASE/temporal_execution_summary.json" \
-  --atomic-library-root "$RELEASE/atomic_libraries"
+  --benchmark-compatibility \
+  "$RELEASE/benchmark_compatibility.json" \
+  --atomic-library-root "$RELEASE/atomic_libraries" \
+  --output-dir latex_code/aamas_method_paper/sections
 \end{verbatim}
 \endgroup
+
+The compatibility certificate permits only explicitly named fields below the
+benchmark's provenance object. It reconstructs and verifies the exact benchmark
+hash recorded by the execution summary; domain cases, formulas, bindings, and
+expected semantics cannot be changed by this mechanism.
 
 After the registered paired matrix completes, the empirical vector figure is
 regenerated directly from that single matrix rather than from manually copied

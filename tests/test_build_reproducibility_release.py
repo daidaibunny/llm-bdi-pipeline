@@ -4,6 +4,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.build_reproducibility_release import build_reproducibility_release
 
 
@@ -18,12 +20,48 @@ def test_release_copies_atomic_libraries_and_removes_local_absolute_paths(
 	_json_file = _write_json(domain_root / "plan_library.json", {"plans": []})
 	_write_json(domain_root / "atomic_library_metadata.json", {"domain": "demo"})
 	benchmark_file = project_root / "paper_artifacts" / "benchmark.json"
-	_write_json(benchmark_file, {"benchmark_id": "demo-benchmark"})
+	execution_benchmark = {
+		"benchmark_id": "demo-benchmark",
+		"provenance": {"source_delivery_archive": {"sha256": "execution-sha"}},
+	}
+	release_benchmark = {
+		"benchmark_id": "demo-benchmark",
+		"provenance": {
+			"source_delivery_archive": {
+				"normalization": "release-relative",
+				"sha256": "release-sha",
+			},
+		},
+	}
+	_write_json(benchmark_file, release_benchmark)
+	compatibility_file = project_root / "paper_artifacts" / "compatibility.json"
+	_write_json(
+		compatibility_file,
+		{
+			"artifact_kind": "benchmark_provenance_compatibility",
+			"current_benchmark_sha256": _sha256(benchmark_file),
+			"execution_benchmark_sha256": _json_sha256(execution_benchmark),
+			"replacements": [
+				{
+					"current_value": release_benchmark["provenance"][
+						"source_delivery_archive"
+					],
+					"execution_value": execution_benchmark["provenance"][
+						"source_delivery_archive"
+					],
+					"json_pointer": "/provenance/source_delivery_archive",
+				},
+			],
+			"schema_version": 1,
+			"serialization": "json_indent_2_sort_keys_true_newline",
+		},
+	)
 	execution_file = project_root / "artifacts" / "execution" / "summary.json"
 	_write_json(
 		execution_file,
 		{
 			"benchmark_id": "demo-benchmark",
+			"benchmark_sha256": _json_sha256(execution_benchmark),
 			"atomic_batch_root": str(atomic_root.parent),
 			"atomic_library_inputs": {
 				"demo": {
@@ -66,12 +104,23 @@ def test_release_copies_atomic_libraries_and_removes_local_absolute_paths(
 	)
 	output_dir = project_root / "paper_artifacts" / "gp2pl_evaluation" / "v1"
 
+	with pytest.raises(ValueError, match="execution benchmark hash mismatch"):
+		build_reproducibility_release(
+			project_root=project_root,
+			execution_summary_file=execution_file,
+			atomic_library_root=atomic_root,
+			challenge_summary_file=challenge_file,
+			benchmark_file=benchmark_file,
+			output_dir=output_dir,
+		)
+
 	report = build_reproducibility_release(
 		project_root=project_root,
 		execution_summary_file=execution_file,
 		atomic_library_root=atomic_root,
 		challenge_summary_file=challenge_file,
 		benchmark_file=benchmark_file,
+		benchmark_compatibility_file=compatibility_file,
 		output_dir=output_dir,
 	)
 
@@ -91,6 +140,10 @@ def test_release_copies_atomic_libraries_and_removes_local_absolute_paths(
 	assert manifest["files"]["atomic_libraries/demo/plan_library.asl"] == _sha256(
 		output_dir / "atomic_libraries/demo/plan_library.asl",
 	)
+	assert manifest["benchmark_compatibility"] == "release_provenance_replacement_v1"
+	assert manifest["files"]["benchmark_compatibility.json"] == _sha256(
+		output_dir / "benchmark_compatibility.json",
+	)
 
 
 def _write_text(path: Path, content: str) -> Path:
@@ -101,6 +154,11 @@ def _write_text(path: Path, content: str) -> Path:
 
 def _write_json(path: Path, payload: object) -> Path:
 	return _write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def _json_sha256(payload: object) -> str:
+	serialized = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode()
+	return hashlib.sha256(serialized).hexdigest()
 
 
 def _sha256(path: Path) -> str:

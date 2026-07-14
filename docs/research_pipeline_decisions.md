@@ -1374,12 +1374,12 @@ fragments. It does not establish action-strategy completeness for arbitrary
 PDDL-times-LTLf products, arbitrary arithmetic planning, or universal
 realizability under every type-compatible parameter assignment.
 
-The paper-facing result generator is
-`scripts/generate_aaai_result_tables.py`. It validates the benchmark and frozen
+The conference-neutral evaluation-table generator is
+`scripts/generate_evaluation_tables.py`. It validates the benchmark and frozen
 prediction hashes, requires a tracked-clean execution revision, requires exact
 coverage of all benchmark sample identifiers, and re-hashes every atomic JSON
 and ASL input before producing `result_macros.tex`, the per-domain table, the
-per-profile table, and `paper_results.json`. For the exact libraries used by
+per-profile table, and `evaluation_results.json`. For the exact libraries used by
 the clean run, it records 1,568 joint certified candidates, 1,527 selected
 branches, and 638.4 KiB of ASL. These are hash-locked structural measurements.
 The earlier atomic generation batch did not record a clean source revision, so
