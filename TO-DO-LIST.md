@@ -66,7 +66,9 @@ certificate.
   LAMA calls share one host-wide lock because the exact nested Apptainer runtime
   uses global loop devices and a shared `/work/out` directory. Scientific
   planner failures remain resumable results, while infrastructure failures are
-  retried by `--resume`.
+  retried by `--resume`. FOND4LTLf normalization removes a declaration-only
+  `:action-costs` flag when no numeric syntax exists, so Boolean Barman cases are
+  not misclassified as numeric PDDL.
 
 - Full-test validation freezes every selected domain and problem into a hashed,
   run-local PDDL input snapshot before starting Jason workers. A transiently

@@ -202,6 +202,25 @@ def test_fond4ltlf_requirement_normalization_rejects_numeric_pddl() -> None:
 		)
 
 
+def test_fond4ltlf_normalization_removes_unused_action_cost_declaration() -> None:
+	domain = """
+(define (domain cost-free)
+ (:requirements :action-costs :strips :typing)
+ (:types thing)
+ (:predicates (ready ?x - thing))
+ (:action prepare
+  :parameters (?x - thing)
+  :precondition (and)
+  :effect (ready ?x)))
+""".strip()
+
+	normalized = normalize_fond4ltlf_domain(domain)
+
+	assert ":action-costs" not in normalized
+	assert "(:requirements :strips :typing)" in normalized
+	assert ":effect (ready ?x)" in normalized
+
+
 def test_compilation_actions_are_removed_without_reordering_domain_actions() -> None:
 	compiled_plan = """
 (move box1 room1 room2)

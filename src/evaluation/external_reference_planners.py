@@ -40,6 +40,7 @@ _NUMERIC_REQUIREMENTS = {
 	":fluents",
 	":action-costs",
 }
+_REMOVABLE_DECLARATIVE_REQUIREMENTS = {":action-costs"}
 
 
 class ExternalReferenceMethod(str, Enum):
@@ -204,7 +205,9 @@ def normalize_fond4ltlf_domain(domain_text: str) -> str:
 		token.lower()
 		for token in re.findall(r":[a-z][a-z0-9-]*", match.group("body"), flags=re.IGNORECASE)
 	)
-	if set(requirements) & _NUMERIC_REQUIREMENTS:
+	if set(requirements) & (
+		_NUMERIC_REQUIREMENTS - _REMOVABLE_DECLARATIVE_REQUIREMENTS
+	):
 		raise ValueError("FOND4LTLf 0.0.4 reference does not support numeric PDDL.")
 	unsupported = set(requirements) - (
 		_FOND4LTLF_REQUIREMENTS | _ADL_REQUIREMENTS | _NUMERIC_REQUIREMENTS
@@ -216,7 +219,7 @@ def normalize_fond4ltlf_domain(domain_text: str) -> str:
 		)
 	output_requirements: list[str] = []
 	for requirement in requirements:
-		if requirement in _ADL_REQUIREMENTS:
+		if requirement in _ADL_REQUIREMENTS | _REMOVABLE_DECLARATIVE_REQUIREMENTS:
 			continue
 		if requirement not in output_requirements:
 			output_requirements.append(requirement)

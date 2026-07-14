@@ -246,7 +246,9 @@ FOND4LTLf v0.0.4 is an explicit partial reference: it rejects numeric PDDL and
 numeric atoms, and its underscore atom encoding is accepted only when predicate
 and object identifiers are unambiguous. A semantics-preserving requirements
 normalization maps declarations such as `:negative-preconditions` to `:adl` for
-the tool parser without changing action formulas. Unsupported inputs are counted
+the tool parser and removes an unused `:action-costs` declaration when the domain
+contains no functions or numeric effects, without changing action formulas.
+Unsupported inputs are counted
 as outside tool applicability, not planner failures. FOND4LTLf compilation and
 LAMA search share one 1,800-second, 8-GiB per-query budget. The setup contract in
 `scripts/setup_external_planning_references.sh` pins ENHSP revision
