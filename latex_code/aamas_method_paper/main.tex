@@ -131,17 +131,17 @@ on signed DFA guards and conditional module summaries.
 \fbox{\parbox[c][2.75in][c]{0.96\textwidth}{\centering
 Figure 2 artwork placeholder\\[8pt]
 (a) Evidence and producible targets\qquad
-(b) Certified candidate selection\qquad
+(b) Certification and set selection\qquad
 (c) Certified atomic module core}}
 }
 \caption{Certified lifting from singleton-goal evidence to a recursive atomic
 module core $\mathcal M_D$. Left: normalized evidence for \texttt{on(X,Y)}, the
 relevant slice of the domain-wide producible target universe, and producer
-schemas generate evidence-backed and schema-derived candidates. Middle:
-candidates pass binding, executability, achievement, internal-call closure,
-progress, and resource-restoration certificates before joint Clingo selection
-of a lexicographically optimal evidence-covering subset. Right:
-branch provenance
+schemas generate evidence-backed and schema-derived candidates. Middle: each
+candidate is checked for binding, executability, achievement, and any triggered
+progress or resource-restoration obligations. Joint Clingo selection then
+chooses a lexicographically optimal set satisfying evidence coverage and
+internal-call closure. Right: branch provenance
 is preserved in the \asl{} realization of $\mathcal M_D$, containing
 already-satisfied and direct-producer cases plus recursive preparation through
 the generated \texttt{clear/1} module. Optimality is relative to the generated

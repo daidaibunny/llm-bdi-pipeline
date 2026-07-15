@@ -762,8 +762,9 @@ inventory.
 
 Use a compact vertical flow with one side input and one final library artifact:
 
-- `Domain model D` and `GP policy evidence E` converge on `(1) Lift + certify
-  once`, producing `Certified atomic module core $\mathcal M_D$`.
+- `Domain model D` and `Singleton-goal policy evidence E` converge on
+  `(1) Construct + certify core once`, producing
+  `Certified atomic module core $\mathcal M_D$`.
 - Draw one solid reuse arrow from `$\mathcal M_D$` to `(2) Compose + append`.
   A side input `Bound temporal query $\langle\varphi_q,B_q\rangle$` enters this
   second operation.
@@ -828,15 +829,23 @@ stacked panels:
   `stack(X,Y)` requires `holding(X), clear(Y)` and adds `on(X,Y)`;
   `unstack(Z,Y)` requires `on(Z,Y), clear(Z), arm_empty` and adds
   `holding(Z), clear(Y)`.
-- Show the `on/2` producer requirements
-  `on/2 -> {holding/1, clear/1}` and separately mark `clear/1` as a member of
-  `prod(D)` because `unstack` adds it. Label this a `relevant slice of T_D(E)`,
-  not a target-specific closure. Do not use an unconnected predicate list.
-- Route three noncrossing provenance connectors into panel (b): normalized
-  evidence to the evidence-backed direct candidate, `stack` to the direct
-  producer candidate, and the `clear/1` dependency to the recursive-preparation
-  candidate. Label the connectors `E`, `S1`, and `S2`; color reinforces these
-  labels but never replaces them.
+- Show the definition
+  `$T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D)$` once, followed
+  by the `relevant slice of $T_D(E)$`: mark `on/2` as evidence-targeted and mark
+  `clear/1` and `holding/1` as positively producible. These membership tags state
+  why each predicate receives candidate modules; they are not reachability edges
+  from `on/2`.
+- Connect `stack(X,Y)` to `{holding/1, clear/1}` with an arrow labelled
+  `producer preconditions`; place the `stack(X,Y)` schema title directly above
+  the arrow. Do not draw
+  `on/2 -> {holding/1, clear/1}`, because that notation resembles a
+  target-specific closure that the method does not compute.
+- Route normalized evidence and the `stack` schema to the same normalized direct
+  candidate `C1`, retaining both provenance tags. Route the producer-precondition
+  relation and the independently producible `clear/1` target to `C2`, labelled
+  `precondition repair via clear/1`. `C0` is the universal already-satisfied
+  branch and needs no evidence connector. Color reinforces the `C0`--`C2` labels
+  but never replaces them.
 
 Panel (b) makes the optimization result visible rather than drawing four cards
 that all appear selected:
@@ -845,18 +854,23 @@ that all appear selected:
   producer`, `C2 recursive prepare clear(Y)`, and `C3 longer feasible macro`.
   Attach source tags such as `evidence`, `schema`, or `recursive preparation`
   to each row. Do not use `closure` as a candidate provenance tag.
-- Use one shared certificate header or compact matrix for `Bind`, `Execute`,
-  `Achieve`, `Call closure`, `Progress`, and `Resource`; do not repeat six miniature
+- Use one shared branch-certificate header or compact matrix for `Bind`,
+  `Execute`, `Achieve`, `Progress`, and `Resource`; do not repeat miniature
   tables whose labels become unreadable. A check means required and proved, a
   dash means the obligation is not triggered, and rejection is shown explicitly
-  rather than as `n/a`.
+  rather than as `n/a`. Do not put `Call closure` in this per-candidate matrix.
 - At the right edge of each row show the optimization outcome. In the
   illustrative feasible selection, `C0`, `C1`, and `C2` are selected; `C3` is
   feasible but omitted at higher lexicographic cost. If an evidence and schema
   candidate normalize to the same branch, show both provenance tags on `C1`
   instead of drawing duplicate candidates.
 - Send the certificate-passing rows to one compact `Clingo: lexicographic
-  selection` node, then to `selected {C0,C1,C2}`. Place
+  selection` node. Beside that node, show the set-level constraint
+  `internal-call closure: $\operatorname{call}(S)
+  \subseteq_{\mathrm{type}}\operatorname{head}(S)$`; it constrains the selected
+  branch set as a whole and is not a certificate on an isolated row. Emit
+  `selected $S=\{C0,C1,C2\}$`, and identify the output core as
+  `$\mathcal M_D:=S$`. Place
   `optimal only in the generated certified space` immediately below this node.
 - Solid arrows denote candidate generation, selection, and emission. Dashed
   arrows are reserved for an internal subgoal call in panel (c); do not use a
@@ -914,10 +928,11 @@ recursive internal-call closure. Approved caption:
 > Figure 2: Certified lifting from singleton-goal evidence to a recursive
 > atomic module core $\mathcal M_D$. Left: normalized evidence for `on(X,Y)` and
 > the relevant slice of the domain-wide producible target universe, and producer
-> schemas generate evidence-backed and schema-derived candidates. Middle:
-> candidates pass binding, executability, achievement, internal-call closure,
-> progress, and resource-restoration certificates before joint Clingo
-> selection of a lexicographically optimal evidence-covering subset. Right:
+> schemas generate evidence-backed and schema-derived candidates. Middle: each
+> candidate is checked for binding, executability, achievement, and any triggered
+> progress or resource-restoration obligations. Joint Clingo selection then
+> chooses a lexicographically optimal set satisfying evidence coverage and
+> internal-call closure. Right:
 > branch provenance
 > is preserved in the AgentSpeak(L) realization of $\mathcal M_D$, containing
 > already-satisfied and direct-producer cases plus recursive preparation through

@@ -256,6 +256,36 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	assert "$\\mathcal L_D^{[k+1]}=\\mathcal L_D^{[k]}\\cup\\mathcal Q_q$" in caption_text
 
 
+def test_figure_design_separates_target_generation_from_set_level_call_closure() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	outline_source = (
+		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
+	).read_text(encoding="utf-8")
+
+	assert "`Singleton-goal policy evidence E`" in outline_source
+	assert "`(1) Construct + certify core once`" in outline_source
+	assert "relevant slice of $T_D(E)$" in outline_source
+	assert "`producer preconditions`" in outline_source
+	assert "`precondition repair via clear/1`" in outline_source
+	assert "set-level constraint" in outline_source
+	assert "\\operatorname{call}(S)" in outline_source
+	assert "subseteq_{\\mathrm{type}}" in outline_source
+
+	figure_two_caption = re.search(
+		r"\\caption\{Certified lifting(.*?)\}\s*"
+		r"\\label\{fig:policy-lifting-example\}",
+		main_source,
+		re.DOTALL,
+	)
+	assert figure_two_caption is not None
+	caption_text = " ".join(figure_two_caption.group(1).split())
+	assert "each candidate is checked" in caption_text
+	assert "set satisfying evidence coverage and internal-call closure" in caption_text
+	assert "candidates pass binding, executability, achievement, internal-call closure" not in (
+		caption_text
+	)
+
+
 def test_main_paper_keeps_serialization_details_in_the_supplement() -> None:
 	main_paper_sources = (
 		LATEX_ROOT / "main.tex",
