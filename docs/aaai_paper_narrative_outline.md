@@ -572,16 +572,16 @@ deduplication. It must also report the primary and expanded registered bounds
 and explain that bounded failure is not an impossibility proof. Keep the frozen
 prompt in Sec. 4.2 and PDDL provenance in Sec. 4.3.
 
-The benchmark section records all 16 domain families and their pinned splits.
-The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
-timeout, worker, and seed configuration. The scientific purpose of the five
-fixed seeds is to estimate variation caused by MOOSE's randomized goal-order
-sampling. One internal MOOSE worker makes training problems consume the seeded
-permutation stream sequentially, removing concurrent access to that stream as a
-within-run confounder. Every seed is compiled and evaluated independently;
-report every result plus the mean and sample standard deviation, never evidence
-union or a best-seed result. Concurrent launch is only an artifact-level
-throughput choice, and contended wall time is not a method result. Cross-seed
+
+The main benchmark section records all 16 domain families, the split
+provenance, and the independent five-seed design. Its scientific purpose is to
+estimate variation caused by MOOSE's randomized goal-order sampling. Exact
+memory limits, timeouts, worker configuration, run identifiers, and source
+hashes belong in the Technical Supplement. Every seed is compiled and evaluated
+independently; report the mean and sample standard deviation in the main paper,
+and preserve every individual result in the supplement. Never union evidence or
+select a best seed. Concurrent launch is only an artifact-level throughput
+choice, and contended wall time is not a method result. Cross-seed
 Jason/VAL runs remain sequential while per-test validation is parallel within
 one seed.
 
@@ -1269,12 +1269,12 @@ Panel (b) specification:
 Draft caption:
 
 > **Figure 3: Five-seed held-out execution.** Panel (a) gives per-domain
-> Jason-plus-VAL coverage for five independently seeded, single-worker MOOSE
+> Jason-plus-VAL coverage for five independently seeded MOOSE
 > evidence runs; points are seeds and diamonds with bars show mean plus or minus
 > sample standard deviation. Panel (b) gives mean cumulative VAL-valid coverage
 > over Jason execution time for three predeclared benchmark families; bands span
 > the seed minimum and maximum. Failures remain in the denominator and the dashed
-> line marks the 1,800-second deadline.
+> line marks the per-instance time limit.
 
 Before delivery, verify the figure totals against the corresponding generated
 LaTeX tables. The figure and table must name the same run IDs and input hashes.
@@ -1490,6 +1490,15 @@ errors, unsupported DFA structure, certificate rejection, Jason failure,
 timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or
 timed-out Jason action prefix is diagnostic evidence, not a successful plan.
 
+Main-paper result prose reports scientific aggregates, cross-seed variation,
+domain-level concentration of failures, causal interpretation, and the claim
+boundary. Do not repeat every seed's raw numerator, timeout/exit status, worker
+count, hash, run identifier, or individual case identifier in the main paper.
+Those audit facts remain in the Technical Supplement. A concrete failure mode
+may remain in the main paper when it explains a method limitation, but express
+it at the level of the missing certificate or hypothesis-class boundary rather
+than as runner bookkeeping.
+
 ### AAAI Figure and Table Style Contract
 
 - Use the official AAAI-27 author kit files `aaai2027.sty` and
@@ -1514,9 +1523,11 @@ timed-out Jason action prefix is diagnostic evidence, not a successful plan.
   on every figure, table, and algorithm float so LaTeX can keep each visual near
   its first substantive discussion without manual page breaks or float-queue
   overrides.
-- A caption must define the population/denominator, aggregation over seeds,
-  timeout, and every abbreviation needed to read the visual independently. The
-  body explains interpretation rather than restating every cell.
+- A caption must define the population/denominator, aggregation over seeds, and
+  every abbreviation needed to read the visual independently. State a time
+  limit only when it is visually encoded or necessary to interpret coverage;
+  exact resource configuration otherwise belongs in the Technical Supplement.
+  The body explains interpretation rather than restating every cell.
 - Use `booktabs`, no vertical rules, no colored table cells, and bold only for a
   genuine best comparable result. Use `--` for not applicable and never overload
   zero. Avoid `\tiny`, `\scriptsize`, and `\footnotesize`; final table text must

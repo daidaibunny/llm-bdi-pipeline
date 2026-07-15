@@ -150,6 +150,7 @@ def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
+	evaluation_text = " ".join(evaluation_source.split())
 	supplement_source = (
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
@@ -162,11 +163,11 @@ def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None
 		"ignores the original achievement goal",
 		"rollouts of at most three actions",
 		"alpha-normalized semantic-signature",
-		"one row for each of the 1,228 test problems",
-		"475 translation calls",
+		"one witness-backed query for each of the 1,228 test problems",
+		"475 distinct translation inputs",
 		"Technical Supplement, Sec.~4.1",
 	):
-		assert required_main_claim in evaluation_source
+		assert required_main_claim in evaluation_text
 
 	for required_supplement_contract in (
 		"\\label{app:teg-dataset}",
@@ -423,6 +424,48 @@ def test_main_paper_keeps_serialization_details_in_the_supplement() -> None:
 		"fixed seed-0 library snapshot",
 	):
 		assert engineering_phrase not in combined_source
+
+
+def test_main_results_report_scientific_aggregates_not_run_bookkeeping() -> None:
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	evaluation_text = " ".join(evaluation_source.split())
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+
+	for engineering_detail in (
+		"The five independently compiled atomic cores solve, for seeds 0--4",
+		"\\AtomicSeedZeroSuccessCount{}",
+		"with no timeout or nonzero exit",
+		"Each seed runs with one internal worker",
+		"pairing established by input fingerprints",
+		"References receive 30 minutes and 8~GB per instance",
+		"\\texttt{p12}",
+		"\\texttt{p20}",
+		"committed trace",
+		"All 13 rejection and",
+		"all 14 labelled and both initial-state cases",
+	):
+		assert engineering_detail not in evaluation_text
+
+	for scientific_result in (
+		"Across five independently compiled atomic cores",
+		"Fourteen of the sixteen domains are complete",
+		"Variation is concentrated in Logistics and Depots",
+		"exact finite-trace language equivalence",
+		"success requires Jason completion",
+	):
+		assert scientific_result in evaluation_text
+
+	for archived_detail in (
+		"There are no timeouts or nonzero exits",
+		"Internal MOOSE workers",
+		"Depots \\texttt{p12} and \\texttt{p20}",
+		"Thirteen registered challenge cases all pass",
+	):
+		assert archived_detail in supplement_source
 
 
 def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:

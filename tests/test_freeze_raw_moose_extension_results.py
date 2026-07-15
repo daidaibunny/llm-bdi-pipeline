@@ -52,7 +52,9 @@ def test_manuscript_consumes_the_frozen_moose_reference_result() -> None:
 
 	assert r"\input{sections/result_moose_reference_macros}" in main
 	assert r"\input{sections/result_moose_reference_table}" in evaluation
-	assert r"\RawMooseExtensionSeedCounts{}" in evaluation
+	assert r"\RawMooseExtensionMeanPercent{}" in evaluation
+	assert r"\RawMooseExtensionSDPercent{}" in evaluation
+	assert r"\RawMooseExtensionSeedCounts{}" not in evaluation
 	assert r"Table~\ref{tab:moose-reference}" in evaluation
 	assert r"raw\_moose\_extension\_" in appendix
 	assert r"five\_seed\_summary.json" in appendix
