@@ -43,6 +43,21 @@ a readable rule may associate the singleton goal $on(X,Y)$ with context
 $holding(X)\land clear(Y)$ and action $stack(X,Y)$. GP2PL does not assume that
 this evidence already implements $clear(Y)$ or covers every reachable context.
 
+\begin{definition}[Producible target universe]
+For domain $D$, let
+$\operatorname{prod}(D)=\{p\mid p$ occurs in a positive add effect of some
+$a\in\mathcal A\}$. If $\operatorname{goalPred}(E)$ is the set of positive
+predicate symbols targeted by admissible evidence, then
+\[
+T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D).
+\]
+$T_D(E)$ is the complete Boolean target universe used for schema-derived atomic
+candidate generation. Predicates with no add or delete effect are static and may
+occur only as contexts. A delete-only dynamic predicate is not a schema-derived
+positive target. Numeric equalities are collected in a separate numeric target
+set and do not remove any member of $\operatorname{prod}(D)$.
+\end{definition}
+
 \subsection{Candidate BDI Modules}
 
 \begin{definition}[Candidate branch]
@@ -53,6 +68,19 @@ integer comparisons, and equality filters, $\beta$ is a finite sequence of
 primitive PDDL actions and internal achievement calls, $\Sigma$ is a
 conditional completion-effect summary, and $\pi_b$ records whether the branch
 came from provider evidence or PDDL schema construction.
+\end{definition}
+
+\begin{definition}[Internal-call closure]
+For a selected branch set $S$, let $\operatorname{head}(S)$ contain its typed
+achievement heads and $\operatorname{call}(S)$ contain every typed internal
+achievement call appearing in a selected body. $S$ is internally closed when
+each element of $\operatorname{call}(S)$ unifies type-compatibly with at least
+one element of $\operatorname{head}(S)$. Equivalently,
+\[
+\operatorname{call}(S)\subseteq_{\mathrm{type}}\operatorname{head}(S).
+\]
+The condition applies to every selected branch and therefore also to calls
+reached transitively from another module.
 \end{definition}
 
 The context is an applicability condition, not a sequence of subgoals. Positive
@@ -71,7 +99,8 @@ by the structure of $b$ is established:
 \item every action and subgoal variable is range restricted and type compatible;
 \item symbolic progression proves each primitive precondition;
 \item successful completion establishes the trigger goal $g$;
-\item every internal call can be closed by a type-compatible selected module;
+\item every internal call has a declared, type-compatible target signature and
+records an internal-call obligation for set-level selection;
 \item every recursion cycle has a non-negative ranking that strictly decreases;
 \item every temporary resource occupation has a finite, target-preserving
 discharge path; and
@@ -108,8 +137,8 @@ contracts. Prefix similarity alone is not coverage.
 For certified space
 $\mathcal C_D^{\checkmark}=\{b\in\mathcal C_E\cup\mathcal C_D\mid
 \mathsf{Cert}_D(b)\}$, a selected set $S\subseteq\mathcal C_D^{\checkmark}$ is
-feasible when it covers every evidence obligation, includes a selected module
-for every internal call, preserves required producer exits, and admits
+feasible when it covers every evidence obligation, is internally closed,
+preserves required producer exits, and admits
 the selected recursion and cross-module dependency ranks.
 \end{definition}
 
@@ -237,7 +266,8 @@ value in $\mathbb N$ and no selected body can restore the protected portion of
 the ranked relation. An infinite descent in $\mathbb N$ is impossible. For
 cross-predicate preparation, every call edge decreases the sealed module rank,
 so a call cycle would imply $r_0>r_1>\cdots>r_0$, a contradiction. Each terminal
-rank has a direct producer, provider macro, or already-satisfied exit by closure.
+rank has a direct producer, provider macro, or already-satisfied exit by the
+producer-exit obligation.
 \end{proof}
 
 \begin{lemma}[Finite target-preserving resource discharge]
@@ -293,7 +323,7 @@ therefore establish it in the concrete return state.
 
 \begin{proposition}[Certified candidate-space optimality]
 If the answer-set optimizer returns $S$, then $S$ satisfies every encoded
-evidence, closure, producer-exit, progress, and resource obligation and is
+evidence, internal-call, producer-exit, progress, and resource obligation and is
 lexicographically optimal among feasible subsets of
 $\mathcal C_D^{\checkmark}$.
 \end{proposition}
@@ -495,7 +525,8 @@ Evidence normalization &
 Provider-name invariance, schema, arity, numeric, and macro tests \\
 Certified candidate language and selection &
 \path{src/domain_level_planning/atomic_module_synthesis.py} &
-Clingo coverage, refinement, closure, ranking, release, and renaming tests \\
+Clingo coverage, refinement, internal-call closure, ranking, release, and
+renaming tests \\
 Conditional completion and threat relation &
 \path{src/domain_level_planning/certified_effects.py} &
 Typed unification, net effects, negative preservation, and portfolio tests \\
@@ -539,7 +570,7 @@ Jason/VAL-valid traces \\
 Proposition 2 &
 Reject uncovered evidence, open internal calls, incompatible producer exits,
 and non-optimal encoded branch subsets &
-Clingo coverage, closure, refinement, and objective tests; exact selected
+Clingo coverage, internal-call closure, refinement, and objective tests; exact selected
 libraries for all 16 domains \\
 Proposition 3 and Lemmas 5--6 &
 Reject cyclic completion threats and forbidden negative completion additions;
@@ -899,7 +930,7 @@ The five-seed submission record is
 \texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
 \texttt{five\_seed\_full\_compiler\_summary.json}. It retains all five source
 summary hashes, the common 1,228-case input-snapshot hash, per-case outcome
-patterns, and the exact compiler/runtime source-closure hash. It also records
+patterns, and the exact compiler/runtime source-file-set hash. It also records
 the SHA-256 of the original five-seed runner aggregate and accepts that
 aggregate only after its protocol, run identifiers, per-seed domain counts,
 coverage values, and evidence-generation outcomes agree with the five child
@@ -921,7 +952,8 @@ The localized variation follows the method boundary. A provider macro is a
 complete lifted action sequence in MOOSE's readable evidence; a Logistics
 example transports one package by truck, airplane, then truck. Seeded
 singleton-goal order changes the states from which these long macros are
-regressed. When one is absent, schema closure cannot always replace it because
+regressed. When one is absent, schema-derived candidate generation cannot always
+replace it because
 \texttt{at} may require \texttt{in} while loading to establish \texttt{in}
 requires \texttt{at}; this is a cyclic producer dependency with no current
 decreasing mode certificate. Depots \texttt{p12} and \texttt{p20} expose a
@@ -935,9 +967,9 @@ admissible substitutes.
 
 The seed-4 runner records \texttt{tracked\_changes=true}; the release does not
 relabel it as clean. All seeds nevertheless use the same sealed PDDL snapshot,
-and the committed method-defining source closure at all three recorded run
+and the committed method-defining source-file set at all three recorded run
 revisions is byte-identical to frozen revision \texttt{5e632fb5}, with SHA-256
-\texttt{cc78013f34d012e3}. The machine record preserves both this closure check
+\texttt{cc78013f34d012e3}. The machine record preserves both this source-set check
 and the seed-4 qualification. Timing is excluded from cross-method speed and
 significance claims because the sequential runs overlapped unrelated machine
 workloads. The main-paper empirical figure reports only the descriptive,
@@ -945,7 +977,7 @@ within-method cumulative distribution of Jason subprocess
 \texttt{run\_seconds}; it excludes queue waiting and VAL time, keeps failures
 in the denominator, and is not evidence of superiority over another planner.
 
-Atomic measures are producible-predicate trigger coverage, module closure,
+Atomic measures are producible-predicate trigger coverage, internal-call closure,
 held-out Jason plus original-goal VAL success, selected branches, context and
 body cost, library bytes, and compilation time. Temporal success requires all
 of: controller acceptance, Jason completion, neutral-goal VAL acceptance,

@@ -17,12 +17,12 @@ Algorithm~\ref{alg:atomic} summarizes the procedure.
 \REQUIRE PDDL domain $D$, training split $\mathcal{I}$, provider output $A$
 \ENSURE Certified atomic module core $\mathcal M_D$ or a rejection diagnostic
 \STATE $E\leftarrow\textsc{NormalizeEvidence}(A,D,\mathcal{I})$
-\STATE $T\leftarrow\textsc{ProducibleClosure}(E,D)$
+\STATE $T\leftarrow\textsc{ProducibleTargets}(E,D)$
 \STATE $C_E\leftarrow\textsc{ValidateEvidenceMacros}(E,D)$
 \STATE $C_D\leftarrow\textsc{GenerateSchemaCandidates}(T,D)$
 \STATE $C\leftarrow\textsc{Certify}(C_E\cup C_D,D)$
 \STATE $S\leftarrow\textsc{ClingoSelect}(C,E)$
-\IF{$S=\bot$ because no set satisfies coverage, closure, and certificates}
+\IF{$S=\bot$ because no set satisfies coverage, internal-call closure, and certificates}
   \STATE \textbf{reject}
 \ENDIF
 \RETURN $\mathcal M_D\leftarrow S$
@@ -87,12 +87,26 @@ those policies provide no action contract for achieving a negated literal.
 
 \subsection{Schema-Derived Candidate Space}
 
-Predicates are classified from effects: a static predicate appears in no add or
-delete effect and remains context-only; every positive add-effect predicate is
-a producible fluent and enters closure even if MOOSE never observed it as a
-goal. Numeric-only evidence does not suppress this predicate closure.
+Let $\operatorname{goalPred}(E)$ contain the predicate symbols targeted by
+positive predicate evidence, and let
+\[
+\operatorname{prod}(D)=
+\{p\mid \exists a\in\mathcal A,\ \exists \ell\in\operatorname{add}(a):
+\operatorname{pred}(\ell)=p\}.
+\]
+The domain-wide producible target universe is
+\[
+T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D).
+\]
+Thus every predicate with a positive producer receives candidate atomic modules
+even when the evidence provider never observed it as a goal. A static predicate
+appears in no add or delete effect and remains context-only. A dynamic predicate
+with no positive producer is not invented as a positive achievement target
+unless admissible evidence explicitly supplies its contract. Supported numeric
+equalities form a separate numeric target set; numeric-only evidence does not
+suppress $\operatorname{prod}(D)$.
 
-For each target $p(\bar X)$, candidate generation searches the finite language
+For each $p\in T_D(E)$, candidate generation searches the finite language
 summarized in Table~\ref{tab:compiler-obligations}. A \emph{producer} is an
 action whose add effects contain $p$. Backward STRIPS regression
 \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression,Chen2026Moose}
@@ -147,19 +161,28 @@ decreasing natural-number dependency ranks & mutually recursive preparation
 without a progress proof \\
 \bottomrule
 \end{tabular}
-\caption{Certified candidate language for atomic BDI modules. Every
-selected branch additionally satisfies typed binding, symbolic PDDL
-executability, target achievement on return, and internal-module closure.}
+\caption{Certified candidate language for atomic BDI modules. Every selected
+branch additionally satisfies typed binding, symbolic PDDL executability, and
+target achievement on return; the selected set satisfies internal-call closure.}
 \label{tab:compiler-obligations}
 \end{table*}
 
-\paragraph{Binding, execution, and closure.}
+\paragraph{Binding, execution, and internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
 certified static sort membership; negative contexts and comparisons only
 filter. Symbolic progression proves each precondition and final trigger
-achievement, recording $\mustadd$, $\mayadd$, and $\maydelete$. Every selected
-call $!q(\bar Y)$ must have a type-compatible selected module; closure is a
-solver obligation.
+achievement, recording $\mustadd$, $\mayadd$, and $\maydelete$. For a selected
+branch set $S$, let $\operatorname{head}(S)$ be its typed achievement heads and
+$\operatorname{call}(S)$ its typed internal achievement calls. Internal-call
+closure requires
+\[
+\operatorname{call}(S)\subseteq_{\mathrm{type}}\operatorname{head}(S),
+\]
+meaning that every selected call $!q(\bar Y)$ unifies type-compatibly with at
+least one selected module head. Because the condition is imposed on every
+selected branch, it also closes calls made transitively by those modules. This
+set-level property is a Clingo obligation; it is distinct from constructing
+$T_D(E)$.
 
 \paragraph{Recursive progress.}
 A same-predicate recursive branch requires a non-negative relation count or
@@ -208,7 +231,7 @@ the same $\mustadd$, no additional $\maydelete$, and equivalent numeric and
 resource contracts. Syntactic body-prefix similarity is not treated as semantic
 equivalence.
 
-The solver enforces evidence coverage, internal closure, producer availability,
+The solver enforces evidence coverage, internal-call closure, producer availability,
 acyclic ranked cross-predicate preparation, and compatibility of relation
 effects with recursive capabilities. Among feasible sets $S$, it uses the
 lexicographic objective
@@ -220,7 +243,7 @@ $R_{prep}$ counts compatible acyclic precondition-discharge capabilities, $C$
 is the number of context literals, and $B$ is the number of body steps. This is
 global optimality only inside the generated and certified candidate space.
 If $\mathcal{C}^{\checkmark}_D$ denotes candidates whose certificates hold and
-$\Omega_E$ the evidence and closure obligations, the construction is
+$\Omega_E$ the evidence and internal-call obligations, the construction is
 equivalently
 \[
 \operatorname*{lexmin}_{S\subseteq\mathcal{C}^{\checkmark}_D}
@@ -312,7 +335,7 @@ their protected prefixes differ, while identical branch sets may share one.
 Contexts remain alternative applicability cases, not simultaneous obligations.
 A recursive $!p;!g$ branch also requires a complete preserving summary for $p$
 and rewrites $!g$ to the alias. Certificates record source branches by literal
-index and claim recursive closure only when one was selected. A functional,
+index and claim recursive alias coverage only when one was selected. A functional,
 acyclic binary request graph may follow its certified progress orientation,
 assuming reachable acyclicity, but every branch must still preserve earlier
 achievements; otherwise compilation rejects.
@@ -453,7 +476,7 @@ reachable-state coverage.
 \paragraph{Candidate-space optimality.}
 
 \textbf{Proposition 2.} If Clingo returns $S$, every encoded evidence and
-closure obligation is satisfied, and $S$ is lexicographically optimal within
+internal-call obligation is satisfied, and $S$ is lexicographically optimal within
 the generated certified candidate space.
 
 This follows from answer-set constraints and priorities, not from completeness

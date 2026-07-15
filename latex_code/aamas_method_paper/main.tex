@@ -83,8 +83,9 @@ recursion, and evidence coverage.
 
 Singleton-goal evidence for \texttt{on(X,Y)} may authorize
 \texttt{stack(X,Y)} under \texttt{holding(X)} and \texttt{clear(Y)} while
-omitting \texttt{clear} as a target \cite{Chen2026Moose}. GP2PL derives an
-internal \texttt{clear} module from action-schema closure and accepts recursive
+omitting \texttt{clear} as a target \cite{Chen2026Moose}. GP2PL includes every
+positively producible predicate in a domain-wide target universe, generates an
+internal \texttt{clear} module from its producer schemas, and accepts recursive
 use only with a decreasing relational ranking.
 
 \begin{figure}[htbp]
@@ -129,16 +130,17 @@ on signed DFA guards and conditional module summaries.
 }{%
 \fbox{\parbox[c][2.75in][c]{0.96\textwidth}{\centering
 Figure 2 artwork placeholder\\[8pt]
-(a) Evidence and schema closure\qquad
+(a) Evidence and producible targets\qquad
 (b) Certified candidate selection\qquad
 (c) Certified atomic module core}}
 }
 \caption{Certified lifting from singleton-goal evidence to a recursive atomic
-module core $\mathcal M_D$. Left: normalized evidence for \texttt{on(X,Y)} and
-target-relevant PDDL schema closure generate evidence-backed and schema-derived
-candidates. Middle: candidates pass binding, executability, achievement,
-closure, progress, and resource-restoration certificates before joint Clingo
-selection of a lexicographically optimal evidence-covering subset. Right:
+module core $\mathcal M_D$. Left: normalized evidence for \texttt{on(X,Y)}, the
+relevant slice of the domain-wide producible target universe, and producer
+schemas generate evidence-backed and schema-derived candidates. Middle:
+candidates pass binding, executability, achievement, internal-call closure,
+progress, and resource-restoration certificates before joint Clingo selection
+of a lexicographically optimal evidence-covering subset. Right:
 branch provenance
 is preserved in the \asl{} realization of $\mathcal M_D$, containing
 already-satisfied and direct-producer cases plus recursive preparation through
@@ -148,13 +150,14 @@ certified candidate space.}
 \end{figure*}
 
 Figure~\ref{fig:policy-lifting-example} follows one atomic target through
-evidence normalization, schema closure, certificate checking, feasible-library
-selection, and construction of the certified atomic module core.
+evidence normalization, producible-target expansion, schema candidate
+generation, certificate checking, feasible-library selection, and construction
+of the certified atomic module core.
 
 GP2PL contributes (i) a finite candidate language with lexicographically
 optimal evidence-to-core selection inside that language; (ii) symbol-invariant
 certificates for binding, execution,
-achievement, recursion, closure, and resource restoration; and (iii)
+achievement, recursion, internal-call closure, and resource restoration; and (iii)
 preservation-safe \ltlf-to-DFA guard composition under primitive-step monitoring.
 Uncertified modules and transitions are rejected. Across
 \BenchmarkDomainCount{} domains, independent atomic cores average

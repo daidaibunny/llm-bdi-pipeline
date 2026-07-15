@@ -79,9 +79,9 @@ and Evaluation case study.
 
 The evidence-side example begins with a readable MOOSE singleton-goal rule for
 `on(X,Y)`, such as a regressed condition that permits `stack(X,Y)`. The compiler
-may derive internal producible modules from the PDDL schema closure even when
-MOOSE did not observe them as training goals. A representative recursive result
-is:
+generates modules for the domain-wide producible target universe even when MOOSE
+did not observe those predicates as training goals. A representative recursive
+result is:
 
 ```asl
 +!on(X,Y) : holding(X) & clear(Y) <-
@@ -159,7 +159,7 @@ The abstract follows a five-part structure:
 1. **Problem:** generalized planners return reusable policies, while BDI agents
    require executable and maintainable plan libraries.
 2. **Gap:** direct policy-to-BDI-plan translation does not establish binding,
-   closure, recursive progress, resource restoration, or safe temporal
+   internal-call closure, recursive progress, resource restoration, or safe temporal
    composition.
 3. **Method:** jointly certify and select MOOSE evidence macros and PDDL-derived
    atomic modules, realize the selected BDI library in AgentSpeak(L), and compile
@@ -197,7 +197,7 @@ Define only concepts used by the algorithms:
 - a typed STRIPS/PDDL Boolean core, its bounded-integer resource extension, and
   their state-transition semantics;
 - a generalized-planning task and readable MOOSE evidence;
-- a trigger--context--body BDI plan rule, a lifted module, and library closure;
+- a trigger--context--body BDI plan rule, a lifted module, and internal-call closure;
 - AgentSpeak(L) as the concrete rendering used by the implementation and Jason
   as its evaluated interpreter, without claiming portability to unevaluated BDI
   languages;
@@ -245,8 +245,12 @@ plan-rule level; the implemented final rendering targets AgentSpeak(L).
 
 1. Normalize provider output into a provider-neutral singleton-goal evidence
    program. Do not expose an internal class name in the main narrative.
-2. Compute producible-fluent closure from PDDL add effects and positive
-   preconditions. Static predicates remain contexts.
+2. Define the domain-wide producible target universe
+   `T_D(E) = goalPred(E) union prod(D)`, where `prod(D)` contains every predicate
+   appearing in a positive PDDL add effect. Static predicates remain contexts;
+   delete-only dynamic predicates are not invented as positive targets. Keep
+   this target expansion distinct from internal-call closure of the selected
+   branch set.
 3. Generate the finite schema-derived candidate language: direct producers;
    backward STRIPS regression over acyclic producer dependencies; and finite
    causal resource-mode discharge. Regression unifies producer preconditions
@@ -257,7 +261,7 @@ plan-rule level; the implemented final rendering targets AgentSpeak(L).
    are never truncated. Cyclic dependencies require provider evidence or a
    separately certified recursive module; this is not an instance-level planner.
 4. Summarize the implemented certificates in one table: binding, symbolic
-   executability, achievement, closure, relation-ranked recursive progress,
+   executability, achievement, internal-call closure, relation-ranked recursive progress,
    finite resource-mode discharge, and Clingo-selected acyclic cross-predicate
    preparation with strictly decreasing dependency ranks.
 5. Explain the joint Clingo optimization over evidence and schema candidates.
@@ -353,7 +357,7 @@ The main paper should contain:
    its trigger when it returns, assuming called modules satisfy their own
    contracts.
 2. **Certified candidate-space optimality:** Clingo satisfies every encoded
-   evidence and closure obligation and returns the lexicographic optimum inside
+   evidence and internal-call obligation and returns the lexicographic optimum inside
    the generated candidate space.
 3. **Supported-transition composition soundness:** if signed obligations are
    initially satisfied or established by their certified repair plans, selected
@@ -388,10 +392,10 @@ descriptive paragraphs rather than numbered or combined RQ labels:
 
 - **Evidence-to-library compilation.** Relative to validated direct adaptation
   of the same normalized evidence, measure how schema-certified lifting and
-  internal closure change module coverage and held-out execution.
+  internal-call closure change module coverage and held-out execution.
 - **Contributions of candidate generation and selection.** Separate the effects
-  of action-only schema closure, recursive/resource/preparation candidates, and
-  joint Clingo selection on coverage, size, and runtime.
+  of action-only producible-target expansion, recursive/resource/preparation
+  candidates, and joint Clingo selection on coverage, size, and runtime.
 - **Preservation of temporal guards.** Against a controller with the same real
   DFA, atomic library, monitor, and Jason runtime but no effect-preservation
   reasoning, measure the effect of threat ordering and preserving portfolios on
@@ -408,9 +412,11 @@ The registered atomic comparison is cumulative and paired on one exact
 normalized evidence hash:
 
 1. **Evidence Only:** validate provider macros against the PDDL schemas and
-   retain them without PDDL closure, internal-module synthesis, or optimization.
-2. **Action Closure:** add PDDL producer closure without decomposed
-   subgoal candidates.
+   retain them without producible-target expansion, internal-module synthesis,
+   or optimization.
+2. **Action Closure:** expand over the producible target universe using only
+   action-only producer candidates. The row name is an ablation label, not the
+   internal-call closure property.
 3. **Maximal Certified:** add progress-, preparation-, and resource-certified
    decomposed candidates, then maximize the jointly compatible branch set under
    all hard certificates.
@@ -442,7 +448,7 @@ different repository revisions from entering a paired temporal comparison.
 
 These four cumulative atomic rows are the complete registered matrix. Do not
 claim additional one-certificate-off experiments: retaining an uncertified
-branch would be unsound, while removing one candidate family changes closure
+branch would be unsound, while removing one candidate family changes internal-call
 feasibility rather than isolating a single subsequent mechanism. Use the 13-case
 fail-closed and symbol-invariance matrix to test the individual certificate
 families. Likewise, signed-negative and bounded-numeric cases stay in the full
@@ -492,13 +498,13 @@ holding the task-level planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
 been proved language-equivalent.
 
-Atomic metrics are producible-predicate coverage, module closure, held-out
+Atomic metrics are producible-predicate coverage, internal-call closure, held-out
 Jason+VAL coverage, branch/context/body costs, ASL bytes, and compile time.
 Producible-predicate coverage has one paired denominator per seed/domain: all
 predicate symbols in positive PDDL action effects. Every method is scored by
 the module triggers it actually emits against that same set. Never let Evidence
 Only or another reduced variant redefine the denominator through absent
-closure metadata.
+target-universe metadata.
 Temporal metrics are compile/rejection status, Jason success, VAL validity,
 gold-DFA acceptance, action count, PAR-2 runtime, append time, controller size,
 and maximum trigger fan-out. Plan length is compared only on jointly solved
@@ -709,7 +715,7 @@ Connector semantics are global and must not change between figures:
   success-only form of the solid flow: use it only after certification or
   acceptance has succeeded, never for an unproved candidate or replay path.
 - A 1.75 pt dashed `#0072B2` line with an open arrowhead means a compile-time
-  dependency, subgoal call, effect-summary use, or closure relation. Its label
+  dependency, subgoal call, effect-summary use, or internal-call relation. Its label
   must state which of those meanings applies.
 - A 1.75 pt dotted `#D55E00` line with a filled arrowhead means fail-closed
   rejection. It always ends at a red rejection box.
@@ -795,8 +801,8 @@ the spellings used by the corresponding artifact.
 
 Use three horizontal panels with aligned semantic rows:
 
-- `(a)` occupies 30 percent of the width and is headed `Evidence + schema
-  closure`.
+- `(a)` occupies 30 percent of the width and is headed `Evidence + producible
+  targets`.
 - `(b)` occupies 39 percent and is headed `Certification + selection`.
 - `(c)` occupies 31 percent and is headed
   `Certified atomic module core $\mathcal M_D$`.
@@ -809,8 +815,9 @@ Use three horizontal panels with aligned semantic rows:
   program fragments are code boxes, so the figure remains readable in
   grayscale.
 
-Panel (a) combines evidence and closure rather than presenting them as two
-unrelated stacked panels:
+Panel (a) combines evidence, producer schemas, and the relevant slice of the
+domain-wide producible target universe rather than presenting them as unrelated
+stacked panels:
 
 - At the top, show two small grounded singleton goals, `on(b1,b2)` and
   `on(b3,b1)`, flowing to a normalized provider-evidence card `E_on`:
@@ -821,9 +828,10 @@ unrelated stacked panels:
   `stack(X,Y)` requires `holding(X), clear(Y)` and adds `on(X,Y)`;
   `unstack(Z,Y)` requires `on(Z,Y), clear(Z), arm_empty` and adds
   `holding(Z), clear(Y)`.
-- Summarize closure as the dependency
-  `on/2 -> {holding/1, clear/1}` and mark `clear/1` as producible through
-  `unstack`. Do not use an unconnected predicate list.
+- Show the `on/2` producer requirements
+  `on/2 -> {holding/1, clear/1}` and separately mark `clear/1` as a member of
+  `prod(D)` because `unstack` adds it. Label this a `relevant slice of T_D(E)`,
+  not a target-specific closure. Do not use an unconnected predicate list.
 - Route three noncrossing provenance connectors into panel (b): normalized
   evidence to the evidence-backed direct candidate, `stack` to the direct
   producer candidate, and the `clear/1` dependency to the recursive-preparation
@@ -835,9 +843,10 @@ that all appear selected:
 
 - Align four candidate rows: `C0 already satisfied`, `C1 validated direct
   producer`, `C2 recursive prepare clear(Y)`, and `C3 longer feasible macro`.
-  Attach source tags such as `evidence`, `schema`, or `closure` to each row.
+  Attach source tags such as `evidence`, `schema`, or `recursive preparation`
+  to each row. Do not use `closure` as a candidate provenance tag.
 - Use one shared certificate header or compact matrix for `Bind`, `Execute`,
-  `Achieve`, `Closure`, `Progress`, and `Resource`; do not repeat six miniature
+  `Achieve`, `Call closure`, `Progress`, and `Resource`; do not repeat six miniature
   tables whose labels become unreadable. A check means required and proved, a
   dash means the obligation is not triggered, and rejection is shown explicitly
   rather than as `n/a`.
@@ -888,7 +897,7 @@ the selected atomic module core $\mathcal M_D$ that forms its reusable part:
 
 - Draw one dashed arrow from the `!clear(Y)` occurrence in the `on/2` code box
   to the `clear/1` box, labelled `internal module call`. This arrow is the
-  concrete visualization of internal closure and arbitrary-depth recursive
+  concrete visualization of internal-call closure and arbitrary-depth recursive
   preparation.
 - Draw thin provenance links from `C0`, `C1`, and `C2` in panel (b) to the
   matching branch labels in the `on/2` code box. Keep these links horizontal by
@@ -900,13 +909,14 @@ the selected atomic module core $\mathcal M_D$ that forms its reusable part:
 The code is an illustrative certificate-valid selection from the generated
 candidate language, not a verbatim claim that every seed selects these exact
 branches. It demonstrates branch provenance, a selected direct producer, and
-recursive internal closure. Approved caption:
+recursive internal-call closure. Approved caption:
 
 > Figure 2: Certified lifting from singleton-goal evidence to a recursive
 > atomic module core $\mathcal M_D$. Left: normalized evidence for `on(X,Y)` and
-> target-relevant PDDL schema closure generate evidence-backed and schema-derived
-> candidates. Middle: candidates pass binding, executability, achievement,
-> closure, progress, and resource-restoration certificates before joint Clingo
+> the relevant slice of the domain-wide producible target universe, and producer
+> schemas generate evidence-backed and schema-derived candidates. Middle:
+> candidates pass binding, executability, achievement, internal-call closure,
+> progress, and resource-restoration certificates before joint Clingo
 > selection of a lexicographically optimal evidence-covering subset. Right:
 > branch provenance
 > is preserved in the AgentSpeak(L) realization of $\mathcal M_D$, containing
@@ -1051,7 +1061,7 @@ Data-release gate:
   `paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json`.
   Require the Full GP2PL method, seeds 0--4, independent evidence runs, no
   evidence union, no best-seed selection, all 16 domains, and a compiler/runtime
-  closure that is byte-identical to every formal execution revision.
+  source-file set whose hash is byte-identical to every formal execution revision.
 - Runtime values read only the five child summaries named by that frozen
   artifact. Require each child `summary.json` SHA-256 to match the frozen row,
   the same Full GP2PL settings and Jason worker count, a 1,800-second Jason and
@@ -1060,7 +1070,7 @@ Data-release gate:
   value within the Jason deadline.
 - Recompute all per-domain and pooled counts from the child records and require
   exact agreement with the frozen artifact. If any input, hash, denominator,
-  success oracle, runtime, or compiler-closure gate fails, leave the prior PDF
+  success oracle, runtime, or compiler source-file hash gate fails, leave the prior PDF
   untouched and persist a diagnostic. Do not render a partial panel.
 
 Use a two-panel asymmetric layout. Panel (a) is wide enough for all 16 domain
@@ -1094,7 +1104,7 @@ Panel (a) specification:
 - Coverage is `100 * valid_trace_count / test_count` from that domain's original
   held-out PDDL achievement tests. A valid trace requires Jason completion and
   VAL acceptance. Do not pool domains before plotting and do not substitute
-  producible-predicate closure for executable held-out coverage.
+  producible-predicate target coverage for executable held-out coverage.
 
 Panel (b) specification:
 
@@ -1141,7 +1151,7 @@ The colleague may deliver the editable method deck and planned conceptual
 figures separately. The plotting script delivers the current empirical figure.
 Its `fig2_evaluation.metadata.json` records the frozen five-seed result, the
 verified source-runner aggregate hash, five hash-locked child summaries,
-compiler closure, dimensions, and plotting contract. If the planned conceptual
+compiler source-file hash, dimensions, and plotting contract. If the planned conceptual
 assets are delivered, assemble the
 multi-asset `aaai_figure_manifest.json` only after recording their dimensions,
 data sources, and embedded fonts. Any font substitution is a release blocker.
@@ -1222,7 +1232,8 @@ Candidate family | Additional acceptance obligation | Excluded failure
 Rows cover validated evidence macros, direct producers, acyclic regression,
 relational recursion, resource-mode discharge, and cross-module preparation.
 The caption states the obligations shared by every branch: typed binding,
-symbolic executability, target achievement, and internal closure.
+symbolic executability and target achievement; the selected set additionally
+satisfies internal-call closure.
 
 ### Atomic Baseline/Ablation Table
 
@@ -1232,7 +1243,7 @@ Full GP2PL) and report paired results for every fixed evidence seed:
 ```text
 compile/rejection status
 producible target coverage
-module closure
+internal-call closure
 held-out Jason+VAL coverage
 branch/context/body counts
 ASL bytes
@@ -1436,7 +1447,7 @@ The remaining submission tasks are:
 The five-seed compiler artifact records seed 4's
 `tracked_source_changes=true` flag instead of relabelling the run clean. The
 common sealed input snapshot, exact summary hashes, and byte-identical committed
-method closure are the eligibility evidence. Timing is not reported because the
+method-defining source-file set are the eligibility evidence. Timing is not reported because the
 runs overlapped unrelated workloads; this qualification does not change the
 coverage or independent VAL outcomes.
 

@@ -30,7 +30,8 @@ a macro, whereas `!clear(Y); !on(X,Y)` is a recursive subgoal decomposition.
 
 The **Validated Policy-Lifting Compiler** consumes provider-neutral evidence
 and the PDDL action schemas. It validates action sequences, generates required
-schema-closure candidates, checks binding and progress conditions, selects a
+schema-derived candidates over the producible target universe, checks binding
+and progress conditions, selects a
 compact candidate set, and renders the certified atomic module core.
 MOOSE and the compiler are upstream and downstream components rather than
 alternative planners.
@@ -60,7 +61,7 @@ mathematical roles from storage layout.
 **Clingo** is the Answer Set Programming solver used for constrained branch
 selection. It does not plan in a PDDL state space and does not execute actions.
 The compiler presents candidate branches, evidence-coverage obligations,
-internal-module closure requirements, incompatibility constraints, and a
+internal-call closure requirements, incompatibility constraints, and a
 lexicographic cost objective; Clingo returns an optimal selected subset within
 that certified candidate space.
 
@@ -68,11 +69,26 @@ A **certificate** is a machine-recheckable witness that justifies one compiler
 claim. It must contain enough structured information for an independent checker
 to replay the relevant PDDL schema reasoning; a prose metadata label is not a
 certificate. The current certificate families are binding, schema
-executability, target achievement, evidence coverage, internal-module closure,
+executability, target achievement, evidence coverage, internal-call closure,
 well-founded recursive progress, resource-capacity restoration, and
 target-preserving DFA guard serialization. Optimality is claimed only after all
 hard certificate obligations hold and only within the generated candidate
 space.
+
+The term **producible target universe** has one exact meaning. If
+`goalPred(E)` is the set of predicates targeted by positive evidence and
+`prod(D)` is the set of predicate symbols occurring in positive PDDL add
+effects, then `T_D(E) = goalPred(E) union prod(D)`. Candidate modules are
+generated for these Boolean targets. Static predicates remain context-only;
+delete-only dynamic predicates are not invented as positive targets. Numeric
+equalities use their own target set and do not suppress `prod(D)`.
+
+The term **internal-call closure** is a different, set-level selection property.
+For selected branches `S`, every typed internal call in `call(S)` must unify
+with a selected typed module head in `head(S)`. In shorthand,
+`call(S) subset_type head(S)`. Applying this condition to all selected branches
+also closes transitive calls. Do not use the unqualified phrase `schema closure`
+for both target expansion and this selection obligation.
 
 The **Temporal Query Compiler** is the third production component. It consumes
 a validated lifted LTLf/DFA artifact and derives `Q_q`, whose plans call modules
@@ -161,8 +177,9 @@ The architecture separates four modules.
    PDDL domain schema. A PDDL domain schema is the action-schema file, for
    example a `drive-truck` action with typed parameters, preconditions, add
    effects, and delete effects. The compiler checks that evidence actions replay
-   through those schemas, lifts object names to variables, adds required
-   PDDL-schema closure modules, selects a compact branch set, and renders
+   through those schemas, lifts object names to variables, generates candidates
+   for the producible target universe, enforces internal-call closure, selects a
+   compact branch set, and renders
    the certified atomic module core `M_D`, including plans such as
    `+!at(X,Y)`.
 3. The Temporal Query Compiler consumes validated lifted LTLf/DFA query
@@ -188,9 +205,9 @@ domain, train/test split, and evidence hash.
 
 | Method | Native behavior |
 | --- | --- |
-| Evidence Only | Validate each evidence macro by symbolic PDDL execution and render the surviving lifted macro plans. Do not add schema closure, internal subgoal modules, or branch optimization. |
-| Action Closure | Add every certificate-valid action-only PDDL producer candidate required by producible-fluent closure. Do not add subgoal-decomposed candidates. |
-| Maximal Certified | Generate the full certified candidate universe and use Clingo to retain a largest jointly compatible program under the same closure, ranking, and resource constraints as the full method. This is not an unchecked union of individually certified branches. |
+| Evidence Only | Validate each evidence macro by symbolic PDDL execution and render the surviving lifted macro plans. Do not expand over the producible target universe, add internal subgoal modules, or optimize branches. |
+| Action Closure | Add every certificate-valid action-only PDDL producer candidate for the producible target universe. This historical ablation label means action-only target expansion; it does not mean internal-call closure. |
+| Maximal Certified | Generate the full certified candidate universe and use Clingo to retain a largest jointly compatible program under the same internal-call, ranking, and resource constraints as the full method. This is not an unchecked union of individually certified branches. |
 | Full GP2PL | Minimize branch, context, and body cost over the same candidate universe and hard certificate constraints used by Maximal Certified. |
 
 Evidence Only is deliberately a strong baseline rather than an unchecked text translator.
@@ -506,10 +523,11 @@ monotone numeric effect toward the target, for example
 `craft_wooden_pogo; !pogo_sticks_to_make(0)` after a `decrease` effect on
 `pogo_sticks_to_make`.
 
-Predicate closure does not disappear when backend evidence contains only a
-numeric goal. Every declared predicate occurring in a positive PDDL add effect
-is a producible fluent and enters the same schema candidate generation and
-Clingo selection. Predicates with no add effect remain static context. This
+The producible target universe does not disappear when backend evidence contains
+only a numeric goal. Every declared predicate occurring in a positive PDDL add
+effect is a producible fluent and enters the same schema candidate generation and
+Clingo selection. Predicates with no add or delete effect remain static context;
+delete-only dynamic predicates remain non-producible. This
 ensures, for example, that a numeric resource policy can coexist with lifted
 `+!position(X)` and `+!air_cell(X)` modules derived from their schemas without
 recognizing those names. The compiler metadata already labels each omitted
@@ -549,7 +567,8 @@ goal `on(crate0, pallet0)` can be achieved by a macro ending in
 
 The compiler module is the post-MOOSE, pre-AgentSpeak component. It consumes
 the readable policy as evidence, checks it against the PDDL domain schema, adds
-internal atomic modules required by PDDL precondition/effect closure, places
+internal atomic modules from the producible target universe and schema-derived
+precondition support, places
 both evidence macros and schema-derived branches in one certified candidate
 space, runs one Clingo/ASP selection, and renders the final AgentSpeak(L)
 library. A
@@ -727,7 +746,8 @@ a sequence removes `relation(Z,X)` and may add `relation(Z,B)`: the global count
 does not fall, but the obstruction cone rooted at `X` falls when schema-derived
 guards prove `B != X`. This candidate certificate carries the explicit
 assumption that the relation is acyclic in all reachable states. It is selected
-only if the complete reachable module closure preserves the same anchored cone.
+only if every module reachable through selected internal calls preserves the
+same anchored cone.
 
 Concretely, if one transition requires `supports(a,b)` and `supports(b,c)`, the
 support-depth order builds `supports(b,c)` first and then `supports(a,b)`. The
@@ -864,7 +884,7 @@ and numeric effects introduce no new harm. Predicate-name
 equality and body-prefix similarity are not semantic evidence coverage. In
 particular, the current compiler does not yet prove that a short recursive
 module is equivalent to an arbitrary long MOOSE macro. Clingo also enforces
-internal-module closure, enforces an acyclic cross-predicate preparation graph,
+internal-call closure, enforces an acyclic cross-predicate preparation graph,
 and rejects selected relation producers reachable from a ranking root unless
 their final effects preserve the certified anchored cone.
 
@@ -1282,7 +1302,7 @@ train/test domains are stable.
 
 `8puzzle-1tile` is not in the formal benchmark scope. The current compiler can
 handle validated singleton macro evidence and feature-definable serialized-width
-schema closure, but `8puzzle-1tile` requires graph-search and
+schema-derived candidates, but `8puzzle-1tile` requires graph-search and
 permutation-progress reasoning:
 placing one tile depends on moving the blank through a grid while preserving
 solvability constraints. That structure needs a graph-search controller,

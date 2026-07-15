@@ -5,7 +5,7 @@ The synthesizer uses external generalized-planning artifacts as evidence for
 which atomic predicates matter, then compresses flat primitive macro evidence
 into reusable predicate modules using PDDL action precondition/effect structure.
 
-Paper correspondence: Section 4 defines producible closure, the finite
+Paper correspondence: Section 4 defines the producible target universe, the finite
 schema-derived candidate language, branch certificates, and joint Clingo
 selection. The supplementary appendix states the formal candidate contract and
 proof obligations. This module must remain invariant to domain, predicate, and
@@ -3620,7 +3620,7 @@ def _retain_all_action_only_branches(
 			evidence_obligation_count=len(tuple(evidence_obligations)),
 			coverage_basis=(
 				"all retained branches passed schema-local certification",
-				"action-only scope contains no internal-module closure obligation",
+				"action-only scope contains no internal-call closure obligation",
 			),
 			ranking_incompatibility_count=0,
 			recursive_capability_obligation_count=0,

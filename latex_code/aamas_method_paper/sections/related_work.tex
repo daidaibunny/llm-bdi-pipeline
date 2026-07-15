@@ -18,8 +18,9 @@ behavior. Recent BDI integrations instead invoke a classical planner at run
 time \cite{Xu2024OperationalSemantics} or use generalized planning directly for
 means--ends reasoning \cite{Meneguzzi2025GeneralisedBDIPlanning}. GP2PL instead
 addresses the representation-compilation problem of transforming
-singleton-goal evidence, together with PDDL schema closure, into a query-independent
-atomic module core $\mathcal M_D$ that can be extended by later queries.
+singleton-goal evidence, together with the domain's producible target universe
+and schema-derived candidates, into a query-independent atomic module core
+$\mathcal M_D$ that can be extended by later queries.
 
 \paragraph{Modular policies and BDI plan libraries.}
 Policy-reuse languages allow one generalized policy to invoke another with

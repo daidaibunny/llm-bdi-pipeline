@@ -26,11 +26,13 @@ line marks the 1,800-second deadline.}
 
 \paragraph{Atomic compilation.}
 \emph{Evidence Only} validates provider macros against the PDDL schemas and
-retains them without PDDL-derived closure. \emph{Action Closure} adds action-only
-producers; \emph{Maximal Certified} also retains compatible recursive preparation
-and resource-restoration candidates; and \emph{Full GP2PL} applies the Clingo
-objective to the same space. Their paired comparison measures closure, held-out
-execution, and compact selection of the atomic core.
+retains them without producible-target expansion. \emph{Action Closure}, an
+ablation label rather than the internal-call property, adds action-only producers
+for the producible target universe; \emph{Maximal Certified} also retains
+compatible recursive preparation and resource-restoration candidates; and
+\emph{Full GP2PL} applies the Clingo objective to the same space. Their paired
+comparison measures target coverage, internal-call closure, held-out execution,
+and compact selection of the atomic core.
 
 \paragraph{Temporal composition.}
 \emph{Unprotected DFA} uses the same automaton, library, and primitive-step
@@ -80,7 +82,7 @@ A temporal run succeeds only if Jason completes \cite{Bordini2007Jason}, VAL
 accepts the full primitive trace against a neutral PDDL goal
 \cite{Howey2004VAL}, and independent replay is accepted by both DFAs. Failed
 prefixes are diagnostic; atomic validation uses the original PDDL goal. We
-report closure, held-out success, size, runtime, actions, and trigger fan-out;
+report internal-call closure, held-out success, size, runtime, actions, and trigger fan-out;
 plan length uses jointly solved instances. The challenge suite tests rejection
 and symbol invariance. Figure~\ref{fig:evaluation-summary} follows MOOSE's
 absolute-time presentation \cite{Chen2026Moose}: a case enters a runtime curve
@@ -112,9 +114,9 @@ count comprises repeated outcomes, not independent cases. Figure~
 groups, never a post-hoc domain subset.
 
 Variation is localized: Logistics ranges from 54/90 to 90/90 because seeded
-goal order changes available cross-mode provider macros, while schema closure
-rejects the cyclic \texttt{at}/\texttt{in} dependency without a decreasing
-certificate. Depots obtains 63.64\% $\pm$ 11.13 points; \texttt{p12} and
+goal order changes available cross-mode provider macros, while schema-derived
+candidate generation cannot admit the cyclic \texttt{at}/\texttt{in} dependency
+without a decreasing certificate. Depots obtains 63.64\% $\pm$ 11.13 points; \texttt{p12} and
 \texttt{p20} require a nested support-resource choice beyond the already-bound
 capacity certificate. The Logistics and Depots failures therefore mark the
 boundary of the certified candidate language; every reported success remains a
