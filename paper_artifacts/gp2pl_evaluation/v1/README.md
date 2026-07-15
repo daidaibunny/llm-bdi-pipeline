@@ -17,6 +17,11 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
   cases under each of five independently trained evidence seeds. It records
   117 VAL-valid plans, 619 planner failures, and four timeouts without retaining
   machine-local paths.
+- `external_reference_results.json` freezes the complete 1,228-case
+  LAMA/MRP+HJ matrix and 1,228-case FOND4LTLf-plus-LAMA matrix after exact
+  infrastructure-only repair. Its 2,456 portable records retain input hashes,
+  outcomes, runtimes, repair provenance, and verified cross-machine launcher
+  relocation without commands, logs, or machine-local paths.
 - `certificate_challenge_summary.json` records fail-closed and renaming tests.
 - `execution_distribution.json` records distributional execution statistics.
 - `benchmark_compatibility.json` proves that the execution-time and portable

@@ -1285,6 +1285,30 @@ limits, and VAL outcome. Runtime is not used because the registered coverage
 protocol permits differing worker isolation and forbids cross-hardware timing
 comparison.
 
+The remaining task-level references are frozen in
+\texttt{external\_reference\_results.json} in the same release. The achievement
+matrix contains \ExternalAchievementValidCount{}/\ExternalAchievementCaseCount{}
+validated outcomes: \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} for LAMA
+on classical PDDL and \ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} for
+ENHSP MRP+HJ on numeric PDDL. The direct temporal matrix retains all
+\ExternalDirectTotalCaseCount{} identifiers, of which
+\ExternalDirectSupportedCount{} are supported Boolean inputs and
+\ExternalDirectValidCount{} produce independently validated accepting traces;
+\ExternalDirectUnsupportedCount{} remain explicitly unsupported.
+
+Both primary matrices used 20 case workers. The exact
+\ExternalAchievementRepairCount{} achievement and
+\ExternalDirectRepairCount{} direct-temporal infrastructure failures were
+rerun with one worker and merged only after input hashes, limits, revisions, and
+toolchain identities matched. The local and remote systems have equivalent
+hardware configurations, and queue waiting is excluded from case runtime, so
+these repaired records remain eligible for PAR-2. The generated FOND4LTLf
+Python entry point and MONA libtool launcher embed absolute installation paths:
+the merge verifies each retry-file hash, rewrites only the recorded installation
+prefix, and requires the rewritten bytes to match the primary hash. No planner
+failure, timeout, unsupported input, compiler failure, or validation failure is
+eligible for replacement.
+
 \subsection{Parameters and Development Values}
 
 MOOSE defaults and synthesis budgets follow its published algorithm and

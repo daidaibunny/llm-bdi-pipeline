@@ -1435,9 +1435,10 @@ Keep MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a
 separate external reference table with short columns such as `Method`, `Source`,
 `Scope`, `Coverage`, `Unsupported`, and `PAR-2`. Do not mix their output representations or
 costs into the compiler ablation table. Do not spend main-paper space on an
-all-empty external-reference table: keep the registered design in this outline
-and insert the table only after the native runners produce a complete hash-locked
-matrix. Keep the completed external table in the main Evaluation section while
+all-empty external-reference table. The completed hash-locked matrix now gives
+LAMA 591/868, MRP+HJ 253/360, and FOND4LTLf plus LAMA 298/492 on its supported
+subset, with 736 explicitly unsupported temporal inputs. Keep this completed
+external table in the main Evaluation section while
 the manuscript is still in evidence-completeness mode; page-budget compression
 is a later editorial decision and must not silently remove a comparison row.
 

@@ -1153,6 +1153,7 @@ def _raw_moose_extension_row(
 			"coverage_sample_sd": (
 				statistics.stdev(valid_counts) if len(valid_counts) > 1 else 0.0
 			),
+			"par2_seconds": None,
 		},
 	)
 	return row
@@ -1377,7 +1378,8 @@ def render_external_table(result: Mapping[str, Any]) -> str:
 			"Reported MOOSE coverage is copied from Table~4 of the five-seed extended "
 			"paper~\\cite{Chen2025MooseExtended}; its runtime is not compared across "
 			"hardware. Measured rows use the registered 30-minute, 8-GiB per-task "
-			"budget. Raw MOOSE extension coverage is mean $\\pm$ sample standard "
+			"budget. Raw MOOSE extension runtime is omitted under its registered "
+			"coverage-only protocol; its coverage is mean $\\pm$ sample standard "
 			"deviation over five seeds. Unsupported FOND4LTLf inputs are separated "
 			"from planner failures.}",
 			"\\label{tab:external-references}",

@@ -139,6 +139,21 @@ interpret these predeclared views without selecting domains after execution.
 \PackageWarning{gp2pl}{External reference table unavailable}%
 }
 
+\paragraph{External-reference outcomes.}
+LAMA validates \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} classical
+achievement instances, while MRP+HJ validates
+\ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} numeric instances. Their
+PAR-2 values are \ExternalLAMAParTwoSeconds{} and
+\ExternalMRPHJParTwoSeconds{} seconds, respectively. These rows cover disjoint
+planning fragments and are therefore interpreted within scope rather than as a
+same-instance ranking. FOND4LTLf with LAMA supports
+\ExternalDirectSupportedCount{} of the \ExternalDirectTotalCaseCount{} temporal
+queries and validates \ExternalDirectValidCount{}; the remaining
+\ExternalDirectUnsupportedCount{} inputs are reported as unsupported rather
+than planner failures. Its supported-set PAR-2 is
+\ExternalDirectParTwoSeconds{} seconds. Raw MOOSE extension runtime remains
+omitted under its registered coverage-only protocol.
+
 \subsection{Five-Seed Atomic Results}
 \label{sec:atomic-results}
 

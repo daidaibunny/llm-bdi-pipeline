@@ -221,7 +221,7 @@ def test_build_comparison_dataset_separates_published_moose_from_local_extension
 			"valid_trace_count": 148.0,
 			"seed_count": 5,
 			"coverage_sample_sd": 0.0,
-			"par2_seconds": 1.0,
+			"par2_seconds": None,
 		},
 	]
 
@@ -1169,6 +1169,10 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert "1079.6/1080" in external
 	assert "Raw MOOSE extension & Measured & Added domains, five seeds" in external
 	assert "148 $\\pm$ 0/148" in external
+	raw_extension_line = next(
+		line for line in external.splitlines() if line.startswith("Raw MOOSE extension")
+	)
+	assert raw_extension_line.endswith("& 0 & -- \\\\")
 	assert "Reported MOOSE coverage is copied from Table~4" in external
 	assert "Evidence Only" in atomic
 	assert "Certified Balanced" in temporal

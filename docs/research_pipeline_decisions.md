@@ -529,6 +529,12 @@ pinned tool revisions and artifact hashes.
 The challenge input must contain exactly the 13 unique registered nodes with 13
 successes. LaTeX cells and the compact release JSON are generated from those
 checked artifacts; aggregate values are never typed into the manuscript by hand.
+The independently generated external-reference release is
+`paper_artifacts/gp2pl_evaluation/v1/external_reference_results.json`. It
+contains 2,456 portable case records: the complete 1,228-case achievement
+matrix and complete 1,228-case direct temporal matrix. It can be frozen before
+the paired compiler matrix completes, but the final combined comparison
+generator must reproduce its external rows exactly.
 
 The companion `scripts/run_certificate_challenge_matrix.py` executes the
 registered rejection and symbol-invariance cases against production compiler
