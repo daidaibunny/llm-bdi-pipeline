@@ -89,6 +89,24 @@ locally reproduced, and its time and memory are not compared across hardware.
 The local Raw MOOSE extension row is labelled Measured and reports mean
 $\pm$ sample standard deviation over five independently trained models. The
 original and added scopes contain 1,080 and 148 cases per seed, respectively.
+The original-domain aggregate is compact because Table~4 reports 90/90 for
+every domain except Logistics, which has a five-model mean of 89.6/90.
+
+Table~\ref{tab:moose-reference} fixes this source split and its observed
+coverage. On the added domains, Raw MOOSE returns VAL-valid plans for
+\RawMooseExtensionSeedCounts{} cases across seeds 0--4, respectively, or
+\RawMooseExtensionMeanValid{} $\pm$ \RawMooseExtensionSDValid{} of 148
+cases (\RawMooseExtensionMeanPercent{}\% $\pm$
+\RawMooseExtensionSDPercent{} percentage points). Blocks Clear and Blocks On
+repeat exactly 7/30 and 2/30 in every seed; variation is confined to Tower and
+Depots. This stable low coverage is therefore not a failed batch or one unlucky
+seed. It identifies the boundary of applying Raw MOOSE directly to the added
+serialized-width families. The 99.96\% Reported row and the 15.81\% Measured
+row use disjoint domain scopes, so their difference is not presented as a
+same-instance performance drop. The same-scope compiler result is reported
+separately in Table~\ref{tab:five-seed-atomic}.
+
+\input{sections/result_moose_reference_table}
 
 \paragraph{Validation and measures.}
 A temporal run succeeds only if Jason completes \cite{Bordini2007Jason}, VAL
@@ -100,9 +118,10 @@ plan length uses jointly solved instances. The challenge suite tests rejection
 and symbol invariance. Figure~\ref{fig:evaluation-summary} follows MOOSE's
 absolute-time presentation \cite{Chen2026Moose}: a case enters a runtime curve
 only after its committed trace passes VAL, and all failures remain in the
-denominator. Tables~\ref{tab:five-seed-atomic} and
-\ref{tab:profile-results} report the compact atomic and temporal-profile
-outcomes. The Technical Supplement reports every domain--seed cell and the
+denominator. Tables~\ref{tab:moose-reference}, \ref{tab:five-seed-atomic}, and
+\ref{tab:profile-results} report the MOOSE source split, compact atomic result,
+and temporal-profile outcomes. The Technical Supplement reports every
+domain--seed cell and the
 fixed seed-0 atomic-core inputs used by the temporal study. The result
 subsections interpret these preregistered views without selecting domains after
 execution.

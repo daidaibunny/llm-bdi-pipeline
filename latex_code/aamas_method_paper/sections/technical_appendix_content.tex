@@ -1104,6 +1104,24 @@ contracts for the 1080-case published scope, 148-case local extension, and
 Published MOOSE time and memory are not combined with locally measured
 penalized average runtime, where a failure is charged twice the cutoff (PAR-2).
 
+The local coverage record is frozen at
+\texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
+\texttt{raw\_moose\_extension\_}
+\texttt{five\_seed\_summary.json}. It retains 740
+portable case records, the five source-summary hashes, the five evidence-batch
+hashes, model/domain/problem hashes, and the common MOOSE artifact and image
+identifiers. Machine-local paths and commands are excluded. The seed-level
+valid-plan counts are 26, 23, 23, 25, and 20, giving 117 successes, 619 planner
+failures, and four timeouts over 740 evaluations. Per-domain five-seed means
+are 7.0/30 for Blocks Clear, 2.0/30 for Blocks On, 6.0/77 for Blocks Tower,
+and 8.4/11 for Depots. All five summaries completed with zero infrastructure
+failures. Their recorded Git states are retained as provenance rather than
+being relabelled clean; coverage admissibility instead depends on the immutable
+case contract, evidence and model hashes, MOOSE toolchain identity, resource
+limits, and VAL outcome. Runtime is not used because the registered coverage
+protocol permits differing worker isolation and forbids cross-hardware timing
+comparison.
+
 \subsection{Parameters and Development Values}
 
 MOOSE defaults and synthesis budgets follow its published algorithm and

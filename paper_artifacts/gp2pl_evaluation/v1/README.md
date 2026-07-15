@@ -12,6 +12,11 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
 - `moose_published_reference.json` records the verified arXiv-v1 Table-4 MOOSE
   coverage values and disjoint case contracts for the 1,080 published-domain
   cases and 148 locally measured GP2PL extension cases.
+- `raw_moose_extension_five_seed_summary.json` freezes all 740 portable
+  case-level Raw MOOSE outcomes for the four GP2PL-added domains: 148 held-out
+  cases under each of five independently trained evidence seeds. It records
+  117 VAL-valid plans, 619 planner failures, and four timeouts without retaining
+  machine-local paths.
 - `certificate_challenge_summary.json` records fail-closed and renaming tests.
 - `execution_distribution.json` records distributional execution statistics.
 - `benchmark_compatibility.json` proves that the execution-time and portable
