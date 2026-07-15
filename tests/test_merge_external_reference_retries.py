@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import hashlib
+from pathlib import Path
 
 import pytest
 
@@ -83,6 +85,52 @@ def test_merge_recomputes_direct_metrics_after_scientific_failure() -> None:
 	assert merged["metrics"]["unsupported_case_count"] == 1
 	assert merged["metrics"]["valid_trace_count"] == 0
 	assert merged["results"][0]["status"] == "planner_failed"
+
+
+def test_merge_accepts_launchers_that_differ_only_by_install_prefix(
+	tmp_path: Path,
+) -> None:
+	primary = _direct_primary()
+	retry = _direct_retry()
+	_configure_path_embedded_launcher_pair(primary, retry, tmp_path=tmp_path)
+
+	merged = merge_infrastructure_retries(
+		primary,
+		retry,
+		kind="direct_temporal",
+		primary_sha256="c" * 64,
+		retry_sha256="d" * 64,
+	)
+
+	verification = merged["infrastructure_repair"]["toolchain_verification"]
+	assert verification["semantic_identity"] == (
+		"exact_pinned_revisions_and_versions"
+	)
+	for launcher in ("fond4ltlf", "mona"):
+		assert verification["path_embedded_launchers"][launcher]["equivalence"] == (
+			"absolute_install_prefix_rewrite"
+		)
+		assert verification["path_embedded_launchers"][launcher][
+			"retry_file_sha256_verified"
+		] is True
+
+
+def test_merge_rejects_unexplained_direct_launcher_hash_change(
+	tmp_path: Path,
+) -> None:
+	primary = _direct_primary()
+	retry = _direct_retry()
+	_configure_path_embedded_launcher_pair(primary, retry, tmp_path=tmp_path)
+	primary["toolchain"]["mona"]["executable_sha256"] = "0" * 64
+
+	with pytest.raises(ValueError, match="MONA launcher fingerprint"):
+		merge_infrastructure_retries(
+			primary,
+			retry,
+			kind="direct_temporal",
+			primary_sha256="c" * 64,
+			retry_sha256="d" * 64,
+		)
 
 
 def _revision(commit: str) -> dict[str, object]:
@@ -271,3 +319,71 @@ def _direct_retry() -> dict[str, object]:
 		"toolchain": _direct_toolchain(),
 		"results": [record],
 	}
+
+
+def _configure_path_embedded_launcher_pair(
+	primary: dict[str, object],
+	retry: dict[str, object],
+	*,
+	tmp_path: Path,
+) -> None:
+	primary_toolchain = primary["toolchain"]
+	retry_toolchain = retry["toolchain"]
+	assert isinstance(primary_toolchain, dict)
+	assert isinstance(retry_toolchain, dict)
+	primary_fond = primary_toolchain["fond4ltlf"]
+	retry_fond = retry_toolchain["fond4ltlf"]
+	primary_mona = primary_toolchain["mona"]
+	retry_mona = retry_toolchain["mona"]
+	assert isinstance(primary_fond, dict)
+	assert isinstance(retry_fond, dict)
+	assert isinstance(primary_mona, dict)
+	assert isinstance(retry_mona, dict)
+
+	primary_fond_root = Path("/remote/project/.external/fond4ltlf-0.0.4")
+	retry_fond_root = tmp_path / "local/project/.external/fond4ltlf-0.0.4"
+	retry_fond_executable = retry_fond_root / ".venv/bin/fond4ltlf"
+	retry_fond_executable.parent.mkdir(parents=True)
+	fond_bytes = f"#!{retry_fond_root}/.venv/bin/python\nentrypoint\n".encode()
+	retry_fond_executable.write_bytes(fond_bytes)
+	primary_fond_bytes = fond_bytes.replace(
+		str(retry_fond_root).encode(),
+		str(primary_fond_root).encode(),
+	)
+	primary_fond.update(
+		{
+			"root": str(primary_fond_root),
+			"executable": str(primary_fond_root / ".venv/bin/fond4ltlf"),
+			"executable_sha256": hashlib.sha256(primary_fond_bytes).hexdigest(),
+		},
+	)
+	retry_fond.update(
+		{
+			"root": str(retry_fond_root),
+			"executable": str(retry_fond_executable),
+			"executable_sha256": hashlib.sha256(fond_bytes).hexdigest(),
+		},
+	)
+
+	primary_mona_root = Path("/remote/project/.external/mona-1.4")
+	retry_mona_root = tmp_path / "local/project/.external/mona-1.4"
+	retry_mona_executable = retry_mona_root / "Front/mona"
+	retry_mona_executable.parent.mkdir(parents=True)
+	mona_bytes = f"root={retry_mona_root}\nexec .libs/mona\n".encode()
+	retry_mona_executable.write_bytes(mona_bytes)
+	primary_mona_bytes = mona_bytes.replace(
+		str(retry_mona_root).encode(),
+		str(primary_mona_root).encode(),
+	)
+	primary_mona.update(
+		{
+			"executable": str(primary_mona_root / "Front/mona"),
+			"executable_sha256": hashlib.sha256(primary_mona_bytes).hexdigest(),
+		},
+	)
+	retry_mona.update(
+		{
+			"executable": str(retry_mona_executable),
+			"executable_sha256": hashlib.sha256(mona_bytes).hexdigest(),
+		},
+	)

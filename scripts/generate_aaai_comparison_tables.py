@@ -476,6 +476,8 @@ def _validate_infrastructure_repair(
 	):
 		if repair.get(key) is not True:
 			raise ValueError(f"{label} repair does not establish {key}")
+	if direct_temporal:
+		_validate_direct_repair_toolchain_verification(repair, label=label)
 	primary_revision = dict(repair.get("primary_source_revision") or {})
 	retry_revision = dict(repair.get("retry_source_revision") or {})
 	_validate_repair_revision(primary_revision, label=f"{label} primary repair")
@@ -500,6 +502,49 @@ def _validate_infrastructure_repair(
 	}
 	if annotated_ids != set(replaced_ids):
 		raise ValueError(f"{label} repair annotations do not match replaced cases")
+
+
+def _validate_direct_repair_toolchain_verification(
+	repair: Mapping[str, Any],
+	*,
+	label: str,
+) -> None:
+	verification = repair.get("toolchain_verification")
+	if not isinstance(verification, Mapping):
+		raise ValueError(f"{label} repair has no toolchain verification evidence")
+	if verification.get("semantic_identity") != (
+		"exact_pinned_revisions_and_versions"
+	):
+		raise ValueError(f"{label} repair changes the pinned toolchain identity")
+	if len(str(verification.get("semantic_identity_sha256") or "")) != 64:
+		raise ValueError(f"{label} repair has no portable toolchain fingerprint")
+	launchers = verification.get("path_embedded_launchers")
+	if not isinstance(launchers, Mapping) or set(launchers) != {"fond4ltlf", "mona"}:
+		raise ValueError(f"{label} repair has incomplete path-embedded launchers")
+	for launcher_name in ("fond4ltlf", "mona"):
+		launcher = launchers.get(launcher_name)
+		if not isinstance(launcher, Mapping):
+			raise ValueError(f"{label} repair has malformed path-embedded launcher")
+		primary_sha256 = str(launcher.get("primary_sha256") or "")
+		retry_sha256 = str(launcher.get("retry_sha256") or "")
+		if len(primary_sha256) != 64 or len(retry_sha256) != 64:
+			raise ValueError(f"{label} repair has incomplete launcher fingerprints")
+		equivalence = str(launcher.get("equivalence") or "")
+		if equivalence == "exact_sha256":
+			if primary_sha256 != retry_sha256:
+				raise ValueError(f"{label} repair has inconsistent launcher equality")
+			continue
+		if equivalence == "absolute_install_prefix_rewrite":
+			if (
+				primary_sha256 == retry_sha256
+				or launcher.get("retry_file_sha256_verified") is not True
+				or int(launcher.get("replacement_count") or 0) <= 0
+			):
+				raise ValueError(
+					f"{label} repair has unverified path-embedded launcher",
+				)
+			continue
+		raise ValueError(f"{label} repair has unverified path-embedded launcher")
 
 
 def _validate_repair_revision(revision: Mapping[str, Any], *, label: str) -> None:

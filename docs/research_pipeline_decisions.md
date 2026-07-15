@@ -393,6 +393,13 @@ revisions plus per-case replacement provenance. The experiment owner confirms
 that the local and remote machines have equivalent configurations and
 comparable resource availability, and queue waiting is excluded from measured
 case runtime; therefore repaired case runtimes remain eligible for PAR-2.
+Generated Python entry points and MONA libtool launchers embed their absolute
+installation directory. When their raw hashes differ across those machines,
+the merge reads the retry launcher, verifies its recorded raw hash, rewrites
+only the recorded installation prefix to the primary prefix, and requires the
+resulting hash to equal the primary hash. Pinned revisions, versions, the
+FOND4LTLf isolation-wrapper hash, and planner artifacts must still match
+exactly; an unexplained launcher difference remains an infrastructure failure.
 Planner failures, timeouts, unsupported inputs, compiler failures, and
 validation failures are never selected for repair.
 

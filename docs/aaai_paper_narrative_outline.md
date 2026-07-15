@@ -632,6 +632,14 @@ queue waiting, so repaired records remain eligible for PAR-2. Never repair a
 planner failure, timeout, unsupported input, compiler failure, or validation
 failure.
 
+Treat the generated FOND4LTLf Python entry point and MONA libtool launcher as
+path-embedded launchers rather than portable binaries. If their raw hashes
+differ across the two equivalent machines, verify the retry file against its
+recorded hash, rewrite only its recorded absolute installation prefix, and
+require the rewritten bytes to match the primary hash. Keep pinned revisions,
+versions, the isolation-wrapper hash, and planner artifacts exact. This is a
+verified relocation equivalence, not a relaxed toolchain comparison.
+
 Atomic metrics are producible-predicate coverage, internal-call closure, held-out
 Jason+VAL coverage, branch/context/body costs, ASL bytes, and compile time.
 Producible-predicate coverage has one paired denominator per seed/domain: all

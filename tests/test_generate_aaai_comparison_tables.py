@@ -473,6 +473,78 @@ def test_build_comparison_dataset_rejects_nonserial_infrastructure_repair(
 		)
 
 
+def test_build_comparison_dataset_validates_direct_launcher_path_rewrite(
+	tmp_path: Path,
+) -> None:
+	direct = _direct_fixture()
+	direct["infrastructure_repair"] = _repair_fixture(case_ids=("s1",))
+	direct["infrastructure_repair"]["toolchain_verification"] = (
+		_direct_toolchain_repair_verification()
+	)
+	direct["results"][0]["infrastructure_retry"] = {
+		"primary_status": "planner_runner_error",
+	}
+
+	result = build_comparison_dataset(
+		paired_results_file=_write_json(tmp_path / "paired.json", _paired_fixture()),
+		raw_moose_summaries=tuple(
+			(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+			for seed in range(5)
+		),
+		instance_reference_summary_file=_write_json(
+			tmp_path / "instances.json",
+			_instance_fixture(),
+		),
+		direct_temporal_summary_file=_write_json(
+			tmp_path / "direct.json",
+			direct,
+		),
+		challenge_summary_file=_write_json(
+			tmp_path / "challenge.json",
+			_challenge_fixture(),
+		),
+	)
+
+	assert any(row["method"] == "FOND4LTLf + LAMA" for row in result["external"])
+
+
+def test_build_comparison_dataset_rejects_unverified_direct_launcher_change(
+	tmp_path: Path,
+) -> None:
+	direct = _direct_fixture()
+	direct["infrastructure_repair"] = _repair_fixture(case_ids=("s1",))
+	verification = _direct_toolchain_repair_verification()
+	verification["path_embedded_launchers"]["mona"]["equivalence"] = "unverified"
+	direct["infrastructure_repair"]["toolchain_verification"] = verification
+	direct["results"][0]["infrastructure_retry"] = {
+		"primary_status": "planner_runner_error",
+	}
+
+	with pytest.raises(ValueError, match="path-embedded launcher"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(
+				tmp_path / "paired.json",
+				_paired_fixture(),
+			),
+			raw_moose_summaries=tuple(
+				(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+				for seed in range(5)
+			),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				_instance_fixture(),
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				direct,
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
+
+
 def test_build_comparison_dataset_keeps_raw_moose_at_six_workers(
 	tmp_path: Path,
 ) -> None:
@@ -1471,6 +1543,24 @@ def _repair_fixture(*, case_ids: tuple[str, ...]) -> dict[str, object]:
 		"hardware_equivalence_confirmed_by_experiment_owner": True,
 		"runtime_measurement_excludes_queue_wait": True,
 		"runtime_comparison_allowed": True,
+	}
+
+
+def _direct_toolchain_repair_verification() -> dict[str, object]:
+	launcher = {
+		"equivalence": "absolute_install_prefix_rewrite",
+		"primary_sha256": "a" * 64,
+		"retry_sha256": "b" * 64,
+		"retry_file_sha256_verified": True,
+		"replacement_count": 1,
+	}
+	return {
+		"semantic_identity": "exact_pinned_revisions_and_versions",
+		"semantic_identity_sha256": "c" * 64,
+		"path_embedded_launchers": {
+			"fond4ltlf": dict(launcher),
+			"mona": dict(launcher),
+		},
 	}
 
 

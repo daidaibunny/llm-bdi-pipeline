@@ -59,7 +59,7 @@ def merge_infrastructure_retries(
 	_validate_clean_revision(retry, label="retry")
 	_validate_protocol(primary, kind=kind, num_workers=PRIMARY_NUM_WORKERS)
 	_validate_protocol(retry, kind=kind, num_workers=RETRY_NUM_WORKERS)
-	_validate_toolchain_pair(primary, retry, kind=kind)
+	toolchain_verification = _validate_toolchain_pair(primary, retry, kind=kind)
 	if kind == "direct_temporal" and primary.get("benchmark_sha256") != retry.get(
 		"benchmark_sha256",
 	):
@@ -159,6 +159,7 @@ def merge_infrastructure_retries(
 				),
 				"input_fingerprints_verified": True,
 				"toolchain_verified": True,
+				"toolchain_verification": toolchain_verification,
 				"resource_limits_verified": True,
 				"hardware_equivalence_confirmed_by_experiment_owner": True,
 				"runtime_measurement_excludes_queue_wait": True,
@@ -224,12 +225,127 @@ def _validate_toolchain_pair(
 	retry: Mapping[str, Any],
 	*,
 	kind: str,
-) -> None:
-	if _toolchain_fingerprint(primary, kind=kind) != _toolchain_fingerprint(
-		retry,
-		kind=kind,
-	):
+) -> dict[str, Any]:
+	primary_fingerprint = _toolchain_fingerprint(primary, kind=kind)
+	retry_fingerprint = _toolchain_fingerprint(retry, kind=kind)
+	if primary_fingerprint != retry_fingerprint:
 		raise ValueError("retry changes the registered external toolchain")
+	verification: dict[str, Any] = {
+		"semantic_identity": (
+			"exact_pinned_revisions_and_versions"
+			if kind == "direct_temporal"
+			else "exact_portable_artifact_hashes_and_revisions"
+		),
+		"semantic_identity_sha256": _mapping_sha256(primary_fingerprint),
+		"path_embedded_launchers": {},
+	}
+	if kind != "direct_temporal":
+		return verification
+	primary_toolchain = dict(primary.get("toolchain") or {})
+	retry_toolchain = dict(retry.get("toolchain") or {})
+	primary_fond = dict(primary_toolchain.get("fond4ltlf") or {})
+	retry_fond = dict(retry_toolchain.get("fond4ltlf") or {})
+	primary_mona = dict(primary_toolchain.get("mona") or {})
+	retry_mona = dict(retry_toolchain.get("mona") or {})
+	verification["path_embedded_launchers"] = {
+		"fond4ltlf": _validate_path_embedded_launcher(
+			primary_fond,
+			retry_fond,
+			label="FOND4LTLf",
+			root_key="root",
+		),
+		"mona": _validate_path_embedded_launcher(
+			primary_mona,
+			retry_mona,
+			label="MONA",
+			root_key=None,
+		),
+	}
+	return verification
+
+
+def _validate_path_embedded_launcher(
+	primary: Mapping[str, Any],
+	retry: Mapping[str, Any],
+	*,
+	label: str,
+	root_key: str | None,
+) -> dict[str, Any]:
+	primary_sha256 = str(primary.get("executable_sha256") or "")
+	retry_sha256 = str(retry.get("executable_sha256") or "")
+	_validate_summary_hash(primary_sha256, label=f"primary {label} launcher")
+	_validate_summary_hash(retry_sha256, label=f"retry {label} launcher")
+	if primary_sha256 == retry_sha256:
+		return {
+			"equivalence": "exact_sha256",
+			"primary_sha256": primary_sha256,
+			"retry_sha256": retry_sha256,
+			"retry_file_sha256_verified": None,
+			"replacement_count": 0,
+		}
+	primary_executable = _required_path(primary, "executable", label=label)
+	retry_executable = _required_path(retry, "executable", label=label)
+	if root_key is None:
+		primary_root = _mona_installation_root(primary)
+		retry_root = _mona_installation_root(retry)
+	else:
+		primary_root = _required_path(primary, root_key, label=label)
+		retry_root = _required_path(retry, root_key, label=label)
+	try:
+		primary_relative = primary_executable.relative_to(primary_root)
+		retry_relative = retry_executable.relative_to(retry_root)
+	except ValueError as error:
+		raise ValueError(f"{label} launcher is outside its installation root") from error
+	if primary_relative != retry_relative:
+		raise ValueError(f"{label} launcher relative path changed")
+	if not retry_executable.is_file():
+		raise ValueError(f"retry {label} launcher is unavailable for verification")
+	retry_bytes = retry_executable.read_bytes()
+	if hashlib.sha256(retry_bytes).hexdigest() != retry_sha256:
+		raise ValueError(f"retry {label} launcher fingerprint does not match its file")
+	retry_prefix = str(retry_root).encode("utf-8")
+	primary_prefix = str(primary_root).encode("utf-8")
+	replacement_count = retry_bytes.count(retry_prefix)
+	if not retry_prefix or not primary_prefix or replacement_count <= 0:
+		raise ValueError(f"{label} launcher has no verifiable installation prefix")
+	rewritten_bytes = retry_bytes.replace(retry_prefix, primary_prefix)
+	if hashlib.sha256(rewritten_bytes).hexdigest() != primary_sha256:
+		raise ValueError(
+			f"{label} launcher fingerprint change is not explained by its install path",
+		)
+	return {
+		"equivalence": "absolute_install_prefix_rewrite",
+		"primary_sha256": primary_sha256,
+		"retry_sha256": retry_sha256,
+		"retry_file_sha256_verified": True,
+		"replacement_count": replacement_count,
+	}
+
+
+def _required_path(
+	payload: Mapping[str, Any],
+	key: str,
+	*,
+	label: str,
+) -> Path:
+	value = str(payload.get(key) or "")
+	if not value:
+		raise ValueError(f"{label} has no {key}")
+	return Path(value)
+
+
+def _mona_installation_root(payload: Mapping[str, Any]) -> Path:
+	executable = _required_path(payload, "executable", label="MONA")
+	if len(executable.parents) < 2:
+		raise ValueError("MONA launcher has no installation root")
+	return executable.parents[1]
+
+
+def _mapping_sha256(payload: Mapping[str, Any]) -> str:
+	encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(
+		"utf-8",
+	)
+	return hashlib.sha256(encoded).hexdigest()
 
 
 def _toolchain_fingerprint(
@@ -255,10 +371,8 @@ def _toolchain_fingerprint(
 	return {
 		"fond_git_revision": fond.get("git_revision"),
 		"fond_release": fond.get("release"),
-		"fond_executable_sha256": fond.get("executable_sha256"),
 		"isolation_wrapper_sha256": fond.get("isolation_wrapper_sha256"),
 		"mona_version": mona.get("version"),
-		"mona_executable_sha256": mona.get("executable_sha256"),
 		"moose_artifact_sha256": lama.get("moose_artifact_sha256"),
 		"moose_git_revision": lama.get("moose_git_revision"),
 		"moose_docker_image": lama.get("docker_image"),
