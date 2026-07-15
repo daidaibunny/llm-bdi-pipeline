@@ -291,17 +291,17 @@ LAMA search share one 1,800-second, 8-GiB per-query budget. The setup contract i
 `3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4`, its Python dependencies, and
 MONA 1.4-18; `--check` verifies functional Java and MONA runtimes plus all
 pinned sources and artifact hashes without modifying them. The exact
-MOOSE-hosted LAMA runtime is non-reentrant: nested Apptainer uses host loop
-devices and MOOSE uses a shared `/work/out` directory. Raw MOOSE and LAMA calls
-therefore share one host-wide cross-process lock. The pinned `ltlf2dfa` 1.0.2
-dependency is also non-reentrant across FOND4LTLf processes because every
-conversion writes the same package-local `automa.mona` scratch file. Direct
-temporal FOND4LTLf compilations use a separate host-wide cross-process lock;
-their subsequent LAMA calls use the MOOSE runtime lock, so different worker
-pipelines may overlap those two independently serialized stages. Higher worker
-counts still parallelize ENHSP. Lock waiting is excluded from per-query runtime
-and recorded separately. `--resume` reuses scientific planner outcomes but
-retries infrastructure failures.
+MOOSE-hosted LAMA image is extracted once into a hash-checked Apptainer sandbox.
+The sandbox avoids per-process loop-device allocation, and every Raw MOOSE or
+LAMA case mounts a private `/work/out` directory. FOND4LTLf keeps the pinned
+`ltlf2dfa` 1.0.2 implementation but redirects its fixed `automa.mona` scratch
+path into a per-case directory. These two isolation boundaries remove the prior
+host-wide runtime locks while retaining the pinned planners. The registered
+remote LAMA/MRP+HJ and direct FOND4LTLf reference matrices use 20 case workers;
+the already registered paired compiler and Raw MOOSE matrices retain six.
+Runs with more than one MOOSE-backed worker fail before scheduling if the
+hash-checked sandbox is absent. `--resume` reuses scientific planner outcomes
+but retries infrastructure failures.
 
 Five fixed MOOSE seeds are run independently with one internal MOOSE worker.
 Evidence is never unioned and a best seed is never selected. Every paired
@@ -392,12 +392,13 @@ experiment groups may use different commits when all registered input hashes,
 toolchains, case sets, and protocols still match. It binds each Raw MOOSE run
 to both the exact model-batch manifest and the canonical model/readable-policy
 artifact fingerprint used by the corresponding compiler seed,
-checks the registered six-worker, 1,800-second, 64-MiB Java-stack, and 8-GiB
-external-planner protocol, and verifies pinned tool revisions and artifact
-hashes. The challenge input must contain exactly the 13 unique registered nodes
-with 13 successes. LaTeX cells and the compact release JSON are generated from
-those checked artifacts; aggregate values are never typed into the manuscript
-by hand.
+checks six workers for the paired compiler and Raw MOOSE matrices, 20 workers
+for the remote LAMA/MRP+HJ and direct FOND4LTLf matrices, the common
+1,800-second and 8-GiB external-planner limits, and the paired compiler's
+64-MiB Java stack. It also verifies pinned tool revisions and artifact hashes.
+The challenge input must contain exactly the 13 unique registered nodes with 13
+successes. LaTeX cells and the compact release JSON are generated from those
+checked artifacts; aggregate values are never typed into the manuscript by hand.
 
 The companion `scripts/run_certificate_challenge_matrix.py` executes the
 registered rejection and symbol-invariance cases against production compiler

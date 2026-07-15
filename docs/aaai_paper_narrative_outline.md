@@ -486,13 +486,13 @@ require original-goal VAL. The direct temporal trace contains only projected
 original-domain actions and requires PDDL replay, neutral-goal VAL, gold-DFA
 acceptance, and predicted-DFA acceptance. FOND4LTLf compilation and LAMA search
 share one 1,800-second, 8-GiB deadline. Numeric inputs and identifiers incompatible
-with its underscore encoding are explicit unsupported cases. The exact MOOSE-hosted
-LAMA runtime is serialized across processes because its nested Apptainer and shared
-work directory are non-reentrant. FOND4LTLf compilation is independently serialized
-because pinned `ltlf2dfa` uses one package-local scratch file; the compiler and LAMA
-locks are distinct, so separate pipeline stages may overlap. ENHSP may still use the
-declared worker pool. Queue waiting is recorded separately from planner runtime. Published
-numbers from different splits or hardware may be cited as prior results but must not be
+with its underscore encoding are explicit unsupported cases. The pinned MOOSE
+artifact is executed through a hash-checked extracted sandbox, with one private
+`/work/out` mount per Raw MOOSE or LAMA case. FOND4LTLf redirects the fixed
+`ltlf2dfa` `automa.mona` scratch path into one private directory per case. The
+registered remote LAMA/MRP+HJ and direct FOND4LTLf matrices therefore use 20
+case workers without host-wide planner or compiler locks. Published numbers
+from different splits or hardware may be cited as prior results but must not be
 inserted into paired experiment tables. Plan4Past is a design precedent for
 holding the task-level planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
@@ -1298,10 +1298,11 @@ classical LAMA cases, and the 360 numeric MRP+HJ cases; duplicates and shared
 omissions are invalid. It additionally requires the five Raw MOOSE runs to use
 the exact seed-specific model-batch manifests and canonical hashes of every
 per-domain model/readable-policy pair consumed by the paired compiler runs, one
-clean source commit for every derived result summary, the registered resource
-protocol, pinned external binaries, and exactly 13 unique successful challenge
-nodes. Report a failed contract as an infrastructure failure, never as a method
-score.
+clean source commit for every derived result summary, six workers for paired
+compiler and Raw MOOSE runs, 20 workers for remote LAMA/MRP+HJ and direct
+FOND4LTLf runs, the remaining registered resource protocol, pinned external
+binaries, and exactly 13 unique successful challenge nodes. Report a failed
+contract as an infrastructure failure, never as a method score.
 
 ### TEG Table
 

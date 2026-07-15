@@ -25,7 +25,9 @@ from scripts.run_certificate_challenge_matrix import METAMORPHIC_CASES  # noqa: 
 
 
 REGISTERED_SEEDS = (0, 1, 2, 3, 4)
-REGISTERED_NUM_WORKERS = 6
+REGISTERED_PAIRED_NUM_WORKERS = 6
+REGISTERED_RAW_MOOSE_NUM_WORKERS = 6
+REGISTERED_REMOTE_REFERENCE_NUM_WORKERS = 20
 REGISTERED_TIMEOUT_SECONDS = 1800
 REGISTERED_MAX_RSS_GB = 8.0
 REGISTERED_JAVA_STACK_SIZE = "64m"
@@ -94,12 +96,17 @@ def build_comparison_dataset(
 	_validate_clean_success(instance, label="instance references")
 	_validate_clean_success(direct, label="direct temporal reference")
 	_validate_clean_success(challenge, label="challenge matrix")
-	_validate_external_reference_protocol(instance, label="instance references")
+	_validate_external_reference_protocol(
+		instance,
+		label="instance references",
+		expected_num_workers=REGISTERED_REMOTE_REFERENCE_NUM_WORKERS,
+	)
 	_validate_achievement_toolchain(instance, label="instance references")
 	_validate_external_reference_protocol(
 		direct,
 		label="direct temporal reference",
 		direct_temporal=True,
+		expected_num_workers=REGISTERED_REMOTE_REFERENCE_NUM_WORKERS,
 	)
 	_validate_direct_temporal_toolchain(
 		direct,
@@ -190,7 +197,7 @@ def _validate_paired_result(paired: Mapping[str, Any]) -> None:
 			seed=seed,
 			label=f"paired seed {seed}",
 		)
-	if int(paired.get("num_workers") or 0) != REGISTERED_NUM_WORKERS:
+	if int(paired.get("num_workers") or 0) != REGISTERED_PAIRED_NUM_WORKERS:
 		raise ValueError("paired result does not use the registered worker count")
 	if int(paired.get("timeout_seconds") or 0) != REGISTERED_TIMEOUT_SECONDS:
 		raise ValueError("paired result does not use the registered timeout")
@@ -245,7 +252,7 @@ def _validate_jason_protocol(
 	label: str,
 	jason_timeout_key: str = "timeout_seconds",
 ) -> None:
-	if int(settings.get("num_workers") or 0) != REGISTERED_NUM_WORKERS:
+	if int(settings.get("num_workers") or 0) != REGISTERED_PAIRED_NUM_WORKERS:
 		raise ValueError(f"{label} does not use the registered worker count")
 	if int(settings.get(jason_timeout_key) or 0) != REGISTERED_TIMEOUT_SECONDS:
 		raise ValueError(f"{label} does not use the registered timeout")
@@ -280,7 +287,11 @@ def _validate_raw_moose_runs(
 		raise ValueError("Raw MOOSE comparison requires exactly seeds 0--4")
 	for seed, _path, summary in runs:
 		_validate_clean_success(summary, label=f"Raw MOOSE seed {seed}")
-		_validate_external_reference_protocol(summary, label=f"Raw MOOSE seed {seed}")
+		_validate_external_reference_protocol(
+			summary,
+			label=f"Raw MOOSE seed {seed}",
+			expected_num_workers=REGISTERED_RAW_MOOSE_NUM_WORKERS,
+		)
 		_validate_achievement_toolchain(summary, label=f"Raw MOOSE seed {seed}")
 		_validate_raw_moose_training_contract(summary, seed=seed)
 		paired_manifest = seed_batch_manifests.get(str(seed))
@@ -355,13 +366,16 @@ def _validate_external_reference_protocol(
 	summary: Mapping[str, Any],
 	*,
 	label: str,
+	expected_num_workers: int,
 	direct_temporal: bool = False,
 ) -> None:
 	parameters = summary.get("parameters")
 	if not isinstance(parameters, Mapping):
 		raise ValueError(f"{label} has no resource protocol")
-	if int(parameters.get("num_workers") or 0) != REGISTERED_NUM_WORKERS:
-		raise ValueError(f"{label} does not use the registered worker count")
+	if int(parameters.get("num_workers") or 0) != expected_num_workers:
+		raise ValueError(
+			f"{label} does not use the registered {expected_num_workers} workers",
+		)
 	timeout_key = (
 		"timeout_seconds_total_compile_and_plan"
 		if direct_temporal

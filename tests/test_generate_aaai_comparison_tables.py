@@ -161,6 +161,71 @@ def test_build_comparison_dataset_rejects_nonregistered_resource_protocol(
 		)
 
 
+def test_build_comparison_dataset_requires_twenty_workers_for_remote_references(
+	tmp_path: Path,
+) -> None:
+	instance_payload = _instance_fixture()
+	instance_payload["parameters"]["num_workers"] = 6
+
+	with pytest.raises(ValueError, match="instance references.*20 workers"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(
+				tmp_path / "paired.json",
+				_paired_fixture(),
+			),
+			raw_moose_summaries=tuple(
+				(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+				for seed in range(5)
+			),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				instance_payload,
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				_direct_fixture(),
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
+
+
+def test_build_comparison_dataset_keeps_raw_moose_at_six_workers(
+	tmp_path: Path,
+) -> None:
+	raw_summaries = []
+	for seed in range(5):
+		payload = _raw_fixture(seed)
+		if seed == 2:
+			payload["parameters"]["num_workers"] = 20
+		raw_summaries.append(
+			(seed, _write_json(tmp_path / f"raw-{seed}.json", payload)),
+		)
+
+	with pytest.raises(ValueError, match="Raw MOOSE seed 2.*6 workers"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(
+				tmp_path / "paired.json",
+				_paired_fixture(),
+			),
+			raw_moose_summaries=tuple(raw_summaries),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				_instance_fixture(),
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				_direct_fixture(),
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
+
+
 def test_build_comparison_dataset_rejects_external_resource_protocol_drift(
 	tmp_path: Path,
 ) -> None:
@@ -896,7 +961,7 @@ def _raw_fixture(seed: int) -> dict[str, object]:
 		"success": True,
 		"source_revision": _clean_revision(),
 		"variants": ["raw_moose"],
-		"parameters": _external_parameters(),
+		"parameters": _external_parameters(num_workers=6),
 		"toolchain": _external_toolchain(),
 		"model_batch_manifest": {
 			"sha256": str(seed) * 64,
@@ -924,7 +989,7 @@ def _instance_fixture() -> dict[str, object]:
 		"success": True,
 		"source_revision": _clean_revision(),
 		"variants": ["lama", "enhsp_hmrphj"],
-		"parameters": _external_parameters(),
+		"parameters": _external_parameters(num_workers=20),
 		"toolchain": _external_toolchain(),
 		"results": [
 			_external_result("LAMA", "p1", valid=True),
@@ -951,7 +1016,7 @@ def _direct_fixture() -> dict[str, object]:
 		"source_revision": _clean_revision(),
 		"benchmark_sha256": BENCHMARK_HASH,
 		"parameters": {
-			"num_workers": 6,
+			"num_workers": 20,
 			"timeout_seconds_total_compile_and_plan": 1800,
 			"max_rss_gb": 8.0,
 			"plan_verifier_timeout_seconds": 1800,
@@ -1012,9 +1077,9 @@ def _clean_revision() -> dict[str, object]:
 	}
 
 
-def _external_parameters() -> dict[str, object]:
+def _external_parameters(*, num_workers: int) -> dict[str, object]:
 	return {
-		"num_workers": 6,
+		"num_workers": num_workers,
 		"timeout_seconds": 1800,
 		"max_rss_gb": 8.0,
 		"plan_verifier_timeout_seconds": 1800,
