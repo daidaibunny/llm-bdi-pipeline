@@ -25,7 +25,7 @@ share $D$. MOOSE applies classical goal-regression
 ideas \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton
 goal conditions and
 lifts the resulting plans into first-order condition-to-macro rules
-\cite{Chen2026Moose}. We treat these rules as \emph{evidence}: they demonstrate
+\cite{Chen2026Moose}. We treat these rules as evidence: they demonstrate
 ways to achieve observed singleton goals, but need not constitute a closed or
 lexicographically selected atomic module core.
 
@@ -38,9 +38,9 @@ evaluated here \cite{Rao1996AgentSpeak}, an achievement plan is
 +!p(\bar X):C\leftarrow b_1;\ldots;b_m,
 \]
 where $C$ is a conjunction of beliefs and comparisons and each $b_i$ is a PDDL
-action or an internal achievement call $!q(\bar Y)$. A library is \emph{lifted}
-when plans contain variables rather than training objects, and \emph{internally
-closed} when every internal call resolves to a selected module. Our certificates apply
+action or an internal achievement call $!q(\bar Y)$. A library is lifted when
+plans contain variables rather than training objects, and internally closed
+when every internal call resolves to a selected module. Our certificates apply
 to this trigger--context--body model and to the PDDL semantics of primitive
 actions. Formally, a candidate branch is
 $b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$, where $g_b$ is one lifted
@@ -62,7 +62,7 @@ state sequence
 to track temporal progress \cite{DeGiacomoRubin2018AutomataFOND}. We construct
 the deterministic finite automaton (DFA)
 $\mathcal D_q=\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle$
-with \texttt{ltlf2dfa} and MONA
+with LTLf2DFA and MONA
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Here
 $Q_q^{\mathrm{dfa}}$ is the finite state set, $AP_q$ the proposition alphabet,
 $\delta_q$ the deterministic transition function, $q_q^0$ the initial state,

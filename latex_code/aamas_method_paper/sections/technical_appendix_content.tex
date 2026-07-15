@@ -116,7 +116,7 @@ threat-induced precedence graph, and relation. \\
 $\mathcal C_E,\mathcal C_D(E),\mathcal C_{D,E}$ & Validated evidence branches,
 action-schema-derived branches, and generated union. &
 $\boldsymbol\ell_\chi$ & Certified serialization of a signed obligation. \\
-$b,\Sigma_b,\mathsf{Cert}_D(b)$ & One candidate branch, its conditional
+$b,\Sigma_b,\operatorname{Cert}_D(b)$ & One candidate branch, its conditional
 completion summary, and soundness predicate. &
 $\mathcal W_{q_s},\mathcal I_{q_s}$ & Waiting self-loop guards and signed source
 invariants. \\
@@ -124,12 +124,12 @@ $\rho_b,\kappa_S,\mathcal G_b^{\mathrm{res}}$ & Same-predicate recursive
 ranking, dependency ranking, and resource-mode graph. &
 $\rho_{\mathrm{num}},b_\chi^{\mathrm{joint}}$ & Numeric-progress ranking and
 complete joint guard-establishment branch. \\
-$\operatorname{head},\operatorname{call},\mathsf{covers}_D$ & Selected
+$\operatorname{head},\operatorname{call},\operatorname{covers}_D$ & Selected
 achievement heads, selected internal calls, and certified evidence-coverage
 relation. &
 $R_\chi[i,j],c_{q_s,\chi}$ & Transition-repair subtree and source-state
 completion test. \\
-$\mathcal C_D^{\mathrm{nr}}(E),\mathsf{realizes}_D$ & Nonrecursive
+$\mathcal C_D^{\mathrm{nr}}(E),\operatorname{realizes}_D$ & Nonrecursive
 schema obligations and certified realization relation. &
 $\operatorname{Pass}_{q_s,\chi},\mathcal R_{q_s,\chi}$ & Complete repair pass
 and plan set for one source-state obligation. \\
@@ -195,7 +195,7 @@ is therefore admitted only when the call to $clear(Y)$ is closed by another
 selected module and the recursive call carries a well-founded progress proof.
 
 \begin{definition}[Candidate soundness certificate]
-For domain $D$, $\mathsf{Cert}_D(b)$ holds exactly when every obligation required
+For domain $D$, $\operatorname{Cert}_D(b)$ holds exactly when every obligation required
 by the structure of $b$ is established:
 \begin{enumerate}
 \item every action and subgoal variable is range restricted and type compatible;
@@ -217,9 +217,9 @@ producer that acquires no resource, are vacuous rather than unproved.
 Let
 \[
 \begin{aligned}
-\mathfrak G=\{&\mathsf{producer},\mathsf{regression},\mathsf{recursion},
-\mathsf{precondition\mbox{-}repair},\\
-&\mathsf{resource\mbox{-}discharge},\mathsf{numeric\mbox{-}progress}\}.
+\mathfrak G=\{&\text{producer},\text{regression},\text{recursion},
+\text{precondition repair},\\
+&\text{resource discharge},\text{numeric progress}\}.
 \end{aligned}
 \]
 Let $\mathcal C_E$ be validated evidence macros and define
@@ -246,13 +246,13 @@ summaries are alpha equivalent; $b$ has the same body under a logically weaker
 conjunctive context; or $b$ is an action-schema producer refinement with the same
 $\mustadd$, no additional $\maydelete$, and equivalent numeric and keyed-resource
 summaries. Prefix similarity alone is not coverage.
-We denote this relation by $\mathsf{covers}_D(b,e)$.
+We denote this relation by $\operatorname{covers}_D(b,e)$.
 \end{definition}
 
 \begin{definition}[Schema-achievement coverage]
 Let $\mathcal C_D^{\mathrm{nr}}(E)$ contain the nonrecursive
 action-schema-derived branches. A certified branch $b$ realizes
-$c\in\mathcal C_D^{\mathrm{nr}}(E)$, written $\mathsf{realizes}_D(b,c)$, when
+$c\in\mathcal C_D^{\mathrm{nr}}(E)$, written $\operatorname{realizes}_D(b,c)$, when
 either $b$ and $c$ have alpha-equivalent trigger, context, and body; $b$ is an
 action-schema producer refinement with a weaker context and no weaker
 completion contract; or $b$ is a target-preserving resource-discharge
@@ -266,13 +266,13 @@ The generated candidate set and its certified subset are
 \mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E),
 \qquad
 \mathcal C^{\checkmark}_{D,E}=
-\{b\in\mathcal C_{D,E}\mid\mathsf{Cert}_D(b)\}.
+\{b\in\mathcal C_{D,E}\mid\operatorname{Cert}_D(b)\}.
 \]
 Let $\Omega_{D,E}$ contain evidence coverage, nonrecursive schema-achievement
 coverage, internal-call closure, preparation acyclicity, and recursive-ranking
 compatibility. Per-branch binding, execution, achievement, completion-effect,
 and resource-discharge obligations are already contained in
-$\mathsf{Cert}_D$. The feasible selection family is
+$\operatorname{Cert}_D$. The feasible selection family is
 \[
 \mathfrak F_{D,E}=
 \{S\subseteq\mathcal C^{\checkmark}_{D,E}\mid S\models\Omega_{D,E}\}.
@@ -283,7 +283,7 @@ admits the selected recursion and cross-module dependency ranks.
 Equivalently, schema-achievement coverage requires
 \[
 \forall c\in\mathcal C_D^{\mathrm{nr}}(E),\quad
-\exists b\in S:\mathsf{realizes}_D(b,c).
+\exists b\in S:\operatorname{realizes}_D(b,c).
 \]
 \end{definition}
 
@@ -357,7 +357,7 @@ and preserves the atomic target. Ambiguous capacity roles are rejected.
 \begin{assumption}[Temporal fragment]
 The input formula belongs to the supported $F$, $X$, strong-$U$,
 conjunction, and literal-negation fragment and is translated by the
-\texttt{ltlf2dfa}/MONA construction
+LTLf2DFA/MONA construction
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. A chosen progress edge has a
 conjunction of signed predicate literals and supported integer equalities.
 Disjunction requiring strategy choice and unsupported arithmetic are rejected.
@@ -489,7 +489,7 @@ $\mathcal C^{\checkmark}_{D,E}$.
 
 \begin{proof}
 Each candidate is admitted to the optimization instance only after
-$\mathsf{Cert}_D$ succeeds. Integrity constraints eliminate a model that leaves
+$\operatorname{Cert}_D$ succeeds. Integrity constraints eliminate a model that leaves
 an evidence or schema-achievement obligation uncovered, an internal call
 unimplemented, a selected preparation graph cyclic, or a recursive/resource
 capability incompatible with its certificate. Hence every answer set denotes a
@@ -555,7 +555,7 @@ For a certified serialization
 $\boldsymbol\ell_\chi=(\ell_1,\ldots,\ell_n)$, let
 \[
 \begin{aligned}
-R_\chi[i,i]&=\mathsf{Leaf}(\ell_i,\Pi_{\chi,i}),\\
+R_\chi[i,i]&=\operatorname{Leaf}(\ell_i,\Pi_{\chi,i}),\\
 R_\chi[i,j]&=R_\chi[i,m];R_\chi[m+1,j] && (i<j),\\
 m&=\lfloor(i+j)/2\rfloor.
 \end{aligned}
@@ -817,6 +817,169 @@ Two zero-action Jason and singleton-state replay cases \\
 \label{app:data}
 
 \subsection{Novel Temporal-Goal Dataset}
+\label{app:teg-dataset}
+
+\paragraph{Construction unit.}
+For domain $D$ and held-out problem $P_i$, one private construction record is
+
+\[
+\mathcal B_i=\langle D,P_i,q_i,T_i,\theta_i,\pi_i\rangle .
+\]
+
+Here $q_i$ is the public controlled-language query, $T_i$ the hidden lifted
+\ltlf{} oracle, $\theta_i$ its problem-object binding, and $\pi_i$ a legal
+primitive-action witness. $P_i$ supplies typed objects and its initial state.
+
+The original PDDL achievement goal is retained only as provenance. It cannot
+affect rollout enumeration, candidate ranking, query wording, or construction
+success; mechanically using $F$ of that goal would not test temporal order.
+
+\begin{algorithm}[htbp]
+\caption{Witness-backed construction of the TEG benchmark}
+\label{alg:teg-benchmark-construction}
+\begin{algorithmic}[1]
+\REQUIRE Domain $D$ and canonically ordered held-out problems $P_1,\ldots,P_n$
+\ENSURE Public rows $q_i$ and sealed oracles $(T_i,\theta_i,\pi_i)$
+\STATE Parse the typed PDDL catalogue and each problem's objects and initial state.
+\FOR{each $P_i$ in canonical path order}
+\STATE Enumerate bounded legal, state-changing, nonrepeating rollouts $\Pi_i$.
+\STATE Extract predicate-add, predicate-delete, and integer-change events.
+\STATE Instantiate the five profiles in Table~\ref{tab:teg-construction-profiles}.
+\STATE Reject candidates that fail legality, novelty, or trace satisfaction.
+\STATE Lift objects to typed parameters; seal each binding and witness.
+\STATE Select by profile use, semantic-signature use, quality, then structural hash.
+\STATE Render $q_i$ deterministically; emit separate public and sealed records.
+\ENDFOR
+\STATE Deduplicate only byte-identical complete model inputs with agreeing semantics.
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Legal rollouts and events.}
+No classical or generalized planner is called. Applicable actions satisfy all
+positive, negative, numeric, and type conditions; effects are applied
+simultaneously.
+
+Only changed successor states are retained, and no path may repeat a complete
+state.
+
+A positive event changes a predicate atom from false to true; a negative event
+changes it from true to false. A changed integer fluent contributes equality to
+its successor value.
+
+Table~\ref{tab:teg-construction-profiles} gives the exact candidate grammar.
+
+\begin{table*}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{0.20\textwidth}p{0.27\textwidth}p{0.45\textwidth}}
+\toprule
+Profile & Hidden lifted oracle & Required grounded witness evidence \\
+\midrule
+Same-state conjunction & $F(A\land B)$ &
+One legal action makes distinct positive events $A$ and $B$ true in the same
+successor state. \\
+Same-state with negation & $F(A\land\neg B)$ &
+One legal action makes $A$ true and deletes predicate atom $B$ in the same
+successor state. \\
+Ordered two milestones & $F(A\land X(F(B)))$ &
+Two legal state-changing actions; $A$ is new after the first and $B$ is new
+after the second. \\
+Ordered three milestones & $F(A\land X(F(B\land X(F(C)))))$ &
+Three legal state-changing actions produce four pairwise-distinct states and a
+new selected event at each step. \\
+Persistence Until & $A\,U\,B$ &
+Dynamic predicate $A$ holds in every state before a new $B$ event, and $B$ is
+absent initially. \\
+\bottomrule
+\end{tabular}
+\caption{Version-1 temporal profiles. $F$ is eventuality, $X$ is strong next,
+and $U$ is strong Until. The witness is grounded before $A$, $B$, and $C$ are
+lifted.}
+\label{tab:teg-construction-profiles}
+\end{table*}
+
+\paragraph{Registered bounds and nontriviality.}
+Table~\ref{tab:teg-construction-bounds} fixes the finite search. The expanded
+tier is tried once and only when a problem has no primary candidate; every
+other rule remains unchanged.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{p{0.58\columnwidth}rr}
+\toprule
+Bound & Primary & Expanded \\
+\midrule
+Trace depth & 3 & 3 \\
+Applicable actions retained per state & 12 & 32 \\
+Join bindings retained per schema & 64 & 2,048 \\
+First-action prefixes & 4 & 4 \\
+Second actions per prefix & 4 & 4 \\
+Three-step prefixes & 1 & 1 \\
+Third actions per prefix & 4 & 4 \\
+Candidates per problem & 1,024 & 1,024 \\
+Candidates per profile & 16$^{a}$ & 16$^{a}$ \\
+\bottomrule
+\end{tabular}
+\caption{Registered construction bounds. $^{a}$The ordered-three profile is
+capped at eight candidates.}
+\label{tab:teg-construction-bounds}
+\end{table}
+
+Candidates are rejected when an action has no state effect, a complete state
+repeats, a second action restores the initial state, an ordered milestone is
+not new at its selected step, or an Until right-hand milestone holds initially.
+
+Failure means no witness was found under these bounds, not that no TEG exists.
+
+\paragraph{Lifting and deterministic selection.}
+Objects are traversed in formula order. Domain constants remain constants;
+other first occurrences become $X,Y,Z,\ldots$ with their PDDL types.
+
+Repeat occurrences reuse the same parameter. Type-compatible distinct objects
+receive explicit inequality constraints.
+
+The ground assignment is stored only in $\theta_i$. Each candidate receives an
+alpha-normalized semantic signature over its profile, types, sharing,
+constraints, atoms, and formula tree; ground object and witness-action names
+are excluded.
+
+Within each domain, selection minimizes prior profile use, then prior signature
+use, a registered structural quality key, and a spelling-independent SHA-256
+tie-break.
+
+Thus an alphabetically early action schema cannot define the benchmark by being
+encountered first.
+
+\paragraph{Concrete example.}
+A legal witness whose milestones are \texttt{holding(b1)} and later
+\texttt{on(b1,b4)} is lifted with
+$\theta_i=\{X\mapsto b1,Y\mapsto b4\}$ to the hidden oracle
+$T_i=F(\mathit{holding}(X)\land X(F(\mathit{on}(X,Y))))$.
+
+The public query exposes only typed $X,Y$, $X\ne Y$, and their strict milestone
+order.
+
+\paragraph{Rendering, deduplication, and audit boundary.}
+A deterministic visitor renders controlled English directly from $T_i$; no
+language model or domain-specific gloss participates.
+
+The public manifest keeps one row per problem, while the sealed audit keeps
+$T_i$, $\theta_i$, $\pi_i$, and replay-state fingerprints.
+
+The 1,228 public rows are grouped into 475 translation calls by hashing the
+rendered domain prompt, source text, typed parameters, constraints, and
+parameter semantics.
+
+Equal English alone is insufficient, and a group is rejected if its hidden
+semantic signatures disagree.
+
+The implementation is in
+\path{src/temporal_input/nl_benchmark.py} and
+\path{src/temporal_input/translation_worklist.py}; construction-profile,
+lifting, symbol-invariance, and deduplication tests accompany both modules.
 
 The novel GP2PL data release contains 475 deduplicated controlled-language
 specifications and 1,228 bound query cases over 16 PDDL domains. Each record
@@ -1027,7 +1190,7 @@ Prompt acceptance is not the semantic oracle. The model output first passes
 the exact eight-key schema, atom-table totality and one-to-one mapping, PDDL
 vocabulary, arity, type,
 parameter, and operator checks. It is then converted to a deterministic
-automaton by \texttt{ltlf2dfa} and MONA and required to be finite-trace
+automaton by LTLf2DFA and MONA and required to be finite-trace
 language-equivalent to the hidden gold formula. Retries receive only
 model-correctable diagnostics;
 infrastructure failures never alter the requested semantics. This separation
@@ -1085,7 +1248,7 @@ Experiments were conducted on an Apple M4 system with ten CPU cores and 24 GB
 unified memory, running macOS 26.4.1 on arm64. No GPU was used. The fixed
 software environment is Python 3.12.7, uv 0.8.19, Clingo 5.8.0
 \cite{Gebser2018Clingo}, Tarski 0.9.1 \cite{RamirezFrances2020Tarski},
-ltlf2dfa 1.0.2 \cite{Fuggitti2020LTLf2DFA}, MONA 1.4-18
+LTLf2DFA 1.0.2 \cite{Fuggitti2020LTLf2DFA}, MONA 1.4-18
 \cite{Henriksen1995MONA}, Jason 3.1.2 \cite{Bordini2007Jason}, OpenJDK 24,
 Maven 3.9.11, Docker 28.5.1, and VAL revision \texttt{3c7a1f3}
 \cite{Howey2004VAL}; the complete revision is fixed in the

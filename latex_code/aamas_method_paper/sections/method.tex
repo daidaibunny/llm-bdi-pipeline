@@ -119,16 +119,16 @@ suppress $\operatorname{prod}(D)$.
 The finite candidate-construction grammar is
 \[
 \begin{aligned}
-\mathfrak G=\{&\mathsf{producer},\mathsf{regression},\mathsf{recursion},
-\mathsf{precondition\mbox{-}repair},\\
-&\mathsf{resource\mbox{-}discharge},\mathsf{numeric\mbox{-}progress}\}.
+\mathfrak G=\{&\text{producer},\text{regression},\text{recursion},
+\text{precondition repair},\\
+&\text{resource discharge},\text{numeric progress}\}.
 \end{aligned}
 \]
 For the Boolean and numeric targets,
 $\operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$ instantiates
 these constructors using only typed schemas and effects from $D$; its finite
-output is $\mathcal C_D(E)$. For a Boolean target predicate $p$, a
-\emph{producer} is an action schema $a\in\mathcal A$ for which some
+output is $\mathcal C_D(E)$. For a Boolean target predicate $p$, a producer is
+an action schema $a\in\mathcal A$ for which some
 $\ell\in\operatorname{add}(a)$ satisfies $\operatorname{pred}(\ell)=p$.
 For target set $T$, define the reachable producer--precondition graph
 $\mathcal G_D^{\mathrm{prod}}(T)=(V_T,E_T)$ over predicate signatures: an edge
@@ -273,13 +273,13 @@ obligation only through alpha-equivalent triggers and bodies, a weaker
 conjunctive context with the same body, or an action-schema producer refinement
 with the same $\mustadd$, no additional $\maydelete$, and equivalent numeric
 and keyed-resource summaries. We write this evidence-coverage relation as
-$\mathsf{covers}_D(b,e)$. Syntactic body-prefix similarity is not treated as
+$\operatorname{covers}_D(b,e)$. Syntactic body-prefix similarity is not treated as
 semantic equivalence.
 
 The solver also treats every nonrecursive action-schema-derived branch as a
 schema-achievement obligation: at least one selected branch must realize the
 same certified achievement contract. Let $\mathcal C_D^{\mathrm{nr}}(E)$ denote
-these nonrecursive branches and let $\mathsf{realizes}_D(b,c)$ hold when selected
+these nonrecursive branches and let $\operatorname{realizes}_D(b,c)$ hold when selected
 branch $b$ is equivalent to, soundly refines, or gives a certified
 target-preserving resource-discharge alternative to schema branch $c$. It
 further enforces internal-call closure,
@@ -287,7 +287,7 @@ acyclic ranked cross-predicate preparation, and compatibility of selected
 effects with recursive rankings. Define
 \begin{align*}
 \mathcal C^{\checkmark}_{D,E}
-  &=\{b\in\mathcal C_{D,E}\mid\mathsf{Cert}_D(b)\},\\
+  &=\{b\in\mathcal C_{D,E}\mid\operatorname{Cert}_D(b)\},\\
 \mathfrak F_{D,E}
   &=\{S\subseteq\mathcal C^{\checkmark}_{D,E}\mid
       S\models\Omega_{D,E}\}.
@@ -295,10 +295,10 @@ effects with recursive rankings. Define
 where $\Omega_{D,E}$ contains evidence coverage, schema-achievement coverage,
 internal-call closure, preparation acyclicity, and recursive-ranking
 compatibility. Resource discharge is already part of the per-branch predicate
-$\mathsf{Cert}_D$. In particular, schema-achievement coverage requires
+$\operatorname{Cert}_D$. In particular, schema-achievement coverage requires
 \[
 \forall c\in\mathcal C_D^{\mathrm{nr}}(E),\quad
-\exists b\in S:\mathsf{realizes}_D(b,c).
+\exists b\in S:\operatorname{realizes}_D(b,c).
 \]
 The optimizer uses the
 lexicographic objective
@@ -346,7 +346,7 @@ A runtime binding is a type-consistent map
 $\theta_q:\bar X_q\rightarrow O_I$ satisfying the type signature
 $\Theta_q:\bar X_q\rightarrow\mathcal T$ and constraints $\Gamma_q$; the validated bound
 query is $\widehat\tau_q=(\tau_q,\theta_q)$, and $g_q$ denotes its generated
-top-level BDI goal. The \texttt{ltlf2dfa}/MONA translation produces
+top-level BDI goal. The LTLf2DFA/MONA translation produces
 \[
 \mathcal D_q=
 \langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle
@@ -406,7 +406,7 @@ Single-valued invariants reject conjunctions requesting two values for one key.
 
 A negative guard $\neg N$ never becomes $!\neg N$. Positive repairs must exclude
 feasible $\mayadd(N)$. If $N$ holds, a signed leaf may call only a finite branch
-with exact $\mathsf{MustDelete}(N)$ that establishes a positive sibling and
+with exact $\operatorname{MustDelete}(N)$ that establishes a positive sibling and
 preserves all obligations. A negative-only edge observes absence. Direct-
 deleter parameters bind through compatible sibling add effects before range
 restriction, without recognizing fluent names.
@@ -513,7 +513,7 @@ otherwise call $!r_{q_s,\chi}$
 \end{algorithmic}
 \end{algorithm}
 
-A \emph{complete transition-repair pass} is
+A complete transition-repair pass is
 $\operatorname{Pass}_{q_s,\chi}=R_\chi[1,n]\cdot c_{q_s,\chi}$, where $\cdot$
 denotes sequential controller composition. The monitor still advances after
 every primitive action, but

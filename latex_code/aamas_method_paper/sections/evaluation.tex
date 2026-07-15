@@ -25,23 +25,22 @@ line marks the 1,800-second deadline.}
 \subsection{Questions and Comparisons}
 
 \paragraph{Atomic compilation.}
-\emph{Evidence Only} validates provider macros against the PDDL schemas and
-retains them without producible-target expansion. \emph{Direct Producers} adds
-action-only producers for the producible target universe; \emph{Maximum
-Feasible} retains a maximum-cardinality jointly feasible subset after adding
+Evidence Only validates provider macros against the PDDL schemas and
+retains them without producible-target expansion. Direct Producers adds
+action-only producers for the producible target universe; Maximum Feasible
+retains a maximum-cardinality jointly feasible subset after adding
 compatible recursive precondition-repair and target-preserving
-resource-discharge candidates; and \emph{Full GP2PL} applies the lexicographic
+resource-discharge candidates; and Full GP2PL applies the lexicographic
 Clingo objective to the same generated certified set. Their paired
 comparison measures target coverage, internal-call closure, held-out execution,
 and compact selection of the atomic core.
 
 \paragraph{Temporal composition.}
-\emph{Unprotected Serialization} uses the same automaton, library, and
-primitive-step monitor without completion-effect analysis. \emph{Certified
-Flat} adds threat-induced precedence ordering and preservation portfolios;
-\emph{Certified Balanced} changes only
+Unprotected Serialization uses the same automaton, library, and
+primitive-step monitor without completion-effect analysis. Certified Flat adds
+threat-induced precedence ordering and preservation portfolios; Certified Balanced changes only
 flat control to the balanced binary transition-repair tree. A
-\emph{Module-Return Monitor} observes only on module return,
+Module-Return Monitor observes only on module return,
 testing the primitive-step observation boundary.
 
 \paragraph{End-to-end references.}
@@ -74,6 +73,34 @@ internal worker and is analyzed independently. Our 16~GiB cap differs from
 MOOSE's 32~GB; Jason and VAL receive 30 minutes per test.
 Source revisions and splits appear in the Technical Supplement, Sec.~4.3;
 parameters and reporting rules appear in Secs.~5.2--5.3.
+
+\paragraph{Temporal benchmark construction.}
+For each held-out problem, the builder reads typed objects, the initial state,
+and action schemas, but ignores the original achievement goal. It invokes no
+planner.
+
+From the initial state, it enumerates legal, state-changing, nonrepeating
+rollouts of at most three actions. Predicate additions, deletions, and integer
+value changes become candidate events.
+
+The five profiles are $F(A\land B)$, $F(A\land\neg B)$,
+$F(A\land X(F(B)))$, $F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$.
+Each candidate retains the legal rollout that witnesses its formula.
+
+Concrete objects are lifted to typed parameters with explicit inequality
+constraints. For example, milestones \texttt{holding(b1)} then
+\texttt{on(b1,b4)} yield
+$F(\mathit{holding}(X)\land X(F(\mathit{on}(X,Y))))$ under a hidden binding.
+
+Canonical selection first balances profile and alpha-normalized semantic-signature
+use, then applies a symbol-independent structural tie-break. A deterministic
+renderer produces the controlled source utterance.
+
+This gives one row for each of the 1,228 test problems.
+
+Deduplication merges only identical complete model inputs with agreeing hidden
+semantics, yielding 475 translation calls. Full rules and registered bounds
+appear in the Technical Supplement, Sec.~4.1.
 
 \paragraph{Controlled inputs and references.}
 Atomic variants share each seed's evidence; temporal variants share the atomic

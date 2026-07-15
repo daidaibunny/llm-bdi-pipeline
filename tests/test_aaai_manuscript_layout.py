@@ -146,6 +146,46 @@ def test_temporal_result_tables_follow_their_result_subsection() -> None:
 	assert "\\input{sections/result_domain_table}" in supplement_source
 
 
+def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None:
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	outline_source = (
+		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
+	).read_text(encoding="utf-8")
+
+	for required_main_claim in (
+		"\\paragraph{Temporal benchmark construction.}",
+		"ignores the original achievement goal",
+		"rollouts of at most three actions",
+		"alpha-normalized semantic-signature",
+		"one row for each of the 1,228 test problems",
+		"475 translation calls",
+		"Technical Supplement, Sec.~4.1",
+	):
+		assert required_main_claim in evaluation_source
+
+	for required_supplement_contract in (
+		"\\label{app:teg-dataset}",
+		"\\mathcal B_i=\\langle D,P_i,q_i,T_i,\\theta_i,\\pi_i\\rangle",
+		"retained only as provenance",
+		"\\label{alg:teg-benchmark-construction}",
+		"\\label{tab:teg-construction-profiles}",
+		"\\label{tab:teg-construction-bounds}",
+		"Failure means no witness was found under these bounds",
+		"\\path{src/temporal_input/nl_benchmark.py}",
+		"\\path{src/temporal_input/translation_worklist.py}",
+	):
+		assert required_supplement_contract in supplement_source
+
+	assert "bounded legal non-repeating rollouts" in outline_source
+	assert "Keep the frozen\nprompt in Sec. 4.2" in outline_source
+	assert "PDDL provenance in Sec. 4.3" in outline_source
+
+
 def test_main_and_supplement_use_the_approved_table_split() -> None:
 	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
@@ -191,7 +231,7 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 	figure_two_position = main_source.index("\\label{fig:policy-lifting-example}")
 	abstract_end_position = main_source.index("\\end{abstract}")
 	introduction_position = main_source.index("\\section{Introduction}")
-	example_position = main_source.index("Singleton-goal evidence for")
+	example_position = main_source.index("Blocks World")
 	background_position = main_source.index("\\input{sections/background}")
 	assert abstract_end_position < introduction_position < example_position
 	assert example_position < figure_one_position
@@ -207,6 +247,82 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 		evaluation_source
 	)
 	assert "\\label{fig:evaluation-summary}" in evaluation_source
+
+
+def test_abstract_uses_paper_level_granularity() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	abstract_match = re.search(
+		r"\\begin\{abstract\}(?P<body>.*?)\\end\{abstract\}",
+		main_source,
+		re.DOTALL,
+	)
+	assert abstract_match is not None
+	abstract_source = abstract_match.group("body")
+	abstract_words = re.findall(r"[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*", abstract_source)
+
+	assert len(abstract_words) <= 180
+	for required_summary in (
+		"representation gap",
+		"certified BDI plan libraries",
+		"finite-trace temporal goals",
+		"supported fragment",
+		"independently validated accepting traces",
+	):
+		assert required_summary in abstract_source
+	for implementation_level_term in (
+		"candidate-construction grammar",
+		"target-preserving resource discharge",
+		"primitive-step monitoring",
+		"Clingo",
+		"ltlf2dfa",
+	):
+		assert implementation_level_term not in abstract_source
+
+
+def test_introduction_explains_blocks_before_using_symbolic_example() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	introduction_source = main_source[
+		main_source.index("\\section{Introduction}") : main_source.index(
+			"\\input{sections/background}",
+		)
+	]
+
+	assert "Blocks World is a standard planning domain" in introduction_source
+	assert introduction_source.index("Blocks World") < introduction_source.index(
+		"\\texttt{on(X,Y)}",
+	)
+	assert "destination block is clear" in introduction_source
+	assert "F(\\mathit{on}" not in introduction_source
+	assert "GP2PL makes three contributions" in introduction_source
+
+
+def test_manuscript_typography_distinguishes_prose_code_and_formal_notation() -> None:
+	authored_sources = (
+		LATEX_ROOT / "main.tex",
+		LATEX_ROOT / "technical_appendix.tex",
+		LATEX_ROOT / "sections/background.tex",
+		LATEX_ROOT / "sections/related_work.tex",
+		LATEX_ROOT / "sections/method.tex",
+		LATEX_ROOT / "sections/evaluation.tex",
+		LATEX_ROOT / "sections/technical_appendix_content.tex",
+	)
+	combined_source = "\n".join(
+		path.read_text(encoding="utf-8") for path in authored_sources
+	)
+
+	assert "LTLf2DFA" in combined_source
+	assert "\\texttt{ltlf2dfa}" not in combined_source
+	assert "\\newcommand{\\mayadd}{\\ensuremath{\\mathrm{MayAdd}}}" in (
+		LATEX_ROOT / "main.tex"
+	).read_text(encoding="utf-8")
+	assert "\\operatorname{realizes}_D" in combined_source
+	assert "\\operatorname{covers}_D" in combined_source
+	for inappropriate_style in (
+		"\\emph{",
+		"\\textit{",
+		"\\mathsf{",
+	):
+		assert inappropriate_style not in combined_source
 
 
 def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
@@ -249,11 +365,12 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	assert figure_caption is not None
 	caption_text = " ".join(figure_caption.group(1).split())
 	assert "atomic module core" in caption_text
-	assert "$\\mathcal M_D=\\mathcal L_D^{[0]}$" in caption_text
+	assert "$\\mathcal M_D$" in caption_text
 	assert "controller plans" in caption_text
 	assert "$\\mathcal Q_q$" in caption_text
-	assert "one maintained BDI library" in caption_text
-	assert "$\\mathcal L_D^{[k+1]}=\\mathcal L_D^{[k]}\\cup\\mathcal Q_q$" in caption_text
+	assert "same maintained BDI library" in caption_text
+	assert "without relearning the core" in caption_text
+	assert "\\mathcal L_D^{[k+1]}" not in caption_text
 
 
 def test_figure_design_separates_target_generation_from_set_level_call_closure() -> None:
@@ -280,7 +397,8 @@ def test_figure_design_separates_target_generation_from_set_level_call_closure()
 	assert figure_two_caption is not None
 	caption_text = " ".join(figure_two_caption.group(1).split())
 	assert "each candidate is checked" in caption_text
-	assert "set satisfying evidence coverage and internal-call closure" in caption_text
+	assert "selects a compact feasible set" in caption_text
+	assert "covers the evidence and resolves every internal call" in caption_text
 	assert "candidates pass binding, executability, achievement, internal-call closure" not in (
 		caption_text
 	)
@@ -324,8 +442,8 @@ def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 	assert "\\operatorname{Inst}_D" in method_source
 	assert "\\mathcal G_D^{\\mathrm{prod}}(T)" in method_source
 	assert "\\mathfrak F_{D,E}" in method_source
-	assert "\\mathsf{covers}_D(b,e)" in supplement_source
-	assert "\\mathsf{realizes}_D(b,c)" in supplement_source
+	assert "\\operatorname{covers}_D(b,e)" in supplement_source
+	assert "\\operatorname{realizes}_D(b,c)" in supplement_source
 	assert (
 		"\\tau_q=\\langle\\iota_q,\\varphi_q,\\mu_q,\\Theta_q,\\Gamma_q\\rangle"
 		in method_source

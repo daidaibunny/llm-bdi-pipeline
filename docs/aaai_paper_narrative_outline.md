@@ -145,8 +145,13 @@ our evidence-to-library compiler.
 
 ## One Running Example
 
-Use one small Blocks example in the Introduction, Method, Temporal Composition,
-and Evaluation case study.
+Use one small Blocks example across the Introduction, Method, Temporal
+Composition, and Evaluation case study. The Introduction first defines Blocks
+World in plain language: a robot rearranges blocks, placing one block on another
+requires holding the first block and clearing the destination, and an executable
+library must know how to achieve that missing condition. Introduce exact
+predicate and action notation only after this explanation, in the method figure
+and formal sections.
 
 The evidence-side example begins with a readable MOOSE singleton-goal rule for
 `on(X,Y)`, such as a regressed condition that permits `stack(X,Y)`. The compiler
@@ -229,15 +234,16 @@ The abstract follows a five-part structure:
 
 1. **Problem:** generalized planners return reusable policies, while BDI agents
    require executable and maintainable plan libraries.
-2. **Gap:** direct policy-to-BDI-plan translation does not establish binding,
-   internal-call closure, recursive progress, target-preserving resource
-   discharge, or safe temporal
-   composition.
-3. **Method:** jointly certify and select MOOSE evidence macros and PDDL-derived
-   atomic modules, realize the selected BDI library in AgentSpeak(L), and compile
-   supported LTLf DFA transitions into query-local controllers.
-4. **Guarantee boundary:** state certified-candidate-set optimality and supported-
-   fragment soundness, together with fail-closed rejection.
+2. **Gap:** direct translation may omit executable plans for subsidiary goals
+   and does not support safe temporal composition. Keep detailed certificate
+   names out of the abstract.
+3. **Method:** validate and lift generalized-planning evidence, complete missing
+   achievable subgoals from PDDL action schemas, select a compact executable
+   core, and append finite-trace query controllers without relearning it. Name
+   concrete software components only in the method and evaluation sections.
+4. **Guarantee boundary:** state soundness for the supported fragment and
+   fail-closed rejection; defer candidate grammar and individual proof
+   obligations to the formal sections.
 5. **Results:** after the clean final runs, report one atomic-compilation number,
    one Jason+VAL execution number, and one DFA-acceptance or TEG-translation
    number. Do not insert unpinned diagnostic results.
@@ -249,13 +255,16 @@ software components.
 
 1. Contrast one grounded classical plan, one generalized policy, and one BDI
    plan library.
-2. Explain why compilation is not formatting: variables must be safely bound,
-   internal calls must be closed, recursion must terminate, and resource use
-   must be restored.
+2. Explain why compilation is not formatting at a conceptual level: a policy
+   may rely on subsidiary conditions for which an executable library has no
+   plan. Defer the complete binding, closure, recursion, and resource
+   certificate inventory to the method.
 3. Explain why a temporally extended goal (TEG), meaning a goal over a finite
    state trace, cannot generally be replaced by an arbitrary sequence of
    achievement calls.
-4. Introduce the Blocks running example.
+4. Introduce the Blocks running example in plain language before using
+   `on(X,Y)`, `stack(X,Y)`, `holding(X)`, or `clear(Y)` notation. Keep the exact
+   rule and temporal formula in the figure caption and method sections.
 5. Present the two-stage architecture and three implemented contributions in a
    continuous paragraph. An itemized contribution list is not forbidden by the
    AAAI template, but prose better matches this paper's short causal argument.
@@ -535,6 +544,34 @@ unregistered capability-switch rows. The historical sequence-only controller
 may appear only as an evaluation-only weak reference; it must not return as an
 operational shortcut.
 
+The benchmark section must describe how the TEG dataset is constructed, not
+only its released fields and translation results. The main paper gives the
+compact dependency-ordered flow:
+
+```text
+PDDL domain + held-out problem initial state
+-> bounded legal non-repeating rollouts
+-> five-profile temporal candidate pool
+-> typed parameter lifting + hidden binding/witness
+-> deterministic profile/signature-balanced selection
+-> deterministic controlled-English rendering
+-> problem-complete manifest
+-> complete-input translation deduplication
+```
+
+State explicitly that the original PDDL achievement goal is provenance only:
+it does not affect rollout enumeration, candidate ranking, query wording, or
+construction success. The main paper must include one concrete lifted example
+and direct readers to Technical Supplement, Sec. 4.1.
+
+Technical Supplement, Sec. 4.1 must define the construction record
+`B_i=<D,P_i,q_i,T_i,theta_i,pi_i>`, the event extraction rules, all five formula
+profiles and their witness conditions, nontriviality filters, typed lifting,
+deterministic selection, public/private boundary, and complete-input
+deduplication. It must also report the primary and expanded registered bounds
+and explain that bounded failure is not an impossibility proof. Keep the frozen
+prompt in Sec. 4.2 and PDDL provenance in Sec. 4.3.
+
 The benchmark section records all 16 domain families and their pinned splits.
 The system section records the MOOSE, compiler, Jason, VAL, MONA, memory,
 timeout, worker, and seed configuration. The scientific purpose of the five
@@ -670,6 +707,7 @@ The standalone source
 `latex_code/aamas_method_paper/technical_appendix.tex` is the canonical
 technical appendix. It contains the full formal definitions, assumptions,
 proofs of every proposition, theory-to-code map, novel-data description,
+the witness-backed TEG construction algorithm and registered search bounds,
 the frozen natural-language-to-LTLf prompt template, external-data provenance,
 final parameter table, development value ranges, hardware/software
 specification, distributional statistics, and checklist explanations. The main
@@ -869,11 +907,9 @@ Figure 1. Those details belong in Figure 2, the algorithms, and Evaluation.
 Draft caption:
 
 > **Figure 1:** GP2PL compiles domain model $D$ and singleton-goal policy
-> evidence $E$ once into the certified atomic module core
-> $\mathcal M_D=\mathcal L_D^{[0]}$. Each bound temporal query $q$ contributes
-> controller plans $\mathcal Q_q$ without relearning, updating the one maintained
-> BDI library by
-> $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
+> evidence $E$ once into the certified atomic module core $\mathcal M_D$. Each
+> bound temporal query $q$ adds controller plans $\mathcal Q_q$ to the same
+> maintained BDI library without relearning the core.
 
 ### Figure 2: From Policy Evidence to a Certified Atomic Core
 
@@ -1011,19 +1047,14 @@ candidate set, not a verbatim claim that every seed selects these exact
 branches. It demonstrates branch provenance, a selected direct producer, and
 recursive internal-call closure. Approved caption:
 
-> Figure 2: Certified lifting from singleton-goal evidence to a recursive
-> atomic module core $\mathcal M_D$. Left: normalized evidence for `on(X,Y)` and
-> the relevant slice of the domain-wide producible target universe, and producer
-> schemas generate evidence-backed and action-schema-derived candidates. Middle: each
-> candidate is checked for binding, executability, achievement, and any triggered
-> progress or target-preserving resource-discharge obligations. Clingo then
-> computes the lexicographically optimal feasible set satisfying evidence coverage and
-> internal-call closure. Right:
-> branch provenance
-> is preserved in the AgentSpeak(L) realization of $\mathcal M_D$, containing
-> already-satisfied and direct-producer cases plus recursive preparation through
-> the generated `clear/1` module. Optimality is relative to the generated
-> certified candidate set $\mathcal C^{\checkmark}_{D,E}$.
+> Figure 2: Certified lifting in the Blocks World example. The goal `on(X,Y)`
+> means that block $X$ rests on block $Y$; `stack(X,Y)` achieves it only when the
+> robot holds $X$ and $Y$ is clear. Left: policy evidence and PDDL action schemas
+> generate candidates not only for `on(X,Y)` but also for achievable subsidiary
+> goals such as clearing a block. Middle: each candidate is checked, and GP2PL
+> selects a compact feasible set that covers the evidence and resolves every
+> internal call. Right: the resulting atomic core $\mathcal M_D$ contains direct
+> plans and recursive preparation through the generated `clear/1` module.
 
 ### Supplementary Figure S1: DFA Transition Compilation and Runtime Monitoring
 
@@ -1465,6 +1496,16 @@ timed-out Jason action prefix is diagnostic evidence, not a successful plan.
   `aaai2027.bst` without locally redefining margins, fonts, caption spacing,
   or bibliography style. The style loads its required fonts; do not add legacy
   `times`, `helvet`, or `courier` packages.
+- In manuscript prose, use the Author Kit's normal Times-like roman text for
+  ordinary technical terms, including producer, regression, recursion,
+  precondition repair, resource discharge, and numeric progress. Write cited
+  software-system names such as MOOSE, LTLf2DFA, MONA, Clingo, AgentSpeak(L),
+  Jason, and VAL in roman text. Use Courier through `\texttt{}` only for literal
+  code, predicate, action, module-signature, path, and artifact identifiers such
+  as `clear/1`, `stack(X,Y)`, and `summary.json`. Use
+  upright serif mathematical notation for formal named summaries such as
+  $\mathrm{MayAdd}$ and conventional operators such as
+  $\operatorname{realizes}$; do not use sans-serif math as generic emphasis.
 - Retain the Author Kit's required `\usepackage{caption}` declaration; do not
   load packages or define commands that override float placement or caption
   spacing.
