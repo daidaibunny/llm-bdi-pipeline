@@ -29,7 +29,8 @@ not a recursive module. For example, `load-truck; drive-truck; unload-truck` is
 a macro, whereas `!clear(Y); !on(X,Y)` is a recursive subgoal decomposition.
 
 The **Validated Policy-Lifting Compiler** consumes provider-neutral evidence
-and the PDDL action schemas. It validates action sequences, generates required
+and the PDDL action schemas. It canonically lifts provider-local variables,
+validates action sequences, generates required
 action-schema-derived candidates over the producible target universe, checks binding
 and progress conditions, selects a
 compact candidate set, and renders the certified atomic module core.
@@ -98,8 +99,11 @@ for each semantic object:
 - `D=<P,F,A,T>` is the typed planning domain; a problem instance is
   `I=<D,O_I,s_I^0,G_I>`, where `O_I` is its finite typed object set;
   `I_train` is the finite training instance set. `E_raw` is one raw provider
-  artifact; `E` is its normalized singleton-goal evidence program; and `e` is
-  one normalized evidence rule.
+  artifact; `E_0` is the provider-normalized evidence program; and
+  `E = CanonicalLift_D(E_0)` is its typed, alpha-normalized singleton-goal
+  evidence program. Canonical lifting preserves repeated-variable sharing and
+  PDDL domain constants; it does not relearn a first-order policy from ground
+  plans. `e` is one canonically lifted evidence rule.
 - `T_D(E)=goalPred(E) union prod(D)` is the Boolean producible target universe,
   and `T_D^Z(E)` is the admitted singleton bounded-integer equality target set.
 - `G` is the domain-independent candidate-construction grammar. The finite

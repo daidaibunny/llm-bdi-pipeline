@@ -30,7 +30,7 @@ constant-integer effects.
 
 \begin{definition}[Singleton-goal evidence]
 A raw provider artifact $\mathcal E_{\mathrm{raw}}$ is admissible when it can be
-normalized into a finite evidence program $E$, understood as a finite rule set.
+normalized into a finite evidence program $E_0$, understood as a finite rule set.
 A normalized evidence rule is
 \[
 e=\langle\bar X_e,C_e^s,g_e,\bar a_e,\nu_e,\pi_e\rangle.
@@ -38,9 +38,21 @@ e=\langle\bar X_e,C_e^s,g_e,\bar a_e,\nu_e,\pi_e\rangle.
 $\bar X_e$ are typed variables, $C_e^s$ is a partial state condition, $g_e$ is
 one positive predicate literal or supported integer equality, $\bar a_e$ is a
 finite PDDL action macro, $\nu_e$ records numeric conditions and effects, and
-$\pi_e$ records provenance. The program $E$ is admissible for $D$ only if
+$\pi_e$ records provenance. The program $E_0$ is admissible for $D$ only if
 all symbols, arities, types, and macro actions map to $D$, and symbolic execution
 under $C_e^s$ establishes $g_e$.
+\end{definition}
+
+\begin{definition}[Canonical lifting]
+For an admissible provider-normalized program $E_0$, canonical lifting is the
+map $\operatorname{Lift}_D(E_0)=E$ that alpha-renames every provider-local
+variable to a typed canonical variable. The map preserves repeated-variable sharing
+within and across a rule's goal, context, and macro actions; constants declared
+by $D$ remain constants. Variables introduced while instantiating typed action
+schemas are fresh with respect to the lifted evidence rule. Thus lifting is
+invariant to provider-local variable names and cannot replace a training object
+by an unrelated constant. It is a representation-level canonicalization of
+first-order evidence, not an inference procedure from ground plans.
 \end{definition}
 
 MOOSE readable policies \cite{Chen2026Moose} are the evaluated evidence
@@ -94,8 +106,8 @@ and validated bound query. \\
 $I,O_I,\mathcal I_{\mathrm{train}}$ & Problem instance, its typed object set,
 and finite training instance set. &
 $\iota_q,g_q$ & Query identifier and generated top-level BDI goal. \\
-$\mathcal E_{\mathrm{raw}},E,e$ & Raw provider artifact, normalized finite
-evidence program, and one evidence rule. &
+$\mathcal E_{\mathrm{raw}},E_0,E,e$ & Raw provider artifact, provider-normalized
+program, canonically lifted finite evidence program, and one evidence rule. &
 $\mu_q,\Theta_q,\Gamma_q$ & Proposition map, parameter type signature, and
 binding constraints. \\
 $T_D(E),T_D^{\mathbb Z}(E)$ & Boolean producible target universe and admitted
@@ -110,7 +122,7 @@ $\mathcal G_D^{\mathrm{prod}}(T)$ & Producer--precondition dependency graph
 reachable from targets $T$. &
 $\mathcal O_\chi$ & Signed transition obligation induced by $\chi$. \\
 $\mathfrak G,\operatorname{Inst}_D$ & Domain-independent candidate-construction
-grammar and typed instantiation. &
+grammar and lifted typed-schema instantiation. &
 $\Pi_{\chi,i},\mathcal G_\chi,\prec_\chi$ & Preservation portfolio,
 threat-induced precedence graph, and relation. \\
 $\mathcal C_E,\mathcal C_D(E),\mathcal C_{D,E}$ & Validated evidence branches,
@@ -738,9 +750,10 @@ paper can be audited in both directions.
 \toprule
 Formal construction & Principal public source & Verification \\
 \midrule
-Evidence normalization &
+Evidence normalization and canonical lifting &
 \path{src/domain_level_planning/evidence_module.py} &
-Provider-name invariance, schema, arity, numeric, and macro tests \\
+Provider-name invariance, repeated-variable sharing, domain-constant
+preservation, schema, arity, numeric, and macro tests \\
 Certified candidate generation and feasible-core selection &
 \path{src/domain_level_planning/atomic_module_synthesis.py} &
 Clingo coverage, refinement, internal-call closure, ranking, release, and

@@ -4,25 +4,26 @@
 \subsection{Method Overview}
 
 GP2PL first maps
-$D,\mathcal{I}_{\mathrm{train}},E\longrightarrow\mathcal{M}_D$,
+$D,\mathcal{I}_{\mathrm{train}},\mathcal E_{\mathrm{raw}}
+\longrightarrow\mathcal{M}_D$,
 compiling the query-independent certified atomic module core from a PDDL domain,
-training split, and normalized generalized-planning evidence. Temporal queries
+training split, and generalized-planning evidence. Temporal queries
 do not enter this optimization; every later query reuses $\mathcal M_D$.
 Algorithm~\ref{alg:atomic} summarizes the procedure.
 
 \begin{algorithm}[htbp]
-\caption{Compile the Certified Atomic Module Core}
+\caption{Compile the Certified Lifted Atomic Module Core}
 \label{alg:atomic}
 \begin{algorithmic}[1]
 \REQUIRE PDDL domain $D$, training split $\mathcal I_{\mathrm{train}}$,
 raw provider artifact $\mathcal E_{\mathrm{raw}}$
-\ENSURE Certified atomic module core $\mathcal M_D$ or a rejection diagnostic
-\STATE $E\leftarrow\textsc{NormalizeEvidence}(\mathcal E_{\mathrm{raw}},D,
-\mathcal I_{\mathrm{train}})$
+\ENSURE Certified lifted atomic module core $\mathcal M_D$ or a rejection diagnostic
+\STATE $E_0\leftarrow\textsc{NormalizeEvidence}(\mathcal E_{\mathrm{raw}},D,\mathcal I_{\mathrm{train}})$
+\STATE $E\leftarrow\textsc{CanonicalLift}(E_0,D)$
 \STATE $T_D(E)\leftarrow\textsc{ProducibleTargets}(E,D)$
 \STATE $\mathcal C_E\leftarrow\textsc{ValidateEvidenceMacros}(E,D)$
 \STATE $\mathcal C_D(E)\leftarrow
-\operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$
+\textsc{LiftSchemas}(D,\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$
 \STATE $\mathcal C^{\checkmark}_{D,E}\leftarrow
 \textsc{Certify}(\mathcal C_E\cup\mathcal C_D(E),D)$
 \STATE $\mathfrak F_{D,E}\leftarrow
@@ -75,11 +76,12 @@ controller or synthetic atomic goal.}
 \label{tab:supported-fragment}
 \end{table}
 
-\subsection{Evidence Normalization}
+\subsection{Evidence Normalization and Canonical Lifting}
 
 An evidence provider is admissible when its raw artifact
-$\mathcal E_{\mathrm{raw}}$ can be normalized into a
-singleton-goal evidence program whose rules have the form
+$\mathcal E_{\mathrm{raw}}$ can be parsed into a provider-normalized
+singleton-goal evidence program $E_0$. Canonical lifting then maps $E_0$ to
+$E=\operatorname{Lift}_D(E_0)$, whose rules have the form
 \[
 e=\langle \bar X_e,C_e^s,g_e,\bar a_e,\nu_e,\pi_e\rangle,
 \]
@@ -89,8 +91,15 @@ effects, and $\pi_e$ records provenance. For example, evidence for
 \texttt{at(P,L)} may contain a
 \texttt{load; move; unload} macro. Admissibility requires every symbol and arity
 to occur in $D$, capture-avoiding renaming of local variables, and a singleton
-positive achievement target. In the experiments, $E$ is obtained from MOOSE readable
-policies \cite{Chen2026Moose}. Negative achievement evidence is rejected because
+positive achievement target. The lifting map alpha-normalizes provider-local
+variables into typed canonical variables, preserves repeated-term sharing, and
+leaves constants declared by $D$ fixed. It does not infer a first-order policy
+from ground plans: that operation belongs to the external evidence provider.
+For example, a provider rule whose declared variables occur as
+\texttt{on(block0,block1)} and \texttt{stack(block0,block1)} becomes
+\texttt{on(X,Y)} and \texttt{stack(X,Y)}, while a PDDL domain constant remains
+unchanged. In the experiments, $E_0$ is obtained from MOOSE readable policies
+\cite{Chen2026Moose}. Negative achievement evidence is rejected because
 those policies provide no validated action realization for achieving a negated
 literal.
 
@@ -125,9 +134,14 @@ The finite candidate-construction grammar is
 \end{aligned}
 \]
 For the Boolean and numeric targets,
-$\operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$ instantiates
-these constructors using only typed schemas and effects from $D$; its finite
-output is $\mathcal C_D(E)$. For a Boolean target predicate $p$, a producer is
+$\textsc{LiftSchemas}$ computes
+\[
+\mathcal C_D(E)=
+\operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E)).
+\]
+It instantiates these constructors using only typed schemas and effects from
+$D$ and alpha-normalizes every resulting variable-level branch. Its output is
+finite. For a Boolean target predicate $p$, a producer is
 an action schema $a\in\mathcal A$ for which some
 $\ell\in\operatorname{add}(a)$ satisfies $\operatorname{pred}(\ell)=p$.
 For target set $T$, define the reachable producer--precondition graph

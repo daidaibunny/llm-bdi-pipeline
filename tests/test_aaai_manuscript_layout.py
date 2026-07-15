@@ -344,7 +344,7 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	assert "\\mathcal{L}_D^{(q)}" not in background_source
 	assert "\\mathcal L_D^{(q)}" not in method_source
 	assert "\\mathcal L_D^{(q)}" not in supplement_source
-	assert "\\ENSURE Certified atomic module core $\\mathcal M_D$" in method_source
+	assert "\\ENSURE Certified lifted atomic module core $\\mathcal M_D$" in method_source
 	assert "selected atomic core $\\mathcal M_D$" in method_source
 	assert "query-local plan set $\\mathcal Q_q$" in method_source
 	assert "The certified atomic module core is the optimal feasible selected set" in (
@@ -376,6 +376,32 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	assert "$\\mathcal L_D^{[k+1]}=\\mathcal L_D^{[k]}\\cup\\mathcal Q_q$" in caption_text
 
 
+def test_atomic_compilation_makes_canonical_lifting_explicit() -> None:
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	decisions_source = (
+		PROJECT_ROOT / "docs" / "research_pipeline_decisions.md"
+	).read_text(encoding="utf-8")
+	outline_source = (
+		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
+	).read_text(encoding="utf-8")
+
+	assert "Compile the Certified Lifted Atomic Module Core" in method_source
+	assert "E_0\\leftarrow\\textsc{NormalizeEvidence}" in method_source
+	assert "E\\leftarrow\\textsc{CanonicalLift}(E_0,D)" in method_source
+	assert "\\textsc{LiftSchemas}" in method_source
+	assert "definition}[Canonical lifting]" in supplement_source
+	assert "preserves repeated-variable sharing" in supplement_source
+	assert "constants declared by $D$ remain constants" in " ".join(
+		supplement_source.split(),
+	)
+	assert "`E_0` is the provider-normalized evidence program" in decisions_source
+	assert "`E = CanonicalLift_D(E_0)`" in decisions_source
+	assert "`E = CanonicalLift_D(E_0)`" in outline_source
+
+
 def test_figure_design_separates_target_generation_from_set_level_call_closure() -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 	outline_source = (
@@ -383,7 +409,7 @@ def test_figure_design_separates_target_generation_from_set_level_call_closure()
 	).read_text(encoding="utf-8")
 
 	assert "`Singleton-goal policy evidence E`" in outline_source
-	assert "`(1) Construct + certify core once`" in outline_source
+	assert "`(1) Lift + certify core once`" in outline_source
 	assert "relevant slice of $T_D(E)$" in outline_source
 	assert "`producer preconditions`" in outline_source
 	assert "`precondition repair via clear/1`" in outline_source

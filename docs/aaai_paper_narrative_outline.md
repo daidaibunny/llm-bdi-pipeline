@@ -49,8 +49,11 @@ second tuple or reuse one symbol for a different semantic role.
 - `D = <P,F,A,T>` is the typed planning domain. A problem instance is
   `I=<D,O_I,s_I^0,G_I>`, where `O_I` is its finite typed object set;
   `I_train` is the finite training instance set. `E_raw` is a raw
-  generalized-planning provider artifact; `E` is its normalized
-  singleton-goal evidence program. This avoids reusing `A`, already reserved for
+  generalized-planning provider artifact; `E_0` is its provider-normalized
+  program; and `E = CanonicalLift_D(E_0)` is the typed, alpha-normalized
+  singleton-goal evidence program. The lifting step preserves repeated-variable
+  sharing and PDDL domain constants; it does not claim the provider's upstream
+  inference from ground plans. This avoids reusing `A`, already reserved for
   the PDDL action-schema set.
 - `T_D(E) = goalPred(E) union prod(D)` is the Boolean producible target universe;
   `T_D^Z(E)` is the admitted singleton integer-equality target set.
@@ -906,7 +909,7 @@ inventory.
 Use a compact vertical flow with one side input and one final library artifact:
 
 - `Domain model D` and `Singleton-goal policy evidence E` converge on
-  `(1) Construct + certify core once`, producing
+  `(1) Lift + certify core once`, producing
   `Certified atomic module core $\mathcal M_D$`.
 - Draw one solid reuse arrow from `$\mathcal M_D$` to `(2) Compose + append`.
   A side input `Bound temporal query $\widehat\tau_q=(\tau_q,\theta_q)$` enters this
