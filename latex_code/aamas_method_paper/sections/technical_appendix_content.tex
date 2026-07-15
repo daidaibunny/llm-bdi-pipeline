@@ -9,6 +9,53 @@ trigger--context--body BDI rules
 AgentSpeak(L), and Jason instantiate four interfaces; none is built into the
 semantic definitions below.
 
+\begin{table*}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}
+>{\raggedright\arraybackslash}p{0.23\textwidth}
+>{\raggedright\arraybackslash}p{0.69\textwidth}@{}}
+\toprule
+Symbol & Unique semantic role \\
+\midrule
+$D,s,\gamma$ & Typed planning domain, world state, and deterministic PDDL
+successor function. \\
+$\mathcal E_{\mathrm{raw}},E,e$ & Raw provider artifact, normalized finite
+singleton-goal evidence program, and one normalized evidence rule. \\
+$T_D(E),T_D^{\mathbb Z}(E)$ & Boolean producible target universe and admitted
+singleton bounded-integer equality targets. \\
+$\mathfrak G,\operatorname{Inst}_D$ & Domain-independent candidate-construction
+grammar and its typed, domain-specific instantiation operator. \\
+$\mathcal C_E,\mathcal C_D(E),\mathcal C_{D,E}$ & Validated evidence branches,
+action-schema-derived branches, and their finite generated union. \\
+$b,\Sigma_b,\mathsf{Cert}_D(b)$ & One candidate branch, its conditional
+module-completion summary, and its candidate soundness predicate. \\
+$\mathcal C^{\checkmark}_{D,E},\Omega_{D,E},\mathfrak F_{D,E}$ & Certified
+candidate set, set-level obligations, and family of feasible selected subsets. \\
+$S^\star,\mathcal M_D$ & Lexicographically optimal feasible subset and the
+resulting query-independent certified atomic module core, with
+$\mathcal M_D:=S^\star$. \\
+$\tau_q,\theta_q,\widehat\tau_q$ & Unbound temporal specification, external
+type-consistent object binding, and validated bound query. \\
+$\mathcal D_q,\mathcal O_\chi$ & Deterministic finite automaton and the signed
+obligation induced by one supported transition guard $\chi$. \\
+$\Pi_{\chi,i},\prec_\chi,\boldsymbol\ell_\chi$ & Occurrence-specific
+preservation portfolio, threat-induced precedence relation, and certified
+serialization. \\
+$\mathcal R_{q_s,\chi},\mathcal Q_q$ & Plan set for one source-state transition
+obligation and the complete query-local controller plan set. \\
+$\mathcal L_D^{[k]}$ & The sole maintained domain library after $k$ appended
+queries. \\
+$\xi,z_i$ & Committed PDDL state--action trace and runtime DFA state after the
+$i$th observed world state. \\
+\bottomrule
+\end{tabular}
+\caption{Canonical GP2PL notation. A symbol is not reused across evidence,
+candidate generation, selected libraries, temporal queries, and runtime traces.}
+\label{tab:canonical-notation}
+\end{table*}
+
 \subsection{Planning and Evidence}
 
 \begin{definition}[Typed planning domain]
@@ -25,14 +72,15 @@ constant-integer effects.
 \end{definition}
 
 \begin{definition}[Singleton-goal evidence]
-A normalized evidence rule is
+A raw provider artifact $\mathcal E_{\mathrm{raw}}$ is admissible when it can be
+normalized into a finite evidence program $E$. A normalized evidence rule is
 \[
-e=\langle\bar X,C_s,g,\bar a,\nu,\pi\rangle.
+e=\langle\bar X_e,C_e^s,g_e,\bar a_e,\nu_e,\pi_e\rangle.
 \]
-$\bar X$ are typed variables, $C_s$ is a partial state condition, $g$ is one
-positive predicate literal or supported integer equality, $\bar a$ is a finite
-PDDL action macro, $\nu$ records numeric conditions and effects, and $\pi$
-records provenance. A finite evidence program $E$ is admissible for $D$ only if
+$\bar X_e$ are typed variables, $C_e^s$ is a partial state condition, $g_e$ is
+one positive predicate literal or supported integer equality, $\bar a_e$ is a
+finite PDDL action macro, $\nu_e$ records numeric conditions and effects, and
+$\pi_e$ records provenance. The program $E$ is admissible for $D$ only if
 all symbols, arities, types, and macro actions map to $D$, and symbolic execution
 under $C_s$ establishes $g$.
 \end{definition}
@@ -51,23 +99,35 @@ predicate symbols targeted by admissible evidence, then
 \[
 T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D).
 \]
-$T_D(E)$ is the complete Boolean target universe used for schema-derived atomic
+$T_D(E)$ is the Boolean target universe used for action-schema-derived atomic
 candidate generation. Predicates with no add or delete effect are static and may
-occur only as contexts. A delete-only dynamic predicate is not a schema-derived
-positive target. Numeric equalities are collected in a separate numeric target
-set and do not remove any member of $\operatorname{prod}(D)$.
+occur only as contexts. A delete-only dynamic predicate is not an
+action-schema-derived
+positive target. The numeric target set
+$T_D^{\mathbb Z}(E)$ contains the admitted singleton integer equalities in $E$
+and does not remove any member of $\operatorname{prod}(D)$.
 \end{definition}
 
 \subsection{Candidate BDI Modules}
 
 \begin{definition}[Candidate branch]
 A lifted candidate branch is
-$b=\langle g,C,\beta,\Sigma,\pi_b\rangle$, where $g$ is one achievement
-literal, $C$ is a conjunction of typed positive and negative state literals,
-integer comparisons, and equality filters, $\beta$ is a finite sequence of
-primitive PDDL actions and internal achievement calls, $\Sigma$ is a
-conditional completion-effect summary, and $\pi_b$ records whether the branch
+$b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$, where $g_b$ is one
+achievement literal, $C_b$ is a conjunction of typed positive and negative
+state literals, integer comparisons, and equality filters, $\beta_b$ is a
+finite sequence of primitive PDDL actions and internal achievement calls,
+$\Sigma_b$ is a conditional module-completion summary, and $\pi_b$ records whether the branch
 came from provider evidence or PDDL schema construction.
+\end{definition}
+
+\begin{definition}[Conditional module-completion summary]
+For candidate branch $b$, $\Sigma_b$ is a condition-indexed conservative
+summary of effects observable when $\beta_b$ returns. Its Boolean projections
+are $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$; it additionally records any
+exact constant-integer delta and keyed resource-mode transition. A must effect
+holds for every feasible selected execution under its recorded condition. A may
+effect contains every feasible selected completion effect and may overapproximate
+it.
 \end{definition}
 
 \begin{definition}[Internal-call closure]
@@ -92,27 +152,40 @@ and comparisons only filter already bound variables. A plan such as
 is therefore admitted only when the call to $clear(Y)$ is closed by another
 selected module and the recursive call carries a well-founded progress proof.
 
-\begin{definition}[Branch certificate]
+\begin{definition}[Candidate soundness certificate]
 For domain $D$, $\mathsf{Cert}_D(b)$ holds exactly when every obligation required
 by the structure of $b$ is established:
 \begin{enumerate}
 \item every action and subgoal variable is range restricted and type compatible;
 \item symbolic progression proves each primitive precondition;
-\item successful completion establishes the trigger goal $g$;
+\item successful completion establishes the trigger goal $g_b$;
 \item every internal call has a declared, type-compatible target signature and
 records an internal-call obligation for set-level selection;
 \item every recursion cycle has a non-negative ranking that strictly decreases;
 \item every temporary resource occupation has a finite, target-preserving
 discharge path; and
-\item $\Sigma$ conservatively contains every feasible completion add and delete
+\item $\Sigma_b$ conservatively contains every feasible completion add and delete
 effect, including effects propagated through internal calls.
 \end{enumerate}
 Obligations that do not arise in $b$, such as resource discharge for a direct
 producer that acquires no resource, are vacuous rather than unproved.
 \end{definition}
 
-\paragraph{Finite candidate language.}
-Let $\mathcal C_E$ be validated evidence macros. Let $\mathcal C_D$ contain
+\paragraph{Finite candidate-construction grammar.}
+Let
+\[
+\begin{aligned}
+\mathfrak G=\{&\mathsf{producer},\mathsf{regression},\mathsf{recursion},
+\mathsf{precondition\mbox{-}repair},\\
+&\mathsf{resource\mbox{-}discharge},\mathsf{numeric\mbox{-}progress}\}.
+\end{aligned}
+\]
+Let $\mathcal C_E$ be validated evidence macros and define
+\[
+\mathcal C_D(E)=
+\operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E)).
+\]
+The instantiated set $\mathcal C_D(E)$ contains
 direct producers, finite backward STRIPS regressions over acyclic
 producer--precondition dependencies, certified relational recursion, and finite
 causal resource-mode discharge. The regression construction builds on
@@ -120,30 +193,42 @@ goal-regression planning \cite{Fikes1972GeneralizedRobotPlans,Chen2026Moose}.
 A regression state is an alpha-normalized tuple
 of open requirements, the selected producer role, and resource modes. A path
 stops before repeating such a state. Equivalent states retain only their
-shortest body for the same completion contract. This establishes finiteness
+shortest body for the same completion summary. This establishes finiteness
 without an arbitrary action-depth constant. Provider macros are validated but
 never truncated by this search rule.
 
 \begin{definition}[Evidence coverage]
 A certified candidate $b$ covers evidence obligation $e$ when their triggers are
 alpha equivalent and one of the following holds: their bodies and numeric
-contracts are alpha equivalent; $b$ has the same body under a logically weaker
+summaries are alpha equivalent; $b$ has the same body under a logically weaker
 conjunctive context; or $b$ is a schema-producer refinement with the same
 $\mustadd$, no additional $\maydelete$, and equivalent numeric and keyed-resource
-contracts. Prefix similarity alone is not coverage.
+summaries. Prefix similarity alone is not coverage.
+We denote this relation by $\mathsf{covers}_D(b,e)$.
 \end{definition}
 
-\begin{definition}[Feasible atomic module core]
-For certified space
-$\mathcal C_D^{\checkmark}=\{b\in\mathcal C_E\cup\mathcal C_D\mid
-\mathsf{Cert}_D(b)\}$, a selected set $S\subseteq\mathcal C_D^{\checkmark}$ is
-feasible when it covers every evidence obligation, is internally closed,
-preserves required producer exits, and admits
-the selected recursion and cross-module dependency ranks.
+\begin{definition}[Feasible candidate family]
+The generated candidate set and its certified subset are
+\[
+\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E),
+\qquad
+\mathcal C^{\checkmark}_{D,E}=
+\{b\in\mathcal C_{D,E}\mid\mathsf{Cert}_D(b)\}.
+\]
+Let $\Omega_{D,E}$ be the evidence-coverage, internal-call, producer-exit,
+progress, and resource-discharge obligations. The feasible family is
+\[
+\mathfrak F_{D,E}=
+\{S\subseteq\mathcal C^{\checkmark}_{D,E}\mid S\models\Omega_{D,E}\}.
+\]
+Thus every $S\in\mathfrak F_{D,E}$ covers every evidence rule, is internally
+closed, preserves required producer exits, and admits the selected recursion
+and cross-module dependency ranks.
 \end{definition}
 
-The certified atomic module core is the feasible selected set
-$\mathcal M_D:=S$, represented by BDI trigger--context--body rules. It is
+The certified atomic module core is the optimal feasible selected set
+$\mathcal M_D:=S^\star$, where $S^\star$ is selected from
+$\mathfrak F_{D,E}$, represented by BDI trigger--context--body rules. It is
 query-independent, closed under its internal achievement calls, and contains
 no query identifier, DFA state, or monitor symbol. The evaluated AgentSpeak(L)
 realization preserves these rules but does not define the core.
@@ -163,10 +248,10 @@ $\mathcal M_D$ and $\mathcal Q_{q_i}$ are logical subsets of this one library, n
 separately maintained plan-library artifacts.
 \end{definition}
 
-GP2PL asks a Clingo answer-set optimizer \cite{Gebser2018Clingo} for a feasible
-$S$ minimizing the
-lexicographic cost stated in the main paper. The result is globally optimal only
-over $\mathcal C_D^{\checkmark}$; candidate generation is not claimed complete
+GP2PL asks a Clingo answer-set optimizer \cite{Gebser2018Clingo} for
+$S^\star\in\mathfrak F_{D,E}$ minimizing the lexicographic cost stated in the
+main paper. The result is globally optimal only over
+$\mathcal C^{\checkmark}_{D,E}$; candidate generation is not claimed complete
 for arbitrary planning programs.
 
 \subsection{Explicit Assumptions and Rejection Boundary}
@@ -181,21 +266,25 @@ fragment, and probabilistic actions are rejected.
 \begin{assumption}[Evidence boundary]
 Evidence is finite, singleton-goal, and schema mappable. It may be incomplete,
 but a provider macro accepted as evidence must pass symbolic PDDL execution.
-Negative achievement evidence without a validated action contract is rejected.
+Negative achievement evidence without a schema-validated achieving action
+sequence is rejected.
 \end{assumption}
 
 \begin{assumption}[Recursive progress]
-A same-predicate recursive branch is accepted only when a schema-derived
-non-negative relational feature strictly decreases until a producer or
+A same-predicate recursive branch is accepted only when an action-schema-derived
+ranking function $\rho_b:\operatorname{States}(D)\rightarrow\mathbb N$,
+obtained from a non-negative relational feature, strictly decreases until a producer or
 already-satisfied exit applies. An acyclic support-depth orientation additionally
 assumes that the grounded support relation remains acyclic in reachable states.
-Cross-predicate preparation uses a selected acyclic call graph with strictly
-decreasing natural-number dependency ranks.
+Cross-predicate precondition repair uses a selected acyclic call graph and a
+dependency rank $\kappa_S:\operatorname{head}(S)\rightarrow\mathbb N$ such that
+$\kappa_S(g)>\kappa_S(h)$ for every selected call edge $g\rightarrow h$.
 \end{assumption}
 
-\begin{assumption}[Resource discharge]
+\begin{assumption}[Target-preserving resource discharge]
 A reusable-resource sequence is accepted only when effect unification identifies
-a stable capacity key, its abstract resource-mode graph is finite, and symbolic
+a stable capacity key, its abstract resource-mode graph
+$\mathcal G_b^{\mathrm{res}}$ is finite, and symbolic
 execution proves that the discharge removes occupation, restores availability,
 and preserves the atomic target. Ambiguous capacity roles are rejected.
 \end{assumption}
@@ -209,7 +298,7 @@ conjunction of signed predicate literals and supported integer equalities.
 Disjunction requiring strategy choice and unsupported arithmetic are rejected.
 \end{assumption}
 
-\begin{assumption}[Observation boundary]
+\begin{assumption}[Primitive-step observation]
 The deterministic finite automaton consumes the initial valuation and every
 state produced by a successful primitive PDDL action. Only the environment can
 update query-local monitor beliefs. Atomic module return is not the semantic
@@ -261,11 +350,12 @@ ranks cannot execute infinitely while remaining inside that component.
 \end{lemma}
 
 \begin{proof}
-For same-predicate recursion, every recursive return-to-trigger step decreases a
-value in $\mathbb N$ and no selected body can restore the protected portion of
+For same-predicate recursion, every recursive return-to-trigger step decreases
+$\rho_b$ and no selected body can restore the protected portion of
 the ranked relation. An infinite descent in $\mathbb N$ is impossible. For
-cross-predicate preparation, every call edge decreases the sealed module rank,
-so a call cycle would imply $r_0>r_1>\cdots>r_0$, a contradiction. Each terminal
+cross-predicate precondition repair, every call edge decreases $\kappa_S$, so a
+call cycle would imply
+$\kappa_S(g_0)>\kappa_S(g_1)>\cdots>\kappa_S(g_0)$, a contradiction. Each terminal
 rank has a direct producer, provider macro, or already-satisfied exit by the
 producer-exit obligation.
 \end{proof}
@@ -306,14 +396,16 @@ effects. The fixed point therefore cannot omit a feasible completion effect.
 
 \begin{proposition}[Atomic branch soundness]
 If an emitted branch for $p(\bar X)$ has a true context under a type-consistent
-grounding, and each called selected module satisfies its contract, then the
+grounding, and each called selected module satisfies its certified achievement
+and completion summary, then the
 branch is executable and successful return establishes $p(\bar X)$.
 \end{proposition}
 
 \begin{proof}
 Lemma 1 grounds every body element. Consider body positions in order. Primitive
 actions are executable and preserve the certified symbolic state by Lemma 2.
-For an internal call, the induction hypothesis on the closed module contract
+For an internal call, the induction hypothesis on the internally closed selected
+module
 establishes its goal and its conservative completion summary updates the caller's
 symbolic state. Lemma 3 excludes infinite selected recursion, and Lemma 4
 discharges any accepted resource debt. The branch achievement obligation requires
@@ -321,11 +413,11 @@ the grounded trigger in the final symbolic state; Lemma 2 and the call induction
 therefore establish it in the concrete return state.
 \end{proof}
 
-\begin{proposition}[Certified candidate-space optimality]
-If the answer-set optimizer returns $S$, then $S$ satisfies every encoded
+\begin{proposition}[Certified-candidate-set optimality]
+If the answer-set optimizer returns $S^\star$, then $S^\star$ satisfies every encoded
 evidence, internal-call, producer-exit, progress, and resource obligation and is
 lexicographically optimal among feasible subsets of
-$\mathcal C_D^{\checkmark}$.
+$\mathcal C^{\checkmark}_{D,E}$.
 \end{proposition}
 
 \begin{proof}
@@ -333,8 +425,8 @@ Each candidate is admitted to the optimization instance only after
 $\mathsf{Cert}_D$ succeeds. Integrity constraints eliminate a model that leaves
 an evidence obligation uncovered, an internal call unimplemented, a required
 producer absent, a selected preparation graph cyclic, or a recursive/resource
-capability incompatible with its contract. Hence every answer set denotes a
-feasible library. Clingo's prioritized optimization compares answer sets by the
+capability incompatible with its certificate. Hence every answer set denotes a
+feasible atomic module core. Clingo's prioritized optimization compares answer sets by the
 declared cost tuple and returns an optimum at each priority. Therefore no
 feasible subset in the same grounded candidate instance has a lexicographically
 smaller cost. The proof says nothing about candidates not generated.
@@ -342,61 +434,85 @@ smaller cost. The proof says nothing about candidates not generated.
 
 \subsection{Temporal Composition}
 
-Let $A_\varphi=\langle Q,2^{AP},\delta,q_0,F\rangle$ be the deterministic finite
-automaton obtained from the MONA-backed translation
-\cite{DeGiacomoVardi2013,Fuggitti2020LTLf2DFA}, and let a progress objective be
-$B=P^+\land\neg P^-$. A positive module portfolio assigns one or more certified
-branches to each $G_i\in P^+$. A negative literal is either observed absent or
-has an exact certified deleter; it never invokes a synthetic negative goal.
-The conditional definite/potential completion summaries follow the goal-
+An unbound temporal specification is
+$\tau_q=\langle\iota_q,\varphi_q,\mu_q,\Theta_q,\Gamma_q\rangle$: identifier,
+\ltlf{} formula, proposition-to-PDDL atom map, typed parameter signature, and
+binding constraints. A runtime binding
+$\Theta_q:\bar X_q\rightarrow\mathcal T$ is its parameter type signature,
+$\theta_q:\bar X_q\rightarrow O$ satisfies $\Theta_q$ and $\Gamma_q$, and
+$\widehat\tau_q=(\tau_q,\theta_q)$ is the validated bound query. Let
+\[
+\mathcal D_q=
+\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle
+\]
+be its deterministic finite automaton obtained from the MONA-backed translation
+\cite{DeGiacomoVardi2013,Fuggitti2020LTLf2DFA}. For transition guard $\chi$, let
+\[
+\chi=\bigwedge_{G\in P_\chi^+}G\land
+\bigwedge_{N\in P_\chi^-}\neg N,
+\qquad
+\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle.
+\]
+$\mathcal O_\chi$ is its signed transition obligation. A preservation portfolio
+$\Pi_{\chi,i}\subseteq\mathcal M_D$ assigns one or more certified branches to
+positive occurrence $G_i\in P_\chi^+$. A negative literal is either observed
+absent or has an exact certified deleter; it never invokes a synthetic negative
+goal. The conditional definite/potential module-completion summaries follow the goal-
 interference distinction used in BDI plan analysis
 \cite{Thangarajah2003GoalInterference}; GP2PL derives them by symbolic PDDL
 execution and propagates them through selected internal calls.
 
-\begin{definition}[Completion threat]
+\begin{definition}[Threat-induced precedence]
 For positive occurrences $G_i,G_j$, the threat relation contains
-$G_j\prec G_i$ when a feasible conditional $\maydelete$ effect of the selected
-portfolio for $G_j$ unifies with $G_i$. The ordering constraint requires $G_j$
+$G_j\prec_\chi G_i$ when a feasible conditional $\maydelete$ effect of a branch
+in $\Pi_{\chi,j}$ unifies with $G_i$. The threat-induced precedence graph is
+$\mathcal G_\chi=(P_\chi^+,\prec_\chi)$. The ordering constraint requires $G_j$
 before $G_i$. A positive repair is inadmissible when a feasible $\mayadd$ effect
-unifies with a protected $N\in P^-$.
+unifies with a protected $N\in P_\chi^-$.
 \end{definition}
 
-\begin{definition}[Complete repair pass]
-For a certified order $L_1,\ldots,L_n$, let
+\begin{definition}[Complete transition-repair pass]
+For a certified serialization
+$\boldsymbol\ell_\chi=(\ell_1,\ldots,\ell_n)$, let
 \[
 \begin{aligned}
-R[i,i]&=\mathsf{Leaf}(L_i),\\
-R[i,j]&=R[i,m];R[m+1,j] && (i<j),\\
+R_\chi[i,i]&=\mathsf{Leaf}(\ell_i,\Pi_{\chi,i}),\\
+R_\chi[i,j]&=R_\chi[i,m];R_\chi[m+1,j] && (i<j),\\
 m&=\lfloor(i+j)/2\rfloor.
 \end{aligned}
 \]
-A complete repair pass invokes $R[1,n]$ and then the $done$ helper. Each leaf
+Let $c_{q_s,\chi}$ be the source-state completion test. The complete pass is
+\[
+\operatorname{Pass}_{q_s,\chi}:=R_\chi[1,n]\cdot c_{q_s,\chi},
+\]
+where $\cdot$ denotes sequential controller composition. Each leaf
 observes its signed literal or invokes its optional certified repair call. The
-runtime monitor advances at every primitive action, but $done$ tests whether the
-monitor still equals the source state only after $R[1,n]$ returns.
+runtime monitor advances at every primitive action, but the completion test
+checks whether the monitor still equals the source state only after
+$R_\chi[1,n]$ returns.
 \end{definition}
 
 \begin{lemma}[Signed serialization invariant]
-Suppose $L_1,\ldots,L_n$ is a topological order of the completion-threat
+Suppose $\boldsymbol\ell_\chi$ is a topological order of the completion-threat
 relation, or an order equipped with per-occurrence preserving portfolios. After
-the repair of prefix $L_1,\ldots,L_i$ returns, every positive literal in the
+the repair of prefix $\ell_1,\ldots,\ell_i$ returns, every positive literal in the
 prefix holds and every protected negative literal is absent.
 \end{lemma}
 
 \begin{proof}
-The base case follows from observing or establishing $L_1$. Assume the invariant
-for $i-1$. If $L_i$ is positive, its selected branch establishes it by
+The base case follows from observing or establishing $\ell_1$. Assume the invariant
+for $i-1$. If $\ell_i$ is positive, its selected branch establishes it by
 Proposition 1. Every feasible completion delete that could affect an earlier
 positive would induce a threat edge and hence contradict the order, unless the
 per-occurrence portfolio explicitly excludes that branch. Every feasible add of
-a protected negative is likewise excluded. If $L_i$ is negative, the leaf either
+a protected negative is likewise excluded. If $\ell_i$ is negative, the leaf either
 observes absence or uses an exact finite deleter whose complete net effects
 preserve the prefix. Thus the invariant holds by induction.
 \end{proof}
 
 \begin{lemma}[Post-exit suffix safety]
 Suppose the monitor leaves source state $q_s$ during the repair call for
-$L_i$. After that call returns, the remaining suffix of the complete pass can
+$\ell_i$. After that call returns, the remaining suffix of the complete pass can
 commit only PDDL-executable actions from certified repairs, preserves the signed
 serialization prefix at module-return boundaries, and induces only transitions
 of the runtime DFA. An unavailable repair, illegal primitive action, or rejecting
@@ -404,7 +520,7 @@ monitor state cannot be converted into controller success.
 \end{lemma}
 
 \begin{proof}
-Proceed over suffix occurrences $L_{i+1},\ldots,L_n$. A satisfied leaf commits
+Proceed over suffix occurrences $\ell_{i+1},\ldots,\ell_n$. A satisfied leaf commits
 no action. An unmet leaf either has no repair and fails closed, or selects an
 applicable certified repair. Atomic branch soundness gives PDDL executability and
 establishment of that occurrence; the signed-serialization invariant excludes
@@ -417,8 +533,9 @@ or fabricated edge. A rejecting state lacks an accepting top-level plan, so any
 such trace fails rather than being relabelled successful.
 \end{proof}
 
-\begin{proposition}[Supported-transition composition]
-For an accepted objective $B$, assume every required repair has an applicable
+\begin{proposition}[Supported transition-composition soundness]
+For an accepted signed transition obligation $\mathcal O_\chi$, assume every
+required repair has an applicable
 certified branch, every selected call terminates, and the completion portfolios
 satisfy the signed serialization invariant. At the end of a complete pass, the
 controller retries if the monitor reports its source state and otherwise returns
@@ -432,15 +549,15 @@ The signed-serialization lemma establishes every repaired prefix, independently
 of whether the primitive-step monitor remains at the source. If it leaves during
 a repair, the post-exit suffix lemma covers the rest of the complete pass. After
 every successful primitive action, the monitor evaluates the original complete
-outgoing cubes, not the serialized approximation. When $R[1,n]$ returns, the
-$done$ helper reads the current state: it restarts the same objective exactly
+outgoing cubes, not the serialized approximation. When $R_\chi[1,n]$ returns,
+the completion test reads the current state: it restarts the same obligation exactly
 when that state is the source and otherwise returns to top-level dispatch. A
 macro and the remaining suffix may cross several edges, but each is an actual
 deterministic transition and a rejecting state has no accepting shortcut. No
 controller statement can manufacture a state transition.
 \end{proof}
 
-\begin{proposition}[Balanced-tree structure]
+\begin{proposition}[Balanced transition-repair complexity]
 For $n\geq1$ signed literals and $e$ certified repair plans, midpoint splitting
 produces $2n+e+2$ query-local plans, trigger fan-out at most two, nesting depth
 $O(\log n)$, and $O(n)$ node visits per pass while preserving the certified
@@ -449,7 +566,7 @@ literal order.
 
 \begin{proof}
 There are $n$ satisfied-leaf plans, $e$ repair alternatives, $n-1$ internal
-binary nodes, one transition-entry plan, and two done plans, totaling
+binary nodes, one transition-entry plan, and two completion-test plans, totaling
 $n+e+(n-1)+1+2=2n+e+2$. Each internal trigger has one dispatch plan and each leaf
 has at most the satisfied and repair alternatives counted above, so structural
 dispatch fan-out is two. Midpoint division yields height
@@ -461,21 +578,22 @@ visited once per pass, hence linear work.
 
 \begin{proposition}[Monitor trace fidelity]
 For concrete PDDL execution
-$s_0,a_1,s_1,\ldots,a_k,s_k$, the monitor state after $s_i$ is exactly the state
-obtained by running $A_\varphi$ on valuations
+$\xi=s_0,a_1,s_1,\ldots,a_k,s_k$, the monitor state after $s_i$ is exactly the state
+obtained by running $\mathcal D_q$ on valuations
 $\mathit{val}(s_0),\ldots,\mathit{val}(s_i)$.
 \end{proposition}
 
 \begin{proof}
-The environment evaluates $\mathit{val}(s_0)$ before dispatch. Assume equality
+The environment evaluates $\mathit{val}(s_0)$ before dispatch, obtaining
+$z_0=\delta_q(q_q^0,\mathit{val}(s_0))$. Assume equality
 after $s_{i-1}$. The environment accepts $a_i$ only when its PDDL preconditions
 hold, computes $s_i=\gamma(s_{i-1},a_i)$, then replaces the monitor state by
-$\delta(q_{i-1},\mathit{val}(s_i))$. Determinism gives the unique automaton run.
+$z_i=\delta_q(z_{i-1},\mathit{val}(s_i))$. Determinism gives the unique automaton run.
 Monitor symbols are query-local and cannot be effects of a PDDL action or a BDI
 plan, so no other transition is possible.
 \end{proof}
 
-\begin{proposition}[Initial-state identity]
+\begin{proposition}[Initial-acceptance trace semantics]
 If the automaton is accepting after the initial valuation, the committed action
 sequence is empty and its finite state trace is $\langle s_0\rangle$.
 \end{proposition}
@@ -523,17 +641,17 @@ Formal construction & Principal public source & Verification \\
 Evidence normalization &
 \path{src/domain_level_planning/evidence_module.py} &
 Provider-name invariance, schema, arity, numeric, and macro tests \\
-Certified candidate language and selection &
+Certified candidate generation and feasible-core selection &
 \path{src/domain_level_planning/atomic_module_synthesis.py} &
 Clingo coverage, refinement, internal-call closure, ranking, release, and
 renaming tests \\
-Conditional completion and threat relation &
+Conditional module-completion summaries and threat relation &
 \path{src/domain_level_planning/certified_effects.py} &
 Typed unification, net effects, negative preservation, and portfolio tests \\
 DFA progress composition &
 \path{src/domain_level_planning/temporal_goal_appender.py} &
 Conjunction, cyclic rejection, Until, negative, mixed numeric, and alpha-renaming tests \\
-Balanced repair tree &
+Balanced binary transition-repair tree &
 \path{src/domain_level_planning/transition_repair_tree.py} &
 Plan count, depth, fan-out, order, negative leaf, and checkpoint tests \\
 Primitive-step execution and trace commit &
@@ -806,7 +924,7 @@ only.
 \endgroup
 
 Prompt acceptance is not the semantic oracle. The model output first passes
-the exact eight-key schema, atom-table closure, PDDL vocabulary, arity, type,
+the exact eight-key schema, atom-table totality and one-to-one mapping, PDDL vocabulary, arity, type,
 parameter, and operator checks. It is then converted to a deterministic
 automaton by \texttt{ltlf2dfa} and MONA and required to be finite-trace
 language-equivalent to the hidden gold formula. Retries receive only
@@ -855,7 +973,7 @@ The choice of domains tests three structural sources of obligations: classical
 singleton-goal evidence, bounded integer effects, and feature-definable
 serialized subgoals. These are reporting groups, not domain routing classes.
 All compiler decisions are derived from schema symbols, types, preconditions,
-effects, evidence contracts, and selected completion summaries.
+effects, evidence obligations, and selected module-completion summaries.
 
 \section{Computational Reproducibility}
 \label{app:reproducibility}
@@ -872,6 +990,17 @@ Maven 3.9.11, Docker 28.5.1, and VAL revision \texttt{3c7a1f3}
 \cite{Howey2004VAL}; the complete revision is fixed in the
 release manifest. The Python dependency lockfile,
 external-revision setup scripts, and source commit accompany the artifact.
+
+The external MOOSE comparison has two predeclared provenance scopes. For the
+twelve original MOOSE domains, we copy only the five-model mean planning
+coverage from Table~4 of arXiv 	exttt{2511.11095v1}
+cite{Chen2025MooseExtended}: 1079.6 of 1080 cases. For the four GP2PL-added
+domains, we execute the exact seed-specific Raw MOOSE models locally over five
+seeds and validate every nonempty returned plan with VAL. The tracked reference
+artifact fixes the source version, twelve per-domain means, and SHA-256
+contracts for the 1080-case published scope, 148-case local extension, and
+1228-case union. The scopes are never selected per domain after execution.
+Published MOOSE time and memory are not combined with locally measured PAR-2.
 
 \subsection{Parameters and Development Values}
 
@@ -952,7 +1081,7 @@ The localized variation follows the method boundary. A provider macro is a
 complete lifted action sequence in MOOSE's readable evidence; a Logistics
 example transports one package by truck, airplane, then truck. Seeded
 singleton-goal order changes the states from which these long macros are
-regressed. When one is absent, schema-derived candidate generation cannot always
+regressed. When one is absent, action-schema-derived candidate generation cannot always
 replace it because
 \texttt{at} may require \texttt{in} while loading to establish \texttt{in}
 requires \texttt{at}; this is a cyclic producer dependency with no current

@@ -111,18 +111,20 @@ and VAL. Experimental modes are explicit, isolated output variants; none may be
 selected as a silent fallback.
 
 Atomic experiment modes share one normalized evidence artifact. Evidence Only
-renders only PDDL-validated evidence macros. Action Closure adds
-certified PDDL producers but no internal subgoals. Maximal Certified selects a
-largest jointly compatible program from the full certified candidate universe.
-Full GP2PL minimizes over that exact universe and the same hard constraints.
+renders only PDDL-validated evidence macros. Direct Producers adds
+certified PDDL producers but no internal subgoals. Maximum Feasible selects a
+maximum-cardinality jointly compatible program from the full generated
+certified candidate set. Full GP2PL minimizes over that exact set and the same
+hard constraints.
 This sequence
-separates evidence quality, schema closure, lifted decomposition, and selection.
+separates evidence quality, producible-target expansion, lifted decomposition,
+and selection.
 
 Temporal experiment modes share one DFA and atomic-library hash. The
-DFA-aware-unprotected mode uses canonical within-edge order without threat or
+Unprotected Serialization mode uses canonical within-edge order without threat or
 preservation reasoning. Certified Flat uses the full selected order and branch
 portfolios but retains flat sibling controller plans. Certified Balanced changes
-only the controller indexing structure. Completion Monitor
+only the controller indexing structure. Module-Return Monitor
 changes only when the real DFA is observed and is restricted to a semantic
 challenge suite with intermediate-state obligations.
 
@@ -133,9 +135,9 @@ all controlled hashes match. Raw MOOSE, LAMA/ENHSP, and direct temporal planning
 are external references and therefore use a separate report rather than being
 mixed into the compiler ablation matrix.
 
-The paper-facing names are `Evidence Only`, `Action Closure`, `Maximal
-Certified`, `Full GP2PL`, `Unprotected DFA`, `Certified Flat`, `Certified
-Balanced`, and `Completion Monitor`. Stable snake-case identifiers remain in
+The paper-facing names are `Evidence Only`, `Direct Producers`, `Maximum
+Feasible`, `Full GP2PL`, `Unprotected Serialization`, `Certified Flat`,
+`Certified Balanced`, and `Module-Return Monitor`. Stable snake-case identifiers remain in
 JSON and command-line arguments only. Tables use short descriptive headings,
 not numbered labels or compressed oracle initials.
 
@@ -271,7 +273,7 @@ generation. A branch selector is the component that chooses which candidate ASL
 branches survive into the final library. In this project, Clingo must preserve
 required branch kinds such as already-true branches, direct producer branches,
 and certified recursive preparation branches, while minimizing branch count,
-context count, and body cost within the generated candidate space.
+context count, and body cost within the generated certified candidate set.
 
 ## Validated Policy Lifting And ASL Compilation
 
@@ -325,7 +327,8 @@ Seed predicate extraction is still used after lifting. It collects the PDDL
 predicate symbols that MOOSE actually learned as singleton targets. For example,
 if MOOSE learned singleton rules for `served(p1)` and `served(p2)`, the seed
 predicate is `served`. This seed set is not treated as the whole library; it is
-the starting evidence for schema closure.
+the evidence component of producible-target expansion and action-schema
+candidate generation.
 
 PDDL schema parsing means reading the domain's lifted predicate and action
 schemas, not the grounded training instances. For example, in Miconic the

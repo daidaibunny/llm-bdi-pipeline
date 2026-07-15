@@ -19,7 +19,7 @@ time \cite{Xu2024OperationalSemantics} or use generalized planning directly for
 means--ends reasoning \cite{Meneguzzi2025GeneralisedBDIPlanning}. GP2PL instead
 addresses the representation-compilation problem of transforming
 singleton-goal evidence, together with the domain's producible target universe
-and schema-derived candidates, into a query-independent atomic module core
+and action-schema-derived candidates, into a query-independent atomic module core
 $\mathcal M_D$ that can be extended by later queries.
 
 \paragraph{Modular policies and BDI plan libraries.}
@@ -34,8 +34,9 @@ recheck intended states after procedural return \cite{Hubner2006DeclarativeGoals
 plan-failure work separates a failed attempt from continued goal pursuit
 \cite{Sardina2007PlanFailure}. Definite and potential effect summaries detect
 interference between BDI goals \cite{Thangarajah2003GoalInterference}. GP2PL
-adopts these execution principles and derives certified modules, summaries, and
-completion patterns from planning evidence and PDDL schemas.
+adopts these execution principles and derives certified modules,
+conditional module-completion summaries, and declarative completion controllers from
+planning evidence and PDDL schemas.
 
 \paragraph{Finite-trace temporal control.}
 \ltlf{} provides finite-trace semantics and admits automata-based reasoning
@@ -72,7 +73,7 @@ connects them through certificate-carrying compilation. The broader
 proof-carrying principle attaches machine-checkable evidence to executable
 artifacts
 \cite{Necula1997ProofCarryingCode}; GP2PL's certificates are narrower symbolic
-planning contracts. GP2PL contributes the certified construction of a reusable
+planning proof obligations. GP2PL contributes the certified construction of a reusable
 atomic module core together with preservation-safe query plans in the maintained
 BDI library $\mathcal L_D^{[k]}$; goal regression, answer-set solving,
 AgentSpeak semantics, and \ltlf-to-DFA translation remain prior components.

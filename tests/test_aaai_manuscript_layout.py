@@ -230,10 +230,10 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	assert "\\ENSURE Certified atomic module core $\\mathcal M_D$" in method_source
 	assert "selected atomic core $\\mathcal M_D$" in method_source
 	assert "query-local plan set $\\mathcal Q_q$" in method_source
-	assert "The certified atomic module core is the feasible selected set" in (
+	assert "The certified atomic module core is the optimal feasible selected set" in (
 		supplement_source
 	)
-	assert "$\\mathcal M_D:=S$" in supplement_source
+	assert "$\\mathcal M_D:=S^\\star$" in supplement_source
 	assert "does not define the core" in supplement_source
 	assert re.search(
 		r"maintained domain library\s+\$\\mathcal L_D\^\{\[k\]\}\$",
@@ -305,3 +305,51 @@ def test_main_paper_keeps_serialization_details_in_the_supplement() -> None:
 		"fixed seed-0 library snapshot",
 	):
 		assert engineering_phrase not in combined_source
+
+
+def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	background_source = (LATEX_ROOT / "sections/background.tex").read_text(
+		encoding="utf-8",
+	)
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	formal_source = "\n".join((background_source, method_source, supplement_source))
+
+	assert "raw provider artifact $\\mathcal E_{\\mathrm{raw}}$" in method_source
+	assert "\\mathcal C^{\\checkmark}_{D,E}" in method_source
+	assert "\\mathfrak G" in method_source
+	assert "\\operatorname{Inst}_D" in method_source
+	assert "\\mathfrak F_{D,E}" in method_source
+	assert "\\mathsf{covers}_D(b,e)" in supplement_source
+	assert (
+		"\\tau_q=\\langle\\iota_q,\\varphi_q,\\mu_q,\\Theta_q,\\Gamma_q\\rangle"
+		in method_source
+	)
+	assert "\\widehat\\tau_q=(\\tau_q,\\theta_q)" in method_source
+	assert "\\mathcal D_q=" in method_source
+	assert "\\mathcal O_\\chi=" in method_source
+	assert "\\Pi_{\\chi,i}" in method_source
+	assert "\\prec_\\chi" in method_source
+	assert "\\boldsymbol\\ell_\\chi" in method_source
+	assert "\\mathcal R_{q_s,\\chi}" in method_source
+	assert "conditional module-completion summary" in formal_source
+	assert "target-preserving resource discharge" in formal_source
+
+	for ambiguous_term in (
+		"provider output $A$",
+		"$\\mathcal C_D^{\\checkmark}$",
+		"Action Closure",
+		"Maximal Certified",
+		"Unprotected DFA",
+		"Completion Monitor",
+		"progress objective be",
+		"Existential preparation projection",
+		"Numeric and Whole-Guard Certificates",
+		"Cyclic Threats and Enforced Portfolios",
+	):
+		assert ambiguous_term not in formal_source
+
+	assert "candidate-construction grammar" in main_source

@@ -49,15 +49,16 @@ Libraries for Temporally Extended Goals}
 \begin{abstract}
 Generalized-planning policies are not directly executable as
 Belief--Desire--Intention (BDI) plan libraries: transcription alone does not
-establish variable binding, internal-call closure, recursive progress, resource
-restoration, or temporal compatibility. We introduce
+establish variable binding, internal-call closure, recursive progress,
+target-preserving resource discharge, or temporal compatibility. We introduce
 \methodname{} (Generalized Planning to Plan Libraries), a certificate-carrying
 compiler that closes this representation gap. Domain compilation combines
 singleton-goal policy evidence with PDDL action schemas into a certified atomic
 module core; query compilation composes preservation-safe plans from
 deterministic-automaton guards without relearning that core. For the declared
-candidate language and temporal fragment, we prove local module soundness,
-candidate-space optimality, transition-composition soundness, and trace-faithful
+candidate-construction grammar, its generated certified set, and the temporal
+fragment, we prove local module soundness, certified-candidate-set optimality,
+transition-composition soundness, and trace-faithful
 primitive-step monitoring; obligations without the required certificates are
 rejected. The evaluated instantiation combines MOOSE, Clingo,
 \texttt{ltlf2dfa}/MONA, and \asl{}/Jason. Across \BenchmarkDomainCount{}
@@ -137,27 +138,29 @@ Figure 2 artwork placeholder\\[8pt]
 \caption{Certified lifting from singleton-goal evidence to a recursive atomic
 module core $\mathcal M_D$. Left: normalized evidence for \texttt{on(X,Y)}, the
 relevant slice of the domain-wide producible target universe, and producer
-schemas generate evidence-backed and schema-derived candidates. Middle: each
+schemas generate evidence-backed and action-schema-derived candidates. Middle: each
 candidate is checked for binding, executability, achievement, and any triggered
-progress or resource-restoration obligations. Joint Clingo selection then
-chooses a lexicographically optimal set satisfying evidence coverage and
-internal-call closure. Right: branch provenance
+progress or target-preserving resource-discharge obligations. Clingo then
+computes the lexicographically optimal feasible set satisfying evidence
+coverage and internal-call closure, denoted $S^\star$. Right: branch provenance
 is preserved in the \asl{} realization of $\mathcal M_D$, containing
 already-satisfied and direct-producer cases plus recursive preparation through
 the generated \texttt{clear/1} module. Optimality is relative to the generated
-certified candidate space.}
+certified candidate set $\mathcal C^{\checkmark}_{D,E}$.}
 \label{fig:policy-lifting-example}
 \end{figure*}
 
 Figure~\ref{fig:policy-lifting-example} follows one atomic target through
-evidence normalization, producible-target expansion, schema candidate
+evidence normalization, producible-target expansion, action-schema candidate
 generation, certificate checking, feasible-library selection, and construction
 of the certified atomic module core.
 
-GP2PL contributes (i) a finite candidate language with lexicographically
-optimal evidence-to-core selection inside that language; (ii) symbol-invariant
+GP2PL contributes (i) a finite candidate-construction grammar $\mathfrak G$ with
+lexicographically optimal evidence-to-core selection inside its generated
+certified candidate set; (ii) symbol-invariant
 certificates for binding, execution,
-achievement, recursion, internal-call closure, and resource restoration; and (iii)
+achievement, recursion, internal-call closure, and target-preserving resource
+discharge; and (iii)
 preservation-safe \ltlf-to-DFA guard composition under primitive-step monitoring.
 Uncertified modules and transitions are rejected. Across
 \BenchmarkDomainCount{} domains, independent atomic cores average
@@ -180,7 +183,8 @@ and appends finite-trace query plans to the unique maintained BDI domain library
 Five-seed atomic coverage averages
 \AtomicFiveSeedMeanSuccessPercent{}\%; the predeclared temporal study solves
 \TEGProblemCount{}/\TEGProblemCount{}. Guarantees remain conditional on the
-certified candidate language and declared \ltlf{} fragment.
+candidate-construction grammar, generated certified candidate set, and declared
+\ltlf{} fragment.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

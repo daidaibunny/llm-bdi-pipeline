@@ -1124,7 +1124,7 @@ records the literal index, complete literal atom, and selected source branch
 names; a recursive strategy label is emitted only when the selected portfolio
 actually contains a recursive atomic branch.
 
-Positive integer numeric equalities may receive a schema-derived one-action
+Positive integer numeric equalities may receive an action-schema-derived one-action
 repair only under a constant-delta certificate. Unit changes use a strict
 directional comparison and may be replayed monotonically; larger changes require
 the exact predecessor value. A single action may establish a complete mixed
@@ -1183,7 +1183,7 @@ without completion-effect threat ordering or preservation-safe branch
 portfolios. It is an evaluation mode rather than a production fallback. The
 full method adds effect-certified ordering and branch portfolios. A second
 paired ablation changes only the AgentSpeak control structure from flat sibling
-plans to the balanced binary repair tree. A semantic-boundary ablation advances
+plans to the balanced binary transition-repair tree. A semantic-boundary ablation advances
 the monitor only when an atomic module returns and is evaluated against cases
 whose intermediate primitive states matter.
 

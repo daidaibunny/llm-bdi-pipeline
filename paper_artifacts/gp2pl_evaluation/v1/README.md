@@ -9,6 +9,9 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
   GP2PL held-out matrices, per-domain variation, failure patterns, source
   summaries, the verified source-runner aggregate hash, and the frozen
   compiler/runtime source closure.
+- `moose_published_reference.json` records the verified arXiv-v1 Table-4 MOOSE
+  coverage values and disjoint case contracts for the 1,080 published-domain
+  cases and 148 locally measured GP2PL extension cases.
 - `certificate_challenge_summary.json` records fail-closed and renaming tests.
 - `execution_distribution.json` records distributional execution statistics.
 - `benchmark_compatibility.json` proves that the execution-time and portable

@@ -18,19 +18,72 @@ from scripts.run_certificate_challenge_matrix import METAMORPHIC_CASES
 
 ATOMIC_VARIANTS = (
 	("validated_evidence_adapter", "Evidence Only"),
-	("action_only_closure", "Action Closure"),
-	("maximal_certified_program", "Maximal Certified"),
+	("action_only_closure", "Direct Producers"),
+	("maximal_certified_program", "Maximum Feasible"),
 	("full", "Full GP2PL"),
 )
 TEMPORAL_VARIANTS = (
-	("dfa_aware_unprotected", "Unprotected DFA"),
+	("dfa_aware_unprotected", "Unprotected Serialization"),
 	("certified_flat", "Certified Flat"),
 	("certified_balanced", "Certified Balanced"),
-	("completion_boundary_monitor", "Completion Monitor"),
+	("completion_boundary_monitor", "Module-Return Monitor"),
 )
 BENCHMARK_HASH = "a" * 64
 ENHSP_REVISION = "537bed55a60d9456975c56afbadd50fc8acb1dc9"
 FOND4LTLF_REVISION = "011d9d9a5bfd6406d2c358faf8f63167f6c839bb"
+
+
+def test_registered_published_moose_reference_matches_arxiv_v1_table_four() -> None:
+	project_root = Path(__file__).resolve().parents[1]
+	reference_file = (
+		project_root
+		/ "paper_artifacts/gp2pl_evaluation/v1/moose_published_reference.json"
+	)
+	payload = json.loads(
+		reference_file.read_text(encoding="utf-8"),
+	)
+
+	assert payload["source"]["arxiv_version"] == "2511.11095v1"
+	assert payload["source"]["table"] == "Table 4"
+	assert payload["published_results"]["seed_count"] == 5
+	assert payload["published_results"]["case_count_per_seed"] == 1080
+	assert payload["published_results"]["mean_solved_count"] == 1079.6
+	assert payload["published_results"]["runtime_comparison_allowed"] is False
+	assert {
+		row["domain"]: row["mean_solved_count"]
+		for row in payload["published_results"]["domains"]
+	} == {
+		"barman": 90.0,
+		"ferry": 90.0,
+		"gripper": 90.0,
+		"logistics": 89.6,
+		"miconic": 90.0,
+		"rovers": 90.0,
+		"satellite": 90.0,
+		"transport": 90.0,
+		"numeric-ferry": 90.0,
+		"numeric-miconic": 90.0,
+		"numeric-minecraft": 90.0,
+		"numeric-transport": 90.0,
+	}
+	assert payload["scope_contracts"]["original_moose"]["case_contract"] == {
+		"count": 1080,
+		"sha256": "b99b12be1bcbe05983b0727dea0517a671530a55c686068e12908bb12eefb8f1",
+	}
+	assert payload["scope_contracts"]["gp2pl_extension"]["case_contract"] == {
+		"count": 148,
+		"sha256": "ae3ccea2e2f30093ff13fca34ba31451087fdcb78ffab18fc7ddd473ebb8ab5d",
+	}
+	assert payload["scope_contracts"]["selected_union"]["case_contract"] == {
+		"count": 1228,
+		"sha256": "3b3d38e19e5e885c3ad15658baf77a26a1aad6cc8a369dfc1284c653a4e385ec",
+	}
+	manifest = json.loads(
+		(reference_file.parent / "manifest.json").read_text(encoding="utf-8"),
+	)
+	assert manifest["files"][reference_file.name] == hashlib.sha256(
+		reference_file.read_bytes(),
+	).hexdigest()
 
 
 def test_comparison_table_cli_runs_from_script_path() -> None:
@@ -49,6 +102,9 @@ def test_comparison_table_cli_runs_from_script_path() -> None:
 
 	assert completed.returncode == 0, completed.stderr
 	assert "Validate final comparison artifacts" in completed.stdout
+	assert "--published-moose-reference" in completed.stdout
+	assert "--raw-moose-extension-summary" in completed.stdout
+	assert "--raw-moose-summary" not in completed.stdout
 
 
 def test_build_comparison_dataset_aggregates_registered_matrix(tmp_path: Path) -> None:
@@ -99,6 +155,158 @@ def test_build_comparison_dataset_aggregates_registered_matrix(tmp_path: Path) -
 	assert external["FOND4LTLf + LAMA"]["supported_case_count"] == 1
 	assert external["FOND4LTLf + LAMA"]["unsupported_case_count"] == 1
 	assert result["challenges"]["success_count"] == 13
+
+
+def test_build_comparison_dataset_separates_published_moose_from_local_extension(
+	tmp_path: Path,
+) -> None:
+	result = build_comparison_dataset(
+		paired_results_file=_write_json(
+			tmp_path / "paired.json",
+			_paired_fixture(raw_moose_case_ids=_registered_raw_moose_case_ids()),
+		),
+		published_moose_reference_file=_write_json(
+			tmp_path / "published-moose.json",
+			_published_moose_fixture(),
+		),
+		raw_moose_extension_summaries=tuple(
+			(
+				seed,
+				_write_json(
+					tmp_path / f"extension-{seed}.json",
+					_raw_extension_fixture(seed),
+				),
+			)
+			for seed in range(5)
+		),
+		instance_reference_summary_file=_write_json(
+			tmp_path / "instances.json",
+			_instance_fixture(),
+		),
+		direct_temporal_summary_file=_write_json(
+			tmp_path / "direct.json",
+			_direct_fixture(),
+		),
+		challenge_summary_file=_write_json(
+			tmp_path / "challenge.json",
+			_challenge_fixture(),
+		),
+	)
+
+	moose_rows = [
+		row for row in result["external"] if "MOOSE" in str(row["method"])
+	]
+	assert result["schema_version"] == 2
+	assert len(result["provenance"]["raw_moose_extension_summaries"]) == 5
+	assert "raw_moose_summaries" not in result["provenance"]
+	assert moose_rows == [
+		{
+			"method": "MOOSE",
+			"source": "Reported",
+			"scope": "Original MOOSE domains, five seeds",
+			"case_count": 1080,
+			"supported_case_count": 1080,
+			"unsupported_case_count": 0,
+			"valid_trace_count": 1079.6,
+			"seed_count": 5,
+			"par2_seconds": None,
+		},
+		{
+			"method": "Raw MOOSE extension",
+			"source": "Measured",
+			"scope": "Added domains, five seeds",
+			"case_count": 148,
+			"supported_case_count": 148,
+			"unsupported_case_count": 0,
+			"valid_trace_count": 148.0,
+			"seed_count": 5,
+			"coverage_sample_sd": 0.0,
+			"par2_seconds": 1.0,
+		},
+	]
+
+
+def test_build_comparison_dataset_rejects_unregistered_published_moose_source(
+	tmp_path: Path,
+) -> None:
+	published = _published_moose_fixture()
+	published["source"]["arxiv_version"] = "2511.11095v2"
+
+	with pytest.raises(ValueError, match="published MOOSE.*2511.11095v1.*Table 4"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(
+				tmp_path / "paired.json",
+				_paired_fixture(raw_moose_case_ids=_registered_raw_moose_case_ids()),
+			),
+			published_moose_reference_file=_write_json(
+				tmp_path / "published-moose.json",
+				published,
+			),
+			raw_moose_extension_summaries=tuple(
+				(
+					seed,
+					_write_json(
+						tmp_path / f"extension-{seed}.json",
+						_raw_extension_fixture(seed),
+					),
+				)
+				for seed in range(5)
+			),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				_instance_fixture(),
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				_direct_fixture(),
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
+
+
+def test_build_comparison_dataset_rejects_changed_published_moose_coverage(
+	tmp_path: Path,
+) -> None:
+	published = _published_moose_fixture()
+	published["published_results"]["domains"][0]["mean_solved_count"] = 89.0
+	published["published_results"]["mean_solved_count"] = 1078.6
+
+	with pytest.raises(ValueError, match="published MOOSE.*Table 4 coverage"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(
+				tmp_path / "paired.json",
+				_paired_fixture(raw_moose_case_ids=_registered_raw_moose_case_ids()),
+			),
+			published_moose_reference_file=_write_json(
+				tmp_path / "published-moose.json",
+				published,
+			),
+			raw_moose_extension_summaries=tuple(
+				(
+					seed,
+					_write_json(
+						tmp_path / f"extension-{seed}.json",
+						_raw_extension_fixture(seed),
+					),
+				)
+				for seed in range(5)
+			),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				_instance_fixture(),
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				_direct_fixture(),
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
 
 
 def test_build_comparison_dataset_rejects_incomplete_atomic_pairing(
@@ -772,9 +980,22 @@ def test_build_comparison_dataset_rejects_direct_temporal_case_omission(
 
 def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None:
 	result = build_comparison_dataset(
-		paired_results_file=_write_json(tmp_path / "paired.json", _paired_fixture()),
-		raw_moose_summaries=tuple(
-			(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+		paired_results_file=_write_json(
+			tmp_path / "paired.json",
+			_paired_fixture(raw_moose_case_ids=_registered_raw_moose_case_ids()),
+		),
+		published_moose_reference_file=_write_json(
+			tmp_path / "published-moose.json",
+			_published_moose_fixture(),
+		),
+		raw_moose_extension_summaries=tuple(
+			(
+				seed,
+				_write_json(
+					tmp_path / f"extension-{seed}.json",
+					_raw_extension_fixture(seed),
+				),
+			)
 			for seed in range(5)
 		),
 		instance_reference_summary_file=_write_json(
@@ -798,7 +1019,12 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 
 	assert "Method & Compiled & Targets & Valid & Branches & KiB & Compile s" in atomic
 	assert "Method & Built & Valid & PAR-2 s & Actions & Plans & Fan-out" in temporal
-	assert "Method & Scope & Valid & Unsupported & PAR-2 s" in external
+	assert "Method & Source & Scope & Coverage & Unsupported & PAR-2 s" in external
+	assert "MOOSE & Reported & Original MOOSE domains, five seeds" in external
+	assert "1079.6/1080" in external
+	assert "Raw MOOSE extension & Measured & Added domains, five seeds" in external
+	assert "148 $\\pm$ 0/148" in external
+	assert "Reported MOOSE coverage is copied from Table~4" in external
 	assert "Evidence Only" in atomic
 	assert "Certified Balanced" in temporal
 	assert "FOND4LTLf + LAMA" in external
@@ -811,7 +1037,10 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 		assert table.index("\\caption{") > table.index("\\end{tabular}")
 
 
-def _paired_fixture() -> dict[str, object]:
+def _paired_fixture(
+	*,
+	raw_moose_case_ids: tuple[str, ...] = ("toy:p1.pddl", "toy:p2.pddl"),
+) -> dict[str, object]:
 	atomic_runs = []
 	for seed in range(5):
 		for index, (variant, method) in enumerate(ATOMIC_VARIANTS, start=1):
@@ -912,7 +1141,7 @@ def _paired_fixture() -> dict[str, object]:
 				"benchmark_sha256": BENCHMARK_HASH,
 			},
 			"external": {
-				"raw_moose": _case_set_contract(("toy:p1.pddl", "toy:p2.pddl")),
+				"raw_moose": _case_set_contract(raw_moose_case_ids),
 				"lama": _case_set_contract(("toy:p1.pddl",)),
 				"enhsp_hmrphj": _case_set_contract(("toy:n1.pddl",)),
 			},
@@ -982,6 +1211,76 @@ def _raw_fixture(seed: int) -> dict[str, object]:
 		],
 		"seed": seed,
 	}
+
+
+def _published_moose_fixture() -> dict[str, object]:
+	project_root = Path(__file__).resolve().parents[1]
+	return json.loads(
+		(
+			project_root
+			/ "paper_artifacts/gp2pl_evaluation/v1/moose_published_reference.json"
+		).read_text(encoding="utf-8"),
+	)
+
+
+def _raw_extension_fixture(seed: int) -> dict[str, object]:
+	payload = _raw_fixture(seed)
+	payload["results"] = [
+		{
+			**_external_result("Raw MOOSE", Path(case_id).stem, valid=True),
+			"domain": case_id.partition(":")[0],
+			"problem_file": f"/test/{case_id.partition(':')[2]}",
+		}
+		for case_id in _registered_raw_moose_extension_case_ids()
+	]
+	return payload
+
+
+def _registered_raw_moose_case_ids() -> tuple[str, ...]:
+	return _registered_domain_case_ids(
+		(
+			"barman",
+			"ferry",
+			"gripper",
+			"logistics",
+			"miconic",
+			"rovers",
+			"satellite",
+			"transport",
+			"numeric-ferry",
+			"numeric-miconic",
+			"numeric-minecraft",
+			"numeric-transport",
+			"blocksworld-clear",
+			"blocksworld-on",
+			"blocksworld-tower",
+			"depots",
+		),
+	)
+
+
+def _registered_raw_moose_extension_case_ids() -> tuple[str, ...]:
+	return _registered_domain_case_ids(
+		(
+			"blocksworld-clear",
+			"blocksworld-on",
+			"blocksworld-tower",
+			"depots",
+		),
+	)
+
+
+def _registered_domain_case_ids(domains: tuple[str, ...]) -> tuple[str, ...]:
+	project_root = Path(__file__).resolve().parents[1]
+	return tuple(
+		sorted(
+			f"{domain}:{problem_file.name}"
+			for domain in domains
+			for problem_file in (project_root / "src/domains" / domain / "test").glob(
+				"*.pddl",
+			)
+		),
+	)
 
 
 def _instance_fixture() -> dict[str, object]:

@@ -78,10 +78,10 @@ def test_shell_entrypoint_accepts_no_domain_arguments_on_bash_3(
 
 def test_registered_experiment_variants_have_short_report_names() -> None:
 	assert [variant.display_name for variant in AtomicCompilerVariant] == [
-		"Evidence Adapter",
-		"Action Closure",
-		"Maximal Certified",
-		"Full Compiler",
+		"Evidence Only",
+		"Direct Producers",
+		"Maximum Feasible",
+		"Full GP2PL",
 	]
 
 
@@ -164,10 +164,10 @@ def test_controller_structure_metrics_measure_only_appended_query_plans() -> Non
 	assert metrics["controller_body_step_count"] == 1
 	assert metrics["controller_asl_bytes"] > 0
 	assert [variant.display_name for variant in TemporalCompilerVariant] == [
-		"Unprotected DFA",
+		"Unprotected Serialization",
 		"Certified Flat",
 		"Certified Balanced",
-		"Completion Monitor",
+		"Module-Return Monitor",
 	]
 
 

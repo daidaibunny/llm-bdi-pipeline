@@ -95,6 +95,13 @@ latex_code/*
 !latex_code/aamas_method_paper/**
 latex_code/aamas_method_paper/.DS_Store
 latex_code/aamas_method_paper/build/
+latex_code/aamas_method_paper/*.aux
+latex_code/aamas_method_paper/*.bbl
+latex_code/aamas_method_paper/*.blg
+latex_code/aamas_method_paper/*.fdb_latexmk
+latex_code/aamas_method_paper/*.fls
+latex_code/aamas_method_paper/*.log
+latex_code/aamas_method_paper/*.pdf
 tests/logs/
 tmp/
 

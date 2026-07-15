@@ -26,19 +26,22 @@ line marks the 1,800-second deadline.}
 
 \paragraph{Atomic compilation.}
 \emph{Evidence Only} validates provider macros against the PDDL schemas and
-retains them without producible-target expansion. \emph{Action Closure}, an
-ablation label rather than the internal-call property, adds action-only producers
-for the producible target universe; \emph{Maximal Certified} also retains
-compatible recursive preparation and resource-restoration candidates; and
-\emph{Full GP2PL} applies the Clingo objective to the same space. Their paired
+retains them without producible-target expansion. \emph{Direct Producers} adds
+action-only producers for the producible target universe; \emph{Maximum
+Feasible} retains a maximum-cardinality jointly feasible subset after adding
+compatible recursive precondition-repair and target-preserving
+resource-discharge candidates; and \emph{Full GP2PL} applies the lexicographic
+Clingo objective to the same generated certified set. Their paired
 comparison measures target coverage, internal-call closure, held-out execution,
 and compact selection of the atomic core.
 
 \paragraph{Temporal composition.}
-\emph{Unprotected DFA} uses the same automaton, library, and primitive-step
-monitor without effect analysis. \emph{Certified Flat} adds threat ordering and
-preserving portfolios; \emph{Certified Balanced} changes only flat control to the
-binary repair tree. A \emph{Completion Monitor} observes only on module return,
+\emph{Unprotected Serialization} uses the same automaton, library, and
+primitive-step monitor without completion-effect analysis. \emph{Certified
+Flat} adds threat-induced precedence ordering and preservation portfolios;
+\emph{Certified Balanced} changes only
+flat control to the balanced binary transition-repair tree. A
+\emph{Module-Return Monitor} observes only on module return,
 testing the primitive-step observation boundary.
 
 \paragraph{End-to-end references.}
@@ -46,7 +49,12 @@ End-to-end evaluation measures valid traces and amortized compilation. Raw
 MOOSE, LAMA, ENHSP, and FOND4LTLf with LAMA
 \cite{Chen2026Moose,RichterWestphal2010LAMA,
 Scala2020NumericSubgoaling,DeGiacomoFuggitti2021FOND4LTLf} are task-level
-references, not compiler ablations.
+references, not compiler ablations. The MOOSE comparison is partitioned by
+provenance before scoring. For all twelve domains in its original benchmark, we
+report the five-model mean coverage from Table~4 of the extended paper
+\cite{Chen2025MooseExtended}. For all four GP2PL-added domains, we measure Raw
+MOOSE locally over seeds 0--4. We never select a source separately for an
+individual domain after observing its outcome.
 
 \subsection{Benchmarks and Protocol}
 
@@ -76,6 +84,11 @@ its learned model; LAMA
 by MOOSE \cite{Chen2026Moose}. FOND4LTLf v0.0.4
 \cite{DeGiacomoFuggitti2021FOND4LTLf} with LAMA covers its accepted grounded
 Boolean subset. References receive 30 minutes and 8~GB per instance.
+The published MOOSE row is coverage-only: it is labelled Reported rather than
+locally reproduced, and its time and memory are not compared across hardware.
+The local Raw MOOSE extension row is labelled Measured and reports mean
+$\pm$ sample standard deviation over five independently trained models. The
+original and added scopes contain 1,080 and 148 cases per seed, respectively.
 
 \paragraph{Validation and measures.}
 A temporal run succeeds only if Jason completes \cite{Bordini2007Jason}, VAL
@@ -93,6 +106,12 @@ outcomes. The Technical Supplement reports every domain--seed cell and the
 fixed seed-0 atomic-core inputs used by the temporal study. The result
 subsections interpret these preregistered views without selecting domains after
 execution.
+
+\IfFileExists{sections/result_external_reference_table.tex}{%
+\input{sections/result_external_reference_table}
+}{%
+\PackageWarning{gp2pl}{External reference table unavailable}%
+}
 
 \subsection{Five-Seed Atomic Results}
 \label{sec:atomic-results}
@@ -114,12 +133,12 @@ count comprises repeated outcomes, not independent cases. Figure~
 groups, never a post-hoc domain subset.
 
 Variation is localized: Logistics ranges from 54/90 to 90/90 because seeded
-goal order changes available cross-mode provider macros, while schema-derived
+goal order changes available cross-mode provider macros, while action-schema-derived
 candidate generation cannot admit the cyclic \texttt{at}/\texttt{in} dependency
 without a decreasing certificate. Depots obtains 63.64\% $\pm$ 11.13 points; \texttt{p12} and
 \texttt{p20} require a nested support-resource choice beyond the already-bound
 capacity certificate. The Logistics and Depots failures therefore mark the
-boundary of the certified candidate language; every reported success remains a
+boundary of the candidate-construction grammar; every reported success remains a
 VAL-valid trace. No domain-specific rule was introduced after observing
 held-out outcomes.
 Table~\ref{tab:five-seed-atomic} gives the non-pooled five-seed summary; the
@@ -136,7 +155,7 @@ binding constraints; it admits $F$, $X$, strong $U$, conjunction, and literal
 negation. The controlled source utterances specify the evaluation distribution,
 not a required user grammar. GPT-5.5 \cite{OpenAI2026GPT55SystemCard}
 translates \TranslationInputCount{} deduplicated specifications. Every accepted
-translation satisfies the typed structural contract and exact DFA-language
+translation satisfies the typed structural validation conditions and exact DFA-language
 equivalence, yielding \TEGProblemCount{} bound queries. The serialized schema
 and validation protocol appear in the Technical Supplement, Sec.~4.2.
 

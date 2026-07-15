@@ -32,7 +32,7 @@ The paper has one thesis:
 > Generalized-planning evidence can be compiled into a reusable, executable BDI
 > plan library, and supported temporally extended goals can be composed over
 > that library, provided that every accepted atomic branch and temporal
-> transition carries the required schema-derived certificates.
+> transition carries the required action-schema-derived certificates.
 
 A certificate is a compile-time, machine-checkable obligation. For example, a
 binding certificate proves that every variable in `stack(X,Y)` is supplied by
@@ -40,6 +40,55 @@ the trigger or positive context; a completion-effect certificate proves which
 PDDL literals may be added or deleted when `!on(X,Y)` successfully returns.
 The compiler accepts a candidate only when its obligations are proved and
 otherwise returns a structured rejection.
+
+## Canonical Formal Notation
+
+The manuscript uses one notation for each method object. Do not introduce a
+second tuple or reuse one symbol for a different semantic role.
+
+- `D = <P,F,A,T>` is the typed planning domain and `I_train` its training split.
+  `E_raw` is a raw generalized-planning provider artifact; `E` is its normalized
+  singleton-goal evidence program. This avoids reusing `A`, already reserved for
+  the PDDL action-schema set.
+- `T_D(E) = goalPred(E) union prod(D)` is the Boolean producible target universe;
+  `T_D^Z(E)` is the admitted singleton integer-equality target set.
+- `G` is the domain-independent candidate-construction grammar. Its typed
+  instantiation `Inst_D(G,T_D(E),T_D^Z(E)) = C_D(E)` is the finite
+  action-schema-derived branch set. `C_E` is the validated evidence-branch set,
+  `C_{D,E} = C_E union C_D(E)` is the generated candidate set, and
+  `C^check_{D,E}` is its certified subset. Never call the instantiated set a
+  grammar or call the grammar a candidate set.
+- `b = <g_b,C_b,beta_b,Sigma_b,pi_b>` is one candidate branch. `Sigma_b` is its
+  conditional module-completion summary, with `MustAdd`, `MayAdd`, `MayDelete`,
+  numeric-delta, and keyed resource-mode projections. `Cert_D(b)` is its
+  candidate soundness certificate, and `covers_D(b,e)` is evidence coverage.
+- `F_{D,E}` is the family of feasible subsets of `C^check_{D,E}`. `S*` is the
+  lexicographic optimum in that family, and `M_D := S*` is the certified atomic
+  module core. Optimality is never claimed outside the generated certified set.
+- `rho_b` is a same-predicate well-founded ranking; `kappa_S` is the selected
+  cross-module dependency rank; `G_b^res` is a finite abstract resource-mode
+  graph. These compile-time witnesses do not become agent beliefs.
+- `tau_q = <iota_q,varphi_q,mu_q,Theta_q,Gamma_q>` is one unbound temporal
+  specification: identifier, formula, proposition map, typed parameter
+  signature, and binding constraints. `theta_q` is the external object binding,
+  and `hat(tau)_q = (tau_q,theta_q)` is the bound query.
+- `D_q = <Q_q^dfa,2^AP_q,delta_q,q_q^0,F_q>` is the deterministic finite
+  automaton. A guard `chi` induces signed obligation
+  `O_chi = <P_chi^+,P_chi^->`; `Pi_{chi,i}` is the preservation portfolio for
+  occurrence `i`; `prec_chi` is the module-completion threat relation;
+  `ell_chi` is the certified serialization; and `R_{q_s,chi}` is its
+  transition-repair plan set.
+- `Q_q` is the complete query-local plan set and `L_D^[k]` is the sole maintained
+  domain library. The font distinction between DFA states `Q_q^dfa` and query
+  plans `Q_q` must remain explicit in typeset mathematics.
+
+Use academic names consistently: action-schema candidate generation,
+conditional module-completion summary, target-preserving resource discharge,
+ranked cross-module precondition repair, preservation portfolio, joint
+guard-establishment certificate, and balanced binary transition-repair tree.
+Do not use the ambiguous phrases `schema closure`, `candidate space`,
+`existential preparation projection`, `whole-guard helper`, or bare `repair
+tree` in the method exposition.
 
 ## AAAI Narrative Alignment
 
@@ -145,7 +194,7 @@ Internal class names, path layouts, worker scheduling, hashes, and command-line
 flags belong in the technical or code-and-data appendix.
 
 Use one symbol-invariant example whenever a certificate would otherwise be
-opaque. For resource restoration, an illustrative acquisition deletes
+opaque. For target-preserving resource discharge, an illustrative acquisition deletes
 `free(R)` and adds `held(R,O)`; the method must state that names are placeholders
 and that the certificate is inferred from shared arguments and PDDL effects. For
 a mixed transition such as `at(P,L) and fuel(V)=3`, explain that one symbolic
@@ -159,12 +208,13 @@ The abstract follows a five-part structure:
 1. **Problem:** generalized planners return reusable policies, while BDI agents
    require executable and maintainable plan libraries.
 2. **Gap:** direct policy-to-BDI-plan translation does not establish binding,
-   internal-call closure, recursive progress, resource restoration, or safe temporal
+   internal-call closure, recursive progress, target-preserving resource
+   discharge, or safe temporal
    composition.
 3. **Method:** jointly certify and select MOOSE evidence macros and PDDL-derived
    atomic modules, realize the selected BDI library in AgentSpeak(L), and compile
    supported LTLf DFA transitions into query-local controllers.
-4. **Guarantee boundary:** state candidate-space optimality and supported-
+4. **Guarantee boundary:** state certified-candidate-set optimality and supported-
    fragment soundness, together with fail-closed rejection.
 5. **Results:** after the clean final runs, report one atomic-compilation number,
    one Jason+VAL execution number, and one DFA-acceptance or TEG-translation
@@ -203,7 +253,8 @@ Define only concepts used by the algorithms:
   languages;
 - an LTLf formula and its deterministic finite automaton (DFA);
 - the domain-compilation input `(D, I_train, E)` and atomic-core output `M_D`;
-- the per-query input `(M_D, tau_q, B_q)` and query-plan output `Q_q`; and
+- the per-query input `(M_D, hat(tau)_q)`, where
+  `hat(tau)_q=(tau_q,theta_q)`, and query-plan output `Q_q`; and
 - the sole maintained library after an ordered sequence `q_1, ..., q_k`,
   `L_D^[k] = M_D union (union_{i=1}^k Q_{q_i})`, with `L_D^[0] = M_D`.
 
@@ -243,7 +294,7 @@ This section covers only the post-evidence domain compiler. Its candidate and
 certificate representation is defined at the trigger--context--body BDI
 plan-rule level; the implemented final rendering targets AgentSpeak(L).
 
-1. Normalize provider output into a provider-neutral singleton-goal evidence
+1. Normalize the raw provider artifact `E_raw` into a provider-neutral singleton-goal evidence
    program. Do not expose an internal class name in the main narrative.
 2. Define the domain-wide producible target universe
    `T_D(E) = goalPred(E) union prod(D)`, where `prod(D)` contains every predicate
@@ -251,7 +302,8 @@ plan-rule level; the implemented final rendering targets AgentSpeak(L).
    delete-only dynamic predicates are not invented as positive targets. Keep
    this target expansion distinct from internal-call closure of the selected
    branch set.
-3. Generate the finite schema-derived candidate language: direct producers;
+3. Define the finite candidate-construction grammar `G` and instantiate
+   `C_D(E)=Inst_D(G,T_D(E),T_D^Z(E))`: direct producers;
    backward STRIPS regression over acyclic producer dependencies; and finite
    causal resource-mode discharge. Regression unifies producer preconditions
    with compatible open requirements before introducing fresh variables.
@@ -264,9 +316,10 @@ plan-rule level; the implemented final rendering targets AgentSpeak(L).
    executability, achievement, internal-call closure, relation-ranked recursive progress,
    finite resource-mode discharge, and Clingo-selected acyclic cross-predicate
    preparation with strictly decreasing dependency ranks.
-5. Explain the joint Clingo optimization over evidence and schema candidates.
+5. Explain feasible-core optimization over evidence and action-schema-derived
+   candidates.
    The precise claim is global optimality only inside the generated certified
-   candidate space.
+   certified candidate set `C^check_{D,E}`.
 6. Render the selected modules as the certified atomic module core `M_D`. State
    explicitly that AgentSpeak(L) is the evaluated realization, not the
    definition of the compilation contribution and not a second maintained
@@ -320,8 +373,9 @@ Supplement and public artifact.
    effects and constant-integer numeric deltas; index helper selection by the
    full literal atom and leave uncertified literals observation-only. Explain
    strict unit progress, exact non-unit predecessor guards, and the complete
-   single-action whole-guard certificate as three bounded strategies rather
-   than claiming arbitrary numeric planning. A whole-guard helper must be
+   single-action joint guard-establishment certificate as three bounded
+   strategies rather than claiming arbitrary numeric planning. A joint
+   guard-establishment branch must be
    callable from every positive literal it establishes and must carry the
    certificate's complete anchor arguments.
 9. For an Until source state, extract common waiting-loop literals as source
@@ -329,7 +383,7 @@ Supplement and public artifact.
    progress literal is established. Explain lexicographic predicate/numeric
    precondition preparation, repeatable non-unifying numeric steps, exact
    terminal predecessors, and capture-avoiding composition.
-10. Compile the certified order into a balanced binary repair tree. The tree is
+10. Compile the certified order into a balanced binary transition-repair tree. The tree is
    an AgentSpeak indexing structure with trigger fan-out at most two; it does
    not reorder DFA transitions or add planning semantics. Include a compact
    construction algorithm defining the signed leaves, midpoint range recursion,
@@ -355,10 +409,10 @@ The main paper should contain:
 1. **Local atomic-branch soundness:** under its certified context and
    type-consistent grounding, an accepted branch is executable and establishes
    its trigger when it returns, assuming called modules satisfy their own
-   contracts.
-2. **Certified candidate-space optimality:** Clingo satisfies every encoded
+   conditional module-completion summaries.
+2. **Certified-candidate-set optimality:** Clingo satisfies every encoded
    evidence and internal-call obligation and returns the lexicographic optimum inside
-   the generated candidate space.
+   the generated certified candidate set `C^check_{D,E}`.
 3. **Supported-transition composition soundness:** if signed obligations are
    initially satisfied or established by their certified repair plans, selected
    modules terminate, and their certified completion effects preserve earlier
@@ -367,7 +421,8 @@ The main paper should contain:
    a call, the remaining suffix stays PDDL-executable and prefix-preserving at
    module returns, while primitive-step monitoring makes every later transition
    an actual DFA edge; rejection fails rather than becoming false success.
-4. **Balanced-tree structure:** for `n` signed literals and `e` certified repair
+4. **Balanced transition-repair complexity:** for `n` signed literals and `e`
+   certified repair
    plans, the generated query-local tree has `2n+e+2` plans, maximum trigger
    fan-out two, logarithmic nesting depth, linear work per pass, and the same
    certified literal order.
@@ -414,14 +469,13 @@ normalized evidence hash:
 1. **Evidence Only:** validate provider macros against the PDDL schemas and
    retain them without producible-target expansion, internal-module synthesis,
    or optimization.
-2. **Action Closure:** expand over the producible target universe using only
-   action-only producer candidates. The row name is an ablation label, not the
-   internal-call closure property.
-3. **Maximal Certified:** add progress-, preparation-, and resource-certified
-   decomposed candidates, then maximize the jointly compatible branch set under
-   all hard certificates.
+2. **Direct Producers:** expand over the producible target universe using only
+   action-only producer candidates.
+3. **Maximum Feasible:** add progress-, preparation-, and resource-certified
+   decomposed candidates, then select a maximum-cardinality jointly feasible
+   branch set under all hard certificates.
 4. **Full GP2PL:** minimize branch, context, and body cost over exactly the
-   same candidate universe and hard constraints as Maximal Certified.
+   same generated certified set and hard constraints as Maximum Feasible.
 
 The registered temporal comparison holds the DFA, atomic-library hash, query
 binding, and Jason runtime fixed:
@@ -432,14 +486,14 @@ the atomic stage of the same clean source revision. The evidence batch supplies
 only the MOOSE model and readable policy. This prevents libraries compiled at
 different repository revisions from entering a paired temporal comparison.
 
-1. **Unprotected DFA:** canonical within-edge serialization, the same
+1. **Unprotected Serialization:** canonical within-edge serialization, the same
    MONA-derived DFA,
    and primitive-step monitor, but no threat ordering or preservation portfolio.
 2. **Certified Flat:** add complete-effect threat ordering and preserving
    portfolios, retaining flat sibling control.
 3. **Certified Balanced:** replace only flat control with the balanced binary
-   repair tree.
-4. **Completion Monitor:** retain completion-effect certification and balanced
+   transition-repair tree.
+4. **Module-Return Monitor:** retain completion-effect certification and balanced
    control, observe the DFA only after an atomic module returns, and omit
    primitive-prefix source-invariant filtering because intermediate primitive
    states are not observable under this ablation. Run it on the complete paired
@@ -491,7 +545,15 @@ artifact is executed through a hash-checked extracted sandbox, with one private
 `/work/out` mount per Raw MOOSE or LAMA case. FOND4LTLf redirects the fixed
 `ltlf2dfa` `automa.mona` scratch path into one private directory per case. The
 registered remote LAMA/MRP+HJ and direct FOND4LTLf matrices therefore use 20
-case workers without host-wide planner or compiler locks. Published numbers
+case workers without host-wide planner or compiler locks. Partition the MOOSE
+coverage reference before execution: use Table 4 of arXiv `2511.11095v1` for
+all twelve original MOOSE domains and local five-seed Raw MOOSE runs for all
+four GP2PL-added domains. Label these rows `Reported` and `Measured`,
+respectively. Never switch an individual domain between sources after observing
+its score. The reported row supplies coverage only; do not compare its runtime
+or memory with local measurements. A local full-seed run is a reproduction
+diagnostic rather than a source for selectively replacing published cells.
+Other published numbers
 from different splits or hardware may be cited as prior results but must not be
 inserted into paired experiment tables. Plan4Past is a design precedent for
 holding the task-level planner fixed while comparing temporal compilations; it
@@ -639,8 +701,8 @@ seven-page limit. The main paper uses exactly three planned figures: the
 single-column framework overview as Figure 1 on the first page's right column,
 the full-width policy-lifting example as Figure 2 at the top of page 2, and the
 five-seed empirical result as Figure 3. The main paper contains exactly four
-core tables: the supported fragment and rejection boundary, the certified
-candidate language, a compact five-seed atomic summary, and the temporal-profile
+core tables: the supported fragment and rejection boundary, the candidate
+constructors and soundness obligations, a compact five-seed atomic summary, and the temporal-profile
 summary. The complete domain--seed matrix and fixed seed-0 temporal input table
 belong in the Technical Supplement, where they preserve every audit value
 without duplicating the headline main-paper views. The detailed DFA-controller
@@ -766,7 +828,7 @@ Use a compact vertical flow with one side input and one final library artifact:
   `(1) Construct + certify core once`, producing
   `Certified atomic module core $\mathcal M_D$`.
 - Draw one solid reuse arrow from `$\mathcal M_D$` to `(2) Compose + append`.
-  A side input `Bound temporal query $\langle\varphi_q,B_q\rangle$` enters this
+  A side input `Bound temporal query $\widehat\tau_q=(\tau_q,\theta_q)$` enters this
   second operation.
 - Label the output arrow `query plans $\mathcal Q_q$`; do not draw
   `$\mathcal Q_q$` as a separately maintained component.
@@ -921,23 +983,23 @@ the selected atomic module core $\mathcal M_D$ that forms its reusable part:
   a standalone `......` line.
 
 The code is an illustrative certificate-valid selection from the generated
-candidate language, not a verbatim claim that every seed selects these exact
+candidate set, not a verbatim claim that every seed selects these exact
 branches. It demonstrates branch provenance, a selected direct producer, and
 recursive internal-call closure. Approved caption:
 
 > Figure 2: Certified lifting from singleton-goal evidence to a recursive
 > atomic module core $\mathcal M_D$. Left: normalized evidence for `on(X,Y)` and
 > the relevant slice of the domain-wide producible target universe, and producer
-> schemas generate evidence-backed and schema-derived candidates. Middle: each
+> schemas generate evidence-backed and action-schema-derived candidates. Middle: each
 > candidate is checked for binding, executability, achievement, and any triggered
-> progress or resource-restoration obligations. Joint Clingo selection then
-> chooses a lexicographically optimal set satisfying evidence coverage and
+> progress or target-preserving resource-discharge obligations. Clingo then
+> computes the lexicographically optimal feasible set satisfying evidence coverage and
 > internal-call closure. Right:
 > branch provenance
 > is preserved in the AgentSpeak(L) realization of $\mathcal M_D$, containing
 > already-satisfied and direct-producer cases plus recursive preparation through
 > the generated `clear/1` module. Optimality is relative to the generated
-> certified candidate space.
+> certified candidate set $\mathcal C^{\checkmark}_{D,E}$.
 
 ### Supplementary Figure S1: DFA Transition Compilation and Runtime Monitoring
 
@@ -951,7 +1013,7 @@ Panel containers:
 
 - `(a)` is `x=1,y=2,w=23,h=96`, heading `MONA-derived DFA transition`.
 - `(b)` is `x=26,y=2,w=21,h=96`, heading `Signed obligations`.
-- `(c)` is `x=49,y=2,w=27,h=96`, heading `Certified repair tree`.
+- `(c)` is `x=49,y=2,w=27,h=96`, heading `Certified transition-repair tree`.
 - `(d)` is `x=78,y=2,w=21,h=96`, heading `Primitive-step monitor`.
 
 Panel (a):
@@ -970,8 +1032,8 @@ Panel (a):
 
 Panel (b):
 
-- `F3-B0`: `x=28,y=15,w=17,h=10`. Blue box: `Conditional completion` and
-  `effect summaries`.
+- `F3-B0`: `x=28,y=15,w=17,h=10`. Blue box: `Conditional module-completion`
+  and `summaries`.
 - `F3-B1`: `x=28,y=34,w=17,h=10`. Green box:
   `G1 = on(A,B)  [positive]`.
 - `F3-B2`: `x=28,y=55,w=17,h=10`. Green box:
@@ -1028,7 +1090,8 @@ Panel (d):
   `after every primitive action`.
 - Draw one purple dashed observation arrow from the monitor-badge group to the
   right edge of `trans_1_done` in panel (c), labelled `current DFA state guard`.
-  Route it through the empty lower gutter so it does not cross the repair tree.
+  Route it through the empty lower gutter so it does not cross the
+  transition-repair tree.
 - Draw a solid green arrow from the final `q1 accepting` badge to
   `top-level DFA dispatch` at `x=83,y=76,w=13,h=10`.
 - Under the timeline, draw a gray bracket from `s0` through `sk` labelled
@@ -1041,8 +1104,9 @@ All helper names in panel (c) omit the common prefix
 
 > **Supplementary Figure S1: Preservation-safe compilation of one DFA progress
 > transition.**
-> Conditional module summaries induce a threat order over signed guard
-> obligations. A balanced BDI repair tree, rendered here in AgentSpeak(L),
+> Conditional module-completion summaries induce a threat-induced precedence
+> relation over signed guard obligations. A balanced binary transition-repair
+> tree, rendered here in AgentSpeak(L),
 > realizes that fixed order with trigger fan-out at most two, while the DFA
 > monitor observes every primitive action. Uncertified cyclic threats or
 > negative-literal repairs are rejected rather than serialized heuristically.
@@ -1252,7 +1316,7 @@ satisfies internal-call closure.
 
 ### Atomic Baseline/Ablation Table
 
-Use short method names (Evidence Only, Action Closure, Maximal Certified, and
+Use short method names (Evidence Only, Direct Producers, Maximum Feasible, and
 Full GP2PL) and report paired results for every fixed evidence seed:
 
 ```text
@@ -1271,8 +1335,8 @@ machine-readable artifact, not as `C0`/`C1`-style table labels.
 
 ### Temporal Baseline/Ablation Table
 
-Use short method names (Unprotected DFA, Certified Flat, Certified Balanced,
-and Completion Monitor) on the same query/DFA/library hashes:
+Use short method names (Unprotected Serialization, Certified Flat, Certified
+Balanced, and Module-Return Monitor) on the same query/DFA/library hashes:
 
 ```text
 controller compiled/rejected
@@ -1288,19 +1352,20 @@ maximum trigger fan-out
 Use the method names above directly. Do not replace them with numbered temporal
 variants or compressed one-letter oracle headings.
 
-Keep Raw MOOSE, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a separate external
-reference table with short columns such as `Method`, `Scope`, `Output`, `Oracle`,
-`Coverage`, `PAR-2`, and `Actions`. Do not mix their output representations or
+Keep MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a
+separate external reference table with short columns such as `Method`, `Source`,
+`Scope`, `Coverage`, `Unsupported`, and `PAR-2`. Do not mix their output representations or
 costs into the compiler ablation table. Do not spend main-paper space on an
 all-empty external-reference table: keep the registered design in this outline
 and insert the table only after the native runners produce a complete hash-locked
-matrix. If the final four-table budget is already occupied, place the full
-external table in Technical Supplement, Sec.~5.3, and report only the paired
-headline comparison in the Evaluation text.
+matrix. Keep the completed external table in the main Evaluation section while
+the manuscript is still in evidence-completeness mode; page-budget compression
+is a later editorial decision and must not silently remove a comparison row.
 
 Generate all three comparison tables with
 `scripts/generate_aaai_comparison_tables.py`. Its mandatory inputs are the
-complete paired compiler result, Raw MOOSE summaries explicitly assigned to
+complete paired compiler result, the checked MOOSE arXiv-v1 Table-4 reference
+artifact, four-domain Raw MOOSE extension summaries explicitly assigned to
 seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, and
 the challenge summary. The script must fail rather than render a partial table
 when a method, seed, case, hash pairing, or clean-source condition is missing.
@@ -1311,10 +1376,10 @@ only compare methods with each other. It recomputes immutable identifier-set
 digests for all 1,228 achievement cases, all 1,228 temporal cases, the 868
 classical LAMA cases, and the 360 numeric MRP+HJ cases; duplicates and shared
 omissions are invalid. It additionally requires the five Raw MOOSE runs to use
-the exact seed-specific model-batch manifests and canonical hashes of every
+the exact 148-case extension scope, seed-specific model-batch manifests, and canonical hashes of every
 per-domain model/readable-policy pair consumed by the paired compiler runs, one
 clean source commit for every derived result summary, six workers for paired
-compiler and Raw MOOSE runs, 20 workers for remote LAMA/MRP+HJ and direct
+compiler and Raw MOOSE extension runs, 20 workers for remote LAMA/MRP+HJ and direct
 FOND4LTLf runs, the remaining registered resource protocol, pinned external
 binaries, and exactly 13 unique successful challenge nodes. Report a failed
 contract as an infrastructure failure, never as a method score.

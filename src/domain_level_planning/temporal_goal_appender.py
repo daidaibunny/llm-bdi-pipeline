@@ -62,10 +62,10 @@ class TemporalCompilerVariant(str, Enum):
 		"""Return the short method name used in papers and reports."""
 
 		return {
-			self.DFA_AWARE_UNPROTECTED: "Unprotected DFA",
+			self.DFA_AWARE_UNPROTECTED: "Unprotected Serialization",
 			self.CERTIFIED_FLAT: "Certified Flat",
 			self.CERTIFIED_BALANCED: "Certified Balanced",
-			self.COMPLETION_BOUNDARY_MONITOR: "Completion Monitor",
+			self.COMPLETION_BOUNDARY_MONITOR: "Module-Return Monitor",
 		}[self]
 
 

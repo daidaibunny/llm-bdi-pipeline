@@ -69,15 +69,15 @@ BENCHMARK_GROUPS = (
 )
 ATOMIC_VARIANTS = (
 	("validated_evidence_adapter", "Evidence Only"),
-	("action_only_closure", "Action Closure"),
-	("maximal_certified_program", "Maximal Certified"),
+	("action_only_closure", "Direct Producers"),
+	("maximal_certified_program", "Maximum Feasible"),
 	("full", "Full GP2PL"),
 )
 TEMPORAL_VARIANTS = (
-	("dfa_aware_unprotected", "Unprotected DFA"),
+	("dfa_aware_unprotected", "Unprotected Serialization"),
 	("certified_flat", "Certified Flat"),
 	("certified_balanced", "Certified Balanced"),
-	("completion_boundary_monitor", "Completion Monitor"),
+	("completion_boundary_monitor", "Module-Return Monitor"),
 )
 
 COLORS = {

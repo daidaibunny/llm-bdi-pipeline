@@ -16,6 +16,10 @@ from typing import Sequence
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "latex_code/aamas_method_paper/sections"
+DEFAULT_PUBLISHED_MOOSE_REFERENCE = (
+	PROJECT_ROOT
+	/ "paper_artifacts/gp2pl_evaluation/v1/moose_published_reference.json"
+)
 
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
@@ -33,50 +37,86 @@ REGISTERED_MAX_RSS_GB = 8.0
 REGISTERED_JAVA_STACK_SIZE = "64m"
 PINNED_ENHSP_REVISION = "537bed55a60d9456975c56afbadd50fc8acb1dc9"
 PINNED_FOND4LTLF_REVISION = "011d9d9a5bfd6406d2c358faf8f63167f6c839bb"
+REGISTERED_PUBLISHED_MOOSE_DOMAIN_COVERAGE = (
+	("barman", 90, 90.0),
+	("ferry", 90, 90.0),
+	("gripper", 90, 90.0),
+	("logistics", 90, 89.6),
+	("miconic", 90, 90.0),
+	("rovers", 90, 90.0),
+	("satellite", 90, 90.0),
+	("transport", 90, 90.0),
+	("numeric-ferry", 90, 90.0),
+	("numeric-miconic", 90, 90.0),
+	("numeric-minecraft", 90, 90.0),
+	("numeric-transport", 90, 90.0),
+)
+REGISTERED_RAW_MOOSE_EXTENSION_DOMAINS = (
+	"blocksworld-clear",
+	"blocksworld-on",
+	"blocksworld-tower",
+	"depots",
+)
+REGISTERED_MOOSE_SCOPE_CONTRACTS = {
+	"original_moose": {
+		"count": 1080,
+		"sha256": "b99b12be1bcbe05983b0727dea0517a671530a55c686068e12908bb12eefb8f1",
+	},
+	"gp2pl_extension": {
+		"count": 148,
+		"sha256": "ae3ccea2e2f30093ff13fca34ba31451087fdcb78ffab18fc7ddd473ebb8ab5d",
+	},
+	"selected_union": {
+		"count": 1228,
+		"sha256": "3b3d38e19e5e885c3ad15658baf77a26a1aad6cc8a369dfc1284c653a4e385ec",
+	},
+}
 REGISTERED_CHALLENGE_NODE_IDS = tuple(
 	case.node_id for case in (*CHALLENGE_CASES, *METAMORPHIC_CASES)
 )
 ATOMIC_METHODS = (
 	("validated_evidence_adapter", "Evidence Only"),
-	("action_only_closure", "Action Closure"),
-	("maximal_certified_program", "Maximal Certified"),
+	("action_only_closure", "Direct Producers"),
+	("maximal_certified_program", "Maximum Feasible"),
 	("full", "Full GP2PL"),
 )
 TEMPORAL_METHODS = (
-	("dfa_aware_unprotected", "Unprotected DFA"),
+	("dfa_aware_unprotected", "Unprotected Serialization"),
 	("certified_flat", "Certified Flat"),
 	("certified_balanced", "Certified Balanced"),
-	("completion_boundary_monitor", "Completion Monitor"),
+	("completion_boundary_monitor", "Module-Return Monitor"),
 )
 
 
 def parse_seed_file_assignments(values: Sequence[str]) -> tuple[tuple[int, Path], ...]:
-	"""Parse repeated ``SEED=FILE`` assignments for Raw MOOSE summaries."""
+	"""Parse repeated ``SEED=FILE`` assignments for Raw MOOSE extensions."""
 
 	assignments: dict[int, Path] = {}
 	for value in values:
 		seed_text, separator, filename = str(value).partition("=")
 		if not separator or not seed_text.strip() or not filename.strip():
-			raise ValueError(f"raw MOOSE summary must use SEED=FILE: {value!r}")
+			raise ValueError(f"Raw MOOSE extension must use SEED=FILE: {value!r}")
 		try:
 			seed = int(seed_text)
 		except ValueError as error:
 			raise ValueError(f"raw MOOSE seed is not an integer: {value!r}") from error
 		if seed in assignments:
-			raise ValueError(f"duplicate Raw MOOSE seed: {seed}")
+			raise ValueError(f"duplicate Raw MOOSE extension seed: {seed}")
 		assignments[seed] = Path(filename).expanduser().resolve()
 	if tuple(sorted(assignments)) != REGISTERED_SEEDS:
-		raise ValueError("Raw MOOSE comparison requires exactly seeds 0,1,2,3,4")
+		raise ValueError("Raw MOOSE extension requires exactly seeds 0,1,2,3,4")
 	return tuple(sorted(assignments.items()))
 
 
 def build_comparison_dataset(
 	*,
 	paired_results_file: str | Path,
-	raw_moose_summaries: Sequence[tuple[int, str | Path]],
+	raw_moose_summaries: Sequence[tuple[int, str | Path]] = (),
 	instance_reference_summary_file: str | Path,
 	direct_temporal_summary_file: str | Path,
 	challenge_summary_file: str | Path,
+	published_moose_reference_file: str | Path | None = None,
+	raw_moose_extension_summaries: Sequence[tuple[int, str | Path]] = (),
 ) -> dict[str, Any]:
 	"""Build a fail-closed compact dataset from every registered comparison."""
 
@@ -84,13 +124,28 @@ def build_comparison_dataset(
 	instance_path = Path(instance_reference_summary_file).expanduser().resolve()
 	direct_path = Path(direct_temporal_summary_file).expanduser().resolve()
 	challenge_path = Path(challenge_summary_file).expanduser().resolve()
+	published_moose_path = (
+		Path(published_moose_reference_file).expanduser().resolve()
+		if published_moose_reference_file is not None
+		else None
+	)
 	paired = _read_json(paired_path)
 	instance = _read_json(instance_path)
 	direct = _read_json(direct_path)
 	challenge = _read_json(challenge_path)
+	published_moose = (
+		_read_json(published_moose_path) if published_moose_path is not None else None
+	)
+	if published_moose is not None:
+		_validate_published_moose_reference(published_moose)
+	selected_raw_summaries = (
+		raw_moose_extension_summaries
+		if published_moose is not None
+		else raw_moose_summaries
+	)
 	raw_records = tuple(
 		(seed, Path(path).expanduser().resolve(), _read_json(path))
-		for seed, path in raw_moose_summaries
+		for seed, path in selected_raw_summaries
 	)
 	_validate_paired_result(paired)
 	_validate_clean_success(instance, label="instance references")
@@ -117,9 +172,21 @@ def build_comparison_dataset(
 			or "",
 		),
 	)
+	raw_moose_contract = _registered_external_case_contract(paired, "raw_moose")
+	if published_moose is not None:
+		scope_contracts = dict(published_moose.get("scope_contracts") or {})
+		selected_union = dict(scope_contracts.get("selected_union") or {})
+		if dict(selected_union.get("case_contract") or {}) != dict(
+			raw_moose_contract,
+		):
+			raise ValueError(
+				"published MOOSE scope union does not match the paired Raw MOOSE corpus",
+			)
+		extension_scope = dict(scope_contracts.get("gp2pl_extension") or {})
+		raw_moose_contract = dict(extension_scope.get("case_contract") or {})
 	_validate_raw_moose_runs(
 		raw_records,
-		contract=_registered_external_case_contract(paired, "raw_moose"),
+		contract=raw_moose_contract,
 		seed_batch_manifests=dict(paired.get("seed_batch_manifests") or {}),
 	)
 	_validate_common_achievement_toolchain(raw_records, instance=instance)
@@ -137,10 +204,15 @@ def build_comparison_dataset(
 
 	atomic_rows, atomic_joint_count = _aggregate_atomic(paired)
 	temporal_rows, temporal_joint_count = _aggregate_temporal(paired)
-	external_rows = _aggregate_external(raw_records, instance, direct)
+	external_rows = _aggregate_external(
+		raw_records,
+		instance,
+		direct,
+		published_moose=published_moose,
+	)
 	challenge_count, challenge_success = _validate_challenge_matrix(challenge)
 	return {
-		"schema_version": 1,
+		"schema_version": 2,
 		"artifact_kind": "aaai_final_comparison_results",
 		"atomic": atomic_rows,
 		"atomic_joint_action_case_count": atomic_joint_count,
@@ -154,7 +226,7 @@ def build_comparison_dataset(
 		"provenance": {
 			"paired_results_file": str(paired_path),
 			"paired_results_sha256": _sha256(paired_path),
-			"raw_moose_summaries": [
+			"raw_moose_extension_summaries": [
 				{
 					"seed": seed,
 					"file": str(path),
@@ -162,6 +234,14 @@ def build_comparison_dataset(
 				}
 				for seed, path, _summary in raw_records
 			],
+			"published_moose_reference_file": (
+				str(published_moose_path) if published_moose_path is not None else None
+			),
+			"published_moose_reference_sha256": (
+				_sha256(published_moose_path)
+				if published_moose_path is not None
+				else None
+			),
 			"instance_reference_summary_file": str(instance_path),
 			"instance_reference_summary_sha256": _sha256(instance_path),
 			"direct_temporal_summary_file": str(direct_path),
@@ -170,6 +250,84 @@ def build_comparison_dataset(
 			"challenge_summary_sha256": _sha256(challenge_path),
 		},
 	}
+
+
+def _validate_published_moose_reference(payload: Mapping[str, Any]) -> None:
+	if (
+		int(payload.get("schema_version") or 0) != 1
+		or payload.get("artifact_kind")
+		!= "published_moose_planning_coverage_reference"
+	):
+		raise ValueError("published MOOSE reference has an invalid schema")
+	source = dict(payload.get("source") or {})
+	if (
+		str(source.get("arxiv_version") or "") != "2511.11095v1"
+		or str(source.get("table") or "") != "Table 4"
+	):
+		raise ValueError(
+			"published MOOSE reference must use arXiv 2511.11095v1 Table 4",
+		)
+	published = payload.get("published_results")
+	if not isinstance(published, Mapping):
+		raise ValueError("published MOOSE reference has no result payload")
+	if (
+		int(published.get("seed_count") or 0) != 5
+		or published.get("validation_origin") != "reported_by_source_authors"
+		or published.get("runtime_comparison_allowed") is not False
+	):
+		raise ValueError("published MOOSE reference has an invalid reporting contract")
+	domain_rows = tuple(published.get("domains") or ())
+	if not domain_rows or not all(isinstance(row, Mapping) for row in domain_rows):
+		raise ValueError("published MOOSE reference has no domain coverage")
+	domain_names = tuple(str(row.get("domain") or "") for row in domain_rows)
+	if len(set(domain_names)) != len(domain_names) or not all(domain_names):
+		raise ValueError("published MOOSE reference has duplicate or empty domains")
+	case_count = sum(int(row.get("case_count_per_seed") or 0) for row in domain_rows)
+	mean_solved = sum(float(row.get("mean_solved_count") or 0.0) for row in domain_rows)
+	if (
+		case_count != int(published.get("case_count_per_seed") or 0)
+		or abs(mean_solved - float(published.get("mean_solved_count") or 0.0))
+		> 1e-9
+	):
+		raise ValueError("published MOOSE domain aggregate does not match its total")
+	for row in domain_rows:
+		domain_case_count = int(row.get("case_count_per_seed") or 0)
+		domain_mean = float(row.get("mean_solved_count") or 0.0)
+		if domain_case_count <= 0 or not 0.0 <= domain_mean <= domain_case_count:
+			raise ValueError("published MOOSE domain coverage is outside its scope")
+	observed_coverage = tuple(
+		(
+			str(row.get("domain") or ""),
+			int(row.get("case_count_per_seed") or 0),
+			float(row.get("mean_solved_count") or 0.0),
+		)
+		for row in domain_rows
+	)
+	if observed_coverage != REGISTERED_PUBLISHED_MOOSE_DOMAIN_COVERAGE:
+		raise ValueError("published MOOSE reference changes the registered Table 4 coverage")
+	scopes = payload.get("scope_contracts")
+	if not isinstance(scopes, Mapping):
+		raise ValueError("published MOOSE reference has no scope contracts")
+	original_scope = dict(scopes.get("original_moose") or {})
+	extension_scope = dict(scopes.get("gp2pl_extension") or {})
+	if tuple(original_scope.get("domains") or ()) != domain_names:
+		raise ValueError("published MOOSE domains do not match the original scope")
+	if tuple(extension_scope.get("domains") or ()) != (
+		REGISTERED_RAW_MOOSE_EXTENSION_DOMAINS
+	):
+		raise ValueError("published MOOSE reference changes the local extension domains")
+	if set(original_scope.get("domains") or ()) & set(
+		extension_scope.get("domains") or (),
+	):
+		raise ValueError("published and local MOOSE scopes overlap")
+	for label in ("original_moose", "gp2pl_extension", "selected_union"):
+		contract = dict(dict(scopes.get(label) or {}).get("case_contract") or {})
+		if int(contract.get("count") or 0) <= 0 or len(
+			str(contract.get("sha256") or ""),
+		) != 64:
+			raise ValueError(f"published MOOSE {label} has an invalid case contract")
+		if contract != REGISTERED_MOOSE_SCOPE_CONTRACTS[label]:
+			raise ValueError(f"published MOOSE {label} changes the registered case set")
 
 
 def _validate_paired_result(paired: Mapping[str, Any]) -> None:
@@ -747,6 +905,8 @@ def _aggregate_external(
 	raw_runs: Sequence[tuple[int, Path, Mapping[str, Any]]],
 	instance: Mapping[str, Any],
 	direct: Mapping[str, Any],
+	*,
+	published_moose: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
 	method_records: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
 	for _seed, _path, summary in raw_runs:
@@ -760,8 +920,39 @@ def _aggregate_external(
 			f"{sorted(method_records)}",
 		)
 	rows: list[dict[str, Any]] = []
+	if published_moose is None:
+		rows.append(
+			_external_row(
+				"Raw MOOSE",
+				"Achievement, five seeds",
+				method_records["Raw MOOSE"],
+			),
+		)
+	else:
+		published_results = dict(published_moose.get("published_results") or {})
+		rows.extend(
+			(
+				{
+					"method": "MOOSE",
+					"source": "Reported",
+					"scope": "Original MOOSE domains, five seeds",
+					"case_count": int(
+						published_results.get("case_count_per_seed") or 0,
+					),
+					"supported_case_count": int(
+						published_results.get("case_count_per_seed") or 0,
+					),
+					"unsupported_case_count": 0,
+					"valid_trace_count": float(
+						published_results.get("mean_solved_count") or 0.0,
+					),
+					"seed_count": int(published_results.get("seed_count") or 0),
+					"par2_seconds": None,
+				},
+				_raw_moose_extension_row(raw_runs),
+			),
+		)
 	for method, scope in (
-		("Raw MOOSE", "Achievement, five seeds"),
 		("LAMA", "Classical achievement"),
 		("MRP+HJ", "Numeric achievement"),
 	):
@@ -782,6 +973,7 @@ def _aggregate_external(
 	rows.append(
 		{
 			"method": "FOND4LTLf + LAMA",
+			"source": "Measured",
 			"scope": "Supported Boolean TEG",
 			"case_count": len(supported),
 			"supported_case_count": len(supported),
@@ -802,6 +994,35 @@ def _aggregate_external(
 	return rows
 
 
+def _raw_moose_extension_row(
+	raw_runs: Sequence[tuple[int, Path, Mapping[str, Any]]],
+) -> dict[str, Any]:
+	seed_records = [tuple(summary.get("results") or ()) for _seed, _path, summary in raw_runs]
+	case_count = len(seed_records[0]) if seed_records else 0
+	valid_counts = [
+		float(sum(record.get("plan_verifier_success") is True for record in records))
+		for records in seed_records
+	]
+	all_records = [record for records in seed_records for record in records]
+	row = _external_row(
+		"Raw MOOSE extension",
+		"Added domains, five seeds",
+		all_records,
+	)
+	row.update(
+		{
+			"case_count": case_count,
+			"supported_case_count": case_count,
+			"valid_trace_count": statistics.mean(valid_counts) if valid_counts else 0.0,
+			"seed_count": len(seed_records),
+			"coverage_sample_sd": (
+				statistics.stdev(valid_counts) if len(valid_counts) > 1 else 0.0
+			),
+		},
+	)
+	return row
+
+
 def _external_row(
 	method: str,
 	scope: str,
@@ -816,6 +1037,7 @@ def _external_row(
 	]
 	return {
 		"method": method,
+		"source": "Measured",
 		"scope": scope,
 		"case_count": len(records),
 		"supported_case_count": len(records),
@@ -993,16 +1215,22 @@ def render_external_table(result: Mapping[str, Any]) -> str:
 		"\\begin{table*}[htbp]",
 		"\\centering",
 		"\\small",
-		"\\setlength{\\tabcolsep}{4.0pt}",
-		"\\begin{tabular}{llrrr}",
+		"\\setlength{\\tabcolsep}{3.2pt}",
+		"\\begin{tabular}{lllrrr}",
 		"\\toprule",
-		r"Method & Scope & Valid & Unsupported & PAR-2 s \\",
+		r"Method & Source & Scope & Coverage & Unsupported & PAR-2 s \\",
 		"\\midrule",
 	]
 	for row in result["external"]:
+		coverage = f"{_number(row['valid_trace_count'])}/{row['case_count']}"
+		if row.get("coverage_sample_sd") is not None:
+			coverage = (
+				f"{_number(row['valid_trace_count'])} $\\pm$ "
+				f"{_number(row['coverage_sample_sd'])}/{row['case_count']}"
+			)
 		lines.append(
-			f"{row['method']} & {row['scope']} & "
-			f"{row['valid_trace_count']}/{row['case_count']} & "
+			f"{row['method']} & {row.get('source', 'Measured')} & {row['scope']} & "
+			f"{coverage} & "
 			f"{row['unsupported_case_count']} & {_number(row['par2_seconds'])} "
 			+ r"\\",
 		)
@@ -1010,10 +1238,13 @@ def render_external_table(result: Mapping[str, Any]) -> str:
 		(
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{Native external planning references under the same 30-minute, "
-			"8-GiB per-task budget. Denominators follow each tool's declared scope; "
-			"unsupported FOND4LTLf inputs are reported separately from planner "
-			"failures.}",
+			"\\caption{External planning references with explicit evidence sources. "
+			"Reported MOOSE coverage is copied from Table~4 of the five-seed extended "
+			"paper~\\cite{Chen2025MooseExtended}; its runtime is not compared across "
+			"hardware. Measured rows use the registered 30-minute, 8-GiB per-task "
+			"budget. Raw MOOSE extension coverage is mean $\\pm$ sample standard "
+			"deviation over five seeds. Unsupported FOND4LTLf inputs are separated "
+			"from planner failures.}",
 			"\\label{tab:external-references}",
 			"\\end{table*}",
 		),
@@ -1108,10 +1339,16 @@ def _parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--paired-results", type=Path, required=True)
 	parser.add_argument(
-		"--raw-moose-summary",
+		"--published-moose-reference",
+		type=Path,
+		default=DEFAULT_PUBLISHED_MOOSE_REFERENCE,
+		help="Verified MOOSE arXiv v1 Table 4 coverage artifact.",
+	)
+	parser.add_argument(
+		"--raw-moose-extension-summary",
 		action="append",
-		default=[],
-		help="Raw MOOSE result as SEED=FILE; repeat for seeds 0--4.",
+		required=True,
+		help="Local four-domain Raw MOOSE result as SEED=FILE; repeat for seeds 0--4.",
 	)
 	parser.add_argument("--instance-reference-summary", type=Path, required=True)
 	parser.add_argument("--direct-temporal-summary", type=Path, required=True)
@@ -1124,7 +1361,10 @@ def main() -> int:
 	args = _parse_args()
 	result = build_comparison_dataset(
 		paired_results_file=args.paired_results,
-		raw_moose_summaries=parse_seed_file_assignments(args.raw_moose_summary),
+		published_moose_reference_file=args.published_moose_reference,
+		raw_moose_extension_summaries=parse_seed_file_assignments(
+			args.raw_moose_extension_summary,
+		),
 		instance_reference_summary_file=args.instance_reference_summary,
 		direct_temporal_summary_file=args.direct_temporal_summary,
 		challenge_summary_file=args.challenge_summary,

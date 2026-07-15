@@ -36,14 +36,15 @@ evaluated here \cite{Rao1996AgentSpeak}, an achievement plan is
 \]
 where $C$ is a conjunction of beliefs and comparisons and each $b_i$ is a PDDL
 action or an internal achievement call $!q(\bar Y)$. A library is \emph{lifted}
-when plans contain variables rather than training objects, and \emph{closed}
-when every internal call resolves to a selected module. Our certificates apply
+when plans contain variables rather than training objects, and \emph{internally
+closed} when every internal call resolves to a selected module. Our certificates apply
 to this trigger--context--body model and to the PDDL semantics of primitive
 actions. Formally, a candidate branch is
-$b=\langle g,C,\beta,\Sigma\rangle$, where $g$ is one lifted achievement
-literal, $C$ is a conjunctive applicability condition, $\beta$ is a finite body
-of primitive actions and internal calls, and $\Sigma$ is a conservative
-conditional summary of effects observable when $\beta$ returns. We map selected
+$b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$, where $g_b$ is one lifted
+achievement literal, $C_b$ is a conjunctive applicability condition, $\beta_b$
+is a finite body of primitive actions and internal calls, $\Sigma_b$ is a
+conservative conditional module-completion summary, and $\pi_b$ records branch
+provenance. We map selected
 branches to \asl{} and evaluate them with Jason \cite{Bordini2007Jason}; claims
 about another BDI language would require a semantics-preserving translation and
 an independent execution study. Query controllers follow declarative goal
@@ -55,14 +56,21 @@ patterns by rechecking their intended state after subsidiary plans return
 An \ltlf{} formula is interpreted over a finite state sequence
 \cite{DeGiacomoVardi2013}. Automata-theoretic planning uses a finite automaton
 to track temporal progress \cite{DeGiacomoRubin2018AutomataFOND}. We construct
-the deterministic finite automaton (DFA) with \texttt{ltlf2dfa} and MONA
+the deterministic finite automaton (DFA)
+$\mathcal D_q=\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle$
+with \texttt{ltlf2dfa} and MONA
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. The supported
 fragment admits certified distance-reducing transitions whose guards contain
-conjunction and literal negation. A guard
+conjunction and literal negation. A supported guard $\chi$ has normal form
 \[
-B=P^+\land\neg P^-
+\chi=
+\bigwedge_{G\in P_\chi^+}G\ \land\!
+\bigwedge_{N\in P_\chi^-}\neg N,
+\qquad
+\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle,
 \]
-contains achievements $P^+$ and atoms $P^-$ that must remain absent. A
+where the signed transition obligation $\mathcal O_\chi$ separates positive
+achievements $P_\chi^+$ from atoms $P_\chi^-$ that must remain absent. A
 query-local monitor evaluates the DFA initially and after every successful
 primitive PDDL action. Disjunction, arbitrary arithmetic, and progress without
 a certified action strategy are outside this fragment.
@@ -70,11 +78,14 @@ a certified action strategy are outside this fragment.
 \subsection{Certified Compilation Problem}
 
 \textbf{Compilation problem.} Given $D$, training instances
-$\mathcal{I}_{\mathrm{train}}$, and singleton-goal evidence $E$, domain
-compilation produces the certified atomic module core $\mathcal{M}_D$: the
+$\mathcal{I}_{\mathrm{train}}$, and normalized singleton-goal evidence $E$,
+atomic-core compilation produces the certified atomic module core $\mathcal{M}_D$: the
 query-independent set of selected branches whose triggers are singleton
-achievements. For a validated bound temporal query $q$, query compilation
-produces the query-local plan set $\mathcal{Q}_q$, comprising its top-level goal,
+achievements. An unbound temporal specification is $\tau_q$, its externally
+supplied type-consistent object binding is $\theta_q$, and
+$\widehat\tau_q=(\tau_q,\theta_q)$ is the validated bound query.
+Temporal-controller compilation produces the query-local plan set $\mathcal{Q}_q$,
+comprising its top-level goal,
 DFA dispatch, and transition-repair plans. For an ordered sequence of appended
 queries $q_1,\ldots,q_k$, the one maintained domain library is
 \[
@@ -84,7 +95,11 @@ queries $q_1,\ldots,q_k$, the one maintained domain library is
 \mathcal{M}_D\cup\bigcup_{i=1}^{k}\mathcal{Q}_{q_i}.
 \]
 Thus $\mathcal M_D$ is the stable logical core of $\mathcal L_D^{[k]}$, not a
-second persisted library.
+second persisted library. Throughout, calligraphic symbols denote finite sets or
+structured artifacts; $b$ denotes one candidate branch, $e$ one normalized
+evidence rule, and $\chi$ one DFA transition guard. The Technical Supplement,
+Sec.~1 defines the generated candidate set, certificates, preservation
+portfolios, and transition-repair programs used below.
 
 Positive predicate goals and supported integer equalities require an executable
 achieving module. Negative literals denote absence and preservation, never

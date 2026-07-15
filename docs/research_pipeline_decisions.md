@@ -30,7 +30,7 @@ a macro, whereas `!clear(Y); !on(X,Y)` is a recursive subgoal decomposition.
 
 The **Validated Policy-Lifting Compiler** consumes provider-neutral evidence
 and the PDDL action schemas. It validates action sequences, generates required
-schema-derived candidates over the producible target universe, checks binding
+action-schema-derived candidates over the producible target universe, checks binding
 and progress conditions, selects a
 compact candidate set, and renders the certified atomic module core.
 MOOSE and the compiler are upstream and downstream components rather than
@@ -63,17 +63,17 @@ selection. It does not plan in a PDDL state space and does not execute actions.
 The compiler presents candidate branches, evidence-coverage obligations,
 internal-call closure requirements, incompatibility constraints, and a
 lexicographic cost objective; Clingo returns an optimal selected subset within
-that certified candidate space.
+the generated certified candidate set.
 
 A **certificate** is a machine-recheckable witness that justifies one compiler
 claim. It must contain enough structured information for an independent checker
 to replay the relevant PDDL schema reasoning; a prose metadata label is not a
 certificate. The current certificate families are binding, schema
 executability, target achievement, evidence coverage, internal-call closure,
-well-founded recursive progress, resource-capacity restoration, and
+well-founded recursive progress, target-preserving resource discharge, and
 target-preserving DFA guard serialization. Optimality is claimed only after all
-hard certificate obligations hold and only within the generated candidate
-space.
+hard certificate obligations hold and only within the generated certified
+candidate set.
 
 The term **producible target universe** has one exact meaning. If
 `goalPred(E)` is the set of predicates targeted by positive evidence and
@@ -90,6 +90,48 @@ with a selected typed module head in `head(S)`. In shorthand,
 also closes transitive calls. Do not use the unqualified phrase `schema closure`
 for both target expansion and this selection obligation.
 
+## Canonical Formal Notation
+
+The manuscript, supplement, figures, and paper-facing reports use one symbol
+for each semantic object:
+
+- `D=<P,F,A,T>` is the typed planning domain; `E_raw` is one raw provider
+  artifact; `E` is its normalized singleton-goal evidence program; and `e` is
+  one normalized evidence rule.
+- `T_D(E)=goalPred(E) union prod(D)` is the Boolean producible target universe,
+  and `T_D^Z(E)` is the admitted singleton bounded-integer equality target set.
+- `G` is the domain-independent candidate-construction grammar. The finite
+  action-schema-derived branch set is
+  `C_D(E)=Inst_D(G,T_D(E),T_D^Z(E))`; `C_E` is the validated evidence-branch
+  set; and `C_{D,E}=C_E union C_D(E)` is the generated candidate set.
+- `b=<g_b,C_b,beta_b,Sigma_b,pi_b>` is one candidate branch. `Sigma_b` is its
+  conditional module-completion summary and `Cert_D(b)` its candidate soundness
+  predicate.
+- `C^check_{D,E}` is the certified candidate set, `Omega_{D,E}` the set-level
+  feasibility obligations, and `F_{D,E}` the family of feasible selected
+  subsets. `S*` is the lexicographic optimum and `M_D:=S*` the certified atomic
+  module core.
+- `tau_q=<iota_q,varphi_q,mu_q,Theta_q,Gamma_q>` is an unbound temporal
+  specification. `Theta_q:Xbar_q->T` is its parameter type signature,
+  `theta_q:Xbar_q->O` is an external type-consistent binding, and
+  `hat(tau)_q=(tau_q,theta_q)` is the validated bound query.
+- `D_q=<Q_q^dfa,2^AP_q,delta_q,q_q^0,F_q>` is the deterministic finite
+  automaton. Guard `chi` induces signed obligation `O_chi`; `Pi_{chi,i}` is an
+  occurrence-specific preservation portfolio; `prec_chi` is the
+  threat-induced precedence relation; `ell_chi` its certified serialization;
+  and `R_{q_s,chi}` the plan set for that source-state transition obligation.
+- `Q_q` is the complete query-local controller plan set and `L_D^[k]` the sole
+  maintained domain library. DFA states `Q_q^dfa` and query plans `Q_q` remain
+  typographically distinct.
+
+Use the academic terms `action-schema candidate generation`, `candidate
+soundness certificate`, `conditional module-completion summary`,
+`target-preserving resource discharge`, `ranked cross-module precondition
+repair`, `preservation portfolio`, `joint guard-establishment certificate`, and
+`balanced binary transition-repair tree`. Do not use `schema closure`, bare
+`candidate space`, `existential preparation projection`, `whole-guard helper`,
+or bare `repair tree` in research-facing prose.
+
 The **Temporal Query Compiler** is the third production component. It consumes
 a validated lifted LTLf/DFA artifact and derives `Q_q`, whose plans call modules
 in `M_D` and update `L_D^[k]` to `L_D^[k+1]`. The concrete AgentSpeak
@@ -103,8 +145,9 @@ semantics and DFA acceptance.
 
 The manuscript presents GP2PL as a theoretical representation-compilation
 framework. Its primary scientific objects are the normalized singleton-goal
-evidence relation, the finite certified candidate language, the feasible-library
-selection problem, conditional completion summaries, and preservation-safe DFA
+evidence relation, the finite candidate-construction grammar and generated
+certified set, the feasible-library selection problem, conditional
+module-completion summaries, and preservation-safe DFA
 guard composition. MOOSE, Clingo, AgentSpeak(L), and Jason are the evaluated
 provider, optimizer, rendering language, and interpreter. Paths, worker
 scheduling, hashes, and command-line details belong in reproducibility material,
@@ -206,13 +249,13 @@ domain, train/test split, and evidence hash.
 | Method | Native behavior |
 | --- | --- |
 | Evidence Only | Validate each evidence macro by symbolic PDDL execution and render the surviving lifted macro plans. Do not expand over the producible target universe, add internal subgoal modules, or optimize branches. |
-| Action Closure | Add every certificate-valid action-only PDDL producer candidate for the producible target universe. This historical ablation label means action-only target expansion; it does not mean internal-call closure. |
-| Maximal Certified | Generate the full certified candidate universe and use Clingo to retain a largest jointly compatible program under the same internal-call, ranking, and resource constraints as the full method. This is not an unchecked union of individually certified branches. |
-| Full GP2PL | Minimize branch, context, and body cost over the same candidate universe and hard certificate constraints used by Maximal Certified. |
+| Direct Producers | Add every certificate-valid action-only PDDL producer candidate for the producible target universe. |
+| Maximum Feasible | Generate the full certified candidate set and use Clingo to retain a maximum-cardinality jointly feasible program under the same internal-call, ranking, and resource constraints as the full method. This is not an unchecked union of individually certified branches. |
+| Full GP2PL | Minimize branch, context, and body cost over the same generated certified set and hard certificate constraints used by Maximum Feasible. |
 
 Evidence Only is deliberately a strong baseline rather than an unchecked text translator.
 It preserves all provider macros that meet the same schema validation used by
-the full method. Maximal Certified versus Full GP2PL changes only the
+the full method. Maximum Feasible versus Full GP2PL changes only the
 optimization objective, so differences in output size and Jason matching cost
 can be attributed to compact selection. The machine-readable variant values are
 `validated_evidence_adapter`, `action_only_closure`,
@@ -232,18 +275,18 @@ LTLf JSON, binding, real MONA-derived DFA, and Jason PDDL environment.
 
 | Method | Native behavior |
 | --- | --- |
-| Unprotected DFA | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or preserving branch portfolios. |
+| Unprotected Serialization | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or preserving branch portfolios. |
 | Certified Flat | Use complete effect summaries, threat-safe order, and per-occurrence preservation portfolios, but compile literals as flat sibling plans. |
-| Certified Balanced | Compile the identical certified literal order and branch choices into the balanced binary repair tree. |
-| Completion Monitor | Retain completion-effect certification and the balanced controller, advance the DFA only when an atomic module returns, and omit primitive-prefix source-invariant filtering because intermediate primitive states are outside this ablation's observation semantics. |
+| Certified Balanced | Compile the identical certified literal order and branch choices into the balanced binary transition-repair tree. |
+| Module-Return Monitor | Retain completion-effect certification and the balanced controller, advance the DFA only when an atomic module returns, and omit primitive-prefix source-invariant filtering because intermediate primitive states are outside this ablation's observation semantics. |
 
 All four temporal variants run the same complete 1,228-case benchmark. The
-causal interpretation of Completion Monitor versus Certified Balanced focuses
+causal interpretation of Module-Return Monitor versus Certified Balanced focuses
 on cases with intermediate-state obligations, where their observation
 boundaries can change acceptance; the remaining paired cases still contribute
 coverage, size, and runtime measurements.
 
-Unprotected DFA and Completion Monitor are evaluation modes, never production
+Unprotected Serialization and Module-Return Monitor are evaluation modes, never production
 fallbacks. The historical
 sequence-only PDDL-goal wrapper may be retained only as a weak evaluation
 reference in isolated artifacts; production temporal append always follows the
@@ -263,6 +306,20 @@ ablations. Plan4Past supplies the experimental design precedent of fixing the
 downstream planner while comparing temporal compilations; its pure-past input is
 not treated as directly interchangeable with our future LTLf input without a
 separately proved language-equivalent translation.
+
+The MOOSE achievement reference is partitioned by provenance before scoring.
+For the twelve domains in the original MOOSE benchmark, the external table uses
+the five-model mean coverage reported in Table 4 of arXiv `2511.11095v1`: 360.0
+of 360 numeric cases and 719.6 of 720 classical cases, including 89.6 of 90 for
+Logistics. These values are labelled `Reported`; they are not presented as a
+local reproduction, and their runtime and memory are not compared with local
+measurements. For the four GP2PL-added domains (`blocksworld-clear`,
+`blocksworld-on`, `blocksworld-tower`, and `depots`), Raw MOOSE is executed
+locally for seeds 0--4 and labelled `Measured`. The scopes are disjoint and
+fixed independently of their outcomes: no domain is switched between published
+and local values after inspection. A completed local full-seed run may be kept
+as a reproduction diagnostic, but it is not an input to the headline external
+reference row.
 
 The native achievement reference runner is
 `scripts/run_external_planning_references.py`. Raw MOOSE executes the exact
@@ -298,22 +355,26 @@ LAMA case mounts a private `/work/out` directory. FOND4LTLf keeps the pinned
 path into a per-case directory. These two isolation boundaries remove the prior
 host-wide runtime locks while retaining the pinned planners. The registered
 remote LAMA/MRP+HJ and direct FOND4LTLf reference matrices use 20 case workers;
-the already registered paired compiler and Raw MOOSE matrices retain six.
+the already registered paired compiler and local Raw MOOSE extension matrices
+retain six.
 Runs with more than one MOOSE-backed worker fail before scheduling if the
 hash-checked sandbox is absent. `--resume` reuses scientific planner outcomes
 but retries infrastructure failures.
 
-Five fixed MOOSE seeds are run independently with one internal MOOSE worker.
-Evidence is never unioned and a best seed is never selected. Every paired
+Five fixed MOOSE seeds are run independently with one internal MOOSE worker for
+the GP2PL-added-domain extension. Evidence is never unioned and a best seed is
+never selected. Every paired
 compiler comparison records both the seeded-training manifest and a canonical
 SHA-256 fingerprint of every per-domain `.model` and `.model.readable`
 artifact; every paired temporal
 comparison records the atomic-library, input, binding, and DFA hashes. Report
-each seed, mean and sample standard deviation, paired coverage differences,
-PAR-2 for timeouts, and plan length only on jointly solved instances. Keep
+each locally measured extension seed, mean and sample standard deviation,
+paired coverage differences, PAR-2 for timeouts, and plan length only on jointly
+solved instances. Keep
 evidence synthesis, domain compilation, query append, execution, and validation
-times separate. Published values obtained under other hardware, splits, or
-formula sets are related-work context and are not copied into result tables.
+times separate. The registered MOOSE Table 4 coverage is the sole published
+value copied into a result table; its source, five-seed aggregation, benchmark
+scope, and absence of comparable local timing are explicit.
 
 The rejection suite is part of the evaluation rather than an implementation
 unit test only. It covers unbound variables, incomplete closure, non-decreasing
@@ -378,10 +439,15 @@ paper table headers.
 
 The final comparison release is generated by
 `scripts/generate_aaai_comparison_tables.py`. It requires the complete paired
-compiler result, five separately assigned Raw MOOSE summaries, one native
+compiler result, the checked
+`paper_artifacts/gp2pl_evaluation/v1/moose_published_reference.json`, five
+separately assigned four-domain Raw MOOSE extension summaries, one native
 LAMA/MRP+HJ summary, one FOND4LTLf plus LAMA summary, and one clean challenge
-matrix. It rejects dirty revisions, missing seeds or variants, mismatched case
-sets, incomplete pairing, and infrastructure failures. The paired manifest
+matrix. It rejects missing seeds or variants, mismatched case sets, incomplete
+pairing, and infrastructure failures. The published-reference artifact fixes
+the arXiv version, table number, per-domain means, and three immutable scope
+contracts: 1,080 original MOOSE cases, 148 locally measured extension cases,
+and their 1,228-case union. The paired manifest
 derives immutable case-set contracts from the selected repository inputs: 1,228
 achievement cases, 1,228 temporal cases, 868 classical LAMA cases, and 360
 numeric MRP+HJ cases. The generator recomputes the sorted identifier digest for
@@ -389,10 +455,11 @@ every method and seed and rejects omissions, duplicates, or substitutions even
 if every compared method made the same mistake. It also requires every
 downstream summary to identify its own clean source commit, but independent
 experiment groups may use different commits when all registered input hashes,
-toolchains, case sets, and protocols still match. It binds each Raw MOOSE run
+toolchains, case sets, and protocols still match. It binds each local Raw MOOSE
+extension run
 to both the exact model-batch manifest and the canonical model/readable-policy
 artifact fingerprint used by the corresponding compiler seed,
-checks six workers for the paired compiler and Raw MOOSE matrices, 20 workers
+checks six workers for the paired compiler and Raw MOOSE extension matrices, 20 workers
 for the remote LAMA/MRP+HJ and direct FOND4LTLf matrices, the common
 1,800-second and 8-GiB external-planner limits, and the paired compiler's
 64-MiB Java stack. It also verifies pinned tool revisions and artifact hashes.
@@ -512,7 +579,7 @@ failures. Results are aggregated by domain and formula profile, while every
 case retains its DFA payload, Jason artifacts, committed trace, validator
 artifacts, and exact source revision.
 
-The compiler contract also includes a bounded integer numeric-resource fragment.
+The supported planning fragment also includes bounded integer resources.
 A numeric resource is a declared PDDL function with an integer value in the
 state, for example `(capacity ?vehicle)` or `(pogo_sticks_to_make)`. A numeric
 resource context is rendered as a mutable AgentSpeak belief plus comparison,
@@ -568,10 +635,10 @@ goal `on(crate0, pallet0)` can be achieved by a macro ending in
 
 The compiler module is the post-MOOSE, pre-AgentSpeak component. It consumes
 the readable policy as evidence, checks it against the PDDL domain schema, adds
-internal atomic modules from the producible target universe and schema-derived
+internal atomic modules from the producible target universe and action-schema-derived
 precondition support, places
-both evidence macros and schema-derived branches in one certified candidate
-space, runs one Clingo/ASP selection, and renders the final AgentSpeak(L)
+both evidence macros and action-schema-derived branches in one generated
+certified candidate set, runs one Clingo/ASP selection, and renders the final AgentSpeak(L)
 library. A
 PDDL domain schema is the declared predicate and action model, for example
 Depots `drop(?hoist, ?crate, ?surface, ?place)` with preconditions such as
@@ -646,7 +713,7 @@ reproduction deviation from the paper's 32-GB synthesis ceiling.
 `num_training = -1`, policy-dump and ASL append timeouts, Jason timeout, and VAL
 timeout are pipeline or hardware settings, not MOOSE method parameters.
 
-The compiler's schema-derived candidate language is explicit but no longer has
+The compiler's candidate-construction grammar is explicit but no longer has
 an arbitrary primitive-action depth bound. It contains direct producers,
 finite backward STRIPS regressions over acyclic producible-precondition
 dependencies, and optional causal resource-mode discharge paths. Backward
@@ -656,7 +723,7 @@ An action's still-unbound parameters are first unified with compatible open
 positive requirements; only parameters that remain unbound receive fresh
 variables. Search terminates by forbidding a repeated alpha-normalized
 requirement/producer step and retaining only the shortest body for an equivalent
-requirement and completion-effect contract. This search is enabled only when
+requirement and conditional module-completion summary. This search is enabled only when
 the producer-precondition predicate graph reachable from the target is acyclic.
 Cyclic targets rely on validated provider macros and separately certified
 recursive modules rather than an unrestricted instance-level planner.
@@ -674,7 +741,7 @@ forbids repeated alpha-normalized resource modes. Consequently, a schema
 candidate may contain more than five actions, but every accepted path is finite
 and symbolically replayed. A validated Evidence Module macro is also never
 truncated. Clingo optimality remains only within this generated certified
-candidate language. These are structural scope restrictions, not domain-name
+candidate set. These are structural scope restrictions, not domain-name
 rules and not MOOSE parameters.
 
 The compiler therefore does not simply rename objects from training instances
@@ -744,7 +811,7 @@ below by zero.
 
 The second feature is an anchored acyclic relation-cone count. It applies when
 a sequence removes `relation(Z,X)` and may add `relation(Z,B)`: the global count
-does not fall, but the obstruction cone rooted at `X` falls when schema-derived
+does not fall, but the obstruction cone rooted at `X` falls when action-schema-derived
 guards prove `B != X`. This candidate certificate carries the explicit
 assumption that the relation is acyclic in all reachable states. It is selected
 only if every module reachable through selected internal calls preserves the
@@ -844,11 +911,11 @@ The key-plus-occupant condition is not treated as an arity shortcut. It is used
 together with the paired precondition/add/delete effects to orient an otherwise
 symmetric transition. If two same-shaped predicates can be swapped without
 changing the schema, the compiler cannot know which mode denotes availability;
-it rejects that cleanup unless provider evidence or a future explicit resource
-contract supplies the missing orientation.
+it rejects that discharge unless provider evidence or a future explicit
+resource-role annotation supplies the missing orientation.
 
 Multi-step discharge is supported when every intermediate mode carries the same
-schema-derived capacity key and occupant roles, no normalized mode repeats,
+action-schema-derived capacity key and occupant roles, no normalized mode repeats,
 every action is symbolically executable, and the final state preserves the
 atomic target. The compiler also records the complete release-action path, not
 only its final action. It does not yet synthesize a query-local restricted
@@ -862,7 +929,7 @@ of assuming role disjointness or recognizing either predicate name.
 
 ### Joint Certified Candidate Selection
 
-Validated MOOSE macros and schema-derived modules are no longer selected in
+Validated MOOSE macros and action-schema-derived modules are no longer selected in
 separate phases. A validated MOOSE macro
 is a readable-policy action sequence that replays through the PDDL action
 schemas, for example a complete Logistics package-delivery macro
@@ -870,15 +937,15 @@ schemas, for example a complete Logistics package-delivery macro
 whose body calls internal subgoals, for example `!lifting(Z,X); !on(X,Y)`.
 
 Each MOOSE macro is an evidence obligation in the same Clingo program that
-selects direct producers, preparation branches, resource-release branches, and
+selects direct producers, preparation branches, resource-discharge branches, and
 validated bounded-integer numeric branches. Numeric-only evidence therefore no
 longer bypasses Clingo. An evidence obligation is covered only by an
 alpha-equivalent branch or an identical body under a weaker conjunctive context.
 Separately, one schema-producer obligation may be covered by a weaker-context
 primitive producer only when its composed `MustAdd` set contains the required
 target, its `MayDelete` set is no larger, and its `NumericDelta` and complete
-parameterized `ResourceRelease` contracts are causally compatible. Contract
-identity records both action names, but refinement may use a different release
+parameterized resource-mode summaries are causally compatible. Summary
+identity records both action names, but refinement may use a different discharge
 action only when debt, restored literals, capacity/occupancy roles, target
 preservation, and alias guards refine the obligation and the composed Boolean
 and numeric effects introduce no new harm. Predicate-name
@@ -927,7 +994,7 @@ capabilities with strict well-founded certificates, next maximizes compatible
 acyclic precondition-discharge capabilities, and finally minimizes branch
 count, context count, and body cost. The first priority reflects unbounded
 structural generalization rather than a domain name or predicate name.
-Optimality is claimed only within the generated certified candidate space, not
+Optimality is claimed only within the generated certified candidate set, not
 over all possible AgentSpeak programs.
 
 ### Current Alignment and Remaining Gap
@@ -937,13 +1004,14 @@ role in these ways:
 
 - MOOSE remains evidence, not the final library.
 - Internal modules such as `clear`, `holding`, `lifting`, `available`, `at`,
-  and `in` are generated from PDDL add-effect/precondition closure when they
-  are producible fluents.
+  and `in` enter the producible target universe from PDDL add effects, while
+  their required internal calls are enforced separately by internal-call
+  closure.
 - Static predicates remain context-only.
 - The final ASL uses PDDL fluents and actions plus the reserved `obj_tp/2`
   type metadata; it must not emit `type_*` predicates.
 - Clingo/ASP is the branch selector for compactness within the generated
-  candidate space.
+  certified candidate set.
 
 The current implementation supports finite acyclic protected resource-mode
 discharge when every step is certified directly by PDDL preconditions and
@@ -953,13 +1021,13 @@ branch portfolio, or if every available cleanup path would delete the protected
 target without a representable non-unification guard, the compiler rejects the
 branch rather than patching the domain by name.
 
-### Certified Existential Preparation Projection
+### Ranked Cross-Module Precondition Repair
 
 A producer action can require several dynamic preconditions that cannot all be
 true at the same location or process stage. Requiring every sibling
 precondition in the context of every preparation branch can therefore create a
 deadlock. The compiler now projects an unrelated dynamic sibling out of one
-preparation context only under all of these schema-derived conditions:
+preparation context only under all of these action-schema-derived conditions:
 
 - the producer-precondition dependency graph is acyclic and traverses a
   schema-inferred single-valued fluent, such as one object's current location;
@@ -1093,7 +1161,7 @@ at each primitive prefix: a positive invariant cannot be deleted and a negative
 invariant cannot be added before the progress literal is established. The final
 establishing action may consume a source invariant because strong Until
 requires the left operand only at earlier positions. For a multi-step numeric
-target, repeatable steps instead carry schema-derived non-unification guards,
+target, repeatable steps instead carry action-schema-derived non-unification guards,
 for example `Other \== Protected`, while a step that must consume the protected
 object is restricted to the exact predecessor value. A query-local numeric base
 case observes the target equality and terminates recursive preparation.
@@ -1106,7 +1174,7 @@ to denote both a store and a waypoint.
 If independently summarized branches induce a conservative cycle, one
 primitive action may replace that serialization only when symbolic execution
 proves that its complete net effect establishes every Boolean and numeric
-literal in the guard. This is a whole-guard certificate, not a domain-specific
+literal in the guard. This is a joint guard-establishment certificate, not a domain-specific
 numeric operator or an unrestricted arithmetic planner.
 The query-local helper is callable from every positive guard literal established
 by that action. Every call carries the complete anchor argument tuple used by
@@ -1155,8 +1223,8 @@ the runtime monitor; without a certified numeric change-away branch it remains
 observation-only rather than being rejected as malformed LTLf.
 
 After certification fixes an order `L1, ..., Ln`, the appender prepends signed
-negative obligations and compiles the result into a balanced transition repair
-tree. A transition repair tree is
+negative obligations and compiles the result into a balanced binary
+transition-repair tree. A balanced binary transition-repair tree is
 query-local AgentSpeak control structure: an internal helper for range `[i,j]`
 calls the two midpoint ranges. A positive leaf checks or achieves `Li`; a
 negative leaf checks `not N` and, when available, calls only its certified
@@ -1303,7 +1371,7 @@ train/test domains are stable.
 
 `8puzzle-1tile` is not in the formal benchmark scope. The current compiler can
 handle validated singleton macro evidence and feature-definable serialized-width
-schema-derived candidates, but `8puzzle-1tile` requires graph-search and
+action-schema-derived candidates, but `8puzzle-1tile` requires graph-search and
 permutation-progress reasoning:
 placing one tile depends on moving the blank through a grid while preserving
 solvability constraints. That structure needs a graph-search controller,

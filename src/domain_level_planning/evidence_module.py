@@ -215,10 +215,10 @@ class AtomicCompilerVariant(str, Enum):
 		"""Return the short method name used in papers and reports."""
 
 		return {
-			self.VALIDATED_EVIDENCE_ADAPTER: "Evidence Adapter",
-			self.ACTION_ONLY_CLOSURE: "Action Closure",
-			self.MAXIMAL_CERTIFIED_PROGRAM: "Maximal Certified",
-			self.FULL: "Full Compiler",
+			self.VALIDATED_EVIDENCE_ADAPTER: "Evidence Only",
+			self.ACTION_ONLY_CLOSURE: "Direct Producers",
+			self.MAXIMAL_CERTIFIED_PROGRAM: "Maximum Feasible",
+			self.FULL: "Full GP2PL",
 		}[self]
 
 
