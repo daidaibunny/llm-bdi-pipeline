@@ -322,19 +322,29 @@ def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 	assert "\\mathcal C^{\\checkmark}_{D,E}" in method_source
 	assert "\\mathfrak G" in method_source
 	assert "\\operatorname{Inst}_D" in method_source
+	assert "\\mathcal G_D^{\\mathrm{prod}}(T)" in method_source
 	assert "\\mathfrak F_{D,E}" in method_source
 	assert "\\mathsf{covers}_D(b,e)" in supplement_source
+	assert "\\mathsf{realizes}_D(b,c)" in supplement_source
 	assert (
 		"\\tau_q=\\langle\\iota_q,\\varphi_q,\\mu_q,\\Theta_q,\\Gamma_q\\rangle"
 		in method_source
 	)
 	assert "\\widehat\\tau_q=(\\tau_q,\\theta_q)" in method_source
+	assert "\\theta_q:\\bar X_q\\rightarrow O_I" in method_source
+	assert "I=\\langle D,O_I,s_I^0,G_I\\rangle" in background_source
 	assert "\\mathcal D_q=" in method_source
 	assert "\\mathcal O_\\chi=" in method_source
 	assert "\\Pi_{\\chi,i}" in method_source
 	assert "\\prec_\\chi" in method_source
 	assert "\\boldsymbol\\ell_\\chi" in method_source
 	assert "\\mathcal R_{q_s,\\chi}" in method_source
+	assert "\\rho_b,\\kappa_S,\\mathcal G_b^{\\mathrm{res}}" in supplement_source
+	assert "\\mathit{val}_q" in formal_source
+	assert "d_q(z)" in formal_source
+	assert "\\mathcal W_{q_s},\\mathcal I_{q_s}" in supplement_source
+	assert "\\rho_{\\mathrm{num}},b_\\chi^{\\mathrm{joint}}" in supplement_source
+	assert "\\operatorname{Pass}_{q_s,\\chi}" in supplement_source
 	assert "conditional module-completion summary" in formal_source
 	assert "target-preserving resource discharge" in formal_source
 
@@ -349,7 +359,23 @@ def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 		"Existential preparation projection",
 		"Numeric and Whole-Guard Certificates",
 		"Cyclic Threats and Enforced Portfolios",
+		"schema closure",
+		"PDDL schema construction",
+		"schema-producer refinement",
+		"completion portfolios",
+		"observation-boundary assumption",
+		"producer-exit obligation",
+		"Feasible candidate family",
+		"resource debt",
+		"validation wrappers",
 	):
 		assert ambiguous_term not in formal_source
 
 	assert "candidate-construction grammar" in main_source
+
+
+def test_manuscript_contains_no_silently_unescaped_latex_commands() -> None:
+	broken_command = re.compile(r"(?<!\\)(?:cite|texttt)\{")
+	for source_path in _manuscript_sources():
+		source = source_path.read_text(encoding="utf-8")
+		assert broken_command.search(source) is None, source_path

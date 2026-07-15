@@ -433,20 +433,20 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			"body_calls": "declared PDDL primitive actions or declared PDDL predicate subgoals",
 			"recursion": (
 				"atomic modules require progress certificates; query transitions use "
-				"balanced repair trees and one complete-guard recheck"
+				"balanced binary transition-repair trees and one source-state completion test"
 			),
 		},
 		temporal_wrapper_language={
 			"rule_shape": (
-				"one +!g_query entry plus one balanced query-local repair tree per "
+				"one +!g_query entry plus one balanced binary transition-repair tree per "
 				"certified DFA progress transition"
 			),
 			"ordering_evidence": (
-				"DFA transition order on the unique certified accepting path",
-				"PDDL-typed conditional completion-effect serialization within one guard",
+				"DFA source-state dispatch over certified distance-reducing transitions",
+				"PDDL-typed conditional module-completion summaries within one signed guard",
 			),
 			"runtime_gate": (
-				"complete transition guard recheck after one balanced repair-tree pass; "
+				"source-state completion test after one complete transition-repair pass; "
 				"ambiguous branching DFA state remains unsupported"
 			),
 			"goal_dependency_scope": "temporal ordering expressed by lifted LTLf and DFA",

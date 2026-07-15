@@ -13,7 +13,7 @@ Current full-test behavior:
    PDDL type constraints participating in unification.
 4. Serialize the guard only when those summaries are complete and the induced
    delete-threat graph has a certified order or supported preservation proof.
-5. Compile that order into a balanced query-local transition repair tree.
+5. Compile that order into a balanced binary transition-repair tree.
 6. Run Jason against the generated atomic AgentSpeak(L) library plus that
    wrapper.
 7. Export every successful primitive action as a complete PDDL plan trace.
@@ -21,7 +21,7 @@ Current full-test behavior:
    plan verifier.
 
 The wrapper shape is a declarative `trans` controller whose ordered literals are
-organized as a balanced repair tree:
+organized as a balanced binary transition-repair tree:
 
 ```asl
 miconic_test_61.
@@ -52,7 +52,8 @@ miconic_test_61.
 This runner validates:
 
 ```text
-PDDL test conjunction -> certified guard order -> balanced trans repair tree -> Jason execution
+PDDL test conjunction -> certified guard order -> balanced binary transition-repair tree
+-> Jason execution
 -> exported PDDL plan trace -> VAL/IPC plan verification
 ```
 
@@ -305,7 +306,7 @@ MOOSE readable singleton policy
 -> PolicyEvidenceProgram
 -> validated policy-rule lifting
 -> PDDL schema parsing
--> producible fluent closure
+-> producible-target expansion T_D(E)
 -> candidate atomic branch generation
 -> schema feasibility and safety filters
 -> Clingo/ASP branch selection
@@ -335,11 +336,11 @@ schemas, not the grounded training instances. For example, in Miconic the
 schema says `depart(?f, ?p)` requires `lift_at(?f)`, `destin(?p, ?f)`, and
 `boarded(?p)`, and adds `served(?p)`.
 
-Producible fluent closure means adding every dynamic predicate that appears in a
-positive action effect as a possible atomic module, plus recursively needed
-support predicates. For example, even if MOOSE only seeds `served`, the closure
-adds `lift_at` and `boarded` because they are producible fluents needed by the
-PDDL schemas. Static predicates, such as Miconic `above/2` or Logistics
+Producible-target expansion constructs
+`T_D(E) = goalPred(E) union prod(D)`: evidence goal predicates plus every
+predicate symbol that appears in a positive action effect. For example, even if
+MOOSE only seeds `served`, `lift_at` and `boarded` enter `T_D(E)` because PDDL
+actions can produce them. Static predicates, such as Miconic `above/2` or Logistics
 `in_city/2`, remain context predicates and do not become `+!above(...)` or
 `+!in_city(...)` achievement goals.
 
@@ -485,10 +486,11 @@ An internal subgoal such as `!clear(Y)` is emitted only when the compiler can
 also emit plans for the target predicate `clear`. The input to this check is the
 Evidence Module's `PolicyEvidenceProgram` plus the PDDL domain schema. For the
 current MOOSE backend, that evidence program is produced from a MOOSE readable
-singleton policy. The output is a closed set of atomic modules before
-AgentSpeak(L) rendering.
+singleton policy. The selected output is internally closed before AgentSpeak(L)
+rendering: every selected typed internal call must resolve to a selected typed
+module head.
 
-The closure rule is domain-general:
+Target expansion and internal-call closure are separate domain-general rules:
 
 1. Start from evidence seed predicates. If the Evidence Module imports a
    singleton rule for `on(X,Y)`, then `on` is a seed predicate.
@@ -502,6 +504,10 @@ The closure rule is domain-general:
    itself a producible module predicate with a valid producer. Static predicates
    such as Miconic `above(F1,F2)` remain context only and do not become
    `+!above(...)` goals.
+5. During set selection, enforce
+   `call(S) subset_type head(S)` so every selected internal achievement call has
+   a type-compatible selected implementation. This is internal-call closure; it
+   does not add predicates to `T_D(E)`.
 
 For Blocks, this process generates `clear` without any Blocks-name branch:
 
@@ -553,7 +559,7 @@ another. The compiler does not inspect domain, predicate, or action names.
 
 The fixed ranking grammar also contains
 `anchored_acyclic_relation_cone_count`. This feature counts relation atoms in
-the obstruction cone rooted at a query argument. It permits a cleanup sequence
+the obstruction cone rooted at a query argument. It permits a relocation sequence
 to delete `relation(Z,X)` and add `relation(Z,B)` without decreasing the global
 relation count only when generated inequality guards prove `B != X`. The local
 candidate is not enough by itself: Clingo follows the selected module call graph
@@ -659,7 +665,7 @@ For paper writing, the domain grouping should therefore be evaluation analysis,
 not a backend-routing rule. A precise statement is: this work compiles validated
 singleton-goal policy evidence from an external generalized planner into a
 domain-level AgentSpeak(L) atomic library; when the PDDL schema exposes
-additional producible fluents required for closure, the compiler may add
+additional producible fluents required for internal-call closure, the compiler may add
 schema-augmented recursive atomic modules subject to safety and progress
 certificates. This is a compiler claim, not a claim that MOOSE directly solves
 interacting conjunctive or temporal goals.
@@ -768,7 +774,7 @@ plans each time `!trans` was replayed. The done plan also contained all `N`
 literals and was considered at the same trigger. This made controller matching
 approximately quadratic even when every atomic module was correct.
 
-The balanced transition repair tree replaces that fan-out:
+The balanced binary transition-repair tree replaces that fan-out:
 
 ```asl
 +!g_gripper_test_72_trans_1 : gripper_test_72 <-

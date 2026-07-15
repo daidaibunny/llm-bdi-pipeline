@@ -5,11 +5,12 @@ The synthesizer uses external generalized-planning artifacts as evidence for
 which atomic predicates matter, then compresses flat primitive macro evidence
 into reusable predicate modules using PDDL action precondition/effect structure.
 
-Paper correspondence: Section 4 defines the producible target universe, the finite
-schema-derived candidate language, branch certificates, and joint Clingo
-selection. The supplementary appendix states the formal candidate contract and
-proof obligations. This module must remain invariant to domain, predicate, and
-action names; tests under ``test_no_domain_hardcoding.py`` enforce that property.
+Paper correspondence: Section 4 defines the producible target universe, finite
+action-schema candidate generation, candidate soundness certificates, and
+feasible-core optimization. The supplementary appendix states the formal
+candidate contract and proof obligations. This module must remain invariant to
+domain, predicate, and action names; tests under ``test_no_domain_hardcoding.py``
+enforce that property.
 """
 
 from __future__ import annotations
@@ -1501,7 +1502,7 @@ def _finalize_sequences(
 		body_actions=base_body,
 	)
 	# Resource release is an optional certified extension. Keep the executable
-	# producer itself in the candidate space so the selector can choose whether
+	# producer itself in the generated candidate set so the selector can choose whether
 	# restoring the resource is necessary for the evidence obligation.
 	variants: tuple[_CleanupExtension | None, ...] = (None, *cleanup_extensions)
 	sequences: list[_ProducerSequence] = []

@@ -71,3 +71,27 @@ def test_manuscript_uses_overview_worked_example_and_empirical_figure() -> None:
 	assert "\\begin{minipage}" not in main_text
 	assert "\\mathcal Q_q" in method_text
 	assert "\\label{alg:temporal}" in method_text
+
+
+def test_method_figure_generator_uses_canonical_formal_vocabulary() -> None:
+	source = (
+		PROJECT_ROOT / "scripts/generate_aaai_method_figures.py"
+	).read_text(encoding="utf-8")
+
+	for required_term in (
+		"producible-target\\nexpansion",
+		"$T_D(E)$",
+		"$\\\\mathcal{C}^{\\\\checkmark}_{D,E}$",
+		"Candidate soundness certificate",
+		"internal-call closure",
+		"$\\\\mathcal{M}_D=S^\\\\star$",
+	):
+		assert required_term in source
+
+	for ambiguous_term in (
+		"schema closure",
+		"$T=\\\\mathrm{closure}_D(E)$",
+		"resource restoration",
+		"$\\\\mathcal{C}^{\\\\mathrm{cert}}_D$",
+	):
+		assert ambiguous_term not in source

@@ -240,7 +240,7 @@ def _render_figure_one() -> bytes:
 			24,
 			28,
 			15,
-			"Bound query\n$\\langle\\tau_q,B_q\\rangle$",
+			"Bound query\n$\\widehat{\\tau}_q$",
 			fill=COLORS["purple_fill"],
 			edge=COLORS["purple_edge"],
 		)
@@ -270,7 +270,7 @@ def _render_figure_one() -> bytes:
 		axis.text(
 			83.5,
 			87.5,
-			"Maintained library\n$\\mathcal{L}_D$",
+			"Maintained library\n$\\mathcal{L}_D^{[k]}$",
 			ha="center",
 			va="top",
 			fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -282,7 +282,7 @@ def _render_figure_one() -> bytes:
 			57,
 			23,
 			17,
-			"Atomic modules",
+			"Atomic core\n$\\mathcal{M}_D$",
 			fill=COLORS["green_fill"],
 			edge=COLORS["green_edge"],
 		)
@@ -339,7 +339,7 @@ def _draw_panel_a(axis: Axes) -> None:
 	axis.text(
 		2.0,
 		94.0,
-		"(a) Evidence and schema closure",
+		"(a) Evidence and producible targets",
 		ha="left",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -417,10 +417,10 @@ def _draw_panel_a(axis: Axes) -> None:
 	)
 	_draw_arrow(axis, (16.4, 37.0), (16.4, 32.0), color=COLORS["blue_edge"])
 	axis.text(
-		17.7,
+		16.4,
 		34.4,
-		"schema closure",
-		ha="left",
+		"producible-target\nexpansion",
+		ha="center",
 		va="center",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
 		color=COLORS["blue_edge"],
@@ -438,7 +438,7 @@ def _draw_panel_a(axis: Axes) -> None:
 	axis.text(
 		16.4,
 		27.8,
-		"$T=\\mathrm{closure}_D(E)$",
+		"$T_D(E)$",
 		ha="center",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -470,7 +470,7 @@ def _draw_panel_b(axis: Axes) -> None:
 	axis.text(
 		34.0,
 		94.0,
-		"(b) Certified selection",
+		"(b) Feasible-core optimization",
 		ha="left",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -479,7 +479,7 @@ def _draw_panel_b(axis: Axes) -> None:
 	axis.text(
 		34.2,
 		87.5,
-		"Certified candidates  $\\mathcal{C}^{\\mathrm{cert}}_D$",
+		"Certified candidates  $\\mathcal{C}^{\\checkmark}_{D,E}$",
 		ha="left",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -529,7 +529,7 @@ def _draw_panel_b(axis: Axes) -> None:
 	axis.text(
 		49.3,
 		33.5,
-		"Candidate contract",
+		"Candidate soundness certificate",
 		ha="center",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -538,7 +538,7 @@ def _draw_panel_b(axis: Axes) -> None:
 	axis.text(
 		49.3,
 		28.5,
-		"binding | execution | achievement\nclosure | progress\nresource restoration",
+		"binding | execution | achievement\ninternal-call | progress\nresource discharge",
 		ha="center",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -567,7 +567,7 @@ def _draw_panel_b(axis: Axes) -> None:
 	axis.text(
 		49.3,
 		5.3,
-		"Optimum is relative to $\\mathcal{C}^{\\mathrm{cert}}_D$.",
+		"Optimum is relative to $\\mathcal{C}^{\\checkmark}_{D,E}$.",
 		ha="center",
 		va="center",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -580,7 +580,7 @@ def _draw_panel_c(axis: Axes) -> None:
 	axis.text(
 		67.5,
 		94.0,
-		"(c) Maintained plan library",
+		"(c) Certified atomic module core",
 		ha="left",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -600,7 +600,7 @@ def _draw_panel_c(axis: Axes) -> None:
 	axis.text(
 		82.75,
 		83.5,
-		"Selected excerpt from $\\mathcal{L}_D$",
+		"Selected excerpt from $\\mathcal{M}_D=S^\\star$",
 		ha="center",
 		va="top",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,
@@ -642,7 +642,7 @@ def _draw_panel_c(axis: Axes) -> None:
 	axis.text(
 		87.0,
 		33.3,
-		"internal closure",
+		"internal-call closure",
 		ha="center",
 		va="center",
 		fontsize=MINIMUM_TEXT_SIZE_POINTS,

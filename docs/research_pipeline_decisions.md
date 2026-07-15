@@ -95,7 +95,9 @@ for both target expansion and this selection obligation.
 The manuscript, supplement, figures, and paper-facing reports use one symbol
 for each semantic object:
 
-- `D=<P,F,A,T>` is the typed planning domain; `E_raw` is one raw provider
+- `D=<P,F,A,T>` is the typed planning domain; a problem instance is
+  `I=<D,O_I,s_I^0,G_I>`, where `O_I` is its finite typed object set;
+  `I_train` is the finite training instance set. `E_raw` is one raw provider
   artifact; `E` is its normalized singleton-goal evidence program; and `e` is
   one normalized evidence rule.
 - `T_D(E)=goalPred(E) union prod(D)` is the Boolean producible target universe,
@@ -104,22 +106,42 @@ for each semantic object:
   action-schema-derived branch set is
   `C_D(E)=Inst_D(G,T_D(E),T_D^Z(E))`; `C_E` is the validated evidence-branch
   set; and `C_{D,E}=C_E union C_D(E)` is the generated candidate set.
+- `G_D^prod(T)` is the producer--precondition dependency graph reachable from
+  target set `T`; schema regression is admitted only when this graph is acyclic.
 - `b=<g_b,C_b,beta_b,Sigma_b,pi_b>` is one candidate branch. `Sigma_b` is its
   conditional module-completion summary and `Cert_D(b)` its candidate soundness
   predicate.
-- `C^check_{D,E}` is the certified candidate set, `Omega_{D,E}` the set-level
-  feasibility obligations, and `F_{D,E}` the family of feasible selected
-  subsets. `S*` is the lexicographic optimum and `M_D:=S*` the certified atomic
-  module core.
+- `rho_b` is a same-predicate recursive ranking, `kappa_S` a cross-module
+  dependency ranking, and `G_b^res=(V_b^res,E_b^res)` the finite keyed
+  resource-mode graph used by a target-preserving resource-discharge
+  certificate. Its labelled edges are target-preserving symbolic action-schema
+  transitions between alpha-normalized occupancy modes.
+- `C_D^nr(E)` is the nonrecursive action-schema-derived obligation set and
+  `realizes_D(b,c)` its certified schema-achievement relation.
+  `C^check_{D,E}` is the certified candidate set. `Omega_{D,E}` contains
+  evidence coverage, nonrecursive schema-achievement coverage, internal-call
+  closure, preparation acyclicity, and recursive-ranking compatibility;
+  per-branch resource discharge belongs to `Cert_D(b)`. `F_{D,E}` is the
+  feasible selection family. `S*` is the lexicographic optimum and `M_D:=S*`
+  the certified atomic module core.
 - `tau_q=<iota_q,varphi_q,mu_q,Theta_q,Gamma_q>` is an unbound temporal
   specification. `Theta_q:Xbar_q->T` is its parameter type signature,
-  `theta_q:Xbar_q->O` is an external type-consistent binding, and
+  `theta_q:Xbar_q->O_I` is an external type-consistent binding into the invoked
+  problem instance's finite typed object set `O_I`, and
   `hat(tau)_q=(tau_q,theta_q)` is the validated bound query.
 - `D_q=<Q_q^dfa,2^AP_q,delta_q,q_q^0,F_q>` is the deterministic finite
-  automaton. Guard `chi` induces signed obligation `O_chi`; `Pi_{chi,i}` is an
+  automaton, `val_q` maps PDDL states to valuations over `AP_q`, and `d_q(z)` is
+  shortest directed distance to acceptance. Guard `chi`
+  induces signed obligation `O_chi`; `Pi_{chi,i}` is an
   occurrence-specific preservation portfolio; `prec_chi` is the
   threat-induced precedence relation; `ell_chi` its certified serialization;
   and `R_{q_s,chi}` the plan set for that source-state transition obligation.
+- `W_{q_s}` is the non-progress self-loop guard set and `I_{q_s}` its signed
+  intersection invariant; `rho_num` is the lexicographic
+  numeric-progress ranking, and `b_chi^joint` a complete joint
+  guard-establishment branch. `R_chi[i,j]` is one transition-repair subtree,
+  `c_{q_s,chi}` its source-state completion test, and `Pass_{q_s,chi}` one
+  complete transition-repair pass.
 - `Q_q` is the complete query-local controller plan set and `L_D^[k]` the sole
   maintained domain library. DFA states `Q_q^dfa` and query plans `Q_q` remain
   typographically distinct.
@@ -275,7 +297,7 @@ LTLf JSON, binding, real MONA-derived DFA, and Jason PDDL environment.
 
 | Method | Native behavior |
 | --- | --- |
-| Unprotected Serialization | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or preserving branch portfolios. |
+| Unprotected Serialization | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or occurrence-specific preservation portfolios. |
 | Certified Flat | Use complete effect summaries, threat-safe order, and per-occurrence preservation portfolios, but compile literals as flat sibling plans. |
 | Certified Balanced | Compile the identical certified literal order and branch choices into the balanced binary transition-repair tree. |
 | Module-Return Monitor | Retain completion-effect certification and the balanced controller, advance the DFA only when an atomic module returns, and omit primitive-prefix source-invariant filtering because intermediate primitive states are outside this ablation's observation semantics. |
@@ -377,8 +399,9 @@ value copied into a result table; its source, five-seed aggregation, benchmark
 scope, and absence of comparable local timing are explicit.
 
 The rejection suite is part of the evaluation rather than an implementation
-unit test only. It covers unbound variables, incomplete closure, non-decreasing
-recursion, unreleased resource debt, cyclic or incomplete completion threats,
+unit test only. It covers unbound variables, incomplete internal-call closure,
+non-decreasing recursion, incomplete target-preserving resource discharge,
+cyclic or incomplete completion threats,
 forbidden negative-guard `MayAdd`, and numeric overshoot. Metamorphic tests apply
 predicate/action/object renaming, compatible parameter permutation, and
 irrelevant-fluent injection. These are the empirical checks behind the
@@ -848,33 +871,37 @@ decrease is available and that recursion is not selected. Predicate names and
 argument positions are not consulted; the feature and action effects come from
 the PDDL schema.
 
-### Causal Resource-Capacity Certificate
+### Target-Preserving Keyed Resource-Mode Discharge
 
-Protected resource release is the compiler rule for a producer action that
-achieves the requested atomic literal but leaves behind a temporary resource
-debt. A resource debt is a fluent produced by the action that represents an
-object being held, lifted, carried, boarded, or otherwise tied to a resource.
-For example, in Depots the action `lift(H,C,S,P)` can achieve `clear(S)`, but
-it also creates `lifting(H,C)` and deletes `available(H)`. If the library stops
-there, later goals may fail because the hoist is still occupied.
+For candidate branch `b`, the formal resource object is the finite graph
+`G_b^res=(V_b^res,E_b^res)`. Each vertex is an alpha-normalized occupancy mode
+keyed by a reusable-resource argument; each labelled edge is a symbolically
+executable action-schema transition that preserves the atomic target. A
+producer may move the resource from an availability mode into an occupied mode.
+The branch is accepted only when a finite non-repeating path returns the same
+key to an availability mode while the target remains true. For example, in
+Depots the action `lift(H,C,S,P)` can achieve `clear(S)`, but it also creates
+the occupied mode `lifting(H,C)` and deletes the availability mode
+`available(H)`. If the library stops there, later goals may fail because the
+hoist is still occupied.
 
-The compiler accepts a finite cleanup path only when the PDDL schema certifies
+The compiler accepts a finite discharge path only when the PDDL schema certifies
 all of the following facts:
 
-- each cleanup edge deletes the current producer-created debt mode without
+- each discharge edge deletes the current producer-created occupied mode without
   immediately re-adding it, and the terminal edge restores the consumed free
   mode; for example `drop(H,C,B,P)` deletes `lifting(H,C)` and restores
   `available(H)`;
 - the producer consumes a key-only free mode and creates a key-plus-occupant
-  debt mode, while the cleanup performs the inverse transition. For example,
+  occupied mode, while the discharge performs the inverse transition. For example,
   `available(H)` supplies key `H`, while `lifting(H,C)` adds occupant `C`;
-- the debt predicate is not merely a same-predicate property moved by the
+- the occupancy predicate is not merely a same-predicate property moved by the
   producer, so `clear(Y)` created by `unstack(X,Y)` is not treated as a held
   resource;
-- every extra cleanup variable is range-restricted by positive context facts,
+- every extra discharge variable is range-restricted by positive context facts,
   for example a parking surface `B` must satisfy `surface(B)`, `at(B,P)`, and
   `clear(B)`;
-- if the cleanup action could delete the protected target, the compiler emits a
+- if the discharge action could delete the protected target, the compiler emits a
   Jason non-unification guard such as `B \== S`.
 
 Before this rule, a generated `+!clear(S)` branch in Depots could stop after
@@ -888,8 +915,8 @@ lifting the obstructing crate:
 ```
 
 This branch achieves `clear(S)`, but it leaves `lifting(H,C)` true and
-`available(H)` false. After the rule, the compiler can emit a certified cleanup
-branch:
+`available(H)` false. After the rule, the compiler can emit a certified
+resource-discharge branch:
 
 ```asl
 +!clear(S) :
@@ -901,11 +928,11 @@ branch:
 ```
 
 This is still not a domain-name patch. The same rule would also accept a
-Blocks-style `unstack; put-down` cleanup, because `unstack(B,S)` creates
+Blocks-style `unstack; put-down` discharge, because `unstack(B,S)` creates
 `holding(B)` and deletes `handempty`, while `put-down(B)` deletes
 `holding(B)` and restores zero-arity `handempty`. The rule rejects the reverse
 shape, such as turning `available(H)` back into `lifting(H,C)`, because that is
-resource acquisition rather than resource release.
+resource acquisition rather than resource discharge.
 
 The key-plus-occupant condition is not treated as an arity shortcut. It is used
 together with the paired precondition/add/delete effects to orient an otherwise
@@ -941,7 +968,7 @@ selects direct producers, preparation branches, resource-discharge branches, and
 validated bounded-integer numeric branches. Numeric-only evidence therefore no
 longer bypasses Clingo. An evidence obligation is covered only by an
 alpha-equivalent branch or an identical body under a weaker conjunctive context.
-Separately, one schema-producer obligation may be covered by a weaker-context
+Separately, one action-schema producer obligation may be covered by a weaker-context
 primitive producer only when its composed `MustAdd` set contains the required
 target, its `MayDelete` set is no larger, and its `NumericDelta` and complete
 parameterized resource-mode summaries are causally compatible. Summary
@@ -1017,9 +1044,9 @@ The current implementation supports finite acyclic protected resource-mode
 discharge when every step is certified directly by PDDL preconditions and
 effects. It is not complete for all parking cases. If a release path requires
 an overloaded untyped producer to be restricted to one context-dependent
-branch portfolio, or if every available cleanup path would delete the protected
-target without a representable non-unification guard, the compiler rejects the
-branch rather than patching the domain by name.
+preserving branch set, or if every available discharge path would delete the
+protected target without a representable non-unification guard, the compiler
+rejects the branch rather than patching the domain by name.
 
 ### Ranked Cross-Module Precondition Repair
 
@@ -1151,7 +1178,7 @@ preparation branch. Predicate preparation strictly reduces the number of
 missing positive producer preconditions. Numeric preparation strictly reduces
 the prerequisite deficit, leaves the target numeric fluent unchanged, and
 preserves the producer's other preconditions. The resulting ranking is
-lexicographic and is persisted in the branch certificate; no fluent or action
+lexicographic and is persisted in the candidate soundness certificate; no fluent or action
 name is recognized.
 
 For an Until source state, literals common to all waiting self-loop cubes are

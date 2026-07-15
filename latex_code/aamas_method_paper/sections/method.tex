@@ -127,15 +127,22 @@ The finite candidate-construction grammar is
 For the Boolean and numeric targets,
 $\operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$ instantiates
 these constructors using only typed schemas and effects from $D$; its finite
-output is $\mathcal C_D(E)$. A \emph{producer} is an
-action whose add effects contain $p$. Backward STRIPS regression
+output is $\mathcal C_D(E)$. For a Boolean target predicate $p$, a
+\emph{producer} is an action schema $a\in\mathcal A$ for which some
+$\ell\in\operatorname{add}(a)$ satisfies $\operatorname{pred}(\ell)=p$.
+For target set $T$, define the reachable producer--precondition graph
+$\mathcal G_D^{\mathrm{prod}}(T)=(V_T,E_T)$ over predicate signatures: an edge
+$p\rightarrow r$ belongs to $E_T$ exactly when a producer for $p$ has a positive
+dynamic precondition with predicate $r$, and $V_T$ contains the signatures
+reachable from $T$ through these edges.
+Backward STRIPS regression
 \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression,Chen2026Moose}
 replaces one
 open positive precondition by a producer's preconditions and rejects a step
 whose deletes contradict another open requirement. Producer preconditions are
 first unified with compatible open requirements, after which only still-unbound
-parameters receive fresh variables. Search is enabled only when the reachable
-producer--precondition graph is acyclic.
+parameters receive fresh variables. Search is enabled only when
+$\mathcal G_D^{\mathrm{prod}}(T)$ is acyclic.
 
 Termination does not use an action-depth constant: a path cannot repeat an
 alpha-normalized requirement/producer step or resource mode, and only the
@@ -156,7 +163,7 @@ Every candidate carries a machine-checkable certificate. Its conditional
 module-completion summary $\Sigma_b$ has Boolean projections
 $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, together with any exact
 constant-integer delta and keyed resource-mode transition. Table~\ref{tab:compiler-obligations}
-connects each generated family to its additional proof obligation and the
+connects each branch constructor to its additional proof obligation and the
 failure it excludes.
 
 \begin{table*}[htbp]
@@ -168,7 +175,7 @@ failure it excludes.
 >{\raggedright\arraybackslash}p{0.42\textwidth}
 >{\raggedright\arraybackslash}p{0.32\textwidth}}
 \toprule
-Candidate family & Additional acceptance obligation & Excluded failure \\
+Branch constructor & Additional acceptance obligation & Excluded failure \\
 \midrule
 Validated evidence macro & every macro step maps to a PDDL action schema and
 symbolic execution establishes the singleton evidence target & invalid or
@@ -179,7 +186,8 @@ Acyclic regression & each open positive requirement is discharged without a
 repeated normalized producer role or conflicting delete effect & arbitrary
 depth cutoffs or cyclic schema search \\
 Relational recursion & a non-negative relation feature strictly decreases and
-a base or producer exit remains available & recursive oscillation \\
+an already-satisfied, direct-producer, or validated-evidence terminal branch
+remains available & recursive oscillation \\
 Target-preserving resource discharge & a finite non-repeating mode path restores keyed
 availability while preserving the target & unreleased reusable resource \\
 Ranked precondition repair & Clingo selects an acyclic call graph with strictly
@@ -214,7 +222,8 @@ $T_D(E)$.
 \paragraph{Well-founded recursive progress.}
 A same-predicate recursive branch $b$ requires a ranking function
 $\rho_b:\operatorname{States}(D)\rightarrow\mathbb N$ defined by a non-negative relation count or
-anchored acyclic-cone count that strictly decreases and has a base/producer exit.
+anchored acyclic-cone count that strictly decreases and has an already-satisfied,
+direct-producer, or validated-evidence terminal branch.
 Threats are checked over the preparation graph selected by Clingo, not over
 unselected candidates. A branch may add the ranked relation outside the
 protected cone only when its trigger preserves the same anchor and a guard proves
@@ -227,11 +236,14 @@ features from the generated candidate set.
 \paragraph{Target-preserving resource discharge.}
 Effects, not predicate names, identify temporary occupation of a reusable
 resource. Suppose an acquisition action deletes an availability fact
-$\mathit{free}(R)$ and adds an occupancy relation $\mathit{held}(R,O)$. These
+$\mathit{free}(R)$ and adds an occupancy relation $\mathit{held}(R,U)$. These
 names are illustrative: the compiler infers the shared resource argument $R$
-and occupant argument $O$ from the effect structure and obtains the same result
+and occupant argument $U$ from the effect structure and obtains the same result
 after consistent symbol renaming. The resulting finite abstract mode graph is
-$\mathcal G_b^{\mathrm{res}}$. A discharge body is accepted only if symbolic
+$\mathcal G_b^{\mathrm{res}}=(V_b^{\mathrm{res}},E_b^{\mathrm{res}})$: vertices
+are alpha-normalized keyed occupancy modes, and an edge labelled by action
+schema $a$ records a symbolically executable transition between two modes while
+preserving the target. A discharge body is accepted only if symbolic
 execution removes the current occupancy mode, restores the corresponding
 availability fact, leaves the atomic target true, and does not recreate an
 earlier normalized mode. Excluding repeated modes makes the discharge search
@@ -253,19 +265,26 @@ relational certificate above.
 
 \subsection{Feasible-Core Optimization}
 
-Validated evidence macros and certified action-schema-derived candidates enter one answer-set
-optimization problem solved with Clingo \cite{Gebser2018Clingo}. Evidence
+Validated evidence macros and certified action-schema-derived candidates enter
+one answer-set optimization problem solved with Clingo
+\cite{Gebser2018Clingo}. Evidence
 rules induce coverage obligations. A selected candidate may cover an evidence
 obligation only through alpha-equivalent triggers and bodies, a weaker
-conjunctive context with the same body, or a schema-producer refinement with
-the same $\mustadd$, no additional $\maydelete$, and equivalent numeric and
-keyed-resource summaries. We write this evidence-coverage relation as
-$\mathsf{covers}_D(b,e)$. Syntactic body-prefix similarity is not treated as semantic
-equivalence.
+conjunctive context with the same body, or an action-schema producer refinement
+with the same $\mustadd$, no additional $\maydelete$, and equivalent numeric
+and keyed-resource summaries. We write this evidence-coverage relation as
+$\mathsf{covers}_D(b,e)$. Syntactic body-prefix similarity is not treated as
+semantic equivalence.
 
-The solver enforces evidence coverage, internal-call closure, producer availability,
-acyclic ranked cross-predicate preparation, and compatibility of relation
-effects with recursive capabilities. Define
+The solver also treats every nonrecursive action-schema-derived branch as a
+schema-achievement obligation: at least one selected branch must realize the
+same certified achievement contract. Let $\mathcal C_D^{\mathrm{nr}}(E)$ denote
+these nonrecursive branches and let $\mathsf{realizes}_D(b,c)$ hold when selected
+branch $b$ is equivalent to, soundly refines, or gives a certified
+target-preserving resource-discharge alternative to schema branch $c$. It
+further enforces internal-call closure,
+acyclic ranked cross-predicate preparation, and compatibility of selected
+effects with recursive rankings. Define
 \begin{align*}
 \mathcal C^{\checkmark}_{D,E}
   &=\{b\in\mathcal C_{D,E}\mid\mathsf{Cert}_D(b)\},\\
@@ -273,9 +292,15 @@ effects with recursive capabilities. Define
   &=\{S\subseteq\mathcal C^{\checkmark}_{D,E}\mid
       S\models\Omega_{D,E}\}.
 \end{align*}
-where $\Omega_{D,E}$ contains evidence coverage, internal-call closure,
-producer-exit, progress, and resource-discharge obligations. The optimizer uses
-the
+where $\Omega_{D,E}$ contains evidence coverage, schema-achievement coverage,
+internal-call closure, preparation acyclicity, and recursive-ranking
+compatibility. Resource discharge is already part of the per-branch predicate
+$\mathsf{Cert}_D$. In particular, schema-achievement coverage requires
+\[
+\forall c\in\mathcal C_D^{\mathrm{nr}}(E),\quad
+\exists b\in S:\mathsf{realizes}_D(b,c).
+\]
+The optimizer uses the
 lexicographic objective
 \begin{multline*}
 S^\star=\operatorname*{lexmin}_{S\in\mathfrak F_{D,E}}
@@ -291,7 +316,8 @@ $\mathcal M_D:=S^\star$. The claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
 The compiler rejects an untyped predicate with several producers when their
-safe use requires different nested precondition-repair portfolios. For example, if one
+safe use requires different nested precondition-repair branch sets. For
+example, if one
 \texttt{at/2} producer preserves a ranked relation and another may increase it,
 static role names alone do not prove that their object sets are disjoint. The
 compiler neither recognizes those names nor assumes disjointness.
@@ -317,7 +343,7 @@ user-facing grammar; the serialized schema and translation protocol appear in
 the Technical Supplement, Sec.~4.2.
 
 A runtime binding is a type-consistent map
-$\theta_q:\bar X_q\rightarrow O$ satisfying the type signature
+$\theta_q:\bar X_q\rightarrow O_I$ satisfying the type signature
 $\Theta_q:\bar X_q\rightarrow\mathcal T$ and constraints $\Gamma_q$; the validated bound
 query is $\widehat\tau_q=(\tau_q,\theta_q)$, and $g_q$ denotes its generated
 top-level BDI goal. The \texttt{ltlf2dfa}/MONA translation produces
@@ -329,9 +355,12 @@ and its guarded
 transitions \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. An accepting
 \texttt{true} self-loop requires no achievement controller. Each edge that
 reduces graph distance to acceptance receives a controller guarded by its
-source state. Valuation cubes with the same source and target may share their
-common achievement objective, while the monitor continues to evaluate each
-complete cube.
+source state. Formally, $d_q(z)$ is the shortest directed-path length from
+$z\in Q_q^{\mathrm{dfa}}$ to $F_q$, with $d_q(z)=\infty$ when no such path
+exists; a progress edge $(q_s,\chi,q_t)$ satisfies
+$d_q(q_t)<d_q(q_s)<\infty$. Valuation cubes with the same source and target may
+share their common achievement objective, while the monitor continues to
+evaluate each complete cube.
 
 Each execution applies $\theta_q$: $\mathit{on}(X,Y)$ under
 $X{=}b_1,Y{=}b_4$ calls $!\mathit{on}(b_1,b_4)$ without grounding the shared
@@ -351,8 +380,8 @@ complete net effect establishes the entire guard. The transition is rejected if 
 can be certified.
 When $b_\chi^{\mathrm{joint}}$ establishes the complete guard, it is available
 from every positive occurrence it establishes and retains every query variable
-appearing in $\mathcal O_\chi$. Thus an already-true first literal cannot hide the branch from an unmet
-sibling or discard a query binding.
+appearing in $\mathcal O_\chi$. Thus an already-true first literal cannot hide
+the branch from an unmet sibling or discard a query binding.
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
 binary transition-repair tree by
 Algorithm~\ref{alg:temporal}.
@@ -368,8 +397,8 @@ polarity, so an internally deleted-and-restored atom is not a completion delete.
 For occurrence $G_i\in P_\chi^+$, a preservation portfolio
 $\Pi_{\chi,i}\subseteq\mathcal M_D$ is the set of certified branches permitted
 to establish $G_i$ under the obligations protected at that position. The
-completion-threat relation contains
-$G_j\prec_\chi G_i$ when a feasible $\maydelete$ effect of a branch in
+threat-induced precedence relation is defined by
+$G_j\prec_\chi G_i$ exactly when a feasible $\maydelete$ effect of a branch in
 $\Pi_{\chi,j}$ unifies with $G_i$. The graph
 $\mathcal G_\chi=(P_\chi^+,\prec_\chi)$ therefore requires $G_j$ to be repaired
 before $G_i$.
@@ -386,16 +415,18 @@ restriction, without recognizing fluent names.
 
 For a cycle, each $\Pi_{\chi,i}$ retains only branches whose exact completion
 preserves prior positives and negatives. In the AgentSpeak realization, a
-query-local restricted module exposes precisely that branch set. Portfolios are certified per ordered
-literal occurrence: two occurrences of $p$ may need different portfolios when
+query-local trigger exposes exactly the bodies rendered from that branch set.
+Portfolios are certified per ordered literal occurrence: two occurrences of
+$p$ may need different portfolios when
 their protected prefixes differ, while identical portfolios may share one
 restricted module in the AgentSpeak realization.
 Contexts remain alternative applicability cases, not simultaneous obligations.
 A recursive $!p;!g$ branch also requires a complete preserving summary for $p$
 and redirects $!g$ to the occurrence's restricted module. Certificates record
 source branches by literal index and claim recursive preservation coverage only
-when at least one branch was selected. A binary support relation $R$ may use the
-support-depth ranking $\rho_R(x)$ only when its grounded request graph is
+when at least one branch was selected. For a binary support relation $R$, the
+same-predicate rank $\rho_b$ may be instantiated as support depth $\rho_R(x)$
+only when its grounded request graph is
 functional and acyclic in every reachable state. Every selected branch must
 still preserve earlier achievements; otherwise compilation rejects.
 
@@ -415,13 +446,18 @@ and uncertified sequential composition are outside the supported fragment.
 Numeric preparation must strictly reduce the lexicographic ranking
 $\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
 where $n_{\mathrm{miss}}$ is the number of missing producer preconditions and
-$d_{\mathrm{target}}$ is the constant-bounded target deficit. It must preserve
+$d_{\mathrm{target}}(s)=|f(s)-c|$ is the bounded deficit for target equality
+$f=c$. It must preserve
 other conditions and leave the target fluent unchanged until the establishing
 step. Compilation rejects the
 candidate when no decreasing tuple can be certified.
 
-For strong Until, intersected non-progress self-loops define signed source
-invariants $\mathcal I_{q_s}=\langle I_{q_s}^+,I_{q_s}^-\rangle$.
+For strong Until, let $\mathcal W_{q_s}$ be the set of non-progress self-loop
+guards at source $q_s$. Their signed source invariants are
+\[
+\mathcal I_{q_s}=\langle I_{q_s}^+,I_{q_s}^-\rangle,
+\quad I_{q_s}^{\pm}=\bigcap_{\chi\in\mathcal W_{q_s}}P_\chi^{\pm}.
+\]
 Before the single progress literal, no action prefix may delete a positive
 invariant or add a negative one; the establishing step may consume the left
 operand. Repeated unit progress separates action and protected objects by a
@@ -555,14 +591,15 @@ optimal within $\mathcal C^{\checkmark}_{D,E}$.
 This follows from answer-set constraints and priorities, not from completeness
 of candidate generation or optimality over all AgentSpeak programs.
 
-\paragraph{Supported-transition composition.}
+\paragraph{Supported transition-composition soundness.}
 
 \textbf{Proposition 3.} Let $\mathcal O_\chi=\langle
 P_\chi^+,P_\chi^-\rangle$ be an accepted signed transition obligation. If each
 required signed repair has an applicable certified branch,
 each selected call terminates, and later repairs preserve earlier obligations,
-then at the end of a complete pass the controller retries exactly when the
-monitor reports the source state; otherwise it returns to dispatch at the
+then at the end of a complete transition-repair pass the controller retries
+exactly when the monitor reports the source state; otherwise it returns to
+dispatch at the
 current state. Every intervening state change is an actual DFA edge enabled by
 the observed valuation, and a rejecting state cannot report success.
 
@@ -572,12 +609,12 @@ forbidden atoms. If the source is left during a call, the remaining suffix still
 contains only these certified calls and observations, so it preserves the prefix
 at return boundaries. The monitor evaluates full cubes after every action and
 cannot be written by the controller; the suffix can therefore cause only real,
-fully observed DFA transitions. After the full pass, $done$ tests the current
-state and either retries or returns to top-level dispatch.
+fully observed DFA transitions. After the full pass, the completion plan tests
+the current state and either retries or returns to top-level dispatch.
 \hfill$\square$ This does not imply complete action-strategy synthesis or
 guarantee that a post-exit suffix avoids a rejecting state.
 
-\paragraph{Balanced-tree structure.}
+\paragraph{Balanced transition-repair complexity.}
 
 \textbf{Proposition 4.} For $n$ signed literals and $e$ repair plans, the tree
 has $2n+e+2$ plans, fan-out two, depth $O(\log n)$, and $O(n)$ visits per pass,
@@ -589,9 +626,9 @@ splitting and range induction establish depth and order. \hfill$\square$
 
 \textbf{Proposition 5.} Let
 $\xi=s_0,a_1,s_1,\ldots,a_k,s_k$ be the PDDL execution observed by the monitor,
-and let $z_0=\delta_q(q_q^0,\mathit{val}(s_0))$. After every successful
+and let $z_0=\delta_q(q_q^0,\mathit{val}_q(s_0))$. After every successful
 primitive action $a_i$, the runtime monitor state equals
-$z_i=\delta_q(z_{i-1},\mathit{val}(s_i))$. Hence leaving a controller source state
+$z_i=\delta_q(z_{i-1},\mathit{val}_q(s_i))$. Hence leaving a controller source state
 is exactly an exit in the deterministic automaton run over the observed finite
 trace.
 
@@ -600,7 +637,7 @@ applies the PDDL successor and then evaluates the deterministic transition
 function on the resulting valuation. Controller plans cannot write monitor
 beliefs. \hfill$\square$
 
-\paragraph{Initial-state identity.}
+\paragraph{Initial-acceptance trace semantics.}
 
 \textbf{Proposition 6.} If the initial valuation is accepting, successful
 execution commits no primitive action and denotes the one-state finite trace

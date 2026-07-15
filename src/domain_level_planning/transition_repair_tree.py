@@ -1,4 +1,4 @@
-"""Compile one certified conjunctive DFA transition into a balanced repair tree.
+"""Compile one certified DFA transition into a balanced binary transition-repair tree.
 
 Paper correspondence: Section 5 and Proposition 4 define this tree after the
 literal order and preserving branch portfolio have already been certified. The
@@ -65,7 +65,7 @@ def compile_transition_repair_tree(
 	if not literals:
 		raise ValueError(
 			"balanced_transition_repair_tree_requires_positive_literal: "
-			"negative-only guards compile directly without a repair tree."
+			"negative-only guards compile directly without a transition-repair tree."
 		)
 	transition = str(transition_symbol).strip()
 	if not transition:

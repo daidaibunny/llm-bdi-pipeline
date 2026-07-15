@@ -23,9 +23,10 @@ PDDL domain + training instances + singleton-goal policy evidence
 A singleton-goal policy evidence rule is an externally supplied rule for one
 goal literal. For example, MOOSE may report that `stack(X,Y)` achieves
 `on(X,Y)` when `holding(X)` and `clear(Y)` hold. The compiler combines such
-evidence with PDDL action schemas, generates closure modules such as
-`clear(X)`, certifies candidate branches, and asks Clingo to select a
-minimum-cost feasible library within the generated candidate language.
+evidence with PDDL action schemas, expands the producible target universe to
+include internal targets such as `clear(X)`, certifies candidate branches, and
+asks Clingo to select a minimum-cost feasible core from the generated certified
+candidate set.
 
 The query-specific temporal compilation is
 
@@ -37,8 +38,9 @@ typed and bound LTLf specification + real ltlf2dfa/MONA automaton
 A controller interprets one deterministic finite automaton transition guard as
 one signed state condition. Positive literals are achievement obligations;
 negative literals are absence obligations and never become synthetic negative
-goals. Completion-effect summaries determine a preservation-safe literal order,
-and a balanced binary repair tree bounds plan-trigger fan-out. A runtime monitor
+goals. Conditional module-completion summaries determine a preservation-safe
+literal order, and a balanced binary transition-repair tree bounds plan-trigger
+fan-out. A runtime monitor
 advances the real automaton after every successful primitive PDDL action.
 
 The implementation renders the resulting BDI rules in AgentSpeak(L) and runs
@@ -52,7 +54,7 @@ of the framework.
   reusable atomic modules.
 - LTLf formulas using `F`, `X`, strong `U`, conjunction, and literal negation,
   provided that every required progress transition receives a certificate.
-- Fail-closed rejection for unresolved binding, closure, progress, resource,
+- Fail-closed rejection for unresolved binding, internal-call closure, progress, resource,
   preservation, or numeric obligations.
 
 The method does not claim complete planning for arbitrary PDDL-times-LTLf

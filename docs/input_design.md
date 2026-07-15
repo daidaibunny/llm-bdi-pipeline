@@ -1100,7 +1100,8 @@ and semantically valid query can still produce `execution_rejected` or timeout
 when the atomic library and schema certificates provide no applicable progress
 action; that outcome is not an input-translation error.
 
-A transition helper checks completion after one full balanced-tree repair pass.
+A transition helper checks completion after one complete balanced binary
+transition-repair pass.
 It returns when the runtime monitor then differs from that helper's source state,
 not only when it equals the immediately adjacent target state; otherwise it
 replays the same transition. One atomic module may contain several primitive
@@ -1115,11 +1116,12 @@ and the top-level controller has no success plan for that state. After the pass,
 source-state exit lets the top-level dispatcher continue from the actual
 monitored state and prevents replaying an already completed transition.
 
-For a cyclic threat resolved by an enforced atomic-branch portfolio, helper
+For a cyclic threat resolved by an occurrence-specific preservation portfolio,
+helper
 selection is scoped to each ordered guard-literal occurrence. Two occurrences
 of the same predicate may therefore call different query-local aliases when
 their already-established sibling sets differ. The appender may share an alias
-only when the certified branch portfolios are identical. Certificate metadata
+only when the certified preservation portfolios are identical. Certificate metadata
 records the literal index, complete literal atom, and selected source branch
 names; a recursive strategy label is emitted only when the selected portfolio
 actually contains a recursive atomic branch.
@@ -1179,9 +1181,9 @@ lifted LTLf payload, binding, and real MONA-derived DFA have been fixed.
 The primary temporal baseline is `dfa_aware_unprotected`: it retains the real
 DFA, source-state dispatch, primitive-step monitor, and the same atomic-library
 hash, but serializes conjunction literals in a deterministic canonical order
-without completion-effect threat ordering or preservation-safe branch
+without completion-effect threat ordering or occurrence-specific preservation
 portfolios. It is an evaluation mode rather than a production fallback. The
-full method adds effect-certified ordering and branch portfolios. A second
+full method adds effect-certified ordering and preservation portfolios. A second
 paired ablation changes only the AgentSpeak control structure from flat sibling
 plans to the balanced binary transition-repair tree. A semantic-boundary ablation advances
 the monitor only when an atomic module returns and is evaluated against cases

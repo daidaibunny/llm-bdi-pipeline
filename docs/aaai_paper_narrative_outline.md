@@ -46,8 +46,10 @@ otherwise returns a structured rejection.
 The manuscript uses one notation for each method object. Do not introduce a
 second tuple or reuse one symbol for a different semantic role.
 
-- `D = <P,F,A,T>` is the typed planning domain and `I_train` its training split.
-  `E_raw` is a raw generalized-planning provider artifact; `E` is its normalized
+- `D = <P,F,A,T>` is the typed planning domain. A problem instance is
+  `I=<D,O_I,s_I^0,G_I>`, where `O_I` is its finite typed object set;
+  `I_train` is the finite training instance set. `E_raw` is a raw
+  generalized-planning provider artifact; `E` is its normalized
   singleton-goal evidence program. This avoids reusing `A`, already reserved for
   the PDDL action-schema set.
 - `T_D(E) = goalPred(E) union prod(D)` is the Boolean producible target universe;
@@ -58,26 +60,46 @@ second tuple or reuse one symbol for a different semantic role.
   `C_{D,E} = C_E union C_D(E)` is the generated candidate set, and
   `C^check_{D,E}` is its certified subset. Never call the instantiated set a
   grammar or call the grammar a candidate set.
+- `G_D^prod(T)` is the producer--precondition dependency graph reachable from
+  target set `T`; it contains an edge `p -> r` when a producer of `p` has a
+  positive dynamic precondition with predicate `r`. Schema regression is
+  admitted only when this reachable graph is acyclic.
 - `b = <g_b,C_b,beta_b,Sigma_b,pi_b>` is one candidate branch. `Sigma_b` is its
   conditional module-completion summary, with `MustAdd`, `MayAdd`, `MayDelete`,
   numeric-delta, and keyed resource-mode projections. `Cert_D(b)` is its
-  candidate soundness certificate, and `covers_D(b,e)` is evidence coverage.
-- `F_{D,E}` is the family of feasible subsets of `C^check_{D,E}`. `S*` is the
+  candidate soundness predicate, and `covers_D(b,e)` is evidence coverage.
+- `C_D^nr(E)` is the set of nonrecursive action-schema-derived obligations, and
+  `realizes_D(b,c)` is their certified schema-achievement relation.
+  `Omega_{D,E}` contains evidence coverage, nonrecursive schema-achievement
+  coverage, internal-call closure, preparation acyclicity, and recursive-ranking
+  compatibility. `F_{D,E}` is the feasible selection family over
+  `C^check_{D,E}`. `S*` is the
   lexicographic optimum in that family, and `M_D := S*` is the certified atomic
   module core. Optimality is never claimed outside the generated certified set.
 - `rho_b` is a same-predicate well-founded ranking; `kappa_S` is the selected
-  cross-module dependency rank; `G_b^res` is a finite abstract resource-mode
-  graph. These compile-time witnesses do not become agent beliefs.
+  cross-module dependency rank; `G_b^res=(V_b^res,E_b^res)` is a finite abstract
+  keyed resource-mode graph whose labelled edges are target-preserving symbolic
+  action-schema transitions. These compile-time witnesses do not become agent
+  beliefs.
 - `tau_q = <iota_q,varphi_q,mu_q,Theta_q,Gamma_q>` is one unbound temporal
   specification: identifier, formula, proposition map, typed parameter
-  signature, and binding constraints. `theta_q` is the external object binding,
+  signature, and binding constraints. `theta_q:Xbar_q->O_I` is the external
+  object binding for the invoked instance,
   and `hat(tau)_q = (tau_q,theta_q)` is the bound query.
 - `D_q = <Q_q^dfa,2^AP_q,delta_q,q_q^0,F_q>` is the deterministic finite
-  automaton. A guard `chi` induces signed obligation
+  automaton, `val_q` maps PDDL states to valuations over `AP_q`, and `d_q(z)` is
+  the shortest directed distance from state `z` to an accepting state. A guard
+  `chi` induces signed obligation
   `O_chi = <P_chi^+,P_chi^->`; `Pi_{chi,i}` is the preservation portfolio for
-  occurrence `i`; `prec_chi` is the module-completion threat relation;
+  occurrence `i`; `prec_chi` is the threat-induced precedence relation;
   `ell_chi` is the certified serialization; and `R_{q_s,chi}` is its
   transition-repair plan set.
+- `W_{q_s}` is the set of non-progress self-loop guards and `I_{q_s}` their
+  signed intersection invariant; `rho_num` is the lexicographic
+  numeric-progress ranking, and `b_chi^joint` a complete joint
+  guard-establishment branch. `R_chi[i,j]` is one transition-repair subtree,
+  `c_{q_s,chi}` its source-state completion test, and `Pass_{q_s,chi}` one
+  complete transition-repair pass.
 - `Q_q` is the complete query-local plan set and `L_D^[k]` is the sole maintained
   domain library. The font distinction between DFA states `Q_q^dfa` and query
   plans `Q_q` must remain explicit in typeset mathematics.
@@ -429,7 +451,7 @@ The main paper should contain:
 5. **Runtime-monitor trace fidelity:** monitor-state beliefs are the result of
    deterministic DFA transition evaluation after every primitive action, not a
    second planning semantics or a domain fluent.
-6. **Initial-state identity case:** zero primitive actions denote the singleton
+6. **Initial-acceptance trace semantics:** zero primitive actions denote the singleton
    trace containing the PDDL initial state. Initial DFA acceptance returns an
    empty committed action trace; it never inserts a noop.
 
@@ -453,10 +475,11 @@ descriptive paragraphs rather than numbered or combined RQ labels:
   candidates, and joint Clingo selection on coverage, size, and runtime.
 - **Preservation of temporal guards.** Against a controller with the same real
   DFA, atomic library, monitor, and Jason runtime but no effect-preservation
-  reasoning, measure the effect of threat ordering and preserving portfolios on
+  reasoning, measure the effect of threat ordering and preservation portfolios on
   VAL- and DFA-valid execution.
 - **Controller structure.** Compare flat and balanced repair controllers while
-  preserving literal order and branch portfolios; report controller size,
+  preserving literal order and occurrence-specific preservation portfolios;
+  report controller size,
   trigger fan-out, loading cost, and execution time without assigning semantic
   credit to the tree.
 - **End-to-end behavior.** Across domains, formula profiles, and evidence seeds,
@@ -502,8 +525,9 @@ different repository revisions from entering a paired temporal comparison.
 
 These four cumulative atomic rows are the complete registered matrix. Do not
 claim additional one-certificate-off experiments: retaining an uncertified
-branch would be unsound, while removing one candidate family changes internal-call
-feasibility rather than isolating a single subsequent mechanism. Use the 13-case
+branch would be unsound, while removing one branch-constructor class changes
+internal-call feasibility rather than isolating a single subsequent mechanism.
+Use the 13-case
 fail-closed and symbol-invariance matrix to test the individual certificate
 families. Likewise, signed-negative and bounded-numeric cases stay in the full
 temporal benchmark with explicit support and failure statuses; do not invent
@@ -630,7 +654,7 @@ Limitations must correspond to observed rejection categories and implemented
 bounds: MOOSE is the only experimentally instantiated evidence provider;
 schema regression is restricted to finite acyclic producer dependencies;
 resource discharge requires a finite non-repeating keyed mode path; untyped
-overloaded producers that require different nested branch portfolios remain
+overloaded producers that require different nested precondition-repair branch sets remain
 unsupported; uncertified cycles are rejected; numeric disequality achievement
 remains observation-only without a certified change-away branch; and runtime
 monitoring does not make action-strategy synthesis complete for arbitrary
@@ -1013,7 +1037,8 @@ Panel containers:
 
 - `(a)` is `x=1,y=2,w=23,h=96`, heading `MONA-derived DFA transition`.
 - `(b)` is `x=26,y=2,w=21,h=96`, heading `Signed obligations`.
-- `(c)` is `x=49,y=2,w=27,h=96`, heading `Certified transition-repair tree`.
+- `(c)` is `x=49,y=2,w=27,h=96`, heading
+  `Certified balanced transition-repair tree`.
 - `(d)` is `x=78,y=2,w=21,h=96`, heading `Primitive-step monitor`.
 
 Panel (a):
@@ -1299,13 +1324,13 @@ negative literals, mixed Boolean/numeric guards, disjunction, and primitive-
 state safety. This table answers what the method supports; it must not contain
 experimental success counts.
 
-### Table 2: Certified Candidate Language
+### Table 2: Candidate Constructors and Soundness Obligations
 
 Merge the previous schema-grammar and certificate tables into one full-width
 table with columns:
 
 ```text
-Candidate family | Additional acceptance obligation | Excluded failure
+Branch constructor | Additional acceptance obligation | Excluded failure
 ```
 
 Rows cover validated evidence macros, direct producers, acyclic regression,
@@ -1483,7 +1508,7 @@ The agent that receives the final TEG run must:
 6. update the Abstract, Introduction contribution summary, Evaluation,
    Limitations, Conclusion, reproducibility checklist, and this outline in one
    coherent change;
-7. preserve the supported-fragment and observation-boundary assumptions even
+7. preserve the supported-fragment and primitive-step observation assumptions even
    if an empirical case happens to pass outside them.
 8. retain the zero-action conformance result as a separate semantic boundary;
    do not add a synthetic noop or merge it into the non-empty VAL denominator.

@@ -53,7 +53,8 @@ establish variable binding, internal-call closure, recursive progress,
 target-preserving resource discharge, or temporal compatibility. We introduce
 \methodname{} (Generalized Planning to Plan Libraries), a certificate-carrying
 compiler that closes this representation gap. Domain compilation combines
-singleton-goal policy evidence with PDDL action schemas into a certified atomic
+singleton-goal policy evidence with Planning Domain Definition Language (PDDL)
+action schemas into a certified atomic
 module core; query compilation composes preservation-safe plans from
 deterministic-automaton guards without relearning that core. For the declared
 candidate-construction grammar, its generated certified set, and the temporal
@@ -111,7 +112,8 @@ $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 Temporally extended goals pose a separate problem
 \cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. The formula
 $F(\mathit{on}(X,Y)\land X(F(\mathit{clear}(Z))))$ imposes query-specific
-order over reusable modules. Conjunctive automaton-guard literals must hold in
+order over reusable modules, where $F$ denotes eventuality and $X$ denotes
+strong next. Conjunctive automaton-guard literals must hold in
 one observed state, so later modules cannot undo earlier achievements, a form
 of BDI goal interference \cite{Thangarajah2003GoalInterference}. Temporal
 control must therefore be composed over the fixed domain library.
@@ -152,7 +154,7 @@ certified candidate set $\mathcal C^{\checkmark}_{D,E}$.}
 
 Figure~\ref{fig:policy-lifting-example} follows one atomic target through
 evidence normalization, producible-target expansion, action-schema candidate
-generation, certificate checking, feasible-library selection, and construction
+generation, certificate checking, feasible-core optimization, and construction
 of the certified atomic module core.
 
 GP2PL contributes (i) a finite candidate-construction grammar $\mathfrak G$ with

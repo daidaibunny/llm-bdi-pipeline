@@ -17,8 +17,11 @@ successor is
 \]
 The numeric component admits finite integer values, comparisons with constants,
 and constant integer increases or decreases; arbitrary arithmetic and
-continuous change are excluded. A generalized-planning task supplies training
-and test instances that share $D$. MOOSE applies classical goal-regression
+continuous change are excluded. A problem instance is
+$I=\langle D,O_I,s_I^0,G_I\rangle$, where $O_I$ is its finite typed object set,
+$s_I^0$ its initial state, and $G_I$ its PDDL achievement condition. A
+generalized-planning task supplies finite training and test instance sets that
+share $D$. MOOSE applies classical goal-regression
 ideas \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton
 goal conditions and
 lifts the resulting plans into first-order condition-to-macro rules
@@ -53,14 +56,23 @@ patterns by rechecking their intended state after subsidiary plans return
 
 \subsection{Finite-Trace Temporal Goals}
 
-An \ltlf{} formula is interpreted over a finite state sequence
+Linear temporal logic over finite traces (\ltlf{}) is interpreted over a finite
+state sequence
 \cite{DeGiacomoVardi2013}. Automata-theoretic planning uses a finite automaton
 to track temporal progress \cite{DeGiacomoRubin2018AutomataFOND}. We construct
 the deterministic finite automaton (DFA)
 $\mathcal D_q=\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle$
 with \texttt{ltlf2dfa} and MONA
-\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. The supported
-fragment admits certified distance-reducing transitions whose guards contain
+\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Here
+$Q_q^{\mathrm{dfa}}$ is the finite state set, $AP_q$ the proposition alphabet,
+$\delta_q$ the deterministic transition function, $q_q^0$ the initial state,
+and $F_q$ the accepting set. The valuation map
+$\mathit{val}_q:\operatorname{States}(D)\rightarrow 2^{AP_q}$ interprets a PDDL
+state over that alphabet. The supported
+fragment admits certified progress transitions. For automaton state $z$, let
+$d_q(z)$ be the shortest directed-path length to $F_q$, or $\infty$ when no
+accepting state is reachable. A progress transition $(q_s,\chi,q_t)$ satisfies
+$d_q(q_t)<d_q(q_s)<\infty$ and has a guard containing
 conjunction and literal negation. A supported guard $\chi$ has normal form
 \[
 \chi=

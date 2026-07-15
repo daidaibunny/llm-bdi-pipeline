@@ -44,15 +44,15 @@ certificate.
 | Item | Status | Next step |
 | --- | --- | --- |
 | Full 16-domain benchmark materialization | Updated | Keep `scripts/materialize_achievement_benchmarks.py` as the single source of truth and rerun it after source-policy changes. |
-| Atomic ASL library generation | Complete and compiler frozen | The independent Full GP2PL libraries for seeds 0--4 are frozen against the byte-identical method closure at revision `5e632fb5`; evidence is neither merged nor selected by best seed. |
+| Atomic ASL library generation | Complete and compiler frozen | The independent Full GP2PL libraries for seeds 0--4 are frozen against the byte-identical method-defining source set at revision `5e632fb5`; evidence is neither merged nor selected by best seed. |
 | Jason plus VAL validation | Complete for the five-seed Full GP2PL method | The five complete 1,228-case runs obtain 1,224, 1,219, 1,187, 1,205, and 1,224 successes: 98.68% mean with 1.29 percentage-point sample standard deviation. All 6,059 successful traces pass original-goal VAL; no case times out or exits nonzero. The compact record is `paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json`. |
 | Numeric domains | Supported bounded fragment | Positive integer equalities, constant deltas, bounded prerequisite preparation, mixed Boolean/numeric preservation, Jason execution, VAL, and DFA trace validation are implemented. Keep arbitrary arithmetic and unrestricted numeric planning outside the claim. |
 | Temporal Input generation | Complete and frozen | The complete 1,228-row natural-language manifest and 475-row deduplicated worklist are sealed in the tracked TEG source archives. |
 | Temporal Goal Validation | Complete and publicly versioned for translation and witness scope | The tracked release at `paper_artifacts/temporal_goal_benchmark/v1` independently reproduces 475/475 exact DFA-language equivalence and 1,228/1,228 hidden-witness acceptance. Its README, CC BY 4.0 notice, citation metadata, portable source archives, integrity verifier, and versioned public Release form the dataset publication boundary. |
 | Temporal execution validation | Complete on pinned revision | `teg-paper-clean-e28bcea4` obtains 1,228/1,228 Jason, neutral-goal VAL, gold-DFA, and predicted-DFA successes across all 16 domains and five formula profiles. The run records commit `e28bcea4`, no tracked changes, every atomic-library input hash, 12 workers, 1,800-second Jason/VAL limits, and a 64-MiB Java stack. |
 | AAAI paper package | Official AAAI-27 format and evidence-complete main-paper table structure in progress; conceptual artwork pending | The manuscript uses the official `aaai2027.sty` and `aaai2027.bst` files without legacy font overrides. Its notation separates the certified atomic module core `M_D`, per-query plan set `Q_q`, and sole maintained library version `L_D^[k]`, with append update `L_D^[k+1] = L_D^[k] union Q_q`. Figure 1 is the first-page single-column representation bridge, Figure 2 is the page-2-top atomic-core construction example, and Figure 3 is the five-seed empirical result. The supported-fragment, certified-candidate, compact five-seed atomic, temporal-profile, paired-ablation, and external-reference tables remain in the main paper until later page-budget editing. Raw domain-by-seed counts and the fixed seed-0 temporal input table are generated into the Technical Supplement. Figures 1 and 2 remain `\IfFileExists` placeholders until the colleague-produced vector PDFs arrive. Every float uses `[htbp]`, captions sit below content, and no manual page break or float-queue override is used. |
-| Atomic experiment harness | Native paired runner complete | Evidence Only, Action Closure, Maximal Certified, and Full GP2PL consume byte-identical model/readable-policy evidence per seed; incomplete artifacts and matrices are rejected. Run the registered five-seed matrix before filling result cells. |
-| Temporal experiment harness | Native paired runner complete | Unprotected DFA, Certified Flat, Certified Balanced, and Completion Monitor consume the same-run seed-0 Full GP2PL libraries, fixed benchmark, sample set, and DFA matrix. Run the registered matrix before filling result cells. |
+| Atomic experiment harness | Native paired runner complete | Evidence Only, Direct Producers, Maximum Feasible, and Full GP2PL consume byte-identical model/readable-policy evidence per seed; incomplete artifacts and matrices are rejected. Run the registered five-seed matrix before filling result cells. |
+| Temporal experiment harness | Native paired runner complete | Unprotected Serialization, Certified Flat, Certified Balanced, and Module-Return Monitor consume the same-run seed-0 Full GP2PL libraries, fixed benchmark, sample set, and DFA matrix. Run the registered matrix before filling result cells. |
 | External references | Published/local MOOSE scope split registered; reduced local extension and C/D matrices pending | The original twelve MOOSE domains use the explicitly labelled five-model coverage reported in arXiv `2511.11095v1`, Table 4; no published runtime is compared locally. Raw MOOSE is measured only on `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, and `depots` for seeds 0--4, reducing the required local matrix to 740 repeated cases. The completed full seed-0 run and interrupted seed-1 run remain diagnostics, not mixed headline inputs. LAMA, ENHSP MRP+HJ, and FOND4LTLf plus LAMA retain pinned native tools and independent validation. Run the five four-domain Raw MOOSE extension summaries and the incomplete C/D matrices from new output roots before generating the external table. |
 | Rejection and metamorphic matrix | Complete on clean revision | All 13 registered certificate rejection and symbol-invariance cases pass on clean commit `46c5af1e`. The portable summary is released under `paper_artifacts/gp2pl_evaluation/v1`; rerun only when a certificate implementation changes. |
 | Main empirical figure | Complete from frozen five-seed Full GP2PL results; final palette pass pending | `scripts/generate_aaai_figures.py --five-seed-results` renders Figure 3 from the frozen 6,059/6,140 five-seed result, the verified raw runner aggregate hash, and five hash-locked Jason summaries. Panel (a) reports every domain; panel (b) follows the MOOSE-style absolute-time convention over all three predeclared benchmark groups, without selecting domains. The current 7.0 by 4.25 inch vector PDF uses embedded Helvetica, a 9-pt minimum text size, grayscale plus marker/line-style redundancy, and a 1,800-second deadline; the planned final palette pass may restore colorblind-safe colors while retaining every redundant marker and line style. The generator recomputes counts, validates VAL success and `run_seconds`, and leaves the prior PDF untouched on any provenance or data mismatch. |
@@ -88,14 +88,15 @@ certificate.
 - Temporal append now always calls the real `ltlf2dfa`/MONA converter. The
   removed ordered-sequence fast path can no longer bypass DFA construction.
   Every distance-reducing DFA edge produces a query-local `trans` controller.
-  Its certified literal order is compiled into a balanced repair tree with
+  Its certified literal order is compiled into a balanced binary
+  transition-repair tree with
   maximum trigger fan-out two and logarithmic nesting depth. One full repair
   pass completes before `done` tests the current monitor state. A post-exit
   suffix contains only observations or already certified, prefix-preserving
   repairs; every primitive action remains DFA-observed, so rejection fails
   closed and a macro that crosses several DFA edges is not replayed against an
   obsolete intermediate target.
-- Atomic schema closure now runs even when backend evidence contains only a
+- Producible-target expansion now runs even when backend evidence contains only a
   numeric goal. Every PDDL positive add-effect predicate is treated as a
   producible fluent, while static predicates remain context-only. This removes
   the Numeric Minecraft coverage gap for `position/1` and `air_cell/1` without
@@ -105,8 +106,9 @@ certificate.
   require the exact predecessor value, and a mixed Boolean/numeric threat cycle
   may use one primitive action only when its complete net effect establishes the
   entire guard.
-- Validated MOOSE macros and PDDL-schema branches now enter one Clingo candidate
-  space. Evidence coverage, internal-module closure, compatible recursive
+- Validated MOOSE macros and action-schema-derived branches now enter one Clingo
+  generated certified candidate set. Evidence coverage, nonrecursive
+  schema-achievement coverage, internal-call closure, compatible recursive
   capabilities, branch count, context count, and body cost are decided in one
   solve; MOOSE macros are no longer appended after schema selection.
 - Query goal ordering no longer infers semantics from predicate argument
@@ -148,21 +150,22 @@ certificate.
 - Same-predicate recursion requires a non-negative relational-count feature
   with a strict delete and no selected reachable branch that can increase the
   feature. Anchored relation cones permit an add only when the trigger preserves
-  the same anchor and a schema-derived guard proves that the new anchor differs.
+  the same anchor and an action-schema-derived guard proves that the new anchor differs.
 - Cross-predicate preparation candidates are optional Clingo capabilities. The
   selected dependency edges must form a directed acyclic graph and are sealed
   with caller/callee ranks satisfying `caller_rank > callee_rank`. Relation
   threats are checked over this selected graph rather than over unused raw
   candidates; the query compiler independently rechecks the final certificates.
 - Acyclic producer-precondition dependencies that traverse a schema-inferred
-  single-valued fluent may use existential context projection: unrelated
+  single-valued fluent may use context-minimizing precondition repair: unrelated
   dynamic siblings are deferred, unique-producer static
   feasibility witnesses are retained, nested variables are alpha-renamed, and
   the complete producer context is rechecked before execution. Cyclic or
   producer-ambiguous dependencies retain the full connected context.
-- Candidate support-depth ordering is enforced only through a query-local
-  branch portfolio whose recursive preparation summaries preserve earlier
-  ranked achievements. Acyclic requested relations without this branch-level
+- Acyclic support-depth serialization is admitted only through a query-local,
+  occurrence-specific preservation portfolio whose recursive preparation
+  summaries preserve earlier ranked achievements. Acyclic requested relations
+  without this branch-level
   noninterference certificate remain unsupported.
 - Query-local preservation portfolios are selected per ordered literal
   occurrence. Repeated uses of one predicate receive distinct aliases when
@@ -224,17 +227,17 @@ results:
 | `blocksworld-tower` instances 49 and 51 | `2/2` Jason plus VAL valid; both previously timed out. |
 | `rovers` official test split | `90/90` Jason plus VAL valid; restores the earlier `p0_14` and `p0_20` regressions. |
 | `gripper` `p1_30` | VAL valid, 3.365 seconds and 3,999 actions. |
-| `gripper` `p2_12` | VAL valid, 38.175 seconds and 85,999 actions with the balanced tree; the same delta-indexed runtime took 288.508 seconds with sibling replay. |
+| `gripper` `p2_12` | VAL valid, 38.175 seconds and 85,999 actions with the balanced binary transition-repair tree; the same delta-indexed runtime took 288.508 seconds with sibling replay. |
 | `blocksworld-tower` `instance-26` | Final compiler probe is Jason plus VAL valid with 34 primitive actions. |
 | `depots` full test split | `7/11` Jason plus VAL valid. `p12`, `p15`, `p20`, and `p22` fail without a committed trace; every successful trace passes VAL. |
 | `logistics` `p1_19` | The acyclic compiler finishes in seconds and executes a 38-action diagnostic prefix, but no complete Jason trace is committed. The cyclic location/transport dependency remains unsupported. |
 
 The remaining Depots gap must not be patched with domain-specific parking or
-transport rules. The current schema language now supports arbitrary-length
-finite acyclic regression and multi-step resource-mode discharge. The remaining
-case needs a query-local nested branch portfolio when one untyped predicate has
-several producers with different preservation contracts. Such a portfolio must
-be selected from certified branch effects, or justified by a separately
+transport rules. The current candidate-construction grammar now supports
+arbitrary-length finite acyclic regression and multi-step resource-mode discharge. The remaining
+case needs a query-local nested precondition-repair branch set when one untyped
+predicate has several producers with different preservation contracts. Such a
+branch set must be selected from certified branch effects, or justified by a separately
 validated static role invariant; the compiler must not infer role disjointness
 from predicate names.
 
