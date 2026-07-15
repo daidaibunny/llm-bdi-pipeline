@@ -383,6 +383,19 @@ Runs with more than one MOOSE-backed worker fail before scheduling if the
 hash-checked sandbox is absent. `--resume` reuses scientific planner outcomes
 but retries infrastructure failures.
 
+An infrastructure repair may replace only the exact case set labelled as
+infrastructure failures in a complete registered summary. The primary remote
+matrix retains 20 workers, while the repair run uses one worker so it does not
+compete with another experiment. The merge rejects missing or extra retry
+cases, changed PDDL fingerprints, toolchain or resource-limit drift, and any
+remaining infrastructure failure. It preserves both summary hashes and source
+revisions plus per-case replacement provenance. The experiment owner confirms
+that the local and remote machines have equivalent configurations and
+comparable resource availability, and queue waiting is excluded from measured
+case runtime; therefore repaired case runtimes remain eligible for PAR-2.
+Planner failures, timeouts, unsupported inputs, compiler failures, and
+validation failures are never selected for repair.
+
 Five fixed MOOSE seeds are run independently with one internal MOOSE worker for
 the GP2PL-added-domain extension. Evidence is never unioned and a best seed is
 never selected. Every paired
@@ -501,7 +514,11 @@ artifact fingerprint used by the corresponding compiler seed,
 checks six workers for the paired compiler and Raw MOOSE extension matrices, 20 workers
 for the remote LAMA/MRP+HJ and direct FOND4LTLf matrices, the common
 1,800-second and 8-GiB external-planner limits, and the paired compiler's
-64-MiB Java stack. It also verifies pinned tool revisions and artifact hashes.
+64-MiB Java stack. When an external matrix contains an infrastructure repair,
+it additionally requires an exact one-worker retry set, unchanged inputs,
+toolchain, and resource limits, clean primary and retry revisions, and explicit
+hardware-equivalence and runtime-comparability attestations. It also verifies
+pinned tool revisions and artifact hashes.
 The challenge input must contain exactly the 13 unique registered nodes with 13
 successes. LaTeX cells and the compact release JSON are generated from those
 checked artifacts; aggregate values are never typed into the manuscript by hand.

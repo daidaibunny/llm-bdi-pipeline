@@ -621,6 +621,17 @@ holding the task-level planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
 been proved language-equivalent.
 
+Repair only cases explicitly recorded as infrastructure failures in those
+complete 20-worker matrices. Run the exact repair set serially with one worker,
+then fail closed on extra or missing cases, input-fingerprint changes,
+toolchain or resource-limit drift, and recurring infrastructure failures. Keep
+both source revisions, both summary hashes, and per-case replacement
+provenance. The experiment owner confirms equivalent local and remote machine
+configurations and comparable resource availability; case runtime excludes
+queue waiting, so repaired records remain eligible for PAR-2. Never repair a
+planner failure, timeout, unsupported input, compiler failure, or validation
+failure.
+
 Atomic metrics are producible-predicate coverage, internal-call closure, held-out
 Jason+VAL coverage, branch/context/body costs, ASL bytes, and compile time.
 Producible-predicate coverage has one paired denominator per seed/domain: all
@@ -1437,7 +1448,10 @@ per-domain model/readable-policy pair consumed by the paired compiler runs, one
 clean source commit for every derived result summary, six workers for paired
 compiler and Raw MOOSE extension runs, 20 workers for remote LAMA/MRP+HJ and direct
 FOND4LTLf runs, the remaining registered resource protocol, pinned external
-binaries, and exactly 13 unique successful challenge nodes. Report a failed
+binaries, and exactly 13 unique successful challenge nodes. A repaired external
+summary must additionally prove that its primary matrix retained 20 workers,
+its exact infrastructure-only retry used one worker, both revisions were clean,
+and hardware-equivalent case runtimes remain comparable. Report a failed
 contract as an infrastructure failure, never as a method score.
 
 ### TEG Table

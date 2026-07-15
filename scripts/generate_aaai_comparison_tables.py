@@ -151,6 +151,16 @@ def build_comparison_dataset(
 	_validate_clean_success(instance, label="instance references")
 	_validate_clean_success(direct, label="direct temporal reference")
 	_validate_clean_success(challenge, label="challenge matrix")
+	_validate_infrastructure_repair(
+		instance,
+		label="instance references",
+		direct_temporal=False,
+	)
+	_validate_infrastructure_repair(
+		direct,
+		label="direct temporal reference",
+		direct_temporal=True,
+	)
 	_validate_external_reference_protocol(
 		instance,
 		label="instance references",
@@ -432,6 +442,86 @@ def _validate_clean_success(payload: Mapping[str, Any], *, label: str) -> None:
 		raise ValueError(f"{label} has untracked source files")
 	if len(str(revision.get("commit") or "")) < 8:
 		raise ValueError(f"{label} has no pinned source commit")
+
+
+def _validate_infrastructure_repair(
+	payload: Mapping[str, Any],
+	*,
+	label: str,
+	direct_temporal: bool,
+) -> None:
+	repair = payload.get("infrastructure_repair")
+	if repair is None:
+		return
+	if not isinstance(repair, Mapping):
+		raise ValueError(f"{label} has malformed infrastructure repair provenance")
+	if repair.get("strategy") != "replace_exact_infrastructure_failures":
+		raise ValueError(f"{label} uses an unregistered infrastructure repair strategy")
+	if int(repair.get("primary_num_workers") or 0) != (
+		REGISTERED_REMOTE_REFERENCE_NUM_WORKERS
+	):
+		raise ValueError(f"{label} repair changes the primary worker protocol")
+	if int(repair.get("retry_num_workers") or 0) != 1:
+		raise ValueError(f"{label} repair does not use the registered serial retry worker")
+	for key in ("primary_summary_sha256", "retry_summary_sha256"):
+		if len(str(repair.get(key) or "")) != 64:
+			raise ValueError(f"{label} repair has no {key}")
+	for key in (
+		"input_fingerprints_verified",
+		"toolchain_verified",
+		"resource_limits_verified",
+		"hardware_equivalence_confirmed_by_experiment_owner",
+		"runtime_measurement_excludes_queue_wait",
+		"runtime_comparison_allowed",
+	):
+		if repair.get(key) is not True:
+			raise ValueError(f"{label} repair does not establish {key}")
+	primary_revision = dict(repair.get("primary_source_revision") or {})
+	retry_revision = dict(repair.get("retry_source_revision") or {})
+	_validate_repair_revision(primary_revision, label=f"{label} primary repair")
+	_validate_repair_revision(retry_revision, label=f"{label} retry")
+	if primary_revision != dict(payload.get("source_revision") or {}):
+		raise ValueError(f"{label} repair changes the primary source revision")
+	replaced_ids = tuple(str(value) for value in repair.get("replaced_case_ids") or ())
+	if not replaced_ids or len(replaced_ids) != len(set(replaced_ids)):
+		raise ValueError(f"{label} repair has an invalid replaced case set")
+	if int(repair.get("replaced_case_count") or 0) != len(replaced_ids):
+		raise ValueError(f"{label} repair has an inconsistent replaced case count")
+	encoded = json.dumps(sorted(replaced_ids), separators=(",", ":")).encode("utf-8")
+	if hashlib.sha256(encoded).hexdigest() != str(
+		repair.get("replaced_case_set_sha256") or "",
+	):
+		raise ValueError(f"{label} repair case-set fingerprint does not match")
+	annotated_ids = {
+		_repaired_record_key(record, direct_temporal=direct_temporal)
+		for record in payload.get("results") or ()
+		if isinstance(record, Mapping)
+		and isinstance(record.get("infrastructure_retry"), Mapping)
+	}
+	if annotated_ids != set(replaced_ids):
+		raise ValueError(f"{label} repair annotations do not match replaced cases")
+
+
+def _validate_repair_revision(revision: Mapping[str, Any], *, label: str) -> None:
+	if len(str(revision.get("commit") or "")) < 8:
+		raise ValueError(f"{label} has no pinned source revision")
+	if revision.get("tracked_changes") is not False:
+		raise ValueError(f"{label} has tracked source changes")
+	if revision.get("untracked_files") is not False:
+		raise ValueError(f"{label} has untracked source files")
+
+
+def _repaired_record_key(
+	record: Mapping[str, Any],
+	*,
+	direct_temporal: bool,
+) -> str:
+	if direct_temporal:
+		return str(record.get("sample_id") or "")
+	return (
+		f"{record.get('variant')}:{record.get('domain')}:"
+		f"{Path(str(record.get('problem_file') or '')).name}"
+	)
 
 
 def _validate_raw_moose_runs(

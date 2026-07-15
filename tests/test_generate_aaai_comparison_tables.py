@@ -400,6 +400,79 @@ def test_build_comparison_dataset_requires_twenty_workers_for_remote_references(
 		)
 
 
+def test_build_comparison_dataset_validates_serial_infrastructure_repair(
+	tmp_path: Path,
+) -> None:
+	instance = _instance_fixture()
+	instance["infrastructure_repair"] = _repair_fixture(
+		case_ids=("lama:toy:p1.pddl",),
+	)
+	instance["results"][0]["variant"] = "lama"
+	instance["results"][0]["infrastructure_retry"] = {
+		"primary_status": "runner_error",
+	}
+
+	result = build_comparison_dataset(
+		paired_results_file=_write_json(tmp_path / "paired.json", _paired_fixture()),
+		raw_moose_summaries=tuple(
+			(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+			for seed in range(5)
+		),
+		instance_reference_summary_file=_write_json(
+			tmp_path / "instances.json",
+			instance,
+		),
+		direct_temporal_summary_file=_write_json(
+			tmp_path / "direct.json",
+			_direct_fixture(),
+		),
+		challenge_summary_file=_write_json(
+			tmp_path / "challenge.json",
+			_challenge_fixture(),
+		),
+	)
+
+	assert {row["method"] for row in result["external"]} >= {"LAMA", "MRP+HJ"}
+
+
+def test_build_comparison_dataset_rejects_nonserial_infrastructure_repair(
+	tmp_path: Path,
+) -> None:
+	instance = _instance_fixture()
+	instance["infrastructure_repair"] = _repair_fixture(
+		case_ids=("lama:toy:p1.pddl",),
+	)
+	instance["infrastructure_repair"]["retry_num_workers"] = 2
+	instance["results"][0]["variant"] = "lama"
+	instance["results"][0]["infrastructure_retry"] = {
+		"primary_status": "runner_error",
+	}
+
+	with pytest.raises(ValueError, match="serial retry worker"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(
+				tmp_path / "paired.json",
+				_paired_fixture(),
+			),
+			raw_moose_summaries=tuple(
+				(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+				for seed in range(5)
+			),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				instance,
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				_direct_fixture(),
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
+
+
 def test_build_comparison_dataset_keeps_raw_moose_at_six_workers(
 	tmp_path: Path,
 ) -> None:
@@ -1373,6 +1446,31 @@ def _clean_revision() -> dict[str, object]:
 		"commit": "0123456789abcdef",
 		"tracked_changes": False,
 		"untracked_files": False,
+	}
+
+
+def _repair_fixture(*, case_ids: tuple[str, ...]) -> dict[str, object]:
+	encoded = json.dumps(sorted(case_ids), separators=(",", ":")).encode("utf-8")
+	return {
+		"strategy": "replace_exact_infrastructure_failures",
+		"primary_summary_sha256": "a" * 64,
+		"retry_summary_sha256": "b" * 64,
+		"primary_source_revision": _clean_revision(),
+		"retry_source_revision": {
+			**_clean_revision(),
+			"commit": "fedcba9876543210fedcba9876543210fedcba98",
+		},
+		"primary_num_workers": 20,
+		"retry_num_workers": 1,
+		"replaced_case_count": len(case_ids),
+		"replaced_case_ids": list(case_ids),
+		"replaced_case_set_sha256": hashlib.sha256(encoded).hexdigest(),
+		"input_fingerprints_verified": True,
+		"toolchain_verified": True,
+		"resource_limits_verified": True,
+		"hardware_equivalence_confirmed_by_experiment_owner": True,
+		"runtime_measurement_excludes_queue_wait": True,
+		"runtime_comparison_allowed": True,
 	}
 
 

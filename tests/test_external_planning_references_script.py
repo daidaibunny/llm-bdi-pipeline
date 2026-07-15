@@ -14,6 +14,7 @@ from scripts.run_external_planning_references import GuardedCommandResult
 from scripts.run_external_planning_references import ReferenceTask
 from scripts.run_external_planning_references import build_moose_reference_arguments
 from scripts.run_external_planning_references import exclusive_runtime_slot
+from scripts.run_external_planning_references import filter_reference_tasks
 from scripts.run_external_planning_references import load_completed_records
 from scripts.run_external_planning_references import model_batch_manifest_metadata
 from scripts.run_external_planning_references import parse_guard_failure
@@ -336,6 +337,37 @@ def test_resume_retries_infrastructure_failures_but_keeps_planner_outcomes(
 
 	assert set(completed) == {"lama:d:planner"}
 	assert completed["lama:d:planner"]["status"] == "planner_failed"
+
+
+def test_case_id_filter_selects_only_registered_retry_cases(tmp_path: Path) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	domain_file.write_text("(define (domain d))", encoding="utf-8")
+	tasks = []
+	for name in ("instance-94", "instance-95", "instance-96"):
+		problem_file = tmp_path / f"{name}.pddl"
+		problem_file.write_text(
+			f"(define (problem {name}) (:domain d))",
+			encoding="utf-8",
+		)
+		tasks.append(
+			ReferenceTask(
+				method=ExternalReferenceMethod.LAMA,
+				domain="blocksworld-tower",
+				domain_file=domain_file,
+				problem_file=problem_file,
+				output_dir=tmp_path / name,
+			),
+		)
+
+	selected = filter_reference_tasks(
+		tasks,
+		case_id_regex=r"blocksworld-tower:instance-(94|96)\.pddl$",
+	)
+
+	assert [task.problem_file.name for task in selected] == [
+		"instance-94.pddl",
+		"instance-96.pddl",
+	]
 
 
 def test_summary_counts_only_val_accepted_plans_as_valid() -> None:

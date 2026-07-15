@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import statistics
 import subprocess
@@ -119,6 +120,10 @@ def parse_args() -> argparse.Namespace:
 		help="Repeat to select references. The default runs every applicable method.",
 	)
 	parser.add_argument("--domain", action="append", choices=DEFAULT_DOMAINS)
+	parser.add_argument(
+		"--case-id-regex",
+		help="Run only DOMAIN:PROBLEM.pddl identifiers matching this expression.",
+	)
 	parser.add_argument("--num-workers", type=int, default=1)
 	parser.add_argument("--timeout-seconds", type=int, default=1800)
 	parser.add_argument("--max-rss-gb", type=float, default=8.0)
@@ -402,6 +407,7 @@ def main() -> int:
 		run_root=run_root,
 		model_batch=model_batch,
 	)
+	tasks = filter_reference_tasks(tasks, case_id_regex=args.case_id_regex)
 	if args.max_cases is not None:
 		tasks = tasks[: max(0, int(args.max_cases))]
 	if not tasks:
@@ -545,6 +551,26 @@ def build_tasks(
 					),
 				)
 	return tuple(tasks)
+
+
+def filter_reference_tasks(
+	tasks: Sequence[ReferenceTask],
+	*,
+	case_id_regex: str | None,
+) -> tuple[ReferenceTask, ...]:
+	"""Select exact portable ``DOMAIN:PROBLEM.pddl`` case identifiers."""
+
+	if not case_id_regex:
+		return tuple(tasks)
+	try:
+		pattern = re.compile(case_id_regex)
+	except re.error as error:
+		raise ValueError(f"Invalid --case-id-regex: {error}") from error
+	return tuple(
+		task
+		for task in tasks
+		if pattern.search(f"{task.domain}:{task.problem_file.name}") is not None
+	)
 
 
 def run_reference_task(
