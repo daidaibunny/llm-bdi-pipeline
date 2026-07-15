@@ -13,6 +13,8 @@ test split through ``scripts/run_full_test_jason_validation.py``.
 from __future__ import annotations
 
 import argparse
+from functools import lru_cache
+import hashlib
 import json
 import os
 import re
@@ -34,6 +36,8 @@ except ImportError:  # pragma: no cover - Unix-only guard.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = PROJECT_ROOT / "src"
 MOOSE_ROOT = PROJECT_ROOT / ".external" / "moose"
+MOOSE_SANDBOX = MOOSE_ROOT / "moose.sandbox"
+MOOSE_SANDBOX_MARKER = MOOSE_ROOT / "moose.sandbox.sha256"
 MOOSE_PAPER_GOAL_PERMUTATIONS = 3
 MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS = 12 * 60 * 60
 MOOSE_PAPER_PLANNING_TIMEOUT_SECONDS = 1800
@@ -856,6 +860,7 @@ def moose_runtime_command(
 	*,
 	runtime: str,
 	max_rss_gb: float,
+	runtime_output_dir: Path | None = None,
 ) -> tuple[str, ...]:
 	"""Wrap official MOOSE arguments in the selected runtime."""
 
@@ -866,10 +871,20 @@ def moose_runtime_command(
 		raise ValueError(f"Unsupported MOOSE runtime: {runtime}")
 	if shutil.which("docker") is None:
 		raise FileNotFoundError("Docker is required for --moose-runtime docker.")
+	runtime_image = (
+		"/work/moose.sandbox" if moose_parallel_runtime_available() else "/work/moose.sif"
+	)
 	inner_command = (
-		"apptainer run --bind /work --bind /project /work/moose.sif "
+		f"apptainer run --bind /work --bind /project {runtime_image} "
 		+ shlex.join(tuple(moose_args))
 	)
+	moose_mount = f"{MOOSE_ROOT}:/work"
+	extra_mounts: tuple[str, ...] = ()
+	if runtime_output_dir is not None:
+		isolated_output = runtime_output_dir.expanduser().resolve()
+		isolated_output.mkdir(parents=True, exist_ok=True)
+		moose_mount += ":ro"
+		extra_mounts = ("-v", f"{isolated_output}:/work/out")
 	return (
 		"docker",
 		"run",
@@ -879,7 +894,8 @@ def moose_runtime_command(
 		f"--memory={int(max_rss_gb)}g",
 		"--privileged",
 		"-v",
-		f"{MOOSE_ROOT}:/work",
+		moose_mount,
+		*extra_mounts,
 		"-v",
 		f"{PROJECT_ROOT}:/project",
 		"-w",
@@ -889,6 +905,28 @@ def moose_runtime_command(
 		"-lc",
 		inner_command,
 	)
+
+
+@lru_cache(maxsize=1)
+def moose_parallel_runtime_available() -> bool:
+	"""Return whether the verified loop-device-free MOOSE sandbox is installed."""
+
+	if not MOOSE_SANDBOX.is_dir() or not MOOSE_SANDBOX_MARKER.is_file():
+		return False
+	artifact = MOOSE_ROOT / "moose.sif"
+	if not artifact.is_file():
+		return False
+	try:
+		expected = MOOSE_SANDBOX_MARKER.read_text(encoding="utf-8").strip()
+	except OSError:
+		return False
+	if len(expected) != 64:
+		return False
+	digest = hashlib.sha256()
+	with artifact.open("rb") as handle:
+		for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+			digest.update(chunk)
+	return digest.hexdigest() == expected
 
 
 def moose_python() -> Path:

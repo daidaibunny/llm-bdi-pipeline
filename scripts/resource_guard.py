@@ -99,7 +99,14 @@ def run_guarded(
 				)
 				return 124
 
-			time.sleep(poll_seconds)
+			wait_seconds = poll_seconds
+			if timeout_seconds is not None:
+				remaining = timeout_seconds - (time.monotonic() - started_at)
+				wait_seconds = min(wait_seconds, max(remaining, 0.001))
+			try:
+				return process.wait(timeout=wait_seconds)
+			except subprocess.TimeoutExpired:
+				continue
 	finally:
 		if process.poll() is None:
 			_stop_process_group(process)

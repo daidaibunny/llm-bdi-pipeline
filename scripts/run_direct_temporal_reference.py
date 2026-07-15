@@ -15,7 +15,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
-import tempfile
+import time
 from typing import Any
 from typing import Mapping
 from typing import Sequence
@@ -27,9 +27,6 @@ DEFAULT_BENCHMARK_ROOT = PROJECT_ROOT / "paper_artifacts/temporal_goal_benchmark
 DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "artifacts/direct_temporal_references"
 DEFAULT_FOND4LTLF_ROOT = PROJECT_ROOT / ".external/fond4ltlf-0.0.4"
 DEFAULT_MONA_EXECUTABLE = PROJECT_ROOT / ".external/mona-1.4/Front/mona"
-FOND4LTLF_COMPILER_LOCK = (
-	Path(tempfile.gettempdir()) / "gp2pl-fond4ltlf-ltlf2dfa-runtime.lock"
-)
 
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
@@ -53,7 +50,6 @@ from evaluation.external_reference_planners import (  # noqa: E402
 )
 from evaluation.temporal_goal_validation import validate_execution_trace  # noqa: E402
 from scripts.run_external_planning_references import (  # noqa: E402
-	MOOSE_RUNTIME_LOCK,
 	build_moose_reference_arguments,
 	is_infrastructure_failure,
 	parse_guard_failure,
@@ -64,6 +60,9 @@ from scripts.run_full_test_jason_validation import (  # noqa: E402
 )
 from scripts.run_moose_faithful_e2e import MOOSE_ROOT  # noqa: E402
 from scripts.run_moose_faithful_e2e import container_path  # noqa: E402
+from scripts.run_moose_faithful_e2e import (  # noqa: E402
+	moose_parallel_runtime_available,
+)
 from scripts.run_moose_faithful_e2e import moose_runtime_command  # noqa: E402
 from scripts.run_temporal_goal_benchmark_execution import (  # noqa: E402
 	benchmark_prediction,
@@ -166,6 +165,13 @@ def main() -> int:
 	)
 	if not tasks:
 		raise ValueError("No temporal benchmark cases matched the requested selection.")
+	parallel_moose = moose_parallel_runtime_available()
+	if args.num_workers > 1 and not parallel_moose:
+		raise ValueError(
+			"Parallel FOND4LTLf + LAMA execution requires the isolated MOOSE "
+			"sandbox. Run `bash scripts/setup_external_planning_references.sh` "
+			"once, then retry.",
+		)
 
 	summary_file = run_root / "summary.json"
 	summary: dict[str, Any] = {
@@ -187,10 +193,14 @@ def main() -> int:
 			"max_rss_gb": float(args.max_rss_gb),
 			"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
 			"plan_verifier_command": str(args.plan_verifier_command),
-			"fond4ltlf_compiler_max_parallelism": 1,
-			"fond4ltlf_compiler_lock_scope": "host",
-			"moose_runtime_max_parallelism": 1,
-			"moose_runtime_lock_scope": "host",
+			"fond4ltlf_compiler_isolation": "per_case_mona_workspace",
+			"fond4ltlf_compiler_max_parallelism": int(args.num_workers),
+			"fond4ltlf_compiler_lock_scope": "none",
+			"moose_runtime_backend": "sandbox" if parallel_moose else "sif",
+			"moose_runtime_max_parallelism": (
+				int(args.num_workers) if parallel_moose else 1
+			),
+			"moose_runtime_lock_scope": "none" if parallel_moose else "host",
 		},
 		"toolchain": temporal_toolchain_metadata(
 			args.fond4ltlf_executable,
@@ -202,6 +212,7 @@ def main() -> int:
 	existing = load_completed_records(tasks) if args.resume else {}
 	records = list(existing.values())
 	pending = tuple(task for task in tasks if task.sample_id not in existing)
+	last_summary_checkpoint = time.monotonic()
 	with ThreadPoolExecutor(max_workers=int(args.num_workers)) as executor:
 		future_map = {
 			executor.submit(
@@ -226,8 +237,11 @@ def main() -> int:
 				_write_json(task.output_dir / "result.json", record)
 			records.append(record)
 			print(progress_line(record), flush=True)
-			summary["results"] = sorted(records, key=record_sort_key)
-			_write_json(summary_file, summary)
+			now = time.monotonic()
+			if now - last_summary_checkpoint >= 5.0:
+				summary["results"] = sorted(records, key=record_sort_key)
+				_write_json(summary_file, summary)
+				last_summary_checkpoint = now
 
 	records = sorted(records, key=record_sort_key)
 	metrics = summarize_temporal_reference_records(
@@ -309,6 +323,43 @@ def build_direct_temporal_tasks(
 	return tuple(tasks)
 
 
+def isolated_fond4ltlf_command(
+	*,
+	executable: Path,
+	runtime_dir: Path,
+	domain_file: Path,
+	problem_file: Path,
+	formula: str,
+	output_domain_file: Path,
+	output_problem_file: Path,
+) -> tuple[str, ...]:
+	"""Invoke the pinned compiler through the per-case MONA workspace shim."""
+
+	python_executable = executable.parent / "python"
+	wrapper = PROJECT_ROOT / "scripts/run_isolated_fond4ltlf.py"
+	if not python_executable.is_file():
+		raise FileNotFoundError(
+			f"Missing pinned FOND4LTLf Python runtime: {python_executable}",
+		)
+	if not wrapper.is_file():
+		raise FileNotFoundError(f"Missing FOND4LTLf isolation wrapper: {wrapper}")
+	official = build_fond4ltlf_command(
+		executable=executable,
+		domain_file=domain_file,
+		problem_file=problem_file,
+		formula=formula,
+		output_domain_file=output_domain_file,
+		output_problem_file=output_problem_file,
+	)
+	return (
+		str(python_executable),
+		str(wrapper),
+		"--runtime-dir",
+		str(runtime_dir),
+		*official[1:],
+	)
+
+
 def run_direct_temporal_task(
 	task: DirectTemporalTask,
 	*,
@@ -359,8 +410,9 @@ def run_direct_temporal_task(
 	compiled_problem = task.output_dir / "compiled_problem.pddl"
 	compiled_plan = task.output_dir / "compiled.plan"
 	projected_plan = task.output_dir / "plan.plan"
-	compiler_command = build_fond4ltlf_command(
+	compiler_command = isolated_fond4ltlf_command(
 		executable=fond4ltlf_executable,
+		runtime_dir=task.output_dir / "ltlf2dfa_runtime",
 		domain_file=compatible_domain,
 		problem_file=task.problem_file,
 		formula=grounded_formula,
@@ -378,7 +430,6 @@ def run_direct_temporal_task(
 			+ os.environ.get("PATH", ""),
 		},
 		artifact_stem="compiler",
-		exclusive_lock_file=FOND4LTLF_COMPILER_LOCK,
 	)
 	record.update(
 		{
@@ -391,6 +442,7 @@ def run_direct_temporal_task(
 			"compiler_lock_wait_seconds": (
 				compiler_result.runtime_lock_wait_seconds
 			),
+			"compiler_wall_seconds": compiler_result.wall_seconds,
 		}
 	)
 	if compiler_result.exit_code != 0:
@@ -426,6 +478,7 @@ def run_direct_temporal_task(
 			lama_arguments,
 			runtime="docker",
 			max_rss_gb=max_rss_gb,
+			runtime_output_dir=task.output_dir / "moose_runtime_out",
 		)
 	except (FileNotFoundError, ValueError) as error:
 		record.update(status="tool_unavailable", error=str(error))
@@ -437,7 +490,6 @@ def run_direct_temporal_task(
 		timeout_seconds=remaining_planner_seconds,
 		max_rss_gb=max_rss_gb,
 		artifact_stem="planner",
-		exclusive_lock_file=MOOSE_RUNTIME_LOCK,
 	)
 	record.update(
 		{
@@ -448,6 +500,7 @@ def run_direct_temporal_task(
 			"planner_stdout": str(planner_result.stdout_file),
 			"planner_stderr": str(planner_result.stderr_file),
 			"runtime_lock_wait_seconds": planner_result.runtime_lock_wait_seconds,
+			"planner_wall_seconds": planner_result.wall_seconds,
 			"elapsed_seconds": (
 				compiler_result.elapsed_seconds + planner_result.elapsed_seconds
 			),
@@ -629,11 +682,15 @@ def progress_line(record: Mapping[str, Any]) -> str:
 		prefix = "skip"
 	else:
 		prefix = "ok" if record.get("success") is True else "fail"
+	elapsed = float(record.get("elapsed_seconds") or 0.0)
+	wait = float(record.get("compiler_lock_wait_seconds") or 0.0) + float(
+		record.get("runtime_lock_wait_seconds") or 0.0,
+	)
 	return (
 		f"[{prefix}] method={METHOD.display_name} domain={record.get('domain')} "
 		f"sample={record.get('sample_id')} status={record.get('status')} "
 		f"actions={record.get('action_count', 0)} "
-		f"elapsed={float(record.get('elapsed_seconds') or 0.0):.1f}s"
+		f"elapsed={elapsed:.1f}s wait={wait:.1f}s wall={elapsed + wait:.1f}s"
 	)
 
 
@@ -656,6 +713,12 @@ def temporal_toolchain_metadata(
 			"release": "v0.0.4",
 			"executable": str(executable),
 			"executable_sha256": _sha256(executable),
+			"isolation_wrapper": str(
+				PROJECT_ROOT / "scripts/run_isolated_fond4ltlf.py"
+			),
+			"isolation_wrapper_sha256": _sha256(
+				PROJECT_ROOT / "scripts/run_isolated_fond4ltlf.py",
+			),
 		},
 		"mona": {
 			"version": "1.4-18",
@@ -667,6 +730,9 @@ def temporal_toolchain_metadata(
 			"moose_root": str(MOOSE_ROOT),
 			"moose_git_revision": _git_revision(MOOSE_ROOT),
 			"moose_artifact_sha256": _sha256(MOOSE_ROOT / "moose.sif"),
+			"runtime_backend": (
+				"sandbox" if moose_parallel_runtime_available() else "sif"
+			),
 			"docker_image": "moose-exact-ubuntu22:local",
 		},
 	}

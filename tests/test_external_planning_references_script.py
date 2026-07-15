@@ -151,9 +151,23 @@ def test_parse_guard_failure_distinguishes_timeout_and_memory() -> None:
 	assert parse_guard_failure("plain planner error") == "planner_failed"
 
 
-def test_moose_hosted_methods_share_one_cross_process_runtime_lock() -> None:
+def test_legacy_sif_methods_share_one_cross_process_runtime_lock(monkeypatch) -> None:
+	monkeypatch.setattr(
+		"scripts.run_external_planning_references.moose_parallel_runtime_available",
+		lambda: False,
+	)
 	assert reference_runtime_lock(ExternalReferenceMethod.RAW_MOOSE) == MOOSE_RUNTIME_LOCK
 	assert reference_runtime_lock(ExternalReferenceMethod.LAMA) == MOOSE_RUNTIME_LOCK
+	assert reference_runtime_lock(ExternalReferenceMethod.ENHSP_HMRPHJ) is None
+
+
+def test_isolated_sandbox_methods_need_no_global_runtime_lock(monkeypatch) -> None:
+	monkeypatch.setattr(
+		"scripts.run_external_planning_references.moose_parallel_runtime_available",
+		lambda: True,
+	)
+	assert reference_runtime_lock(ExternalReferenceMethod.RAW_MOOSE) is None
+	assert reference_runtime_lock(ExternalReferenceMethod.LAMA) is None
 	assert reference_runtime_lock(ExternalReferenceMethod.ENHSP_HMRPHJ) is None
 
 
@@ -187,7 +201,10 @@ def test_exclusive_runtime_slot_serializes_threads_and_process_lock_file(
 	assert second_entered.is_set()
 
 
-def test_lama_task_enters_host_runtime_lock(tmp_path: Path, monkeypatch) -> None:
+def test_lama_task_uses_no_host_lock_with_isolated_sandbox(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
 	domain_file = tmp_path / "domain.pddl"
 	problem_file = tmp_path / "problem.pddl"
 	domain_file.write_text("(define (domain d))", encoding="utf-8")
@@ -228,6 +245,10 @@ def test_lama_task_enters_host_runtime_lock(tmp_path: Path, monkeypatch) -> None
 		lambda *args, **kwargs: ("planner",),
 	)
 	monkeypatch.setattr(
+		"scripts.run_external_planning_references.moose_parallel_runtime_available",
+		lambda: True,
+	)
+	monkeypatch.setattr(
 		"scripts.run_external_planning_references.run_guarded_command",
 		fake_guarded_command,
 	)
@@ -241,7 +262,7 @@ def test_lama_task_enters_host_runtime_lock(tmp_path: Path, monkeypatch) -> None
 		plan_verifier_timeout_seconds=1800,
 	)
 
-	assert observed_locks == [MOOSE_RUNTIME_LOCK]
+	assert observed_locks == [None]
 	assert record["status"] == "planner_failed"
 
 

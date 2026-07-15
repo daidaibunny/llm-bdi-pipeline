@@ -31,6 +31,9 @@ def test_external_reference_setup_verifies_native_artifacts() -> None:
 	assert 'MONA_EXECUTABLE="${EXTERNAL_DIR}/mona-1.4/Front/mona"' in script
 	assert 'MONA_VERSION="1.4-18"' in script
 	assert 'MOOSE_DOCKER_IMAGE="moose-exact-ubuntu22:local"' in script
+	assert 'MOOSE_SANDBOX="${MOOSE_ROOT}/moose.sandbox"' in script
+	assert "materialize_moose_sandbox" in script
+	assert "apptainer build --sandbox" in script
 	assert 'docker image inspect "${MOOSE_DOCKER_IMAGE}"' in script
 	assert 'java -version' in script
 	assert 'mona_version_output="$("${MONA_EXECUTABLE}" -v 2>&1 || true)"' in script

@@ -8,6 +8,8 @@ FOND4LTLF_ROOT="${EXTERNAL_DIR}/fond4ltlf-0.0.4"
 MONA_EXECUTABLE="${EXTERNAL_DIR}/mona-1.4/Front/mona"
 MONA_VERSION="1.4-18"
 MOOSE_ROOT="${EXTERNAL_DIR}/moose"
+MOOSE_SANDBOX="${MOOSE_ROOT}/moose.sandbox"
+MOOSE_SANDBOX_MARKER="${MOOSE_ROOT}/moose.sandbox.sha256"
 VAL_ROOT="${EXTERNAL_DIR}/VAL"
 
 ENHSP_URL="https://github.com/hstairs/jpddlplus.git"
@@ -87,6 +89,47 @@ checkout_pinned_repository() {
 	fi
 }
 
+materialize_moose_sandbox() {
+	local moose_sha="$1"
+	if [[ -d "${MOOSE_SANDBOX}" ]] \
+		&& [[ -f "${MOOSE_SANDBOX_MARKER}" ]] \
+		&& [[ "$(tr -d '[:space:]' < "${MOOSE_SANDBOX_MARKER}")" == "${moose_sha}" ]]; then
+		return
+	fi
+	if ! docker image inspect "${MOOSE_DOCKER_IMAGE}" >/dev/null 2>&1; then
+		printf '[external-reference] missing MOOSE runtime image: %s\n' \
+			"${MOOSE_DOCKER_IMAGE}" >&2
+		exit 1
+	fi
+	if [[ -L "${MOOSE_SANDBOX}" || -L "${MOOSE_SANDBOX_MARKER}" ]]; then
+		printf '[external-reference] refusing symlinked MOOSE sandbox paths\n' >&2
+		exit 1
+	fi
+	local staging
+	staging="$(mktemp -d "${MOOSE_ROOT}/.moose.sandbox.build.XXXXXX")"
+	printf '[external-reference] extracting loop-device-free MOOSE sandbox\n'
+	if ! docker run --rm --platform linux/amd64 --privileged \
+		-v "${MOOSE_ROOT}:/work:ro" \
+		-w /tmp \
+		"${MOOSE_DOCKER_IMAGE}" \
+		bash -lc \
+		'apptainer build --sandbox /tmp/moose.sandbox /work/moose.sif >&2 && tar -C /tmp/moose.sandbox -cf - .' \
+		| tar -C "${staging}" -xf -; then
+		rm -rf -- "${staging}"
+		printf '[external-reference] failed to extract MOOSE sandbox\n' >&2
+		exit 1
+	fi
+	if [[ ! -f "${staging}/.singularity.d/actions/run" ]]; then
+		rm -rf -- "${staging}"
+		printf '[external-reference] extracted MOOSE sandbox has no runscript\n' >&2
+		exit 1
+	fi
+	rm -rf -- "${MOOSE_SANDBOX}"
+	mv "${staging}" "${MOOSE_SANDBOX}"
+	printf '%s\n' "${moose_sha}" > "${MOOSE_SANDBOX_MARKER}.tmp"
+	mv "${MOOSE_SANDBOX_MARKER}.tmp" "${MOOSE_SANDBOX_MARKER}"
+}
+
 verify_installation() {
 	verify_revision "${ENHSP_ROOT}" "${ENHSP_REVISION}" "ENHSP"
 	verify_revision "${FOND4LTLF_ROOT}" "${FOND4LTLF_REVISION}" "FOND4LTLf"
@@ -133,6 +176,13 @@ verify_installation() {
 			"${moose_sha}" >&2
 		exit 1
 	fi
+	if [[ ! -d "${MOOSE_SANDBOX}" ]] \
+		|| [[ ! -f "${MOOSE_SANDBOX_MARKER}" ]] \
+		|| [[ "$(tr -d '[:space:]' < "${MOOSE_SANDBOX_MARKER}" 2>/dev/null || true)" != "${moose_sha}" ]] \
+		|| [[ ! -f "${MOOSE_SANDBOX}/.singularity.d/actions/run" ]]; then
+		printf '[external-reference] missing or stale MOOSE sandbox; rerun setup\n' >&2
+		exit 1
+	fi
 	if ! docker image inspect "${MOOSE_DOCKER_IMAGE}" >/dev/null 2>&1; then
 		printf '[external-reference] missing MOOSE runtime image: %s\n' \
 			"${MOOSE_DOCKER_IMAGE}" >&2
@@ -150,6 +200,7 @@ require_command git
 require_command uv
 require_command java
 require_command docker
+require_command tar
 mkdir -p "${EXTERNAL_DIR}"
 
 if [[ "${MODE}" == "setup" ]]; then
@@ -170,6 +221,12 @@ if [[ "${MODE}" == "setup" ]]; then
 		--no-deps --editable "${FOND4LTLF_ROOT}"
 	if [[ ! -x "${MONA_EXECUTABLE}" ]]; then
 		bash "${ROOT_DIR}/scripts/setup_mona.sh"
+	fi
+	if [[ -f "${MOOSE_ROOT}/moose.sif" ]]; then
+		moose_sha="$(sha256_file "${MOOSE_ROOT}/moose.sif")"
+		if [[ "${moose_sha}" == "${MOOSE_ARTIFACT_SHA256}" ]]; then
+			materialize_moose_sandbox "${moose_sha}"
+		fi
 	fi
 fi
 

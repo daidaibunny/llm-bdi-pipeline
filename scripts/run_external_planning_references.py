@@ -54,6 +54,9 @@ from scripts.run_full_test_jason_validation import (  # noqa: E402
 from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 from scripts.run_moose_faithful_e2e import MOOSE_ROOT  # noqa: E402
 from scripts.run_moose_faithful_e2e import container_path  # noqa: E402
+from scripts.run_moose_faithful_e2e import (  # noqa: E402
+	moose_parallel_runtime_available,
+)
 from scripts.run_moose_faithful_e2e import moose_runtime_command  # noqa: E402
 from scripts.run_moose_faithful_e2e import natural_sort_key  # noqa: E402
 from scripts.run_moose_faithful_e2e import normalise_pddl_for_moose  # noqa: E402
@@ -95,6 +98,12 @@ class GuardedCommandResult:
 	stdout_file: Path
 	stderr_file: Path
 	runtime_lock_wait_seconds: float = 0.0
+
+	@property
+	def wall_seconds(self) -> float:
+		"""Return subprocess time plus any conservative runtime-lock wait."""
+
+		return self.runtime_lock_wait_seconds + self.elapsed_seconds
 
 
 def parse_args() -> argparse.Namespace:
@@ -282,9 +291,12 @@ def is_infrastructure_failure(status: object) -> bool:
 
 
 def reference_runtime_lock(method: ExternalReferenceMethod) -> Path | None:
-	"""Serialize methods hosted by the non-reentrant MOOSE Apptainer runtime."""
+	"""Serialize only the legacy SIF runtime that still needs loop devices."""
 
-	if method in {ExternalReferenceMethod.RAW_MOOSE, ExternalReferenceMethod.LAMA}:
+	if (
+		method in {ExternalReferenceMethod.RAW_MOOSE, ExternalReferenceMethod.LAMA}
+		and not moose_parallel_runtime_available()
+	):
 		return MOOSE_RUNTIME_LOCK
 	return None
 
@@ -394,6 +406,16 @@ def main() -> int:
 		tasks = tasks[: max(0, int(args.max_cases))]
 	if not tasks:
 		raise ValueError("No applicable external reference tasks were selected.")
+	moose_tasks_selected = any(
+		task.method in {ExternalReferenceMethod.RAW_MOOSE, ExternalReferenceMethod.LAMA}
+		for task in tasks
+	)
+	parallel_moose = moose_parallel_runtime_available()
+	if moose_tasks_selected and args.num_workers > 1 and not parallel_moose:
+		raise ValueError(
+			"Parallel MOOSE/LAMA execution requires the isolated MOOSE sandbox. "
+			"Run `bash scripts/setup_external_planning_references.sh` once, then retry.",
+		)
 
 	summary_file = run_root / "summary.json"
 	manifest = {
@@ -413,8 +435,11 @@ def main() -> int:
 			"max_rss_gb": float(args.max_rss_gb),
 			"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
 			"plan_verifier_command": str(args.plan_verifier_command),
-			"moose_runtime_max_parallelism": 1,
-			"moose_runtime_lock_scope": "host",
+			"moose_runtime_backend": "sandbox" if parallel_moose else "sif",
+			"moose_runtime_max_parallelism": (
+				int(args.num_workers) if parallel_moose else 1
+			),
+			"moose_runtime_lock_scope": "none" if parallel_moose else "host",
 		},
 		"toolchain": toolchain_metadata(args.enhsp_jar),
 		"results": [],
@@ -424,6 +449,7 @@ def main() -> int:
 	existing = load_completed_records(tasks) if args.resume else {}
 	records = list(existing.values())
 	pending = tuple(task for task in tasks if task_key(task) not in existing)
+	last_summary_checkpoint = time.monotonic()
 	with ThreadPoolExecutor(max_workers=int(args.num_workers)) as executor:
 		future_map = {
 			executor.submit(
@@ -447,8 +473,11 @@ def main() -> int:
 				_write_json(task.output_dir / "result.json", record)
 			records.append(record)
 			print(progress_line(record), flush=True)
-			manifest["results"] = sorted(records, key=record_sort_key)
-			_write_json(summary_file, manifest)
+			now = time.monotonic()
+			if now - last_summary_checkpoint >= 5.0:
+				manifest["results"] = sorted(records, key=record_sort_key)
+				_write_json(summary_file, manifest)
+				last_summary_checkpoint = now
 
 	records = sorted(records, key=record_sort_key)
 	metrics = summarize_records(records, timeout_seconds=int(args.timeout_seconds))
@@ -558,6 +587,7 @@ def run_reference_task(
 			"planner_stdout": str(command_result.stdout_file),
 			"planner_stderr": str(command_result.stderr_file),
 			"runtime_lock_wait_seconds": command_result.runtime_lock_wait_seconds,
+			"runtime_wall_seconds": command_result.wall_seconds,
 		}
 	)
 	if command_result.exit_code != 0:
@@ -655,6 +685,7 @@ def reference_command(
 		arguments,
 		runtime="docker",
 		max_rss_gb=max_rss_gb,
+		runtime_output_dir=task.output_dir / "moose_runtime_out",
 	)
 
 
@@ -707,7 +738,9 @@ def run_guarded_command(
 	)
 	lock_started = time.monotonic()
 	with exclusive_runtime_slot(exclusive_lock_file):
-		lock_wait_seconds = time.monotonic() - lock_started
+		lock_wait_seconds = (
+			time.monotonic() - lock_started if exclusive_lock_file is not None else 0.0
+		)
 		started = time.monotonic()
 		with stdout_file.open("w", encoding="utf-8") as stdout_handle, stderr_file.open(
 			"w",
@@ -811,11 +844,13 @@ def load_completed_records(tasks: Sequence[ReferenceTask]) -> dict[str, dict[str
 
 def progress_line(record: Mapping[str, Any]) -> str:
 	status = "ok" if record.get("status") == "valid" else "fail"
+	elapsed = float(record.get("elapsed_seconds") or 0.0)
+	wait = float(record.get("runtime_lock_wait_seconds") or 0.0)
 	return (
 		f"[{status}] method={record.get('method')} domain={record.get('domain')} "
 		f"test={record.get('test')} status={record.get('status')} "
 		f"actions={record.get('action_count', 0)} "
-		f"elapsed={float(record.get('elapsed_seconds') or 0.0):.1f}s"
+		f"elapsed={elapsed:.1f}s wait={wait:.1f}s wall={elapsed + wait:.1f}s"
 	)
 
 
@@ -835,6 +870,9 @@ def toolchain_metadata(enhsp_jar: Path) -> dict[str, Any]:
 			"root": str(MOOSE_ROOT),
 			"git_revision": _git_revision(MOOSE_ROOT),
 			"artifact_sha256": _sha256(MOOSE_ROOT / "moose.sif"),
+			"runtime_backend": (
+				"sandbox" if moose_parallel_runtime_available() else "sif"
+			),
 			"docker_image": "moose-exact-ubuntu22:local",
 			"docker_image_id": _docker_image_id("moose-exact-ubuntu22:local"),
 		},

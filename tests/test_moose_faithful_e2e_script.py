@@ -16,6 +16,7 @@ from scripts.run_moose_faithful_e2e import MOOSE_PAPER_SYNTHESIS_TIMEOUT_SECONDS
 from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_RANDOM_SEED
 from scripts.run_moose_faithful_e2e import MOOSE_REPRODUCTION_SYNTHESIS_WORKERS
 from scripts.run_moose_faithful_e2e import moose_policy_command
+from scripts.run_moose_faithful_e2e import moose_runtime_command
 from scripts.run_moose_faithful_e2e import moose_train_command
 from scripts.run_moose_faithful_e2e import natural_sort_key
 from scripts.run_moose_faithful_e2e import normalise_pddl_for_moose
@@ -264,7 +265,13 @@ def test_moose_train_command_wraps_docker_exact_runtime() -> None:
 	assert "/project/src/domains/ferry/train" in command[-1]
 
 
-def test_moose_policy_command_docker_runtime_does_not_need_local_scorpion() -> None:
+def test_moose_policy_command_docker_runtime_does_not_need_local_scorpion(
+	monkeypatch,
+) -> None:
+	monkeypatch.setattr(
+		"scripts.run_moose_faithful_e2e.moose_parallel_runtime_available",
+		lambda: False,
+	)
 	project_model = Path.cwd() / "tmp" / "model.model"
 	project_domain = Path.cwd() / "tmp" / "moose_compatible_pddl" / "domain.pddl"
 	project_problem = Path.cwd() / "tmp" / "moose_compatible_pddl" / "test" / "p01.pddl"
@@ -286,6 +293,30 @@ def test_moose_policy_command_docker_runtime_does_not_need_local_scorpion() -> N
 	assert ".external/moose/ext/planners/scorpion/scorpion.sif" not in command_text
 	assert "/project/tmp/moose_compatible_pddl/domain.pddl" in command_text
 	assert "/project/tmp/moose_compatible_pddl/test/p01.pddl" in command_text
+
+
+def test_moose_parallel_runtime_uses_sandbox_and_private_out_mount(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	monkeypatch.setattr(
+		"scripts.run_moose_faithful_e2e.moose_parallel_runtime_available",
+		lambda: True,
+	)
+	runtime_out = tmp_path / "runtime-out"
+
+	command = moose_runtime_command(
+		("search", "lama-first", "/project/domain.pddl", "/project/problem.pddl"),
+		runtime="docker",
+		max_rss_gb=8,
+		runtime_output_dir=runtime_out,
+	)
+	command_text = " ".join(command)
+
+	assert "/work/moose.sandbox" in command_text
+	assert "/work/moose.sif" not in command_text
+	assert f"{runtime_out.resolve()}:/work/out" in command
+	assert any(item.endswith("/.external/moose:/work:ro") for item in command)
 
 
 def test_timestamped_batch_command_generates_isolated_library_root(
