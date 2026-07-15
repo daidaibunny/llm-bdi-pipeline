@@ -358,20 +358,22 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	)
 
 	figure_caption = re.search(
-		r"\\caption\{GP2PL compiles(.*?)\}\s*"
+		r"\\caption\{GP2PL separates(.*?)\}\s*"
 		r"\\label\{fig:architecture\}",
 		main_source,
 		re.DOTALL,
 	)
 	assert figure_caption is not None
 	caption_text = " ".join(figure_caption.group(1).split())
-	assert "atomic module core" in caption_text
-	assert "$\\mathcal M_D$" in caption_text
-	assert "controller plans" in caption_text
+	assert "$\\mathcal E_{\\mathrm{raw}}$" in caption_text
+	assert "$\\mathcal I_{\\mathrm{train}}$" in caption_text
+	assert "Validated policy lifting" in caption_text
+	assert "$\\mathcal M_D=\\mathcal L_D^{[0]}$" in caption_text
+	assert "DFA-guided temporal compilation" in caption_text
+	assert "$\\widehat{\\tau}_q$" in caption_text
 	assert "$\\mathcal Q_q$" in caption_text
-	assert "same maintained BDI library" in caption_text
-	assert "without relearning the core" in caption_text
-	assert "\\mathcal L_D^{[k+1]}" not in caption_text
+	assert "sole maintained library" in caption_text
+	assert "$\\mathcal L_D^{[k+1]}=\\mathcal L_D^{[k]}\\cup\\mathcal Q_q$" in caption_text
 
 
 def test_figure_design_separates_target_generation_from_set_level_call_closure() -> None:

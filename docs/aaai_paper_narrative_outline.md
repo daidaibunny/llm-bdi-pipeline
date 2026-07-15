@@ -917,10 +917,14 @@ Do not place PDDL syntax, MOOSE, Clingo, MONA, Jason, VAL, certificate tables,
 Figure 1. Those details belong in Figure 2, the algorithms, and Evaluation.
 Draft caption:
 
-> **Figure 1:** GP2PL compiles domain model $D$ and singleton-goal policy
-> evidence $E$ once into the certified atomic module core $\mathcal M_D$. Each
-> bound temporal query $q$ adds controller plans $\mathcal Q_q$ to the same
-> maintained BDI library without relearning the core.
+> **Figure 1:** GP2PL separates reusable domain compilation from query-specific
+> temporal compilation. An external generalized-planning backend derives raw
+> singleton-goal evidence $\mathcal E_{\mathrm{raw}}$ from domain $D$ and training
+> instances $\mathcal I_{\mathrm{train}}$. Validated policy lifting compiles these
+> inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$; DFA-guided temporal
+> compilation maps each bound query $\widehat{\tau}_q$ to query-local plans
+> $\mathcal Q_q$, updating the sole maintained library by
+> $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
 
 ### Figure 2: From Policy Evidence to a Certified Atomic Core
 
