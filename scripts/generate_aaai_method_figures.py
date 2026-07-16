@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the two GP2PL method figures from verified repository artifacts."""
+"""Materialize the locked overview and generate the verified method figure."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from matplotlib.patches import Polygon  # noqa: E402
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "latex_code/aamas_method_paper/figures"
 FIGURE_ONE_WIDTH_INCHES = 3.25
-FIGURE_ONE_HEIGHT_INCHES = 2.55
+FIGURE_ONE_HEIGHT_INCHES = 1.60
 FIGURE_TWO_WIDTH_INCHES = 7.0
 FIGURE_TWO_HEIGHT_INCHES = 3.45
 FIGURE_FONT_FAMILY = "Helvetica"
@@ -49,6 +49,12 @@ LIBRARY_FILE = (
 	/ "artifacts/moose_asl_batches/pddl-five-seed-20260713-153900-seed0"
 	/ "domain_libraries/blocksworld-on/plan_library.asl"
 )
+LOCKED_FIGURE_ONE_PATH = DEFAULT_OUTPUT_DIR / "fig1_architecture.png"
+LOCKED_FIGURE_ONE_SHA256 = (
+	"01b108c40dd5d916a82ddec528f6dd5008d22d6f97a6309f3c78ee2cce45aae9"
+)
+LOCKED_FIGURE_ONE_PIXEL_SIZE = (2558, 1256)
+LOCKED_FIGURE_ONE_DPI = 330
 
 COLORS = {
 	"text": "#1A1A1A",
@@ -68,40 +74,47 @@ COLORS = {
 
 
 def generate_method_figures(*, output_dir: str | Path) -> dict[str, Any]:
-	"""Render both method figures after verifying their evidence-backed example."""
+	"""Copy the locked overview and render the evidence-backed method figure."""
 
 	output_path = Path(output_dir).expanduser().resolve()
 	source_hashes = _verify_worked_example_sources()
-	figure_one_bytes = _render_figure_one()
+	figure_one_bytes = _locked_figure_one_bytes()
 	figure_two_bytes = _render_figure_two()
 	output_path.mkdir(parents=True, exist_ok=True)
-	figure_one_path = output_path / "fig1_architecture.pdf"
+	figure_one_path = output_path / "fig1_architecture.png"
 	figure_two_path = output_path / "fig2_policy_lifting.pdf"
-	figure_one_path.write_bytes(figure_one_bytes)
+	if figure_one_path != LOCKED_FIGURE_ONE_PATH.resolve():
+		figure_one_path.write_bytes(figure_one_bytes)
 	figure_two_path.write_bytes(figure_two_bytes)
 
 	metadata = {
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_aaai_method_figures",
 		"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-		"color_mode": FIGURE_COLOR_MODE,
+		"color_mode": "locked_rgb_overview_and_generated_cmyk_method_figure",
 		"font_family": FIGURE_FONT_FAMILY,
 		"minimum_text_size_points": MINIMUM_TEXT_SIZE_POINTS,
 		"figure_one": {
 			"output_file": _portable_path(figure_one_path),
 			"semantic_role": "problem_overview",
+			"source_kind": "locked_final_artwork",
+			"sha256": LOCKED_FIGURE_ONE_SHA256,
+			"pixel_size": list(LOCKED_FIGURE_ONE_PIXEL_SIZE),
+			"dpi": LOCKED_FIGURE_ONE_DPI,
+			"color_mode": "srgb_with_alpha",
 			"width_inches": FIGURE_ONE_WIDTH_INCHES,
 			"height_inches": FIGURE_ONE_HEIGHT_INCHES,
 			"labels": [
-				"Domain model",
-				"Singleton-goal policy evidence",
-				"One maintained plan library",
+				"Domain",
+				"Singleton-goal Evidence",
+				"Maintained BDI Plan Library",
 				"Bound temporal query",
 			],
 		},
 		"figure_two": {
 			"output_file": _portable_path(figure_two_path),
 			"semantic_role": "worked_policy_lifting_example",
+			"color_mode": FIGURE_COLOR_MODE,
 			"width_inches": FIGURE_TWO_WIDTH_INCHES,
 			"height_inches": FIGURE_TWO_HEIGHT_INCHES,
 			"example_domain": "blocksworld-on",
@@ -115,6 +128,25 @@ def generate_method_figures(*, output_dir: str | Path) -> dict[str, Any]:
 		encoding="utf-8",
 	)
 	return metadata
+
+
+def _locked_figure_one_bytes() -> bytes:
+	"""Return the approved Figure 1 artwork only when its identity is unchanged."""
+
+	if not LOCKED_FIGURE_ONE_PATH.is_file():
+		raise FileNotFoundError(
+			f"Locked Figure 1 artwork is missing: {LOCKED_FIGURE_ONE_PATH}",
+		)
+	payload = LOCKED_FIGURE_ONE_PATH.read_bytes()
+	if not payload.startswith(b"\x89PNG\r\n\x1a\n"):
+		raise ValueError("Locked Figure 1 artwork is not a PNG file")
+	digest = hashlib.sha256(payload).hexdigest()
+	if digest != LOCKED_FIGURE_ONE_SHA256:
+		raise ValueError(
+			"Locked Figure 1 artwork hash changed: "
+			f"expected {LOCKED_FIGURE_ONE_SHA256}, received {digest}",
+		)
+	return payload
 
 
 def convert_pdf_bytes_to_cmyk(pdf_bytes: bytes) -> bytes:
@@ -192,121 +224,6 @@ def _verify_worked_example_sources() -> dict[str, str]:
 		"evidence_policy": _sha256(EVIDENCE_FILE),
 		"agentspeak_library": _sha256(LIBRARY_FILE),
 	}
-
-
-def _render_figure_one() -> bytes:
-	with plt.rc_context(_matplotlib_style()):
-		figure, axis = plt.subplots(
-			figsize=(FIGURE_ONE_WIDTH_INCHES, FIGURE_ONE_HEIGHT_INCHES),
-		)
-		figure.subplots_adjust(left=0.015, right=0.985, bottom=0.02, top=0.98)
-		_prepare_axis(axis)
-		_draw_box(
-			axis,
-			1,
-			73,
-			28,
-			13,
-			"Domain model $D$",
-			fill=COLORS["gray_fill"],
-			edge=COLORS["gray_edge"],
-		)
-		_draw_box(
-			axis,
-			1,
-			53,
-			28,
-			15,
-			"Policy evidence $E$",
-			fill=COLORS["amber_fill"],
-			edge=COLORS["amber_edge"],
-		)
-		_draw_box(
-			axis,
-			35,
-			60,
-			27,
-			21,
-			"(1) Lift + certify\nmodules",
-			fill=COLORS["blue_fill"],
-			edge=COLORS["blue_edge"],
-		)
-		_draw_arrow(axis, (29, 79.5), (35, 73), color=COLORS["gray_edge"])
-		_draw_arrow(axis, (29, 60.5), (35, 68), color=COLORS["amber_edge"])
-
-		_draw_box(
-			axis,
-			1,
-			24,
-			28,
-			15,
-			"Bound query\n$\\widehat{\\tau}_q$",
-			fill=COLORS["purple_fill"],
-			edge=COLORS["purple_edge"],
-		)
-		_draw_box(
-			axis,
-			35,
-			22,
-			27,
-			19,
-			"(2) Compose\ncontroller",
-			fill=COLORS["blue_fill"],
-			edge=COLORS["blue_edge"],
-		)
-		_draw_arrow(axis, (29, 31.5), (35, 31.5), color=COLORS["purple_edge"])
-
-		_draw_box(
-			axis,
-			69,
-			10,
-			29,
-			82,
-			"",
-			fill="#F7FBF5",
-			edge=COLORS["green_edge"],
-			linewidth=1.2,
-		)
-		axis.text(
-			83.5,
-			87.5,
-			"Maintained library\n$\\mathcal{L}_D^{[k]}$",
-			ha="center",
-			va="top",
-			fontsize=MINIMUM_TEXT_SIZE_POINTS,
-			color=COLORS["text"],
-		)
-		_draw_box(
-			axis,
-			72,
-			57,
-			23,
-			17,
-			"Atomic core\n$\\mathcal{M}_D$",
-			fill=COLORS["green_fill"],
-			edge=COLORS["green_edge"],
-		)
-		_draw_box(
-			axis,
-			72,
-			26,
-			23,
-			17,
-			"Query controller\n$\\mathcal{Q}_q$",
-			fill=COLORS["purple_fill"],
-			edge=COLORS["purple_edge"],
-		)
-		_draw_arrow(axis, (62, 70.5), (72, 65.5), color=COLORS["blue_edge"])
-		_draw_arrow(axis, (62, 31.5), (72, 34.5), color=COLORS["blue_edge"])
-		_draw_arrow(
-			axis,
-			(77, 57),
-			(59, 41),
-			color=COLORS["green_edge"],
-			linestyle="--",
-			connectionstyle="arc3,rad=0.13",
-		)
-		return _figure_to_cmyk_pdf(figure)
 
 
 def _render_figure_two() -> bytes:

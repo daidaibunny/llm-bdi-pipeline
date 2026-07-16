@@ -252,7 +252,7 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 	)
 
 	assert (
-		"\\providecommand{\\gpplfigureonepath}{figures/fig1_architecture.pdf}"
+		"\\providecommand{\\gpplfigureonepath}{figures/fig1_architecture.png}"
 		in main_source
 	)
 	assert (

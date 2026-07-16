@@ -6,6 +6,7 @@ from scripts.generate_aaai_method_figures import FIGURE_ONE_HEIGHT_INCHES
 from scripts.generate_aaai_method_figures import FIGURE_ONE_WIDTH_INCHES
 from scripts.generate_aaai_method_figures import FIGURE_TWO_HEIGHT_INCHES
 from scripts.generate_aaai_method_figures import FIGURE_TWO_WIDTH_INCHES
+from scripts.generate_aaai_method_figures import LOCKED_FIGURE_ONE_SHA256
 from scripts.generate_aaai_method_figures import generate_method_figures
 
 
@@ -13,23 +14,29 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LATEX_ROOT = PROJECT_ROOT / "latex_code/aamas_method_paper"
 
 
-def test_generate_method_figures_writes_vector_pdfs_with_verified_sources(
+def test_generate_method_figures_preserves_locked_overview_and_verified_method_figure(
 	tmp_path: Path,
 ) -> None:
 	metadata = generate_method_figures(output_dir=tmp_path)
 
-	figure_one = tmp_path / "fig1_architecture.pdf"
+	figure_one = tmp_path / "fig1_architecture.png"
 	figure_two = tmp_path / "fig2_policy_lifting.pdf"
-	assert figure_one.read_bytes().startswith(b"%PDF")
+	assert figure_one.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
 	assert figure_two.read_bytes().startswith(b"%PDF")
 	assert FIGURE_ONE_WIDTH_INCHES == 3.25
-	assert FIGURE_ONE_HEIGHT_INCHES == 2.55
+	assert FIGURE_ONE_HEIGHT_INCHES == 1.60
 	assert FIGURE_TWO_WIDTH_INCHES == 7.0
 	assert FIGURE_TWO_HEIGHT_INCHES == 3.45
 
-	assert metadata["color_mode"] == "colorblind_safe_cmyk"
+	assert metadata["color_mode"] == (
+		"locked_rgb_overview_and_generated_cmyk_method_figure"
+	)
 	assert metadata["minimum_text_size_points"] == 9.0
 	assert metadata["figure_one"]["semantic_role"] == "problem_overview"
+	assert metadata["figure_one"]["source_kind"] == "locked_final_artwork"
+	assert metadata["figure_one"]["sha256"] == LOCKED_FIGURE_ONE_SHA256
+	assert metadata["figure_one"]["pixel_size"] == [2558, 1256]
+	assert metadata["figure_one"]["dpi"] == 330
 	assert metadata["figure_two"]["semantic_role"] == (
 		"worked_policy_lifting_example"
 	)
@@ -48,9 +55,9 @@ def test_generate_method_figures_writes_vector_pdfs_with_verified_sources(
 	)
 
 	figure_one_labels = set(metadata["figure_one"]["labels"])
-	assert "Domain model" in figure_one_labels
-	assert "Singleton-goal policy evidence" in figure_one_labels
-	assert "One maintained plan library" in figure_one_labels
+	assert "Domain" in figure_one_labels
+	assert "Singleton-goal Evidence" in figure_one_labels
+	assert "Maintained BDI Plan Library" in figure_one_labels
 	assert "MOOSE" not in figure_one_labels
 	assert "PDDL" not in figure_one_labels
 	assert "Clingo" not in figure_one_labels
@@ -63,7 +70,7 @@ def test_manuscript_uses_overview_worked_example_and_empirical_figure() -> None:
 		encoding="utf-8",
 	)
 
-	assert "figures/fig1_architecture.pdf" in main_text
+	assert "figures/fig1_architecture.png" in main_text
 	assert "\\label{fig:architecture}" in main_text
 	assert "figures/fig2_policy_lifting.pdf" in main_text
 	assert "\\label{fig:policy-lifting-example}" in main_text
