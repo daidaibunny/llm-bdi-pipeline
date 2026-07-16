@@ -1455,8 +1455,8 @@ Translation temperature & 0 & 0 & Deterministic structured translation \\
 Translation token limit & 60,000 & 60,000 & Accommodate the complete JSON response schema \\
 Semantic retries & 0--3 & at most 3 & Retry only structured validation failure \\
 Jason/VAL timeout & 30 minutes & 30 minutes each & Common per-instance evaluation cap \\
-Validation workers & 6,8,10,12,16 & 8 &
-Registered resource-isolation setting; not a method parameter \\
+Validation workers & 6,8,10,12,16,20 & 6 paired; 12 fixed temporal; 20 external &
+Fixed per registered experiment; not a method parameter \\
 Java thread stack & default, 64 MiB & 64 MiB &
 Prevent parser stack exhaustion on large query libraries \\
 \bottomrule
@@ -1468,8 +1468,9 @@ Method-defining constants were not selected on test performance.}
 
 All five MOOSE seeds use one internal worker and are compiled independently.
 Seed processes may be launched concurrently in isolated operating-system
-processes, but their evidence is never concatenated. Cross-seed Jason/VAL runs
-are sequential; eight workers parallelize test instances only within one seed.
+processes, but their evidence is never concatenated. The standalone five-seed
+Full GP2PL study uses eight validation workers, whereas every paired atomic and
+temporal ablation uses the registered six workers.
 
 The fixed temporal release predates this five-seed protocol and conditions on
 one hash-identified seed-0 library set. Its 12-worker launch changes throughput,
@@ -1516,12 +1517,9 @@ evidence-guided decreasing mode path for Logistics and a certified nested
 resource choice for Depots. Domain-specific transport or parking rules are not
 admissible substitutes.
 
-The seed-4 runner records \texttt{tracked\_changes=true}; the release does not
-relabel it as clean. All seeds nevertheless use the same sealed PDDL snapshot,
-and the committed method-defining source-file set at all three recorded run
-revisions is byte-identical to frozen revision \texttt{5e632fb5}, with SHA-256
-\texttt{cc78013f34d012e3}. The machine record preserves both this source-set check
-and the seed-4 qualification. Timing is excluded from cross-method speed and
+All five seeded runs share the same sealed PDDL snapshot and hash-verified
+method-defining source-file set. The machine record preserves the source and
+protocol fingerprints. Timing is excluded from cross-method speed and
 significance claims because the sequential runs overlapped unrelated machine
 workloads. The main-paper empirical figure reports only the descriptive,
 within-method cumulative distribution of Jason subprocess
@@ -1534,6 +1532,39 @@ body cost, library bytes, and compilation time. Temporal success requires all
 of: controller acceptance, Jason completion, neutral-goal VAL acceptance,
 independent PDDL replay, gold-DFA acceptance, and predicted-DFA acceptance.
 Failed action prefixes are diagnostics and never plans.
+
+The completed paired release is
+\texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
+\texttt{paired\_ablation\_results.json}. It contains 24,560 portable atomic
+outcomes (1,228 cases, four variants, and five seeds), 4,912 portable temporal
+outcomes (1,228 cases and four variants), every paired-input contract, the 13
+challenge count, and exact parent-result and challenge-summary hashes.
+Machine-local paths and transient logs are excluded.
+
+\input{sections/result_atomic_comparison_table}
+
+Direct Producers and Maximum Feasible have
+\AtomicDirectToMaximumRightOnlyValidCount{} discordant cases, all favoring
+Maximum Feasible ($p=\AtomicDirectToMaximumExactP{}$, two-sided exact paired
+binary test). Maximum Feasible and Full GP2PL have identical valid-case sets;
+the latter removes \AtomicFullBranchReduction{} mean branches and
+\AtomicFullLibraryKiBReduction{} mean KiB. Evidence Only and Direct Producers
+differ on one case in the opposite direction, so target completion alone is not
+claimed to make AgentSpeak plan selection monotone.
+
+\input{sections/result_temporal_comparison_table}
+
+Unprotected Serialization and Certified Flat have
+\TemporalUnprotectedToFlatRightOnlyValidCount{} cases favoring certification
+and \TemporalUnprotectedToFlatLeftOnlyValidCount{} favoring the unprotected controller
+($p=\TemporalUnprotectedToFlatExactP{}$). Certified Flat and Certified Balanced
+have identical valid-case sets ($p=\TemporalFlatToBalancedExactP{}$); the
+balanced result therefore supports only the structural fan-out claim. Certified
+Balanced and Module-Return Monitor have
+\TemporalBalancedToModuleReturnLeftOnlyValidCount{} discordant cases, all favoring
+primitive-step observation
+($p=\TemporalBalancedToModuleReturnExactP{}$). PAR-2 and action counts remain
+descriptive; no continuous-measure superiority claim is made.
 
 For the 1,228 fixed temporal cases, runtime has minimum 2.29, first quartile
 4.28, median 5.49, third quartile 8.49, maximum 110.31, mean 9.39, and sample
@@ -1549,17 +1580,14 @@ and exact terminal numeric progress. Six test invariance under predicate/action
 renaming, action-parameter permutation, evidence-object renaming, irrelevant
 static vocabulary, negative-guard renaming, and progress-relation renaming.
 
-The present fixed temporal release supports descriptive claims about coverage,
-trace length, and runtime, but no inferential claim that one compiler variant
-improves another. Accordingly, no observed difference is labelled statistically
-significant. A comparative claim may be added only after the registered
-five-seed matrix is complete: binary success is paired by seed, domain, and test
-instance, while continuous measures are compared only on jointly solved cases.
-The planned analysis uses an exact paired test for binary outcomes and a
-Wilcoxon signed-rank test with an effect size for continuous outcomes. Thus the
-checklist's statistical item is ``yes'' for the submitted claims: every claimed
-performance difference is subject to inferential testing, and the current paper
-makes no such claim without the required paired evidence.
+The completed matrix pairs binary atomic success by seed, domain, and test, and
+binary temporal success by query under identical input hashes. Coverage
+comparisons use the two-sided exact paired binary test reported above. The flat
+versus balanced claim is structural because their success sets are identical.
+Continuous values are reported descriptively on the registered denominator or
+jointly solved cases; the paper makes no continuous-measure improvement claim.
+The checklist's statistical item is therefore ``yes'' for every stated
+performance change.
 
 \subsection{Reproduction Commands and Artifact Map}
 
@@ -1628,6 +1656,27 @@ compiler_results.py \
 \end{verbatim}
 \endgroup
 
+The paired ablation release and both comparison tables are regenerated from the
+completed matrix without rerunning any planner:
+
+\begingroup
+\small
+\begin{verbatim}
+uv run python \
+  scripts/freeze_paired_ablation_\
+results.py \
+  --paired-results artifacts/\
+paired_compiler_experiments/\
+aaai-paired-72b0604f/paired_results.json \
+  --challenge-summary artifacts/\
+paired_compiler_experiments/\
+aaai-paired-72b0604f/challenge_runs/\
+aaai-paired-72b0604f-certificate-\
+challenges/\
+summary.json
+\end{verbatim}
+\endgroup
+
 The compatibility certificate permits only explicitly named fields below the
 benchmark's provenance object. It reconstructs and verifies the exact benchmark
 hash recorded by the execution summary; domain cases, formulas, bindings, and
@@ -1692,8 +1741,8 @@ Likewise, the sealed construction audit was unavailable to the translation model
 during inference but is included in the released temporal-goal dataset for
 independent validation. Hence there is no non-public experimental dataset.
 
-The statistical answer does not claim a significant advantage by declaration.
-It records a stricter boundary: this manuscript makes no inferential improvement
-claim from the fixed release, and the registered paired tests are a prerequisite
-for adding one. Descriptive outcomes and complete per-instance records remain
-available independently of that future comparison.
+The statistical answer is grounded in the frozen paired records. Binary
+coverage changes use two-sided exact paired tests over the complete registered
+case sets; structural equality and continuous summaries are not relabelled as
+performance improvements. Complete per-instance outcomes remain available for
+independent reanalysis.

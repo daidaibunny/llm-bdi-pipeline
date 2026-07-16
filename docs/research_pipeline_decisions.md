@@ -550,6 +550,13 @@ contains 2,456 portable case records: the complete 1,228-case achievement
 matrix and complete 1,228-case direct temporal matrix. It can be frozen before
 the paired compiler matrix completes, but the final combined comparison
 generator must reproduce its external rows exactly.
+The paired compiler release is
+`paper_artifacts/gp2pl_evaluation/v1/paired_ablation_results.json`. It contains
+all 24,560 portable atomic outcomes and 4,912 portable temporal outcomes,
+adjacent-method exact paired contrasts, corrected transition-repair fan-out,
+paired-input contracts, and parent/challenge hashes. The generated atomic and
+temporal tables and macros are the only manuscript insertion path for these
+values.
 
 The companion `scripts/run_certificate_challenge_matrix.py` executes the
 registered rejection and symbol-invariance cases against production compiler

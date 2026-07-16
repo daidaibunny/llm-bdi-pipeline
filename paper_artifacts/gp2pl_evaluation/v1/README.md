@@ -22,6 +22,10 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
   infrastructure-only repair. Its 2,456 portable records retain input hashes,
   outcomes, runtimes, repair provenance, and verified cross-machine launcher
   relocation without commands, logs, or machine-local paths.
+- `paired_ablation_results.json` freezes all 24,560 atomic and 4,912 temporal
+  paired outcomes, their aggregate tables, adjacent-method exact paired
+  contrasts, corrected transition-repair fan-out, input-pairing contracts, and
+  the 13-case challenge-summary hash without machine-local paths.
 - `certificate_challenge_summary.json` records fail-closed and renaming tests.
 - `execution_distribution.json` records distributional execution statistics.
 - `benchmark_compatibility.json` proves that the execution-time and portable

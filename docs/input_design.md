@@ -1227,6 +1227,10 @@ VAL, gold-DFA acceptance, predicted-DFA acceptance, action count, append time,
 runtime or PAR-2, controller plan count, and maximum trigger fan-out. A failed
 variant cannot change the input formula, binding, DFA, atomic library, or timeout
 and retry under a different query.
+Here fan-out means the maximum number of plans sharing one transition-repair
+controller trigger. Preserving-branch and support-helper portfolios contribute
+to total controller plan count and size but not to the flat-versus-balanced
+tree-structure metric.
 
 A direct LTLf planning compilation is an external reference on its supported
 grounded Boolean subset, not a replacement for this paired compiler ablation.

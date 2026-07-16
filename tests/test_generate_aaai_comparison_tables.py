@@ -3,14 +3,17 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
 import pytest
 
 from scripts.generate_aaai_comparison_tables import build_comparison_dataset
+from scripts.generate_aaai_comparison_tables import build_paired_ablation_dataset
 from scripts.generate_aaai_comparison_tables import child_revision_contract_sha256
 from scripts.generate_aaai_comparison_tables import render_atomic_table
+from scripts.generate_aaai_comparison_tables import render_comparison_macros
 from scripts.generate_aaai_comparison_tables import render_external_table
 from scripts.generate_aaai_comparison_tables import render_temporal_table
 from scripts.run_certificate_challenge_matrix import CHALLENGE_CASES
@@ -225,6 +228,55 @@ def test_build_comparison_dataset_separates_published_moose_from_local_extension
 			"par2_seconds": None,
 		},
 	]
+
+
+def test_build_paired_ablation_dataset_requires_only_paired_and_challenge_inputs(
+	tmp_path: Path,
+) -> None:
+	paired = _paired_fixture()
+	result = build_paired_ablation_dataset(
+		paired_results_file=_write_json(tmp_path / "paired.json", paired),
+		challenge_summary_file=_write_json(
+			tmp_path / "challenge.json",
+			_challenge_fixture(),
+		),
+	)
+
+	assert result["artifact_kind"] == "gp2pl_paired_ablation_results"
+	assert [row["method"] for row in result["atomic"]] == [
+		name for _variant, name in ATOMIC_VARIANTS
+	]
+	assert [row["method"] for row in result["temporal"]] == [
+		name for _variant, name in TEMPORAL_VARIANTS
+	]
+	assert result["challenges"] == {"case_count": 13, "success_count": 13}
+	assert len(result["atomic_records"]) == 40
+	assert len(result["temporal_records"]) == 8
+	assert len(result["atomic_seed_results"]) == 20
+	assert len(result["temporal_breakdowns"]) == 4
+	assert "/test/" not in json.dumps(result["atomic_records"])
+	assert len(result["paired_contrasts"]["atomic"]) == 3
+	assert len(result["paired_contrasts"]["temporal"]) == 3
+	flat_to_balanced = result["paired_contrasts"]["temporal"][1]
+	assert flat_to_balanced["left_only_valid_count"] == 0
+	assert flat_to_balanced["right_only_valid_count"] == 1
+	assert flat_to_balanced["exact_two_sided_p"] == 1.0
+	assert result["provenance"]["paired_results_sha256"] == hashlib.sha256(
+		(tmp_path / "paired.json").read_bytes(),
+	).hexdigest()
+	macros = render_comparison_macros(result)
+	assert all(
+		macro_name.isalpha()
+		for macro_name in re.findall(r"\\newcommand\{\\([^}]+)\}", macros)
+	)
+	assert r"\newcommand{\AtomicEvidenceOnlyValidCount}{5}" in macros
+	assert r"\newcommand{\AtomicAblationCaseCount}{10}" in macros
+	assert r"\newcommand{\TemporalCertifiedBalancedValidCount}{2}" in macros
+	assert r"\newcommand{\TemporalAblationCaseCount}{2}" in macros
+	assert r"\newcommand{\TemporalCertifiedBalancedFanout}{2}" in macros
+	assert r"\newcommand{\AtomicDirectToMaximumValidGain}{0}" in macros
+	assert r"\newcommand{\TemporalFlatToBalancedValidGain}{1}" in macros
+	assert r"\newcommand{\TemporalFlatToBalancedExactP}{1}" in macros
 
 
 def test_build_comparison_dataset_rejects_unregistered_published_moose_source(

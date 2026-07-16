@@ -44,6 +44,7 @@ Libraries for Temporally Extended Goals}
 \input{sections/result_five_seed_atomic_macros}
 \input{sections/result_moose_reference_macros}
 \input{sections/result_external_reference_macros}
+\input{sections/result_comparison_macros}
 
 \begin{document}
 \maketitle
@@ -65,6 +66,12 @@ soundness for the supported fragment; unsupported obligations are rejected.
 Across \BenchmarkDomainCount{} domains, five independently seeded libraries
 solve \AtomicFiveSeedMeanSuccessPercent{}\% of held-out cases on average
 (\AtomicFiveSeedSampleSDPercent{} percentage-point sample standard deviation).
+In paired ablations, certified recursive candidates increase atomic success
+from \AtomicDirectProducersValidCount{}/\AtomicAblationCaseCount{} to
+\AtomicFullGPPLValidCount{}/\AtomicAblationCaseCount{}, while temporal
+preservation certification increases success from
+\TemporalUnprotectedValidCount{}/\TemporalAblationCaseCount{} to
+\TemporalCertifiedFlatValidCount{}/\TemporalAblationCaseCount{}.
 All \TranslationEquivalentCount{} translated temporal specifications match
 their gold finite-trace languages, and all \TEGProblemCount{} bound queries
 produce independently validated accepting traces.
@@ -163,7 +170,10 @@ finite-trace temporal goals, retaining the same domain core. Across
 \BenchmarkDomainCount{} domains, independently compiled atomic cores average
 \AtomicFiveSeedMeanSuccessPercent{}\% held-out execution coverage over five
 goal-order seeds, and all \TEGProblemCount{} predeclared temporal queries pass
-independent execution and trace validation. These are guarantees and results
+independent execution and trace validation. The paired matrix further isolates
+\AtomicDirectToMaximumValidGain{} additional atomic successes from certified
+recursive candidate generation and \TemporalUnprotectedToFlatValidGain{}
+additional temporal successes from preservation certification. These are guarantees and results
 for the declared fragment and evaluated inputs, not completeness for arbitrary
 PDDL--\ltlf{} products; formal definitions, proofs, and the reproducibility
 protocol appear in the Technical Supplement, Secs.~2 and~5.
@@ -179,7 +189,11 @@ GP2PL compiles generalized-planning evidence into a certified atomic module core
 and appends finite-trace query plans to the unique maintained BDI domain library.
 Five-seed atomic coverage averages
 \AtomicFiveSeedMeanSuccessPercent{}\%; the predeclared temporal study solves
-\TEGProblemCount{}/\TEGProblemCount{}. Guarantees remain conditional on the
+\TEGProblemCount{}/\TEGProblemCount{}. In the paired ablation, Full GP2PL
+matches Maximum Feasible coverage with \AtomicFullBranchReduction{} fewer
+mean branches, and Certified Balanced matches Certified Flat coverage while
+reducing transition-repair fan-out from \TemporalCertifiedFlatFanout{} to
+\TemporalCertifiedBalancedFanout{}. Guarantees remain conditional on the
 candidate-construction grammar, generated certified candidate set, and declared
 \ltlf{} fragment.
 

@@ -209,3 +209,49 @@ separately from the five-seed sensitivity study; it supports neither
 cross-seed claims nor arbitrary PDDL--\ltlf{} completeness. The Technical
 Supplement, Sec.~5.3 gives the semantic-conformance cases, fixed-input domain
 breakdown, complete distributions, and provenance.
+
+\subsection{Paired Ablation Results}
+\label{sec:paired-ablation-results}
+
+\input{sections/result_atomic_comparison_table}
+
+All four atomic variants compile all 80 seed--domain libraries. Evidence Only
+reaches \AtomicEvidenceOnlyCoveredTargetCount{}/365 producible predicates,
+whereas every schema-expanded variant reaches 365/365. Direct Producers differs
+from Evidence Only on one execution, reflecting AgentSpeak plan choice rather
+than an infrastructure failure. Adding the certified recursive candidate
+families in Maximum Feasible yields
+\AtomicDirectToMaximumValidGain{} additional valid executions over Direct
+Producers; their exact paired binary test gives
+$p=\AtomicDirectToMaximumExactP{}$. Full GP2PL preserves the same successful
+case set as Maximum Feasible while removing \AtomicFullBranchReduction{} mean
+branches and \AtomicFullLibraryKiBReduction{} mean KiB, isolating compact
+selection without a coverage loss.
+
+\input{sections/result_temporal_comparison_table}
+
+Completion-effect ordering and preservation portfolios produce a net gain of
+\TemporalUnprotectedToFlatValidGain{} valid traces over Unprotected
+Serialization; \TemporalUnprotectedToFlatRightOnlyValidCount{} cases favor
+Certified Flat and \TemporalUnprotectedToFlatLeftOnlyValidCount{} favors the
+unprotected controller ($p=\TemporalUnprotectedToFlatExactP{}$, exact paired
+binary test). Certified Flat and Certified Balanced have the same
+\TemporalCertifiedBalancedValidCount{}-case success set.
+Balancing therefore receives no semantic credit: it changes median controller
+plans from 7 to 13 and maximum transition-repair fan-out from
+\TemporalCertifiedFlatFanout{} to \TemporalCertifiedBalancedFanout{} while
+retaining coverage. Moving observation from primitive steps to module return
+loses \TemporalBalancedToModuleReturnLeftOnlyValidCount{} valid traces;
+Module-Return Monitor records
+\TemporalModuleReturnJasonTimeoutCount{} Jason timeouts,
+\TemporalModuleReturnJasonFailedCount{} Jason failure, and
+\TemporalModuleReturnGoldDFARejectedCount{} gold-DFA rejection. The shared
+Certified Flat/Balanced failure,
+\texttt{logistics\_p0\_24}, is a genuine strategy-choice boundary: the selected
+loading branch leaves the monitor in its source state.
+
+The separate fixed-library end-to-end run above remains
+\TEGProblemCount{}/\TEGProblemCount{}. The paired matrix conditions on the
+seed-0 Full GP2PL library emitted within its own run, so its Certified Balanced
+row is the ablation estimate rather than a replacement for that fixed-input
+result.

@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from collections import defaultdict
 import hashlib
 import json
+import math
 from pathlib import Path
 import statistics
 import sys
@@ -86,6 +88,294 @@ TEMPORAL_METHODS = (
 	("certified_balanced", "Certified Balanced"),
 	("completion_boundary_monitor", "Module-Return Monitor"),
 )
+ATOMIC_MACRO_PREFIXES = {
+	"validated_evidence_adapter": "AtomicEvidenceOnly",
+	"action_only_closure": "AtomicDirectProducers",
+	"maximal_certified_program": "AtomicMaximumFeasible",
+	"full": "AtomicFullGPPL",
+}
+TEMPORAL_MACRO_PREFIXES = {
+	"dfa_aware_unprotected": "TemporalUnprotected",
+	"certified_flat": "TemporalCertifiedFlat",
+	"certified_balanced": "TemporalCertifiedBalanced",
+	"completion_boundary_monitor": "TemporalModuleReturn",
+}
+
+
+def build_paired_ablation_dataset(
+	*,
+	paired_results_file: str | Path,
+	challenge_summary_file: str | Path,
+) -> dict[str, Any]:
+	"""Build the complete atomic and temporal ablation release."""
+
+	paired_path = Path(paired_results_file).expanduser().resolve()
+	challenge_path = Path(challenge_summary_file).expanduser().resolve()
+	paired = _read_json(paired_path)
+	challenge = _read_json(challenge_path)
+	_validate_paired_result(paired)
+	_validate_clean_success(challenge, label="challenge matrix")
+	atomic_rows, atomic_joint_count = _aggregate_atomic(paired)
+	temporal_rows, temporal_joint_count = _aggregate_temporal(paired)
+	challenge_count, challenge_success = _validate_challenge_matrix(challenge)
+	atomic_records, atomic_seed_results = _portable_atomic_ablation_records(paired)
+	temporal_records, temporal_breakdowns = _portable_temporal_ablation_records(paired)
+	paired_contrasts = {
+		"atomic": _paired_binary_contrasts(
+			atomic_records,
+			methods=ATOMIC_METHODS,
+			key_fields=("seed", "case_id"),
+		),
+		"temporal": _paired_binary_contrasts(
+			temporal_records,
+			methods=TEMPORAL_METHODS,
+			key_fields=("sample_id",),
+		),
+	}
+	return {
+		"schema_version": 1,
+		"artifact_kind": "gp2pl_paired_ablation_results",
+		"run_id": str(paired.get("run_id") or ""),
+		"atomic": atomic_rows,
+		"atomic_records": atomic_records,
+		"atomic_seed_results": atomic_seed_results,
+		"atomic_joint_action_case_count": atomic_joint_count,
+		"temporal": temporal_rows,
+		"temporal_records": temporal_records,
+		"temporal_breakdowns": temporal_breakdowns,
+		"paired_contrasts": paired_contrasts,
+		"temporal_joint_action_case_count": temporal_joint_count,
+		"challenges": {
+			"case_count": challenge_count,
+			"success_count": challenge_success,
+		},
+		"protocol": {
+			"registered_seeds": list(REGISTERED_SEEDS),
+			"num_workers": int(paired.get("num_workers") or 0),
+			"timeout_seconds": int(paired.get("timeout_seconds") or 0),
+			"jason_java_stack_size": str(
+				paired.get("jason_java_stack_size") or "",
+			),
+			"case_contract": dict(paired.get("case_contract") or {}),
+			"atomic_pairing": dict(paired.get("atomic_pairing") or {}),
+			"temporal_pairing": dict(paired.get("temporal_pairing") or {}),
+		},
+		"provenance": {
+			"paired_results_sha256": _sha256(paired_path),
+			"challenge_summary_sha256": _sha256(challenge_path),
+			"source_revision": dict(paired.get("source_revision") or {}),
+			"challenge_source_revision": dict(
+				challenge.get("source_revision") or {},
+			),
+			"method_source_equivalence": dict(
+				paired.get("method_source_equivalence") or {},
+			),
+			"derived_metric_correction": dict(
+				paired.get("derived_metric_correction") or {},
+			),
+		},
+	}
+
+
+def _portable_atomic_ablation_records(
+	paired: Mapping[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+	records: list[dict[str, Any]] = []
+	seed_results: list[dict[str, Any]] = []
+	for run_value in sorted(
+		paired.get("atomic_runs") or (),
+		key=lambda run: (int(run.get("seed") or 0), str(run.get("variant") or "")),
+	):
+		run = dict(run_value)
+		seed = int(run.get("seed") or 0)
+		variant = str(run.get("variant") or "")
+		method = str(run.get("method") or "")
+		run_records: list[dict[str, Any]] = []
+		for validation_value in dict(run.get("summary") or {}).get("validations") or ():
+			validation = dict(validation_value)
+			problem = Path(str(validation.get("problem_file") or "")).name
+			record = {
+				"seed": seed,
+				"variant": variant,
+				"method": method,
+				"case_id": f"{validation.get('domain')}:{problem}",
+				"domain": str(validation.get("domain") or ""),
+				"test": Path(problem).stem,
+				"status": str(validation.get("status") or ""),
+				"valid": _achievement_valid(validation),
+				"jason_success": validation.get("success") is True,
+				"val_attempted": validation.get("plan_verifier_attempted") is True,
+				"val_success": validation.get("plan_verifier_success") is True,
+				"timed_out": validation.get("timed_out") is True,
+				"duration_seconds": float(
+					validation.get("duration_seconds") or 0.0,
+				),
+				"action_count": validation.get("action_count"),
+				"observed_action_prefix_count": int(
+					validation.get("observed_action_prefix_count") or 0,
+				),
+				"input_fingerprint": str(
+					validation.get("input_fingerprint") or "",
+				),
+			}
+			records.append(record)
+			run_records.append(record)
+		seed_results.append(
+			{
+				"seed": seed,
+				"variant": variant,
+				"method": method,
+				"case_count": len(run_records),
+				"valid_count": sum(record["valid"] for record in run_records),
+				"status_counts": dict(
+					sorted(Counter(record["status"] for record in run_records).items()),
+				),
+			},
+		)
+	return records, seed_results
+
+
+def _portable_temporal_ablation_records(
+	paired: Mapping[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+	records: list[dict[str, Any]] = []
+	breakdowns: list[dict[str, Any]] = []
+	for run_value in sorted(
+		paired.get("temporal_runs") or (),
+		key=lambda run: str(run.get("variant") or ""),
+	):
+		run = dict(run_value)
+		variant = str(run.get("variant") or "")
+		method = str(run.get("method") or "")
+		run_records: list[dict[str, Any]] = []
+		for result_value in run.get("results") or ():
+			result = dict(result_value)
+			validation = dict(result.get("execution_validation") or {})
+			record = {
+				"variant": variant,
+				"method": method,
+				"sample_id": str(result.get("sample_id") or ""),
+				"domain": str(result.get("domain") or ""),
+				"profile": str(result.get("profile") or ""),
+				"status": str(result.get("status") or ""),
+				"valid": _temporal_valid(result),
+				"jason_status": str(result.get("jason_status") or ""),
+				"jason_timed_out": result.get("jason_timed_out") is True,
+				"duration_seconds": float(result.get("duration_seconds") or 0.0),
+				"action_count": result.get("action_count"),
+				"observed_action_prefix_count": int(
+					result.get("observed_action_prefix_count") or 0,
+				),
+				"controller_plan_count": result.get("controller_plan_count"),
+				"max_trigger_fanout": result.get("max_trigger_fanout"),
+				"trigger_fanout_scope": str(
+					result.get("trigger_fanout_scope") or "",
+				),
+				"val_attempted": validation.get("val_attempted") is True,
+				"val_success": validation.get("val_success") is True,
+				"gold_accepted": validation.get("gold_accepted") is True,
+				"prediction_accepted": validation.get("prediction_accepted") is True,
+				"input_fingerprint": str(result.get("input_fingerprint") or ""),
+				"atomic_library_fingerprint": str(
+					result.get("atomic_library_fingerprint") or "",
+				),
+				"dfa_fingerprint": str(result.get("dfa_fingerprint") or ""),
+				"controller_fingerprint": str(
+					result.get("controller_fingerprint") or "",
+				),
+			}
+			records.append(record)
+			run_records.append(record)
+		breakdowns.append(
+			{
+				"variant": variant,
+				"method": method,
+				"case_count": len(run_records),
+				"valid_count": sum(record["valid"] for record in run_records),
+				"status_counts": dict(
+					sorted(Counter(record["status"] for record in run_records).items()),
+				),
+				"domains": _temporal_group_breakdown(run_records, key="domain"),
+				"profiles": _temporal_group_breakdown(run_records, key="profile"),
+			},
+		)
+	return records, breakdowns
+
+
+def _temporal_group_breakdown(
+	records: Sequence[Mapping[str, Any]],
+	*,
+	key: str,
+) -> list[dict[str, Any]]:
+	groups: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
+	for record in records:
+		groups[str(record.get(key) or "")].append(record)
+	return [
+		{
+			key: value,
+			"case_count": len(group),
+			"valid_count": sum(record.get("valid") is True for record in group),
+		}
+		for value, group in sorted(groups.items())
+	]
+
+
+def _paired_binary_contrasts(
+	records: Sequence[Mapping[str, Any]],
+	*,
+	methods: Sequence[tuple[str, str]],
+	key_fields: Sequence[str],
+) -> list[dict[str, Any]]:
+	by_variant: dict[str, dict[tuple[Any, ...], bool]] = defaultdict(dict)
+	for record in records:
+		variant = str(record.get("variant") or "")
+		key = tuple(record.get(field) for field in key_fields)
+		if key in by_variant[variant]:
+			raise ValueError(f"duplicate paired outcome for {variant}: {key}")
+		by_variant[variant][key] = record.get("valid") is True
+	contrasts: list[dict[str, Any]] = []
+	for (left_variant, left_method), (right_variant, right_method) in zip(
+		methods,
+		methods[1:],
+	):
+		left = by_variant[left_variant]
+		right = by_variant[right_variant]
+		if set(left) != set(right):
+			raise ValueError(
+				f"paired contrast case sets differ: {left_variant}, {right_variant}",
+			)
+		both_valid = sum(left[key] and right[key] for key in left)
+		left_only = sum(left[key] and not right[key] for key in left)
+		right_only = sum(not left[key] and right[key] for key in left)
+		neither = len(left) - both_valid - left_only - right_only
+		contrasts.append(
+			{
+				"left_variant": left_variant,
+				"left_method": left_method,
+				"right_variant": right_variant,
+				"right_method": right_method,
+				"case_count": len(left),
+				"both_valid_count": both_valid,
+				"left_only_valid_count": left_only,
+				"right_only_valid_count": right_only,
+				"neither_valid_count": neither,
+				"valid_count_difference": right_only - left_only,
+				"valid_rate_difference": (
+					(right_only - left_only) / len(left) if left else 0.0
+				),
+				"exact_two_sided_p": _exact_paired_binary_p(left_only, right_only),
+			},
+		)
+	return contrasts
+
+
+def _exact_paired_binary_p(left_only: int, right_only: int) -> float:
+	discordant = int(left_only) + int(right_only)
+	if discordant == 0:
+		return 1.0
+	extreme = min(int(left_only), int(right_only))
+	tail = sum(math.comb(discordant, index) for index in range(extreme + 1))
+	return min(1.0, 2.0 * tail / (2**discordant))
 
 
 def parse_seed_file_assignments(values: Sequence[str]) -> tuple[tuple[int, Path], ...]:
@@ -1443,17 +1733,106 @@ def render_comparison_macros(result: Mapping[str, Any]) -> str:
 	"""Render aggregate challenge and joint-case macros for manuscript prose."""
 
 	challenges = dict(result["challenges"])
-	return "\n".join(
-		(
-			"% Auto-generated by scripts/generate_aaai_comparison_tables.py.",
-			f"\\newcommand{{\\ChallengeCaseCount}}{{{challenges['case_count']}}}",
-			f"\\newcommand{{\\ChallengeSuccessCount}}{{{challenges['success_count']}}}",
-			"\\newcommand{\\AtomicJointActionCaseCount}"
-			f"{{{result['atomic_joint_action_case_count']}}}",
-			"\\newcommand{\\TemporalJointActionCaseCount}"
-			f"{{{result['temporal_joint_action_case_count']}}}",
+	atomic_rows = tuple(dict(row) for row in result["atomic"])
+	temporal_rows = tuple(dict(row) for row in result["temporal"])
+	lines = [
+		"% Auto-generated by scripts/generate_aaai_comparison_tables.py.",
+		f"\\newcommand{{\\ChallengeCaseCount}}{{{challenges['case_count']}}}",
+		f"\\newcommand{{\\ChallengeSuccessCount}}{{{challenges['success_count']}}}",
+		"\\newcommand{\\AtomicJointActionCaseCount}"
+		f"{{{result['atomic_joint_action_case_count']}}}",
+		"\\newcommand{\\TemporalJointActionCaseCount}"
+		f"{{{result['temporal_joint_action_case_count']}}}",
+		f"\\newcommand{{\\AtomicAblationCaseCount}}{{{atomic_rows[0]['test_count']}}}",
+		f"\\newcommand{{\\TemporalAblationCaseCount}}{{{temporal_rows[0]['test_count']}}}",
+	]
+	for row in atomic_rows:
+		prefix = ATOMIC_MACRO_PREFIXES[str(row["variant"])]
+		lines.extend(
+			(
+				f"\\newcommand{{\\{prefix}ValidCount}}{{{row['valid_trace_count']}}}",
+				f"\\newcommand{{\\{prefix}FailureCount}}"
+				f"{{{int(row['test_count']) - int(row['valid_trace_count'])}}}",
+				f"\\newcommand{{\\{prefix}CoveredTargetCount}}"
+				f"{{{row['covered_target_count']}}}",
+				f"\\newcommand{{\\{prefix}BranchMean}}"
+				f"{{{_number(row['mean_branch_count'])}}}",
+				f"\\newcommand{{\\{prefix}LibraryKiBMean}}"
+				f"{{{_number(row['mean_library_kib'])}}}",
+			),
 		)
-	) + "\n"
+	for row in temporal_rows:
+		prefix = TEMPORAL_MACRO_PREFIXES[str(row["variant"])]
+		lines.extend(
+			(
+				f"\\newcommand{{\\{prefix}ValidCount}}{{{row['valid_trace_count']}}}",
+				f"\\newcommand{{\\{prefix}FailureCount}}"
+				f"{{{int(row['test_count']) - int(row['valid_trace_count'])}}}",
+				f"\\newcommand{{\\{prefix}ParTwoSeconds}}"
+				f"{{{_number(row['par2_seconds'])}}}",
+				f"\\newcommand{{\\{prefix}Fanout}}"
+				f"{{{row['maximum_trigger_fanout']}}}",
+			),
+		)
+	status_macro_suffixes = {
+		"jason_failed": "JasonFailedCount",
+		"jason_timeout": "JasonTimeoutCount",
+		"gold_dfa_rejected": "GoldDFARejectedCount",
+	}
+	for breakdown in result.get("temporal_breakdowns") or ():
+		prefix = TEMPORAL_MACRO_PREFIXES[str(breakdown["variant"])]
+		status_counts = dict(breakdown.get("status_counts") or {})
+		for status, suffix in status_macro_suffixes.items():
+			lines.append(
+				f"\\newcommand{{\\{prefix}{suffix}}}"
+				f"{{{int(status_counts.get(status, 0))}}}",
+			)
+	paired_contrasts = dict(result.get("paired_contrasts") or {})
+	contrast_macros = (
+		("atomic", "AtomicEvidenceToDirectValidGain"),
+		("atomic", "AtomicDirectToMaximumValidGain"),
+		("atomic", "AtomicMaximumToFullValidGain"),
+		("temporal", "TemporalUnprotectedToFlatValidGain"),
+		("temporal", "TemporalFlatToBalancedValidGain"),
+		("temporal", "TemporalBalancedToModuleReturnValidGain"),
+	)
+	contrast_indexes = {"atomic": 0, "temporal": 0}
+	for group, macro in contrast_macros:
+		rows = tuple(paired_contrasts.get(group) or ())
+		index = contrast_indexes[group]
+		contrast_indexes[group] += 1
+		if index < len(rows):
+			contrast = dict(rows[index])
+			macro_base = macro.removesuffix("ValidGain")
+			lines.append(
+				f"\\newcommand{{\\{macro}}}"
+				f"{{{int(contrast['valid_count_difference'])}}}",
+			)
+			lines.append(
+				f"\\newcommand{{\\{macro.replace('ValidGain', 'ExactP')}}}"
+				f"{{{_latex_probability(float(contrast['exact_two_sided_p']))}}}",
+			)
+			lines.append(
+				f"\\newcommand{{\\{macro_base}LeftOnlyValidCount}}"
+				f"{{{int(contrast['left_only_valid_count'])}}}",
+			)
+			lines.append(
+				f"\\newcommand{{\\{macro_base}RightOnlyValidCount}}"
+				f"{{{int(contrast['right_only_valid_count'])}}}",
+			)
+	atomic_by_variant = {str(row["variant"]): row for row in atomic_rows}
+	maximum = atomic_by_variant.get("maximal_certified_program")
+	full = atomic_by_variant.get("full")
+	if maximum is not None and full is not None:
+		lines.extend(
+			(
+				"\\newcommand{\\AtomicFullBranchReduction}"
+				f"{{{_number(float(maximum['mean_branch_count']) - float(full['mean_branch_count']))}}}",
+				"\\newcommand{\\AtomicFullLibraryKiBReduction}"
+				f"{{{_number(float(maximum['mean_library_kib']) - float(full['mean_library_kib']))}}}",
+			),
+		)
+	return "\n".join(lines) + "\n"
 
 
 def write_comparison_files(result: Mapping[str, Any], *, output_dir: str | Path) -> None:
@@ -1505,6 +1884,15 @@ def _number(value: object) -> str:
 		return "--"
 	number = float(value)
 	return str(int(number)) if number.is_integer() else f"{number:.1f}"
+
+
+def _latex_probability(value: float) -> str:
+	if value == 0.0:
+		return "0"
+	if value < 0.001:
+		mantissa, exponent = f"{value:.2e}".split("e")
+		return f"{mantissa} \\times 10^{{{int(exponent)}}}"
+	return f"{value:.3f}".rstrip("0").rstrip(".")
 
 
 def _read_json(path: str | Path) -> dict[str, Any]:
