@@ -768,6 +768,14 @@ most three actions, controlled utterances do not measure unrestricted
 natural-language robustness, and the end-to-end temporal matrix fixes one
 seed-0 atomic core.
 
+Close the section with generator-assisted domain onboarding as a bounded future
+extension. A pinned parameterized PDDL problem generator may create a finite
+training curriculum for a compatible generalized-planning provider, provided
+that generated problems validate against the domain and a disjoint held-out set
+is sealed first. Describe this as scaling evidence acquisition and domain
+onboarding, not as expanding the supported PDDL-times-LTLf fragment, proving
+representative sampling, or changing any compiler certificate.
+
 The Conclusion answers three questions only: what representation gap was
 closed, why the output can be executed by a BDI agent, and which temporal goals
 are certified. Do not repeat the implementation inventory.

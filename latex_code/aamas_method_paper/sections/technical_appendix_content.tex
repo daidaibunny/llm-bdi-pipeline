@@ -1670,6 +1670,20 @@ benchmark repositories are not represented as author-created code; supplied
 setup scripts retrieve them at recorded revisions and preserve their upstream
 terms.
 
+\paragraph{Generator-assisted domain onboarding.}
+For a future domain, a third-party PDDL problem generator may supply
+$\mathcal I_{\mathrm{train}}$ and $\mathcal I_{\mathrm{test}}$ before evidence
+extraction. Reproducibility requires the generator revision and digest,
+parameter ranges, random seeds, deterministic split rule, and complete output
+manifest with file digests.
+
+Every generated problem must parse against $D$, training and held-out content
+hashes must be disjoint, and the held-out set must be sealed before evidence
+learning. The generalized-planning backend receives only
+$\mathcal I_{\mathrm{train}}$; GP2PL receives its normalized evidence. A
+generator supplies coverage opportunities, not certificates, so every compiler
+gate remains unchanged.
+
 \begingroup
 \small
 \begin{verbatim}

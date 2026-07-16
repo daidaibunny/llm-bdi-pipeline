@@ -153,9 +153,17 @@ without relearning the core.}
 \label{fig:policy-lifting-example}
 \end{figure*}
 
-GP2PL makes three contributions. First, it turns singleton-goal policy evidence
-controllers that preserve earlier milestones while pursuing supported
-finite-trace temporal goals over the same core.
+\begin{samepage}
+GP2PL makes three contributions. First, it compiles singleton-goal evidence and
+PDDL schemas into an internally closed BDI core with modules for omitted
+producible subgoals.
+
+Second, it accepts only branches with certificates for binding, symbolic
+execution, achievement, completion effects, and progress.
+
+Third, it appends preservation-safe finite-trace controllers over the fixed
+core and monitors DFA progress after each primitive action.
+\end{samepage}
 
 The experiments separate component effects from complete-system behavior.
 Across \BenchmarkDomainCount{} domains, independently compiled atomic cores
@@ -195,6 +203,17 @@ formula syntax, but GP2PL does not provide complete action-strategy synthesis.
 Unsupported arithmetic, uncertified interference cycles, and progress guards
 without an applicable certified repair are rejected. The empirical results
 therefore do not imply arbitrary PDDL--\ltlf{} strategy synthesis.
+
+The input boundary nevertheless offers a practical route to future domains.
+When an established benchmark supplies a parameterized PDDL problem generator,
+as planning competitions have done \cite{Bacchus2001AIPS00}, its revision,
+parameters, and random seed can define a reproducible training curriculum.
+
+After reserving a disjoint held-out split and validating every generated
+problem against $D$, a compatible generalized-planning backend can learn
+evidence from $\mathcal I_{\mathrm{train}}$ for the unchanged GP2PL compiler.
+This scales evidence acquisition and domain onboarding, not the supported
+PDDL--\ltlf{} fragment or representative-coverage guarantees.
 
 \section{Conclusion}
 

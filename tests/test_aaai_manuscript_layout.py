@@ -366,6 +366,47 @@ def test_introduction_explains_blocks_before_using_symbolic_example() -> None:
 	assert "destination block is clear" in introduction_source
 	assert "F(\\mathit{on}" not in introduction_source
 	assert "GP2PL makes three contributions" in introduction_source
+	for contribution_marker in (
+		"First, it compiles singleton-goal evidence",
+		"Second, it accepts only branches",
+		"Third, it appends preservation-safe finite-trace controllers",
+	):
+		assert contribution_marker in introduction_source
+	assert "policy evidence\ncontrollers" not in introduction_source
+
+
+def test_generator_assisted_onboarding_is_bounded_by_the_existing_contract() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	background_source = (LATEX_ROOT / "sections/background.tex").read_text(
+		encoding="utf-8",
+	)
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	supplement_text = " ".join(supplement_source.split())
+	outline_source = (
+		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
+	).read_text(encoding="utf-8")
+	decisions_source = (
+		PROJECT_ROOT / "docs" / "research_pipeline_decisions.md"
+	).read_text(encoding="utf-8")
+
+	assert "parameterized PDDL problem generator" in main_source
+	assert "\\cite{Bacchus2001AIPS00}" in main_source
+	assert "disjoint held-out split" in main_source
+	assert "scales evidence acquisition and domain onboarding" in main_source
+	assert "not the supported\nPDDL--\\ltlf{} fragment" in main_source
+	assert "formal interface is agnostic" in background_source
+	for reproducibility_requirement in (
+		"generator revision and digest",
+		"complete output",
+		"content hashes must be disjoint",
+		"held-out set must be sealed before evidence learning",
+		"every compiler gate remains unchanged",
+	):
+		assert reproducibility_requirement in supplement_text
+	assert "generator-assisted domain onboarding" in outline_source
+	assert "pinned parameterized PDDL problem generator" in decisions_source
 
 
 def test_manuscript_typography_distinguishes_prose_code_and_formal_notation() -> None:
