@@ -217,6 +217,18 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 	transition_symbol = str(certificate.get("transition_symbol") or "").strip()
 	tree_root_symbol = str(certificate.get("tree_root_symbol") or "").strip()
 	done_symbol = str(certificate.get("done_symbol") or "").strip()
+	if role == "transition_repair_linear_entry":
+		ordered_leaf_symbols = tuple(certificate.get("ordered_leaf_symbols") or ())
+		expected_symbols = (*ordered_leaf_symbols, done_symbol)
+		return (
+			plan.trigger.symbol == transition_symbol
+			and bool(ordered_leaf_symbols)
+			and len(body) == len(expected_symbols)
+			and all(
+				_is_nullary_subgoal(step, symbol)
+				for step, symbol in zip(body, expected_symbols, strict=True)
+			)
+		)
 	if role == "transition_repair_tree_entry":
 		return (
 			len(body) == 2
@@ -232,14 +244,20 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 			and _is_nullary_subgoal(body[0], left_symbol)
 			and _is_nullary_subgoal(body[1], right_symbol)
 		)
-	if role == "transition_repair_tree_leaf_satisfied":
+	if role in {
+		"transition_repair_tree_leaf_satisfied",
+		"transition_repair_linear_leaf_satisfied",
+	}:
 		literal_atom = str(certificate.get("literal_atom") or "").strip()
 		literal_polarity = str(certificate.get("literal_polarity") or "positive")
 		expected_context = (
 			literal_atom if literal_polarity == "positive" else f"not {literal_atom}"
 		)
 		return bool(literal_atom) and expected_context in context and not body
-	if role == "transition_repair_tree_leaf_achievement":
+	if role in {
+		"transition_repair_tree_leaf_achievement",
+		"transition_repair_linear_leaf_achievement",
+	}:
 		literal_atom = str(certificate.get("literal_atom") or "").strip()
 		literal_polarity = str(certificate.get("literal_polarity") or "positive")
 		expected_context = (
@@ -247,17 +265,39 @@ def _guard_transition_plan_is_valid(plan, *, certificate: dict) -> bool:
 		)
 		achievement_symbol = str(certificate.get("achievement_symbol") or "").strip()
 		achievement_arguments = tuple(certificate.get("achievement_arguments") or ())
-		return (
-			bool(literal_atom)
-			and expected_context in context
-			and len(body) == 1
+		achievement_body_valid = (
+			bool(body)
 			and body[0].kind == "subgoal"
 			and body[0].symbol == achievement_symbol
 			and tuple(body[0].arguments or ()) == achievement_arguments
 		)
-	if role == "transition_repair_tree_done":
+		monitor_checkpoint_action = str(
+			certificate.get("monitor_checkpoint_action") or ""
+		).strip()
+		if monitor_checkpoint_action:
+			achievement_body_valid = (
+				achievement_body_valid
+				and len(body) == 2
+				and body[1].kind == "action"
+				and body[1].symbol == monitor_checkpoint_action
+				and not tuple(body[1].arguments or ())
+			)
+		else:
+			achievement_body_valid = achievement_body_valid and len(body) == 1
+		return (
+			bool(literal_atom)
+			and expected_context in context
+			and achievement_body_valid
+		)
+	if role in {
+		"transition_repair_tree_done",
+		"transition_repair_linear_done",
+	}:
 		return plan.trigger.symbol == done_symbol and not body
-	if role == "transition_repair_tree_replay":
+	if role in {
+		"transition_repair_tree_replay",
+		"transition_repair_linear_replay",
+	}:
 		return (
 			plan.trigger.symbol == done_symbol
 			and len(body) == 1

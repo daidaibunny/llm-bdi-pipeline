@@ -42,6 +42,7 @@ from .certified_effects import query_local_preservation_alias_plans
 from .certified_effects import negative_guard_establishment_alias_plans
 from .transition_repair_tree import TransitionRepairLiteral
 from .transition_repair_tree import compile_flat_transition_repair_controller
+from .transition_repair_tree import compile_linear_transition_repair_controller
 from .transition_repair_tree import compile_transition_repair_tree
 
 
@@ -54,6 +55,7 @@ class TemporalCompilerVariant(str, Enum):
 
 	DFA_AWARE_UNPROTECTED = "dfa_aware_unprotected"
 	CERTIFIED_FLAT = "certified_flat"
+	CERTIFIED_LINEAR = "certified_linear"
 	CERTIFIED_BALANCED = "certified_balanced"
 	COMPLETION_BOUNDARY_MONITOR = "completion_boundary_monitor"
 
@@ -64,6 +66,7 @@ class TemporalCompilerVariant(str, Enum):
 		return {
 			self.DFA_AWARE_UNPROTECTED: "Unprotected Serialization",
 			self.CERTIFIED_FLAT: "Certified Flat",
+			self.CERTIFIED_LINEAR: "Certified Linear",
 			self.CERTIFIED_BALANCED: "Certified Balanced",
 			self.COMPLETION_BOUNDARY_MONITOR: "Module-Return Monitor",
 		}[self]
@@ -114,6 +117,17 @@ def _temporal_compiler_settings(
 			certified_serialization=True,
 			controller_structure="flat",
 			controller_strategy="monitored_certified_flat_replay",
+			monitor_observation_boundary=(
+				TemporalMonitorObservationBoundary.PRIMITIVE_STEP
+			),
+			enforce_primitive_prefix_invariants=True,
+		)
+	if resolved == TemporalCompilerVariant.CERTIFIED_LINEAR:
+		return _TemporalCompilerSettings(
+			variant=resolved,
+			certified_serialization=True,
+			controller_structure="linear",
+			controller_strategy="monitored_certified_linear_body",
 			monitor_observation_boundary=(
 				TemporalMonitorObservationBoundary.PRIMITIVE_STEP
 			),
@@ -1029,6 +1043,17 @@ def _guard_transition_wrapper_plans(
 		)
 		if settings.controller_structure == "flat":
 			controller_compilation = compile_flat_transition_repair_controller(
+				transition_symbol=transition_name,
+				shared_context=shared_context,
+				repair_literals=repair_literals,
+				completion_context=completion_context,
+				certificate=certificate,
+				wrapper_mode=_DFA_GUARD_TRANSITION_WRAPPER_MODE,
+				controller_strategy=settings.controller_strategy,
+				monitor_checkpoint_action=monitor_checkpoint_action,
+			)
+		elif settings.controller_structure == "linear":
+			controller_compilation = compile_linear_transition_repair_controller(
 				transition_symbol=transition_name,
 				shared_context=shared_context,
 				repair_literals=repair_literals,

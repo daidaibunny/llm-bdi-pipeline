@@ -9,6 +9,7 @@ from plan_library import (
 )
 from plan_library.validation import build_library_validation_record
 from domain_level_planning.transition_repair_tree import TransitionRepairLiteral
+from domain_level_planning.transition_repair_tree import compile_linear_transition_repair_controller
 from domain_level_planning.transition_repair_tree import compile_transition_repair_tree
 from domain_level_planning.temporal_goal_appender import append_temporal_goal_to_library
 
@@ -122,6 +123,39 @@ def test_library_validation_accepts_runtime_monitored_dfa_product(tmp_path) -> N
 			transition_count=2,
 			plans_generated=len(updated.plans),
 			initial_belief_count=len(updated.initial_beliefs),
+		),
+	)
+
+	assert record.passed is True, record.warnings
+	assert all(record.checked_layers.values())
+
+
+def test_library_validation_accepts_certified_linear_controller() -> None:
+	linear = compile_linear_transition_repair_controller(
+		transition_symbol="g_query_1_trans_1",
+		shared_context=("query_1",),
+		repair_literals=(
+			TransitionRepairLiteral("left", "left", ()),
+			TransitionRepairLiteral("right", "right", ()),
+		),
+		completion_context=("query_1", "left", "right"),
+		certificate={"query_entry_proposition": "query_1"},
+	)
+	plan_library = PlanLibrary(
+		domain_name="generic",
+		initial_beliefs=("query_1",),
+		plans=linear.plans,
+	)
+
+	record = build_library_validation_record(
+		domain_name="generic",
+		plan_library=plan_library,
+		generation_summary=PlanGenerationSummary(
+			domain_name="generic",
+			dfa_count=1,
+			transition_count=1,
+			plans_generated=len(linear.plans),
+			initial_belief_count=1,
 		),
 	)
 

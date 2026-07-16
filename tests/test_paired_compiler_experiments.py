@@ -405,6 +405,7 @@ def test_temporal_pairing_checks_benchmark_library_and_dfa_hashes() -> None:
 	other_runs = (
 		{**base, "variant": "dfa_aware_unprotected"},
 		base,
+		{**base, "variant": "certified_linear"},
 		{**base, "variant": "certified_balanced"},
 		{**base, "variant": "completion_boundary_monitor"},
 	)

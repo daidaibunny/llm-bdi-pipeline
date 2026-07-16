@@ -14,6 +14,7 @@ from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
+from scripts.run_controller_structure_smoke_ablation import _paired_trace_equivalent
 from scripts.run_temporal_goal_benchmark_execution import (
 	benchmark_prediction,
 )
@@ -174,13 +175,36 @@ def test_controller_structure_metrics_excludes_support_helper_plan_fanout() -> N
 	assert metrics["max_trigger_fanout"] == 2
 	assert metrics["controller_context_literal_count"] == 6
 	assert metrics["controller_body_step_count"] == 4
+	assert metrics["max_controller_body_steps"] == 1
 	assert metrics["controller_asl_bytes"] > 0
 	assert [variant.display_name for variant in TemporalCompilerVariant] == [
 		"Unprotected Serialization",
 		"Certified Flat",
+		"Certified Linear",
 		"Certified Balanced",
 		"Module-Return Monitor",
 	]
+
+
+def test_controller_smoke_requires_cross_variant_trace_equivalence() -> None:
+	records = [
+		{
+			"size": 32,
+			"repeat": 1,
+			"variant": variant.value,
+			"action_count": 32,
+			"trace_sha256": "same-trace",
+		}
+		for variant in (
+			TemporalCompilerVariant.CERTIFIED_FLAT,
+			TemporalCompilerVariant.CERTIFIED_LINEAR,
+			TemporalCompilerVariant.CERTIFIED_BALANCED,
+		)
+	]
+
+	assert _paired_trace_equivalent(records) is True
+	records[-1]["trace_sha256"] = "different-trace"
+	assert _paired_trace_equivalent(records) is False
 
 
 def test_benchmark_prediction_preserves_predicate_and_numeric_atoms() -> None:

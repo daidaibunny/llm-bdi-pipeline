@@ -299,6 +299,23 @@ def test_temporal_compiler_variants_share_inputs_and_isolate_mechanisms(
 	assert any(plan.plan_name.endswith("_repair_1") for plan in certified_flat.plans)
 	assert not any("repair_1_2_dispatch" in plan.plan_name for plan in certified_flat.plans)
 
+	certified_linear = outputs[TemporalCompilerVariant.CERTIFIED_LINEAR]
+	assert any(
+		plan.plan_name.endswith("_repair_linear") for plan in certified_linear.plans
+	)
+	assert not any(
+		"repair_1_2_dispatch" in plan.plan_name for plan in certified_linear.plans
+	)
+	linear_entry = next(
+		plan
+		for plan in certified_linear.plans
+		if plan.plan_name.endswith("_repair_linear")
+	)
+	assert [step.symbol for step in linear_entry.body] == [
+		f"g_certified_linear_trans_1_repair_{index}_{index}"
+		for index in range(1, 3)
+	] + ["g_certified_linear_trans_1_done"]
+
 	balanced = outputs[TemporalCompilerVariant.CERTIFIED_BALANCED]
 	assert any("repair_1_2_dispatch" in plan.plan_name for plan in balanced.plans)
 	completion = outputs[TemporalCompilerVariant.COMPLETION_BOUNDARY_MONITOR]

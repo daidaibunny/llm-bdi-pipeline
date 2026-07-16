@@ -19,6 +19,7 @@ from plan_library.models import AgentSpeakTrigger
 _DEFAULT_WRAPPER_MODE = "dfa_guard_transition_replay"
 _DEFAULT_CONTROLLER_STRATEGY = "balanced_transition_repair_tree"
 _FLAT_CONTROLLER_STRATEGY = "monitored_certified_flat_replay"
+_LINEAR_CONTROLLER_STRATEGY = "monitored_certified_linear_body"
 
 
 @dataclass(frozen=True)
@@ -262,6 +263,181 @@ def compile_flat_transition_repair_controller(
 		transition_symbol=transition,
 		root_symbol=transition,
 		done_symbol=transition,
+		literal_count=len(literals),
+		tree_height=1,
+		controller_strategy=str(controller_strategy),
+	)
+
+
+def compile_linear_transition_repair_controller(
+	*,
+	transition_symbol: str,
+	shared_context: Sequence[str],
+	repair_literals: Sequence[TransitionRepairLiteral],
+	completion_context: Sequence[str],
+	certificate: Mapping[str, object],
+	wrapper_mode: str = _DEFAULT_WRAPPER_MODE,
+	controller_strategy: str = _LINEAR_CONTROLLER_STRATEGY,
+	monitor_checkpoint_action: str | None = None,
+) -> TransitionRepairTreeCompilation:
+	"""Compile a certified literal order into one sequential helper body.
+
+	This ablation retains the same occurrence-specific leaves and monitored replay
+	semantics as the balanced controller. Only the dispatch structure changes: the
+	transition entry calls every leaf in certified order before the done check.
+	"""
+
+	literals = tuple(repair_literals)
+	if not literals:
+		raise ValueError(
+			"linear_transition_repair_controller_requires_literal: negative-only "
+			"observation guards compile directly without a repair controller.",
+		)
+	transition = str(transition_symbol).strip()
+	if not transition:
+		raise ValueError("transition_symbol must not be empty")
+	shared = tuple(
+		dict.fromkeys(str(item).strip() for item in shared_context if str(item).strip())
+	)
+	completion = tuple(
+		dict.fromkeys(str(item).strip() for item in completion_context if str(item).strip())
+	)
+	done_symbol = f"{transition}_done"
+	leaf_symbols = tuple(
+		_range_symbol(transition, index, index)
+		for index in range(1, len(literals) + 1)
+	)
+	base_certificate = {
+		**dict(certificate),
+		"artifact_family": "temporal_goal_dfa_append",
+		"wrapper_mode": str(wrapper_mode),
+		"controller_strategy": str(controller_strategy),
+		"transition_symbol": transition,
+		"done_symbol": done_symbol,
+		"positive_literal_count": sum(
+			literal.polarity == "positive" for literal in literals
+		),
+		"negative_literal_count": sum(
+			literal.polarity == "negative" for literal in literals
+		),
+		"completion_context_checked": True,
+		"monitor_checkpoint_action": monitor_checkpoint_action,
+	}
+	plans: list[AgentSpeakPlan] = [
+		AgentSpeakPlan(
+			plan_name=f"{transition}_repair_linear",
+			trigger=AgentSpeakTrigger("achievement_goal", transition, ()),
+			context=shared,
+			body=tuple(
+				AgentSpeakBodyStep("subgoal", leaf_symbol, ())
+				for leaf_symbol in (*leaf_symbols, done_symbol)
+			),
+			binding_certificate=(
+				{
+					**base_certificate,
+					"wrapper_role": "transition_repair_linear_entry",
+					"ordered_leaf_symbols": list(leaf_symbols),
+				},
+			),
+		),
+	]
+	for literal_index, (literal, leaf_symbol) in enumerate(
+		zip(literals, leaf_symbols, strict=True),
+		start=1,
+	):
+		if literal.polarity not in {"positive", "negative"}:
+			raise ValueError(
+				"transition_repair_literal_polarity_invalid: expected positive or negative."
+			)
+		satisfied_context = (
+			literal.atom if literal.polarity == "positive" else f"not {literal.atom}"
+		)
+		unmet_context = (
+			f"not {literal.atom}" if literal.polarity == "positive" else literal.atom
+		)
+		leaf_certificate = {
+			**base_certificate,
+			"literal_index": literal_index,
+			"literal_atom": literal.atom,
+			"achievement_symbol": literal.achievement_symbol,
+			"achievement_arguments": list(literal.achievement_arguments),
+			"literal_polarity": literal.polarity,
+		}
+		plans.append(
+			AgentSpeakPlan(
+				plan_name=f"{leaf_symbol}_satisfied",
+				trigger=AgentSpeakTrigger("achievement_goal", leaf_symbol, ()),
+				context=(*shared, satisfied_context),
+				body=(),
+				binding_certificate=(
+					{
+						**leaf_certificate,
+						"wrapper_role": "transition_repair_linear_leaf_satisfied",
+					},
+				),
+			),
+		)
+		if literal.achievement_symbol:
+			plans.append(
+				AgentSpeakPlan(
+					plan_name=f"{leaf_symbol}_achieve",
+					trigger=AgentSpeakTrigger("achievement_goal", leaf_symbol, ()),
+					context=(*shared, unmet_context),
+					body=(
+						AgentSpeakBodyStep(
+							"subgoal",
+							literal.achievement_symbol,
+							literal.achievement_arguments,
+						),
+						*(
+							(AgentSpeakBodyStep("action", monitor_checkpoint_action, ()),)
+							if monitor_checkpoint_action
+							else ()
+						),
+					),
+					binding_certificate=(
+						{
+							**leaf_certificate,
+							"wrapper_role": (
+								"transition_repair_linear_leaf_achievement"
+							),
+						},
+					),
+				),
+			)
+	plans.extend(
+		(
+			AgentSpeakPlan(
+				plan_name=f"{done_symbol}_success",
+				trigger=AgentSpeakTrigger("achievement_goal", done_symbol, ()),
+				context=completion,
+				body=(),
+				binding_certificate=(
+					{
+						**base_certificate,
+						"wrapper_role": "transition_repair_linear_done",
+					},
+				),
+			),
+			AgentSpeakPlan(
+				plan_name=f"{done_symbol}_replay",
+				trigger=AgentSpeakTrigger("achievement_goal", done_symbol, ()),
+				context=shared,
+				body=(AgentSpeakBodyStep("subgoal", transition, ()),),
+				binding_certificate=(
+					{
+						**base_certificate,
+						"wrapper_role": "transition_repair_linear_replay",
+					},
+				),
+			),
+		)
+	)
+	return TransitionRepairTreeCompilation(
+		plans=tuple(plans),
+		transition_symbol=transition,
+		root_symbol=transition,
+		done_symbol=done_symbol,
 		literal_count=len(literals),
 		tree_height=1,
 		controller_strategy=str(controller_strategy),

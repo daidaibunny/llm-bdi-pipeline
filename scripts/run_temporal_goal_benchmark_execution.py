@@ -588,6 +588,10 @@ def controller_structure_metrics(
 			len(plan.context) for plan in query_plans
 		),
 		"controller_body_step_count": sum(len(plan.body) for plan in query_plans),
+		"max_controller_body_steps": max(
+			(len(plan.body) for plan in repair_controller_plans),
+			default=0,
+		),
 		"controller_asl_bytes": updated_asl_bytes - base_asl_bytes,
 	}
 
@@ -595,7 +599,11 @@ def controller_structure_metrics(
 def _is_transition_repair_controller_plan(plan: AgentSpeakPlan) -> bool:
 	return any(
 		str(certificate.get("wrapper_role") or "").startswith(
-			("transition_flat_", "transition_repair_tree_"),
+			(
+				"transition_flat_",
+				"transition_repair_linear_",
+				"transition_repair_tree_",
+			),
 		)
 		for certificate in plan.binding_certificate
 	)

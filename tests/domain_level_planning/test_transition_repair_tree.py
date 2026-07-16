@@ -4,6 +4,7 @@ from collections import Counter
 
 from domain_level_planning.transition_repair_tree import TransitionRepairLiteral
 from domain_level_planning.transition_repair_tree import compile_flat_transition_repair_controller
+from domain_level_planning.transition_repair_tree import compile_linear_transition_repair_controller
 from domain_level_planning.transition_repair_tree import compile_transition_repair_tree
 from plan_library.models import AgentSpeakBodyStep
 
@@ -177,6 +178,46 @@ def test_flat_transition_controller_uses_one_ordered_sibling_per_repair() -> Non
 	assert compilation.literal_count == 3
 	assert compilation.tree_height == 1
 	assert compilation.controller_strategy == "monitored_certified_flat_replay"
+
+
+def test_linear_transition_controller_calls_occurrence_leaves_in_certified_order() -> None:
+	literals = (
+		TransitionRepairLiteral("first", "first", ()),
+		TransitionRepairLiteral("second(X)", "second", ("X",)),
+		TransitionRepairLiteral(
+			"blocked",
+			"establish_not_blocked",
+			(),
+			polarity="negative",
+		),
+	)
+	compilation = compile_linear_transition_repair_controller(
+		transition_symbol="g_query_trans_1",
+		shared_context=("query", "obj_tp(X, item)"),
+		repair_literals=literals,
+		completion_context=("query", "not g_query_monitor_state_q0"),
+		certificate={"serialization_certificate": {"ordered_literal_indexes": [0, 1]}},
+	)
+
+	entry = compilation.plans[0]
+	assert entry.body == (
+		AgentSpeakBodyStep("subgoal", "g_query_trans_1_repair_1_1", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_trans_1_repair_2_2", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_trans_1_repair_3_3", ()),
+		AgentSpeakBodyStep("subgoal", "g_query_trans_1_done", ()),
+	)
+	negative_leaf = next(
+		plan
+		for plan in compilation.plans
+		if plan.plan_name == "g_query_trans_1_repair_3_3_achieve"
+	)
+	assert negative_leaf.context[-1] == "blocked"
+	assert negative_leaf.body == (
+		AgentSpeakBodyStep("subgoal", "establish_not_blocked", ()),
+	)
+	assert compilation.controller_strategy == "monitored_certified_linear_body"
+	assert compilation.literal_count == 3
+	assert compilation.tree_height == 1
 
 
 def test_balanced_tree_checkpoints_only_after_an_achievement_call() -> None:
