@@ -70,6 +70,27 @@ def test_figures_and_tables_use_flexible_aaai_placement_without_forced_flushes()
 		assert undersized_command not in combined_source
 
 
+def test_every_table_uses_the_full_htbp_placement_set() -> None:
+	table_pattern = re.compile(
+		r"\\begin\{(?P<environment>table\*?)\}"
+		r"(?:\[(?P<placement>[^]]*)])?",
+	)
+	tables: list[tuple[str, str, str | None]] = []
+	for source_path in _manuscript_sources():
+		source = source_path.read_text(encoding="utf-8")
+		tables.extend(
+			(
+				source_path.name,
+				match.group("environment"),
+				match.group("placement"),
+			)
+			for match in table_pattern.finditer(source)
+		)
+
+	assert tables
+	assert all(placement == "htbp" for _, _, placement in tables), tables
+
+
 def test_tables_use_at_least_nine_point_text_and_place_captions_below() -> None:
 	table_pattern = re.compile(
 		r"\\begin\{table\*?\}\[htbp](?P<body>.*?)\\end\{table\*?\}",
