@@ -537,9 +537,10 @@ binding, and Jason runtime fixed:
 
 For the final combined run, the shared atomic input is not copied from the
 long-running evidence batch. It is the seed-0 Full GP2PL output produced by
-the atomic stage of the same clean source revision. The evidence batch supplies
-only the MOOSE model and readable policy. This prevents libraries compiled at
-different repository revisions from entering a paired temporal comparison.
+the atomic stage of the same run and confirmed method-source equivalence class.
+The evidence batch supplies only the MOOSE model and readable policy. Exact
+atomic-library and controller-input hashes, rather than Git commit identity,
+prevent different semantic inputs from entering a paired temporal comparison.
 
 1. **Unprotected Serialization:** canonical within-edge serialization, the same
    MONA-derived DFA,
@@ -1380,7 +1381,7 @@ gold-DFA acceptance
 PAR-2 runtime
 action count on jointly solved cases
 controller plan count
-maximum trigger fan-out
+maximum transition-repair trigger fan-out
 ```
 
 Use the method names above directly. Do not replace them with numbered temporal
@@ -1403,9 +1404,11 @@ complete paired compiler result, the checked MOOSE arXiv-v1 Table-4 reference
 artifact, four-domain Raw MOOSE extension summaries explicitly assigned to
 seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, and
 the challenge summary. The script must fail rather than render a partial table
-when a method, seed, case, hash pairing, or clean-source condition is missing.
-Each input must identify a clean source commit, while commits may differ across
-independently executed experiment groups.
+when a method, seed, case, hash pairing, or source-equivalence condition is
+missing. Inputs normally identify clean source commits. A paired long run that
+spans commits instead retains every child revision and supplies a SHA-256-bound
+experiment-owner confirmation that method-defining code remained equivalent;
+the confirmation cannot be reused after any child revision record changes.
 The final generator must fail closed over the registered corpus rather than
 only compare methods with each other. It recomputes immutable identifier-set
 digests for all 1,228 achievement cases, all 1,228 temporal cases, the 868

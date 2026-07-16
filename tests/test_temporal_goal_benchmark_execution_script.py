@@ -132,7 +132,7 @@ def test_temporal_resume_requires_exact_case_inputs(tmp_path: Path) -> None:
 	assert load_completed_records((task,), compiler_variant=variant) == {}
 
 
-def test_controller_structure_metrics_measure_only_appended_query_plans() -> None:
+def test_controller_structure_metrics_excludes_support_helper_plan_fanout() -> None:
 	base_plan = AgentSpeakPlan(
 		"done_via_finish",
 		AgentSpeakTrigger("achievement_goal", "done", ("X",)),
@@ -145,12 +145,24 @@ def test_controller_structure_metrics_measure_only_appended_query_plans() -> Non
 			AgentSpeakTrigger("achievement_goal", "g_query_trans", ()),
 			("query",),
 			(AgentSpeakBodyStep("subgoal", "g_query_left", ()),),
+			binding_certificate=({"wrapper_role": "transition_flat_repair"},),
 		),
 		AgentSpeakPlan(
 			"g_query_trans_done",
 			AgentSpeakTrigger("achievement_goal", "g_query_trans", ()),
 			("query", "done(a)"),
 			(),
+			binding_certificate=({"wrapper_role": "transition_flat_done"},),
+		),
+		*(
+			AgentSpeakPlan(
+				f"g_query_support_{index}",
+				AgentSpeakTrigger("achievement_goal", "g_query_support", ()),
+				("query",),
+				(AgentSpeakBodyStep("action", f"support_{index}", ()),),
+				binding_certificate=({"wrapper_role": "preservation_support"},),
+			)
+			for index in range(3)
 		),
 	)
 	base = PlanLibrary(domain_name="tiny", plans=(base_plan,))
@@ -158,10 +170,10 @@ def test_controller_structure_metrics_measure_only_appended_query_plans() -> Non
 
 	metrics = controller_structure_metrics(base, updated)
 
-	assert metrics["controller_plan_count"] == 2
+	assert metrics["controller_plan_count"] == 5
 	assert metrics["max_trigger_fanout"] == 2
-	assert metrics["controller_context_literal_count"] == 3
-	assert metrics["controller_body_step_count"] == 1
+	assert metrics["controller_context_literal_count"] == 6
+	assert metrics["controller_body_step_count"] == 4
 	assert metrics["controller_asl_bytes"] > 0
 	assert [variant.display_name for variant in TemporalCompilerVariant] == [
 		"Unprotected Serialization",

@@ -9,6 +9,7 @@ import sys
 import pytest
 
 from scripts.generate_aaai_comparison_tables import build_comparison_dataset
+from scripts.generate_aaai_comparison_tables import child_revision_contract_sha256
 from scripts.generate_aaai_comparison_tables import render_atomic_table
 from scripts.generate_aaai_comparison_tables import render_external_table
 from scripts.generate_aaai_comparison_tables import render_temporal_table
@@ -646,6 +647,81 @@ def test_build_comparison_dataset_accepts_mixed_clean_source_revisions(
 	)
 
 	assert result["external"]
+
+
+def test_build_comparison_dataset_accepts_hash_bound_method_source_equivalence(
+	tmp_path: Path,
+) -> None:
+	paired = _paired_fixture()
+	paired["atomic_runs"][0]["summary"]["source_revision"] = {
+		"available": True,
+		"commit": "fedcba9876543210",
+		"tracked_changes": True,
+		"untracked_files": False,
+	}
+	paired["method_source_equivalence"] = {
+		"status": "confirmed",
+		"basis": "experiment_owner_confirmed_no_method_code_changes",
+		"child_revision_contract_sha256": child_revision_contract_sha256(paired),
+	}
+
+	result = build_comparison_dataset(
+		paired_results_file=_write_json(tmp_path / "paired.json", paired),
+		raw_moose_summaries=tuple(
+			(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+			for seed in range(5)
+		),
+		instance_reference_summary_file=_write_json(
+			tmp_path / "instances.json",
+			_instance_fixture(),
+		),
+		direct_temporal_summary_file=_write_json(
+			tmp_path / "direct.json",
+			_direct_fixture(),
+		),
+		challenge_summary_file=_write_json(
+			tmp_path / "challenge.json",
+			_challenge_fixture(),
+		),
+	)
+
+	assert result["atomic"]
+	assert result["provenance"]["method_source_equivalence"] == paired[
+		"method_source_equivalence"
+	]
+
+
+def test_build_comparison_dataset_rejects_stale_method_source_equivalence(
+	tmp_path: Path,
+) -> None:
+	paired = _paired_fixture()
+	paired["method_source_equivalence"] = {
+		"status": "confirmed",
+		"basis": "experiment_owner_confirmed_no_method_code_changes",
+		"child_revision_contract_sha256": child_revision_contract_sha256(paired),
+	}
+	paired["temporal_runs"][0]["source_revision"]["commit"] = "fedcba9876543210"
+
+	with pytest.raises(ValueError, match="does not cover child revisions"):
+		build_comparison_dataset(
+			paired_results_file=_write_json(tmp_path / "paired.json", paired),
+			raw_moose_summaries=tuple(
+				(seed, _write_json(tmp_path / f"raw-{seed}.json", _raw_fixture(seed)))
+				for seed in range(5)
+			),
+			instance_reference_summary_file=_write_json(
+				tmp_path / "instances.json",
+				_instance_fixture(),
+			),
+			direct_temporal_summary_file=_write_json(
+				tmp_path / "direct.json",
+				_direct_fixture(),
+			),
+			challenge_summary_file=_write_json(
+				tmp_path / "challenge.json",
+				_challenge_fixture(),
+			),
+		)
 
 
 def test_build_comparison_dataset_rejects_child_run_protocol_drift(

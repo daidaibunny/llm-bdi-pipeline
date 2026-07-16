@@ -48,6 +48,7 @@ from evaluation.temporal_benchmark import (  # noqa: E402
 	validate_temporal_goal_benchmark_bundle,
 )
 from evaluation.temporal_goal_validation import validate_execution_trace  # noqa: E402
+from plan_library.models import AgentSpeakPlan  # noqa: E402
 from plan_library.models import PlanLibrary  # noqa: E402
 from plan_library.rendering import render_plan_library_asl  # noqa: E402
 from scripts.run_full_test_jason_validation import (  # noqa: E402
@@ -561,19 +562,22 @@ def controller_structure_metrics(
 	base_library: PlanLibrary,
 	updated_library: PlanLibrary,
 ) -> dict[str, Any]:
-	"""Measure only query-local plans appended to an unchanged atomic library."""
+	"""Measure query-local plans and transition-repair controller fan-out."""
 
 	base_plan_count = len(base_library.plans)
 	if tuple(updated_library.plans[:base_plan_count]) != tuple(base_library.plans):
 		raise ValueError("temporal append changed or reordered the atomic plan prefix")
 	query_plans = tuple(updated_library.plans[base_plan_count:])
+	repair_controller_plans = tuple(
+		plan for plan in query_plans if _is_transition_repair_controller_plan(plan)
+	)
 	trigger_counts = Counter(
 		(
 			plan.trigger.event_type,
 			plan.trigger.symbol,
 			plan.trigger.arguments,
 		)
-		for plan in query_plans
+		for plan in repair_controller_plans
 	)
 	base_asl_bytes = len(render_plan_library_asl(base_library).encode("utf-8"))
 	updated_asl_bytes = len(render_plan_library_asl(updated_library).encode("utf-8"))
@@ -586,6 +590,15 @@ def controller_structure_metrics(
 		"controller_body_step_count": sum(len(plan.body) for plan in query_plans),
 		"controller_asl_bytes": updated_asl_bytes - base_asl_bytes,
 	}
+
+
+def _is_transition_repair_controller_plan(plan: AgentSpeakPlan) -> bool:
+	return any(
+		str(certificate.get("wrapper_role") or "").startswith(
+			("transition_flat_", "transition_repair_tree_"),
+		)
+		for certificate in plan.binding_certificate
+	)
 
 
 def benchmark_prediction(

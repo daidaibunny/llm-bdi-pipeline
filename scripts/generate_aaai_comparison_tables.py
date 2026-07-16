@@ -236,6 +236,12 @@ def build_comparison_dataset(
 		"provenance": {
 			"paired_results_file": str(paired_path),
 			"paired_results_sha256": _sha256(paired_path),
+			"method_source_equivalence": dict(
+				paired.get("method_source_equivalence") or {},
+			),
+			"derived_metric_correction": dict(
+				paired.get("derived_metric_correction") or {},
+			),
 			"raw_moose_extension_summaries": [
 				{
 					"seed": seed,
@@ -374,44 +380,88 @@ def _validate_paired_result(paired: Mapping[str, Any]) -> None:
 	expected_commit = str(
 		dict(paired.get("source_revision") or {}).get("commit") or "",
 	)
+	child_revisions_match = True
 	for run in paired.get("atomic_runs") or ():
 		summary = dict(dict(run).get("summary") or {})
-		_validate_child_source_revision(
+		child_revisions_match = _child_source_revision_matches(
 			summary,
-			label="atomic child run",
 			expected_commit=expected_commit,
-		)
+		) and child_revisions_match
 		_validate_jason_protocol(
 			dict(summary.get("settings") or {}),
 			label="atomic child run",
 		)
 	for run in paired.get("temporal_runs") or ():
 		run_payload = dict(run)
-		_validate_child_source_revision(
+		child_revisions_match = _child_source_revision_matches(
 			run_payload,
-			label="temporal child run",
 			expected_commit=expected_commit,
-		)
+		) and child_revisions_match
 		_validate_jason_protocol(
 			dict(run_payload.get("parameters") or {}),
 			label="temporal child run",
 			jason_timeout_key="jason_timeout_seconds",
 		)
+	if not child_revisions_match:
+		_validate_method_source_equivalence(paired)
 
 
-def _validate_child_source_revision(
+def _child_source_revision_matches(
 	payload: Mapping[str, Any],
 	*,
-	label: str,
 	expected_commit: str,
-) -> None:
+) -> bool:
 	revision = dict(payload.get("source_revision") or {})
-	if revision.get("tracked_changes") is not False or revision.get(
-		"untracked_files",
-	) is not False:
-		raise ValueError(f"{label} was not executed from a clean revision")
-	if str(revision.get("commit") or "") != expected_commit:
-		raise ValueError(f"{label} does not share the paired source revision")
+	return (
+		revision.get("tracked_changes") is False
+		and revision.get("untracked_files") is False
+		and str(revision.get("commit") or "") == expected_commit
+	)
+
+
+def child_revision_contract_sha256(paired: Mapping[str, Any]) -> str:
+	"""Hash every atomic and temporal child source-revision record."""
+
+	records: list[dict[str, Any]] = []
+	for run in paired.get("atomic_runs") or ():
+		run_payload = dict(run)
+		summary = dict(run_payload.get("summary") or {})
+		records.append(
+			{
+				"stage": "atomic",
+				"seed": int(run_payload.get("seed") or 0),
+				"variant": str(run_payload.get("variant") or ""),
+				"source_revision": dict(summary.get("source_revision") or {}),
+			},
+		)
+	for run in paired.get("temporal_runs") or ():
+		run_payload = dict(run)
+		records.append(
+			{
+				"stage": "temporal",
+				"variant": str(run_payload.get("variant") or ""),
+				"source_revision": dict(run_payload.get("source_revision") or {}),
+			},
+		)
+	encoded = json.dumps(
+		sorted(records, key=lambda item: (item["stage"], item.get("seed", -1), item["variant"])),
+		sort_keys=True,
+		separators=(",", ":"),
+	).encode("utf-8")
+	return hashlib.sha256(encoded).hexdigest()
+
+
+def _validate_method_source_equivalence(paired: Mapping[str, Any]) -> None:
+	equivalence = dict(paired.get("method_source_equivalence") or {})
+	if equivalence.get("status") != "confirmed" or equivalence.get("basis") != (
+		"experiment_owner_confirmed_no_method_code_changes"
+	):
+		raise ValueError(
+			"paired child revisions differ without confirmed method-source equivalence",
+		)
+	expected = child_revision_contract_sha256(paired)
+	if str(equivalence.get("child_revision_contract_sha256") or "") != expected:
+		raise ValueError("method-source equivalence does not cover child revisions")
 
 
 def _validate_jason_protocol(

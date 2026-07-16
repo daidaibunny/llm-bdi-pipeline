@@ -440,17 +440,27 @@ raw readable-policy hash and normalized evidence-program fingerprint for every
 method at a given seed and domain. Temporal pairing requires the same benchmark,
 atomic-library, and DFA fingerprints and the same sample set for every method.
 For the registered `--stage all` release, all temporal variants consume the
-seed-0 Full GP2PL libraries emitted earlier in that same run and source
-revision. They never consume ASL files opportunistically generated while the
+seed-0 Full GP2PL libraries emitted earlier in that same run and confirmed
+method-source equivalence class. They never consume ASL files opportunistically generated while the
 long-running evidence batch was in progress. A temporal-only diagnostic may use
 an explicit precompiled batch, but it is not substituted into the registered
 combined matrix.
+Git commit identity is provenance rather than a semantic pairing key. When a
+long run spans repository commits, the release keeps every original child
+revision record and requires a hash-bound experiment-owner confirmation that no
+method-defining code changed. That confirmation is valid only for the exact
+recorded child-revision set; evidence, atomic-library, benchmark, binding, DFA,
+case-set, resource, and controller pairing checks remain fail-closed.
 The DFA fingerprint covers the formula, atom binding, initial and accepting
 states, and guarded transition graph. It excludes conversion timings, artifact
 paths, and DOT rendering, which are provenance rather than paired semantic
 input. Each result separately records a controller fingerprint over the
 registered variant settings and generated query-local plans; controller
 fingerprints may differ and never substitute for the common DFA check.
+Maximum trigger fan-out is measured only over transition-repair controller
+plans: flat repair siblings, or balanced entry, range, leaf, done, and replay
+plans. Query-local preserving-branch and support-helper portfolios remain part
+of controller size but are excluded from this structural tree metric.
 An evidence failure blocks its dependent runs, and an incomplete pairing is
 persisted as an infrastructure failure in `paired_results.json`; it is not
 silently dropped or interpreted as method failure.
