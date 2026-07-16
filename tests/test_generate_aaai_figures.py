@@ -8,6 +8,7 @@ from typing import Callable
 
 import pytest
 from PIL import Image
+from PIL import ImageChops
 
 from scripts.generate_aaai_figures import ATOMIC_VARIANTS
 from scripts.generate_aaai_figures import BENCHMARK_GROUPS
@@ -153,6 +154,15 @@ def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_provenance(
 		assert figure.format == "PNG"
 		assert figure.size == (4200, 1700)
 		assert figure.info["dpi"] == pytest.approx((600.0, 600.0), abs=0.1)
+		difference = ImageChops.difference(
+			figure.convert("RGB"),
+			Image.new("RGB", figure.size, "white"),
+		).convert("L")
+		content_bounds = difference.point(
+			lambda value: 255 if value > 8 else 0,
+		).getbbox()
+		assert content_bounds is not None
+		assert figure.height - content_bounds[3] <= 72
 	assert output_file.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
 	assert FIGURE_DPI == 600
 	assert metadata["artifact_kind"] == "gp2pl_ablation_empirical_figure"
@@ -164,6 +174,8 @@ def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_provenance(
 	assert metadata["pixel_width"] == 4200
 	assert metadata["pixel_height"] == 1700
 	assert metadata["dpi"] == 600
+	assert metadata["manuscript_width_fraction"] == pytest.approx(2.0 / 3.0)
+	assert metadata["effective_minimum_text_size_points"] >= 7.0
 	assert metadata["color_mode"] == "colorblind-safe with redundant encodings"
 	assert metadata["atomic_focus_domain"] == "blocksworld-tower"
 
@@ -298,9 +310,11 @@ def test_manuscript_places_headline_results_in_main_and_details_in_supplement() 
 		"\\subsection{Questions and Comparisons}",
 	)
 	assert "\\IfFileExists{\\gpplfigurethreepath}" in evaluation_text
+	assert "\\begin{minipage}{0.667\\textwidth}" in evaluation_text
 	assert "\\includegraphics[width=\\textwidth]{\\gpplfigurethreepath}" in (
 		evaluation_text
 	)
+	assert "\\captionsetup{skip=2pt}" in evaluation_text
 	assert "\\label{fig:evaluation-summary}" in evaluation_text
 	for table_input in (
 		"\\input{sections/result_five_seed_atomic_table}",
