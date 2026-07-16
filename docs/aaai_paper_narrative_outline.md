@@ -90,8 +90,14 @@ second tuple or reuse one symbol for a different semantic role.
   signature, and binding constraints. `theta_q:Xbar_q->O_I` is the external
   object binding for the invoked instance,
   and `hat(tau)_q = (tau_q,theta_q)` is the bound query.
+- `Phi_syn` is the recursive `F`, strong-`X`, strong-`U`, conjunction, and
+  literal-negation input grammar; `Phi_bench` is the five-profile evaluation
+  family; and `Phi_cert(D,M_D)` is the certificate-accepted subset. Never call
+  these three scopes interchangeably "the supported fragment".
 - `D_q = <Q_q^dfa,2^AP_q,delta_q,q_q^0,F_q>` is the deterministic finite
-  automaton, `val_q` maps PDDL states to valuations over `AP_q`, and `d_q(z)` is
+  automaton. For the bound query, `val_q` maps a proposition to true exactly
+  when its `mu_q` predicate instance holds or its bounded integer equality has
+  the requested value after applying `theta_q`. `d_q(z)` is
   the shortest directed distance from state `z` to an accepting state. A guard
   `chi` induces signed obligation
   `O_chi = <P_chi^+,P_chi^->`; `Pi_{chi,i}` is the preservation portfolio for
@@ -379,6 +385,15 @@ released benchmark define the evaluated distribution rather than a required
 user syntax. Keep the frozen prompt and field-by-field schema in the Technical
 Supplement and public artifact.
 
+Before describing the automaton, give the compact grammar for `Phi_syn` and
+state that negation applies only directly to an atom. Define `Phi_bench` as the
+five registered profile schemas and `Phi_cert(D,M_D)` as the bound formulas
+whose required DFA progress obligations pass all compiler certificates. Parsing
+is not a planning-completeness claim. Put the full non-empty finite-trace
+satisfaction clauses for conjunction, strong Next, Eventually, and strong Until
+in the Technical Supplement. Define `val_q` for both bound PDDL predicates and
+bounded integer equalities.
+
 1. Validate the structured artifact fail-closed, meaning rejection rather than
    silent repair. Require the exact schema; exactly one atom-table entry for
    every formula symbol and no unused entry; PDDL catalogue membership; valid
@@ -386,6 +401,10 @@ Supplement and public artifact.
    equivalence is an evaluation oracle, not a deployment-time input requirement.
 2. Construct the deterministic automaton for validated lifted LTLf JSON with
    `ltlf2dfa` and MONA. Do not use an ordered-sequence approximation.
+   Explain that MONA may return several valuation cubes representing Boolean
+   alternatives. Each cube is compiled as one conjunctive guard; several cubes
+   are not one admitted disjunctive guard, and the monitor retains every original
+   cube even when same-source/same-target cubes share a certified objective.
 3. Give every DFA edge that strictly reduces graph distance to acceptance one
    transition controller guarded by the current query-local monitor state.
 4. Treat a conjunction on one edge as one achievement block whose literals

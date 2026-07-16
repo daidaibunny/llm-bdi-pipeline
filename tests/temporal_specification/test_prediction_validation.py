@@ -112,6 +112,47 @@ def test_validate_prediction_payload_accepts_numeric_equality() -> None:
 
 
 @pytest.mark.parametrize(
+	"formula",
+	(
+		"!(F(a0))",
+		"!!a0",
+	),
+)
+def test_validate_prediction_payload_rejects_non_literal_negation(formula: str) -> None:
+	expected = {
+		"sample_id": "tiny_1",
+		"declared_parameters": [{"name": "X", "pddl_type": "item"}],
+		"constraints": [],
+	}
+	payload = {
+		"schema_version": 1,
+		"sample_id": "tiny_1",
+		"temporal_logic": "LTLf",
+		"ltlf_formula": formula,
+		"atoms": [
+			{
+				"symbol": "a0",
+				"kind": "predicate",
+				"predicate": "ready",
+				"args": ["X"],
+			},
+		],
+		"declared_parameters": expected["declared_parameters"],
+		"constraints": [],
+		"status": "supported",
+	}
+
+	with pytest.raises(PredictionValidationError) as raised:
+		validate_prediction_payload(
+			payload,
+			expected_sample=expected,
+			catalog=CATALOG,
+		)
+
+	assert raised.value.code.value == "E_UNSUPPORTED_OPERATOR"
+
+
+@pytest.mark.parametrize(
 	("mutator", "error_code"),
 	[
 		(lambda payload: payload.update({"explanation": "extra"}), "E_JSON_FORMAT"),

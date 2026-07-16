@@ -56,11 +56,25 @@ patterns by rechecking their intended state after subsidiary plans return
 
 \subsection{Finite-Trace Temporal Goals}
 
-Linear temporal logic over finite traces (\ltlf{}) is interpreted over a finite
-state sequence
-\cite{DeGiacomoVardi2013}. Automata-theoretic planning uses a finite automaton
-to track temporal progress \cite{DeGiacomoRubin2018AutomataFOND}. We construct
-the deterministic finite automaton (DFA)
+Linear temporal logic over finite traces (\ltlf{}) is interpreted over a
+nonempty finite state sequence \cite{DeGiacomoVardi2013}. For proposition
+alphabet $AP_q$, the declared input language $\Phi_{\mathrm{syn}}$ is
+\[
+\begin{aligned}
+\ell &::= a\mid\neg a,\\
+\varphi &::= \ell\mid(\varphi\land\varphi)\mid F\varphi\mid X\varphi\\
+&\phantom{{}::={}}\mid(\varphi U\varphi),\qquad a\in AP_q.
+\end{aligned}
+\]
+Negation is restricted to atoms; the serialized syntax writes it as
+\texttt{!}. Both $X$ and $U$ have their strong finite-trace meanings. The
+evaluation family $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains
+instances of the five predeclared profiles in Sec.~\ref{sec:evaluation}.
+Membership in either set is not an action-strategy guarantee.
+
+Automata-theoretic planning uses a finite automaton to track temporal progress
+\cite{DeGiacomoRubin2018AutomataFOND}. We construct the deterministic finite
+automaton (DFA)
 $\mathcal D_q=\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle$
 with LTLf2DFA and MONA
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Here
@@ -82,10 +96,19 @@ conjunction and literal negation. A supported guard $\chi$ has normal form
 \mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle,
 \]
 where the signed transition obligation $\mathcal O_\chi$ separates positive
-achievements $P_\chi^+$ from atoms $P_\chi^-$ that must remain absent. A
-query-local monitor evaluates the DFA initially and after every successful
-primitive PDDL action. Disjunction, arbitrary arithmetic, and progress without
-a certified action strategy are outside this fragment.
+achievements $P_\chi^+$ from atoms $P_\chi^-$ that must remain absent. MONA may
+represent Boolean alternatives by several valuation cubes. GP2PL
+treats each cube as a separate conjunctive guard; several cubes are not one
+disjunctive guard, and the monitor continues to evaluate every original cube.
+An explicit disjunction inside one guard and strategy choice without a
+certificate remain unsupported. The certificate-dependent subset
+$\Phi_{\mathrm{cert}}(D,\mathcal M_D)\subseteq\Phi_{\mathrm{syn}}$ contains the
+validated bound formulas whose required DFA progress obligations admit the
+certificates below. The soundness claims apply to this subset; the empirical
+claims apply to accepted members of $\Phi_{\mathrm{bench}}$. A query-local
+monitor evaluates the DFA initially and after every successful primitive PDDL
+action. Arbitrary arithmetic and progress without a certified action strategy
+are outside this fragment.
 
 \subsection{Certified Compilation Problem}
 

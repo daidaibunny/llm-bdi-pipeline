@@ -15,6 +15,9 @@ from typing import Any
 from typing import Mapping
 from typing import Sequence
 
+from ltlf2dfa.ltlf import LTLfAtomic
+from ltlf2dfa.ltlf import LTLfFormula
+from ltlf2dfa.ltlf import LTLfNot
 from ltlf2dfa.parser.ltlf import LTLfParser
 
 from .errors import TranslationErrorCode
@@ -212,9 +215,28 @@ def _validate_formula_syntax(formula: str) -> None:
 			"Formula contains a symbol or operator outside a<number>, F, X, U, &, and !.",
 		)
 	try:
-		LTLfParser()(formula)
+		parsed_formula = LTLfParser()(formula)
 	except Exception as error:  # noqa: BLE001 - normalized into a stable model error.
 		_fail(TranslationErrorCode.E_LTLF_SYNTAX, f"Invalid LTLf syntax: {error}")
+	if any(
+		isinstance(node, LTLfNot) and not isinstance(node.f, LTLfAtomic)
+		for node in _walk_formula(parsed_formula)
+	):
+		_fail(
+			TranslationErrorCode.E_UNSUPPORTED_OPERATOR,
+			"Negation is supported only directly on one proposition atom.",
+		)
+
+
+def _walk_formula(formula: LTLfFormula) -> tuple[LTLfFormula, ...]:
+	children: list[LTLfFormula] = []
+	unary_child = getattr(formula, "f", None)
+	if isinstance(unary_child, LTLfFormula):
+		children.append(unary_child)
+	for child in getattr(formula, "formulas", ()):
+		if isinstance(child, LTLfFormula):
+			children.append(child)
+	return (formula, *(descendant for child in children for descendant in _walk_formula(child)))
 
 
 def _validate_atom(

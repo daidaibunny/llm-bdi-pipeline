@@ -450,8 +450,26 @@ numeric equality. The model MUST NOT add a problem-object `binding` field.
 
 ### Formula fragment
 
-Benchmark version 1 allows exactly `F`, `X`, `U`, `&`, and `!`. The five tested
-structures are:
+The declared syntactic language `Phi_syn` uses proposition symbols `a0`, `a1`,
+... and the grammar:
+
+```text
+literal ::= atom | !atom
+formula ::= literal
+          | (formula & formula)
+          | F(formula)
+          | X(formula)
+          | (formula U formula)
+```
+
+Negation is literal-only: `!` may apply directly to one proposition symbol, not
+to a temporal or conjunctive subformula. `X` is strong next and `U` is strong
+Until. Bare atoms are syntactically valid. Parsing a member of `Phi_syn` does
+not imply that the PDDL domain and atomic library provide a certified action
+strategy.
+
+The evaluated family `Phi_bench` is the subset instantiated from exactly five
+registered structures:
 
 ```text
 F(a0 & a1)
@@ -465,6 +483,14 @@ Disjunction, global, release, weak-next, implication, equivalence, and
 quantifiers are out of scope. This restriction matches the formulas generated
 by the local benchmark; it is not a claim about unrestricted LTLf.
 
+The certificate-dependent subset `Phi_cert(D, M_D)` contains validated bound
+formulas whose required distance-reducing DFA obligations all admit the
+binding, completion-effect, preservation, progress, and resource certificates
+used by the Temporal Query Compiler. End-to-end soundness is claimed for
+accepted members of `Phi_cert`; experimental coverage is reported over
+`Phi_bench`. These scopes must not be collapsed into one generic "supported
+fragment" label.
+
 ### Prediction-validation contract
 
 An implementation accepting a model response MUST check:
@@ -477,6 +503,8 @@ An implementation accepting a model response MUST check:
   predicate or numeric function;
 - integer values for `numeric_equality` atoms;
 - use of only the benchmark-version-1 operators;
+- literal-only negation, rejecting `!(F(a0))`, `!!a0`, and other negation over
+  compound formulas;
 - successful restricted-LTLf parsing before invoking LTLf2DFA/MONA.
 
 Only model-correctable JSON, syntax, vocabulary, arity, type, parameter,
@@ -1090,11 +1118,13 @@ The execution runner advances the same grounded deterministic finite automaton
 after the initial valuation and after every successful primitive PDDL action.
 Its query-local monitor-state and accepting beliefs select appended AgentSpeak
 transition controllers; they are not PDDL fluents or hidden replacements for
-the formula. For same-source/same-target MONA valuation cubes, controller
-construction may use only their common achievement objective, while monitor
-advancement still evaluates each complete original cube. Positive, negative,
-and numeric atoms therefore retain finite-trace semantics at primitive-action
-boundaries. This execution contract does not imply that the controller can find
+the formula. MONA may encode Boolean alternatives as several valuation cubes.
+Each cube is one conjunctive guard, not part of one admitted disjunctive guard.
+For same-source/same-target cubes, controller construction may use only their
+certified common achievement objective, while monitor advancement still
+evaluates every complete original cube. Positive, negative, and numeric atoms
+therefore retain finite-trace semantics at primitive-action boundaries. This
+execution contract does not imply that the controller can find
 an action strategy for every satisfiable PDDL-times-LTLf product. A syntactically
 and semantically valid query can still produce `execution_rejected` or timeout
 when the atomic library and schema certificates provide no applicable progress

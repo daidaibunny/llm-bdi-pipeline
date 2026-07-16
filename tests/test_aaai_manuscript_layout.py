@@ -191,6 +191,37 @@ def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None
 	assert "PDDL provenance in Sec. 4.3" in outline_source
 
 
+def test_manuscript_formalizes_ltlf_syntax_semantics_and_scope_boundaries() -> None:
+	background_source = (LATEX_ROOT / "sections/background.tex").read_text(
+		encoding="utf-8",
+	)
+	background_text = " ".join(background_source.split())
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+
+	for scope_symbol in (
+		"\\Phi_{\\mathrm{syn}}",
+		"\\Phi_{\\mathrm{bench}}",
+		"\\Phi_{\\mathrm{cert}}",
+	):
+		assert scope_symbol in background_source
+		assert scope_symbol in supplement_source
+	assert "Negation is restricted to atoms" in background_text
+	assert "several valuation cubes" in background_text
+	assert "not one disjunctive guard" in background_text
+	for semantic_clause in (
+		"\\xi,i\\models X\\varphi",
+		"\\xi,i\\models F\\varphi",
+		"\\xi,i\\models \\varphi U\\psi",
+	):
+		assert semantic_clause in supplement_source
+	assert "a\\in\\mathit{val}_q(s)" in method_source
+	assert "\\mu_q(a)=p(\\bar t)" in method_source
+	assert "\\mu_q(a)=[f(\\bar t)=c]" in method_source
+
+
 def test_main_and_supplement_use_the_approved_table_split() -> None:
 	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(

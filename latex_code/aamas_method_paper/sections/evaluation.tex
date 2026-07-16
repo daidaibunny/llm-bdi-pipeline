@@ -183,8 +183,12 @@ failure diagnostic.
 
 The temporal protocol exposes the public PDDL vocabulary, typed parameters, and
 binding constraints; it admits $F$, $X$, strong $U$, conjunction, and literal
-negation. The controlled source utterances specify the evaluation distribution,
-not a required user grammar. GPT-5.5 \cite{OpenAI2026GPT55SystemCard}
+negation. The five registered structures instantiate
+$\Phi_{\mathrm{bench}}$, rather than exhausting the recursive syntax
+$\Phi_{\mathrm{syn}}$; execution results include only queries admitted to
+$\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. The controlled source utterances specify
+the evaluation distribution, not a required user grammar. GPT-5.5
+\cite{OpenAI2026GPT55SystemCard}
 translates \TranslationInputCount{} deduplicated specifications. Every accepted
 translation satisfies the typed structural validation conditions and exact
 finite-trace language equivalence, yielding \TEGProblemCount{} bound queries.
