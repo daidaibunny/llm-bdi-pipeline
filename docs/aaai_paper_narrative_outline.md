@@ -940,7 +940,7 @@ Draft caption:
 
 ### Figure 2: Inside the Two GP2PL Compiler Stages
 
-Place this full-width `figure*[htbp]` immediately after Figure 1 so it is
+Place this full-width `figure*[t!]` immediately after Figure 1 so it is
 eligible for the top of page 2. Use a 7.0 by approximately 3.1 inch canvas with
 two adjacent panels separated by one thin rule. Panel (a) occupies 52 percent
 and panel (b) 48 percent. This is one continuous Blocks World example, not an

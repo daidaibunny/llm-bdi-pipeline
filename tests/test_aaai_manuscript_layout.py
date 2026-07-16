@@ -50,7 +50,11 @@ def test_figures_and_tables_use_flexible_aaai_placement_without_forced_flushes()
 		)
 
 	assert placements
-	assert all(placement == "htbp" for _filename, placement in placements), placements
+	assert all(
+		placement == "htbp" or (filename == "main.tex" and placement == "t!")
+		for filename, placement in placements
+	), placements
+	assert placements.count(("main.tex", "t!")) == 1
 	for forbidden_command in (
 		"\\clearpage",
 		"\\newpage",
@@ -238,7 +242,7 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 	assert example_position < figure_one_position
 	assert figure_one_position < figure_two_position < background_position
 	assert "\\begin{figure}[htbp]" in main_source
-	assert "\\begin{figure*}[htbp]" in main_source
+	assert "\\begin{figure*}[t!]" in main_source
 	assert "\\IfFileExists{\\gpplfigureonepath}" in main_source
 	assert "\\IfFileExists{\\gpplfiguretwopath}" in main_source
 	assert "Figure 1 artwork placeholder" in main_source
@@ -431,6 +435,8 @@ def test_figure_design_separates_target_generation_from_set_level_call_closure()
 	assert "internally closed atomic core" in caption_text
 	assert "balanced query-local controller" in caption_text
 	assert "without relearning the core" in caption_text
+	assert (LATEX_ROOT / "figures/fig2_policy_lifting.pdf").is_file()
+	assert "\\begin{figure*}[t!]" in main_source
 
 
 def test_manuscript_uses_library_centered_closure_and_selection_notation() -> None:
