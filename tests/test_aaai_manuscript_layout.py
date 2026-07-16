@@ -70,6 +70,27 @@ def test_figures_and_tables_use_flexible_aaai_placement_without_forced_flushes()
 		assert undersized_command not in combined_source
 
 
+def test_every_table_uses_the_full_htbp_placement_set() -> None:
+	table_pattern = re.compile(
+		r"\\begin\{(?P<environment>table\*?)\}"
+		r"(?:\[(?P<placement>[^]]*)])?",
+	)
+	tables: list[tuple[str, str, str | None]] = []
+	for source_path in _manuscript_sources():
+		source = source_path.read_text(encoding="utf-8")
+		tables.extend(
+			(
+				source_path.name,
+				match.group("environment"),
+				match.group("placement"),
+			)
+			for match in table_pattern.finditer(source)
+		)
+
+	assert tables
+	assert all(placement == "htbp" for _, _, placement in tables), tables
+
+
 def test_tables_use_at_least_nine_point_text_and_place_captions_below() -> None:
 	table_pattern = re.compile(
 		r"\\begin\{table\*?\}\[htbp](?P<body>.*?)\\end\{table\*?\}",
@@ -157,7 +178,9 @@ def test_result_floats_are_flushed_before_the_conclusion() -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 
 	barrier_position = main_source.index("\\FloatBarrier")
-	conclusion_position = main_source.index("\\section{Conclusion}")
+	conclusion_position = main_source.index(
+		"\\section{Conclusion and Future Work}",
+	)
 	bibliography_position = main_source.index("\\bibliography{references}")
 
 	assert barrier_position < conclusion_position < bibliography_position
@@ -345,6 +368,47 @@ def test_introduction_explains_blocks_before_using_symbolic_example() -> None:
 	assert "destination block is clear" in introduction_source
 	assert "F(\\mathit{on}" not in introduction_source
 	assert "GP2PL makes three contributions" in introduction_source
+	for contribution_marker in (
+		"First, it compiles singleton-goal evidence",
+		"Second, it accepts only branches",
+		"Third, it appends preservation-safe finite-trace controllers",
+	):
+		assert contribution_marker in introduction_source
+	assert "policy evidence\ncontrollers" not in introduction_source
+
+
+def test_generator_assisted_onboarding_is_bounded_by_the_existing_contract() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	background_source = (LATEX_ROOT / "sections/background.tex").read_text(
+		encoding="utf-8",
+	)
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	supplement_text = " ".join(supplement_source.split())
+	outline_source = (
+		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
+	).read_text(encoding="utf-8")
+	decisions_source = (
+		PROJECT_ROOT / "docs" / "research_pipeline_decisions.md"
+	).read_text(encoding="utf-8")
+
+	assert "parameterized PDDL problem generator" in main_source
+	assert "\\cite{Bacchus2001AIPS00}" in main_source
+	assert "disjoint held-out split" in main_source
+	assert "scales evidence acquisition and domain onboarding" in main_source
+	assert "not the supported\nPDDL--\\ltlf{} fragment" in main_source
+	assert "formal interface is agnostic" in background_source
+	for reproducibility_requirement in (
+		"generator revision and digest",
+		"complete output",
+		"content hashes must be disjoint",
+		"held-out set must be sealed before evidence learning",
+		"every compiler gate remains unchanged",
+	):
+		assert reproducibility_requirement in supplement_text
+	assert "generator-assisted domain onboarding" in outline_source
+	assert "pinned parameterized PDDL problem generator" in decisions_source
 
 
 def test_manuscript_typography_distinguishes_prose_code_and_formal_notation() -> None:
@@ -658,7 +722,7 @@ def test_manuscript_contains_no_silently_unescaped_latex_commands() -> None:
 		assert broken_command.search(source) is None, source_path
 
 
-def test_main_paper_states_the_complete_claim_boundary_in_one_limitations_section(
+def test_conclusion_and_future_work_preserves_the_complete_claim_boundary(
 ) -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
@@ -666,17 +730,18 @@ def test_main_paper_states_the_complete_claim_boundary_in_one_limitations_sectio
 	)
 	combined = " ".join((main_source + evaluation_source).split())
 
-	limitations_position = main_source.index(r"\section{Limitations}")
-	conclusion_position = main_source.index(r"\section{Conclusion}")
-	assert limitations_position < conclusion_position
+	assert r"\section{Conclusion and Future Work}" in main_source
+	assert r"\section{Limitations}" not in main_source
+	assert r"\section{Conclusion}" not in main_source
 	for required_boundary in (
-		"only experimentally instantiated evidence provider",
-		"candidate generation is incomplete",
+		"only instantiated evidence provider",
+		"candidate-construction grammar remains incomplete",
 		"type-compatible resolution",
-		"witness-backed short-horizon queries",
-		"controlled utterances",
+		"controlled, witness-backed queries",
 		"fixed seed-0 atomic core",
 		r"arbitrary PDDL--\ltlf{} strategy synthesis",
+		"Future work can use a parameterized PDDL problem generator",
+		"scales evidence acquisition and domain onboarding",
 	):
 		assert required_boundary in combined
 

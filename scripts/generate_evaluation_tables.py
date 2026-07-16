@@ -489,8 +489,8 @@ def render_profile_table(result: dict[str, Any]) -> str:
 			"DFAs have exactly the same finite-trace language. E2E valid counts all "
 			"1,228 bound queries and requires controller compilation, Jason "
 			"completion, neutral-goal VAL, and acceptance by both DFA trace oracles. "
-			"Medians are primitive actions and wall-clock seconds over bound queries; "
-			"the All row pools all profiles.}",
+			"Medians are primitive actions and wall-clock seconds; the All row is "
+			"pooled across all bound queries.}",
 			"\\label{tab:profile-results}",
 			"\\end{table}",
 		],

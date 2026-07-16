@@ -99,8 +99,13 @@ for each semantic object:
 
 - `D=<P,F,A,T>` is the typed planning domain; a problem instance is
   `I=<D,O_I,s_I^0,G_I>`, where `O_I` is its finite typed object set;
-  `I_train` is the finite training instance set. `E_raw` is one raw provider
-  artifact; `E_0` is the provider-normalized evidence program; and
+  `I_train` is the finite training instance set. It may be curated or produced
+  before evidence extraction by a pinned parameterized PDDL problem generator.
+  Generator revision, digest, parameters, seeds, output manifest, and a
+  content-disjoint sealed test split are then part of provenance. This scales
+  evidence acquisition and domain onboarding, not the compiler's supported
+  fragment or certificates. `E_raw` is one raw provider artifact;
+  `E_0` is the provider-normalized evidence program; and
   `E = CanonicalLift_D(E_0)` is its typed, alpha-normalized singleton-goal
   evidence program. Canonical lifting preserves repeated-variable sharing and
   PDDL domain constants; it does not relearn a first-order policy from ground

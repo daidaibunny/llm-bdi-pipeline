@@ -46,6 +46,8 @@ MINIMUM_LOG_SECONDS = 0.1
 FIGURE_WIDTH_INCHES = 7.0
 FIGURE_HEIGHT_INCHES = 4.25
 FROZEN_ABLATION_FIGURE_HEIGHT_INCHES = 17.0 / 6.0
+FROZEN_ABLATION_MANUSCRIPT_WIDTH_FRACTION = 2.0 / 3.0
+FROZEN_ABLATION_TEXT_POINTS = 10.5
 FIGURE_DPI = 600
 FIGURE_FONT_FAMILY = "Helvetica"
 MINIMUM_FIGURE_TEXT_POINTS = 9.0
@@ -1122,11 +1124,16 @@ def generate_frozen_ablation_figure(
 		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
 		"figure_width_inches": FIGURE_WIDTH_INCHES,
 		"figure_height_inches": FROZEN_ABLATION_FIGURE_HEIGHT_INCHES,
+		"manuscript_width_fraction": FROZEN_ABLATION_MANUSCRIPT_WIDTH_FRACTION,
 		"pixel_width": pixel_width,
 		"pixel_height": pixel_height,
 		"dpi": FIGURE_DPI,
 		"font_family": FIGURE_FONT_FAMILY,
-		"minimum_text_size_points": MINIMUM_FIGURE_TEXT_POINTS,
+		"minimum_text_size_points": FROZEN_ABLATION_TEXT_POINTS,
+		"effective_minimum_text_size_points": (
+			FROZEN_ABLATION_TEXT_POINTS
+			* FROZEN_ABLATION_MANUSCRIPT_WIDTH_FRACTION
+		),
 		"color_mode": FIGURE_COLOR_MODE,
 		"panel_contract": (
 			"affected-domain atomic coverage matrix; full paired Tower atomic "
@@ -1744,15 +1751,15 @@ def _plot_five_seed_runtime_groups(axis: Any, dataset: Mapping[str, Any]) -> Non
 def _render_frozen_ablation_figure(dataset: Mapping[str, Any]) -> bytes:
 	rc_parameters = {
 		"font.family": FIGURE_FONT_FAMILY,
-		"font.size": MINIMUM_FIGURE_TEXT_POINTS,
+		"font.size": FROZEN_ABLATION_TEXT_POINTS,
 		"font.weight": "normal",
-		"axes.titlesize": MINIMUM_FIGURE_TEXT_POINTS,
+		"axes.titlesize": FROZEN_ABLATION_TEXT_POINTS,
 		"axes.titleweight": "normal",
-		"axes.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"axes.labelsize": FROZEN_ABLATION_TEXT_POINTS,
 		"axes.labelweight": "normal",
-		"xtick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
-		"ytick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
-		"legend.fontsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"xtick.labelsize": FROZEN_ABLATION_TEXT_POINTS,
+		"ytick.labelsize": FROZEN_ABLATION_TEXT_POINTS,
+		"legend.fontsize": FROZEN_ABLATION_TEXT_POINTS,
 		"axes.edgecolor": COLORS["gray"],
 		"axes.linewidth": 0.5,
 		"text.color": COLORS["text"],
@@ -1771,10 +1778,10 @@ def _render_frozen_ablation_figure(dataset: Mapping[str, Any]) -> bytes:
 		focus_axis = figure.add_subplot(grid[0, 1])
 		temporal_axis = figure.add_subplot(grid[0, 2])
 		figure.subplots_adjust(
-			left=0.115,
-			right=0.99,
+			left=0.15,
+			right=0.965,
 			top=0.915,
-			bottom=0.215,
+			bottom=0.145,
 			wspace=0.42,
 		)
 		_plot_atomic_domain_matrix(atomic_axis, dataset)
@@ -1851,7 +1858,7 @@ def _plot_atomic_domain_matrix(axis: Any, dataset: Mapping[str, Any]) -> None:
 	axis.grid(which="minor", color="white", linewidth=0.8)
 	axis.tick_params(which="minor", bottom=False, left=False)
 	axis.tick_params(axis="both", length=0, pad=2.0)
-	axis.set_title("(a) Atomic coverage by domain (%)", loc="left", pad=3.0)
+	axis.set_title("(a) Atomic coverage (%)", loc="left", pad=3.0)
 	for spine in axis.spines.values():
 		spine.set_visible(False)
 

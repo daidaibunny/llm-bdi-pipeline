@@ -21,8 +21,11 @@ continuous change are excluded. A problem instance is
 $I=\langle D,O_I,s_I^0,G_I\rangle$, where $O_I$ is its finite typed object set,
 $s_I^0$ its initial state, and $G_I$ its PDDL achievement condition. A
 generalized-planning task supplies finite training and test instance sets that
-share $D$. MOOSE applies classical goal-regression
-ideas \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton
+share $D$. The formal interface is agnostic to whether those finite sets are
+curated or produced by a parameterized problem generator; their provenance and
+separation remain part of the experimental protocol. MOOSE applies classical
+goal-regression ideas
+\cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton
 goal conditions and
 lifts the resulting plans into first-order condition-to-macro rules
 \cite{Chen2026Moose}. We treat these rules as evidence: they demonstrate
