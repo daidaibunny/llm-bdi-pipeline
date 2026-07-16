@@ -22,9 +22,12 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.patches import Rectangle  # noqa: E402
 from matplotlib.ticker import FixedLocator  # noqa: E402
 from matplotlib.ticker import FuncFormatter  # noqa: E402
+from matplotlib.ticker import NullLocator  # noqa: E402
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -42,11 +45,13 @@ REGISTERED_JAVA_STACK_SIZE = "64m"
 MINIMUM_LOG_SECONDS = 0.1
 FIGURE_WIDTH_INCHES = 7.0
 FIGURE_HEIGHT_INCHES = 4.25
+FROZEN_ABLATION_FIGURE_HEIGHT_INCHES = 17.0 / 6.0
 FIGURE_DPI = 600
 FIGURE_FONT_FAMILY = "Helvetica"
 MINIMUM_FIGURE_TEXT_POINTS = 9.0
 FIGURE_COLOR_MODE = "colorblind-safe with redundant encodings"
 TEMPORAL_MARKER_SECONDS = (1.0, 10.0, 100.0, 1800.0)
+ATOMIC_FOCUS_DOMAIN = "blocksworld-tower"
 
 DOMAIN_ORDER = (
 	"barman",
@@ -280,6 +285,74 @@ def build_frozen_ablation_figure_dataset(
 			"coverage_sd": statistics.stdev(coverage_values),
 		}
 
+	atomic_domain_variant_coverage: dict[str, dict[str, float]] = {}
+	for domain in DOMAIN_ORDER:
+		atomic_domain_variant_coverage[domain] = {}
+		for variant, _method in ATOMIC_VARIANTS:
+			domain_records = tuple(
+				row for row in atomic_by_variant[variant] if row["domain"] == domain
+			)
+			if not domain_records:
+				raise ValueError(f"atomic record matrix has no {variant} {domain}")
+			atomic_domain_variant_coverage[domain][variant] = (
+				100.0
+				* sum(row["valid"] is True for row in domain_records)
+				/ len(domain_records)
+			)
+	atomic_affected_domains = [
+		domain
+		for domain in DOMAIN_ORDER
+		if len(
+			{
+				round(value, 10)
+				for value in atomic_domain_variant_coverage[domain].values()
+			},
+		)
+		> 1
+	]
+	atomic_unchanged_domains = [
+		domain for domain in DOMAIN_ORDER if domain not in atomic_affected_domains
+	]
+	atomic_unchanged_variant_coverage: dict[str, float] = {}
+	for variant, _method in ATOMIC_VARIANTS:
+		unchanged_records = tuple(
+			row
+			for row in atomic_by_variant[variant]
+			if row["domain"] in atomic_unchanged_domains
+		)
+		if unchanged_records:
+			atomic_unchanged_variant_coverage[variant] = (
+				100.0
+				* sum(row["valid"] is True for row in unchanged_records)
+				/ len(unchanged_records)
+			)
+
+	focus_records = tuple(
+		row for row in atomic_records if row["domain"] == ATOMIC_FOCUS_DOMAIN
+	)
+	if not focus_records:
+		raise ValueError(f"atomic focus domain is absent: {ATOMIC_FOCUS_DOMAIN}")
+	focus_horizon_seconds = max(
+		MINIMUM_LOG_SECONDS,
+		max(float(row["duration_seconds"]) for row in focus_records),
+	)
+	atomic_focus_curves: dict[str, dict[str, Any]] = {}
+	for variant, _method in ATOMIC_VARIANTS:
+		variant_records = tuple(
+			row for row in focus_records if row["variant"] == variant
+		)
+		x_values, y_values = _cumulative_frozen_valid_fraction(
+			variant_records,
+			timeout_seconds=focus_horizon_seconds,
+		)
+		atomic_focus_curves[variant] = {
+			"x_seconds": x_values,
+			"solved_percent": y_values,
+			"sample_count": len(variant_records),
+			"solved_count": sum(row["valid"] is True for row in variant_records),
+			"final_percent": y_values[-1],
+		}
+
 	temporal_records = tuple(dict(row) for row in payload["temporal_records"])
 	temporal_curves: dict[str, dict[str, Any]] = {}
 	for variant, _method in TEMPORAL_VARIANTS:
@@ -307,6 +380,13 @@ def build_frozen_ablation_figure_dataset(
 			or {},
 		),
 		"atomic_domain_coverage": atomic_domain_coverage,
+		"atomic_domain_variant_coverage": atomic_domain_variant_coverage,
+		"atomic_affected_domains": atomic_affected_domains,
+		"atomic_unchanged_domains": atomic_unchanged_domains,
+		"atomic_unchanged_variant_coverage": atomic_unchanged_variant_coverage,
+		"atomic_focus_domain": ATOMIC_FOCUS_DOMAIN,
+		"atomic_focus_curves": atomic_focus_curves,
+		"atomic_focus_horizon_seconds": focus_horizon_seconds,
 		"atomic_tradeoff_summary": atomic_tradeoff_summary,
 		"temporal_curves": temporal_curves,
 		"atomic_case_count": atomic_case_count_per_seed * len(REGISTERED_SEEDS),
@@ -568,7 +648,7 @@ def _temporal_record_matrix(
 def _cumulative_frozen_valid_fraction(
 	records: Sequence[Mapping[str, Any]],
 	*,
-	timeout_seconds: int,
+	timeout_seconds: float | int,
 ) -> tuple[list[float], list[float]]:
 	if not records:
 		raise ValueError("frozen temporal matrix has no query records")
@@ -1017,7 +1097,7 @@ def generate_frozen_ablation_figure(
 	output_path.parent.mkdir(parents=True, exist_ok=True)
 	output_path.write_bytes(png_bytes)
 	pixel_width = round(FIGURE_WIDTH_INCHES * FIGURE_DPI)
-	pixel_height = round(FIGURE_HEIGHT_INCHES * FIGURE_DPI)
+	pixel_height = round(FROZEN_ABLATION_FIGURE_HEIGHT_INCHES * FIGURE_DPI)
 	metadata = {
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_ablation_empirical_figure",
@@ -1031,11 +1111,17 @@ def generate_frozen_ablation_figure(
 		"atomic_domain_count": len(DOMAIN_ORDER),
 		"atomic_variant_count": len(ATOMIC_VARIANTS),
 		"atomic_case_count": int(dataset["atomic_case_count"]),
+		"atomic_affected_domain_count": len(dataset["atomic_affected_domains"]),
+		"atomic_unchanged_domain_count": len(dataset["atomic_unchanged_domains"]),
+		"atomic_focus_domain": str(dataset["atomic_focus_domain"]),
+		"atomic_focus_case_count": int(
+			next(iter(dict(dataset["atomic_focus_curves"]).values()))["sample_count"],
+		),
 		"temporal_variant_count": len(TEMPORAL_VARIANTS),
 		"temporal_case_count": int(dataset["temporal_case_count"]),
 		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
 		"figure_width_inches": FIGURE_WIDTH_INCHES,
-		"figure_height_inches": FIGURE_HEIGHT_INCHES,
+		"figure_height_inches": FROZEN_ABLATION_FIGURE_HEIGHT_INCHES,
 		"pixel_width": pixel_width,
 		"pixel_height": pixel_height,
 		"dpi": FIGURE_DPI,
@@ -1043,8 +1129,8 @@ def generate_frozen_ablation_figure(
 		"minimum_text_size_points": MINIMUM_FIGURE_TEXT_POINTS,
 		"color_mode": FIGURE_COLOR_MODE,
 		"panel_contract": (
-			"paired domain coverage; atomic coverage-size tradeoff; "
-			"temporal cumulative valid-trace coverage"
+			"affected-domain atomic coverage matrix; full paired Tower atomic "
+			"time-to-valid coverage; all-query temporal time-to-valid coverage"
 		),
 	}
 	_write_json(output_path.with_suffix(".metadata.json"), metadata)
@@ -1677,28 +1763,22 @@ def _render_frozen_ablation_figure(dataset: Mapping[str, Any]) -> bytes:
 	}
 	with matplotlib.rc_context(rc_parameters):
 		figure = plt.figure(
-			figsize=(FIGURE_WIDTH_INCHES, FIGURE_HEIGHT_INCHES),
+			figsize=(FIGURE_WIDTH_INCHES, FROZEN_ABLATION_FIGURE_HEIGHT_INCHES),
 			facecolor="white",
 		)
-		grid = figure.add_gridspec(
-			2,
-			2,
-			width_ratios=(1.12, 1.0),
-			height_ratios=(0.92, 1.08),
-		)
-		atomic_axis = figure.add_subplot(grid[:, 0])
-		tradeoff_axis = figure.add_subplot(grid[0, 1])
-		temporal_axis = figure.add_subplot(grid[1, 1])
+		grid = figure.add_gridspec(1, 3, width_ratios=(1.24, 1.0, 1.12))
+		atomic_axis = figure.add_subplot(grid[0, 0])
+		focus_axis = figure.add_subplot(grid[0, 1])
+		temporal_axis = figure.add_subplot(grid[0, 2])
 		figure.subplots_adjust(
-			left=0.17,
-			right=0.98,
-			top=0.94,
-			bottom=0.14,
+			left=0.115,
+			right=0.99,
+			top=0.915,
+			bottom=0.215,
 			wspace=0.42,
-			hspace=0.68,
 		)
-		_plot_atomic_coverage(atomic_axis, dataset)
-		_plot_atomic_tradeoff(tradeoff_axis, dataset)
+		_plot_atomic_domain_matrix(atomic_axis, dataset)
+		_plot_atomic_focus_curve(focus_axis, dataset)
 		_plot_temporal_curve(temporal_axis, dataset)
 		buffer = io.BytesIO()
 		figure.savefig(
@@ -1714,6 +1794,159 @@ def _render_frozen_ablation_figure(dataset: Mapping[str, Any]) -> bytes:
 		)
 		plt.close(figure)
 	return buffer.getvalue()
+
+
+def _plot_atomic_domain_matrix(axis: Any, dataset: Mapping[str, Any]) -> None:
+	coverage = dict(dataset["atomic_domain_variant_coverage"])
+	affected_domains = list(dataset["atomic_affected_domains"])
+	unchanged_domains = list(dataset["atomic_unchanged_domains"])
+	unchanged_coverage = dict(dataset["atomic_unchanged_variant_coverage"])
+	row_keys: list[str] = list(affected_domains)
+	row_labels = [_short_domain_label(domain) for domain in affected_domains]
+	if unchanged_domains:
+		row_keys.append("__unchanged__")
+		row_labels.append(f"Other {len(unchanged_domains)}")
+	matrix: list[list[float]] = []
+	for row_key in row_keys:
+		matrix.append(
+			[
+				float(
+					unchanged_coverage[variant]
+					if row_key == "__unchanged__"
+					else coverage[row_key][variant],
+				)
+				for variant, _method in ATOMIC_VARIANTS
+			],
+		)
+	color_map = LinearSegmentedColormap.from_list(
+		"gp2pl_coverage",
+		("#FFFFFF", "#D6EAF5", "#6BAED6", COLORS["blue"]),
+	)
+	axis.imshow(matrix, cmap=color_map, vmin=0.0, vmax=100.0, aspect="auto")
+	for row_index, values in enumerate(matrix):
+		for column_index, value in enumerate(values):
+			label = f"{value:.0f}" if abs(value - round(value)) < 0.05 else f"{value:.1f}"
+			axis.text(
+				column_index,
+				row_index,
+				label,
+				ha="center",
+				va="center",
+				color="white" if value >= 72.0 else COLORS["text"],
+			)
+	axis.add_patch(
+		Rectangle(
+			(2.5, -0.5),
+			1.0,
+			len(row_keys),
+			fill=False,
+			edgecolor=COLORS["blue"],
+			linewidth=1.0,
+		),
+	)
+	axis.set_xticks(range(len(ATOMIC_VARIANTS)), labels=("Evid.", "Direct", "Max.", "Full"))
+	axis.set_yticks(range(len(row_labels)), labels=row_labels)
+	axis.set_xticks([index - 0.5 for index in range(1, len(ATOMIC_VARIANTS))], minor=True)
+	axis.set_yticks([index - 0.5 for index in range(1, len(row_labels))], minor=True)
+	axis.grid(which="minor", color="white", linewidth=0.8)
+	axis.tick_params(which="minor", bottom=False, left=False)
+	axis.tick_params(axis="both", length=0, pad=2.0)
+	axis.set_title("(a) Atomic coverage by domain (%)", loc="left", pad=3.0)
+	for spine in axis.spines.values():
+		spine.set_visible(False)
+
+
+def _plot_atomic_focus_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
+	curves = dict(dataset["atomic_focus_curves"])
+	horizon = float(dataset["atomic_focus_horizon_seconds"])
+	for variant in ("maximal_certified_program", "full"):
+		color, marker = ATOMIC_STYLES[variant]
+		line_style = "--" if variant == "maximal_certified_program" else "-"
+		curve = dict(curves[variant])
+		axis.step(
+			curve["x_seconds"],
+			curve["solved_percent"],
+			where="post",
+			color=color,
+			linestyle=line_style,
+			linewidth=1.05,
+			label=ATOMIC_FIGURE_LABELS[variant],
+		)
+		checkpoints = tuple(
+			value for value in (5.0, 10.0, 15.0, 20.0) if value <= horizon
+		)
+		if checkpoints:
+			axis.plot(
+				checkpoints,
+				_step_values_at(
+					curve["x_seconds"],
+					curve["solved_percent"],
+					checkpoints,
+				),
+				linestyle="none",
+				marker=marker,
+				markersize=2.6,
+				markerfacecolor=color,
+				markeredgecolor="white",
+				markeredgewidth=0.3,
+			)
+	all_focus_records = sum(
+		int(curves[variant]["sample_count"]) for variant, _method in ATOMIC_VARIANTS
+	)
+	minimum_duration = min(
+		float(value)
+		for variant, _method in ATOMIC_VARIANTS
+		for value in curves[variant]["x_seconds"]
+		if float(value) > MINIMUM_LOG_SECONDS
+	)
+	axis.set_xscale("log")
+	axis.set_xlim(
+		max(MINIMUM_LOG_SECONDS, minimum_duration * 0.8),
+		max(20.5, horizon * 1.04),
+	)
+	axis.set_ylim(-2.0, 102.0)
+	axis.set_yticks((0, 25, 50, 75, 100))
+	axis.xaxis.set_major_locator(FixedLocator((5.0, 10.0, 20.0)))
+	axis.xaxis.set_minor_locator(NullLocator())
+	axis.xaxis.set_major_formatter(FuncFormatter(lambda value, _position: f"{value:g}"))
+	axis.set_ylabel("Valid (%)")
+	axis.set_xlabel("Time (s, log scale)", labelpad=2.0)
+	axis.set_title("(b) Tower (12-50 blocks)", loc="left", pad=3.0)
+	zero_methods = [
+		ATOMIC_FIGURE_LABELS[variant]
+		for variant in ("validated_evidence_adapter", "action_only_closure")
+		if int(curves[variant]["solved_count"]) == 0
+	]
+	if zero_methods:
+		per_variant_count = all_focus_records // len(ATOMIC_VARIANTS)
+		axis.text(
+			0.98,
+			0.05,
+			f"{'/'.join(zero_methods)}: 0/{per_variant_count}",
+			transform=axis.transAxes,
+			ha="right",
+			va="bottom",
+			color=COLORS["gray"],
+		)
+	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
+	axis.set_axisbelow(True)
+	_style_axis(axis)
+	axis.legend(
+		loc="upper left",
+		frameon=False,
+		borderaxespad=0.15,
+		handlelength=1.5,
+		handletextpad=0.3,
+		labelspacing=0.25,
+	)
+
+
+def _short_domain_label(domain: str) -> str:
+	return {
+		"blocksworld-clear": "Blocks Clear",
+		"blocksworld-on": "Blocks On",
+		"blocksworld-tower": "Blocks Tower",
+	}.get(domain, domain.replace("-", " ").title())
 
 
 def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
@@ -2003,18 +2236,21 @@ def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 		linestyle="--",
 	)
 	axis.set_xscale("log")
-	axis.set_xlim(MINIMUM_LOG_SECONDS, 2000.0)
+	axis.set_xlim(MINIMUM_LOG_SECONDS, 2100.0)
 	axis.set_ylim(-2.0, 102.0)
 	axis.set_yticks((0, 25, 50, 75, 100))
 	axis.xaxis.set_major_locator(
 		FixedLocator((0.1, 1.0, 10.0, 100.0, 1800.0)),
 	)
+	axis.xaxis.set_minor_locator(NullLocator())
 	axis.xaxis.set_major_formatter(
-		FuncFormatter(lambda value, _position: f"{value:g}"),
+		FuncFormatter(
+			lambda value, _position: "1.8k" if value == 1800.0 else f"{value:g}",
+		),
 	)
-	axis.set_ylabel("Valid queries (%)")
-	axis.set_xlabel("End-to-end time (s, log scale)", labelpad=2.0)
-	axis.set_title("(c) Temporal time-to-valid-trace", loc="left", pad=2.5)
+	axis.set_ylabel("Valid (%)")
+	axis.set_xlabel("Time (s, log scale)", labelpad=2.0)
+	axis.set_title("(c) All temporal queries", loc="left", pad=3.0)
 	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
 	axis.set_axisbelow(True)
 	_style_axis(axis)
@@ -2034,7 +2270,8 @@ def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 	legend_order = (0, 2, 1, 3)
 	axis.legend(
 		handles=tuple(legend_handles[index] for index in legend_order),
-		loc="center right",
+		loc="lower right",
+		bbox_to_anchor=(0.99, 0.03),
 		ncol=1,
 		frameon=False,
 		borderaxespad=0.12,

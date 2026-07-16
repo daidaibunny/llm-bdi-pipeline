@@ -83,6 +83,14 @@ def test_build_frozen_ablation_figure_dataset_recomputes_paired_results() -> Non
 		"coverage_mean": 100.0,
 		"coverage_sd": 0.0,
 	}
+	assert dataset["atomic_affected_domains"] == list(DOMAIN_ORDER)
+	assert dataset["atomic_unchanged_domains"] == []
+	assert dataset["atomic_focus_domain"] == "blocksworld-tower"
+	assert dataset["atomic_focus_curves"]["validated_evidence_adapter"][
+		"solved_count"
+	] == 5
+	assert dataset["atomic_focus_curves"]["full"]["solved_count"] == 10
+	assert dataset["atomic_focus_curves"]["full"]["sample_count"] == 10
 	assert dataset["temporal_curves"]["certified_balanced"][
 		"final_percent"
 	] == pytest.approx(100.0)
@@ -143,7 +151,7 @@ def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_provenance(
 
 	with Image.open(output_file) as figure:
 		assert figure.format == "PNG"
-		assert figure.size == (4200, 2550)
+		assert figure.size == (4200, 1700)
 		assert figure.info["dpi"] == pytest.approx((600.0, 600.0), abs=0.1)
 	assert output_file.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
 	assert FIGURE_DPI == 600
@@ -154,9 +162,10 @@ def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_provenance(
 	assert metadata["atomic_case_count"] == 160
 	assert metadata["temporal_case_count"] == 16
 	assert metadata["pixel_width"] == 4200
-	assert metadata["pixel_height"] == 2550
+	assert metadata["pixel_height"] == 1700
 	assert metadata["dpi"] == 600
 	assert metadata["color_mode"] == "colorblind-safe with redundant encodings"
+	assert metadata["atomic_focus_domain"] == "blocksworld-tower"
 
 
 def test_registered_figure_three_matches_the_frozen_ablation_release() -> None:
@@ -172,12 +181,13 @@ def test_registered_figure_three_matches_the_frozen_ablation_release() -> None:
 	metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
 
 	with Image.open(figure_file) as figure:
-		assert figure.size == (4200, 2550)
+		assert figure.size == (4200, 1700)
 		assert figure.info["dpi"] == pytest.approx((600.0, 600.0), abs=0.1)
 	assert metadata["source_sha256"] == _file_sha256(result_file)
 	assert metadata["source_run_id"] == "aaai-paired-72b0604f"
 	assert metadata["atomic_case_count"] == 6140
 	assert metadata["temporal_case_count"] == 1228
+	assert metadata["atomic_focus_domain"] == "blocksworld-tower"
 
 
 def test_cumulative_solved_fraction_keeps_failures_in_denominator() -> None:
