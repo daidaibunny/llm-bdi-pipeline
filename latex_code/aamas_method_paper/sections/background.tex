@@ -27,7 +27,7 @@ goal conditions and
 lifts the resulting plans into first-order condition-to-macro rules
 \cite{Chen2026Moose}. We treat these rules as evidence: they demonstrate
 ways to achieve observed singleton goals, but need not constitute a closed or
-lexicographically selected atomic module core.
+compact atomic module core.
 
 \subsection{BDI Plan Libraries and Their AgentSpeak(L) Realization}
 
@@ -40,9 +40,12 @@ evaluated here \cite{Rao1996AgentSpeak}, an achievement plan is
 where $C$ is a conjunction of beliefs and comparisons and each $b_i$ is a PDDL
 action or an internal achievement call $!q(\bar Y)$. A library is lifted when
 plans contain variables rather than training objects, and internally closed
-when every internal call resolves to a selected module. Our certificates apply
-to this trigger--context--body model and to the PDDL semantics of primitive
-actions. Formally, a candidate branch is
+when every internal call resolves to a type-compatible selected module.
+Internal-call closure is a signature-resolution property; it does not assert
+that some plan for the call is applicable in every reachable state.
+
+Our certificates apply to this trigger--context--body model and to the PDDL
+semantics of primitive actions. Formally, a candidate branch is
 $b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$, where $g_b$ is one lifted
 achievement literal, $C_b$ is a conjunctive applicability condition, $\beta_b$
 is a finite body of primitive actions and internal calls, $\Sigma_b$ is a
@@ -82,8 +85,8 @@ $Q_q^{\mathrm{dfa}}$ is the finite state set, $AP_q$ the proposition alphabet,
 $\delta_q$ the deterministic transition function, $q_q^0$ the initial state,
 and $F_q$ the accepting set. The valuation map
 $\mathit{val}_q:\operatorname{States}(D)\rightarrow 2^{AP_q}$ interprets a PDDL
-state over that alphabet. The supported
-fragment admits certified progress transitions. For automaton state $z$, let
+state over that alphabet. The compiler-supported subset requires certified
+progress transitions. For automaton state $z$, let
 $d_q(z)$ be the shortest directed-path length to $F_q$, or $\infty$ when no
 accepting state is reachable. A progress transition $(q_s,\chi,q_t)$ satisfies
 $d_q(q_t)<d_q(q_s)<\infty$ and has a guard containing
@@ -114,15 +117,15 @@ are outside this fragment.
 
 \textbf{Compilation problem.} Given $D$, training instances
 $\mathcal{I}_{\mathrm{train}}$, and normalized singleton-goal evidence $E$,
-atomic-core compilation produces the certified atomic module core $\mathcal{M}_D$: the
-query-independent set of selected branches whose triggers are singleton
-achievements. An unbound temporal specification is $\tau_q$, its externally
-supplied type-consistent object binding is $\theta_q$, and
-$\widehat\tau_q=(\tau_q,\theta_q)$ is the validated bound query.
-Temporal-controller compilation produces the query-local plan set $\mathcal{Q}_q$,
-comprising its top-level goal,
-DFA dispatch, and transition-repair plans. For an ordered sequence of appended
-queries $q_1,\ldots,q_k$, the one maintained domain library is
+atomic compilation produces the certified atomic module core $\mathcal{M}_D$:
+the query-independent branches whose triggers are singleton achievements.
+
+An unbound temporal specification is $\tau_q$, its externally supplied
+type-consistent object binding is $\theta_q$, and
+$\widehat\tau_q=(\tau_q,\theta_q)$ is the validated bound query. Temporal
+compilation produces the query-local plan set $\mathcal{Q}_q$, comprising its
+top-level goal, DFA dispatch, and transition-repair plans. For appended queries
+$q_1,\ldots,q_k$, the one maintained domain library is
 \[
 \mathcal{L}_D^{[0]}=\mathcal{M}_D,
 \qquad

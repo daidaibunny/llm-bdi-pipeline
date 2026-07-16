@@ -61,6 +61,33 @@ def test_manuscript_consumes_generated_paired_ablation_results() -> None:
 	assert r"\newcommand{\TemporalModuleReturnJasonTimeoutCount}{15}" in macros
 
 
+def test_manuscript_presents_component_evidence_before_full_system_and_references(
+) -> None:
+	evaluation = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+
+	figure = evaluation.index(r"\begin{figure*}[t!]")
+	questions = evaluation.index(r"\subsection{Questions and Comparisons}")
+	protocol = evaluation.index(r"\subsection{Benchmarks and Protocol}")
+	paired = evaluation.index(r"\subsection{Paired Component Ablations}")
+	full_system = evaluation.index(
+		r"\subsection{Full-System Coverage and Robustness}",
+	)
+	external = evaluation.index(r"\subsection{External Planning References}")
+
+	assert figure < questions < protocol < paired < full_system < external
+	assert paired < evaluation.index(
+		r"\input{sections/result_atomic_comparison_table}",
+	) < evaluation.index(r"\input{sections/result_temporal_comparison_table}")
+	assert full_system < evaluation.index(
+		r"\input{sections/result_five_seed_atomic_table}",
+	) < evaluation.index(r"\input{sections/result_profile_table}")
+	assert external < evaluation.index(
+		r"\input{sections/result_moose_reference_table}",
+	) < evaluation.index(r"\input{sections/result_external_reference_table}")
+
+
 def test_write_paired_ablation_files_updates_tables_macros_and_manifest(
 	tmp_path: Path,
 ) -> None:

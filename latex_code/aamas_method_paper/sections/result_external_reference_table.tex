@@ -14,6 +14,6 @@ MRP+HJ & Measured & Numeric achievement & 253/360 & 0 & 1127.4 \\
 FOND4LTLf + LAMA & Measured & Supported Boolean TEG & 298/492 & 736 & 1457.5 \\
 \bottomrule
 \end{tabular}
-\caption{External planning references with explicit evidence sources. Reported MOOSE coverage is copied from Table~4 of the five-seed extended paper~\cite{Chen2025MooseExtended}; its runtime is not compared across hardware. Measured rows use the registered 30-minute, 8-GiB per-task budget. Raw MOOSE extension runtime is omitted under its registered coverage-only protocol; its coverage is mean $\pm$ sample standard deviation over five seeds. Unsupported FOND4LTLf inputs are separated from planner failures.}
+\caption{Scope-separated external planning references. Reported MOOSE coverage is copied from Table~4 of the five-seed extended paper~\cite{Chen2025MooseExtended}; its runtime is not compared with local measurements. Measured rows use a 1,800-second, 8-GiB per-task budget, and PAR-2 charges nonvalid supported cases twice the cutoff. Raw MOOSE extension coverage is mean $\pm$ sample standard deviation over five seeds; its runtime is omitted by protocol. FOND4LTLf unsupported inputs are excluded from its coverage denominator and separated from planner and compiler failures. Rows with different scopes are not ranked.}
 \label{tab:external-references}
 \end{table*}

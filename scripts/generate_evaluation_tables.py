@@ -485,10 +485,12 @@ def render_profile_table(result: dict[str, Any]) -> str:
 			"\\bottomrule",
 			"\\end{tabular}",
 			"\\caption{Translation and execution by temporal profile. DFA equiv. "
-			"is exact gold/predicted DFA-language equivalence. E2E valid requires "
-			"controller compilation, Jason completion, neutral-goal VAL, and both "
-			"DFA trace checks. Medians are primitive actions and wall-clock seconds; "
-			"the All-row medians are pooled across all bound queries.}",
+			"counts the 475 distinct translation inputs whose gold and predicted "
+			"DFAs have exactly the same finite-trace language. E2E valid counts all "
+			"1,228 bound queries and requires controller compilation, Jason "
+			"completion, neutral-goal VAL, and acceptance by both DFA trace oracles. "
+			"Medians are primitive actions and wall-clock seconds over bound queries; "
+			"the All row pools all profiles.}",
 			"\\label{tab:profile-results}",
 			"\\end{table}",
 		],

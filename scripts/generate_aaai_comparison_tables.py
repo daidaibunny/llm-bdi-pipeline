@@ -1619,12 +1619,21 @@ def render_atomic_table(result: Mapping[str, Any]) -> str:
 		"\\midrule",
 	]
 	for row in result["atomic"]:
+		variant = str(row["variant"])
+		method = str(row["method"])
+		valid = f"{row['valid_trace_count']}/{row['test_count']}"
+		branches = _mean_sd_text(row["mean_branch_count"], row["sd_branch_count"])
+		library_kib = _mean_sd_text(row["mean_library_kib"], row["sd_library_kib"])
+		if variant in {"maximal_certified_program", "full"}:
+			valid = f"\\resultbest{{{valid}}}"
+		if variant == "full":
+			method = f"\\resultselected{{{method}}}"
+			branches = f"\\resultselected{{{branches}}}"
+			library_kib = f"\\resultselected{{{library_kib}}}"
 		lines.append(
-			f"{row['method']} & {row['compiled_count']}/{row['compiled_total']} & "
+			f"{method} & {row['compiled_count']}/{row['compiled_total']} & "
 			f"{row['covered_target_count']}/{row['producible_target_count']} & "
-			f"{row['valid_trace_count']}/{row['test_count']} & "
-			f"{_mean_sd_text(row['mean_branch_count'], row['sd_branch_count'])} & "
-			f"{_mean_sd_text(row['mean_library_kib'], row['sd_library_kib'])} & "
+			f"{valid} & {branches} & {library_kib} & "
 			f"{_mean_sd_text(row['mean_compile_seconds'], row['sd_compile_seconds'])} "
 			+ r"\\",
 		)
@@ -1632,11 +1641,16 @@ def render_atomic_table(result: Mapping[str, Any]) -> str:
 		(
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{Paired atomic compiler comparison over five fixed evidence "
-			"seeds. Compiled counts domain libraries; Targets uses the shared "
-			"positive-add-effect predicate denominator; Valid requires Jason success "
-			"and original-goal VAL. Size and time are mean $\\pm$ sample standard "
-			"deviation over seeds.}",
+			"\\caption{Paired atomic compiler comparison over 80 domain libraries "
+			"and 6,140 seed--case executions: 16 domains and 1,228 held-out cases "
+			"under five fixed evidence seeds. Compiled counts libraries; Targets uses "
+			"the shared positive-add-effect predicate denominator; Valid requires "
+			"Jason success and original-goal VAL. KiB is library size in kibibytes, "
+			"and Compile s is seconds; Branches, KiB, and Compile s are "
+			"mean $\\pm$ sample standard deviation across seeds. Valid totals are "
+			"descriptive; case-clustered inference is reported in the text. Bold marks "
+			"tied best coverage; blue bold identifies Full and its lower size within "
+			"the equal-coverage pair. Color is not used alone.}",
 			"\\label{tab:atomic-comparison}",
 			"\\end{table*}",
 		),
@@ -1660,22 +1674,36 @@ def render_temporal_table(result: Mapping[str, Any]) -> str:
 		"\\midrule",
 	]
 	for row in result["temporal"]:
+		variant = str(row["variant"])
+		method = str(row["method"])
+		valid = f"{row['valid_trace_count']}/{row['test_count']}"
+		fanout = str(row["maximum_trigger_fanout"])
+		if variant in {"certified_flat", "certified_balanced"}:
+			valid = f"\\resultbest{{{valid}}}"
+		if variant == "certified_balanced":
+			method = f"\\resultselected{{{method}}}"
+			fanout = f"\\resultselected{{{fanout}}}"
 		lines.append(
-			f"{row['method']} & {row['compiled_count']}/{row['test_count']} & "
-			f"{row['valid_trace_count']}/{row['test_count']} & "
+			f"{method} & {row['compiled_count']}/{row['test_count']} & "
+			f"{valid} & "
 			f"{_number(row['par2_seconds'])} & "
 			f"{_number(row['median_joint_action_count'])} & "
 			f"{_number(row['median_controller_plan_count'])} & "
-			f"{row['maximum_trigger_fanout']} " + r"\\",
+			f"{fanout} " + r"\\",
 		)
 	lines.extend(
 		(
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{Paired temporal compiler comparison on identical DFA, "
-			"binding, and atomic-library hashes. Valid requires Jason, neutral-goal "
-			f"VAL, and both DFA oracles. Actions are medians on the {joint_count} "
-			"jointly solved queries.}",
+			"\\caption{Paired temporal compiler comparison over 1,228 queries with "
+			"identical DFA, binding, and atomic-library inputs. Built counts generated "
+			"controllers; Valid requires Jason, neutral-goal VAL, and acceptance by "
+			"the gold and predicted DFA trace oracles. "
+			"PAR-2 charges failures twice the 1,800-second limit. Actions are medians "
+			f"over the {joint_count} jointly solved queries; Plans is the median "
+			"controller size and Fan-out its maximum transition-repair value. Bold "
+			"marks tied best coverage; blue bold identifies Balanced and its lower "
+			"fan-out relative to equal-coverage Flat. Color is not used alone.}",
 			"\\label{tab:temporal-comparison}",
 			"\\end{table*}",
 		),
@@ -1714,14 +1742,15 @@ def render_external_table(result: Mapping[str, Any]) -> str:
 		(
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{External planning references with explicit evidence sources. "
-			"Reported MOOSE coverage is copied from Table~4 of the five-seed extended "
-			"paper~\\cite{Chen2025MooseExtended}; its runtime is not compared across "
-			"hardware. Measured rows use the registered 30-minute, 8-GiB per-task "
-			"budget. Raw MOOSE extension runtime is omitted under its registered "
-			"coverage-only protocol; its coverage is mean $\\pm$ sample standard "
-			"deviation over five seeds. Unsupported FOND4LTLf inputs are separated "
-			"from planner failures.}",
+			"\\caption{Scope-separated external planning references. Reported MOOSE "
+			"coverage is copied from Table~4 of the five-seed extended paper~"
+			"\\cite{Chen2025MooseExtended}; its runtime is not compared with local "
+			"measurements. Measured rows use a 1,800-second, 8-GiB per-task budget, and "
+			"PAR-2 charges nonvalid supported cases twice the cutoff. Raw MOOSE "
+			"extension coverage is mean $\\pm$ sample standard deviation over five "
+			"seeds; its runtime is omitted by protocol. FOND4LTLf unsupported inputs "
+			"are excluded from its coverage denominator and separated from planner "
+			"and compiler failures. Rows with different scopes are not ranked.}",
 			"\\label{tab:external-references}",
 			"\\end{table*}",
 		),

@@ -44,13 +44,14 @@ planning evidence and PDDL schemas.
 with the MONA-backed LTLf2DFA construction
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Full temporal synthesis
 synthesizes over the domain--automaton product
-\cite{DeGiacomoRubin2018AutomataFOND}; GP2PL instead composes certified progress
-over an independent BDI library. Temporally extended goals have also been given
-explicit agent-language semantics \cite{Hindriks2009TemporalGoals}; we retain
-standard plan execution and add a query-local monitor. Plan4Past's fixed-planner
-comparison motivates our paired temporal design \cite{Bonassi2023Plan4Past}.
-FOND4LTLf \cite{DeGiacomoFuggitti2021FOND4LTLf} is a task-level reference on its
-accepted subset, using LAMA as its fixed planner.
+\cite{DeGiacomoRubin2018AutomataFOND}. GP2PL instead composes certified repairs
+over an existing BDI library and makes no complete product-synthesis claim.
+Temporally extended goals also have explicit agent-language semantics
+\cite{Hindriks2009TemporalGoals}; we retain standard plan execution and add a
+query-local monitor. Plan4Past motivates holding the underlying planner fixed
+in a temporal comparison \cite{Bonassi2023Plan4Past}. FOND4LTLf
+\cite{DeGiacomoFuggitti2021FOND4LTLf} is therefore a task-level reference on its
+accepted subset, not a compiler ablation.
 
 \paragraph{Natural-language temporal specifications.}
 Prior systems map natural-language instructions to temporal logic through
@@ -63,8 +64,9 @@ but prompt-based semantic parsers remain sensitive to input perturbations
 \cite{Zhuo2023RobustSemanticParsing}. Our evaluated translation protocol
 therefore constrains the schema and vocabulary, then validates typed,
 externally bound parametric \ltlf{} by exact finite-trace language equivalence
-before GP2PL compilation. The complete prompt appears in the Technical
-Supplement, Sec.~4.2.
+before GP2PL compilation. This protocol tests controlled structured
+translation, not robustness to unrestricted natural language. The complete
+prompt appears in the Technical Supplement, Sec.~4.2.
 
 \paragraph{Position of this work.}
 Generalized planners target policies or programs, BDI programming assumes a
@@ -73,7 +75,7 @@ connects them through certificate-carrying compilation. The broader
 proof-carrying principle attaches machine-checkable evidence to executable
 artifacts
 \cite{Necula1997ProofCarryingCode}; GP2PL's certificates are narrower symbolic
-planning proof obligations. GP2PL contributes the certified construction of a reusable
-atomic module core together with preservation-safe query plans in the maintained
-BDI library $\mathcal L_D^{[k]}$; goal regression, answer-set solving,
+planning obligations. GP2PL contributes the certified construction of a
+reusable atomic module core and preservation-safe query plans in the maintained
+BDI library $\mathcal L_D^{[k]}$. Goal regression, answer-set solving,
 AgentSpeak semantics, and \ltlf-to-DFA translation remain prior components.

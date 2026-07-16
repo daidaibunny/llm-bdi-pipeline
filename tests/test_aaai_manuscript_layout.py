@@ -144,13 +144,23 @@ def test_temporal_result_tables_follow_their_result_subsection() -> None:
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
 	temporal_results_position = evaluation_source.index(
-		"\\subsection{End-to-End Temporal Results}",
+		"\\paragraph{End-to-end temporal validation.}",
 	)
 	assert evaluation_source.index("\\input{sections/result_profile_table}") > (
 		temporal_results_position
 	)
 	assert "\\input{sections/result_domain_table}" not in evaluation_source
 	assert "\\input{sections/result_domain_table}" in supplement_source
+
+
+def test_result_floats_are_flushed_before_the_conclusion() -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+
+	barrier_position = main_source.index("\\FloatBarrier")
+	conclusion_position = main_source.index("\\section{Conclusion}")
+	bibliography_position = main_source.index("\\bibliography{references}")
+
+	assert barrier_position < conclusion_position < bibliography_position
 
 
 def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None:
@@ -266,6 +276,8 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 		"\\providecommand{\\gpplfigurethreepath}{figures/fig3_evaluation.png}"
 		in main_source
 	)
+	assert r"\newcommand{\resultbest}[1]{\textbf{#1}}" in main_source
+	assert r"\newcommand{\resultselected}[1]" in main_source
 	figure_one_position = main_source.index("\\label{fig:architecture}")
 	figure_two_position = main_source.index("\\label{fig:policy-lifting-example}")
 	abstract_end_position = main_source.index("\\end{abstract}")
@@ -644,3 +656,57 @@ def test_manuscript_contains_no_silently_unescaped_latex_commands() -> None:
 	for source_path in _manuscript_sources():
 		source = source_path.read_text(encoding="utf-8")
 		assert broken_command.search(source) is None, source_path
+
+
+def test_main_paper_states_the_complete_claim_boundary_in_one_limitations_section(
+) -> None:
+	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	combined = " ".join((main_source + evaluation_source).split())
+
+	limitations_position = main_source.index(r"\section{Limitations}")
+	conclusion_position = main_source.index(r"\section{Conclusion}")
+	assert limitations_position < conclusion_position
+	for required_boundary in (
+		"only experimentally instantiated evidence provider",
+		"candidate generation is incomplete",
+		"type-compatible resolution",
+		"witness-backed short-horizon queries",
+		"controlled utterances",
+		"fixed seed-0 atomic core",
+		r"arbitrary PDDL--\ltlf{} strategy synthesis",
+	):
+		assert required_boundary in combined
+
+
+def test_paired_result_inference_respects_the_atomic_case_cluster() -> None:
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	combined = " ".join((evaluation_source + supplement_source).split())
+
+	assert "130 nonzero case-level differences" in combined
+	assert r"1.47\times10^{-39}" in combined
+	assert "five seeded outcomes for each held-out case identifier" in combined
+	assert "case-level $p$-value" in combined
+	assert r"p=\AtomicDirectToMaximumExactP{}" not in combined
+	assert r"p=\TemporalUnprotectedToFlatExactP{}" not in combined
+
+
+def test_evaluation_reports_costs_and_scope_without_unmeasured_amortization() -> None:
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	evaluation_text = " ".join(evaluation_source.split())
+
+	assert "amortized compilation" not in evaluation_text
+	assert "10.42 percentage points" in evaluation_text
+	assert "fivefold" in evaluation_text
+	assert "113 of the 114 net temporal gains" in evaluation_text
+	assert "720/740" in evaluation_text
+	assert "117/740" in evaluation_text

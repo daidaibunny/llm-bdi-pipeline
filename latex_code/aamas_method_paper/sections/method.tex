@@ -38,12 +38,10 @@ raw provider artifact $\mathcal E_{\mathrm{raw}}$
 
 Certification and selection operate on trigger--context--body rules before
 surface rendering. AgentSpeak(L) rendering preserves the selected triggers,
-contexts, bodies, and internal-call relation in $\mathcal M_D$; it is the
-evaluated realization, not the definition of the compilation problem. Claims
-for another BDI language would require a semantics-preserving rendering and an
-independent execution study.
-Table~\ref{tab:supported-fragment} states the exact compilation boundary used
-throughout the formal claims and experiments.
+contexts, bodies, and internal-call relation in $\mathcal M_D$. These selected
+rules define the compiler output; AgentSpeak(L) and Jason provide its evaluated
+realization. Table~\ref{tab:supported-fragment} states the acceptance and
+rejection boundary used by the formal claims and experiments.
 
 \begin{table}[htbp]
 \centering
@@ -142,7 +140,9 @@ $\textsc{LiftSchemas}$ computes
 \]
 It instantiates these constructors using only typed schemas and effects from
 $D$ and alpha-normalizes every resulting variable-level branch. Its output is
-finite. For a Boolean target predicate $p$, a producer is
+finite because $D$ and the target signatures are finite, constructor states are
+identified up to alpha-normalization, and no requirement/producer state or
+resource mode may repeat. For a Boolean target predicate $p$, a producer is
 an action schema $a\in\mathcal A$ for which some
 $\ell\in\operatorname{add}(a)$ satisfies $\operatorname{pred}(\ell)=p$.
 For target set $T$, define the reachable producer--precondition graph
@@ -237,7 +237,8 @@ plan set $\mathcal R$, define
 The compiler requires $\operatorname{Closed}_D(\mathcal M_D)$, so every
 internal achievement call resolves to a type-compatible selected plan,
 including calls reached transitively. This set-level property is a Clingo
-obligation; it is distinct from constructing $T_D(E)$.
+obligation; it is distinct from constructing $T_D(E)$. It proves resolution by
+signature and type, not applicability of some branch in every reachable state.
 
 \paragraph{Well-founded recursive progress.}
 A same-predicate recursive branch $b$ requires a ranking function
@@ -385,22 +386,20 @@ s_{\mathcal F}(f(\bar t)\theta_q)=c,
 \]
 Thus predicate propositions denote grounded Boolean facts and numeric
 propositions denote exact bounded-integer equalities in the same observed
-state. The LTLf2DFA/MONA translation produces
+state. As defined in Sec.~\ref{sec:background}, LTLf2DFA/MONA produces
 \[
 \mathcal D_q=
 \langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle
 \]
-and its guarded
-transitions \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. An accepting
-\texttt{true} self-loop requires no achievement controller. Each edge that
-reduces graph distance to acceptance receives a controller guarded by its
-source state. Formally, $d_q(z)$ is the shortest directed-path length from
-$z\in Q_q^{\mathrm{dfa}}$ to $F_q$, with $d_q(z)=\infty$ when no such path
-exists; a progress edge $(q_s,\chi,q_t)$ satisfies
-$d_q(q_t)<d_q(q_s)<\infty$. Valuation cubes with the same source and target may
-share their common achievement objective, while the monitor continues to
-evaluate each complete cube. Such cubes are separate conjunctive alternatives
-in MONA's transition relation, not one admitted disjunctive guard.
+and its guarded transitions
+\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. GP2PL attaches a controller to
+each progress edge $(q_s,\chi,q_t)$ with
+$d_q(q_t)<d_q(q_s)<\infty$; an accepting \texttt{true} self-loop needs none.
+
+Same-source/same-target valuation cubes may share a common achievement
+objective, but the monitor still evaluates every complete cube. They remain
+separate conjunctive alternatives in MONA's transition relation, not one
+admitted disjunctive guard.
 
 Each execution applies $\theta_q$: $\mathit{on}(X,Y)$ under
 $X{=}b_1,Y{=}b_4$ calls $!\mathit{on}(b_1,b_4)$ without grounding the shared
@@ -605,12 +604,14 @@ trace is $\langle s_0\rangle$, not an empty trace or inserted noop; a noop could
 change strong-Next or Until truth under finite-trace semantics
 \cite{DeGiacomoVardi2013}.
 
-\section{Formal Guarantees}
+\section{Conditional Guarantees}
 \label{sec:guarantees}
 
-The guarantees are conditional on the generated certified candidate set and supported
-temporal fragment. They do not assert completeness for arbitrary PDDL domains,
-AgentSpeak programs, or DFA strategies.
+The guarantees concern accepted artifacts under their stated premises. They are
+conditional on the generated certified candidate set and certificate-accepted
+temporal subset; they do not assert complete candidate generation, universal
+AgentSpeak optimality, or complete strategy synthesis for arbitrary PDDL
+domains and DFAs.
 
 \paragraph{Atomic branch soundness.}
 \textbf{Proposition 1.} If an emitted $p(\bar X)$ branch's context holds under a
@@ -624,12 +625,13 @@ reachable-state coverage.
 
 \paragraph{Certified-candidate-set optimality.}
 
-\textbf{Proposition 2.} If Clingo returns $\mathcal M_D$, every encoded evidence
-and internal-call obligation is satisfied, and $\mathcal M_D$ is lexicographically
-optimal within $\mathcal C^{\checkmark}_{D,E}$.
+\textbf{Proposition 2.} For the grounded selection instance defined above, a
+Clingo optimum $\mathcal M_D$ belongs to $\mathfrak F_{D,E}$ and minimizes the
+declared lexicographic cost over that feasible family.
 
-This follows from answer-set constraints and priorities, not from completeness
-of candidate generation or optimality over all AgentSpeak programs.
+The Technical Supplement proves a bidirectional correspondence between answer
+sets and feasible subsets. The result does not imply complete candidate
+generation or optimality over all AgentSpeak programs.
 
 \paragraph{Supported transition-composition soundness.}
 

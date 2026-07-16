@@ -453,7 +453,7 @@ bounded integer equalities.
    further actual edges, including rejection, but cannot manufacture acceptance.
    The top-level controller then dispatches from the actual monitor state.
 
-### 6. Formal Guarantees
+### 6. Conditional Guarantees
 
 Keep guarantees separate from algorithm exposition, following the MOOSE
 presentation.
@@ -515,8 +515,17 @@ descriptive paragraphs rather than numbered or combined RQ labels:
   trigger fan-out, loading cost, and execution time without assigning semantic
   credit to the tree.
 - **End-to-end behavior.** Across domains, formula profiles, and evidence seeds,
-  report valid traces and reusable-library amortization relative to raw MOOSE
-  and per-instance planning references.
+  report valid traces and keep one-time core compilation, query append, and
+  execution costs separate. Do not claim amortization without a measured
+  break-even analysis. Compare Raw MOOSE and per-instance planners only on
+  their declared scopes.
+
+After the questions and protocol, present evidence in dependency order. First,
+paired component ablations identify which mechanisms change coverage or
+structure. Second, full-system results report five-seed atomic robustness and
+fixed-library temporal validation. Third, external planning references place
+those results in context. Declare Figure 3 at the start of Evaluation so that
+the full-width float visually precedes the paired ablation discussion.
 
 The registered atomic comparison is cumulative and paired on one exact
 normalized evidence hash:
@@ -679,6 +688,20 @@ standard deviation. A rejection challenge suite and symbol-renaming,
 parameter-permutation, object-renaming, and irrelevant-fluent metamorphic tests
 are mandatory evidence for fail-closed and domain-independent behavior.
 
+The five atomic seeds repeat the same 1,228 held-out identifiers. Seed--case
+totals are descriptive; inferential analysis first averages the paired binary
+difference within each case identifier and applies a two-sided exact sign test
+to the 130 nonzero case-level differences. Temporal queries cluster by domain
+and share 475 translation inputs, so temporal coverage changes use discordant
+counts and domain/profile concentration without a case-level p-value.
+
+The result narrative must locate effects rather than only report aggregates.
+All 640 Direct-to-Maximum seed--case gains occur in the four added domains. On
+those same 740 five-seed evaluations, Full GP2PL validates 720 traces and Raw
+MOOSE 117. Four numeric domains account for 113 of the 114 net
+Unprotected-to-Flat temporal gains. These are scope statements, not domain
+routing rules.
+
 For temporal pairing, define the common DFA fingerprint over the formula, atom
 binding, initial state, accepting states, and guarded transition graph. Exclude
 conversion timing, artifact paths, and DOT text. Record a separate controller
@@ -738,7 +761,12 @@ overloaded producers that require different nested precondition-repair branch se
 unsupported; uncertified cycles are rejected; numeric disequality achievement
 remains observation-only without a certified change-away branch; and runtime
 monitoring does not make action-strategy synthesis complete for arbitrary
-PDDL-times-LTLf products.
+PDDL-times-LTLf products. State separately that internal-call closure proves
+type-compatible resolution rather than universal applicability, the temporal
+dataset contains witness-backed short-horizon queries mined from rollouts of at
+most three actions, controlled utterances do not measure unrestricted
+natural-language robustness, and the end-to-end temporal matrix fixes one
+seed-0 atomic core.
 
 The Conclusion answers three questions only: what representation gap was
 closed, why the output can be executed by a BDI agent, and which temporal goals
@@ -792,11 +820,11 @@ named repository link disabled. The camera-ready conditional enables
 PDF or supplementary review PDF.
 
 Checklist answers may change to `yes` only when the corresponding evidence is
-present in the paper, appendix, or submitted archive. The statistical answer is
-`yes` because binary coverage changes now use the complete registered paired
-case sets and two-sided exact paired tests. Continuous PAR-2 and action-count
-values remain descriptive, and the flat-versus-balanced claim is structural
-because their valid-case sets are identical.
+present in the paper, appendix, or submitted archive. Atomic coverage inference
+uses a two-sided exact sign test over distinct held-out case identifiers after
+within-case seed aggregation. Temporal coverage, PAR-2, action count, and size
+remain descriptive because of domain/input clustering; Flat versus Balanced is
+structural because their valid-case sets are identical.
 
 ## Final Visual Program
 
@@ -835,7 +863,7 @@ Canvas, PowerPoint, Python, and export settings:
   3.25 inches wide (approximately 1.60 inches high). Main Figure 2 uses a 13.333 by 6.000 inch
   PowerPoint export canvas and is inserted at 7.0 inches wide. The supplementary
   DFA figure uses a 13.333 by 5.333 inch PowerPoint canvas. Main Figure 3 is
-  generated by Matplotlib at exactly 7.0 by 4.25 inches. Figure 1 retains its
+  generated by Matplotlib at exactly 7.0 by 2.833 inches. Figure 1 retains its
   supplied alpha channel and must be verified on the paper's white page;
   generated figures use a white opaque background.
 - Use Arial Regular 18 pt for labels and panel headings, and Courier New Regular
@@ -857,7 +885,7 @@ Canvas, PowerPoint, Python, and export settings:
 - Embed fonts in vector PDFs, crop to the slide boundary, and verify all text at
   its final include width. Do not rasterize the method figures or
   resample/recompress the locked Figure 1 PNG. Figure 3 is the deliberate
-  exception: it is generated directly at 4,200 by 2,550 pixels and 600 dpi, not
+  exception: it is generated directly at 4,200 by 1,700 pixels and 600 dpi, not
   converted from a lower-resolution vector or slide export.
 - Main Figure 3 uses regular-weight Helvetica throughout, with every panel
   heading, axis label, tick label, domain label, legend, and annotation at least
@@ -1174,39 +1202,40 @@ and cumulative temporal curve from the portable records. For temporal success,
 Jason, neutral-goal VAL, gold-DFA acceptance, and predicted-DFA acceptance must
 all agree. A mismatch writes a diagnostic and leaves the existing PNG untouched.
 
-Use an asymmetric three-panel layout on one 7.0 by 4.25 inch canvas. Panel (a)
-spans both rows on the left. Panels (b) and (c) occupy the upper and lower right.
-Export directly at 600 dpi, producing exactly 4,200 by 2,550 pixels. Use regular
+Use one horizontal three-panel layout on a 7.0 by 2.833 inch canvas. Export
+directly at 600 dpi, producing exactly 4,200 by 1,700 pixels. Use regular
 Helvetica at 9 pt or larger, an opaque white background, light-gray major grids,
-and no top or right spines. The palette is colorblind-safe, while open/filled
-markers, marker shapes, and line styles redundantly encode every method. Do not
-use stars or bold text.
+and no top or right spines. The palette is colorblind-safe, while printed cell
+values, marker shapes, and line styles make every comparison independent of
+color. Do not use stars or bold text.
 
-Panel (a), `Atomic lifting by domain`:
+Panel (a), `Atomic coverage by domain`:
 
-- Keep the fixed 16-domain order and group separators after `transport` and
-  `numeric-transport`; do not select only favorable domains.
-- Compare the predeclared endpoints Evidence Only and Full GP2PL. For each
-  domain and method, show all five seed values as translucent points and the
-  mean with a horizontal sample-standard-deviation interval. Join only the two
-  endpoint means for the same domain with a thin neutral line.
-- The x-axis is Jason-plus-VAL held-out coverage from 0 to 100 percent. A dashed
-  vertical line marks complete coverage. This panel visualizes where schema and
-  recursive lifting change executable coverage; it does not replace the
-  four-variant aggregate in panel (b).
+- Recompute Jason-plus-VAL coverage for all four atomic variants from all five
+  paired seeds. Display every domain for which any variant differs. Aggregate
+  the remaining domains in one `Other N` row only when all four variants have
+  identical coverage there. This rule is data-independent and prevents
+  favorable-domain selection.
+- Use a four-column numeric matrix with the method order Evidence Only, Direct
+  Producers, Maximum Feasible, and Full GP2PL. Print each percentage in its
+  cell; fill intensity is redundant. Outline the selected Full column without
+  implying significance.
+- The frozen release currently yields five differing domains and 11 unchanged
+  domains, all at 100 percent. The exact per-seed domain distribution remains
+  in the generated Technical Supplement table.
 
-Panel (b), `Atomic coverage-size tradeoff`:
+Panel (b), `Blocksworld Tower time-to-valid-trace`:
 
-- Plot all four atomic variants. The x coordinate is total emitted branches per
-  complete 16-domain seed library; the y coordinate is held-out Jason-plus-VAL
-  coverage over all 1,228 cases in that seed. Markers and capped bars show the
-  five-seed mean plus or minus sample standard deviation on both axes.
-- Use a linear branch-count axis because the observed range is less than a
-  factor of two. Keep the y-axis truncated but numerically labelled so the
-  equal-coverage branch reduction from Maximum Feasible to Full GP2PL remains
-  visible without implying a larger absolute coverage change.
-- Use short in-figure labels `Evidence`, `Direct`, `Maximum`, and `Full`; the
-  caption and paired-ablation table retain the complete method names.
+- Use every one of the 385 paired seed--instance records in the registered
+  Blocksworld Tower size series, which spans 12--50 blocks. This is the corpus's
+  monotonic size stress family and therefore gives a principled scaling view;
+  no individual instance is selected after observing its outcome.
+- Plot right-continuous cumulative valid-trace curves for Maximum Feasible and
+  Full GP2PL on a logarithmic time axis. Evidence Only and Direct Producers
+  solve 0/385 and are reported as an explicit annotation rather than two
+  coincident zero curves.
+- Failures remain in each method's denominator. Do not smooth or interpolate
+  the empirical curves.
 
 Panel (c), `Temporal time-to-valid-trace`:
 
@@ -1223,15 +1252,16 @@ Panel (c), `Temporal time-to-valid-trace`:
 
 Canonical caption:
 
-> **Figure 3: Paired ablations.** Panel (a) compares Evidence Only and Full
-> GP2PL per-domain Jason-plus-VAL coverage over five fixed seeds; small points
-> are seeds, and large markers with bars show mean plus or minus sample standard
-> deviation. Panel (b) gives held-out coverage versus emitted branches for all
-> four atomic variants, again as five-seed mean plus or minus sample standard
-> deviation. Panel (c) gives cumulative valid-trace coverage over end-to-end
-> time for all 1,228 paired temporal queries. Failures remain in the denominator,
-> and the dashed line marks the 1,800-second limit. Color is redundant with
-> marker and line style.
+> **Figure 3: Paired ablations.** Panel (a) reports descriptive Jason-plus-VAL
+> coverage over five evidence seeds for every domain on which the atomic
+> variants differ; the other 11 domains are aggregated because all variants
+> reach 100 percent. Panel (b) gives cumulative valid traces over end-to-end
+> time for all 385 seed--instance pairs in the registered 12--50-block Tower
+> series. Panel (c) gives cumulative valid-trace coverage for all 1,228 paired
+> temporal queries. Failures remain in every denominator, and the dashed line
+> marks the 1,800-second limit. Repeated atomic seeds are not treated as
+> independent inferential units; numeric labels, markers, and line styles
+> duplicate color.
 
 Before delivery, verify the plotted totals against both generated ablation
 tables and require the same frozen source SHA-256 in the figure metadata. Never
@@ -1280,7 +1310,8 @@ placeholders until their colleague-produced vector PDFs are delivered:
 ```
 
 The main Evaluation source contains the Figure 3 `figure*[t!]` placement before
-its result subsections. Until the frozen paired-ablation artifact passes the
+its question, protocol, and result subsections. Until the frozen paired-ablation
+artifact passes the
 plotting gate, `\IfFileExists` omits the
 figure and emits a package warning; no synthetic or partial empirical graphic
 is allowed to enter the review PDF. A layout-only preview may override
@@ -1372,7 +1403,7 @@ costs into the compiler ablation table. Do not spend main-paper space on an
 all-empty external-reference table. The completed hash-locked matrix now gives
 LAMA 591/868, MRP+HJ 253/360, and FOND4LTLf plus LAMA 298/492 on its supported
 subset, with 736 explicitly unsupported temporal inputs. Keep this completed
-external table in the main Evaluation section while
+external table in the final main-Evaluation result subsection while
 the manuscript is still in evidence-completeness mode; page-budget compression
 is a later editorial decision and must not silently remove a comparison row.
 
@@ -1421,8 +1452,8 @@ individually. The complete-domain set and varying-domain rows are computed from
 the frozen matrix rather than named in the generator. Values are mean $\pm$
 sample standard deviation over five independently compiled libraries
 ($n=5$); the success range preserves the raw minimum and maximum. Figure 3
-retains all five per-domain seed points, so the compact table does not hide the
-within-domain distribution.
+aggregates every paired seed--instance record, while the Technical Supplement's
+domain--seed table preserves the within-domain distribution.
 
 The Technical Supplement contains `result_five_seed_atomic_domain_table.tex`,
 with raw Seed 0--4 counts and one combined mean $\pm$ sample-standard-deviation
@@ -1485,17 +1516,21 @@ than as runner bookkeeping.
 - Cite every figure or table in the body before it appears. Figure captions go
   below figures, and table captions go below the tabular content. Use `[htbp]`
   on every figure, table, and algorithm float so LaTeX can keep each visual near
-  its first substantive discussion without manual page breaks or float-queue
-  overrides.
+  its first substantive discussion without manual page breaks. Use one
+  `\\FloatBarrier` before the Conclusion so every result table remains ahead of
+  the conclusion and references.
 - A caption must define the population/denominator, aggregation over seeds, and
   every abbreviation needed to read the visual independently. State a time
   limit only when it is visually encoded or necessary to interpret coverage;
   exact resource configuration otherwise belongs in the Technical Supplement.
   The body explains interpretation rather than restating every cell.
-- Use `booktabs`, no vertical rules, no colored table cells, and bold only for a
-  genuine best comparable result. Use `--` for not applicable and never overload
-  zero. Avoid `\tiny`, `\scriptsize`, and `\footnotesize`; final table text must
-  remain at least 9 pt.
+- Use `booktabs` and no vertical rules or colored table cells. Bold marks a
+  genuine tied-best comparable result. Blue bold may identify the selected
+  configuration and the structurally motivated metric that distinguishes it,
+  but the caption must state that rule and the same distinction must remain in
+  bold without color. Do not rank rows drawn from disjoint case sets. Use `--`
+  for not applicable and never overload zero. Avoid `\tiny`, `\scriptsize`, and
+  `\footnotesize`; final table text must remain at least 9 pt.
 - Use vector PDF for PowerPoint method figures with embedded fonts. Set the slide
   canvas to the final aspect ratio, use at least 9 pt text at final printed size, and
   export tightly cropped. Raster content, if unavoidable, must be at least

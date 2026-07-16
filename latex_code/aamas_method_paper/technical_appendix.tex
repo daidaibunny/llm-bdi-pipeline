@@ -2,6 +2,7 @@
 \usepackage[submission]{aaai2027}
 \usepackage[hyphens]{url}
 \usepackage{graphicx}
+\usepackage{xcolor}
 \urlstyle{rm}
 \def\UrlFont{\rm}
 \usepackage{natbib}
@@ -32,6 +33,9 @@
 \newcommand{\maydelete}{\ensuremath{\mathrm{MayDelete}}}
 \newcommand{\mayadd}{\ensuremath{\mathrm{MayAdd}}}
 \newcommand{\methodname}{GP2PL}
+\definecolor{gpplresultblue}{RGB}{0,82,136}
+\newcommand{\resultbest}[1]{\textbf{#1}}
+\newcommand{\resultselected}[1]{\textbf{\textcolor{gpplresultblue}{#1}}}
 \newtheorem{definition}{Definition}
 \newtheorem{assumption}{Assumption}
 \newtheorem{lemma}{Lemma}

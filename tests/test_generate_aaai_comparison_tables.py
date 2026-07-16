@@ -1304,6 +1304,12 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert "Reported MOOSE coverage is copied from Table~4" in external
 	assert "Evidence Only" in atomic
 	assert "Certified Balanced" in temporal
+	assert r"\resultbest{" in atomic
+	assert r"\resultselected{Full GP2PL}" in atomic
+	assert r"\resultbest{" in temporal
+	assert r"\resultselected{Certified Balanced}" in temporal
+	assert "Color is not used alone" in atomic
+	assert "Color is not used alone" in temporal
 	assert "FOND4LTLf + LAMA" in external
 	assert "C0" not in combined
 	assert "T0" not in combined

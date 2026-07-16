@@ -3,6 +3,7 @@
 \usepackage[submission]{aaai2027}
 \usepackage[hyphens]{url}
 \usepackage{graphicx}
+\usepackage{xcolor}
 \urlstyle{rm}
 \def\UrlFont{\rm}
 \usepackage{natbib}
@@ -32,6 +33,9 @@ Libraries for Temporally Extended Goals}
 \newcommand{\maydelete}{\ensuremath{\mathrm{MayDelete}}}
 \newcommand{\mayadd}{\ensuremath{\mathrm{MayAdd}}}
 \newcommand{\methodname}{GP2PL}
+\definecolor{gpplresultblue}{RGB}{0,82,136}
+\newcommand{\resultbest}[1]{\textbf{#1}}
+\newcommand{\resultselected}[1]{\textbf{\textcolor{gpplresultblue}{#1}}}
 \providecommand{\gpplfigureonepath}{figures/fig1_architecture.png}
 \providecommand{\gpplfiguretwopath}{figures/fig2_policy_lifting.pdf}
 \providecommand{\gpplfigurethreepath}{figures/fig3_evaluation.png}
@@ -50,30 +54,27 @@ Libraries for Temporally Extended Goals}
 \maketitle
 
 \begin{abstract}
-Generalized planning synthesizes reusable behavior for problem families, while
-Belief--Desire--Intention (BDI) agents execute plan libraries. A learned policy
-may omit executable plans for internal subgoals and safe temporal composition.
-We introduce \methodname{}
-(Generalized Planning to Plan Libraries), which closes this representation gap
-by compiling generalized-planning evidence and Planning Domain Definition
-Language (PDDL) action models into certified BDI plan libraries. GP2PL validates
-and lifts evidence rules, completes missing achievable subgoals from action
-schemas, selects a compact executable atomic core, and appends query-specific
-controllers for finite-trace temporal goals without relearning that core. We
-formalize this representation, selection, and composition process and prove
-soundness for the supported fragment; unsupported obligations are rejected.
-Across \BenchmarkDomainCount{} domains, five independently seeded libraries
-solve \AtomicFiveSeedMeanSuccessPercent{}\% of held-out cases on average
-(\AtomicFiveSeedSampleSDPercent{} percentage-point sample standard deviation).
-In paired ablations, certified recursive candidates increase atomic success
-from \AtomicDirectProducersValidCount{}/\AtomicAblationCaseCount{} to
-\AtomicFullGPPLValidCount{}/\AtomicAblationCaseCount{}, while temporal
-preservation certification increases success from
-\TemporalUnprotectedValidCount{}/\TemporalAblationCaseCount{} to
-\TemporalCertifiedFlatValidCount{}/\TemporalAblationCaseCount{}.
-All \TranslationEquivalentCount{} translated temporal specifications match
-their gold finite-trace languages, and all \TEGProblemCount{} bound queries
-produce independently validated accepting traces.
+Generalized planning learns reusable behavior for problem families, whereas
+Belief--Desire--Intention (BDI) agents execute plan libraries. Direct adaptation
+leaves a representation gap: singleton-goal evidence may omit modules for
+subsidiary achievements and does not certify temporal composition. We introduce
+\methodname{} (Generalized Planning to Plan Libraries), which compiles such
+evidence and Planning Domain Definition Language (PDDL) action models into
+certified BDI plan libraries. GP2PL validates and lifts evidence, generates
+schema-derived modules for producible goals, selects a compact closed
+atomic core, and appends query controllers guided by deterministic finite
+automata for finite-trace temporal goals without relearning that core. For the
+generated candidate language and supported fragment, accepted branches and
+controllers satisfy conditional soundness guarantees; uncertified obligations
+are rejected. Across \BenchmarkDomainCount{} domains, five independently seeded
+cores achieve \AtomicFiveSeedMeanSuccessPercent{}\% mean held-out coverage
+($\AtomicFiveSeedSampleSDPercent{}$ percentage-point sample standard deviation).
+Recursive candidates improve paired atomic success by 10.42 percentage points,
+and preservation certification improves paired temporal success by 9.28
+percentage points. All \TranslationEquivalentCount{} translated specifications
+match their gold finite-trace languages, and the fixed-core temporal study
+produces independently validated accepting traces for all \TEGProblemCount{}
+bound queries.
 \end{abstract}
 
 \section{Introduction}
@@ -109,12 +110,12 @@ Single-column GP2PL overview\\
 Domain compilation $+$ query-specific temporal compilation}}
 }
 \caption{GP2PL separates reusable domain compilation from query-specific
-temporal compilation. An external generalized-planning backend derives raw
-singleton-goal evidence $\mathcal E_{\mathrm{raw}}$ from domain $D$ and training
-instances $\mathcal I_{\mathrm{train}}$. Validated policy lifting compiles these
-inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$; DFA-guided temporal
-compilation maps each bound query $\widehat{\tau}_q$ to query-local plans
-$\mathcal Q_q$, updating the sole maintained library by
+temporal compilation. From domain $D$, training instances
+$\mathcal I_{\mathrm{train}}$, and raw singleton-goal evidence
+$\mathcal E_{\mathrm{raw}}$, Validated policy lifting constructs the internally
+closed core $\mathcal M_D=\mathcal L_D^{[0]}$ once. DFA-guided temporal
+compilation maps a bound query $\widehat{\tau}_q$ to query-local plans
+$\mathcal Q_q$ and updates the sole maintained library by
 $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 \label{fig:architecture}
 \end{figure}
@@ -128,11 +129,9 @@ achievement. This is a form of BDI goal interference
 \cite{Thangarajah2003GoalInterference}. Safe reuse therefore requires temporal
 control over the fixed domain library and observation after primitive actions.
 
-Figure~\ref{fig:architecture} separates one-time domain compilation from
-query-specific additions. After the atomic core is built, each new temporal
-request adds only its controller plans to the same maintained library. Both
-stages use symbolic action schemas and effects rather than domain-specific
-names.
+The central design choice is reuse: temporal requests extend one maintained
+library instead of triggering a new domain-level learning run. Both compiler
+stages reason over typed action schemas and effects rather than domain names.
 
 \begin{figure*}[t!]
 \centering
@@ -145,56 +144,76 @@ Figure 2 artwork placeholder\\[8pt]
 (b) DFA-guided query compilation and append}}
 }
 \caption{Certified lifting and temporal composition in Blocks World. Left:
-GP2PL canonically lifts singleton-goal evidence, instantiates typed
+GP2PL canonically lifts singleton-goal evidence, augments it with typed
 action-schema candidates, and selects the internally closed atomic core
-$\mathcal M_D=\mathcal L_D^{[0]}$. Right: for a bound \ltlf{} query, GP2PL
-decodes the MONA-derived DFA, derives a preservation-safe order for each
-progress guard, renders the balanced query-local controller $\mathcal Q_q$,
-and appends it to the sole maintained library without relearning the core.}
+$\mathcal M_D=\mathcal L_D^{[0]}$. Right: for a bound \ltlf{} query, it derives
+a preservation-safe order for each MONA-derived DFA progress guard, renders the
+balanced query-local controller $\mathcal Q_q$, and appends that controller
+without relearning the core.}
 \label{fig:policy-lifting-example}
 \end{figure*}
 
-Figure~\ref{fig:policy-lifting-example} expands both compiler operations from
-Figure~\ref{fig:architecture}: one-time construction of the reusable core and
-query-specific composition over that fixed core. The method sections define the
-candidate language, certificates, selection problem, and DFA-guided controller.
-
 GP2PL makes three contributions. First, it turns singleton-goal policy evidence
-and PDDL action models into a compact BDI module core, including plans for
-achievable subsidiary goals omitted by the evidence. Second, it certifies safe
-variable binding, executable plan bodies, achieved subgoals, and progress of
-recursive plans; otherwise, compilation rejects the library. Third, it appends
 controllers that preserve earlier milestones while pursuing supported
-finite-trace temporal goals, retaining the same domain core. Across
-\BenchmarkDomainCount{} domains, independently compiled atomic cores average
-\AtomicFiveSeedMeanSuccessPercent{}\% held-out execution coverage over five
-goal-order seeds, and all \TEGProblemCount{} predeclared temporal queries pass
-independent execution and trace validation. The paired matrix further isolates
-\AtomicDirectToMaximumValidGain{} additional atomic successes from certified
-recursive candidate generation and \TemporalUnprotectedToFlatValidGain{}
-additional temporal successes from preservation certification. These are guarantees and results
-for the declared fragment and evaluated inputs, not completeness for arbitrary
-PDDL--\ltlf{} products; formal definitions, proofs, and the reproducibility
-protocol appear in the Technical Supplement, Secs.~2 and~5.
+finite-trace temporal goals over the same core.
+
+The experiments separate component effects from complete-system behavior.
+Across \BenchmarkDomainCount{} domains, independently compiled atomic cores
+average \AtomicFiveSeedMeanSuccessPercent{}\% held-out coverage over five
+evidence seeds. A fixed-core study validates all \TEGProblemCount{} registered
+temporal queries. These claims concern the declared candidate and formula
+fragments, not complete planning for arbitrary PDDL--\ltlf{} products. Formal
+definitions and proofs appear in Technical Supplement, Secs.~1--2; Sec.~5 gives
+the reporting and reproducibility protocol.
 
 \input{sections/background}
 \input{sections/related_work}
 \input{sections/method}
 \input{sections/evaluation}
 
+\FloatBarrier
+\section{Limitations}
+
+MOOSE is the only experimentally instantiated evidence provider. The provider
+interface is general, but candidate generation is incomplete: the
+candidate-construction grammar admits schema regression only over an acyclic
+producer--precondition dependency graph, and recursive or resource behavior
+only when the implemented ranking or keyed-mode certificates apply.
+Internal-call closure proves type-compatible resolution of
+each selected call; it does not guarantee an applicable branch in every
+reachable state.
+
+The temporal benchmark contains witness-backed short-horizon queries mined from
+rollouts of at most three actions. Its controlled utterances evaluate structured
+translation under a fixed vocabulary, not robustness to unrestricted natural
+language or arbitrary long-horizon temporal planning. The end-to-end temporal
+matrix also conditions on a fixed seed-0 atomic core, so it supports no
+cross-seed temporal-robustness claim.
+
+Primitive-step monitoring gives exact trace observation for the declared
+formula syntax, but GP2PL does not provide complete action-strategy synthesis.
+Unsupported arithmetic, uncertified interference cycles, and progress guards
+without an applicable certified repair are rejected. The empirical results
+therefore do not imply arbitrary PDDL--\ltlf{} strategy synthesis.
+
 \section{Conclusion}
 
-GP2PL compiles generalized-planning evidence into a certified atomic module core
-and appends finite-trace query plans to the unique maintained BDI domain library.
-Five-seed atomic coverage averages
-\AtomicFiveSeedMeanSuccessPercent{}\%; the predeclared temporal study solves
-\TEGProblemCount{}/\TEGProblemCount{}. In the paired ablation, Full GP2PL
-matches Maximum Feasible coverage with \AtomicFullBranchReduction{} fewer
-mean branches, and Certified Balanced matches Certified Flat coverage while
-reducing transition-repair fan-out from \TemporalCertifiedFlatFanout{} to
-\TemporalCertifiedBalancedFanout{}. Guarantees remain conditional on the
-candidate-construction grammar, generated certified candidate set, and declared
-\ltlf{} fragment.
+GP2PL closes the representation gap by converting generalized-planning evidence
+and PDDL action schemas into a reusable atomic BDI core, then appending
+query-local temporal controllers to the same maintained library.
+
+The output is executable in the evaluated AgentSpeak(L)/Jason realization
+because each accepted branch has certified binding, symbolic PDDL
+executability, target achievement, and progress, while selected internal calls
+resolve within the library. Unproved obligations fail compilation rather than
+becoming unchecked plans.
+
+The certified temporal scope consists of bound formulas in the declared $F$,
+$X$, strong-$U$, conjunction, and literal-negation syntax whose DFA progress
+obligations admit preservation-safe repairs. Within that scope, the measured
+component gains and \TEGProblemCount{}/\TEGProblemCount{} fixed-core temporal
+result show that certification changes both coverage and controller structure,
+while the limitations above delimit what those results establish.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

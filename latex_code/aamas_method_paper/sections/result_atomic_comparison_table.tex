@@ -9,10 +9,10 @@ Method & Compiled & Targets & Valid & Branches & KiB & Compile s \\
 \midrule
 Evidence Only & 80/80 & 90/365 & 5420/6140 & 835.0 $\pm$ 15.8 & 488.3 $\pm$ 8.3 & 5.9 $\pm$ 0.7 \\
 Direct Producers & 80/80 & 365/365 & 5419/6140 & 1153.0 $\pm$ 15.8 & 549.2 $\pm$ 8.3 & 8.0 $\pm$ 2.5 \\
-Maximum Feasible & 80/80 & 365/365 & 6059/6140 & 1533.0 $\pm$ 15.8 & 645.9 $\pm$ 8.3 & 41.5 $\pm$ 13.1 \\
-Full GP2PL & 80/80 & 365/365 & 6059/6140 & 1499.0 $\pm$ 15.8 & 635.1 $\pm$ 8.3 & 40.7 $\pm$ 7.6 \\
+Maximum Feasible & 80/80 & 365/365 & \resultbest{6059/6140} & 1533.0 $\pm$ 15.8 & 645.9 $\pm$ 8.3 & 41.5 $\pm$ 13.1 \\
+\resultselected{Full GP2PL} & 80/80 & 365/365 & \resultbest{6059/6140} & \resultselected{1499.0 $\pm$ 15.8} & \resultselected{635.1 $\pm$ 8.3} & 40.7 $\pm$ 7.6 \\
 \bottomrule
 \end{tabular}
-\caption{Paired atomic compiler comparison over five fixed evidence seeds. Compiled counts domain libraries; Targets uses the shared positive-add-effect predicate denominator; Valid requires Jason success and original-goal VAL. Size and time are mean $\pm$ sample standard deviation over seeds.}
+\caption{Paired atomic compiler comparison over 80 domain libraries and 6,140 seed--case executions: 16 domains and 1,228 held-out cases under five fixed evidence seeds. Compiled counts libraries; Targets uses the shared positive-add-effect predicate denominator; Valid requires Jason success and original-goal VAL. KiB is library size in kibibytes, and Compile s is seconds; Branches, KiB, and Compile s are mean $\pm$ sample standard deviation across seeds. Valid totals are descriptive; case-clustered inference is reported in the text. Bold marks tied best coverage; blue bold identifies Full and its lower size within the equal-coverage pair. Color is not used alone.}
 \label{tab:atomic-comparison}
 \end{table*}
