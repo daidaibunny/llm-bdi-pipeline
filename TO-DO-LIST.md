@@ -97,7 +97,9 @@ certificate.
   Every distance-reducing DFA edge produces a query-local `trans` controller.
   Its certified literal order is compiled into a balanced binary
   transition-repair tree with
-  maximum trigger fan-out two and logarithmic nesting depth. One full repair
+  maximum trigger fan-out two, maximum plan-body length two, and logarithmic
+  nesting depth. A direct linear realization would preserve the same order but
+  make one plan body and its intention continuation grow with guard size. One full repair
   pass completes before `done` tests the current monitor state. A post-exit
   suffix contains only observations or already certified, prefix-preserving
   repairs; every primitive action remains DFA-observed, so rejection fails

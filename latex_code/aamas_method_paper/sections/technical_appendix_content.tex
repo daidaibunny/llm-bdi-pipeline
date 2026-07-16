@@ -792,9 +792,9 @@ controller statement can manufacture a state transition.
 
 \begin{proposition}[Balanced transition-repair complexity]
 For $n\geq1$ signed literals and $e$ certified repair plans, midpoint splitting
-produces $2n+e+2$ query-local plans, trigger fan-out at most two, nesting depth
-$O(\log n)$, and $O(n)$ node visits per pass while preserving the certified
-literal order.
+produces $2n+e+2$ query-local plans, trigger fan-out at most two, at most two
+body steps per generated controller plan, nesting depth $O(\log n)$, and
+$O(n)$ node visits per pass while preserving the certified literal order.
 \end{proposition}
 
 \begin{proof}
@@ -806,7 +806,10 @@ dispatch fan-out is two. Midpoint division yields height
 $\lceil\log_2 n\rceil$ up to constant entry and completion frames. Induction on
 a contiguous range shows that its left subtree completes before its right
 subtree, so an in-order traversal equals the certified sequence. Each node is
-visited once per pass, hence linear work.
+visited once per pass, hence linear work. Entry and internal plans contain two
+controller calls, a repair leaf contains at most its certified call and monitor
+checkpoint, and completion plans contain at most one call; hence body length is
+at most two.
 \end{proof}
 
 \begin{proposition}[Monitor trace fidelity]

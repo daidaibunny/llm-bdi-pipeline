@@ -241,9 +241,12 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
   state. The tree is query-local control structure, not a domain fluent or a
   second temporal fast path.
 - The balanced tree bounds sibling-plan fan-out by two, visits all positive
-  literals in linear controller work per pass, and has logarithmic nesting
-  depth. It does not reduce primitive PDDL action count or choose the literal
-  order; threat and preservation certificates determine the order first.
+  literals in linear controller work per pass, bounds each generated plan body
+  by two steps, and has logarithmic nesting depth. A direct linear realization
+  would preserve the same certified order but place all leaf calls in one body,
+  making its plan representation and intention continuation grow with guard
+  size. The tree does not reduce primitive PDDL action count or choose the
+  literal order; threat and preservation certificates determine the order first.
   A singleton transition is the identity case: one leaf calls one atomic module
   and the done helper rechecks the same transition.
 

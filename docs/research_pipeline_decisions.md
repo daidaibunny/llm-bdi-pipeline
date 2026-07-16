@@ -1387,11 +1387,20 @@ the suffix is a complete strategy for the newly reached state. Thus balancing
 changes how Jason dispatches a certified serialization, not which serialization
 or temporal semantics is used.
 
+A direct linear realization would invoke the same certified leaves in the same
+order, but one transition plan would contain all `N` leaf calls plus the done
+check. Parsing and storing that monolithic plan, and constructing and resuming
+its intention continuation, would therefore remain dependent on guard size.
+Midpoint decomposition changes only this representation: every generated
+controller plan has at most two body steps while preserving the same ordered
+leaf sequence.
+
 This replaces the old one-sibling-plan-per-literal representation. For `N`
 positive literals, that representation gave one trigger `N` repair candidates
 and could repeat that candidate scan after each repair, yielding quadratic
 controller matching. The balanced tree has `O(N)` query-local nodes, maximum
-trigger fan-out two, `O(N)` visits per pass, and `O(log N)` nesting depth. The
+trigger fan-out two, maximum plan-body length two, `O(N)` visits per pass, and
+`O(log N)` nesting depth. The
 exact runtime monitor is consulted through the source-state completion belief
 after each pass. The compiler records
 `transition_controller_strategy=monitored_balanced_repair_tree` so experiments

@@ -29,6 +29,7 @@ def test_balanced_repair_tree_bounds_trigger_fanout_and_depth() -> None:
 
 	trigger_counts = Counter(plan.trigger.symbol for plan in compilation.plans)
 	assert max(trigger_counts.values()) == 2
+	assert max(len(plan.body) for plan in compilation.plans) == 2
 	assert compilation.literal_count == 8
 	assert compilation.tree_height == 4
 	assert compilation.root_symbol == "g_query_trans_1_repair_1_8"

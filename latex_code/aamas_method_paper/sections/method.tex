@@ -519,6 +519,13 @@ contain the top-level dispatcher together with every accepted
 $\mathcal R_{q_s,\chi}$. Algorithm~\ref{alg:temporal} constructs one such
 transition plan set.
 
+A direct linear rendering would execute the same certified order but place all
+$n$ literal calls and the completion test in one monolithic plan body. The
+representation parsed and stored for that plan, together with the intention
+continuation constructed and resumed by the interpreter, would therefore grow
+with the guard. Midpoint decomposition preserves the identical left-to-right
+order while limiting every generated controller plan to at most two body steps.
+
 \begin{algorithm}[htbp]
 \caption{Compile a Certified DFA Progress Controller}
 \label{alg:temporal}
@@ -575,8 +582,8 @@ complete strategy for a newly reached state.
 
 For $n=1$, $R_\chi[1,1]$ is one leaf followed by the same completion test. Balancing
 does not choose the certified order or reduce primitive action count; it bounds
-trigger fan-out by two and nesting depth logarithmically while retaining linear
-work per pass. The repeated state check is an instance of the declarative goal
+trigger fan-out and individual plan-body length by two, with logarithmic nesting
+depth and linear work per pass. The repeated state check is an instance of the declarative goal
 plan pattern \cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure
 is GP2PL's controller realization.
 
@@ -659,8 +666,9 @@ guarantee that a post-exit suffix avoids a rejecting state.
 \paragraph{Balanced transition-repair complexity.}
 
 \textbf{Proposition 4.} For $n$ signed literals and $e$ repair plans, the tree
-has $2n+e+2$ plans, fan-out two, depth $O(\log n)$, and $O(n)$ visits per pass,
-while preserving order. The count follows from $n$ satisfied leaves, $e$ repair
+has $2n+e+2$ plans, fan-out at most two, maximum body length two, depth
+$O(\log n)$, and $O(n)$ visits per pass, while preserving order. The count
+follows from $n$ satisfied leaves, $e$ repair
 leaves, $n-1$ internal nodes, one entry, and two completion plans; midpoint
 splitting and range induction establish depth and order. \hfill$\square$
 

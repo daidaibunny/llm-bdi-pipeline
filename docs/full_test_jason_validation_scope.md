@@ -186,6 +186,12 @@ contains more query-local helper plans, but it does not change the certified
 literal order, primitive action sequence chosen by an atomic module, or DFA
 transition boundaries.
 
+A direct linear controller would preserve that same order but place all `N`
+leaf calls and the done check in one monolithic body. Its parsed plan
+representation and intention continuation therefore grow with the guard. The
+balanced controller avoids that second unbounded local structure: each
+generated plan contains at most two body steps.
+
 Branching or state-dependent DFA goals are not silently compiled to `tg_state`
 plans. They now fail with `nonlinear_temporal_goal_not_supported`. Those goals
 need an external DFA or reward-machine controller because a single ASL body is

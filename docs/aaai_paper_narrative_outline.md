@@ -438,8 +438,10 @@ bounded integer equalities.
    precondition preparation, repeatable non-unifying numeric steps, exact
    terminal predecessors, and capture-avoiding composition.
 10. Compile the certified order into a balanced binary transition-repair tree. The tree is
-   an AgentSpeak indexing structure with trigger fan-out at most two; it does
-   not reorder DFA transitions or add planning semantics. Include a compact
+   an AgentSpeak indexing structure with trigger fan-out and individual plan-body
+   length at most two; it does not reorder DFA transitions or add planning
+   semantics. Contrast it with a semantically equivalent linear rendering,
+   whose single plan body and intention continuation grow with guard size. Include a compact
    construction algorithm defining the signed leaves, midpoint range recursion,
    transition entry, and two completion alternatives.
 11. Advance the real deterministic finite automaton after the initial valuation
@@ -478,8 +480,8 @@ The main paper should contain:
 4. **Balanced transition-repair complexity:** for `n` signed literals and `e`
    certified repair
    plans, the generated query-local tree has `2n+e+2` plans, maximum trigger
-   fan-out two, logarithmic nesting depth, linear work per pass, and the same
-   certified literal order.
+   fan-out two, maximum plan-body length two, logarithmic nesting depth, linear
+   work per pass, and the same certified literal order.
 5. **Runtime-monitor trace fidelity:** monitor-state beliefs are the result of
    deterministic DFA transition evaluation after every primitive action, not a
    second planning semantics or a domain fluent.

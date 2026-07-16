@@ -1132,6 +1132,11 @@ action; that outcome is not an input-translation error.
 
 A transition helper checks completion after one complete balanced binary
 transition-repair pass.
+This binary organization does not alter the certified literal order. A direct
+linear realization would execute the same leaves but place all calls in one
+plan body, making that plan and its intention continuation grow with guard
+size. The balanced realization keeps every generated controller body bounded
+by two steps.
 It returns when the runtime monitor then differs from that helper's source state,
 not only when it equals the immediately adjacent target state; otherwise it
 replays the same transition. One atomic module may contain several primitive

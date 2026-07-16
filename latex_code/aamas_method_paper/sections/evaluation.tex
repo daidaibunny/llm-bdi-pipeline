@@ -183,7 +183,10 @@ Balancing therefore receives no semantic credit. It increases the median
 controller size from 7 to 13 plans and PAR-2 from 8.0 to 8.6 seconds, while
 reducing maximum transition-repair fan-out from
 \TemporalCertifiedFlatFanout{} to \TemporalCertifiedBalancedFanout{}. We
-select Balanced for this structural bound, not for coverage or runtime.
+select Balanced for this structural bound, not for coverage or runtime. A
+direct linear realization would retain the certified order but move the
+unbounded term into one plan body; binary dispatch instead bounds both trigger
+fan-out and individual body length.
 
 Moving observation from primitive steps to module return loses
 \TemporalBalancedToModuleReturnLeftOnlyValidCount{} valid traces. Module-Return
