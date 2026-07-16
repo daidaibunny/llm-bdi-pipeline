@@ -50,11 +50,14 @@ def test_figures_and_tables_use_flexible_aaai_placement_without_forced_flushes()
 		)
 
 	assert placements
+	page_top_float_files = {"main.tex", "evaluation.tex"}
 	assert all(
-		placement == "htbp" or (filename == "main.tex" and placement == "t!")
+		placement == "htbp"
+		or (filename in page_top_float_files and placement == "t!")
 		for filename, placement in placements
 	), placements
 	assert placements.count(("main.tex", "t!")) == 1
+	assert placements.count(("evaluation.tex", "t!")) == 1
 	for forbidden_command in (
 		"\\clearpage",
 		"\\newpage",
@@ -260,7 +263,7 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 		in main_source
 	)
 	assert (
-		"\\providecommand{\\gpplfigurethreepath}{figures/fig2_evaluation.pdf}"
+		"\\providecommand{\\gpplfigurethreepath}{figures/fig3_evaluation.png}"
 		in main_source
 	)
 	figure_one_position = main_source.index("\\label{fig:architecture}")

@@ -1,0 +1,7 @@
+{
+  "artifact_kind": "gp2pl_ablation_figure_diagnostic",
+  "output_file": "latex_code/aamas_method_paper/figures/fig3_evaluation.png",
+  "source_file": "paper_artifacts/gp2pl_evaluation/v1/paired_ablation_results.json",
+  "source_sha256": "73546ee94cb8adaaf894041d0a85967b968439391219afbf95937f47b4d2f853",
+  "success": true
+}

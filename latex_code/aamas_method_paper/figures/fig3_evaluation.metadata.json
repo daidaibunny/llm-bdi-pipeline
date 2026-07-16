@@ -1,0 +1,31 @@
+{
+  "artifact_kind": "gp2pl_ablation_empirical_figure",
+  "atomic_case_count": 6140,
+  "atomic_domain_count": 16,
+  "atomic_seed_count": 5,
+  "atomic_variant_count": 4,
+  "color_mode": "colorblind-safe with redundant encodings",
+  "dpi": 600,
+  "figure_height_inches": 4.25,
+  "figure_width_inches": 7.0,
+  "font_family": "Helvetica",
+  "generated_at": "2026-07-16T06:54:27+00:00",
+  "minimum_text_size_points": 9.0,
+  "output_file": "latex_code/aamas_method_paper/figures/fig3_evaluation.png",
+  "panel_contract": "paired domain coverage; atomic coverage-size tradeoff; temporal cumulative valid-trace coverage",
+  "pixel_height": 2550,
+  "pixel_width": 4200,
+  "schema_version": 1,
+  "source_file": "paper_artifacts/gp2pl_evaluation/v1/paired_ablation_results.json",
+  "source_revision": {
+    "available": true,
+    "commit": "72b0604fe324f10d8c78e821eb25265c7665240d",
+    "tracked_changes": false,
+    "untracked_files": false
+  },
+  "source_run_id": "aaai-paired-72b0604f",
+  "source_sha256": "73546ee94cb8adaaf894041d0a85967b968439391219afbf95937f47b4d2f853",
+  "temporal_case_count": 1228,
+  "temporal_variant_count": 4,
+  "timeout_seconds": 1800
+}

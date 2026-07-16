@@ -1,25 +1,26 @@
 \section{Experimental Evaluation}
 \label{sec:evaluation}
 
-Figure~\ref{fig:evaluation-summary} summarizes the complete five-seed held-out
-matrix and its predeclared benchmark groups; the estimands, validation oracles,
-and timing boundary are defined below.
+Figure~\ref{fig:evaluation-summary} summarizes the paired atomic and temporal
+ablations at domain, library, and execution levels; the variants, validation
+oracles, and timing boundary are defined below.
 
 \IfFileExists{\gpplfigurethreepath}{%
-\begin{figure*}[htbp]
+\begin{figure*}[t!]
 \centering
 \includegraphics[width=\textwidth]{\gpplfigurethreepath}
-\caption{Five-seed held-out execution. Panel (a) gives per-domain
-Jason-plus-VAL coverage for five independently seeded MOOSE evidence runs;
-points are seeds and diamonds with bars show mean $\pm$ sample
-standard deviation. Panel (b) gives mean cumulative VAL-valid coverage over
-Jason execution time for three predeclared benchmark groups; bands span the
-seed minimum and maximum. Failures remain in the denominator, and the dashed
-line marks the per-instance time limit.}
+\caption{Paired ablations. Panel (a) compares Evidence Only and Full GP2PL
+per-domain Jason-plus-VAL coverage over five fixed seeds; small points are
+seeds, and large markers with bars show mean $\pm$ sample standard deviation.
+Panel (b) gives held-out coverage versus emitted branches for all four atomic
+variants, again as five-seed mean $\pm$ sample standard deviation. Panel (c)
+gives cumulative valid-trace coverage over end-to-end time for all 1,228 paired
+temporal queries. Failures remain in the denominator, and the dashed line marks
+the 1,800-second limit. Color is redundant with marker and line style.}
 \label{fig:evaluation-summary}
 \end{figure*}
 }{%
-\PackageWarning{gp2pl}{Five-seed result figure unavailable}%
+\PackageWarning{gp2pl}{Paired ablation result figure unavailable}%
 }
 
 \subsection{Questions and Comparisons}

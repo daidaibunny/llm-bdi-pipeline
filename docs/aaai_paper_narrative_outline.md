@@ -804,7 +804,8 @@ During result insertion, empirical completeness takes priority over the
 seven-page limit. The main paper uses exactly three planned figures: the
 single-column framework overview as Figure 1 on the first page's right column,
 the full-width policy-lifting example as Figure 2 at the top of page 2, and the
-five-seed empirical result as Figure 3. The main paper retains the supported
+paired atomic-and-temporal ablation result as Figure 3. The main paper retains
+the supported
 fragment, candidate-constructor, compact five-seed, temporal-profile, paired
 atomic, paired temporal, MOOSE-source, and external-reference tables while
 empirical completeness is the priority. The complete domain--seed matrix and fixed seed-0 temporal input table
@@ -849,13 +850,15 @@ Canvas, PowerPoint, Python, and export settings:
   editable source deck `aaai_method_figures_source.pptx`, with exactly one
   figure per slide. Main Figure 3 is produced by the checked-in Matplotlib script.
 - Main figure files are `fig1_architecture.png`, `fig2_policy_lifting.pdf`, and
-  the empirical artifact `fig2_evaluation.pdf`, which is inserted as
+  the empirical artifact `fig3_evaluation.png`, which is inserted as
   Figure 3 through `\gpplfigurethreepath`. The supplementary vector file is
   `figS1_dfa_controller.pdf`; all files live under
   `latex_code/aamas_method_paper/figures/` when delivered.
 - Embed fonts in vector PDFs, crop to the slide boundary, and verify all text at
-  its final include width. Do not rasterize vector figures or resample/recompress
-  the locked Figure 1 PNG.
+  its final include width. Do not rasterize the method figures or
+  resample/recompress the locked Figure 1 PNG. Figure 3 is the deliberate
+  exception: it is generated directly at 4,200 by 2,550 pixels and 600 dpi, not
+  converted from a lower-resolution vector or slide export.
 - Main Figure 3 uses regular-weight Helvetica throughout, with every panel
   heading, axis label, tick label, domain label, legend, and annotation at least
   9 pt. Do not use bold text inside the data figure. Hide the top and right
@@ -1145,126 +1148,101 @@ All helper names in panel (c) omit the common prefix
 > monitor observes every primitive action. Uncertified cyclic threats or
 > negative-literal repairs are rejected rather than serialized heuristically.
 
-### Figure 3: Five-Seed Empirical Evidence
+### Figure 3: Paired Atomic and Temporal Ablations
 
-Use a full-width `figure*[htbp]` in the main Evaluation section after the protocol
-and metric definitions and before the result subsections. This figure is
-generated from artifacts, not manually drawn. The
-checked-in plotting script places every point, interval, annotation, and curve;
-PowerPoint must not be used to reconstruct the data marks.
+Use a full-width `figure*[t!]` at the start of the main Evaluation section.
+The figure is generated from artifacts rather than manually drawn. The checked-in
+plotting script owns every point, interval, curve, label, and style; PowerPoint
+must not be used to reconstruct data marks.
 
-The required generator is `scripts/generate_aaai_figures.py`. The submitted
-empirical figure uses
-`--five-seed-results`, `--validation-run-root`, and `--output-file`. The separate
-`--paired-results` mode remains available for the registered compiler and
-temporal ablations after that matrix completes; it is not used to fabricate
-missing ablation points in the submitted figure. Both modes exit nonzero without
-replacing the PDF when a gate fails and write machine-readable diagnostic and
-provenance sidecars.
+The canonical command is:
 
-Data-release gate:
+```bash
+uv run python scripts/generate_aaai_figures.py \
+  --ablation-results \
+  paper_artifacts/gp2pl_evaluation/v1/paired_ablation_results.json \
+  --output-file \
+  latex_code/aamas_method_paper/figures/fig3_evaluation.png
+```
 
-- Treat the raw runner aggregate at
-  `artifacts/parser_order_full_val_logs/pddl-five-seed-20260713-153900/`
-  `five_seed_summary.json` as an index, not as the sole result oracle. Freeze
-  its SHA-256 only after its five-seed protocol, child run identifiers,
-  evidence-generation status, per-seed domain counts, means, and sample
-  standard deviations agree exactly with the independently read child runs.
-- Coverage values read exactly one frozen
-  `paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json`.
-  Require the Full GP2PL method, seeds 0--4, independent evidence runs, no
-  evidence union, no best-seed selection, all 16 domains, and a compiler/runtime
-  source-file set whose hash is byte-identical to every formal execution revision.
-- Runtime values read only the five child summaries named by that frozen
-  artifact. Require each child `summary.json` SHA-256 to match the frozen row,
-  the same Full GP2PL settings and Jason worker count, a 1,800-second Jason and
-  VAL limit, and a 64-MiB Java stack. A successful case must have Jason success,
-  attempted and successful VAL validation, and a `timing_profile.run_seconds`
-  value within the Jason deadline.
-- Recompute all per-domain and pooled counts from the child records and require
-  exact agreement with the frozen artifact. If any input, hash, denominator,
-  success oracle, runtime, or compiler source-file hash gate fails, leave the prior PDF
-  untouched and persist a diagnostic. Do not render a partial panel.
+The generator accepts only the frozen paired-ablation artifact. It requires the
+four registered atomic variants, the four registered temporal variants, seeds
+0--4, all 16 domains, the common case contracts, certified atomic and temporal
+pairing, the 1,800-second limit, six workers, and the 64-MiB Java stack. It
+recomputes every per-domain coverage, per-seed coverage, summary success count,
+and cumulative temporal curve from the portable records. For temporal success,
+Jason, neutral-goal VAL, gold-DFA acceptance, and predicted-DFA acceptance must
+all agree. A mismatch writes a diagnostic and leaves the existing PNG untouched.
 
-Use a two-panel asymmetric layout. Panel (a) is wide enough for all 16 domain
-labels; panel (b) receives slightly more horizontal space for the logarithmic
-time axis. Both panels share one 7.0 by 4.25 inch `figure*` canvas.
+Use an asymmetric three-panel layout on one 7.0 by 4.25 inch canvas. Panel (a)
+spans both rows on the left. Panels (b) and (c) occupy the upper and lower right.
+Export directly at 600 dpi, producing exactly 4,200 by 2,550 pixels. Use regular
+Helvetica at 9 pt or larger, an opaque white background, light-gray major grids,
+and no top or right spines. The palette is colorblind-safe, while open/filled
+markers, marker shapes, and line styles redundantly encode every method. Do not
+use stars or bold text.
 
-- `(a)` is headed `Five-seed held-out coverage`.
-- `(b)` is headed `Time-to-valid-trace by benchmark group`.
-- Use Helvetica, embedded as TrueType in the PDF, with a 9-pt minimum for every
-  visible text element. Plot backgrounds are white; all plot text uses regular
-  weight; top and right spines are omitted; and only light gray major grid lines
-  remain. Use the colorblind-safe palette with redundant marker and line-style
-  encodings so no distinction depends on color alone. Stars are not used: in
-  empirical figures they commonly
-  imply significance or a privileged best point, neither of which is encoded
-  by this experiment.
+Panel (a), `Atomic lifting by domain`:
 
-Panel (a) specification:
+- Keep the fixed 16-domain order and group separators after `transport` and
+  `numeric-transport`; do not select only favorable domains.
+- Compare the predeclared endpoints Evidence Only and Full GP2PL. For each
+  domain and method, show all five seed values as translucent points and the
+  mean with a horizontal sample-standard-deviation interval. Join only the two
+  endpoint means for the same domain with a thin neutral line.
+- The x-axis is Jason-plus-VAL held-out coverage from 0 to 100 percent. A dashed
+  vertical line marks complete coverage. This panel visualizes where schema and
+  recursive lifting change executable coverage; it does not replace the
+  four-variant aggregate in panel (b).
 
-- Y-axis order is fixed as: `barman`, `ferry`, `gripper`, `logistics`,
-  `miconic`, `rovers`, `satellite`, `transport`, then `numeric-ferry`,
-  `numeric-miconic`, `numeric-minecraft`, `numeric-transport`, then
-  `blocksworld-clear`, `blocksworld-on`, `blocksworld-tower`, `depots`.
-  Draw thin group separators after `transport` and `numeric-transport`.
-- X-axis is `Jason + VAL coverage (%)`, fixed from 0 to 100 with ticks at
-  0, 25, 50, 75, and 100. Draw a gray dashed reference line at 100.
-- For every domain, plot all five Full GP2PL seed coverages as small translucent
-  blue points. Plot their mean as a filled blue diamond with a horizontal capped
-  sample-standard-deviation interval. Annotate only domains with nonzero seed
-  variation; the complete numeric table follows in the Technical Supplement.
-- Coverage is `100 * valid_trace_count / test_count` from that domain's original
-  held-out PDDL achievement tests. A valid trace requires Jason completion and
-  VAL acceptance. Do not pool domains before plotting and do not substitute
-  producible-predicate target coverage for executable held-out coverage.
+Panel (b), `Atomic coverage-size tradeoff`:
 
-Panel (b) specification:
+- Plot all four atomic variants. The x coordinate is total emitted branches per
+  complete 16-domain seed library; the y coordinate is held-out Jason-plus-VAL
+  coverage over all 1,228 cases in that seed. Markers and capped bars show the
+  five-seed mean plus or minus sample standard deviation on both axes.
+- Use a linear branch-count axis because the observed range is less than a
+  factor of two. Keep the y-axis truncated but numerically labelled so the
+  equal-coverage branch reduction from Maximum Feasible to Full GP2PL remains
+  visible without implying a larger absolute coverage change.
+- Use short in-figure labels `Evidence`, `Direct`, `Maximum`, and `Full`; the
+  caption and paired-ablation table retain the complete method names.
 
-- Do not select visually favorable domains. Aggregate all registered domains by
-  the three report groups fixed before plotting: eight classical MOOSE domains,
-  four bounded-integer domains, and four serialized-width domains. These groups
-  are reporting strata, never backend routes.
-- For each group and seed, sort `jason_validation.json` values from
-  `timing_profile.run_seconds` for cases that complete in Jason and pass VAL.
-  At each time, divide the solved count by every test case in that group; failed
-  and timed-out cases stay in the denominator. This follows MOOSE's
-  absolute-time cumulative-coverage convention, but the time measure is
-  explicitly Jason process execution rather than VAL or concurrent queue time.
-- Draw one right-continuous mean curve per group: classical in blue with circle
-  markers, numeric in green with square markers, and serialized-width in amber
-  with diamond markers. Shade the seed minimum-to-maximum envelope at each time.
-  The envelope is descriptive seed variation, not a confidence interval.
-- X-axis is `Jason execution time (s, log scale)` from 0.5 to just beyond the
-  1,800-second deadline. Y-axis is `VAL-valid cases solved (%)` from 0 to 100.
-  Mark 1, 10, 100, and 1,800 seconds on each curve and draw a vertical dashed
-  deadline. Do not smooth or interpolate the step curves.
-- This panel reports representative coverage and execution scale across the
-  complete corpus. It does not establish superiority over MOOSE or another
-  planner. Add external-baseline curves only after a hash-paired full matrix is
-  available; never insert published numbers from different hardware or splits.
+Panel (c), `Temporal time-to-valid-trace`:
 
-Draft caption:
+- Plot one right-continuous cumulative curve for each temporal variant over the
+  identical 1,228-query paired set. A query enters the numerator only when its
+  complete execution satisfies Jason, neutral-goal VAL, and both DFA oracles.
+  Failed and timed-out queries remain in the denominator.
+- Use a logarithmic end-to-end time axis and mark 1, 10, 100, and 1,800 seconds.
+  The dashed vertical line is the registered deadline. Do not smooth or
+  interpolate the empirical step curves.
+- Use short labels `Unprotected`, `Certified flat`, `Certified balanced`, and
+  `Module return`; the exact success counts, PAR-2, controller plans, and trigger
+  fan-out remain in the generated table.
 
-> **Figure 3: Five-seed held-out execution.** Panel (a) gives per-domain
-> Jason-plus-VAL coverage for five independently seeded MOOSE
-> evidence runs; points are seeds and diamonds with bars show mean plus or minus
-> sample standard deviation. Panel (b) gives mean cumulative VAL-valid coverage
-> over Jason execution time for three predeclared benchmark families; bands span
-> the seed minimum and maximum. Failures remain in the denominator and the dashed
-> line marks the per-instance time limit.
+Canonical caption:
 
-Before delivery, verify the figure totals against the corresponding generated
-LaTeX tables. The figure and table must name the same run IDs and input hashes.
-No one may copy values from a PDF table back into the plot source.
+> **Figure 3: Paired ablations.** Panel (a) compares Evidence Only and Full
+> GP2PL per-domain Jason-plus-VAL coverage over five fixed seeds; small points
+> are seeds, and large markers with bars show mean plus or minus sample standard
+> deviation. Panel (b) gives held-out coverage versus emitted branches for all
+> four atomic variants, again as five-seed mean plus or minus sample standard
+> deviation. Panel (c) gives cumulative valid-trace coverage over end-to-end
+> time for all 1,228 paired temporal queries. Failures remain in the denominator,
+> and the dashed line marks the 1,800-second limit. Color is redundant with
+> marker and line style.
+
+Before delivery, verify the plotted totals against both generated ablation
+tables and require the same frozen source SHA-256 in the figure metadata. Never
+copy values from a PDF or LaTeX table back into the plotting source.
 
 ### Figure Delivery and LaTeX Insertion Contract
 
 The colleague may deliver the editable method deck and planned conceptual
 figures separately. The plotting script delivers the current empirical figure.
-Its `fig2_evaluation.metadata.json` records the frozen five-seed result, the
-verified source-runner aggregate hash, five hash-locked child summaries,
-compiler source-file hash, dimensions, and plotting contract. If the planned conceptual
+Its `fig3_evaluation.metadata.json` records the frozen paired-ablation source
+hash, run identifier, dimensions, resolution, and panel contract. If the planned conceptual
 assets are delivered, assemble the
 multi-asset `aaai_figure_manifest.json` only after recording their dimensions,
 data sources, and embedded fonts. Any font substitution is a release blocker.
@@ -1284,7 +1262,7 @@ placeholders until their colleague-produced vector PDFs are delivered:
   \label{fig:architecture}
 \end{figure}
 
-\begin{figure*}[htbp]
+\begin{figure*}[t!]
   \centering
   \IfFileExists{\gpplfiguretwopath}{
     \includegraphics[width=\textwidth]{\gpplfiguretwopath}
@@ -1293,7 +1271,7 @@ placeholders until their colleague-produced vector PDFs are delivered:
   \label{fig:policy-lifting-example}
 \end{figure*}
 
-\begin{figure*}[htbp]
+\begin{figure*}[t!]
   \centering
   \includegraphics[width=\textwidth]{\gpplfigurethreepath}
   \caption{<approved Figure 3 caption from this outline>}
@@ -1301,24 +1279,25 @@ placeholders until their colleague-produced vector PDFs are delivered:
 \end{figure*}
 ```
 
-The main Evaluation source contains the Figure 3 `figure*[htbp]` placement before
-its result subsections. Until the frozen five-seed
-result and every child hash pass the plotting gate, `\IfFileExists` omits the
+The main Evaluation source contains the Figure 3 `figure*[t!]` placement before
+its result subsections. Until the frozen paired-ablation artifact passes the
+plotting gate, `\IfFileExists` omits the
 figure and emits a package warning; no synthetic or partial empirical graphic
 is allowed to enter the review PDF. A layout-only preview may override
 `\gpplfigurethreepath` in an untracked build, but it is never a paper artifact.
 
-The current main paper inserts the existing `fig2_evaluation.pdf` empirical
-artifact through the Figure 3 macro. Figures 1 and 2 deliberately show layout
+The current main paper inserts the 600-dpi `fig3_evaluation.png` artifact
+through the Figure 3 macro. Figures 1 and 2 deliberately show layout
 placeholders until the final conceptual vector assets are delivered and
 validated; the supplementary DFA asset remains optional until delivery.
 
 The angle-bracket caption placeholders are instructions and must be replaced by
 the approved caption text before compilation. Never duplicate a caption inside
-the graphic. Inspect every exported PDF at 100 and 200 percent zoom, print one
-grayscale proof, and verify that line style and labels preserve every semantic
-distinction without color. Run `pdffonts` and require all fonts to report
-embedded. The final manuscript must cite each figure before it appears.
+the graphic. Inspect the generated PNG at native resolution and the compiled
+paper at 100 and 200 percent zoom, print one grayscale proof, and verify that
+line style and labels preserve every semantic distinction without color. Run
+`pdffonts` on vector assets and require all fonts to report embedded. The final
+manuscript must cite each figure before it appears.
 
 ### Table 1: Supported Fragment and Rejection Boundary
 

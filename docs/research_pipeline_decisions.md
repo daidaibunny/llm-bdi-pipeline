@@ -557,6 +557,13 @@ adjacent-method exact paired contrasts, corrected transition-repair fan-out,
 paired-input contracts, and parent/challenge hashes. The generated atomic and
 temporal tables and macros are the only manuscript insertion path for these
 values.
+Main-paper Figure 3 is generated from this same frozen release by
+`scripts/generate_aaai_figures.py --ablation-results`; it is not reconstructed
+from LaTeX cells. The three fixed panels report (i) five-seed per-domain
+Evidence Only versus Full GP2PL coverage, (ii) the four atomic variants'
+coverage-versus-branch-count tradeoff, and (iii) cumulative valid temporal
+traces for all four controller variants. The generator revalidates pairing and
+the success oracle before writing the 7.0 by 4.25 inch, 600-dpi PNG.
 
 The companion `scripts/run_certificate_challenge_matrix.py` executes the
 registered rejection and symbol-invariance cases against production compiler

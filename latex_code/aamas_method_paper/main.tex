@@ -34,7 +34,7 @@ Libraries for Temporally Extended Goals}
 \newcommand{\methodname}{GP2PL}
 \providecommand{\gpplfigureonepath}{figures/fig1_architecture.png}
 \providecommand{\gpplfiguretwopath}{figures/fig2_policy_lifting.pdf}
-\providecommand{\gpplfigurethreepath}{figures/fig2_evaluation.pdf}
+\providecommand{\gpplfigurethreepath}{figures/fig3_evaluation.png}
 \newif\ifgpplpublicartifact
 % Keep false for anonymous review; set true only in the camera-ready source.
 \gpplpublicartifactfalse
@@ -50,11 +50,10 @@ Libraries for Temporally Extended Goals}
 \maketitle
 
 \begin{abstract}
-Generalized planning synthesizes reusable behavior for families of planning
-problems, whereas Belief--Desire--Intention (BDI) agents execute plan libraries.
-The two representations are not interchangeable: a learned policy need not
-provide executable plans for internally required subgoals or support safe
-composition of temporally extended requirements. We introduce \methodname{}
+Generalized planning synthesizes reusable behavior for problem families, while
+Belief--Desire--Intention (BDI) agents execute plan libraries. A learned policy
+may omit executable plans for internal subgoals and safe temporal composition.
+We introduce \methodname{}
 (Generalized Planning to Plan Libraries), which closes this representation gap
 by compiling generalized-planning evidence and Planning Domain Definition
 Language (PDDL) action models into certified BDI plan libraries. GP2PL validates

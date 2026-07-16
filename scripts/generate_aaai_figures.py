@@ -29,6 +29,9 @@ from matplotlib.ticker import FuncFormatter  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_FILE = (
+	PROJECT_ROOT / "latex_code/aamas_method_paper/figures/fig3_evaluation.png"
+)
+LEGACY_OUTPUT_FILE = (
 	PROJECT_ROOT / "latex_code/aamas_method_paper/figures/fig2_evaluation.pdf"
 )
 DEFAULT_VALIDATION_RUN_ROOT = PROJECT_ROOT / "artifacts/jason_full_test_runs"
@@ -39,9 +42,10 @@ REGISTERED_JAVA_STACK_SIZE = "64m"
 MINIMUM_LOG_SECONDS = 0.1
 FIGURE_WIDTH_INCHES = 7.0
 FIGURE_HEIGHT_INCHES = 4.25
+FIGURE_DPI = 600
 FIGURE_FONT_FAMILY = "Helvetica"
 MINIMUM_FIGURE_TEXT_POINTS = 9.0
-FIGURE_COLOR_MODE = "grayscale"
+FIGURE_COLOR_MODE = "colorblind-safe with redundant encodings"
 TEMPORAL_MARKER_SECONDS = (1.0, 10.0, 100.0, 1800.0)
 
 DOMAIN_ORDER = (
@@ -79,15 +83,27 @@ TEMPORAL_VARIANTS = (
 	("certified_balanced", "Certified Balanced"),
 	("completion_boundary_monitor", "Module-Return Monitor"),
 )
+ATOMIC_FIGURE_LABELS = {
+	"validated_evidence_adapter": "Evidence",
+	"action_only_closure": "Direct",
+	"maximal_certified_program": "Maximum",
+	"full": "Full",
+}
+TEMPORAL_FIGURE_LABELS = {
+	"dfa_aware_unprotected": "Unprotected",
+	"certified_flat": "Certified flat",
+	"certified_balanced": "Certified balanced",
+	"completion_boundary_monitor": "Module return",
+}
 
 COLORS = {
-	"blue": "0.15",
-	"orange": "0.45",
-	"green": "0.30",
-	"purple": "0.60",
-	"gray": "0.45",
-	"light_gray": "0.80",
-	"text": "0.10",
+	"blue": "#0072B2",
+	"orange": "#D55E00",
+	"green": "#009E73",
+	"purple": "#CC79A7",
+	"gray": "#666666",
+	"light_gray": "#D4D4D4",
+	"text": "#1A1A1A",
 }
 ATOMIC_STYLES = {
 	"validated_evidence_adapter": (COLORS["gray"], "o"),
@@ -189,6 +205,387 @@ def build_figure_dataset(payload: Mapping[str, Any]) -> dict[str, Any]:
 		"temporal_curves": temporal_curves,
 		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
 	}
+
+
+def build_frozen_ablation_figure_dataset(
+	payload: Mapping[str, Any],
+) -> dict[str, Any]:
+	"""Validate the frozen paired release and derive all Figure 3 values."""
+
+	_validate_frozen_ablation_gate(payload)
+	protocol = _mapping_field(payload, "protocol", label="frozen ablation")
+	case_contract = _mapping_field(protocol, "case_contract", label="protocol")
+	achievement_contract = _mapping_field(
+		case_contract,
+		"achievement",
+		label="case contract",
+	)
+	temporal_contract = _mapping_field(
+		case_contract,
+		"temporal",
+		label="case contract",
+	)
+	atomic_case_count_per_seed = int(achievement_contract["count"])
+	temporal_case_count = int(temporal_contract["count"])
+
+	atomic_records = tuple(dict(row) for row in payload["atomic_records"])
+	atomic_by_variant = {
+		variant: tuple(row for row in atomic_records if row["variant"] == variant)
+		for variant, _method in ATOMIC_VARIANTS
+	}
+	atomic_domain_coverage: dict[str, dict[str, list[float]]] = {}
+	for domain in DOMAIN_ORDER:
+		atomic_domain_coverage[domain] = {}
+		for output_key, variant in (
+			("evidence_adapter", "validated_evidence_adapter"),
+			("full", "full"),
+		):
+			values: list[float] = []
+			for seed in REGISTERED_SEEDS:
+				domain_records = tuple(
+					row
+					for row in atomic_by_variant[variant]
+					if int(row["seed"]) == seed and row["domain"] == domain
+				)
+				if not domain_records:
+					raise ValueError(
+						f"atomic record matrix has no {variant} seed {seed} {domain}",
+					)
+				values.append(
+					100.0
+					* sum(row["valid"] is True for row in domain_records)
+					/ len(domain_records),
+				)
+			atomic_domain_coverage[domain][output_key] = values
+
+	atomic_summary_by_variant = {
+		str(row["variant"]): dict(row) for row in payload["atomic"]
+	}
+	atomic_seed_rows = tuple(dict(row) for row in payload["atomic_seed_results"])
+	atomic_tradeoff_summary: dict[str, dict[str, float]] = {}
+	for variant, _method in ATOMIC_VARIANTS:
+		summary = atomic_summary_by_variant[variant]
+		seed_rows = sorted(
+			(row for row in atomic_seed_rows if row["variant"] == variant),
+			key=lambda row: int(row["seed"]),
+		)
+		coverage_values = [
+			100.0 * int(row["valid_count"]) / int(row["case_count"])
+			for row in seed_rows
+		]
+		atomic_tradeoff_summary[variant] = {
+			"branch_mean": float(summary["mean_branch_count"]),
+			"branch_sd": float(summary["sd_branch_count"]),
+			"coverage_mean": statistics.mean(coverage_values),
+			"coverage_sd": statistics.stdev(coverage_values),
+		}
+
+	temporal_records = tuple(dict(row) for row in payload["temporal_records"])
+	temporal_curves: dict[str, dict[str, Any]] = {}
+	for variant, _method in TEMPORAL_VARIANTS:
+		variant_records = tuple(
+			row for row in temporal_records if row["variant"] == variant
+		)
+		x_values, y_values = _cumulative_frozen_valid_fraction(
+			variant_records,
+			timeout_seconds=REGISTERED_TIMEOUT_SECONDS,
+		)
+		temporal_curves[variant] = {
+			"x_seconds": x_values,
+			"solved_percent": y_values,
+			"sample_count": len(variant_records),
+			"solved_count": sum(row["valid"] is True for row in variant_records),
+			"final_percent": y_values[-1],
+		}
+
+	return {
+		"run_id": str(payload.get("run_id") or ""),
+		"source_revision": dict(
+			_mapping_field(payload, "provenance", label="frozen ablation").get(
+				"source_revision",
+			)
+			or {},
+		),
+		"atomic_domain_coverage": atomic_domain_coverage,
+		"atomic_tradeoff_summary": atomic_tradeoff_summary,
+		"temporal_curves": temporal_curves,
+		"atomic_case_count": atomic_case_count_per_seed * len(REGISTERED_SEEDS),
+		"temporal_case_count": temporal_case_count,
+		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
+	}
+
+
+def _validate_frozen_ablation_gate(payload: Mapping[str, Any]) -> None:
+	if payload.get("artifact_kind") != "gp2pl_paired_ablation_results":
+		raise ValueError("unsupported frozen ablation artifact")
+	if int(payload.get("schema_version") or 0) != 1:
+		raise ValueError("unsupported frozen ablation schema")
+	protocol = _mapping_field(payload, "protocol", label="frozen ablation")
+	if tuple(protocol.get("registered_seeds") or ()) != REGISTERED_SEEDS:
+		raise ValueError("frozen ablation must contain registered seeds 0--4")
+	if int(protocol.get("num_workers") or 0) != REGISTERED_NUM_WORKERS:
+		raise ValueError("frozen ablation worker protocol disagrees")
+	if int(protocol.get("timeout_seconds") or 0) != REGISTERED_TIMEOUT_SECONDS:
+		raise ValueError("frozen ablation timeout protocol disagrees")
+	if protocol.get("jason_java_stack_size") != REGISTERED_JAVA_STACK_SIZE:
+		raise ValueError("frozen ablation Java stack protocol disagrees")
+	atomic_pairing = _mapping_field(protocol, "atomic_pairing", label="protocol")
+	if atomic_pairing.get("paired") is not True:
+		raise ValueError("frozen ablation atomic pairing is not certified")
+	if int(atomic_pairing.get("seed_domain_group_count") or 0) != (
+		len(REGISTERED_SEEDS) * len(DOMAIN_ORDER)
+	):
+		raise ValueError("frozen ablation atomic pairing group count disagrees")
+	temporal_pairing = _mapping_field(
+		protocol,
+		"temporal_pairing",
+		label="protocol",
+	)
+	if temporal_pairing.get("paired") is not True:
+		raise ValueError("frozen ablation temporal pairing is not certified")
+	if int(temporal_pairing.get("domain_count") or 0) != len(DOMAIN_ORDER):
+		raise ValueError("frozen ablation temporal domain count disagrees")
+	case_contract = _mapping_field(protocol, "case_contract", label="protocol")
+	achievement_contract = _mapping_field(
+		case_contract,
+		"achievement",
+		label="case contract",
+	)
+	temporal_contract = _mapping_field(
+		case_contract,
+		"temporal",
+		label="case contract",
+	)
+	atomic_case_count_per_seed = int(achievement_contract.get("count") or 0)
+	temporal_case_count = int(temporal_contract.get("count") or 0)
+	if atomic_case_count_per_seed <= 0 or temporal_case_count <= 0:
+		raise ValueError("frozen ablation case contracts are empty")
+	for name, contract in (
+		("achievement", achievement_contract),
+		("temporal", temporal_contract),
+	):
+		if len(str(contract.get("sha256") or "")) != 64:
+			raise ValueError(f"frozen ablation {name} case contract has no SHA-256")
+
+	provenance = _mapping_field(payload, "provenance", label="frozen ablation")
+	if len(str(provenance.get("paired_results_sha256") or "")) != 64:
+		raise ValueError("frozen ablation has no paired-result SHA-256")
+	method_equivalence = _mapping_field(
+		provenance,
+		"method_source_equivalence",
+		label="provenance",
+	)
+	if method_equivalence.get("status") != "confirmed":
+		raise ValueError("frozen ablation method source is not confirmed")
+
+	atomic_summaries = tuple(dict(row) for row in payload.get("atomic") or ())
+	if {row.get("variant") for row in atomic_summaries} != {
+		variant for variant, _method in ATOMIC_VARIANTS
+	}:
+		raise ValueError("frozen ablation atomic summary variants disagree")
+	atomic_records = tuple(dict(row) for row in payload.get("atomic_records") or ())
+	expected_atomic_record_count = (
+		atomic_case_count_per_seed * len(REGISTERED_SEEDS) * len(ATOMIC_VARIANTS)
+	)
+	if len(atomic_records) != expected_atomic_record_count:
+		raise ValueError("frozen ablation atomic record matrix is incomplete")
+	_atomic_record_matrix(
+		atomic_records,
+		atomic_summaries=atomic_summaries,
+		atomic_seed_results=tuple(payload.get("atomic_seed_results") or ()),
+		case_count_per_seed=atomic_case_count_per_seed,
+	)
+
+	temporal_summaries = tuple(dict(row) for row in payload.get("temporal") or ())
+	if {row.get("variant") for row in temporal_summaries} != {
+		variant for variant, _method in TEMPORAL_VARIANTS
+	}:
+		raise ValueError("frozen ablation temporal summary variants disagree")
+	temporal_records = tuple(
+		dict(row) for row in payload.get("temporal_records") or ()
+	)
+	if len(temporal_records) != temporal_case_count * len(TEMPORAL_VARIANTS):
+		raise ValueError("frozen ablation temporal record matrix is incomplete")
+	_temporal_record_matrix(
+		temporal_records,
+		temporal_summaries=temporal_summaries,
+		case_count=temporal_case_count,
+	)
+	if int(temporal_pairing.get("sample_count") or 0) != temporal_case_count:
+		raise ValueError("frozen ablation temporal pairing sample count disagrees")
+	if int(temporal_pairing.get("controller_fingerprint_count") or 0) != len(
+		temporal_records,
+	):
+		raise ValueError("frozen ablation controller fingerprint count disagrees")
+
+
+def _atomic_record_matrix(
+	records: Sequence[Mapping[str, Any]],
+	*,
+	atomic_summaries: Sequence[Mapping[str, Any]],
+	atomic_seed_results: Sequence[Mapping[str, Any]],
+	case_count_per_seed: int,
+) -> None:
+	by_variant: dict[str, dict[tuple[int, str], Mapping[str, Any]]] = {}
+	for variant, _method in ATOMIC_VARIANTS:
+		variant_rows = [row for row in records if row.get("variant") == variant]
+		index: dict[tuple[int, str], Mapping[str, Any]] = {}
+		for row in variant_rows:
+			seed = int(row.get("seed", -1))
+			case_id = str(row.get("case_id") or "")
+			key = (seed, case_id)
+			if seed not in REGISTERED_SEEDS or not case_id or key in index:
+				raise ValueError(f"invalid atomic record key for {variant}: {key}")
+			if row.get("domain") not in DOMAIN_ORDER:
+				raise ValueError(f"atomic record has unknown domain: {row.get('domain')}")
+			expected_valid = (
+				row.get("status") == "success"
+				and row.get("jason_success") is True
+				and row.get("val_attempted") is True
+				and row.get("val_success") is True
+			)
+			if (row.get("valid") is True) != expected_valid:
+				raise ValueError(f"atomic validity oracle disagrees for {variant} {key}")
+			index[key] = row
+		by_variant[variant] = index
+	reference_variant = ATOMIC_VARIANTS[0][0]
+	reference = by_variant[reference_variant]
+	for variant, index in by_variant.items():
+		if set(index) != set(reference):
+			raise ValueError(f"atomic record matrix differs for {variant}")
+		for key, row in index.items():
+			reference_row = reference[key]
+			if row.get("domain") != reference_row.get("domain"):
+				raise ValueError(f"atomic paired input differs for {variant} {key}")
+	for seed in REGISTERED_SEEDS:
+		if sum(key[0] == seed for key in reference) != case_count_per_seed:
+			raise ValueError(f"atomic record matrix seed {seed} count disagrees")
+
+	seed_index: dict[tuple[int, str], Mapping[str, Any]] = {}
+	for raw_row in atomic_seed_results:
+		row = dict(raw_row)
+		key = (int(row.get("seed", -1)), str(row.get("variant") or ""))
+		if key in seed_index:
+			raise ValueError(f"duplicate atomic seed summary: {key}")
+		seed_index[key] = row
+	expected_seed_keys = {
+		(seed, variant)
+		for seed in REGISTERED_SEEDS
+		for variant, _method in ATOMIC_VARIANTS
+	}
+	if set(seed_index) != expected_seed_keys:
+		raise ValueError("atomic seed summary matrix is incomplete")
+	for key, row in seed_index.items():
+		seed, variant = key
+		variant_rows = [
+			record for record_key, record in by_variant[variant].items() if record_key[0] == seed
+		]
+		if int(row.get("case_count") or 0) != len(variant_rows):
+			raise ValueError(f"atomic seed summary case count disagrees: {key}")
+		if int(row.get("valid_count") or 0) != sum(
+			record.get("valid") is True for record in variant_rows
+		):
+			raise ValueError(f"atomic seed summary validity disagrees: {key}")
+
+	summary_index = {str(row["variant"]): row for row in atomic_summaries}
+	for variant, index in by_variant.items():
+		summary = summary_index[variant]
+		if int(summary.get("test_count") or 0) != len(index):
+			raise ValueError(f"atomic summary case count disagrees for {variant}")
+		if int(summary.get("valid_trace_count") or 0) != sum(
+			row.get("valid") is True for row in index.values()
+		):
+			raise ValueError(f"atomic summary validity disagrees for {variant}")
+
+
+def _temporal_record_matrix(
+	records: Sequence[Mapping[str, Any]],
+	*,
+	temporal_summaries: Sequence[Mapping[str, Any]],
+	case_count: int,
+) -> None:
+	by_variant: dict[str, dict[str, Mapping[str, Any]]] = {}
+	for variant, _method in TEMPORAL_VARIANTS:
+		index: dict[str, Mapping[str, Any]] = {}
+		for row in (row for row in records if row.get("variant") == variant):
+			sample_id = str(row.get("sample_id") or "")
+			if not sample_id or sample_id in index:
+				raise ValueError(f"invalid temporal record key for {variant}: {sample_id}")
+			if row.get("domain") not in DOMAIN_ORDER:
+				raise ValueError(
+					f"temporal record has unknown domain: {row.get('domain')}",
+				)
+			expected_valid = (
+				row.get("status") == "success"
+				and row.get("jason_status") == "success"
+				and row.get("val_attempted") is True
+				and row.get("val_success") is True
+				and row.get("gold_accepted") is True
+				and row.get("prediction_accepted") is True
+			)
+			if (row.get("valid") is True) != expected_valid:
+				raise ValueError(
+					f"temporal validity oracle disagrees for {variant} {sample_id}",
+				)
+			if expected_valid:
+				duration = float(row.get("duration_seconds") or -1.0)
+				if duration < 0.0 or duration > REGISTERED_TIMEOUT_SECONDS:
+					raise ValueError(
+						f"valid temporal duration is outside deadline: {variant} {sample_id}",
+					)
+			index[sample_id] = row
+		by_variant[variant] = index
+	reference_variant = TEMPORAL_VARIANTS[0][0]
+	reference = by_variant[reference_variant]
+	if len(reference) != case_count:
+		raise ValueError("temporal record matrix case count disagrees")
+	for variant, index in by_variant.items():
+		if set(index) != set(reference):
+			raise ValueError(f"temporal record matrix differs for {variant}")
+		for sample_id, row in index.items():
+			reference_row = reference[sample_id]
+			for field in (
+				"domain",
+				"profile",
+				"atomic_library_fingerprint",
+				"dfa_fingerprint",
+			):
+				if row.get(field) != reference_row.get(field):
+					raise ValueError(
+						f"temporal paired input differs for {variant} {sample_id}: {field}",
+					)
+	summary_index = {str(row["variant"]): row for row in temporal_summaries}
+	for variant, index in by_variant.items():
+		summary = summary_index[variant]
+		if int(summary.get("test_count") or 0) != len(index):
+			raise ValueError(f"temporal summary case count disagrees for {variant}")
+		if int(summary.get("valid_trace_count") or 0) != sum(
+			row.get("valid") is True for row in index.values()
+		):
+			raise ValueError(f"temporal summary validity disagrees for {variant}")
+
+
+def _cumulative_frozen_valid_fraction(
+	records: Sequence[Mapping[str, Any]],
+	*,
+	timeout_seconds: int,
+) -> tuple[list[float], list[float]]:
+	if not records:
+		raise ValueError("frozen temporal matrix has no query records")
+	cutoff = float(timeout_seconds)
+	solved_times = sorted(
+		max(MINIMUM_LOG_SECONDS, float(record["duration_seconds"]))
+		for record in records
+		if record.get("valid") is True
+	)
+	x_values = [MINIMUM_LOG_SECONDS]
+	y_values = [0.0]
+	for solved_count, duration in enumerate(solved_times, start=1):
+		x_values.append(duration)
+		y_values.append(100.0 * solved_count / len(records))
+	x_values.append(cutoff)
+	y_values.append(100.0 * len(solved_times) / len(records))
+	return x_values, y_values
 
 
 def cumulative_solved_fraction(
@@ -584,6 +981,80 @@ def generate_empirical_figure(
 			"artifact_kind": "gp2pl_empirical_figure_diagnostic",
 			"success": True,
 			"source_file": _portable_artifact_path(input_path),
+			"output_file": _portable_artifact_path(output_path),
+		},
+	)
+	return metadata
+
+
+def generate_frozen_ablation_figure(
+	*,
+	ablation_results_file: str | Path,
+	output_file: str | Path,
+) -> dict[str, Any]:
+	"""Render the canonical high-resolution Figure 3 from the frozen release."""
+
+	input_path = Path(ablation_results_file).expanduser().resolve()
+	output_path = Path(output_file).expanduser().resolve()
+	diagnostic_path = output_path.with_suffix(".diagnostic.json")
+	try:
+		payload = _read_json(input_path)
+		dataset = build_frozen_ablation_figure_dataset(payload)
+	except (OSError, TypeError, ValueError) as error:
+		_write_json(
+			diagnostic_path,
+			{
+				"artifact_kind": "gp2pl_ablation_figure_diagnostic",
+				"success": False,
+				"source_file": _portable_artifact_path(input_path),
+				"output_file_untouched": _portable_artifact_path(output_path),
+				"error": str(error),
+			},
+		)
+		raise
+
+	png_bytes = _render_frozen_ablation_figure(dataset)
+	output_path.parent.mkdir(parents=True, exist_ok=True)
+	output_path.write_bytes(png_bytes)
+	pixel_width = round(FIGURE_WIDTH_INCHES * FIGURE_DPI)
+	pixel_height = round(FIGURE_HEIGHT_INCHES * FIGURE_DPI)
+	metadata = {
+		"schema_version": 1,
+		"artifact_kind": "gp2pl_ablation_empirical_figure",
+		"source_file": _portable_artifact_path(input_path),
+		"source_sha256": _sha256(input_path),
+		"source_run_id": str(dataset["run_id"]),
+		"source_revision": dict(dataset["source_revision"]),
+		"output_file": _portable_artifact_path(output_path),
+		"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+		"atomic_seed_count": len(REGISTERED_SEEDS),
+		"atomic_domain_count": len(DOMAIN_ORDER),
+		"atomic_variant_count": len(ATOMIC_VARIANTS),
+		"atomic_case_count": int(dataset["atomic_case_count"]),
+		"temporal_variant_count": len(TEMPORAL_VARIANTS),
+		"temporal_case_count": int(dataset["temporal_case_count"]),
+		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
+		"figure_width_inches": FIGURE_WIDTH_INCHES,
+		"figure_height_inches": FIGURE_HEIGHT_INCHES,
+		"pixel_width": pixel_width,
+		"pixel_height": pixel_height,
+		"dpi": FIGURE_DPI,
+		"font_family": FIGURE_FONT_FAMILY,
+		"minimum_text_size_points": MINIMUM_FIGURE_TEXT_POINTS,
+		"color_mode": FIGURE_COLOR_MODE,
+		"panel_contract": (
+			"paired domain coverage; atomic coverage-size tradeoff; "
+			"temporal cumulative valid-trace coverage"
+		),
+	}
+	_write_json(output_path.with_suffix(".metadata.json"), metadata)
+	_write_json(
+		diagnostic_path,
+		{
+			"artifact_kind": "gp2pl_ablation_figure_diagnostic",
+			"success": True,
+			"source_file": _portable_artifact_path(input_path),
+			"source_sha256": metadata["source_sha256"],
 			"output_file": _portable_artifact_path(output_path),
 		},
 	)
@@ -1184,6 +1655,67 @@ def _plot_five_seed_runtime_groups(axis: Any, dataset: Mapping[str, Any]) -> Non
 	)
 
 
+def _render_frozen_ablation_figure(dataset: Mapping[str, Any]) -> bytes:
+	rc_parameters = {
+		"font.family": FIGURE_FONT_FAMILY,
+		"font.size": MINIMUM_FIGURE_TEXT_POINTS,
+		"font.weight": "normal",
+		"axes.titlesize": MINIMUM_FIGURE_TEXT_POINTS,
+		"axes.titleweight": "normal",
+		"axes.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"axes.labelweight": "normal",
+		"xtick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"ytick.labelsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"legend.fontsize": MINIMUM_FIGURE_TEXT_POINTS,
+		"axes.edgecolor": COLORS["gray"],
+		"axes.linewidth": 0.5,
+		"text.color": COLORS["text"],
+		"axes.labelcolor": COLORS["text"],
+		"xtick.color": COLORS["text"],
+		"ytick.color": COLORS["text"],
+		"savefig.transparent": False,
+	}
+	with matplotlib.rc_context(rc_parameters):
+		figure = plt.figure(
+			figsize=(FIGURE_WIDTH_INCHES, FIGURE_HEIGHT_INCHES),
+			facecolor="white",
+		)
+		grid = figure.add_gridspec(
+			2,
+			2,
+			width_ratios=(1.12, 1.0),
+			height_ratios=(0.92, 1.08),
+		)
+		atomic_axis = figure.add_subplot(grid[:, 0])
+		tradeoff_axis = figure.add_subplot(grid[0, 1])
+		temporal_axis = figure.add_subplot(grid[1, 1])
+		figure.subplots_adjust(
+			left=0.17,
+			right=0.98,
+			top=0.94,
+			bottom=0.14,
+			wspace=0.42,
+			hspace=0.68,
+		)
+		_plot_atomic_coverage(atomic_axis, dataset)
+		_plot_atomic_tradeoff(tradeoff_axis, dataset)
+		_plot_temporal_curve(temporal_axis, dataset)
+		buffer = io.BytesIO()
+		figure.savefig(
+			buffer,
+			format="png",
+			dpi=FIGURE_DPI,
+			facecolor="white",
+			metadata={
+				"Title": "GP2PL paired atomic and temporal ablations",
+				"Author": "Anonymous",
+				"Software": "GP2PL Matplotlib figure generator",
+			},
+		)
+		plt.close(figure)
+	return buffer.getvalue()
+
+
 def _render_empirical_figure(dataset: Mapping[str, Any]) -> bytes:
 	rc_parameters = {
 		"font.family": FIGURE_FONT_FAMILY,
@@ -1311,7 +1843,7 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 	)
 	axis.set_ylim(-1.2, len(DOMAIN_ORDER) - 0.45)
 	axis.set_xlabel("Jason + VAL coverage (%)", labelpad=2.0)
-	axis.set_title("(a) Paired atomic coverage", loc="left", pad=2.5)
+	axis.set_title("(a) Atomic lifting by domain", loc="left", pad=2.5)
 	axis.grid(axis="x", color="#E8E8E8", linewidth=0.45)
 	axis.set_axisbelow(True)
 	_style_axis(axis)
@@ -1341,7 +1873,7 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 	)
 	axis.legend(
 		handles=legend_handles,
-		loc="lower left",
+		loc="upper left",
 		ncol=2,
 		frameon=False,
 		borderaxespad=0.15,
@@ -1352,34 +1884,43 @@ def _plot_atomic_coverage(axis: Any, dataset: Mapping[str, Any]) -> None:
 
 
 def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
-	tradeoff = dict(dataset["atomic_tradeoff"])
+	tradeoff = dict(dataset.get("atomic_tradeoff") or {})
+	tradeoff_summary = dict(dataset.get("atomic_tradeoff_summary") or {})
+	plot_extents: list[tuple[float, float, float, float]] = []
 	for variant, method in ATOMIC_VARIANTS:
 		color, marker = ATOMIC_STYLES[variant]
 		face_color = "white" if variant == "validated_evidence_adapter" else color
 		mean_edge_color = (
 			color if variant == "validated_evidence_adapter" else "white"
 		)
-		points = tuple(tradeoff[variant])
-		x_values = [float(point["selected_branch_count"]) for point in points]
-		y_values = [float(point["coverage_percent"]) for point in points]
-		axis.scatter(
-			x_values,
-			y_values,
-			s=9,
-			marker=marker,
-			facecolors=face_color,
-			edgecolors=color,
-			alpha=0.34,
-			linewidths=0.3,
-			label=method,
-			zorder=2,
-		)
-		x_mean = statistics.mean(x_values)
-		y_mean = statistics.mean(y_values)
-		x_sd = statistics.stdev(x_values)
-		y_sd = statistics.stdev(y_values)
-		x_lower = max(0.5, x_mean - x_sd)
+		if variant in tradeoff_summary:
+			summary = dict(tradeoff_summary[variant])
+			x_mean = float(summary["branch_mean"])
+			y_mean = float(summary["coverage_mean"])
+			x_sd = float(summary["branch_sd"])
+			y_sd = float(summary["coverage_sd"])
+		else:
+			points = tuple(tradeoff[variant])
+			x_values = [float(point["selected_branch_count"]) for point in points]
+			y_values = [float(point["coverage_percent"]) for point in points]
+			axis.scatter(
+				x_values,
+				y_values,
+				s=9,
+				marker=marker,
+				facecolors=face_color,
+				edgecolors=color,
+				alpha=0.34,
+				linewidths=0.3,
+				zorder=2,
+			)
+			x_mean = statistics.mean(x_values)
+			y_mean = statistics.mean(y_values)
+			x_sd = statistics.stdev(x_values)
+			y_sd = statistics.stdev(y_values)
+		x_lower = max(0.0, x_mean - x_sd)
 		x_upper = x_mean + x_sd
+		plot_extents.append((x_lower, x_upper, y_mean - y_sd, y_mean + y_sd))
 		axis.errorbar(
 			x_mean,
 			y_mean,
@@ -1393,13 +1934,18 @@ def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
 			ecolor=color,
 			elinewidth=0.65,
 			capsize=1.3,
+			label=ATOMIC_FIGURE_LABELS[variant],
 			zorder=4,
 		)
-	axis.set_xscale("log")
-	axis.set_ylim(-2.0, 102.0)
-	axis.set_yticks((0, 25, 50, 75, 100))
+	x_min = min(extent[0] for extent in plot_extents)
+	x_max = max(extent[1] for extent in plot_extents)
+	x_padding = max(1.0, 0.07 * (x_max - x_min))
+	y_min = min(extent[2] for extent in plot_extents)
+	y_padding = max(1.5, 0.08 * (100.0 - y_min))
+	axis.set_xlim(max(0.0, x_min - x_padding), x_max + x_padding)
+	axis.set_ylim(max(0.0, y_min - y_padding), 100.8)
 	axis.set_ylabel("Held-out coverage (%)")
-	axis.set_xlabel("Emitted branches (log scale)", labelpad=2.0)
+	axis.set_xlabel("Emitted branches", labelpad=2.0)
 	axis.set_title("(b) Atomic coverage-size tradeoff", loc="left", pad=2.5)
 	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
 	axis.set_axisbelow(True)
@@ -1409,7 +1955,7 @@ def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
 	axis.legend(
 		handles=[handles[index] for index in legend_order],
 		labels=[labels[index] for index in legend_order],
-		loc="lower left",
+		loc="upper left",
 		ncol=2,
 		frameon=False,
 		borderaxespad=0.12,
@@ -1422,7 +1968,7 @@ def _plot_atomic_tradeoff(axis: Any, dataset: Mapping[str, Any]) -> None:
 
 def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 	curves = dict(dataset["temporal_curves"])
-	for variant, method in TEMPORAL_VARIANTS:
+	for variant, _method in TEMPORAL_VARIANTS:
 		color, line_style, marker = TEMPORAL_STYLES[variant]
 		curve = dict(curves[variant])
 		axis.step(
@@ -1432,7 +1978,7 @@ def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 			color=color,
 			linestyle=line_style,
 			linewidth=1.05,
-			label=method,
+			label=TEMPORAL_FIGURE_LABELS[variant],
 		)
 		marker_values = _step_values_at(
 			curve["x_seconds"],
@@ -1466,9 +2012,9 @@ def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 	axis.xaxis.set_major_formatter(
 		FuncFormatter(lambda value, _position: f"{value:g}"),
 	)
-	axis.set_ylabel("All queries solved (%)")
+	axis.set_ylabel("Valid queries (%)")
 	axis.set_xlabel("End-to-end time (s, log scale)", labelpad=2.0)
-	axis.set_title("(c) Temporal cumulative coverage", loc="left", pad=2.5)
+	axis.set_title("(c) Temporal time-to-valid-trace", loc="left", pad=2.5)
 	axis.grid(which="major", color="#E8E8E8", linewidth=0.45)
 	axis.set_axisbelow(True)
 	_style_axis(axis)
@@ -1481,15 +2027,15 @@ def _plot_temporal_curve(axis: Any, dataset: Mapping[str, Any]) -> None:
 			marker=TEMPORAL_STYLES[variant][2],
 			markersize=2.5,
 			linewidth=1.05,
-			label=method,
+			label=TEMPORAL_FIGURE_LABELS[variant],
 		)
-		for variant, method in TEMPORAL_VARIANTS
+		for variant, _method in TEMPORAL_VARIANTS
 	)
 	legend_order = (0, 2, 1, 3)
 	axis.legend(
 		handles=tuple(legend_handles[index] for index in legend_order),
-		loc="lower right",
-		ncol=2,
+		loc="center right",
+		ncol=1,
 		frameon=False,
 		borderaxespad=0.12,
 		handlelength=1.7,
@@ -1571,6 +2117,7 @@ def _sha256(path: Path) -> str:
 def _parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description=__doc__)
 	input_group = parser.add_mutually_exclusive_group(required=True)
+	input_group.add_argument("--ablation-results", type=Path)
 	input_group.add_argument("--paired-results", type=Path)
 	input_group.add_argument("--five-seed-results", type=Path)
 	parser.add_argument(
@@ -1578,23 +2125,35 @@ def _parse_args() -> argparse.Namespace:
 		type=Path,
 		default=DEFAULT_VALIDATION_RUN_ROOT,
 	)
-	parser.add_argument("--output-file", type=Path, default=DEFAULT_OUTPUT_FILE)
+	parser.add_argument("--output-file", type=Path)
 	return parser.parse_args()
 
 
 def main() -> int:
 	args = _parse_args()
+	output_file = args.output_file
+	if output_file is None:
+		output_file = (
+			DEFAULT_OUTPUT_FILE
+			if args.ablation_results is not None
+			else LEGACY_OUTPUT_FILE
+		)
 	try:
-		if args.five_seed_results is not None:
+		if args.ablation_results is not None:
+			metadata = generate_frozen_ablation_figure(
+				ablation_results_file=args.ablation_results,
+				output_file=output_file,
+			)
+		elif args.five_seed_results is not None:
 			metadata = generate_five_seed_empirical_figure(
 				five_seed_results_file=args.five_seed_results,
 				validation_run_root=args.validation_run_root,
-				output_file=args.output_file,
+				output_file=output_file,
 			)
 		else:
 			metadata = generate_empirical_figure(
 				paired_results_file=args.paired_results,
-				output_file=args.output_file,
+				output_file=output_file,
 			)
 	except (OSError, TypeError, ValueError) as error:
 		print(f"[fail] empirical_figure error={error}", file=sys.stderr)
