@@ -178,7 +178,9 @@ def test_result_floats_are_flushed_before_the_conclusion() -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 
 	barrier_position = main_source.index("\\FloatBarrier")
-	conclusion_position = main_source.index("\\section{Conclusion}")
+	conclusion_position = main_source.index(
+		"\\section{Conclusion and Future Work}",
+	)
 	bibliography_position = main_source.index("\\bibliography{references}")
 
 	assert barrier_position < conclusion_position < bibliography_position
@@ -720,7 +722,7 @@ def test_manuscript_contains_no_silently_unescaped_latex_commands() -> None:
 		assert broken_command.search(source) is None, source_path
 
 
-def test_main_paper_states_the_complete_claim_boundary_in_one_limitations_section(
+def test_conclusion_and_future_work_preserves_the_complete_claim_boundary(
 ) -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
@@ -728,17 +730,18 @@ def test_main_paper_states_the_complete_claim_boundary_in_one_limitations_sectio
 	)
 	combined = " ".join((main_source + evaluation_source).split())
 
-	limitations_position = main_source.index(r"\section{Limitations}")
-	conclusion_position = main_source.index(r"\section{Conclusion}")
-	assert limitations_position < conclusion_position
+	assert r"\section{Conclusion and Future Work}" in main_source
+	assert r"\section{Limitations}" not in main_source
+	assert r"\section{Conclusion}" not in main_source
 	for required_boundary in (
-		"only experimentally instantiated evidence provider",
-		"candidate generation is incomplete",
+		"only instantiated evidence provider",
+		"candidate-construction grammar remains incomplete",
 		"type-compatible resolution",
-		"witness-backed short-horizon queries",
-		"controlled utterances",
+		"controlled, witness-backed queries",
 		"fixed seed-0 atomic core",
 		r"arbitrary PDDL--\ltlf{} strategy synthesis",
+		"Future work can use a parameterized PDDL problem generator",
+		"scales evidence acquisition and domain onboarding",
 	):
 		assert required_boundary in combined
 

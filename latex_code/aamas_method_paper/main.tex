@@ -180,42 +180,7 @@ the reporting and reproducibility protocol.
 \input{sections/evaluation}
 
 \FloatBarrier
-\section{Limitations}
-
-MOOSE is the only experimentally instantiated evidence provider. The provider
-interface is general, but candidate generation is incomplete: the
-candidate-construction grammar admits schema regression only over an acyclic
-producer--precondition dependency graph, and recursive or resource behavior
-only when the implemented ranking or keyed-mode certificates apply.
-Internal-call closure proves type-compatible resolution of
-each selected call; it does not guarantee an applicable branch in every
-reachable state.
-
-The temporal benchmark contains witness-backed short-horizon queries mined from
-rollouts of at most three actions. Its controlled utterances evaluate structured
-translation under a fixed vocabulary, not robustness to unrestricted natural
-language or arbitrary long-horizon temporal planning. The end-to-end temporal
-matrix also conditions on a fixed seed-0 atomic core, so it supports no
-cross-seed temporal-robustness claim.
-
-Primitive-step monitoring gives exact trace observation for the declared
-formula syntax, but GP2PL does not provide complete action-strategy synthesis.
-Unsupported arithmetic, uncertified interference cycles, and progress guards
-without an applicable certified repair are rejected. The empirical results
-therefore do not imply arbitrary PDDL--\ltlf{} strategy synthesis.
-
-The input boundary nevertheless offers a practical route to future domains.
-When an established benchmark supplies a parameterized PDDL problem generator,
-as planning competitions have done \cite{Bacchus2001AIPS00}, its revision,
-parameters, and random seed can define a reproducible training curriculum.
-
-After reserving a disjoint held-out split and validating every generated
-problem against $D$, a compatible generalized-planning backend can learn
-evidence from $\mathcal I_{\mathrm{train}}$ for the unchanged GP2PL compiler.
-This scales evidence acquisition and domain onboarding, not the supported
-PDDL--\ltlf{} fragment or representative-coverage guarantees.
-
-\section{Conclusion}
+\section{Conclusion and Future Work}
 
 GP2PL closes the representation gap by converting generalized-planning evidence
 and PDDL action schemas into a reusable atomic BDI core, then appending
@@ -232,7 +197,30 @@ $X$, strong-$U$, conjunction, and literal-negation syntax whose DFA progress
 obligations admit preservation-safe repairs. Within that scope, the measured
 component gains and \TEGProblemCount{}/\TEGProblemCount{} fixed-core temporal
 result show that certification changes both coverage and controller structure,
-while the limitations above delimit what those results establish.
+while the conditions below delimit what those results establish.
+
+MOOSE is the only instantiated evidence provider; the
+candidate-construction grammar remains incomplete beyond the implemented
+acyclic, ranking, and keyed-resource certificates, and call closure proves
+type-compatible resolution rather than universal applicability.
+
+The temporal study uses controlled, witness-backed queries mined from at most
+three actions and a fixed seed-0 atomic core, so it does not measure unrestricted
+language, long-horizon planning, or cross-seed temporal robustness.
+
+Primitive-step monitoring is exact for the declared syntax, but rejected
+arithmetic, interference, and repair cases preclude arbitrary
+PDDL--\ltlf{} strategy synthesis.
+
+Future work can use a parameterized PDDL problem generator to broaden evidence
+acquisition through a pinned benchmark source, as in planning competitions
+\cite{Bacchus2001AIPS00}.
+
+After reserving a disjoint held-out split and validating every generated
+problem against $D$, a compatible generalized-planning backend can learn
+evidence from $\mathcal I_{\mathrm{train}}$ for the unchanged GP2PL compiler.
+This scales evidence acquisition and domain onboarding, not the supported
+PDDL--\ltlf{} fragment or representative-coverage guarantees.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}
