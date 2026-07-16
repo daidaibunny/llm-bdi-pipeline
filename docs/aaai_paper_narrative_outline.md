@@ -74,12 +74,13 @@ second tuple or reuse one symbol for a different semantic role.
 - `C_D^nr(E)` is the set of nonrecursive action-schema-derived obligations, and
   `realizes_D(b,c)` is their certified schema-achievement relation.
   `Omega_{D,E}` contains evidence coverage, nonrecursive schema-achievement
-  coverage, internal-call closure, preparation acyclicity, and recursive-ranking
-  compatibility. `F_{D,E}` is the feasible selection family over
-  `C^check_{D,E}`. `S*` is the
-  lexicographic optimum in that family, and `M_D := S*` is the certified atomic
-  module core. Optimality is never claimed outside the generated certified set.
-- `rho_b` is a same-predicate well-founded ranking; `kappa_S` is the selected
+  coverage, preparation acyclicity, and recursive-ranking compatibility.
+  `Closed_D(R)` means that every internal `!goal` in plan set `R` has a
+  type-compatible selected implementation in the same set. `F_{D,E}` is the
+  family of subsets of `C^check_{D,E}` that satisfy both `Omega_{D,E}` and
+  `Closed_D`. `M_D` is the lexicographic optimum in that family. Optimality is
+  never claimed outside the generated certified set.
+- `rho_b` is a same-predicate well-founded ranking; `kappa_M` is the selected
   cross-module dependency rank; `G_b^res=(V_b^res,E_b^res)` is a finite abstract
   keyed resource-mode graph whose labelled edges are target-preserving symbolic
   action-schema transitions. These compile-time witnesses do not become agent
@@ -937,150 +938,78 @@ Draft caption:
 > $\mathcal Q_q$, updating the sole maintained library by
 > $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
 
-### Figure 2: From Policy Evidence to a Certified Atomic Core
+### Figure 2: Inside the Two GP2PL Compiler Stages
 
-Place this full-width `figure*[htbp]` immediately after Figure 1 in the
-Introduction source so the two-column float is eligible for the top of page 2.
-The placeholder reserves 2.75 inches of artwork height before its caption. This
-is one continuous method example, not an architecture inventory or an
-experimental result. It must let the reader trace one `on(X,Y)` target from
-evidence and action schemas to individual selected AgentSpeak(L) branches. Use
-the repository's Blocks vocabulary. Render PDDL and AgentSpeak identifiers with
-the spellings used by the corresponding artifact.
+Place this full-width `figure*[htbp]` immediately after Figure 1 so it is
+eligible for the top of page 2. Use a 7.0 by approximately 3.1 inch canvas with
+two adjacent panels separated by one thin rule. Panel (a) occupies 52 percent
+and panel (b) 48 percent. This is one continuous Blocks World example, not an
+architecture inventory. Body text must remain at least 8 pt at final size, use
+regular weight, and remain interpretable in grayscale.
 
-Use three horizontal panels with aligned semantic rows:
+Panel (a), `Reusable lifted-core compilation`, expands operation (1) from
+Figure 1:
 
-- `(a)` occupies 30 percent of the width and is headed `Evidence + producible
-  targets`.
-- `(b)` occupies 39 percent and is headed `Certification + selection`.
-- `(c)` occupies 31 percent and is headed
-  `Certified atomic module core $\mathcal M_D$`.
-- Candidate identifiers and row positions must remain aligned from their source
-  in (a), through certification in (b), to their emitted branch in (c). This
-  correspondence, rather than panel borders, is the visual argument.
-- Use a 7.0 by approximately 3.0 inch final canvas. At final print size all body
-  text is at least 8 pt and panel headings use regular weight. Inputs are
-  rectangles, transformations are rounded rectangles or a hexagon, and emitted
-  program fragments are code boxes, so the figure remains readable in
-  grayscale.
+- Begin with `Domain model D` and `Raw singleton-goal evidence E_raw`. The
+  evidence card carries the small provenance tag `external GP backend`; do not
+  expand the upstream learner inside the compiler panel.
+- Make canonical lifting explicit as `Lift_D(E_0)=E`, including the example
+  `on(u,v); stack(u,v) -> on(X,Y); stack(X,Y)` and the guarantees `typed
+  variables`, `shared terms preserved`, and `domain constants fixed`.
+- Show `Lift typed schemas` and the relevant slice of
+  `$T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D)$` containing
+  `on/2`, `clear/1`, `holding/1`, `arm-empty/0`, and `on-table/1`. Connect the
+  `stack` schema to `holding/1` and `clear/1` with the exact label
+  `producer preconditions`; do not draw a target-specific closure edge.
+- Show candidate rows `C0 already satisfied`, `C1 direct producer`, `C2
+  recursive preparation via clear/1`, and gray `C3 longer feasible macro,
+  higher cost`. Send them to one `Certify + joint Clingo selection` node with
+  `Bind`, `Execute`, `Achieve`, and `Progress` checks.
+- Emit one code card headed `Certified lifted atomic core
+  $\mathcal M_D=\mathcal L_D^{[0]}$`, containing the already-satisfied, direct
+  `stack`, and recursive `!clear(Y); !on(X,Y)` branches plus a `+!clear(Y)`
+  excerpt. Do not introduce a selected-set symbol.
+- Replace the old set equation with the plain-language closure statement
+  `Internally closed: every !goal resolves inside $\mathcal M_D$`. A green
+  dashed arrow from `!clear(Y)` to the `+!clear(Y)` excerpt is the concrete
+  witness. A small flat Blocks inset may show an obstruction removed before
+  placing `X` on `Y`.
 
-Panel (a) combines evidence, producer schemas, and the relevant slice of the
-domain-wide producible target universe rather than presenting them as unrelated
-stacked panels:
+Panel (b), `DFA-guided query compilation and append`, expands operation (2):
 
-- At the top, show two small grounded singleton goals, `on(b1,b2)` and
-  `on(b3,b1)`, flowing to a normalized provider-evidence card `E_on`:
-  `goal on(X,Y)`, `context holding(X), clear(Y)`, and `body stack(X,Y)`.
-  The card may carry a small `provider macro` provenance tag; the panel heading
-  must not make the representation-compilation method appear MOOSE-specific.
-- Below, show only the target-relevant portions of two action schemas:
-  `stack(X,Y)` requires `holding(X), clear(Y)` and adds `on(X,Y)`;
-  `unstack(Z,Y)` requires `on(Z,Y), clear(Z), arm_empty` and adds
-  `holding(Z), clear(Y)`.
-- Show the definition
-  `$T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D)$` once, followed
-  by the `relevant slice of $T_D(E)$`: mark `on/2` as evidence-targeted and mark
-  `clear/1` and `holding/1` as positively producible. These membership tags state
-  why each predicate receives candidate modules; they are not reachability edges
-  from `on/2`.
-- Connect `stack(X,Y)` to `{holding/1, clear/1}` with an arrow labelled
-  `producer preconditions`; place the `stack(X,Y)` schema title directly above
-  the arrow. Do not draw
-  `on/2 -> {holding/1, clear/1}`, because that notation resembles a
-  target-specific closure that the method does not compute.
-- Route normalized evidence and the `stack` schema to the same normalized direct
-  candidate `C1`, retaining both provenance tags. Route the producer-precondition
-  relation and the independently producible `clear/1` target to `C2`, labelled
-  `precondition repair via clear/1`. `C0` is the universal already-satisfied
-  branch and needs no evidence connector. Color reinforces the `C0`--`C2` labels
-  but never replaces them.
+- Start from the bound query
+  `$\widehat\tau_q=F(on(A,B)\land on(B,C)\land on(C,D))$` and binding
+  `$\theta_q=\{A\mapsto b_1,B\mapsto b_2,C\mapsto b_3,D\mapsto b_4\}$`, beside
+  a flat four-block target stack.
+- Show the decoded LTLf2DFA/MONA automaton with `q0`, accepting `qf`, progress
+  guard `$\chi=on(b_1,b_2)\land on(b_2,b_3)\land on(b_3,b_4)$`, waiting loop
+  `not chi`, and accepting loop `true`.
+- Reuse the core's certified completion summaries through a blue dash-dot arrow
+  labelled `reuse; no relearning`. Derive the preservation-safe bottom-up order
+  `on(b3,b4) -> on(b2,b3) -> on(b1,b2)` from possible delete effects, then show
+  its balanced binary repair tree.
+- Emit a purple `Query-local controller $\mathcal Q_q$` code card and append it
+  to one stacked-document artifact labelled `One maintained domain library`.
+  Show the green core layer and purple query layer together with
+  `$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$`, `append only; no
+  relearning`, and `$\operatorname{Closed}_D(\mathcal L_D^{[k+1]})$`.
 
-Panel (b) makes the optimization result visible rather than drawing four cards
-that all appear selected:
+Use schema blue, evidence amber, certified-core green, temporal purple, and
+omitted-candidate gray. Solid arrows denote transformations, blue dash-dot
+arrows completion-summary reuse, green dashed arrows internal module calls, and
+purple arrows query append. Circles are reserved for DFA states and a hexagon
+for optimization. Do not use gradients, shadows, decorative icons, or color as
+the only distinction.
 
-- Align four candidate rows: `C0 already satisfied`, `C1 validated direct
-  producer`, `C2 recursive prepare clear(Y)`, and `C3 longer feasible macro`.
-  Attach source tags such as `evidence`, `schema`, or `recursive preparation`
-  to each row. Do not use `closure` as a candidate provenance tag.
-- Use one shared branch-certificate header or compact matrix for `Bind`,
-  `Execute`, `Achieve`, `Progress`, and `Resource`; do not repeat miniature
-  tables whose labels become unreadable. A check means required and proved, a
-  dash means the obligation is not triggered, and rejection is shown explicitly
-  rather than as `n/a`. Do not put `Call closure` in this per-candidate matrix.
-- At the right edge of each row show the optimization outcome. In the
-  illustrative feasible selection, `C0`, `C1`, and `C2` are selected; `C3` is
-  feasible but omitted at higher lexicographic cost. If an evidence and schema
-  candidate normalize to the same branch, show both provenance tags on `C1`
-  instead of drawing duplicate candidates.
-- Send the certificate-passing rows to one compact `Clingo: lexicographic
-  selection` node. Beside that node, show the set-level constraint
-  `internal-call closure: $\operatorname{call}(S)
-  \subseteq_{\mathrm{type}}\operatorname{head}(S)$`; it constrains the selected
-  branch set as a whole and is not a certificate on an isolated row. Emit
-  `selected $S=\{C0,C1,C2\}$`, and identify the output core as
-  `$\mathcal M_D:=S$`. Place
-  `optimal only in the generated certified space` immediately below this node.
-- Solid arrows denote candidate generation, selection, and emission. Dashed
-  arrows are reserved for an internal subgoal call in panel (c); do not use a
-  dashed outer candidate-space container as a decorative border.
+Approved caption:
 
-Panel (c) removes the empty `One domain library` container. Figure 1 already
-establishes that exactly one domain library is maintained; Figure 2 should show
-the selected atomic module core $\mathcal M_D$ that forms its reusable part:
-
-- Put one code box headed `on/2 module` containing three branch rows. Prefix
-  them with the same `C0`, `C1`, and `C2` identifiers used in panel (b):
-
-```asl
-+!on(X,Y) : on(X,Y) <- true.
-
-+!on(X,Y) : clear(Y) & holding(X) <-
-    stack(X,Y).
-
-+!on(X,Y) : not clear(Y) <-
-    !clear(Y);
-    !on(X,Y).
-```
-
-- Below it, use the previously empty space for a second code box headed
-  `clear/1 module excerpt`:
-
-```asl
-+!clear(Y) : clear(Y) <- true.
-
-+!clear(Y) : arm_empty & on(Z,Y) & clear(Z) <-
-    unstack(Z,Y);
-    putdown(Z).
-
-+!clear(Y) : on(Z,Y) & not clear(Z) <-
-    !clear(Z);
-    !clear(Y).
-```
-
-- Draw one dashed arrow from the `!clear(Y)` occurrence in the `on/2` code box
-  to the `clear/1` box, labelled `internal module call`. This arrow is the
-  concrete visualization of internal-call closure and arbitrary-depth recursive
-  preparation.
-- Draw thin provenance links from `C0`, `C1`, and `C2` in panel (b) to the
-  matching branch labels in the `on/2` code box. Keep these links horizontal by
-  aligning rows across the two panels.
-- End the panel with `lifted variables only; no training objects; no synthetic
-  goals`. Use one `... omitted selected branches` note only if needed; never use
-  a standalone `......` line.
-
-The code is an illustrative certificate-valid selection from the generated
-candidate set, not a verbatim claim that every seed selects these exact
-branches. It demonstrates branch provenance, a selected direct producer, and
-recursive internal-call closure. Approved caption:
-
-> Figure 2: Certified lifting in the Blocks World example. The goal `on(X,Y)`
-> means that block $X$ rests on block $Y$; `stack(X,Y)` achieves it only when the
-> robot holds $X$ and $Y$ is clear. Left: policy evidence and PDDL action schemas
-> generate candidates not only for `on(X,Y)` but also for achievable subsidiary
-> goals such as clearing a block. Middle: each candidate is checked, and GP2PL
-> selects a compact feasible set that covers the evidence and resolves every
-> internal call. Right: the resulting atomic core $\mathcal M_D$ contains direct
-> plans and recursive preparation through the generated `clear/1` module.
+> Figure 2: Certified lifting and temporal composition in Blocks World. Left:
+> GP2PL canonically lifts singleton-goal evidence, instantiates typed
+> action-schema candidates, and selects the internally closed atomic core
+> $\mathcal M_D=\mathcal L_D^{[0]}$. Right: for a bound LTLf query, GP2PL
+> decodes the MONA-derived DFA, derives a preservation-safe order for each
+> progress guard, renders the balanced query-local controller $\mathcal Q_q$,
+> and appends it to the sole maintained library without relearning the core.
 
 ### Supplementary Figure S1: DFA Transition Compilation and Runtime Monitoring
 

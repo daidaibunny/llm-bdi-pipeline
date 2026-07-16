@@ -85,11 +85,12 @@ delete-only dynamic predicates are not invented as positive targets. Numeric
 equalities use their own target set and do not suppress `prod(D)`.
 
 The term **internal-call closure** is a different, set-level selection property.
-For selected branches `S`, every typed internal call in `call(S)` must unify
-with a selected typed module head in `head(S)`. In shorthand,
-`call(S) subset_type head(S)`. Applying this condition to all selected branches
-also closes transitive calls. Do not use the unqualified phrase `schema closure`
-for both target expansion and this selection obligation.
+For any BDI plan set `R`, `Closed_D(R)` means that every internal achievement
+call `!g(...)` occurring in a selected body has a type-compatible `+!g(...)`
+plan in the same set. Applying the condition to every plan also closes
+transitive calls. Primitive PDDL actions are not internal achievement calls.
+Do not use the unqualified phrase `schema closure` for both target expansion and
+this selection obligation.
 
 ## Canonical Formal Notation
 
@@ -115,7 +116,7 @@ for each semantic object:
 - `b=<g_b,C_b,beta_b,Sigma_b,pi_b>` is one candidate branch. `Sigma_b` is its
   conditional module-completion summary and `Cert_D(b)` its candidate soundness
   predicate.
-- `rho_b` is a same-predicate recursive ranking, `kappa_S` a cross-module
+- `rho_b` is a same-predicate recursive ranking, `kappa_M` a cross-module
   dependency ranking, and `G_b^res=(V_b^res,E_b^res)` the finite keyed
   resource-mode graph used by a target-preserving resource-discharge
   certificate. Its labelled edges are target-preserving symbolic action-schema
@@ -123,11 +124,11 @@ for each semantic object:
 - `C_D^nr(E)` is the nonrecursive action-schema-derived obligation set and
   `realizes_D(b,c)` its certified schema-achievement relation.
   `C^check_{D,E}` is the certified candidate set. `Omega_{D,E}` contains
-  evidence coverage, nonrecursive schema-achievement coverage, internal-call
-  closure, preparation acyclicity, and recursive-ranking compatibility;
+  evidence coverage, nonrecursive schema-achievement coverage, preparation
+  acyclicity, and recursive-ranking compatibility;
   per-branch resource discharge belongs to `Cert_D(b)`. `F_{D,E}` is the
-  feasible selection family. `S*` is the lexicographic optimum and `M_D:=S*`
-  the certified atomic module core.
+  family of candidate cores that also satisfy `Closed_D`. `M_D` is the
+  lexicographic optimum in that family and is the certified atomic module core.
 - `tau_q=<iota_q,varphi_q,mu_q,Theta_q,Gamma_q>` is an unbound temporal
   specification. `Theta_q:Xbar_q->T` is its parameter type signature,
   `theta_q:Xbar_q->O_I` is an external type-consistent binding into the invoked

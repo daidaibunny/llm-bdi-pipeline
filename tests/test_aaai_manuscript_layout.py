@@ -347,10 +347,11 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	assert "\\ENSURE Certified lifted atomic module core $\\mathcal M_D$" in method_source
 	assert "selected atomic core $\\mathcal M_D$" in method_source
 	assert "query-local plan set $\\mathcal Q_q$" in method_source
-	assert "The certified atomic module core is the optimal feasible selected set" in (
+	assert "The certified atomic module core is selected directly as" in (
 		supplement_source
 	)
-	assert "$\\mathcal M_D:=S^\\star$" in supplement_source
+	assert "\\mathcal M_D=" in supplement_source
+	assert "\\operatorname*{lexargmin}" in supplement_source
 	assert "does not define the core" in supplement_source
 	assert re.search(
 		r"maintained domain library\s+\$\\mathcal L_D\^\{\[k\]\}\$",
@@ -410,12 +411,13 @@ def test_figure_design_separates_target_generation_from_set_level_call_closure()
 
 	assert "`Singleton-goal policy evidence E`" in outline_source
 	assert "`(1) Lift + certify core once`" in outline_source
-	assert "relevant slice of $T_D(E)$" in outline_source
+	normalized_outline = " ".join(outline_source.split())
+	assert "relevant slice of `$T_D(E)" in normalized_outline
 	assert "`producer preconditions`" in outline_source
-	assert "`precondition repair via clear/1`" in outline_source
-	assert "set-level constraint" in outline_source
-	assert "\\operatorname{call}(S)" in outline_source
-	assert "subseteq_{\\mathrm{type}}" in outline_source
+	assert "recursive preparation via clear/1" in normalized_outline
+	assert "every !goal resolves inside $\\mathcal M_D$" in outline_source
+	assert "$\\mathcal M_D=\\mathcal L_D^{[0]}$" in outline_source
+	assert "$\\operatorname{Closed}_D(\\mathcal L_D^{[k+1]})$" in outline_source
 
 	figure_two_caption = re.search(
 		r"\\caption\{Certified lifting(.*?)\}\s*"
@@ -425,12 +427,44 @@ def test_figure_design_separates_target_generation_from_set_level_call_closure()
 	)
 	assert figure_two_caption is not None
 	caption_text = " ".join(figure_two_caption.group(1).split())
-	assert "each candidate is checked" in caption_text
-	assert "selects a compact feasible set" in caption_text
-	assert "covers the evidence and resolves every internal call" in caption_text
-	assert "candidates pass binding, executability, achievement, internal-call closure" not in (
-		caption_text
+	assert "canonically lifts singleton-goal evidence" in caption_text
+	assert "internally closed atomic core" in caption_text
+	assert "balanced query-local controller" in caption_text
+	assert "without relearning the core" in caption_text
+
+
+def test_manuscript_uses_library_centered_closure_and_selection_notation() -> None:
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	decisions_source = (
+		PROJECT_ROOT / "docs" / "research_pipeline_decisions.md"
+	).read_text(encoding="utf-8")
+	outline_source = (
+		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
+	).read_text(encoding="utf-8")
+	formal_source = "\n".join(
+		(method_source, supplement_source, decisions_source, outline_source),
 	)
+
+	assert "\\operatorname{Closed}_D(\\mathcal M_D)" in formal_source
+	assert "\\operatorname{Closed}_D(\\mathcal L_D^{[k]})" in supplement_source
+	assert "\\operatorname{Closed}_D(\\mathcal L_D^{[k+1]})" in supplement_source
+	assert "\\mathcal M_D=\\operatorname*{lexargmin}" in method_source
+	assert "\\mathcal L_D^{[0]}=\\mathcal M_D" in supplement_source
+
+	for obsolete_notation in (
+		"\\operatorname{head}",
+		"\\operatorname{call}",
+		"S^\\star",
+		"S*",
+		"\\kappa_S",
+		"kappa_S",
+		"call(S)",
+		"head(S)",
+	):
+		assert obsolete_notation not in formal_source
 
 
 def test_main_paper_keeps_serialization_details_in_the_supplement() -> None:
@@ -528,7 +562,9 @@ def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 	assert "\\prec_\\chi" in method_source
 	assert "\\boldsymbol\\ell_\\chi" in method_source
 	assert "\\mathcal R_{q_s,\\chi}" in method_source
-	assert "\\rho_b,\\kappa_S,\\mathcal G_b^{\\mathrm{res}}" in supplement_source
+	assert "\\rho_b,\\kappa_{\\mathcal M},\\mathcal G_b^{\\mathrm{res}}" in (
+		supplement_source
+	)
 	assert "\\mathit{val}_q" in formal_source
 	assert "d_q(z)" in formal_source
 	assert "\\mathcal W_{q_s},\\mathcal I_{q_s}" in supplement_source

@@ -83,7 +83,8 @@ generalized policy into such a library is therefore a compilation problem, not
 a change of syntax.
 
 Blocks World is a standard planning domain in which a robot rearranges blocks.
-A learned rule for placing block $X$ on block $Y$ may
+A lifted achievement $\texttt{on(X,Y)}$ asks that block $X$ rest on block $Y$.
+A learned rule for achieving it may
 use the action \texttt{stack(X,Y)} when the robot is holding $X$ and the
 destination block is clear. If $Y$ is not clear, however, an executable BDI
 library also needs a reusable plan for making it clear, even when that condition
@@ -134,25 +135,23 @@ names.
 }{%
 \fbox{\parbox[c][2.75in][c]{0.96\textwidth}{\centering
 Figure 2 artwork placeholder\\[8pt]
-(a) Evidence and producible targets\qquad
-(b) Certification and set selection\qquad
-(c) Certified atomic module core}}
+(a) Reusable lifted-core compilation\qquad
+(b) DFA-guided query compilation and append}}
 }
-\caption{Certified lifting in the Blocks World example. The goal
-\texttt{on(X,Y)} means that block $X$ rests on block $Y$;
-\texttt{stack(X,Y)} achieves it only when the robot holds $X$ and $Y$ is clear.
-Left: policy evidence and PDDL action schemas generate candidates not only for
-\texttt{on(X,Y)} but also for achievable subsidiary goals such as clearing a
-block. Middle: each candidate is checked, and GP2PL selects a compact feasible
-set that covers the evidence and resolves every internal call. Right: the
-resulting atomic core $\mathcal M_D$ contains direct plans and recursive
-preparation through the generated \texttt{clear/1} module.}
+\caption{Certified lifting and temporal composition in Blocks World. Left:
+GP2PL canonically lifts singleton-goal evidence, instantiates typed
+action-schema candidates, and selects the internally closed atomic core
+$\mathcal M_D=\mathcal L_D^{[0]}$. Right: for a bound \ltlf{} query, GP2PL
+decodes the MONA-derived DFA, derives a preservation-safe order for each
+progress guard, renders the balanced query-local controller $\mathcal Q_q$,
+and appends it to the sole maintained library without relearning the core.}
 \label{fig:policy-lifting-example}
 \end{figure*}
 
-Figure~\ref{fig:policy-lifting-example} shows how evidence for one block-placement
-goal becomes a small, internally closed set of BDI modules. The method sections
-define the exact candidate language, certificates, and selection problem.
+Figure~\ref{fig:policy-lifting-example} expands both compiler operations from
+Figure~\ref{fig:architecture}: one-time construction of the reusable core and
+query-specific composition over that fixed core. The method sections define the
+candidate language, certificates, selection problem, and DFA-guided controller.
 
 GP2PL makes three contributions. First, it turns singleton-goal policy evidence
 and PDDL action models into a compact BDI module core, including plans for

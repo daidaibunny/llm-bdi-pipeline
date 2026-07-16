@@ -212,7 +212,8 @@ without a progress proof \\
 \caption{Candidate constructors and soundness obligations for atomic BDI
 modules. Every selected
 branch additionally satisfies typed binding, symbolic PDDL executability, and
-target achievement on return; the selected set satisfies internal-call closure.}
+target achievement on return; the resulting core satisfies
+$\operatorname{Closed}_D(\mathcal M_D)$.}
 \label{tab:compiler-obligations}
 \end{table*}
 
@@ -220,18 +221,22 @@ target achievement on return; the selected set satisfies internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
 certified static sort membership; negative contexts and comparisons only
 filter. Symbolic progression proves each precondition and final trigger
-achievement, recording $\mustadd$, $\mayadd$, and $\maydelete$. For a selected
-branch set $S$, let $\operatorname{head}(S)$ be its typed achievement heads and
-$\operatorname{call}(S)$ its typed internal achievement calls. Internal-call
-closure requires
+achievement, recording $\mustadd$, $\mayadd$, and $\maydelete$. For any BDI
+plan set $\mathcal R$, define
 \[
-\operatorname{call}(S)\subseteq_{\mathrm{type}}\operatorname{head}(S),
+\operatorname{Closed}_D(\mathcal R)
+\Longleftrightarrow
+\begin{aligned}[t]
+&\forall b\in\mathcal R,\ \forall !q(\bar Y)\text{ occurring in }\beta_b,\\
+&\exists b'\in\mathcal R\text{ such that}\\
+&\qquad g_{b'}\text{ type-unifies with }q(\bar Y)\\
+&\qquad\text{under the type hierarchy of }D.
+\end{aligned}
 \]
-meaning that every selected call $!q(\bar Y)$ unifies type-compatibly with at
-least one selected module head. Because the condition is imposed on every
-selected branch, it also closes calls made transitively by those modules. This
-set-level property is a Clingo obligation; it is distinct from constructing
-$T_D(E)$.
+The compiler requires $\operatorname{Closed}_D(\mathcal M_D)$, so every
+internal achievement call resolves to a type-compatible selected plan,
+including calls reached transitively. This set-level property is a Clingo
+obligation; it is distinct from constructing $T_D(E)$.
 
 \paragraph{Well-founded recursive progress.}
 A same-predicate recursive branch $b$ requires a ranking function
@@ -270,10 +275,11 @@ such as an object's location. A repair branch may defer an unrelated sibling onl
 through a schema-inferred single-valued fluent when every deferred sibling has
 one producer, all static feasibility witnesses remain, local variables are
 alpha-renamed, and the original target is retried before primitive production.
-Cross-predicate repair candidates are optional. For the selected call graph,
-Clingo assigns a dependency rank
-$\kappa_S:\operatorname{head}(S)\rightarrow\mathbb N$ and requires
-$\kappa_S(g)>\kappa_S(h)$ for every selected call edge $g\rightarrow h$.
+Cross-predicate repair candidates are optional. For a candidate core
+$\mathcal M$, Clingo assigns each trigger signature in its selected call graph a
+dependency rank $\kappa_{\mathcal M}$ and requires
+$\kappa_{\mathcal M}(g)>\kappa_{\mathcal M}(h)$ for every selected call edge
+$g\rightarrow h$.
 Same-predicate recursion instead requires the
 relational certificate above.
 
@@ -303,30 +309,32 @@ effects with recursive rankings. Define
 \mathcal C^{\checkmark}_{D,E}
   &=\{b\in\mathcal C_{D,E}\mid\operatorname{Cert}_D(b)\},\\
 \mathfrak F_{D,E}
-  &=\{S\subseteq\mathcal C^{\checkmark}_{D,E}\mid
-      S\models\Omega_{D,E}\}.
+  &=\{\mathcal M\subseteq\mathcal C^{\checkmark}_{D,E}\mid
+      \mathcal M\models\Omega_{D,E}\land
+      \operatorname{Closed}_D(\mathcal M)\}.
 \end{align*}
 where $\Omega_{D,E}$ contains evidence coverage, schema-achievement coverage,
-internal-call closure, preparation acyclicity, and recursive-ranking
-compatibility. Resource discharge is already part of the per-branch predicate
+preparation acyclicity, and recursive-ranking compatibility. Resource discharge
+is already part of the per-branch predicate
 $\operatorname{Cert}_D$. In particular, schema-achievement coverage requires
 \[
 \forall c\in\mathcal C_D^{\mathrm{nr}}(E),\quad
-\exists b\in S:\operatorname{realizes}_D(b,c).
+\exists b\in\mathcal M:\operatorname{realizes}_D(b,c).
 \]
 The optimizer uses the
 lexicographic objective
 \begin{multline*}
-S^\star=\operatorname*{lexmin}_{S\in\mathfrak F_{D,E}}
-\bigl\langle-N_{\mathrm{rel}}(S),-N_{\mathrm{prep}}(S),|S|,\\
-N_C(S),N_\beta(S)\bigr\rangle,
+\mathcal M_D=\operatorname*{lexargmin}_{\mathcal M\in\mathfrak F_{D,E}}
+\bigl\langle-N_{\mathrm{rel}}(\mathcal M),-N_{\mathrm{prep}}(\mathcal M),
+|\mathcal M|,\\
+N_C(\mathcal M),N_\beta(\mathcal M)\bigr\rangle,
 \end{multline*}
 where $N_{\mathrm{rel}}$ and $N_{\mathrm{prep}}$ count compatible
 relation-ranked recursion and acyclic precondition-repair capabilities,
 $N_C$ counts context literals, and $N_\beta$ counts body steps. Clingo computes
-this optimum for the grounded finite instance. The selected set $S^\star$,
-rather than its AgentSpeak rendering, defines the certified atomic module core
-$\mathcal M_D:=S^\star$. The claim is global only within
+this core directly for the grounded finite instance. The selected
+trigger--context--body rules, rather than their AgentSpeak rendering, define
+$\mathcal M_D$. The claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
 The compiler rejects an untyped predicate with several producers when their
@@ -598,8 +606,8 @@ reachable-state coverage.
 
 \paragraph{Certified-candidate-set optimality.}
 
-\textbf{Proposition 2.} If Clingo returns $S^\star$, every encoded evidence and
-internal-call obligation is satisfied, and $S^\star$ is lexicographically
+\textbf{Proposition 2.} If Clingo returns $\mathcal M_D$, every encoded evidence
+and internal-call obligation is satisfied, and $\mathcal M_D$ is lexicographically
 optimal within $\mathcal C^{\checkmark}_{D,E}$.
 
 This follows from answer-set constraints and priorities, not from completeness

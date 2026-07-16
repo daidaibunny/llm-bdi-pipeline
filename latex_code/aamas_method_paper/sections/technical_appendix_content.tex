@@ -132,13 +132,12 @@ $b,\Sigma_b,\operatorname{Cert}_D(b)$ & One candidate branch, its conditional
 completion summary, and soundness predicate. &
 $\mathcal W_{q_s},\mathcal I_{q_s}$ & Waiting self-loop guards and signed source
 invariants. \\
-$\rho_b,\kappa_S,\mathcal G_b^{\mathrm{res}}$ & Same-predicate recursive
+$\rho_b,\kappa_{\mathcal M},\mathcal G_b^{\mathrm{res}}$ & Same-predicate recursive
 ranking, dependency ranking, and resource-mode graph. &
 $\rho_{\mathrm{num}},b_\chi^{\mathrm{joint}}$ & Numeric-progress ranking and
 complete joint guard-establishment branch. \\
-$\operatorname{head},\operatorname{call},\operatorname{covers}_D$ & Selected
-achievement heads, selected internal calls, and certified evidence-coverage
-relation. &
+$\operatorname{Closed}_D,\operatorname{covers}_D$ & Internal-call closure
+predicate and certified evidence-coverage relation. &
 $R_\chi[i,j],c_{q_s,\chi}$ & Transition-repair subtree and source-state
 completion test. \\
 $\mathcal C_D^{\mathrm{nr}}(E),\operatorname{realizes}_D$ & Nonrecursive
@@ -149,8 +148,7 @@ $\mathcal C^{\checkmark}_{D,E},\Omega_{D,E},\mathfrak F_{D,E}$ & Certified
 set, set-level obligations, and feasible selection family. &
 $\mathcal Q_q,\mathcal L_D^{[k]}$ & Query-local controller plans and maintained
 library after $k$ appends. \\
-$S^\star,\mathcal M_D$ & Lexicographically optimal feasible subset and the
-resulting atomic module core. &
+$\mathcal M_D$ & Lexicographically optimal feasible atomic module core. &
 $\xi,z_i$ & Committed PDDL trace and runtime DFA state after observation $i$. \\
 $N_{\mathrm{rel}},N_{\mathrm{prep}},N_C,N_\beta$ & Counts of selected
 relation-ranked recursion, acyclic precondition repair, context literals, and
@@ -185,16 +183,20 @@ it.
 \end{definition}
 
 \begin{definition}[Internal-call closure]
-For a selected branch set $S$, let $\operatorname{head}(S)$ contain its typed
-achievement heads and $\operatorname{call}(S)$ contain every typed internal
-achievement call appearing in a selected body. $S$ is internally closed when
-each element of $\operatorname{call}(S)$ unifies type-compatibly with at least
-one element of $\operatorname{head}(S)$. Equivalently,
+For any BDI plan set $\mathcal R$, internal-call closure is the predicate
 \[
-\operatorname{call}(S)\subseteq_{\mathrm{type}}\operatorname{head}(S).
+\operatorname{Closed}_D(\mathcal R)
+\Longleftrightarrow
+\begin{aligned}[t]
+&\forall b\in\mathcal R,\ \forall !q(\bar Y)\text{ occurring in }\beta_b,\\
+&\exists b'\in\mathcal R\text{ such that}\\
+&\qquad g_{b'}\text{ type-unifies with }q(\bar Y)\\
+&\qquad\text{under the type hierarchy of }D.
+\end{aligned}
 \]
-The condition applies to every selected branch and therefore also to calls
-reached transitively from another module.
+The condition applies to every plan in $\mathcal R$ and therefore also to calls
+reached transitively from another module. Primitive PDDL actions are not
+achievement calls and are outside this predicate.
 \end{definition}
 
 The context is an applicability condition, not a sequence of subgoals. Positive
@@ -281,27 +283,34 @@ The generated candidate set and its certified subset are
 \{b\in\mathcal C_{D,E}\mid\operatorname{Cert}_D(b)\}.
 \]
 Let $\Omega_{D,E}$ contain evidence coverage, nonrecursive schema-achievement
-coverage, internal-call closure, preparation acyclicity, and recursive-ranking
-compatibility. Per-branch binding, execution, achievement, completion-effect,
+coverage, preparation acyclicity, and recursive-ranking compatibility.
+Per-branch binding, execution, achievement, completion-effect,
 and resource-discharge obligations are already contained in
 $\operatorname{Cert}_D$. The feasible selection family is
 \[
 \mathfrak F_{D,E}=
-\{S\subseteq\mathcal C^{\checkmark}_{D,E}\mid S\models\Omega_{D,E}\}.
+\{\mathcal M\subseteq\mathcal C^{\checkmark}_{D,E}\mid
+\mathcal M\models\Omega_{D,E}\land
+\operatorname{Closed}_D(\mathcal M)\}.
 \]
-Thus every $S\in\mathfrak F_{D,E}$ covers every evidence rule and required
+Thus every $\mathcal M\in\mathfrak F_{D,E}$ covers every evidence rule and required
 nonrecursive action-schema achievement contract, is internally closed, and
 admits the selected recursion and cross-module dependency ranks.
 Equivalently, schema-achievement coverage requires
 \[
 \forall c\in\mathcal C_D^{\mathrm{nr}}(E),\quad
-\exists b\in S:\operatorname{realizes}_D(b,c).
+\exists b\in\mathcal M:\operatorname{realizes}_D(b,c).
 \]
 \end{definition}
 
-The certified atomic module core is the optimal feasible selected set
-$\mathcal M_D:=S^\star$, where $S^\star$ is selected from
-$\mathfrak F_{D,E}$, represented by BDI trigger--context--body rules. It is
+The certified atomic module core is selected directly as
+\[
+\mathcal M_D=
+\operatorname*{lexargmin}_{\mathcal M\in\mathfrak F_{D,E}}
+\operatorname{Cost}(\mathcal M),
+\]
+where $\operatorname{Cost}$ is the lexicographic objective in the main paper.
+The core is represented by BDI trigger--context--body rules. It is
 query-independent, closed under its internal achievement calls, and contains
 no query identifier, DFA state, or monitor symbol. The evaluated AgentSpeak(L)
 realization preserves these rules but does not define the core.
@@ -318,12 +327,16 @@ $\mathcal L_D^{[k]}$ is
 \mathcal M_D\cup\bigcup_{i=1}^{k}\mathcal Q_{q_i}.
 \]
 $\mathcal M_D$ and $\mathcal Q_{q_i}$ are logical subsets of this one library, not
-separately maintained plan-library artifacts.
+separately maintained plan-library artifacts. The compiler establishes
+$\operatorname{Closed}_D(\mathcal L_D^{[0]})$ and accepts an append only when
+$\operatorname{Closed}_D(\mathcal L_D^{[k+1]})$ holds. Consequently,
+$\operatorname{Closed}_D(\mathcal L_D^{[k]})$ is an invariant of every
+maintained library.
 \end{definition}
 
-GP2PL asks a Clingo answer-set optimizer \cite{Gebser2018Clingo} for
-$S^\star\in\mathfrak F_{D,E}$ minimizing the lexicographic cost stated in the
-main paper. The result is globally optimal only over
+GP2PL asks a Clingo answer-set optimizer \cite{Gebser2018Clingo} to compute
+$\mathcal M_D$ by minimizing the declared lexicographic cost over
+$\mathfrak F_{D,E}$. The result is globally optimal only over
 $\mathcal C^{\checkmark}_{D,E}$; candidate generation is not claimed complete
 for arbitrary planning programs.
 
@@ -349,9 +362,11 @@ ranking function $\rho_b:\operatorname{States}(D)\rightarrow\mathbb N$,
 obtained from a non-negative relational feature, strictly decreases until a producer or
 already-satisfied exit applies. An acyclic support-depth orientation additionally
 assumes that the grounded support relation remains acyclic in reachable states.
-Cross-predicate precondition repair uses a selected acyclic call graph and a
-dependency rank $\kappa_S:\operatorname{head}(S)\rightarrow\mathbb N$ such that
-$\kappa_S(g)>\kappa_S(h)$ for every selected call edge $g\rightarrow h$.
+Cross-predicate precondition repair uses a selected acyclic call graph for a
+candidate core $\mathcal M$ and a dependency rank $\kappa_{\mathcal M}$ over
+its trigger signatures such that
+$\kappa_{\mathcal M}(g)>\kappa_{\mathcal M}(h)$ for every selected call edge
+$g\rightarrow h$.
 \end{assumption}
 
 \begin{assumption}[Target-preserving resource discharge]
@@ -430,9 +445,11 @@ ranks cannot execute infinitely while remaining inside that component.
 For same-predicate recursion, every recursive return-to-trigger step decreases
 $\rho_b$ and no selected body can restore the protected portion of
 the ranked relation. An infinite descent in $\mathbb N$ is impossible. For
-cross-predicate precondition repair, every call edge decreases $\kappa_S$, so a
+cross-predicate precondition repair, every call edge decreases
+$\kappa_{\mathcal M}$, so a
 call cycle would imply
-$\kappa_S(g_0)>\kappa_S(g_1)>\cdots>\kappa_S(g_0)$, a contradiction. Each
+$\kappa_{\mathcal M}(g_0)>\kappa_{\mathcal M}(g_1)>\cdots>
+\kappa_{\mathcal M}(g_0)$, a contradiction. Each
 terminal rank has a direct producer, provider macro, or already-satisfied exit
 because the corresponding nonrecursive schema-achievement contract is covered.
 \end{proof}
@@ -492,7 +509,7 @@ therefore establish it in the concrete return state.
 \end{proof}
 
 \begin{proposition}[Certified-candidate-set optimality]
-If the answer-set optimizer returns $S^\star$, then $S^\star$ satisfies every
+If the answer-set optimizer returns $\mathcal M_D$, then $\mathcal M_D$ satisfies every
 encoded evidence-coverage, schema-achievement, internal-call,
 preparation-acyclicity, and recursive-ranking obligation and is
 lexicographically optimal among feasible subsets of
