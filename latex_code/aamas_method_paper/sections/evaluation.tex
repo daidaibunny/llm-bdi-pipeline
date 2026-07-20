@@ -286,31 +286,10 @@ on the added families, not universal dominance wherever Raw MOOSE already
 saturates.
 
 Table~\ref{tab:moose-reference} records the preregistered source split and
-coverage boundary.
+coverage boundary. Task-level references to standalone planners
+(LAMA, ENHSP MRP+HJ, and FOND4LTLf) cover disjoint fragments and are not ranked
+against GP2PL on the same instances; their scope-separated coverage, PAR-2
+budgets, and unsupported-input taxonomy appear in the Technical Supplement,
+Sec.~4.
 
 \input{sections/result_moose_reference_table}
-
-\IfFileExists{sections/result_external_reference_table.tex}{%
-\input{sections/result_external_reference_table}
-}{%
-\PackageWarning{gp2pl}{External reference table unavailable}%
-}
-
-\paragraph{Instance-planner outcomes.}
-LAMA validates \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} classical
-instances, while MRP+HJ validates
-\ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} numeric instances. Their
-PAR-2 values are \ExternalLAMAParTwoSeconds{} and
-\ExternalMRPHJParTwoSeconds{} seconds.
-
-These rows cover disjoint fragments and are interpreted within scope rather
-than as a same-instance ranking. FOND4LTLf with LAMA supports
-\ExternalDirectSupportedCount{} of \ExternalDirectTotalCaseCount{} temporal
-queries and validates \ExternalDirectValidCount{}.
-
-The remaining \ExternalDirectUnsupportedCount{} inputs are unsupported rather
-than planner failures; this total includes both numeric PDDL outside the tool's
-scope and identifiers rejected by the current adapter encoding. Supported-set
-PAR-2 is \ExternalDirectParTwoSeconds{} seconds. Raw MOOSE extension runtime
-remains omitted under its coverage-only protocol. The Technical Supplement
-reports the planner, compiler, timeout, and unsupported outcome taxonomy.

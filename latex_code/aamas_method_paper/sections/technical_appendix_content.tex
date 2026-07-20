@@ -1501,6 +1501,21 @@ limits, and VAL outcome. Runtime is not used because the registered coverage
 protocol permits differing worker isolation and forbids cross-hardware timing
 comparison.
 
+\IfFileExists{sections/result_external_reference_table.tex}{%
+\input{sections/result_external_reference_table}
+}{%
+\PackageWarning{gp2pl}{External reference table unavailable}%
+}
+
+Table~\ref{tab:external-references} gives the scope-separated coverage. LAMA
+validates \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} classical instances
+and MRP+HJ \ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} numeric
+instances, at PAR-2 values \ExternalLAMAParTwoSeconds{} and
+\ExternalMRPHJParTwoSeconds{} seconds. FOND4LTLf with LAMA supports
+\ExternalDirectSupportedCount{} of \ExternalDirectTotalCaseCount{} temporal
+queries and validates \ExternalDirectValidCount{}, with supported-set PAR-2
+\ExternalDirectParTwoSeconds{} seconds.
+
 The remaining task-level references are frozen in
 \texttt{external\_reference\_results.json} in the same release. The achievement
 matrix contains \ExternalAchievementValidCount{}/\ExternalAchievementCaseCount{}

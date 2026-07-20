@@ -73,8 +73,8 @@ def test_manuscript_consumes_frozen_external_reference_results() -> None:
 	assert (
 		r"\input{sections/result_external_reference_macros}" in technical_appendix
 	)
-	assert r"\ExternalLAMAValidCount{}" in evaluation
-	assert r"\ExternalDirectValidCount{}" in evaluation
+	assert r"\ExternalLAMAValidCount{}" in appendix
+	assert r"\ExternalDirectValidCount{}" in appendix
 	assert r"external\_reference\_results.json" in appendix
 	assert "LAMA & Measured & Classical achievement & 591/868 & 0 & 1178.4" in table
 	assert "MRP+HJ & Measured & Numeric achievement & 253/360 & 0 & 1127.4" in table
