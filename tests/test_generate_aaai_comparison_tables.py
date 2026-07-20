@@ -1290,6 +1290,7 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	external = render_external_table(result)
 	combined = atomic + temporal + external
 	atomic_text = " ".join(atomic.split())
+	temporal_text = " ".join(temporal.split())
 
 	assert "Method & Valid (\\%) & Branches & KiB" in atomic
 	assert "Method & Valid & PAR-2 s & Plans & Fan-out" in temporal
@@ -1311,7 +1312,9 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert r"\resultselected{Certified Balanced}" in temporal
 	assert "Bold marks tied best coverage" in atomic_text
 	assert "blue bold marks Full GP2PL" in atomic_text
-	assert "Color is not used alone" in temporal
+	assert "PAR-2 charges failures twice" in temporal_text
+	assert "Valid requires Jason" not in combined
+	assert "identical DFA, binding, and atomic-library inputs" not in temporal
 	assert "FOND4LTLf + LAMA" in external
 	assert "C0" not in combined
 	assert "T0" not in combined

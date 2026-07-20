@@ -74,6 +74,7 @@ def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
 	macros = render_result_macros(result)
 	main_table = render_main_table(result)
 	domain_table = render_domain_table(result)
+	main_table_text = " ".join(main_table.split())
 
 	assert "\\newcommand{\\AtomicFiveSeedMeanSuccessPercent}{40.00}" in macros
 	assert "\\newcommand{\\AtomicFiveSeedSampleSDPercent}{22.36}" in macros
@@ -82,10 +83,9 @@ def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
 	assert "Logistics & 1 & 0--1 & 80.0 $\\pm$ 44.7" in main_table
 	assert "Depots & 1 & 0 & 0.0 $\\pm$ 0.0" in main_table
 	assert "Seed 0" not in main_table
-	assert "sample standard deviation (SD)" in main_table
-	assert "atomic cores compiled independently from predeclared evidence seeds" in (
-		main_table
-	)
+	assert "sample standard deviation (SD)" in main_table_text
+	assert "predeclared evidence seeds" in main_table_text
+	assert "compiled independently" not in main_table_text
 	assert "Domain & Test & Seed 0 & Seed 1 & Seed 2 & Seed 3 & Seed 4" in domain_table
 	assert "Coverage (\\%)" in domain_table
 	assert "Mean (\\%)" not in domain_table

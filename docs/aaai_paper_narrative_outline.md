@@ -580,25 +580,13 @@ unregistered capability-switch rows. The historical sequence-only controller
 may appear only as an evaluation-only weak reference; it must not return as an
 operational shortcut.
 
-The benchmark section must describe how the TEG dataset is constructed, not
-only its released fields and translation results. The main paper gives the
-compact dependency-ordered flow:
-
-```text
-PDDL domain + held-out problem initial state
--> bounded legal non-repeating rollouts
--> five-profile temporal candidate pool
--> typed parameter lifting + hidden binding/witness
--> deterministic profile/signature-balanced selection
--> deterministic controlled-English rendering
--> problem-complete manifest
--> complete-input translation deduplication
-```
-
-State explicitly that the original PDDL achievement goal is provenance only:
-it does not affect rollout enumeration, candidate ranking, query wording, or
-construction success. The main paper must include one concrete lifted example
-and direct readers to Technical Supplement, Sec. 4.1.
+The benchmark section must state the scientific scope of the TEG dataset, not
+repeat its construction algorithm. The main paper names all five temporal
+profiles, states that the original PDDL achievement goal is ignored, records
+that every selected query has a legal witness, and gives the 1,228-query /
+475-input scale. Rollout depth, event extraction, profile/signature balancing,
+typed lifting, rendering, deduplication, and deterministic tie-breaking belong
+only in Technical Supplement, Sec. 4.1.
 
 Technical Supplement, Sec. 4.1 must define the construction record
 `B_i=<D,P_i,q_i,T_i,theta_i,pi_i>`, the event extraction rules, all five formula
@@ -607,6 +595,13 @@ deterministic selection, public/private boundary, and complete-input
 deduplication. It must also report the primary and expanded registered bounds
 and explain that bounded failure is not an impossibility proof. Keep the frozen
 prompt in Sec. 4.2 and PDDL provenance in Sec. 4.3.
+
+Keep protocol facts in one place. The Evaluation body defines paired inputs,
+atomic and temporal success, and denominator handling exactly once. Result
+captions retain only the experimental unit, non-obvious column definitions, and
+visual emphasis notation; they do not restate those protocol definitions.
+Consolidate main-to-supplement pointers at the end of the protocol and external
+reference discussion rather than repeating one after every paragraph.
 
 
 The main benchmark section records all 16 domain families, the split

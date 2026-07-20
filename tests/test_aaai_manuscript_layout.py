@@ -206,13 +206,22 @@ def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None
 	for required_main_claim in (
 		"\\paragraph{Temporal benchmark construction.}",
 		"ignores the original achievement goal",
-		"rollouts of at most three actions",
-		"semantic-signature",
+		"$F(A\\land B)$",
+		"$F(A\\land\\neg B)$",
+		"$F(A\\land X(F(B)))$",
+		"$F(A\\land X(F(B\\land X(F(C)))))$",
+		"strong $A\\,U\\,B$",
 		"one witness-backed query per held-out problem",
 		"1,228 queries over 475 distinct translation inputs",
-		"Technical Supplement, Sec.~4.1",
 	):
 		assert required_main_claim in evaluation_text
+	for construction_detail in (
+		"rollouts of at most three actions",
+		"semantic-signature use",
+		"symbol-independent tie-break",
+		"it invokes no planner",
+	):
+		assert construction_detail not in evaluation_text
 
 	for required_supplement_contract in (
 		"\\label{app:teg-dataset}",
@@ -224,10 +233,16 @@ def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None
 		"Failure means no witness was found under these bounds",
 		"\\path{src/temporal_input/nl_benchmark.py}",
 		"\\path{src/temporal_input/translation_worklist.py}",
+		"semantic-signature use",
+		"spelling-independent SHA-256",
+		"No classical or generalized planner is called",
 	):
 		assert required_supplement_contract in supplement_source
 
-	assert "bounded legal non-repeating rollouts" in outline_source
+	assert "Rollout depth, event extraction, profile/signature balancing" in (
+		outline_source
+	)
+	assert "belong\nonly in Technical Supplement, Sec. 4.1" in outline_source
 	assert "Keep the frozen\nprompt in Sec. 4.2" in outline_source
 	assert "PDDL provenance in Sec. 4.3" in outline_source
 
@@ -740,8 +755,7 @@ def test_main_results_report_scientific_aggregates_not_run_bookkeeping() -> None
 	for scientific_result in (
 		"Across five independently compiled atomic cores",
 		"All-seed complete (14)",
-		"residual variation concentrates in Logistics",
-		"in Depots",
+		"Variation is confined to Logistics and Depots",
 		"exact finite-trace language equivalence",
 		"requires controller compilation, Jason completion",
 	):
@@ -754,6 +768,40 @@ def test_main_results_report_scientific_aggregates_not_run_bookkeeping() -> None
 		"Thirteen registered challenge cases all pass",
 	):
 		assert archived_detail in supplement_source
+
+
+def test_evaluation_protocol_facts_are_not_repeated_in_table_captions() -> None:
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	table_sources = "\n".join(
+		path.read_text(encoding="utf-8")
+		for path in (
+			LATEX_ROOT / "sections/result_atomic_comparison_table.tex",
+			LATEX_ROOT / "sections/result_temporal_comparison_table.tex",
+			LATEX_ROOT / "sections/result_temporal_summary_table.tex",
+			LATEX_ROOT / "sections/result_same_scope_evidence_table.tex",
+		)
+	)
+	evaluation_text = " ".join(evaluation_source.split())
+	table_text = " ".join(table_sources.split())
+
+	for required_protocol_fact in (
+		"Atomic variants share each seed's evidence",
+		"Temporal variants share the same atomic core, binding, and DFA",
+		"Atomic success requires Jason completion and original-goal VAL",
+		"Translation success requires exact finite-trace language equivalence",
+		"Temporal success requires controller compilation, Jason completion",
+		"all failures remain in the denominator",
+	):
+		assert required_protocol_fact in evaluation_text
+	for duplicated_caption_fact in (
+		"Valid requires Jason",
+		"identical DFA, binding, and atomic-library inputs",
+		"Query validity additionally requires controller compilation",
+		"Every valid plan passes original-goal VAL",
+	):
+		assert duplicated_caption_fact not in table_text
 
 
 def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
