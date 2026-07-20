@@ -1349,8 +1349,11 @@ maximum transition-repair trigger fan-out
 Use the method names above directly. Do not replace them with numbered temporal
 variants or compressed one-letter oracle headings.
 
-The main paper uses one compact same-scope table for Raw MOOSE evidence and
-Full GP2PL on the identical 740 added-domain seed--case evaluations. Keep
+The main paper uses a standalone evidence-to-library table for Raw MOOSE
+evidence and Full GP2PL on the identical 740 added-domain seed--case
+evaluations. It is separate from the compiler ablation because it compares
+provider execution with the final library on a narrower paired scope, rather
+than comparing compiler variants over all 16 domains. Keep
 MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a separate
 Technical-Supplement reference table with short columns such as `Method`,
 `Source`, `Scope`, `Coverage`, `Unsupported`, and `PAR-2`. Do not mix their
