@@ -17,33 +17,11 @@ $D,\mathcal{I}_{\mathrm{train}},\mathcal E_{\mathrm{raw}}
 \longrightarrow\mathcal{M}_D$,
 compiling the query-independent certified atomic module core from a PDDL domain,
 training split, and generalized-planning evidence. Temporal queries
-do not enter this optimization; every later query reuses $\mathcal M_D$.
-Algorithm~\ref{alg:atomic} summarizes the procedure.
-
-\begin{algorithm}[htbp]
-\caption{Compile the Certified Lifted Atomic Module Core}
-\label{alg:atomic}
-\begin{algorithmic}[1]
-\REQUIRE PDDL domain $D$, training split $\mathcal I_{\mathrm{train}}$,
-raw provider artifact $\mathcal E_{\mathrm{raw}}$
-\ENSURE Certified lifted atomic module core $\mathcal M_D$ or a rejection diagnostic
-\STATE $E_0\leftarrow\textsc{NormalizeEvidence}(\mathcal E_{\mathrm{raw}},D,\mathcal I_{\mathrm{train}})$
-\STATE $E\leftarrow\textsc{CanonicalLift}(E_0,D)$
-\STATE $T_D(E)\leftarrow\textsc{ProducibleTargets}(E,D)$
-\STATE $\mathcal C_E\leftarrow\textsc{ValidateEvidenceMacros}(E,D)$
-\STATE $\mathcal C_D(E)\leftarrow
-\textsc{LiftSchemas}(D,\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$
-\STATE $\mathcal C^{\checkmark}_{D,E}\leftarrow
-\textsc{Certify}(\mathcal C_E\cup\mathcal C_D(E),D)$
-\STATE $\mathfrak F_{D,E}\leftarrow
-\textsc{FeasibleSubsets}(\mathcal C^{\checkmark}_{D,E},E)$
-\IF{$\mathfrak F_{D,E}=\varnothing$}
-  \STATE \textbf{reject}
-\ENDIF
-\RETURN $\mathcal M_D\leftarrow
-\textsc{ClingoLexMin}(\mathfrak F_{D,E})$
-\end{algorithmic}
-\end{algorithm}
+do not enter this optimization; every later query reuses $\mathcal M_D$. The
+pipeline normalizes and canonically lifts the evidence, validates its macros,
+generates schema-derived candidates for the producible targets, certifies every
+candidate, and selects a feasible core with Clingo; the Technical Supplement,
+Sec.~3 gives the full pseudocode.
 
 Certification and selection operate on trigger--context--body rules before
 surface rendering. AgentSpeak(L) rendering preserves the selected triggers,
@@ -127,16 +105,16 @@ $\mathcal G_D^{\mathrm{prod}}(T)$ is acyclic.
 
 Termination does not use an action-depth constant: a path cannot repeat an
 alpha-normalized requirement/producer step or resource mode, and only the
-shortest body is retained for an equivalent open-requirement and completion-
-effect summary. Every candidate is then verified by symbolic progression.
-Evidence macros are not truncated. Let $\mathcal C_E$ denote validated evidence
-branches and $\mathcal C_D(E)$ the branches generated from $D$ for these target
-sets. Cyclic dependencies require provider
-evidence or a separately certified recursive module. The resulting candidate
-set $\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$ is finite, but
-$\mathfrak G$ is not a complete hypothesis language for PDDL planning. Types constrain
-unification; an \asl{} realization may expose static sort membership in
-contexts, but never as an achievement call or exported action.
+shortest body is retained for an equivalent open-requirement and
+completion-effect summary. Every candidate is then verified by symbolic
+progression, and evidence macros are not truncated. Cyclic dependencies
+require provider evidence or a separately certified recursive module. The
+resulting candidate set
+$\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$, joining validated evidence
+branches with the generated branches, is finite, but $\mathfrak G$ is not a
+complete hypothesis language for PDDL planning. Types constrain unification; an
+\asl{} realization may expose static sort membership in contexts, but never as
+an achievement call or exported action.
 
 Figure~\ref{fig:atomic-case} isolates the Blocks World instance used throughout
 the exposition from the domain-independent compiler definition above.
@@ -180,106 +158,76 @@ Action and subgoal variables must be bound by the trigger, positive context, or
 certified static sort membership; negative contexts and comparisons only
 filter. Symbolic progression proves each precondition and final trigger
 achievement, recording $\mustadd$, $\mayadd$, and $\maydelete$. For any BDI
-plan set $\mathcal R$, define
-\[
-\operatorname{Closed}_D(\mathcal R)
-\Longleftrightarrow
-\begin{aligned}[t]
-&\forall b\in\mathcal R,\ \forall !q(\bar Y)\text{ occurring in }\beta_b,\\
-&\exists b'\in\mathcal R\text{ such that}\\
-&\qquad g_{b'}\text{ type-unifies with }q(\bar Y)\\
-&\qquad\text{under the type hierarchy of }D.
-\end{aligned}
-\]
-The compiler requires $\operatorname{Closed}_D(\mathcal M_D)$, so every
-internal achievement call resolves to a type-compatible selected plan,
-including calls reached transitively. This set-level property is a Clingo
-obligation; it is distinct from constructing $T_D(E)$. It proves resolution by
-signature and type, not applicability of some branch in every reachable state.
+plan set $\mathcal R$, $\operatorname{Closed}_D(\mathcal R)$ holds exactly when
+every internal achievement call occurring in a selected body type-unifies with
+the trigger of some selected plan under the type hierarchy of $D$. The
+compiler requires $\operatorname{Closed}_D(\mathcal M_D)$, so every internal
+call, including transitively reached ones, resolves to a type-compatible
+selected plan. This set-level property is a Clingo obligation; it proves
+resolution by signature and type, not applicability of some branch in every
+reachable state.
 
 \paragraph{Well-founded recursive progress.}
 A same-predicate recursive branch $b$ requires a ranking function
-$\rho_b:\operatorname{States}(D)\rightarrow\mathbb N$ defined by a non-negative relation count or
-anchored acyclic-cone count that strictly decreases and has an already-satisfied,
-direct-producer, or validated-evidence terminal branch.
-Threats are checked over the preparation graph selected by Clingo, not over
-unselected candidates. A branch may add the ranked relation outside the
-protected cone only when its trigger preserves the same anchor and a guard proves
-that the new anchor differs from the protected one. The ranking feature is used
-only in certification and never becomes an agent belief. The construction
-follows relational progress witnesses in general-policy work
+$\rho_b:\operatorname{States}(D)\rightarrow\mathbb N$, a non-negative relation
+or anchored acyclic-cone count that strictly decreases, together with an
+already-satisfied, direct-producer, or validated-evidence terminal branch.
+Threats are checked over the preparation graph selected by Clingo; a branch may
+add the ranked relation outside the protected cone only under a guard proving
+the new anchor differs from the protected one. The ranking feature is used only
+in certification and never becomes an agent belief. The construction follows
+relational progress witnesses in general-policy work
 \cite{Frances2021LearningGeneralPolicies}, but claims only schema-certified
 features from the generated candidate set.
 
 \paragraph{Target-preserving resource discharge.}
 Effects, not predicate names, identify temporary occupation of a reusable
-resource. Suppose an acquisition action deletes an availability fact
-$\mathit{free}(R)$ and adds an occupancy relation $\mathit{held}(R,U)$. These
-names are illustrative: the compiler infers the shared resource argument $R$
-and occupant argument $U$ from the effect structure and obtains the same result
-after consistent symbol renaming. The resulting finite abstract mode graph is
-$\mathcal G_b^{\mathrm{res}}=(V_b^{\mathrm{res}},E_b^{\mathrm{res}})$: vertices
-are alpha-normalized keyed occupancy modes, and an edge labelled by action
-schema $a$ records a symbolically executable transition between two modes while
-preserving the target. A discharge body is accepted only if symbolic
-execution removes the current occupancy mode, restores the corresponding
-availability fact, leaves the atomic target true, and does not recreate an
-earlier normalized mode. Excluding repeated modes makes the discharge search
-finite without assuming that release is one action. Disequalities arise only
-when unifying two roles would make a PDDL precondition false.
+resource: when an acquisition action deletes an availability fact
+$\mathit{free}(R)$ and adds an occupancy relation $\mathit{held}(R,U)$ (names
+illustrative), the compiler infers the resource and occupant arguments from the
+effect structure and forms a finite graph of alpha-normalized keyed occupancy
+modes. A discharge body is accepted only if symbolic execution removes the
+current occupancy mode, restores the availability fact, leaves the atomic
+target true, and does not recreate an earlier normalized mode; excluding
+repeated modes makes the search finite without assuming that release is one
+action.
 
 \paragraph{Ranked cross-module precondition repair.}
 Preparing one of several dynamic preconditions may temporarily change another,
-such as an object's location. A repair branch may defer an unrelated sibling only
-through a schema-inferred single-valued fluent when every deferred sibling has
-one producer, all static feasibility witnesses remain, local variables are
-alpha-renamed, and the original target is retried before primitive production.
-Cross-predicate repair candidates are optional. For a candidate core
-$\mathcal M$, Clingo assigns each trigger signature in its selected call graph a
-dependency rank $\kappa_{\mathcal M}$ and requires
-$\kappa_{\mathcal M}(g)>\kappa_{\mathcal M}(h)$ for every selected call edge
-$g\rightarrow h$.
-Same-predicate recursion instead requires the
-relational certificate above.
+such as an object's location. A repair branch may defer an unrelated sibling
+only through a schema-inferred single-valued fluent when every deferred sibling
+has one producer, all static feasibility witnesses remain, and the original
+target is retried before primitive production. For a candidate core
+$\mathcal M$, Clingo assigns each trigger signature in its selected call graph
+a dependency rank $\kappa_{\mathcal M}$ that strictly decreases along every
+selected call edge; same-predicate recursion instead requires the relational
+certificate above.
 
 \subsection{Feasible-Core Optimization}
 
 Validated evidence macros and certified action-schema-derived candidates enter
 one answer-set optimization problem solved with Clingo
-\cite{Gebser2018Clingo}. Evidence
-rules induce coverage obligations. A selected candidate may cover an evidence
+\cite{Gebser2018Clingo}. Evidence rules induce coverage obligations,
+$\operatorname{covers}_D(b,e)$: a selected candidate may cover an evidence
 obligation only through alpha-equivalent triggers and bodies, a weaker
 conjunctive context with the same body, or an action-schema producer refinement
 with the same $\mustadd$, no additional $\maydelete$, and equivalent numeric
-and keyed-resource summaries. We write this evidence-coverage relation as
-$\operatorname{covers}_D(b,e)$. Syntactic body-prefix similarity is not treated as
-semantic equivalence.
-
-The solver also treats every nonrecursive action-schema-derived branch as a
-schema-achievement obligation: at least one selected branch must realize the
-same certified achievement contract. Let $\mathcal C_D^{\mathrm{nr}}(E)$ denote
-these nonrecursive branches and let $\operatorname{realizes}_D(b,c)$ hold when selected
-branch $b$ is equivalent to, soundly refines, or gives a certified
-target-preserving resource-discharge alternative to schema branch $c$. It
-further enforces internal-call closure,
-acyclic ranked cross-predicate preparation, and compatibility of selected
-effects with recursive rankings. Define
+and keyed-resource summaries; syntactic body-prefix similarity is not semantic
+equivalence. Every nonrecursive schema-derived branch is likewise a
+schema-achievement obligation, $\operatorname{realizes}_D(b,c)$: some selected
+branch must be equivalent to, soundly refine, or give a certified
+resource-discharge alternative to it. Define
 \begin{align*}
 \mathcal C^{\checkmark}_{D,E}
   &=\{b\in\mathcal C_{D,E}\mid\operatorname{Cert}_D(b)\},\\
 \mathfrak F_{D,E}
   &=\{\mathcal M\subseteq\mathcal C^{\checkmark}_{D,E}\mid
       \mathcal M\models\Omega_{D,E}\land
-      \operatorname{Closed}_D(\mathcal M)\}.
+      \operatorname{Closed}_D(\mathcal M)\},
 \end{align*}
 where $\Omega_{D,E}$ contains evidence coverage, schema-achievement coverage,
-preparation acyclicity, and recursive-ranking compatibility. Resource discharge
-is already part of the per-branch predicate
-$\operatorname{Cert}_D$. In particular, schema-achievement coverage requires
-\[
-\forall c\in\mathcal C_D^{\mathrm{nr}}(E),\quad
-\exists b\in\mathcal M:\operatorname{realizes}_D(b,c).
-\]
+preparation acyclicity, and recursive-ranking compatibility, and resource
+discharge is part of the per-branch predicate $\operatorname{Cert}_D$.
 The optimizer uses the
 lexicographic objective
 \begin{multline*}
@@ -290,10 +238,9 @@ N_C(\mathcal M),N_\beta(\mathcal M)\bigr\rangle,
 \end{multline*}
 where $N_{\mathrm{rel}}$ and $N_{\mathrm{prep}}$ count compatible
 relation-ranked recursion and acyclic precondition-repair capabilities,
-$N_C$ counts context literals, and $N_\beta$ counts body steps. Clingo computes
-this core directly for the grounded finite instance. The selected
+$N_C$ counts context literals, and $N_\beta$ counts body steps. The selected
 trigger--context--body rules, rather than their AgentSpeak rendering, define
-$\mathcal M_D$. The claim is global only within
+$\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
 The compiler rejects an untyped predicate with several producers when their
@@ -322,9 +269,9 @@ each progress edge $(q_s,\chi,q_t)$ with
 $d_q(q_t)<d_q(q_s)<\infty$; an accepting \texttt{true} self-loop needs none.
 
 Same-source/same-target valuation cubes may share a common achievement
-objective, but the monitor still evaluates every complete cube. They remain
-separate conjunctive alternatives in MONA's transition relation, not one
-admitted disjunctive guard.
+objective, but each remains a separate conjunctive alternative in MONA's
+transition relation (Sec.~\ref{sec:background}), and the monitor evaluates
+every complete cube.
 
 Each execution applies $\theta_q$: $\mathit{on}(X,Y)$ under
 $X{=}b_1,Y{=}b_4$ calls $!\mathit{on}(b_1,b_4)$ without grounding the shared
@@ -458,11 +405,10 @@ reachable-state coverage.
 
 \textbf{Proposition 2.} For the grounded selection instance defined above, a
 Clingo optimum $\mathcal M_D$ belongs to $\mathfrak F_{D,E}$ and minimizes the
-declared lexicographic cost over that feasible family.
-
-The Technical Supplement proves a bidirectional correspondence between answer
-sets and feasible subsets. The result does not imply complete candidate
-generation or optimality over all AgentSpeak programs.
+declared lexicographic cost over that feasible family. The Technical Supplement
+proves a bidirectional correspondence between answer sets and feasible subsets;
+the result does not imply complete candidate generation or optimality over all
+AgentSpeak programs.
 
 \paragraph{Supported transition-composition soundness.}
 

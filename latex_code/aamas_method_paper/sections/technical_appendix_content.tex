@@ -1008,6 +1008,34 @@ claim.
 \section{Algorithmic Correspondence}
 \label{app:code-map}
 
+Algorithm~\ref{alg:atomic} summarizes the atomic compilation pipeline whose
+stages are defined in the main paper and formalized above.
+
+\begin{algorithm}[htbp]
+\caption{Compile the Certified Lifted Atomic Module Core}
+\label{alg:atomic}
+\begin{algorithmic}[1]
+\REQUIRE PDDL domain $D$, training split $\mathcal I_{\mathrm{train}}$,
+raw provider artifact $\mathcal E_{\mathrm{raw}}$
+\ENSURE Certified lifted atomic module core $\mathcal M_D$ or a rejection diagnostic
+\STATE $E_0\leftarrow\textsc{NormalizeEvidence}(\mathcal E_{\mathrm{raw}},D,\mathcal I_{\mathrm{train}})$
+\STATE $E\leftarrow\textsc{CanonicalLift}(E_0,D)$
+\STATE $T_D(E)\leftarrow\textsc{ProducibleTargets}(E,D)$
+\STATE $\mathcal C_E\leftarrow\textsc{ValidateEvidenceMacros}(E,D)$
+\STATE $\mathcal C_D(E)\leftarrow
+\textsc{LiftSchemas}(D,\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$
+\STATE $\mathcal C^{\checkmark}_{D,E}\leftarrow
+\textsc{Certify}(\mathcal C_E\cup\mathcal C_D(E),D)$
+\STATE $\mathfrak F_{D,E}\leftarrow
+\textsc{FeasibleSubsets}(\mathcal C^{\checkmark}_{D,E},E)$
+\IF{$\mathfrak F_{D,E}=\varnothing$}
+  \STATE \textbf{reject}
+\ENDIF
+\RETURN $\mathcal M_D\leftarrow
+\textsc{ClingoLexMin}(\mathfrak F_{D,E})$
+\end{algorithmic}
+\end{algorithm}
+
 Table~\ref{tab:code-map} maps each theoretical construction to the public
 implementation. Module docstrings repeat these references so that code and
 paper can be audited in both directions.
