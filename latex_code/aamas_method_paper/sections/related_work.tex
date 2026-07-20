@@ -55,18 +55,15 @@ accepted subset, not a compiler ablation.
 
 \paragraph{Natural-language temporal specifications.}
 Prior systems map natural-language instructions to temporal logic through
-extensible pattern libraries \cite{FuggittiChakraborti2023NL2LTL}, lifted
-language-to-logic translation \cite{Chen2023NL2TL}, or modular grounding in new
-environments \cite{Liu2023Lang2LTL}; related planning work extracts ordering and
-blocking constraints into solver specifications \cite{Guo2025CaStL}. Prompt
-programs can constrain structured outputs \cite{BeurerKellner2023Prompting},
-but prompt-based semantic parsers remain sensitive to input perturbations
-\cite{Zhuo2023RobustSemanticParsing}. Our evaluated translation protocol
-therefore constrains the schema and vocabulary, then validates typed,
+pattern libraries \cite{FuggittiChakraborti2023NL2LTL}, lifted
+language-to-logic translation \cite{Chen2023NL2TL,Guo2025CaStL}, or modular
+grounding \cite{Liu2023Lang2LTL}. Prompt programs can constrain structured
+outputs \cite{BeurerKellner2023Prompting}, but prompt-based parsers remain
+sensitive to input perturbations \cite{Zhuo2023RobustSemanticParsing}. Translation is an
+evaluated input condition here, not a contribution: we validate typed,
 externally bound parametric \ltlf{} by exact finite-trace language equivalence
-before GP2PL compilation. This protocol tests controlled structured
-translation, not robustness to unrestricted natural language. The complete
-prompt appears in the Technical Supplement, Sec.~4.2.
+before GP2PL compilation, with the protocol and frozen prompt in the Technical
+Supplement, Sec.~4.
 
 \paragraph{Position of this work.}
 Generalized planners target policies or programs, BDI programming assumes a

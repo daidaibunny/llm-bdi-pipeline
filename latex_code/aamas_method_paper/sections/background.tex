@@ -64,18 +64,14 @@ patterns by rechecking their intended state after subsidiary plans return
 
 Linear temporal logic over finite traces (\ltlf{}) is interpreted over a
 nonempty finite state sequence \cite{DeGiacomoVardi2013}. For proposition
-alphabet $AP_q$, the declared input language $\Phi_{\mathrm{syn}}$ is
-\[
-\begin{aligned}
-\ell &::= a\mid\neg a,\\
-\varphi &::= \ell\mid(\varphi\land\varphi)\mid F\varphi\mid X\varphi\\
-&\phantom{{}::={}}\mid(\varphi U\varphi),\qquad a\in AP_q.
-\end{aligned}
-\]
+alphabet $AP_q$, the declared input language $\Phi_{\mathrm{syn}}$ admits
+literals, conjunction, $F$, $X$, and strong $U$ over $AP_q$; the full grammar
+and finite-trace semantics appear in the Technical Supplement, Sec.~1.
 Negation is restricted to atoms; the serialized syntax writes it as
 \texttt{!}. Both $X$ and $U$ have their strong finite-trace meanings. The
 evaluation family $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains
-instances of the five predeclared profiles in Sec.~\ref{sec:evaluation}.
+instances of the five predeclared profiles in Sec.~\ref{sec:evaluation}, and
+the certificate-supported subset $\Phi_{\mathrm{cert}}$ is defined below.
 Membership in either set is not an action-strategy guarantee.
 
 Automata-theoretic planning uses a finite automaton to track temporal progress
@@ -136,9 +132,10 @@ $q_1,\ldots,q_k$, the one maintained domain library is
 \mathcal{M}_D\cup\bigcup_{i=1}^{k}\mathcal{Q}_{q_i}.
 \]
 Thus $\mathcal M_D$ is the stable logical core of $\mathcal L_D^{[k]}$, not a
-second persisted library. Throughout, calligraphic symbols denote finite sets or
-structured artifacts; $b$ denotes one candidate branch, $e$ one normalized
-evidence rule, and $\chi$ one DFA transition guard. The Technical Supplement,
+second persisted library, and appending $\mathcal Q_{q_i}$ neither reconstructs
+nor reoptimizes the atomic core. Throughout, calligraphic symbols denote finite
+sets or structured artifacts; $b$ denotes one candidate branch, $e$ one
+normalized evidence rule, and $\chi$ one DFA transition guard. The Technical Supplement,
 Sec.~1 defines the generated candidate set, certificates, preservation
 portfolios, and transition-repair programs used below.
 

@@ -134,15 +134,11 @@ After aggregating the five seeded outcomes within each identifier, there are
 two-sided exact sign test gives $p=1.47\times10^{-39}$, so the conclusion does
 not rely on treating repeated seed--case outcomes as independent.
 
-Full GP2PL preserves the Maximum Feasible success set while removing
-\AtomicFullBranchReduction{} mean branches and
-\AtomicFullLibraryKiBReduction{} mean KiB, reductions of 2.2\% and 1.7\%,
-respectively. This isolates compact selection without assigning it a coverage
-gain.
-
-The additional capability has an offline cost: Full compiles in 40.7 seconds
-on average, roughly fivefold the 8.0 seconds of Direct Producers. We report that
-cost directly and make no unmeasured amortization claim.
+Full GP2PL preserves the full Maximum Feasible success set while selecting a
+more compact core, removing \AtomicFullBranchReduction{} mean branches and
+\AtomicFullLibraryKiBReduction{} mean KiB (2.2\% and 1.7\%). Clingo's
+lexicographic objective thus yields the smallest certified library at equal
+coverage, a one-time offline compilation reused by every later query.
 
 \input{sections/result_temporal_comparison_table}
 

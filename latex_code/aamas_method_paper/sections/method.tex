@@ -3,6 +3,15 @@
 
 \subsection{Method Overview}
 
+An executable BDI library needs four properties to hold at once: every plan
+variable is bound, every primitive body is executable, every internal call
+resolves to a selected module, and every recursion makes progress. GP2PL turns
+each property into a compile-time, machine-checkable proof obligation and emits
+a structured diagnostic rather than an uncertified controller whenever an
+obligation fails. Building the library is therefore not transcription but
+construction under proof: we generate candidate branches, keep only those
+whose obligations discharge, and select a feasible core from what survives.
+
 GP2PL first maps
 $D,\mathcal{I}_{\mathrm{train}},\mathcal E_{\mathrm{raw}}
 \longrightarrow\mathcal{M}_D$,
@@ -38,42 +47,13 @@ raw provider artifact $\mathcal E_{\mathrm{raw}}$
 
 Certification and selection operate on trigger--context--body rules before
 surface rendering. AgentSpeak(L) rendering preserves the selected triggers,
-contexts, bodies, and internal-call relation in $\mathcal M_D$. These selected
-rules define the compiler output; AgentSpeak(L) and Jason provide its evaluated
-realization. Table~\ref{tab:supported-fragment} states the acceptance and
-rejection boundary used by the formal claims and experiments.
-
-\begin{table}[htbp]
-\centering
-\small
-\setlength{\tabcolsep}{2pt}
-\begin{tabular}{@{}
->{\raggedright\arraybackslash}p{0.22\columnwidth}
->{\raggedright\arraybackslash}p{0.31\columnwidth}
->{\raggedright\arraybackslash}p{0.39\columnwidth}@{}}
-\toprule
-Construct & Accepted strategy & Rejection boundary \\
-\midrule
-Positive predicate & Certified atomic module & No executable achieving branch \\
-Numeric equality & Bounded constant-integer progress & Unsupported arithmetic or
-incomplete numeric effect \\
-Positive conjunction & Threat-safe serialization & Incomplete effects or cyclic
-threats \\
-Negative predicate & Observe absence or use an exact certified deleter & Synthetic
-negated achievement or possible re-addition \\
-Mixed Boolean and numeric guard & Complete net-effect and preservation certificate &
-Incomplete mixed-effect certificate \\
-Boolean alternatives & Separate conjunctive MONA cubes & Explicit disjunction in
-the input or one cube; uncertified strategy choice \\
-Primitive-state safety & DFA monitor after every primitive action & Completion-only
-observation \\
-\bottomrule
-\end{tabular}
-\caption{Supported compilation fragment and fail-closed boundary. Rejection
-means that GP2PL emits a structured diagnostic rather than an uncertified
-controller or synthetic atomic goal.}
-\label{tab:supported-fragment}
-\end{table}
+contexts, bodies, and internal-call relation in $\mathcal M_D$; AgentSpeak(L)
+and Jason provide the evaluated realization. The supported fragment covers
+positive predicate and bounded integer-equality goals, same-state conjunction,
+literal negation, and primitive-step DFA observation; unsupported arithmetic,
+disjunctive guards, and completion-only observation are rejected. The Technical
+Supplement, Sec.~1 gives the full accept/reject boundary used by the formal
+claims and experiments.
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -104,6 +84,11 @@ literal.
 
 \subsection{Action-Schema Candidate Generation}
 
+Evidence only covers goals the provider was trained on, so internal calls such
+as $!\mathit{clear}(Y)$ have no realizing rule and internal-call closure fails
+by construction. We therefore synthesize the missing candidates directly from
+the action schemas: whichever obligation must hold decides what is generated,
+independent of whether the provider ever observed the goal.
 Let $\operatorname{goalPred}(E)$ contain the predicate symbols targeted by
 positive predicate evidence, and let
 \[
@@ -202,46 +187,12 @@ generation and certification use only typed schemas and effects.}
 Every candidate carries a machine-checkable certificate. Its conditional
 module-completion summary $\Sigma_b$ has Boolean projections
 $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, together with any exact
-constant-integer delta and keyed resource-mode transition. Table~\ref{tab:compiler-obligations}
-connects each branch constructor to its additional proof obligation and the
-failure it excludes.
-
-\begin{table*}[htbp]
-\centering
-\small
-\setlength{\tabcolsep}{3.0pt}
-\begin{tabular}{
->{\raggedright\arraybackslash}p{0.17\textwidth}
->{\raggedright\arraybackslash}p{0.42\textwidth}
->{\raggedright\arraybackslash}p{0.32\textwidth}}
-\toprule
-Branch constructor & Additional acceptance obligation & Excluded failure \\
-\midrule
-Validated evidence macro & every macro step maps to a PDDL action schema and
-symbolic execution establishes the singleton evidence target & invalid or
-misbound provider evidence \\
-Direct producer & one action adds the target under the certified context and
-preserves its completion summary & action chosen only by predicate name \\
-Acyclic regression & each open positive requirement is discharged without a
-repeated normalized producer role or conflicting delete effect & arbitrary
-depth cutoffs or cyclic schema search \\
-Relational recursion & a non-negative relation feature strictly decreases and
-an already-satisfied, direct-producer, or validated-evidence terminal branch
-remains available & recursive oscillation \\
-Target-preserving resource discharge & a finite non-repeating mode path restores keyed
-availability while preserving the target & unreleased reusable resource \\
-Ranked precondition repair & Clingo selects an acyclic call graph with strictly
-decreasing natural-number dependency ranks & mutually recursive preparation
-without a progress proof \\
-\bottomrule
-\end{tabular}
-\caption{Candidate constructors and soundness obligations for atomic BDI
-modules. Every selected
-branch additionally satisfies typed binding, symbolic PDDL executability, and
-target achievement on return; the resulting core satisfies
-$\operatorname{Closed}_D(\mathcal M_D)$.}
-\label{tab:compiler-obligations}
-\end{table*}
+constant-integer delta and keyed resource-mode transition. Every selected branch
+additionally satisfies typed binding, symbolic PDDL executability, and target
+achievement on return, so the core satisfies
+$\operatorname{Closed}_D(\mathcal M_D)$. The Technical Supplement, Sec.~1 tabulates each branch
+constructor with its additional proof obligation and the failure it excludes;
+the paragraphs below give the load-bearing certificates.
 
 \paragraph{Binding, symbolic execution, and internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
@@ -375,43 +326,16 @@ compiler neither recognizes those names nor assumes disjointness.
 \label{sec:temporal-composition}
 
 \paragraph{Validated parametric input.}
-GP2PL does not prescribe a controlled surface grammar for user requests. In the
-evaluated front end, a source utterance is accompanied by the public PDDL symbol
-catalogue, declared typed parameters, and binding constraints. Translation
-produces a structured specification
-$\tau_q=\langle\iota_q,\varphi_q,\mu_q,\Theta_q,\Gamma_q\rangle$, where
-$\iota_q$ is its identifier, $\varphi_q$ is an \ltlf{} formula over proposition
-symbols, $\mu_q$ maps each proposition to a lifted PDDL predicate or integer
-equality, $\Theta_q$ is the typed parameter signature, and $\Gamma_q$ contains
-binding constraints. Before automaton construction, validation requires a
-bijective formula-to-atom mapping, membership in the domain vocabulary, and
-correct arities, types, numeric values, temporal operators, and literal-only
-negation. Invalid
-specifications are rejected rather than repaired. The controlled utterances in
+A temporal query is a validated parametric \ltlf{} specification $\tau_q$ over
+lifted PDDL predicates and bounded integer equalities, with a typed parameter
+signature and binding constraints; a runtime binding $\theta_q$ grounds it to a
+bound query $\widehat\tau_q$ whose top-level BDI goal is $g_q$. Predicate
+propositions then denote grounded Boolean facts and numeric propositions exact
+bounded-integer equalities in the observed state. The controlled utterances in
 the released benchmark define the evaluation distribution, not a required
-user-facing grammar; the serialized schema and translation protocol appear in
-the Technical Supplement, Sec.~4.2.
-
-A runtime binding is a type-consistent map
-$\theta_q:\bar X_q\rightarrow O_I$ satisfying the type signature
-$\Theta_q:\bar X_q\rightarrow\mathcal T$ and constraints $\Gamma_q$; the validated bound
-query is $\widehat\tau_q=(\tau_q,\theta_q)$, and $g_q$ denotes its generated
-top-level BDI goal. Applying $\theta_q$ substitutes declared parameters and
-leaves PDDL domain constants fixed. For $a\in AP_q$, its bound PDDL-state
-valuation is
-\[
-a\in\mathit{val}_q(s)
-\Longleftrightarrow
-\begin{cases}
-p(\bar t)\theta_q\in s_{\mathcal P},
-  & \mu_q(a)=p(\bar t),\\
-s_{\mathcal F}(f(\bar t)\theta_q)=c,
-  & \mu_q(a)=[f(\bar t)=c].
-\end{cases}
-\]
-Thus predicate propositions denote grounded Boolean facts and numeric
-propositions denote exact bounded-integer equalities in the same observed
-state. As defined in Sec.~\ref{sec:background}, LTLf2DFA/MONA produces
+user-facing grammar; the specification tuple, valuation map, and translation
+protocol appear in the Technical Supplement, Secs.~1 and~4.2. As defined in
+Sec.~\ref{sec:background}, LTLf2DFA/MONA produces
 \[
 \mathcal D_q=
 \langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle
@@ -447,8 +371,7 @@ from every positive occurrence it establishes and retains every query variable
 appearing in $\mathcal O_\chi$. Thus an already-true first literal cannot hide
 the branch from an unmet sibling or discard a query binding.
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
-binary transition-repair tree by
-Algorithm~\ref{alg:temporal}.
+binary transition-repair tree (Sec.~\ref{sec:balanced-trees}).
 
 Figure~\ref{fig:temporal-case} gives the corresponding query-local Blocks World
 case without placing its details in the compiler overview.
@@ -473,191 +396,69 @@ $\mathcal L_D^{[k]}$ without changing $\mathcal M_D$.}
 \label{fig:temporal-case}
 \end{figure}
 
-\subsection{Conditional Module-Completion Summaries}
+\subsection{Conditional Summaries and Preservation Portfolios}
 
-A relational fixed point over selected calls computes $\Sigma_b$, the effects
-observable when branch $b$ returns. Query arguments remain anchors; local
-variables are alpha-normalized and typed; effects retain branch conditions.
-Sequential composition records net
-polarity, so an internally deleted-and-restored atom is not a completion delete.
-
-For occurrence $G_i\in P_\chi^+$, a preservation portfolio
-$\Pi_{\chi,i}\subseteq\mathcal M_D$ is the set of certified branches permitted
-to establish $G_i$ under the obligations protected at that position. The
-threat-induced precedence relation is defined by
-$G_j\prec_\chi G_i$ exactly when a feasible $\maydelete$ effect of a branch in
-$\Pi_{\chi,j}$ unifies with $G_i$. The graph
-$\mathcal G_\chi=(P_\chi^+,\prec_\chi)$ therefore requires $G_j$ to be repaired
-before $G_i$.
-Single-valued invariants reject conjunctions requesting two values for one key.
-
-A negative guard $\neg N$ never becomes $!\neg N$. Positive repairs must exclude
-feasible $\mayadd(N)$. If $N$ holds, a signed leaf may call only a finite branch
-with exact $\operatorname{MustDelete}(N)$ that establishes a positive sibling and
-preserves all obligations. A negative-only edge observes absence. Direct-
-deleter parameters bind through compatible sibling add effects before range
-restriction, without recognizing fluent names.
-
-\subsection{Preservation Portfolios for Cyclic Interference}
-
-For a cycle, each $\Pi_{\chi,i}$ retains only branches whose exact completion
-preserves prior positives and negatives. In the AgentSpeak realization, a
-query-local trigger exposes exactly the bodies rendered from that branch set.
-Portfolios are certified per ordered literal occurrence: two occurrences of
-$p$ may need different portfolios when
-their protected prefixes differ, while identical portfolios may share one
-restricted module in the AgentSpeak realization.
-Contexts remain alternative applicability cases, not simultaneous obligations.
-A recursive $!p;!g$ branch also requires a complete preserving summary for $p$
-and redirects $!g$ to the occurrence's restricted module. Certificates record
-source branches by literal index and claim recursive preservation coverage only
-when at least one branch was selected. For a binary support relation $R$, the
-same-predicate rank $\rho_b$ may be instantiated as support depth $\rho_R(x)$
-only when its grounded request graph is
-functional and acyclic in every reachable state. Every selected branch must
-still preserve earlier achievements; otherwise compilation rejects.
+A relational fixed point over selected calls computes each branch summary
+$\Sigma_b$, and for occurrence $G_i\in P_\chi^+$ a preservation portfolio
+$\Pi_{\chi,i}\subseteq\mathcal M_D$ collects the certified branches allowed to
+establish $G_i$ without disturbing the obligations protected at that position.
+Portfolios are certified per ordered literal occurrence rather than per
+predicate: two occurrences of $p$ may need different portfolios when their
+protected prefixes differ. A negative guard $\neg N$ never becomes a
+$!\neg N$ achievement goal; it is discharged by observing absence or by an exact
+certified deleter. The threat-induced precedence graph
+$\mathcal G_\chi=(P_\chi^+,\prec_\chi)$ orders repairs so no established positive
+is later undone; the summary definition, precedence relation, and cyclic-cycle
+portfolio rules appear in the Technical Supplement, Secs.~1--2.
 
 \subsection{Numeric and Joint Guard-Establishment Certificates}
 
-A positive integer equality may call a complete constant-delta action: unit
-deltas require strict direction, larger deltas the exact predecessor. Mixed
-guards use complete action-only net effects. For example, a body for
-$\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
-$\mathit{at}(P,L)$ and the exact integer value 3 in its final state while
-preserving every other signed guard obligation. A cyclic guard admits one
-joint guard-establishment action only if the same proof covers the complete
+Numeric-domain support reuses the same certificate machinery. A positive
+integer equality is achieved by a complete constant-delta action: a unit delta
+requires strict direction and a larger delta the exact predecessor value. A
+mixed Boolean--numeric guard uses complete action-only net effects; for example,
+a body for $\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
+$\mathit{at}(P,L)$ and the exact integer value $3$ in its final state while
+preserving every other signed obligation. A cyclic guard admits one joint
+guard-establishment action only when a single proof covers the complete
 successor valuation required by $\mathcal O_\chi$. Negated equality is
 observation-only without a certified change-away action; arbitrary arithmetic
-and uncertified sequential composition are outside the supported fragment.
-
-Numeric preparation must strictly reduce the lexicographic ranking
-$\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
-where $n_{\mathrm{miss}}$ is the number of missing producer preconditions and
-$d_{\mathrm{target}}(s)=|f(s)-c|$ is the bounded deficit for target equality
-$f=c$. It must preserve
-other conditions and leave the target fluent unchanged until the establishing
-step. Compilation rejects the
-candidate when no decreasing tuple can be certified.
-
-For strong Until, let $\mathcal W_{q_s}$ be the set of non-progress self-loop
-guards at source $q_s$. Their signed source invariants are
-\[
-\mathcal I_{q_s}=\langle I_{q_s}^+,I_{q_s}^-\rangle,
-\quad I_{q_s}^{\pm}=\bigcap_{\chi\in\mathcal W_{q_s}}P_\chi^{\pm}.
-\]
-Before the single progress literal, no action prefix may delete a positive
-invariant or add a negative one; the establishing step may consume the left
-operand. Repeated unit progress separates action and protected objects by a
-derived non-unification guard, and unavoidable consumption requires the exact
-predecessor. An observed target equality is the base case.
+and uncertified sequential composition stay outside the fragment. Numeric
+preparation carries its own well-founded ranking (a lexicographic pair of the
+missing-precondition count and the bounded target deficit), and strong-Until
+sources preserve their non-progress self-loop invariants until the single
+progress step; the ranking, invariants, and their termination proof appear in
+the Technical Supplement, Sec.~2.
 
 Inserted auxiliary variables are alpha-renamed away from query and producer
 variables, preventing textual collisions from imposing unrelated constraints.
 
 \subsection{Balanced Binary Transition-Repair Trees}
+\label{sec:balanced-trees}
 
-Let $\boldsymbol\ell_\chi=(\ell_1,\ldots,\ell_n)$ be a certified serialization
-of $\mathcal O_\chi$ and let $\Pi_{\chi,i}$ be the optional preservation
-portfolio for occurrence $\ell_i$. A positive leaf
-observes or achieves its atom; a negative leaf observes absence or invokes its
-exact certified deleter. The tree indexes these occurrences, not DFA states or
-primitive actions. For query $q$, let $\mathcal R_{q_s,\chi}$ denote the plans
-for one source-state transition obligation and let the query-local plan set $\mathcal Q_q$
-contain the top-level dispatcher together with every accepted
-$\mathcal R_{q_s,\chi}$. Algorithm~\ref{alg:temporal} constructs one such
-transition plan set.
+For query $q$, let $\mathcal R_{q_s,\chi}$ denote the plans for one source-state
+transition obligation; the query-local plan set $\mathcal Q_q$ contains the
+top-level dispatcher together with every accepted $\mathcal R_{q_s,\chi}$. Both
+a direct linear rendering and a balanced binary tree execute the same certified
+literal order $\boldsymbol\ell_\chi$; certified serialization, not the dispatch
+shape, provides the temporal guarantee. The linear rendering places all $n$
+calls and the completion test in one plan body that grows with the guard,
+whereas balanced dispatch groups contiguous occurrences into binary helper
+plans, bounding trigger fan-out and every generated plan body by two. The
+construction reads the selected atomic core $\mathcal M_D$ and emits one
+$\mathcal R_{q_s,\chi}$ per progress obligation. We adopt balanced dispatch for
+this structural bound; the construction algorithm, completion-test pass, and
+suffix-safety argument appear in the Technical Supplement, Sec.~2.
 
-A direct linear rendering would execute the same certified order but place all
-$n$ literal calls and the completion test in one monolithic plan body. The
-representation parsed and stored for that plan, together with the intention
-continuation constructed and resumed by the interpreter, would therefore grow
-with the guard. Midpoint decomposition preserves the identical left-to-right
-order while limiting every generated controller plan to at most two body steps.
-
-\begin{algorithm}[htbp]
-\caption{Compile a Certified DFA Progress Controller}
-\label{alg:temporal}
-\begin{algorithmic}[1]
-\REQUIRE DFA source $q_s$, guard $\chi$, signed obligation $\mathcal O_\chi$,
-selected atomic core $\mathcal M_D$
-\ENSURE Transition-repair plan set $\mathcal R_{q_s,\chi}$ or rejection
-\STATE $\boldsymbol\Sigma\leftarrow
-\{\Sigma_b\mid b\in\mathcal M_D\}$
-\STATE $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)\leftarrow
-\textsc{CertifySerialization}(\mathcal O_\chi,\boldsymbol\Sigma)$
-\IF{$(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)=\bot$}
-  \STATE \textbf{reject}
-\ENDIF
-\STATE emit entry $r_{q_s,\chi}\leftarrow !R_\chi[1,n];!c_{q_s,\chi}$
-\STATE \textbf{procedure} $\textsc{Build}(i,j)$
-\IF{$i=j$}
-  \STATE emit the satisfied plan for signed literal $\ell_i$
-  \IF{$\Pi_{\chi,i}\ne\varnothing$}
-    \STATE emit the unmet plan restricted to $\Pi_{\chi,i}$
-  \ENDIF
-\ELSE
-  \STATE $m\leftarrow\lfloor(i+j)/2\rfloor$
-  \STATE emit $R_\chi[i,j]\leftarrow !R_\chi[i,m];!R_\chi[m+1,j]$
-  \STATE $\textsc{Build}(i,m);\ \textsc{Build}(m+1,j)$
-\ENDIF
-\STATE \textbf{end procedure}; $\textsc{Build}(1,n)$
-\STATE emit completion test $c_{q_s,\chi}$: return if monitor $\ne q_s$;
-otherwise call $!r_{q_s,\chi}$
-\RETURN $\mathcal R_{q_s,\chi}$
-\end{algorithmic}
-\end{algorithm}
-
-A complete transition-repair pass is
-$\operatorname{Pass}_{q_s,\chi}=R_\chi[1,n]\cdot c_{q_s,\chi}$, where $\cdot$
-denotes sequential controller composition. The monitor still advances after
-every primitive action, but
-the controller tests source-state exit only after the whole pass. It does not
-interrupt an atomic call or short-circuit the remaining ranges.
-
-Suppose the monitor leaves $q_s$ while a branch in $\Pi_{\chi,i}$ executes.
-After that call
-returns, every suffix leaf either observes its literal without acting or selects
-only a branch from its already certified $\Pi_{\chi,j}$. Applicability is rechecked at invocation;
-an applicable call is PDDL-executable and preserves the established signed
-prefix at module return, while a missing call fails without inserting an
-uncertified action. Every primitive suffix action is observed by the same DFA,
-so it may traverse further actual edges, including a rejecting edge, but cannot
-manufacture a transition or report false acceptance. Only after the suffix
-finishes does the completion test return to top-level dispatch at the current state or replay
-when that state is still $q_s$. Consequently, the controller cannot report an
-accepting transition that the monitor did not take. The suffix need not be a
-complete strategy for a newly reached state.
-
-For $n=1$, $R_\chi[1,1]$ is one leaf followed by the same completion test. Balancing
-does not choose the certified order or reduce primitive action count; it bounds
-trigger fan-out and individual plan-body length by two, with logarithmic nesting
-depth and linear work per pass. The repeated state check is an instance of the declarative goal
-plan pattern \cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure
-is GP2PL's controller realization.
-
-\subsection{Maintained Domain Library}
-
-The atomic compiler constructs $\mathcal M_D$ once. Temporal compilation for a
-query $q_i$ unions its dispatcher and transition plan sets into
-$\mathcal Q_{q_i}$. For an ordered sequence $q_1,\ldots,q_k$, the sole
-maintained library is
-\[
-\mathcal L_D^{[k]}=
-\mathcal M_D\cup\bigcup_{i=1}^{k}\mathcal Q_{q_i},
-\qquad
-\mathcal L_D^{[0]}=\mathcal M_D.
-\]
-The \asl{} realization serializes $\mathcal L_D^{[k]}$ as one per-domain plan
-library; $\mathcal M_D$ is its stable query-independent subset, not a second
-library. Appending $\mathcal Q_{q_i}$ neither reconstructs nor reoptimizes the
-atomic core. Query-local goals are control symbols, not PDDL fluents or exported
+The maintained library $\mathcal L_D^{[k]}$ is defined in
+Sec.~\ref{sec:background}: temporal compilation for query $q_i$ only unions its
+dispatcher and transition plans $\mathcal Q_{q_i}$ into the single per-domain
+library, so query-local goals are control symbols, not PDDL fluents or exported
 actions. Jason records the complete primitive trace, which VAL checks against
-the PDDL problem \cite{Howey2004VAL}.
-
-If the initial valuation is accepting, the committed plan is empty and the
-trace is $\langle s_0\rangle$, not an empty trace or inserted noop; a noop could
-change strong-Next or Until truth under finite-trace semantics
-\cite{DeGiacomoVardi2013}.
+the PDDL problem \cite{Howey2004VAL}. If the initial valuation is accepting, the
+committed plan is empty and the trace is $\langle s_0\rangle$, not an empty
+trace or inserted noop; a noop could change strong-Next or Until truth under
+finite-trace semantics \cite{DeGiacomoVardi2013}.
 
 \section{Conditional Guarantees}
 \label{sec:guarantees}

@@ -311,6 +311,43 @@ Obligations that do not arise in $b$, such as resource discharge for a direct
 producer that acquires no resource, are vacuous rather than unproved.
 \end{definition}
 
+\begin{table*}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3.0pt}
+\begin{tabular}{
+>{\raggedright\arraybackslash}p{0.17\textwidth}
+>{\raggedright\arraybackslash}p{0.42\textwidth}
+>{\raggedright\arraybackslash}p{0.32\textwidth}}
+\toprule
+Branch constructor & Additional acceptance obligation & Excluded failure \\
+\midrule
+Validated evidence macro & every macro step maps to a PDDL action schema and
+symbolic execution establishes the singleton evidence target & invalid or
+misbound provider evidence \\
+Direct producer & one action adds the target under the certified context and
+preserves its completion summary & action chosen only by predicate name \\
+Acyclic regression & each open positive requirement is discharged without a
+repeated normalized producer role or conflicting delete effect & arbitrary
+depth cutoffs or cyclic schema search \\
+Relational recursion & a non-negative relation feature strictly decreases and
+an already-satisfied, direct-producer, or validated-evidence terminal branch
+remains available & recursive oscillation \\
+Target-preserving resource discharge & a finite non-repeating mode path restores keyed
+availability while preserving the target & unreleased reusable resource \\
+Ranked precondition repair & Clingo selects an acyclic call graph with strictly
+decreasing natural-number dependency ranks & mutually recursive preparation
+without a progress proof \\
+\bottomrule
+\end{tabular}
+\caption{Candidate constructors and soundness obligations for atomic BDI
+modules. Every selected
+branch additionally satisfies typed binding, symbolic PDDL executability, and
+target achievement on return; the resulting core satisfies
+$\operatorname{Closed}_D(\mathcal M_D)$.}
+\label{tab:compiler-obligations}
+\end{table*}
+
 \paragraph{Finite candidate-construction grammar.}
 Let
 \[
@@ -482,6 +519,38 @@ state produced by a successful primitive PDDL action. Only the environment can
 update query-local monitor beliefs. Atomic module return is not the semantic
 observation boundary of the full method.
 \end{assumption}
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}
+>{\raggedright\arraybackslash}p{0.22\columnwidth}
+>{\raggedright\arraybackslash}p{0.31\columnwidth}
+>{\raggedright\arraybackslash}p{0.39\columnwidth}@{}}
+\toprule
+Construct & Accepted strategy & Rejection boundary \\
+\midrule
+Positive predicate & Certified atomic module & No executable achieving branch \\
+Numeric equality & Bounded constant-integer progress & Unsupported arithmetic or
+incomplete numeric effect \\
+Positive conjunction & Threat-safe serialization & Incomplete effects or cyclic
+threats \\
+Negative predicate & Observe absence or use an exact certified deleter & Synthetic
+negated achievement or possible re-addition \\
+Mixed Boolean and numeric guard & Complete net-effect and preservation certificate &
+Incomplete mixed-effect certificate \\
+Boolean alternatives & Separate conjunctive MONA cubes & Explicit disjunction in
+the input or one cube; uncertified strategy choice \\
+Primitive-state safety & DFA monitor after every primitive action & Completion-only
+observation \\
+\bottomrule
+\end{tabular}
+\caption{Supported compilation fragment and fail-closed boundary. Rejection
+means that GP2PL emits a structured diagnostic rather than an uncertified
+controller or synthetic atomic goal.}
+\label{tab:supported-fragment}
+\end{table}
 
 \section{Complete Proofs}
 \label{app:proofs}
@@ -699,6 +768,66 @@ $\mathcal G_\chi=(P_\chi^+,\prec_\chi)$. The ordering constraint requires $G_j$
 before $G_i$. A positive repair is inadmissible when a feasible $\mayadd$ effect
 unifies with a protected $N\in P_\chi^-$.
 \end{definition}
+
+The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
+binary transition-repair tree. A positive leaf observes or achieves its atom; a
+negative leaf observes absence or invokes its exact certified deleter. The tree
+indexes these occurrences, not DFA states or primitive actions. A direct linear
+rendering would execute the same certified order but place all $n$ literal calls
+and the completion test in one monolithic plan body, so the representation
+parsed and stored for that plan, together with the intention continuation
+constructed and resumed by the interpreter, would grow with the guard. Midpoint
+decomposition preserves the identical left-to-right order while limiting every
+generated controller plan to at most two body steps. Algorithm~\ref{alg:temporal}
+constructs one such transition plan set.
+
+\begin{algorithm}[htbp]
+\caption{Compile a Certified DFA Progress Controller}
+\label{alg:temporal}
+\begin{algorithmic}[1]
+\REQUIRE DFA source $q_s$, guard $\chi$, signed obligation $\mathcal O_\chi$,
+selected atomic core $\mathcal M_D$
+\ENSURE Transition-repair plan set $\mathcal R_{q_s,\chi}$ or rejection
+\STATE $\boldsymbol\Sigma\leftarrow
+\{\Sigma_b\mid b\in\mathcal M_D\}$
+\STATE $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)\leftarrow
+\textsc{CertifySerialization}(\mathcal O_\chi,\boldsymbol\Sigma)$
+\IF{$(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)=\bot$}
+  \STATE \textbf{reject}
+\ENDIF
+\STATE emit entry $r_{q_s,\chi}\leftarrow !R_\chi[1,n];!c_{q_s,\chi}$
+\STATE \textbf{procedure} $\textsc{Build}(i,j)$
+\IF{$i=j$}
+  \STATE emit the satisfied plan for signed literal $\ell_i$
+  \IF{$\Pi_{\chi,i}\ne\varnothing$}
+    \STATE emit the unmet plan restricted to $\Pi_{\chi,i}$
+  \ENDIF
+\ELSE
+  \STATE $m\leftarrow\lfloor(i+j)/2\rfloor$
+  \STATE emit $R_\chi[i,j]\leftarrow !R_\chi[i,m];!R_\chi[m+1,j]$
+  \STATE $\textsc{Build}(i,m);\ \textsc{Build}(m+1,j)$
+\ENDIF
+\STATE \textbf{end procedure}; $\textsc{Build}(1,n)$
+\STATE emit completion test $c_{q_s,\chi}$: return if monitor $\ne q_s$;
+otherwise call $!r_{q_s,\chi}$
+\RETURN $\mathcal R_{q_s,\chi}$
+\end{algorithmic}
+\end{algorithm}
+
+Suppose the monitor leaves $q_s$ while a branch in $\Pi_{\chi,i}$ executes. After
+that call returns, every suffix leaf either observes its literal without acting
+or selects only a branch from its already certified $\Pi_{\chi,j}$. Applicability
+is rechecked at invocation; an applicable call is PDDL-executable and preserves
+the established signed prefix at module return, while a missing call fails
+without inserting an uncertified action. Every primitive suffix action is
+observed by the same DFA, so it may traverse further actual edges, including a
+rejecting edge, but cannot manufacture a transition or report false acceptance.
+Only after the suffix finishes does the completion test return to top-level
+dispatch at the current state or replay when that state is still $q_s$. For
+$n=1$, $R_\chi[1,1]$ is one leaf followed by the same completion test; balancing
+does not choose the certified order or reduce primitive action count, but bounds
+trigger fan-out and individual plan-body length by two, with logarithmic nesting
+depth and linear work per pass.
 
 \begin{definition}[Complete transition-repair pass]
 For a certified serialization
