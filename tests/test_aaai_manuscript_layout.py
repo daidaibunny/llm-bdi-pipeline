@@ -450,9 +450,10 @@ def test_generator_assisted_onboarding_is_bounded_by_the_existing_contract() -> 
 
 	assert "pinned PDDL problem generator" in main_text
 	assert "\\cite{Bacchus2001AIPS00}" in main_text
-	assert "disjoint held-out split" in main_text
-	assert "scales evidence acquisition and domain onboarding" in main_text
-	assert "not the supported PDDL--\\ltlf{} fragment" in main_text
+	assert "held-out-disjoint instance sets" in main_text
+	assert "broaden evidence acquisition" in main_text
+	assert "scaling domain onboarding" in main_text
+	assert "without extending the supported PDDL--\\ltlf{} fragment" in main_text
 	assert "An evidence provider is admissible" in method_source
 	for reproducibility_requirement in (
 		"generator revision and digest",
@@ -568,6 +569,7 @@ def test_atomic_compilation_makes_canonical_lifting_explicit() -> None:
 	assert "E\\leftarrow\\textsc{CanonicalLift}(E_0,D)" in supplement_source
 	assert "\\textsc{LiftSchemas}" in method_source
 	assert "definition}[Canonical lifting]" in supplement_source
+	assert "preserves repeated-variable sharing" in method_source
 	assert "preserves repeated-variable sharing" in supplement_source
 	assert "constants declared by $D$ remain constants" in " ".join(
 		supplement_source.split(),
@@ -575,6 +577,45 @@ def test_atomic_compilation_makes_canonical_lifting_explicit() -> None:
 	assert "`E_0` is the provider-normalized evidence program" in decisions_source
 	assert "`E = CanonicalLift_D(E_0)`" in decisions_source
 	assert "`E = CanonicalLift_D(E_0)`" in outline_source
+
+
+def test_main_method_retains_load_bearing_compiler_conditions() -> None:
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	method_text = " ".join(method_source.split())
+	supplement_source = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
+	supplement_text = " ".join(supplement_source.split())
+
+	for finite_generation_condition in (
+		"alpha-normalized regression state",
+		"before repeating such a state",
+		"without an arbitrary action-depth constant",
+		"evidence macros are never truncated",
+	):
+		assert finite_generation_condition in method_text
+
+	for coverage_condition in (
+		"the same $\\mustadd$",
+		"no additional $\\maydelete$",
+		"equivalent numeric and keyed-resource summaries",
+		"target-preserving resource-discharge alternative",
+	):
+		assert coverage_condition in method_text
+
+	for joint_guard_condition in (
+		"callable from every positive occurrence it establishes",
+		"retains every query variable",
+	):
+		assert joint_guard_condition in method_text
+		assert joint_guard_condition in supplement_text
+
+	assert (
+		"$\\rho_{\\mathrm{num}}="
+		"\\langle n_{\\mathrm{miss}},d_{\\mathrm{target}}\\rangle$"
+		in method_text
+	)
+	assert "common to every non-progress self-loop guard" in method_text
 
 
 def test_figure_design_separates_high_level_stages_from_local_cases() -> None:
@@ -807,13 +848,14 @@ def test_conclusion_and_future_work_preserves_the_complete_claim_boundary(
 	assert r"\section{Conclusion}" not in main_source
 	for required_boundary in (
 		"only instantiated evidence provider",
-		"candidate-construction grammar remains incomplete",
+		"candidate-construction grammar is not a complete hypothesis language",
 		"type-compatible resolution",
 		"controlled, witness-backed queries",
 		"fixed seed-0 atomic core",
 		r"arbitrary PDDL--\ltlf{} strategy synthesis",
 		"pinned PDDL problem generator",
-		"scales evidence acquisition and domain onboarding",
+		"broaden evidence acquisition",
+		"scaling domain onboarding",
 	):
 		assert required_boundary in combined
 
@@ -829,7 +871,8 @@ def test_paired_result_inference_respects_the_atomic_case_cluster() -> None:
 
 	assert "130 nonzero case-level differences" in combined
 	assert r"1.47\times10^{-39}" in combined
-	assert "five seeded outcomes for each held-out case identifier" in combined
+	assert "five seeded outcomes within each identifier" in combined
+	assert "held-out case identifiers under five evidence seeds" in combined
 	assert "case-level $p$-value" in combined
 	assert r"p=\AtomicDirectToMaximumExactP{}" not in combined
 	assert r"p=\TemporalUnprotectedToFlatExactP{}" not in combined

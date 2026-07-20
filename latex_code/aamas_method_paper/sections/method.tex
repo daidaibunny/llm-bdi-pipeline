@@ -26,7 +26,7 @@ contexts, bodies, and internal-call relation in $\mathcal M_D$, and Jason
 provides the evaluated realization. The Technical Supplement, Sec.~1 gives the
 full accept/reject boundary used by the formal claims and experiments.
 
-\subsection{Normalization and Lifting}
+\subsection{Evidence Normalization and Canonical Lifting}
 
 An evidence provider is admissible when its raw artifact
 $\mathcal E_{\mathrm{raw}}$ can be parsed into a provider-normalized
@@ -36,13 +36,14 @@ one goal atom with a PDDL action macro, numeric effects, and provenance.
 Admissibility requires every symbol and arity to occur in $D$,
 capture-avoiding renaming of local variables, and a singleton positive
 achievement target; lifting alpha-normalizes provider-local variables into
-typed canonical variables and leaves constants declared by $D$ fixed, so a
-rule over \texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. It does not
-infer a first-order policy from ground plans; that operation belongs to the
-external evidence provider. In the experiments, $E_0$ is obtained from MOOSE
-readable policies \cite{Chen2026Moose}, and negative achievement evidence is
-rejected because those policies provide no validated action realization for a
-negated literal.
+typed canonical variables, preserves repeated-variable sharing across the
+rule, and leaves constants declared by $D$ fixed, so a rule over
+\texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. It does not infer a
+first-order policy from ground plans; that operation belongs to the external
+evidence provider. In the experiments, $E_0$ is obtained from MOOSE readable
+policies \cite{Chen2026Moose}, and negative achievement evidence is rejected
+because those policies provide no validated action realization for a negated
+literal.
 
 \subsection{Action-Schema Candidate Generation}
 
@@ -61,8 +62,10 @@ T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D).
 Thus every predicate with a positive producer receives candidate atomic modules
 even when the evidence provider never observed it as a goal, and no achievement
 target is invented for a predicate without a positive producer or validated
-evidence. Supported numeric equalities form $T_D^{\mathbb Z}(E)$, the set of
-admitted singleton integer-equality targets in $E$.
+evidence. Static predicates therefore remain context-only, and delete-only
+dynamic predicates are not invented as positive targets. Supported numeric
+equalities form $T_D^{\mathbb Z}(E)$, the set of admitted singleton
+integer-equality targets in $E$.
 
 The finite candidate-construction grammar
 $\mathfrak G$ contains six constructors---producer, regression, recursion,
@@ -72,28 +75,36 @@ $\mathcal C_D(E)=
 \operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$,
 instantiating these constructors using only typed schemas and effects from
 $D$ and alpha-normalizing every resulting variable-level branch.
+For target set $T$, the producer--precondition graph
+$\mathcal G_D^{\mathrm{prod}}(T)$ has an edge $p\rightarrow r$ when a producer
+for $p$ has a positive dynamic precondition with predicate $r$.
 Backward STRIPS regression
 \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression,Chen2026Moose}
-replaces one open positive precondition by a producer's preconditions,
-rejecting steps whose deletes contradict another open requirement, and is
-enabled only when the producer--precondition graph over the reachable
-predicate signatures is acyclic; every candidate is then verified by symbolic
-progression. Cyclic dependencies require provider evidence or a separately
-certified recursive module. The resulting candidate set
-$\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$, joining validated evidence
-branches with the generated branches, is finite, but $\mathfrak G$ is not a
-complete hypothesis language for PDDL planning. Types constrain unification; an
-\asl{} realization may expose static sort membership in contexts, but never as
-an achievement call or exported action.
+on an acyclic reachable graph first unifies compatible open requirements,
+introduces fresh variables only for unbound parameters, and rejects conflicting
+deletes. An alpha-normalized regression state records open requirements,
+producer role, and resource modes; search stops before repeating such a state
+and keeps the shortest body for an equivalent completion summary. Construction
+is therefore finite without an arbitrary action-depth constant; validated
+evidence macros are never truncated. Symbolic progression verifies every
+candidate, while cyclic dependencies require provider evidence or a separately
+certified recursive module. Let $\mathcal C_E$ be the validated evidence
+branches. The resulting candidate set
+$\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$ is finite, but
+$\mathfrak G$ is not a complete hypothesis language for PDDL planning. Types
+constrain unification; an \asl{} realization may expose static sort membership
+in contexts, but never as an achievement call or exported action.
 
 \subsection{Candidate Soundness Certificates}
 
 Every candidate carries a machine-checkable certificate. Its conditional
 module-completion summary $\Sigma_b$ has Boolean projections
 $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, together with any exact
-constant-integer delta and keyed resource-mode transition. Every selected branch
-additionally satisfies typed binding, symbolic PDDL executability, and target
-achievement on return, so the core satisfies
+constant-integer delta and keyed resource-mode transition. The $\mustadd_b$
+facts hold after every feasible completion; $\mayadd_b$ and $\maydelete_b$
+overapproximate possible effects. Selected branches also satisfy typed binding,
+symbolic executability, and target achievement; $\operatorname{Cert}_D(b)$
+denotes their conjunction, and the core satisfies
 $\operatorname{Closed}_D(\mathcal M_D)$. The Technical Supplement, Sec.~1 tabulates each branch
 constructor with its additional proof obligation and the failure it excludes;
 the paragraphs below give the load-bearing certificates.
@@ -119,9 +130,10 @@ or anchored acyclic-cone count that strictly decreases, together with an
 already-satisfied, direct-producer, or validated-evidence terminal branch.
 Threats are checked over the preparation graph selected by Clingo; a branch may
 add the ranked relation outside the protected cone only under a guard proving
-the new anchor differs from the protected one. The construction follows
-relational progress witnesses in general-policy work
-\cite{Frances2021LearningGeneralPolicies}.
+the new anchor differs from the protected one. The ranking is a compile-time
+witness, not an agent belief, and claims only generated schema-certified
+features. The construction follows relational progress witnesses in
+general-policy work \cite{Frances2021LearningGeneralPolicies}.
 
 \paragraph{Target-preserving resource discharge.}
 Effects, not predicate names, identify temporary occupation of a reusable
@@ -151,12 +163,15 @@ certificate above.
 Validated evidence macros and certified action-schema-derived candidates enter
 one answer-set optimization problem solved with Clingo
 \cite{Gebser2018Clingo}. Evidence rules induce coverage obligations
-$\operatorname{covers}_D(b,e)$, admitting only alpha-equivalent,
-context-weakened, or effect-preserving producer refinements---syntactic
-body-prefix similarity is not semantic equivalence---and every nonrecursive
-schema-derived branch is a schema-achievement obligation
-$\operatorname{realizes}_D(b,c)$ that some selected branch must soundly
-realize. Define
+$\operatorname{covers}_D(b,e)$. Coverage requires alpha-equivalent triggers
+and either an equivalent body and summary, the same body under a weaker
+context, or a producer refinement with the same $\mustadd$, no
+additional $\maydelete$, and equivalent numeric and keyed-resource summaries.
+For each nonrecursive schema branch, $\operatorname{realizes}_D(b,c)$ permits
+an equivalent branch, a refinement with no weaker completion contract, or a
+target-preserving resource-discharge alternative with the same achievement
+contract. Body-prefix similarity alone satisfies neither relation.
+Define
 \begin{align*}
 \mathcal C^{\checkmark}_{D,E}
   &=\{b\in\mathcal C_{D,E}\mid\operatorname{Cert}_D(b)\},\\
@@ -183,7 +198,7 @@ trigger--context--body rules, rather than their AgentSpeak rendering, define
 $\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
-Figure~\ref{fig:atomic-case} isolates how the selected variable-level core is
+Figure~\ref{fig:atomic-case} isolates how the selected atomic core $\mathcal M_D$ is
 instantiated in a Blocks World state not encoded in its rules.
 
 \begin{figure}[htbp]
@@ -239,6 +254,8 @@ ordered; a cyclic graph requires either an occurrence-specific preservation
 portfolio or a joint guard-establishment branch $b_\chi^{\mathrm{joint}}$ whose
 complete net effect establishes the entire guard. The transition is rejected if neither
 can be certified.
+An accepted joint branch is callable from every positive occurrence it
+establishes and retains every query variable in $\mathcal O_\chi$.
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
 binary transition-repair tree (Sec.~\ref{sec:balanced-trees}).
 
@@ -276,10 +293,13 @@ guard-establishment action only when a single proof covers the complete
 successor valuation required by $\mathcal O_\chi$. Negated equality is
 observation-only without a certified change-away action; arbitrary arithmetic
 and uncertified sequential composition stay outside the fragment. Numeric
-preparation carries its own well-founded ranking, and strong-Until sources
-preserve their non-progress self-loop invariants until the single progress
-step (Technical Supplement, Sec.~2); inserted auxiliary variables are
-alpha-renamed away from query and producer variables.
+preparation uses
+$\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
+ordering missing preconditions before bounded target distance. Strong-Until
+source invariants are the signed literals common to every non-progress
+self-loop guard and are preserved until progress
+(Technical Supplement, Sec.~2); inserted auxiliary variables are alpha-renamed
+away from query and producer variables.
 
 \subsection{Balanced Binary Transition-Repair Trees}
 \label{sec:balanced-trees}

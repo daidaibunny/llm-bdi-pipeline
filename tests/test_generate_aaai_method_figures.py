@@ -69,6 +69,9 @@ def test_manuscript_separates_compiler_overview_and_local_cases() -> None:
 	evaluation_text = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
+	supplement_text = (
+		LATEX_ROOT / "sections/technical_appendix_content.tex"
+	).read_text(encoding="utf-8")
 
 	assert "figures/fig1_architecture.png" in main_text
 	assert "\\label{fig:architecture}" in main_text
@@ -81,7 +84,8 @@ def test_manuscript_separates_compiler_overview_and_local_cases() -> None:
 	assert "\\gpplfigurethreepath" not in evaluation_text
 	assert "\\begin{minipage}" not in main_text
 	assert "\\mathcal Q_q" in method_text
-	assert "\\label{alg:temporal}" in method_text
+	assert "\\label{alg:temporal}" not in method_text
+	assert "\\label{alg:temporal}" in supplement_text
 
 
 def test_method_figure_generator_uses_canonical_formal_vocabulary() -> None:

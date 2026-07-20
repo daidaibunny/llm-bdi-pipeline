@@ -997,6 +997,8 @@ source invariants are
 A cyclic
 guard may instead use $b_\chi^{\mathrm{joint}}$ only when symbolic execution
 proves that one complete branch establishes every obligation in
+$\mathcal O_\chi$. The accepted branch is callable from every positive
+occurrence it establishes and retains every query variable appearing in
 $\mathcal O_\chi$.
 
 For strong Until, literals common to all non-progress source loops are source
