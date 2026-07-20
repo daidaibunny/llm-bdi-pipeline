@@ -374,86 +374,54 @@ technical-content limit.
 ### 5. DFA-Guided Composition of Temporally Extended Goals
 
 This section covers only query-specific control over the selected atomic core
-`M_D`. Open by defining the semantic input boundary rather than prescribing a
-surface grammar for users. The evaluated front end receives a source utterance,
-the public PDDL symbol catalogue, declared typed parameters, and binding
-constraints; it returns the exact eight-key lifted LTLf artifact. Explain its
-formula, atom-table, parameter, constraint, metadata, and support-status fields
-as one parametric specification. Parameters are externally bound at invocation,
-not quantified or exhaustively grounded. The controlled utterances in the
-released benchmark define the evaluated distribution rather than a required
-user syntax. Keep the frozen prompt and field-by-field schema in the Technical
-Supplement and public artifact.
+`M_D`. Assume the notation and semantic boundary already fixed in Sec. 2:
+`tau_q`, the external type-consistent binding `theta_q`, the bound query
+`widehat tau_q`, `Phi_syn`, `Phi_bench`, `Phi_cert(D,M_D)`, `val_q`, and the
+deterministic automaton. Do not redefine them here. Keep the eight-key input
+schema, fail-closed field validation, prompt, and formula-to-DFA construction
+details in the Technical Supplement; keep controlled utterances, profile
+sampling, and translation equivalence in Experimental Evaluation. The main
+method begins from a validated bound query and its DFA.
 
-Before describing the automaton, give the compact grammar for `Phi_syn` and
-state that negation applies only directly to an atom. Define `Phi_bench` as the
-five registered profile schemas and `Phi_cert(D,M_D)` as the bound formulas
-whose required DFA progress obligations pass all compiler certificates. Parsing
-is not a planning-completeness claim. Put the full non-empty finite-trace
-satisfaction clauses for conjunction, strong Next, Eventually, and strong Until
-in the Technical Supplement. Define `val_q` for both bound PDDL predicates and
-bounded integer equalities.
-
-1. Validate the structured artifact fail-closed, meaning rejection rather than
-   silent repair. Require the exact schema; exactly one atom-table entry for
-   every formula symbol and no unused entry; PDDL catalogue membership; valid
-   arities, parameter types, numeric values, and temporal operators. Gold-formula
-   equivalence is an evaluation oracle, not a deployment-time input requirement.
-2. Construct the deterministic automaton for validated lifted LTLf JSON with
-   `ltlf2dfa` and MONA. Do not use an ordered-sequence approximation.
-   Explain that MONA may return several valuation cubes representing Boolean
-   alternatives. Each cube is compiled as one conjunctive guard; several cubes
-   are not one admitted disjunctive guard, and the monitor retains every original
-   cube even when same-source/same-target cubes share a certified objective.
-3. Give every DFA edge that strictly reduces graph distance to acceptance one
+1. Give every DFA edge that strictly reduces graph distance to acceptance one
    transition controller guarded by the current query-local monitor state.
-4. Treat a conjunction on one edge as one achievement block whose literals
+2. Treat a conjunction on one edge as one achievement block whose literals
    must hold in the same observable state.
-5. Treat a negative literal such as `not calibrated(C,R)` as a signed context
+3. Treat a negative literal such as `not calibrated(C,R)` as a signed context
    obligation, never as `!not_calibrated(C,R)`. A query-local helper may
    establish it only through a certified positive-sibling branch or single PDDL
    action with exact net `MustDelete`, sibling preservation, and no forbidden
    completion `MayAdd`.
-6. Build a threat graph from certified completion summaries. An edge
-   `G_j -> G_i` means a module for `G_j` may delete `G_i`, so `G_j` must be
-   repaired first.
-7. For a cyclic threat graph, use only a certified preserving portfolio or a
-   supported ranking proof; otherwise reject. Select the preserving portfolio
-   per ordered literal occurrence, because two occurrences of one predicate can
-   have different protected prefixes. Share query-local aliases only for
-   identical certified portfolios, and explain that alternative plan contexts
-   are not simultaneous obligations.
-8. For mixed Boolean/numeric guards, use complete action-only net Boolean
+4. Compute conditional completion summaries and select preservation portfolios
+   per literal occurrence. A chosen portfolio tuple induces the threat graph:
+   `G_j -> G_i` means a feasible branch for `G_j` may delete `G_i`, so `G_j`
+   must be repaired first.
+5. Topologically serialize an acyclic induced graph. If every portfolio choice
+   remains cyclic, admit only a complete joint guard-establishment branch that
+   is callable from every positive occurrence it establishes and retains every
+   query variable; otherwise reject the progress edge.
+6. For mixed Boolean/numeric guards, use complete action-only net Boolean
    effects and constant-integer numeric deltas; index helper selection by the
    full literal atom and leave uncertified literals observation-only. Explain
    strict unit progress, exact non-unit predecessor guards, and the complete
    single-action joint guard-establishment certificate as three bounded
-   strategies rather than claiming arbitrary numeric planning. A joint
-   guard-establishment branch must be
-   callable from every positive literal it establishes and must carry the
-   certificate's complete anchor arguments.
-9. For an Until source state, extract common waiting-loop literals as source
+   strategies rather than claiming arbitrary numeric planning.
+7. For an Until source state, extract common waiting-loop literals as source
    invariants. Require primitive-prefix preservation until the single positive
    progress literal is established. Explain lexicographic predicate/numeric
    precondition preparation, repeatable non-unifying numeric steps, exact
    terminal predecessors, and capture-avoiding composition.
-10. Compile the certified order into a balanced binary transition-repair tree. The tree is
+8. Compile the certified order into a balanced binary transition-repair tree. The tree is
    an AgentSpeak indexing structure with trigger fan-out and individual plan-body
    length at most two; it does not reorder DFA transitions or add planning
-   semantics. Contrast it with a semantically equivalent linear rendering,
-   whose single plan body and intention continuation grow with guard size. Include a compact
-   construction algorithm defining the signed leaves, midpoint range recursion,
-   transition entry, and two completion alternatives.
-11. Advance the real deterministic finite automaton after the initial valuation
-   and every successful primitive PDDL action. Explain that the integrated
-   runtime monitor gives the declared formula fragment primitive-step trace
-   semantics, while action-strategy synthesis remains incomplete. Source-state
-   exit is tested only by the done helper after one full repair pass; it does not
-   interrupt an atomic call or the remaining tree ranges. Prove that the suffix
-   contains only observations or certified, prefix-preserving repairs and that
-   every primitive suffix action remains visible to the same DFA. It may cross
-   further actual edges, including rejection, but cannot manufacture acceptance.
-   The top-level controller then dispatches from the actual monitor state.
+   semantics. State midpoint range recursion, signed leaves, and completion
+   rechecking in the main method. Keep the flat-control comparison in Evaluation
+   and the full construction algorithm and continuation-cost explanation in the
+   Technical Supplement.
+9. Append the resulting query-local plans to the maintained library without
+   changing `M_D`. State the primitive-step observation boundary and completion
+   retry condition in the method; place suffix-safety and monitor-fidelity proofs
+   in Conditional Guarantees and the Technical Supplement.
 
 ### 6. Conditional Guarantees
 

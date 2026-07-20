@@ -209,39 +209,21 @@ variables rather than these illustrative object names.}
 \section{DFA-Guided Composition of Temporally Extended Goals}
 \label{sec:temporal-composition}
 
-\paragraph{Validated parametric input.}
-A temporal query is a validated parametric \ltlf{} specification $\tau_q$ over
-lifted PDDL predicates and bounded integer equalities, with a typed parameter
-signature and binding constraints; a runtime binding $\theta_q$ grounds it to a
-bound query $\widehat\tau_q$ whose top-level BDI goal is $g_q$. Predicate
-propositions then denote grounded Boolean facts and numeric propositions exact
-bounded-integer equalities in the observed state. The specification tuple and
-valuation map appear in the Technical Supplement, Sec.~1. LTLf2DFA/MONA produces
-the DFA $\mathcal D_q$ of Sec.~\ref{sec:background} and its guarded transitions
-\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. GP2PL attaches a controller to
-each progress edge $(q_s,\chi,q_t)$ with
-$d_q(q_t)<d_q(q_s)<\infty$; an accepting \texttt{true} self-loop needs none.
-
-Each execution applies $\theta_q$ without grounding the shared lifted module;
-a binding inconsistent with the validated query specification is rejected.
-For a supported guard $\chi$ with signed transition obligation
-$\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle$
-(Sec.~\ref{sec:background}), compilation computes
-conditional module-completion summaries and a threat-induced precedence graph, building
-on BDI goal-interference analyses that
-distinguish definite from potential plan effects
-\cite{Thangarajah2003GoalInterference}. An acyclic graph is topologically
-ordered; a cyclic graph requires either an occurrence-specific preservation
-portfolio or a joint guard-establishment branch $b_\chi^{\mathrm{joint}}$ whose
-complete net effect establishes the entire guard. The transition is rejected if neither
-can be certified.
-An accepted joint branch is callable from every positive occurrence it
-establishes and retains every query variable in $\mathcal O_\chi$.
-The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
-binary transition-repair tree (Sec.~\ref{sec:balanced-trees}).
+\paragraph{Progress-edge compilation.}
+Given the validated bound query $\widehat\tau_q$ and DFA $\mathcal D_q$ of
+Sec.~\ref{sec:background}, GP2PL compiles one controller for each progress edge
+$(q_s,\chi,q_t)$; an accepting \texttt{true} self-loop needs none. The external
+binding $\theta_q$ instantiates query propositions while the shared atomic core
+$\mathcal M_D$ remains lifted. For signed obligation
+$\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle$, compilation derives a
+certified serialization $\boldsymbol\ell_\chi$ and occurrence-specific
+preservation portfolios $\boldsymbol\Pi_\chi$ from the selected completion
+summaries. Failure to certify this pair rejects the progress edge; otherwise
+$\boldsymbol\ell_\chi$ is rendered as the balanced binary transition-repair
+tree of Sec.~\ref{sec:balanced-trees}.
 
 Figure~\ref{fig:compiler-stages}(b) instantiates this construction for a bound
-Blocks World tower query. Its MONA progress guard requires three
+Blocks World tower query. Its DFA progress guard requires three
 \texttt{on} literals to hold together; conditional completion summaries induce
 a bottom-up preservation-safe order, and the balanced transition-repair tree
 emits $\mathcal Q_q$ for append to $\mathcal L_D^{[k]}$.
@@ -249,38 +231,43 @@ emits $\mathcal Q_q$ for append to $\mathcal L_D^{[k]}$.
 \subsection{Summaries and Preservation Portfolios}
 
 A relational fixed point over selected calls computes each branch summary
-$\Sigma_b$, and for occurrence $G_i\in P_\chi^+$ a preservation portfolio
-$\Pi_{\chi,i}\subseteq\mathcal M_D$ collects the certified branches allowed to
-establish $G_i$ without disturbing the obligations protected at that position.
-Portfolios are certified per ordered literal occurrence rather than per
-predicate: two occurrences of $p$ may need different portfolios when their
-protected prefixes differ. A negative guard $\neg N$ never becomes a
-$!\neg N$ achievement goal; it is discharged by observing absence or by an exact
-certified deleter. The threat-induced precedence graph
-$\mathcal G_\chi=(P_\chi^+,\prec_\chi)$ orders repairs so no established positive
-is later undone; the summary definition, precedence relation, and cyclic-cycle
-portfolio rules appear in the Technical Supplement, Secs.~1--2.
+$\Sigma_b$, following the definite/potential effect distinction in BDI
+goal-interference analysis \cite{Thangarajah2003GoalInterference}. For positive
+occurrence $G_i\in P_\chi^+$, a preservation portfolio
+$\Pi_{\chi,i}\subseteq\mathcal M_D$ contains the certified branches allowed to
+establish $G_i$ under the obligations protected at that occurrence. Portfolios
+are occurrence-specific: two occurrences of the same predicate may admit
+different branches.
+
+A negative guard $\neg N$ is observed absent or discharged by an exact
+certified deleter; it never becomes a synthetic $!\neg N$ goal. A portfolio
+branch is admissible only when its conditional $\mayadd$ excludes $N$. For a
+chosen portfolio tuple, the
+threat-induced precedence graph
+$\mathcal G_\chi=(P_\chi^+,\prec_\chi)$ places $G_j$ before $G_i$ when a feasible
+$\maydelete$ of $\Pi_{\chi,j}$ may delete $G_i$. An acyclic graph yields a
+topological serialization. If no portfolio choice removes a cycle, compilation
+requires a joint branch $b_\chi^{\mathrm{joint}}$ whose complete net effect
+establishes the entire guard, is callable from every positive occurrence it
+establishes, and retains every query variable; otherwise it rejects the edge.
+The exact fixed point, precedence relation, and cycle conditions appear in the
+Technical Supplement, Secs.~1--2.
 
 \subsection{Numeric and Joint Guard Certificates}
 
-Numeric-domain support reuses the same certificate machinery. A positive
+Numeric obligations reuse the same certificate machinery. A positive
 integer equality is achieved by a complete constant-delta action: a unit delta
 requires strict direction and a larger delta the exact predecessor value. A
 mixed Boolean--numeric guard uses complete action-only net effects; for example,
 a body for $\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
 $\mathit{at}(P,L)$ and the exact integer value $3$ in its final state while
-preserving every other signed obligation. A cyclic guard admits one joint
-guard-establishment action only when a single proof covers the complete
-successor valuation required by $\mathcal O_\chi$. Negated equality is
-observation-only without a certified change-away action; arbitrary arithmetic
-and uncertified sequential composition stay outside the fragment. Numeric
-preparation uses
+preserving every other signed obligation. Negated equality is observation-only
+without a certified change-away action. Numeric preparation uses
 $\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
 ordering missing preconditions before bounded target distance. Strong-Until
 source invariants are the signed literals common to every non-progress
 self-loop guard and are preserved until progress
-(Technical Supplement, Sec.~2); inserted auxiliary variables are alpha-renamed
-away from query and producer variables.
+(Technical Supplement, Sec.~2).
 
 \subsection{Balanced Binary Transition-Repair Trees}
 \label{sec:balanced-trees}
@@ -288,21 +275,19 @@ away from query and producer variables.
 For query $q$, let $\mathcal R_{q_s,\chi}$ denote the plans for one source-state
 transition obligation; the query-local plan set $\mathcal Q_q$ contains the
 top-level dispatcher together with every accepted $\mathcal R_{q_s,\chi}$, one
-per progress obligation. Both a direct linear rendering and a balanced binary
-tree execute the same certified literal order $\boldsymbol\ell_\chi$; certified
-serialization, not the dispatch shape, provides the temporal guarantee. We
-adopt balanced dispatch because it bounds trigger fan-out and every generated
-plan body by two; the construction algorithm, completion-test pass, and
-suffix-safety argument appear in the Technical Supplement, Sec.~2.
+per progress obligation. Each $\mathcal R_{q_s,\chi}$ realizes
+$\boldsymbol\ell_\chi$ by recursively splitting contiguous literal ranges at
+their midpoint. Internal nodes dispatch two child ranges, leaves observe or
+repair one signed literal, and the completion plan retries only while the
+monitor remains at $q_s$. The certificate pair, rather than the tree shape,
+provides the temporal guarantee; balanced dispatch bounds trigger fan-out and
+each generated body to at most two steps. The construction and suffix-safety
+argument appear in the Technical Supplement, Sec.~2.
 
-The maintained library $\mathcal L_D^{[k]}$ is defined in
-Sec.~\ref{sec:background}: temporal compilation for query $q_i$ only unions its
-dispatcher and transition plans $\mathcal Q_{q_i}$ into the single per-domain
-library, so query-local goals are control symbols, not PDDL fluents or exported
-actions. Execution commits only primitive PDDL actions, yielding a nonempty
-finite state trace. If the initial valuation is accepting, the committed action
-sequence is empty and the trace is $\langle s_0\rangle$; inserting a noop could
-change strong-Next or Until truth \cite{DeGiacomoVardi2013}.
+Appending $\mathcal Q_q$ updates $\mathcal L_D^{[k]}$ as defined in
+Sec.~\ref{sec:background} without changing $\mathcal M_D$. Query-local goals are
+control symbols, not PDDL fluents or exported actions; only primitive PDDL
+actions change the observed state.
 
 \section{Conditional Guarantees}
 \label{sec:guarantees}

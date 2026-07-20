@@ -804,6 +804,45 @@ def test_evaluation_protocol_facts_are_not_repeated_in_table_captions() -> None:
 		assert duplicated_caption_fact not in table_text
 
 
+def test_temporal_method_is_separated_from_evaluation_protocol() -> None:
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
+	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+	temporal_method = method_source.split(
+		"\\section{DFA-Guided Composition of Temporally Extended Goals}",
+		maxsplit=1,
+	)[1].split("\\section{Conditional Guarantees}", maxsplit=1)[0]
+	temporal_text = " ".join(temporal_method.split())
+	evaluation_text = " ".join(evaluation_source.split())
+
+	for evaluation_only_term in (
+		"Jason",
+		"VAL",
+		"released benchmark",
+		"evaluation distribution",
+		"direct linear rendering",
+		"runtime binding",
+	):
+		assert evaluation_only_term not in temporal_text
+
+	for required_method_term in (
+		"preservation portfolio",
+		"threat-induced precedence graph",
+		"balanced binary transition-repair tree",
+	):
+		assert required_method_term in temporal_text
+
+	for required_evaluation_term in (
+		"Certified Flat",
+		"Certified Balanced",
+		"Module-Return Monitor",
+		"Jason completion",
+		"neutral-goal VAL",
+	):
+		assert required_evaluation_term in evaluation_text
+
+
 def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 	background_source = (LATEX_ROOT / "sections/background.tex").read_text(
