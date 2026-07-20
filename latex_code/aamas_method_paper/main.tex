@@ -128,12 +128,12 @@ Single-column GP2PL overview\\
 Domain compilation $+$ query-specific temporal compilation}}
 }
 \caption{GP2PL separates reusable domain compilation from query-specific
-temporal compilation. From domain $D$, training instances
-$\mathcal I_{\mathrm{train}}$, and raw singleton-goal evidence
-$\mathcal E_{\mathrm{raw}}$, Validated policy lifting constructs the internally
-closed core $\mathcal M_D=\mathcal L_D^{[0]}$ once. DFA-guided temporal
-compilation maps a bound query $\widehat{\tau}_q$ to query-local plans
-$\mathcal Q_q$ and updates the sole maintained library by
+temporal compilation. An external generalized-planning backend derives raw
+singleton-goal evidence $\mathcal E_{\mathrm{raw}}$ from domain $D$ and training
+instances $\mathcal I_{\mathrm{train}}$. Validated policy lifting compiles these
+inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$; DFA-guided temporal
+compilation maps each bound query $\widehat{\tau}_q$ to query-local plans
+$\mathcal Q_q$, updating the sole maintained library by
 $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 \label{fig:architecture}
 \end{figure}
