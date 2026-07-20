@@ -1,0 +1,22 @@
+% Compact main-paper summary derived from generated result macros.
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{2.8pt}
+\begin{tabular}{lrr}
+\toprule
+Validation unit & Valid & Total \\
+\midrule
+Distinct translated specifications & \TranslationEquivalentCount{} &
+\TranslationInputCount{} \\
+Bound temporal queries & \TEGProblemCount{} & \TEGProblemCount{} \\
+\bottomrule
+\end{tabular}
+\caption{Selected fixed-core temporal result. Translation validity requires
+exact finite-trace language equivalence between predicted and gold DFAs.
+Query validity additionally requires controller compilation, Jason completion,
+neutral-goal VAL, and acceptance by both DFA trace oracles. Per-profile,
+per-domain, runtime, and action-count distributions are reported in the
+Technical Supplement.}
+\label{tab:temporal-summary}
+\end{table}

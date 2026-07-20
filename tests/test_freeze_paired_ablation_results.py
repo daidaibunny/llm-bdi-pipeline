@@ -67,7 +67,6 @@ def test_manuscript_presents_component_evidence_before_full_system_and_reference
 		encoding="utf-8",
 	)
 
-	figure = evaluation.index(r"\begin{figure*}[t!]")
 	questions = evaluation.index(r"\subsection{Questions and Comparisons}")
 	protocol = evaluation.index(r"\subsection{Benchmarks and Protocol}")
 	paired = evaluation.index(r"\subsection{Paired Component Ablations}")
@@ -76,16 +75,20 @@ def test_manuscript_presents_component_evidence_before_full_system_and_reference
 	)
 	external = evaluation.index(r"\subsection{External Planning References}")
 
-	assert figure < questions < protocol < paired < full_system < external
+	assert questions < protocol < paired < full_system < external
+	assert r"\label{fig:evaluation-summary}" not in evaluation
 	assert paired < evaluation.index(
 		r"\input{sections/result_atomic_comparison_table}",
 	) < evaluation.index(r"\input{sections/result_temporal_comparison_table}")
 	assert full_system < evaluation.index(
 		r"\input{sections/result_five_seed_atomic_table}",
-	) < evaluation.index(r"\input{sections/result_profile_table}")
+	) < evaluation.index(r"\input{sections/result_temporal_summary_table}")
 	assert external < evaluation.index(
-		r"\input{sections/result_moose_reference_table}",
-	) < evaluation.index(r"\input{sections/result_external_reference_table}")
+		r"\input{sections/result_same_scope_evidence_table}",
+	)
+	assert r"\input{sections/result_external_reference_table}" not in evaluation
+	assert r"\input{sections/result_profile_table}" not in evaluation
+	assert r"\input{sections/result_moose_reference_table}" not in evaluation
 
 
 def test_write_paired_ablation_files_updates_tables_macros_and_manifest(

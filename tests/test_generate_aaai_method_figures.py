@@ -63,7 +63,7 @@ def test_generate_method_figures_preserves_locked_overview_and_verified_method_f
 	assert "Clingo" not in figure_one_labels
 
 
-def test_manuscript_uses_overview_worked_example_and_empirical_figure() -> None:
+def test_manuscript_separates_compiler_overview_and_local_cases() -> None:
 	main_text = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 	method_text = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
 	evaluation_text = (LATEX_ROOT / "sections/evaluation.tex").read_text(
@@ -72,9 +72,12 @@ def test_manuscript_uses_overview_worked_example_and_empirical_figure() -> None:
 
 	assert "figures/fig1_architecture.png" in main_text
 	assert "\\label{fig:architecture}" in main_text
-	assert "figures/fig2_policy_lifting.pdf" in main_text
-	assert "\\label{fig:policy-lifting-example}" in main_text
-	assert "\\label{fig:evaluation-summary}" in evaluation_text
+	assert "figures/fig2_compiler_stages.pdf" in main_text
+	assert "\\label{fig:compiler-stages}" in main_text
+	assert "\\label{fig:atomic-case}" in method_text
+	assert "\\label{fig:temporal-case}" in method_text
+	assert "\\label{fig:evaluation-summary}" not in evaluation_text
+	assert "\\gpplfigurethreepath" not in evaluation_text
 	assert "\\begin{minipage}" not in main_text
 	assert "\\mathcal Q_q" in method_text
 	assert "\\label{alg:temporal}" in method_text

@@ -1,32 +1,12 @@
 \section{Experimental Evaluation}
 \label{sec:evaluation}
 
-Figure~\ref{fig:evaluation-summary} summarizes the paired atomic and temporal
-ablations at domain, stress-family, and execution levels; the variants, validation
-oracles, and timing boundary are defined below.
-
-\IfFileExists{\gpplfigurethreepath}{%
-\begin{figure*}[t!]
-\centering
-\begin{minipage}{0.667\textwidth}
-\includegraphics[width=\textwidth]{\gpplfigurethreepath}
-\end{minipage}
-\captionsetup{skip=2pt}
-\caption{Paired ablations. Panel (a) reports descriptive coverage requiring
-Jason completion and original-goal VAL acceptance
-over five evidence seeds for every domain on which the atomic variants differ;
-the other 11 domains are aggregated because all variants reach 100\%. Panel
-(b) gives cumulative valid traces over end-to-end time for all 385
-seed--instance pairs in the registered 12--50-block Tower series. Panel (c)
-gives cumulative valid-trace coverage for all 1,228 paired temporal queries.
-Failures remain in every denominator, and the dashed line marks the
-1,800-second limit. Repeated atomic seeds are not treated as independent
-inferential units; numeric labels, markers, and line styles duplicate color.}
-\label{fig:evaluation-summary}
-\end{figure*}
-}{%
-\PackageWarning{gp2pl}{Paired ablation result figure unavailable}%
-}
+The principal comparisons are exact endpoint outcomes over heterogeneous
+domains rather than samples from one continuous difficulty axis. Compact
+main-paper tables therefore report component effects, selected-system
+robustness, and scope-separated external references. The Technical Supplement
+preserves every domain--seed cell, temporal profile, runtime distribution, and
+diagnostic classification.
 
 \subsection{Questions and Comparisons}
 
@@ -118,9 +98,8 @@ accepts the full primitive trace against a neutral PDDL goal
 \cite{Howey2004VAL}, and independent replay is accepted by both DFAs. Atomic
 validation instead uses the original PDDL goal. We report internal-call closure,
 held-out success, library size, runtime, action count, and trigger fan-out; plan
-length uses jointly solved instances. Figure~\ref{fig:evaluation-summary}
-follows MOOSE's absolute-time presentation \cite{Chen2026Moose}: coverage is
-credited only to VAL-valid traces, and all failures remain in the denominator.
+length uses jointly solved instances. Coverage is credited only to VAL-valid
+traces, and all failures remain in the denominator.
 The generated tables report paired component effects, full-system robustness,
 temporal profiles, and external scope separately. The Technical Supplement
 preserves every domain--seed cell, diagnostic, and fixed temporal input. The
@@ -210,9 +189,8 @@ the separately preregistered full-system configuration.
 Across five independently compiled atomic cores, mean held-out coverage is
 \AtomicFiveSeedMeanSuccessPercent{}\% $\pm$
 \AtomicFiveSeedSampleSDPercent{} percentage points. Fourteen of the sixteen
-domains are complete. Figure~\ref{fig:evaluation-summary} accounts for the
-entire corpus: it shows each domain with a variant difference and aggregates
-only the 11 domains on which every variant is complete.
+domains are complete. Table~\ref{tab:five-seed-atomic} aggregates exactly the
+domains complete in every seed and shows each varying domain separately.
 
 Variation is concentrated in Logistics and Depots. In Logistics, seeded goal
 order changes the available cross-mode provider macros; the remaining producer
@@ -245,8 +223,7 @@ GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates
 translation passes typed validation and exact finite-trace language
 equivalence, yielding \TEGProblemCount{} bound queries.
 
-Table~\ref{tab:profile-results} separates five formula profiles. All
-\TEGProblemCount{} queries satisfy the end-to-end criterion: Jason completes,
+All \TEGProblemCount{} queries satisfy the end-to-end criterion: Jason completes,
 all \TEGVALSuccessCount{} nonempty traces pass VAL, and both DFAs accept all
 \TEGGoldDFAAcceptCount{} traces.
 
@@ -254,7 +231,7 @@ Runtime is \TEGMedianRuntimeSeconds{} seconds median (interquartile range
 4.28--8.49); action count is \TEGMedianActionCount{} median (interquartile
 range 1--2).
 
-\input{sections/result_profile_table}
+\input{sections/result_temporal_summary_table}
 
 Unlike the paired estimate above, this study fixes one preregistered seed-0
 atomic core per domain and obtains \TEGProblemCount{}/\TEGProblemCount{}. It
@@ -279,38 +256,14 @@ On the same 740 added-domain seed--case evaluations, Full GP2PL validates
 same-scope contrast isolates the practical value of compiling evidence into a
 closed recursive library on the serialized-width families.
 
-Because these scopes are disjoint, their difference is not a same-instance
-comparison. Moreover, published Raw MOOSE coverage on its original 12-domain
-scope is already near ceiling. We therefore claim improved structural coverage
-on the added families, not universal dominance wherever Raw MOOSE already
-saturates.
+\input{sections/result_same_scope_evidence_table}
 
-Table~\ref{tab:moose-reference} records the preregistered source split and
-coverage boundary.
+The published original-domain scope and the added-domain scope are disjoint, so
+their coverage levels are not a same-instance comparison. Moreover, published
+Raw MOOSE coverage on its original 12-domain scope is already near ceiling. We
+therefore claim improved structural coverage on the added families, not
+universal dominance wherever Raw MOOSE already saturates.
 
-\input{sections/result_moose_reference_table}
-
-\IfFileExists{sections/result_external_reference_table.tex}{%
-\input{sections/result_external_reference_table}
-}{%
-\PackageWarning{gp2pl}{External reference table unavailable}%
-}
-
-\paragraph{Instance-planner outcomes.}
-LAMA validates \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} classical
-instances, while MRP+HJ validates
-\ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} numeric instances. Their
-PAR-2 values are \ExternalLAMAParTwoSeconds{} and
-\ExternalMRPHJParTwoSeconds{} seconds.
-
-These rows cover disjoint fragments and are interpreted within scope rather
-than as a same-instance ranking. FOND4LTLf with LAMA supports
-\ExternalDirectSupportedCount{} of \ExternalDirectTotalCaseCount{} temporal
-queries and validates \ExternalDirectValidCount{}.
-
-The remaining \ExternalDirectUnsupportedCount{} inputs are unsupported rather
-than planner failures; this total includes both numeric PDDL outside the tool's
-scope and identifiers rejected by the current adapter encoding. Supported-set
-PAR-2 is \ExternalDirectParTwoSeconds{} seconds. Raw MOOSE extension runtime
-remains omitted under its coverage-only protocol. The Technical Supplement
-reports the planner, compiler, timeout, and unsupported outcome taxonomy.
+Table~\ref{tab:added-scope-evidence} is the only same-scope external contrast
+in the main paper. The Technical Supplement keeps the remaining reference
+scopes separate and does not rank rows drawn from different case sets.

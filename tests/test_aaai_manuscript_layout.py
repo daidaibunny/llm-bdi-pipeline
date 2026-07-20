@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import re
 
@@ -57,7 +58,7 @@ def test_figures_and_tables_use_flexible_aaai_placement_without_forced_flushes()
 		for filename, placement in placements
 	), placements
 	assert placements.count(("main.tex", "t!")) == 1
-	assert placements.count(("evaluation.tex", "t!")) == 1
+	assert placements.count(("evaluation.tex", "t!")) == 0
 	for forbidden_command in (
 		"\\clearpage",
 		"\\newpage",
@@ -167,9 +168,13 @@ def test_temporal_result_tables_follow_their_result_subsection() -> None:
 	temporal_results_position = evaluation_source.index(
 		"\\paragraph{End-to-end temporal validation.}",
 	)
-	assert evaluation_source.index("\\input{sections/result_profile_table}") > (
+	assert evaluation_source.index(
+		"\\input{sections/result_temporal_summary_table}",
+	) > (
 		temporal_results_position
 	)
+	assert "\\input{sections/result_profile_table}" not in evaluation_source
+	assert "\\input{sections/result_profile_table}" in supplement_source
 	assert "\\input{sections/result_domain_table}" not in evaluation_source
 	assert "\\input{sections/result_domain_table}" in supplement_source
 
@@ -270,7 +275,14 @@ def test_main_and_supplement_use_the_approved_table_split() -> None:
 	assert "\\label{tab:supported-fragment}" in method_source
 	assert "\\label{tab:compiler-obligations}" in method_source
 	assert "\\input{sections/result_five_seed_atomic_table}" in evaluation_source
-	assert "\\input{sections/result_profile_table}" in evaluation_source
+	assert "\\input{sections/result_profile_table}" not in evaluation_source
+	assert "\\input{sections/result_moose_reference_table}" not in evaluation_source
+	assert (
+		"\\input{sections/result_same_scope_evidence_table}" in evaluation_source
+	)
+	assert "\\input{sections/result_external_reference_table}" not in (
+		evaluation_source
+	)
 	assert "\\input{sections/result_five_seed_atomic_domain_table}" not in (
 		evaluation_source
 	)
@@ -279,10 +291,49 @@ def test_main_and_supplement_use_the_approved_table_split() -> None:
 		supplement_source
 	)
 	assert "\\input{sections/result_domain_table}" in supplement_source
+	assert "\\input{sections/result_profile_table}" in supplement_source
+	assert "\\input{sections/result_moose_reference_table}" in supplement_source
+	assert "\\input{sections/result_external_reference_table}" in supplement_source
 
 
-def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
+def test_same_scope_evidence_table_matches_frozen_case_records() -> None:
+	raw = json.loads(
+		(
+			PROJECT_ROOT
+			/ "paper_artifacts/gp2pl_evaluation/v1/"
+			"raw_moose_extension_five_seed_summary.json"
+		).read_text(encoding="utf-8"),
+	)
+	paired = json.loads(
+		(
+			PROJECT_ROOT
+			/ "paper_artifacts/gp2pl_evaluation/v1/paired_ablation_results.json"
+		).read_text(encoding="utf-8"),
+	)
+	raw_records = tuple(raw["records"])
+	raw_keys = {(int(record["seed"]), str(record["case_id"])) for record in raw_records}
+	full_records = {
+		(int(record["seed"]), str(record["case_id"])): record
+		for record in paired["atomic_records"]
+		if record["variant"] == "full"
+	}
+	assert len(raw_keys) == len(raw_records) == 740
+	assert raw_keys <= set(full_records)
+
+	raw_valid = int(raw["aggregate"]["pooled_valid_count"])
+	full_valid = sum(bool(full_records[key]["valid"]) for key in raw_keys)
+	table = (
+		LATEX_ROOT / "sections/result_same_scope_evidence_table.tex"
+	).read_text(encoding="utf-8")
+	assert f"Raw MOOSE evidence & {raw_valid}/740 & 15.8" in table
+	assert f"\\textbf{{{full_valid}/740}}" in table
+	assert raw_valid == 117
+	assert full_valid == 720
+
+
+def test_main_paper_uses_overview_and_local_method_cases_without_result_figure() -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
@@ -292,17 +343,22 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 		in main_source
 	)
 	assert (
-		"\\providecommand{\\gpplfiguretwopath}{figures/fig2_policy_lifting.pdf}"
+		"\\providecommand{\\gpplfiguretwopath}{figures/fig2_compiler_stages.pdf}"
 		in main_source
 	)
 	assert (
-		"\\providecommand{\\gpplfigurethreepath}{figures/fig3_evaluation.png}"
+		"\\providecommand{\\gpplatomiccasepath}{figures/fig3_atomic_case.pdf}"
 		in main_source
 	)
+	assert (
+		"\\providecommand{\\gppltemporalcasepath}{figures/fig4_temporal_case.pdf}"
+		in main_source
+	)
+	assert "\\gpplfigurethreepath" not in main_source
 	assert r"\newcommand{\resultbest}[1]{\textbf{#1}}" in main_source
 	assert r"\newcommand{\resultselected}[1]" in main_source
 	figure_one_position = main_source.index("\\label{fig:architecture}")
-	figure_two_position = main_source.index("\\label{fig:policy-lifting-example}")
+	figure_two_position = main_source.index("\\label{fig:compiler-stages}")
 	abstract_end_position = main_source.index("\\end{abstract}")
 	introduction_position = main_source.index("\\section{Introduction}")
 	example_position = main_source.index("Blocks World")
@@ -316,11 +372,12 @@ def test_main_paper_reserves_the_three_figure_program_in_order() -> None:
 	assert "\\IfFileExists{\\gpplfiguretwopath}" in main_source
 	assert "Figure 1 artwork placeholder" in main_source
 	assert "Figure 2 artwork placeholder" in main_source
-	assert "\\IfFileExists{\\gpplfigurethreepath}" in evaluation_source
-	assert "\\includegraphics[width=\\textwidth]{\\gpplfigurethreepath}" in (
-		evaluation_source
-	)
-	assert "\\label{fig:evaluation-summary}" in evaluation_source
+	assert "\\IfFileExists{\\gpplatomiccasepath}" in method_source
+	assert "\\IfFileExists{\\gppltemporalcasepath}" in method_source
+	assert "\\label{fig:atomic-case}" in method_source
+	assert "\\label{fig:temporal-case}" in method_source
+	assert "\\gpplfigurethreepath" not in evaluation_source
+	assert "\\label{fig:evaluation-summary}" not in evaluation_source
 
 
 def test_abstract_uses_paper_level_granularity() -> None:
@@ -517,35 +574,35 @@ def test_atomic_compilation_makes_canonical_lifting_explicit() -> None:
 	assert "`E = CanonicalLift_D(E_0)`" in outline_source
 
 
-def test_figure_design_separates_target_generation_from_set_level_call_closure() -> None:
+def test_figure_design_separates_high_level_stages_from_local_cases() -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
 	outline_source = (
 		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
 	).read_text(encoding="utf-8")
 
-	assert "`Singleton-goal policy evidence E`" in outline_source
-	assert "`(1) Lift + certify core once`" in outline_source
+	assert "Figure 2: Inside the Two GP2PL Compiler Stages" in outline_source
+	assert "Figure 3: Atomic Lifting Case" in outline_source
+	assert "Figure 4: Temporal Composition Case" in outline_source
 	normalized_outline = " ".join(outline_source.split())
-	assert "relevant slice of `$T_D(E)" in normalized_outline
-	assert "`producer preconditions`" in outline_source
-	assert "recursive preparation via clear/1" in normalized_outline
-	assert "every !goal resolves inside $\\mathcal M_D$" in outline_source
+	assert "producible target universe" in normalized_outline
+	assert "recursive preparation via `!clear(Y)`" in normalized_outline
 	assert "$\\mathcal M_D=\\mathcal L_D^{[0]}$" in outline_source
-	assert "$\\operatorname{Closed}_D(\\mathcal L_D^{[k+1]})$" in outline_source
 
 	figure_two_caption = re.search(
-		r"\\caption\{Certified lifting(.*?)\}\s*"
-		r"\\label\{fig:policy-lifting-example\}",
+		r"\\caption\{Inside the two GP2PL compiler stages(.*?)\}\s*"
+		r"\\label\{fig:compiler-stages\}",
 		main_source,
 		re.DOTALL,
 	)
 	assert figure_two_caption is not None
 	caption_text = " ".join(figure_two_caption.group(1).split())
-	assert "canonically lifts singleton-goal evidence" in caption_text
-	assert "internally closed atomic core" in caption_text
-	assert "balanced query-local controller" in caption_text
-	assert "without relearning the core" in caption_text
-	assert (LATEX_ROOT / "figures/fig2_policy_lifting.pdf").is_file()
+	assert "query-independent" in caption_text
+	assert "query-specific" in caption_text
+	assert "worked cases are separated" in caption_text
+	assert "Blocks World" in method_source
+	assert "recursive preparation" in method_source
+	assert "preservation-safe order" in method_source
 	assert "\\begin{figure*}[t!]" in main_source
 
 

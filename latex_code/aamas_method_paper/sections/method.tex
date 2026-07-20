@@ -172,6 +172,31 @@ $\mathfrak G$ is not a complete hypothesis language for PDDL planning. Types con
 unification; an \asl{} realization may expose static sort membership in
 contexts, but never as an achievement call or exported action.
 
+Figure~\ref{fig:atomic-case} isolates the Blocks World instance used throughout
+the exposition from the domain-independent compiler definition above.
+
+\begin{figure}[htbp]
+\centering
+\IfFileExists{\gpplatomiccasepath}{%
+\includegraphics[width=\columnwidth]{\gpplatomiccasepath}%
+}{%
+\fbox{\parbox[c][1.35in][c]{0.92\columnwidth}{\centering
+Atomic case artwork placeholder\\[5pt]
+\texttt{on(X,Y)} evidence $\rightarrow$ producible targets\\
+$\rightarrow$ certified direct and recursive candidates\\
+$\rightarrow$ internally closed $\mathcal M_D$}}
+}
+\caption{Atomic lifting case in Blocks World. Evidence for
+\texttt{on(X,Y)} supplies a validated \texttt{stack(X,Y)} macro; the producible
+target universe additionally admits modules such as \texttt{clear/1} and
+\texttt{holding/1}. A direct producer handles the ready context, while certified
+recursive preparation via \texttt{!clear(Y)} covers an obstructed destination.
+Joint selection retains a compact implementation whose internal call resolves
+inside $\mathcal M_D$. Predicate names illustrate one instantiation; candidate
+generation and certification use only typed schemas and effects.}
+\label{fig:atomic-case}
+\end{figure}
+
 \subsection{Candidate Soundness Certificates}
 
 Every candidate carries a machine-checkable certificate. Its conditional
@@ -424,6 +449,29 @@ the branch from an unmet sibling or discard a query binding.
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
 binary transition-repair tree by
 Algorithm~\ref{alg:temporal}.
+
+Figure~\ref{fig:temporal-case} gives the corresponding query-local Blocks World
+case without placing its details in the compiler overview.
+
+\begin{figure}[htbp]
+\centering
+\IfFileExists{\gppltemporalcasepath}{%
+\includegraphics[width=\columnwidth]{\gppltemporalcasepath}%
+}{%
+\fbox{\parbox[c][1.45in][c]{0.92\columnwidth}{\centering
+Temporal case artwork placeholder\\[5pt]
+Bound tower query $\rightarrow$ MONA progress guard\\
+$\rightarrow$ preservation-safe bottom-up order\\
+$\rightarrow$ balanced $\mathcal Q_q$ append}}
+}
+\caption{Temporal composition case in Blocks World. For a bound eventual tower
+query, one MONA progress guard requires three \texttt{on} literals to hold
+together. Conditional completion summaries induce a bottom-up
+preservation-safe order; the balanced transition-repair tree realizes that
+fixed order and emits $\mathcal Q_q$. The controller is appended to
+$\mathcal L_D^{[k]}$ without changing $\mathcal M_D$.}
+\label{fig:temporal-case}
+\end{figure}
 
 \subsection{Conditional Module-Completion Summaries}
 

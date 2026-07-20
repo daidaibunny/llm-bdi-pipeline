@@ -288,7 +288,7 @@ def test_generate_empirical_figure_writes_vector_pdf_and_provenance(
 	assert output_file.with_suffix(".metadata.json").is_file()
 
 
-def test_manuscript_places_headline_results_in_main_and_details_in_supplement() -> None:
+def test_manuscript_uses_tables_in_main_and_moves_detailed_views_to_supplement() -> None:
 	main_text = (PROJECT_ROOT / "latex_code/aamas_method_paper/main.tex").read_text()
 	evaluation_text = (
 		PROJECT_ROOT / "latex_code/aamas_method_paper/sections/evaluation.tex"
@@ -298,42 +298,30 @@ def test_manuscript_places_headline_results_in_main_and_details_in_supplement() 
 		/ "latex_code/aamas_method_paper/sections/technical_appendix_content.tex"
 	).read_text()
 
-	assert (
-		"\\providecommand{\\gpplfigurethreepath}{figures/fig3_evaluation.png}"
-		in main_text
-	)
-	figure_position = evaluation_text.index("\\begin{figure*}[t!]")
-	assert evaluation_text.index("\\section{Experimental Evaluation}") < (
-		figure_position
-	)
-	assert figure_position < evaluation_text.index(
-		"\\subsection{Questions and Comparisons}",
-	)
-	assert "\\IfFileExists{\\gpplfigurethreepath}" in evaluation_text
-	assert "\\begin{minipage}{0.667\\textwidth}" in evaluation_text
-	assert "\\includegraphics[width=\\textwidth]{\\gpplfigurethreepath}" in (
-		evaluation_text
-	)
-	assert "\\captionsetup{skip=2pt}" in evaluation_text
-	assert "\\label{fig:evaluation-summary}" in evaluation_text
+	assert "\\gpplfigurethreepath" not in main_text
+	assert "\\gpplfigurethreepath" not in evaluation_text
+	assert "\\label{fig:evaluation-summary}" not in evaluation_text
 	for table_input in (
 		"\\input{sections/result_five_seed_atomic_table}",
-		"\\input{sections/result_profile_table}",
+		"\\input{sections/result_temporal_summary_table}",
 	):
 		assert table_input in evaluation_text
 		assert table_input not in supplement_text
 	for table_input in (
 		"\\input{sections/result_five_seed_atomic_domain_table}",
 		"\\input{sections/result_domain_table}",
+		"\\input{sections/result_profile_table}",
+		"\\input{sections/result_moose_reference_table}",
 	):
 		assert table_input not in evaluation_text
 		assert table_input in supplement_text
 	assert "\\clearpage" not in evaluation_text
-	assert "\\IfFileExists{\\gpplfigurethreepath}" not in supplement_text
+	assert "supplementary diagnostic artifact" in supplement_text
 	result_float_specs = {
 		"result_five_seed_atomic_table.tex": "\\begin{table}[htbp]",
 		"result_five_seed_atomic_domain_table.tex": "\\begin{table*}[htbp]",
 		"result_profile_table.tex": "\\begin{table}[htbp]",
+		"result_temporal_summary_table.tex": "\\begin{table}[htbp]",
 		"result_domain_table.tex": "\\begin{table}[htbp]",
 	}
 	for filename, expected_float in result_float_specs.items():
