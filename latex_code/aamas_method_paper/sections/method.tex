@@ -365,37 +365,22 @@ portfolio rules appear in the Technical Supplement, Secs.~1--2.
 
 \subsection{Numeric and Joint Guard-Establishment Certificates}
 
-A positive integer equality may call a complete constant-delta action: unit
-deltas require strict direction, larger deltas the exact predecessor. Mixed
-guards use complete action-only net effects. For example, a body for
-$\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
-$\mathit{at}(P,L)$ and the exact integer value 3 in its final state while
-preserving every other signed guard obligation. A cyclic guard admits one
-joint guard-establishment action only if the same proof covers the complete
+Numeric-domain support reuses the same certificate machinery. A positive
+integer equality is achieved by a complete constant-delta action: a unit delta
+requires strict direction and a larger delta the exact predecessor value. A
+mixed Boolean--numeric guard uses complete action-only net effects; for example,
+a body for $\mathit{at}(P,L)\land \mathit{fuel}(V)=3$ must symbolically establish
+$\mathit{at}(P,L)$ and the exact integer value $3$ in its final state while
+preserving every other signed obligation. A cyclic guard admits one joint
+guard-establishment action only when a single proof covers the complete
 successor valuation required by $\mathcal O_\chi$. Negated equality is
 observation-only without a certified change-away action; arbitrary arithmetic
-and uncertified sequential composition are outside the supported fragment.
-
-Numeric preparation must strictly reduce the lexicographic ranking
-$\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
-where $n_{\mathrm{miss}}$ is the number of missing producer preconditions and
-$d_{\mathrm{target}}(s)=|f(s)-c|$ is the bounded deficit for target equality
-$f=c$. It must preserve
-other conditions and leave the target fluent unchanged until the establishing
-step. Compilation rejects the
-candidate when no decreasing tuple can be certified.
-
-For strong Until, let $\mathcal W_{q_s}$ be the set of non-progress self-loop
-guards at source $q_s$. Their signed source invariants are
-\[
-\mathcal I_{q_s}=\langle I_{q_s}^+,I_{q_s}^-\rangle,
-\quad I_{q_s}^{\pm}=\bigcap_{\chi\in\mathcal W_{q_s}}P_\chi^{\pm}.
-\]
-Before the single progress literal, no action prefix may delete a positive
-invariant or add a negative one; the establishing step may consume the left
-operand. Repeated unit progress separates action and protected objects by a
-derived non-unification guard, and unavoidable consumption requires the exact
-predecessor. An observed target equality is the base case.
+and uncertified sequential composition stay outside the fragment. Numeric
+preparation carries its own well-founded ranking (a lexicographic pair of the
+missing-precondition count and the bounded target deficit), and strong-Until
+sources preserve their non-progress self-loop invariants until the single
+progress step; the ranking, invariants, and their termination proof appear in
+the Technical Supplement, Sec.~2.
 
 Inserted auxiliary variables are alpha-renamed away from query and producer
 variables, preventing textual collisions from imposing unrelated constraints.
