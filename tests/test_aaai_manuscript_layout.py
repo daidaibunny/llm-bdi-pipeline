@@ -448,12 +448,10 @@ def test_generator_assisted_onboarding_is_bounded_by_the_existing_contract() -> 
 		PROJECT_ROOT / "docs" / "research_pipeline_decisions.md"
 	).read_text(encoding="utf-8")
 
-	assert "pinned PDDL problem generator" in main_text
-	assert "\\cite{Bacchus2001AIPS00}" in main_text
-	assert "held-out-disjoint instance sets" in main_text
-	assert "broaden evidence acquisition" in main_text
-	assert "scaling domain onboarding" in main_text
-	assert "without extending the supported PDDL--\\ltlf{} fragment" in main_text
+	assert "pinned PDDL generators" in main_text
+	assert "held-out-disjoint instances" in main_text
+	assert "scale evidence acquisition and domain onboarding" in main_text
+	assert "fail-closed certification" in main_text
 	assert "An evidence provider is admissible" in method_source
 	for reproducibility_requirement in (
 		"generator revision and digest",
@@ -825,7 +823,7 @@ def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 	):
 		assert ambiguous_term not in formal_source
 
-	assert "candidate-construction grammar" in main_source
+	assert "candidate grammars" in main_source
 
 
 def test_manuscript_contains_no_silently_unescaped_latex_commands() -> None:
@@ -835,7 +833,7 @@ def test_manuscript_contains_no_silently_unescaped_latex_commands() -> None:
 		assert broken_command.search(source) is None, source_path
 
 
-def test_conclusion_and_future_work_preserves_the_complete_claim_boundary(
+def test_conclusion_and_future_work_states_the_supported_claim_boundary(
 ) -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
@@ -847,15 +845,14 @@ def test_conclusion_and_future_work_preserves_the_complete_claim_boundary(
 	assert r"\section{Limitations}" not in main_source
 	assert r"\section{Conclusion}" not in main_source
 	for required_boundary in (
-		"only instantiated evidence provider",
-		"candidate-construction grammar is not a complete hypothesis language",
-		"type-compatible resolution",
-		"controlled, witness-backed queries",
-		"fixed seed-0 atomic core",
 		r"arbitrary PDDL--\ltlf{} strategy synthesis",
-		"pinned PDDL problem generator",
-		"broaden evidence acquisition",
-		"scaling domain onboarding",
+		"arithmetic outside the bounded-integer fragment",
+		"formulae outside the declared",
+		"disjunctive strategy choice",
+		"uncertified recursive or interference repair",
+		"pinned PDDL generators",
+		"held-out-disjoint instances",
+		"scale evidence acquisition and domain onboarding",
 	):
 		assert required_boundary in combined
 

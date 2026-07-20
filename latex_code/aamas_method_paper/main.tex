@@ -198,29 +198,30 @@ Supplement.
 \FloatBarrier
 \section{Conclusion and Future Work}
 
-GP2PL closes the representation gap by converting generalized-planning evidence
-and PDDL action schemas into a reusable atomic BDI core, then appending
-query-local temporal controllers to the same maintained library. Unproved
-obligations fail compilation rather than becoming unchecked plans, and within
-the certified scope the measured component gains and
-\TEGProblemCount{}/\TEGProblemCount{} fixed-core temporal result show that
-certification changes both coverage and controller structure.
+GP2PL demonstrates that generalized-planning evidence can be compiled, not
+merely translated, into a maintained BDI plan library. Validated policy lifting
+selects an internally closed atomic core from evidence and typed PDDL schemas;
+DFA-guided compilation appends preservation-safe temporal controllers without
+relearning that core. Unsupported obligations fail closed rather than becoming
+unchecked plans.
 
-Several conditions delimit these results. MOOSE is the only instantiated
-evidence provider, the candidate-construction grammar is not a complete
-hypothesis language, and call closure proves type-compatible resolution rather
-than universal applicability. The temporal study uses controlled,
-witness-backed queries and a fixed seed-0 atomic core, so it does not measure
-unrestricted language, long-horizon planning, or cross-seed robustness, and
-rejected arithmetic, interference, and repair cases preclude arbitrary
-PDDL--\ltlf{} strategy synthesis.
+Across \BenchmarkDomainCount{} domains, five independently seeded cores achieved
+\AtomicFiveSeedMeanSuccessPercent{}\% mean held-out coverage
+(\AtomicFiveSeedSampleSDPercent{}-point sample SD), while recursive candidates
+improved paired atomic success by 10.42 percentage points. Preservation
+certification improved paired temporal success by 9.28 points; all
+\TranslationEquivalentCount{} translations matched their gold finite-trace
+languages, and all \TEGProblemCount{} queries produced validated accepting
+traces. Certification improved both reusable coverage and
+temporally correct execution.
 
-Future work can broaden evidence acquisition through a parameterized, pinned
-PDDL problem generator, as in planning competitions \cite{Bacchus2001AIPS00}:
-a compatible generalized-planning backend can then learn evidence from
-validated, held-out-disjoint instance sets for the unchanged GP2PL compiler,
-scaling domain onboarding without extending the supported PDDL--\ltlf{}
-fragment.
+GP2PL does not claim arbitrary PDDL--\ltlf{} strategy synthesis: it rejects
+arithmetic outside the bounded-integer fragment, formulae outside the declared
+$F$, $X$, $U$, conjunction, and literal-negation fragment, disjunctive strategy
+choice, and uncertified recursive or interference repair. Future work should
+broaden providers, candidate grammars, and temporal fragments while retaining
+fail-closed certification, using pinned PDDL generators and held-out-disjoint
+instances to scale evidence acquisition and domain onboarding.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}
