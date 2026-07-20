@@ -21,6 +21,25 @@
 \pdfinfo{/TemplateVersion (2027.1)}
 \setcounter{secnumdepth}{2}
 
+% Compact float packing. Page geometry, fonts, and \baselinestretch are
+% untouched; these only let floats share pages with text instead of
+% drifting to float-only pages, and tighten float/text separation.
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.9}
+\renewcommand{\dbltopfraction}{0.95}
+\renewcommand{\dblfloatpagefraction}{0.9}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 4pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlength{\dblfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\dbltextfloatsep}{10pt plus 2pt minus 4pt}
+\captionsetup{skip=5pt}
+
 \title{GP2PL: From Generalized Planning Evidence to Certified BDI Plan
 Libraries for Temporally Extended Goals}
 \author{Anonymous Submission}
