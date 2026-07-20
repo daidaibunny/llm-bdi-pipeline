@@ -268,7 +268,7 @@ def test_main_and_supplement_use_the_approved_table_split() -> None:
 	).read_text(encoding="utf-8")
 
 	assert "\\label{tab:supported-fragment}" in supplement_source
-	assert "\\label{tab:compiler-obligations}" in method_source
+	assert "\\label{tab:compiler-obligations}" in supplement_source
 	assert "\\input{sections/result_five_seed_atomic_table}" in evaluation_source
 	assert "\\input{sections/result_profile_table}" in evaluation_source
 	assert "\\input{sections/result_five_seed_atomic_domain_table}" not in (

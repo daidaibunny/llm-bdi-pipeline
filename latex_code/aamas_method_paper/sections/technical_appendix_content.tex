@@ -311,6 +311,43 @@ Obligations that do not arise in $b$, such as resource discharge for a direct
 producer that acquires no resource, are vacuous rather than unproved.
 \end{definition}
 
+\begin{table*}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3.0pt}
+\begin{tabular}{
+>{\raggedright\arraybackslash}p{0.17\textwidth}
+>{\raggedright\arraybackslash}p{0.42\textwidth}
+>{\raggedright\arraybackslash}p{0.32\textwidth}}
+\toprule
+Branch constructor & Additional acceptance obligation & Excluded failure \\
+\midrule
+Validated evidence macro & every macro step maps to a PDDL action schema and
+symbolic execution establishes the singleton evidence target & invalid or
+misbound provider evidence \\
+Direct producer & one action adds the target under the certified context and
+preserves its completion summary & action chosen only by predicate name \\
+Acyclic regression & each open positive requirement is discharged without a
+repeated normalized producer role or conflicting delete effect & arbitrary
+depth cutoffs or cyclic schema search \\
+Relational recursion & a non-negative relation feature strictly decreases and
+an already-satisfied, direct-producer, or validated-evidence terminal branch
+remains available & recursive oscillation \\
+Target-preserving resource discharge & a finite non-repeating mode path restores keyed
+availability while preserving the target & unreleased reusable resource \\
+Ranked precondition repair & Clingo selects an acyclic call graph with strictly
+decreasing natural-number dependency ranks & mutually recursive preparation
+without a progress proof \\
+\bottomrule
+\end{tabular}
+\caption{Candidate constructors and soundness obligations for atomic BDI
+modules. Every selected
+branch additionally satisfies typed binding, symbolic PDDL executability, and
+target achievement on return; the resulting core satisfies
+$\operatorname{Closed}_D(\mathcal M_D)$.}
+\label{tab:compiler-obligations}
+\end{table*}
+
 \paragraph{Finite candidate-construction grammar.}
 Let
 \[
