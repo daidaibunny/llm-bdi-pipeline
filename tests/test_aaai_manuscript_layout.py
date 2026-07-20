@@ -207,9 +207,9 @@ def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None
 		"\\paragraph{Temporal benchmark construction.}",
 		"ignores the original achievement goal",
 		"rollouts of at most three actions",
-		"alpha-normalized semantic-signature",
-		"one witness-backed query for each of the 1,228 test problems",
-		"475 distinct translation inputs",
+		"semantic-signature",
+		"one witness-backed query per held-out problem",
+		"1,228 queries over 475 distinct translation inputs",
 		"Technical Supplement, Sec.~4.1",
 	):
 		assert required_main_claim in evaluation_text
@@ -237,7 +237,6 @@ def test_manuscript_formalizes_ltlf_syntax_semantics_and_scope_boundaries() -> N
 		encoding="utf-8",
 	)
 	background_text = " ".join(background_source.split())
-	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
 	supplement_source = (
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
@@ -249,18 +248,18 @@ def test_manuscript_formalizes_ltlf_syntax_semantics_and_scope_boundaries() -> N
 	):
 		assert scope_symbol in background_source
 		assert scope_symbol in supplement_source
-	assert "Negation is restricted to atoms" in background_text
+	assert "negation restricted to atoms" in background_text
 	assert "several valuation cubes" in background_text
-	assert "not one disjunctive guard" in background_text
+	assert "separate conjunctive guard" in background_text
 	for semantic_clause in (
 		"\\xi,i\\models X\\varphi",
 		"\\xi,i\\models F\\varphi",
 		"\\xi,i\\models \\varphi U\\psi",
 	):
 		assert semantic_clause in supplement_source
-	assert "a\\in\\mathit{val}_q(s)" in method_source
-	assert "\\mu_q(a)=p(\\bar t)" in method_source
-	assert "\\mu_q(a)=[f(\\bar t)=c]" in method_source
+	assert "a\\in\\mathit{val}_q(s)" in supplement_source
+	assert "\\mu_q(a)=p(\\bar t)" in supplement_source
+	assert "\\mu_q(a)=[f(\\bar t)=c]" in supplement_source
 
 
 def test_main_and_supplement_use_the_approved_table_split() -> None:
@@ -272,8 +271,10 @@ def test_main_and_supplement_use_the_approved_table_split() -> None:
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
 
-	assert "\\label{tab:supported-fragment}" in method_source
-	assert "\\label{tab:compiler-obligations}" in method_source
+	assert "\\label{tab:supported-fragment}" not in method_source
+	assert "\\label{tab:compiler-obligations}" not in method_source
+	assert "\\label{tab:supported-fragment}" in supplement_source
+	assert "\\label{tab:compiler-obligations}" in supplement_source
 	assert "\\input{sections/result_five_seed_atomic_table}" in evaluation_source
 	assert "\\input{sections/result_profile_table}" not in evaluation_source
 	assert "\\input{sections/result_moose_reference_table}" not in evaluation_source
@@ -414,28 +415,28 @@ def test_introduction_explains_blocks_before_using_symbolic_example() -> None:
 			"\\input{sections/background}",
 		)
 	]
+	introduction_text = " ".join(introduction_source.split())
 
-	assert "Blocks World is a standard planning domain" in introduction_source
+	assert "In Blocks World" in introduction_text
 	assert introduction_source.index("Blocks World") < introduction_source.index(
 		"\\texttt{on(X,Y)}",
 	)
-	assert "destination block is clear" in introduction_source
-	assert "F(\\mathit{on}" not in introduction_source
-	assert "GP2PL makes three contributions" in introduction_source
+	assert "destination block is clear" in introduction_text
+	assert "F(\\mathit{on}" not in introduction_text
+	assert "GP2PL makes three contributions" in introduction_text
 	for contribution_marker in (
-		"First, it compiles singleton-goal evidence",
-		"Second, it accepts only branches",
-		"Third, it appends preservation-safe finite-trace controllers",
+		"it compiles singleton-goal evidence",
+		"it accepts only branches",
+		"it appends preservation-safe finite-trace controllers",
 	):
-		assert contribution_marker in introduction_source
+		assert contribution_marker in introduction_text
 	assert "policy evidence\ncontrollers" not in introduction_source
 
 
 def test_generator_assisted_onboarding_is_bounded_by_the_existing_contract() -> None:
 	main_source = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
-	background_source = (LATEX_ROOT / "sections/background.tex").read_text(
-		encoding="utf-8",
-	)
+	main_text = " ".join(main_source.split())
+	method_source = (LATEX_ROOT / "sections/method.tex").read_text(encoding="utf-8")
 	supplement_source = (
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
@@ -447,12 +448,12 @@ def test_generator_assisted_onboarding_is_bounded_by_the_existing_contract() -> 
 		PROJECT_ROOT / "docs" / "research_pipeline_decisions.md"
 	).read_text(encoding="utf-8")
 
-	assert "parameterized PDDL problem generator" in main_source
-	assert "\\cite{Bacchus2001AIPS00}" in main_source
-	assert "disjoint held-out split" in main_source
-	assert "scales evidence acquisition and domain onboarding" in main_source
-	assert "not the supported\nPDDL--\\ltlf{} fragment" in main_source
-	assert "formal interface is agnostic" in background_source
+	assert "pinned PDDL problem generator" in main_text
+	assert "\\cite{Bacchus2001AIPS00}" in main_text
+	assert "disjoint held-out split" in main_text
+	assert "scales evidence acquisition and domain onboarding" in main_text
+	assert "not the supported PDDL--\\ltlf{} fragment" in main_text
+	assert "An evidence provider is admissible" in method_source
 	for reproducibility_requirement in (
 		"generator revision and digest",
 		"complete output",
@@ -512,7 +513,10 @@ def test_manuscript_distinguishes_atomic_core_query_plans_and_library() -> None:
 	assert "\\mathcal{L}_D^{(q)}" not in background_source
 	assert "\\mathcal L_D^{(q)}" not in method_source
 	assert "\\mathcal L_D^{(q)}" not in supplement_source
-	assert "\\ENSURE Certified lifted atomic module core $\\mathcal M_D$" in method_source
+	assert (
+		"\\ENSURE Certified lifted atomic module core $\\mathcal M_D$"
+		in supplement_source
+	)
 	assert "selected atomic core $\\mathcal M_D$" in method_source
 	assert "query-local plan set $\\mathcal Q_q$" in method_source
 	assert "The certified atomic module core is selected directly as" in (
@@ -557,9 +561,11 @@ def test_atomic_compilation_makes_canonical_lifting_explicit() -> None:
 		PROJECT_ROOT / "docs" / "aaai_paper_narrative_outline.md"
 	).read_text(encoding="utf-8")
 
-	assert "Compile the Certified Lifted Atomic Module Core" in method_source
-	assert "E_0\\leftarrow\\textsc{NormalizeEvidence}" in method_source
-	assert "E\\leftarrow\\textsc{CanonicalLift}(E_0,D)" in method_source
+	assert "\\subsection{Evidence Normalization and Canonical Lifting}" in method_source
+	assert "E=\\operatorname{Lift}_D(E_0)" in method_source
+	assert "Compile the Certified Lifted Atomic Module Core" in supplement_source
+	assert "E_0\\leftarrow\\textsc{NormalizeEvidence}" in supplement_source
+	assert "E\\leftarrow\\textsc{CanonicalLift}(E_0,D)" in supplement_source
 	assert "\\textsc{LiftSchemas}" in method_source
 	assert "definition}[Canonical lifting]" in supplement_source
 	assert "preserves repeated-variable sharing" in supplement_source
@@ -664,7 +670,15 @@ def test_main_results_report_scientific_aggregates_not_run_bookkeeping() -> None
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
-	evaluation_text = " ".join(evaluation_source.split())
+	atomic_table_source = (
+		LATEX_ROOT / "sections/result_five_seed_atomic_table.tex"
+	).read_text(encoding="utf-8")
+	temporal_table_source = (
+		LATEX_ROOT / "sections/result_temporal_summary_table.tex"
+	).read_text(encoding="utf-8")
+	evaluation_text = " ".join(
+		(evaluation_source + atomic_table_source + temporal_table_source).split(),
+	)
 	supplement_source = (
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
@@ -686,10 +700,11 @@ def test_main_results_report_scientific_aggregates_not_run_bookkeeping() -> None
 
 	for scientific_result in (
 		"Across five independently compiled atomic cores",
-		"Fourteen of the sixteen domains are complete",
-		"Variation is concentrated in Logistics and Depots",
+		"All-seed complete (14)",
+		"residual variation concentrates in Logistics",
+		"in Depots",
 		"exact finite-trace language equivalence",
-		"success requires Jason completion",
+		"requires controller compilation, Jason completion",
 	):
 		assert scientific_result in evaluation_text
 
@@ -712,8 +727,9 @@ def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
 	formal_source = "\n".join((background_source, method_source, supplement_source))
+	method_text = " ".join(method_source.split())
 
-	assert "raw provider artifact $\\mathcal E_{\\mathrm{raw}}$" in method_source
+	assert "raw artifact $\\mathcal E_{\\mathrm{raw}}$" in method_text
 	assert "\\mathcal C^{\\checkmark}_{D,E}" in method_source
 	assert "\\mathfrak G" in method_source
 	assert "\\operatorname{Inst}_D" in method_source
@@ -723,12 +739,12 @@ def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:
 	assert "\\operatorname{realizes}_D(b,c)" in supplement_source
 	assert (
 		"\\tau_q=\\langle\\iota_q,\\varphi_q,\\mu_q,\\Theta_q,\\Gamma_q\\rangle"
-		in method_source
+		in supplement_source
 	)
-	assert "\\widehat\\tau_q=(\\tau_q,\\theta_q)" in method_source
-	assert "\\theta_q:\\bar X_q\\rightarrow O_I" in method_source
+	assert "\\widehat\\tau_q=(\\tau_q,\\theta_q)" in supplement_source
+	assert "\\theta_q:\\bar X_q\\rightarrow O_I" in supplement_source
 	assert "I=\\langle D,O_I,s_I^0,G_I\\rangle" in background_source
-	assert "\\mathcal D_q=" in method_source
+	assert "\\mathcal D_q=" in supplement_source
 	assert "\\mathcal O_\\chi=" in method_source
 	assert "\\Pi_{\\chi,i}" in method_source
 	assert "\\prec_\\chi" in method_source
@@ -796,7 +812,7 @@ def test_conclusion_and_future_work_preserves_the_complete_claim_boundary(
 		"controlled, witness-backed queries",
 		"fixed seed-0 atomic core",
 		r"arbitrary PDDL--\ltlf{} strategy synthesis",
-		"Future work can use a parameterized PDDL problem generator",
+		"pinned PDDL problem generator",
 		"scales evidence acquisition and domain onboarding",
 	):
 		assert required_boundary in combined
@@ -823,11 +839,13 @@ def test_evaluation_reports_costs_and_scope_without_unmeasured_amortization() ->
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
-	evaluation_text = " ".join(evaluation_source.split())
+	same_scope_table = (
+		LATEX_ROOT / "sections/result_same_scope_evidence_table.tex"
+	).read_text(encoding="utf-8")
+	evaluation_text = " ".join((evaluation_source + same_scope_table).split())
 
 	assert "amortized compilation" not in evaluation_text
-	assert "10.42 percentage points" in evaluation_text
-	assert "fivefold" in evaluation_text
-	assert "113 of the 114 net temporal gains" in evaluation_text
+	assert "10.42-percentage-point gain" in evaluation_text
+	assert "9.28-percentage-point gain" in evaluation_text
 	assert "720/740" in evaluation_text
 	assert "117/740" in evaluation_text

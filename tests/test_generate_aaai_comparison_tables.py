@@ -1289,9 +1289,10 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	temporal = render_temporal_table(result)
 	external = render_external_table(result)
 	combined = atomic + temporal + external
+	atomic_text = " ".join(atomic.split())
 
-	assert "Method & Compiled & Targets & Valid & Branches & KiB & Compile s" in atomic
-	assert "Method & Built & Valid & PAR-2 s & Actions & Plans & Fan-out" in temporal
+	assert "Method & Valid (\\%) & Branches & KiB" in atomic
+	assert "Method & Valid & PAR-2 s & Plans & Fan-out" in temporal
 	assert "Method & Source & Scope & Coverage & Unsupported & PAR-2 s" in external
 	assert "MOOSE & Reported & Original MOOSE domains, five seeds" in external
 	assert "1079.6/1080" in external
@@ -1308,16 +1309,21 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert r"\resultselected{Full GP2PL}" in atomic
 	assert r"\resultbest{" in temporal
 	assert r"\resultselected{Certified Balanced}" in temporal
-	assert "Color is not used alone" in atomic
+	assert "Bold marks tied best coverage" in atomic_text
+	assert "blue bold marks Full GP2PL" in atomic_text
 	assert "Color is not used alone" in temporal
 	assert "FOND4LTLf + LAMA" in external
 	assert "C0" not in combined
 	assert "T0" not in combined
-	for table in (atomic, temporal, external):
-		assert "\\begin{table*}[htbp]" in table
+	for table in (atomic, temporal):
+		assert "\\begin{table}[htbp]" in table
 		assert "\\small" in table
 		assert "\\footnotesize" not in table
 		assert table.index("\\caption{") > table.index("\\end{tabular}")
+	assert "\\begin{table*}[htbp]" in external
+	assert "\\small" in external
+	assert "\\footnotesize" not in external
+	assert external.index("\\caption{") > external.index("\\end{tabular}")
 
 
 def _paired_fixture(
