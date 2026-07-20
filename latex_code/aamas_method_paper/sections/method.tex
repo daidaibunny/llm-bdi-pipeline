@@ -438,49 +438,20 @@ the branch from an unmet sibling or discard a query binding.
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
 binary transition-repair tree (Sec.~\ref{sec:balanced-trees}).
 
-\subsection{Conditional Module-Completion Summaries}
+\subsection{Conditional Summaries and Preservation Portfolios}
 
-A relational fixed point over selected calls computes $\Sigma_b$, the effects
-observable when branch $b$ returns. Query arguments remain anchors; local
-variables are alpha-normalized and typed; effects retain branch conditions.
-Sequential composition records net
-polarity, so an internally deleted-and-restored atom is not a completion delete.
-
-For occurrence $G_i\in P_\chi^+$, a preservation portfolio
-$\Pi_{\chi,i}\subseteq\mathcal M_D$ is the set of certified branches permitted
-to establish $G_i$ under the obligations protected at that position. The
-threat-induced precedence relation is defined by
-$G_j\prec_\chi G_i$ exactly when a feasible $\maydelete$ effect of a branch in
-$\Pi_{\chi,j}$ unifies with $G_i$. The graph
-$\mathcal G_\chi=(P_\chi^+,\prec_\chi)$ therefore requires $G_j$ to be repaired
-before $G_i$.
-Single-valued invariants reject conjunctions requesting two values for one key.
-
-A negative guard $\neg N$ never becomes $!\neg N$. Positive repairs must exclude
-feasible $\mayadd(N)$. If $N$ holds, a signed leaf may call only a finite branch
-with exact $\operatorname{MustDelete}(N)$ that establishes a positive sibling and
-preserves all obligations. A negative-only edge observes absence. Direct-
-deleter parameters bind through compatible sibling add effects before range
-restriction, without recognizing fluent names.
-
-\subsection{Preservation Portfolios for Cyclic Interference}
-
-For a cycle, each $\Pi_{\chi,i}$ retains only branches whose exact completion
-preserves prior positives and negatives. In the AgentSpeak realization, a
-query-local trigger exposes exactly the bodies rendered from that branch set.
-Portfolios are certified per ordered literal occurrence: two occurrences of
-$p$ may need different portfolios when
-their protected prefixes differ, while identical portfolios may share one
-restricted module in the AgentSpeak realization.
-Contexts remain alternative applicability cases, not simultaneous obligations.
-A recursive $!p;!g$ branch also requires a complete preserving summary for $p$
-and redirects $!g$ to the occurrence's restricted module. Certificates record
-source branches by literal index and claim recursive preservation coverage only
-when at least one branch was selected. For a binary support relation $R$, the
-same-predicate rank $\rho_b$ may be instantiated as support depth $\rho_R(x)$
-only when its grounded request graph is
-functional and acyclic in every reachable state. Every selected branch must
-still preserve earlier achievements; otherwise compilation rejects.
+A relational fixed point over selected calls computes each branch summary
+$\Sigma_b$, and for occurrence $G_i\in P_\chi^+$ a preservation portfolio
+$\Pi_{\chi,i}\subseteq\mathcal M_D$ collects the certified branches allowed to
+establish $G_i$ without disturbing the obligations protected at that position.
+Portfolios are certified per ordered literal occurrence rather than per
+predicate: two occurrences of $p$ may need different portfolios when their
+protected prefixes differ. A negative guard $\neg N$ never becomes a
+$!\neg N$ achievement goal; it is discharged by observing absence or by an exact
+certified deleter. The threat-induced precedence graph
+$\mathcal G_\chi=(P_\chi^+,\prec_\chi)$ orders repairs so no established positive
+is later undone; the summary definition, precedence relation, and cyclic-cycle
+portfolio rules appear in the Technical Supplement, Secs.~1--2.
 
 \subsection{Numeric and Joint Guard-Establishment Certificates}
 
