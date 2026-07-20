@@ -75,7 +75,8 @@ def test_manuscript_separates_compiler_overview_and_local_cases() -> None:
 	assert "figures/fig2_compiler_stages.pdf" in main_text
 	assert "\\label{fig:compiler-stages}" in main_text
 	assert "\\label{fig:atomic-case}" in method_text
-	assert "\\label{fig:temporal-case}" in method_text
+	assert "\\label{fig:temporal-case}" not in method_text
+	assert "fig4_temporal_case.pdf" not in main_text
 	assert "\\label{fig:evaluation-summary}" not in evaluation_text
 	assert "\\gpplfigurethreepath" not in evaluation_text
 	assert "\\begin{minipage}" not in main_text

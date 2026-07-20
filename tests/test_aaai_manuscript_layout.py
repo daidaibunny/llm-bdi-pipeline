@@ -350,10 +350,8 @@ def test_main_paper_uses_overview_and_local_method_cases_without_result_figure()
 		"\\providecommand{\\gpplatomiccasepath}{figures/fig3_atomic_case.pdf}"
 		in main_source
 	)
-	assert (
-		"\\providecommand{\\gppltemporalcasepath}{figures/fig4_temporal_case.pdf}"
-		in main_source
-	)
+	assert "\\gppltemporalcasepath" not in main_source
+	assert "fig4_temporal_case.pdf" not in main_source
 	assert "\\gpplfigurethreepath" not in main_source
 	assert r"\newcommand{\resultbest}[1]{\textbf{#1}}" in main_source
 	assert r"\newcommand{\resultselected}[1]" in main_source
@@ -373,9 +371,8 @@ def test_main_paper_uses_overview_and_local_method_cases_without_result_figure()
 	assert "Figure 1 artwork placeholder" in main_source
 	assert "Figure 2 artwork placeholder" in main_source
 	assert "\\IfFileExists{\\gpplatomiccasepath}" in method_source
-	assert "\\IfFileExists{\\gppltemporalcasepath}" in method_source
 	assert "\\label{fig:atomic-case}" in method_source
-	assert "\\label{fig:temporal-case}" in method_source
+	assert "\\label{fig:temporal-case}" not in method_source
 	assert "\\gpplfigurethreepath" not in evaluation_source
 	assert "\\label{fig:evaluation-summary}" not in evaluation_source
 
@@ -582,11 +579,12 @@ def test_figure_design_separates_high_level_stages_from_local_cases() -> None:
 	).read_text(encoding="utf-8")
 
 	assert "Figure 2: Inside the Two GP2PL Compiler Stages" in outline_source
-	assert "Figure 3: Atomic Lifting Case" in outline_source
-	assert "Figure 4: Temporal Composition Case" in outline_source
+	assert "Figure 3: Selected Atomic-Core Execution Case" in outline_source
+	assert "Figure 4: Temporal Composition Case" not in outline_source
 	normalized_outline = " ".join(outline_source.split())
 	assert "producible target universe" in normalized_outline
-	assert "recursive preparation via `!clear(Y)`" in normalized_outline
+	assert "`!clear(y) -> !clear(z)" in normalized_outline
+	assert "selected variable-level fragments" in normalized_outline
 	assert "$\\mathcal M_D=\\mathcal L_D^{[0]}$" in outline_source
 
 	figure_two_caption = re.search(
@@ -599,9 +597,10 @@ def test_figure_design_separates_high_level_stages_from_local_cases() -> None:
 	caption_text = " ".join(figure_two_caption.group(1).split())
 	assert "query-independent" in caption_text
 	assert "query-specific" in caption_text
-	assert "worked cases are separated" in caption_text
+	assert "MONA-derived conjunctive progress guard" in caption_text
+	assert "balanced transition-repair tree" in caption_text
 	assert "Blocks World" in method_source
-	assert "recursive preparation" in method_source
+	assert "\\texttt{clear/1} module recurs" in method_source
 	assert "preservation-safe order" in method_source
 	assert "\\begin{figure*}[t!]" in main_source
 

@@ -832,10 +832,11 @@ structural because their valid-case sets are identical.
 The visual hierarchy follows the representation-compilation contribution rather
 than forcing every result into a chart. Figure 1 is the single-column framework
 overview on the first page. Figure 2 is a full-width, domain-independent view
-inside the two compiler stages. Figure 3 is a small single-column atomic-lifting
-case placed beside candidate construction, and Figure 4 is a small single-column
-temporal-composition case placed beside DFA-guided composition. The two case
-figures instantiate the abstract stages without crowding Figure 2.
+inside the two compiler stages; its right panel embeds the concrete DFA-guided
+tower-query construction so that the temporal compiler is not an unexplained
+process box. Figure 3 is a small single-column Blocks World execution case placed
+after feasible-core optimization. It demonstrates how the selected lifted
+atomic core recursively solves an unseen stack configuration.
 
 The main paper has no empirical result figure. Exact endpoint comparisons over
 heterogeneous domains are reported in compact `booktabs` tables at the point of
@@ -848,7 +849,7 @@ scope-separated external-reference matrix.
 
 ### Figure Production Handoff Contract
 
-Figures 1--4 and the planned supplementary DFA diagram are conceptual. Their
+Figures 1--3 and the planned supplementary DFA diagram are conceptual. Their
 labels and examples below come from the implemented architecture, evidence, and
 domain schemas, not from estimated experimental measurements. Experimental
 numbers enter the manuscript only through deterministic tables generated from
@@ -866,8 +867,8 @@ Canvas, PowerPoint, Python, and export settings:
 - Main Figure 1 uses the approved 2558-by-1256, 330-DPI PNG and is inserted at
   3.25 inches wide (approximately 1.60 inches high). Main Figure 2 uses a
   13.333-by-4.2-inch PowerPoint export canvas and is inserted at 7.0 inches
-  wide. Figures 3 and 4 each use a 6.5-by-2.7-inch canvas and are inserted at
-  one column. The supplementary DFA figure uses a 13.333-by-5.333-inch
+  wide. Figure 3 uses a 6.5-by-3.1-inch canvas and is inserted at one column.
+  The supplementary DFA figure uses a 13.333-by-5.333-inch
   PowerPoint canvas. Figure 1 retains its supplied alpha channel and must be
   verified on the paper's white page; generated conceptual figures use a white
   opaque background.
@@ -879,16 +880,15 @@ Canvas, PowerPoint, Python, and export settings:
   three-dimensional effects, icons, decorative illustrations, or screenshots.
 - Main Figure 1 is the approved, version-controlled raster asset
   `fig1_architecture.png`; its SHA-256 identity is enforced by the method-figure
-  generator and tests. Figures 2--4 and the supplementary DFA figure may share
+  generator and tests. Figures 2--3 and the supplementary DFA figure may share
   the editable source deck `aaai_method_figures_source.pptx`, with exactly one
   figure per slide.
 - Main figure files are `fig1_architecture.png`,
-  `fig2_compiler_stages.pdf`, `fig3_atomic_case.pdf`, and
-  `fig4_temporal_case.pdf`. The supplementary vector file is
+  `fig2_compiler_stages.pdf`, and `fig3_atomic_case.pdf`. The supplementary vector file is
   `figS1_dfa_controller.pdf`; all files live under
   `latex_code/aamas_method_paper/figures/` when delivered.
 - Embed fonts in vector PDFs, crop to the slide boundary, and verify all text at
-  its final include width. Do not rasterize Figures 2--4 or
+  its final include width. Do not rasterize Figures 2--3 or
   resample/recompress the locked Figure 1 PNG.
 
 Use this exact color palette. Text is always `#1A1A1A` unless the fill is the
@@ -992,20 +992,30 @@ Draft caption:
 ### Figure 2: Inside the Two GP2PL Compiler Stages
 
 Place this full-width `figure*[t!]` after Figure 1. Use two adjacent process
-panels separated by one thin rule. This figure explains compiler stages only:
-it contains no domain objects, PDDL snippets, AgentSpeak plans, candidate rows,
-or repair tree.
+panels separated by one thin rule. Panel (a) remains domain-independent.
+Panel (b) embeds the bound Blocks World tower query that previously occupied a
+separate temporal-composition figure. It must retain a clear left-to-right
+compiler spine rather than becoming a standalone automaton diagram.
 
 - Panel (a), `Query-independent atomic-core compiler`, shows
   `$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$` entering
   `normalize and canonically lift`, then `construct candidates over the
   producible target universe`, `certify branches`, and `joint lexicographic
   selection`, yielding `$\mathcal M_D=\mathcal L_D^{[0]}$`.
-- Panel (b), `Query-specific temporal compiler`, shows
-  `$\widehat\tau_q$` entering `real LTLf2DFA/MONA construction`, then `signed
-  progress obligations`, `completion and preservation certification`, and
-  `balanced controller rendering`, yielding `$\mathcal Q_q$` and the append
-  equation `$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$`.
+- Panel (b), `DFA-guided query compilation`, begins with a bound eventual tower
+  query
+  `F(on(b1,b2) & on(b2,b3) & on(b3,b4))`, understood as the grounded projection
+  of one typed query invocation. Show one relevant MONA progress edge rather
+  than the complete automaton. Its guard contains exactly those three required
+  `on` literals.
+- Convert that guard into three signed positive obligations. Completion-summary
+  threats induce the bottom-up order `on(b3,b4)`, `on(b2,b3)`, `on(b1,b2)`.
+  An arrow labelled `preservation-safe serialization` connects the obligations
+  to this order.
+- Show the compact balanced transition-repair tree whose leaves follow that
+  fixed order. The tree emits `$\mathcal Q_q$`; end with
+  `$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$`, not a second
+  maintained-library drawing.
 - A single reuse connector carries certified completion summaries from
   `$\mathcal M_D$` to temporal certification. Label it `reuse; no relearning`.
 - Use short noun phrases and the notation already defined in the paper. The
@@ -1016,63 +1026,43 @@ Approved caption:
 > Figure 2: Inside the two GP2PL compiler stages. The query-independent stage
 > normalizes and lifts evidence, constructs and certifies schema-derived
 > candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. The query-specific
-> stage compiles a bound temporal query through its DFA progress obligations,
-> certified preservation constraints, and query-local controller
-> $\mathcal Q_q$, which is appended without relearning the core. The worked
-> cases are separated into Figures 3 and 4.
+> stage is instantiated by a bound Blocks World tower query: a MONA-derived
+> conjunctive progress guard is converted into signed obligations, ordered by
+> completion-effect threats, and rendered as a balanced transition-repair tree.
+> The resulting $\mathcal Q_q$ is appended without relearning the core.
+> Figure 3 separately illustrates execution of the selected atomic core.
 
-### Figure 3: Atomic Lifting Case
+### Figure 3: Selected Atomic-Core Execution Case
 
-Place this single-column figure at the end of Action-Schema Candidate
-Generation, immediately before Candidate Soundness Certificates. It
-instantiates Figure 2(a) with Blocks World:
+Place this single-column figure after Feasible-Core Optimization and immediately
+before DFA-Guided Composition. It demonstrates the result of Figure 2(a), rather
+than repeating candidate construction:
 
-- Start with lifted evidence for `on(X,Y)` and the validated
-  `stack(X,Y)` macro.
-- Show the relevant producible target universe containing `on/2`, `clear/1`,
-  and `holding/1`; label the connection from `stack` requirements as
-  `producer preconditions`.
-- Show three compact candidate rows: already satisfied, direct producer, and
-  recursive preparation via `!clear(Y)`. A longer feasible macro may appear in
-  gray as a higher-cost alternative.
-- End with the selected `+!on(X,Y)` fragment and a visible call edge to a
-  selected `+!clear(Y)` module. The closure statement is `every internal call
-  resolves inside $\mathcal M_D$`.
-- State visually that names are illustrative; construction uses typed schemas
-  and effects, not Blocks-specific rules.
-
-Approved caption:
-
-> Figure 3: Atomic lifting case in Blocks World. Evidence for `on(X,Y)`
-> supplies a validated `stack(X,Y)` macro; the producible target universe
-> additionally admits modules such as `clear/1` and `holding/1`. A direct
-> producer handles the ready context, while certified recursive preparation via
-> `!clear(Y)` covers an obstructed destination. Joint selection retains a
-> compact implementation whose internal call resolves inside $\mathcal M_D$.
-
-### Figure 4: Temporal Composition Case
-
-Place this single-column figure after the signed transition obligation is
-defined and before Conditional Module-Completion Summaries. It instantiates
-Figure 2(b) with the same domain:
-
-- Show the bound eventual tower query and its object binding.
-- Show only the relevant MONA progress edge, whose guard contains the three
-  required `on` literals.
-- Show completion-summary threats inducing the bottom-up order
-  `on(b3,b4)`, `on(b2,b3)`, `on(b1,b2)`.
-- Show the compact balanced repair tree and its output
-  `$\mathcal Q_q$`; end at the append equation rather than drawing another
-  maintained library.
+- Use the unseen state
+  `on(w,z), on(z,y), on(y,x), clear(w), arm_empty` and the invocation
+  `!on(y,z)`.
+- Show the selected variable-level fragments for recursive `clear/1`, direct
+  `clear/1`, recursive preparation of `on/2`, and direct `stack` production.
+  Do not include candidate tables, certificate matrices, or Clingo in this
+  figure.
+- The execution path is
+  `!clear(y) -> !clear(z) -> unstack(w,z); putdown(w) ->
+  unstack(z,y); putdown(z) -> !holding(y) -> unstack(y,x) ->
+  stack(y,z)`.
+- Distinguish achievement-call dispatch from primitive PDDL actions by shape
+  and labels, not color alone. End at `on(y,z)` with a check mark.
+- Use lowercase symbols for state objects and uppercase symbols only inside
+  variable-level AgentSpeak rules. State explicitly that no training object
+  occurs in the selected core.
 
 Approved caption:
 
-> Figure 4: Temporal composition case in Blocks World. For a bound eventual
-> tower query, one MONA progress guard requires three `on` literals to hold
-> together. Conditional completion summaries induce a bottom-up
-> preservation-safe order; the balanced transition-repair tree realizes that
-> fixed order and emits $\mathcal Q_q$. The controller is appended to
-> $\mathcal L_D^{[k]}$ without changing $\mathcal M_D$.
+> Figure 3: Execution of the selected atomic core in Blocks World. From
+> `on(w,z)`, `on(z,y)`, and `on(y,x)`, the goal `!on(y,z)` calls `!clear(y)`.
+> The same `clear/1` module recurs on `z`, decreasing the certified obstruction
+> count before `holding/1` and the direct `stack(y,z)` producer complete the
+> goal. The selected rules contain variables rather than these illustrative
+> object names.
 
 ### Supplementary Figure S1: DFA Transition Compilation and Runtime Monitoring
 
@@ -1286,7 +1276,7 @@ are delivered, assemble the
 multi-asset `aaai_figure_manifest.json` only after recording their dimensions,
 data sources, and embedded fonts. Any font substitution is a release blocker.
 
-Use these LaTeX placements and labels. Figures 2--4 retain visible placeholders
+Use these LaTeX placements and labels. Figures 2--3 retain visible placeholders
 until their colleague-produced vector PDFs are delivered:
 
 ```latex
@@ -1315,15 +1305,6 @@ until their colleague-produced vector PDFs are delivered:
   }{<single-column placeholder>}
   \caption{<approved Figure 3 caption from this outline>}
   \label{fig:atomic-case}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \IfFileExists{\gppltemporalcasepath}{
-    \includegraphics[width=\columnwidth]{\gppltemporalcasepath}
-  }{<single-column placeholder>}
-  \caption{<approved Figure 4 caption from this outline>}
-  \label{fig:temporal-case}
 \end{figure}
 ```
 
@@ -1549,7 +1530,7 @@ than as runner bookkeeping.
 - Use a colorblind-safe palette and redundant shape/line encodings. Figure text
   and mathematical symbols must remain readable in grayscale; never convey a
   certificate or failure state by color alone.
-- Conceptual Figures 2--4 and Supplementary Figure S1 may be authored in
+- Conceptual Figures 2--3 and Supplementary Figure S1 may be authored in
   PowerPoint and exported as vector PDF. Any optional diagnostic plot must be
   regenerated by its checked-in script from frozen records and must not be
   promoted to a main-paper result figure.
