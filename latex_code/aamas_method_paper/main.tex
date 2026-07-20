@@ -81,8 +81,8 @@ bound queries.
 \section{Introduction}
 
 Classical PDDL planning computes an action sequence for one grounded problem
-\cite{McDermott1998PDDL}. Generalized planning instead learns reusable behavior
-for a family of related problems
+\cite{McDermott1998PDDL}; generalized planning learns reusable behavior for a
+family of related problems
 \cite{Srivastava2011DirectedSearch,Chen2026Moose}. A
 Belief--Desire--Intention (BDI) interpreter uses a different representation: a
 plan library that connects events and belief contexts to actions and subsidiary
@@ -90,10 +90,8 @@ goals \cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. Turning a
 generalized policy into such a library is therefore a compilation problem, not
 a change of syntax.
 
-Blocks World is a standard planning domain in which a robot rearranges blocks.
-A lifted achievement $\texttt{on(X,Y)}$ asks that block $X$ rest on block $Y$.
-A learned rule for achieving it may
-use the action \texttt{stack(X,Y)} when the robot is holding $X$ and the
+In Blocks World, a learned rule for the lifted achievement $\texttt{on(X,Y)}$
+may use the action \texttt{stack(X,Y)} when the robot is holding $X$ and the
 destination block is clear. If $Y$ is not clear, however, an executable BDI
 library also needs a reusable plan for making it clear, even when that condition
 never appeared as a training goal. More generally, variables must remain safely
@@ -123,13 +121,12 @@ $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 \end{figure}
 
 Temporally extended goals add a second representation gap
-\cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. A request to place one
-block on another and only later clear a third block constrains a finite state
-trace, not only its final state. Likewise, a conjunctive milestone requires its
-conditions to hold together, so a later plan must not undo an earlier
-achievement. This is a form of BDI goal interference
-\cite{Thangarajah2003GoalInterference}. Safe reuse therefore requires temporal
-control over the fixed domain library and observation after primitive actions.
+\cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}: a request to place one
+block on another and only later clear a third constrains the whole finite
+trace, and a conjunctive milestone must not be undone by a later plan---a form
+of BDI goal interference \cite{Thangarajah2003GoalInterference}. Safe reuse
+therefore requires temporal control over the fixed domain library and
+observation after primitive actions.
 
 The central design choice is reuse: temporal requests extend one maintained
 library instead of triggering a new domain-level learning run. Both compiler
@@ -169,14 +166,14 @@ Third, it appends preservation-safe finite-trace controllers over the fixed
 core and monitors DFA progress after each primitive action.
 \end{samepage}
 
-The experiments separate component effects from complete-system behavior.
-Across \BenchmarkDomainCount{} domains, independently compiled atomic cores
+The experiments separate component effects from complete-system behavior:
+across \BenchmarkDomainCount{} domains, independently compiled atomic cores
 average \AtomicFiveSeedMeanSuccessPercent{}\% held-out coverage over five
-evidence seeds. A fixed-core study validates all \TEGProblemCount{} registered
-temporal queries. These claims concern the declared candidate and formula
-fragments, not complete planning for arbitrary PDDL--\ltlf{} products. Formal
-definitions and proofs appear in Technical Supplement, Secs.~1--2; Sec.~5 gives
-the reporting and reproducibility protocol.
+evidence seeds, and a fixed-core study validates all \TEGProblemCount{}
+registered temporal queries. These claims concern the declared candidate and
+formula fragments, not complete planning for arbitrary PDDL--\ltlf{} products.
+Formal definitions, proofs, and the reporting protocol appear in the Technical
+Supplement.
 
 \input{sections/background}
 \input{sections/related_work}
@@ -188,43 +185,36 @@ the reporting and reproducibility protocol.
 
 GP2PL closes the representation gap by converting generalized-planning evidence
 and PDDL action schemas into a reusable atomic BDI core, then appending
-query-local temporal controllers to the same maintained library.
+query-local temporal controllers to the same maintained library. The output is
+executable in the evaluated AgentSpeak(L)/Jason realization because each
+accepted branch has certified binding, symbolic PDDL executability, target
+achievement, and progress, while selected internal calls resolve within the
+library. Unproved obligations fail compilation rather than becoming unchecked
+plans. Within the certified scope---bound formulas in the declared $F$, $X$,
+strong-$U$, conjunction, and literal-negation syntax whose DFA progress
+obligations admit preservation-safe repairs---the measured component gains and
+\TEGProblemCount{}/\TEGProblemCount{} fixed-core temporal result show that
+certification changes both coverage and controller structure.
 
-The output is executable in the evaluated AgentSpeak(L)/Jason realization
-because each accepted branch has certified binding, symbolic PDDL
-executability, target achievement, and progress, while selected internal calls
-resolve within the library. Unproved obligations fail compilation rather than
-becoming unchecked plans.
-
-The certified temporal scope consists of bound formulas in the declared $F$,
-$X$, strong-$U$, conjunction, and literal-negation syntax whose DFA progress
-obligations admit preservation-safe repairs. Within that scope, the measured
-component gains and \TEGProblemCount{}/\TEGProblemCount{} fixed-core temporal
-result show that certification changes both coverage and controller structure,
-while the conditions below delimit what those results establish.
-
-MOOSE is the only instantiated evidence provider; the
-candidate-construction grammar remains incomplete beyond the implemented
-acyclic, ranking, and keyed-resource certificates, and call closure proves
-type-compatible resolution rather than universal applicability.
-
+Several conditions delimit these results. MOOSE is the only instantiated
+evidence provider; the candidate-construction grammar remains incomplete beyond
+the implemented acyclic, ranking, and keyed-resource certificates; and call
+closure proves type-compatible resolution rather than universal applicability.
 The temporal study uses controlled, witness-backed queries mined from at most
-three actions and a fixed seed-0 atomic core, so it does not measure unrestricted
-language, long-horizon planning, or cross-seed temporal robustness.
-
-Primitive-step monitoring is exact for the declared syntax, but rejected
-arithmetic, interference, and repair cases preclude arbitrary
+three actions and a fixed seed-0 atomic core, so it does not measure
+unrestricted language, long-horizon planning, or cross-seed temporal
+robustness. Primitive-step monitoring is exact for the declared syntax, but
+rejected arithmetic, interference, and repair cases preclude arbitrary
 PDDL--\ltlf{} strategy synthesis.
 
-Future work can use a parameterized PDDL problem generator to broaden evidence
-acquisition through a pinned benchmark source, as in planning competitions
-\cite{Bacchus2001AIPS00}.
-
-After reserving a disjoint held-out split and validating every generated
-problem against $D$, a compatible generalized-planning backend can learn
-evidence from $\mathcal I_{\mathrm{train}}$ for the unchanged GP2PL compiler.
-This scales evidence acquisition and domain onboarding, not the supported
-PDDL--\ltlf{} fragment or representative-coverage guarantees.
+Future work can broaden evidence acquisition through a parameterized,
+pinned PDDL problem generator, as in planning competitions
+\cite{Bacchus2001AIPS00}: after reserving a disjoint held-out split and
+validating every generated problem against $D$, a compatible
+generalized-planning backend can learn evidence from
+$\mathcal I_{\mathrm{train}}$ for the unchanged GP2PL compiler. This scales
+evidence acquisition and domain onboarding, not the supported PDDL--\ltlf{}
+fragment or representative-coverage guarantees.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

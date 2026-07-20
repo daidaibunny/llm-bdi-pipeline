@@ -5,74 +5,63 @@
 Generalized planning seeks compact policies or programs that solve families of
 planning instances
 \cite{Jimenez2019ReviewGeneralizedPlanning,Srivastava2011DirectedSearch,
-Chen2026Moose}.
-Feature approaches learn abstractions or policies from small examples
-\cite{Bonet2018Features,Frances2021LearningGeneralPolicies,
-Bonet2024GeneralPoliciesWidth}. Policy sketches encode serialized subgoal
-structure, with answer-set optimization used to learn compact rules
-\cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches}; PG3 uses lifted
-decision lists \cite{Yang2022PG3}, and BFGP++ uses terminating programs
-\cite{SegoviaAguas2022BFGPpp}. MOOSE learns lifted condition-to-macro rules by
-singleton-goal regression \cite{Chen2026Moose}. These methods learn reusable
-behavior. Recent BDI integrations instead invoke a classical planner at run
-time \cite{Xu2024OperationalSemantics} or use generalized planning directly for
-means--ends reasoning \cite{Meneguzzi2025GeneralisedBDIPlanning}. GP2PL instead
-addresses the representation-compilation problem of transforming
-singleton-goal evidence, together with the domain's producible target universe
-and action-schema-derived candidates, into a query-independent atomic module core
-$\mathcal M_D$ that can be extended by later queries.
+Bonet2018Features,Frances2021LearningGeneralPolicies,
+Bonet2024GeneralPoliciesWidth}, via policy sketches and answer-set optimization
+\cite{Drexler2022LearningSketches,Drexler2024SubgoalSketches}, lifted decision
+lists \cite{Yang2022PG3}, or terminating programs
+\cite{SegoviaAguas2022BFGPpp}; MOOSE learns lifted condition-to-macro rules by
+singleton-goal regression \cite{Chen2026Moose}. Recent BDI integrations invoke
+a classical planner at run time \cite{Xu2024OperationalSemantics} or use
+generalized planning for means--ends reasoning
+\cite{Meneguzzi2025GeneralisedBDIPlanning}. GP2PL instead addresses the
+representation-compilation problem: transforming singleton-goal evidence and
+action-schema-derived candidates into a query-independent atomic module core
+$\mathcal M_D$ that later queries extend.
 
 \paragraph{Modular policies and BDI plan libraries.}
-Policy-reuse languages allow one generalized policy to invoke another with
+Policy-reuse languages let one generalized policy invoke another with
 parameters \cite{Bonet2024PolicyReuse}, motivating internal calls such as
-\texttt{!clear(Y)}. Procedural BDI languages likewise organize behavior as
+\texttt{!clear(Y)}. Procedural BDI languages organize behavior as
 event-triggered plans selected from a context-dependent library
-\cite{MeneguzziDeSilva2015PlanningBDI,DeSilva2020BDIArchitectures}; \asl{}
-formalizes these plans and Jason executes an extension
-\cite{Rao1996AgentSpeak,Bordini2007Jason}. Plan patterns for declarative goals
-recheck intended states after procedural return \cite{Hubner2006DeclarativeGoals};
-plan-failure work separates a failed attempt from continued goal pursuit
-\cite{Sardina2007PlanFailure}. Definite and potential effect summaries detect
-interference between BDI goals \cite{Thangarajah2003GoalInterference}. GP2PL
-adopts these execution principles and derives certified modules,
-conditional module-completion summaries, and declarative completion controllers from
-planning evidence and PDDL schemas.
+\cite{MeneguzziDeSilva2015PlanningBDI,DeSilva2020BDIArchitectures,
+Rao1996AgentSpeak,Bordini2007Jason}, with declarative-goal rechecking
+\cite{Hubner2006DeclarativeGoals}, plan-failure handling
+\cite{Sardina2007PlanFailure}, and effect-summary interference analysis
+\cite{Thangarajah2003GoalInterference}. GP2PL adopts these execution
+principles and derives certified modules, completion summaries, and
+declarative completion controllers from planning evidence and PDDL schemas.
 
 \paragraph{Finite-trace temporal control.}
-\ltlf{} provides finite-trace semantics and admits automata-based reasoning
-\cite{DeGiacomoVardi2013}. We instantiate the automata-theoretic translation
-with the MONA-backed LTLf2DFA construction
-\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Full temporal synthesis
-synthesizes over the domain--automaton product
-\cite{DeGiacomoRubin2018AutomataFOND}. GP2PL instead composes certified repairs
-over an existing BDI library and makes no complete product-synthesis claim.
-Temporally extended goals also have explicit agent-language semantics
-\cite{Hindriks2009TemporalGoals}; we retain standard plan execution and add a
-query-local monitor. Plan4Past motivates holding the underlying planner fixed
-in a temporal comparison \cite{Bonassi2023Plan4Past}. FOND4LTLf
-\cite{DeGiacomoFuggitti2021FOND4LTLf} is therefore a task-level reference on its
-accepted subset, not a compiler ablation.
+\ltlf{} admits automata-based reasoning \cite{DeGiacomoVardi2013}, which we
+instantiate with the MONA-backed LTLf2DFA construction
+\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Full temporal synthesis solves
+the domain--automaton product \cite{DeGiacomoRubin2018AutomataFOND}; GP2PL
+instead composes certified repairs over an existing BDI library and makes no
+complete product-synthesis claim. Temporally extended goals also have explicit
+agent-language semantics \cite{Hindriks2009TemporalGoals}; we retain standard
+plan execution and add a query-local monitor. Following the fixed-planner
+principle of \cite{Bonassi2023Plan4Past}, FOND4LTLf
+\cite{DeGiacomoFuggitti2021FOND4LTLf} is a task-level reference on its accepted
+subset, not a compiler ablation.
 
 \paragraph{Natural-language temporal specifications.}
 Prior systems map natural-language instructions to temporal logic through
 pattern libraries \cite{FuggittiChakraborti2023NL2LTL}, lifted
 language-to-logic translation \cite{Chen2023NL2TL,Guo2025CaStL}, or modular
-grounding \cite{Liu2023Lang2LTL}. Prompt programs can constrain structured
-outputs \cite{BeurerKellner2023Prompting}, but prompt-based parsers remain
-sensitive to input perturbations \cite{Zhuo2023RobustSemanticParsing}. Translation is an
-evaluated input condition here, not a contribution: we validate typed,
+grounding \cite{Liu2023Lang2LTL}; prompt-based parsers remain sensitive to
+input perturbations
+\cite{BeurerKellner2023Prompting,Zhuo2023RobustSemanticParsing}. Translation is
+an evaluated input condition here, not a contribution: we validate typed,
 externally bound parametric \ltlf{} by exact finite-trace language equivalence
 before GP2PL compilation, with the protocol and frozen prompt in the Technical
 Supplement, Sec.~4.
 
 \paragraph{Position of this work.}
 Generalized planners target policies or programs, BDI programming assumes a
-plan library, and temporal synthesis targets an automaton strategy. GP2PL
-connects them through certificate-carrying compilation. The broader
-proof-carrying principle attaches machine-checkable evidence to executable
-artifacts
-\cite{Necula1997ProofCarryingCode}; GP2PL's certificates are narrower symbolic
-planning obligations. GP2PL contributes the certified construction of a
-reusable atomic module core and preservation-safe query plans in the maintained
-BDI library $\mathcal L_D^{[k]}$. Goal regression, answer-set solving,
-AgentSpeak semantics, and \ltlf-to-DFA translation remain prior components.
+plan library, and temporal synthesis targets an automaton strategy; GP2PL
+connects them through certificate-carrying compilation, echoing proof-carrying
+code \cite{Necula1997ProofCarryingCode} with narrower symbolic planning
+obligations. Its contribution is the certified construction of a reusable
+atomic module core and preservation-safe query plans in the maintained BDI
+library $\mathcal L_D^{[k]}$; goal regression, answer-set solving, AgentSpeak
+semantics, and \ltlf-to-DFA translation remain prior components.

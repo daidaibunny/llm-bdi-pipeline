@@ -5,31 +5,20 @@
 
 We use typed STRIPS PDDL plus a bounded-integer resource fragment
 \cite{FikesNilsson1971STRIPS,McDermott1998PDDL,FoxLong2003PDDL21}. A domain is
-$D=\langle\mathcal{P},\mathcal{F},\mathcal{A},\mathcal{T}\rangle$, where
-$\mathcal{P}$ and $\mathcal{F}$ contain predicate schemas and integer-valued
-resource functions, $\mathcal{A}$ contains action schemas, and $\mathcal{T}$ is
-a type hierarchy. A state $s=(s_{\mathcal P},s_{\mathcal F})$ combines Boolean
-and integer valuations. For an applicable grounded action $a$, the Boolean
-successor is
-\[
-\gamma_{\mathcal P}(s,a)=
-(s_{\mathcal P}\setminus\mathit{del}(a))\cup\mathit{add}(a).
-\]
-The numeric component admits finite integer values, comparisons with constants,
-and constant integer increases or decreases; arbitrary arithmetic and
-continuous change are excluded. A problem instance is
-$I=\langle D,O_I,s_I^0,G_I\rangle$, where $O_I$ is its finite typed object set,
-$s_I^0$ its initial state, and $G_I$ its PDDL achievement condition. A
-generalized-planning task supplies finite training and test instance sets that
-share $D$. The formal interface is agnostic to whether those finite sets are
-curated or produced by a parameterized problem generator; their provenance and
-separation remain part of the experimental protocol. MOOSE applies classical
-goal-regression ideas
-\cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton
-goal conditions and
-lifts the resulting plans into first-order condition-to-macro rules
-\cite{Chen2026Moose}. We treat these rules as evidence: they demonstrate
-ways to achieve observed singleton goals, but need not constitute a closed or
+$D=\langle\mathcal{P},\mathcal{F},\mathcal{A},\mathcal{T}\rangle$ with predicate
+schemas, integer-valued resource functions, action schemas, and a type
+hierarchy; a state $s=(s_{\mathcal P},s_{\mathcal F})$ combines Boolean and
+integer valuations under the standard add/delete successor. The numeric
+component admits finite integer values, comparisons with constants, and
+constant integer changes; arbitrary arithmetic and continuous change are
+excluded. A problem instance is $I=\langle D,O_I,s_I^0,G_I\rangle$ with typed
+objects, initial state, and PDDL achievement condition, and a
+generalized-planning task supplies finite training and test instance sets
+sharing $D$. MOOSE applies goal regression
+\cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression} to singleton goals
+and lifts the plans into first-order condition-to-macro rules
+\cite{Chen2026Moose}. We treat these rules as evidence: they demonstrate ways
+to achieve observed singleton goals, but need not constitute a closed or
 compact atomic module core.
 
 \subsection{BDI Plan Libraries and Their AgentSpeak(L) Realization}
@@ -43,53 +32,41 @@ evaluated here \cite{Rao1996AgentSpeak}, an achievement plan is
 where $C$ is a conjunction of beliefs and comparisons and each $b_i$ is a PDDL
 action or an internal achievement call $!q(\bar Y)$. A library is lifted when
 plans contain variables rather than training objects, and internally closed
-when every internal call resolves to a type-compatible selected module.
-Internal-call closure is a signature-resolution property; it does not assert
-that some plan for the call is applicable in every reachable state.
+when every internal call resolves to a type-compatible selected module; closure
+is a signature-resolution property, not per-state applicability.
 
 Our certificates apply to this trigger--context--body model and to the PDDL
 semantics of primitive actions. Formally, a candidate branch is
-$b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$, where $g_b$ is one lifted
-achievement literal, $C_b$ is a conjunctive applicability condition, $\beta_b$
-is a finite body of primitive actions and internal calls, $\Sigma_b$ is a
-conservative conditional module-completion summary, and $\pi_b$ records branch
-provenance. We map selected
-branches to \asl{} and evaluate them with Jason \cite{Bordini2007Jason}; claims
-about another BDI language would require a semantics-preserving translation and
-an independent execution study. Query controllers follow declarative goal
-patterns by rechecking their intended state after subsidiary plans return
-\cite{Hubner2006DeclarativeGoals}.
+$b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$: one lifted achievement
+literal, a conjunctive applicability condition, a finite body of primitive
+actions and internal calls, a conservative conditional module-completion
+summary, and provenance. We map selected branches to \asl{} and evaluate them
+with Jason \cite{Bordini2007Jason}; claims about another BDI language would
+require a semantics-preserving translation and an independent execution study.
+Query controllers follow declarative goal patterns by rechecking their intended
+state after subsidiary plans return \cite{Hubner2006DeclarativeGoals}.
 
 \subsection{Finite-Trace Temporal Goals}
 
 Linear temporal logic over finite traces (\ltlf{}) is interpreted over a
 nonempty finite state sequence \cite{DeGiacomoVardi2013}. For proposition
 alphabet $AP_q$, the declared input language $\Phi_{\mathrm{syn}}$ admits
-literals, conjunction, $F$, $X$, and strong $U$ over $AP_q$; the full grammar
-and finite-trace semantics appear in the Technical Supplement, Sec.~1.
-Negation is restricted to atoms; the serialized syntax writes it as
-\texttt{!}. Both $X$ and $U$ have their strong finite-trace meanings. The
-evaluation family $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains
-instances of the five predeclared profiles in Sec.~\ref{sec:evaluation}, and
-the certificate-supported subset $\Phi_{\mathrm{cert}}$ is defined below.
-Membership in either set is not an action-strategy guarantee.
+literals, conjunction, $F$, $X$, and strong $U$ over $AP_q$, with negation
+restricted to atoms; the full grammar and finite-trace semantics appear in the
+Technical Supplement, Sec.~1. The evaluation family
+$\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains instances of the
+five predeclared profiles in Sec.~\ref{sec:evaluation}; membership in either
+set is not an action-strategy guarantee.
 
-Automata-theoretic planning uses a finite automaton to track temporal progress
-\cite{DeGiacomoRubin2018AutomataFOND}. We construct the deterministic finite
-automaton (DFA)
+Following automata-theoretic planning \cite{DeGiacomoRubin2018AutomataFOND}, we
+construct the deterministic finite automaton (DFA)
 $\mathcal D_q=\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle$
-with LTLf2DFA and MONA
-\cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Here
-$Q_q^{\mathrm{dfa}}$ is the finite state set, $AP_q$ the proposition alphabet,
-$\delta_q$ the deterministic transition function, $q_q^0$ the initial state,
-and $F_q$ the accepting set. The valuation map
-$\mathit{val}_q:\operatorname{States}(D)\rightarrow 2^{AP_q}$ interprets a PDDL
-state over that alphabet. The compiler-supported subset requires certified
-progress transitions. For automaton state $z$, let
-$d_q(z)$ be the shortest directed-path length to $F_q$, or $\infty$ when no
-accepting state is reachable. A progress transition $(q_s,\chi,q_t)$ satisfies
-$d_q(q_t)<d_q(q_s)<\infty$ and has a guard containing
-conjunction and literal negation. A supported guard $\chi$ has normal form
+with LTLf2DFA and MONA \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}, and a
+valuation map $\mathit{val}_q$ interprets a PDDL state over $AP_q$. For
+automaton state $z$, let $d_q(z)$ be the shortest directed-path length to
+$F_q$, or $\infty$ when no accepting state is reachable. A progress transition
+$(q_s,\chi,q_t)$ satisfies $d_q(q_t)<d_q(q_s)<\infty$, and a supported guard
+$\chi$ has normal form
 \[
 \chi=
 \bigwedge_{G\in P_\chi^+}G\ \land\!
@@ -98,19 +75,16 @@ conjunction and literal negation. A supported guard $\chi$ has normal form
 \mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle,
 \]
 where the signed transition obligation $\mathcal O_\chi$ separates positive
-achievements $P_\chi^+$ from atoms $P_\chi^-$ that must remain absent. MONA may
-represent Boolean alternatives by several valuation cubes. GP2PL
-treats each cube as a separate conjunctive guard; several cubes are not one
-disjunctive guard, and the monitor continues to evaluate every original cube.
-An explicit disjunction inside one guard and strategy choice without a
-certificate remain unsupported. The certificate-dependent subset
+achievements from atoms that must remain absent. MONA may represent Boolean
+alternatives by several valuation cubes; GP2PL treats each cube as a separate
+conjunctive guard, and an explicit disjunction inside one guard remains
+unsupported. The certificate-dependent subset
 $\Phi_{\mathrm{cert}}(D,\mathcal M_D)\subseteq\Phi_{\mathrm{syn}}$ contains the
 validated bound formulas whose required DFA progress obligations admit the
-certificates below. The soundness claims apply to this subset; the empirical
-claims apply to accepted members of $\Phi_{\mathrm{bench}}$. A query-local
-monitor evaluates the DFA initially and after every successful primitive PDDL
-action. Arbitrary arithmetic and progress without a certified action strategy
-are outside this fragment.
+certificates of Sec.~\ref{sec:temporal-composition}; soundness claims apply to
+this subset, empirical claims to accepted members of $\Phi_{\mathrm{bench}}$.
+A query-local monitor evaluates the DFA initially and after every successful
+primitive PDDL action.
 
 \subsection{Certified Compilation Problem}
 
@@ -135,17 +109,6 @@ Thus $\mathcal M_D$ is the stable logical core of $\mathcal L_D^{[k]}$, not a
 second persisted library, and appending $\mathcal Q_{q_i}$ neither reconstructs
 nor reoptimizes the atomic core. Throughout, calligraphic symbols denote finite
 sets or structured artifacts; $b$ denotes one candidate branch, $e$ one
-normalized evidence rule, and $\chi$ one DFA transition guard. The Technical Supplement,
-Sec.~1 defines the generated candidate set, certificates, preservation
-portfolios, and transition-repair programs used below.
-
-Positive predicate goals and supported integer equalities require an executable
-achieving module. Negative literals denote absence and preservation, never
-synthetic negative achievement calls. Conjunctive guards require a
-preservation-safe order; mixed Boolean--numeric guards require complete net
-effects for a common final state. Compilation rejects unsupported arithmetic,
-disjunction, cyclic threats without a preserving strategy, and any obligation
-whose effects are incomplete. In the \asl{} realization, static sort-membership
-beliefs may constrain PDDL type compatibility, but no domain-specific typing
-predicate becomes an achievement goal or primitive action. Formal definitions
-and supported-fragment assumptions appear in the Technical Supplement, Sec.~1.
+normalized evidence rule, and $\chi$ one DFA transition guard. The Technical
+Supplement, Sec.~1 gives the formal definitions, supported-fragment
+assumptions, and the acceptance and rejection boundary used below.

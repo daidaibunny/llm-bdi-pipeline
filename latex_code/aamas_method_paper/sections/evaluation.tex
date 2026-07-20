@@ -4,7 +4,7 @@
 The principal comparisons are exact endpoint outcomes over heterogeneous
 domains rather than samples from one continuous difficulty axis. Compact
 main-paper tables therefore report component effects, selected-system
-robustness, and scope-separated external references. The Technical Supplement
+robustness, and scope-separated external references; the Technical Supplement
 preserves every domain--seed cell, temporal profile, runtime distribution, and
 diagnostic classification.
 
@@ -25,35 +25,30 @@ and compact selection of the atomic core.
 Unprotected Serialization uses the same automaton, library, and
 primitive-step monitor without completion-effect analysis. Certified Flat adds
 threat-induced precedence ordering and preservation portfolios; Certified
-Balanced changes only flat control to the balanced binary transition-repair tree. A
-Module-Return Monitor observes only on module return,
-testing the primitive-step observation boundary.
+Balanced changes only flat control to the balanced binary transition-repair
+tree. A Module-Return Monitor observes only on module return, testing the
+primitive-step observation boundary.
 
 \paragraph{End-to-end references.}
 End-to-end evaluation reports valid-trace coverage and keeps one-time
 compilation, query append, and execution costs separate. Raw MOOSE, LAMA,
-ENHSP, and FOND4LTLf with LAMA
+ENHSP MRP+HJ, and FOND4LTLf with LAMA
 \cite{Chen2026Moose,RichterWestphal2010LAMA,
 Scala2020NumericSubgoaling,DeGiacomoFuggitti2021FOND4LTLf} are task-level
-references, not compiler ablations. The MOOSE comparison is partitioned by
-provenance before scoring. For all twelve domains in its original benchmark, we
-report the five-model mean coverage from Table~4 of the extended paper
-\cite{Chen2025MooseExtended}. For all four GP2PL-added domains, we measure Raw
-MOOSE locally over seeds 0--4. We never select a source separately for an
-individual domain after observing its outcome.
+references, not compiler ablations; the MOOSE comparison is partitioned by
+provenance before scoring, as detailed with the external references below.
 
 \subsection{Benchmarks and Protocol}
 
 \paragraph{Corpus and repetitions.}
 The corpus comprises eight classical and four bounded-integer MOOSE domains with
 official splits \cite{Chen2026Moose,DillonZChenMooseDataset}, plus four
-serialized-width families \cite{LipovetzkyGeffner2012Width}. Blocksworld Clear
-and On use published no-constants splits
-\cite{Frances2021LearningGeneralPolicies,
-BonetLearnerPoliciesRepository}; Tower uses the first quarter of a fixed IPC
-corpus \cite{Bacchus2001AIPS00,PotasscoPDDLInstances}, and Depots the first half
-of the 22-instance D2L corpus
-\cite{Bonet2018Features,RLeapD2LRepository}. Groups are used only for reporting.
+serialized-width families \cite{LipovetzkyGeffner2012Width}: Blocksworld Clear
+and On with published no-constants splits
+\cite{Frances2021LearningGeneralPolicies,BonetLearnerPoliciesRepository},
+Tower on the first quarter of a fixed IPC corpus
+\cite{Bacchus2001AIPS00,PotasscoPDDLInstances}, and Depots on the first half
+of the 22-instance D2L corpus \cite{Bonet2018Features,RLeapD2LRepository}.
 Following MOOSE \cite{Chen2026Moose}, the atomic study uses all training
 instances and three goal orders to compile five independently seeded atomic
 cores. Source revisions, split construction, resource limits, and reporting
@@ -65,53 +60,31 @@ achievement goal and derives candidate temporal milestones from legal,
 state-changing, nonrepeating rollouts of at most three actions; it invokes no
 planner. Predicate and bounded-integer changes instantiate five predeclared
 profiles: $F(A\land B)$, $F(A\land\neg B)$, $F(A\land X(F(B)))$,
-$F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$.
-For example, a witness that first establishes \texttt{holding(b1)} and later
-\texttt{on(b1,b4)} yields the lifted formula
-$F(\mathit{holding}(X)\land X(F(\mathit{on}(X,Y))))$ under a typed hidden
-binding.
+$F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$. For example, a witness
+that first establishes \texttt{holding(b1)} and later \texttt{on(b1,b4)}
+yields $F(\mathit{holding}(X)\land X(F(\mathit{on}(X,Y))))$ under a typed
+hidden binding. Each candidate retains a legal witness, and selection balances
+profile and semantic-signature use under a symbol-independent tie-break,
+yielding one witness-backed query per held-out problem: 1,228 queries over 475
+distinct translation inputs. The complete construction and registered bounds
+appear in the Technical Supplement, Sec.~4.1.
 
-Each candidate retains a legal witness. Its objects are lifted to typed
-parameters, and selection balances profile use and alpha-normalized
-semantic-signature use before applying a symbol-independent tie-break. The
-resulting benchmark contains one witness-backed query for each of the 1,228
-test problems. Requests with identical translation inputs and agreeing hidden
-semantics are translated once, yielding 475 distinct translation inputs while
-retaining all 1,228 queries for execution. The complete construction and
-registered bounds appear in the Technical Supplement, Sec.~4.1.
-
-\paragraph{Controlled inputs and references.}
+\paragraph{Controlled inputs and validation.}
 Atomic variants share each seed's evidence; temporal variants are paired on the
-same atomic core, binding, and DFA. MOOSE reuses its learned model; LAMA
-\cite{RichterWestphal2010LAMA} and ENHSP MRP+HJ
-\cite{Scala2020NumericSubgoaling} are the classical and numeric references used
-by MOOSE \cite{Chen2026Moose}. FOND4LTLf
-\cite{DeGiacomoFuggitti2021FOND4LTLf} with LAMA covers its accepted grounded
-Boolean subset.
-The published and locally measured MOOSE rows use preregistered disjoint scopes;
-their source labels and reporting boundaries are given with the external
-references after the GP2PL results.
-
-\paragraph{Validation and measures.}
-A temporal success requires Jason completion \cite{Bordini2007Jason}, VAL
-accepts the full primitive trace against a neutral PDDL goal
-\cite{Howey2004VAL}, and independent replay is accepted by both DFAs. Atomic
-validation instead uses the original PDDL goal. We report internal-call closure,
-held-out success, library size, runtime, action count, and trigger fan-out; plan
-length uses jointly solved instances. Coverage is credited only to VAL-valid
-traces, and all failures remain in the denominator.
-The generated tables report paired component effects, full-system robustness,
-temporal profiles, and external scope separately. The Technical Supplement
-preserves every domain--seed cell, diagnostic, and fixed temporal input. The
-result subsections first isolate component effects, then evaluate the selected
-system, and finally place the external references in context.
+same atomic core, binding, and DFA. A temporal success requires Jason
+completion \cite{Bordini2007Jason}, VAL acceptance of the full primitive trace
+against a neutral PDDL goal \cite{Howey2004VAL}, and independent replay
+accepted by both the gold and predicted DFAs; atomic validation instead uses
+the original PDDL goal. Coverage is credited only to VAL-valid traces, and all
+failures remain in the denominator.
 
 Atomic totals contain five seeded outcomes for each held-out case identifier.
 For inference, we average the paired binary difference within each identifier
 and apply a two-sided exact sign test to the nonzero case-level differences.
-Temporal queries share domains and, in some cases, one of 475 translated inputs;
-we therefore report discordant counts and domain concentration without a
-case-level $p$-value. Runtime, plan length, and library size remain descriptive.
+Temporal queries share domains and, in some cases, one of 475 translated
+inputs; we therefore report discordant counts and domain concentration without
+a case-level $p$-value. Runtime, plan length, and library size remain
+descriptive.
 
 \subsection{Paired Component Ablations}
 \label{sec:paired-ablation-results}
@@ -120,19 +93,16 @@ case-level $p$-value. Runtime, plan length, and library size remain descriptive.
 
 All four atomic variants compile all 80 seed--domain libraries. Evidence Only
 reaches \AtomicEvidenceOnlyCoveredTargetCount{}/365 producible predicates,
-whereas every schema-expanded variant reaches 365/365. Direct Producers differs
-from Evidence Only on one execution, reflecting AgentSpeak plan choice rather
-than an infrastructure failure.
+whereas every schema-expanded variant reaches 365/365.
 
 The decisive atomic change is certified recursive candidate generation. Maximum
 Feasible adds \AtomicDirectToMaximumValidGain{} valid executions over Direct
-Producers, an increase of 10.42 percentage points. All 640 seed--case gains
-occur in the four GP2PL-added serialized-width domains.
-
-After aggregating the five seeded outcomes within each identifier, there are
-130 nonzero case-level differences, all favoring Maximum Feasible. The
-two-sided exact sign test gives $p=1.47\times10^{-39}$, so the conclusion does
-not rely on treating repeated seed--case outcomes as independent.
+Producers, an increase of 10.42 percentage points, with all 640 seed--case
+gains in the four GP2PL-added serialized-width domains. After aggregating the
+five seeded outcomes within each identifier, all 130 nonzero case-level
+differences favor Maximum Feasible; the two-sided exact sign test gives
+$p=1.47\times10^{-39}$, so the conclusion does not rely on treating repeated
+seed--case outcomes as independent.
 
 Full GP2PL preserves the full Maximum Feasible success set while selecting a
 more compact core, removing \AtomicFullBranchReduction{} mean branches and
@@ -144,38 +114,30 @@ coverage, a one-time offline compilation reused by every later query.
 
 Completion-effect ordering and preservation portfolios produce a net gain of
 \TemporalUnprotectedToFlatValidGain{} valid traces, or 9.28 percentage points,
-over Unprotected Serialization. Of the discordant queries,
-\TemporalUnprotectedToFlatRightOnlyValidCount{} favor Certified Flat and
-\TemporalUnprotectedToFlatLeftOnlyValidCount{} favors the unprotected
-controller. Four bounded-integer domains account for 113 of the 114 net
-temporal gains, locating the observed benefit in preservation-sensitive numeric
-composition rather than uniformly across the corpus.
+over Unprotected Serialization
+(\TemporalUnprotectedToFlatRightOnlyValidCount{} discordant queries favor
+Certified Flat, \TemporalUnprotectedToFlatLeftOnlyValidCount{} the unprotected
+controller). Four bounded-integer domains account for 113 of the 114 net
+gains, locating the benefit in preservation-sensitive numeric composition.
 
 Certified Flat and Certified Balanced have the same
-\TemporalCertifiedBalancedValidCount{}-case success set.
-
-Balancing therefore receives no semantic credit. It increases the median
-controller size from 7 to 13 plans and PAR-2 from 8.0 to 8.6 seconds, while
-reducing maximum transition-repair fan-out from
-\TemporalCertifiedFlatFanout{} to \TemporalCertifiedBalancedFanout{}. We
-select Balanced for this structural bound, not for coverage or runtime. A
-direct linear realization would retain the certified order but move the
-unbounded term into one plan body; binary dispatch instead bounds both trigger
-fan-out and individual body length.
+\TemporalCertifiedBalancedValidCount{}-case success set, so balancing receives
+no semantic credit: it increases the median controller size from 7 to 13 plans
+and PAR-2 from 8.0 to 8.6 seconds while reducing maximum transition-repair
+fan-out from \TemporalCertifiedFlatFanout{} to
+\TemporalCertifiedBalancedFanout{}. We select Balanced for this structural
+bound, not for coverage or runtime.
 
 Moving observation from primitive steps to module return loses
-\TemporalBalancedToModuleReturnLeftOnlyValidCount{} valid traces. Module-Return
-Monitor records
-\TemporalModuleReturnJasonTimeoutCount{} Jason timeouts,
-\TemporalModuleReturnJasonFailedCount{} Jason failure, and
-\TemporalModuleReturnGoldDFARejectedCount{} gold-DFA rejection. The shared
+\TemporalBalancedToModuleReturnLeftOnlyValidCount{} valid traces
+(\TemporalModuleReturnJasonTimeoutCount{} Jason timeouts,
+\TemporalModuleReturnJasonFailedCount{} Jason failure,
+\TemporalModuleReturnGoldDFARejectedCount{} gold-DFA rejection). The shared
 Certified Flat/Balanced failure is a strategy-choice boundary: the selected
-branch leaves the monitor in its source state. The Technical Supplement records
-the case identifier and complete diagnostic.
-
-The paired matrix conditions on its same-run seed-0 Full GP2PL library. Its
-Certified Balanced row is an ablation estimate; the next subsection evaluates
-the separately preregistered full-system configuration.
+branch leaves the monitor in its source state. The paired matrix conditions on
+its same-run seed-0 Full GP2PL library; its Certified Balanced row is an
+ablation estimate, and the next subsection evaluates the separately
+preregistered full-system configuration.
 
 \subsection{Full-System Coverage and Robustness}
 \label{sec:full-system-results}
@@ -185,81 +147,69 @@ the separately preregistered full-system configuration.
 Across five independently compiled atomic cores, mean held-out coverage is
 \AtomicFiveSeedMeanSuccessPercent{}\% $\pm$
 \AtomicFiveSeedSampleSDPercent{} percentage points. Fourteen of the sixteen
-domains are complete. Table~\ref{tab:five-seed-atomic} aggregates exactly the
+domains are complete; Table~\ref{tab:five-seed-atomic} aggregates exactly the
 domains complete in every seed and shows each varying domain separately.
-
-Variation is concentrated in Logistics and Depots. In Logistics, seeded goal
-order changes the available cross-mode provider macros; the remaining producer
-dependency is cyclic and lacks a decreasing certificate.
-
-Depots requires a nested support-resource choice beyond the current
-bound-capacity certificate. These failures delimit candidate construction;
-every reported success still satisfies original-goal VAL.
-
-No domain-specific rule was introduced after observing held-out outcomes.
-Table~\ref{tab:five-seed-atomic} gives the non-pooled summary; the Technical
-Supplement, Sec.~5.3 gives every domain--seed diagnostic.
+Variation is concentrated in Logistics, where seeded goal order changes the
+available cross-mode provider macros and the remaining producer dependency is
+cyclic without a decreasing certificate, and in Depots, which requires a
+nested support-resource choice beyond the current bound-capacity certificate.
+These failures delimit candidate construction; every reported success still
+satisfies original-goal VAL, and no domain-specific rule was introduced after
+observing held-out outcomes. The Technical Supplement, Sec.~5.3 gives every
+domain--seed diagnostic.
 
 \input{sections/result_five_seed_atomic_table}
 
 \paragraph{End-to-end temporal validation.}
 \label{sec:end-to-end-results}
 The protocol exposes the public PDDL vocabulary, typed parameters, and binding
-constraints. It admits $F$, $X$, strong $U$, conjunction, and literal negation.
+constraints; the five registered structures instantiate
+$\Phi_{\mathrm{bench}}$ rather than exhausting $\Phi_{\mathrm{syn}}$, and
+execution includes only queries admitted to
+$\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. GPT-5.5
+\cite{OpenAI2026GPT55SystemCard} translates \TranslationInputCount{}
+deduplicated specifications; every accepted translation passes typed
+validation and exact finite-trace language equivalence, yielding
+\TEGProblemCount{} bound queries.
 
-The five registered structures instantiate $\Phi_{\mathrm{bench}}$, rather
-than exhausting $\Phi_{\mathrm{syn}}$. Execution includes only queries admitted
-to $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$.
-
-The controlled source utterances define the evaluation distribution, not a
-required user grammar.
-
-GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates
-\TranslationInputCount{} deduplicated specifications. Every accepted
-translation passes typed validation and exact finite-trace language
-equivalence, yielding \TEGProblemCount{} bound queries.
-
-All \TEGProblemCount{} queries satisfy the end-to-end criterion: Jason completes,
-all \TEGVALSuccessCount{} nonempty traces pass VAL, and both DFAs accept all
-\TEGGoldDFAAcceptCount{} traces.
-
-Runtime is \TEGMedianRuntimeSeconds{} seconds median (interquartile range
-4.28--8.49); action count is \TEGMedianActionCount{} median (interquartile
-range 1--2).
+All \TEGProblemCount{} queries satisfy the end-to-end criterion: Jason
+completes, all \TEGVALSuccessCount{} nonempty traces pass VAL, and both DFAs
+accept all \TEGGoldDFAAcceptCount{} traces. Runtime is
+\TEGMedianRuntimeSeconds{} seconds median (interquartile range 4.28--8.49);
+action count is \TEGMedianActionCount{} median (interquartile range 1--2).
 
 \input{sections/result_temporal_summary_table}
 
 Unlike the paired estimate above, this study fixes one preregistered seed-0
 atomic core per domain and obtains \TEGProblemCount{}/\TEGProblemCount{}. It
 supports neither cross-seed claims nor arbitrary PDDL--\ltlf{} completeness.
-
 The translation protocol appears in the Technical Supplement, Sec.~4.2;
 Sec.~5.3 gives semantic-conformance cases, distributions, and provenance.
 
 \subsection{External Planning References}
 \label{sec:external-references}
 
-The published MOOSE row is coverage-only: it is labelled Reported rather than
-locally reproduced, and its time and memory are not compared across hardware.
-The local Raw MOOSE extension row is labelled Measured over five models.
-
-The original and added scopes contain 1,080 and 148 cases per seed. Across the
-four added domains, Raw MOOSE obtains \RawMooseExtensionMeanPercent{}\%
-$\pm$ \RawMooseExtensionSDPercent{} percentage points.
-
-On the same 740 added-domain seed--case evaluations, Full GP2PL validates
-720/740 traces, whereas Raw MOOSE validates 117/740. This descriptive
+The published MOOSE row (five-model mean coverage from Table~4 of the extended
+paper \cite{Chen2025MooseExtended}) is coverage-only, labelled Reported rather
+than locally reproduced, and its time and memory are not compared across
+hardware;
+the local Raw MOOSE extension row is labelled Measured over five models. The
+original and added scopes contain 1,080 and 148 cases per seed, and the source
+for each scope was preregistered, never selected per domain after observing
+outcomes. Across the four added domains, Raw MOOSE obtains
+\RawMooseExtensionMeanPercent{}\% $\pm$ \RawMooseExtensionSDPercent{}
+percentage points; on the same 740 added-domain seed--case evaluations, Full
+GP2PL validates 720/740 traces versus 117/740 for Raw MOOSE. This descriptive
 same-scope contrast isolates the practical value of compiling evidence into a
 closed recursive library on the serialized-width families.
 
 \input{sections/result_same_scope_evidence_table}
 
 The published original-domain scope and the added-domain scope are disjoint, so
-their coverage levels are not a same-instance comparison. Moreover, published
+their coverage levels are not a same-instance comparison; moreover, published
 Raw MOOSE coverage on its original 12-domain scope is already near ceiling. We
 therefore claim improved structural coverage on the added families, not
 universal dominance wherever Raw MOOSE already saturates.
-
 Table~\ref{tab:added-scope-evidence} is the only same-scope external contrast
-in the main paper. The Technical Supplement keeps the remaining reference
+in the main paper; the Technical Supplement keeps the remaining reference
 scopes separate and does not rank rows drawn from different case sets.
