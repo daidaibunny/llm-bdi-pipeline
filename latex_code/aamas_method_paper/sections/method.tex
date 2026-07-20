@@ -223,7 +223,6 @@ safe use requires different nested precondition-repair branch sets: if one
 \texttt{at/2} producer preserves a ranked relation and another may increase it,
 static role names alone do not prove that their object sets are disjoint, and
 the compiler neither recognizes those names nor assumes disjointness.
-
 Figure~\ref{fig:atomic-case} isolates how the selected variable-level core is
 instantiated in a Blocks World state not encoded in its rules.
 
@@ -266,7 +265,6 @@ transitions
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. GP2PL attaches a controller to
 each progress edge $(q_s,\chi,q_t)$ with
 $d_q(q_t)<d_q(q_s)<\infty$; an accepting \texttt{true} self-loop needs none.
-
 Same-source/same-target valuation cubes may share a common achievement
 objective, but each remains a separate conjunctive alternative in MONA's
 transition relation (Sec.~\ref{sec:background}), and the monitor evaluates
@@ -332,10 +330,9 @@ preparation carries its own well-founded ranking (a lexicographic pair of the
 missing-precondition count and the bounded target deficit), and strong-Until
 sources preserve their non-progress self-loop invariants until the single
 progress step; the ranking, invariants, and their termination proof appear in
-the Technical Supplement, Sec.~2.
-
-Inserted auxiliary variables are alpha-renamed away from query and producer
-variables, preventing textual collisions from imposing unrelated constraints.
+the Technical Supplement, Sec.~2. Inserted auxiliary variables are
+alpha-renamed away from query and producer variables, preventing textual
+collisions from imposing unrelated constraints.
 
 \subsection{Balanced Binary Transition-Repair Trees}
 \label{sec:balanced-trees}

@@ -155,17 +155,12 @@ atomic core.}
 \label{fig:compiler-stages}
 \end{figure*}
 
-\begin{samepage}
-GP2PL makes three contributions. First, it compiles singleton-goal evidence and
-PDDL schemas into an internally closed BDI core with modules for omitted
-producible subgoals.
-
-Second, it accepts only branches with certificates for binding, symbolic
-execution, achievement, completion effects, and progress.
-
-Third, it appends preservation-safe finite-trace controllers over the fixed
-core and monitors DFA progress after each primitive action.
-\end{samepage}
+GP2PL makes three contributions: it compiles singleton-goal evidence and PDDL
+schemas into an internally closed BDI core with modules for omitted producible
+subgoals; it accepts only branches carrying certificates for binding, symbolic
+execution, achievement, completion effects, and progress; and it appends
+preservation-safe finite-trace controllers over the fixed core, monitoring DFA
+progress after each primitive action.
 
 The experiments separate component effects from complete-system behavior:
 across \BenchmarkDomainCount{} domains, independently compiled atomic cores

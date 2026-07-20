@@ -82,58 +82,37 @@ Atomic totals contain five seeded outcomes for each held-out case identifier.
 For inference, we average the paired binary difference within each identifier
 and apply a two-sided exact sign test to the nonzero case-level differences.
 Temporal queries share domains and, in some cases, one of 475 translated
-inputs; we therefore report discordant counts and domain concentration without
-a case-level $p$-value. Runtime, plan length, and library size remain
-descriptive.
+inputs; we therefore report domain concentration rather than a case-level
+$p$-value, with per-query discordance in the Technical Supplement. Runtime,
+plan length, and library size remain descriptive.
 
 \subsection{Paired Component Ablations}
 \label{sec:paired-ablation-results}
 
 \input{sections/result_atomic_comparison_table}
 
-All four atomic variants compile all 80 seed--domain libraries. Evidence Only
-reaches \AtomicEvidenceOnlyCoveredTargetCount{}/365 producible predicates,
-whereas every schema-expanded variant reaches 365/365.
-
-The decisive atomic change is certified recursive candidate generation. Maximum
-Feasible adds \AtomicDirectToMaximumValidGain{} valid executions over Direct
-Producers, an increase of 10.42 percentage points, with all 640 seed--case
-gains in the four GP2PL-added serialized-width domains. After aggregating the
-five seeded outcomes within each identifier, all 130 nonzero case-level
-differences favor Maximum Feasible; the two-sided exact sign test gives
-$p=1.47\times10^{-39}$, so the conclusion does not rely on treating repeated
-seed--case outcomes as independent.
-
-Full GP2PL preserves the full Maximum Feasible success set while selecting a
-more compact core, removing \AtomicFullBranchReduction{} mean branches and
-\AtomicFullLibraryKiBReduction{} mean KiB (2.2\% and 1.7\%). Clingo's
-lexicographic objective thus yields the smallest certified library at equal
-coverage, a one-time offline compilation reused by every later query.
+The decisive atomic change is certified recursive candidate generation: its
+10.42-percentage-point gain in Table~\ref{tab:atomic-comparison} concentrates
+entirely in the four GP2PL-added serialized-width domains. The gain survives
+case-level aggregation: after averaging the five seeded outcomes within each
+identifier, every nonzero difference favors the recursive variants, and the
+two-sided exact sign test gives $p=1.47\times10^{-39}$, so the conclusion does
+not rely on treating repeated seed--case outcomes as independent. At equal
+coverage, Clingo's lexicographic objective yields the smallest certified
+library, a one-time offline compilation reused by every later query.
 
 \input{sections/result_temporal_comparison_table}
 
-Completion-effect ordering and preservation portfolios produce a net gain of
-\TemporalUnprotectedToFlatValidGain{} valid traces, or 9.28 percentage points,
-over Unprotected Serialization
-(\TemporalUnprotectedToFlatRightOnlyValidCount{} discordant queries favor
-Certified Flat, \TemporalUnprotectedToFlatLeftOnlyValidCount{} the unprotected
-controller). Four bounded-integer domains account for 113 of the 114 net
-gains, locating the benefit in preservation-sensitive numeric composition.
-
-Certified Flat and Certified Balanced have the same
-\TemporalCertifiedBalancedValidCount{}-case success set, so balancing receives
-no semantic credit: it increases the median controller size from 7 to 13 plans
-and PAR-2 from 8.0 to 8.6 seconds while reducing maximum transition-repair
-fan-out from \TemporalCertifiedFlatFanout{} to
-\TemporalCertifiedBalancedFanout{}. We select Balanced for this structural
-bound, not for coverage or runtime.
-
-Moving observation from primitive steps to module return loses
-\TemporalBalancedToModuleReturnLeftOnlyValidCount{} valid traces
-(\TemporalModuleReturnJasonTimeoutCount{} Jason timeouts,
-\TemporalModuleReturnJasonFailedCount{} Jason failure,
-\TemporalModuleReturnGoldDFARejectedCount{} gold-DFA rejection). The shared
-Certified Flat/Balanced failure is a strategy-choice boundary: the selected
+Completion-effect ordering and preservation portfolios drive the
+9.28-percentage-point gain over Unprotected Serialization in
+Table~\ref{tab:temporal-comparison}, concentrated almost entirely in the four
+bounded-integer domains: the benefit lies in preservation-sensitive numeric
+composition, not uniformly across the corpus. Certified Flat and Certified
+Balanced share an identical success set, so balancing receives no semantic
+credit; we select Balanced for its structural fan-out bound, not for coverage
+or runtime. Moving observation from primitive steps to module return loses
+valid traces, chiefly through Jason timeouts, and the single shared
+Flat/Balanced failure is a strategy-choice boundary in which the selected
 branch leaves the monitor in its source state. The paired matrix conditions on
 its same-run seed-0 Full GP2PL library; its Certified Balanced row is an
 ablation estimate, and the next subsection evaluates the separately
@@ -146,17 +125,16 @@ preregistered full-system configuration.
 \label{sec:atomic-results}
 Across five independently compiled atomic cores, mean held-out coverage is
 \AtomicFiveSeedMeanSuccessPercent{}\% $\pm$
-\AtomicFiveSeedSampleSDPercent{} percentage points. Fourteen of the sixteen
-domains are complete; Table~\ref{tab:five-seed-atomic} aggregates exactly the
-domains complete in every seed and shows each varying domain separately.
-Variation is concentrated in Logistics, where seeded goal order changes the
-available cross-mode provider macros and the remaining producer dependency is
-cyclic without a decreasing certificate, and in Depots, which requires a
-nested support-resource choice beyond the current bound-capacity certificate.
-These failures delimit candidate construction; every reported success still
-satisfies original-goal VAL, and no domain-specific rule was introduced after
-observing held-out outcomes. The Technical Supplement, Sec.~5.3 gives every
-domain--seed diagnostic.
+\AtomicFiveSeedSampleSDPercent{} percentage points
+(Table~\ref{tab:five-seed-atomic}). The residual variation concentrates in
+Logistics, where seeded goal order changes the available cross-mode provider
+macros and the remaining producer dependency is cyclic without a decreasing
+certificate, and in Depots, which requires a nested support-resource choice
+beyond the current bound-capacity certificate. These failures delimit
+candidate construction; every reported success still satisfies original-goal
+VAL, and no domain-specific rule was introduced after observing held-out
+outcomes. The Technical Supplement, Sec.~5.3 gives every domain--seed
+diagnostic.
 
 \input{sections/result_five_seed_atomic_table}
 
@@ -167,24 +145,19 @@ constraints; the five registered structures instantiate
 $\Phi_{\mathrm{bench}}$ rather than exhausting $\Phi_{\mathrm{syn}}$, and
 execution includes only queries admitted to
 $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. GPT-5.5
-\cite{OpenAI2026GPT55SystemCard} translates \TranslationInputCount{}
-deduplicated specifications; every accepted translation passes typed
-validation and exact finite-trace language equivalence, yielding
-\TEGProblemCount{} bound queries.
-
-All \TEGProblemCount{} queries satisfy the end-to-end criterion: Jason
-completes, all \TEGVALSuccessCount{} nonempty traces pass VAL, and both DFAs
-accept all \TEGGoldDFAAcceptCount{} traces. Runtime is
-\TEGMedianRuntimeSeconds{} seconds median (interquartile range 4.28--8.49);
-action count is \TEGMedianActionCount{} median (interquartile range 1--2).
+\cite{OpenAI2026GPT55SystemCard} translates the \TranslationInputCount{}
+deduplicated specifications; Table~\ref{tab:temporal-summary} reports
+translation and end-to-end validity. Runtime is
+\TEGMedianRuntimeSeconds{} seconds median (interquartile range 4.28--8.49) and
+action count \TEGMedianActionCount{} median (interquartile range 1--2).
 
 \input{sections/result_temporal_summary_table}
 
 Unlike the paired estimate above, this study fixes one preregistered seed-0
-atomic core per domain and obtains \TEGProblemCount{}/\TEGProblemCount{}. It
-supports neither cross-seed claims nor arbitrary PDDL--\ltlf{} completeness.
-The translation protocol appears in the Technical Supplement, Sec.~4.2;
-Sec.~5.3 gives semantic-conformance cases, distributions, and provenance.
+atomic core per domain; its full coverage supports neither cross-seed claims
+nor arbitrary PDDL--\ltlf{} completeness. The translation protocol appears in
+the Technical Supplement, Sec.~4.2; Sec.~5.3 gives semantic-conformance cases,
+distributions, and provenance.
 
 \subsection{External Planning References}
 \label{sec:external-references}
@@ -196,12 +169,9 @@ hardware;
 the local Raw MOOSE extension row is labelled Measured over five models. The
 original and added scopes contain 1,080 and 148 cases per seed, and the source
 for each scope was preregistered, never selected per domain after observing
-outcomes. Across the four added domains, Raw MOOSE obtains
-\RawMooseExtensionMeanPercent{}\% $\pm$ \RawMooseExtensionSDPercent{}
-percentage points; on the same 740 added-domain seed--case evaluations, Full
-GP2PL validates 720/740 traces versus 117/740 for Raw MOOSE. This descriptive
-same-scope contrast isolates the practical value of compiling evidence into a
-closed recursive library on the serialized-width families.
+outcomes. On the added serialized-width families, the descriptive same-scope
+contrast in Table~\ref{tab:added-scope-evidence} isolates the practical value
+of compiling evidence into a closed recursive library.
 
 \input{sections/result_same_scope_evidence_table}
 
