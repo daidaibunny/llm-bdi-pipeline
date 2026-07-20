@@ -483,6 +483,38 @@ update query-local monitor beliefs. Atomic module return is not the semantic
 observation boundary of the full method.
 \end{assumption}
 
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}
+>{\raggedright\arraybackslash}p{0.22\columnwidth}
+>{\raggedright\arraybackslash}p{0.31\columnwidth}
+>{\raggedright\arraybackslash}p{0.39\columnwidth}@{}}
+\toprule
+Construct & Accepted strategy & Rejection boundary \\
+\midrule
+Positive predicate & Certified atomic module & No executable achieving branch \\
+Numeric equality & Bounded constant-integer progress & Unsupported arithmetic or
+incomplete numeric effect \\
+Positive conjunction & Threat-safe serialization & Incomplete effects or cyclic
+threats \\
+Negative predicate & Observe absence or use an exact certified deleter & Synthetic
+negated achievement or possible re-addition \\
+Mixed Boolean and numeric guard & Complete net-effect and preservation certificate &
+Incomplete mixed-effect certificate \\
+Boolean alternatives & Separate conjunctive MONA cubes & Explicit disjunction in
+the input or one cube; uncertified strategy choice \\
+Primitive-state safety & DFA monitor after every primitive action & Completion-only
+observation \\
+\bottomrule
+\end{tabular}
+\caption{Supported compilation fragment and fail-closed boundary. Rejection
+means that GP2PL emits a structured diagnostic rather than an uncertified
+controller or synthetic atomic goal.}
+\label{tab:supported-fragment}
+\end{table}
+
 \section{Complete Proofs}
 \label{app:proofs}
 
