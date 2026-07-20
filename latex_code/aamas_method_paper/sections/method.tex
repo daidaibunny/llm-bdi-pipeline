@@ -3,6 +3,15 @@
 
 \subsection{Method Overview}
 
+An executable BDI library needs four properties to hold at once: every plan
+variable is bound, every primitive body is executable, every internal call
+resolves to a selected module, and every recursion makes progress. GP2PL turns
+each property into a compile-time, machine-checkable proof obligation and emits
+a structured diagnostic rather than an uncertified controller whenever an
+obligation fails. Building the library is therefore not transcription but
+construction under proof: we generate candidate branches, keep only those
+whose obligations discharge, and select a feasible core from what survives.
+
 GP2PL first maps
 $D,\mathcal{I}_{\mathrm{train}},\mathcal E_{\mathrm{raw}}
 \longrightarrow\mathcal{M}_D$,
@@ -104,6 +113,11 @@ literal.
 
 \subsection{Action-Schema Candidate Generation}
 
+Evidence only covers goals the provider was trained on, so internal calls such
+as $!\mathit{clear}(Y)$ have no realizing rule and internal-call closure fails
+by construction. We therefore synthesize the missing candidates directly from
+the action schemas: whichever obligation must hold decides what is generated,
+independent of whether the provider ever observed the goal.
 Let $\operatorname{goalPred}(E)$ contain the predicate symbols targeted by
 positive predicate evidence, and let
 \[
