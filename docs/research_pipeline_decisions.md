@@ -489,18 +489,19 @@ mismatches produce a diagnostic instead of a PNG. The manuscript label for
 `validated_evidence_adapter` remains `Evidence Only`.
 
 The main visual program separates abstraction from instantiation. Figure 1
-states the representation bridge, Figure 2 exposes only the two compiler-stage
-flows, and two single-column case figures instantiate atomic lifting and
-temporal composition locally in their respective method sections. The detailed
-Blocks World candidates, AgentSpeak fragments, DFA guard, threat order, and
-repair tree must not be crowded back into the high-level Figure 2. Main-paper
-results use exact generated tables; per-profile, per-domain, per-seed, runtime,
-and diagnostic views belong in the Technical Supplement. The main paper's
-external comparison is restricted to the identical 740 added-domain seed--case
-evaluations for Raw MOOSE evidence and Full GP2PL. The complete
-scope-separated MOOSE, LAMA, MRP+HJ, and FOND4LTLf reference matrix remains in
-the Technical Supplement, avoiding a cross-scope ranking and a page-breaking
-double-column float.
+states the representation bridge. Figure 2 exposes both compiler-stage flows,
+while its temporal half embeds one bound Blocks World tower guard, the induced
+preservation order, and the balanced transition-repair tree. This concrete
+right-hand chain prevents the DFA-guided compiler from being represented only
+by unexplained process boxes. Figure 3 separately shows execution of the
+selected variable-level atomic core on an unseen Blocks stack and is placed
+after feasible-core optimization. Main-paper results use exact generated
+tables; per-profile, per-domain, per-seed, runtime, and diagnostic views belong
+in the Technical Supplement. The main paper's external comparison is restricted
+to the identical 740 added-domain seed--case evaluations for Raw MOOSE evidence
+and Full GP2PL. The complete scope-separated MOOSE, LAMA, MRP+HJ, and
+FOND4LTLf reference matrix remains in the Technical Supplement, avoiding a
+cross-scope ranking and a page-breaking double-column float.
 
 Machine-readable artifacts retain stable identifiers such as
 `validated_evidence_adapter` and `certified_balanced`. Manuscript tables and

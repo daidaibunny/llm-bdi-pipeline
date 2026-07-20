@@ -39,7 +39,6 @@ Libraries for Temporally Extended Goals}
 \providecommand{\gpplfigureonepath}{figures/fig1_architecture.png}
 \providecommand{\gpplfiguretwopath}{figures/fig2_compiler_stages.pdf}
 \providecommand{\gpplatomiccasepath}{figures/fig3_atomic_case.pdf}
-\providecommand{\gppltemporalcasepath}{figures/fig4_temporal_case.pdf}
 \newif\ifgpplpublicartifact
 % Keep false for anonymous review; set true only in the camera-ready source.
 \gpplpublicartifactfalse
@@ -145,15 +144,17 @@ mixing them with a domain-specific worked example.
 \fbox{\parbox[c][2.75in][c]{0.96\textwidth}{\centering
 Figure 2 artwork placeholder\\[8pt]
 (a) Query-independent atomic-core compiler\qquad
-(b) Query-specific temporal compiler}}
+(b) Bound query $\rightarrow$ DFA guard $\rightarrow$ certified repair tree}}
 }
 \caption{Inside the two GP2PL compiler stages. The query-independent stage
 normalizes and lifts evidence, constructs and certifies schema-derived
 candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. The query-specific
-stage compiles a bound temporal query through its DFA progress obligations,
-certified preservation constraints, and query-local controller
-$\mathcal Q_q$, which is appended without relearning the core. The worked cases
-are separated into Figures~\ref{fig:atomic-case} and~\ref{fig:temporal-case}.}
+stage is instantiated by a bound Blocks World tower query: a MONA-derived
+conjunctive progress guard is converted into signed obligations, ordered by
+completion-effect threats, and rendered as a balanced transition-repair tree.
+The resulting $\mathcal Q_q$ is appended without relearning the core.
+Figure~\ref{fig:atomic-case} separately illustrates execution of the selected
+atomic core.}
 \label{fig:compiler-stages}
 \end{figure*}
 
