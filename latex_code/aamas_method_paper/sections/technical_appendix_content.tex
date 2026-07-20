@@ -700,6 +700,66 @@ before $G_i$. A positive repair is inadmissible when a feasible $\mayadd$ effect
 unifies with a protected $N\in P_\chi^-$.
 \end{definition}
 
+The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
+binary transition-repair tree. A positive leaf observes or achieves its atom; a
+negative leaf observes absence or invokes its exact certified deleter. The tree
+indexes these occurrences, not DFA states or primitive actions. A direct linear
+rendering would execute the same certified order but place all $n$ literal calls
+and the completion test in one monolithic plan body, so the representation
+parsed and stored for that plan, together with the intention continuation
+constructed and resumed by the interpreter, would grow with the guard. Midpoint
+decomposition preserves the identical left-to-right order while limiting every
+generated controller plan to at most two body steps. Algorithm~\ref{alg:temporal}
+constructs one such transition plan set.
+
+\begin{algorithm}[htbp]
+\caption{Compile a Certified DFA Progress Controller}
+\label{alg:temporal}
+\begin{algorithmic}[1]
+\REQUIRE DFA source $q_s$, guard $\chi$, signed obligation $\mathcal O_\chi$,
+selected atomic core $\mathcal M_D$
+\ENSURE Transition-repair plan set $\mathcal R_{q_s,\chi}$ or rejection
+\STATE $\boldsymbol\Sigma\leftarrow
+\{\Sigma_b\mid b\in\mathcal M_D\}$
+\STATE $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)\leftarrow
+\textsc{CertifySerialization}(\mathcal O_\chi,\boldsymbol\Sigma)$
+\IF{$(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)=\bot$}
+  \STATE \textbf{reject}
+\ENDIF
+\STATE emit entry $r_{q_s,\chi}\leftarrow !R_\chi[1,n];!c_{q_s,\chi}$
+\STATE \textbf{procedure} $\textsc{Build}(i,j)$
+\IF{$i=j$}
+  \STATE emit the satisfied plan for signed literal $\ell_i$
+  \IF{$\Pi_{\chi,i}\ne\varnothing$}
+    \STATE emit the unmet plan restricted to $\Pi_{\chi,i}$
+  \ENDIF
+\ELSE
+  \STATE $m\leftarrow\lfloor(i+j)/2\rfloor$
+  \STATE emit $R_\chi[i,j]\leftarrow !R_\chi[i,m];!R_\chi[m+1,j]$
+  \STATE $\textsc{Build}(i,m);\ \textsc{Build}(m+1,j)$
+\ENDIF
+\STATE \textbf{end procedure}; $\textsc{Build}(1,n)$
+\STATE emit completion test $c_{q_s,\chi}$: return if monitor $\ne q_s$;
+otherwise call $!r_{q_s,\chi}$
+\RETURN $\mathcal R_{q_s,\chi}$
+\end{algorithmic}
+\end{algorithm}
+
+Suppose the monitor leaves $q_s$ while a branch in $\Pi_{\chi,i}$ executes. After
+that call returns, every suffix leaf either observes its literal without acting
+or selects only a branch from its already certified $\Pi_{\chi,j}$. Applicability
+is rechecked at invocation; an applicable call is PDDL-executable and preserves
+the established signed prefix at module return, while a missing call fails
+without inserting an uncertified action. Every primitive suffix action is
+observed by the same DFA, so it may traverse further actual edges, including a
+rejecting edge, but cannot manufacture a transition or report false acceptance.
+Only after the suffix finishes does the completion test return to top-level
+dispatch at the current state or replay when that state is still $q_s$. For
+$n=1$, $R_\chi[1,1]$ is one leaf followed by the same completion test; balancing
+does not choose the certified order or reduce primitive action count, but bounds
+trigger fan-out and individual plan-body length by two, with logarithmic nesting
+depth and linear work per pass.
+
 \begin{definition}[Complete transition-repair pass]
 For a certified serialization
 $\boldsymbol\ell_\chi=(\ell_1,\ldots,\ell_n)$, let

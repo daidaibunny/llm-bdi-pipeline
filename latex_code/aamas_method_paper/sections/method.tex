@@ -436,8 +436,7 @@ from every positive occurrence it establishes and retains every query variable
 appearing in $\mathcal O_\chi$. Thus an already-true first literal cannot hide
 the branch from an unmet sibling or discard a query binding.
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
-binary transition-repair tree by
-Algorithm~\ref{alg:temporal}.
+binary transition-repair tree (Sec.~\ref{sec:balanced-trees}).
 
 \subsection{Conditional Module-Completion Summaries}
 
@@ -521,85 +520,21 @@ Inserted auxiliary variables are alpha-renamed away from query and producer
 variables, preventing textual collisions from imposing unrelated constraints.
 
 \subsection{Balanced Binary Transition-Repair Trees}
+\label{sec:balanced-trees}
 
-Let $\boldsymbol\ell_\chi=(\ell_1,\ldots,\ell_n)$ be a certified serialization
-of $\mathcal O_\chi$ and let $\Pi_{\chi,i}$ be the optional preservation
-portfolio for occurrence $\ell_i$. A positive leaf
-observes or achieves its atom; a negative leaf observes absence or invokes its
-exact certified deleter. The tree indexes these occurrences, not DFA states or
-primitive actions. For query $q$, let $\mathcal R_{q_s,\chi}$ denote the plans
-for one source-state transition obligation and let the query-local plan set $\mathcal Q_q$
-contain the top-level dispatcher together with every accepted
-$\mathcal R_{q_s,\chi}$. Algorithm~\ref{alg:temporal} constructs one such
-transition plan set.
-
-A direct linear rendering would execute the same certified order but place all
-$n$ literal calls and the completion test in one monolithic plan body. The
-representation parsed and stored for that plan, together with the intention
-continuation constructed and resumed by the interpreter, would therefore grow
-with the guard. Midpoint decomposition preserves the identical left-to-right
-order while limiting every generated controller plan to at most two body steps.
-
-\begin{algorithm}[htbp]
-\caption{Compile a Certified DFA Progress Controller}
-\label{alg:temporal}
-\begin{algorithmic}[1]
-\REQUIRE DFA source $q_s$, guard $\chi$, signed obligation $\mathcal O_\chi$,
-selected atomic core $\mathcal M_D$
-\ENSURE Transition-repair plan set $\mathcal R_{q_s,\chi}$ or rejection
-\STATE $\boldsymbol\Sigma\leftarrow
-\{\Sigma_b\mid b\in\mathcal M_D\}$
-\STATE $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)\leftarrow
-\textsc{CertifySerialization}(\mathcal O_\chi,\boldsymbol\Sigma)$
-\IF{$(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)=\bot$}
-  \STATE \textbf{reject}
-\ENDIF
-\STATE emit entry $r_{q_s,\chi}\leftarrow !R_\chi[1,n];!c_{q_s,\chi}$
-\STATE \textbf{procedure} $\textsc{Build}(i,j)$
-\IF{$i=j$}
-  \STATE emit the satisfied plan for signed literal $\ell_i$
-  \IF{$\Pi_{\chi,i}\ne\varnothing$}
-    \STATE emit the unmet plan restricted to $\Pi_{\chi,i}$
-  \ENDIF
-\ELSE
-  \STATE $m\leftarrow\lfloor(i+j)/2\rfloor$
-  \STATE emit $R_\chi[i,j]\leftarrow !R_\chi[i,m];!R_\chi[m+1,j]$
-  \STATE $\textsc{Build}(i,m);\ \textsc{Build}(m+1,j)$
-\ENDIF
-\STATE \textbf{end procedure}; $\textsc{Build}(1,n)$
-\STATE emit completion test $c_{q_s,\chi}$: return if monitor $\ne q_s$;
-otherwise call $!r_{q_s,\chi}$
-\RETURN $\mathcal R_{q_s,\chi}$
-\end{algorithmic}
-\end{algorithm}
-
-A complete transition-repair pass is
-$\operatorname{Pass}_{q_s,\chi}=R_\chi[1,n]\cdot c_{q_s,\chi}$, where $\cdot$
-denotes sequential controller composition. The monitor still advances after
-every primitive action, but
-the controller tests source-state exit only after the whole pass. It does not
-interrupt an atomic call or short-circuit the remaining ranges.
-
-Suppose the monitor leaves $q_s$ while a branch in $\Pi_{\chi,i}$ executes.
-After that call
-returns, every suffix leaf either observes its literal without acting or selects
-only a branch from its already certified $\Pi_{\chi,j}$. Applicability is rechecked at invocation;
-an applicable call is PDDL-executable and preserves the established signed
-prefix at module return, while a missing call fails without inserting an
-uncertified action. Every primitive suffix action is observed by the same DFA,
-so it may traverse further actual edges, including a rejecting edge, but cannot
-manufacture a transition or report false acceptance. Only after the suffix
-finishes does the completion test return to top-level dispatch at the current state or replay
-when that state is still $q_s$. Consequently, the controller cannot report an
-accepting transition that the monitor did not take. The suffix need not be a
-complete strategy for a newly reached state.
-
-For $n=1$, $R_\chi[1,1]$ is one leaf followed by the same completion test. Balancing
-does not choose the certified order or reduce primitive action count; it bounds
-trigger fan-out and individual plan-body length by two, with logarithmic nesting
-depth and linear work per pass. The repeated state check is an instance of the declarative goal
-plan pattern \cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure
-is GP2PL's controller realization.
+For query $q$, let $\mathcal R_{q_s,\chi}$ denote the plans for one source-state
+transition obligation; the query-local plan set $\mathcal Q_q$ contains the
+top-level dispatcher together with every accepted $\mathcal R_{q_s,\chi}$. Both
+a direct linear rendering and a balanced binary tree execute the same certified
+literal order $\boldsymbol\ell_\chi$; certified serialization, not the dispatch
+shape, provides the temporal guarantee. The linear rendering places all $n$
+calls and the completion test in one plan body that grows with the guard,
+whereas balanced dispatch groups contiguous occurrences into binary helper
+plans, bounding trigger fan-out and every generated plan body by two. The
+construction reads the selected atomic core $\mathcal M_D$ and emits one
+$\mathcal R_{q_s,\chi}$ per progress obligation. We adopt balanced dispatch for
+this structural bound; the construction algorithm, completion-test pass, and
+suffix-safety argument appear in the Technical Supplement, Sec.~2.
 
 The maintained library $\mathcal L_D^{[k]}$ is defined in
 Sec.~\ref{sec:background}: temporal compilation for query $q_i$ only unions its
