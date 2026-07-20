@@ -3,56 +3,46 @@
 
 \subsection{Method Overview}
 
-An executable BDI library needs four properties to hold at once: every plan
-variable is bound, every primitive body is executable, every internal call
-resolves to a selected module, and every recursion makes progress. GP2PL turns
-each property into a compile-time, machine-checkable proof obligation and emits
-a structured diagnostic rather than an uncertified controller whenever an
-obligation fails. Building the library is therefore not transcription but
-construction under proof: we generate candidate branches, keep only those
-whose obligations discharge, and select a feasible core from what survives.
+An executable BDI library must bind every plan variable, make each primitive
+body executable, resolve every internal call, and ensure recursive progress.
+GP2PL encodes these requirements as compile-time proof obligations: it generates
+candidate branches, rejects uncertified candidates, and selects a feasible core
+from the remainder.
 
 GP2PL has two certification boundaries. Domain compilation maps
-$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$
-by verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ for each
-candidate before feasible-core selection. Query compilation reuses
-$\{\Sigma_b\mid b\in\mathcal M_D\}$ to certify
+$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$ by
+verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before feasible-core
+selection. Query compilation reuses the selected summaries to certify
 $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)$ for each DFA guard $\chi$, without
-relearning $\mathcal M_D$; the Technical Supplement, Sec.~3 gives the full
+relearning $\mathcal M_D$. The Technical Supplement, Sec.~3 gives the full
 pseudocode.
 
-Certification and selection operate on trigger--context--body rules before
-surface rendering; AgentSpeak(L) rendering preserves the selected triggers,
-contexts, bodies, and internal-call relation in $\mathcal M_D$, and Jason
-provides the evaluated realization. The Technical Supplement, Sec.~1 gives the
-full accept/reject boundary used by the formal claims and experiments.
+All obligations are checked on trigger--context--body rules before rendering.
+The \asl{} rendering preserves each selected trigger, context, ordered body, and
+internal-call edge. The Technical Supplement, Sec.~1 gives the formal
+accept/reject boundary.
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
 An evidence provider is admissible when its raw artifact
-$\mathcal E_{\mathrm{raw}}$ can be parsed into a provider-normalized
-singleton-goal evidence program $E_0$; canonical lifting then maps $E_0$ to
+$\mathcal E_{\mathrm{raw}}$ parses to a singleton-goal evidence program $E_0$.
+Canonical lifting produces
 $E=\operatorname{Lift}_D(E_0)$, whose rules pair a partial state condition and
 one goal atom with a PDDL action macro, numeric effects, and provenance.
-Admissibility requires every symbol and arity to occur in $D$,
-capture-avoiding renaming of local variables, and a singleton positive
-achievement target; lifting alpha-normalizes provider-local variables into
-typed canonical variables, preserves repeated-variable sharing across the
-rule, and leaves constants declared by $D$ fixed, so a rule over
-\texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. It does not infer a
-first-order policy from ground plans; that operation belongs to the external
-evidence provider. In the experiments, $E_0$ is obtained from MOOSE readable
-policies \cite{Chen2026Moose}, and negative achievement evidence is rejected
-because those policies provide no validated action realization for a negated
-literal.
+Every symbol and arity must occur in $D$. Lifting capture-avoidingly
+alpha-normalizes provider variables, preserves repeated-variable sharing, and
+keeps constants declared by $D$ fixed, so
+\texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. It normalizes a policy
+already generalized by the provider rather than inferring one from ground
+plans. Atomic evidence is restricted to positive singleton achievements;
+negative literals remain guard conditions and do not induce synthetic atomic
+goals.
 
 \subsection{Action-Schema Candidate Generation}
 
-Evidence only covers goals the provider was trained on, so internal calls such
-as $!\mathit{clear}(Y)$ have no realizing rule and internal-call closure fails
-by construction. We therefore synthesize the missing candidates directly from
-the action schemas: whichever obligation must hold decides what is generated,
-independent of whether the provider ever observed the goal.
+Evidence need not cover the signatures required by internal calls. Candidate
+generation therefore expands from evidence goals to schema-producible targets,
+independently of which goals the provider observed.
 Let $\operatorname{goalPred}(E)$ contain the predicate symbols targeted by
 positive predicate evidence and $\operatorname{prod}(D)$ the predicates
 occurring in some action's add effects; the domain-wide producible target
@@ -60,22 +50,19 @@ universe is
 \[
 T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D).
 \]
-Thus every predicate with a positive producer receives candidate atomic modules
-even when the evidence provider never observed it as a goal, and no achievement
-target is invented for a predicate without a positive producer or validated
-evidence. Static predicates therefore remain context-only, and delete-only
-dynamic predicates are not invented as positive targets. Supported numeric
-equalities form $T_D^{\mathbb Z}(E)$, the set of admitted singleton
-integer-equality targets in $E$.
+Every add-effect predicate thus receives candidate atomic modules. Predicates
+with neither validated evidence nor a positive producer do not; static and
+delete-only predicates remain non-achievement context. Supported numeric
+equalities form $T_D^{\mathbb Z}(E)$, the admitted singleton integer-equality
+targets in $E$.
 
-The finite candidate-construction grammar
-$\mathfrak G$ contains six constructors---producer, regression, recursion,
-precondition repair, resource discharge, and numeric progress---and for the
-Boolean and numeric targets $\textsc{LiftSchemas}$ computes
+The finite grammar $\mathfrak G$ contains six constructors---producer,
+regression, recursion, precondition repair, resource discharge, and numeric
+progress. For Boolean and numeric targets, $\textsc{LiftSchemas}$ computes
 $\mathcal C_D(E)=
 \operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$,
-instantiating these constructors using only typed schemas and effects from
-$D$ and alpha-normalizing every resulting variable-level branch.
+using only typed schemas and effects from $D$, then alpha-normalizes each
+variable-level branch.
 For target set $T$, the producer--precondition graph
 $\mathcal G_D^{\mathrm{prod}}(T)$ has an edge $p\rightarrow r$ when a producer
 for $p$ has a positive dynamic precondition with predicate $r$.
@@ -93,35 +80,31 @@ certified recursive module. Let $\mathcal C_E$ be the validated evidence
 branches. The resulting candidate set
 $\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$ is finite, but
 $\mathfrak G$ is not a complete hypothesis language for PDDL planning. Types
-constrain unification; an \asl{} realization may expose static sort membership
-in contexts, but never as an achievement call or exported action.
+constrain unification; rendered sort membership is context-only.
 
 \subsection{Candidate Soundness Certificates}
 
-Every candidate carries a machine-checkable certificate. Its conditional
-module-completion summary $\Sigma_b$ has Boolean projections
+Each candidate's conditional module-completion summary $\Sigma_b$ has Boolean
+projections
 $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, together with any exact
 constant-integer delta and keyed resource-mode transition. The $\mustadd_b$
 facts hold after every feasible completion; $\mayadd_b$ and $\maydelete_b$
 overapproximate possible effects. Selected branches also satisfy typed binding,
 symbolic executability, and target achievement; $\operatorname{Cert}_D(b)$
 denotes their conjunction, and the core satisfies
-$\operatorname{Closed}_D(\mathcal M_D)$. The Technical Supplement, Sec.~1 tabulates each branch
-constructor with its additional proof obligation and the failure it excludes;
-the paragraphs below give the load-bearing certificates.
+$\operatorname{Closed}_D(\mathcal M_D)$. The Technical Supplement, Sec.~1
+tabulates constructor-specific obligations; the load-bearing certificates
+follow.
 
 \paragraph{Binding, symbolic execution, and internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
 certified static sort membership; negative contexts and comparisons only
-filter. Symbolic progression proves each precondition and final trigger
-achievement, recording $\mustadd$, $\mayadd$, and $\maydelete$. For any BDI
-plan set $\mathcal R$, $\operatorname{Closed}_D(\mathcal R)$ holds exactly when
-every internal achievement call occurring in a selected body type-unifies with
-the trigger of some selected plan under the type hierarchy of $D$. The
-compiler requires $\operatorname{Closed}_D(\mathcal M_D)$, so every internal
-call, including transitively reached ones, resolves to a type-compatible
-selected plan. This set-level property is a Clingo obligation; it proves
-resolution by signature and type, not applicability of some branch in every
+filter. Symbolic progression proves preconditions and target achievement while
+recording $\mustadd$, $\mayadd$, and $\maydelete$.
+$\operatorname{Closed}_D(\mathcal R)$ holds when every internal call in plan set
+$\mathcal R$ type-unifies with a selected trigger under $D$'s type hierarchy.
+Requiring $\operatorname{Closed}_D(\mathcal M_D)$ is a set-level Clingo
+obligation: it proves signature resolution, not branch applicability in every
 reachable state.
 
 \paragraph{Well-founded recursive progress.}
@@ -232,12 +215,9 @@ lifted PDDL predicates and bounded integer equalities, with a typed parameter
 signature and binding constraints; a runtime binding $\theta_q$ grounds it to a
 bound query $\widehat\tau_q$ whose top-level BDI goal is $g_q$. Predicate
 propositions then denote grounded Boolean facts and numeric propositions exact
-bounded-integer equalities in the observed state. The controlled utterances in
-the released benchmark define the evaluation distribution, not a required
-user-facing grammar; the specification tuple, valuation map, and translation
-protocol appear in the Technical Supplement, Secs.~1 and~4.2. LTLf2DFA/MONA
-produces the DFA $\mathcal D_q$ of Sec.~\ref{sec:background} and its guarded
-transitions
+bounded-integer equalities in the observed state. The specification tuple and
+valuation map appear in the Technical Supplement, Sec.~1. LTLf2DFA/MONA produces
+the DFA $\mathcal D_q$ of Sec.~\ref{sec:background} and its guarded transitions
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. GP2PL attaches a controller to
 each progress edge $(q_s,\chi,q_t)$ with
 $d_q(q_t)<d_q(q_s)<\infty$; an accepting \texttt{true} self-loop needs none.
@@ -319,11 +299,10 @@ The maintained library $\mathcal L_D^{[k]}$ is defined in
 Sec.~\ref{sec:background}: temporal compilation for query $q_i$ only unions its
 dispatcher and transition plans $\mathcal Q_{q_i}$ into the single per-domain
 library, so query-local goals are control symbols, not PDDL fluents or exported
-actions. Jason records the complete primitive trace, which VAL checks against
-the PDDL problem \cite{Howey2004VAL}. If the initial valuation is accepting, the
-committed plan is empty and the trace is $\langle s_0\rangle$, not an empty
-trace or inserted noop; a noop could change strong-Next or Until truth under
-finite-trace semantics \cite{DeGiacomoVardi2013}.
+actions. Execution commits only primitive PDDL actions, yielding a nonempty
+finite state trace. If the initial valuation is accepting, the committed action
+sequence is empty and the trace is $\langle s_0\rangle$; inserting a noop could
+change strong-Next or Until truth \cite{DeGiacomoVardi2013}.
 
 \section{Conditional Guarantees}
 \label{sec:guarantees}
