@@ -1118,11 +1118,12 @@ The execution runner advances the same grounded deterministic finite automaton
 after the initial valuation and after every successful primitive PDDL action.
 Its query-local monitor-state and accepting beliefs select appended AgentSpeak
 transition controllers; they are not PDDL fluents or hidden replacements for
-the formula. MONA may encode Boolean alternatives as several valuation cubes.
-Each cube is one conjunctive guard, not part of one admitted disjunctive guard.
-For same-source/same-target cubes, controller construction may use only their
-certified common achievement objective, while monitor advancement still
-evaluates every complete original cube. Positive, negative, and numeric atoms
+the formula. Before certificate construction, the converter expands the DFA's
+Boolean transition relation into separate conjunctive transition records. This
+normalization does not reject Boolean alternatives. For same-source/same-target
+records, controller construction may use only their certified common
+achievement objective, while monitor advancement still
+evaluates every complete original transition guard. Positive, negative, and numeric atoms
 therefore retain finite-trace semantics at primitive-action boundaries. This
 execution contract does not imply that the controller can find
 an action strategy for every satisfiable PDDL-times-LTLf product. A syntactically

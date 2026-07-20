@@ -233,13 +233,9 @@ the binding, completion-effect, preservation, progress, and resource
 certificates used by the compiler. Formula parsing alone therefore establishes
 membership only in $\Phi_{\mathrm{syn}}$.
 
-MONA may encode alternatives in the Boolean transition relation as several
-valuation cubes. Each cube is compiled as a separate conjunctive guard. Several
-cubes, including cubes sharing a source and target, are not one disjunctive
-guard: the runtime monitor evaluates each original cube, while the compiler may
-share only a certified common achievement objective. An explicit disjunction
-inside one cube or an uncertified strategy choice remains outside
-$\Phi_{\mathrm{cert}}(D,\mathcal M_D)$.
+Before certificate construction, the DFA converter expands its Boolean
+transition relation into separate conjunctive transition records. The runtime
+monitor retains the complete DFA transition relation.
 \end{definition}
 
 \subsection{Candidate BDI Modules}
@@ -507,10 +503,9 @@ The input formula belongs to $\Phi_{\mathrm{syn}}$ and is translated by the
 LTLf2DFA/MONA construction
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. The evaluation distribution is
 $\Phi_{\mathrm{bench}}$; sound temporal compilation additionally requires
-membership in $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. A chosen progress cube is
-a conjunction of signed predicate literals and supported integer equalities.
-Explicit disjunction requiring strategy choice and unsupported arithmetic are
-rejected.
+membership in $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. Each compiled progress
+guard is a conjunction of signed predicate literals and supported integer
+equalities. Unsupported arithmetic is rejected.
 \end{assumption}
 
 \begin{assumption}[Primitive-step observation]
@@ -540,8 +535,6 @@ Negative predicate & Observe absence or use an exact certified deleter & Synthet
 negated achievement or possible re-addition \\
 Mixed Boolean and numeric guard & Complete net-effect and preservation certificate &
 Incomplete mixed-effect certificate \\
-Boolean alternatives & Separate conjunctive MONA cubes & Explicit disjunction in
-the input or one cube; uncertified strategy choice \\
 Primitive-state safety & DFA monitor after every primitive action & Completion-only
 observation \\
 \bottomrule

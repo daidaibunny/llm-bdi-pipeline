@@ -111,22 +111,19 @@ action count \TEGMedianActionCount{} median (interquartile range 1--2).
 This study fixes one preregistered seed-0 atomic core per domain; its result
 supports neither cross-seed claims nor arbitrary PDDL--\ltlf{} completeness.
 
-\subsection{External Planning References}
-\label{sec:external-references}
+\subsection{Evidence-to-Library Comparison}
+\label{sec:evidence-to-library}
 
-Published MOOSE coverage is taken from Table~4 of the extended paper
-\cite{Chen2025MooseExtended}; it is reported rather than locally reproduced,
-so time and memory are not compared across hardware. The local same-scope
-contrast in Table~\ref{tab:added-scope-evidence} instead evaluates Raw MOOSE
-evidence and Full GP2PL on identical added-family cases.
+Table~\ref{tab:added-scope-evidence} isolates the compiler's gain over its
+evidence provider on the four added families. Raw MOOSE executes each
+seed-specific policy directly; Full GP2PL compiles the same evidence with typed
+action schemas. Both use the same 740 held-out seed--case pairs.
 
 \input{sections/result_same_scope_evidence_table}
 
-The published original-domain and added-domain scopes are disjoint, and Raw
-MOOSE is already near ceiling on its original scope. We therefore claim
-improved structural coverage only on the added families, not universal
-dominance. The Technical Supplement, Sec.~5, reports scope-separated LAMA,
-ENHSP MRP+HJ, and FOND4LTLf references
-\cite{RichterWestphal2010LAMA,Scala2020NumericSubgoaling,
-DeGiacomoFuggitti2021FOND4LTLf}, together with per-domain diagnostics; rows
-drawn from different case sets are not ranked.
+It remains separate from Table~\ref{tab:atomic-comparison}: that table compares
+compiler variants over all 16 domains, whereas this table compares provider
+execution with the final library on a paired scope. Published MOOSE coverage is
+near ceiling on its disjoint original scope \cite{Chen2025MooseExtended};
+scope-separated MOOSE and per-instance planner references appear only in the
+Technical Supplement, Sec.~5.

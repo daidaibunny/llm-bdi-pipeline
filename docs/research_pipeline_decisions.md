@@ -1423,11 +1423,13 @@ The execution environment advances the real deterministic finite automaton
 after the initial valuation and after every successful primitive PDDL action.
 It updates query-local monitor-state and accepting beliefs used by the top-level
 AgentSpeak controller. These beliefs are controller interface state, not domain
-fluents and not exported actions. MONA may encode Boolean alternatives as
-several valuation cubes. Each cube is a conjunctive guard rather than part of
-one admitted disjunctive guard. Same-source/same-target cubes are grouped only
-by a certified common achievement objective, while the monitor still evaluates
-every original cube. Consequently a strong-until formula detects an
+fluents and not exported actions. Before certificate construction, the
+converter expands the DFA's Boolean transition relation into separate
+conjunctive transition records. This is a representation normalization rather
+than rejection of Boolean alternatives: the runtime monitor still evaluates
+the complete DFA transition relation. Same-source/same-target records are
+grouped only by a certified common achievement objective. Consequently a
+strong-until formula detects an
 intermediate violation even when an atomic macro later restores the fluent.
 This gives exact trace observation for the declared `F`, `X`, `U`, conjunction,
 and literal-negation fragment. It does not prove that the generated action

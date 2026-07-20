@@ -264,8 +264,9 @@ def test_manuscript_formalizes_ltlf_syntax_semantics_and_scope_boundaries() -> N
 		assert scope_symbol in background_source
 		assert scope_symbol in supplement_source
 	assert "negation restricted to atoms" in background_text
-	assert "each cube as a separate conjunctive guard" in background_text
-	assert "separate conjunctive guard" in background_text
+	assert "signed transition obligation" in background_text
+	assert "each cube as a separate conjunctive guard" not in background_text
+	assert "explicit disjunction inside one guard" not in background_text
 	for semantic_clause in (
 		"\\xi,i\\models X\\varphi",
 		"\\xi,i\\models F\\varphi",
@@ -342,7 +343,8 @@ def test_same_scope_evidence_table_matches_frozen_case_records() -> None:
 		LATEX_ROOT / "sections/result_same_scope_evidence_table.tex"
 	).read_text(encoding="utf-8")
 	assert f"Raw MOOSE evidence & {raw_valid}/740 & 15.8" in table
-	assert f"\\textbf{{{full_valid}/740}}" in table
+	assert f"\\resultselected{{{full_valid}/740}}" in table
+	assert "\\resultselected{Full GP2PL}" in table
 	assert raw_valid == 117
 	assert full_valid == 720
 
@@ -935,7 +937,6 @@ def test_conclusion_and_future_work_states_the_supported_claim_boundary(
 		r"arbitrary PDDL--\ltlf{} strategy synthesis",
 		"arithmetic outside the bounded-integer fragment",
 		"formulae outside the declared",
-		"disjunctive strategy choice",
 		"uncertified recursive or interference repair",
 		"pinned PDDL generators",
 		"held-out-disjoint instances",

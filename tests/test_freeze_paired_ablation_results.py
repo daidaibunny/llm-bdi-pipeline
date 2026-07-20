@@ -92,7 +92,7 @@ def test_manuscript_presents_component_evidence_before_full_system_and_reference
 	full_system = evaluation.index(
 		r"\subsection{Full-System Coverage and Robustness}",
 	)
-	external = evaluation.index(r"\subsection{External Planning References}")
+	external = evaluation.index(r"\subsection{Evidence-to-Library Comparison}")
 
 	assert questions < protocol < paired < full_system < external
 	assert r"\label{fig:evaluation-summary}" not in evaluation

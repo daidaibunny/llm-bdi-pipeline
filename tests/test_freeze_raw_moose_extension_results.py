@@ -46,6 +46,9 @@ def test_manuscript_consumes_the_frozen_moose_reference_result() -> None:
 	latex_root = PROJECT_ROOT / "latex_code/aamas_method_paper"
 	main = (latex_root / "main.tex").read_text(encoding="utf-8")
 	evaluation = (latex_root / "sections/evaluation.tex").read_text(encoding="utf-8")
+	same_scope_table = (
+		latex_root / "sections/result_same_scope_evidence_table.tex"
+	).read_text(encoding="utf-8")
 	appendix = (latex_root / "sections/technical_appendix_content.tex").read_text(
 		encoding="utf-8",
 	)
@@ -53,10 +56,9 @@ def test_manuscript_consumes_the_frozen_moose_reference_result() -> None:
 	assert r"\input{sections/result_moose_reference_macros}" in main
 	assert r"\input{sections/result_moose_reference_table}" not in evaluation
 	assert r"\input{sections/result_moose_reference_table}" in appendix
-	assert r"\RawMooseExtensionMeanPercent{}" in evaluation
-	assert r"\RawMooseExtensionSDPercent{}" in evaluation
 	assert r"\RawMooseExtensionSeedCounts{}" not in evaluation
 	assert r"Table~\ref{tab:added-scope-evidence}" in evaluation
+	assert "Raw MOOSE evidence & 117/740 & 15.8" in same_scope_table
 	assert r"raw\_moose\_extension\_" in appendix
 	assert r"five\_seed\_summary.json" in appendix
 
