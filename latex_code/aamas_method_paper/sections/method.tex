@@ -601,29 +601,15 @@ depth and linear work per pass. The repeated state check is an instance of the d
 plan pattern \cite{Hubner2006DeclarativeGoals}; the balanced dispatch structure
 is GP2PL's controller realization.
 
-\subsection{Maintained Domain Library}
-
-The atomic compiler constructs $\mathcal M_D$ once. Temporal compilation for a
-query $q_i$ unions its dispatcher and transition plan sets into
-$\mathcal Q_{q_i}$. For an ordered sequence $q_1,\ldots,q_k$, the sole
-maintained library is
-\[
-\mathcal L_D^{[k]}=
-\mathcal M_D\cup\bigcup_{i=1}^{k}\mathcal Q_{q_i},
-\qquad
-\mathcal L_D^{[0]}=\mathcal M_D.
-\]
-The \asl{} realization serializes $\mathcal L_D^{[k]}$ as one per-domain plan
-library; $\mathcal M_D$ is its stable query-independent subset, not a second
-library. Appending $\mathcal Q_{q_i}$ neither reconstructs nor reoptimizes the
-atomic core. Query-local goals are control symbols, not PDDL fluents or exported
+The maintained library $\mathcal L_D^{[k]}$ is defined in
+Sec.~\ref{sec:background}: temporal compilation for query $q_i$ only unions its
+dispatcher and transition plans $\mathcal Q_{q_i}$ into the single per-domain
+library, so query-local goals are control symbols, not PDDL fluents or exported
 actions. Jason records the complete primitive trace, which VAL checks against
-the PDDL problem \cite{Howey2004VAL}.
-
-If the initial valuation is accepting, the committed plan is empty and the
-trace is $\langle s_0\rangle$, not an empty trace or inserted noop; a noop could
-change strong-Next or Until truth under finite-trace semantics
-\cite{DeGiacomoVardi2013}.
+the PDDL problem \cite{Howey2004VAL}. If the initial valuation is accepting, the
+committed plan is empty and the trace is $\langle s_0\rangle$, not an empty
+trace or inserted noop; a noop could change strong-Next or Until truth under
+finite-trace semantics \cite{DeGiacomoVardi2013}.
 
 \section{Conditional Guarantees}
 \label{sec:guarantees}
