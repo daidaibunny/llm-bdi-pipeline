@@ -12,13 +12,14 @@ obligation fails. Building the library is therefore not transcription but
 construction under proof: we generate candidate branches, keep only those
 whose obligations discharge, and select a feasible core from what survives.
 
-GP2PL first maps
-$D,\mathcal{I}_{\mathrm{train}},\mathcal E_{\mathrm{raw}}
-\longrightarrow\mathcal{M}_D$,
-compiling the query-independent certified atomic module core from a PDDL domain,
-training split, and generalized-planning evidence. Temporal queries
-do not enter this optimization; every later query reuses $\mathcal M_D$, and
-the Technical Supplement, Sec.~3 gives the full pseudocode.
+GP2PL has two certification boundaries. Domain compilation maps
+$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$
+by verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ for each
+candidate before feasible-core selection. Query compilation reuses
+$\{\Sigma_b\mid b\in\mathcal M_D\}$ to certify
+$(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)$ for each DFA guard $\chi$, without
+relearning $\mathcal M_D$; the Technical Supplement, Sec.~3 gives the full
+pseudocode.
 
 Certification and selection operate on trigger--context--body rules before
 surface rendering; AgentSpeak(L) rendering preserves the selected triggers,

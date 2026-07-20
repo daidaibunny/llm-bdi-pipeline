@@ -164,10 +164,11 @@ Figure 2 artwork placeholder\\[8pt]
 }
 \caption{Inside the two GP2PL compiler stages. The query-independent stage
 normalizes and lifts evidence, constructs and certifies schema-derived
-candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. The query-specific
-stage is instantiated by a bound Blocks World tower query: a MONA-derived
-conjunctive progress guard is converted into signed obligations, ordered by
-completion-effect threats, and rendered as a balanced transition-repair tree.
+candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. For the bound Blocks
+World tower query, the query-specific stage reuses selected completion summaries
+to certify a preservation portfolio $\boldsymbol\Pi_\chi$ and serialization
+$\boldsymbol\ell_\chi$ for its MONA-derived conjunctive progress guard, then
+renders the certified order as a balanced transition-repair tree.
 The resulting $\mathcal Q_q$ is appended without relearning the core.
 Figure~\ref{fig:atomic-case} separately illustrates execution of the selected
 atomic core.}
