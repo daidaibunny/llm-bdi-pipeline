@@ -83,7 +83,8 @@ def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
 	assert "Logistics & 1 & 0--1 & 80.0 $\\pm$ 44.7" in main_table
 	assert "Depots & 1 & 0 & 0.0 $\\pm$ 0.0" in main_table
 	assert "Seed 0" not in main_table
-	assert "sample standard deviation (SD)" in main_table_text
+	assert "sample standard deviation" in main_table_text
+	assert "standard deviation (SD)" not in main_table_text
 	assert "predeclared evidence seeds" in main_table_text
 	assert "compiled independently" not in main_table_text
 	assert "Domain & Test & Seed 0 & Seed 1 & Seed 2 & Seed 3 & Seed 4" in domain_table
