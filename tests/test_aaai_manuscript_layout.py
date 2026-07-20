@@ -264,7 +264,7 @@ def test_manuscript_formalizes_ltlf_syntax_semantics_and_scope_boundaries() -> N
 		assert scope_symbol in background_source
 		assert scope_symbol in supplement_source
 	assert "negation restricted to atoms" in background_text
-	assert "several valuation cubes" in background_text
+	assert "each cube as a separate conjunctive guard" in background_text
 	assert "separate conjunctive guard" in background_text
 	for semantic_clause in (
 		"\\xi,i\\models X\\varphi",
