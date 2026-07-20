@@ -17,45 +17,32 @@ $D,\mathcal{I}_{\mathrm{train}},\mathcal E_{\mathrm{raw}}
 \longrightarrow\mathcal{M}_D$,
 compiling the query-independent certified atomic module core from a PDDL domain,
 training split, and generalized-planning evidence. Temporal queries
-do not enter this optimization; every later query reuses $\mathcal M_D$. The
-pipeline normalizes and canonically lifts the evidence, validates its macros,
-generates schema-derived candidates for the producible targets, certifies every
-candidate, and selects a feasible core with Clingo; the Technical Supplement,
-Sec.~3 gives the full pseudocode.
+do not enter this optimization; every later query reuses $\mathcal M_D$, and
+the Technical Supplement, Sec.~3 gives the full pseudocode.
 
 Certification and selection operate on trigger--context--body rules before
-surface rendering. AgentSpeak(L) rendering preserves the selected triggers,
-contexts, bodies, and internal-call relation in $\mathcal M_D$; AgentSpeak(L)
-and Jason provide the evaluated realization. The supported fragment covers
-positive predicate and bounded integer-equality goals, same-state conjunction,
-literal negation, and primitive-step DFA observation; unsupported arithmetic,
-disjunctive guards, and completion-only observation are rejected. The Technical
-Supplement, Sec.~1 gives the full accept/reject boundary used by the formal
-claims and experiments.
+surface rendering; AgentSpeak(L) rendering preserves the selected triggers,
+contexts, bodies, and internal-call relation in $\mathcal M_D$, and Jason
+provides the evaluated realization. The Technical Supplement, Sec.~1 gives the
+full accept/reject boundary used by the formal claims and experiments.
 
 \subsection{Normalization and Lifting}
 
 An evidence provider is admissible when its raw artifact
 $\mathcal E_{\mathrm{raw}}$ can be parsed into a provider-normalized
-singleton-goal evidence program $E_0$. Canonical lifting then maps $E_0$ to
-$E=\operatorname{Lift}_D(E_0)$, whose rules have the form
-\[
-e=\langle \bar X_e,C_e^s,g_e,\bar a_e,\nu_e,\pi_e\rangle,
-\]
-where $C_e^s$ is a partial state condition, $g_e$ is one goal atom,
-$\bar a_e$ is a PDDL action macro, $\nu_e$ records numeric conditions and
-effects, and $\pi_e$ records provenance. Admissibility requires every symbol
-and arity to occur in $D$, capture-avoiding renaming of local variables, and a
-singleton positive achievement target. The lifting map alpha-normalizes
-provider-local variables into typed canonical variables, preserves
-repeated-term sharing, and leaves constants declared by $D$ fixed: a provider
-rule over \texttt{on(block0,block1)} and \texttt{stack(block0,block1)} becomes
-\texttt{on(X,Y)} and \texttt{stack(X,Y)}. It does not infer a first-order
-policy from ground plans; that operation belongs to the external evidence
-provider. In the experiments, $E_0$ is obtained from MOOSE readable policies
-\cite{Chen2026Moose}. Negative achievement evidence is rejected because
-those policies provide no validated action realization for achieving a negated
-literal.
+singleton-goal evidence program $E_0$; canonical lifting then maps $E_0$ to
+$E=\operatorname{Lift}_D(E_0)$, whose rules pair a partial state condition and
+one goal atom with a PDDL action macro, numeric effects, and provenance.
+Admissibility requires every symbol and arity to occur in $D$,
+capture-avoiding renaming of local variables, and a singleton positive
+achievement target; lifting alpha-normalizes provider-local variables into
+typed canonical variables and leaves constants declared by $D$ fixed, so a
+rule over \texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. It does not
+infer a first-order policy from ground plans; that operation belongs to the
+external evidence provider. In the experiments, $E_0$ is obtained from MOOSE
+readable policies \cite{Chen2026Moose}, and negative achievement evidence is
+rejected because those policies provide no validated action realization for a
+negated literal.
 
 \subsection{Action-Schema Candidate Generation}
 
@@ -72,13 +59,10 @@ universe is
 T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D).
 \]
 Thus every predicate with a positive producer receives candidate atomic modules
-even when the evidence provider never observed it as a goal. A static predicate
-appears in no add or delete effect and remains context-only. A dynamic predicate
-with no positive producer is not invented as a positive achievement target
-unless admissible evidence explicitly supplies a validated realization.
-Supported numeric equalities form $T_D^{\mathbb Z}(E)$, the set of admitted
-singleton integer-equality targets in $E$; numeric-only evidence does not
-suppress $\operatorname{prod}(D)$.
+even when the evidence provider never observed it as a goal, and no achievement
+target is invented for a predicate without a positive producer or validated
+evidence. Supported numeric equalities form $T_D^{\mathbb Z}(E)$, the set of
+admitted singleton integer-equality targets in $E$.
 
 The finite candidate-construction grammar
 $\mathfrak G$ contains six constructors---producer, regression, recursion,
@@ -87,29 +71,15 @@ Boolean and numeric targets $\textsc{LiftSchemas}$ computes
 $\mathcal C_D(E)=
 \operatorname{Inst}_D(\mathfrak G,T_D(E),T_D^{\mathbb Z}(E))$,
 instantiating these constructors using only typed schemas and effects from
-$D$ and alpha-normalizing every resulting variable-level branch. Its output is
-finite because $D$ and the target signatures are finite, constructor states are
-identified up to alpha-normalization, and no requirement/producer state or
-resource mode may repeat. For target set $T$, the reachable
-producer--precondition graph $\mathcal G_D^{\mathrm{prod}}(T)$ over predicate
-signatures has an edge $p\rightarrow r$ exactly when a producer for $p$ has a
-positive dynamic precondition with predicate $r$.
+$D$ and alpha-normalizing every resulting variable-level branch.
 Backward STRIPS regression
 \cite{Fikes1972GeneralizedRobotPlans,Alcazar2013Regression,Chen2026Moose}
-replaces one
-open positive precondition by a producer's preconditions and rejects a step
-whose deletes contradict another open requirement. Producer preconditions are
-first unified with compatible open requirements, after which only still-unbound
-parameters receive fresh variables. Search is enabled only when
-$\mathcal G_D^{\mathrm{prod}}(T)$ is acyclic.
-
-Termination does not use an action-depth constant: a path cannot repeat an
-alpha-normalized requirement/producer step or resource mode, and only the
-shortest body is retained for an equivalent open-requirement and
-completion-effect summary. Every candidate is then verified by symbolic
-progression, and evidence macros are not truncated. Cyclic dependencies
-require provider evidence or a separately certified recursive module. The
-resulting candidate set
+replaces one open positive precondition by a producer's preconditions,
+rejecting steps whose deletes contradict another open requirement, and is
+enabled only when the producer--precondition graph over the reachable
+predicate signatures is acyclic; every candidate is then verified by symbolic
+progression. Cyclic dependencies require provider evidence or a separately
+certified recursive module. The resulting candidate set
 $\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$, joining validated evidence
 branches with the generated branches, is finite, but $\mathfrak G$ is not a
 complete hypothesis language for PDDL planning. Types constrain unification; an
@@ -149,11 +119,9 @@ or anchored acyclic-cone count that strictly decreases, together with an
 already-satisfied, direct-producer, or validated-evidence terminal branch.
 Threats are checked over the preparation graph selected by Clingo; a branch may
 add the ranked relation outside the protected cone only under a guard proving
-the new anchor differs from the protected one. The ranking feature is used only
-in certification and never becomes an agent belief. The construction follows
+the new anchor differs from the protected one. The construction follows
 relational progress witnesses in general-policy work
-\cite{Frances2021LearningGeneralPolicies}, but claims only schema-certified
-features from the generated candidate set.
+\cite{Frances2021LearningGeneralPolicies}.
 
 \paragraph{Target-preserving resource discharge.}
 Effects, not predicate names, identify temporary occupation of a reusable
@@ -182,16 +150,13 @@ certificate above.
 
 Validated evidence macros and certified action-schema-derived candidates enter
 one answer-set optimization problem solved with Clingo
-\cite{Gebser2018Clingo}. Evidence rules induce coverage obligations,
-$\operatorname{covers}_D(b,e)$: a selected candidate may cover an evidence
-obligation only through alpha-equivalent triggers and bodies, a weaker
-conjunctive context with the same body, or an action-schema producer refinement
-with the same $\mustadd$, no additional $\maydelete$, and equivalent numeric
-and keyed-resource summaries; syntactic body-prefix similarity is not semantic
-equivalence. Every nonrecursive schema-derived branch is likewise a
-schema-achievement obligation, $\operatorname{realizes}_D(b,c)$: some selected
-branch must be equivalent to, soundly refine, or give a certified
-resource-discharge alternative to it. Define
+\cite{Gebser2018Clingo}. Evidence rules induce coverage obligations
+$\operatorname{covers}_D(b,e)$, admitting only alpha-equivalent,
+context-weakened, or effect-preserving producer refinements---syntactic
+body-prefix similarity is not semantic equivalence---and every nonrecursive
+schema-derived branch is a schema-achievement obligation
+$\operatorname{realizes}_D(b,c)$ that some selected branch must soundly
+realize. Define
 \begin{align*}
 \mathcal C^{\checkmark}_{D,E}
   &=\{b\in\mathcal C_{D,E}\mid\operatorname{Cert}_D(b)\},\\
@@ -218,11 +183,6 @@ trigger--context--body rules, rather than their AgentSpeak rendering, define
 $\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
-The compiler rejects an untyped predicate with several producers when their
-safe use requires different nested precondition-repair branch sets: if one
-\texttt{at/2} producer preserves a ranked relation and another may increase it,
-static role names alone do not prove that their object sets are disjoint, and
-the compiler neither recognizes those names nor assumes disjointness.
 Figure~\ref{fig:atomic-case} isolates how the selected variable-level core is
 instantiated in a Blocks World state not encoded in its rules.
 
@@ -265,15 +225,9 @@ transitions
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. GP2PL attaches a controller to
 each progress edge $(q_s,\chi,q_t)$ with
 $d_q(q_t)<d_q(q_s)<\infty$; an accepting \texttt{true} self-loop needs none.
-Same-source/same-target valuation cubes may share a common achievement
-objective, but each remains a separate conjunctive alternative in MONA's
-transition relation (Sec.~\ref{sec:background}), and the monitor evaluates
-every complete cube.
 
-Each execution applies $\theta_q$: $\mathit{on}(X,Y)$ under
-$X{=}b_1,Y{=}b_4$ calls $!\mathit{on}(b_1,b_4)$ without grounding the shared
-$+!\mathit{on}(X,Y)$ module. A binding inconsistent with the validated query
-specification is rejected.
+Each execution applies $\theta_q$ without grounding the shared lifted module;
+a binding inconsistent with the validated query specification is rejected.
 For a supported guard $\chi$ with signed transition obligation
 $\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle$
 (Sec.~\ref{sec:background}), compilation computes
@@ -285,10 +239,6 @@ ordered; a cyclic graph requires either an occurrence-specific preservation
 portfolio or a joint guard-establishment branch $b_\chi^{\mathrm{joint}}$ whose
 complete net effect establishes the entire guard. The transition is rejected if neither
 can be certified.
-When $b_\chi^{\mathrm{joint}}$ establishes the complete guard, it is available
-from every positive occurrence it establishes and retains every query variable
-appearing in $\mathcal O_\chi$. Thus an already-true first literal cannot hide
-the branch from an unmet sibling or discard a query binding.
 The certified serialization $\boldsymbol\ell_\chi$ is rendered as a balanced
 binary transition-repair tree (Sec.~\ref{sec:balanced-trees}).
 
@@ -326,29 +276,22 @@ guard-establishment action only when a single proof covers the complete
 successor valuation required by $\mathcal O_\chi$. Negated equality is
 observation-only without a certified change-away action; arbitrary arithmetic
 and uncertified sequential composition stay outside the fragment. Numeric
-preparation carries its own well-founded ranking (a lexicographic pair of the
-missing-precondition count and the bounded target deficit), and strong-Until
-sources preserve their non-progress self-loop invariants until the single
-progress step; the ranking, invariants, and their termination proof appear in
-the Technical Supplement, Sec.~2. Inserted auxiliary variables are
-alpha-renamed away from query and producer variables, preventing textual
-collisions from imposing unrelated constraints.
+preparation carries its own well-founded ranking, and strong-Until sources
+preserve their non-progress self-loop invariants until the single progress
+step (Technical Supplement, Sec.~2); inserted auxiliary variables are
+alpha-renamed away from query and producer variables.
 
 \subsection{Balanced Binary Transition-Repair Trees}
 \label{sec:balanced-trees}
 
 For query $q$, let $\mathcal R_{q_s,\chi}$ denote the plans for one source-state
 transition obligation; the query-local plan set $\mathcal Q_q$ contains the
-top-level dispatcher together with every accepted $\mathcal R_{q_s,\chi}$. Both
-a direct linear rendering and a balanced binary tree execute the same certified
-literal order $\boldsymbol\ell_\chi$; certified serialization, not the dispatch
-shape, provides the temporal guarantee. The linear rendering places all $n$
-calls and the completion test in one plan body that grows with the guard,
-whereas balanced dispatch groups contiguous occurrences into binary helper
-plans, bounding trigger fan-out and every generated plan body by two. The
-construction reads the selected atomic core $\mathcal M_D$ and emits one
-$\mathcal R_{q_s,\chi}$ per progress obligation. We adopt balanced dispatch for
-this structural bound; the construction algorithm, completion-test pass, and
+top-level dispatcher together with every accepted $\mathcal R_{q_s,\chi}$, one
+per progress obligation. Both a direct linear rendering and a balanced binary
+tree execute the same certified literal order $\boldsymbol\ell_\chi$; certified
+serialization, not the dispatch shape, provides the temporal guarantee. We
+adopt balanced dispatch because it bounds trigger fan-out and every generated
+plan body by two; the construction algorithm, completion-test pass, and
 suffix-safety argument appear in the Technical Supplement, Sec.~2.
 
 The maintained library $\mathcal L_D^{[k]}$ is defined in
@@ -412,41 +355,18 @@ the current state and either retries or returns to top-level dispatch.
 \hfill$\square$ This does not imply complete action-strategy synthesis or
 guarantee that a post-exit suffix avoids a rejecting state.
 
-\paragraph{Balanced transition-repair complexity.}
-
-\textbf{Proposition 4.} For $n$ signed literals and $e$ repair plans, the tree
-has $2n+e+2$ plans, fan-out at most two, maximum body length two, depth
-$O(\log n)$, and $O(n)$ visits per pass, while preserving order. The count
-follows from $n$ satisfied leaves, $e$ repair
-leaves, $n-1$ internal nodes, one entry, and two completion plans; midpoint
-splitting and range induction establish depth and order. \hfill$\square$
-
-\paragraph{Monitor trace fidelity.}
-
-\textbf{Proposition 5.} Let
-$\xi=s_0,a_1,s_1,\ldots,a_k,s_k$ be the PDDL execution observed by the monitor,
-and let $z_0=\delta_q(q_q^0,\mathit{val}_q(s_0))$. After every successful
-primitive action $a_i$, the runtime monitor state equals
-$z_i=\delta_q(z_{i-1},\mathit{val}_q(s_i))$. Hence leaving a controller source state
-is exactly an exit in the deterministic automaton run over the observed finite
-trace.
-
-The result follows by induction on primitive actions: the environment first
-applies the PDDL successor and then evaluates the deterministic transition
-function on the resulting valuation. Controller plans cannot write monitor
-beliefs. \hfill$\square$
-
-\paragraph{Initial-acceptance trace semantics.}
-
-\textbf{Proposition 6.} If the initial valuation is accepting, successful
-execution commits no primitive action and denotes the one-state finite trace
-$\langle s_0\rangle$. It is therefore equivalent to evaluating the query on the
-initial state and is not equivalent to inserting an arbitrary noop.
-
-This is immediate from finite-trace semantics and Proposition~5: the initial
-valuation is consumed before action execution, while a noop would introduce a
-second observed position and could change strong-Next or Until truth.
-\hfill$\square$
+\paragraph{Structural and monitor-fidelity guarantees.}
+Three further guarantees are stated and proved in the Technical Supplement,
+Sec.~2. The balanced tree for $n$ signed literals and $e$ repair plans has
+$2n+e+2$ plans, fan-out and body length at most two, and depth $O(\log n)$
+while preserving the certified order (Proposition~4). After every successful
+primitive action, the runtime monitor state equals the deterministic automaton
+state over the observed finite trace, so leaving a controller source state is
+exactly a DFA exit and controller plans cannot write monitor beliefs
+(Proposition~5). If the initial valuation is accepting, successful execution
+commits no primitive action and denotes the one-state trace
+$\langle s_0\rangle$ rather than an inserted noop, which could change
+strong-Next or Until truth (Proposition~6).
 
 Complete proofs, including the binding, symbolic-progression,
 relational-ranking, resource-discharge, and tree-order lemmas used by these
