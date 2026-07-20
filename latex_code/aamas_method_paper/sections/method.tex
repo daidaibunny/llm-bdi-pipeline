@@ -301,43 +301,16 @@ compiler neither recognizes those names nor assumes disjointness.
 \label{sec:temporal-composition}
 
 \paragraph{Validated parametric input.}
-GP2PL does not prescribe a controlled surface grammar for user requests. In the
-evaluated front end, a source utterance is accompanied by the public PDDL symbol
-catalogue, declared typed parameters, and binding constraints. Translation
-produces a structured specification
-$\tau_q=\langle\iota_q,\varphi_q,\mu_q,\Theta_q,\Gamma_q\rangle$, where
-$\iota_q$ is its identifier, $\varphi_q$ is an \ltlf{} formula over proposition
-symbols, $\mu_q$ maps each proposition to a lifted PDDL predicate or integer
-equality, $\Theta_q$ is the typed parameter signature, and $\Gamma_q$ contains
-binding constraints. Before automaton construction, validation requires a
-bijective formula-to-atom mapping, membership in the domain vocabulary, and
-correct arities, types, numeric values, temporal operators, and literal-only
-negation. Invalid
-specifications are rejected rather than repaired. The controlled utterances in
+A temporal query is a validated parametric \ltlf{} specification $\tau_q$ over
+lifted PDDL predicates and bounded integer equalities, with a typed parameter
+signature and binding constraints; a runtime binding $\theta_q$ grounds it to a
+bound query $\widehat\tau_q$ whose top-level BDI goal is $g_q$. Predicate
+propositions then denote grounded Boolean facts and numeric propositions exact
+bounded-integer equalities in the observed state. The controlled utterances in
 the released benchmark define the evaluation distribution, not a required
-user-facing grammar; the serialized schema and translation protocol appear in
-the Technical Supplement, Sec.~4.2.
-
-A runtime binding is a type-consistent map
-$\theta_q:\bar X_q\rightarrow O_I$ satisfying the type signature
-$\Theta_q:\bar X_q\rightarrow\mathcal T$ and constraints $\Gamma_q$; the validated bound
-query is $\widehat\tau_q=(\tau_q,\theta_q)$, and $g_q$ denotes its generated
-top-level BDI goal. Applying $\theta_q$ substitutes declared parameters and
-leaves PDDL domain constants fixed. For $a\in AP_q$, its bound PDDL-state
-valuation is
-\[
-a\in\mathit{val}_q(s)
-\Longleftrightarrow
-\begin{cases}
-p(\bar t)\theta_q\in s_{\mathcal P},
-  & \mu_q(a)=p(\bar t),\\
-s_{\mathcal F}(f(\bar t)\theta_q)=c,
-  & \mu_q(a)=[f(\bar t)=c].
-\end{cases}
-\]
-Thus predicate propositions denote grounded Boolean facts and numeric
-propositions denote exact bounded-integer equalities in the same observed
-state. As defined in Sec.~\ref{sec:background}, LTLf2DFA/MONA produces
+user-facing grammar; the specification tuple, valuation map, and translation
+protocol appear in the Technical Supplement, Secs.~1 and~4.2. As defined in
+Sec.~\ref{sec:background}, LTLf2DFA/MONA produces
 \[
 \mathcal D_q=
 \langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle
