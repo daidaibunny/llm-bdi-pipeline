@@ -60,10 +60,8 @@ achievement goal and derives candidate temporal milestones from legal,
 state-changing, nonrepeating rollouts of at most three actions; it invokes no
 planner. Predicate and bounded-integer changes instantiate five predeclared
 profiles: $F(A\land B)$, $F(A\land\neg B)$, $F(A\land X(F(B)))$,
-$F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$. For example, a witness
-that first establishes \texttt{holding(b1)} and later \texttt{on(b1,b4)}
-yields $F(\mathit{holding}(X)\land X(F(\mathit{on}(X,Y))))$ under a typed
-hidden binding. Each candidate retains a legal witness, and selection balances
+$F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$.
+Each candidate retains a legal witness, and selection balances
 profile and semantic-signature use under a symbol-independent tie-break,
 yielding one witness-backed query per held-out problem: 1,228 queries over 475
 distinct translation inputs. The complete construction and registered bounds
@@ -75,16 +73,9 @@ same atomic core, binding, and DFA. A temporal success requires Jason
 completion \cite{Bordini2007Jason}, VAL acceptance of the full primitive trace
 against a neutral PDDL goal \cite{Howey2004VAL}, and independent replay
 accepted by both the gold and predicted DFAs; atomic validation instead uses
-the original PDDL goal. Coverage is credited only to VAL-valid traces, and all
-failures remain in the denominator.
-
-Atomic totals contain five seeded outcomes for each held-out case identifier.
-For inference, we average the paired binary difference within each identifier
-and apply a two-sided exact sign test to the nonzero case-level differences.
-Temporal queries share domains and, in some cases, one of 475 translated
-inputs; we therefore report domain concentration rather than a case-level
-$p$-value, with per-query discordance in the Technical Supplement. Runtime,
-plan length, and library size remain descriptive.
+the original PDDL goal. Coverage is credited only to VAL-valid traces, all
+failures remain in the denominator, and the inference protocol with per-query
+outcomes appears in the Technical Supplement, Sec.~5.
 
 \subsection{Paired Component Ablations}
 \label{sec:paired-ablation-results}

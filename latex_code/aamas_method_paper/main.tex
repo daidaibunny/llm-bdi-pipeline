@@ -181,36 +181,27 @@ Supplement.
 
 GP2PL closes the representation gap by converting generalized-planning evidence
 and PDDL action schemas into a reusable atomic BDI core, then appending
-query-local temporal controllers to the same maintained library. The output is
-executable in the evaluated AgentSpeak(L)/Jason realization because each
-accepted branch has certified binding, symbolic PDDL executability, target
-achievement, and progress, while selected internal calls resolve within the
-library. Unproved obligations fail compilation rather than becoming unchecked
-plans. Within the certified scope---bound formulas in the declared $F$, $X$,
-strong-$U$, conjunction, and literal-negation syntax whose DFA progress
-obligations admit preservation-safe repairs---the measured component gains and
+query-local temporal controllers to the same maintained library. Unproved
+obligations fail compilation rather than becoming unchecked plans, and within
+the certified scope the measured component gains and
 \TEGProblemCount{}/\TEGProblemCount{} fixed-core temporal result show that
 certification changes both coverage and controller structure.
 
 Several conditions delimit these results. MOOSE is the only instantiated
-evidence provider; the candidate-construction grammar remains incomplete beyond
-the implemented acyclic, ranking, and keyed-resource certificates; and call
-closure proves type-compatible resolution rather than universal applicability.
-The temporal study uses controlled, witness-backed queries mined from at most
-three actions and a fixed seed-0 atomic core, so it does not measure
-unrestricted language, long-horizon planning, or cross-seed temporal
-robustness. Primitive-step monitoring is exact for the declared syntax, but
+evidence provider, the candidate-construction grammar is not a complete
+hypothesis language, and call closure proves type-compatible resolution rather
+than universal applicability. The temporal study uses controlled,
+witness-backed queries and a fixed seed-0 atomic core, so it does not measure
+unrestricted language, long-horizon planning, or cross-seed robustness, and
 rejected arithmetic, interference, and repair cases preclude arbitrary
 PDDL--\ltlf{} strategy synthesis.
 
-Future work can broaden evidence acquisition through a parameterized,
-pinned PDDL problem generator, as in planning competitions
-\cite{Bacchus2001AIPS00}: after reserving a disjoint held-out split and
-validating every generated problem against $D$, a compatible
-generalized-planning backend can learn evidence from
-$\mathcal I_{\mathrm{train}}$ for the unchanged GP2PL compiler. This scales
-evidence acquisition and domain onboarding, not the supported PDDL--\ltlf{}
-fragment or representative-coverage guarantees.
+Future work can broaden evidence acquisition through a parameterized, pinned
+PDDL problem generator, as in planning competitions \cite{Bacchus2001AIPS00}:
+a compatible generalized-planning backend can then learn evidence from
+validated, held-out-disjoint instance sets for the unchanged GP2PL compiler,
+scaling domain onboarding without extending the supported PDDL--\ltlf{}
+fragment.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}
