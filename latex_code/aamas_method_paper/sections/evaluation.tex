@@ -1,27 +1,6 @@
 \section{Experimental Evaluation}
 \label{sec:evaluation}
 
-\subsection{Questions and Comparisons}
-
-\paragraph{Atomic compilation.}
-The cumulative comparison begins with Evidence Only, which validates and
-retains provider macros. Direct Producers adds action-only producers for the
-producible target universe. Maximum Feasible adds certified recursive
-preparation and target-preserving resource discharge, then retains a
-maximum-cardinality feasible subset. Full GP2PL applies the lexicographic
-Clingo objective to that same certified candidate set. These rows isolate
-target expansion, recursive candidate generation, and compact selection.
-
-\paragraph{Temporal composition.}
-Unprotected Serialization uses the same automaton, library, and
-primitive-step monitor without completion-effect analysis. Module-Return
-Monitor retains completion-effect ordering, preservation portfolios, and
-balanced repair, but checks the DFA only after an invoked atomic achievement
-module finishes all primitive actions and returns control to the query
-controller. Certified Balanced instead checks the DFA after every primitive
-action. The two references expose the effects of unprotected serialization and
-a coarser observation boundary.
-
 \subsection{Benchmarks and Protocol}
 
 \paragraph{Corpus and repetitions.}
@@ -60,6 +39,15 @@ appear in the Technical Supplement, Secs.~4--5.
 \subsection{Paired Component Ablations}
 \label{sec:paired-ablation-results}
 
+\paragraph{Atomic compilation.}
+The cumulative comparison begins with Evidence Only, which validates and
+retains provider macros. Direct Producers adds action-only producers for the
+producible target universe. Maximum Feasible adds certified recursive
+preparation and target-preserving resource discharge, then retains a
+maximum-cardinality feasible subset. Full GP2PL applies the lexicographic
+Clingo objective to that same certified candidate set. These rows isolate
+target expansion, recursive candidate generation, and compact selection.
+
 \input{sections/result_atomic_comparison_table}
 
 All variants compile 80 libraries and cover all 365 producible targets except
@@ -69,6 +57,16 @@ the four added serialized-width domains. After averaging the five seeded
 outcomes within each identifier, every nonzero difference favors the recursive
 variants. At equal coverage, the lexicographic objective selects the smallest
 certified library.
+
+\paragraph{Temporal composition.}
+Unprotected Serialization uses the same automaton, library, and
+primitive-step monitor without completion-effect analysis. Module-Return
+Monitor retains completion-effect ordering, preservation portfolios, and
+balanced repair, but checks the DFA only after an invoked atomic achievement
+module finishes all primitive actions and returns control to the query
+controller. Certified Balanced instead checks the DFA after every primitive
+action. The two references expose the effects of unprotected serialization and
+a coarser observation boundary.
 
 \input{sections/result_temporal_comparison_table}
 

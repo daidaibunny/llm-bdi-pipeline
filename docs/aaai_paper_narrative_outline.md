@@ -473,8 +473,8 @@ DFA strategy synthesis, or primitive-state safety to a theorem.
 The evaluation must match the paper's actual contribution: MOOSE is one
 instantiated Evidence Module provider, while the proposed method is the
 post-evidence library compiler and temporal query compiler. There is therefore
-no single global planner baseline. Present the five questions as separate
-descriptive paragraphs rather than numbered or combined RQ labels:
+no single global planner baseline. Do not create a stand-alone research-question
+subsection. State each comparison beside the evidence that answers it:
 
 - **Evidence-to-library compilation.** Relative to validated direct adaptation
   of the same normalized evidence, measure how schema-certified lifting and
@@ -486,18 +486,16 @@ descriptive paragraphs rather than numbered or combined RQ labels:
   DFA, atomic library, monitor, and Jason runtime but no effect-preservation
   reasoning, measure the effect of threat ordering and preservation portfolios on
   VAL- and DFA-valid execution.
-- **Controller structure.** Compare flat and balanced repair controllers while
-  preserving literal order and occurrence-specific preservation portfolios;
-  report controller size,
-  trigger fan-out, loading cost, and execution time without assigning semantic
-  credit to the tree.
+- **Controller structure.** Report controller size and trigger fan-out for the
+  balanced realization, and justify it by its representation bounds rather than
+  assigning semantic or runtime credit to the tree.
 - **End-to-end behavior.** Across domains, formula profiles, and evidence seeds,
   report valid traces and keep one-time core compilation, query append, and
   execution costs separate. Do not claim amortization without a measured
   break-even analysis. Compare Raw MOOSE and per-instance planners only on
   their declared scopes.
 
-After the questions and protocol, present evidence in dependency order. First,
+After the protocol, present evidence in dependency order. First,
 paired component ablations identify which mechanisms change coverage or
 structure. Second, full-system results report five-seed atomic robustness and
 fixed-library temporal validation. Third, external planning references place
@@ -532,11 +530,12 @@ publication fields.
    MONA-derived DFA,
    and primitive-step monitor, but no threat ordering or preservation portfolio.
 2. **Module-Return Monitor:** retain completion-effect certification and balanced
-   control, observe the DFA only after an atomic module returns, and omit
-   primitive-prefix source-invariant filtering because intermediate primitive
-   states are not observable under this ablation. Run it on the complete paired
-   benchmark, but attribute observation-boundary effects only on cases with
-   intermediate-state obligations.
+   control, but check the DFA only after an invoked atomic achievement module
+   finishes all primitive actions and returns control to the query controller.
+   Omit primitive-prefix source-invariant filtering because intermediate
+   primitive states are not observable under this ablation. Run it on the
+   complete paired benchmark, but attribute observation-boundary effects only on
+   cases with intermediate-state obligations.
 3. **Certified Balanced:** combine complete-effect threat ordering, preserving
    portfolios, balanced repair, and primitive-step monitoring as the selected
    configuration.

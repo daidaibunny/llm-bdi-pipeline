@@ -84,7 +84,6 @@ def test_manuscript_presents_component_evidence_before_full_system_and_reference
 		encoding="utf-8",
 	)
 
-	questions = evaluation.index(r"\subsection{Questions and Comparisons}")
 	protocol = evaluation.index(r"\subsection{Benchmarks and Protocol}")
 	paired = evaluation.index(r"\subsection{Paired Component Ablations}")
 	full_system = evaluation.index(
@@ -92,11 +91,19 @@ def test_manuscript_presents_component_evidence_before_full_system_and_reference
 	)
 	external = evaluation.index(r"\subsection{Evidence-to-Library Comparison}")
 
-	assert questions < protocol < paired < full_system < external
+	assert r"\subsection{Questions and Comparisons}" not in evaluation
+	assert protocol < paired < full_system < external
 	assert r"\label{fig:evaluation-summary}" not in evaluation
-	assert paired < evaluation.index(
+	atomic_description = evaluation.index(r"\paragraph{Atomic compilation.}")
+	temporal_description = evaluation.index(r"\paragraph{Temporal composition.}")
+	atomic_table = evaluation.index(
 		r"\input{sections/result_atomic_comparison_table}",
-	) < evaluation.index(r"\input{sections/result_temporal_comparison_table}")
+	)
+	temporal_table = evaluation.index(
+		r"\input{sections/result_temporal_comparison_table}",
+	)
+	assert paired < atomic_description < atomic_table
+	assert atomic_table < temporal_description < temporal_table
 	assert full_system < evaluation.index(
 		r"\input{sections/result_five_seed_atomic_table}",
 	) < evaluation.index(r"\paragraph{End-to-end temporal validation.}")

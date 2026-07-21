@@ -308,7 +308,7 @@ LTLf JSON, binding, real MONA-derived DFA, and Jason PDDL environment.
 | Method | Native behavior |
 | --- | --- |
 | Unprotected Serialization | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or occurrence-specific preservation portfolios. |
-| Module-Return Monitor | Retain completion-effect certification and the balanced controller, advance the DFA only when an atomic module returns, and omit primitive-prefix source-invariant filtering because intermediate primitive states are outside this ablation's observation semantics. |
+| Module-Return Monitor | Retain completion-effect certification and the balanced controller, but check the DFA only after an invoked atomic achievement module finishes all primitive actions and returns control to the query controller. Omit primitive-prefix source-invariant filtering because intermediate primitive states are outside this ablation's observation semantics. |
 | Certified Balanced | Use complete effect summaries, threat-safe order, per-occurrence preservation portfolios, balanced repair, and primitive-step monitoring. |
 
 All three reported temporal variants run the same complete 1,228-case benchmark.
