@@ -100,3 +100,15 @@ tmp/
 
 fast-downward/
 archive/
+
+# LaTeX artifacts: compiled output lives only in latex_code/*/build/ (already ignored via build/)
+latex_code/**/*.aux
+latex_code/**/*.bbl
+latex_code/**/*.blg
+latex_code/**/*.fdb_latexmk
+latex_code/**/*.fls
+latex_code/**/*.log
+latex_code/**/*.out
+latex_code/**/*.synctex.gz
+latex_code/aamas_method_paper/main.pdf
+latex_code/aamas_method_paper/technical_appendix.pdf
