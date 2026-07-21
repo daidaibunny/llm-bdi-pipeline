@@ -116,6 +116,22 @@ def test_manuscript_presents_component_evidence_before_full_system_and_reference
 	assert r"\input{sections/result_moose_reference_table}" not in evaluation
 
 
+def test_evaluation_uses_precise_comparison_and_aggregation_language() -> None:
+	evaluation = (LATEX_ROOT / "sections/evaluation.tex").read_text(
+		encoding="utf-8",
+	)
+
+	evaluation_text = " ".join(evaluation.split())
+	assert r"\subsection{Paired Component Ablations}" in evaluation
+	assert "73 producible targets under every seed" in evaluation_text
+	assert "365 seed--target obligations" in evaluation_text
+	assert "preregistered seed-0" not in evaluation_text
+	assert (
+		"Median runtime is \\TEGMedianRuntimeSeconds{} seconds" in evaluation_text
+	)
+	assert "compares provider execution with the complete compiler" in evaluation_text
+
+
 def test_write_paired_ablation_files_updates_tables_macros_and_manifest(
 	tmp_path: Path,
 ) -> None:

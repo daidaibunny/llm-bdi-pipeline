@@ -283,7 +283,7 @@ def render_moose_reference_table(result: Mapping[str, Any]) -> str:
 		(
 			"\\bottomrule",
 			"\\end{tabular}",
-			"\\caption{Raw MOOSE coverage under the preregistered source split. "
+			"\\caption{Raw MOOSE coverage under the declared source split. "
 			"The Reported row is copied from Table~4 of the five-seed MOOSE "
 			"extended paper~\\cite{Chen2025MooseExtended}; the Measured rows "
 			"are mean $\\pm$ sample standard deviation over the five local "

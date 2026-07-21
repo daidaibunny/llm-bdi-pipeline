@@ -268,6 +268,10 @@ def test_build_paired_ablation_dataset_requires_only_paired_and_challenge_inputs
 	assert r"\newcommand{\AtomicDirectToMaximumValidGain}{0}" in macros
 	assert r"\newcommand{\TemporalFlatToBalancedValidGain}{1}" in macros
 	assert r"\newcommand{\TemporalFlatToBalancedExactP}{1}" in macros
+	atomic_table = render_atomic_table(result)
+	atomic_table_text = " ".join(atomic_table.split())
+	assert "per-seed totals over the 16 domain libraries" in atomic_table_text
+	assert "mean $\\pm$ sample standard deviation across five seeds" in atomic_table_text
 
 
 def test_build_comparison_dataset_rejects_unregistered_published_moose_source(

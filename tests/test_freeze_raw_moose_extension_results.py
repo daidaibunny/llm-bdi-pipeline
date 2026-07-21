@@ -123,6 +123,8 @@ def test_reference_table_labels_reported_and_measured_sources(tmp_path: Path) ->
 	assert "Original 12 domains" in rendered
 	assert "GP2PL-added 4" in rendered
 	assert "Table~4" in rendered
+	assert "declared source split" in rendered
+	assert "preregistered" not in rendered
 	assert "cross-hardware runtime" in rendered
 	assert "\\begin{table}[htbp]" in rendered
 

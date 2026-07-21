@@ -17,8 +17,9 @@ cores.
 
 \paragraph{Temporal benchmark construction.}
 For each held-out problem, benchmark construction ignores the original
-achievement goal. Predicate and bounded-integer changes instantiate five
-predeclared profiles: $F(A\land B)$, $F(A\land\neg B)$, $F(A\land X(F(B)))$,
+achievement goal. Predicate events and bounded-integer fluent changes
+instantiate five predeclared profiles: $F(A\land B)$, $F(A\land\neg B)$,
+$F(A\land X(F(B)))$,
 $F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$.
 Selection retains one witness-backed query per held-out problem, yielding 1,228
 queries over 475 distinct translation inputs.
@@ -50,13 +51,14 @@ target expansion, recursive candidate generation, and compact selection.
 
 \input{sections/result_atomic_comparison_table}
 
-All variants compile 80 libraries and cover all 365 producible targets except
-Evidence Only (90/365). Certified recursive candidate generation supplies the
-10.42-percentage-point gain in Table~\ref{tab:atomic-comparison}, entirely on
-the four added serialized-width domains. After averaging the five seeded
-outcomes within each identifier, every nonzero difference favors the recursive
-variants. At equal coverage, the lexicographic objective selects the smallest
-certified library.
+Each method compiles 80 libraries. Direct Producers, Maximum Feasible, and Full
+GP2PL cover all 73 producible targets under every seed, giving 365 seed--target
+obligations; Evidence Only covers 90/365. Certified recursive candidate
+generation supplies the 10.42-percentage-point gain in
+Table~\ref{tab:atomic-comparison}, entirely on the four added serialized-width
+domains. After averaging the five seeded outcomes within each identifier, every
+nonzero difference favors the recursive variants. At equal coverage, the
+lexicographic objective selects the smallest certified library.
 
 \paragraph{Temporal composition.}
 Unprotected Serialization uses the same automaton, library, and
@@ -103,26 +105,26 @@ to $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. GPT-5.5 translates the registered
 specifications. All \TranslationEquivalentCount{}/\TranslationInputCount{}
 controlled-language specifications are valid and DFA-language equivalent, and
 all \TEGProblemCount{} admitted bound queries complete and pass neutral-goal
-VAL and both DFA trace oracles. Runtime is \TEGMedianRuntimeSeconds{} seconds
-median (interquartile range 4.28--8.49), and action count is
-\TEGMedianActionCount{} median (interquartile range 1--2).
+VAL and both DFA trace oracles. Median runtime is \TEGMedianRuntimeSeconds{}
+seconds (interquartile range 4.28--8.49), and median trace length is
+\TEGMedianActionCount{} primitive actions (interquartile range 1--2).
 
-This study fixes one preregistered seed-0 atomic core per domain; its result
-supports neither cross-seed claims nor arbitrary PDDL--\ltlf{} completeness.
+The temporal study fixes one seed-0 atomic core per domain, controlling the
+atomic-library input without measuring cross-seed robustness or arbitrary
+PDDL--\ltlf{} completeness.
 
 \subsection{Evidence-to-Library Comparison}
 \label{sec:evidence-to-library}
 
-Table~\ref{tab:added-scope-evidence} isolates the compiler's gain over its
-evidence provider on the four added families. Raw MOOSE executes each
-seed-specific policy directly; Full GP2PL compiles the same evidence with typed
-action schemas. Both use the same 740 held-out seed--case pairs.
+Table~\ref{tab:added-scope-evidence} compares direct execution of raw MOOSE
+policies with final GP2PL libraries compiled from the same evidence over the
+same 740 held-out seed--case pairs from the four added families.
 
 \input{sections/result_same_scope_evidence_table}
 
-It remains separate from Table~\ref{tab:atomic-comparison}: that table compares
-compiler variants over all 16 domains, whereas this table compares provider
-execution with the final library on a paired scope. Published MOOSE coverage is
-near ceiling on its disjoint original scope \cite{Chen2025MooseExtended};
+Unlike Table~\ref{tab:atomic-comparison}, it compares provider execution with
+the complete compiler rather than compiler configurations. Published MOOSE
+coverage is near ceiling on its disjoint original scope
+\cite{Chen2025MooseExtended};
 scope-separated MOOSE and per-instance planner references appear only in the
 Technical Supplement, Sec.~5.
