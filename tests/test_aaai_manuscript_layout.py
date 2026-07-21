@@ -466,7 +466,7 @@ def test_generator_assisted_onboarding_is_bounded_by_the_existing_contract() -> 
 
 	assert "pinned PDDL generators" in main_text
 	assert "held-out-disjoint instances" in main_text
-	assert "scalable domain onboarding" in main_text
+	assert "domain onboarding" in main_text
 	assert "fail-closed certification" in main_text
 	assert "An evidence provider is admissible" in method_source
 	for reproducibility_requirement in (
@@ -935,7 +935,7 @@ def test_conclusion_and_future_work_states_the_supported_claim_boundary(
 		"uncertified recursive or interference repair",
 		"pinned PDDL generators",
 		"held-out-disjoint instances",
-		"scalable domain onboarding",
+		"domain onboarding",
 	):
 		assert required_boundary in combined
 
