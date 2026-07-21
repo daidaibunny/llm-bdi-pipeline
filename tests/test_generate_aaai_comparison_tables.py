@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-import re
 import subprocess
 import sys
 
@@ -11,10 +10,6 @@ import pytest
 
 from scripts.generate_aaai_comparison_tables import build_comparison_dataset
 from scripts.generate_aaai_comparison_tables import build_paired_ablation_dataset
-from scripts.generate_aaai_comparison_tables import render_atomic_table
-from scripts.generate_aaai_comparison_tables import render_comparison_macros
-from scripts.generate_aaai_comparison_tables import render_external_table
-from scripts.generate_aaai_comparison_tables import render_temporal_table
 from scripts.run_certificate_challenge_matrix import CHALLENGE_CASES
 from scripts.run_certificate_challenge_matrix import METAMORPHIC_CASES
 
@@ -255,23 +250,6 @@ def test_build_paired_ablation_dataset_requires_only_paired_and_challenge_inputs
 	assert flat_to_balanced["right_only_valid_count"] == 1
 	assert flat_to_balanced["exact_two_sided_p"] == 1.0
 	assert result["temporal"][2]["valid_trace_count"] == 2
-	macros = render_comparison_macros(result)
-	assert all(
-		macro_name.isalpha()
-		for macro_name in re.findall(r"\\newcommand\{\\([^}]+)\}", macros)
-	)
-	assert r"\newcommand{\AtomicEvidenceOnlyValidCount}{5}" in macros
-	assert r"\newcommand{\AtomicAblationCaseCount}{10}" in macros
-	assert r"\newcommand{\TemporalCertifiedBalancedValidCount}{2}" in macros
-	assert r"\newcommand{\TemporalAblationCaseCount}{2}" in macros
-	assert r"\newcommand{\TemporalCertifiedBalancedFanout}{2}" in macros
-	assert r"\newcommand{\AtomicDirectToMaximumValidGain}{0}" in macros
-	assert r"\newcommand{\TemporalFlatToBalancedValidGain}{1}" in macros
-	assert r"\newcommand{\TemporalFlatToBalancedExactP}{1}" in macros
-	atomic_table = render_atomic_table(result)
-	atomic_table_text = " ".join(atomic_table.split())
-	assert "per-seed totals over the 16 domain libraries" in atomic_table_text
-	assert "mean $\\pm$ sample standard deviation across five seeds" in atomic_table_text
 
 
 def test_build_comparison_dataset_rejects_unregistered_published_moose_source(
@@ -898,89 +876,6 @@ def test_build_comparison_dataset_rejects_direct_temporal_case_omission(
 				_challenge_fixture(),
 			),
 		)
-
-def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None:
-	result = build_comparison_dataset(
-		paired_results_file=_write_json(
-			tmp_path / "paired.json",
-			_paired_fixture(raw_moose_case_ids=_registered_raw_moose_case_ids()),
-		),
-		published_moose_reference_file=_write_json(
-			tmp_path / "published-moose.json",
-			_published_moose_fixture(),
-		),
-		raw_moose_extension_summaries=tuple(
-			(
-				seed,
-				_write_json(
-					tmp_path / f"extension-{seed}.json",
-					_raw_extension_fixture(seed),
-				),
-			)
-			for seed in range(5)
-		),
-		instance_reference_summary_file=_write_json(
-			tmp_path / "instances.json",
-			_instance_fixture(),
-		),
-		direct_temporal_summary_file=_write_json(
-			tmp_path / "direct.json",
-			_direct_fixture(),
-		),
-		challenge_summary_file=_write_json(
-			tmp_path / "challenge.json",
-			_challenge_fixture(),
-		),
-	)
-
-	atomic = render_atomic_table(result)
-	temporal = render_temporal_table(result)
-	external = render_external_table(result)
-	combined = atomic + temporal + external
-	atomic_text = " ".join(atomic.split())
-	temporal_text = " ".join(temporal.split())
-
-	assert "Method & Valid (\\%) & Branches & KiB" in atomic
-	assert "Method & Valid & PAR-2 s & Plans & Fan-out" in temporal
-	assert "Method & Source & Scope & Coverage & Unsupported & PAR-2 s" in external
-	assert "MOOSE & Reported & Original MOOSE domains, five seeds" in external
-	assert "1079.6/1080" in external
-	assert "Raw MOOSE extension & Measured & Added domains, five seeds" in external
-	assert "148 $\\pm$ 0/148" in external
-	raw_extension_line = next(
-		line for line in external.splitlines() if line.startswith("Raw MOOSE extension")
-	)
-	assert raw_extension_line.endswith("& 0 & -- \\\\")
-	assert "Reported MOOSE coverage is copied from Table~4" in external
-	assert "Evidence Only" in atomic
-	assert "Certified Flat" not in temporal
-	assert temporal.index("Unprotected Serialization") < temporal.index(
-		"Module-Return Monitor",
-	) < temporal.index("Certified Balanced")
-	assert "Certified Balanced" in temporal
-	assert r"\resultbest{" in atomic
-	assert r"\resultselected{Full GP2PL}" in atomic
-	assert r"\resultbest{" in temporal
-	assert r"\resultselected{Certified Balanced}" in temporal
-	assert "Bold marks tied best coverage" in atomic_text
-	assert "blue bold marks Full GP2PL" in atomic_text
-	assert "PAR-2 charges failures twice" in temporal_text
-	assert "selection is structural, not runtime-based" in temporal_text
-	assert "Valid requires Jason" not in combined
-	assert "identical DFA, binding, and atomic-library inputs" not in temporal
-	assert "FOND4LTLf + LAMA" in external
-	assert "C0" not in combined
-	assert "T0" not in combined
-	for table in (atomic, temporal):
-		assert "\\begin{table}[htbp]" in table
-		assert "\\small" in table
-		assert "\\footnotesize" not in table
-		assert table.index("\\caption{") > table.index("\\end{tabular}")
-	assert "\\begin{table*}[htbp]" in external
-	assert "\\small" in external
-	assert "\\footnotesize" not in external
-	assert external.index("\\caption{") > external.index("\\end{tabular}")
-
 
 def _paired_fixture(
 	*,

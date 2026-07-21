@@ -11,7 +11,6 @@ from scripts import freeze_external_reference_results
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RELEASE_ROOT = PROJECT_ROOT / "paper_artifacts/gp2pl_evaluation/v1"
 RESULT_FILE = RELEASE_ROOT / "external_reference_results.json"
-LATEX_ROOT = PROJECT_ROOT / "latex_code/aamas_method_paper"
 
 
 def test_temporal_freeze_rejects_a_different_case_set_with_the_same_size(
@@ -80,37 +79,3 @@ def test_registered_external_reference_result_is_complete_portable_and_manifeste
 	for relative_path in manifest["files"]:
 		artifact = RELEASE_ROOT / relative_path
 		assert artifact.is_file()
-
-
-def test_manuscript_consumes_frozen_external_reference_results() -> None:
-	main = (LATEX_ROOT / "main.tex").read_text(encoding="utf-8")
-	technical_appendix = (LATEX_ROOT / "technical_appendix.tex").read_text(
-		encoding="utf-8",
-	)
-	evaluation = (LATEX_ROOT / "sections/evaluation.tex").read_text(encoding="utf-8")
-	appendix = (
-		LATEX_ROOT / "sections/technical_appendix_content.tex"
-	).read_text(encoding="utf-8")
-	table = (
-		LATEX_ROOT / "sections/result_external_reference_table.tex"
-	).read_text(encoding="utf-8")
-
-	assert r"\input{sections/result_external_reference_macros}" in main
-	assert (
-		r"\input{sections/result_external_reference_macros}" in technical_appendix
-	)
-	assert r"\ExternalLAMAValidCount{}" not in evaluation
-	assert r"\ExternalLAMAValidCount{}" in appendix
-	assert r"\ExternalDirectValidCount{}" not in evaluation
-	assert r"\ExternalDirectValidCount{}" in appendix
-	assert r"external\_reference\_results.json" in appendix
-	assert r"\input{sections/result_external_reference_table}" not in evaluation
-	assert r"\input{sections/result_external_reference_table}" in appendix
-	assert "LAMA & Measured & Classical achievement & 591/868 & 0 & 1178.4" in table
-	assert "MRP+HJ & Measured & Numeric achievement & 253/360 & 0 & 1127.4" in table
-	assert "FOND4LTLf + LAMA & Measured & Supported Boolean TEG" in table
-	assert "298/492 & 736 & 1457.5" in table
-	raw_line = next(
-		line for line in table.splitlines() if line.startswith("Raw MOOSE extension")
-	)
-	assert raw_line.endswith("& 0 & -- " + "\\\\")

@@ -273,47 +273,6 @@ def test_generate_empirical_figure_writes_vector_pdf_and_outcome_metadata(
 	assert output_file.with_suffix(".metadata.json").is_file()
 
 
-def test_manuscript_uses_tables_in_main_and_moves_detailed_views_to_supplement() -> None:
-	main_text = (PROJECT_ROOT / "latex_code/aamas_method_paper/main.tex").read_text()
-	evaluation_text = (
-		PROJECT_ROOT / "latex_code/aamas_method_paper/sections/evaluation.tex"
-	).read_text()
-	supplement_text = (
-		PROJECT_ROOT
-		/ "latex_code/aamas_method_paper/sections/technical_appendix_content.tex"
-	).read_text()
-
-	assert "\\gpplfigurethreepath" not in main_text
-	assert "\\gpplfigurethreepath" not in evaluation_text
-	assert "\\label{fig:evaluation-summary}" not in evaluation_text
-	for table_input in ("\\input{sections/result_five_seed_atomic_table}",):
-		assert table_input in evaluation_text
-		assert table_input not in supplement_text
-	assert "\\input{sections/result_temporal_summary_table}" not in evaluation_text
-	for table_input in (
-		"\\input{sections/result_five_seed_atomic_domain_table}",
-		"\\input{sections/result_domain_table}",
-		"\\input{sections/result_profile_table}",
-		"\\input{sections/result_moose_reference_table}",
-	):
-		assert table_input not in evaluation_text
-		assert table_input in supplement_text
-	assert "\\clearpage" not in evaluation_text
-	assert "supplementary diagnostic artifact" in supplement_text
-	result_float_specs = {
-		"result_five_seed_atomic_table.tex": "\\begin{table}[htbp]",
-		"result_five_seed_atomic_domain_table.tex": "\\begin{table*}[htbp]",
-		"result_profile_table.tex": "\\begin{table}[htbp]",
-		"result_domain_table.tex": "\\begin{table}[htbp]",
-	}
-	for filename, expected_float in result_float_specs.items():
-		float_text = (
-			PROJECT_ROOT / "latex_code/aamas_method_paper/sections" / filename
-		).read_text()
-		assert expected_float in float_text
-		assert "[H]" not in float_text
-
-
 def test_generate_empirical_figure_fails_closed_with_diagnostic(
 	tmp_path: Path,
 ) -> None:

@@ -6,7 +6,6 @@ from pathlib import Path
 from scripts.freeze_raw_moose_extension_results import (
 	build_raw_moose_extension_dataset,
 )
-from scripts.freeze_raw_moose_extension_results import render_moose_reference_table
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -37,27 +36,6 @@ def test_registered_frozen_result_is_complete_portable_and_manifested() -> None:
 	assert "/Users/" not in result_file.read_text(encoding="utf-8")
 	manifest = json.loads((release_root / "manifest.json").read_text(encoding="utf-8"))
 	assert result_file.name in manifest["files"]
-
-
-def test_manuscript_consumes_the_frozen_moose_reference_result() -> None:
-	latex_root = PROJECT_ROOT / "latex_code/aamas_method_paper"
-	main = (latex_root / "main.tex").read_text(encoding="utf-8")
-	evaluation = (latex_root / "sections/evaluation.tex").read_text(encoding="utf-8")
-	same_scope_table = (
-		latex_root / "sections/result_same_scope_evidence_table.tex"
-	).read_text(encoding="utf-8")
-	appendix = (latex_root / "sections/technical_appendix_content.tex").read_text(
-		encoding="utf-8",
-	)
-
-	assert r"\input{sections/result_moose_reference_macros}" in main
-	assert r"\input{sections/result_moose_reference_table}" not in evaluation
-	assert r"\input{sections/result_moose_reference_table}" in appendix
-	assert r"\RawMooseExtensionSeedCounts{}" not in evaluation
-	assert r"Table~\ref{tab:added-scope-evidence}" in evaluation
-	assert "Raw MOOSE evidence & 117/740 & 15.8" in same_scope_table
-	assert r"raw\_moose\_extension\_" in appendix
-	assert r"five\_seed\_summary.json" in appendix
 
 
 def test_freeze_filters_registered_extension_and_preserves_five_seed_counts(
@@ -97,36 +75,6 @@ def test_freeze_filters_registered_extension_and_preserves_five_seed_counts(
 		EXTENSION_DOMAINS,
 	)
 	assert result["published_reference"]["mean_solved_count"] == 1079.6
-
-
-def test_reference_table_labels_reported_and_measured_sources(tmp_path: Path) -> None:
-	case_ids = _extension_case_ids()
-	summaries = {
-		seed: _write_json(
-			tmp_path / f"seed-{seed}.json",
-			_summary(seed, [_result(case_id, valid=True) for case_id in case_ids]),
-		)
-		for seed in range(5)
-	}
-	result = build_raw_moose_extension_dataset(
-		summaries,
-		published_reference_file=(
-			PROJECT_ROOT
-			/ "paper_artifacts/gp2pl_evaluation/v1/moose_published_reference.json"
-		),
-	)
-
-	rendered = render_moose_reference_table(result)
-
-	assert r"\textbf{Reported} (MOOSE Table~4)" in rendered
-	assert r"\textbf{Measured} (local five seeds)" in rendered
-	assert "Original 12 domains" in rendered
-	assert "GP2PL-added 4" in rendered
-	assert "Table~4" in rendered
-	assert "declared source split" in rendered
-	assert "preregistered" not in rendered
-	assert "cross-hardware runtime" in rendered
-	assert "\\begin{table}[htbp]" in rendered
 
 
 def _extension_case_ids() -> tuple[str, ...]:

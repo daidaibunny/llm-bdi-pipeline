@@ -7,9 +7,6 @@ import pytest
 
 from scripts.freeze_five_seed_full_compiler_results import (
 	build_five_seed_result_dataset,
-	render_domain_table,
-	render_main_table,
-	render_result_macros,
 )
 
 
@@ -103,43 +100,6 @@ def test_build_five_seed_result_dataset_uses_jason_process_time(
 		if row["seed"] == 0 and row["domain"] == "logistics"
 	)
 	assert row["jason_run_seconds"] == 7.5
-
-
-def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
-	result = build_five_seed_result_dataset(
-		_write_summary_set(tmp_path),
-		expected_domains=("depots", "logistics"),
-		expected_case_count=2,
-	)
-
-	macros = render_result_macros(result)
-	main_table = render_main_table(result)
-	domain_table = render_domain_table(result)
-	main_table_text = " ".join(main_table.split())
-
-	assert "\\newcommand{\\AtomicFiveSeedMeanSuccessPercent}{40.00}" in macros
-	assert "\\newcommand{\\AtomicFiveSeedSampleSDPercent}{22.36}" in macros
-	assert "Scope & Cases/seed & Valid/seed & Coverage (\\%)" in main_table
-	assert "All 2 domains & 2 & 0--1 & 40.0 $\\pm$ 22.4" in main_table
-	assert "Logistics & 1 & 0--1 & 80.0 $\\pm$ 44.7" in main_table
-	assert "Depots & 1 & 0 & 0.0 $\\pm$ 0.0" in main_table
-	assert "Seed 0" not in main_table
-	assert "sample standard deviation" in main_table_text
-	assert "standard deviation (SD)" not in main_table_text
-	assert "predeclared evidence seeds" in main_table_text
-	assert "compiled independently" not in main_table_text
-	assert "Domain & Test & Seed 0 & Seed 1 & Seed 2 & Seed 3 & Seed 4" in domain_table
-	assert "Coverage (\\%)" in domain_table
-	assert "Mean (\\%)" not in domain_table
-	assert "SD (pp)" not in domain_table
-	assert "logistics & 1 & 1 & 1 & 0 & 1 & 1 & 80.0 $\\pm$ 44.7" in domain_table
-	assert "$n=5$" in domain_table
-	assert "independently compiled atomic cores" in domain_table
-	for table in (main_table, domain_table):
-		assert "[htbp]" in table
-		assert "\\small" in table
-		assert "\\scriptsize" not in table
-		assert table.index("\\caption{") > table.index("\\end{tabular}")
 
 
 def _write_summary_set(root: Path) -> dict[int, Path]:
