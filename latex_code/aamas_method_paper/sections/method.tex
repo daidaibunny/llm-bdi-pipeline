@@ -274,11 +274,12 @@ $\boldsymbol\ell_\chi$ by recursively splitting contiguous literal ranges at
 their midpoint. Internal nodes dispatch two child ranges, leaves observe or
 repair one signed literal, and the completion plan retries only while the
 monitor remains at $q_s$. The certificate pair, rather than the tree shape,
-provides the temporal guarantee. Flat control gives one trigger $O(n)$ sibling
-plans, whereas a direct linear body gives an $O(n)$-long intention continuation;
-balanced dispatch preserves the certified order while bounding both local
-quantities by two. The construction and suffix-safety argument appear in the
-Technical Supplement, Sec.~2.
+provides the temporal guarantee. Trigger fan-out denotes the number of sibling
+AgentSpeak plans sharing one transition-repair trigger. Flat control therefore
+has fan-out $O(n)$, whereas a direct linear body gives an $O(n)$-long intention
+continuation; balanced dispatch preserves the certified order while bounding
+both local quantities by two. The construction and suffix-safety argument
+appear in the Technical Supplement, Sec.~2.
 
 Appending $\mathcal Q_q$ updates $\mathcal L_D^{[k]}$ as defined in
 Sec.~\ref{sec:background} without changing $\mathcal M_D$. Query-local goals are
