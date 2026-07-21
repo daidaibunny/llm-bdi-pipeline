@@ -164,28 +164,17 @@ protocol appear in the Technical Supplement.
 \FloatBarrier
 \section{Conclusion and Future Work}
 
-GP2PL compiles generalized-planning evidence and typed PDDL schemas into a
-closed atomic core, then appends preservation-safe DFA controllers to one
-maintained BDI library; uncertified obligations fail closed.
-
-Using five fixed evidence seeds and one atomic core per domain and seed, mean
-held-out coverage over \BenchmarkDomainCount{} domains was
-\AtomicFiveSeedMeanSuccessPercent{}\%
-(\AtomicFiveSeedSampleSDPercent{}-point sample SD), while recursive candidates
-improved paired atomic success by 10.42 percentage points. Preservation
-certification improved paired temporal success by 9.36 points; all
-\TranslationEquivalentCount{} translations matched their gold finite-trace
-languages, and all \TEGProblemCount{} admitted queries produced validated accepting
-traces. Certification improved both reusable coverage and
-temporally correct execution.
-
-GP2PL does not claim arbitrary PDDL--\ltlf{} strategy synthesis: it rejects
-arithmetic outside the bounded-integer fragment, formulae outside the declared
-$F$, $X$, $U$, conjunction, and literal-negation fragment, and uncertified
-recursive or interference repair. Future work should
-broaden providers, candidate grammars, and temporal fragments under fail-closed
-certification, with pinned PDDL generators and held-out-disjoint instances for
-domain onboarding.
+GP2PL compiles GP evidence and PDDL schemas into a closed atomic core and
+certified DFA controllers. Across five seeds, atomic coverage over
+\BenchmarkDomainCount{} domains is \AtomicFiveSeedMeanSuccessPercent{}\%
+(\AtomicFiveSeedSampleSDPercent{}-point sample SD); recursion and preservation
+add 10.42 and 9.36 paired-success points. All
+\TranslationEquivalentCount{} translations and \TEGProblemCount{} admitted
+queries pass semantic and execution validation. Unsupported are unrestricted
+PDDL--\ltlf{} synthesis, out-of-fragment arithmetic/formulae, and uncertified
+repair; future work broadens this scope under fail-closed certification.
+Pinned PDDL generators with held-out-disjoint instances can extend domain
+onboarding without changing the certificates.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}
@@ -194,8 +183,5 @@ dataset are available at \url{\gpplartifacturl}.
 \fi
 
 \bibliography{references}
-
-\def\isChecklistMainFile{}
-\input{sections/reproducibility_checklist}
 
 \end{document}

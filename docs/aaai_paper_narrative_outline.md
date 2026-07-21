@@ -1552,10 +1552,10 @@ The remaining submission tasks are:
 
 1. full or supplementary proofs for any claim stronger than the current proof
    sketches; and
-2. final camera-ready author and artifact metadata. With empirical completeness
-   retained before page-budget editing, the current compiled draft places the
-   final section and the start of the references on page 14; references continue
-   through page 16 and the checklist occupies pages 16--17.
+2. final camera-ready author and artifact metadata. The current compiled draft
+   uses seven technical-content pages, followed by references. Under the
+   AAAI-27 submission instructions, the reproducibility checklist is compiled
+   and uploaded separately rather than appended to the main-paper PDF.
 
 The five-seed public artifact records the declared protocol and every one of the
 6,140 seed--case outcomes. Timing is not reported because the runs overlapped
