@@ -3,7 +3,6 @@
 \usepackage[submission]{aaai2027}
 \usepackage[hyphens]{url}
 \usepackage{graphicx}
-\usepackage{xcolor}
 \urlstyle{rm}
 \def\UrlFont{\rm}
 \usepackage{natbib}
@@ -16,29 +15,8 @@
 \usepackage{algorithmic}
 
 \frenchspacing
-\setlength{\pdfpagewidth}{8.5in}
-\setlength{\pdfpageheight}{11in}
 \pdfinfo{/TemplateVersion (2027.1)}
 \setcounter{secnumdepth}{2}
-
-% Compact float packing. Page geometry, fonts, and \baselinestretch are
-% untouched; these only let floats share pages with text instead of
-% drifting to float-only pages, and tighten float/text separation.
-\renewcommand{\topfraction}{0.95}
-\renewcommand{\bottomfraction}{0.9}
-\renewcommand{\textfraction}{0.05}
-\renewcommand{\floatpagefraction}{0.9}
-\renewcommand{\dbltopfraction}{0.95}
-\renewcommand{\dblfloatpagefraction}{0.9}
-\setcounter{topnumber}{4}
-\setcounter{bottomnumber}{3}
-\setcounter{totalnumber}{6}
-\setlength{\floatsep}{8pt plus 2pt minus 2pt}
-\setlength{\textfloatsep}{10pt plus 2pt minus 4pt}
-\setlength{\intextsep}{8pt plus 2pt minus 2pt}
-\setlength{\dblfloatsep}{8pt plus 2pt minus 2pt}
-\setlength{\dbltextfloatsep}{10pt plus 2pt minus 4pt}
-\captionsetup{skip=5pt}
 
 \title{GP2PL: From Generalized Planning Evidence to Certified BDI Plan
 Libraries for Temporally Extended Goals}
@@ -52,9 +30,9 @@ Libraries for Temporally Extended Goals}
 \newcommand{\maydelete}{\ensuremath{\mathrm{MayDelete}}}
 \newcommand{\mayadd}{\ensuremath{\mathrm{MayAdd}}}
 \newcommand{\methodname}{GP2PL}
-\definecolor{gpplresultblue}{RGB}{0,82,136}
 \newcommand{\resultbest}[1]{\textbf{#1}}
-\newcommand{\resultselected}[1]{\textbf{\textcolor{gpplresultblue}{#1}}}
+\newcommand{\resultselected}[1]{\textbf{#1}}
+\newcommand{\selectedmark}{\textsuperscript{\ensuremath{\dagger}}}
 \providecommand{\gpplfigureonepath}{figures/fig1_architecture.png}
 \providecommand{\gpplfiguretwopath}{figures/fig2_compiler_stages.pdf}
 \providecommand{\gpplatomiccasepath}{figures/fig3_atomic_case.png}
@@ -93,7 +71,7 @@ and preservation certification improves paired temporal success by 9.36
 percentage points. All \TranslationEquivalentCount{} translated specifications
 match their gold finite-trace languages, and the fixed-core temporal study
 produces independently validated accepting traces for all \TEGProblemCount{}
-bound queries.
+admitted bound queries.
 \end{abstract}
 
 \section{Introduction}
@@ -146,12 +124,6 @@ of BDI goal interference \cite{Thangarajah2003GoalInterference}. Safe reuse
 therefore requires temporal control over the fixed domain library and
 observation after primitive actions.
 
-The central design choice is reuse: temporal requests extend one maintained
-library instead of triggering a new domain-level learning run. Both compiler
-stages reason over typed action schemas and effects rather than domain names.
-Figure~\ref{fig:compiler-stages} exposes their internal transformations without
-mixing them with a domain-specific worked example.
-
 \begin{figure*}[t!]
 \centering
 \IfFileExists{\gpplfiguretwopath}{%
@@ -168,10 +140,7 @@ candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. For the bound Blocks
 World tower query, the query-specific stage reuses selected completion summaries
 to certify a preservation portfolio $\boldsymbol\Pi_\chi$ and serialization
 $\boldsymbol\ell_\chi$ for its MONA-derived conjunctive progress guard, then
-renders the certified order as a balanced transition-repair tree.
-The resulting $\mathcal Q_q$ is appended without relearning the core.
-  Figure~\ref{fig:atomic-case} separately illustrates a compositional derivation
-  available in the selected atomic core.}
+renders the certified order as a balanced transition-repair tree.}
 \label{fig:compiler-stages}
 \end{figure*}
 
@@ -210,7 +179,7 @@ Across \BenchmarkDomainCount{} domains, five independently seeded cores achieved
 improved paired atomic success by 10.42 percentage points. Preservation
 certification improved paired temporal success by 9.36 points; all
 \TranslationEquivalentCount{} translations matched their gold finite-trace
-languages, and all \TEGProblemCount{} queries produced validated accepting
+languages, and all \TEGProblemCount{} admitted queries produced validated accepting
 traces. Certification improved both reusable coverage and
 temporally correct execution.
 

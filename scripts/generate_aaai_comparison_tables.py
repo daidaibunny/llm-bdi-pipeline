@@ -1304,7 +1304,7 @@ def render_atomic_table(result: Mapping[str, Any]) -> str:
 		if variant in {"maximal_certified_program", "full"}:
 			valid = f"\\resultbest{{{valid}}}"
 		if variant == "full":
-			method = f"\\resultselected{{{method}}}"
+			method = f"\\resultselected{{{method}}}\\selectedmark"
 			branches = f"\\resultselected{{{branches}}}"
 			library_kib = f"\\resultselected{{{library_kib}}}"
 		lines.append(
@@ -1317,9 +1317,8 @@ def render_atomic_table(result: Mapping[str, Any]) -> str:
 			"\\caption{Paired atomic compiler comparison over 6,140 held-out seed--case",
 			"executions (16 domains, 1,228 cases, five fixed seeds). Branches and KiB are",
 			"per-seed totals over the 16 domain libraries, reported as mean $\\pm$ sample",
-			"standard deviation across five seeds. Bold",
-			"marks tied best coverage; blue bold marks Full GP2PL and its smaller core at",
-			"equal coverage.}",
+			"standard deviation across five seeds. Bold marks tied best coverage and the",
+			"selected smaller core at equal coverage; $\\dagger$ marks the selected method.}",
 			"\\label{tab:atomic-comparison}",
 			"\\end{table}",
 		),
@@ -1355,7 +1354,7 @@ def render_temporal_table(result: Mapping[str, Any]) -> str:
 		if variant == "certified_balanced":
 			valid = f"\\resultbest{{{valid}}}"
 		if variant == "certified_balanced":
-			method = f"\\resultselected{{{method}}}"
+			method = f"\\resultselected{{{method}}}\\selectedmark"
 			fanout = f"\\resultselected{{{fanout}}}"
 		lines.append(
 			f"{method} & {valid} & {_number(row['par2_seconds'])} & "
@@ -1369,8 +1368,8 @@ def render_temporal_table(result: Mapping[str, Any]) -> str:
 			"\\caption{Paired temporal compiler comparison over 1,228 queries. PAR-2 charges",
 			"failures twice the 1,800-second limit. Plans is median controller size and",
 			"Fan-out is the maximum number of sibling plans sharing one repair trigger.",
-			"Bold marks best coverage; blue bold marks selected Balanced, which bounds fan-out",
-			"at two; selection is structural, not runtime-based.}",
+			"Bold marks best coverage and the selected structural bound; $\\dagger$ marks",
+			"Balanced as the selected method. Selection is structural, not runtime-based.}",
 			"\\label{tab:temporal-comparison}",
 			"\\end{table}",
 		),

@@ -8,13 +8,14 @@ $D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$ by
 verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before feasible-core
 selection. Query compilation reuses the selected summaries to certify
 $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)$ for each DFA guard $\chi$, without
-relearning $\mathcal M_D$. The Technical Supplement, Sec.~3 gives the full
-pseudocode.
+relearning $\mathcal M_D$. The Technical Supplement formalizes the accept/reject
+boundary and constructor obligations (Sec.~1), proves the binding, symbolic
+execution, progress, resource, preservation, tree, monitor, and answer-set
+correspondence claims (Sec.~2), and gives full compiler pseudocode (Sec.~3).
 
 All obligations are checked on trigger--context--body rules before rendering.
 The \asl{} rendering preserves each selected trigger, context, ordered body, and
-internal-call edge. The Technical Supplement, Sec.~1 gives the formal
-accept/reject boundary.
+internal-call edge.
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -86,9 +87,7 @@ facts hold after every feasible completion; $\mayadd_b$ and $\maydelete_b$
 overapproximate possible effects. Selected branches also satisfy typed binding,
 symbolic executability, and target achievement; $\operatorname{Cert}_D(b)$
 denotes their conjunction, and the core satisfies
-$\operatorname{Closed}_D(\mathcal M_D)$. The Technical Supplement, Sec.~1
-tabulates constructor-specific obligations; the load-bearing certificates
-follow.
+$\operatorname{Closed}_D(\mathcal M_D)$; the load-bearing certificates follow.
 
 \paragraph{Binding, symbolic execution, and internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
@@ -176,15 +175,6 @@ trigger--context--body rules, rather than their AgentSpeak rendering, define
 $\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
-Figure~\ref{fig:atomic-case} isolates one certified compositional derivation
-available in the selected atomic core $\mathcal M_D$. For the runtime binding
-$X\mapsto y$, $Y\mapsto z$, and $Z\mapsto x$, branch $b_0$ expands
-$\texttt{!on(y,z)}$ into $\texttt{!clear(y)}$ followed by a retry; this control
-step leaves the PDDL state unchanged. Branch $b_1$ clears $y$, and $b_2$ then
-establishes $\texttt{on(y,z)}$. Multiple selected branches may be applicable in
-one state, so the figure demonstrates an available derivation rather than an
-executor tie-breaking rule.
-
 \begin{figure}[htbp]
 \centering
 \IfFileExists{\gpplatomiccasepath}{%
@@ -219,12 +209,6 @@ summaries. Failure to certify this pair rejects the progress edge; otherwise
 $\boldsymbol\ell_\chi$ is rendered as the balanced binary transition-repair
 tree of Sec.~\ref{sec:balanced-trees}.
 
-Figure~\ref{fig:compiler-stages}(b) instantiates this construction for a bound
-Blocks World tower query. Its DFA progress guard requires three
-\texttt{on} literals to hold together; conditional completion summaries induce
-a bottom-up preservation-safe order, and the balanced transition-repair tree
-emits $\mathcal Q_q$ for append to $\mathcal L_D^{[k]}$.
-
 \subsection{Summaries and Preservation Portfolios}
 
 A relational fixed point over selected calls computes each branch summary
@@ -247,8 +231,6 @@ topological serialization. If no portfolio choice removes a cycle, compilation
 requires a joint branch $b_\chi^{\mathrm{joint}}$ whose complete net effect
 establishes the entire guard, is callable from every positive occurrence it
 establishes, and retains every query variable; otherwise it rejects the edge.
-The exact fixed point, precedence relation, and cycle conditions appear in the
-Technical Supplement, Secs.~1--2.
 
 \subsection{Numeric and Joint Guard Certificates}
 
@@ -263,8 +245,7 @@ without a certified change-away action. Numeric preparation uses
 $\rho_{\mathrm{num}}=\langle n_{\mathrm{miss}},d_{\mathrm{target}}\rangle$,
 ordering missing preconditions before bounded target distance. Strong-Until
 source invariants are the signed literals common to every non-progress
-self-loop guard and are preserved until progress
-(Technical Supplement, Sec.~2).
+self-loop guard and are preserved until progress.
 
 \subsection{Balanced Binary Transition-Repair Trees}
 \label{sec:balanced-trees}
@@ -281,8 +262,7 @@ provides the temporal guarantee. Trigger fan-out denotes the number of sibling
 AgentSpeak plans sharing one transition-repair trigger. Flat control therefore
 has fan-out $O(n)$, whereas a direct linear body gives an $O(n)$-long intention
 continuation; balanced dispatch preserves the certified order while bounding
-both local quantities by two. The construction and suffix-safety argument
-appear in the Technical Supplement, Sec.~2.
+both local quantities by two.
 
 Appending $\mathcal Q_q$ updates $\mathcal L_D^{[k]}$ as defined in
 Sec.~\ref{sec:background} without changing $\mathcal M_D$. Query-local goals are
@@ -312,10 +292,8 @@ reachable-state coverage.
 
 \textbf{Proposition 2.} For the grounded selection instance defined above, a
 Clingo optimum $\mathcal M_D$ belongs to $\mathfrak F_{D,E}$ and minimizes the
-declared lexicographic cost over that feasible family. The Technical Supplement
-proves a bidirectional correspondence between answer sets and feasible subsets;
-the result does not imply complete candidate generation or optimality over all
-AgentSpeak programs.
+declared lexicographic cost over that feasible family. The result does not imply
+complete candidate generation or optimality over all AgentSpeak programs.
 
 \paragraph{Supported transition-composition soundness.}
 
@@ -341,8 +319,7 @@ the current state and either retries or returns to top-level dispatch.
 guarantee that a post-exit suffix avoids a rejecting state.
 
 \paragraph{Structural and monitor-fidelity guarantees.}
-Three further guarantees are stated and proved in the Technical Supplement,
-Sec.~2. The balanced tree for $n$ signed literals and $e$ repair plans has
+The balanced tree for $n$ signed literals and $e$ repair plans has
 $2n+e+2$ plans, fan-out and body length at most two, and depth $O(\log n)$
 while preserving the certified order (Proposition~4). After every successful
 primitive action, the runtime monitor state equals the deterministic automaton
@@ -352,7 +329,3 @@ exactly a DFA exit and controller plans cannot write monitor beliefs
 commits no primitive action and denotes the one-state trace
 $\langle s_0\rangle$ rather than an inserted noop, which could change
 strong-Next or Until truth (Proposition~6).
-
-Complete proofs, including the binding, symbolic-progression,
-relational-ranking, resource-discharge, and tree-order lemmas used by these
-propositions, appear in the Technical Supplement, Sec.~2.
