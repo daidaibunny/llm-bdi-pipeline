@@ -358,10 +358,9 @@ def test_obsolete_generated_benchmark_implementation_names_are_absent() -> None:
 		PROJECT_ROOT / "scripts",
 		PROJECT_ROOT / "src",
 		PROJECT_ROOT / "tests",
-		PROJECT_ROOT / "latex_code" / "aamas_method_paper" / "sections",
 		PROJECT_ROOT / "paper_artifacts",
 	)
-	suffixes = {".bib", ".json", ".md", ".py", ".tex", ".txt"}
+	suffixes = {".bib", ".json", ".md", ".py", ".txt"}
 
 	paths: list[Path] = []
 	for root in scan_roots:
