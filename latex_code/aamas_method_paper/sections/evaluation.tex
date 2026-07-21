@@ -15,11 +15,12 @@ target expansion, recursive candidate generation, and compact selection.
 \paragraph{Temporal composition.}
 Unprotected Serialization uses the same automaton, library, and
 primitive-step monitor without completion-effect analysis. Module-Return
-Monitor retains certified balanced control but observes the DFA only after a
-module returns. Certified Balanced combines completion-effect ordering,
-preservation portfolios, balanced repair, and primitive-step observation. The
-two references expose the effects of unprotected serialization and a coarser
-observation boundary.
+Monitor retains completion-effect ordering, preservation portfolios, and
+balanced repair, but checks the DFA only after an invoked atomic achievement
+module finishes all primitive actions and returns control to the query
+controller. Certified Balanced instead checks the DFA after every primitive
+action. The two references expose the effects of unprotected serialization and
+a coarser observation boundary.
 
 \subsection{Benchmarks and Protocol}
 
