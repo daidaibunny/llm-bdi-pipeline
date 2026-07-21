@@ -1,264 +1,113 @@
 {
   "artifact_kind": "certificate_and_symbol_invariance_challenge_matrix",
   "case_count": 13,
-  "created_at": "2026-07-13T23:10:51",
   "records": [
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_library_contract.py::test_domain_level_library_contract_rejects_unbound_body_variables",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.8080623749410734,
       "family": "Binding",
       "kind": "rejection",
       "name": "Unbound Body Variable",
-      "node_id": "tests/domain_level_planning/test_library_contract.py::test_domain_level_library_contract_rejects_unbound_body_variables",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_atomic_module_synthesis.py::test_schema_regression_rejects_cyclic_producer_graph_before_search",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.908381124958396,
       "family": "Preparation",
       "kind": "rejection",
       "name": "Cyclic Producer Graph",
-      "node_id": "tests/domain_level_planning/test_atomic_module_synthesis.py::test_schema_regression_rejects_cyclic_producer_graph_before_search",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_atomic_module_synthesis.py::test_recursive_progress_rejects_delete_add_obstruction_exchange",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.8677452499978244,
       "family": "Progress",
       "kind": "rejection",
       "name": "Obstruction Exchange",
-      "node_id": "tests/domain_level_planning/test_atomic_module_synthesis.py::test_recursive_progress_rejects_delete_add_obstruction_exchange",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_atomic_module_synthesis.py::test_resource_release_rejects_symmetric_modes_without_capacity_key",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.8595555420033634,
       "family": "Release",
       "kind": "rejection",
       "name": "Ambiguous Capacity Key",
-      "node_id": "tests/domain_level_planning/test_atomic_module_synthesis.py::test_resource_release_rejects_symmetric_modes_without_capacity_key",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_temporal_goal_appender.py::test_append_temporal_goal_rejects_cyclic_conjunctive_threats",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.822041834006086,
       "family": "Threat",
       "kind": "rejection",
       "name": "Cyclic Completion Threat",
-      "node_id": "tests/domain_level_planning/test_temporal_goal_appender.py::test_append_temporal_goal_rejects_cyclic_conjunctive_threats",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_temporal_goal_appender.py::test_append_temporal_goal_rejects_uncertified_negative_guard_preservation",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.80343199998606,
       "family": "Negative Guard",
       "kind": "rejection",
       "name": "Forbidden Completion Addition",
-      "node_id": "tests/domain_level_planning/test_temporal_goal_appender.py::test_append_temporal_goal_rejects_uncertified_negative_guard_preservation",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_temporal_goal_appender.py::test_numeric_until_separates_repeatable_preserving_and_exact_terminal_steps",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.8376135000726208,
       "family": "Numeric Progress",
       "kind": "acceptance",
       "name": "Exact Terminal Step",
-      "node_id": "tests/domain_level_planning/test_temporal_goal_appender.py::test_numeric_until_separates_repeatable_preserving_and_exact_terminal_steps",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_synthesis_is_invariant_under_vocabulary_alpha_renaming",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.7531174590112641,
       "family": "Vocabulary Renaming",
       "kind": "invariance",
       "name": "Predicate and Action Renaming",
-      "node_id": "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_synthesis_is_invariant_under_vocabulary_alpha_renaming",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_synthesis_is_invariant_under_action_parameter_permutation",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.7621639169519767,
       "family": "Parameter Permutation",
       "kind": "invariance",
       "name": "Action Parameter Permutation",
-      "node_id": "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_synthesis_is_invariant_under_action_parameter_permutation",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_compilation_is_invariant_under_evidence_object_renaming",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.7506789999315515,
       "family": "Object Renaming",
       "kind": "invariance",
       "name": "Evidence Object Renaming",
-      "node_id": "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_compilation_is_invariant_under_evidence_object_renaming",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_synthesis_ignores_unreferenced_static_vocabulary",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.7603764169616625,
       "family": "Irrelevant Fluent",
       "kind": "invariance",
       "name": "Unreferenced Static Injection",
-      "node_id": "tests/domain_level_planning/test_no_domain_hardcoding.py::test_atomic_synthesis_ignores_unreferenced_static_vocabulary",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_certified_effects.py::test_negative_guard_preservation_is_symbol_invariant",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.7786573329940438,
       "family": "Negative Renaming",
       "kind": "invariance",
       "name": "Negative Guard Renaming",
-      "node_id": "tests/domain_level_planning/test_certified_effects.py::test_negative_guard_preservation_is_symbol_invariant",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     },
     {
-      "command": [
-        "uv",
-        "run",
-        "pytest",
-        "tests/domain_level_planning/test_certified_effects.py::test_support_depth_certificate_is_invariant_under_vocabulary_renaming",
-        "-q",
-        "--tb=short"
-      ],
       "duration_seconds": 0.803798665991053,
       "family": "Progress Renaming",
       "kind": "invariance",
       "name": "Support Ranking Renaming",
-      "node_id": "tests/domain_level_planning/test_certified_effects.py::test_support_depth_certificate_is_invariant_under_vocabulary_renaming",
       "return_code": 0,
-      "stderr": null,
-      "stdout": null,
       "success": true
     }
   ],
-  "run_id": "gp2pl-repro-46c5af1e",
   "schema_version": 1,
-  "source_revision": {
-    "available": true,
-    "commit": "46c5af1e37742384371ff6b4e6c0dd9d38f3ef58",
-    "tracked_changes": false,
-    "untracked_files": false
-  },
   "success": true,
   "success_count": 13
 }

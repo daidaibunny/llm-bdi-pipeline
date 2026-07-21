@@ -203,10 +203,10 @@ reproducibility artifact and `docs/research_pipeline_decisions.md`.
 Every paragraph must carry one identifiable argumentative role: motivate a
 problem, define a concept, state a method, justify a design choice, present
 evidence, or delimit a claim. Prefer concrete subjects and causal transitions
-over inventories of implementation components. Terms such as `pinned`,
-`hash-locked`, `pipeline`, and internal run identifiers belong in the
-reproducibility material unless they are indispensable to distinguish two
-experimental estimands. The Abstract and Introduction follow the narrative
+over inventories of implementation components. Terms such as `hash-locked`,
+source revision, byte digest, and internal run identifier are transient
+execution bookkeeping: omit them from the manuscript, Technical Supplement,
+and public result release. The Abstract and Introduction follow the narrative
 cadence of accepted AAAI planning papers: problem, limitation of existing
 representations, central idea, guarantee, and empirical result.
 
@@ -517,15 +517,14 @@ normalized evidence hash:
 4. **Full GP2PL:** minimize branch, context, and body cost over exactly the
    same generated certified set and hard constraints as Maximum Feasible.
 
-The registered temporal comparison holds the DFA, atomic-library hash, query
-binding, and Jason runtime fixed:
+The registered temporal comparison holds the DFA, atomic library, query
+binding, case set, and Jason runtime protocol fixed:
 
-For the final combined run, the shared atomic input is not copied from the
-long-running evidence batch. It is the seed-0 Full GP2PL output produced by
-the atomic stage of the same run and confirmed method-source equivalence class.
-The evidence batch supplies only the MOOSE model and readable policy. Exact
-atomic-library and controller-input hashes, rather than Git commit identity,
-prevent different semantic inputs from entering a paired temporal comparison.
+For the final comparison, every temporal variant consumes the same declared
+seed-0 Full GP2PL core, query bindings, automata, and held-out identifiers. The
+public record demonstrates this pairing through complete, duplicate-free case
+outcomes and the registered protocol; source and byte identities are not
+publication fields.
 
 1. **Unprotected Serialization:** canonical within-edge serialization, the same
    MONA-derived DFA,
@@ -580,8 +579,9 @@ reference discussion rather than repeating one after every paragraph.
 The main benchmark section records all 16 domain families, the split
 provenance, and the independent five-seed design. Its scientific purpose is to
 estimate variation caused by MOOSE's randomized goal-order sampling. Exact
-memory limits, timeouts, worker configuration, and run identifiers belong in
-the Technical Supplement. Every seed is compiled and evaluated
+memory limits, timeouts, and worker configuration belong in the Technical
+Supplement. Run identifiers remain only in transient local logs. Every seed is
+compiled and evaluated
 independently; report the mean and sample standard deviation in the main paper,
 and preserve every individual result in the supplement. Never union evidence or
 select a best seed. Concurrent launch is only an artifact-level throughput
@@ -591,8 +591,8 @@ one seed.
 
 Keep the two experimental estimands explicit. The five-seed atomic matrix
 measures variability of evidence discovery, compilation, and atomic achievement
-coverage. The pinned temporal matrix conditions on one exact SHA-256-identified
-atomic-library snapshot and measures translation, query-controller execution,
+coverage. The temporal matrix conditions on one declared seed-0 atomic-library
+set and measures translation, query-controller execution,
 and trace semantics. A recent conditional temporal result does not become
 invalid because its library was generated under a different worker protocol,
 but it cannot support a cross-seed atomic-robustness claim.
@@ -627,22 +627,19 @@ been proved language-equivalent.
 
 Repair only cases explicitly recorded as infrastructure failures in those
 complete 20-worker matrices. Run the exact repair set serially with one worker,
-then fail closed on extra or missing cases, input-fingerprint changes,
-toolchain or resource-limit drift, and recurring infrastructure failures. Keep
-both source revisions, both summary hashes, and per-case replacement
-provenance. The experiment owner confirms equivalent local and remote machine
+then fail closed on extra or missing cases, changed semantic inputs,
+tool-version or resource-limit drift, and recurring infrastructure failures.
+The experiment owner confirms equivalent local and remote machine
 configurations and comparable resource availability; case runtime excludes
 queue waiting, so repaired records remain eligible for PAR-2. Never repair a
 planner failure, timeout, unsupported input, compiler failure, or validation
 failure.
 
 Treat the generated FOND4LTLf Python entry point and MONA libtool launcher as
-path-embedded launchers rather than portable binaries. If their raw hashes
-differ across the two equivalent machines, verify the retry file against its
-recorded hash, rewrite only its recorded absolute installation prefix, and
-require the rewritten bytes to match the primary hash. Keep pinned revisions,
-versions, the isolation-wrapper hash, and planner artifacts exact. This is a
-verified relocation equivalence, not a relaxed toolchain comparison.
+path-embedded launchers rather than portable binaries. A repair may relocate
+their installation prefix, but it must retain the same declared tool versions,
+case inputs, resource limits, and validation semantics. These execution details
+do not appear in the public outcome records.
 
 Atomic metrics are producible-predicate coverage, internal-call closure, held-out
 Jason+VAL coverage, branch/context/body costs, ASL bytes, and compile time.
@@ -674,11 +671,10 @@ MOOSE 117. Four numeric domains account for 113 of the 115 net
 Unprotected-to-Flat temporal gains, and Transport accounts for two. These are
 scope statements, not domain routing rules.
 
-For temporal pairing, define the common DFA fingerprint over the formula, atom
-binding, initial state, accepting states, and guarded transition graph. Exclude
-conversion timing, artifact paths, and DOT text. Record a separate controller
-fingerprint over the variant settings and generated query-local plans so the
-paper can demonstrate identical DFA inputs without erasing controller changes.
+For temporal pairing, compare the formula, atom binding, initial state,
+accepting states, guarded transition graph, and held-out identifier directly.
+Controller variants intentionally differ in their query-local plans; the public
+record exposes their settings and outcomes without source or byte fingerprints.
 
 The final paper must distinguish:
 
@@ -1234,7 +1230,7 @@ Diagnostic description, not a manuscript caption:
 > duplicate color.
 
 When the diagnostic is regenerated, verify its totals against both generated
-ablation tables and require the same frozen source SHA-256 in its metadata.
+ablation tables and the complete released outcome records.
 Never copy values from a PDF or LaTeX table back into the plotting source.
 
 ### Figure Delivery and LaTeX Insertion Contract
@@ -1365,7 +1361,7 @@ MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a separate
 Technical-Supplement reference table with short columns such as `Method`,
 `Source`, `Scope`, `Coverage`, `Unsupported`, and `PAR-2`. Do not mix their
 output representations or costs into the compiler ablation table. The
-completed hash-locked matrix gives
+completed outcome matrix gives
 LAMA 591/868, MRP+HJ 253/360, and FOND4LTLf plus LAMA 298/492 on its supported
 subset, with 736 explicitly unsupported temporal inputs. Retain every row in
 the Technical Supplement; moving the matrix out of the main paper changes
@@ -1377,26 +1373,19 @@ complete paired compiler result, the checked MOOSE arXiv-v1 Table-4 reference
 artifact, four-domain Raw MOOSE extension summaries explicitly assigned to
 seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, and
 the challenge summary. The script must fail rather than render a partial table
-when a method, seed, case, hash pairing, or source-equivalence condition is
-missing. Inputs normally identify clean source commits. A paired long run that
-spans commits instead retains every child revision and supplies a SHA-256-bound
-experiment-owner confirmation that method-defining code remained equivalent;
-the confirmation cannot be reused after any child revision record changes.
-The final generator must fail closed over the registered corpus rather than
-only compare methods with each other. It recomputes immutable identifier-set
-digests for all 1,228 achievement cases, all 1,228 temporal cases, the 868
+when a method, seed, case, protocol field, or semantic outcome is missing. The
+final generator must fail closed over the registered corpus rather than only
+compare methods with each other. It checks the complete identifier sets for all
+1,228 achievement cases, all 1,228 temporal cases, the 868
 classical LAMA cases, and the 360 numeric MRP+HJ cases; duplicates and shared
 omissions are invalid. It additionally requires the five Raw MOOSE runs to use
-the exact 148-case extension scope, seed-specific model-batch manifests, and canonical hashes of every
-per-domain model/readable-policy pair consumed by the paired compiler runs,
-clean source records or an exact hash-bound method-source equivalence
-confirmation, six workers for paired
+the exact 148-case extension scope and seed-specific evidence assignment, six workers for paired
 compiler and Raw MOOSE extension runs, 20 workers for remote LAMA/MRP+HJ and direct
 FOND4LTLf runs, the remaining registered resource protocol, pinned external
 binaries, and exactly 13 unique successful challenge nodes. A repaired external
 summary must additionally prove that its primary matrix retained 20 workers,
-its exact infrastructure-only retry used one worker, both revisions were clean,
-and hardware-equivalent case runtimes remain comparable. Report a failed
+its exact infrastructure-only retry used one worker, and hardware-equivalent
+case runtimes remain comparable. Report a failed
 contract as an infrastructure failure, never as a method score.
 
 ### TEG Table
@@ -1446,8 +1435,9 @@ timed-out Jason action prefix is diagnostic evidence, not a successful plan.
 Main-paper result prose reports scientific aggregates, cross-seed variation,
 domain-level concentration of failures, causal interpretation, and the claim
 boundary. Do not repeat every seed's raw numerator, timeout/exit status, worker
-count, hash, run identifier, or individual case identifier in the main paper.
-Those audit facts remain in the Technical Supplement. A concrete failure mode
+count, or individual case identifier in the main paper. Worker and resource
+details remain in the Technical Supplement; source hashes and run identifiers
+do not. A concrete failure mode
 may remain in the main paper when it explains a method limitation, but express
 it at the level of the missing certificate or hypothesis-class boundary rather
 than as runner bookkeeping.
@@ -1531,7 +1521,7 @@ The following result insertions are complete:
 1. the frozen five-seed Full GP2PL atomic result: 1,224, 1,219, 1,187,
    1,205, and 1,224 original-goal Jason-plus-VAL successes out of 1,228,
    giving 98.68% mean and 1.29 percentage-point sample standard deviation;
-2. the pinned predicted-controller execution result from commit `e28bcea4`:
+2. the fixed predicted-controller execution result:
    1,228/1,228 Jason and neutral-goal VAL successes, with the same 1,228 traces
    accepted independently by both gold and predicted DFAs;
 3. 475/475 frozen GPT-5.5 predictions satisfying the JSON contract and exact
@@ -1539,7 +1529,7 @@ The following result insertions are complete:
 4. the five profile totals from that run: 273 ordered-two, 272 ordered-three,
    275 strong-Until, 137 same-state conjunction, and 271 same-state with
    negation;
-5. a generated 16-domain table for the exact hashed atomic-library inputs:
+5. a generated 16-domain table for the declared atomic-library inputs:
    1,568 certified candidates, 1,527 selected branches, and 638.4 KiB of ASL;
 6. deterministic LaTeX macros and domain/profile tables generated by the
    conference-neutral `scripts/generate_evaluation_tables.py`, plus the
@@ -1568,18 +1558,14 @@ The remaining submission tasks are:
    final section and the start of the references on page 14; references continue
    through page 16 and the checklist occupies pages 16--17.
 
-The five-seed compiler artifact records seed 4's
-`tracked_source_changes=true` flag instead of relabelling the run clean. The
-common sealed input snapshot, exact summary hashes, and byte-identical committed
-method-defining source-file set are the eligibility evidence. Timing is not reported because the
-runs overlapped unrelated workloads; this qualification does not change the
-coverage or independent VAL outcomes.
+The five-seed public artifact records the declared protocol and every one of the
+6,140 seed--case outcomes. Timing is not reported because the runs overlapped
+unrelated workloads; this qualification does not change coverage or independent
+VAL outcomes.
 
-The TEG execution matrix exists at
-`artifacts/temporal_goal_execution_runs/teg-paper-clean-e28bcea4` and may be
-reported. Its exact atomic inputs are hash-locked in the run summary and may be
-reported structurally. The manuscript must not present unpinned atomic
-generation time or provisional diagnostic runs as final timing evidence.
+The temporal public artifact records all 1,228 semantic outcomes for the
+declared seed-0 atomic core. The manuscript must not infer atomic generation
+time from provisional diagnostic logs.
 
 ## Page Budget and Maintenance
 

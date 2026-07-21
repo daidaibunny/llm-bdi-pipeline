@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-import hashlib
 import json
 from pathlib import Path
 import re
@@ -19,9 +18,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
 	sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.generate_aaai_comparison_tables import (  # noqa: E402
-	child_revision_contract_sha256,
-)
 from scripts.run_paired_compiler_experiments import execution_metrics  # noqa: E402
 from scripts.run_temporal_goal_benchmark_execution import (  # noqa: E402
 	summarize_execution_records,
@@ -54,12 +50,6 @@ def repair_paired_results(paired_results_file: str | Path) -> dict[str, Any]:
 	paired_path = Path(paired_results_file).expanduser().resolve()
 	paired = _read_json(paired_path)
 	run_root = paired_path.parent
-	input_sha256 = str(
-		dict(paired.get("derived_metric_correction") or {}).get(
-			"input_paired_results_sha256",
-		)
-		or _sha256(paired_path)
-	)
 	variant_maxima: dict[str, int] = {}
 	repaired_case_count = 0
 	for temporal_run_value in paired.get("temporal_runs") or ():
@@ -115,19 +105,12 @@ def repair_paired_results(paired_results_file: str | Path) -> dict[str, Any]:
 		] = maximum
 		variant_maxima[variant] = maximum
 
-	paired["method_source_equivalence"] = {
-		"status": "confirmed",
-		"basis": "experiment_owner_confirmed_no_method_code_changes",
-		"child_revision_contract_sha256": child_revision_contract_sha256(paired),
-	}
 	paired["derived_metric_correction"] = {
 		"status": "applied",
 		"metric": "max_trigger_fanout",
 		"scope": "transition_repair_controller",
-		"source_artifact": "jason/agentspeak_generated.asl",
 		"repaired_case_count": repaired_case_count,
 		"variant_maxima": dict(sorted(variant_maxima.items())),
-		"input_paired_results_sha256": input_sha256,
 	}
 	_write_json(paired_path, paired)
 	return {
@@ -184,7 +167,6 @@ def replace_temporal_results(
 			updates[(variant, sample_id)] = {
 				"domain": str(replacement["domain"]),
 				"sample_id": sample_id,
-				"source_run_id": str(summary.get("run_id") or ""),
 				"status": str(replacement["status"]),
 				"variant": variant,
 			}
@@ -343,10 +325,6 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 		json.dumps(payload, indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",
 	)
-
-
-def _sha256(path: Path) -> str:
-	return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _parse_args() -> argparse.Namespace:

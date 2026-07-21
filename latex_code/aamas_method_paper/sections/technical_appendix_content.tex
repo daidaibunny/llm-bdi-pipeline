@@ -1155,10 +1155,10 @@ success; mechanically using $F$ of that goal would not test temporal order.
 \STATE Instantiate the five profiles in Table~\ref{tab:teg-construction-profiles}.
 \STATE Reject candidates that fail legality, novelty, or trace satisfaction.
 \STATE Lift objects to typed parameters; seal each binding and witness.
-\STATE Select by profile use, semantic-signature use, quality, then structural hash.
+\STATE Select by profile use, semantic-signature use, quality, then a deterministic structural tie-break.
 \STATE Render $q_i$ deterministically; emit separate public and sealed records.
 \ENDFOR
-\STATE Deduplicate only byte-identical complete model inputs with agreeing semantics.
+\STATE Deduplicate only identical complete model inputs with agreeing semantics.
 \end{algorithmic}
 \end{algorithm}
 
@@ -1255,8 +1255,7 @@ constraints, atoms, and formula tree; ground object and witness-action names
 are excluded.
 
 Within each domain, selection minimizes prior profile use, then prior signature
-use, a registered structural quality key, and a spelling-independent SHA-256
-tie-break.
+use, a registered structural quality key, and a spelling-independent deterministic tie-break.
 
 Thus an alphabetically early action schema cannot define the benchmark by being
 encountered first.
@@ -1275,7 +1274,7 @@ A deterministic visitor renders controlled English directly from $T_i$; no
 language model or domain-specific gloss participates.
 
 The public manifest keeps one row per problem, while the sealed audit keeps
-$T_i$, $\theta_i$, $\pi_i$, and replay-state fingerprints.
+$T_i$, $\theta_i$, $\pi_i$, and the replayed states.
 
 The 1,228 public rows are grouped into 475 translation calls by hashing the
 rendered domain prompt, source text, typed parameters, constraints, and
@@ -1294,8 +1293,8 @@ specifications and 1,228 bound query cases over 16 PDDL domains. Each record
 contains the source utterance, typed parameters, binding, atom table, gold
 parametric LTLf formula, model-produced JSON, language-equivalence result, and
 sealed construction-witness checks. Per-domain JSON files, the complete
-benchmark, model predictions, independent validation, source archives, and
-SHA-256 manifests are included in the code-and-data appendix under
+benchmark, model predictions, independent validation, and source archives are
+included in the code-and-data appendix under
 \path{paper_artifacts/temporal_goal_benchmark/v1}. This dataset evaluates
 translation equivalence and witness validity; the 1,228 Jason, VAL, and
 trace-automaton executions are reported in the separate evaluation release.
@@ -1329,8 +1328,8 @@ formulas, and construction witnesses are not model-visible.
 
 The following is the semantically complete paper-facing template. Line wrapping
 is typographic, and angle-bracket fields denote deterministic catalogue or
-sample substitutions. The release retains the exact rendered requests,
-responses, model identifier, prompt-source revision, and validation records.
+sample substitutions. The release retains the rendered requests, responses,
+model identifier, prompt configuration, and validation records.
 
 \begingroup
 \small
@@ -1536,8 +1535,7 @@ First $\lfloor n/2\rfloor$ naturally sorted instances train; remainder test &
 GPL-3.0 upstream repository; original terms retained \\
 \bottomrule
 \end{tabular}
-\caption{Public PDDL sources. Commits and deterministic split rules are part of
-the release manifest.}
+\caption{Pinned public PDDL sources and deterministic split rules.}
 \label{tab:data-sources}
 \end{table*}
 
@@ -1559,37 +1557,34 @@ software environment is Python 3.12.7, uv 0.8.19, Clingo 5.8.0
 LTLf2DFA 1.0.2 \cite{Fuggitti2020LTLf2DFA}, MONA 1.4-18
 \cite{Henriksen1995MONA}, Jason 3.1.2 \cite{Bordini2007Jason}, OpenJDK 24,
 Maven 3.9.11, Docker 28.5.1, and VAL revision \texttt{3c7a1f3}
-\cite{Howey2004VAL}; the complete revision is fixed in the
-release manifest. The Python dependency lockfile,
-external-revision setup scripts, and source commit accompany the artifact.
+\cite{Howey2004VAL}. The Python dependency lockfile and external setup scripts
+specify the software environment used by the experiments.
 
 The external MOOSE comparison has two predeclared provenance scopes. For the
 twelve original MOOSE domains, we copy only the five-model mean planning
 coverage from Table~4 of arXiv \texttt{2511.11095v1}
 \cite{Chen2025MooseExtended}: 1079.6 of 1080 cases. For the four GP2PL-added
 domains, we execute the exact seed-specific Raw MOOSE models locally over five
-seeds and validate every nonempty returned plan with VAL. The tracked reference
-artifact fixes the source version, twelve per-domain means, and SHA-256
-contracts for the 1080-case published scope, 148-case local extension, and
-1228-case union. The scopes are never selected per domain after execution.
+seeds and validate every nonempty returned plan with VAL. The reference record
+identifies the source table, its twelve per-domain means, and the disjoint
+1080-case published scope and 148-case local extension. The scopes are never
+selected per domain after execution.
 Published MOOSE time and memory are not combined with locally measured
 penalized average runtime, where a failure is charged twice the cutoff (PAR-2).
 
 The local coverage record is frozen at
 \texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
 \texttt{raw\_moose\_extension\_}
-\texttt{five\_seed\_summary.json}. It retains 740
-portable case records, the five source-summary hashes, the five evidence-batch
-hashes, model/domain/problem hashes, and the common MOOSE artifact and image
-identifiers. Machine-local paths and commands are excluded. The seed-level
+\texttt{five\_seed\_summary.json}. It retains 740 portable case records, the
+declared five-seed protocol, and per-domain outcomes; run bookkeeping,
+machine-local paths, and commands are excluded. The seed-level
 valid-plan counts are 26, 23, 23, 25, and 20, giving 117 successes, 619 planner
 failures, and four timeouts over 740 evaluations. Per-domain five-seed means
 are 7.0/30 for Blocks Clear, 2.0/30 for Blocks On, 6.0/77 for Blocks Tower,
 and 8.4/11 for Depots. All five summaries completed with zero infrastructure
-failures. Their recorded Git states are retained as provenance rather than
-being relabelled clean; coverage admissibility instead depends on the immutable
-case contract, evidence and model hashes, MOOSE toolchain identity, resource
-limits, and VAL outcome. Runtime is not used because the registered coverage
+failures. Coverage is interpreted on the declared case set under the recorded
+resource limits and requires a VAL-valid returned plan. Runtime is not used
+because the registered coverage
 protocol permits differing worker isolation and forbids cross-hardware timing
 comparison.
 
@@ -1619,18 +1614,15 @@ encoding rejections. The latter are an adapter boundary, not a limitation of
 the \ltlf{} semantics, so the row is interpreted only on its declared supported
 subset.
 
-Both primary matrices used 20 case workers. The exact
+Both primary matrices used 20 case workers. The
 \ExternalAchievementRepairCount{} achievement and
 \ExternalDirectRepairCount{} direct-temporal infrastructure failures were
-rerun with one worker and merged only after input hashes, limits, revisions, and
-toolchain identities matched. The local and remote systems have equivalent
-hardware configurations, and queue waiting is excluded from case runtime, so
-these repaired records remain eligible for PAR-2. The generated FOND4LTLf
-Python entry point and MONA libtool launcher embed absolute installation paths:
-the merge verifies each retry-file hash, rewrites only the recorded installation
-prefix, and requires the rewritten bytes to match the primary hash. No planner
-failure, timeout, unsupported input, compiler failure, or validation failure is
-eligible for replacement.
+rerun with one worker under the same case inputs, tool versions, limits, and
+validation contract. The local and remote systems have equivalent hardware
+configurations, and queue waiting is excluded from case runtime, so these
+repaired records remain eligible for PAR-2. Only cases classified as
+infrastructure failures are replaceable; planner failures, timeouts, unsupported
+inputs, compiler failures, and validation failures remain unchanged.
 
 \subsection{Parameters and Development Values}
 
@@ -1682,20 +1674,17 @@ Full GP2PL study uses eight validation workers, whereas every paired atomic and
 temporal ablation uses the registered six workers.
 
 The fixed temporal release predates this five-seed protocol and conditions on
-one hash-identified seed-0 library set. Its 12-worker launch changes throughput,
-not query semantics, and does not support a five-seed robustness claim.
+one declared seed-0 library set. Its 12-worker launch changes throughput, not
+query semantics, and does not support a five-seed robustness claim.
 
 \subsection{Metrics, Distribution, and Validation}
 
 The five-seed submission record is
 \texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
-\texttt{five\_seed\_full\_compiler\_summary.json}. It retains all five source
-summary hashes, the common 1,228-case input-snapshot hash, per-case outcome
-patterns, and the exact compiler/runtime source-file-set hash. It also records
-the SHA-256 of the original five-seed runner aggregate and accepts that
-aggregate only after its protocol, run identifiers, per-seed domain counts,
-coverage values, and evidence-generation outcomes agree with the five child
-summaries. The five runs contain 6,059 original-goal VAL-valid successes among
+\texttt{five\_seed\_full\_compiler\_summary.json}. It retains the protocol,
+all 6,140 seed--case outcomes, per-domain counts, and cross-seed outcome
+patterns, so every aggregate in the tables can be recomputed directly. The five
+runs contain 6,059 original-goal VAL-valid successes among
 6,140 repeated evaluations. There are no timeouts or nonzero exits. Of the
 1,228 distinct cases, 1,180 succeed for every seed, 46 are seed-sensitive, and
 Depots \texttt{p12} and \texttt{p20} fail for every seed.
@@ -1755,9 +1744,8 @@ evidence-guided decreasing mode path for Logistics and a certified nested
 resource choice for Depots. Domain-specific transport or parking rules are not
 admissible substitutes.
 
-All five seeded runs share the same sealed PDDL snapshot and hash-verified
-method-defining source-file set. The machine record preserves the source and
-protocol fingerprints. Timing is excluded from cross-method speed and
+All five seeded runs use the same benchmark case set and declared compiler
+configuration. Timing is excluded from cross-method speed and
 significance claims because the sequential runs overlapped unrelated machine
 workloads. A supplementary diagnostic artifact may report the descriptive,
 within-method cumulative distribution of Jason subprocess
@@ -1766,7 +1754,7 @@ in the denominator, and is not evidence of superiority over another planner.
 
 Atomic measures are producible-predicate trigger coverage, internal-call closure,
 held-out Jason plus original-goal VAL success, selected branches, context and
-body cost, library bytes, and compilation time. Temporal success requires all
+body cost, library size, and compilation time. Temporal success requires all
 of: controller acceptance, Jason completion, neutral-goal VAL acceptance,
 independent PDDL replay, gold-DFA acceptance, and predicted-DFA acceptance.
 Failed action prefixes are diagnostics and never plans.
@@ -1895,8 +1883,6 @@ uv run python \
   --execution-summary \
   "$RELEASE/\
 temporal_execution_summary.json" \
-  --benchmark-compatibility \
-  "$RELEASE/benchmark_compatibility.json" \
   --atomic-library-root \
   "$RELEASE/atomic_libraries" \
   --output-dir \
@@ -1904,20 +1890,15 @@ temporal_execution_summary.json" \
 \end{verbatim}
 \endgroup
 
-The independent five-seed Full GP2PL table and compact submission record are
+The independent five-seed Full GP2PL table and compact public record are
 regenerated directly from the five complete Jason/VAL summaries with:
 
 \begingroup
 \small
 \begin{verbatim}
-AGG=artifacts/parser_order_full_val_logs/\
-pddl-five-seed-20260713-153900/\
-five_seed_summary.json
 uv run python \
   scripts/freeze_five_seed_full_\
-compiler_results.py \
-  --source-aggregate "$AGG" \
-  --compiler-freeze-revision 5e632fb5
+compiler_results.py
 \end{verbatim}
 \endgroup
 
@@ -1930,22 +1911,10 @@ completed matrix without rerunning any planner:
 uv run python \
   scripts/freeze_paired_ablation_\
 results.py \
-  --paired-results artifacts/\
-paired_compiler_experiments/\
-aaai-paired-72b0604f/paired_results.json \
-  --challenge-summary artifacts/\
-paired_compiler_experiments/\
-aaai-paired-72b0604f/challenge_runs/\
-aaai-paired-72b0604f-certificate-\
-challenges/\
-summary.json
+  --paired-results "$PAIRED_RESULTS" \
+  --challenge-summary "$CHALLENGE_SUMMARY"
 \end{verbatim}
 \endgroup
-
-The compatibility certificate permits only explicitly named fields below the
-benchmark's provenance object. It reconstructs and verifies the exact benchmark
-hash recorded by the execution summary; domain cases, formulas, bindings, and
-expected semantics cannot be changed by this mechanism.
 
 The former three-panel empirical view remains reproducible as a supplementary
 diagnostic artifact generated from the frozen paired-ablation release rather

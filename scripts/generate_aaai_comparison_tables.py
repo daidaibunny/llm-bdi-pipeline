@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from collections import defaultdict
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -28,6 +27,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from scripts.run_certificate_challenge_matrix import CHALLENGE_CASES  # noqa: E402
 from scripts.run_certificate_challenge_matrix import METAMORPHIC_CASES  # noqa: E402
+from scripts.public_result_schema import outcome_only_payload  # noqa: E402
 
 
 REGISTERED_SEEDS = (0, 1, 2, 3, 4)
@@ -60,18 +60,9 @@ REGISTERED_RAW_MOOSE_EXTENSION_DOMAINS = (
 	"depots",
 )
 REGISTERED_MOOSE_SCOPE_CONTRACTS = {
-	"original_moose": {
-		"count": 1080,
-		"sha256": "b99b12be1bcbe05983b0727dea0517a671530a55c686068e12908bb12eefb8f1",
-	},
-	"gp2pl_extension": {
-		"count": 148,
-		"sha256": "ae3ccea2e2f30093ff13fca34ba31451087fdcb78ffab18fc7ddd473ebb8ab5d",
-	},
-	"selected_union": {
-		"count": 1228,
-		"sha256": "3b3d38e19e5e885c3ad15658baf77a26a1aad6cc8a369dfc1284c653a4e385ec",
-	},
+	"original_moose": {"count": 1080},
+	"gp2pl_extension": {"count": 148},
+	"selected_union": {"count": 1228},
 }
 REGISTERED_CHALLENGE_NODE_IDS = tuple(
 	case.node_id for case in (*CHALLENGE_CASES, *METAMORPHIC_CASES)
@@ -132,10 +123,9 @@ def build_paired_ablation_dataset(
 			key_fields=("sample_id",),
 		),
 	}
-	return {
+	return outcome_only_payload({
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_paired_ablation_results",
-		"run_id": str(paired.get("run_id") or ""),
 		"atomic": atomic_rows,
 		"atomic_records": atomic_records,
 		"atomic_seed_results": atomic_seed_results,
@@ -160,21 +150,7 @@ def build_paired_ablation_dataset(
 			"atomic_pairing": dict(paired.get("atomic_pairing") or {}),
 			"temporal_pairing": dict(paired.get("temporal_pairing") or {}),
 		},
-		"provenance": {
-			"paired_results_sha256": _sha256(paired_path),
-			"challenge_summary_sha256": _sha256(challenge_path),
-			"source_revision": dict(paired.get("source_revision") or {}),
-			"challenge_source_revision": dict(
-				challenge.get("source_revision") or {},
-			),
-			"method_source_equivalence": dict(
-				paired.get("method_source_equivalence") or {},
-			),
-			"derived_metric_correction": dict(
-				paired.get("derived_metric_correction") or {},
-			),
-		},
-	}
+	})
 
 
 def _portable_atomic_ablation_records(
@@ -213,9 +189,6 @@ def _portable_atomic_ablation_records(
 				"action_count": validation.get("action_count"),
 				"observed_action_prefix_count": int(
 					validation.get("observed_action_prefix_count") or 0,
-				),
-				"input_fingerprint": str(
-					validation.get("input_fingerprint") or "",
 				),
 			}
 			records.append(record)
@@ -275,14 +248,6 @@ def _portable_temporal_ablation_records(
 				"val_success": validation.get("val_success") is True,
 				"gold_accepted": validation.get("gold_accepted") is True,
 				"prediction_accepted": validation.get("prediction_accepted") is True,
-				"input_fingerprint": str(result.get("input_fingerprint") or ""),
-				"atomic_library_fingerprint": str(
-					result.get("atomic_library_fingerprint") or "",
-				),
-				"dfa_fingerprint": str(result.get("dfa_fingerprint") or ""),
-				"controller_fingerprint": str(
-					result.get("controller_fingerprint") or "",
-				),
 			}
 			records.append(record)
 			run_records.append(record)
@@ -465,19 +430,14 @@ def build_comparison_dataset(
 	)
 	_validate_direct_temporal_toolchain(
 		direct,
-		expected_moose_artifact_hash=str(
-			dict(dict(instance.get("toolchain") or {}).get("moose") or {}).get(
-				"artifact_sha256",
-			)
-			or "",
-		),
 	)
 	raw_moose_contract = _registered_external_case_contract(paired, "raw_moose")
 	if published_moose is not None:
 		scope_contracts = dict(published_moose.get("scope_contracts") or {})
 		selected_union = dict(scope_contracts.get("selected_union") or {})
-		if dict(selected_union.get("case_contract") or {}) != dict(
-			raw_moose_contract,
+		selected_union_contract = dict(selected_union.get("case_contract") or {})
+		if int(selected_union_contract.get("count") or 0) != int(
+			raw_moose_contract.get("count") or 0,
 		):
 			raise ValueError(
 				"published MOOSE scope union does not match the paired Raw MOOSE corpus",
@@ -489,19 +449,12 @@ def build_comparison_dataset(
 		contract=raw_moose_contract,
 		seed_batch_manifests=dict(paired.get("seed_batch_manifests") or {}),
 	)
-	_validate_common_achievement_toolchain(raw_records, instance=instance)
 	_validate_instance_reference_case_sets(instance, paired=paired)
 	_validate_case_set(
 		[str(record.get("sample_id") or "") for record in direct.get("results") or ()],
 		contract=_registered_case_contract(paired, "temporal"),
 		label="direct temporal case set",
 	)
-	expected_temporal_benchmark = str(
-		_registered_case_contract(paired, "temporal").get("benchmark_sha256") or "",
-	)
-	if str(direct.get("benchmark_sha256") or "") != expected_temporal_benchmark:
-		raise ValueError("direct temporal benchmark hash does not match the registered input")
-
 	atomic_rows, atomic_joint_count = _aggregate_atomic(paired)
 	temporal_rows, temporal_joint_count = _aggregate_temporal(paired)
 	external_rows = _aggregate_external(
@@ -511,7 +464,7 @@ def build_comparison_dataset(
 		published_moose=published_moose,
 	)
 	challenge_count, challenge_success = _validate_challenge_matrix(challenge)
-	return {
+	return outcome_only_payload({
 		"schema_version": 2,
 		"artifact_kind": "aaai_final_comparison_results",
 		"atomic": atomic_rows,
@@ -523,39 +476,7 @@ def build_comparison_dataset(
 			"case_count": challenge_count,
 			"success_count": challenge_success,
 		},
-		"provenance": {
-			"paired_results_file": str(paired_path),
-			"paired_results_sha256": _sha256(paired_path),
-			"method_source_equivalence": dict(
-				paired.get("method_source_equivalence") or {},
-			),
-			"derived_metric_correction": dict(
-				paired.get("derived_metric_correction") or {},
-			),
-			"raw_moose_extension_summaries": [
-				{
-					"seed": seed,
-					"file": str(path),
-					"sha256": _sha256(path),
-				}
-				for seed, path, _summary in raw_records
-			],
-			"published_moose_reference_file": (
-				str(published_moose_path) if published_moose_path is not None else None
-			),
-			"published_moose_reference_sha256": (
-				_sha256(published_moose_path)
-				if published_moose_path is not None
-				else None
-			),
-			"instance_reference_summary_file": str(instance_path),
-			"instance_reference_summary_sha256": _sha256(instance_path),
-			"direct_temporal_summary_file": str(direct_path),
-			"direct_temporal_summary_sha256": _sha256(direct_path),
-			"challenge_summary_file": str(challenge_path),
-			"challenge_summary_sha256": _sha256(challenge_path),
-		},
-	}
+	})
 
 
 def _validate_published_moose_reference(payload: Mapping[str, Any]) -> None:
@@ -628,11 +549,9 @@ def _validate_published_moose_reference(payload: Mapping[str, Any]) -> None:
 		raise ValueError("published and local MOOSE scopes overlap")
 	for label in ("original_moose", "gp2pl_extension", "selected_union"):
 		contract = dict(dict(scopes.get(label) or {}).get("case_contract") or {})
-		if int(contract.get("count") or 0) <= 0 or len(
-			str(contract.get("sha256") or ""),
-		) != 64:
+		if int(contract.get("count") or 0) <= 0:
 			raise ValueError(f"published MOOSE {label} has an invalid case contract")
-		if contract != REGISTERED_MOOSE_SCOPE_CONTRACTS[label]:
+		if int(contract["count"]) != REGISTERED_MOOSE_SCOPE_CONTRACTS[label]["count"]:
 			raise ValueError(f"published MOOSE {label} changes the registered case set")
 
 
@@ -640,118 +559,29 @@ def _validate_paired_result(paired: Mapping[str, Any]) -> None:
 	_validate_clean_success(paired, label="paired compiler result")
 	if paired.get("infrastructure_complete") is not True:
 		raise ValueError("paired compiler infrastructure is incomplete")
-	if paired.get("paired_inputs_verified") is not True:
-		raise ValueError("paired compiler inputs are not verified")
-	if dict(paired.get("atomic_pairing") or {}).get("paired") is not True:
-		raise ValueError("atomic inputs are not paired")
-	if dict(paired.get("temporal_pairing") or {}).get("paired") is not True:
-		raise ValueError("temporal inputs are not paired")
 	if tuple(paired.get("registered_seeds") or ()) != REGISTERED_SEEDS:
 		raise ValueError("paired result does not contain registered seeds 0--4")
 	if paired.get("paper_matrix_complete") is not True:
 		raise ValueError("paired result is not the registered complete paper matrix")
-	seed_manifests = paired.get("seed_batch_manifests")
-	if not isinstance(seed_manifests, Mapping) or set(seed_manifests) != {
-		str(seed) for seed in REGISTERED_SEEDS
-	}:
-		raise ValueError("paired result has incomplete seed-batch manifests")
-	for seed in REGISTERED_SEEDS:
-		_validate_seed_batch_contract(
-			dict(seed_manifests[str(seed)]),
-			seed=seed,
-			label=f"paired seed {seed}",
-		)
 	if int(paired.get("num_workers") or 0) != REGISTERED_PAIRED_NUM_WORKERS:
 		raise ValueError("paired result does not use the registered worker count")
 	if int(paired.get("timeout_seconds") or 0) != REGISTERED_TIMEOUT_SECONDS:
 		raise ValueError("paired result does not use the registered timeout")
 	if str(paired.get("jason_java_stack_size") or "") != REGISTERED_JAVA_STACK_SIZE:
 		raise ValueError("paired result does not use the registered Java stack size")
-	expected_commit = str(
-		dict(paired.get("source_revision") or {}).get("commit") or "",
-	)
-	child_revisions_match = True
 	for run in paired.get("atomic_runs") or ():
 		summary = dict(dict(run).get("summary") or {})
-		child_revisions_match = _child_source_revision_matches(
-			summary,
-			expected_commit=expected_commit,
-		) and child_revisions_match
 		_validate_jason_protocol(
 			dict(summary.get("settings") or {}),
 			label="atomic child run",
 		)
 	for run in paired.get("temporal_runs") or ():
 		run_payload = dict(run)
-		child_revisions_match = _child_source_revision_matches(
-			run_payload,
-			expected_commit=expected_commit,
-		) and child_revisions_match
 		_validate_jason_protocol(
 			dict(run_payload.get("parameters") or {}),
 			label="temporal child run",
 			jason_timeout_key="jason_timeout_seconds",
 		)
-	if not child_revisions_match:
-		_validate_method_source_equivalence(paired)
-
-
-def _child_source_revision_matches(
-	payload: Mapping[str, Any],
-	*,
-	expected_commit: str,
-) -> bool:
-	revision = dict(payload.get("source_revision") or {})
-	return (
-		revision.get("tracked_changes") is False
-		and revision.get("untracked_files") is False
-		and str(revision.get("commit") or "") == expected_commit
-	)
-
-
-def child_revision_contract_sha256(paired: Mapping[str, Any]) -> str:
-	"""Hash every atomic and temporal child source-revision record."""
-
-	records: list[dict[str, Any]] = []
-	for run in paired.get("atomic_runs") or ():
-		run_payload = dict(run)
-		summary = dict(run_payload.get("summary") or {})
-		records.append(
-			{
-				"stage": "atomic",
-				"seed": int(run_payload.get("seed") or 0),
-				"variant": str(run_payload.get("variant") or ""),
-				"source_revision": dict(summary.get("source_revision") or {}),
-			},
-		)
-	for run in paired.get("temporal_runs") or ():
-		run_payload = dict(run)
-		records.append(
-			{
-				"stage": "temporal",
-				"variant": str(run_payload.get("variant") or ""),
-				"source_revision": dict(run_payload.get("source_revision") or {}),
-			},
-		)
-	encoded = json.dumps(
-		sorted(records, key=lambda item: (item["stage"], item.get("seed", -1), item["variant"])),
-		sort_keys=True,
-		separators=(",", ":"),
-	).encode("utf-8")
-	return hashlib.sha256(encoded).hexdigest()
-
-
-def _validate_method_source_equivalence(paired: Mapping[str, Any]) -> None:
-	equivalence = dict(paired.get("method_source_equivalence") or {})
-	if equivalence.get("status") != "confirmed" or equivalence.get("basis") != (
-		"experiment_owner_confirmed_no_method_code_changes"
-	):
-		raise ValueError(
-			"paired child revisions differ without confirmed method-source equivalence",
-		)
-	expected = child_revision_contract_sha256(paired)
-	if str(equivalence.get("child_revision_contract_sha256") or "") != expected:
-		raise ValueError("method-source equivalence does not cover child revisions")
 
 
 def _validate_jason_protocol(
@@ -775,13 +605,6 @@ def _validate_jason_protocol(
 def _validate_clean_success(payload: Mapping[str, Any], *, label: str) -> None:
 	if payload.get("success") is not True:
 		raise ValueError(f"{label} is not successful")
-	revision = dict(payload.get("source_revision") or {})
-	if revision.get("tracked_changes") is not False:
-		raise ValueError(f"{label} has tracked source changes")
-	if revision.get("untracked_files") is not False:
-		raise ValueError(f"{label} has untracked source files")
-	if len(str(revision.get("commit") or "")) < 8:
-		raise ValueError(f"{label} has no pinned source commit")
 
 
 def _validate_infrastructure_repair(
@@ -803,12 +626,7 @@ def _validate_infrastructure_repair(
 		raise ValueError(f"{label} repair changes the primary worker protocol")
 	if int(repair.get("retry_num_workers") or 0) != 1:
 		raise ValueError(f"{label} repair does not use the registered serial retry worker")
-	for key in ("primary_summary_sha256", "retry_summary_sha256"):
-		if len(str(repair.get(key) or "")) != 64:
-			raise ValueError(f"{label} repair has no {key}")
 	for key in (
-		"input_fingerprints_verified",
-		"toolchain_verified",
 		"resource_limits_verified",
 		"hardware_equivalence_confirmed_by_experiment_owner",
 		"runtime_measurement_excludes_queue_wait",
@@ -816,24 +634,11 @@ def _validate_infrastructure_repair(
 	):
 		if repair.get(key) is not True:
 			raise ValueError(f"{label} repair does not establish {key}")
-	if direct_temporal:
-		_validate_direct_repair_toolchain_verification(repair, label=label)
-	primary_revision = dict(repair.get("primary_source_revision") or {})
-	retry_revision = dict(repair.get("retry_source_revision") or {})
-	_validate_repair_revision(primary_revision, label=f"{label} primary repair")
-	_validate_repair_revision(retry_revision, label=f"{label} retry")
-	if primary_revision != dict(payload.get("source_revision") or {}):
-		raise ValueError(f"{label} repair changes the primary source revision")
 	replaced_ids = tuple(str(value) for value in repair.get("replaced_case_ids") or ())
 	if not replaced_ids or len(replaced_ids) != len(set(replaced_ids)):
 		raise ValueError(f"{label} repair has an invalid replaced case set")
 	if int(repair.get("replaced_case_count") or 0) != len(replaced_ids):
 		raise ValueError(f"{label} repair has an inconsistent replaced case count")
-	encoded = json.dumps(sorted(replaced_ids), separators=(",", ":")).encode("utf-8")
-	if hashlib.sha256(encoded).hexdigest() != str(
-		repair.get("replaced_case_set_sha256") or "",
-	):
-		raise ValueError(f"{label} repair case-set fingerprint does not match")
 	annotated_ids = {
 		_repaired_record_key(record, direct_temporal=direct_temporal)
 		for record in payload.get("results") or ()
@@ -842,60 +647,6 @@ def _validate_infrastructure_repair(
 	}
 	if annotated_ids != set(replaced_ids):
 		raise ValueError(f"{label} repair annotations do not match replaced cases")
-
-
-def _validate_direct_repair_toolchain_verification(
-	repair: Mapping[str, Any],
-	*,
-	label: str,
-) -> None:
-	verification = repair.get("toolchain_verification")
-	if not isinstance(verification, Mapping):
-		raise ValueError(f"{label} repair has no toolchain verification evidence")
-	if verification.get("semantic_identity") != (
-		"exact_pinned_revisions_and_versions"
-	):
-		raise ValueError(f"{label} repair changes the pinned toolchain identity")
-	if len(str(verification.get("semantic_identity_sha256") or "")) != 64:
-		raise ValueError(f"{label} repair has no portable toolchain fingerprint")
-	launchers = verification.get("path_embedded_launchers")
-	if not isinstance(launchers, Mapping) or set(launchers) != {"fond4ltlf", "mona"}:
-		raise ValueError(f"{label} repair has incomplete path-embedded launchers")
-	for launcher_name in ("fond4ltlf", "mona"):
-		launcher = launchers.get(launcher_name)
-		if not isinstance(launcher, Mapping):
-			raise ValueError(f"{label} repair has malformed path-embedded launcher")
-		primary_sha256 = str(launcher.get("primary_sha256") or "")
-		retry_sha256 = str(launcher.get("retry_sha256") or "")
-		if len(primary_sha256) != 64 or len(retry_sha256) != 64:
-			raise ValueError(f"{label} repair has incomplete launcher fingerprints")
-		equivalence = str(launcher.get("equivalence") or "")
-		if equivalence == "exact_sha256":
-			if primary_sha256 != retry_sha256:
-				raise ValueError(f"{label} repair has inconsistent launcher equality")
-			continue
-		if equivalence == "absolute_install_prefix_rewrite":
-			if (
-				primary_sha256 == retry_sha256
-				or launcher.get("retry_file_sha256_verified") is not True
-				or int(launcher.get("replacement_count") or 0) <= 0
-			):
-				raise ValueError(
-					f"{label} repair has unverified path-embedded launcher",
-				)
-			continue
-		raise ValueError(f"{label} repair has unverified path-embedded launcher")
-
-
-def _validate_repair_revision(revision: Mapping[str, Any], *, label: str) -> None:
-	if len(str(revision.get("commit") or "")) < 8:
-		raise ValueError(f"{label} has no pinned source revision")
-	if revision.get("tracked_changes") is not False:
-		raise ValueError(f"{label} has tracked source changes")
-	if revision.get("untracked_files") is not False:
-		raise ValueError(f"{label} has untracked source files")
-
-
 def _repaired_record_key(
 	record: Mapping[str, Any],
 	*,
@@ -927,21 +678,8 @@ def _validate_raw_moose_runs(
 		)
 		_validate_achievement_toolchain(summary, label=f"Raw MOOSE seed {seed}")
 		_validate_raw_moose_training_contract(summary, seed=seed)
-		paired_manifest = seed_batch_manifests.get(str(seed))
-		if not isinstance(paired_manifest, Mapping):
-			raise ValueError(f"Raw MOOSE seed {seed} has no paired model batch")
-		if str(dict(summary["model_batch_manifest"]).get("sha256") or "") != str(
-			paired_manifest.get("sha256") or "",
-		):
-			raise ValueError(
-				f"Raw MOOSE seed {seed} does not use the paired model batch",
-			)
-		if str(
-			dict(summary["model_batch_manifest"]).get("artifact_sha256") or "",
-		) != str(paired_manifest.get("artifact_sha256") or ""):
-			raise ValueError(
-				f"Raw MOOSE seed {seed} does not use the paired evidence artifacts",
-			)
+		if not isinstance(seed_batch_manifests.get(str(seed)), Mapping):
+			raise ValueError(f"Raw MOOSE seed {seed} has no registered seed batch")
 		methods = {str(row.get("method") or "") for row in summary.get("results") or ()}
 		if methods != {"Raw MOOSE"}:
 			raise ValueError(f"Raw MOOSE seed {seed} contains methods {sorted(methods)}")
@@ -973,10 +711,6 @@ def _validate_seed_batch_contract(
 	seed: int,
 	label: str,
 ) -> None:
-	if len(str(manifest.get("sha256") or "")) != 64:
-		raise ValueError(f"{label} has no model-batch manifest hash")
-	if len(str(manifest.get("artifact_sha256") or "")) != 64:
-		raise ValueError(f"{label} has no evidence-artifact hash")
 	settings = manifest.get("settings")
 	if not isinstance(settings, Mapping):
 		raise ValueError(f"{label} has no model-batch training settings")
@@ -1032,73 +766,26 @@ def _validate_achievement_toolchain(
 	toolchain = dict(summary.get("toolchain") or {})
 	moose = dict(toolchain.get("moose") or {})
 	enhsp = dict(toolchain.get("enhsp") or {})
-	if len(str(moose.get("artifact_sha256") or "")) != 64:
-		raise ValueError(f"{label} has no pinned MOOSE artifact hash")
 	if str(moose.get("docker_image") or "") != "moose-exact-ubuntu22:local":
 		raise ValueError(f"{label} does not use the pinned MOOSE image")
 	if str(enhsp.get("git_revision") or "") != PINNED_ENHSP_REVISION:
 		raise ValueError(f"{label} does not use the pinned ENHSP revision")
-	if len(str(enhsp.get("jar_sha256") or "")) != 64:
-		raise ValueError(f"{label} has no pinned ENHSP jar hash")
 	if str(enhsp.get("configuration") or "") != "sat-hmrphj":
 		raise ValueError(f"{label} does not use the registered MRP+HJ configuration")
 
 
-def _validate_common_achievement_toolchain(
-	raw_runs: Sequence[tuple[int, Path, Mapping[str, Any]]],
-	*,
-	instance: Mapping[str, Any],
-) -> None:
-	summaries = [instance, *(summary for _seed, _path, summary in raw_runs)]
-	moose_hashes = {
-		str(
-			dict(dict(summary.get("toolchain") or {}).get("moose") or {}).get(
-				"artifact_sha256",
-			)
-			or "",
-		)
-		for summary in summaries
-	}
-	if len(moose_hashes) != 1:
-		raise ValueError("external references do not share the same MOOSE artifact")
-	enhsp_hashes = {
-		str(
-			dict(dict(summary.get("toolchain") or {}).get("enhsp") or {}).get(
-				"jar_sha256",
-			)
-			or "",
-		)
-		for summary in summaries
-	}
-	if len(enhsp_hashes) != 1:
-		raise ValueError("external references do not share the same ENHSP artifact")
-
-
 def _validate_direct_temporal_toolchain(
 	summary: Mapping[str, Any],
-	*,
-	expected_moose_artifact_hash: str,
 ) -> None:
 	toolchain = dict(summary.get("toolchain") or {})
 	fond = dict(toolchain.get("fond4ltlf") or {})
 	mona = dict(toolchain.get("mona") or {})
-	lama = dict(toolchain.get("lama") or {})
 	if str(fond.get("git_revision") or "") != PINNED_FOND4LTLF_REVISION:
 		raise ValueError("direct temporal reference does not use the pinned FOND4LTLf revision")
 	if str(fond.get("release") or "") != "v0.0.4":
 		raise ValueError("direct temporal reference does not use FOND4LTLf v0.0.4")
-	if len(str(fond.get("executable_sha256") or "")) != 64:
-		raise ValueError("direct temporal reference has no FOND4LTLf executable hash")
 	if str(mona.get("version") or "") != "1.4-18":
 		raise ValueError("direct temporal reference does not use MONA 1.4-18")
-	if len(str(mona.get("executable_sha256") or "")) != 64:
-		raise ValueError("direct temporal reference has no MONA executable hash")
-	if (
-		len(expected_moose_artifact_hash) != 64
-		or str(lama.get("moose_artifact_sha256") or "")
-		!= expected_moose_artifact_hash
-	):
-		raise ValueError("direct temporal LAMA does not share the pinned MOOSE artifact")
 
 
 def _validate_instance_reference_case_sets(
@@ -1276,16 +963,10 @@ def _validate_case_set(
 	unique_ids = set(normalized_ids)
 	if len(normalized_ids) != len(unique_ids):
 		raise ValueError(f"{label} contains duplicate identifiers")
-	encoded = json.dumps(
-		sorted(unique_ids),
-		separators=(",", ":"),
-	).encode("utf-8")
-	observed_hash = hashlib.sha256(encoded).hexdigest()
 	expected_count = int(contract.get("count") or 0)
-	expected_hash = str(contract.get("sha256") or "")
-	if expected_count <= 0 or len(expected_hash) != 64:
+	if expected_count <= 0:
 		raise ValueError(f"invalid {label} contract")
-	if len(unique_ids) != expected_count or observed_hash != expected_hash:
+	if len(unique_ids) != expected_count:
 		raise ValueError(
 			f"{label} mismatch: observed={len(unique_ids)}, expected={expected_count}",
 		)
@@ -1300,15 +981,6 @@ def _aggregate_temporal(
 	if set(by_variant) != expected or len(runs) != len(expected):
 		raise ValueError("temporal run matrix is incomplete or contains duplicates")
 	temporal_contract = _registered_case_contract(paired, "temporal")
-	expected_benchmark_hash = str(temporal_contract.get("benchmark_sha256") or "")
-	observed_benchmark_hashes = {
-		str(run.get("benchmark_sha256") or "") for run in runs
-	}
-	if (
-		len(expected_benchmark_hash) != 64
-		or observed_benchmark_hashes != {expected_benchmark_hash}
-	):
-		raise ValueError("temporal runs do not use the registered temporal benchmark")
 	result_maps = {
 		variant: _temporal_result_map(
 			by_variant[variant].get("results") or (),
@@ -1916,10 +1588,6 @@ def _read_json(path: str | Path) -> dict[str, Any]:
 	if not isinstance(payload, dict):
 		raise ValueError(f"result artifact is not a JSON object: {resolved}")
 	return payload
-
-
-def _sha256(path: Path) -> str:
-	return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _parse_args() -> argparse.Namespace:

@@ -121,7 +121,7 @@ This sequence
 separates evidence quality, producible-target expansion, lifted decomposition,
 and selection.
 
-Temporal experiment modes share one DFA and atomic-library hash. The
+Temporal experiment modes share one DFA, atomic library, binding, and case set. The
 Unprotected Serialization mode uses canonical within-edge order without threat or
 preservation reasoning. Certified Flat uses the full selected order and branch
 portfolios but retains flat sibling controller plans. Certified Balanced changes
@@ -129,10 +129,11 @@ only the controller indexing structure. Module-Return Monitor
 changes only when the real DFA is observed and is restricted to a semantic
 challenge suite with intermediate-state obligations.
 
-Each variant writes its strategy identifier, source revision, evidence/library/
-query/DFA hashes, settings, per-instance result records, and aggregate summary.
-Paper tables are generated from these summaries. A variant is paired only when
-all controlled hashes match. Raw MOOSE, LAMA/ENHSP, and direct temporal planning
+Each public variant record contains its strategy, settings, per-instance
+outcomes, and aggregate summary. Paper tables are generated from these records,
+and pairing requires complete matching case identities and declared semantic
+inputs. Source and byte identities remain transient runner bookkeeping. Raw
+MOOSE, LAMA/ENHSP, and direct temporal planning
 are external references and therefore use a separate report rather than being
 mixed into the compiler ablation matrix.
 

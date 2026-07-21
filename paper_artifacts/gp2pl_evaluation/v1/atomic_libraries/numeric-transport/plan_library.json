@@ -176,7 +176,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 5,
       "source_name": "numeric-transport",
@@ -205,7 +204,6 @@
       "validated_policy_rule_plan_count": 5
     },
     "pddl_support": {
-      "domain_file": "src/domains/numeric-transport/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -243,7 +241,6 @@
       "numeric_functions": [
         "capacity"
       ],
-      "problem_files": [],
       "requirements": [
         ":typing",
         ":numeric-fluents"
@@ -268,7 +265,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
     "source_name": "numeric-transport",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 5,
@@ -351,7 +347,6 @@
             "Y \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "producer_actions": [
             "drive"
           ],
@@ -396,7 +391,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "producer_actions": [
             "drop"
           ],
@@ -446,7 +440,6 @@
             "capacity(Z, N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "producer_actions": [
             "pick-up",
             "drive",
@@ -522,7 +515,6 @@
             "capacity(Z, N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "producer_actions": [
             "drive",
             "pick-up",
@@ -610,7 +602,6 @@
             "capacity(Z, N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "producer_actions": [
             "drop",
             "pick-up",
@@ -691,7 +682,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -748,7 +738,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "A != X",
@@ -816,7 +805,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -898,7 +886,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -979,7 +966,6 @@
             "capacity(Y, N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "producer_actions": [
             "pick-up"
           ],
@@ -1033,7 +1019,6 @@
               "at(Z, A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "prepared_predicate": "in",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1092,7 +1077,6 @@
               "at(Z, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "prepared_predicate": "in",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1148,7 +1132,6 @@
               "at(Y, Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1204,7 +1187,6 @@
               "at(X, Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-transport/numeric-transport.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",

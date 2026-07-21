@@ -10,7 +10,6 @@ from scripts.freeze_five_seed_full_compiler_results import (
 	render_domain_table,
 	render_main_table,
 	render_result_macros,
-	validate_source_aggregate,
 )
 
 
@@ -19,7 +18,6 @@ def test_build_five_seed_result_dataset_reports_seed_variation(tmp_path: Path) -
 
 	result = build_five_seed_result_dataset(
 		summary_files,
-		compiler_freeze={"revision": "0123456789abcdef", "closure_sha256": "abc"},
 		expected_domains=("depots", "logistics"),
 		expected_case_count=2,
 	)
@@ -46,6 +44,18 @@ def test_build_five_seed_result_dataset_reports_seed_variation(tmp_path: Path) -
 		"00000": 1,
 		"11011": 1,
 	}
+	assert len(result["case_records"]) == 10
+	assert set(result["case_records"][0]) == {
+		"action_count",
+		"domain",
+		"jason_run_seconds",
+		"seed",
+		"status",
+		"test_id",
+		"timed_out",
+		"val_success",
+		"valid",
+	}
 
 
 def test_build_five_seed_result_dataset_rejects_success_without_val(
@@ -62,6 +72,37 @@ def test_build_five_seed_result_dataset_rejects_success_without_val(
 			expected_domains=("depots", "logistics"),
 			expected_case_count=2,
 		)
+
+
+def test_build_five_seed_result_dataset_uses_jason_process_time(
+	tmp_path: Path,
+) -> None:
+	summary_files = _write_summary_set(tmp_path)
+	seed_zero = json.loads(summary_files[0].read_text(encoding="utf-8"))
+	validation = seed_zero["validations"][0]
+	validation.pop("jason_run_seconds")
+	output_dir = tmp_path / "runtime" / "logistics-p1-01"
+	output_dir.mkdir(parents=True)
+	(output_dir / "jason_validation.json").write_text(
+		json.dumps({"timing_profile": {"run_seconds": 7.5}}),
+		encoding="utf-8",
+	)
+	validation["output_dir"] = str(output_dir)
+	validation["duration_seconds"] = 99.0
+	summary_files[0].write_text(json.dumps(seed_zero), encoding="utf-8")
+
+	result = build_five_seed_result_dataset(
+		summary_files,
+		expected_domains=("depots", "logistics"),
+		expected_case_count=2,
+	)
+
+	row = next(
+		row
+		for row in result["case_records"]
+		if row["seed"] == 0 and row["domain"] == "logistics"
+	)
+	assert row["jason_run_seconds"] == 7.5
 
 
 def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
@@ -99,54 +140,6 @@ def test_rendered_latex_uses_machine_values(tmp_path: Path) -> None:
 		assert "\\small" in table
 		assert "\\scriptsize" not in table
 		assert table.index("\\caption{") > table.index("\\end{tabular}")
-
-
-def test_validate_source_aggregate_matches_five_child_runs(tmp_path: Path) -> None:
-	result = build_five_seed_result_dataset(
-		_write_summary_set(tmp_path),
-		expected_domains=("depots", "logistics"),
-		expected_case_count=2,
-	)
-	aggregate_file = tmp_path / "five_seed_summary.json"
-	aggregate_file.write_text(
-		json.dumps(_source_aggregate(result)),
-		encoding="utf-8",
-	)
-
-	provenance = validate_source_aggregate(
-		aggregate_file,
-		result=result,
-		project_root=tmp_path,
-	)
-
-	assert provenance["run_id"] == "fixture-five-seed"
-	assert provenance["path"] == "five_seed_summary.json"
-	assert len(provenance["sha256"]) == 64
-	assert provenance["moose_internal_workers"] == 1
-	assert provenance["jason_workers_per_repetition"] == 8
-
-
-def test_validate_source_aggregate_rejects_changed_domain_count(
-	tmp_path: Path,
-) -> None:
-	result = build_five_seed_result_dataset(
-		_write_summary_set(tmp_path),
-		expected_domains=("depots", "logistics"),
-		expected_case_count=2,
-	)
-	aggregate = _source_aggregate(result)
-	aggregate["aggregate_domains"]["logistics"][
-		"successful_cases_across_repetitions"
-	] += 1
-	aggregate_file = tmp_path / "five_seed_summary.json"
-	aggregate_file.write_text(json.dumps(aggregate), encoding="utf-8")
-
-	with pytest.raises(ValueError, match="aggregate domain logistics"):
-		validate_source_aggregate(
-			aggregate_file,
-			result=result,
-			project_root=tmp_path,
-		)
 
 
 def _write_summary_set(root: Path) -> dict[int, Path]:
@@ -203,69 +196,11 @@ def _validation(*, domain: str, test_id: str, success: bool) -> dict[str, object
 		"domain": domain,
 		"error": None if success else "execution success marker not found in runtime output",
 		"exit_code": 0,
+		"jason_run_seconds": 1.25,
 		"plan_verifier_attempted": success,
 		"plan_verifier_success": True if success else None,
 		"problem_file": f"/fixture/{domain}/test/{test_id}.pddl",
 		"status": "success" if success else "failed",
 		"success": success,
 		"timed_out": False,
-	}
-
-
-def _source_aggregate(result: dict[str, object]) -> dict[str, object]:
-	seed_results = result["seed_results"]
-	domain_rows = result["domains"]
-	assert isinstance(seed_results, list)
-	assert isinstance(domain_rows, list)
-	return {
-		"schema_version": 1,
-		"run_id": "fixture-five-seed",
-		"protocol": "five_independent_moose_synthesis_repetitions",
-		"seeds": [0, 1, 2, 3, 4],
-		"evidence_merged": False,
-		"moose_internal_workers": 1,
-		"moose_seed_parallelism": 5,
-		"cross_seed_jason_parallelism": 1,
-		"jason_workers_per_repetition": 8,
-		"aggregate_domains": {
-			row["domain"]: {
-				"completed_repetitions": 5,
-				"mean_seed_coverage": row["mean_success_rate"],
-				"sample_stddev_seed_coverage": row[
-					"sample_sd_success_rate"
-				],
-				"successful_cases_across_repetitions": sum(
-					row["success_counts"],
-				),
-				"total_cases_across_repetitions": row["test_count"] * 5,
-			}
-			for row in domain_rows
-		},
-		"repetitions": [
-			{
-				"seed": seed_row["seed"],
-				"validation_run_id": seed_row["run_id"],
-				"moose_exit_code": 0,
-				"validation_exit_code": (
-					0 if seed_row["failure_count"] == 0 else 1
-				),
-				"evidence": {
-					row["domain"]: {"generation_success": True}
-					for row in domain_rows
-				},
-				"validation": {
-					row["domain"]: {
-						"success": row["success_counts"][seed_row["seed"]],
-						"total": row["test_count"],
-						"timeout": 0,
-						"coverage": (
-							row["success_counts"][seed_row["seed"]]
-							/ row["test_count"]
-						),
-					}
-					for row in domain_rows
-				},
-			}
-			for seed_row in seed_results
-		],
 	}

@@ -249,7 +249,6 @@
   },
   "compiled_plan_count": 34,
   "compiled_singleton_rule_count": 0,
-  "domain_file": "src/domains/blocksworld-clear/domain.pddl",
   "domain_name": "blocksworld-clear",
   "evidence_provider": "moose",
   "library_metadata": {
@@ -524,7 +523,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-clear/blocksworld-clear.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 7,
       "source_name": "blocksworld-clear",
@@ -553,7 +551,6 @@
       "validated_policy_rule_plan_count": 7
     },
     "pddl_support": {
-      "domain_file": "src/domains/blocksworld-clear/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -587,7 +584,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":strips"
       ],
@@ -610,7 +606,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-clear/blocksworld-clear.model.readable",
     "source_name": "blocksworld-clear",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 7,
@@ -658,7 +653,6 @@
     "validated_policy_rule_plan_count": 7
   },
   "minimal_modules": true,
-  "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-clear/blocksworld-clear.model.readable",
   "policy_program_module_count": 7,
   "policy_program_rule_count": 7,
   "raw_rule_count": 7,

@@ -270,7 +270,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 4,
       "source_name": "gripper",
@@ -299,7 +298,6 @@
       "validated_policy_rule_plan_count": 4
     },
     "pddl_support": {
-      "domain_file": "src/domains/gripper/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -333,7 +331,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [],
       "supported_requirement_set": [
         ":action-costs",
@@ -352,7 +349,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
     "source_name": "gripper",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 4,
@@ -479,7 +475,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "drop"
           ],
@@ -526,7 +521,6 @@
             "A \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "pick",
             "move",
@@ -596,7 +590,6 @@
             "A \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "drop",
             "pick",
@@ -679,7 +672,6 @@
             "A \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "move",
             "pick",
@@ -757,7 +749,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -811,7 +802,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -875,7 +865,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -950,7 +939,6 @@
             "X \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "move"
           ],
@@ -992,7 +980,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "pick"
           ],
@@ -1040,7 +1027,6 @@
             "A \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "drop",
             "pick"
@@ -1098,7 +1084,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "producer_actions": [
             "drop"
           ],
@@ -1150,7 +1135,6 @@
               "gripper(B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "carry",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1208,7 +1192,6 @@
               "gripper(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "carry",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1266,7 +1249,6 @@
               "gripper(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "free",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1323,7 +1305,6 @@
               "room(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "at-robby",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1382,7 +1363,6 @@
               "gripper(B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "at-robby",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1440,7 +1420,6 @@
               "room(B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "at-robby",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1492,7 +1471,6 @@
             "dynamic_sibling_projection": true,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "at-robby",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1546,7 +1524,6 @@
               "room(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "at-robby",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1605,7 +1582,6 @@
               "room(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1660,7 +1636,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "free",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1712,7 +1687,6 @@
               "room(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
           "prepared_predicate": "at-robby",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",

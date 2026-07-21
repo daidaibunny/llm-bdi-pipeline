@@ -246,7 +246,6 @@
   },
   "compiled_plan_count": 26,
   "compiled_singleton_rule_count": 0,
-  "domain_file": "src/domains/gripper/domain.pddl",
   "domain_name": "gripper",
   "evidence_provider": "moose",
   "library_metadata": {
@@ -518,7 +517,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 4,
       "source_name": "gripper",
@@ -547,7 +545,6 @@
       "validated_policy_rule_plan_count": 4
     },
     "pddl_support": {
-      "domain_file": "src/domains/gripper/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -581,7 +578,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [],
       "supported_requirement_set": [
         ":action-costs",
@@ -600,7 +596,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
     "source_name": "gripper",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 4,
@@ -648,7 +643,6 @@
     "validated_policy_rule_plan_count": 4
   },
   "minimal_modules": true,
-  "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/gripper/gripper.model.readable",
   "policy_program_module_count": 4,
   "policy_program_rule_count": 4,
   "raw_rule_count": 4,

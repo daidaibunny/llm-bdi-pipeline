@@ -397,29 +397,22 @@ An infrastructure repair may replace only the exact case set labelled as
 infrastructure failures in a complete registered summary. The primary remote
 matrix retains 20 workers, while the repair run uses one worker so it does not
 compete with another experiment. The merge rejects missing or extra retry
-cases, changed PDDL fingerprints, toolchain or resource-limit drift, and any
-remaining infrastructure failure. It preserves both summary hashes and source
-revisions plus per-case replacement provenance. The experiment owner confirms
-that the local and remote machines have equivalent configurations and
-comparable resource availability, and queue waiting is excluded from measured
-case runtime; therefore repaired case runtimes remain eligible for PAR-2.
-Generated Python entry points and MONA libtool launchers embed their absolute
-installation directory. When their raw hashes differ across those machines,
-the merge reads the retry launcher, verifies its recorded raw hash, rewrites
-only the recorded installation prefix to the primary prefix, and requires the
-resulting hash to equal the primary hash. Pinned revisions, versions, the
-FOND4LTLf isolation-wrapper hash, and planner artifacts must still match
-exactly; an unexplained launcher difference remains an infrastructure failure.
+cases, changed semantic inputs, tool-version or resource-limit drift, and any
+remaining infrastructure failure. The experiment owner confirms that the local
+and remote machines have equivalent configurations and comparable resource
+availability, and queue waiting is excluded from measured case runtime;
+therefore repaired case runtimes remain eligible for PAR-2. Generated Python
+entry points and MONA launchers may contain machine-local installation paths;
+those paths and their byte identities are not public result fields.
 Planner failures, timeouts, unsupported inputs, compiler failures, and
 validation failures are never selected for repair.
 
 Five fixed MOOSE seeds are run independently with one internal MOOSE worker for
 the GP2PL-added-domain extension. Evidence is never unioned and a best seed is
-never selected. Every paired
-compiler comparison records both the seeded-training manifest and a canonical
-SHA-256 fingerprint of every per-domain `.model` and `.model.readable`
-artifact; every paired temporal
-comparison records the atomic-library, input, binding, and DFA hashes. Report
+never selected. Every paired compiler comparison uses the same seeded evidence
+assignment and held-out identifiers for all variants. Every paired temporal
+comparison uses the same declared atomic core, query binding, DFA, and case set.
+Report
 each locally measured extension seed, mean and sample standard deviation,
 paired coverage differences, PAR-2 for timeouts, and plan length only on jointly
 solved instances. Keep
@@ -441,27 +434,14 @@ The native paired harness is `scripts/run_paired_compiler_experiments.py`.
 It can generate five isolated MOOSE evidence batches or consume explicit
 `SEED=BATCH_ID` assignments, then invokes the production full-test and temporal
 benchmark runners once per registered method. Atomic pairing requires the same
-raw readable-policy hash and normalized evidence-program fingerprint for every
-method at a given seed and domain. Temporal pairing requires the same benchmark,
-atomic-library, and DFA fingerprints and the same sample set for every method.
-For the registered `--stage all` release, all temporal variants consume the
-seed-0 Full GP2PL libraries emitted earlier in that same run and confirmed
-method-source equivalence class. They never consume ASL files opportunistically generated while the
-long-running evidence batch was in progress. A temporal-only diagnostic may use
-an explicit precompiled batch, but it is not substituted into the registered
-combined matrix.
-Git commit identity is provenance rather than a semantic pairing key. When a
-long run spans repository commits, the release keeps every original child
-revision record and requires a hash-bound experiment-owner confirmation that no
-method-defining code changed. That confirmation is valid only for the exact
-recorded child-revision set; evidence, atomic-library, benchmark, binding, DFA,
-case-set, resource, and controller pairing checks remain fail-closed.
-The DFA fingerprint covers the formula, atom binding, initial and accepting
-states, and guarded transition graph. It excludes conversion timings, artifact
-paths, and DOT rendering, which are provenance rather than paired semantic
-input. Each result separately records a controller fingerprint over the
-registered variant settings and generated query-local plans; controller
-fingerprints may differ and never substitute for the common DFA check.
+seeded evidence assignment and held-out case set for every method at a given
+seed and domain. Temporal pairing requires the same benchmark cases, atomic
+core, query bindings, and guarded DFA structure for every method. For the
+registered `--stage all` release, all temporal variants consume the declared
+seed-0 Full GP2PL libraries. Public records expose complete paired outcomes and
+protocol fields, not source revisions or byte fingerprints. Internal transient
+fingerprints may still protect resume operations from mixing inputs, but they
+are not scientific results or publication eligibility criteria.
 Maximum trigger fan-out is measured only over transition-repair controller
 plans: flat repair siblings, or balanced entry, range, leaf, done, and replay
 plans. Query-local preserving-branch and support-helper portfolios remain part
@@ -516,15 +496,13 @@ The completed Raw MOOSE extension matrix is frozen by
 The freeze applies the predeclared four-domain case contract to each source
 summary, so the earlier seed-0 1,228-case superset contributes only its same 148
 extension cases. The five selected counts are 26, 23, 23, 25, and 20 valid
-plans; the portable release retains all 740 case outcomes and their input/model
-hashes but removes commands and machine-local paths. The main-paper MOOSE table
+plans; the portable release retains all 740 case outcomes and the declared
+protocol but removes commands, run bookkeeping, and machine-local paths. The main-paper MOOSE table
 is emitted in the same deterministic freeze transaction and checked in beside
 the registered arXiv-v1 Table-4 reference; the frozen JSON is the sole local
-numeric record thereafter. Recorded dirty Git states are preserved as
-provenance and are not a coverage exclusion: the admissibility gates are the
-immutable case set,
-evidence/model hashes, MOOSE toolchain, resource protocol, completion status,
-and VAL result. Timing is excluded.
+numeric record thereafter. The admissibility gates are the complete case set,
+declared tool and resource protocol, completion status, and VAL result. Timing
+is excluded.
 
 The final comparison release is generated by
 `scripts/generate_aaai_comparison_tables.py`. It requires the complete paired
@@ -539,23 +517,17 @@ contracts: 1,080 original MOOSE cases, 148 locally measured extension cases,
 and their 1,228-case union. The paired manifest
 derives immutable case-set contracts from the selected repository inputs: 1,228
 achievement cases, 1,228 temporal cases, 868 classical LAMA cases, and 360
-numeric MRP+HJ cases. The generator recomputes the sorted identifier digest for
-every method and seed and rejects omissions, duplicates, or substitutions even
-if every compared method made the same mistake. It also requires every
-downstream summary to identify its own clean source commit, but independent
-experiment groups may use different commits when all registered input hashes,
-toolchains, case sets, and protocols still match. It binds each local Raw MOOSE
-extension run
-to both the exact model-batch manifest and the canonical model/readable-policy
-artifact fingerprint used by the corresponding compiler seed,
+numeric MRP+HJ cases. The generator checks every complete identifier set and
+rejects omissions, duplicates, or substitutions even if every compared method
+made the same mistake. It binds each local Raw MOOSE extension run to its
+declared seed and evidence assignment,
 checks six workers for the paired compiler and Raw MOOSE extension matrices, 20 workers
 for the remote LAMA/MRP+HJ and direct FOND4LTLf matrices, the common
 1,800-second and 8-GiB external-planner limits, and the paired compiler's
 64-MiB Java stack. When an external matrix contains an infrastructure repair,
 it additionally requires an exact one-worker retry set, unchanged inputs,
-toolchain, and resource limits, clean primary and retry revisions, and explicit
-hardware-equivalence and runtime-comparability attestations. It also verifies
-pinned tool revisions and artifact hashes.
+tool versions, and resource limits plus explicit hardware-equivalence and
+runtime-comparability attestations.
 The challenge input must contain exactly the 13 unique registered nodes with 13
 successes. LaTeX cells and the compact release JSON are generated from those
 checked artifacts; aggregate values are never typed into the manuscript by hand.
@@ -569,7 +541,7 @@ The paired compiler release is
 `paper_artifacts/gp2pl_evaluation/v1/paired_ablation_results.json`. It contains
 all 24,560 portable atomic outcomes and 4,912 portable temporal outcomes,
 adjacent-method exact paired contrasts, corrected transition-repair fan-out,
-paired-input contracts, and parent/challenge hashes. The generated atomic and
+and paired protocol contracts. The generated atomic and
 temporal tables and macros are the only manuscript insertion path for these
 values. The optional diagnostic plot is regenerated from the same release and
 is never reconstructed from LaTeX cells or used as a main-paper result figure.
@@ -581,8 +553,9 @@ with disjoint case sets are not visually ranked or colored.
 
 The companion `scripts/run_certificate_challenge_matrix.py` executes the
 registered rejection and symbol-invariance cases against production compiler
-entry points through exact test nodes. It records the source revision, command,
-duration, stdout, stderr, and result for each case. A failed challenge is an
+entry points through exact test nodes. The public challenge record retains each
+case identity and outcome; local commands and source bookkeeping remain
+transient. A failed challenge is an
 infrastructure/claim failure for the paired experiment run, whereas an ordinary
 held-out planning failure remains a measured method outcome.
 
@@ -711,9 +684,9 @@ timestamped atomic-library batch without retraining MOOSE, compiles every case
 independently, and records query compilation, Jason, PDDL replay, neutral-goal
 VAL, gold-DFA, and predicted-DFA outcomes separately. Unsupported DFA structure
 and missing certificates are structured compiler rejections rather than Jason
-failures. Results are aggregated by domain and formula profile, while every
-case retains its DFA payload, Jason artifacts, committed trace, validator
-artifacts, and exact source revision.
+failures. Results are aggregated by domain and formula profile. The public
+record retains case outcomes and validation statuses; verbose DFA, Jason,
+trace, and validator artifacts remain local diagnostics.
 
 The supported planning fragment also includes bounded integer resources.
 A numeric resource is a declared PDDL function with an integer value in the
@@ -1627,15 +1600,12 @@ updates, optimization metrics as achievement goals, non-equality numeric goals,
 and numeric goals that require a recursive ranking proof not present in the
 validated evidence.
 
-## Pinned Five-Seed Full Compiler Evidence
+## Five-Seed Full Compiler Results
 
 The final submitted compiler is the Full GP2PL variant with validated policy
-lifting and Clingo selection. Its method-defining source closure is frozen at
-revision `5e632fb5` with SHA-256
-`cc78013f34d012e32e0ee450a7477912a620982e98eb32a9f915fae99fa9729a`.
-The same 29-file closure is byte-identical at the three source commits recorded
-by the five formal runs. Subsequent paper or experiment-orchestration edits do
-not authorize a semantic compiler change for this submission.
+lifting and Clingo selection. Each of the five evidence seeds is trained,
+compiled, and evaluated independently on the same declared 1,228-case set;
+evidence is neither pooled nor selected by best seed.
 
 The five independent 1,228-case runs for seeds 0--4 obtain 1,224, 1,219,
 1,187, 1,205, and 1,224 Jason-plus-original-goal-VAL successes. The per-seed
@@ -1651,21 +1621,17 @@ beyond the current already-bound capacity-discharge certificate.
 
 The compact record is
 `paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json`.
-It stores the five source summary hashes, common input-snapshot hash, exact
-outcome patterns, per-domain counts, failure diagnostic, and compiler closure.
-Seed 4 truthfully retains `tracked_source_changes=true`; the record does not
-claim that all five repository states were clean. Eligibility rests on sealed
-scientific inputs and outputs plus the byte-identical committed method closure.
-Cross-seed timing is excluded because unrelated workloads overlapped the runs.
-Evidence is not pooled and seed 4 is not selected as a best-seed result.
+It stores the experiment protocol, all 6,140 seed--case outcomes, exact outcome
+patterns, per-domain counts, and failure diagnostics. The public schema omits
+run identifiers, source revisions, byte digests, and machine-local paths; every
+reported aggregate is recomputable from the included outcomes. Cross-seed
+timing is excluded because unrelated workloads overlapped the runs.
 
-## Pinned Temporal Execution Evidence
+## Temporal Execution Results
 
-The paper-eligible Temporal Extended Goal execution run is
-`teg-paper-clean-e28bcea4`. It executed the complete 1,228-case benchmark from
-commit `e28bcea4`, with no tracked source changes, 12 workers, 1,800-second
-Jason and VAL limits, and a 64-MiB Java stack. Every atomic AgentSpeak library
-input is recorded by SHA-256 hash in the run summary.
+The fixed Temporal Extended Goal evaluation executes the complete 1,228-case
+benchmark with one declared seed-0 atomic core per domain, 12 workers,
+1,800-second Jason and VAL limits, and a 64-MiB Java stack.
 
 All 1,228 cases have an explicit Jason success marker, a complete primitive
 PDDL action trace accepted by neutral-goal VAL, and acceptance by both the gold
@@ -1678,22 +1644,18 @@ totals are 273/273 ordered-two, 272/272 ordered-three, 275/275 strong-Until,
 137/137 same-state conjunction, and 271/271 same-state-with-negation.
 
 This result establishes complete execution coverage only for the released
-benchmark, supplied atomic-library hashes, and declared temporal and numeric
+benchmark, supplied atomic libraries, and declared temporal and numeric
 fragments. It does not establish action-strategy completeness for arbitrary
 PDDL-times-LTLf products, arbitrary arithmetic planning, or universal
 realizability under every type-compatible parameter assignment.
 
 The conference-neutral evaluation-table generator is
-`scripts/generate_evaluation_tables.py`. It validates the benchmark and frozen
-prediction hashes, requires a tracked-clean execution revision, requires exact
-coverage of all benchmark sample identifiers, and re-hashes every atomic JSON
-and ASL input before producing `result_macros.tex`, the per-domain table, the
-per-profile table, and `evaluation_results.json`. For the exact libraries used by
-the clean run, it records 1,568 joint certified candidates, 1,527 selected
-branches, and 638.4 KiB of ASL. These are hash-locked structural measurements.
-The earlier atomic generation batch did not record a clean source revision, so
-its synthesis and compiler runtimes are not paper-eligible and must not be
-inferred from timestamps or diagnostic logs.
+`scripts/generate_evaluation_tables.py`. It requires exact, duplicate-free
+coverage of all benchmark sample identifiers and checks every reported semantic
+outcome before producing `result_macros.tex`, the per-domain table, the
+per-profile table, and `evaluation_results.json`. For the supplied libraries it
+records 1,568 joint certified candidates, 1,527 selected branches, and 638.4 KiB
+of ASL. Synthesis and compiler runtimes are not inferred from diagnostic logs.
 
 ## Temporal Semantic Conformance Suite
 

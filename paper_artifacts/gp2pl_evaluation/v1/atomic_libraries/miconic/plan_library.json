@@ -240,7 +240,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 11,
       "source_name": "miconic",
@@ -269,7 +268,6 @@
       "validated_policy_rule_plan_count": 11
     },
     "pddl_support": {
-      "domain_file": "src/domains/miconic/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -303,7 +301,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":strips",
         ":typing"
@@ -328,7 +325,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
     "source_name": "miconic",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 11,
@@ -430,7 +426,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "producer_actions": [
             "board"
           ],
@@ -474,7 +469,6 @@
             "X \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "producer_actions": [
             "down"
           ],
@@ -519,7 +513,6 @@
             "X \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "producer_actions": [
             "up"
           ],
@@ -562,7 +555,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "producer_actions": [
             "depart"
           ],
@@ -604,7 +596,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -657,7 +648,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -710,7 +700,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -771,7 +760,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -832,7 +820,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -907,7 +894,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -976,7 +962,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -1051,7 +1036,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -1126,7 +1110,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -1201,7 +1184,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -1277,7 +1259,6 @@
               "origin(X, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "prepared_predicate": "lift-at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1327,7 +1308,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "prepared_predicate": "boarded",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1378,7 +1358,6 @@
               "boarded(X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/miconic/miconic.model.readable",
           "prepared_predicate": "lift-at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",

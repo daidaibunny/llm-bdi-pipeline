@@ -444,7 +444,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 179,
       "source_name": "blocksworld-tower",
@@ -473,7 +472,6 @@
       "validated_policy_rule_plan_count": 179
     },
     "pddl_support": {
-      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -507,7 +505,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":strips",
         ":typing"
@@ -532,7 +529,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
     "source_name": "blocksworld-tower",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 179,
@@ -679,7 +675,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "put-down"
           ],
@@ -720,7 +715,6 @@
             "X \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "unstack"
           ],
@@ -764,7 +758,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "unstack",
             "put-down"
@@ -835,7 +828,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "put-down"
           ],
@@ -872,7 +864,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "pick-up"
           ],
@@ -913,7 +904,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "unstack"
           ],
@@ -956,7 +946,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "stack"
           ],
@@ -1001,7 +990,6 @@
             "X \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "pick-up",
             "stack"
@@ -1058,7 +1046,6 @@
             "Y \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "unstack",
             "stack"
@@ -1114,7 +1101,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "X != Y"
@@ -1168,7 +1154,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "X != Y"
@@ -1220,7 +1205,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -1282,7 +1266,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -1346,7 +1329,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "X != Y"
@@ -1404,7 +1386,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "X != Y"
@@ -1464,7 +1445,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -1537,7 +1517,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -1608,7 +1587,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -1679,7 +1657,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "X != Y"
@@ -1748,7 +1725,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -1821,7 +1797,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "X != Y"
@@ -1888,7 +1863,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -1964,7 +1938,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2047,7 +2020,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2132,7 +2104,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -2211,7 +2182,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2294,7 +2264,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -2375,7 +2344,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -2456,7 +2424,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2541,7 +2508,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2625,7 +2591,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2717,7 +2682,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -2802,7 +2766,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2894,7 +2857,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -2988,7 +2950,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -3076,7 +3037,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -3168,7 +3128,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -3260,7 +3219,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != X",
@@ -3353,7 +3311,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -3447,7 +3404,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -3537,7 +3493,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -3627,7 +3582,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -3731,7 +3685,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -3835,7 +3788,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -3940,7 +3892,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -4044,7 +3995,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4151,7 +4101,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -4253,7 +4202,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4359,7 +4307,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4465,7 +4412,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4573,7 +4519,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -4675,7 +4620,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4781,7 +4725,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4889,7 +4832,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4995,7 +4937,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -5108,7 +5049,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != X",
@@ -5224,7 +5164,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -5339,7 +5278,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -5454,7 +5392,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -5571,7 +5508,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -5686,7 +5622,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -5797,7 +5732,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -5910,7 +5844,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -6025,7 +5958,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -6136,7 +6068,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "B != Z",
@@ -6251,7 +6182,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -6368,7 +6298,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -6482,7 +6411,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -6595,7 +6523,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "B != Z",
@@ -6710,7 +6637,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -6839,7 +6765,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -6970,7 +6895,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -7101,7 +7025,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -7233,7 +7156,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -7364,7 +7286,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -7491,7 +7412,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -7624,7 +7544,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -7746,7 +7665,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -7879,7 +7797,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -8008,7 +7925,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -8139,7 +8055,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -8268,7 +8183,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -8390,7 +8304,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -8521,7 +8434,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -8650,7 +8562,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -8780,7 +8691,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != Z",
@@ -8920,7 +8830,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -9062,7 +8971,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -9202,7 +9110,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -9342,7 +9249,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -9473,7 +9379,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -9609,7 +9514,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -9747,7 +9651,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -9886,7 +9789,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -10026,7 +9928,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -10157,7 +10058,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -10295,7 +10195,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -10433,7 +10332,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -10573,7 +10471,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -10715,7 +10612,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -10857,7 +10753,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != X",
@@ -10998,7 +10893,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -11138,7 +11032,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -11276,7 +11169,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -11431,7 +11323,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -11589,7 +11480,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -11749,7 +11639,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -11905,7 +11794,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -12065,7 +11953,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -12225,7 +12112,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -12383,7 +12269,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -12540,7 +12425,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -12687,7 +12571,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -12843,7 +12726,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -12999,7 +12881,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -13158,7 +13039,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -13312,7 +13192,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -13459,7 +13338,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -13613,7 +13491,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -13776,7 +13653,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != X",
@@ -13944,7 +13820,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -14113,7 +13988,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -14282,7 +14156,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -14447,7 +14320,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -14611,7 +14483,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -14778,7 +14649,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -14945,7 +14815,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -15108,7 +14977,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -15273,7 +15141,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -15438,7 +15305,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -15607,7 +15473,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -15773,7 +15638,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -15942,7 +15806,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -16109,7 +15972,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -16265,7 +16127,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -16421,7 +16282,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -16608,7 +16468,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -16791,7 +16650,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -16976,7 +16834,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -17163,7 +17020,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -17337,7 +17193,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -17526,7 +17381,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -17700,7 +17554,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -17883,7 +17736,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -18071,7 +17923,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -18245,7 +18096,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -18430,7 +18280,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -18614,7 +18463,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -18797,7 +18645,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -18986,7 +18833,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "X != Z",
@@ -19169,7 +19015,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -19352,7 +19197,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -19548,7 +19392,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -19742,7 +19585,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -19940,7 +19782,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -20134,7 +19975,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -20326,7 +20166,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "B != Z",
@@ -20524,7 +20363,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -20720,7 +20558,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != X",
@@ -20917,7 +20754,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -21110,7 +20946,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -21293,7 +21128,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -21485,7 +21319,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -21677,7 +21510,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -21891,7 +21723,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -22105,7 +21936,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -22319,7 +22149,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -22537,7 +22366,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -22753,7 +22581,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -22973,7 +22800,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -23187,7 +23013,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -23390,7 +23215,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -23593,7 +23417,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -23816,7 +23639,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -24039,7 +23861,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -24251,7 +24072,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -24480,7 +24300,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -24703,7 +24522,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -24930,7 +24748,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -25142,7 +24959,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -25367,7 +25183,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "schema_binding_guards": [
             "Y != Z",
@@ -25590,7 +25405,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 17, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -25841,7 +25655,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 17, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -26088,7 +25901,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 17, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -26335,7 +26147,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 18, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -26591,7 +26402,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 18, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -26851,7 +26661,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "precedence": "(1, 18, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -27108,7 +26917,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "put-down"
           ],
@@ -27147,7 +26955,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "producer_actions": [
             "unstack",
             "put-down"
@@ -27204,7 +27011,6 @@
               "on(Y, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "clear",
           "recursive_progress_certificate": {
             "certificate_kind": "well_founded_relational_count_decrease",
@@ -27269,7 +27075,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27315,7 +27120,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "clear",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27363,7 +27167,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "clear",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27414,7 +27217,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "clear",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27465,7 +27267,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27514,7 +27315,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27565,7 +27365,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27616,7 +27415,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "clear",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27664,7 +27462,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -27710,7 +27507,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",

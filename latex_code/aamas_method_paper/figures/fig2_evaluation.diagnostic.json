@@ -1,6 +1,4 @@
 {
   "artifact_kind": "gp2pl_five_seed_figure_diagnostic",
-  "output_file": "latex_code/aamas_method_paper/figures/fig2_evaluation.pdf",
-  "source_file": "paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json",
   "success": true
 }

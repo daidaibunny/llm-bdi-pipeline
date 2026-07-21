@@ -106,7 +106,13 @@ def test_repair_paired_results_replaces_derived_fanout_everywhere(
 	assert child["results"][0]["max_trigger_fanout"] == 2
 	assert case["max_trigger_fanout"] == 2
 	assert case["trigger_fanout_scope"] == "transition_repair_controller"
-	assert paired["method_source_equivalence"]["status"] == "confirmed"
+	assert paired["derived_metric_correction"] == {
+		"metric": "max_trigger_fanout",
+		"repaired_case_count": 1,
+		"scope": "transition_repair_controller",
+		"status": "applied",
+		"variant_maxima": {"certified_balanced": 2},
+	}
 	assert json.loads(paired_file.read_text(encoding="utf-8")) == first_repair
 
 
@@ -215,7 +221,6 @@ def test_replace_temporal_results_updates_only_the_semantic_case(
 		{
 			"domain": "logistics",
 			"sample_id": "logistics_p0_24",
-			"source_run_id": "final-logistics-p0-24-certified-balanced",
 			"status": "success",
 			"variant": "certified_balanced",
 		},

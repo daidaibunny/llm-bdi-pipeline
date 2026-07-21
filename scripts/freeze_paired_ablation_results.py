@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 import sys
@@ -74,11 +73,11 @@ def _update_release_manifest(
 	manifest["paired_ablation_temporal_record_count"] = sum(
 		int(row.get("test_count") or 0) for row in result["temporal"]
 	)
-	manifest["files"] = {
-		str(path.relative_to(release_root)): _sha256(path)
+	manifest["files"] = [
+		str(path.relative_to(release_root))
 		for path in sorted(release_root.rglob("*"))
 		if path.is_file() and path != manifest_path
-	}
+	]
 	_write_json(manifest_path, manifest)
 
 
@@ -94,10 +93,6 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 		json.dumps(payload, indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",
 	)
-
-
-def _sha256(path: Path) -> str:
-	return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _parse_args() -> argparse.Namespace:

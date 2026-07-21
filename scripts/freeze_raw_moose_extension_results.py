@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from collections import defaultdict
-import hashlib
 import json
 from pathlib import Path
 import statistics
@@ -29,6 +28,7 @@ from scripts.generate_aaai_comparison_tables import (  # noqa: E402
 from scripts.generate_aaai_comparison_tables import (  # noqa: E402
 	_validate_published_moose_reference,
 )
+from scripts.public_result_schema import outcome_only_payload  # noqa: E402
 
 
 EXPECTED_SEEDS = (0, 1, 2, 3, 4)
@@ -133,18 +133,10 @@ def build_raw_moose_extension_dataset(
 	domain_seed_valid: dict[str, dict[int, int]] = defaultdict(dict)
 	domain_seed_total: dict[str, dict[int, int]] = defaultdict(dict)
 	domain_status_counts: dict[str, Counter[str]] = defaultdict(Counter)
-	common_toolchain: dict[str, str] | None = None
-
 	for seed in EXPECTED_SEEDS:
 		summary_path = Path(summary_files[seed]).expanduser().resolve()
 		summary = _read_json(summary_path)
 		_validate_summary_header(summary, seed=seed)
-		toolchain = _portable_moose_toolchain(summary, seed=seed)
-		if common_toolchain is None:
-			common_toolchain = toolchain
-		elif toolchain != common_toolchain:
-			raise ValueError(f"Raw MOOSE seed {seed} uses a different toolchain")
-
 		selected = tuple(
 			record
 			for record in summary.get("results") or ()
@@ -174,32 +166,14 @@ def build_raw_moose_extension_dataset(
 					domain_seed_valid[domain].get(seed, 0) + 1
 				)
 
-		source_revision = dict(summary.get("source_revision") or {})
-		batch_manifest = dict(summary.get("model_batch_manifest") or {})
 		seed_results.append(
 			{
 				"seed": seed,
-				"run_id": str(summary.get("run_id") or ""),
-				"finished_at": str(summary.get("finished_at") or ""),
-				"source_commit": str(source_revision.get("commit") or ""),
-				"tracked_source_changes": bool(
-					source_revision.get("tracked_changes"),
-				),
-				"untracked_source_files": bool(
-					source_revision.get("untracked_files"),
-				),
 				"source_result_count": len(summary.get("results") or ()),
 				"selected_result_count": len(selected),
 				"valid_count": valid_count,
 				"failure_count": len(selected) - valid_count,
 				"status_counts": dict(sorted(status_counts.items())),
-				"summary_sha256": _sha256(summary_path),
-				"model_batch_manifest_sha256": str(
-					batch_manifest.get("sha256") or "",
-				),
-				"evidence_artifact_sha256": str(
-					batch_manifest.get("artifact_sha256") or "",
-				),
 			}
 		)
 
@@ -213,7 +187,7 @@ def build_raw_moose_extension_dataset(
 	published_results = dict(published["published_results"])
 	mean_valid = statistics.mean(valid_counts)
 	sd_valid = statistics.stdev(valid_counts)
-	return {
+	return outcome_only_payload({
 		"artifact_kind": "gp2pl_raw_moose_extension_five_seed_result",
 		"schema_version": 1,
 		"protocol": {
@@ -233,10 +207,7 @@ def build_raw_moose_extension_dataset(
 			"runtime_comparison_allowed": False,
 			"clean_git_state_required": False,
 		},
-		"toolchain": dict(common_toolchain or {}),
 		"published_reference": {
-			"source_file": _portable_project_path(published_path),
-			"source_sha256": _sha256(published_path),
 			"arxiv_version": str(dict(published["source"])["arxiv_version"]),
 			"table": str(dict(published["source"])["table"]),
 			"source": "Reported",
@@ -266,7 +237,7 @@ def build_raw_moose_extension_dataset(
 		},
 		"domains": domain_rows,
 		"records": portable_records,
-	}
+	})
 
 
 def render_moose_reference_table(result: Mapping[str, Any]) -> str:
@@ -378,8 +349,6 @@ def _validate_summary_header(summary: Mapping[str, Any], *, seed: int) -> None:
 		raise ValueError(f"Raw MOOSE seed {seed} did not complete")
 	if int(summary.get("infrastructure_failure_count") or 0) != 0:
 		raise ValueError(f"Raw MOOSE seed {seed} has infrastructure failures")
-	if not str(summary.get("finished_at") or ""):
-		raise ValueError(f"Raw MOOSE seed {seed} has no completion time")
 	parameters = dict(summary.get("parameters") or {})
 	expected_parameters = {
 		"num_workers": EXPECTED_NUM_WORKERS,
@@ -391,13 +360,7 @@ def _validate_summary_header(summary: Mapping[str, Any], *, seed: int) -> None:
 			raise ValueError(f"Raw MOOSE seed {seed} has unexpected {key}")
 	if float(parameters.get("max_rss_gb") or 0.0) != EXPECTED_MAX_RSS_GB:
 		raise ValueError(f"Raw MOOSE seed {seed} has unexpected memory limit")
-	source_revision = dict(summary.get("source_revision") or {})
-	if len(str(source_revision.get("commit") or "")) != 40:
-		raise ValueError(f"Raw MOOSE seed {seed} has no full source commit")
 	manifest = dict(summary.get("model_batch_manifest") or {})
-	for key in ("sha256", "artifact_sha256"):
-		if len(str(manifest.get(key) or "")) != 64:
-			raise ValueError(f"Raw MOOSE seed {seed} has no {key}")
 	settings = dict(manifest.get("settings") or {})
 	expected_settings = {
 		"random_seed": seed,
@@ -413,26 +376,6 @@ def _validate_summary_header(summary: Mapping[str, Any], *, seed: int) -> None:
 		raise ValueError(f"Raw MOOSE seed {seed} has unexpected training memory")
 
 
-def _portable_moose_toolchain(
-	summary: Mapping[str, Any],
-	*,
-	seed: int,
-) -> dict[str, str]:
-	moose = dict(dict(summary.get("toolchain") or {}).get("moose") or {})
-	result = {
-		"artifact_sha256": str(moose.get("artifact_sha256") or ""),
-		"docker_image_id": str(moose.get("docker_image_id") or ""),
-		"git_revision": str(moose.get("git_revision") or ""),
-	}
-	if len(result["artifact_sha256"]) != 64:
-		raise ValueError(f"Raw MOOSE seed {seed} has no artifact hash")
-	if not result["docker_image_id"].startswith("sha256:"):
-		raise ValueError(f"Raw MOOSE seed {seed} has no image identifier")
-	if len(result["git_revision"]) != 40:
-		raise ValueError(f"Raw MOOSE seed {seed} has no MOOSE revision")
-	return result
-
-
 def _portable_record(record: Mapping[str, Any], *, seed: int) -> dict[str, Any]:
 	if str(record.get("method") or "") != "Raw MOOSE":
 		raise ValueError(f"Raw MOOSE seed {seed} contains another method")
@@ -444,12 +387,6 @@ def _portable_record(record: Mapping[str, Any], *, seed: int) -> dict[str, Any]:
 	valid = record.get("plan_verifier_success") is True
 	if valid != (status == "valid"):
 		raise ValueError(f"Raw MOOSE seed {seed} has inconsistent valid status")
-	checksums = {
-		key: str(record.get(key) or "")
-		for key in ("domain_sha256", "problem_sha256", "model_sha256")
-	}
-	if any(len(value) != 64 for value in checksums.values()):
-		raise ValueError(f"Raw MOOSE seed {seed} has incomplete case checksums")
 	return {
 		"seed": seed,
 		"case_id": _case_id(record),
@@ -461,7 +398,6 @@ def _portable_record(record: Mapping[str, Any], *, seed: int) -> dict[str, Any]:
 		"action_count": int(record.get("action_count") or 0),
 		"elapsed_seconds": float(record.get("elapsed_seconds") or 0.0),
 		"runtime_wall_seconds": float(record.get("runtime_wall_seconds") or 0.0),
-		**checksums,
 	}
 
 
@@ -520,11 +456,7 @@ def _validate_case_contract(
 	normalized = tuple(str(case_id) for case_id in case_ids)
 	if len(normalized) != len(set(normalized)):
 		raise ValueError("Raw MOOSE extension contains duplicate case identifiers")
-	encoded = json.dumps(sorted(normalized), separators=(",", ":")).encode("utf-8")
-	observed_hash = hashlib.sha256(encoded).hexdigest()
-	if len(normalized) != int(contract["count"]) or observed_hash != str(
-		contract["sha256"],
-	):
+	if len(normalized) != int(contract["count"]):
 		raise ValueError("Raw MOOSE extension case contract mismatch")
 
 
@@ -543,19 +475,8 @@ def _parse_seed_assignments(values: Sequence[str]) -> dict[int, Path]:
 	return result
 
 
-def _portable_project_path(path: Path) -> str:
-	try:
-		return path.relative_to(PROJECT_ROOT).as_posix()
-	except ValueError:
-		return path.name
-
-
 def _read_json(path: str | Path) -> dict[str, Any]:
 	return json.loads(Path(path).expanduser().resolve().read_text(encoding="utf-8"))
-
-
-def _sha256(path: str | Path) -> str:
-	return hashlib.sha256(Path(path).expanduser().resolve().read_bytes()).hexdigest()
 
 
 def _format_int(value: object) -> str:

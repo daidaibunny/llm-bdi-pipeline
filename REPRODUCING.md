@@ -9,12 +9,11 @@ an execution guide, not part of the theoretical contribution.
 | --- | --- | --- |
 | Temporal-goal benchmark | [`paper_artifacts/temporal_goal_benchmark/v1`](paper_artifacts/temporal_goal_benchmark/v1/README.md) | 475 unique natural-language translations and 1,228 bound query cases over 16 domains. |
 | Semantic conformance suite | `paper_artifacts/temporal_semantic_conformance/v1` | Direct finite-trace semantics versus MONA-derived automata, including zero-action cases. |
-| Evaluation release | `paper_artifacts/gp2pl_evaluation/v1` | Exact atomic libraries, 1,228 compact execution records, 13 certificate challenges, distribution summaries, and SHA-256 manifest. |
+| Evaluation release | `paper_artifacts/gp2pl_evaluation/v1` | Exact atomic libraries, compact per-case outcomes, 13 certificate challenges, and distribution summaries. |
 
-The release contains no machine-local absolute paths. The canonical benchmark,
-per-domain views, frozen predictions, semantic validation rows, and source
-archives are hash-identified across `manifest.json` and
-`release_validation.json`.
+The evaluation release contains no machine-local absolute paths, run identifiers,
+source revisions, or byte digests. Its manifest lists the public files and result
+counts; aggregate claims can be recomputed from the included per-case outcomes.
 
 ## Tested Environment
 
@@ -26,8 +25,9 @@ archives are hash-identified across `manifest.json` and
 - Docker 28.5.1 and VAL revision
   `3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4`.
 
-The experiment scripts record the actual command, source revision, timeout,
-memory bound, worker count, seed, and input hashes in every run manifest.
+Public result files retain seeds, resource limits, method labels, case outcomes,
+and validation status. Transient local run directories may retain additional
+resume metadata, but that bookkeeping is not part of the public result schema.
 
 ## Install Dependencies
 
@@ -68,8 +68,6 @@ PYTHONDONTWRITEBYTECODE=1 uv run python \
   scripts/generate_evaluation_tables.py \
   --execution-summary \
   paper_artifacts/gp2pl_evaluation/v1/temporal_execution_summary.json \
-  --benchmark-compatibility \
-  paper_artifacts/gp2pl_evaluation/v1/benchmark_compatibility.json \
   --atomic-library-root \
   paper_artifacts/gp2pl_evaluation/v1/atomic_libraries \
   --output-dir artifacts/evaluation_tables
@@ -77,13 +75,8 @@ PYTHONDONTWRITEBYTECODE=1 uv run python \
 
 The output directory contains `evaluation_results.json`, `result_macros.tex`,
 `result_domain_table.tex`, and `result_profile_table.tex`. The generator rejects
-dirty or hash-inconsistent inputs and incomplete benchmark coverage rather than
-silently producing a partial table.
-
-The compatibility certificate is limited to explicitly named fields below the
-benchmark's `provenance` object. It reconstructs the benchmark hash stored by the
-execution record and cannot change domains, formulas, bindings, or expected
-semantics.
+incomplete or duplicated benchmark case sets and inconsistent semantic outcome
+counts rather than silently producing a partial table.
 
 ## Registered Experimental Parameters
 

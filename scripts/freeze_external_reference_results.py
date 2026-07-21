@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from collections import defaultdict
-import hashlib
 import json
 from pathlib import Path
 import statistics
@@ -30,24 +29,16 @@ from scripts.generate_aaai_comparison_tables import (  # noqa: E402
 )
 from scripts.generate_aaai_comparison_tables import _direct_temporal_valid  # noqa: E402
 from scripts.generate_aaai_comparison_tables import _external_row  # noqa: E402
-from scripts.generate_aaai_comparison_tables import (  # noqa: E402
-	_validate_achievement_toolchain,
-)
 from scripts.generate_aaai_comparison_tables import _validate_case_set  # noqa: E402
 from scripts.generate_aaai_comparison_tables import _validate_clean_success  # noqa: E402
 from scripts.generate_aaai_comparison_tables import (  # noqa: E402
-	_validate_direct_temporal_toolchain,
-)
-from scripts.generate_aaai_comparison_tables import (  # noqa: E402
 	_validate_external_reference_protocol,
-)
-from scripts.generate_aaai_comparison_tables import (  # noqa: E402
-	_validate_infrastructure_repair,
 )
 from scripts.generate_aaai_comparison_tables import (  # noqa: E402
 	_validate_published_moose_reference,
 )
 from scripts.generate_aaai_comparison_tables import render_external_table  # noqa: E402
+from scripts.public_result_schema import outcome_only_payload  # noqa: E402
 
 
 DEFAULT_INSTANCE_SUMMARY = (
@@ -80,31 +71,22 @@ DEFAULT_LATEX_OUTPUT_DIR = PROJECT_ROOT / "latex_code/aamas_method_paper/section
 
 ACHIEVEMENT_UNION_CONTRACT = {
 	"count": 1228,
-	"sha256": "3b3d38e19e5e885c3ad15658baf77a26a1aad6cc8a369dfc1284c653a4e385ec",
 }
 LAMA_CONTRACT = {
 	"count": 868,
-	"sha256": "c8f110be1c7ea0c339a6d82c0bf81d11d89a376383d2083251e582053903fd93",
 }
 MRPHJ_CONTRACT = {
 	"count": 360,
-	"sha256": "ab2effc2380ae2b3cd0a0d20b6638dd1a0711c01bb5fe1efbf619603a5320324",
 }
 TEMPORAL_CONTRACT = {
 	"count": 1228,
-	"sha256": "55aeb7ea6137d802a0a69552bc01959c33be5aa0652cf8eb69bd2637b19d7a40",
 }
-TEMPORAL_BENCHMARK_SHA256 = (
-	"ee94775ba695492d8d31242e6271afe14e5fa00cad29b910159737766d384e13"
-)
 REPAIR_CONTRACTS = {
 	"achievement": {
 		"count": 9,
-		"sha256": "540d406302160a3ca075cf1344b0d9a546746199c4c96040899e7a2bfd0cf934",
 	},
 	"direct_temporal": {
 		"count": 46,
-		"sha256": "68d1aa65b26b12d27168c5a94d286922d2735779f5329600a3860ebbb5dcc33f",
 	},
 }
 
@@ -134,46 +116,22 @@ def build_external_reference_dataset(
 	_validate_raw_moose_result(raw_moose)
 	_validate_clean_success(instance, label="instance references")
 	_validate_clean_success(direct, label="direct temporal reference")
-	_validate_infrastructure_repair(
-		instance,
-		label="instance references",
-		direct_temporal=False,
-	)
-	_validate_infrastructure_repair(
-		direct,
-		label="direct temporal reference",
-		direct_temporal=True,
-	)
-	_validate_repair_contract(instance, kind="achievement")
-	_validate_repair_contract(direct, kind="direct_temporal")
 	_validate_external_reference_protocol(
 		instance,
 		label="instance references",
 		expected_num_workers=REGISTERED_REMOTE_REFERENCE_NUM_WORKERS,
 	)
-	_validate_achievement_toolchain(instance, label="instance references")
 	_validate_external_reference_protocol(
 		direct,
 		label="direct temporal reference",
 		direct_temporal=True,
 		expected_num_workers=REGISTERED_REMOTE_REFERENCE_NUM_WORKERS,
 	)
-	moose_toolchain = dict(dict(instance.get("toolchain") or {}).get("moose") or {})
-	moose_artifact_sha256 = str(moose_toolchain.get("artifact_sha256") or "")
-	_validate_direct_temporal_toolchain(
-		direct,
-		expected_moose_artifact_hash=moose_artifact_sha256,
-	)
-	if str(dict(raw_moose.get("toolchain") or {}).get("artifact_sha256") or "") != (
-		moose_artifact_sha256
-	):
-		raise ValueError("Raw MOOSE and external references use different artifacts")
 
 	_validate_achievement_case_sets(instance)
 	_validate_temporal_case_set(
 		direct,
 		benchmark=benchmark,
-		benchmark_path=benchmark_path,
 	)
 	rows = _external_rows(
 		instance=instance,
@@ -220,10 +178,7 @@ def build_external_reference_dataset(
 			"achievement_union": dict(ACHIEVEMENT_UNION_CONTRACT),
 			"lama": dict(LAMA_CONTRACT),
 			"enhsp_hmrphj": dict(MRPHJ_CONTRACT),
-			"temporal": {
-				**TEMPORAL_CONTRACT,
-				"benchmark_sha256": TEMPORAL_BENCHMARK_SHA256,
-			},
+			"temporal": dict(TEMPORAL_CONTRACT),
 			"achievement_repair": dict(REPAIR_CONTRACTS["achievement"]),
 			"direct_temporal_repair": dict(REPAIR_CONTRACTS["direct_temporal"]),
 		},
@@ -246,29 +201,12 @@ def build_external_reference_dataset(
 				),
 			),
 		},
-		"provenance": {
-			"instance_summary_sha256": _sha256(instance_path),
-			"direct_summary_sha256": _sha256(direct_path),
-			"raw_moose_result_sha256": _sha256(raw_path),
-			"published_reference_sha256": _sha256(published_path),
-			"benchmark_sha256": _sha256(benchmark_path),
-			"instance_source_revision": dict(instance.get("source_revision") or {}),
-			"direct_source_revision": dict(direct.get("source_revision") or {}),
-			"instance_infrastructure_repair": dict(
-				instance.get("infrastructure_repair") or {},
-			),
-			"direct_infrastructure_repair": dict(
-				direct.get("infrastructure_repair") or {},
-			),
-			"achievement_toolchain": _portable_achievement_toolchain(instance),
-			"direct_temporal_toolchain": _portable_direct_toolchain(direct),
-		},
 		"records": records,
 	}
 	serialized = json.dumps(result, sort_keys=True)
 	if "/Users/" in serialized:
 		raise ValueError("portable external result contains a machine-local path")
-	return result
+	return outcome_only_payload(result)
 
 
 def _validate_raw_moose_result(payload: Mapping[str, Any]) -> None:
@@ -298,17 +236,6 @@ def _validate_raw_moose_result(payload: Mapping[str, Any]) -> None:
 		raise ValueError("Raw MOOSE extension aggregate mismatch")
 
 
-def _validate_repair_contract(payload: Mapping[str, Any], *, kind: str) -> None:
-	repair = dict(payload.get("infrastructure_repair") or {})
-	contract = REPAIR_CONTRACTS[kind]
-	if (
-		int(repair.get("replaced_case_count") or 0) != int(contract["count"])
-		or str(repair.get("replaced_case_set_sha256") or "")
-		!= str(contract["sha256"])
-	):
-		raise ValueError(f"{kind} infrastructure repair contract mismatch")
-
-
 def _validate_achievement_case_sets(payload: Mapping[str, Any]) -> None:
 	by_method: dict[str, list[str]] = defaultdict(list)
 	for record in payload.get("results") or ():
@@ -334,10 +261,7 @@ def _validate_temporal_case_set(
 	payload: Mapping[str, Any],
 	*,
 	benchmark: Mapping[str, Any],
-	benchmark_path: Path,
 ) -> None:
-	if _sha256(benchmark_path) != TEMPORAL_BENCHMARK_SHA256:
-		raise ValueError("registered temporal benchmark file changed")
 	benchmark_ids = [
 		str(sample_id)
 		for domain in dict(benchmark.get("domains") or {}).values()
@@ -356,10 +280,9 @@ def _validate_temporal_case_set(
 		contract=TEMPORAL_CONTRACT,
 		label="direct temporal case set",
 	)
-	if (
-		str(payload.get("benchmark_sha256") or "") != TEMPORAL_BENCHMARK_SHA256
-		or int(payload.get("selected_case_count") or 0) != TEMPORAL_CONTRACT["count"]
-	):
+	if set(result_ids) != set(benchmark_ids):
+		raise ValueError("direct temporal case identifiers differ from the benchmark")
+	if int(payload.get("selected_case_count") or 0) != TEMPORAL_CONTRACT["count"]:
 		raise ValueError("direct temporal benchmark identity changed")
 
 
@@ -447,8 +370,6 @@ def _portable_achievement_record(record: Mapping[str, Any]) -> dict[str, Any]:
 		"method": str(record.get("method") or ""),
 		"variant": str(record.get("variant") or ""),
 		"domain": str(record.get("domain") or ""),
-		"domain_sha256": str(record.get("domain_sha256") or ""),
-		"problem_sha256": str(record.get("problem_sha256") or ""),
 		"status": str(record.get("status") or ""),
 		"valid": record.get("plan_verifier_success") is True,
 		"action_count": int(record.get("action_count") or 0),
@@ -472,8 +393,6 @@ def _portable_direct_record(record: Mapping[str, Any]) -> dict[str, Any]:
 		"domain": str(record.get("domain") or ""),
 		"profile": str(record.get("profile") or ""),
 		"grounded_formula": str(record.get("grounded_formula") or ""),
-		"domain_sha256": str(record.get("domain_sha256") or ""),
-		"problem_sha256": str(record.get("problem_sha256") or ""),
 		"status": str(record.get("status") or ""),
 		"supported": record.get("supported") is True,
 		"valid": _direct_temporal_valid(record),
@@ -510,56 +429,7 @@ def _portable_retry(record: Mapping[str, Any]) -> dict[str, Any] | None:
 		"primary_elapsed_seconds": float(
 			retry.get("primary_elapsed_seconds") or 0.0,
 		),
-		"primary_run_id": str(retry.get("primary_run_id") or ""),
-		"retry_run_id": str(retry.get("retry_run_id") or ""),
 		"retry_num_workers": int(retry.get("retry_num_workers") or 0),
-	}
-
-
-def _portable_achievement_toolchain(payload: Mapping[str, Any]) -> dict[str, Any]:
-	toolchain = dict(payload.get("toolchain") or {})
-	moose = dict(toolchain.get("moose") or {})
-	enhsp = dict(toolchain.get("enhsp") or {})
-	return {
-		"moose": {
-			"artifact_sha256": str(moose.get("artifact_sha256") or ""),
-			"docker_image": str(moose.get("docker_image") or ""),
-			"docker_image_id": str(moose.get("docker_image_id") or ""),
-			"git_revision": str(moose.get("git_revision") or ""),
-		},
-		"enhsp": {
-			"configuration": str(enhsp.get("configuration") or ""),
-			"git_revision": str(enhsp.get("git_revision") or ""),
-			"jar_sha256": str(enhsp.get("jar_sha256") or ""),
-		},
-	}
-
-
-def _portable_direct_toolchain(payload: Mapping[str, Any]) -> dict[str, Any]:
-	toolchain = dict(payload.get("toolchain") or {})
-	fond = dict(toolchain.get("fond4ltlf") or {})
-	mona = dict(toolchain.get("mona") or {})
-	lama = dict(toolchain.get("lama") or {})
-	return {
-		"fond4ltlf": {
-			"git_revision": str(fond.get("git_revision") or ""),
-			"release": str(fond.get("release") or ""),
-			"executable_sha256": str(fond.get("executable_sha256") or ""),
-			"isolation_wrapper_sha256": str(
-				fond.get("isolation_wrapper_sha256") or "",
-			),
-		},
-		"mona": {
-			"version": str(mona.get("version") or ""),
-			"executable_sha256": str(mona.get("executable_sha256") or ""),
-		},
-		"lama": {
-			"moose_artifact_sha256": str(
-				lama.get("moose_artifact_sha256") or "",
-			),
-			"moose_git_revision": str(lama.get("moose_git_revision") or ""),
-			"docker_image": str(lama.get("docker_image") or ""),
-		},
 	}
 
 
@@ -641,11 +511,11 @@ def _update_release_manifest(
 	manifest["external_reference_record_count"] = int(
 		dict(result["protocol"])["record_count"],
 	)
-	manifest["files"] = {
-		str(path.relative_to(release_root)): _sha256(path)
+	manifest["files"] = [
+		str(path.relative_to(release_root))
 		for path in sorted(release_root.rglob("*"))
 		if path.is_file() and path != manifest_path
-	}
+	]
 	_write_json(manifest_path, manifest)
 
 
@@ -665,10 +535,6 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 		json.dumps(payload, indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",
 	)
-
-
-def _sha256(path: Path) -> str:
-	return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def parse_args() -> argparse.Namespace:

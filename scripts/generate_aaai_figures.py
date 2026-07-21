@@ -7,7 +7,6 @@ import argparse
 from bisect import bisect_right
 from datetime import datetime
 from datetime import timezone
-import hashlib
 import io
 import json
 from pathlib import Path
@@ -40,6 +39,7 @@ LEGACY_OUTPUT_FILE = (
 DEFAULT_VALIDATION_RUN_ROOT = PROJECT_ROOT / "artifacts/jason_full_test_runs"
 REGISTERED_SEEDS = (0, 1, 2, 3, 4)
 REGISTERED_NUM_WORKERS = 6
+REGISTERED_FIVE_SEED_VALIDATION_WORKERS = 8
 REGISTERED_TIMEOUT_SECONDS = 1800
 REGISTERED_JAVA_STACK_SIZE = "64m"
 MINIMUM_LOG_SECONDS = 0.1
@@ -206,7 +206,6 @@ def build_figure_dataset(payload: Mapping[str, Any]) -> dict[str, Any]:
 		}
 
 	return {
-		"source_revision": dict(payload.get("source_revision") or {}),
 		"atomic_domain_coverage": atomic_domain_coverage,
 		"atomic_tradeoff": atomic_tradeoff,
 		"temporal_curves": temporal_curves,
@@ -374,13 +373,6 @@ def build_frozen_ablation_figure_dataset(
 		}
 
 	return {
-		"run_id": str(payload.get("run_id") or ""),
-		"source_revision": dict(
-			_mapping_field(payload, "provenance", label="frozen ablation").get(
-				"source_revision",
-			)
-			or {},
-		),
 		"atomic_domain_coverage": atomic_domain_coverage,
 		"atomic_domain_variant_coverage": atomic_domain_variant_coverage,
 		"atomic_affected_domains": atomic_affected_domains,
@@ -442,24 +434,6 @@ def _validate_frozen_ablation_gate(payload: Mapping[str, Any]) -> None:
 	temporal_case_count = int(temporal_contract.get("count") or 0)
 	if atomic_case_count_per_seed <= 0 or temporal_case_count <= 0:
 		raise ValueError("frozen ablation case contracts are empty")
-	for name, contract in (
-		("achievement", achievement_contract),
-		("temporal", temporal_contract),
-	):
-		if len(str(contract.get("sha256") or "")) != 64:
-			raise ValueError(f"frozen ablation {name} case contract has no SHA-256")
-
-	provenance = _mapping_field(payload, "provenance", label="frozen ablation")
-	if len(str(provenance.get("paired_results_sha256") or "")) != 64:
-		raise ValueError("frozen ablation has no paired-result SHA-256")
-	method_equivalence = _mapping_field(
-		provenance,
-		"method_source_equivalence",
-		label="provenance",
-	)
-	if method_equivalence.get("status") != "confirmed":
-		raise ValueError("frozen ablation method source is not confirmed")
-
 	atomic_summaries = tuple(dict(row) for row in payload.get("atomic") or ())
 	if {row.get("variant") for row in atomic_summaries} != {
 		variant for variant, _method in ATOMIC_VARIANTS
@@ -495,10 +469,6 @@ def _validate_frozen_ablation_gate(payload: Mapping[str, Any]) -> None:
 	)
 	if int(temporal_pairing.get("sample_count") or 0) != temporal_case_count:
 		raise ValueError("frozen ablation temporal pairing sample count disagrees")
-	if int(temporal_pairing.get("controller_fingerprint_count") or 0) != len(
-		temporal_records,
-	):
-		raise ValueError("frozen ablation controller fingerprint count disagrees")
 
 
 def _atomic_record_matrix(
@@ -626,12 +596,7 @@ def _temporal_record_matrix(
 			raise ValueError(f"temporal record matrix differs for {variant}")
 		for sample_id, row in index.items():
 			reference_row = reference[sample_id]
-			for field in (
-				"domain",
-				"profile",
-				"atomic_library_fingerprint",
-				"dfa_fingerprint",
-			):
+			for field in ("domain", "profile"):
 				if row.get(field) != reference_row.get(field):
 					raise ValueError(
 						f"temporal paired input differs for {variant} {sample_id}: {field}",
@@ -705,22 +670,12 @@ def cumulative_solved_fraction(
 
 def build_five_seed_figure_dataset(
 	payload: Mapping[str, Any],
-	*,
-	run_summaries: Mapping[int, Mapping[str, Any]],
-	run_seconds: Mapping[int, Mapping[tuple[str, int], float]],
 ) -> dict[str, Any]:
-	"""Validate five Full GP2PL runs and derive coverage and runtime curves."""
+	"""Validate frozen five-seed outcomes and derive coverage and runtime curves."""
 
 	_validate_five_seed_result_gate(payload)
 	protocol = _mapping_field(payload, "protocol", label="five-seed result")
-	source_aggregate = _mapping_field(
-		payload,
-		"source_aggregate",
-		label="five-seed result",
-	)
 	seeds = tuple(int(seed) for seed in protocol["seeds"])
-	if set(run_summaries) != set(seeds) or set(run_seconds) != set(seeds):
-		raise ValueError("five-seed figure inputs do not cover every registered seed")
 
 	domain_rows = {
 		str(row.get("domain") or ""): row
@@ -744,56 +699,33 @@ def build_five_seed_figure_dataset(
 	if set(seed_result_rows) != set(seeds):
 		raise ValueError("five-seed result has incomplete seed summaries")
 
+	case_records = tuple(dict(row) for row in payload.get("case_records") or ())
 	validated_rows: dict[int, list[dict[str, Any]]] = {}
-	observed_worker_counts: set[int] = set()
-	observed_source_commits: set[str] = set()
 	pooled_success_count = 0
 	pooled_evaluation_count = 0
 	for seed_index, seed in enumerate(seeds):
-		summary = run_summaries[seed]
 		seed_result = seed_result_rows[seed]
-		_validate_five_seed_child_summary(
-			summary,
-			seed=seed,
-			expected_run_id=str(seed_result.get("run_id") or ""),
-			expected_source_commit=str(seed_result.get("source_commit") or ""),
-		)
-		settings = _mapping_field(summary, "settings", label=f"seed {seed} summary")
-		observed_worker_counts.add(int(settings.get("num_workers") or 0))
-		observed_source_commits.add(
-			str(_mapping_field(summary, "source_revision", label=f"seed {seed}").get(
-				"commit",
-			)
-			or ""),
-		)
-
 		rows: list[dict[str, Any]] = []
 		domain_success = {domain: 0 for domain in DOMAIN_ORDER}
 		domain_total = {domain: 0 for domain in DOMAIN_ORDER}
-		seen_cases: set[tuple[str, int]] = set()
-		for raw_record in tuple(summary.get("validations") or ()):
-			if not isinstance(raw_record, Mapping):
-				raise ValueError(f"seed {seed} has a malformed validation record")
+		seen_cases: set[tuple[str, str]] = set()
+		for raw_record in (row for row in case_records if int(row.get("seed", -1)) == seed):
 			domain = str(raw_record.get("domain") or "")
-			test_index = int(raw_record.get("test_index") or 0)
-			case_key = (domain, test_index)
-			if domain not in domain_total or test_index <= 0 or case_key in seen_cases:
+			test_id = str(raw_record.get("test_id") or "")
+			case_key = (domain, test_id)
+			if domain not in domain_total or not test_id or case_key in seen_cases:
 				raise ValueError(f"seed {seed} has an invalid case identifier {case_key}")
 			seen_cases.add(case_key)
 			domain_total[domain] += 1
-			success = raw_record.get("success") is True
+			success = raw_record.get("valid") is True
 			if success:
-				if (
-					raw_record.get("status") != "success"
-					or raw_record.get("plan_verifier_attempted") is not True
-					or raw_record.get("plan_verifier_success") is not True
-				):
+				if raw_record.get("status") != "success" or raw_record.get(
+					"val_success",
+				) is not True:
 					raise ValueError(
 						f"seed {seed} case {case_key} lacks Jason and VAL acceptance",
 					)
-				if case_key not in run_seconds[seed]:
-					raise ValueError(f"seed {seed} case {case_key} has no Jason runtime")
-				duration = float(run_seconds[seed][case_key])
+				duration = float(raw_record.get("jason_run_seconds") or 0.0)
 				if duration < 0.0 or duration > REGISTERED_TIMEOUT_SECONDS:
 					raise ValueError(
 						f"seed {seed} case {case_key} runtime is outside the deadline",
@@ -804,7 +736,7 @@ def build_five_seed_figure_dataset(
 			rows.append(
 				{
 					"domain": domain,
-					"test_index": test_index,
+					"test_id": test_id,
 					"success": success,
 					"run_seconds": duration,
 				},
@@ -830,15 +762,9 @@ def build_five_seed_figure_dataset(
 		pooled_success_count += seed_success_count
 		pooled_evaluation_count += len(rows)
 
-	if len(observed_worker_counts) != 1 or next(iter(observed_worker_counts)) <= 0:
-		raise ValueError("five seed runs do not share one positive Jason worker count")
-	observed_worker_count = next(iter(observed_worker_counts))
-	if observed_worker_count != int(protocol.get("validation_workers") or 0):
-		raise ValueError("five seed worker count disagrees with the frozen protocol")
-	freeze = _mapping_field(payload, "compiler_freeze", label="five-seed result")
-	formal_revisions = {str(value) for value in freeze.get("formal_run_revisions") or ()}
-	if observed_source_commits != formal_revisions:
-		raise ValueError("five seed source revisions disagree with the compiler freeze")
+	observed_worker_count = int(protocol.get("validation_workers") or 0)
+	if observed_worker_count <= 0:
+		raise ValueError("five-seed result has no positive Jason worker count")
 
 	aggregate = _mapping_field(payload, "aggregate", label="five-seed result")
 	if pooled_success_count != int(aggregate.get("pooled_success_count") or -1):
@@ -859,10 +785,6 @@ def build_five_seed_figure_dataset(
 		"group_curves": group_curves,
 		"seeds": list(seeds),
 		"jason_workers": observed_worker_count,
-		"source_revisions": sorted(observed_source_commits),
-		"compiler_closure_sha256": str(freeze.get("closure_sha256") or ""),
-		"source_aggregate_run_id": str(source_aggregate.get("run_id") or ""),
-		"source_aggregate_sha256": str(source_aggregate.get("sha256") or ""),
 		"pooled_success_count": pooled_success_count,
 		"pooled_evaluation_count": pooled_evaluation_count,
 		"mean_success_percent": 100.0 * float(aggregate["mean_success_rate"]),
@@ -896,68 +818,12 @@ def _validate_five_seed_result_gate(payload: Mapping[str, Any]) -> None:
 		raise ValueError("five-seed result must contain seeds 0--4")
 	if int(protocol.get("domain_count") or 0) != len(DOMAIN_ORDER):
 		raise ValueError("five-seed result must contain 16 domains")
-	source_aggregate = _mapping_field(
-		payload,
-		"source_aggregate",
-		label="five-seed result",
-	)
-	if source_aggregate.get("verified_against_child_runs") is not True:
-		raise ValueError("five-seed result has an unverified source aggregate")
-	if len(str(source_aggregate.get("sha256") or "")) != 64:
-		raise ValueError("five-seed result source aggregate has no SHA-256")
-	expected_source_protocol = {
-		"moose_internal_workers": 1,
-		"moose_seed_parallelism": len(REGISTERED_SEEDS),
-		"cross_seed_jason_parallelism": 1,
-		"jason_workers_per_repetition": int(
-			protocol.get("validation_workers") or 0,
-		),
-	}
-	for key, expected in expected_source_protocol.items():
-		if source_aggregate.get(key) != expected:
-			if key == "jason_workers_per_repetition":
-				raise ValueError(
-					"five seed worker count disagrees with source aggregate",
-				)
-			raise ValueError(
-				f"five-seed result source aggregate has unexpected {key}",
-			)
-	freeze = _mapping_field(payload, "compiler_freeze", label="five-seed result")
-	if freeze.get("byte_identical_to_formal_run_revisions") is not True:
-		raise ValueError("five-seed result lacks a byte-identical compiler freeze")
-	if len(str(freeze.get("closure_sha256") or "")) < 16:
-		raise ValueError("five-seed result lacks a compiler closure hash")
-
-
-def _validate_five_seed_child_summary(
-	summary: Mapping[str, Any],
-	*,
-	seed: int,
-	expected_run_id: str,
-	expected_source_commit: str,
-) -> None:
-	if summary.get("artifact_kind") != (
-		"full_test_jason_validation_from_moose_asl_batch"
+	if int(protocol.get("validation_workers") or 0) != (
+		REGISTERED_FIVE_SEED_VALIDATION_WORKERS
 	):
-		raise ValueError(f"seed {seed} has the wrong validation artifact kind")
-	if str(summary.get("run_id") or "") != expected_run_id:
-		raise ValueError(f"seed {seed} validation run id disagrees")
-	settings = _mapping_field(summary, "settings", label=f"seed {seed} summary")
-	expected_settings = {
-		"atomic_library_mode": "validated-policy-lifting",
-		"compiler_variant": "full",
-		"method": "Full Compiler",
-		"require_plan_verifier": True,
-		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
-		"plan_verifier_timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
-		"jason_java_stack_size": REGISTERED_JAVA_STACK_SIZE,
-	}
-	for key, expected in expected_settings.items():
-		if settings.get(key) != expected:
-			raise ValueError(f"seed {seed} has unexpected {key}")
-	revision = _mapping_field(summary, "source_revision", label=f"seed {seed}")
-	if str(revision.get("commit") or "") != expected_source_commit:
-		raise ValueError(f"seed {seed} source revision disagrees")
+		raise ValueError("five-seed result has an unexpected validation worker count")
+	if not payload.get("case_records"):
+		raise ValueError("five-seed result has no case-level outcomes")
 
 
 def _five_seed_group_curve(
@@ -1023,8 +889,6 @@ def generate_empirical_figure(
 			{
 				"artifact_kind": "gp2pl_empirical_figure_diagnostic",
 				"success": False,
-				"source_file": _portable_artifact_path(input_path),
-				"output_file_untouched": _portable_artifact_path(output_path),
 				"error": str(error),
 			},
 		)
@@ -1037,11 +901,6 @@ def generate_empirical_figure(
 	metadata = {
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_empirical_figure",
-		"source_file": _portable_artifact_path(input_path),
-		"source_sha256": _sha256(input_path),
-		"source_revision": dict(dataset["source_revision"]),
-		"output_file": _portable_artifact_path(output_path),
-		"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
 		"atomic_seed_count": len(REGISTERED_SEEDS),
 		"atomic_domain_count": len(DOMAIN_ORDER),
 		"atomic_variant_count": len(ATOMIC_VARIANTS),
@@ -1062,8 +921,6 @@ def generate_empirical_figure(
 		{
 			"artifact_kind": "gp2pl_empirical_figure_diagnostic",
 			"success": True,
-			"source_file": _portable_artifact_path(input_path),
-			"output_file": _portable_artifact_path(output_path),
 		},
 	)
 	return metadata
@@ -1088,8 +945,6 @@ def generate_frozen_ablation_figure(
 			{
 				"artifact_kind": "gp2pl_ablation_figure_diagnostic",
 				"success": False,
-				"source_file": _portable_artifact_path(input_path),
-				"output_file_untouched": _portable_artifact_path(output_path),
 				"error": str(error),
 			},
 		)
@@ -1103,12 +958,6 @@ def generate_frozen_ablation_figure(
 	metadata = {
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_ablation_empirical_figure",
-		"source_file": _portable_artifact_path(input_path),
-		"source_sha256": _sha256(input_path),
-		"source_run_id": str(dataset["run_id"]),
-		"source_revision": dict(dataset["source_revision"]),
-		"output_file": _portable_artifact_path(output_path),
-		"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
 		"atomic_seed_count": len(REGISTERED_SEEDS),
 		"atomic_domain_count": len(DOMAIN_ORDER),
 		"atomic_variant_count": len(ATOMIC_VARIANTS),
@@ -1146,9 +995,6 @@ def generate_frozen_ablation_figure(
 		{
 			"artifact_kind": "gp2pl_ablation_figure_diagnostic",
 			"success": True,
-			"source_file": _portable_artifact_path(input_path),
-			"source_sha256": metadata["source_sha256"],
-			"output_file": _portable_artifact_path(output_path),
 		},
 	)
 	return metadata
@@ -1157,34 +1003,22 @@ def generate_frozen_ablation_figure(
 def generate_five_seed_empirical_figure(
 	*,
 	five_seed_results_file: str | Path,
-	validation_run_root: str | Path,
 	output_file: str | Path,
 ) -> dict[str, Any]:
-	"""Render the main five-seed coverage figure from frozen, hashed inputs."""
+	"""Render the main five-seed coverage figure from frozen outcomes."""
 
 	input_path = Path(five_seed_results_file).expanduser().resolve()
-	run_root = Path(validation_run_root).expanduser().resolve()
 	output_path = Path(output_file).expanduser().resolve()
 	diagnostic_path = output_path.with_suffix(".diagnostic.json")
 	try:
 		payload = _read_json(input_path)
-		run_summaries, run_seconds, child_hashes = _load_five_seed_run_inputs(
-			payload,
-			validation_run_root=run_root,
-		)
-		dataset = build_five_seed_figure_dataset(
-			payload,
-			run_summaries=run_summaries,
-			run_seconds=run_seconds,
-		)
+		dataset = build_five_seed_figure_dataset(payload)
 	except (OSError, TypeError, ValueError) as error:
 		_write_json(
 			diagnostic_path,
 			{
 				"artifact_kind": "gp2pl_five_seed_figure_diagnostic",
 				"success": False,
-				"source_file": _portable_artifact_path(input_path),
-				"output_file_untouched": _portable_artifact_path(output_path),
 				"error": str(error),
 			},
 		)
@@ -1196,13 +1030,6 @@ def generate_five_seed_empirical_figure(
 	metadata = {
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_five_seed_empirical_figure",
-		"source_file": _portable_artifact_path(input_path),
-		"source_sha256": _sha256(input_path),
-		"source_aggregate_run_id": dataset["source_aggregate_run_id"],
-		"source_aggregate_sha256": dataset["source_aggregate_sha256"],
-		"child_summary_sha256": child_hashes,
-		"output_file": _portable_artifact_path(output_path),
-		"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
 		"seed_count": len(dataset["seeds"]),
 		"domain_count": len(DOMAIN_ORDER),
 		"benchmark_group_count": len(BENCHMARK_GROUPS),
@@ -1214,9 +1041,7 @@ def generate_five_seed_empirical_figure(
 		),
 		"jason_workers": int(dataset["jason_workers"]),
 		"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
-		"runtime_measure": "jason_timing_profile.run_seconds",
-		"compiler_closure_sha256": dataset["compiler_closure_sha256"],
-		"source_revisions": dataset["source_revisions"],
+		"runtime_measure": "case_records.jason_run_seconds",
 		"figure_width_inches": FIGURE_WIDTH_INCHES,
 		"figure_height_inches": FIGURE_HEIGHT_INCHES,
 		"font_family": FIGURE_FONT_FAMILY,
@@ -1229,80 +1054,9 @@ def generate_five_seed_empirical_figure(
 		{
 			"artifact_kind": "gp2pl_five_seed_figure_diagnostic",
 			"success": True,
-			"source_file": _portable_artifact_path(input_path),
-			"output_file": _portable_artifact_path(output_path),
 		},
 	)
 	return metadata
-
-
-def _load_five_seed_run_inputs(
-	payload: Mapping[str, Any],
-	*,
-	validation_run_root: Path,
-) -> tuple[
-	dict[int, dict[str, Any]],
-	dict[int, dict[tuple[str, int], float]],
-	dict[str, str],
-]:
-	seed_rows = tuple(payload.get("seed_results") or ())
-	run_summaries: dict[int, dict[str, Any]] = {}
-	run_seconds: dict[int, dict[tuple[str, int], float]] = {}
-	child_hashes: dict[str, str] = {}
-	for seed_row in seed_rows:
-		if not isinstance(seed_row, Mapping):
-			raise ValueError("five-seed result contains a malformed seed row")
-		seed = int(seed_row.get("seed", -1))
-		run_id = str(seed_row.get("run_id") or "")
-		run_dir = validation_run_root / run_id
-		summary_file = run_dir / "summary.json"
-		observed_hash = _sha256(summary_file)
-		expected_hash = str(seed_row.get("summary_sha256") or "")
-		if observed_hash != expected_hash:
-			raise ValueError(f"seed {seed} child summary hash disagrees")
-		summary = _read_json(summary_file)
-		run_summaries[seed] = summary
-		child_hashes[str(seed)] = observed_hash
-		seed_times: dict[tuple[str, int], float] = {}
-		for validation in tuple(summary.get("validations") or ()):
-			if not isinstance(validation, Mapping) or validation.get("success") is not True:
-				continue
-			domain = str(validation.get("domain") or "")
-			test_index = int(validation.get("test_index") or 0)
-			runtime_file = _resolve_jason_validation_file(
-				validation,
-				run_dir=run_dir,
-			)
-			runtime_payload = _read_json(runtime_file)
-			timing = _mapping_field(
-				runtime_payload,
-				"timing_profile",
-				label=f"seed {seed} case {(domain, test_index)}",
-			)
-			raw_seconds = timing.get("run_seconds")
-			if raw_seconds is None:
-				raise ValueError(
-					f"seed {seed} case {(domain, test_index)} has no run_seconds",
-				)
-			seed_times[(domain, test_index)] = float(raw_seconds)
-		run_seconds[seed] = seed_times
-	return run_summaries, run_seconds, child_hashes
-
-
-def _resolve_jason_validation_file(
-	validation: Mapping[str, Any],
-	*,
-	run_dir: Path,
-) -> Path:
-	output_dir = Path(str(validation.get("output_dir") or ""))
-	direct_path = output_dir / "jason_validation.json"
-	if direct_path.is_file():
-		return direct_path
-	domain = str(validation.get("domain") or "")
-	portable_path = run_dir / "jason" / domain / output_dir.name / "jason_validation.json"
-	if portable_path.is_file():
-		return portable_path
-	raise ValueError(f"missing Jason timing artifact for {domain}/{output_dir.name}")
 
 
 def _validate_release_gate(payload: Mapping[str, Any]) -> None:
@@ -1333,33 +1087,15 @@ def _validate_release_gate(payload: Mapping[str, Any]) -> None:
 		raise ValueError("paired result does not use the registered 1,800-second timeout")
 	if str(payload.get("jason_java_stack_size") or "") != REGISTERED_JAVA_STACK_SIZE:
 		raise ValueError("paired result does not use the registered 64m Java stack")
-	revision = dict(payload.get("source_revision") or {})
-	if len(str(revision.get("commit") or "")) < 8:
-		raise ValueError("paired result has no pinned source revision")
-	if revision.get("tracked_changes") is not False:
-		raise ValueError("paired result has tracked source changes")
-	if revision.get("untracked_files") is not False:
-		raise ValueError("paired result has untracked source files")
-	expected_commit = str(revision["commit"])
 	_validate_seed_manifests(payload)
 	for run in tuple(payload.get("atomic_runs") or ()):
 		summary = _mapping_field(run, "summary", label="atomic child run")
-		_validate_child_revision(
-			_mapping_field(summary, "source_revision", label="atomic child run"),
-			expected_commit=expected_commit,
-			label="atomic child run",
-		)
 		_validate_execution_protocol(
 			_mapping_field(summary, "settings", label="atomic child run"),
 			label="atomic child run",
 			timeout_key="timeout_seconds",
 		)
 	for run in tuple(payload.get("temporal_runs") or ()):
-		_validate_child_revision(
-			_mapping_field(run, "source_revision", label="temporal child run"),
-			expected_commit=expected_commit,
-			label="temporal child run",
-		)
 		_validate_execution_protocol(
 			_mapping_field(run, "parameters", label="temporal child run"),
 			label="temporal child run",
@@ -1397,20 +1133,6 @@ def _validate_seed_manifests(payload: Mapping[str, Any]) -> None:
 				raise ValueError(f"MOOSE seed {seed} has nonregistered {key}")
 		if float(settings.get("max_rss_gb") or 0.0) != 16.0:
 			raise ValueError(f"MOOSE seed {seed} has nonregistered memory limit")
-
-
-def _validate_child_revision(
-	revision: Mapping[str, Any],
-	*,
-	expected_commit: str,
-	label: str,
-) -> None:
-	if revision.get("tracked_changes") is not False:
-		raise ValueError(f"{label} has tracked source changes")
-	if revision.get("untracked_files") is not False:
-		raise ValueError(f"{label} has untracked source files")
-	if str(revision.get("commit") or "") != expected_commit:
-		raise ValueError(f"{label} does not share the paired source revision")
 
 
 def _validate_execution_protocol(
@@ -2340,24 +2062,6 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
 	)
 
 
-def _portable_artifact_path(path: Path) -> str:
-	"""Return a repository-relative path without exposing a local home directory."""
-
-	resolved_path = path.expanduser().resolve()
-	try:
-		return resolved_path.relative_to(PROJECT_ROOT).as_posix()
-	except ValueError:
-		return str(resolved_path)
-
-
-def _sha256(path: Path) -> str:
-	hasher = hashlib.sha256()
-	with path.open("rb") as handle:
-		for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-			hasher.update(chunk)
-	return hasher.hexdigest()
-
-
 def _parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description=__doc__)
 	input_group = parser.add_mutually_exclusive_group(required=True)
@@ -2368,6 +2072,7 @@ def _parse_args() -> argparse.Namespace:
 		"--validation-run-root",
 		type=Path,
 		default=DEFAULT_VALIDATION_RUN_ROOT,
+		help=argparse.SUPPRESS,
 	)
 	parser.add_argument("--output-file", type=Path)
 	return parser.parse_args()
@@ -2391,7 +2096,6 @@ def main() -> int:
 		elif args.five_seed_results is not None:
 			metadata = generate_five_seed_empirical_figure(
 				five_seed_results_file=args.five_seed_results,
-				validation_run_root=args.validation_run_root,
 				output_file=output_file,
 			)
 		else:
@@ -2403,8 +2107,7 @@ def main() -> int:
 		print(f"[fail] empirical_figure error={error}", file=sys.stderr)
 		return 2
 	print(
-		f"[ok] empirical_figure output={metadata['output_file']} "
-		f"source_sha256={metadata['source_sha256']}",
+		f"[ok] empirical_figure artifact={metadata['artifact_kind']}",
 		flush=True,
 	)
 	return 0

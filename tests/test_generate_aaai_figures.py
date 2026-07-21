@@ -25,7 +25,6 @@ from scripts.generate_aaai_figures import cumulative_solved_fraction
 from scripts.generate_aaai_figures import generate_empirical_figure
 from scripts.generate_aaai_figures import generate_five_seed_empirical_figure
 from scripts.generate_aaai_figures import generate_frozen_ablation_figure
-from scripts.generate_aaai_figures import _portable_artifact_path
 from scripts.generate_aaai_figures import _step_values_at
 
 
@@ -135,7 +134,7 @@ def test_build_frozen_ablation_figure_dataset_rejects_unpaired_or_inconsistent_d
 		build_frozen_ablation_figure_dataset(payload)
 
 
-def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_provenance(
+def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_outcome_metadata(
 	tmp_path: Path,
 ) -> None:
 	input_file = tmp_path / "paired_ablation_results.json"
@@ -166,7 +165,6 @@ def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_provenance(
 	assert output_file.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
 	assert FIGURE_DPI == 600
 	assert metadata["artifact_kind"] == "gp2pl_ablation_empirical_figure"
-	assert metadata["source_sha256"]
 	assert metadata["atomic_seed_count"] == 5
 	assert metadata["atomic_domain_count"] == 16
 	assert metadata["atomic_case_count"] == 160
@@ -180,11 +178,7 @@ def test_generate_frozen_ablation_figure_writes_600_dpi_png_and_provenance(
 	assert metadata["atomic_focus_domain"] == "blocksworld-tower"
 
 
-def test_registered_figure_three_matches_the_frozen_ablation_release() -> None:
-	result_file = (
-		PROJECT_ROOT
-		/ "paper_artifacts/gp2pl_evaluation/v1/paired_ablation_results.json"
-	)
+def test_registered_figure_three_has_the_frozen_result_shape() -> None:
 	figure_file = (
 		PROJECT_ROOT
 		/ "latex_code/aamas_method_paper/figures/fig3_evaluation.png"
@@ -195,8 +189,6 @@ def test_registered_figure_three_matches_the_frozen_ablation_release() -> None:
 	with Image.open(figure_file) as figure:
 		assert figure.size == (4200, 1700)
 		assert figure.info["dpi"] == pytest.approx((600.0, 600.0), abs=0.1)
-	assert metadata["source_sha256"] == _file_sha256(result_file)
-	assert metadata["source_run_id"] == "aaai-paired-72b0604f"
 	assert metadata["atomic_case_count"] == 6140
 	assert metadata["temporal_case_count"] == 1228
 	assert metadata["atomic_focus_domain"] == "blocksworld-tower"
@@ -234,12 +226,6 @@ def test_step_values_at_uses_right_continuous_value_for_shared_checkpoints() -> 
 		(lambda payload: payload.update({"registered_seeds": [0, 1]}), "seeds"),
 		(lambda payload: payload["atomic_runs"].pop(), "atomic matrix"),
 		(lambda payload: payload["temporal_runs"].pop(), "temporal matrix"),
-		(
-			lambda payload: payload["atomic_runs"][0]["summary"]["source_revision"].update(
-				{"commit": "different"},
-			),
-			"source revision",
-		),
 	),
 )
 def test_build_figure_dataset_rejects_incomplete_or_unpaired_inputs(
@@ -253,7 +239,7 @@ def test_build_figure_dataset_rejects_incomplete_or_unpaired_inputs(
 		build_figure_dataset(payload)
 
 
-def test_generate_empirical_figure_writes_vector_pdf_and_provenance(
+def test_generate_empirical_figure_writes_vector_pdf_and_outcome_metadata(
 	tmp_path: Path,
 ) -> None:
 	input_file = tmp_path / "paired_results.json"
@@ -276,7 +262,6 @@ def test_generate_empirical_figure_writes_vector_pdf_and_provenance(
 	assert b"DejaVuSans" not in pdf_bytes
 	assert b"Helvetica" in pdf_bytes
 	assert metadata["artifact_kind"] == "gp2pl_empirical_figure"
-	assert metadata["source_sha256"]
 	assert metadata["atomic_seed_count"] == 5
 	assert metadata["atomic_domain_count"] == 16
 	assert metadata["temporal_sample_count"] == 3
@@ -350,20 +335,10 @@ def test_generate_empirical_figure_fails_closed_with_diagnostic(
 	assert "infrastructure" in diagnostic["error"]
 
 
-def test_portable_artifact_path_hides_local_workspace_prefix() -> None:
-	artifact = PROJECT_ROOT / "paper_artifacts/example.json"
-
-	assert _portable_artifact_path(artifact) == "paper_artifacts/example.json"
-
-
 def test_build_five_seed_figure_dataset_uses_every_domain_and_group() -> None:
-	result, run_summaries, run_seconds = _complete_five_seed_figure_inputs()
+	result = _complete_five_seed_figure_inputs()
 
-	dataset = build_five_seed_figure_dataset(
-		result,
-		run_summaries=run_summaries,
-		run_seconds=run_seconds,
-	)
+	dataset = build_five_seed_figure_dataset(result)
 
 	assert dataset["domain_coverage"]["logistics"] == [
 		100.0,
@@ -381,83 +356,31 @@ def test_build_five_seed_figure_dataset_uses_every_domain_and_group() -> None:
 
 
 def test_build_five_seed_figure_dataset_rejects_unverified_success() -> None:
-	result, run_summaries, run_seconds = _complete_five_seed_figure_inputs()
-	run_summaries[0]["validations"][0]["plan_verifier_success"] = False
+	result = _complete_five_seed_figure_inputs()
+	result["case_records"][0]["val_success"] = False
 
 	with pytest.raises(ValueError, match="VAL acceptance"):
-		build_five_seed_figure_dataset(
-			result,
-			run_summaries=run_summaries,
-			run_seconds=run_seconds,
-		)
+		build_five_seed_figure_dataset(result)
 
 
 def test_build_five_seed_figure_dataset_rejects_worker_protocol_mismatch() -> None:
-	result, run_summaries, run_seconds = _complete_five_seed_figure_inputs()
+	result = _complete_five_seed_figure_inputs()
 	result["protocol"]["validation_workers"] = 6
 
-	with pytest.raises(ValueError, match="worker count disagrees"):
-		build_five_seed_figure_dataset(
-			result,
-			run_summaries=run_summaries,
-			run_seconds=run_seconds,
-		)
-
-
-def test_build_five_seed_figure_dataset_rejects_unverified_source_aggregate() -> None:
-	result, run_summaries, run_seconds = _complete_five_seed_figure_inputs()
-	result["source_aggregate"]["verified_against_child_runs"] = False
-
-	with pytest.raises(ValueError, match="unverified source aggregate"):
-		build_five_seed_figure_dataset(
-			result,
-			run_summaries=run_summaries,
-			run_seconds=run_seconds,
-		)
+	with pytest.raises(ValueError, match="validation worker"):
+		build_five_seed_figure_dataset(result)
 
 
 def test_generate_five_seed_empirical_figure_writes_real_result_shape(
 	tmp_path: Path,
 ) -> None:
-	result, run_summaries, run_seconds = _complete_five_seed_figure_inputs()
-	run_root = tmp_path / "runs"
-	for seed, summary in run_summaries.items():
-		run_dir = run_root / summary["run_id"]
-		for validation in summary["validations"]:
-			output_dir = run_dir / "jason" / validation["domain"] / (
-				f"test_{validation['test_index']:04d}"
-			)
-			validation["output_dir"] = str(output_dir)
-			if validation["success"]:
-				output_dir.mkdir(parents=True, exist_ok=True)
-				(output_dir / "jason_validation.json").write_text(
-					json.dumps(
-						{
-							"timing_profile": {
-								"run_seconds": run_seconds[seed][
-									(
-										validation["domain"],
-										validation["test_index"],
-									)
-								],
-							},
-						},
-					),
-					encoding="utf-8",
-				)
-		run_dir.mkdir(parents=True, exist_ok=True)
-		summary_file = run_dir / "summary.json"
-		summary_file.write_text(json.dumps(summary), encoding="utf-8")
-		result["seed_results"][seed]["summary_sha256"] = _file_sha256(
-			summary_file,
-		)
+	result = _complete_five_seed_figure_inputs()
 	results_file = tmp_path / "five_seed_results.json"
 	results_file.write_text(json.dumps(result), encoding="utf-8")
 	output_file = tmp_path / "fig2_evaluation.pdf"
 
 	metadata = generate_five_seed_empirical_figure(
 		five_seed_results_file=results_file,
-		validation_run_root=run_root,
 		output_file=output_file,
 	)
 
@@ -470,34 +393,11 @@ def test_generate_five_seed_empirical_figure_writes_real_result_shape(
 	assert metadata["domain_count"] == 16
 	assert metadata["seed_count"] == 5
 	assert metadata["pooled_success_count"] == 79
-	assert metadata["runtime_measure"] == "jason_timing_profile.run_seconds"
+	assert metadata["runtime_measure"] == "case_records.jason_run_seconds"
 	assert metadata["figure_height_inches"] == FIGURE_HEIGHT_INCHES
 	assert metadata["font_family"] == "Helvetica"
 	assert metadata["minimum_text_size_points"] == 9.0
 	assert metadata["color_mode"] == "colorblind-safe with redundant encodings"
-	assert metadata["source_aggregate_run_id"] == "five-seed-fixture"
-	assert metadata["source_aggregate_sha256"] == "a" * 64
-
-
-def test_generate_five_seed_empirical_figure_rejects_changed_child_summary(
-	tmp_path: Path,
-) -> None:
-	result, run_summaries, _run_seconds = _complete_five_seed_figure_inputs()
-	run_root = tmp_path / "runs"
-	for seed, summary in run_summaries.items():
-		run_dir = run_root / summary["run_id"]
-		run_dir.mkdir(parents=True)
-		(run_dir / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
-		result["seed_results"][seed]["summary_sha256"] = "not-the-observed-hash"
-	results_file = tmp_path / "five_seed_results.json"
-	results_file.write_text(json.dumps(result), encoding="utf-8")
-
-	with pytest.raises(ValueError, match="child summary hash"):
-		generate_five_seed_empirical_figure(
-			five_seed_results_file=results_file,
-			validation_run_root=run_root,
-			output_file=tmp_path / "figure.pdf",
-		)
 
 
 def _complete_frozen_ablation_payload() -> dict[str, Any]:
@@ -534,7 +434,6 @@ def _complete_frozen_ablation_payload() -> dict[str, Any]:
 						"duration_seconds": float(case_index + seed),
 						"action_count": case_index if valid else None,
 						"observed_action_prefix_count": 0,
-						"input_fingerprint": f"input-{domain}-{case_index}",
 					}
 					atomic_records.append(record)
 					variant_records.append(record)
@@ -597,11 +496,7 @@ def _complete_frozen_ablation_payload() -> dict[str, Any]:
 				"val_success": valid,
 				"gold_accepted": valid,
 				"prediction_accepted": valid,
-				"input_fingerprint": f"temporal-{domain}",
-				"atomic_library_fingerprint": "atomic-library",
-				"dfa_fingerprint": f"dfa-{domain}",
-				"controller_fingerprint": f"controller-{variant}-{domain}",
-			}
+				}
 			temporal_records.append(record)
 			variant_records.append(record)
 		temporal_summaries.append(
@@ -621,7 +516,6 @@ def _complete_frozen_ablation_payload() -> dict[str, Any]:
 	return {
 		"schema_version": 1,
 		"artifact_kind": "gp2pl_paired_ablation_results",
-		"run_id": "paired-ablation-fixture",
 		"atomic": atomic_summaries,
 		"atomic_records": atomic_records,
 		"atomic_seed_results": atomic_seed_results,
@@ -640,30 +534,11 @@ def _complete_frozen_ablation_payload() -> dict[str, Any]:
 				"paired": True,
 				"sample_count": temporal_case_count,
 				"domain_count": len(DOMAIN_ORDER),
-				"controller_fingerprint_count": (
-					temporal_case_count * len(TEMPORAL_VARIANTS)
-				),
 			},
 			"case_contract": {
-				"achievement": {
-					"count": atomic_case_count_per_seed,
-					"sha256": "a" * 64,
-				},
-				"temporal": {
-					"count": temporal_case_count,
-					"sha256": "b" * 64,
-				},
+				"achievement": {"count": atomic_case_count_per_seed},
+				"temporal": {"count": temporal_case_count},
 			},
-		},
-		"provenance": {
-			"paired_results_sha256": "c" * 64,
-			"source_revision": {
-				"available": True,
-				"commit": "0123456789abcdef",
-				"tracked_changes": False,
-				"untracked_files": False,
-			},
-			"method_source_equivalence": {"status": "confirmed"},
 		},
 	}
 
@@ -786,14 +661,8 @@ def _execution_settings() -> dict[str, object]:
 	}
 
 
-def _complete_five_seed_figure_inputs() -> tuple[
-	dict[str, Any],
-	dict[int, dict[str, Any]],
-	dict[int, dict[tuple[str, int], float]],
-]:
+def _complete_five_seed_figure_inputs() -> dict[str, Any]:
 	domain_rows: list[dict[str, Any]] = []
-	run_summaries: dict[int, dict[str, Any]] = {}
-	run_seconds: dict[int, dict[tuple[str, int], float]] = {}
 	for domain in DOMAIN_ORDER:
 		success_counts = [1, 1, 1, 1, 1]
 		if domain == "logistics":
@@ -808,113 +677,58 @@ def _complete_five_seed_figure_inputs() -> tuple[
 				"sample_sd_success_rate": statistics.stdev(success_counts),
 			},
 		)
-	seed_results = []
+	seed_results: list[dict[str, Any]] = []
+	case_records: list[dict[str, Any]] = []
 	for seed in range(5):
-		validations = []
-		run_seconds[seed] = {}
+		valid_count = 0
 		for index, domain in enumerate(DOMAIN_ORDER, start=1):
 			success = not (domain == "logistics" and seed == 2)
-			validations.append(
+			valid_count += int(success)
+			case_records.append(
 				{
+					"seed": seed,
 					"domain": domain,
-					"test_index": index,
-					"problem_file": f"/fixture/{domain}/p01.pddl",
-					"success": success,
+					"test_id": "p01",
 					"status": "success" if success else "failed",
+					"valid": success,
+					"jason_run_seconds": float(index + seed + 1),
+					"action_count": 1 if success else None,
 					"timed_out": False,
-					"plan_verifier_attempted": success,
-					"plan_verifier_success": True if success else None,
-					"output_dir": f"/fixture/run{seed}/{domain}/test_{index:04d}",
+					"val_success": success,
 				},
 			)
-			if success:
-				run_seconds[seed][(domain, index)] = float(index + seed + 1)
-		run_id = f"five-seed-run-{seed}"
-		run_summaries[seed] = {
-			"artifact_kind": "full_test_jason_validation_from_moose_asl_batch",
-			"run_id": run_id,
-			"settings": {
-				"atomic_library_mode": "validated-policy-lifting",
-				"compiler_variant": "full",
-				"method": "Full Compiler",
-				"num_workers": 8,
-				"timeout_seconds": 1800,
-				"plan_verifier_timeout_seconds": 1800,
-				"jason_java_stack_size": "64m",
-				"require_plan_verifier": True,
-			},
-			"source_revision": {
-				"available": True,
-				"commit": "0123456789abcdef0123456789abcdef01234567",
-				"tracked_changes": False,
-				"untracked_files": False,
-			},
-			"validations": validations,
-		}
 		seed_results.append(
 			{
 				"seed": seed,
-				"run_id": run_id,
-				"source_commit": "0123456789abcdef0123456789abcdef01234567",
-				"summary_sha256": "fixture-summary-sha256",
-				"success_count": sum(row["success"] for row in validations),
-				"evaluation_count": len(validations),
+				"success_count": valid_count,
+				"evaluation_count": len(DOMAIN_ORDER),
 			},
 		)
-	return (
-		{
-			"artifact_kind": "gp2pl_five_seed_full_compiler_submission_result",
-			"schema_version": 1,
-			"source_aggregate": {
-				"artifact_kind": "gp2pl_five_seed_runner_aggregate_provenance",
-				"run_id": "five-seed-fixture",
-				"path": "artifacts/five-seed-fixture/five_seed_summary.json",
-				"sha256": "a" * 64,
-				"moose_internal_workers": 1,
-				"moose_seed_parallelism": 5,
-				"cross_seed_jason_parallelism": 1,
-				"jason_workers_per_repetition": 8,
-				"verified_against_child_runs": True,
-			},
-			"compiler_freeze": {
-				"byte_identical_to_formal_run_revisions": True,
-				"closure_sha256": "compiler-closure-sha256",
-				"formal_run_revisions": [
-					"0123456789abcdef0123456789abcdef01234567",
-				],
-			},
-			"protocol": {
-				"method": "Full GP2PL",
-				"compiler_variant": "full",
-				"atomic_library_mode": "validated-policy-lifting",
-				"seeds": [0, 1, 2, 3, 4],
-				"domain_count": 16,
-				"case_count_per_seed": 16,
-				"validation_workers": 8,
-				"independent_seed_runs": True,
-				"evidence_union": False,
-				"best_seed_selection": False,
-				"success_contract": (
-					"Jason completion plus original-goal VAL acceptance"
-				),
-			},
-			"aggregate": {
-				"pooled_success_count": 79,
-				"pooled_evaluation_count": 80,
-				"mean_success_rate": 79 / 80,
-				"sample_sd_success_rate": statistics.stdev(
-					[1.0, 1.0, 15 / 16, 1.0, 1.0],
-				),
-			},
-			"seed_results": seed_results,
-			"domains": domain_rows,
+	return {
+		"artifact_kind": "gp2pl_five_seed_full_compiler_submission_result",
+		"schema_version": 1,
+		"protocol": {
+			"method": "Full GP2PL",
+			"compiler_variant": "full",
+			"atomic_library_mode": "validated-policy-lifting",
+			"seeds": [0, 1, 2, 3, 4],
+			"domain_count": 16,
+			"case_count_per_seed": 16,
+			"validation_workers": 8,
+			"independent_seed_runs": True,
+			"evidence_union": False,
+			"best_seed_selection": False,
+			"success_contract": "Jason completion plus original-goal VAL acceptance",
 		},
-		run_summaries,
-		run_seconds,
-	)
-
-
-def _file_sha256(path: Path) -> str:
-	import hashlib
-
-	return hashlib.sha256(path.read_bytes()).hexdigest()
+		"aggregate": {
+			"pooled_success_count": 79,
+			"pooled_evaluation_count": 80,
+			"mean_success_rate": 79 / 80,
+			"sample_sd_success_rate": statistics.stdev(
+				[1.0, 1.0, 15 / 16, 1.0, 1.0],
+			),
+		},
+		"seed_results": seed_results,
+		"domains": domain_rows,
+		"case_records": case_records,
+	}

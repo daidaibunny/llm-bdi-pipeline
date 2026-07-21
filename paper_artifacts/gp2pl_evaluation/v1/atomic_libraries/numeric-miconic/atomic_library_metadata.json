@@ -263,7 +263,6 @@
   },
   "compiled_plan_count": 26,
   "compiled_singleton_rule_count": 0,
-  "domain_file": "src/domains/numeric-miconic/domain.pddl",
   "domain_name": "numeric-miconic",
   "evidence_provider": "moose",
   "library_metadata": {
@@ -552,7 +551,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-miconic/numeric-miconic.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 11,
       "source_name": "numeric-miconic",
@@ -581,7 +579,6 @@
       "validated_policy_rule_plan_count": 11
     },
     "pddl_support": {
-      "domain_file": "src/domains/numeric-miconic/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -620,7 +617,6 @@
         "lift_capacity",
         "weight"
       ],
-      "problem_files": [],
       "requirements": [
         ":strips",
         ":typing",
@@ -647,7 +643,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-miconic/numeric-miconic.model.readable",
     "source_name": "numeric-miconic",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 11,
@@ -695,7 +690,6 @@
     "validated_policy_rule_plan_count": 11
   },
   "minimal_modules": true,
-  "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-miconic/numeric-miconic.model.readable",
   "policy_program_module_count": 11,
   "policy_program_rule_count": 11,
   "raw_rule_count": 11,

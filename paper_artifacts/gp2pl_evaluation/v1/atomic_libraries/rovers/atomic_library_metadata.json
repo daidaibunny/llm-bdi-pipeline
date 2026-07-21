@@ -603,7 +603,6 @@
   },
   "compiled_plan_count": 127,
   "compiled_singleton_rule_count": 0,
-  "domain_file": "src/domains/rovers/domain.pddl",
   "domain_name": "rovers",
   "evidence_provider": "moose",
   "library_metadata": {
@@ -1234,7 +1233,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 90,
       "source_name": "rovers",
@@ -1263,7 +1261,6 @@
       "validated_policy_rule_plan_count": 90
     },
     "pddl_support": {
-      "domain_file": "src/domains/rovers/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -1297,7 +1294,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":strips",
         ":typing"
@@ -1322,7 +1318,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
     "source_name": "rovers",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 90,
@@ -1372,7 +1367,6 @@
     "validated_policy_rule_plan_count": 90
   },
   "minimal_modules": true,
-  "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
   "policy_program_module_count": 90,
   "policy_program_rule_count": 90,
   "raw_rule_count": 90,

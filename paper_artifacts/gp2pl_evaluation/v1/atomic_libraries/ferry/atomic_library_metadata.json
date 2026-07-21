@@ -197,7 +197,6 @@
   },
   "compiled_plan_count": 21,
   "compiled_singleton_rule_count": 0,
-  "domain_file": "src/domains/ferry/domain.pddl",
   "domain_name": "ferry",
   "evidence_provider": "moose",
   "library_metadata": {
@@ -420,7 +419,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/ferry/ferry.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 5,
       "source_name": "ferry",
@@ -449,7 +447,6 @@
       "validated_policy_rule_plan_count": 5
     },
     "pddl_support": {
-      "domain_file": "src/domains/ferry/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -483,7 +480,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":typing",
         ":strips",
@@ -510,7 +506,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/ferry/ferry.model.readable",
     "source_name": "ferry",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 5,
@@ -558,7 +553,6 @@
     "validated_policy_rule_plan_count": 5
   },
   "minimal_modules": true,
-  "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/ferry/ferry.model.readable",
   "policy_program_module_count": 5,
   "policy_program_rule_count": 5,
   "raw_rule_count": 5,

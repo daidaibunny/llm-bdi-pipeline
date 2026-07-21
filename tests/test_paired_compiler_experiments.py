@@ -205,11 +205,10 @@ def test_temporal_command_selects_exact_registered_variant(tmp_path: Path) -> No
 
 def test_resume_manifest_requires_same_registered_contract() -> None:
 	existing = {
-		"source_revision": {"commit": "abc", "tracked_changes": False},
 		"domains": ["ferry"],
 		"registered_seeds": [0, 1, 2, 3, 4],
-		"case_contract": {"achievement": {"sha256": "a"}},
-		"seed_batch_manifests": {"0": {"artifact_sha256": "b"}},
+		"case_contract": {"achievement": {"count": 1}},
+		"seed_batch_manifests": {"0": {"seed": 0}},
 		"temporal_atomic_input": {"batch_id": "paper-seed0-full"},
 		"num_workers": 6,
 		"timeout_seconds": 1800,
@@ -223,15 +222,9 @@ def test_resume_manifest_requires_same_registered_contract() -> None:
 		validate_resume_manifest(existing, changed)
 
 
-def test_registered_run_resume_requires_complete_matching_revision(
+def test_registered_run_resume_requires_a_complete_summary(
 	tmp_path: Path,
 ) -> None:
-	revision = {
-		"available": True,
-		"commit": "abc",
-		"tracked_changes": False,
-		"untracked_files": False,
-	}
 	summary_file = tmp_path / "summary.json"
 	run = RegisteredRun(
 		stage="Atomic",
@@ -242,24 +235,19 @@ def test_registered_run_resume_requires_complete_matching_revision(
 		summary_file=summary_file,
 		seed=0,
 	)
-	assert not registered_run_summary_complete(run, expected_revision=revision)
+	assert not registered_run_summary_complete(run)
 
 	summary_file.write_text(
-		json.dumps({"source_revision": revision}),
+		json.dumps({"status": "running"}),
 		encoding="utf-8",
 	)
-	assert not registered_run_summary_complete(run, expected_revision=revision)
+	assert not registered_run_summary_complete(run)
 
 	summary_file.write_text(
-		json.dumps({"source_revision": revision, "completed_at": "now"}),
+		json.dumps({"completed_at": "now"}),
 		encoding="utf-8",
 	)
-	assert registered_run_summary_complete(run, expected_revision=revision)
-	with pytest.raises(ValueError, match="source revision"):
-		registered_run_summary_complete(
-			run,
-			expected_revision={**revision, "tracked_changes": True},
-		)
+	assert registered_run_summary_complete(run)
 
 
 def test_registered_case_contract_covers_all_selected_test_and_temporal_cases(

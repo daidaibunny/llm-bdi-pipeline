@@ -420,7 +420,6 @@
   },
   "compiled_plan_count": 205,
   "compiled_singleton_rule_count": 0,
-  "domain_file": "src/domains/blocksworld-tower/domain.pddl",
   "domain_name": "blocksworld-tower",
   "evidence_provider": "moose",
   "library_metadata": {
@@ -866,7 +865,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 179,
       "source_name": "blocksworld-tower",
@@ -895,7 +893,6 @@
       "validated_policy_rule_plan_count": 179
     },
     "pddl_support": {
-      "domain_file": "src/domains/blocksworld-tower/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -929,7 +926,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":strips",
         ":typing"
@@ -954,7 +950,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
     "source_name": "blocksworld-tower",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 179,
@@ -1002,7 +997,6 @@
     "validated_policy_rule_plan_count": 179
   },
   "minimal_modules": true,
-  "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/blocksworld-tower/blocksworld-tower.model.readable",
   "policy_program_module_count": 179,
   "policy_program_rule_count": 179,
   "raw_rule_count": 179,

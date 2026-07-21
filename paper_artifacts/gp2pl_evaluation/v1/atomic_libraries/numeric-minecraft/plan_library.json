@@ -191,7 +191,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 16,
       "source_name": "numeric-minecraft",
@@ -222,7 +221,6 @@
       "validated_policy_rule_plan_count": 17
     },
     "pddl_support": {
-      "domain_file": "src/domains/numeric-minecraft/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -270,7 +268,6 @@
         "count_tree_tap_in_inventory",
         "pogo_sticks_to_make"
       ],
-      "problem_files": [],
       "requirements": [
         ":strips",
         ":typing",
@@ -301,7 +298,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
     "source_name": "numeric-minecraft",
     "source_numeric_goal_functions": [
       "pogo_sticks_to_make"
@@ -356,7 +352,6 @@
         {
           "artifact_family": "numeric_resource_goal_module",
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "rule_kind": "already_true",
           "source_name": "numeric-minecraft",
           "source_provider": "moose",
@@ -407,7 +402,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "producer_actions": [
             "break"
           ],
@@ -448,7 +442,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [],
@@ -493,7 +486,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [],
@@ -543,7 +535,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [],
@@ -600,7 +591,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -669,7 +659,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -746,7 +735,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -832,7 +820,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -926,7 +913,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1025,7 +1011,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1129,7 +1114,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1246,7 +1230,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1371,7 +1354,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1501,7 +1483,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1636,7 +1617,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1786,7 +1766,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -1944,7 +1923,6 @@
           "artifact_family": "numeric_resource_goal_module",
           "net_delta": -1,
           "numeric_function": "pogo_sticks_to_make",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "precedence": "(1, 16, 0, 0)",
           "rule_kind": "monotone_resource_macro",
           "schema_binding_guards": [
@@ -2120,7 +2098,6 @@
             "X \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "producer_actions": [
             "tp_to"
           ],
@@ -2167,7 +2144,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-minecraft/numeric-minecraft.model.readable",
           "prepared_predicate": "position",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",

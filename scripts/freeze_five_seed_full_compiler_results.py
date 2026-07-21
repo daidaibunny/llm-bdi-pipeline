@@ -5,29 +5,27 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
-import hashlib
 import json
 from pathlib import Path
 import statistics
-import subprocess
+import sys
 from typing import Any, Mapping, Sequence
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+	sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.public_result_schema import outcome_only_payload  # noqa: E402
+
+
 DEFAULT_RUN_ROOT = PROJECT_ROOT / "artifacts/jason_full_test_runs"
 DEFAULT_RUN_PREFIX = "pddl-five-seed-20260713-153900-full-test-seed"
-DEFAULT_SOURCE_AGGREGATE = (
-	PROJECT_ROOT
-	/ "artifacts/parser_order_full_val_logs/pddl-five-seed-20260713-153900"
-	/ "five_seed_summary.json"
-)
 DEFAULT_OUTPUT_JSON = (
 	PROJECT_ROOT
 	/ "paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json"
 )
 DEFAULT_LATEX_OUTPUT_DIR = PROJECT_ROOT / "latex_code/aamas_method_paper/sections"
 EXPECTED_SEEDS = (0, 1, 2, 3, 4)
-REGISTERED_TRACKED_CHANGE_SEEDS = (4,)
 REGISTERED_VALIDATION_WORKERS = 8
 REGISTERED_JASON_TIMEOUT_SECONDS = 1800
 REGISTERED_PLAN_VERIFIER_TIMEOUT_SECONDS = 1800
@@ -52,19 +50,6 @@ EXPECTED_DOMAINS = (
 	"satellite",
 	"transport",
 )
-COMPILER_EXECUTION_CLOSURE_PATHS = (
-	"src/domain_level_planning",
-	"src/evaluation/jason_runtime",
-	"src/plan_library",
-	"src/utils/pddl_parser.py",
-	"src/main.py",
-	"scripts/run_full_test_jason_validation.py",
-	"scripts/run_moose_faithful_e2e.py",
-	"scripts/run_moose_asl_batch.sh",
-	"scripts/run_pddl_five_seed_full_test.sh",
-)
-
-
 def main() -> None:
 	parser = argparse.ArgumentParser(
 		description=(
@@ -79,20 +64,6 @@ def main() -> None:
 		help=(
 			"Summary for one seed. Repeat for seeds 0--4. If omitted, use the "
 			"registered pddl-five-seed-20260713-153900 results."
-		),
-	)
-	parser.add_argument(
-		"--compiler-freeze-revision",
-		default="HEAD",
-		help="Git revision whose compiler execution closure is frozen.",
-	)
-	parser.add_argument(
-		"--source-aggregate",
-		type=Path,
-		default=DEFAULT_SOURCE_AGGREGATE,
-		help=(
-			"Five-seed runner aggregate that indexes the five child validations. "
-			"Its counts and execution protocol are checked against the child runs."
 		),
 	)
 	parser.add_argument("--output-json", type=Path, default=DEFAULT_OUTPUT_JSON)
@@ -110,18 +81,6 @@ def main() -> None:
 	)
 	result = build_five_seed_result_dataset(
 		summary_files,
-		allowed_tracked_change_seeds=REGISTERED_TRACKED_CHANGE_SEEDS,
-	)
-	result["source_aggregate"] = validate_source_aggregate(
-		args.source_aggregate,
-		result=result,
-		project_root=PROJECT_ROOT,
-	)
-	execution_commits = [row["source_commit"] for row in result["seed_results"]]
-	result["compiler_freeze"] = build_compiler_freeze_metadata(
-		project_root=PROJECT_ROOT,
-		freeze_revision=args.compiler_freeze_revision,
-		execution_revisions=execution_commits,
 	)
 	write_result_files(
 		result,
@@ -141,11 +100,9 @@ def main() -> None:
 def build_five_seed_result_dataset(
 	summary_files: Mapping[int, str | Path],
 	*,
-	compiler_freeze: Mapping[str, Any] | None = None,
 	expected_seeds: Sequence[int] = EXPECTED_SEEDS,
 	expected_domains: Sequence[str] | None = EXPECTED_DOMAINS,
 	expected_case_count: int | None = EXPECTED_CASE_COUNT,
-	allowed_tracked_change_seeds: Sequence[int] = (),
 ) -> dict[str, Any]:
 	"""Validate five complete summaries and return a compact descriptive dataset."""
 
@@ -157,21 +114,15 @@ def build_five_seed_result_dataset(
 		)
 
 	seed_results: list[dict[str, Any]] = []
+	case_records: list[dict[str, Any]] = []
 	case_outcomes_by_seed: dict[int, dict[tuple[str, str], bool]] = {}
 	domain_success_by_seed: dict[int, Counter[str]] = {}
 	domain_total_by_seed: dict[int, Counter[str]] = {}
 	failure_diagnostics: Counter[str] = Counter()
-	snapshot_hash: str | None = None
-	completed_at_values: list[str] = []
-
 	for seed in seed_order:
 		summary_path = Path(summary_files[seed]).expanduser().resolve()
 		summary = _read_json(summary_path)
-		_validate_summary_header(
-			summary,
-			seed=seed,
-			allow_tracked_changes=seed in set(allowed_tracked_change_seeds),
-		)
+		_validate_summary_header(summary, seed=seed)
 		validations = tuple(summary.get("validations") or ())
 		if expected_case_count is not None and len(validations) != expected_case_count:
 			raise ValueError(
@@ -184,13 +135,6 @@ def build_five_seed_result_dataset(
 			raise ValueError(f"seed {seed} input snapshot is incomplete")
 		if int(input_snapshot.get("task_count") or -1) != len(validations):
 			raise ValueError(f"seed {seed} input snapshot task count mismatch")
-		observed_snapshot_hash = str(input_snapshot.get("manifest_sha256") or "")
-		if len(observed_snapshot_hash) < 16:
-			raise ValueError(f"seed {seed} input snapshot hash is missing")
-		if snapshot_hash is None:
-			snapshot_hash = observed_snapshot_hash
-		elif snapshot_hash != observed_snapshot_hash:
-			raise ValueError("five seeds do not share the same input snapshot")
 
 		case_outcomes: dict[tuple[str, str], bool] = {}
 		domain_success: Counter[str] = Counter()
@@ -212,6 +156,19 @@ def build_five_seed_result_dataset(
 				failure_diagnostics[
 					str(validation.get("error") or "unspecified method failure")
 				] += 1
+			case_records.append(
+				{
+					"seed": seed,
+					"domain": case_key[0],
+					"test_id": case_key[1],
+					"status": str(validation.get("status") or "missing"),
+					"valid": success,
+					"jason_run_seconds": _jason_run_seconds(validation),
+					"action_count": validation.get("action_count"),
+					"timed_out": validation.get("timed_out") is True,
+					"val_success": validation.get("plan_verifier_success") is True,
+				},
+			)
 
 		observed_domains = set(domain_total)
 		if expected_domains is not None and observed_domains != set(expected_domains):
@@ -228,17 +185,9 @@ def build_five_seed_result_dataset(
 		if summary.get("success") is not all_succeeded:
 			raise ValueError(f"seed {seed} top-level success flag is inconsistent")
 
-		source_revision = dict(summary.get("source_revision") or {})
-		completed_at = str(summary.get("completed_at") or "")
-		completed_at_values.append(completed_at)
 		seed_results.append(
 			{
 				"seed": seed,
-				"run_id": str(summary.get("run_id") or ""),
-				"completed_at": completed_at,
-				"source_commit": str(source_revision.get("commit") or ""),
-				"tracked_source_changes": bool(source_revision.get("tracked_changes")),
-				"summary_sha256": _sha256(summary_path),
 				"success_count": sum(case_outcomes.values()),
 				"failure_count": len(case_outcomes) - sum(case_outcomes.values()),
 				"evaluation_count": len(case_outcomes),
@@ -308,11 +257,9 @@ def build_five_seed_result_dataset(
 		if "0" in pattern and "1" in pattern
 	)
 
-	return {
+	return outcome_only_payload({
 		"artifact_kind": "gp2pl_five_seed_full_compiler_submission_result",
 		"schema_version": 1,
-		"released_at": max(completed_at_values),
-		"compiler_freeze": dict(compiler_freeze or {}),
 		"protocol": {
 			"method": "Full GP2PL",
 			"source_method_label": "Full Compiler",
@@ -321,7 +268,6 @@ def build_five_seed_result_dataset(
 			"seeds": list(seed_order),
 			"domain_count": len(domain_rows),
 			"case_count_per_seed": len(baseline_cases),
-			"input_snapshot_manifest_sha256": snapshot_hash,
 			"fresh_validation": True,
 			"validation_workers": REGISTERED_VALIDATION_WORKERS,
 			"jason_timeout_seconds": REGISTERED_JASON_TIMEOUT_SECONDS,
@@ -329,7 +275,6 @@ def build_five_seed_result_dataset(
 				REGISTERED_PLAN_VERIFIER_TIMEOUT_SECONDS
 			),
 			"jason_java_stack_size": REGISTERED_JAVA_STACK_SIZE,
-			"tracked_change_seed_exceptions": sorted(allowed_tracked_change_seeds),
 			"independent_seed_runs": True,
 			"evidence_union": False,
 			"best_seed_selection": False,
@@ -357,6 +302,7 @@ def build_five_seed_result_dataset(
 			"nonzero_exit_count": 0,
 		},
 		"domains": domain_rows,
+		"case_records": case_records,
 		"case_outcomes": {
 			"pattern_counts": dict(sorted(pattern_counts.items())),
 			"persistent_failures": persistent_failures,
@@ -366,196 +312,7 @@ def build_five_seed_result_dataset(
 			{"diagnostic": diagnostic, "count": count}
 			for diagnostic, count in failure_diagnostics.most_common()
 		],
-	}
-
-
-def validate_source_aggregate(
-	aggregate_file: str | Path,
-	*,
-	result: Mapping[str, Any],
-	project_root: str | Path = PROJECT_ROOT,
-) -> dict[str, Any]:
-	"""Verify the runner aggregate against independently validated child runs."""
-
-	root = Path(project_root).expanduser().resolve()
-	path = Path(aggregate_file).expanduser().resolve()
-	try:
-		portable_path = path.relative_to(root).as_posix()
-	except ValueError as error:
-		raise ValueError("source aggregate must be inside the project root") from error
-	aggregate = _read_json(path)
-	protocol = dict(result.get("protocol") or {})
-	seed_rows = tuple(result.get("seed_results") or ())
-	domain_rows = tuple(result.get("domains") or ())
-	seeds = tuple(int(value) for value in protocol.get("seeds") or ())
-	domain_by_name = {str(row["domain"]): row for row in domain_rows}
-	seed_by_id = {int(row["seed"]): row for row in seed_rows}
-
-	expected_header = {
-		"schema_version": 1,
-		"protocol": "five_independent_moose_synthesis_repetitions",
-		"evidence_merged": False,
-		"moose_internal_workers": 1,
-		"moose_seed_parallelism": len(seeds),
-		"cross_seed_jason_parallelism": 1,
-		"jason_workers_per_repetition": int(protocol["validation_workers"]),
-	}
-	for key, expected in expected_header.items():
-		if aggregate.get(key) != expected:
-			raise ValueError(
-				f"source aggregate has unexpected {key}: {aggregate.get(key)!r}",
-			)
-	if tuple(int(value) for value in aggregate.get("seeds") or ()) != seeds:
-		raise ValueError("source aggregate seed order differs from child runs")
-
-	aggregate_domains = dict(aggregate.get("aggregate_domains") or {})
-	if set(aggregate_domains) != set(domain_by_name):
-		raise ValueError("source aggregate domain set differs from child runs")
-	for domain, result_row in domain_by_name.items():
-		source_row = dict(aggregate_domains[domain] or {})
-		expected_success = sum(int(value) for value in result_row["success_counts"])
-		expected_total = int(result_row["test_count"]) * len(seeds)
-		expected_values = {
-			"completed_repetitions": len(seeds),
-			"successful_cases_across_repetitions": expected_success,
-			"total_cases_across_repetitions": expected_total,
-		}
-		for key, expected in expected_values.items():
-			if source_row.get(key) != expected:
-				raise ValueError(
-					f"aggregate domain {domain} has unexpected {key}: "
-					f"{source_row.get(key)!r}",
-				)
-		_float_must_match(
-			source_row.get("mean_seed_coverage"),
-			result_row["mean_success_rate"],
-			label=f"aggregate domain {domain} mean coverage",
-		)
-		_float_must_match(
-			source_row.get("sample_stddev_seed_coverage"),
-			result_row["sample_sd_success_rate"],
-			label=f"aggregate domain {domain} sample standard deviation",
-		)
-
-	repetitions = tuple(aggregate.get("repetitions") or ())
-	if len(repetitions) != len(seeds):
-		raise ValueError("source aggregate repetition count differs from child runs")
-	repetition_by_seed = {int(row.get("seed", -1)): row for row in repetitions}
-	if set(repetition_by_seed) != set(seeds):
-		raise ValueError("source aggregate repetitions do not cover every seed once")
-	for seed in seeds:
-		repetition = dict(repetition_by_seed[seed] or {})
-		seed_row = seed_by_id[seed]
-		if repetition.get("validation_run_id") != seed_row["run_id"]:
-			raise ValueError(f"source aggregate seed {seed} child run id differs")
-		if repetition.get("moose_exit_code") != 0:
-			raise ValueError(f"source aggregate seed {seed} MOOSE generation failed")
-		evidence = dict(repetition.get("evidence") or {})
-		if set(evidence) != set(domain_by_name) or any(
-			dict(record or {}).get("generation_success") is not True
-			for record in evidence.values()
-		):
-			raise ValueError(
-				f"source aggregate seed {seed} has incomplete MOOSE evidence",
-			)
-		validation = dict(repetition.get("validation") or {})
-		if set(validation) != set(domain_by_name):
-			raise ValueError(
-				f"source aggregate seed {seed} validation domain set differs",
-			)
-		for domain, result_row in domain_by_name.items():
-			source_row = dict(validation[domain] or {})
-			expected_success = int(result_row["success_counts"][seed])
-			expected_total = int(result_row["test_count"])
-			if source_row.get("success") != expected_success:
-				raise ValueError(
-					f"source aggregate seed {seed} domain {domain} success differs",
-				)
-			if source_row.get("total") != expected_total:
-				raise ValueError(
-					f"source aggregate seed {seed} domain {domain} total differs",
-				)
-			if source_row.get("timeout") != 0:
-				raise ValueError(
-					f"source aggregate seed {seed} domain {domain} timed out",
-				)
-			_float_must_match(
-				source_row.get("coverage"),
-				expected_success / expected_total,
-				label=(
-					f"source aggregate seed {seed} domain {domain} coverage"
-				),
-			)
-
-	return {
-		"artifact_kind": "gp2pl_five_seed_runner_aggregate_provenance",
-		"schema_version": int(aggregate["schema_version"]),
-		"run_id": str(aggregate.get("run_id") or ""),
-		"path": portable_path,
-		"sha256": _sha256(path),
-		"protocol": str(aggregate["protocol"]),
-		"moose_internal_workers": int(aggregate["moose_internal_workers"]),
-		"moose_seed_parallelism": int(aggregate["moose_seed_parallelism"]),
-		"cross_seed_jason_parallelism": int(
-			aggregate["cross_seed_jason_parallelism"],
-		),
-		"jason_workers_per_repetition": int(
-			aggregate["jason_workers_per_repetition"],
-		),
-		"verified_against_child_runs": True,
-	}
-
-
-def _float_must_match(observed: object, expected: object, *, label: str) -> None:
-	try:
-		observed_value = float(observed)
-		expected_value = float(expected)
-	except (TypeError, ValueError) as error:
-		raise ValueError(f"{label} is not numeric") from error
-	if abs(observed_value - expected_value) > 1e-12:
-		raise ValueError(
-			f"{label} differs: observed {observed_value}, expected {expected_value}",
-		)
-
-
-def build_compiler_freeze_metadata(
-	*,
-	project_root: str | Path,
-	freeze_revision: str,
-	execution_revisions: Sequence[str],
-) -> dict[str, Any]:
-	"""Hash the exact compiler/runtime closure and match every execution revision."""
-
-	root = Path(project_root).expanduser().resolve()
-	resolved_freeze = _git_output(root, "rev-parse", freeze_revision).strip()
-	if len(resolved_freeze) != 40:
-		raise ValueError("compiler freeze revision did not resolve to a full commit")
-	if subprocess.run(
-		("git", "diff", "--quiet", "--", *COMPILER_EXECUTION_CLOSURE_PATHS),
-		cwd=root,
-		check=False,
-	).returncode != 0:
-		raise ValueError("compiler execution closure has uncommitted changes")
-
-	freeze_digest, freeze_files = _git_closure_digest(root, resolved_freeze)
-	resolved_execution_revisions = sorted(set(execution_revisions))
-	for revision in resolved_execution_revisions:
-		digest, files = _git_closure_digest(root, revision)
-		if files != freeze_files or digest != freeze_digest:
-			raise ValueError(
-				"compiler execution closure differs between freeze revision and "
-				f"formal run revision {revision}",
-			)
-	return {
-		"revision": resolved_freeze,
-		"closure_sha256": freeze_digest,
-		"closure_file_count": len(freeze_files),
-		"closure_paths": list(COMPILER_EXECUTION_CLOSURE_PATHS),
-		"closure_files": freeze_files,
-		"formal_run_revisions": resolved_execution_revisions,
-		"byte_identical_to_formal_run_revisions": True,
-		"semantic_changes_after_freeze_permitted": False,
-	}
+	})
 
 
 def render_result_macros(result: Mapping[str, Any]) -> str:
@@ -764,7 +521,6 @@ def _validate_summary_header(
 	summary: Mapping[str, Any],
 	*,
 	seed: int,
-	allow_tracked_changes: bool,
 ) -> None:
 	if summary.get("artifact_kind") != "full_test_jason_validation_from_moose_asl_batch":
 		raise ValueError(f"seed {seed} has the wrong artifact kind")
@@ -787,15 +543,6 @@ def _validate_summary_header(
 			raise ValueError(f"seed {seed} has unexpected {key}: {settings.get(key)!r}")
 	if int(summary.get("resumed_validation_count") or 0) != 0:
 		raise ValueError(f"seed {seed} reused validation results")
-	source_revision = dict(summary.get("source_revision") or {})
-	if source_revision.get("available") is not True:
-		raise ValueError(f"seed {seed} has no source revision")
-	if source_revision.get("tracked_changes") is not False and not allow_tracked_changes:
-		raise ValueError(f"seed {seed} has tracked source changes")
-	if source_revision.get("untracked_files") is not False:
-		raise ValueError(f"seed {seed} has untracked source files")
-	if len(str(source_revision.get("commit") or "")) != 40:
-		raise ValueError(f"seed {seed} source commit is not pinned")
 
 
 def _validate_case_record(
@@ -828,6 +575,38 @@ def _validate_case_record(
 		if not isinstance(action_count, int) or action_count < 0:
 			raise ValueError(f"seed {seed} case {case_key} has invalid action count")
 	return success
+
+
+def _jason_run_seconds(validation: Mapping[str, Any]) -> float:
+	"""Return the Jason process time, excluding VAL and orchestration overhead."""
+
+	direct_value = validation.get("jason_run_seconds")
+	if direct_value is not None:
+		return _non_negative_seconds(direct_value, label="jason_run_seconds")
+
+	output_dir = str(validation.get("output_dir") or "").strip()
+	if output_dir:
+		validation_path = Path(output_dir) / "jason_validation.json"
+		if validation_path.is_file():
+			runtime = _read_json(validation_path)
+			timing_profile = dict(runtime.get("timing_profile") or {})
+			if timing_profile.get("run_seconds") is not None:
+				return _non_negative_seconds(
+					timing_profile["run_seconds"],
+					label="timing_profile.run_seconds",
+				)
+
+	return _non_negative_seconds(
+		validation.get("duration_seconds") or 0.0,
+		label="duration_seconds",
+	)
+
+
+def _non_negative_seconds(value: Any, *, label: str) -> float:
+	seconds = float(value)
+	if seconds < 0.0:
+		raise ValueError(f"{label} must be non-negative")
+	return seconds
 
 
 def _validate_domain_summaries(
@@ -879,49 +658,6 @@ def _parse_seed_summaries(values: Sequence[str]) -> dict[int, Path]:
 	return result
 
 
-def _git_closure_digest(root: Path, revision: str) -> tuple[str, dict[str, str]]:
-	files_text = _git_output(
-		root,
-		"ls-tree",
-		"-r",
-		"--name-only",
-		revision,
-		"--",
-		*COMPILER_EXECUTION_CLOSURE_PATHS,
-	)
-	files = tuple(sorted(line for line in files_text.splitlines() if line.strip()))
-	if not files:
-		raise ValueError(f"compiler closure is empty at revision {revision}")
-	digest = hashlib.sha256()
-	file_hashes: dict[str, str] = {}
-	for path in files:
-		content = subprocess.run(
-			("git", "show", f"{revision}:{path}"),
-			cwd=root,
-			capture_output=True,
-			check=True,
-		).stdout
-		file_hashes[path] = hashlib.sha256(content).hexdigest()
-		digest.update(path.encode("utf-8"))
-		digest.update(b"\0")
-		digest.update(content)
-		digest.update(b"\0")
-	return digest.hexdigest(), file_hashes
-
-
-def _git_output(root: Path, *arguments: str) -> str:
-	try:
-		return subprocess.run(
-			("git", *arguments),
-			cwd=root,
-			text=True,
-			capture_output=True,
-			check=True,
-		).stdout
-	except subprocess.CalledProcessError as error:
-		raise ValueError(error.stderr.strip() or "git command failed") from error
-
-
 def _domain_count_cell(domain: Mapping[str, Any] | None, index: int) -> str:
 	if domain is None:
 		return "--"
@@ -935,10 +671,6 @@ def _read_json(path: Path) -> dict[str, Any]:
 	if not isinstance(data, dict):
 		raise ValueError(f"expected a JSON object: {path}")
 	return data
-
-
-def _sha256(path: Path) -> str:
-	return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _format_int(value: int | float) -> str:

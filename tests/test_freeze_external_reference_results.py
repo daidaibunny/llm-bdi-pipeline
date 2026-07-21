@@ -1,16 +1,50 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
 import pytest
+
+from scripts import freeze_external_reference_results
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RELEASE_ROOT = PROJECT_ROOT / "paper_artifacts/gp2pl_evaluation/v1"
 RESULT_FILE = RELEASE_ROOT / "external_reference_results.json"
 LATEX_ROOT = PROJECT_ROOT / "latex_code/aamas_method_paper"
+
+
+def test_temporal_freeze_rejects_a_different_case_set_with_the_same_size(
+	monkeypatch: pytest.MonkeyPatch,
+) -> None:
+	monkeypatch.setitem(
+		freeze_external_reference_results.TEMPORAL_CONTRACT,
+		"count",
+		2,
+	)
+	benchmark = {
+		"domains": {
+			"example": {
+				"cases": {
+					"case_a": {},
+					"case_b": {},
+				},
+			},
+		},
+	}
+	payload = {
+		"selected_case_count": 2,
+		"results": [
+			{"sample_id": "case_a"},
+			{"sample_id": "case_c"},
+		],
+	}
+
+	with pytest.raises(ValueError, match="identifiers differ"):
+		freeze_external_reference_results._validate_temporal_case_set(
+			payload,
+			benchmark=benchmark,
+		)
 
 
 def test_registered_external_reference_result_is_complete_portable_and_manifested() -> None:
@@ -39,21 +73,13 @@ def test_registered_external_reference_result_is_complete_portable_and_manifeste
 	assert rows["FOND4LTLf + LAMA"]["par2_seconds"] == pytest.approx(
 		1457.5163589505448,
 	)
-	direct_repair = result["provenance"]["direct_infrastructure_repair"]
-	assert direct_repair["toolchain_verified"] is True
-	verification = direct_repair["toolchain_verification"]
-	assert verification["semantic_identity"] == "exact_pinned_revisions_and_versions"
-	assert set(verification["path_embedded_launchers"]) == {"fond4ltlf", "mona"}
-	for launcher in verification["path_embedded_launchers"].values():
-		assert launcher["equivalence"] == "absolute_install_prefix_rewrite"
-		assert launcher["retry_file_sha256_verified"] is True
+	assert "provenance" not in result
 
 	manifest = json.loads((RELEASE_ROOT / "manifest.json").read_text(encoding="utf-8"))
 	assert manifest["external_reference_record_count"] == 2456
-	for relative_path, expected_sha256 in manifest["files"].items():
+	for relative_path in manifest["files"]:
 		artifact = RELEASE_ROOT / relative_path
 		assert artifact.is_file()
-		assert hashlib.sha256(artifact.read_bytes()).hexdigest() == expected_sha256
 
 
 def test_manuscript_consumes_frozen_external_reference_results() -> None:

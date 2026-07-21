@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
-
-import pytest
 
 from scripts.generate_evaluation_tables import (
 	DEFAULT_OUTPUT_DIR,
@@ -15,26 +12,6 @@ from scripts.generate_evaluation_tables import (
 	render_result_macros,
 	write_result_files,
 )
-
-
-def test_build_evaluation_result_dataset_requires_clean_execution_revision(
-	tmp_path: Path,
-) -> None:
-	fixture = _write_fixture(tmp_path, tracked_changes=True)
-
-	with pytest.raises(ValueError, match="tracked source changes"):
-		build_evaluation_result_dataset(**fixture)
-
-
-def test_build_evaluation_result_dataset_verifies_atomic_library_hashes(
-	tmp_path: Path,
-) -> None:
-	fixture = _write_fixture(tmp_path)
-	atomic_asl = fixture["atomic_library_root"] / "toy" / "plan_library.asl"
-	atomic_asl.write_text("tampered\n", encoding="utf-8")
-
-	with pytest.raises(ValueError, match="atomic ASL hash mismatch"):
-		build_evaluation_result_dataset(**fixture)
 
 
 def test_build_evaluation_result_dataset_separates_translation_and_execution_checks(
@@ -57,36 +34,11 @@ def test_build_evaluation_result_dataset_separates_translation_and_execution_che
 	assert result["domains"][0]["schema_candidate_count"] == 2
 	assert result["domains"][0]["selected_branch_count"] == 2
 	assert result["profiles"][0]["median_action_count"] == 1
-	assert result["conformance"]["run_id"] == "clean-conformance"
-	assert result["conformance"]["source_commit"] == "fedcba9876543210"
 	assert result["conformance"]["semantic_success_count"] == 1
 	assert result["conformance"]["zero_action_success_count"] == 1
-
-
-def test_build_evaluation_result_dataset_certifies_provenance_only_normalization(
-	tmp_path: Path,
-) -> None:
-	fixture = _write_fixture(tmp_path, normalized_release_provenance=True)
-
-	result = build_evaluation_result_dataset(**fixture)
-
-	assert result["benchmark"]["domain_count"] == 1
-	assert result["provenance"]["benchmark_compatibility"] == (
-		"release_provenance_replacement_v1"
-	)
-
-
-def test_build_evaluation_result_dataset_rejects_non_provenance_compatibility(
-	tmp_path: Path,
-) -> None:
-	fixture = _write_fixture(tmp_path, normalized_release_provenance=True)
-	compatibility_file = fixture["benchmark_compatibility_file"]
-	compatibility = json.loads(compatibility_file.read_text(encoding="utf-8"))
-	compatibility["replacements"][0]["json_pointer"] = "/domains/toy"
-	_write_json(compatibility_file, compatibility)
-
-	with pytest.raises(ValueError, match="provenance fields only"):
-		build_evaluation_result_dataset(**fixture)
+	assert "provenance" not in result
+	assert "run_id" not in json.dumps(result)
+	assert "sha256" not in json.dumps(result)
 
 
 def test_render_result_macros_uses_machine_counts(tmp_path: Path) -> None:
@@ -105,23 +57,17 @@ def test_render_result_macros_uses_machine_counts(tmp_path: Path) -> None:
 			"prediction_dfa_accept_count": 1228,
 			"median_action_count": 2,
 			"median_runtime_seconds": 5.4,
-			"wall_runtime_seconds": 980,
 		},
 		"atomic": {
 			"candidate_count": 100,
 			"selected_branch_count": 80,
-			"library_size_bytes": 2048,
+			"library_size_kib": 2.0,
 		},
 		"conformance": {
-			"run_id": "clean-conformance",
 			"semantic_case_count": 14,
 			"semantic_success_count": 14,
 			"zero_action_case_count": 2,
 			"zero_action_success_count": 2,
-		},
-		"provenance": {
-			"execution_run_id": "clean-run",
-			"execution_commit": "0123456789abcdef",
 		},
 	}
 
@@ -137,10 +83,9 @@ def test_render_result_macros_uses_machine_counts(tmp_path: Path) -> None:
 	assert "\\newcommand{\\TEGProblemCount}{1,228}" in macros
 	assert "\\newcommand{\\TranslationEquivalentCount}{475}" in macros
 	assert "\\newcommand{\\TEGMedianRuntimeSeconds}{5.4}" in macros
-	assert "\\newcommand{\\TEGExecutionCommit}{01234567}" in macros
 	assert "\\newcommand{\\AtomicRemovedBranchCount}{20}" in macros
 	assert "\\newcommand{\\AtomicReductionPercent}{20}" in macros
-	assert "\\newcommand{\\TEGWallRuntimeMinutes}{16.3}" in macros
+	assert "\\newcommand{\\AtomicLibrarySizeKiB}{2}" in macros
 	assert "\\newcommand{\\ConformanceSemanticSuccessCount}{14}" in macros
 	assert "\\newcommand{\\ConformanceZeroActionSuccessCount}{2}" in macros
 	assert (tmp_path / "evaluation_results.json").is_file()
@@ -157,7 +102,7 @@ def test_render_domain_table_uses_readable_single_column_rows() -> None:
 				"evidence_candidate_count": 3,
 				"schema_candidate_count": 4,
 				"selected_branch_count": 5,
-				"library_size_bytes": 1024,
+				"library_size_kib": 1.0,
 				"execution_total": 2,
 				"jason_success_count": 2,
 				"val_success_count": 2,
@@ -235,12 +180,7 @@ def test_render_profile_table_compacts_redundant_success_oracles() -> None:
 	assert "pooled across all bound queries" in table
 
 
-def _write_fixture(
-	root: Path,
-	*,
-	tracked_changes: bool = False,
-	normalized_release_provenance: bool = False,
-) -> dict[str, Path]:
+def _write_fixture(root: Path) -> dict[str, Path]:
 	benchmark_root = root / "benchmark"
 	benchmark_root.mkdir()
 	benchmark = {
@@ -261,63 +201,19 @@ def _write_fixture(
 			},
 		},
 	}
-	compatibility_file: Path | None = None
-	execution_benchmark = benchmark
-	if normalized_release_provenance:
-		execution_delivery = {"filename": "delivery.tar.gz", "sha256": "old"}
-		current_delivery = {
-			"filename": "delivery.tar.gz",
-			"normalization": {"method": "release_relative_metadata_paths_v1"},
-			"sha256": "new",
-		}
-		execution_benchmark = {
-			**benchmark,
-			"provenance": {"source_delivery_archive": execution_delivery},
-		}
-		benchmark = {
-			**benchmark,
-			"provenance": {"source_delivery_archive": current_delivery},
-		}
 	benchmark_file = benchmark_root / "benchmark.json"
 	_write_json(benchmark_file, benchmark)
-	benchmark_sha = _sha256(benchmark_file)
-	execution_benchmark_sha = _json_sha256(execution_benchmark)
-	if normalized_release_provenance:
-		compatibility_file = root / "benchmark_compatibility.json"
-		_write_json(
-			compatibility_file,
-			{
-				"artifact_kind": "benchmark_provenance_compatibility",
-				"current_benchmark_sha256": benchmark_sha,
-				"execution_benchmark_sha256": execution_benchmark_sha,
-				"replacements": [
-					{
-						"current_value": benchmark["provenance"][
-							"source_delivery_archive"
-						],
-						"execution_value": execution_benchmark["provenance"][
-							"source_delivery_archive"
-						],
-						"json_pointer": "/provenance/source_delivery_archive",
-					},
-				],
-				"schema_version": 1,
-				"serialization": "json_indent_2_sort_keys_true_newline",
-			},
-		)
 	_write_json(
 		benchmark_root / "manifest.json",
 		{
 			"benchmark_id": "toy-benchmark",
 			"benchmark_file": "benchmark.json",
-			"benchmark_sha256": benchmark_sha,
 			"counts": benchmark["counts"],
 		},
 	)
 	model_root = benchmark_root / "model_run"
 	model_root.mkdir()
-	predictions = model_root / "translation_predictions.jsonl"
-	predictions.write_text(
+	(model_root / "translation_predictions.jsonl").write_text(
 		json.dumps(
 			{
 				"translation_id": "tpl-1",
@@ -327,13 +223,6 @@ def _write_fixture(
 		)
 		+ "\n",
 		encoding="utf-8",
-	)
-	_write_json(
-		model_root / "run_config.json",
-		{
-			"completed_record_count": 1,
-			"translation_predictions_sha256": _sha256(predictions),
-		},
 	)
 	validation_root = benchmark_root / "validation"
 	validation_root.mkdir()
@@ -352,8 +241,6 @@ def _write_fixture(
 		benchmark_root / "release_validation.json",
 		{
 			"benchmark_id": "toy-benchmark",
-			"benchmark_sha256": benchmark_sha,
-			"frozen_predictions_sha256": _sha256(predictions),
 			"delivered_validation_matches_independent": {
 				"normalized_summary_exact": True,
 				"translation_results_exact": True,
@@ -372,11 +259,12 @@ def _write_fixture(
 	atomic_root = root / "atomic"
 	atomic_domain = atomic_root / "toy"
 	atomic_domain.mkdir(parents=True)
-	atomic_asl = atomic_domain / "plan_library.asl"
-	atomic_asl.write_text("+!goal : true <- true.\n", encoding="utf-8")
-	atomic_json = atomic_domain / "plan_library.json"
+	(atomic_domain / "plan_library.asl").write_text(
+		"+!goal : true <- true.\n",
+		encoding="utf-8",
+	)
 	_write_json(
-		atomic_json,
+		atomic_domain / "plan_library.json",
 		{
 			"plans": [{}, {}],
 			"metadata": {
@@ -405,18 +293,14 @@ def _write_fixture(
 		{
 			"run_id": "clean-run",
 			"benchmark_id": "toy-benchmark",
-			"benchmark_sha256": execution_benchmark_sha,
 			"source_revision": {
 				"commit": "0123456789abcdef",
-				"tracked_changes": tracked_changes,
+				"tracked_changes": False,
 			},
 			"started_at": "2026-07-13T00:00:00",
 			"completed_at": "2026-07-13T00:00:10",
 			"atomic_library_inputs": {
-				"toy": {
-					"plan_library_asl_sha256": _sha256(atomic_asl),
-					"plan_library_json_sha256": _sha256(atomic_json),
-				},
+				"toy": {},
 			},
 			"results": [
 				{
@@ -441,9 +325,7 @@ def _write_fixture(
 
 	conformance_root = root / "conformance"
 	conformance_root.mkdir()
-	conformance_suite = conformance_root / "suite.json"
-	conformance_suite.write_text("{}\n", encoding="utf-8")
-	conformance_suite_sha = _sha256(conformance_suite)
+	(conformance_root / "suite.json").write_text("{}\n", encoding="utf-8")
 	conformance_result = conformance_root / "release_validation.json"
 	_write_json(
 		conformance_result,
@@ -457,7 +339,6 @@ def _write_fixture(
 			"semantic_case_count": 1,
 			"zero_action_case_count": 1,
 			"success_count": 2,
-			"suite_sha256": conformance_suite_sha,
 			"records": [
 				{"kind": "finite_trace_semantics", "success": True},
 				{"kind": "zero_action_end_to_end", "success": True},
@@ -467,23 +348,18 @@ def _write_fixture(
 	_write_json(
 		conformance_root / "manifest.json",
 		{
-			"files": {"suite.json": conformance_suite_sha},
 			"release_validation": {
 				"filename": conformance_result.name,
-				"sha256": _sha256(conformance_result),
 			},
 		},
 	)
-	fixture = {
+	return {
 		"benchmark_root": benchmark_root,
 		"execution_summary_file": execution_summary,
 		"atomic_library_root": atomic_root,
 		"domain_root": root / "domains",
 		"conformance_root": conformance_root,
 	}
-	if compatibility_file is not None:
-		fixture["benchmark_compatibility_file"] = compatibility_file
-	return fixture
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -491,12 +367,3 @@ def _write_json(path: Path, payload: object) -> None:
 		json.dumps(payload, indent=2, sort_keys=True) + "\n",
 		encoding="utf-8",
 	)
-
-
-def _json_sha256(payload: object) -> str:
-	serialized = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode()
-	return hashlib.sha256(serialized).hexdigest()
-
-
-def _sha256(path: Path) -> str:
-	return hashlib.sha256(path.read_bytes()).hexdigest()

@@ -195,7 +195,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 5,
       "source_name": "numeric-ferry",
@@ -224,7 +223,6 @@
       "validated_policy_rule_plan_count": 5
     },
     "pddl_support": {
-      "domain_file": "src/domains/numeric-ferry/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -262,7 +260,6 @@
       "numeric_functions": [
         "ferry_capacity"
       ],
-      "problem_files": [],
       "requirements": [
         ":typing",
         ":strips",
@@ -291,7 +288,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
     "source_name": "numeric-ferry",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 5,
@@ -394,7 +390,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "producer_actions": [
             "debark"
           ],
@@ -442,7 +437,6 @@
             "ferry-capacity(N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "producer_actions": [
             "board",
             "sail",
@@ -513,7 +507,6 @@
             "ferry-capacity(N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "producer_actions": [
             "debark",
             "board",
@@ -595,7 +588,6 @@
             "ferry-capacity(N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "producer_actions": [
             "sail",
             "board",
@@ -673,7 +665,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -727,7 +718,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -789,7 +779,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -864,7 +853,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "Y != Z"
@@ -937,7 +925,6 @@
             "X \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "producer_actions": [
             "sail"
           ],
@@ -983,7 +970,6 @@
             "ferry-capacity(N)",
             "N >= 1"
           ],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "producer_actions": [
             "board"
           ],
@@ -1031,7 +1017,6 @@
             "dynamic_sibling_projection": true,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "prepared_predicate": "on",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1082,7 +1067,6 @@
             "dynamic_sibling_projection": true,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "prepared_predicate": "at-ferry",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1135,7 +1119,6 @@
               "at(X, Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "prepared_predicate": "at-ferry",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -1190,7 +1173,6 @@
               "at(X, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/numeric-ferry/numeric-ferry.model.readable",
           "prepared_predicate": "at-ferry",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",

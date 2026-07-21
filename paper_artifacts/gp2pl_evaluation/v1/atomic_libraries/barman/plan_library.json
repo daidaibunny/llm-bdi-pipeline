@@ -915,7 +915,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 176,
       "source_name": "barman",
@@ -944,7 +943,6 @@
       "validated_policy_rule_plan_count": 176
     },
     "pddl_support": {
-      "domain_file": "src/domains/barman/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -978,7 +976,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":action-costs",
         ":strips",
@@ -1005,7 +1002,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
     "source_name": "barman",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 176,
@@ -1272,7 +1268,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shaker"
           ],
@@ -1317,7 +1312,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot"
           ],
@@ -1367,7 +1361,6 @@
             "Y \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shaker"
@@ -1425,7 +1418,6 @@
             "A \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shot"
@@ -1484,7 +1476,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "fill-shot"
           ],
@@ -1536,7 +1527,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shot-to-clean-shaker"
           ],
@@ -1591,7 +1581,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shot-to-used-shaker"
           ],
@@ -1645,7 +1634,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "refill-shot"
           ],
@@ -1697,7 +1685,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake"
           ],
@@ -1753,7 +1740,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shaker",
             "pour-shot-to-clean-shaker"
@@ -1821,7 +1807,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "fill-shot"
@@ -1889,7 +1874,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "pour-shaker-to-shot"
@@ -1963,7 +1947,6 @@
             "A \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "fill-shot"
@@ -2026,7 +2009,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shaker-to-shot"
@@ -2094,7 +2076,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shot-to-clean-shaker"
@@ -2162,7 +2143,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shot-to-used-shaker"
@@ -2229,7 +2209,6 @@
             "A \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "refill-shot"
@@ -2294,7 +2273,6 @@
             "B \\== C"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "shake"
@@ -2364,7 +2342,6 @@
             "V8 \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake",
             "pour-shaker-to-shot"
@@ -2446,7 +2423,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shaker",
             "fill-shot",
@@ -2530,7 +2506,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shaker",
             "refill-shot",
@@ -2614,7 +2589,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "clean-shaker",
@@ -2716,7 +2690,6 @@
             "B \\== V11"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "empty-shaker",
             "clean-shaker",
@@ -2821,7 +2794,6 @@
             "B \\== V11"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "empty-shaker",
             "clean-shaker",
@@ -2926,7 +2898,6 @@
             "V10 \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "empty-shot",
             "clean-shaker",
@@ -3026,7 +2997,6 @@
             "V10 \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "empty-shot",
             "clean-shaker",
@@ -3127,7 +3097,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shaker",
@@ -3226,7 +3195,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shaker",
@@ -3325,7 +3293,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shaker",
@@ -3424,7 +3391,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shaker",
@@ -3523,7 +3489,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shaker",
@@ -3622,7 +3587,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "clean-shaker",
@@ -3721,7 +3685,6 @@
             "B \\== V12"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shaker-to-shot",
             "clean-shaker",
@@ -3833,7 +3796,6 @@
             "B \\== V12"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shaker-to-shot",
             "clean-shaker",
@@ -3941,7 +3903,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "barman",
@@ -3994,7 +3955,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "B != Y",
@@ -4071,7 +4031,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4159,7 +4118,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4246,7 +4204,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4334,7 +4291,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "V8 != X",
@@ -4432,7 +4388,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "V8 != V9",
@@ -4531,7 +4486,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4635,7 +4589,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4731,7 +4684,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4835,7 +4787,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -4948,7 +4899,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "V8 != V9",
@@ -5061,7 +5011,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -5174,7 +5123,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "V8 != V9",
@@ -5287,7 +5235,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "V8 != X",
@@ -5395,7 +5342,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -5501,7 +5447,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -5607,7 +5552,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "V8 != X",
@@ -5715,7 +5659,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != B",
@@ -5844,7 +5787,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != B",
@@ -5973,7 +5915,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "V8 != X",
@@ -6094,7 +6035,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -6215,7 +6155,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "V10 != V9",
@@ -6344,7 +6283,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "V10 != V9",
@@ -6473,7 +6411,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "A != Z",
@@ -6594,7 +6531,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "V8 != X",
@@ -6715,7 +6651,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != B",
@@ -6854,7 +6789,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != B",
@@ -6988,7 +6922,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "V10 != V9",
@@ -7127,7 +7060,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != B",
@@ -7266,7 +7198,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "V9 != X",
@@ -7400,7 +7331,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "A != B",
@@ -7534,7 +7464,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "V9 != X",
@@ -7668,7 +7597,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 7, 0, 0)",
           "schema_binding_guards": [
             "V10 != V9",
@@ -7807,7 +7735,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -7953,7 +7880,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "V10 != V11",
@@ -8114,7 +8040,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "V10 != V11",
@@ -8275,7 +8200,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -8421,7 +8345,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "V10 != V11",
@@ -8582,7 +8505,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -8728,7 +8650,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -8874,7 +8795,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 8, 0, 0)",
           "schema_binding_guards": [
             "V10 != V11",
@@ -9035,7 +8955,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -9209,7 +9128,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V10 != X",
@@ -9373,7 +9291,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -9547,7 +9464,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V10 != X",
@@ -9711,7 +9627,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -9885,7 +9800,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -10059,7 +9973,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -10233,7 +10146,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -10407,7 +10319,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V10 != X",
@@ -10571,7 +10482,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -10745,7 +10655,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -10919,7 +10828,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 9, 0, 0)",
           "schema_binding_guards": [
             "V10 != X",
@@ -11083,7 +10991,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -11260,7 +11167,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V12 != V13",
@@ -11447,7 +11353,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -11630,7 +11535,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -11813,7 +11717,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -11994,7 +11897,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -12177,7 +12079,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -12354,7 +12255,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -12535,7 +12435,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -12718,7 +12617,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -12895,7 +12793,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -13078,7 +12975,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -13261,7 +13157,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -13444,7 +13339,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -13621,7 +13515,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -13798,7 +13691,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -13975,7 +13867,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -14152,7 +14043,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -14335,7 +14225,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 10, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -14512,7 +14401,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -14696,7 +14584,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -14886,7 +14773,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -15076,7 +14962,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -15270,7 +15155,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -15454,7 +15338,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -15640,7 +15523,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -15826,7 +15708,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -16016,7 +15897,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -16206,7 +16086,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -16390,7 +16269,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -16580,7 +16458,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -16772,7 +16649,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -16958,7 +16834,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -17148,7 +17023,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -17334,7 +17208,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -17526,7 +17399,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -17712,7 +17584,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -17902,7 +17773,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -18088,7 +17958,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -18280,7 +18149,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -18466,7 +18334,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -18652,7 +18519,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -18842,7 +18708,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -19034,7 +18899,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 11, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -19224,7 +19088,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -19417,7 +19280,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -19616,7 +19478,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -19819,7 +19680,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -20012,7 +19872,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -20210,7 +20069,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -20411,7 +20269,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -20604,7 +20461,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -20797,7 +20653,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -20995,7 +20850,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -21196,7 +21050,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -21395,7 +21248,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -21593,7 +21445,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != V12",
@@ -21791,7 +21642,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -21992,7 +21842,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -22185,7 +22034,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -22378,7 +22226,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -22571,7 +22418,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -22769,7 +22615,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -22967,7 +22812,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -23160,7 +23004,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -23353,7 +23196,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -23551,7 +23393,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -23744,7 +23585,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -23945,7 +23785,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -24143,7 +23982,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -24341,7 +24179,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 12, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -24534,7 +24371,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -24745,7 +24581,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -24953,7 +24788,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -25171,7 +25005,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -25372,7 +25205,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -25573,7 +25405,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -25791,7 +25622,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V12 != V13",
@@ -26009,7 +25839,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -26210,7 +26039,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -26411,7 +26239,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -26629,7 +26456,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V12 != V13",
@@ -26847,7 +26673,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -27055,7 +26880,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -27263,7 +27087,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -27481,7 +27304,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -27689,7 +27511,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -27890,7 +27711,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -28091,7 +27911,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -28292,7 +28111,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -28510,7 +28328,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -28718,7 +28535,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -28919,7 +28735,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -29120,7 +28935,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V11 != X",
@@ -29321,7 +29135,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -29529,7 +29342,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -29730,7 +29542,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "V12 != V13",
@@ -29948,7 +29759,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 13, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -30166,7 +29976,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -30387,7 +30196,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -30603,7 +30411,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -30824,7 +30631,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -31040,7 +30846,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -31261,7 +31066,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -31482,7 +31286,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "B != C",
@@ -31698,7 +31501,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -31919,7 +31721,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -32140,7 +31941,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -32361,7 +32161,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -32577,7 +32376,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -32798,7 +32596,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -33014,7 +32811,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -33235,7 +33031,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -33466,7 +33261,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -33687,7 +33481,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -33903,7 +33696,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 14, 0, 0)",
           "schema_binding_guards": [
             "V12 != X",
@@ -34124,7 +33916,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -34360,7 +34151,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "V13 != X",
@@ -34596,7 +34386,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "V13 != X",
@@ -34832,7 +34621,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "V13 != X",
@@ -35068,7 +34856,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "V13 != X",
@@ -35304,7 +35091,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "precedence": "(1, 15, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -35541,7 +35327,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "empty-shaker"
           ],
@@ -35592,7 +35377,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "empty-shot"
           ],
@@ -35636,7 +35420,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shot-to-clean-shaker"
           ],
@@ -35690,7 +35473,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shot-to-used-shaker"
           ],
@@ -35743,7 +35525,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shaker",
             "pour-shot-to-clean-shaker"
@@ -35810,7 +35591,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "empty-shaker"
@@ -35871,7 +35651,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "empty-shot"
@@ -35927,7 +35706,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shot-to-clean-shaker"
@@ -35992,7 +35770,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shot-to-used-shaker"
@@ -36055,7 +35832,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake",
             "empty-shaker"
@@ -36130,7 +35906,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "leave"
           ],
@@ -36171,7 +35946,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp"
           ],
@@ -36216,7 +35990,6 @@
             "X \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "leave",
             "grasp"
@@ -36272,7 +36045,6 @@
             "Y \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "leave",
             "grasp"
@@ -36326,7 +36098,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "leave"
           ],
@@ -36367,7 +36138,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake"
           ],
@@ -36424,7 +36194,6 @@
             "B \\== C"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "shake"
@@ -36492,7 +36261,6 @@
             "B \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "empty-shaker"
           ],
@@ -36547,7 +36315,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shaker-to-shot"
           ],
@@ -36606,7 +36373,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "pour-shaker-to-shot"
@@ -36681,7 +36447,6 @@
             "B \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "empty-shaker"
@@ -36746,7 +36511,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shaker-to-shot"
@@ -36815,7 +36579,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shaker-to-shot",
             "empty-shot"
@@ -36908,7 +36671,6 @@
             "B \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake",
             "empty-shaker"
@@ -36989,7 +36751,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake",
             "pour-shaker-to-shot"
@@ -37074,7 +36835,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "pour-shaker-to-shot",
@@ -37182,7 +36942,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shaker-to-shot",
@@ -37287,7 +37046,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake",
             "pour-shaker-to-shot",
@@ -37406,7 +37164,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "fill-shot"
           ],
@@ -37458,7 +37215,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shaker-to-shot"
           ],
@@ -37516,7 +37272,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "fill-shot"
@@ -37587,7 +37342,6 @@
             "D \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "pour-shaker-to-shot"
@@ -37660,7 +37414,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "fill-shot",
             "empty-shot"
@@ -37745,7 +37498,6 @@
             "A \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "fill-shot"
@@ -37808,7 +37560,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shaker-to-shot"
@@ -37874,7 +37625,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "pour-shaker-to-shot",
             "empty-shot"
@@ -37965,7 +37715,6 @@
             "V8 \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake",
             "pour-shaker-to-shot"
@@ -38049,7 +37798,6 @@
             "C \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "fill-shot",
@@ -38153,7 +37901,6 @@
             "D \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "clean-shot",
             "pour-shaker-to-shot",
@@ -38261,7 +38008,6 @@
             "A \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "fill-shot",
@@ -38357,7 +38103,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "grasp",
             "pour-shaker-to-shot",
@@ -38458,7 +38203,6 @@
             "V8 \\== Y"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "producer_actions": [
             "shake",
             "pour-shaker-to-shot",
@@ -38579,7 +38323,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -38627,7 +38370,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -38675,7 +38417,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -38723,7 +38464,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -38786,7 +38526,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -38876,7 +38615,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -38951,7 +38689,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39002,7 +38739,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39053,7 +38789,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39113,7 +38848,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39188,7 +38922,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39264,7 +38997,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39340,7 +39072,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39417,7 +39148,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39493,7 +39223,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39577,7 +39306,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39664,7 +39392,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39754,7 +39481,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39829,7 +39555,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39880,7 +39605,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39931,7 +39655,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -39991,7 +39714,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40066,7 +39788,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40142,7 +39863,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40218,7 +39938,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40295,7 +40014,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40371,7 +40089,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40455,7 +40172,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40536,7 +40252,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40611,7 +40326,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40687,7 +40401,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40762,7 +40475,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40838,7 +40550,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -40922,7 +40633,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41004,7 +40714,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41076,7 +40785,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41146,7 +40854,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41221,7 +40928,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41293,7 +40999,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41364,7 +41069,6 @@
               "contains(Z, V10)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41443,7 +41147,6 @@
               "used(Z, V9)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41521,7 +41224,6 @@
               "ontable(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41598,7 +41300,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41683,7 +41384,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41765,7 +41465,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41841,7 +41540,6 @@
               "contains(Z, V10)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41919,7 +41617,6 @@
               "ontable(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -41996,7 +41693,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42081,7 +41777,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42163,7 +41858,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42239,7 +41933,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42316,7 +42009,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42395,7 +42087,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42473,7 +42164,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42550,7 +42240,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42635,7 +42324,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42717,7 +42405,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42793,7 +42480,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42870,7 +42556,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -42948,7 +42633,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43025,7 +42709,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43110,7 +42793,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43190,7 +42872,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43250,7 +42931,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43301,7 +42981,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43352,7 +43031,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43409,7 +43087,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43478,7 +43155,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43553,7 +43229,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43627,7 +43302,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43702,7 +43376,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43771,7 +43444,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43836,7 +43508,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43904,7 +43575,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -43972,7 +43642,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44036,7 +43705,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44094,7 +43762,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44163,7 +43830,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44236,7 +43902,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44315,7 +43980,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44386,7 +44050,6 @@
               "holding(A, Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44453,7 +44116,6 @@
               "ontable(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44519,7 +44181,6 @@
               "holding(A, Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44590,7 +44251,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44661,7 +44321,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44726,7 +44385,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44797,7 +44455,6 @@
               "contains(Z, V10)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44876,7 +44533,6 @@
               "used(Z, V9)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -44954,7 +44610,6 @@
               "ontable(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45028,7 +44683,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45104,7 +44758,6 @@
               "contains(Z, V10)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45182,7 +44835,6 @@
               "ontable(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45252,7 +44904,6 @@
               "holding(A, Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45317,7 +44968,6 @@
               "ontable(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45389,7 +45039,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45475,7 +45124,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45560,7 +45208,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45630,7 +45277,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45681,7 +45327,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45732,7 +45377,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45793,7 +45437,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45869,7 +45512,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -45946,7 +45588,6 @@
               "handempty(D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46023,7 +45664,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46101,7 +45741,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46178,7 +45817,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46263,7 +45901,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "used",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46342,7 +45979,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46406,7 +46042,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46473,7 +46108,6 @@
               "shaker-empty-level(X, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46549,7 +46183,6 @@
               "shaker-empty-level(X, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46615,7 +46248,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46663,7 +46295,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46711,7 +46342,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46765,7 +46395,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46830,7 +46459,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46894,7 +46522,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -46959,7 +46586,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47022,7 +46648,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47084,7 +46709,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47146,7 +46770,6 @@
               "next(B, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47202,7 +46825,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47253,7 +46875,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47310,7 +46931,6 @@
               "unshaked(X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47374,7 +46994,6 @@
               "unshaked(X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47437,7 +47056,6 @@
               "unshaked(X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47501,7 +47119,6 @@
               "unshaked(X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47558,7 +47175,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47606,7 +47222,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47662,7 +47277,6 @@
               "holding(B, A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47733,7 +47347,6 @@
               "handempty(B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47809,7 +47422,6 @@
               "holding(B, A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47890,7 +47502,6 @@
               "shaker-empty-level(X, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -47968,7 +47579,6 @@
               "shaker-empty-level(X, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48049,7 +47659,6 @@
               "clean(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48134,7 +47743,6 @@
               "clean(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48214,7 +47822,6 @@
               "holding(B, A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48285,7 +47892,6 @@
               "handempty(B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48361,7 +47967,6 @@
               "holding(B, A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48440,7 +48045,6 @@
               "next(Y, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48513,7 +48117,6 @@
               "clean(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48584,7 +48187,6 @@
               "next(Y, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48656,7 +48258,6 @@
               "next(Y, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48733,7 +48334,6 @@
               "next(Y, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48814,7 +48414,6 @@
               "next(Y, C)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48888,7 +48487,6 @@
               "clean(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -48964,7 +48562,6 @@
               "clean(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49045,7 +48642,6 @@
               "used(A, D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49111,7 +48707,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49162,7 +48757,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49213,7 +48807,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49264,7 +48857,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49315,7 +48907,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "clean",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49379,7 +48970,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49464,7 +49054,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49544,7 +49133,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49616,7 +49204,6 @@
               "handempty(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49693,7 +49280,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49773,7 +49359,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "contains",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49838,7 +49423,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49889,7 +49473,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -49949,7 +49532,6 @@
               "shaked(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "handempty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50020,7 +49602,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50096,7 +49677,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50177,7 +49757,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50251,7 +49830,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50323,7 +49901,6 @@
               "shaked(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50400,7 +49977,6 @@
               "unshaked(A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50481,7 +50057,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "holding",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50556,7 +50131,6 @@
               "handempty(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50619,7 +50193,6 @@
             "dynamic_sibling_projection": false,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "ontable",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50678,7 +50251,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50749,7 +50321,6 @@
               "handempty(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50820,7 +50391,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50892,7 +50462,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -50964,7 +50533,6 @@
               "handempty(Z)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -51041,7 +50609,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -51121,7 +50688,6 @@
               "next(C, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "shaker-level",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -51199,7 +50765,6 @@
               "holding(Z, X)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/barman/barman.model.readable",
           "prepared_predicate": "unshaked",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",

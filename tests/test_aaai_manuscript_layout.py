@@ -233,7 +233,7 @@ def test_manuscript_explains_witness_backed_teg_benchmark_construction() -> None
 		"\\path{src/temporal_input/nl_benchmark.py}",
 		"\\path{src/temporal_input/translation_worklist.py}",
 		"semantic-signature use",
-		"spelling-independent SHA-256",
+		"spelling-independent deterministic tie-break",
 		"No classical or generalized planner is called",
 	):
 		assert required_supplement_contract in supplement_source

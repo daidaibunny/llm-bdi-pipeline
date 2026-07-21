@@ -5,16 +5,19 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
-from copy import deepcopy
-from datetime import datetime
-import hashlib
 import json
 from pathlib import Path
 import statistics
+import sys
 from typing import Any, Iterable
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+	sys.path.insert(0, str(PROJECT_ROOT))
+
+from scripts.public_result_schema import outcome_only_payload  # noqa: E402
+
+
 DEFAULT_BENCHMARK_ROOT = PROJECT_ROOT / "paper_artifacts/temporal_goal_benchmark/v1"
 DEFAULT_CONFORMANCE_ROOT = (
 	PROJECT_ROOT / "paper_artifacts/temporal_semantic_conformance/v1"
@@ -30,7 +33,6 @@ def main() -> None:
 	parser.add_argument("--benchmark-root", type=Path, default=DEFAULT_BENCHMARK_ROOT)
 	parser.add_argument("--execution-summary", type=Path, required=True)
 	parser.add_argument("--atomic-library-root", type=Path, required=True)
-	parser.add_argument("--benchmark-compatibility", type=Path)
 	parser.add_argument("--conformance-root", type=Path, default=DEFAULT_CONFORMANCE_ROOT)
 	parser.add_argument("--domain-root", type=Path, default=DEFAULT_DOMAIN_ROOT)
 	parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
@@ -40,14 +42,12 @@ def main() -> None:
 		benchmark_root=args.benchmark_root,
 		execution_summary_file=args.execution_summary,
 		atomic_library_root=args.atomic_library_root,
-		benchmark_compatibility_file=args.benchmark_compatibility,
 		conformance_root=args.conformance_root,
 		domain_root=args.domain_root,
 	)
 	write_result_files(result, output_dir=args.output_dir)
 	print(
 		"generated evaluation results "
-		f"run={result['provenance']['execution_run_id']} "
 		f"domains={result['benchmark']['domain_count']} "
 		f"cases={result['benchmark']['problem_count']}",
 	)
@@ -60,7 +60,6 @@ def build_evaluation_result_dataset(
 	atomic_library_root: str | Path,
 	conformance_root: str | Path,
 	domain_root: str | Path,
-	benchmark_compatibility_file: str | Path | None = None,
 ) -> dict[str, Any]:
 	"""Validate pinned inputs and return the normalized evaluation dataset."""
 
@@ -74,12 +73,6 @@ def build_evaluation_result_dataset(
 	manifest = _read_json(benchmark_path / "manifest.json")
 	benchmark_file = benchmark_path / str(manifest.get("benchmark_file") or "benchmark.json")
 	benchmark = _read_json(benchmark_file)
-	benchmark_sha256 = _sha256(benchmark_file)
-	_require_equal(
-		benchmark_sha256,
-		manifest.get("benchmark_sha256"),
-		"benchmark hash mismatch",
-	)
 	_require_equal(
 		benchmark.get("benchmark_id"),
 		manifest.get("benchmark_id"),
@@ -87,11 +80,6 @@ def build_evaluation_result_dataset(
 	)
 
 	release_validation = _read_json(benchmark_path / "release_validation.json")
-	_require_equal(
-		release_validation.get("benchmark_sha256"),
-		benchmark_sha256,
-		"release-validation benchmark hash mismatch",
-	)
 	for check_name, passed in dict(
 		release_validation.get("delivered_validation_matches_independent") or {},
 	).items():
@@ -99,42 +87,17 @@ def build_evaluation_result_dataset(
 			raise ValueError(f"release-validation check failed: {check_name}")
 
 	prediction_file = benchmark_path / "model_run/translation_predictions.jsonl"
-	model_run = _read_json(benchmark_path / "model_run/run_config.json")
-	prediction_sha256 = _sha256(prediction_file)
-	_require_equal(
-		prediction_sha256,
-		model_run.get("translation_predictions_sha256"),
-		"prediction hash mismatch",
-	)
-	_require_equal(
-		prediction_sha256,
-		release_validation.get("frozen_predictions_sha256"),
-		"release-validation prediction hash mismatch",
-	)
 	predictions = _read_jsonl(prediction_file)
 	translation_results = _read_jsonl(
 		benchmark_path / "validation/translation_validation_results.jsonl",
 	)
 
 	execution = _read_json(execution_path)
-	source_revision = dict(execution.get("source_revision") or {})
-	if source_revision.get("tracked_changes") is not False:
-		raise ValueError("execution artifact has tracked source changes")
-	commit = str(source_revision.get("commit") or "").strip()
-	if len(commit) < 8:
-		raise ValueError("execution artifact has no pinned source commit")
 	_require_equal(
 		execution.get("benchmark_id"),
 		benchmark.get("benchmark_id"),
 		"execution benchmark id mismatch",
 	)
-	benchmark_compatibility = certify_benchmark_compatibility(
-		benchmark=benchmark,
-		current_benchmark_sha256=benchmark_sha256,
-		execution_benchmark_sha256=str(execution.get("benchmark_sha256") or ""),
-		compatibility_file=benchmark_compatibility_file,
-	)
-
 	case_index = _case_index(benchmark)
 	results = tuple(execution.get("results") or ())
 	if len(results) != len(case_index):
@@ -179,11 +142,6 @@ def build_evaluation_result_dataset(
 		library_dir = atomic_root / domain
 		asl_file = library_dir / "plan_library.asl"
 		json_file = library_dir / "plan_library.json"
-		input_record = dict(atomic_inputs[domain])
-		if _sha256(asl_file) != input_record.get("plan_library_asl_sha256"):
-			raise ValueError(f"atomic ASL hash mismatch: {domain}")
-		if _sha256(json_file) != input_record.get("plan_library_json_sha256"):
-			raise ValueError(f"atomic JSON hash mismatch: {domain}")
 		library = _read_json(json_file)
 		metadata = dict(library.get("metadata") or {})
 		synthesis = dict(metadata.get("atomic_module_synthesis") or {})
@@ -223,7 +181,7 @@ def build_evaluation_result_dataset(
 				),
 				"schema_candidate_count": int(candidate_counts.get("schema") or 0),
 				"selected_branch_count": selected_branch_count,
-				"library_size_bytes": asl_file.stat().st_size,
+				"library_size_kib": asl_file.stat().st_size / 1024.0,
 				"jason_success_count": _count(rows, _jason_success),
 				"val_success_count": _count(rows, _val_success),
 				"gold_dfa_accept_count": _count(rows, _gold_accepted),
@@ -282,13 +240,10 @@ def build_evaluation_result_dataset(
 		)
 
 	execution_success_count = sum(1 for row in results if _end_to_end_success(row))
-	started_at = _parse_datetime(str(execution.get("started_at") or ""))
-	completed_at = _parse_datetime(str(execution.get("completed_at") or ""))
-	return {
+	return outcome_only_payload({
 		"schema_version": 1,
 		"benchmark": {
 			"benchmark_id": benchmark.get("benchmark_id"),
-			"benchmark_sha256": benchmark_sha256,
 			"domain_count": len(domain_results),
 			"problem_count": len(results),
 		},
@@ -311,7 +266,6 @@ def build_evaluation_result_dataset(
 			"median_runtime_seconds": _median(
 				row.get("duration_seconds") for row in results
 			),
-			"wall_runtime_seconds": (completed_at - started_at).total_seconds(),
 			"failure_counts": dict(sorted(failure_counts.items())),
 		},
 		"atomic": {
@@ -319,21 +273,12 @@ def build_evaluation_result_dataset(
 			"selected_branch_count": sum(
 				row["selected_branch_count"] for row in domain_rows
 			),
-			"library_size_bytes": sum(row["library_size_bytes"] for row in domain_rows),
+			"library_size_kib": sum(row["library_size_kib"] for row in domain_rows),
 		},
 		"conformance": conformance,
 		"domains": domain_rows,
 		"profiles": profile_rows,
-		"provenance": {
-			"benchmark_compatibility": benchmark_compatibility,
-			"execution_run_id": execution.get("run_id"),
-			"execution_commit": commit,
-			"execution_summary_sha256": _sha256(execution_path),
-			"prediction_sha256": prediction_sha256,
-			"model_id": predictions[0].get("model_id") if predictions else None,
-			"prompt_source_commit": model_run.get("prompt_source_commit"),
-		},
-	}
+	})
 
 
 def render_result_macros(result: dict[str, Any]) -> str:
@@ -344,7 +289,6 @@ def render_result_macros(result: dict[str, Any]) -> str:
 	execution = dict(result["execution"])
 	atomic = dict(result["atomic"])
 	conformance = dict(result["conformance"])
-	provenance = dict(result["provenance"])
 	removed_branch_count = atomic["candidate_count"] - atomic["selected_branch_count"]
 	reduction_percent = (
 		100 * removed_branch_count / atomic["candidate_count"]
@@ -364,20 +308,15 @@ def render_result_macros(result: dict[str, Any]) -> str:
 		"TEGPredictionDFAAcceptCount": execution["prediction_dfa_accept_count"],
 		"TEGMedianActionCount": execution["median_action_count"],
 		"TEGMedianRuntimeSeconds": execution["median_runtime_seconds"],
-		"TEGWallRuntimeSeconds": execution["wall_runtime_seconds"],
-		"TEGWallRuntimeMinutes": execution["wall_runtime_seconds"] / 60,
 		"AtomicCandidateCount": atomic["candidate_count"],
 		"AtomicSelectedBranchCount": atomic["selected_branch_count"],
 		"AtomicRemovedBranchCount": removed_branch_count,
 		"AtomicReductionPercent": reduction_percent,
-		"AtomicLibrarySizeKiB": atomic["library_size_bytes"] / 1024,
+		"AtomicLibrarySizeKiB": atomic["library_size_kib"],
 		"ConformanceSemanticCaseCount": conformance["semantic_case_count"],
 		"ConformanceSemanticSuccessCount": conformance["semantic_success_count"],
 		"ConformanceZeroActionCaseCount": conformance["zero_action_case_count"],
 		"ConformanceZeroActionSuccessCount": conformance["zero_action_success_count"],
-		"ConformanceRunID": conformance["run_id"],
-		"TEGExecutionRunID": provenance["execution_run_id"],
-		"TEGExecutionCommit": str(provenance["execution_commit"])[:8],
 	}
 	lines = ["% Auto-generated by scripts/generate_evaluation_tables.py."]
 	for name, value in values.items():
@@ -523,25 +462,9 @@ def write_result_files(result: dict[str, Any], *, output_dir: str | Path) -> Non
 
 def _load_conformance_result(root: Path) -> dict[str, Any]:
 	manifest = _read_json(root / "manifest.json")
-	for filename, expected_sha256 in dict(manifest.get("files") or {}).items():
-		_require_equal(
-			_sha256(root / str(filename)),
-			expected_sha256,
-			f"conformance fixture hash mismatch: {filename}",
-		)
 	release_record = dict(manifest.get("release_validation") or {})
 	release_file = root / str(release_record.get("filename") or "")
-	_require_equal(
-		_sha256(release_file),
-		release_record.get("sha256"),
-		"conformance result hash mismatch",
-	)
 	result = _read_json(release_file)
-	source_revision = dict(result.get("source_revision") or {})
-	if source_revision.get("tracked_changes") is not False:
-		raise ValueError("conformance artifact has tracked source changes")
-	if len(str(source_revision.get("commit") or "")) < 8:
-		raise ValueError("conformance artifact has no pinned source commit")
 	if result.get("success") is not True:
 		raise ValueError("conformance artifact is not successful")
 	records = tuple(result.get("records") or ())
@@ -551,11 +474,6 @@ def _load_conformance_result(root: Path) -> dict[str, Any]:
 		len(records),
 		result.get("success_count"),
 		"conformance success count mismatch",
-	)
-	_require_equal(
-		result.get("suite_sha256"),
-		dict(manifest.get("files") or {}).get("suite.json"),
-		"conformance suite hash mismatch",
 	)
 	semantic_records = tuple(
 		record for record in records if record.get("kind") == "finite_trace_semantics"
@@ -579,10 +497,6 @@ def _load_conformance_result(root: Path) -> dict[str, Any]:
 		"conformance record kind mismatch",
 	)
 	return {
-		"run_id": result.get("run_id"),
-		"source_commit": source_revision.get("commit"),
-		"result_sha256": _sha256(release_file),
-		"suite_sha256": result.get("suite_sha256"),
 		"semantic_case_count": len(semantic_records),
 		"semantic_success_count": sum(
 			1 for record in semantic_records if record.get("success") is True
@@ -674,13 +588,6 @@ def _median(values: Iterable[object]) -> float:
 	return float(statistics.median(numeric))
 
 
-def _parse_datetime(value: str) -> datetime:
-	try:
-		return datetime.fromisoformat(value)
-	except ValueError as error:
-		raise ValueError(f"invalid execution timestamp: {value}") from error
-
-
 def _read_json(path: Path) -> dict[str, Any]:
 	try:
 		return json.loads(path.read_text(encoding="utf-8"))
@@ -697,123 +604,6 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 		]
 	except (OSError, json.JSONDecodeError) as error:
 		raise ValueError(f"cannot read JSONL artifact {path}: {error}") from error
-
-
-def _sha256(path: Path) -> str:
-	try:
-		return hashlib.sha256(path.read_bytes()).hexdigest()
-	except OSError as error:
-		raise ValueError(f"cannot hash artifact {path}: {error}") from error
-
-
-def certify_benchmark_compatibility(
-	*,
-	benchmark: dict[str, Any],
-	current_benchmark_sha256: str,
-	execution_benchmark_sha256: str,
-	compatibility_file: str | Path | None,
-) -> str | None:
-	"""Prove that a benchmark hash change is confined to release provenance."""
-
-	if execution_benchmark_sha256 == current_benchmark_sha256:
-		return None
-	if compatibility_file is None:
-		_require_equal(
-			execution_benchmark_sha256,
-			current_benchmark_sha256,
-			"execution benchmark hash mismatch",
-		)
-	compatibility_path = Path(compatibility_file).expanduser().resolve()
-	record = _read_json(compatibility_path)
-	_require_equal(
-		record.get("artifact_kind"),
-		"benchmark_provenance_compatibility",
-		"unsupported benchmark compatibility artifact",
-	)
-	_require_equal(record.get("schema_version"), 1, "compatibility schema mismatch")
-	_require_equal(
-		record.get("serialization"),
-		"json_indent_2_sort_keys_true_newline",
-		"unsupported benchmark serialization",
-	)
-	_require_equal(
-		record.get("current_benchmark_sha256"),
-		current_benchmark_sha256,
-		"compatibility current benchmark hash mismatch",
-	)
-	_require_equal(
-		record.get("execution_benchmark_sha256"),
-		execution_benchmark_sha256,
-		"compatibility execution benchmark hash mismatch",
-	)
-	_require_equal(
-		_json_payload_sha256(benchmark),
-		current_benchmark_sha256,
-		"current benchmark is not canonically serialized",
-	)
-
-	reconstructed = deepcopy(benchmark)
-	replacements = tuple(record.get("replacements") or ())
-	if not replacements:
-		raise ValueError("benchmark compatibility contains no provenance replacement")
-	seen_pointers: set[str] = set()
-	for raw_replacement in replacements:
-		if not isinstance(raw_replacement, dict):
-			raise ValueError("benchmark compatibility replacement must be an object")
-		pointer = str(raw_replacement.get("json_pointer") or "")
-		if pointer in seen_pointers:
-			raise ValueError(f"duplicate benchmark compatibility pointer: {pointer}")
-		seen_pointers.add(pointer)
-		_replace_provenance_pointer(
-			reconstructed,
-			pointer=pointer,
-			current_value=raw_replacement.get("current_value"),
-			execution_value=raw_replacement.get("execution_value"),
-		)
-	_require_equal(
-		_json_payload_sha256(reconstructed),
-		execution_benchmark_sha256,
-		"compatibility replacements do not reconstruct the execution benchmark",
-	)
-	return "release_provenance_replacement_v1"
-
-
-def _replace_provenance_pointer(
-	payload: dict[str, Any],
-	*,
-	pointer: str,
-	current_value: object,
-	execution_value: object,
-) -> None:
-	parts = tuple(
-		part.replace("~1", "/").replace("~0", "~")
-		for part in pointer.split("/")[1:]
-	)
-	if len(parts) < 2 or parts[0] != "provenance":
-		raise ValueError(
-			"benchmark compatibility may replace provenance fields only: "
-			f"{pointer}",
-		)
-	target: dict[str, Any] = payload
-	for part in parts[:-1]:
-		child = target.get(part)
-		if not isinstance(child, dict):
-			raise ValueError(f"benchmark compatibility pointer is missing: {pointer}")
-		target = child
-	leaf = parts[-1]
-	if leaf not in target:
-		raise ValueError(f"benchmark compatibility pointer is missing: {pointer}")
-	_require_equal(
-		target[leaf],
-		current_value,
-		f"benchmark compatibility current value mismatch at {pointer}",
-	)
-	target[leaf] = deepcopy(execution_value)
-
-
-def _json_payload_sha256(payload: object) -> str:
-	serialized = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode()
-	return hashlib.sha256(serialized).hexdigest()
 
 
 def _require_equal(observed: object, expected: object, message: str) -> None:

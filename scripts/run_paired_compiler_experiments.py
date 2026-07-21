@@ -39,7 +39,6 @@ from evaluation.external_reference_planners import (  # noqa: E402
 from evaluation.external_reference_planners import (  # noqa: E402
 	reference_methods_for_domain,
 )
-from scripts.run_full_test_jason_validation import source_revision_metadata  # noqa: E402
 from scripts.run_external_planning_references import (  # noqa: E402
 	model_batch_manifest_metadata,
 )
@@ -138,7 +137,6 @@ def validate_resume_manifest(
 	"""Require an interrupted paired run to retain its exact registered contract."""
 
 	immutable_keys = (
-		"source_revision",
 		"domains",
 		"registered_seeds",
 		"case_contract",
@@ -159,20 +157,12 @@ def validate_resume_manifest(
 
 def registered_run_summary_complete(
 	run: RegisteredRun,
-	*,
-	expected_revision: Mapping[str, Any],
 ) -> bool:
-	"""Return whether a child summary is complete and from the registered revision."""
+	"""Return whether a child summary contains its complete registered outcome."""
 
 	if run.stage == "Evidence" or not run.summary_file.is_file():
 		return False
 	payload = _read_json(run.summary_file)
-	child_revision = dict(payload.get("source_revision") or {})
-	if child_revision != dict(expected_revision):
-		raise ValueError(
-			f"completed child {run.run_id} has source revision {child_revision!r}, "
-			f"expected {dict(expected_revision)!r}",
-		)
 	if run.stage in {"Atomic", "Temporal"}:
 		return bool(payload.get("completed_at"))
 	case_count = int(payload.get("case_count") or 0)
@@ -947,7 +937,6 @@ def _normalize_temporal_summary(
 	return {
 		"variant": variant.value,
 		"method": variant.display_name,
-		"source_revision": dict(summary.get("source_revision") or {}),
 		"parameters": parameters,
 		"benchmark_sha256": summary.get("benchmark_sha256"),
 		"atomic_library_inputs": dict(summary.get("atomic_library_inputs") or {}),
@@ -1007,7 +996,7 @@ def _parse_args() -> argparse.Namespace:
 		action="store_true",
 		help=(
 			"Resume the same registered matrix. Completed child runs are reused only "
-			"when the immutable manifest and source revision match exactly."
+			"when the registered semantic manifest matches exactly."
 		),
 	)
 	parser.add_argument("--dry-run", action="store_true")
@@ -1174,7 +1163,6 @@ def main() -> int:
 				summary_file=challenge_output_root / child_id / "summary.json",
 			),
 		)
-	current_revision = source_revision_metadata(project_root)
 	manifest = {
 		"schema_version": 1,
 		"artifact_kind": "paired_compiler_experiment_matrix",
@@ -1189,7 +1177,6 @@ def main() -> int:
 			if previous_manifest is not None
 			else None
 		),
-		"source_revision": current_revision,
 		"domains": list(domains),
 		"registered_seeds": list(REGISTERED_SEEDS),
 		"case_contract": case_contract,
@@ -1259,7 +1246,6 @@ def main() -> int:
 			continue
 		reused = args.resume and registered_run_summary_complete(
 			run,
-			expected_revision=current_revision,
 		)
 		if reused:
 			print(

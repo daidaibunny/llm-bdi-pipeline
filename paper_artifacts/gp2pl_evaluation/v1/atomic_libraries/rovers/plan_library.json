@@ -629,7 +629,6 @@
       ]
     },
     "evidence_module": {
-      "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
       "representation": "moose_readable_first_order_decision_list",
       "rule_count": 90,
       "source_name": "rovers",
@@ -658,7 +657,6 @@
       "validated_policy_rule_plan_count": 90
     },
     "pddl_support": {
-      "domain_file": "src/domains/rovers/domain.pddl",
       "fragment_assumptions": [
         "classical finite-domain PDDL files parsed before lifted ASL synthesis",
         "positive conjunctive predicate achievement goals only",
@@ -692,7 +690,6 @@
       "logical_numeric_functions": [],
       "metric_only_numeric_functions": [],
       "numeric_functions": [],
-      "problem_files": [],
       "requirements": [
         ":strips",
         ":typing"
@@ -717,7 +714,6 @@
       "unsupported_reasons": [],
       "unsupported_requirements": []
     },
-    "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
     "source_name": "rovers",
     "source_numeric_goal_functions": [],
     "source_raw_rule_count": 90,
@@ -991,7 +987,6 @@
             "Y \\== Z"
           ],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "navigate"
           ],
@@ -1036,7 +1031,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "calibrate"
           ],
@@ -1086,7 +1080,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "communicate_image_data"
           ],
@@ -1138,7 +1131,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -1204,7 +1196,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "B != C"
@@ -1267,7 +1258,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "B != C"
@@ -1329,7 +1319,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -1405,7 +1394,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -1484,7 +1472,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -1562,7 +1549,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -1640,7 +1626,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -1719,7 +1704,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -1797,7 +1781,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -1887,7 +1870,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -1980,7 +1962,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -2069,7 +2050,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -2160,7 +2140,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -2248,7 +2227,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -2335,7 +2313,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -2423,7 +2400,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -2515,7 +2491,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -2604,7 +2579,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -2694,7 +2668,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -2785,7 +2758,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -2876,7 +2848,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -2965,7 +2936,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -3053,7 +3023,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -3143,7 +3112,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -3233,7 +3201,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -3338,7 +3305,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -3443,7 +3409,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -3540,7 +3505,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -3644,7 +3608,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -3743,7 +3706,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -3842,7 +3804,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -3947,7 +3908,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -4046,7 +4006,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -4146,7 +4105,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -4249,7 +4207,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -4353,7 +4310,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -4457,7 +4413,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -4557,7 +4512,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -4661,7 +4615,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "C != D",
@@ -4763,7 +4716,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -4863,7 +4815,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "C != D"
@@ -4961,7 +4912,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "D != V7"
@@ -5069,7 +5019,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -5182,7 +5131,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -5296,7 +5244,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -5416,7 +5363,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 6, 0, 0)",
           "schema_binding_guards": [
             "D != V7",
@@ -5530,7 +5476,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -5576,7 +5521,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -5622,7 +5566,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -5669,7 +5612,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -5728,7 +5670,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "A != X"
@@ -5787,7 +5728,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "A != X"
@@ -5845,7 +5785,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -5912,7 +5851,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -5984,7 +5922,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6055,7 +5992,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6127,7 +6063,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6198,7 +6133,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -6284,7 +6218,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6364,7 +6297,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6444,7 +6376,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -6529,7 +6460,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -6614,7 +6544,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6695,7 +6624,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6783,7 +6711,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -6872,7 +6799,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -6966,7 +6892,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -7059,7 +6984,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -7106,7 +7030,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -7152,7 +7075,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 1, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -7198,7 +7120,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "A != X"
@@ -7257,7 +7178,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -7316,7 +7236,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 2, 0, 0)",
           "schema_binding_guards": [
             "A != X"
@@ -7374,7 +7293,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -7445,7 +7363,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [],
           "source_name": "rovers",
@@ -7512,7 +7429,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -7584,7 +7500,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -7656,7 +7571,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 3, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -7727,7 +7641,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -7808,7 +7721,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -7894,7 +7806,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -7974,7 +7885,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -8059,7 +7969,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -8144,7 +8053,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 4, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -8224,7 +8132,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -8313,7 +8220,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X"
@@ -8401,7 +8307,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -8495,7 +8400,6 @@
         {
           "alias_guard_basis": "pddl_schema_symbolic_execution_only",
           "artifact_family": "validated_policy_lifting_macro_rule",
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "precedence": "(1, 5, 0, 0)",
           "schema_binding_guards": [
             "B != X",
@@ -8589,7 +8493,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "drop"
           ],
@@ -8631,7 +8534,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "sample_rock"
           ],
@@ -8678,7 +8580,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "sample_soil"
           ],
@@ -8725,7 +8626,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "take_image"
           ],
@@ -8779,7 +8679,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "sample_rock"
           ],
@@ -8827,7 +8726,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "drop",
             "sample_rock"
@@ -8886,7 +8784,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "sample_soil"
           ],
@@ -8934,7 +8831,6 @@
           "artifact_family": "atomic_minimal_literal_module",
           "guard_contexts": [],
           "numeric_contexts": [],
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "producer_actions": [
             "drop",
             "sample_soil"
@@ -9002,7 +8898,6 @@
               "on_board(X, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9068,7 +8963,6 @@
               "visible_from(X, V7)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "have_image",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9140,7 +9034,6 @@
               "visible_from(X, V7)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9209,7 +9102,6 @@
               "store_of(D, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "have_rock_analysis",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9273,7 +9165,6 @@
               "store_of(D, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9337,7 +9228,6 @@
               "store_of(D, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "have_soil_analysis",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9401,7 +9291,6 @@
               "store_of(D, Y)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9465,7 +9354,6 @@
               "store_of(X, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9527,7 +9415,6 @@
               "store_of(X, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9590,7 +9477,6 @@
               "visible_from(C, D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "calibrated",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9660,7 +9546,6 @@
               "visible_from(C, D)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9723,7 +9608,6 @@
             "dynamic_sibling_projection": true,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9781,7 +9665,6 @@
               "store_of(Z, A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "full",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9845,7 +9728,6 @@
               "store_of(Z, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9902,7 +9784,6 @@
             "dynamic_sibling_projection": true,
             "retained_positive_context": []
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "at",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -9960,7 +9841,6 @@
               "store_of(Z, A)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "full",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
@@ -10024,7 +9904,6 @@
               "store_of(Z, B)"
             ]
           },
-          "policy_file": "artifacts/moose_asl_batches/full-val-20260712-190917/run_logs/rovers/rovers.model.readable",
           "prepared_predicate": "empty",
           "recursive_progress_certificate": null,
           "rule_kind": "prepare_public_precondition",
