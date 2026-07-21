@@ -837,6 +837,7 @@ def _guard_transition_wrapper_plans(
 	"""Compile every DFA progress edge into one query-local transition helper."""
 
 	entry_proposition = _query_entry_proposition(goal_name)
+	accepting_state_names = {str(state) for state in accepting_states}
 	transition_names = tuple(
 		f"{goal_name}_trans_{index}"
 		for index in range(1, len(tuple(transition_path)) + 1)
@@ -921,6 +922,10 @@ def _guard_transition_wrapper_plans(
 					plan_library=plan_library,
 					domain=domain,
 					helper_prefix=transition_name,
+					allow_complete_guard_dominance=(
+						str(transition.get("target_state") or "")
+						in accepting_state_names
+					),
 				)
 				if settings.certified_serialization
 				else _canonical_unprotected_literal_serialization(
@@ -1141,6 +1146,149 @@ def _canonical_unprotected_literal_serialization(
 	)
 
 
+def _certified_negative_guard_establishment_alias_plans(
+	literals: Sequence[DFALiteral],
+	*,
+	negative_literals: Sequence[DFALiteral],
+	plan_library: PlanLibrary,
+	domain: PDDLDomain,
+	helper_prefix: str,
+	allow_complete_guard_dominance: bool,
+) -> tuple[
+	tuple[AgentSpeakPlan, ...],
+	Mapping[int, tuple[str, tuple[str, ...]]],
+	Mapping[str, object],
+]:
+	"""Prefer accepting whole-guard actions without removing partial fallbacks."""
+
+	literal_tuple = tuple(literals)
+	negative_tuple = tuple(negative_literals)
+	aliases, helper_by_negative_index, certificate = (
+		negative_guard_establishment_alias_plans(
+			tuple((literal.predicate, literal.arguments) for literal in literal_tuple),
+			negative_literals=tuple(
+				(literal.predicate, literal.arguments) for literal in negative_tuple
+			),
+			plan_library=plan_library,
+			domain=domain,
+			helper_prefix=helper_prefix,
+		)
+	)
+	whole_guard = _single_action_whole_guard_plans(
+		literal_tuple,
+		negative_literals=negative_tuple,
+		domain=domain,
+		helper_prefix=helper_prefix,
+	) if allow_complete_guard_dominance else None
+	if whole_guard is None or not negative_tuple:
+		return aliases, helper_by_negative_index, certificate
+	whole_guard_aliases = whole_guard[2]
+	if not whole_guard_aliases:
+		return aliases, helper_by_negative_index, certificate
+
+	query_arguments = tuple(
+		dict.fromkeys(
+			argument
+			for literal in (*literal_tuple, *negative_tuple)
+			for argument in literal.arguments
+			if _is_agentspeak_variable(argument)
+		)
+	)
+	helper_mapping = dict(helper_by_negative_index)
+	normal_by_helper: dict[
+		tuple[str, tuple[str, ...]],
+		list[AgentSpeakPlan],
+	] = {}
+	for alias in aliases:
+		normal_by_helper.setdefault(
+			(alias.trigger.symbol, alias.trigger.arguments),
+			[],
+		).append(alias)
+	combined: list[AgentSpeakPlan] = []
+	establishers = {
+		str(atom): list(names)
+		for atom, names in dict(
+			certificate.get("negative_guard_establishers") or {}
+		).items()
+	}
+	for negative_index, literal in enumerate(negative_tuple):
+		helper_symbol, helper_arguments = helper_mapping.setdefault(
+			negative_index,
+			(
+				_safe_query_identifier(
+					f"{helper_prefix}_establish_not_"
+					f"{literal.predicate}_{negative_index + 1}"
+				),
+				query_arguments,
+			),
+		)
+		dominating = tuple(
+			_retarget_whole_guard_alias_as_negative_establisher(
+				alias,
+				helper_symbol=helper_symbol,
+				helper_arguments=helper_arguments,
+				negative_literal=literal,
+				branch_index=branch_index,
+			)
+			for branch_index, alias in enumerate(whole_guard_aliases, start=1)
+		)
+		fallback = tuple(
+			normal_by_helper.pop((helper_symbol, helper_arguments), ())
+		)
+		combined.extend(dominating)
+		combined.extend(fallback)
+		establishers[literal.atom] = [
+			plan.plan_name for plan in (*dominating, *fallback)
+		]
+	for remaining in normal_by_helper.values():
+		combined.extend(remaining)
+	return tuple(combined), helper_mapping, {
+		**dict(certificate),
+		"negative_guard_establishable": (
+			len(helper_mapping) == len(negative_tuple)
+		),
+		"negative_guard_establishers": establishers,
+		"accepting_whole_guard_dominance_checked": True,
+		"whole_guard_dominating_branch_count": len(whole_guard_aliases),
+		"whole_guard_dominance_scope": "accepting_target_only",
+		"negative_guard_establishment_strategy": (
+			"complete_guard_first_with_partial_deleter_fallback"
+		),
+	}
+
+
+def _retarget_whole_guard_alias_as_negative_establisher(
+	plan: AgentSpeakPlan,
+	*,
+	helper_symbol: str,
+	helper_arguments: tuple[str, ...],
+	negative_literal: DFALiteral,
+	branch_index: int,
+) -> AgentSpeakPlan:
+	certificate = dict(plan.binding_certificate[-1]) if plan.binding_certificate else {}
+	certificate.update(
+		{
+			"wrapper_role": "query_local_negative_guard_whole_guard_branch",
+			"dominance_relation": "complete_signed_guard_over_partial_deleter",
+			"established_negative_atom": negative_literal.atom,
+		}
+	)
+	return AgentSpeakPlan(
+		plan_name=(
+			f"{helper_symbol}_whole_guard_{branch_index}_{plan.plan_name}"
+		),
+		trigger=AgentSpeakTrigger(
+			plan.trigger.event_type,
+			helper_symbol,
+			helper_arguments,
+		),
+		context=plan.context,
+		body=plan.body,
+		source_instruction_ids=plan.source_instruction_ids,
+		binding_certificate=(*plan.binding_certificate[:-1], certificate),
+	)
+
+
 def _certified_positive_literal_serialization(
 	literals: Sequence[DFALiteral],
 	*,
@@ -1149,6 +1297,7 @@ def _certified_positive_literal_serialization(
 	plan_library: PlanLibrary,
 	domain: PDDLDomain,
 	helper_prefix: str,
+	allow_complete_guard_dominance: bool,
 ) -> tuple[
 	tuple[DFALiteral, ...],
 	Mapping[str, object],
@@ -1215,12 +1364,13 @@ def _certified_positive_literal_serialization(
 				{},
 			)
 		establishment_aliases, establishment_helpers, establishment = (
-			negative_guard_establishment_alias_plans(
-				literal_signatures,
-				negative_literals=negative_literal_signatures,
+			_certified_negative_guard_establishment_alias_plans(
+				literal_tuple,
+				negative_literals=negative_literal_tuple,
 				plan_library=plan_library,
 				domain=domain,
 				helper_prefix=helper_prefix,
+				allow_complete_guard_dominance=allow_complete_guard_dominance,
 			)
 		)
 		certificate.update(establishment)
@@ -1234,12 +1384,13 @@ def _certified_positive_literal_serialization(
 		)
 	if not literal_tuple:
 		establishment_aliases, establishment_helpers, establishment = (
-			negative_guard_establishment_alias_plans(
+			_certified_negative_guard_establishment_alias_plans(
 				(),
-				negative_literals=negative_literal_signatures,
+				negative_literals=negative_literal_tuple,
 				plan_library=plan_library,
 				domain=domain,
 				helper_prefix=helper_prefix,
+				allow_complete_guard_dominance=allow_complete_guard_dominance,
 			)
 		)
 		certificate = {
@@ -1357,12 +1508,13 @@ def _certified_positive_literal_serialization(
 			literal.atom for literal in negative_literal_tuple
 		]
 		establishment_aliases, establishment_helpers, establishment = (
-			negative_guard_establishment_alias_plans(
-				literal_signatures,
-				negative_literals=negative_literal_signatures,
+			_certified_negative_guard_establishment_alias_plans(
+				literal_tuple,
+				negative_literals=negative_literal_tuple,
 				plan_library=plan_library,
 				domain=domain,
 				helper_prefix=helper_prefix,
+				allow_complete_guard_dominance=allow_complete_guard_dominance,
 			)
 		)
 		certificate_payload.update(establishment)
@@ -1379,12 +1531,13 @@ def _certified_positive_literal_serialization(
 		literal.atom for literal in negative_literal_tuple
 	]
 	establishment_aliases, establishment_helpers, establishment = (
-		negative_guard_establishment_alias_plans(
-			literal_signatures,
-			negative_literals=negative_literal_signatures,
+		_certified_negative_guard_establishment_alias_plans(
+			literal_tuple,
+			negative_literals=negative_literal_tuple,
 			plan_library=plan_library,
 			domain=domain,
 			helper_prefix=helper_prefix,
+			allow_complete_guard_dominance=allow_complete_guard_dominance,
 		)
 	)
 	certificate_payload.update(establishment)

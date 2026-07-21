@@ -1170,6 +1170,13 @@ Boolean/numeric guard only when symbolic execution proves every required net
 effect. Negated numeric equality remains an exact observation unless a separate
 certified change-away strategy exists.
 
+On an edge whose target is accepting, a negative-repair helper may prefer a
+single action whose complete effects establish the edge's entire signed guard.
+All previously certified partial deleters remain ordered fallbacks when that
+action is not applicable. The preference is not enabled for non-accepting
+edges, because those edges still have later temporal obligations whose
+reachability is not part of this local guard certificate.
+
 For Until profiles, literals common to every non-progress self-loop cube are
 treated as source-state invariants during strategy synthesis. The benchmark
 fragment has one positive progress literal per such state. Every primitive

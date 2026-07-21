@@ -1484,6 +1484,185 @@ def test_append_temporal_goal_establishes_negative_guard_via_positive_side_effec
 	assert serialization["negative_guard_establishable"] is True
 
 
+def test_accepting_complete_guard_establisher_precedes_partial_negative_fallback(
+	tmp_path: Path,
+) -> None:
+	domain_file = tmp_path / "typed-transfer-domain.pddl"
+	domain_file.write_text(
+		"""
+(define (domain typed-transfer)
+ (:requirements :strips :typing)
+ (:types
+  movable - object
+  carrier - movable
+  site - object
+  parcel - movable
+  cart jet - carrier)
+ (:predicates
+  (placed ?x - movable ?s - site)
+  (inside ?p - parcel ?c - carrier))
+ (:action stow_cart
+  :parameters (?p - parcel ?c - cart ?s - site)
+  :precondition (and (placed ?p ?s) (placed ?c ?s))
+  :effect (and (inside ?p ?c) (not (placed ?p ?s))))
+ (:action stow_jet
+  :parameters (?p - parcel ?j - jet ?s - site)
+  :precondition (and (placed ?p ?s) (placed ?j ?s))
+  :effect (and (inside ?p ?j) (not (placed ?p ?s))))
+)
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	library = PlanLibrary(
+		domain_name="typed-transfer",
+		plans=(
+			AgentSpeakPlan(
+				"inside_already_true",
+				AgentSpeakTrigger("achievement_goal", "inside", ("X", "Y")),
+				("inside(X, Y)",),
+				(),
+			),
+			AgentSpeakPlan(
+				"inside_via_cart",
+				AgentSpeakTrigger("achievement_goal", "inside", ("X", "Y")),
+				(
+					"obj_tp(X, parcel)",
+					"obj_tp(Y, cart)",
+					"placed(X, Z)",
+					"obj_tp(Z, site)",
+					"placed(Y, Z)",
+				),
+				(AgentSpeakBodyStep("action", "stow_cart", ("X", "Y", "Z")),),
+			),
+			AgentSpeakPlan(
+				"inside_via_jet",
+				AgentSpeakTrigger("achievement_goal", "inside", ("X", "Y")),
+				(
+					"obj_tp(X, parcel)",
+					"obj_tp(Y, jet)",
+					"placed(X, Z)",
+					"obj_tp(Z, site)",
+					"placed(Y, Z)",
+				),
+				(AgentSpeakBodyStep("action", "stow_jet", ("X", "Y", "Z")),),
+			),
+		),
+	)
+	dfa_payload = {
+		"initial_state": "q0",
+		"accepting_states": ["q1"],
+		"guarded_transitions": [
+			{
+				"source_state": "q0",
+				"target_state": "q1",
+				"raw_label": "inside(pkg, jet0) & not placed(pkg, hub)",
+			},
+			{"source_state": "q1", "target_state": "q1", "raw_label": "true"},
+		],
+	}
+
+	updated = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_1",
+		dfa_payload=dfa_payload,
+		domain_file=domain_file,
+	)
+	negative_leaf = next(
+		plan
+		for plan in updated.plans
+		if plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_polarity") == "negative"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	helper_symbol = negative_leaf.body[0].symbol
+	helper_plans = tuple(
+		plan for plan in updated.plans if plan.trigger.symbol == helper_symbol
+	)
+	certificate_kinds = tuple(
+		plan.binding_certificate[-1].get("certificate_kind")
+		for plan in helper_plans
+	)
+
+	assert "pddl_single_action_whole_guard" in certificate_kinds
+	assert "pddl_single_action_must_delete" in certificate_kinds
+	assert max(
+		index
+		for index, kind in enumerate(certificate_kinds)
+		if kind == "pddl_single_action_whole_guard"
+	) < min(
+		index
+		for index, kind in enumerate(certificate_kinds)
+		if kind == "pddl_single_action_must_delete"
+	)
+	assert any(
+		plan.body
+		== (AgentSpeakBodyStep("action", "stow_jet", ("pkg", "jet0", "hub")),)
+		for plan in helper_plans
+	)
+	serialization = next(
+		plan.binding_certificate[0]["serialization_certificate"]
+		for plan in updated.plans
+		if plan.plan_name == "g_query_1_trans_1_repair_tree"
+	)
+	assert serialization["accepting_whole_guard_dominance_checked"] is True
+	assert serialization["whole_guard_dominating_branch_count"] >= 1
+	assert serialization["whole_guard_dominance_scope"] == "accepting_target_only"
+	assert serialization["negative_guard_establishment_strategy"] == (
+		"complete_guard_first_with_partial_deleter_fallback"
+	)
+
+	nonterminal = append_temporal_goal_to_library(
+		plan_library=library,
+		goal_name="g_query_2",
+		dfa_payload={
+			"initial_state": "q0",
+			"accepting_states": ["q2"],
+			"guarded_transitions": [
+				{
+					"source_state": "q0",
+					"target_state": "q1",
+					"raw_label": "inside(pkg, jet0) & not placed(pkg, hub)",
+				},
+				{
+					"source_state": "q1",
+					"target_state": "q2",
+					"raw_label": "inside(pkg, jet0)",
+				},
+				{"source_state": "q2", "target_state": "q2", "raw_label": "true"},
+			],
+		},
+		domain_file=domain_file,
+	)
+	nonterminal_negative_leaf = next(
+		plan
+		for plan in nonterminal.plans
+		if plan.plan_name.startswith("g_query_2_trans_1")
+		and plan.binding_certificate
+		and plan.binding_certificate[0].get("literal_polarity") == "negative"
+		and plan.binding_certificate[0].get("wrapper_role")
+		== "transition_repair_tree_leaf_achievement"
+	)
+	nonterminal_helper_plans = tuple(
+		plan
+		for plan in nonterminal.plans
+		if plan.trigger.symbol == nonterminal_negative_leaf.body[0].symbol
+	)
+	assert nonterminal_helper_plans
+	assert all(
+		plan.binding_certificate[-1].get("certificate_kind")
+		== "pddl_single_action_must_delete"
+		for plan in nonterminal_helper_plans
+	)
+	nonterminal_serialization = next(
+		plan.binding_certificate[0]["serialization_certificate"]
+		for plan in nonterminal.plans
+		if plan.plan_name == "g_query_2_trans_1_repair_tree"
+	)
+	assert "accepting_whole_guard_dominance_checked" not in nonterminal_serialization
+
+
 def test_single_action_whole_guard_certificate_needs_no_atomic_seed_module(
 	tmp_path: Path,
 ) -> None:

@@ -169,10 +169,16 @@ negative guard, or rejects the transition with
 `negative_guard_not_preserved`. When a positive action-only branch has an exact
 PDDL net `MustDelete` for a currently present forbidden atom and preserves all
 positive siblings, the appender copies it under a query-local establishment
-helper. A signed negative leaf calls only that helper. The certificate stores
-the forbidden atoms and both preserving and establishing branch names. A negative-only edge is only an immediate
-context check; it does not create a negative achievement module. Mixed numeric
-conjunctions remain outside the certificate.
+helper. For an edge entering an accepting state, that helper first tries any
+single action certified to satisfy the complete signed guard and retains the
+partial deleters as fallbacks. Non-accepting edges keep the prior helper order
+because later transition reachability is outside a local completion
+certificate. A signed negative leaf calls only that helper. The certificate
+stores the forbidden atoms and both preserving and establishing branch names.
+A negative-only edge is only an immediate context check; it does not create a
+negative achievement module. Mixed
+Boolean/numeric conjunctions require their separate complete net-effect and
+constant-delta certificates.
 
 The balanced tree is a data-structure optimization over one DFA transition,
 not another planner. With `N` positive literals, the old sibling layout gave

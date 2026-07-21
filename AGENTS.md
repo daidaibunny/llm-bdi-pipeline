@@ -200,6 +200,12 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
   guards; if no non-empty goal-achieving selection remains, reject with
   `negative_guard_not_preserved`. A negative-only edge may use the same
   schema-certified single-action deleter; otherwise it only observes absence.
+- On a progress edge entering an accepting state, a query-local negative helper
+  may place a schema-certified action that satisfies the complete signed guard
+  before partial deleters. Retain every partial deleter as an applicability
+  fallback. Do not apply this preference to non-accepting edges without a
+  separate future-obligation preservation certificate, and never recognize a
+  domain, predicate, or action name.
 - Mixed Boolean/numeric conjunctions use complete action-only net Boolean
   effects and constant-integer numeric deltas. Helpers are indexed by the full
   grounded/lifted literal, not only by predicate name. A literal without a

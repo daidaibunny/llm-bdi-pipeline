@@ -1342,6 +1342,14 @@ When a forbidden atom is present, the appender may repair its absence through
 either a positive sibling's finite action-only branch or a directly matched
 single PDDL action. Both cases require an exact net `MustDelete`, preservation
 of every positive sibling, and no completion `MayAdd` for any forbidden atom.
+For a progress edge whose target is accepting, the same helper first tries any
+schema-certified single action whose complete net effects satisfy every signed
+guard obligation. If that action is inapplicable, Jason continues with all
+pre-existing partial deleters in their original order. This accepting-edge
+dominance rule is deliberately not applied to non-accepting edges, where an
+alternative complete repair could change the state available to later temporal
+obligations. The rule uses typed unification and complete PDDL effects, never a
+domain, predicate, or action name.
 Extra action parameters must be range-restricted by positive PDDL preconditions
 or `obj_tp/2`. Free deleter parameters are first unified with compatible
 positive-sibling add effects. Thus a relocation action whose delete binds the
