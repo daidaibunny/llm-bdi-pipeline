@@ -405,13 +405,10 @@ def render_main_table(result: Mapping[str, Any]) -> str:
 			(
 				"\n".join(
 					(
-						"\\caption{Full GP2PL atomic held-out coverage over $n=5$ "
-						"predeclared evidence",
-						"seeds. Coverage is",
-						"mean $\\pm$ sample standard deviation; Valid/seed gives the "
-						"minimum--maximum",
-						"count. Domains complete in every seed are aggregated; others are shown",
-						"separately.}",
+						"\\caption{Full GP2PL atomic coverage over five evidence seeds. "
+						"Coverage is mean",
+						"$\\pm$ sample SD; Valid/seed is the range. All-seed-complete domains are",
+						"aggregated.}",
 					),
 				)
 			),

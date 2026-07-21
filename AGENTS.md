@@ -37,19 +37,20 @@ formula is permitted only as a per-invocation validation projection. Do not
 claim first-order quantified LTLf unless a separate formal implementation and
 evaluation are added.
 
-The current architecture has two connected flows across four named modules:
-the Evidence Module, Validated Policy-Lifting Compiler, Temporal Query
-Compiler, and Execution Validation Module. Do not call these Layer A/B/C.
-The complete framework is named **GP2PL** (Generalized Planning to Plan
-Libraries); GP2PL is not an alias for any one of the four modules.
+The current architecture has two connected flows across five named modules:
+the Typed Temporal Input Module, Evidence Module, Validated Policy-Lifting
+Compiler, Temporal Query Compiler, and Execution Validation Module. Do not call
+these Layer A/B/C. The complete framework is named **GP2PL** (Generalized
+Planning to Plan Libraries); GP2PL is not an alias for any one module.
 
 The manuscript must present GP2PL as a theoretical representation-compilation
-framework rather than as a software architecture. Lead with the normalized
-evidence relation, certified candidate language, feasible-library optimization,
-conditional completion summaries, and preservation-safe DFA guard composition.
-MOOSE, Clingo, AgentSpeak(L), and Jason are concrete instantiations of those
-interfaces. Keep internal paths, command-line options, hashes, worker scheduling,
-and class names in the technical or code-and-data appendix.
+framework rather than as a software architecture. Lead with the typed temporal
+input contract, normalized evidence relation, certified candidate language,
+feasible-library optimization, conditional completion summaries, and
+preservation-safe DFA guard composition. The frozen translation model, MOOSE,
+Clingo, AgentSpeak(L), and Jason are concrete instantiations of those interfaces.
+Keep internal paths, command-line options, hashes, worker scheduling, and class
+names in the technical or code-and-data appendix.
 
 The canonical technical supplement is
 `latex_code/aamas_method_paper/technical_appendix.tex`. Public reproducibility
@@ -68,7 +69,9 @@ PDDL domain + train split
 -> atomic minimal literal module synthesis
 -> compact lifted atomic AgentSpeak(L) library
 
-validated lifted LTLf JSON
+controlled natural-language request + typed parameters
+-> frozen prompt + deterministic input validation
+-> validated lifted LTLf JSON
 -> real ltlf2dfa/MONA DFA construction
 -> conjunctive guard-transition DFA validation
 -> append +!g_query wrapper plans to the same domain library
@@ -168,11 +171,15 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
   validated implementation. Reject them with a structured diagnostic instead of
   inventing synthetic subgoals.
 
-## Temporal Goal Append Layer
+## Temporal Input and Goal Append
 
-- The external Input component produces lifted LTLf JSON. This repository must
-  consume that artifact, not reimplement the Input LLM workflow unless
-  explicitly requested.
+- The Typed Temporal Input Module translates controlled natural-language
+  requests into typed, externally bound parametric LTLf JSON under a fixed
+  eight-key payload contract. Its frozen prompt, PDDL vocabulary/arity/type
+  checks, and benchmark protocol are GP2PL contributions. Exact gold/predicted
+  DFA-language equivalence is an evaluation oracle, not an online requirement.
+- Temporal append consumes the persisted validated LTLf artifact and must not
+  rerun the language model during query compilation.
 - The historical LTLf-to-DFA and logger code may be restored and refactored, but
   it must be PDDL-only and must not reintroduce HDDL, HTN, or legacy event-to-
   fluent mappings.

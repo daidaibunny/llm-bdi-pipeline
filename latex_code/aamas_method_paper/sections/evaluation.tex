@@ -4,71 +4,67 @@
 \subsection{Benchmarks and Protocol}
 
 \paragraph{Corpus and repetitions.}
-The corpus contains eight classical and four bounded-integer MOOSE domains with
-official splits \cite{Chen2026Moose,DillonZChenMooseDataset} and four
+The corpus comprises eight classical and four bounded-integer MOOSE domains with
+official splits \cite{Chen2026Moose,DillonZChenMooseDataset}, plus four
 predeclared serialized-width families \cite{LipovetzkyGeffner2012Width}:
 Blocksworld Clear and On
 \cite{Frances2021LearningGeneralPolicies,BonetLearnerPoliciesRepository},
 Tower \cite{Bacchus2001AIPS00,PotasscoPDDLInstances}, and Depots
 \cite{Bonet2018Features,RLeapD2LRepository}. MOOSE readable policies provide
-$\mathcal E_{\mathrm{raw}}$. Following MOOSE, each of five fixed seeds uses every
-training instance and three goal orders to compile one core per domain (80
-total).
+$\mathcal E_{\mathrm{raw}}$. Each of five fixed seeds follows MOOSE by using all
+training instances and three goal orders to compile one core per domain (80 total).
 
 \paragraph{Temporal benchmark construction.}
-For each held-out problem, construction discards the original goal and uses
-predicate events and bounded-integer changes to instantiate five predeclared
-profiles: $F(A\land B)$, $F(A\land\neg B)$,
+For each held-out problem, we replace the original goal with one of five
+predeclared predicate or bounded-integer profiles: $F(A\land B)$, $F(A\land\neg B)$,
 $F(A\land X(F(B)))$,
 $F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$.
-Selection retains one witness-backed query per held-out problem, yielding 1,228
-queries over 475 distinct translation inputs.
+The lifted hidden formula is rendered deterministically as controlled English.
+GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates 475 deduplicated inputs,
+expanding to 1,228 witness-backed bound queries.
 
 \paragraph{Controlled inputs and validation.}
 Atomic variants share each seed's evidence; temporal variants share the core,
 binding, and DFA. Atomic success requires Jason completion and original-goal
 VAL \cite{Bordini2007Jason,Howey2004VAL}; translation requires exact predicted--gold
 DFA language equivalence; temporal success requires compilation, Jason,
-neutral-goal VAL, and acceptance by both DFAs. Every failure remains in the
-denominator. Comparisons are paired by held-out identifier, averaging seeded
-atomic outcomes within identifiers before inference. Construction details,
-limits, costs, and inference rules appear in the Technical Supplement,
-Secs.~4--5.
+neutral-goal VAL, and both DFA oracles. Failures remain in the denominator.
+Comparisons pair held-out identifiers and average seeded atomic outcomes before
+inference. The Technical Supplement, Secs.~4--5 gives construction, limits,
+costs, and inference rules.
 
 \subsection{Paired Component Ablations}
 \label{sec:paired-ablation-results}
 
 \paragraph{Atomic compilation.}
 Evidence Only validates provider macros; Direct Producers adds action-only
-producers for the producible target universe; Maximum Feasible adds certified
-recursive preparation and target-preserving resource discharge and retains a
-maximum-cardinality feasible subset. Full GP2PL applies lexicographic Clingo
-selection to the same candidates. The rows isolate target expansion, recursive
-generation, and compact selection.
+producers; Maximum Feasible adds recursive preparation and resource discharge
+and retains a maximum-cardinality feasible subset. Full GP2PL applies
+lexicographic Clingo selection to those candidates, isolating target expansion,
+recursion, and compact selection.
 
 \input{sections/result_atomic_comparison_table}
 
 Direct Producers, Maximum Feasible, and Full GP2PL cover all 73 producible
 targets under every seed (365 seed--target obligations); Evidence Only covers
-90/365. Recursive generation supplies the 10.42-point gain in
-Table~\ref{tab:atomic-comparison}, entirely on the four added serialized-width
-domains; every nonzero averaged paired difference favors a recursive variant.
-At equal coverage, lexicographic selection yields the smallest certified core.
+90/365. Recursion supplies the 10.42-point gain in
+Table~\ref{tab:atomic-comparison}, entirely on the four added families; every
+nonzero paired difference favors it. At equal coverage, lexicographic selection
+yields the smallest certified core.
 
 \paragraph{Temporal composition.}
 Unprotected Serialization omits completion-effect analysis. Module-Return
-Monitor retains ordering, preservation portfolios, and balanced repair but
-checks the DFA only after an atomic module finishes all primitive actions;
-Certified Balanced checks after every primitive action. All share the same
-automaton, library, and monitor implementation.
+Monitor retains certified balanced repair but checks the DFA only after an
+atomic module finishes all primitive actions; Certified Balanced checks after
+each action. All share the automaton, library, and monitor implementation.
 
 \input{sections/result_temporal_comparison_table}
 
 Certified Balanced gains 9.36 points over Unprotected Serialization
 (Table~\ref{tab:temporal-comparison}); 113 of 115 gains are in bounded-integer
 domains and two in Transport. We select its bounded local structure, not its
-runtime; helper plans are the representational cost. Lower Module-Return
-coverage supports primitive-step observation.
+runtime; helper plans are the cost. Lower Module-Return coverage supports
+primitive-step observation.
 
 \subsection{Full-System Coverage and Robustness}
 \label{sec:full-system-results}
@@ -78,23 +74,23 @@ coverage supports primitive-step observation.
 Across 80 domain--seed cores, mean held-out coverage is
 \AtomicFiveSeedMeanSuccessPercent{}\% $\pm$
 \AtomicFiveSeedSampleSDPercent{} percentage points
-(Table~\ref{tab:five-seed-atomic}). Only Logistics and Depots vary because cyclic
-producer and resource dependencies exceed the certificate class; no
-domain-specific rule was added after observing held-out outcomes.
+(Table~\ref{tab:five-seed-atomic}). The other 14 domains succeed in all 5,635
+seed--case executions. Variation is confined to Logistics and Depots; the
+Technical Supplement analyzes their unresolved cyclic-producer and nested
+resource-choice patterns.
 
 \input{sections/result_five_seed_atomic_table}
 
 \paragraph{End-to-end temporal validation.}
 \label{sec:end-to-end-results}
-The fixed study uses one seed-0 core per domain and does not assess cross-seed
-robustness. Its five structures instantiate $\Phi_{\mathrm{bench}}$, not all of
-$\Phi_{\mathrm{syn}}$, and execution includes only queries admitted to
-$\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. GPT-5.5
-\cite{OpenAI2026GPT55SystemCard} translates the specifications. All
-\TranslationEquivalentCount{}/\TranslationInputCount{} are DFA-language
-equivalent, and all \TEGProblemCount{} admitted queries pass Jason, neutral-goal
-VAL, and both DFA oracles. Median runtime is \TEGMedianRuntimeSeconds{} seconds
-(IQR 4.28--8.49), and median trace length is \TEGMedianActionCount{} actions
-(IQR 1--2). Across 740 same-seed added-family cases, GP2PL raises VAL-valid
+The paired temporal study fixes one seed-0 core per domain, isolating controller
+variants. Its five structures instantiate $\Phi_{\mathrm{bench}}$, not all of
+$\Phi_{\mathrm{syn}}$; execution includes queries admitted to
+$\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. All
+\TranslationEquivalentCount{} translations are DFA-language equivalent; all
+\TEGProblemCount{} admitted queries pass Jason, neutral-goal VAL, and both DFA
+oracles. Median runtime is \TEGMedianRuntimeSeconds{} seconds (IQR 4.28--8.49),
+with \TEGMedianActionCount{} actions (IQR 1--2) per median trace.
+Across 740 same-seed added-family cases, GP2PL raises VAL-valid
 coverage from 15.8\% to 97.3\%; original-scope MOOSE results are separate
 \cite{Chen2025MooseExtended}.

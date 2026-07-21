@@ -11,10 +11,18 @@ parametric natural-language LTLf input and temporal evaluation is maintained in
 ## Canonical Terminology
 
 **GP2PL** expands to **Generalized Planning to Plan Libraries** and is the
-formal name of the complete four-module framework. The Evidence Module,
-Validated Policy-Lifting Compiler, Temporal Query Compiler, and Execution
-Validation Module retain their distinct scopes; GP2PL is not an alias for any
-single module. The paper title and prose use GP2PL for the complete method.
+formal name of the complete five-module framework. The Typed Temporal Input
+Module, Evidence Module, Validated Policy-Lifting Compiler, Temporal Query
+Compiler, and Execution Validation Module retain distinct scopes; GP2PL is not
+an alias for any single module. The paper title and prose use GP2PL for the
+complete method.
+
+The **Typed Temporal Input Module** maps a controlled natural-language request,
+declared typed parameters and constraints, and the public PDDL catalogue to a
+fixed eight-key parametric LTLf JSON payload. Its frozen prompt and deterministic
+schema, vocabulary, arity, type, parameter, atom-table, and operator checks are
+part of the GP2PL contribution. Hidden gold-formula DFA equivalence is used only
+to evaluate translation, not as an online acceptance oracle.
 
 **MOOSE evidence** is the readable first-order decision-list artifact emitted by
 `policy --dump-policy`. For example, one evidence rule may associate the
@@ -230,8 +238,9 @@ fixed-release differences remain descriptive, and any future improvement claim
 is gated on the registered paired five-seed analysis.
 
 This repository no longer builds a universal generalized planner and no longer
-routes domains by prior-paper taxonomy labels. The Evidence Module imports
-external generalized-planning artifacts and normalizes them into provider-neutral
+routes domains by prior-paper taxonomy labels. The Typed Temporal Input Module
+produces validated parametric LTLf; the Evidence Module imports external
+generalized-planning artifacts and normalizes them into provider-neutral
 singleton-goal evidence. The compiler constructs `M_D` from accepted evidence;
 later queries contribute `Q_q` to the same maintained `L_D^[k]`. MOOSE is the
 current Evidence Module provider for positive singleton PDDL predicate goals;
@@ -239,16 +248,20 @@ it is not the name of the framework module.
 
 ## Compiler Contract
 
-The architecture separates four modules.
+The architecture separates five modules.
 
-1. The Evidence Module imports provider artifacts and emits a
+1. The Typed Temporal Input Module maps a controlled-language request, typed
+   parameters and constraints, and the public PDDL catalogue to validated
+   parametric LTLf JSON under the fixed prompt and payload contract. It does not
+   ground parameters, select objects, or choose actions.
+2. The Evidence Module imports provider artifacts and emits a
    `PolicyEvidenceProgram`. A `PolicyEvidenceProgram` is the common evidence
    intermediate representation: it records a provider name, a source artifact,
    and singleton-goal policy rules. For example, the MOOSE adapter parses a
    `policy --dump-policy` first-order decision-list rule whose singleton goal is
    `at(package0, location2)` and whose macro sequence loads a package, flies it,
    unloads it, drives it by truck, and unloads it at the destination.
-2. The Validated Policy-Lifting Compiler consumes the evidence program plus the
+3. The Validated Policy-Lifting Compiler consumes the evidence program plus the
    PDDL domain schema. A PDDL domain schema is the action-schema file, for
    example a `drive-truck` action with typed parameters, preconditions, add
    effects, and delete effects. The compiler checks that evidence actions replay
@@ -257,21 +270,22 @@ The architecture separates four modules.
    compact branch set, and renders
    the certified atomic module core `M_D`, including plans such as
    `+!at(X,Y)`.
-3. The Temporal Query Compiler consumes validated lifted LTLf/DFA query
+4. The Temporal Query Compiler consumes validated lifted LTLf/DFA query
    artifacts, constructs the query-local plan set `Q_q`, and appends it to the
    maintained library, updating `L_D^[k]` to `L_D^[k+1]`.
-4. The Temporal Goal Validation Module validates the model payload, proves or
-   refutes gold/predicted DFA language equivalence, checks the hidden source
-   witness, and consumes the committed trace produced by the separate Jason
-   runtime. It validates that trace independently with PDDL replay, VAL, and
-   gold-DFA acceptance.
+5. The Execution Validation Module evaluates translation with gold/predicted DFA
+   language equivalence and the hidden source witness, then consumes the
+   committed trace produced by the separate Jason runtime. It validates that
+   trace independently with PDDL replay, VAL, and gold-DFA acceptance. Gold
+   equivalence is an experimental oracle, not an online input check.
 
 ## Experimental Comparison Contract
 
 The framework is not evaluated as though it were one more per-instance PDDL
 planner. MOOSE is one instantiated Evidence Module provider; the proposed
-components are the Validated Policy-Lifting Compiler and Temporal Query
-Compiler. Baselines and ablations therefore match one module boundary at a time.
+components are the Typed Temporal Input Module, Validated Policy-Lifting
+Compiler, and Temporal Query Compiler. Baselines and ablations therefore match
+one module boundary at a time.
 
 ### Primary Atomic Comparison
 
@@ -917,13 +931,14 @@ relation. The generated `unstack; put-down` sequence deletes one `on` atom and
 does not add any `on` atom, so the feature strictly decreases and is bounded
 below by zero.
 
-The second feature is an anchored acyclic relation-cone count. It applies when
-a sequence removes `relation(Z,X)` and may add `relation(Z,B)`: the global count
-does not fall, but the obstruction cone rooted at `X` falls when action-schema-derived
-guards prove `B != X`. This candidate certificate carries the explicit
-assumption that the relation is acyclic in all reachable states. It is selected
-only if every module reachable through selected internal calls preserves the
-same anchored cone.
+The second feature is an anchor-local relation count under an acyclicity
+assumption. For anchor `X`, it counts facts of the form `relation(Z,X)`. A
+sequence may remove `relation(Z,X)` and add `relation(Z,B)`: the global count
+does not fall, but the anchor-local count falls when schema-derived guards prove
+`B != X`. Acyclicity prevents recursive calls from returning to an earlier
+anchor. The candidate is selected only if every reachable internal module
+preserves this decrease. The implementation metadata retains the internal label
+`anchored_acyclic_relation_cone_count`; the paper uses the explicit count.
 
 Concretely, if one transition requires `supports(a,b)` and `supports(b,c)`, the
 support-depth order builds `supports(b,c)` first and then `supports(a,b)`. The
@@ -1612,11 +1627,13 @@ mean is 98.68% and the sample standard deviation is 1.29 percentage points.
 All 6,059 successful traces pass VAL; none of the 6,140 repeated evaluations
 times out or exits nonzero. Among the 1,228 distinct cases, 1,180 succeed for
 all seeds, 46 are seed-sensitive, and only Depots `p12` and `p20` fail for all
-five. Fourteen domains are complete under every seed. Logistics varies from
-54/90 to 90/90 because randomized evidence order changes availability of long
-cross-mode provider macros while the certified schema constructor rejects the
-cyclic `at`/`in` dependency. Depots needs a nested typed support-resource choice
-beyond the current already-bound capacity-discharge certificate.
+five. Fourteen domains are complete under every seed, accounting for
+5,635/5,635 successful seed--case executions. Variation is confined to
+Logistics and Depots. Diagnostic inspection finds missing long cross-mode
+provider macros beside a cyclic `at`/`in` constructor boundary in Logistics,
+and nested typed support-resource choices beyond the current already-bound
+capacity-discharge certificate in Depots. These diagnoses explain the observed
+implementation boundary but are not impossibility proofs for the domains.
 
 The compact record is
 `paper_artifacts/gp2pl_evaluation/v1/five_seed_full_compiler_summary.json`.

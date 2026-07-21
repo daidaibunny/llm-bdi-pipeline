@@ -1,5 +1,18 @@
 # Automatic Natural-Language TEG Benchmark Construction
 
+## Research Contribution and Boundary
+
+GP2PL contributes a typed controlled-language-to-parametric-LTLf input contract:
+one frozen prompt maps a public request, declared typed parameters and
+constraints, and a PDDL catalogue to a fixed eight-key JSON payload.
+Deterministic validation checks schema, vocabulary, arity, types, parameter
+preservation, the atom table, and the supported operator fragment before
+temporal compilation. The hidden gold formula and exact DFA-language-equivalence
+check evaluate this translation on the benchmark; they are not available as an
+online oracle. Model execution may remain an external frozen call, while the
+prompt, contracts, validation, dataset construction, and result protocol are
+part of GP2PL.
+
 ## Terminology
 
 This glossary is normative.

@@ -36,7 +36,9 @@ when every internal call resolves to a type-compatible selected module; closure
 is a signature-resolution property, not per-state applicability.
 
 Our certificates apply to this trigger--context--body model and to the PDDL
-semantics of primitive actions. Formally, a candidate branch is
+semantics of primitive actions. A certificate is a compile-time, machine-checkable
+witness derived from $D$; for example, symbolic progression verifies sequential
+action applicability and target achievement. Formally, a candidate branch is
 $b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$: one lifted achievement
 literal, a conjunctive applicability condition, a finite body of primitive
 actions and internal calls, a conservative conditional module-completion
@@ -51,9 +53,10 @@ state after subsidiary plans return \cite{Hubner2006DeclarativeGoals}.
 Linear temporal logic over finite traces (\ltlf{}) is interpreted over a
 nonempty finite state sequence \cite{DeGiacomoVardi2013}. For proposition
 alphabet $AP_q$, the declared input language $\Phi_{\mathrm{syn}}$ admits
-literals, conjunction, $F$, $X$, and strong $U$ over $AP_q$, with negation
-restricted to atoms; the full grammar and finite-trace semantics appear in the
-Technical Supplement, Sec.~1. The evaluation family
+literals, conjunction, and the operators $F$ (eventually), $X$ (strong next),
+and $U$ (strong until) over $AP_q$, with negation restricted to atoms; the full
+grammar and finite-trace semantics appear in the Technical Supplement, Sec.~1.
+The evaluation family
 $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains instances of the
 five predeclared profiles in Sec.~\ref{sec:evaluation}; membership in either
 set is not an action-strategy guarantee.

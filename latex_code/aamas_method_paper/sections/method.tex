@@ -1,21 +1,23 @@
-\section{Certified Atomic-Module Compilation}
+\section{Validated Temporal Input and Plan-Library Compilation}
 \label{sec:method}
 
-\subsection{Method Overview}
+\subsection{Compilation Boundaries}
 
-GP2PL has two certification boundaries. Domain compilation maps
+A frozen prompt maps a controlled-language request, typed parameters and
+constraints, and the PDDL catalogue to eight-key JSON with parametric \ltlf{} and
+a one-to-one proposition table. Validation rejects vocabulary, type, arity,
+operator, table, or constraint violations without grounding parameters or
+selecting actions or objects; invocation supplies $\theta_q$. A hidden formula
+supports exact language evaluation only.
+
+After validation, domain compilation maps
 $D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$ by
-verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before feasible-core
-selection. Query compilation reuses the selected summaries to certify
+checking $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before selection;
+query compilation reuses the summaries to certify
 $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)$ for each DFA guard $\chi$, without
-relearning $\mathcal M_D$. The Technical Supplement formalizes the accept/reject
-boundary and constructor obligations (Sec.~1), proves the binding, symbolic
-execution, progress, resource, preservation, tree, monitor, and answer-set
-correspondence claims (Sec.~2), and gives full compiler pseudocode (Sec.~3).
-
-All obligations are checked on trigger--context--body rules before rendering.
-The \asl{} rendering preserves each selected trigger, context, ordered body, and
-internal-call edge.
+relearning $\mathcal M_D$. Obligations are checked before \asl{} rendering,
+which preserves selected rules and calls. The Technical Supplement gives the
+formal boundary, proofs, pseudocode, and input protocol (Secs.~1--4).
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -102,12 +104,15 @@ reachable state.
 
 \paragraph{Well-founded recursive progress.}
 A same-predicate recursive branch $b$ requires a ranking function
-$\rho_b:\operatorname{States}(D)\rightarrow\mathbb N$, a non-negative relation
-or anchored acyclic-cone count that strictly decreases, together with an
+$\rho_b:\operatorname{States}(D)\rightarrow\mathbb N$, either a non-negative
+global relation count or an anchor-local count
+$\rho_{R,x}(s)=|\{y\mid R(y,x)\in s\}|$ that strictly decreases under a
+reachable-state acyclicity assumption, together with an
 already-satisfied, direct-producer, or validated-evidence terminal branch.
+Acyclicity prevents recursive calls from returning to an earlier anchor.
 Threats are checked over the preparation graph selected by Clingo; a branch may
-add the ranked relation outside the protected cone only under a guard proving
-the new anchor differs from the protected one. The ranking is a compile-time
+add the ranked relation at another anchor only under a guard proving that the
+new anchor differs from the protected one. The ranking is a compile-time
 witness, not an agent belief, and claims only generated schema-certified
 features. The construction follows relational progress witnesses in
 general-policy work \cite{Frances2021LearningGeneralPolicies}.

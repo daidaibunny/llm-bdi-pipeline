@@ -307,6 +307,11 @@ Obligations that do not arise in $b$, such as resource discharge for a direct
 producer that acquires no resource, are vacuous rather than unproved.
 \end{definition}
 
+The implemented relational rankings are either a global relation count or the
+anchor-local count $\rho_{R,x}(s)=|\{y\mid R(y,x)\in s\}|$. The latter requires
+$R$ to remain acyclic in reachable states; every recursive step must decrease
+the count, and selected callees may not restore an $R(\cdot,x)$ fact.
+
 \begin{table*}[htbp]
 \centering
 \small
@@ -1316,8 +1321,8 @@ relicensed as original GP2PL data.
 \subsection{Frozen Natural-Language Translation Prompt}
 \label{app:translation-prompt}
 
-The natural-language translation protocol is an evaluated input condition,
-separate from the policy-lifting method. Its role is to map one controlled-language
+The natural-language translation protocol is GP2PL's typed input contribution,
+separate from the policy-lifting compiler. Its role is to map one controlled-language
 specification to typed, externally bound parametric \ltlf{} JSON. It cannot
 choose PDDL actions, objects, bindings, or domain-library modules. The full
 protocol comprises five declared components: a normal-form guide,
@@ -1727,7 +1732,8 @@ identifiers rejected by the current adapter encoding. Supported-set PAR-2 is
 omitted under its coverage-only protocol. The artifact records preserve the
 planner, compiler, timeout, and unsupported outcome taxonomy.
 
-The localized variation follows the method boundary. A provider macro is a
+Diagnostic inspection localizes the variation at the method boundary. A provider
+macro is a
 complete lifted action sequence in MOOSE's readable evidence; a Logistics
 example transports one package by truck, airplane, then truck. Seeded
 singleton-goal order changes the states from which these long macros are

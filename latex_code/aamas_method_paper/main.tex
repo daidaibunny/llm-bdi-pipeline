@@ -57,7 +57,9 @@ leaves a representation gap: singleton-goal evidence may omit modules for
 subsidiary achievements and does not certify temporal composition. We introduce
 \methodname{} (Generalized Planning to Plan Libraries), which compiles such
 evidence and Planning Domain Definition Language (PDDL) action models into
-certified BDI plan libraries. GP2PL validates and lifts evidence, generates
+certified BDI plan libraries. A typed front end maps controlled-language requests
+to externally bound parametric \ltlf{} JSON validated against PDDL vocabulary
+and types. GP2PL validates and lifts evidence, generates
 schema-derived modules for producible goals, selects a compact closed
 atomic core, and appends query controllers guided by deterministic finite
 automata for finite-trace temporal goals without relearning that core. For the
@@ -69,10 +71,10 @@ seed, mean held-out coverage over \BenchmarkDomainCount{} domains is
 ($\AtomicFiveSeedSampleSDPercent{}$ percentage-point sample standard deviation).
 Recursive candidates improve paired atomic success by 10.42 percentage points,
 and preservation certification improves paired temporal success by 9.36
-percentage points. All \TranslationEquivalentCount{} translated specifications
-match their gold finite-trace languages, and the fixed-core temporal study
-produces independently validated accepting traces for all \TEGProblemCount{}
-admitted bound queries.
+percentage points. All \TranslationEquivalentCount{} controlled-language
+translations match their gold finite-trace languages, and all
+\TEGProblemCount{} admitted bound queries produce independently validated
+accepting traces.
 \end{abstract}
 
 \section{Introduction}
@@ -107,12 +109,11 @@ Single-column GP2PL overview\\
 Domain compilation $+$ query-specific temporal compilation}}
 }
 \caption{GP2PL separates reusable domain compilation from query-specific
-temporal compilation. An external generalized-planning backend derives raw
-singleton-goal evidence $\mathcal E_{\mathrm{raw}}$ from domain $D$ and training
-instances $\mathcal I_{\mathrm{train}}$. Validated policy lifting compiles these
-inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$; DFA-guided temporal
-compilation maps each bound query $\widehat{\tau}_q$ to query-local plans
-$\mathcal Q_q$, updating the sole maintained library by
+temporal compilation. An external generalized-planning backend derives
+$\mathcal E_{\mathrm{raw}}$ from $D$ and $\mathcal I_{\mathrm{train}}$; validated
+policy lifting compiles $\mathcal M_D=\mathcal L_D^{[0]}$ once. The typed front
+end maps controlled language to $\tau_q$, and external binding $\theta_q$ forms
+$\widehat{\tau}_q$. DFA-guided compilation appends $\mathcal Q_q$ by
 $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 \label{fig:architecture}
 \end{figure}
@@ -145,12 +146,12 @@ renders the certified order as a balanced transition-repair tree.}
 \label{fig:compiler-stages}
 \end{figure*}
 
-GP2PL makes three contributions: it compiles singleton-goal evidence and PDDL
-schemas into an internally closed BDI core with modules for omitted producible
-subgoals; it accepts only branches carrying certificates for binding, symbolic
-execution, achievement, completion effects, and progress; and it appends
-preservation-safe finite-trace controllers over the fixed core, monitoring DFA
-progress after each primitive action.
+GP2PL makes four contributions: a typed controlled-language-to-parametric-\ltlf{}
+contract evaluated by exact DFA-language equivalence; a closed BDI core compiled
+from singleton-goal evidence and PDDL schemas, including omitted producible
+subgoals; compile-time certificates for binding, execution, achievement,
+completion effects, and progress; and preservation-safe finite-trace controllers
+that monitor DFA progress after each primitive action.
 
 We evaluate component and end-to-end behavior only within the declared
 candidate and formula fragments; formal definitions, proofs, and the reporting
@@ -164,17 +165,14 @@ protocol appear in the Technical Supplement.
 \FloatBarrier
 \section{Conclusion and Future Work}
 
-GP2PL compiles GP evidence and PDDL schemas into a closed atomic core and
-certified DFA controllers. Across five seeds, atomic coverage over
-\BenchmarkDomainCount{} domains is \AtomicFiveSeedMeanSuccessPercent{}\%
-(\AtomicFiveSeedSampleSDPercent{}-point sample SD); recursion and preservation
-add 10.42 and 9.36 paired-success points. All
+GP2PL translates typed controlled-language requests and compiles GP evidence and
+PDDL schemas into closed BDI cores with certified DFA controllers. Across five
+seeds, atomic coverage is \AtomicFiveSeedMeanSuccessPercent{}\%; recursion and
+preservation add 10.42 and 9.36 paired-success points. All
 \TranslationEquivalentCount{} translations and \TEGProblemCount{} admitted
-queries pass semantic and execution validation. Unsupported are unrestricted
-PDDL--\ltlf{} synthesis, out-of-fragment arithmetic/formulae, and uncertified
-repair; future work broadens this scope under fail-closed certification.
-Pinned PDDL generators with held-out-disjoint instances can extend domain
-onboarding without changing the certificates.
+queries pass DFA-language and execution checks. Unrestricted PDDL--\ltlf{}
+synthesis, other arithmetic or formulae, uncertified repair, and generator-assisted
+domain onboarding remain future work.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

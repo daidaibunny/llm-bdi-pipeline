@@ -48,15 +48,16 @@ subset, not a compiler ablation.
 Prior systems map natural-language instructions to temporal logic through
 pattern libraries \cite{FuggittiChakraborti2023NL2LTL}, lifted
 language-to-logic translation \cite{Chen2023NL2TL,Guo2025CaStL}, or modular
-grounding \cite{Liu2023Lang2LTL}. Translation is
-an evaluated input condition here, not a contribution: we validate typed,
-externally bound parametric \ltlf{} by exact finite-trace language equivalence
-before GP2PL compilation, with the protocol and frozen prompt in the Technical
-Supplement, Sec.~4.
+grounding \cite{Liu2023Lang2LTL}. GP2PL contributes a narrower input contract:
+fixed JSON preserves typed, externally bound parameters; validation enforces
+PDDL vocabulary and types; and evaluation checks exact finite-trace language
+equivalence. The frozen prompt and protocol appear in the Technical Supplement,
+Sec.~4.
 
 \paragraph{Position of this work.}
-Prior work supplies generalized policies, answer-set optimization, AgentSpeak
-semantics, and \ltlf{} automata separately. GP2PL instead treats their connection
-as certificate-carrying compilation, establishing schema-level obligations
-before emitting one maintained library, akin to proof-carrying code
+Prior work supplies language-to-logic translation, generalized policies,
+answer-set optimization, AgentSpeak semantics, and \ltlf{} automata separately.
+GP2PL connects a typed translation contract to certificate-carrying compilation,
+establishing schema-level obligations before emitting one maintained library,
+akin to proof-carrying code
 \cite{Necula1997ProofCarryingCode} with narrower symbolic obligations.

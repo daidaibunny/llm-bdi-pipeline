@@ -222,11 +222,13 @@ main text.
 
 The manuscript presents GP2PL as a theoretical representation-compilation
 framework, not as a software architecture report. Its primary objects are a
-normalized singleton-goal evidence relation, a finite set of certified lifted
-BDI branches, a constrained feasible-library selection problem, conditional
-completion summaries, and preservation-safe deterministic finite automaton
-guard composition. MOOSE, Clingo, AgentSpeak(L), and Jason instantiate the
-evidence, optimization, rendering, and execution interfaces respectively.
+typed controlled-language-to-parametric-LTLf contract, a normalized
+singleton-goal evidence relation, a finite set of certified lifted BDI branches,
+a constrained feasible-library selection problem, conditional completion
+summaries, and preservation-safe deterministic finite automaton guard
+composition. A frozen language model, MOOSE, Clingo, AgentSpeak(L), and Jason
+instantiate the translation, evidence, optimization, rendering, and execution
+interfaces respectively.
 Internal class names, path layouts, worker scheduling, and command-line flags
 belong in the technical or code-and-data appendix. Empirical result prose and
 tests assert case identities and outcomes rather than file hashes or byte
@@ -249,10 +251,11 @@ The abstract follows a five-part structure:
 2. **Gap:** direct translation may omit executable plans for subsidiary goals
    and does not support safe temporal composition. Keep detailed certificate
    names out of the abstract.
-3. **Method:** validate and lift generalized-planning evidence, complete missing
-   achievable subgoals from PDDL action schemas, select a compact executable
-   core, and append finite-trace query controllers without relearning it. Name
-   concrete software components only in the method and evaluation sections.
+3. **Method:** translate typed controlled-language requests to parametric LTLf,
+   validate and lift generalized-planning evidence, complete missing achievable
+   subgoals from PDDL action schemas, select a compact executable core, and
+   append finite-trace query controllers without relearning it. Name concrete
+   software components only in the method and evaluation sections.
 4. **Guarantee boundary:** state soundness for the supported fragment and
    fail-closed rejection; defer candidate grammar and individual proof
    obligations to the formal sections.
@@ -277,7 +280,7 @@ software components.
 4. Introduce the Blocks running example in plain language before using
    `on(X,Y)`, `stack(X,Y)`, `holding(X)`, or `clear(Y)` notation. Keep the exact
    rule and temporal formula in the figure caption and method sections.
-5. Present the two-stage architecture and three implemented contributions in a
+5. Present the input boundary, two-stage compiler, and four contributions in a
    continuous paragraph. An itemized contribution list is not forbidden by the
    AAAI template, but prose better matches this paper's short causal argument.
 6. Preview the evaluation design without endpoint values; headline results
@@ -289,6 +292,9 @@ software components.
 
 Define only concepts used by the algorithms:
 
+- the controlled-language request, typed parameter/constraint contract, fixed
+  JSON translation, and distinction between deterministic online validation and
+  hidden-gold evaluation;
 - a typed STRIPS/PDDL Boolean core, its bounded-integer resource extension, and
   their state-transition semantics;
 - a generalized-planning task and readable MOOSE evidence;
@@ -324,18 +330,22 @@ compiler is introduced. Organize the section by representation gap:
 4. temporally extended BDI goals and LTLf-to-DFA synthesis; and
 5. natural-language-to-temporal-logic and planning-constraint translation,
    structured prompt programming, prompt-based semantic-parser robustness, and
-   the stricter typed, externally bound validation contract used here.
+   GP2PL's typed, externally bound translation contract and benchmark.
 
 End with the exact novelty boundary: MOOSE goal regression, Clingo solving,
 AgentSpeak semantics, conditional effect summaries for BDI goal interference,
-and LTLf-to-DFA translation are prior work. The contribution is their connection
-through a certificate-carrying compiler that derives the summaries from
-generalized-planning evidence and PDDL schemas, constructs executable domain
-modules, and composes query-local controllers.
+and LTLf-to-DFA translation are prior work. The contribution is a typed,
+externally bound translation contract and benchmark plus their connection to a
+certificate-carrying compiler that derives summaries from generalized-planning
+evidence and PDDL schemas, constructs executable domain modules, and composes
+query-local controllers.
 
-### 4. Certified Atomic-Module Compilation
+### 4. Validated Temporal Input and Plan-Library Compilation
 
-This section covers only the post-evidence domain compiler. Its candidate and
+First define the controlled-language input, frozen prompt, exact JSON contract,
+deterministic PDDL/schema checks, and externally bound parameter semantics.
+State that hidden-gold DFA equivalence is an evaluation oracle, not an online
+requirement. Then present the post-evidence domain compiler. Its candidate and
 certificate representation is defined at the trigger--context--body BDI
 plan-rule level; the implemented final rendering targets AgentSpeak(L).
 
@@ -471,10 +481,11 @@ DFA strategy synthesis, or primitive-state safety to a theorem.
 ### 7. Experimental Evaluation
 
 The evaluation must match the paper's actual contribution: MOOSE is one
-instantiated Evidence Module provider, while the proposed method is the
-post-evidence library compiler and temporal query compiler. There is therefore
-no single global planner baseline. Do not create a stand-alone research-question
-subsection. State each comparison beside the evidence that answers it:
+instantiated Evidence Module provider, while the proposed method contains the
+typed temporal-input contract, post-evidence library compiler, and temporal
+query compiler. There is therefore no single global planner baseline. Do not
+create a stand-alone research-question subsection. State each comparison beside
+the evidence that answers it:
 
 - **Evidence-to-library compilation.** Relative to validated direct adaptation
   of the same normalized evidence, measure how schema-certified lifting and
@@ -686,7 +697,8 @@ The final paper must distinguish:
   equivalence, the predicted formula is compiled into the query controller and
   executed once. The resulting trace is checked by both DFAs.
 
-The natural-language front end uses one frozen full prompt configuration. The
+The natural-language front end is GP2PL's typed input contribution and uses one
+frozen full prompt configuration. The
 technical supplement must reproduce a semantically complete paper-facing
 template containing the public PDDL catalogue, atom-table contract,
 externally-bound parameter contract, allowed operator fragment, normal forms,
@@ -695,8 +707,9 @@ model-correctable retry message. State that catalogue/sample placeholders are
 deterministic substitutions and that the artifact retains the exact rendered
 requests and responses. Prompt compliance is not a semantic oracle: exact
 schema/PDDL validation and reachable-product DFA-language equivalence remain
-separate gates. Treat this translation protocol as an evaluated input front
-end, not as the policy-lifting contribution.
+separate gates. Distinguish this input contribution from the policy-lifting
+compiler and state that hidden-gold equivalence is an evaluation oracle rather
+than an online validation requirement.
 
 The pinned version-1 artifact is not two duplicated execution runs. Gold-DFA
 and predicted-DFA acceptance are separate semantic oracles over the same trace.
@@ -932,8 +945,10 @@ Use a compact vertical flow with one side input and one final library artifact:
   `(1) Lift + certify core once`, producing
   `Certified atomic module core $\mathcal M_D$`.
 - Draw one solid reuse arrow from `$\mathcal M_D$` to `(2) Compose + append`.
-  A side input `Bound temporal query $\widehat\tau_q=(\tau_q,\theta_q)$` enters this
-  second operation.
+  A side input `Bound temporal query $\widehat\tau_q=(\tau_q,\theta_q)$`, produced
+  by the typed controlled-language input contribution described in the text,
+  enters this second operation. The user/thought-bubble motif denotes this input
+  boundary without adding a model-specific software box.
 - Label the output arrow `query plans $\mathcal Q_q$`; do not draw
   `$\mathcal Q_q$` as a separately maintained component.
 - End at one emphasized stacked-document artifact labelled
@@ -952,9 +967,10 @@ Draft caption:
 > temporal compilation. An external generalized-planning backend derives raw
 > singleton-goal evidence $\mathcal E_{\mathrm{raw}}$ from domain $D$ and training
 > instances $\mathcal I_{\mathrm{train}}$. Validated policy lifting compiles these
-> inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$; DFA-guided temporal
-> compilation maps each bound query $\widehat{\tau}_q$ to query-local plans
-> $\mathcal Q_q$, updating the sole maintained library by
+> inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$. A typed controlled-language
+> front end produces $\tau_q$, and an external type-consistent binding $\theta_q$
+> forms $\widehat{\tau}_q$; DFA-guided compilation maps it to query-local plans
+> $\mathcal Q_q$, updating the sole library by
 > $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
 
 ### Figure 2: Inside the Two GP2PL Compiler Stages
