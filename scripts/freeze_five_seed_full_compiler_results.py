@@ -452,8 +452,8 @@ def render_domain_table(result: Mapping[str, Any]) -> str:
 			(
 				"\\caption{Complete Full GP2PL atomic held-out successes by independent "
 				"MOOSE goal-order seed. Coverage is mean $\\pm$ sample standard "
-				"deviation (SD) for $n=5$ independently compiled atomic cores; no "
-				"evidence is pooled and no "
+				"deviation (SD) across five evidence seeds, with one core compiled "
+				"per domain and seed; no evidence is pooled and no "
 				"best seed is selected.}"
 			),
 			"\\label{tab:five-seed-atomic-domains}",

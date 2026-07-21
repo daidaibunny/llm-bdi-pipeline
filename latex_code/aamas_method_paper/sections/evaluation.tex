@@ -12,8 +12,8 @@ Blocksworld Clear and On
 Tower \cite{Bacchus2001AIPS00,PotasscoPDDLInstances}, and Depots
 \cite{Bonet2018Features,RLeapD2LRepository}. MOOSE readable policies provide
 $\mathcal E_{\mathrm{raw}}$. Following its protocol, the atomic study uses every
-training instance and three goal orders to compile five independently seeded
-cores.
+training instance and three goal orders. Each of five fixed evidence seeds
+produces one atomic core for each domain (80 cores in total).
 
 \paragraph{Temporal benchmark construction.}
 For each held-out problem, benchmark construction ignores the original
@@ -83,7 +83,7 @@ observation.
 
 \paragraph{Five-seed atomic robustness.}
 \label{sec:atomic-results}
-Across five independently compiled atomic cores, mean held-out coverage is
+Across these 80 domain--seed cores, mean held-out coverage is
 \AtomicFiveSeedMeanSuccessPercent{}\% $\pm$
 \AtomicFiveSeedSampleSDPercent{} percentage points
 (Table~\ref{tab:five-seed-atomic}). Variation is confined to Logistics and

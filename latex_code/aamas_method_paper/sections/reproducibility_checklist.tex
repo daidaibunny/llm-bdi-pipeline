@@ -20,6 +20,11 @@
 
 \begin{document}
 \fi
+\ifreproStandalone
+\newcommand{\finishReproChecklist}{\end{document}}
+\else
+\newcommand{\finishReproChecklist}{}
+\fi
 \setlength{\leftmargini}{20pt}
 \makeatletter\def\@listi{\leftmargin\leftmargini \topsep .5em \parsep .5em \itemsep .5em}
 \def\@listii{\leftmargin\leftmarginii \labelwidth\leftmarginii \advance\labelwidth-\labelsep \topsep .4em \parsep .4em \itemsep .4em}
@@ -218,6 +223,4 @@ yes
 
 \end{itemize}
 \end{itemize}
-\ifreproStandalone
-\end{document}
-\fi
+\finishReproChecklist

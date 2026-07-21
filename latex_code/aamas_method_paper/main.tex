@@ -63,8 +63,9 @@ atomic core, and appends query controllers guided by deterministic finite
 automata for finite-trace temporal goals without relearning that core. For the
 generated candidate language and supported fragment, accepted branches and
 controllers satisfy conditional soundness guarantees; uncertified obligations
-are rejected. Across \BenchmarkDomainCount{} domains, five independently seeded
-cores achieve \AtomicFiveSeedMeanSuccessPercent{}\% mean held-out coverage
+are rejected. Using five fixed evidence seeds and one atomic core per domain and
+seed, mean held-out coverage over \BenchmarkDomainCount{} domains is
+\AtomicFiveSeedMeanSuccessPercent{}\%
 ($\AtomicFiveSeedSampleSDPercent{}$ percentage-point sample standard deviation).
 Recursive candidates improve paired atomic success by 10.42 percentage points,
 and preservation certification improves paired temporal success by 9.36
@@ -173,8 +174,9 @@ DFA-guided compilation appends preservation-safe temporal controllers without
 relearning that core. Unsupported obligations fail closed rather than becoming
 unchecked plans.
 
-Across \BenchmarkDomainCount{} domains, five independently seeded cores achieved
-\AtomicFiveSeedMeanSuccessPercent{}\% mean held-out coverage
+Using five fixed evidence seeds and one atomic core per domain and seed, mean
+held-out coverage over \BenchmarkDomainCount{} domains was
+\AtomicFiveSeedMeanSuccessPercent{}\%
 (\AtomicFiveSeedSampleSDPercent{}-point sample SD), while recursive candidates
 improved paired atomic success by 10.42 percentage points. Preservation
 certification improved paired temporal success by 9.36 points; all
