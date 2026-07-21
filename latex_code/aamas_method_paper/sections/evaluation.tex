@@ -95,9 +95,10 @@ held-out outcomes.
 
 \paragraph{End-to-end temporal validation.}
 \label{sec:end-to-end-results}
-The five registered structures instantiate $\Phi_{\mathrm{bench}}$ rather than
-exhausting $\Phi_{\mathrm{syn}}$, and execution includes only queries admitted
-to $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. GPT-5.5
+The fixed temporal study uses one seed-0 atomic core per domain and does not
+assess cross-seed robustness. Its five registered structures instantiate
+$\Phi_{\mathrm{bench}}$ rather than exhaust $\Phi_{\mathrm{syn}}$, and execution
+includes only queries admitted to $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. GPT-5.5
 \cite{OpenAI2026GPT55SystemCard} translates the registered
 specifications. All \TranslationEquivalentCount{}/\TranslationInputCount{}
 controlled-language specifications are valid and DFA-language equivalent, and
@@ -106,22 +107,15 @@ VAL and both DFA trace oracles. Median runtime is \TEGMedianRuntimeSeconds{}
 seconds (interquartile range 4.28--8.49), and median trace length is
 \TEGMedianActionCount{} primitive actions (interquartile range 1--2).
 
-The temporal study fixes one seed-0 atomic core per domain, controlling the
-atomic-library input without measuring cross-seed robustness or arbitrary
-PDDL--\ltlf{} completeness.
-
 \subsection{Evidence-to-Library Comparison}
 \label{sec:evidence-to-library}
 
-Table~\ref{tab:added-scope-evidence} compares raw MOOSE execution with final
-GP2PL libraries compiled from the same evidence on 740 paired held-out
-seed--cases from the four added families.
+Table~\ref{tab:added-scope-evidence} compares raw MOOSE execution with the
+complete GP2PL compiler on 740 paired held-out seed--cases.
 
 \input{sections/result_same_scope_evidence_table}
 
-Unlike Table~\ref{tab:atomic-comparison}, it compares provider execution with
-the complete compiler rather than compiler configurations. Published MOOSE
-coverage is near ceiling on its disjoint original scope
+Published MOOSE coverage is near ceiling on its disjoint original scope
 \cite{Chen2025MooseExtended};
 scope-separated MOOSE and per-instance planner references appear only in the
 Technical Supplement, Sec.~5.

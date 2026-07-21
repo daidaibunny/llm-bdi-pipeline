@@ -264,19 +264,15 @@ has fan-out $O(n)$, whereas a direct linear body gives an $O(n)$-long intention
 continuation; balanced dispatch preserves the certified order while bounding
 both local quantities by two.
 
-Appending $\mathcal Q_q$ updates $\mathcal L_D^{[k]}$ as defined in
-Sec.~\ref{sec:background} without changing $\mathcal M_D$. Query-local goals are
-control symbols, not PDDL fluents or exported actions; only primitive PDDL
-actions change the observed state.
+Appending $\mathcal Q_q$ leaves $\mathcal M_D$ unchanged. Query-local goals are
+control symbols; only primitive PDDL actions change the observed state.
 
 \section{Conditional Guarantees}
 \label{sec:guarantees}
 
-The guarantees concern accepted artifacts under their stated premises. They are
-conditional on the generated certified candidate set and certificate-accepted
-temporal subset; they do not assert complete candidate generation, universal
-AgentSpeak optimality, or complete strategy synthesis for arbitrary PDDL
-domains and DFAs.
+These guarantees apply only to accepted artifacts and imply neither complete
+candidate generation, global AgentSpeak optimality, nor strategy synthesis for
+arbitrary PDDL domains and DFAs.
 
 \paragraph{Atomic branch soundness.}
 \textbf{Proposition 1.} If an emitted $p(\bar X)$ branch's context holds under a
@@ -315,8 +311,8 @@ at return boundaries. The monitor evaluates full cubes after every action and
 cannot be written by the controller; the suffix can therefore cause only real,
 fully observed DFA transitions. After the full pass, the completion plan tests
 the current state and either retries or returns to top-level dispatch.
-\hfill$\square$ This does not imply complete action-strategy synthesis or
-guarantee that a post-exit suffix avoids a rejecting state.
+\hfill$\square$ This does not guarantee that a post-exit suffix avoids
+rejection.
 
 \paragraph{Structural and monitor-fidelity guarantees.}
 The balanced tree for $n$ signed literals and $e$ repair plans has

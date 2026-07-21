@@ -152,12 +152,9 @@ execution, achievement, completion effects, and progress; and it appends
 preservation-safe finite-trace controllers over the fixed core, monitoring DFA
 progress after each primitive action.
 
-The evaluation separates component effects from complete-system behavior
-through five-seed atomic evaluation, paired compiler ablations, and fixed-core
-temporal validation. These claims concern the declared candidate and formula
-fragments, not complete planning for arbitrary PDDL--\ltlf{} products. Formal
-definitions, proofs, and the reporting protocol appear in the Technical
-Supplement.
+We evaluate component and end-to-end behavior only within the declared
+candidate and formula fragments; formal definitions, proofs, and the reporting
+protocol appear in the Technical Supplement.
 
 \input{sections/background}
 \input{sections/related_work}
@@ -167,12 +164,9 @@ Supplement.
 \FloatBarrier
 \section{Conclusion and Future Work}
 
-GP2PL demonstrates that generalized-planning evidence can be compiled into a
-maintained BDI plan library. Validated policy lifting
-selects an internally closed atomic core from evidence and typed PDDL schemas;
-DFA-guided compilation appends preservation-safe temporal controllers without
-relearning that core. Unsupported obligations fail closed rather than becoming
-unchecked plans.
+GP2PL compiles generalized-planning evidence and typed PDDL schemas into a
+closed atomic core, then appends preservation-safe DFA controllers to one
+maintained BDI library; uncertified obligations fail closed.
 
 Using five fixed evidence seeds and one atomic core per domain and seed, mean
 held-out coverage over \BenchmarkDomainCount{} domains was
