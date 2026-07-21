@@ -833,7 +833,8 @@ Canvas, PowerPoint, Python, and export settings:
 - Main Figure 1 uses the approved 2558-by-1256, 330-DPI PNG and is inserted at
   3.25 inches wide (approximately 1.60 inches high). Main Figure 2 uses a
   13.333-by-4.2-inch PowerPoint export canvas and is inserted at 7.0 inches
-  wide. Figure 3 uses a 6.5-by-3.1-inch canvas and is inserted at one column.
+  wide. Figure 3 uses the approved 1451-by-783, 330-DPI PNG and is inserted at
+  one column.
   The supplementary DFA figure uses a 13.333-by-5.333-inch
   PowerPoint canvas. Figure 1 retains its supplied alpha channel and must be
   verified on the paper's white page; generated conceptual figures use a white
@@ -846,16 +847,17 @@ Canvas, PowerPoint, Python, and export settings:
   three-dimensional effects, icons, decorative illustrations, or screenshots.
 - Main Figure 1 is the approved, version-controlled raster asset
   `fig1_architecture.png`; its SHA-256 identity is enforced by the method-figure
-  generator and tests. Figures 2--3 and the supplementary DFA figure may share
+  generator and tests. Figure 3 is the approved supplied raster asset
+  `fig3_atomic_case.png`. Figure 2 and the supplementary DFA figure may share
   the editable source deck `aaai_method_figures_source.pptx`, with exactly one
   figure per slide.
 - Main figure files are `fig1_architecture.png`,
-  `fig2_compiler_stages.pdf`, and `fig3_atomic_case.pdf`. The supplementary vector file is
+  `fig2_compiler_stages.pdf`, and `fig3_atomic_case.png`. The supplementary vector file is
   `figS1_dfa_controller.pdf`; all files live under
   `latex_code/aamas_method_paper/figures/` when delivered.
 - Embed fonts in vector PDFs, crop to the slide boundary, and verify all text at
-  its final include width. Do not rasterize Figures 2--3 or
-  resample/recompress the locked Figure 1 PNG.
+  its final include width. Do not rasterize Figure 2 or the supplementary DFA
+  figure, and do not resample or recompress the locked Figures 1 and 3 PNGs.
 
 Use this exact color palette. Text is always `#1A1A1A` unless the fill is the
 dark Clingo box, in which case text is white.
@@ -996,39 +998,36 @@ Approved caption:
 > conjunctive progress guard is converted into signed obligations, ordered by
 > completion-effect threats, and rendered as a balanced transition-repair tree.
 > The resulting $\mathcal Q_q$ is appended without relearning the core.
-> Figure 3 separately illustrates execution of the selected atomic core.
+> Figure 3 separately illustrates a compositional derivation available in the
+> selected atomic core.
 
-### Figure 3: Selected Atomic-Core Execution Case
+### Figure 3: Selected Atomic-Core Compositional Derivation
 
 Place this single-column figure after Feasible-Core Optimization and immediately
 before DFA-Guided Composition. It demonstrates the result of Figure 2(a), rather
 than repeating candidate construction:
 
-- Use the unseen state
-  `on(w,z), on(z,y), on(y,x), clear(w), arm_empty` and the invocation
-  `!on(y,z)`.
-- Show the selected variable-level fragments for recursive `clear/1`, direct
-  `clear/1`, recursive preparation of `on/2`, and direct `stack` production.
-  Do not include candidate tables, certificate matrices, or Clingo in this
-  figure.
-- The execution path is
-  `!clear(y) -> !clear(z) -> unstack(w,z); putdown(w) ->
-  unstack(z,y); putdown(z) -> !holding(y) -> unstack(y,x) ->
-  stack(y,z)`.
-- Distinguish achievement-call dispatch from primitive PDDL actions by shape
-  and labels, not color alone. End at `on(y,z)` with a check mark.
-- Use lowercase symbols for state objects and uppercase symbols only inside
-  variable-level AgentSpeak rules. State explicitly that no training object
-  occurs in the selected core.
+- Show the three-block state `on(z,y), on(y,x), clear(z), arm_empty` and the
+  invocation `!on(y,z)`.
+- Show the relevant selected slice $b_0,b_1,b_2\in\mathcal M_D$: preparation of
+  `on/2` through `!clear`, direct production of `clear/1`, and direct production
+  of `on/2`. Do not include candidate tables, certificate matrices, or Clingo.
+- Branch $b_0$ expands the goal stack to `!clear(y); !on(y,z)` without changing
+  the PDDL state. Branch $b_1$ executes `unstack(z,y); putdown(z)`, and branch
+  $b_2$ executes `unstack(y,x); stack(y,z)`.
+- Distinguish goal-stack expansion from primitive PDDL state transitions by
+  arrows and labels, not color alone. End at `on(y,z)` with a check mark.
+- The figure shows one certified derivation available in the core; it does not
+  define executor branch priority. Disequality guards inactive under the shown
+  binding may be omitted from the drawing.
 
 Approved caption:
 
-> Figure 3: Execution of the selected atomic core in Blocks World. From
-> `on(w,z)`, `on(z,y)`, and `on(y,x)`, the goal `!on(y,z)` calls `!clear(y)`.
-> The same `clear/1` module recurs on `z`, decreasing the certified obstruction
-> count before `holding/1` and the direct `stack(y,z)` producer complete the
-> goal. The selected rules contain variables rather than these illustrative
-> object names.
+> Figure 3: One certified compositional derivation from a selected Blocks World
+> atomic-core slice. The first transition expands an internal achievement
+> without changing the PDDL state; subsequent transitions execute schema
+> actions. Disequality guards inactive under the shown binding are omitted. The
+> figure demonstrates derivation availability, not runtime branch priority.
 
 ### Supplementary Figure S1: DFA Transition Compilation and Runtime Monitoring
 

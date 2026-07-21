@@ -176,8 +176,14 @@ trigger--context--body rules, rather than their AgentSpeak rendering, define
 $\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
 
-Figure~\ref{fig:atomic-case} isolates how the selected atomic core $\mathcal M_D$ is
-instantiated in a Blocks World state not encoded in its rules.
+Figure~\ref{fig:atomic-case} isolates one certified compositional derivation
+available in the selected atomic core $\mathcal M_D$. For the runtime binding
+$X\mapsto y$, $Y\mapsto z$, and $Z\mapsto x$, branch $b_0$ expands
+$\texttt{!on(y,z)}$ into $\texttt{!clear(y)}$ followed by a retry; this control
+step leaves the PDDL state unchanged. Branch $b_1$ clears $y$, and $b_2$ then
+establishes $\texttt{on(y,z)}$. Multiple selected branches may be applicable in
+one state, so the figure demonstrates an available derivation rather than an
+executor tie-breaking rule.
 
 \begin{figure}[htbp]
 \centering
@@ -186,17 +192,14 @@ instantiated in a Blocks World state not encoded in its rules.
 }{%
 \fbox{\parbox[c][1.55in][c]{0.92\columnwidth}{\centering
 Atomic-core execution placeholder\\[5pt]
-$\texttt{on(w,z),on(z,y),on(y,x)}$\\
-$\rightarrow\ !\texttt{clear(y)}\rightarrow\ !\texttt{clear(z)}$\\
-$\rightarrow\ !\texttt{holding(y)}\rightarrow\texttt{stack(y,z)}$}}
+$\texttt{on(z,y),on(y,x)}$\\
+$\rightarrow\ !\texttt{clear(y)}\rightarrow\ !\texttt{on(y,z)}$}}
 }
-\caption{Execution of the selected atomic core in Blocks World. From
-\(\texttt{on(w,z)},\texttt{on(z,y)},\texttt{on(y,x)}\), the goal
-\(\texttt{!on(y,z)}\) calls \(\texttt{!clear(y)}\). The same
-\texttt{clear/1} module recurs on \texttt{z}, decreasing the certified
-obstruction count before \texttt{holding/1} and the direct
-\texttt{stack(y,z)} producer complete the goal. The selected rules contain
-variables rather than these illustrative object names.}
+\caption{One certified compositional derivation from a selected Blocks World
+atomic-core slice. The first transition expands an internal achievement without
+changing the PDDL state; subsequent transitions execute schema actions.
+Disequality guards inactive under the shown binding are omitted. The figure
+demonstrates derivation availability, not runtime branch priority.}
 \label{fig:atomic-case}
 \end{figure}
 
