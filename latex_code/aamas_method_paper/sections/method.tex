@@ -15,22 +15,23 @@ language equivalence; this gold oracle is not an online input requirement. The
 complete prompt and translation protocol appear in the Technical Supplement,
 Sec.~4.
 
-\subsection{Atomic-Compilation Overview}
+\subsection{Compiler Certification Structure}
 
-GP2PL has one validated translation boundary and two certification boundaries.
-Domain compilation maps
-$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$ by
-verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before feasible-core
-selection. Query compilation reuses the selected summaries to certify
-$(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)$ for each DFA guard $\chi$, without
-relearning $\mathcal M_D$. The Technical Supplement formalizes the accept/reject
-boundary and constructor obligations (Sec.~1), proves the binding, symbolic
-execution, progress, resource, preservation, tree, monitor, and answer-set
-correspondence claims (Sec.~2), and gives full compiler pseudocode (Sec.~3).
+GP2PL separates deterministic input validation from two compiler certification
+stages. Atomic compilation first checks each candidate branch locally through
+$\operatorname{Cert}_D(b)$ and records its completion summary $\Sigma_b$. It
+then checks candidate sets globally for evidence and schema coverage,
+internal-call closure, and compatible progress and dependency ranks before
+selecting $\mathcal M_D$. Temporal compilation reuses the selected summaries to
+certify an occurrence-specific preservation portfolio $\boldsymbol\Pi_\chi$ and
+serialization $\boldsymbol\ell_\chi$ for each DFA guard $\chi$; it neither
+reopens atomic selection nor relearns $\mathcal M_D$.
 
-All obligations are checked on trigger--context--body rules before rendering.
-The \asl{} rendering preserves each selected trigger, context, ordered body, and
-internal-call edge.
+These obligations are checked on trigger--context--body rules before rendering,
+and the \asl{} realization preserves each selected trigger, context, ordered
+body, and internal-call edge. The Technical Supplement formalizes the
+accept/reject boundary and constructors (Sec.~1), proves the certificate and
+monitor claims (Sec.~2), and gives compiler pseudocode (Sec.~3).
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -95,14 +96,14 @@ constrain unification; rendered sort membership is context-only.
 \subsection{Candidate Soundness Certificates}
 
 Each candidate's conditional module-completion summary $\Sigma_b$ has Boolean
-projections
-$\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, together with any exact
-constant-integer delta and keyed resource-mode transition. The $\mustadd_b$
-facts hold after every feasible completion; $\mayadd_b$ and $\maydelete_b$
-overapproximate possible effects. Selected branches also satisfy typed binding,
-symbolic executability, and target achievement; $\operatorname{Cert}_D(b)$
-denotes their conjunction, and the core satisfies
-$\operatorname{Closed}_D(\mathcal M_D)$; the load-bearing certificates follow.
+projections $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, together with any
+exact constant-integer delta and keyed resource-mode transition. The
+$\mustadd_b$ facts hold after every feasible completion; $\mayadd_b$ and
+$\maydelete_b$ overapproximate possible effects. Let
+$\operatorname{Cert}_D(b)$ denote the conjunction of typed binding, symbolic
+executability, target achievement, and any constructor-specific progress or
+resource obligation. The selected core must additionally satisfy the set-level
+condition $\operatorname{Closed}_D(\mathcal M_D)$; the definitions follow.
 
 \paragraph{Binding, symbolic execution, and internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
@@ -192,6 +193,13 @@ $N_C$ counts context literals, and $N_\beta$ counts body steps. The selected
 trigger--context--body rules, rather than their AgentSpeak rendering, define
 $\mathcal M_D$; the claim is global only within
 $\mathcal C^{\checkmark}_{D,E}$, not over ungenerated programs.
+
+Figure~\ref{fig:atomic-case} isolates one certified compositional derivation
+available in $\mathcal M_D$. Under the displayed binding, branch $b_0$ expands
+$\texttt{!on(y,z)}$ into $\texttt{!clear(y)}$ followed by a retry without
+changing the PDDL state; $b_1$ clears $y$, and $b_2$ establishes
+$\texttt{on(y,z)}$. Several selected branches may apply in one state, so the
+figure shows an available derivation rather than an executor tie-breaking rule.
 
 \begin{figure}[htbp]
 \centering
@@ -288,9 +296,8 @@ control symbols; only primitive PDDL actions change the observed state.
 \section{Conditional Guarantees}
 \label{sec:guarantees}
 
-These guarantees apply only to accepted artifacts and imply neither complete
-candidate generation, global AgentSpeak optimality, nor strategy synthesis for
-arbitrary PDDL domains and DFAs.
+These guarantees apply only to accepted artifacts; each proposition states its
+branch-local, candidate-space, or supported-composition boundary.
 
 \paragraph{Atomic branch soundness.}
 \textbf{Proposition 1.} If an emitted $p(\bar X)$ branch's context holds under a

@@ -277,9 +277,10 @@ software components.
 3. Explain why a temporally extended goal (TEG), meaning a goal over a finite
    state trace, cannot generally be replaced by an arbitrary sequence of
    achievement calls.
-4. Introduce the Blocks running example in plain language before using
-   `on(X,Y)`, `stack(X,Y)`, `holding(X)`, or `clear(Y)` notation. Keep the exact
-   rule and temporal formula in the figure caption and method sections.
+4. Keep Figure 1 at the representation-boundary level: domain and provider
+   evidence compile once into `M_D`, while each bound temporal query appends
+   `Q_q` to the maintained library. Introduce the Blocks running example only
+   in Figure 2 and the method, where its rules carry explanatory value.
 5. Present the input boundary, two-stage compiler, and four contributions in a
    continuous paragraph. An itemized contribution list is not forbidden by the
    AAAI template, but prose better matches this paper's short causal argument.
@@ -296,7 +297,9 @@ Define only concepts used by the algorithms:
   JSON translation, and distinction between deterministic online validation and
   hidden-gold evaluation;
 - a typed STRIPS/PDDL Boolean core, its bounded-integer resource extension, and
-  their state-transition semantics;
+  their state-transition semantics; state explicitly that actions are
+  instantaneous and deterministic and states fully observable, excluding
+  conditional/durative effects, stochasticity, and partial observability;
 - a generalized-planning task and readable MOOSE evidence;
 - a trigger--context--body BDI plan rule, a lifted module, and internal-call closure;
 - AgentSpeak(L) as the concrete rendering used by the implementation and Jason
@@ -323,11 +326,13 @@ does not prescribe one location, and MOOSE places it near the end, but this
 paper connects three communities whose boundaries should be clear before the
 compiler is introduced. Organize the section by representation gap:
 
-1. generalized planning, MOOSE, feature policies, and sketches;
+1. generalized planning, MOOSE, feature policies, sketches, and direct
+   program-generating systems such as LMPlan and GenePlan;
 2. policy reuse and solver-backed compact rule selection;
 3. procedural BDI plan libraries, AgentSpeak declarative goal patterns, plan
    failure, and definite/possible effect summaries for goal interference;
-4. temporally extended BDI goals and LTLf-to-DFA synthesis; and
+4. temporally extended BDI goals, LTLf-to-DFA synthesis, product compilation
+   such as FOND4LTLf, and automaton-trace search such as TIDE; and
 5. natural-language-to-temporal-logic and planning-constraint translation,
    structured prompt programming, prompt-based semantic-parser robustness, and
    GP2PL's typed, externally bound translation contract and benchmark.
@@ -348,6 +353,13 @@ State that hidden-gold DFA equivalence is an evaluation oracle, not an online
 requirement. Then present the post-evidence domain compiler. Its candidate and
 certificate representation is defined at the trigger--context--body BDI
 plan-rule level; the implemented final rendering targets AgentSpeak(L).
+
+Present certification at three distinct levels. Candidate-local atomic
+certification establishes `Cert_D(b)` and `Sigma_b`; selected-core feasibility
+establishes evidence/schema coverage, `Closed_D(M_D)`, and compatible progress
+and dependency ranks; query-side certification establishes the preservation
+portfolio `Pi_chi` and serialization `ell_chi` for each DFA progress guard.
+Deterministic translation validation is an input gate, not a fourth certificate.
 
 1. Normalize the raw provider artifact `E_raw` into a provider-neutral singleton-goal evidence
    program. Do not expose an internal class name in the main narrative.
@@ -604,9 +616,8 @@ Keep the two experimental estimands explicit. The five-seed atomic matrix
 measures variability of evidence discovery, compilation, and atomic achievement
 coverage. The temporal matrix conditions on one declared seed-0 atomic-library
 set and measures translation, query-controller execution,
-and trace semantics. A recent conditional temporal result does not become
-invalid because its library was generated under a different worker protocol,
-but it cannot support a cross-seed atomic-robustness claim.
+and trace semantics. It isolates temporal variants but cannot support a
+cross-seed temporal-robustness claim.
 
 Raw MOOSE, LAMA for classical planning, ENHSP MRP+HJ for numeric planning, and
 FOND4LTLf v0.0.4 plus LAMA for its grounded Boolean temporal subset are external
@@ -635,6 +646,11 @@ inserted into paired experiment tables. Plan4Past is a design precedent for
 holding the task-level planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
 been proved language-equivalent.
+
+The main result narrative may report the direct FOND4LTLf comparison only on
+the 492 Boolean queries accepted by its adapter, separating the other 736 inputs
+as unsupported. TIDE is a conceptual trace-search comparator until a common
+adapter and same-scope experiment exist; do not imply an empirical comparison.
 
 Repair only cases explicitly recorded as infrastructure failures in those
 complete 20-worker matrices. Run the exact repair set serially with one worker,
@@ -666,6 +682,8 @@ instances. Report paired coverage differences, every seed, mean and sample
 standard deviation. A rejection challenge suite and symbol-renaming,
 parameter-permutation, object-renaming, and irrelevant-fluent metamorphic tests
 are mandatory evidence for fail-closed and domain-independent behavior.
+Report the resulting 13/13 structural challenge outcomes in the main paper, but
+do not treat them as a completeness proof.
 
 The five atomic seeds repeat the same 1,228 held-out identifiers. Seed--case
 totals and within-case paired gains are descriptive because identifiers within
@@ -742,6 +760,11 @@ Compress the main-paper limitations into one short sentence for each claim
 boundary: evidence-provider and candidate-grammar scope; temporal-dataset and
 fixed-core scope; and incomplete strategy synthesis. Preserve the detailed
 rejection categories and implemented bounds in the Technical Supplement.
+
+Name unmeasured extensions as future work rather than implied evidence:
+cross-seed temporal robustness, scaling with generated candidate-set size,
+action-quality or repair-overhead analysis, same-scope trace-search comparison,
+and richer planning models.
 
 Close the section with generator-assisted domain onboarding as a bounded future
 extension. A pinned parameterized PDDL problem generator may create a finite

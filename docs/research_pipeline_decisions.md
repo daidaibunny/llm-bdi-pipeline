@@ -490,11 +490,13 @@ by unexplained process boxes. Figure 3 separately shows execution of the
 selected variable-level atomic core on an unseen Blocks stack and is placed
 after feasible-core optimization. Main-paper results use exact generated
 tables; per-profile, per-domain, per-seed, runtime, and diagnostic views belong
-in the Technical Supplement. The main paper's external comparison is restricted
-to the identical 740 added-domain seed--case evaluations for Raw MOOSE evidence
-and Full GP2PL. The complete scope-separated MOOSE, LAMA, MRP+HJ, and
-FOND4LTLf reference matrix remains in the Technical Supplement, avoiding a
-cross-scope ranking and a page-breaking double-column float.
+in the Technical Supplement. The main paper reports the identical 740
+added-domain seed--case comparison with Raw MOOSE and the 492 Boolean temporal
+queries accepted by the direct FOND4LTLf adapter; unsupported inputs remain
+separate. The complete scope-separated MOOSE, LAMA, MRP+HJ, and FOND4LTLf
+matrix remains in the Technical Supplement, avoiding a cross-scope ranking and
+a page-breaking double-column float. TIDE remains a conceptual trace-search
+comparison until a same-scope executable adapter is evaluated.
 
 Machine-readable artifacts retain stable identifiers such as
 `validated_evidence_adapter` and `certified_balanced`. Manuscript tables and
@@ -701,7 +703,10 @@ failures. Results are aggregated by domain and formula profile. The public
 record retains case outcomes and validation statuses; verbose DFA, Jason,
 trace, and validator artifacts remain local diagnostics.
 
-The supported planning fragment also includes bounded integer resources.
+The planning model uses instantaneous deterministic typed STRIPS actions and
+fully observable states. Conditional effects, durative actions, stochastic
+outcomes, and partial observability are outside the certified fragment and fail
+closed. The supported planning fragment also includes bounded integer resources.
 A numeric resource is a declared PDDL function with an integer value in the
 state, for example `(capacity ?vehicle)` or `(pogo_sticks_to_make)`. A numeric
 resource context is rendered as a mutable AgentSpeak belief plus comparison,

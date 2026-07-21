@@ -79,23 +79,22 @@ accepting traces.
 \section{Introduction}
 
 Classical PDDL planning computes an action sequence for one grounded problem
-\cite{McDermott1998PDDL}; generalized planning learns reusable behavior for a
-family of related problems
-\cite{Srivastava2011DirectedSearch,Chen2026Moose}. A
-Belief--Desire--Intention (BDI) interpreter uses a different representation: a
-plan library that connects events and belief contexts to actions and subsidiary
-goals \cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. Turning a
-generalized policy into such a library is therefore a compilation problem, not
-a change of syntax.
+\cite{McDermott1998PDDL}; generalized planning amortizes this effort by learning
+reusable behavior for a family of related problems
+\cite{Srivastava2011DirectedSearch,Chen2026Moose}. Belief--Desire--Intention
+(BDI) agents also reuse behavior, but through plan libraries that connect events
+and belief contexts to actions and subsidiary goals
+\cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. These artifacts obey
+different contracts: singleton-goal policy evidence need not provide the
+callable, context-indexed modules required by a maintained BDI library.
 
-In Blocks World, a learned rule for the lifted achievement $\texttt{on(X,Y)}$
-may use the action \texttt{stack(X,Y)} when the robot is holding $X$ and the
-destination block is clear. If $Y$ is not clear, however, an executable BDI
-library also needs a reusable plan for making it clear, even when that condition
-never appeared as a training goal. More generally, variables must remain safely
-bound, subsidiary goals must resolve to library plans, and recursive plans must
-make progress. Figure~\ref{fig:architecture} summarizes the representation
-bridge and its query-reuse boundary.
+Consider a typed planning domain $D$, training instances
+$\mathcal I_{\mathrm{train}}$, and raw singleton-goal evidence
+$\mathcal E_{\mathrm{raw}}$ produced by an external generalized-planning backend.
+GP2PL addresses the representation-compilation problem shown in
+Figure~\ref{fig:architecture}. It compiles a reusable atomic core once per domain,
+then extends the same library with a controller for each bound temporal query;
+the external backend is neither replaced nor rerun for a new query.
 
 \begin{figure}[htbp]
 \centering
@@ -119,17 +118,22 @@ $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 \label{fig:architecture}
 \end{figure}
 
-Temporally extended goals add a second representation gap
-\cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}: a request to place one
-block on another and only later clear a third constrains the whole finite
-trace, and a conjunctive milestone must not be undone by a later plan, a form
-of BDI goal interference \cite{Thangarajah2003GoalInterference}. Safe reuse
-therefore requires temporal control over the fixed domain library and
-observation after primitive actions.
+Raw evidence is not yet an atomic plan-library core. It may omit producible
+achievements needed by internal calls, and it does not by itself establish safe
+variable binding, sequential PDDL executability, recursive progress, resource
+restoration, or internal-call closure. GP2PL therefore lifts evidence, constructs
+schema-derived candidates, certifies them locally and as a selected set, and
+optimizes a compact closed core.
 
-At the input boundary, a frozen prompt maps controlled-language requests to
-typed, externally bound parametric \ltlf{}; deterministic checks enforce the
-declared PDDL vocabulary, arities, types, parameters, and operator fragment.
+Temporally extended requests add a second representation gap
+\cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. The input contract must
+preserve typed external parameters in parametric \ltlf{}, while conjunctive DFA
+guards may contain achievements that interfere and safety-sensitive formulas
+require observation within atomic modules \cite{Thangarajah2003GoalInterference}.
+GP2PL certifies a preservation-safe realization of each admitted progress guard,
+monitors the DFA after primitive actions, and appends the resulting controller
+without relearning the core. Figure~\ref{fig:compiler-stages} details both
+compiler stages.
 
 \begin{figure*}[t!]
 \centering
@@ -158,10 +162,6 @@ omitted producible subgoals; compile-time certificates for binding, execution,
 achievement, completion effects, and progress; and preservation-safe
 finite-trace controllers that monitor DFA progress after each primitive action.
 
-We evaluate component and end-to-end behavior only within the declared
-candidate and formula fragments; formal definitions, proofs, and the reporting
-protocol appear in the Technical Supplement.
-
 \input{sections/background}
 \input{sections/related_work}
 \input{sections/method}
@@ -179,9 +179,11 @@ add 10.42 and 9.36 paired-success points. All
 \TranslationEquivalentCount{} translations and \TEGProblemCount{} admitted
 queries pass DFA-language and execution validation. Unsupported are unrestricted
 PDDL--\ltlf{} synthesis, out-of-fragment arithmetic/formulae, and uncertified
-repair; future work broadens this scope under fail-closed certification.
-Pinned PDDL generators with held-out-disjoint instances can extend domain
-onboarding without changing the certificates.
+repair. Future work studies cross-seed temporal robustness, candidate-size
+scaling, action-quality overhead, same-scope trace-search comparisons, and
+richer models under fail-closed certification. Pinned PDDL generators with
+held-out-disjoint instances can extend domain onboarding without changing the
+certificates.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}

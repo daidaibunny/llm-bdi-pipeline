@@ -466,9 +466,10 @@ for arbitrary planning programs.
 
 \begin{assumption}[Planning fragment]
 Boolean actions use deterministic typed STRIPS semantics. Numeric effects are
-constant integer increases or decreases over finite values. Arbitrary
-expressions, continuous change, conditional effects outside the supported PDDL
-fragment, and probabilistic actions are rejected.
+constant integer increases or decreases over finite values. Actions are
+instantaneous and states are fully observable. Arbitrary expressions,
+continuous change, conditional effects, durative actions, probabilistic actions,
+and partial observability are rejected.
 \end{assumption}
 
 \begin{assumption}[Evidence boundary]

@@ -565,7 +565,8 @@ src/domains/<domain>/domain.pddl
 src/domains/<domain>/test/*.pddl
 ```
 
-The supported fragment is finite-domain typed or untyped STRIPS with:
+The supported fragment assumes instantaneous deterministic actions and fully
+observable finite states. It is typed or untyped STRIPS with:
 
 - positive and negative conjunctive predicate preconditions;
 - positive and delete predicate effects;
@@ -575,8 +576,8 @@ The supported fragment is finite-domain typed or untyped STRIPS with:
 - typed domain constants.
 
 Unsupported nested disjunction, quantification, conditional effects, derived
-predicates, arbitrary arithmetic, or durative actions MUST fail closed with a
-structured diagnostic.
+predicates, arbitrary arithmetic, durative actions, stochastic outcomes, or
+partial observability MUST fail closed with a structured diagnostic.
 
 ### Public output
 

@@ -11,7 +11,10 @@ hierarchy; a state $s=(s_{\mathcal P},s_{\mathcal F})$ combines Boolean and
 integer valuations under the standard add/delete successor. The numeric
 component admits finite integer values, comparisons with constants, and
 constant integer changes; arbitrary arithmetic and continuous change are
-excluded. A problem instance is $I=\langle D,O_I,s_I^0,G_I\rangle$ with typed
+excluded. Actions are instantaneous and deterministic, and the state is fully
+observable; conditional effects, durative actions, stochastic outcomes, and
+partial observability are outside the model. A problem instance is
+$I=\langle D,O_I,s_I^0,G_I\rangle$ with typed
 objects, initial state, and PDDL achievement condition, and a
 generalized-planning task supplies finite training and test instance sets
 sharing $D$. MOOSE applies goal regression
@@ -32,8 +35,7 @@ evaluated here \cite{Rao1996AgentSpeak}, an achievement plan is
 where $C$ is a conjunction of beliefs and comparisons and each $b_i$ is a PDDL
 action or an internal achievement call $!q(\bar Y)$. A library is lifted when
 plans contain variables rather than training objects, and internally closed
-when every internal call resolves to a type-compatible selected module; closure
-is a signature-resolution property, not per-state applicability.
+when every internal call resolves to a type-compatible selected module.
 
 Our certificates apply to this trigger--context--body model and to the PDDL
 semantics of primitive actions. A certificate is a compile-time, machine-checkable

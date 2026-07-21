@@ -67,9 +67,8 @@ automaton, library, and monitor implementation.
 
 Certified Balanced gains 9.36 points over Unprotected Serialization
 (Table~\ref{tab:temporal-comparison}); 113 of 115 gains are in bounded-integer
-domains and two in Transport. We select its bounded local structure, not its
-runtime; helper plans are the representational cost. Lower Module-Return
-coverage supports primitive-step observation.
+domains and two in Transport. Lower Module-Return coverage supports
+primitive-step observation.
 
 \subsection{Full-System Coverage and Robustness}
 \label{sec:full-system-results}
@@ -86,10 +85,17 @@ resource-choice patterns.
 
 \input{sections/result_five_seed_atomic_table}
 
+All \ChallengeSuccessCount{}/\ChallengeCaseCount{} registered structural
+challenges pass: seven test exact acceptance or rejection, and six test
+invariance under symbol renaming, parameter permutation, object renaming, or
+irrelevant vocabulary. These checks complement held-out coverage without
+claiming certificate completeness.
+
 \paragraph{End-to-end temporal validation.}
 \label{sec:end-to-end-results}
-The paired temporal study fixes one seed-0 core per domain so controller variants
-differ only in temporal compilation. Its five structures instantiate
+To isolate temporal compilation, the paired study conditions every controller
+variant on the same seed-0 core per domain; it does not estimate cross-seed
+temporal variability. Its five structures instantiate
 $\Phi_{\mathrm{bench}}$, not all of
 $\Phi_{\mathrm{syn}}$, and execution includes only queries admitted to
 $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. All
@@ -97,6 +103,15 @@ $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. All
 equivalent, and all \TEGProblemCount{} admitted queries pass Jason, neutral-goal
 VAL, and both DFA oracles. Median runtime is \TEGMedianRuntimeSeconds{} seconds
 (IQR 4.28--8.49), and median trace length is \TEGMedianActionCount{} actions
-(IQR 1--2). Across 740 same-seed added-family cases, GP2PL raises VAL-valid
-coverage from 15.8\% to 97.3\%; original-scope MOOSE results are separate
-\cite{Chen2025MooseExtended}.
+(IQR 1--2); trace length is descriptive, not an action-cost optimality claim.
+Across 740 same-seed added-family cases, GP2PL raises VAL-valid coverage from
+15.8\% to 97.3\%; original-scope MOOSE results are separate
+\cite{Chen2025MooseExtended}. On the \ExternalDirectSupportedCount{} Boolean
+queries in the direct FOND4LTLf comparison, GP2PL validates
+\ExternalDirectSupportedCount{}/\ExternalDirectSupportedCount{} and FOND4LTLf
+with LAMA validates
+\ExternalDirectValidCount{} (supported-set PAR-2
+\ExternalDirectParTwoSeconds{} seconds) \cite{DeGiacomoFuggitti2021FOND4LTLf}.
+The other \ExternalDirectUnsupportedCount{} inputs fall outside the reference's
+declared input scope, so this is a task reference rather than a compiler
+ablation.
