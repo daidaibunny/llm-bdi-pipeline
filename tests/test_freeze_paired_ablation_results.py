@@ -101,7 +101,8 @@ def test_manuscript_presents_component_evidence_before_full_system_and_reference
 	) < evaluation.index(r"\input{sections/result_temporal_comparison_table}")
 	assert full_system < evaluation.index(
 		r"\input{sections/result_five_seed_atomic_table}",
-	) < evaluation.index(r"\input{sections/result_temporal_summary_table}")
+	) < evaluation.index(r"\paragraph{End-to-end temporal validation.}")
+	assert r"\input{sections/result_temporal_summary_table}" not in evaluation
 	assert external < evaluation.index(
 		r"\input{sections/result_same_scope_evidence_table}",
 	)

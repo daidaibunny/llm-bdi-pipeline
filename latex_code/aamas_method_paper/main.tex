@@ -182,13 +182,11 @@ execution, achievement, completion effects, and progress; and it appends
 preservation-safe finite-trace controllers over the fixed core, monitoring DFA
 progress after each primitive action.
 
-The experiments separate component effects from complete-system behavior:
-across \BenchmarkDomainCount{} domains, independently compiled atomic cores
-average \AtomicFiveSeedMeanSuccessPercent{}\% held-out coverage over five
-evidence seeds, and a fixed-core study validates all \TEGProblemCount{}
-registered temporal queries. These claims concern the declared candidate and
-formula fragments, not complete planning for arbitrary PDDL--\ltlf{} products.
-Formal definitions, proofs, and the reporting protocol appear in the Technical
+The evaluation separates component effects from complete-system behavior
+through five-seed atomic evaluation, paired compiler ablations, and fixed-core
+temporal validation. These claims concern the declared candidate and formula
+fragments, not complete planning for arbitrary PDDL--\ltlf{} products. Formal
+definitions, proofs, and the reporting protocol appear in the Technical
 Supplement.
 
 \input{sections/background}

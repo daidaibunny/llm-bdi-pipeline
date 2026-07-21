@@ -57,11 +57,10 @@ before GP2PL compilation, with the protocol and frozen prompt in the Technical
 Supplement, Sec.~4.
 
 \paragraph{Position of this work.}
-Generalized planners target policies or programs, BDI programming assumes a
-plan library, and temporal synthesis targets an automaton strategy; GP2PL
-connects them through certificate-carrying compilation, echoing proof-carrying
-code \cite{Necula1997ProofCarryingCode} with narrower symbolic planning
-obligations. Its contribution is the certified construction of a reusable
-atomic module core and preservation-safe query plans in the maintained BDI
-library; goal regression, answer-set solving, AgentSpeak semantics, and
-\ltlf-to-DFA translation remain prior components.
+Prior work supplies generalized policies, answer-set optimization, AgentSpeak
+execution semantics, and \ltlf{} automata as separate artifacts. GP2PL
+formulates their connection as a certificate-carrying compilation problem that
+establishes schema-level obligations before emitting one maintained executable
+library, echoing proof-carrying code \cite{Necula1997ProofCarryingCode} with
+narrower symbolic planning obligations. Goal regression, answer-set solving,
+AgentSpeak semantics, and \ltlf-to-DFA translation remain prior components.

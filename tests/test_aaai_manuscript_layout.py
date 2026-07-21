@@ -158,21 +158,20 @@ def test_manuscript_uses_required_caption_package_without_float_overrides() -> N
 			assert f"\\usepackage{{{forbidden_package}}}" not in source
 
 
-def test_temporal_result_tables_follow_their_result_subsection() -> None:
+def test_temporal_result_summary_is_prose_and_details_stay_in_supplement() -> None:
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
 	supplement_source = (
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
 	).read_text(encoding="utf-8")
-	temporal_results_position = evaluation_source.index(
-		"\\paragraph{End-to-end temporal validation.}",
+	evaluation_text = " ".join(evaluation_source.split())
+	assert "\\input{sections/result_temporal_summary_table}" not in evaluation_source
+	assert (
+		"controlled-language specifications are valid and DFA-language equivalent"
+		in evaluation_text
 	)
-	assert evaluation_source.index(
-		"\\input{sections/result_temporal_summary_table}",
-	) > (
-		temporal_results_position
-	)
+	assert "pass neutral-goal VAL and both DFA trace oracles" in evaluation_text
 	assert "\\input{sections/result_profile_table}" not in evaluation_source
 	assert "\\input{sections/result_profile_table}" in supplement_source
 	assert "\\input{sections/result_domain_table}" not in evaluation_source
@@ -729,11 +728,8 @@ def test_main_results_report_scientific_aggregates_not_run_bookkeeping() -> None
 	atomic_table_source = (
 		LATEX_ROOT / "sections/result_five_seed_atomic_table.tex"
 	).read_text(encoding="utf-8")
-	temporal_table_source = (
-		LATEX_ROOT / "sections/result_temporal_summary_table.tex"
-	).read_text(encoding="utf-8")
 	evaluation_text = " ".join(
-		(evaluation_source + atomic_table_source + temporal_table_source).split(),
+		(evaluation_source + atomic_table_source).split(),
 	)
 	supplement_source = (
 		LATEX_ROOT / "sections/technical_appendix_content.tex"
@@ -781,7 +777,6 @@ def test_evaluation_protocol_facts_are_not_repeated_in_table_captions() -> None:
 		for path in (
 			LATEX_ROOT / "sections/result_atomic_comparison_table.tex",
 			LATEX_ROOT / "sections/result_temporal_comparison_table.tex",
-			LATEX_ROOT / "sections/result_temporal_summary_table.tex",
 			LATEX_ROOT / "sections/result_same_scope_evidence_table.tex",
 		)
 	)
@@ -945,7 +940,7 @@ def test_conclusion_and_future_work_states_the_supported_claim_boundary(
 		assert required_boundary in combined
 
 
-def test_paired_result_inference_respects_the_atomic_case_cluster() -> None:
+def test_paired_result_reporting_respects_the_atomic_case_cluster() -> None:
 	evaluation_source = (LATEX_ROOT / "sections/evaluation.tex").read_text(
 		encoding="utf-8",
 	)
@@ -955,7 +950,8 @@ def test_paired_result_inference_respects_the_atomic_case_cluster() -> None:
 	combined = " ".join((evaluation_source + supplement_source).split())
 
 	assert "130 nonzero case-level differences" in combined
-	assert r"1.47\times10^{-39}" in combined
+	assert r"1.47\times10^{-39}" not in combined
+	assert "two-sided exact sign test" not in combined
 	assert "five seeded outcomes within each identifier" in combined
 	assert "held-out case identifiers under five evidence seeds" in combined
 	assert "case-level $p$-value" in combined

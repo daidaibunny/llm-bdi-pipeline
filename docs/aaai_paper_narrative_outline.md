@@ -278,7 +278,9 @@ software components.
 5. Present the two-stage architecture and three implemented contributions in a
    continuous paragraph. An itemized contribution list is not forbidden by the
    AAAI template, but prose better matches this paper's short causal argument.
-6. End with the supported-fragment boundary rather than universal-planning or
+6. Preview the evaluation design without endpoint values; headline results
+   belong in the Abstract, Evaluation, and Conclusion.
+7. End with the supported-fragment boundary rather than universal-planning or
    full-LTLf claims.
 
 ### 2. Problem Formulation and Foundations
@@ -655,11 +657,12 @@ parameter-permutation, object-renaming, and irrelevant-fluent metamorphic tests
 are mandatory evidence for fail-closed and domain-independent behavior.
 
 The five atomic seeds repeat the same 1,228 held-out identifiers. Seed--case
-totals are descriptive; inferential analysis first averages the paired binary
-difference within each case identifier and applies a two-sided exact sign test
-to the 130 nonzero case-level differences. Temporal queries cluster by domain
-and share 475 translation inputs, so temporal coverage changes use discordant
-counts and domain/profile concentration without a case-level p-value.
+totals and within-case paired gains are descriptive because identifiers within
+one domain share a compiled library. Report the 640 seed--case gains, 130
+improved identifiers, and their domain concentration without a case-level
+p-value. Temporal queries likewise cluster by domain and share 475 translation
+inputs, so temporal coverage changes use discordant counts and domain/profile
+concentration without a case-level p-value.
 
 The result narrative must locate effects rather than only report aggregates.
 All 640 Direct-to-Maximum seed--case gains occur in the four added domains. On
@@ -784,11 +787,11 @@ named repository link disabled. The camera-ready conditional enables
 PDF or supplementary review PDF.
 
 Checklist answers may change to `yes` only when the corresponding evidence is
-present in the paper, appendix, or submitted archive. Atomic coverage inference
-uses a two-sided exact sign test over distinct held-out case identifiers after
-within-case seed aggregation. Temporal coverage, PAR-2, action count, and size
-remain descriptive because of domain/input clustering; Flat versus Balanced is
-structural because their valid-case sets are identical.
+present in the paper, appendix, or submitted archive. Atomic and temporal
+coverage, PAR-2, action count, and size remain descriptive because cases share
+domain-level libraries and temporal inputs. Report paired counts and
+domain/profile concentration without case-level p-values; Flat versus Balanced
+is structural because their valid-case sets are identical.
 
 ## Final Visual Program
 
@@ -802,10 +805,11 @@ after feasible-core optimization. It demonstrates how the selected lifted
 atomic core recursively solves an unseen stack configuration.
 
 The main paper has no empirical result figure. Exact endpoint comparisons over
-heterogeneous domains are reported in compact `booktabs` tables at the point of
-the corresponding claim. The main paper retains the supported-fragment,
-candidate-constructor, paired atomic, paired temporal, compact five-seed,
-compact fixed-core temporal, and same-scope evidence-to-library tables.
+heterogeneous domains are reported in compact `booktabs` tables or concise
+result prose at the point of the corresponding claim. The main paper retains
+the supported-fragment, candidate-constructor, paired atomic, paired temporal,
+compact five-seed, and same-scope evidence-to-library tables; fixed-core
+temporal totals remain in prose.
 Per-profile, per-domain, per-seed, runtime-distribution, and diagnostic views
 belong in the Technical Supplement, together with the complete
 scope-separated external-reference matrix.
@@ -1420,24 +1424,17 @@ The latter must never be described as a five-seed robustness result.
 
 ### Main Fixed-Core Temporal Summary
 
-Use one compact single-column table with explicit rows:
-
-```text
-Validation unit | Valid | Total
-Distinct translated specifications | language-equivalent | translated
-Bound temporal queries | end-to-end valid | bound queries
-```
-
-The caption defines translation validity as exact finite-trace language
-equivalence and end-to-end validity as controller compilation, Jason
-completion, neutral-goal VAL, and both DFA trace checks. Move the five
-per-profile rows and runtime/action distributions to the Technical Supplement.
+Report the two endpoint totals in one self-contained paragraph: distinct
+controlled-language specifications must be valid and DFA-language equivalent;
+bound temporal queries must complete controller compilation and Jason execution,
+pass neutral-goal VAL, and be accepted by both DFA trace oracles. Keep the five
+per-profile rows and runtime/action distributions in the Technical Supplement.
 
 ### Failure and Rejection Reporting
 
-The main paper keeps only the compact five-seed and fixed-core temporal summary
-tables. The Technical Supplement and machine-readable artifact preserve all raw
-domain--seed, per-profile, and fixed-input values. The supplementary artifact should always
+The main paper keeps the compact five-seed table and reports fixed-core temporal
+totals in prose. The Technical Supplement and machine-readable artifact preserve
+all raw domain--seed, per-profile, and fixed-input values. The supplementary artifact should always
 keep translation errors, schema validation
 errors, unsupported DFA structure, certificate rejection, Jason failure,
 timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or

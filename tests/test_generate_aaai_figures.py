@@ -301,12 +301,10 @@ def test_manuscript_uses_tables_in_main_and_moves_detailed_views_to_supplement()
 	assert "\\gpplfigurethreepath" not in main_text
 	assert "\\gpplfigurethreepath" not in evaluation_text
 	assert "\\label{fig:evaluation-summary}" not in evaluation_text
-	for table_input in (
-		"\\input{sections/result_five_seed_atomic_table}",
-		"\\input{sections/result_temporal_summary_table}",
-	):
+	for table_input in ("\\input{sections/result_five_seed_atomic_table}",):
 		assert table_input in evaluation_text
 		assert table_input not in supplement_text
+	assert "\\input{sections/result_temporal_summary_table}" not in evaluation_text
 	for table_input in (
 		"\\input{sections/result_five_seed_atomic_domain_table}",
 		"\\input{sections/result_domain_table}",
@@ -321,7 +319,6 @@ def test_manuscript_uses_tables_in_main_and_moves_detailed_views_to_supplement()
 		"result_five_seed_atomic_table.tex": "\\begin{table}[htbp]",
 		"result_five_seed_atomic_domain_table.tex": "\\begin{table*}[htbp]",
 		"result_profile_table.tex": "\\begin{table}[htbp]",
-		"result_temporal_summary_table.tex": "\\begin{table}[htbp]",
 		"result_domain_table.tex": "\\begin{table}[htbp]",
 	}
 	for filename, expected_float in result_float_specs.items():

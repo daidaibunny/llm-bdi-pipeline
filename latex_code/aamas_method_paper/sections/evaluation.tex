@@ -66,9 +66,8 @@ Evidence Only (90/365). Certified recursive candidate generation supplies the
 10.42-percentage-point gain in Table~\ref{tab:atomic-comparison}, entirely on
 the four added serialized-width domains. After averaging the five seeded
 outcomes within each identifier, every nonzero difference favors the recursive
-variants; the two-sided exact sign test gives
-$p=1.47\times10^{-39}$. At equal coverage, the lexicographic objective selects
-the smallest certified library.
+variants. At equal coverage, the lexicographic objective selects the smallest
+certified library.
 
 \input{sections/result_temporal_comparison_table}
 
@@ -101,12 +100,12 @@ domain-specific rule was introduced after observing held-out outcomes.
 The five registered structures instantiate $\Phi_{\mathrm{bench}}$ rather than
 exhausting $\Phi_{\mathrm{syn}}$, and execution includes only queries admitted
 to $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. GPT-5.5 translates the registered
-specifications; Table~\ref{tab:temporal-summary} reports language equivalence
-and end-to-end validity. Runtime is
-\TEGMedianRuntimeSeconds{} seconds median (interquartile range 4.28--8.49) and
-action count \TEGMedianActionCount{} median (interquartile range 1--2).
-
-\input{sections/result_temporal_summary_table}
+specifications. All \TranslationEquivalentCount{}/\TranslationInputCount{}
+controlled-language specifications are valid and DFA-language equivalent, and
+all \TEGProblemCount{} admitted bound queries complete and pass neutral-goal
+VAL and both DFA trace oracles. Runtime is \TEGMedianRuntimeSeconds{} seconds
+median (interquartile range 4.28--8.49), and action count is
+\TEGMedianActionCount{} median (interquartile range 1--2).
 
 This study fixes one preregistered seed-0 atomic core per domain; its result
 supports neither cross-seed claims nor arbitrary PDDL--\ltlf{} completeness.

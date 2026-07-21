@@ -1772,11 +1772,9 @@ independent PDDL replay, gold-DFA acceptance, and predicted-DFA acceptance.
 Failed action prefixes are diagnostics and never plans.
 
 The atomic matrix repeats each of 1,228 held-out case identifiers under five
-evidence seeds. Seed--case totals are descriptive; they are not treated as
-6,140 independent experimental units. For the Direct Producers--Maximum
-Feasible contrast, we average the five paired binary differences for each case
-identifier and apply a two-sided exact sign test to the nonzero case-level
-differences.
+evidence seeds. Seed--case totals and within-case paired counts are descriptive
+because identifiers within a domain share one compiled library; they are not
+treated as 6,140 independent experimental units.
 
 The temporal matrix contains one query per held-out problem under one fixed
 atomic core. Queries nevertheless cluster by domain and may share one of 475
@@ -1797,8 +1795,8 @@ Machine-local paths and transient logs are excluded.
 Direct Producers and Maximum Feasible have
 \AtomicDirectToMaximumRightOnlyValidCount{} seed--case outcomes favoring
 Maximum Feasible and none favoring Direct Producers. Aggregation within case
-gives 130 nonzero case-level differences, all positive; the two-sided exact
-sign test yields $p=1.47\times10^{-39}$. Maximum Feasible and Full GP2PL have
+gives 130 nonzero case-level differences, all positive. Maximum Feasible and
+Full GP2PL have
 identical valid-case sets; Full removes \AtomicFullBranchReduction{} mean
 branches and \AtomicFullLibraryKiBReduction{} mean KiB. Evidence Only and
 Direct Producers differ on one seed--case outcome in the opposite direction,
@@ -2010,9 +2008,8 @@ Likewise, the sealed construction audit was unavailable to the translation model
 during inference but is included in the released temporal-goal dataset for
 independent validation. Hence there is no non-public experimental dataset.
 
-The statistical answer is grounded in the frozen paired records. Atomic
-coverage inference uses a two-sided exact sign test over distinct held-out case
-identifiers after within-case aggregation across seeds. Temporal coverage,
-structural equality, and continuous summaries are reported descriptively and
-are not relabelled as independently sampled performance improvements. Complete
-per-instance outcomes remain available for independent reanalysis.
+The statistical answer is grounded in the frozen paired records. Atomic and
+temporal coverage, structural equality, and continuous summaries are reported
+descriptively because cases share domain-level libraries and temporal inputs;
+they are not relabelled as independently sampled performance improvements.
+Complete per-instance outcomes remain available for independent reanalysis.

@@ -3,12 +3,6 @@
 
 \subsection{Method Overview}
 
-An executable BDI library must bind every plan variable, make each primitive
-body executable, resolve every internal call, and ensure recursive progress.
-GP2PL encodes these requirements as compile-time proof obligations: it generates
-candidate branches, rejects uncertified candidates, and selects a feasible core
-from the remainder.
-
 GP2PL has two certification boundaries. Domain compilation maps
 $D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$ by
 verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before feasible-core
