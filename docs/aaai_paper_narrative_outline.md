@@ -833,7 +833,7 @@ Canvas, PowerPoint, Python, and export settings:
 - Main Figure 1 uses the approved 2558-by-1256, 330-DPI PNG and is inserted at
   3.25 inches wide (approximately 1.60 inches high). Main Figure 2 uses a
   13.333-by-4.2-inch PowerPoint export canvas and is inserted at 7.0 inches
-  wide. Figure 3 uses the approved 1387-by-778, 330-DPI PNG and is inserted at
+  wide. Figure 3 uses the approved 1381-by-778, 330-DPI PNG and is inserted at
   one column.
   The supplementary DFA figure uses a 13.333-by-5.333-inch
   PowerPoint canvas. Figure 1 retains its supplied alpha channel and must be
