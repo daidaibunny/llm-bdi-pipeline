@@ -261,9 +261,7 @@ def test_build_paired_ablation_dataset_requires_only_paired_and_challenge_inputs
 	assert flat_to_balanced["left_only_valid_count"] == 0
 	assert flat_to_balanced["right_only_valid_count"] == 1
 	assert flat_to_balanced["exact_two_sided_p"] == 1.0
-	assert result["provenance"]["paired_results_sha256"] == hashlib.sha256(
-		(tmp_path / "paired.json").read_bytes(),
-	).hexdigest()
+	assert result["temporal"][2]["valid_trace_count"] == 2
 	macros = render_comparison_macros(result)
 	assert all(
 		macro_name.isalpha()

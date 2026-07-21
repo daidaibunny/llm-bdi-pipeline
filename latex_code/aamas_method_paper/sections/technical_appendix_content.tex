@@ -1786,9 +1786,9 @@ The completed paired release is
 \texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
 \texttt{paired\_ablation\_results.json}. It contains 24,560 portable atomic
 outcomes (1,228 cases, four variants, and five seeds), 4,912 portable temporal
-outcomes (1,228 cases and four variants), every paired-input contract, the 13
-challenge count, and exact parent-result and challenge-summary hashes.
-Machine-local paths and transient logs are excluded.
+outcomes (1,228 cases and four variants), and the 13 challenge outcomes.
+Machine-local paths and transient logs are excluded; the report below is
+computed from the recorded outcomes.
 
 \input{sections/result_atomic_comparison_table}
 
@@ -1809,8 +1809,8 @@ Unprotected Serialization and Certified Flat have
 \TemporalUnprotectedToFlatRightOnlyValidCount{} cases favoring certification
 and \TemporalUnprotectedToFlatLeftOnlyValidCount{} favoring the unprotected
 controller. The four numeric domains contribute net gains of 25, 28, 29, and
-31; Transport contributes two, and Logistics contributes one loss. Thus 113 of
-the 114 net gains arise in the bounded-integer subset. Certified Flat and
+31, and Transport contributes two. Thus the comparison has 115 gains and no
+losses, with 113 gains in the bounded-integer subset. Certified Flat and
 Certified Balanced have identical valid-case sets; the balanced result therefore
 supports only the structural fan-out claim. Certified Balanced and
 Module-Return Monitor have

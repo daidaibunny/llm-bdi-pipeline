@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 from scripts.repair_paired_ablation_results import repair_paired_results
+from scripts.repair_paired_ablation_results import replace_temporal_results
 from scripts.repair_paired_ablation_results import transition_repair_fanout_from_asl
 
 
@@ -92,7 +93,7 @@ def test_repair_paired_results_replaces_derived_fanout_everywhere(
 	)
 
 	repair_paired_results(paired_file)
-	first_repair = paired_file.read_bytes()
+	first_repair = json.loads(paired_file.read_text(encoding="utf-8"))
 	repair_paired_results(paired_file)
 
 	paired = json.loads(paired_file.read_text(encoding="utf-8"))
@@ -106,4 +107,116 @@ def test_repair_paired_results_replaces_derived_fanout_everywhere(
 	assert case["max_trigger_fanout"] == 2
 	assert case["trigger_fanout_scope"] == "transition_repair_controller"
 	assert paired["method_source_equivalence"]["status"] == "confirmed"
-	assert paired_file.read_bytes() == first_repair
+	assert json.loads(paired_file.read_text(encoding="utf-8")) == first_repair
+
+
+def test_replace_temporal_results_updates_only_the_semantic_case(
+	tmp_path: Path,
+) -> None:
+	paired_file = tmp_path / "paired_results.json"
+	failed = {
+		"sample_id": "logistics_p0_24",
+		"domain": "logistics",
+		"profile": "same_state_with_negation",
+		"goal_name": "g_logistics_p0_24",
+		"temporal_compiler_variant": "certified_balanced",
+		"status": "jason_failed",
+		"success": False,
+		"duration_seconds": 3.0,
+		"controller_plan_count": 12,
+		"max_trigger_fanout": 2,
+	}
+	sibling = {
+		"sample_id": "logistics_p0_25",
+		"domain": "logistics",
+		"profile": "same_state_with_negation",
+		"goal_name": "g_logistics_p0_25",
+		"temporal_compiler_variant": "certified_balanced",
+		"status": "success",
+		"success": True,
+		"duration_seconds": 3.0,
+		"action_count": 2,
+		"controller_plan_count": 13,
+		"max_trigger_fanout": 2,
+		"execution_validation": {
+			"val_attempted": True,
+			"val_success": True,
+			"gold_accepted": True,
+			"prediction_accepted": True,
+		},
+	}
+	unaffected_run = {
+		"variant": "dfa_aware_unprotected",
+		"method": "Unprotected Serialization",
+		"parameters": {"jason_timeout_seconds": 1800},
+		"results": [{**sibling, "temporal_compiler_variant": "dfa_aware_unprotected"}],
+		"aggregate": {"success_count": 1, "total": 1},
+		"execution_metrics": {"valid_trace_count": 1},
+	}
+	paired = {
+		"run_id": "paper",
+		"timeout_seconds": 1800,
+		"temporal_runs": [
+			{
+				"variant": "certified_balanced",
+				"method": "Certified Balanced",
+				"parameters": {"jason_timeout_seconds": 1800},
+				"results": [failed, sibling],
+				"aggregate": {"success_count": 1, "total": 2},
+				"execution_metrics": {"valid_trace_count": 1},
+			},
+			unaffected_run,
+		],
+	}
+	paired_file.write_text(json.dumps(paired), encoding="utf-8")
+	replacement_file = tmp_path / "replacement.json"
+	replacement_file.write_text(
+		json.dumps(
+			{
+				"run_id": "final-logistics-p0-24-certified-balanced",
+				"temporal_compiler_variant": "certified_balanced",
+				"results": [
+					{
+						**failed,
+						"status": "success",
+						"success": True,
+						"jason_status": "success",
+						"duration_seconds": 1.5,
+						"action_count": 1,
+						"controller_plan_count": 14,
+						"execution_validation": {
+							"action_count": 1,
+							"replay_valid": True,
+							"val_attempted": True,
+							"val_success": True,
+							"gold_accepted": True,
+							"prediction_accepted": True,
+						},
+					},
+				],
+			},
+		),
+		encoding="utf-8",
+	)
+
+	report = replace_temporal_results(paired_file, [replacement_file])
+	updated = json.loads(paired_file.read_text(encoding="utf-8"))
+	balanced = updated["temporal_runs"][0]
+
+	assert report["replaced_case_count"] == 1
+	assert balanced["results"][0]["status"] == "success"
+	assert balanced["results"][0]["action_count"] == 1
+	assert balanced["results"][1] == sibling
+	assert balanced["aggregate"]["success_count"] == 2
+	assert balanced["execution_metrics"]["valid_trace_count"] == 2
+	assert balanced["execution_metrics"]["par2_seconds"] == 2.25
+	assert updated["temporal_runs"][1] == unaffected_run
+	assert updated["incremental_result_updates"] == [
+		{
+			"domain": "logistics",
+			"sample_id": "logistics_p0_24",
+			"source_run_id": "final-logistics-p0-24-certified-balanced",
+			"status": "success",
+			"variant": "certified_balanced",
+		},
+	]

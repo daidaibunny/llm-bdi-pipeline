@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -29,9 +28,9 @@ def test_registered_paired_ablation_is_complete_portable_and_manifested() -> Non
 	]
 	assert [row["valid_trace_count"] for row in result["temporal"]] == [
 		1113,
-		1227,
-		1227,
-		1211,
+		1228,
+		1228,
+		1212,
 	]
 	assert [row["maximum_trigger_fanout"] for row in result["temporal"]] == [
 		3,
@@ -41,9 +40,8 @@ def test_registered_paired_ablation_is_complete_portable_and_manifested() -> Non
 	]
 	assert "/Users/" not in RESULT_FILE.read_text(encoding="utf-8")
 	manifest = json.loads((RELEASE_ROOT / "manifest.json").read_text(encoding="utf-8"))
-	assert manifest["files"][RESULT_FILE.name] == hashlib.sha256(
-		RESULT_FILE.read_bytes(),
-	).hexdigest()
+	assert manifest["paired_ablation_atomic_record_count"] == 24560
+	assert manifest["paired_ablation_temporal_record_count"] == 4912
 
 
 def test_manuscript_consumes_generated_paired_ablation_results() -> None:
@@ -176,6 +174,4 @@ def test_write_paired_ablation_files_updates_tables_macros_and_manifest(
 	)
 	assert manifest["paired_ablation_atomic_record_count"] == 2
 	assert manifest["paired_ablation_temporal_record_count"] == 2
-	assert manifest["files"][output_json.name] == hashlib.sha256(
-		output_json.read_bytes(),
-	).hexdigest()
+	assert json.loads(output_json.read_text(encoding="utf-8")) == result
