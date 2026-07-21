@@ -972,6 +972,6 @@ def test_evaluation_reports_costs_and_scope_without_unmeasured_amortization() ->
 
 	assert "amortized compilation" not in evaluation_text
 	assert "10.42-percentage-point gain" in evaluation_text
-	assert "9.36-percentage-point gain" in evaluation_text
+	assert "gains 9.36 percentage points" in evaluation_text
 	assert "720/740" in evaluation_text
 	assert "117/740" in evaluation_text

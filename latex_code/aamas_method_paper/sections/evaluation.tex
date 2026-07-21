@@ -51,10 +51,10 @@ target expansion, recursive candidate generation, and compact selection.
 
 \input{sections/result_atomic_comparison_table}
 
-Each method compiles 80 libraries. Direct Producers, Maximum Feasible, and Full
-GP2PL cover all 73 producible targets under every seed, giving 365 seed--target
-obligations; Evidence Only covers 90/365. Certified recursive candidate
-generation supplies the 10.42-percentage-point gain in
+Direct Producers, Maximum Feasible, and Full GP2PL cover all 73 producible
+targets under every seed (365 seed--target obligations); Evidence Only covers
+90/365. Certified recursive candidate generation supplies the
+10.42-percentage-point gain in
 Table~\ref{tab:atomic-comparison}, entirely on the four added serialized-width
 domains. After averaging the five seeded outcomes within each identifier, every
 nonzero difference favors the recursive variants. At equal coverage, the
@@ -67,20 +67,16 @@ Monitor retains completion-effect ordering, preservation portfolios, and
 balanced repair, but checks the DFA only after an invoked atomic achievement
 module finishes all primitive actions and returns control to the query
 controller. Certified Balanced instead checks the DFA after every primitive
-action. The two references expose the effects of unprotected serialization and
-a coarser observation boundary.
+action.
 
 \input{sections/result_temporal_comparison_table}
 
-Certified Balanced yields a
-9.36-percentage-point gain over Unprotected Serialization in
-Table~\ref{tab:temporal-comparison}; the four bounded-integer domains account
-for 113 of the 115 gains, and Transport accounts for two. We select Balanced for
-its bounded local controller structure, not for runtime superiority; helper
-plans are its expected representational cost. Module-return observation reduces
-valid coverage, supporting the
-primitive-step observation boundary. This paired matrix conditions on its
-registered seed-0 core and does not estimate cross-seed temporal robustness.
+Certified Balanced gains 9.36 percentage points over Unprotected Serialization
+(Table~\ref{tab:temporal-comparison}); 113 of 115 gains occur in bounded-integer
+domains and two in Transport. We select Balanced for bounded local controller
+structure, not runtime superiority; helper plans are its expected
+representational cost. Lower Module-Return coverage supports primitive-step
+observation.
 
 \subsection{Full-System Coverage and Robustness}
 \label{sec:full-system-results}
@@ -92,8 +88,8 @@ Across five independently compiled atomic cores, mean held-out coverage is
 \AtomicFiveSeedSampleSDPercent{} percentage points
 (Table~\ref{tab:five-seed-atomic}). Variation is confined to Logistics and
 Depots, where cyclic producer and resource dependencies exceed the current
-certificate class. Every reported success satisfies original-goal VAL, and no
-domain-specific rule was introduced after observing held-out outcomes.
+certificate class. No domain-specific rule was introduced after observing
+held-out outcomes.
 
 \input{sections/result_five_seed_atomic_table}
 
@@ -116,9 +112,9 @@ PDDL--\ltlf{} completeness.
 \subsection{Evidence-to-Library Comparison}
 \label{sec:evidence-to-library}
 
-Table~\ref{tab:added-scope-evidence} compares direct execution of raw MOOSE
-policies with final GP2PL libraries compiled from the same evidence over the
-same 740 held-out seed--case pairs from the four added families.
+Table~\ref{tab:added-scope-evidence} compares raw MOOSE execution with final
+GP2PL libraries compiled from the same evidence on 740 paired held-out
+seed--cases from the four added families.
 
 \input{sections/result_same_scope_evidence_table}
 

@@ -130,6 +130,10 @@ def test_evaluation_uses_precise_comparison_and_aggregation_language() -> None:
 		"Median runtime is \\TEGMedianRuntimeSeconds{} seconds" in evaluation_text
 	)
 	assert "compares provider execution with the complete compiler" in evaluation_text
+	assert "Each method compiles 80 libraries" not in evaluation_text
+	assert "The two references expose" not in evaluation_text
+	assert "Every reported success satisfies original-goal VAL" not in evaluation_text
+	assert evaluation_text.count("cross-seed") == 1
 
 
 def test_write_paired_ablation_files_updates_tables_macros_and_manifest(
