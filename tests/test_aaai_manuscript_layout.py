@@ -831,13 +831,13 @@ def test_temporal_method_is_separated_from_evaluation_protocol() -> None:
 		assert required_method_term in temporal_text
 
 	for required_evaluation_term in (
-		"Certified Flat",
 		"Certified Balanced",
 		"Module-Return Monitor",
 		"Jason completion",
 		"neutral-goal VAL",
 	):
 		assert required_evaluation_term in evaluation_text
+	assert "Certified Flat" not in evaluation_text
 
 
 def test_manuscript_uses_one_canonical_formal_vocabulary() -> None:

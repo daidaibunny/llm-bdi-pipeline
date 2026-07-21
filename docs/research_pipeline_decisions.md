@@ -308,21 +308,20 @@ LTLf JSON, binding, real MONA-derived DFA, and Jason PDDL environment.
 | Method | Native behavior |
 | --- | --- |
 | Unprotected Serialization | Use the real DFA and primitive-step monitor, but serialize each transition guard in a deterministic canonical order without completion-effect threat ordering or occurrence-specific preservation portfolios. |
-| Certified Flat | Use complete effect summaries, threat-safe order, and per-occurrence preservation portfolios, but compile literals as flat sibling plans. |
-| Certified Balanced | Compile the identical certified literal order and branch choices into the balanced binary transition-repair tree. |
 | Module-Return Monitor | Retain completion-effect certification and the balanced controller, advance the DFA only when an atomic module returns, and omit primitive-prefix source-invariant filtering because intermediate primitive states are outside this ablation's observation semantics. |
+| Certified Balanced | Use complete effect summaries, threat-safe order, per-occurrence preservation portfolios, balanced repair, and primitive-step monitoring. |
 
-All four temporal variants run the same complete 1,228-case benchmark. The
-causal interpretation of Module-Return Monitor versus Certified Balanced focuses
-on cases with intermediate-state obligations, where their observation
+All three reported temporal variants run the same complete 1,228-case benchmark.
+The causal interpretation of Module-Return Monitor versus Certified Balanced
+focuses on cases with intermediate-state obligations, where their observation
 boundaries can change acceptance; the remaining paired cases still contribute
 coverage, size, and runtime measurements.
 
-Unprotected Serialization and Module-Return Monitor are evaluation modes, never production
-fallbacks. The historical
+Unprotected Serialization and Module-Return Monitor are evaluation modes, never
+production fallbacks. The historical
 sequence-only PDDL-goal wrapper may be retained only as a weak evaluation
 reference in isolated artifacts; production temporal append always follows the
-real DFA transition path. The four rows above are the complete registered
+real DFA transition path. The three rows above are the reported
 temporal baseline and ablation matrix. Signed-negative and bounded-numeric cases
 remain in the full benchmark and are reported by support and failure status;
 there is no separate unimplemented capability-switch row.

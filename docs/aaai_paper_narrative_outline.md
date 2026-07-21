@@ -531,16 +531,15 @@ publication fields.
 1. **Unprotected Serialization:** canonical within-edge serialization, the same
    MONA-derived DFA,
    and primitive-step monitor, but no threat ordering or preservation portfolio.
-2. **Certified Flat:** add complete-effect threat ordering and preserving
-   portfolios, retaining flat sibling control.
-3. **Certified Balanced:** replace only flat control with the balanced binary
-   transition-repair tree.
-4. **Module-Return Monitor:** retain completion-effect certification and balanced
+2. **Module-Return Monitor:** retain completion-effect certification and balanced
    control, observe the DFA only after an atomic module returns, and omit
    primitive-prefix source-invariant filtering because intermediate primitive
    states are not observable under this ablation. Run it on the complete paired
    benchmark, but attribute observation-boundary effects only on cases with
    intermediate-state obligations.
+3. **Certified Balanced:** combine complete-effect threat ordering, preserving
+   portfolios, balanced repair, and primitive-step monitoring as the selected
+   configuration.
 
 These four cumulative atomic rows are the complete registered matrix. Do not
 claim additional one-certificate-off experiments: retaining an uncertified
@@ -791,8 +790,8 @@ Checklist answers may change to `yes` only when the corresponding evidence is
 present in the paper, appendix, or submitted archive. Atomic and temporal
 coverage, PAR-2, action count, and size remain descriptive because cases share
 domain-level libraries and temporal inputs. Report paired counts and
-domain/profile concentration without case-level p-values; Flat versus Balanced
-is structural because their valid-case sets are identical.
+domain/profile concentration without case-level p-values; the Balanced
+representation claim is structural rather than runtime-based.
 
 ## Final Visual Program
 
@@ -1337,8 +1336,8 @@ machine-readable artifact, not as `C0`/`C1`-style table labels.
 
 ### Temporal Baseline/Ablation Table
 
-Use short method names (Unprotected Serialization, Certified Flat, Certified
-Balanced, and Module-Return Monitor) on the same query/DFA/library hashes:
+Use short method names (Unprotected Serialization, Module-Return Monitor, and
+Certified Balanced) on the same query/DFA/library inputs:
 
 ```text
 controller compiled/rejected

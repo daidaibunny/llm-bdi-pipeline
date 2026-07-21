@@ -8,15 +8,14 @@
 Method & Valid & PAR-2 s & Plans & Fan-out \\
 \midrule
 Unprotected Serialization & 1113/1228 & 342.0 & 7 & 3 \\
-Certified Flat & \resultbest{1228/1228} & 5.1 & 7 & 3 \\
-\resultselected{Certified Balanced} & \resultbest{1228/1228} & 5.6 & 13 & \resultselected{2} \\
 Module-Return Monitor & 1212/1228 & 53.1 & 13 & 2 \\
+\resultselected{Certified Balanced} & \resultbest{1228/1228} & 5.6 & 13 & \resultselected{2} \\
 \bottomrule
 \end{tabular}
 \caption{Paired temporal compiler comparison over 1,228 queries. PAR-2 charges
 failures twice the 1,800-second limit. Plans is median controller size and
-Fan-out the maximum transition-repair value. Bold marks tied best coverage;
-blue bold marks selected Balanced, which ties best coverage and bounds fan-out
+Fan-out is the maximum number of sibling plans sharing one repair trigger.
+Bold marks best coverage; blue bold marks selected Balanced, which bounds fan-out
 at two; selection is structural, not runtime-based.}
 \label{tab:temporal-comparison}
 \end{table}

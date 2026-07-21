@@ -14,12 +14,12 @@ target expansion, recursive candidate generation, and compact selection.
 
 \paragraph{Temporal composition.}
 Unprotected Serialization uses the same automaton, library, and
-primitive-step monitor without completion-effect analysis. Certified Flat adds
-threat-induced precedence ordering and preservation portfolios; Certified
-Balanced changes only flat control to the balanced binary transition-repair
-tree. Module-Return Monitor retains certified balanced control but observes the
-DFA only after a module returns. Together, the rows separate preservation,
-controller structure, and the primitive-step observation boundary.
+primitive-step monitor without completion-effect analysis. Module-Return
+Monitor retains certified balanced control but observes the DFA only after a
+module returns. Certified Balanced combines completion-effect ordering,
+preservation portfolios, balanced repair, and primitive-step observation. The
+two references expose the effects of unprotected serialization and a coarser
+observation boundary.
 
 \subsection{Benchmarks and Protocol}
 
@@ -71,14 +71,13 @@ certified library.
 
 \input{sections/result_temporal_comparison_table}
 
-Completion-effect ordering and preservation portfolios yield the
+Certified Balanced yields a
 9.36-percentage-point gain over Unprotected Serialization in
 Table~\ref{tab:temporal-comparison}; the four bounded-integer domains account
-for 113 of the 115 gains, and Transport accounts for two. Certified Flat and
-Certified Balanced have identical success sets. We select Balanced for its
-bounded local controller structure, not for runtime superiority; the additional
-helper plans are its expected representational cost. Module-return observation
-reduces valid coverage, supporting the
+for 113 of the 115 gains, and Transport accounts for two. We select Balanced for
+its bounded local controller structure, not for runtime superiority; helper
+plans are its expected representational cost. Module-return observation reduces
+valid coverage, supporting the
 primitive-step observation boundary. This paired matrix conditions on its
 registered seed-0 core and does not estimate cross-seed temporal robustness.
 

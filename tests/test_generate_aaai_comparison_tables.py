@@ -949,6 +949,10 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert raw_extension_line.endswith("& 0 & -- \\\\")
 	assert "Reported MOOSE coverage is copied from Table~4" in external
 	assert "Evidence Only" in atomic
+	assert "Certified Flat" not in temporal
+	assert temporal.index("Unprotected Serialization") < temporal.index(
+		"Module-Return Monitor",
+	) < temporal.index("Certified Balanced")
 	assert "Certified Balanced" in temporal
 	assert r"\resultbest{" in atomic
 	assert r"\resultselected{Full GP2PL}" in atomic

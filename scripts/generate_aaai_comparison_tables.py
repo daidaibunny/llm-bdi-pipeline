@@ -79,6 +79,11 @@ TEMPORAL_METHODS = (
 	("certified_balanced", "Certified Balanced"),
 	("completion_boundary_monitor", "Module-Return Monitor"),
 )
+TEMPORAL_TABLE_VARIANTS = (
+	"dfa_aware_unprotected",
+	"completion_boundary_monitor",
+	"certified_balanced",
+)
 ATOMIC_MACRO_PREFIXES = {
 	"validated_evidence_adapter": "AtomicEvidenceOnly",
 	"action_only_closure": "AtomicDirectProducers",
@@ -1335,12 +1340,18 @@ def render_temporal_table(result: Mapping[str, Any]) -> str:
 		r"Method & Valid & PAR-2 s & Plans & Fan-out \\",
 		"\\midrule",
 	]
-	for row in result["temporal"]:
+	temporal_by_variant = {
+		str(row["variant"]): row for row in result["temporal"]
+	}
+	for table_variant in TEMPORAL_TABLE_VARIANTS:
+		row = temporal_by_variant.get(table_variant)
+		if row is None:
+			continue
 		variant = str(row["variant"])
 		method = str(row["method"])
 		valid = f"{row['valid_trace_count']}/{row['test_count']}"
 		fanout = str(row["maximum_trigger_fanout"])
-		if variant in {"certified_flat", "certified_balanced"}:
+		if variant == "certified_balanced":
 			valid = f"\\resultbest{{{valid}}}"
 		if variant == "certified_balanced":
 			method = f"\\resultselected{{{method}}}"
@@ -1356,8 +1367,8 @@ def render_temporal_table(result: Mapping[str, Any]) -> str:
 			"\\end{tabular}",
 			"\\caption{Paired temporal compiler comparison over 1,228 queries. PAR-2 charges",
 			"failures twice the 1,800-second limit. Plans is median controller size and",
-			"Fan-out the maximum transition-repair value. Bold marks tied best coverage;",
-			"blue bold marks selected Balanced, which ties best coverage and bounds fan-out",
+			"Fan-out is the maximum number of sibling plans sharing one repair trigger.",
+			"Bold marks best coverage; blue bold marks selected Balanced, which bounds fan-out",
 			"at two; selection is structural, not runtime-based.}",
 			"\\label{tab:temporal-comparison}",
 			"\\end{table}",

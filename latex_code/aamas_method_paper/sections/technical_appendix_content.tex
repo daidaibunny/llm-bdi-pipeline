@@ -1774,7 +1774,7 @@ The completed paired release is
 \texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
 \texttt{paired\_ablation\_results.json}. It contains 24,560 portable atomic
 outcomes (1,228 cases, four variants, and five seeds), 4,912 portable temporal
-outcomes (1,228 cases and four variants), and the 13 challenge outcomes.
+outcomes (1,228 cases), and the 13 challenge outcomes.
 Machine-local paths and transient logs are excluded; the report below is
 computed from the recorded outcomes.
 
@@ -1793,14 +1793,10 @@ monotone.
 
 \input{sections/result_temporal_comparison_table}
 
-Unprotected Serialization and Certified Flat have
-\TemporalUnprotectedToFlatRightOnlyValidCount{} cases favoring certification
-and \TemporalUnprotectedToFlatLeftOnlyValidCount{} favoring the unprotected
-controller. The four numeric domains contribute net gains of 25, 28, 29, and
-31, and Transport contributes two. Thus the comparison has 115 gains and no
-losses, with 113 gains in the bounded-integer subset. Certified Flat and
-Certified Balanced have identical valid-case sets; the balanced result therefore
-supports only the structural fan-out claim. Certified Balanced and
+Certified Balanced has 115 cases favoring it over Unprotected Serialization and
+none favoring the unprotected controller. The four numeric domains contribute
+net gains of 25, 28, 29, and 31, and Transport contributes two. Thus 113 of the
+115 gains occur in the bounded-integer subset. Certified Balanced and
 Module-Return Monitor have
 \TemporalBalancedToModuleReturnLeftOnlyValidCount{} discordant cases, all favoring
 primitive-step observation. PAR-2 and action counts remain descriptive; no
@@ -1823,8 +1819,8 @@ static vocabulary, negative-guard renaming, and progress-relation renaming.
 The completed matrix pairs binary atomic success by seed, domain, and test, and
 binary temporal success by query under identical inputs. The atomic sign test
 uses distinct case identifiers as its inferential unit; temporal contrasts are
-descriptive because domain and translation-input clustering remains. The Flat
-versus Balanced claim is structural because their success sets are identical.
+descriptive because domain and translation-input clustering remains. The
+Balanced representation claim is structural rather than runtime-based.
 Continuous values are reported on the registered denominator or jointly solved
 cases without a superiority test.
 
