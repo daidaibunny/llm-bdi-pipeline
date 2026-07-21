@@ -1311,6 +1311,7 @@ def test_comparison_tables_use_short_descriptive_headers(tmp_path: Path) -> None
 	assert "Bold marks tied best coverage" in atomic_text
 	assert "blue bold marks Full GP2PL" in atomic_text
 	assert "PAR-2 charges failures twice" in temporal_text
+	assert "selection is structural, not runtime-based" in temporal_text
 	assert "Valid requires Jason" not in combined
 	assert "identical DFA, binding, and atomic-library inputs" not in temporal
 	assert "FOND4LTLf + LAMA" in external

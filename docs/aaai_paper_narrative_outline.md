@@ -415,10 +415,11 @@ method begins from a validated bound query and its DFA.
    progress literal is established. Explain lexicographic predicate/numeric
    precondition preparation, repeatable non-unifying numeric steps, exact
    terminal predecessors, and capture-avoiding composition.
-8. Compile the certified order into a balanced binary transition-repair tree. The tree is
-   an AgentSpeak indexing structure with trigger fan-out and individual plan-body
-   length at most two; it does not reorder DFA transitions or add planning
-   semantics. State midpoint range recursion, signed leaves, and completion
+8. Compile the certified order into a balanced binary transition-repair tree. Flat
+   control gives one trigger `O(n)` siblings, while a direct linear body gives an
+   `O(n)`-long intention continuation. The tree is an AgentSpeak indexing structure
+   that bounds both local quantities by two; it does not reorder DFA transitions or
+   add planning semantics. State midpoint range recursion, signed leaves, and completion
    rechecking in the main method. Keep the flat-control comparison in Evaluation
    and the full construction algorithm and continuation-cost explanation in the
    Technical Supplement.

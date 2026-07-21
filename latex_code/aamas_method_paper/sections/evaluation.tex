@@ -75,9 +75,10 @@ Completion-effect ordering and preservation portfolios yield the
 9.36-percentage-point gain over Unprotected Serialization in
 Table~\ref{tab:temporal-comparison}; the four bounded-integer domains account
 for 113 of the 115 gains, and Transport accounts for two. Certified Flat and
-Certified Balanced have identical
-success sets, so balancing receives only structural credit for bounding
-fan-out. Module-return observation reduces valid coverage, supporting the
+Certified Balanced have identical success sets. We select Balanced for its
+bounded local controller structure, not for runtime superiority; the additional
+helper plans are its expected representational cost. Module-return observation
+reduces valid coverage, supporting the
 primitive-step observation boundary. This paired matrix conditions on its
 registered seed-0 core and does not estimate cross-seed temporal robustness.
 
