@@ -1,23 +1,36 @@
 \section{Validated Temporal Input and Plan-Library Compilation}
 \label{sec:method}
 
-\subsection{Compilation Boundaries}
+\subsection{Controlled-Language Translation}
 
-A frozen prompt maps a controlled-language request, typed parameters and
-constraints, and the PDDL catalogue to eight-key JSON with parametric \ltlf{} and
-a one-to-one proposition table. Validation rejects vocabulary, type, arity,
-operator, table, or constraint violations without grounding parameters or
-selecting actions or objects; invocation supplies $\theta_q$. A hidden formula
-supports exact language evaluation only.
+A frozen language-model prompt receives one controlled-language request, its
+declared typed parameters and constraints, and the public PDDL catalogue. It
+returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
+formula and a one-to-one proposition table. Deterministic validation rejects
+undeclared symbols, wrong arities or types, unsupported operators, incomplete
+atom tables, and altered parameter constraints; it neither grounds parameters
+nor selects actions or objects. Invocation later supplies $\theta_q$. For
+evaluation only, a hidden construction formula permits exact finite-trace
+language equivalence; this gold oracle is not an online input requirement. The
+complete prompt and translation protocol appear in the Technical Supplement,
+Sec.~4.
 
-After validation, domain compilation maps
+\subsection{Atomic-Compilation Overview}
+
+GP2PL has one validated translation boundary and two certification boundaries.
+Domain compilation maps
 $D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$ to $\mathcal M_D$ by
-checking $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before selection;
-query compilation reuses the summaries to certify
+verifying $\operatorname{Cert}_D(b)$ and recording $\Sigma_b$ before feasible-core
+selection. Query compilation reuses the selected summaries to certify
 $(\boldsymbol\ell_\chi,\boldsymbol\Pi_\chi)$ for each DFA guard $\chi$, without
-relearning $\mathcal M_D$. Obligations are checked before \asl{} rendering,
-which preserves selected rules and calls. The Technical Supplement gives the
-formal boundary, proofs, pseudocode, and input protocol (Secs.~1--4).
+relearning $\mathcal M_D$. The Technical Supplement formalizes the accept/reject
+boundary and constructor obligations (Sec.~1), proves the binding, symbolic
+execution, progress, resource, preservation, tree, monitor, and answer-set
+correspondence claims (Sec.~2), and gives full compiler pseudocode (Sec.~3).
+
+All obligations are checked on trigger--context--body rules before rendering.
+The \asl{} rendering preserves each selected trigger, context, ordered body, and
+internal-call edge.
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
