@@ -167,19 +167,10 @@ temporal controllers that reuse and extend one maintained BDI library.
 \section{Conclusion and Future Work}
 
 GP2PL translates controlled natural-language requests with typed parameters into
-parametric \ltlf{} query specifications, and compiles
-generalized-planning evidence and PDDL schemas into a closed atomic core with
-certified DFA controllers. Across five
-seeds, atomic coverage over
-\BenchmarkDomainCount{} domains is \AtomicFiveSeedMeanSuccessPercent{}\%
-(\AtomicFiveSeedSampleSDPercent{}-point sample SD); recursion and preservation
-add 10.42 and 9.36 paired-success points. All
-\TranslationEquivalentCount{} translations are DFA-language equivalent to their
-gold formulas, and
-Certified Balanced validates
-\TemporalCrossSeedValidCount{}/\TemporalCrossSeedEvaluationCount{} executions
-across five seed-specific core sets, with every admitted query succeeding under
-every seed.
+parametric \ltlf{} query specifications and compiles generalized-planning
+evidence with PDDL schemas into a closed atomic core. Certified DFA controllers
+then extend the same maintained BDI plan library for achievement and temporally
+extended goals without relearning the core.
 Future work should study unrestricted PDDL--\ltlf{} strategy synthesis, richer
 arithmetic, temporal formulae, and planning models, broader repair
 certification, candidate-size scaling, action-quality overhead, and trace-search
