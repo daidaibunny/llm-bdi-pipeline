@@ -347,7 +347,8 @@ dispatch at the
 current state. Every intervening state change is an actual DFA edge enabled by
 the observed valuation, and a rejecting state cannot report success.
 
-\noindent\textbf{Proof sketch.} Induction over the certified order shows that each leaf
+\paragraph{Proof sketch.}
+Induction over the certified order shows that each leaf
 establishes its signed literal and later summaries preserve prior positives and
 absences; if a call leaves the source, the remaining certified suffix preserves
 this prefix at return boundaries. Because only the monitor evaluates full cubes
