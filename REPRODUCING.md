@@ -141,6 +141,33 @@ This requires the official MOOSE repository installed by
 Incomplete smoke matrices are rejected as paper results unless the explicit
 development-only flag is supplied.
 
+## Direct TIDE Temporal Reference
+
+Install and verify the pinned official TIDE source, recursive submodules, and
+revision-labelled runtime image with:
+
+```bash
+bash scripts/setup_external_planning_references.sh
+bash scripts/setup_external_planning_references.sh --check
+```
+
+Run TIDE's feedback, trace-heuristic, prefix-cache, and Fast Downward
+`lama-first` configuration on the released temporal benchmark with:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run python \
+  scripts/run_direct_temporal_reference.py \
+  --method tide_lama \
+  --num-workers 1 \
+  --timeout-seconds 1800
+```
+
+The runner supplies the persisted predicted formula and explicit invocation
+binding to TIDE. It projects only primitive PDDL actions from the official plan
+artifact, then applies replay, neutral-goal VAL, gold-DFA acceptance, and
+predicted-DFA acceptance. Unsupported numeric inputs remain explicit
+applicability outcomes rather than planner failures.
+
 ## Statistical Reporting Boundary
 
 The selected temporal compiler reports the complete five-seed distribution.

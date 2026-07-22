@@ -9,8 +9,10 @@ from evaluation.temporal_goal_validation import ExecutionTraceValidationResult
 from scripts.run_direct_temporal_reference import DirectTemporalTask
 from scripts.run_direct_temporal_reference import load_completed_records
 from scripts.run_direct_temporal_reference import run_direct_temporal_task
+from scripts.run_direct_temporal_reference import run_tide_temporal_task
 from scripts.run_direct_temporal_reference import stage_failure_status
 from scripts.run_direct_temporal_reference import summarize_temporal_reference_records
+from scripts.run_direct_temporal_reference import unsupported_tide_status
 from scripts.run_external_planning_references import GuardedCommandResult
 
 
@@ -56,6 +58,10 @@ def test_temporal_stage_failure_uses_stage_specific_status(tmp_path: Path) -> No
 
 	assert stage_failure_status("compiler", stderr_file) == "compiler_failed"
 	assert stage_failure_status("planner", stderr_file) == "planner_failed"
+	assert (
+		unsupported_tide_status(ValueError("negation on literals only"))
+		== "unsupported_formula_operator"
+	)
 
 
 def test_direct_temporal_runner_filters_compiler_actions_before_validation(
@@ -271,3 +277,183 @@ def test_direct_resume_retries_infrastructure_results(tmp_path: Path) -> None:
 	completed = load_completed_records((infra_task, planner_task))
 
 	assert set(completed) == {"planner"}
+
+
+def test_tide_runner_projects_and_independently_validates_official_plan(
+	tmp_path: Path,
+	monkeypatch,
+) -> None:
+	domain_file = tmp_path / "domain.pddl"
+	problem_file = tmp_path / "original.pddl"
+	domain_file.write_text(
+		"""
+(define (domain tiny)
+ (:requirements :strips)
+ (:predicates (at ?x))
+ (:action place
+  :parameters (?x)
+  :precondition (and)
+  :effect (at ?x)))
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	problem_file.write_text(
+		"""
+(define (problem tiny-1)
+ (:domain tiny)
+ (:objects item)
+ (:init)
+ (:goal (and)))
+""".strip()
+		+ "\n",
+		encoding="utf-8",
+	)
+	task = DirectTemporalTask(
+		domain="tiny",
+		sample_id="tiny_1",
+		profile="eventually",
+		domain_file=domain_file,
+		problem_file=problem_file,
+		benchmark_case={
+			"bindings": {"X": "item"},
+			"declared_parameters": [],
+			"constraints": [],
+			"atoms": [
+				{
+					"symbol": "a0",
+					"kind": "predicate",
+					"predicate": "at",
+					"args": ["X"],
+				},
+			],
+			"ltlf_formula": "F(a0)",
+		},
+		audit_row={
+			"gold_formula_ast": {},
+		},
+		output_dir=tmp_path / "case",
+	)
+	mona_executable = tmp_path / "mona"
+	mona_executable.write_text("#!/bin/sh\n", encoding="utf-8")
+	commands: list[tuple[str, ...]] = []
+
+	def fake_run_guarded_command(
+		command,
+		*,
+		output_dir,
+		timeout_seconds,
+		max_rss_gb,
+		extra_env=None,
+		artifact_stem="planner",
+		exclusive_lock_file=None,
+	):
+		del timeout_seconds, max_rss_gb, extra_env, exclusive_lock_file
+		command_tuple = tuple(str(item) for item in command)
+		commands.append(command_tuple)
+		stdout_file = output_dir / f"{artifact_stem}.stdout.txt"
+		stderr_file = output_dir / f"{artifact_stem}.stderr.txt"
+		stdout_file.parent.mkdir(parents=True, exist_ok=True)
+		stdout_file.write_text("", encoding="utf-8")
+		stderr_file.write_text("", encoding="utf-8")
+		result_dir = (
+			output_dir
+			/ "solutions/tide/fd/lama-first/tiny/problem"
+		)
+		result_dir.mkdir(parents=True)
+		(result_dir / "problem_plan_1").write_text(
+			"""
+Plan:
+(place item)
+
+DFA Path:
+1 -> 2
+
+Product Path:
+diagnostic only
+""".strip()
+			+ "\n",
+			encoding="utf-8",
+		)
+		(result_dir / "stats.txt").write_text(
+			"""
+For 1 runs:
+Average DFA construction time: 0.1 seconds
+First DFA construction time: 0.1 seconds
+Average DFA construction time (without first): 0 seconds
+Average search time: 0.2 seconds
+Average total time: 0.3 seconds
+Average number of expanded nodes: 4
+Average plan length: 1
+Average number of backtracks: 0
+""".strip()
+			+ "\n",
+			encoding="utf-8",
+		)
+		return GuardedCommandResult(
+			command=command_tuple,
+			exit_code=0,
+			elapsed_seconds=0.4,
+			stdout_file=stdout_file,
+			stderr_file=stderr_file,
+			runtime_lock_wait_seconds=0.0,
+		)
+
+	def fake_validate_execution_trace(**kwargs):
+		assert Path(kwargs["plan_file"]).read_text(encoding="utf-8") == (
+			"(place item)\n"
+		)
+		return ExecutionTraceValidationResult(
+			replay_valid=True,
+			val_attempted=True,
+			val_success=True,
+			gold_accepted=True,
+			prediction_accepted=True,
+			action_count=1,
+			state_count=2,
+			neutral_problem_file="neutral.pddl",
+			legality_certificate="pddl_replay_and_external_val",
+		)
+
+	monkeypatch.setattr(
+		"scripts.run_direct_temporal_reference.run_guarded_command",
+		fake_run_guarded_command,
+	)
+	monkeypatch.setattr(
+		"scripts.run_direct_temporal_reference.validate_execution_trace",
+		fake_validate_execution_trace,
+	)
+	monkeypatch.setattr(
+		"scripts.run_direct_temporal_reference._tide_runtime_error",
+		lambda **_: None,
+	)
+
+	record = run_tide_temporal_task(
+		task,
+		tide_root=tmp_path / "tide",
+		tide_image="gp2pl-tide:test",
+		mona_executable=mona_executable,
+		timeout_seconds=1800,
+		max_rss_gb=8.0,
+		subproblem_timeout_ms=60_000,
+		plan_verifier_command="val",
+		plan_verifier_timeout_seconds=1800,
+	)
+
+	assert len(commands) == 1
+	assert commands[0][:4] == (
+		"docker",
+		"run",
+		"--rm",
+		"--platform",
+	)
+	assert record["method"] == "TIDE + LAMA"
+	assert record["variant"] == "tide_lama"
+	assert record["supported"] is True
+	assert record["status"] == "valid"
+	assert record["success"] is True
+	assert record["action_count"] == 1
+	assert record["tide_statistics"]["average_backtracks"] == 0.0
+	assert "(:goal (eventually (at item)))" in (
+		task.output_dir / "problem.pddl"
+	).read_text(encoding="utf-8")

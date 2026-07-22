@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the native FOND4LTLf plus LAMA direct temporal reference."""
+"""Run pinned task-level temporal-planning references under shared validation."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -42,11 +43,23 @@ from evaluation.external_reference_planners import (  # noqa: E402
 from evaluation.external_reference_planners import (  # noqa: E402
 	build_ground_fond4ltlf_formula,
 )
+from evaluation.external_reference_planners import build_tide_command  # noqa: E402
+from evaluation.external_reference_planners import build_tide_pddl_goal  # noqa: E402
+from evaluation.external_reference_planners import (  # noqa: E402
+	ensure_tide_domain_compatible,
+)
+from evaluation.external_reference_planners import (  # noqa: E402
+	extract_tide_plan_actions,
+)
 from evaluation.external_reference_planners import (  # noqa: E402
 	filter_compilation_actions,
 )
 from evaluation.external_reference_planners import (  # noqa: E402
 	normalize_fond4ltlf_domain,
+)
+from evaluation.external_reference_planners import parse_tide_statistics  # noqa: E402
+from evaluation.external_reference_planners import (  # noqa: E402
+	rewrite_pddl_problem_goal,
 )
 from evaluation.temporal_goal_validation import validate_execution_trace  # noqa: E402
 from scripts.run_external_planning_references import (  # noqa: E402
@@ -81,6 +94,10 @@ from utils.pddl_parser import PDDLParser  # noqa: E402
 
 
 METHOD = ExternalReferenceMethod.FOND4LTLF_LAMA
+TIDE_METHOD = ExternalReferenceMethod.TIDE_LAMA
+PINNED_TIDE_REVISION = "9bdd247752817352714eac115ea6b78d90f26c09"
+DEFAULT_TIDE_ROOT = PROJECT_ROOT / ".external/tide"
+DEFAULT_TIDE_IMAGE = f"gp2pl-tide:{PINNED_TIDE_REVISION[:12]}"
 
 
 @dataclass(frozen=True)
@@ -99,6 +116,11 @@ class DirectTemporalTask:
 
 def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description=__doc__)
+	parser.add_argument(
+		"--method",
+		choices=(METHOD.value, TIDE_METHOD.value),
+		default=METHOD.value,
+	)
 	parser.add_argument("--benchmark-root", type=Path, default=DEFAULT_BENCHMARK_ROOT)
 	parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
 	parser.add_argument("--run-id")
@@ -123,14 +145,23 @@ def parse_args() -> argparse.Namespace:
 		type=Path,
 		default=DEFAULT_MONA_EXECUTABLE,
 	)
+	parser.add_argument("--tide-root", type=Path, default=DEFAULT_TIDE_ROOT)
+	parser.add_argument("--tide-image", default=DEFAULT_TIDE_IMAGE)
+	parser.add_argument("--tide-subproblem-timeout-ms", type=int, default=60_000)
 	parser.add_argument("--resume", action="store_true")
 	return parser.parse_args()
 
 
 def main() -> int:
 	args = parse_args()
-	if args.num_workers <= 0 or args.timeout_seconds <= 0 or args.max_rss_gb <= 0:
+	if (
+		args.num_workers <= 0
+		or args.timeout_seconds <= 0
+		or args.max_rss_gb <= 0
+		or args.tide_subproblem_timeout_ms <= 0
+	):
 		raise ValueError("Worker, timeout, and memory values must be positive.")
+	method = ExternalReferenceMethod(args.method)
 	benchmark_root = args.benchmark_root.expanduser().resolve()
 	bundle = _read_json(benchmark_root / "benchmark.json")
 	validate_release_inputs(benchmark_root=benchmark_root, bundle=bundle)
@@ -139,7 +170,9 @@ def main() -> int:
 	unknown = sorted(set(domains) - set(all_domains))
 	if unknown:
 		raise ValueError(f"Unknown benchmark domains: {', '.join(unknown)}")
-	run_id = args.run_id or f"direct-temporal-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+	run_id = args.run_id or (
+		f"direct-temporal-{method.value}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+	)
 	run_root = args.output_root.expanduser().resolve() / run_id
 	try:
 		run_root.relative_to(PROJECT_ROOT)
@@ -165,12 +198,43 @@ def main() -> int:
 	)
 	if not tasks:
 		raise ValueError("No temporal benchmark cases matched the requested selection.")
-	parallel_moose = moose_parallel_runtime_available()
-	if args.num_workers > 1 and not parallel_moose:
+	parallel_moose = method == METHOD and moose_parallel_runtime_available()
+	if method == METHOD and args.num_workers > 1 and not parallel_moose:
 		raise ValueError(
 			"Parallel FOND4LTLf + LAMA execution requires the isolated MOOSE "
 			"sandbox. Run `bash scripts/setup_external_planning_references.sh` "
 			"once, then retry.",
+		)
+
+	parameters: dict[str, Any] = {
+		"num_workers": int(args.num_workers),
+		"timeout_seconds_total_compile_and_plan": int(args.timeout_seconds),
+		"max_rss_gb": float(args.max_rss_gb),
+		"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
+		"plan_verifier_command": str(args.plan_verifier_command),
+	}
+	if method == TIDE_METHOD:
+		parameters.update(
+			{
+				"tide_internal_runs_per_case": 1,
+				"tide_subproblem_timeout_ms": int(args.tide_subproblem_timeout_ms),
+				"tide_configuration": (
+					"feedback+trace-heuristic+prefix-cache+lama-first"
+				),
+			}
+		)
+	else:
+		parameters.update(
+			{
+				"fond4ltlf_compiler_isolation": "per_case_mona_workspace",
+				"fond4ltlf_compiler_max_parallelism": int(args.num_workers),
+				"fond4ltlf_compiler_lock_scope": "none",
+				"moose_runtime_backend": "sandbox" if parallel_moose else "sif",
+				"moose_runtime_max_parallelism": (
+					int(args.num_workers) if parallel_moose else 1
+				),
+				"moose_runtime_lock_scope": "none" if parallel_moose else "host",
+			}
 		)
 
 	summary_file = run_root / "summary.json"
@@ -183,56 +247,65 @@ def main() -> int:
 		"benchmark_id": bundle.get("benchmark_id"),
 		"benchmark_file": str(benchmark_root / "benchmark.json"),
 		"benchmark_sha256": _sha256(benchmark_root / "benchmark.json"),
-		"method": METHOD.display_name,
-		"variant": METHOD.value,
+		"method": method.display_name,
+		"variant": method.value,
 		"domains": list(domains),
 		"selected_case_count": len(tasks),
-		"parameters": {
-			"num_workers": int(args.num_workers),
-			"timeout_seconds_total_compile_and_plan": int(args.timeout_seconds),
-			"max_rss_gb": float(args.max_rss_gb),
-			"plan_verifier_timeout_seconds": int(args.plan_verifier_timeout_seconds),
-			"plan_verifier_command": str(args.plan_verifier_command),
-			"fond4ltlf_compiler_isolation": "per_case_mona_workspace",
-			"fond4ltlf_compiler_max_parallelism": int(args.num_workers),
-			"fond4ltlf_compiler_lock_scope": "none",
-			"moose_runtime_backend": "sandbox" if parallel_moose else "sif",
-			"moose_runtime_max_parallelism": (
-				int(args.num_workers) if parallel_moose else 1
-			),
-			"moose_runtime_lock_scope": "none" if parallel_moose else "host",
-		},
+		"parameters": parameters,
 		"toolchain": temporal_toolchain_metadata(
 			args.fond4ltlf_executable,
 			args.mona_executable,
+			method=method,
+			tide_root=args.tide_root,
+			tide_image=str(args.tide_image),
 		),
 		"results": [],
 	}
 	_write_json(summary_file, summary)
-	existing = load_completed_records(tasks) if args.resume else {}
+	existing = load_completed_records(tasks, method=method) if args.resume else {}
 	records = list(existing.values())
 	pending = tuple(task for task in tasks if task.sample_id not in existing)
 	last_summary_checkpoint = time.monotonic()
 	with ThreadPoolExecutor(max_workers=int(args.num_workers)) as executor:
-		future_map = {
-			executor.submit(
-				run_direct_temporal_task,
-				task,
-				fond4ltlf_executable=args.fond4ltlf_executable.expanduser().resolve(),
-				mona_executable=args.mona_executable.expanduser().resolve(),
-				timeout_seconds=int(args.timeout_seconds),
-				max_rss_gb=float(args.max_rss_gb),
-				plan_verifier_command=str(args.plan_verifier_command),
-				plan_verifier_timeout_seconds=int(args.plan_verifier_timeout_seconds),
-			): task
-			for task in pending
-		}
+		future_map = {}
+		for task in pending:
+			if method == TIDE_METHOD:
+				future = executor.submit(
+					run_tide_temporal_task,
+					task,
+					tide_root=args.tide_root.expanduser().resolve(),
+					tide_image=str(args.tide_image),
+					mona_executable=args.mona_executable.expanduser().resolve(),
+					timeout_seconds=int(args.timeout_seconds),
+					max_rss_gb=float(args.max_rss_gb),
+					subproblem_timeout_ms=int(args.tide_subproblem_timeout_ms),
+					plan_verifier_command=str(args.plan_verifier_command),
+					plan_verifier_timeout_seconds=int(
+						args.plan_verifier_timeout_seconds,
+					),
+				)
+			else:
+				future = executor.submit(
+					run_direct_temporal_task,
+					task,
+					fond4ltlf_executable=(
+						args.fond4ltlf_executable.expanduser().resolve()
+					),
+					mona_executable=args.mona_executable.expanduser().resolve(),
+					timeout_seconds=int(args.timeout_seconds),
+					max_rss_gb=float(args.max_rss_gb),
+					plan_verifier_command=str(args.plan_verifier_command),
+					plan_verifier_timeout_seconds=int(
+						args.plan_verifier_timeout_seconds,
+					),
+				)
+			future_map[future] = task
 		for future in as_completed(future_map):
 			task = future_map[future]
 			try:
 				record = future.result()
 			except Exception as error:  # noqa: BLE001 - persisted infrastructure failure.
-				record = base_record(task)
+				record = base_record(task, method=method)
 				record.update(status="runner_error", error=str(error))
 				_write_json(task.output_dir / "result.json", record)
 			records.append(record)
@@ -574,6 +647,170 @@ def run_direct_temporal_task(
 	return record
 
 
+def run_tide_temporal_task(
+	task: DirectTemporalTask,
+	*,
+	tide_root: Path,
+	tide_image: str,
+	mona_executable: Path,
+	timeout_seconds: int,
+	max_rss_gb: float,
+	subproblem_timeout_ms: int,
+	plan_verifier_command: str,
+	plan_verifier_timeout_seconds: int,
+) -> dict[str, Any]:
+	"""Run official TIDE, project its plan, and apply the shared trace oracles."""
+
+	task.output_dir.mkdir(parents=True, exist_ok=True)
+	record = base_record(task, method=TIDE_METHOD)
+	runtime_error = _tide_runtime_error(tide_root=tide_root, tide_image=tide_image)
+	if runtime_error is not None:
+		record.update(status="tool_unavailable", error=runtime_error)
+		_write_json(task.output_dir / "result.json", record)
+		return record
+	if not mona_executable.is_file():
+		record.update(
+			status="tool_unavailable",
+			error=f"Missing pinned MONA executable: {mona_executable}",
+		)
+		_write_json(task.output_dir / "result.json", record)
+		return record
+
+	try:
+		domain_text = task.domain_file.read_text(encoding="utf-8")
+		ensure_tide_domain_compatible(domain_text)
+		ltlf_formula = str(task.benchmark_case.get("ltlf_formula") or "").strip()
+		query_atoms = _required_mapping_sequence(task.benchmark_case, "atoms")
+		bindings = _required_mapping(task.benchmark_case, "bindings")
+		temporal_goal = build_tide_pddl_goal(
+			ltlf_formula=ltlf_formula,
+			atoms=query_atoms,
+			bindings=bindings,
+		)
+		temporal_problem = rewrite_pddl_problem_goal(
+			task.problem_file.read_text(encoding="utf-8"),
+			temporal_goal,
+		)
+	except ValueError as error:
+		record.update(
+			status=unsupported_tide_status(error),
+			supported=False,
+			error=str(error),
+		)
+		_write_json(task.output_dir / "result.json", record)
+		return record
+
+	record.update(supported=True, tide_temporal_goal=temporal_goal)
+	tide_domain = task.output_dir / "domain.pddl"
+	tide_problem = task.output_dir / "problem.pddl"
+	tide_domain.write_text(domain_text, encoding="utf-8")
+	tide_problem.write_text(temporal_problem, encoding="utf-8")
+	official_command = build_tide_command(
+		executable="/app/bin/main_single",
+		domain_file="/work/domain.pddl",
+		problem_file="/work/problem.pddl",
+		subproblem_timeout_ms=subproblem_timeout_ms,
+	)
+	docker_command = _build_tide_docker_command(
+		tide_image=tide_image,
+		workspace=task.output_dir,
+		max_rss_gb=max_rss_gb,
+		official_command=official_command,
+	)
+	planner_result = run_guarded_command(
+		docker_command,
+		output_dir=task.output_dir,
+		timeout_seconds=timeout_seconds,
+		max_rss_gb=max_rss_gb,
+		artifact_stem="tide",
+	)
+	record.update(
+		{
+			"planner_command": list(planner_result.command),
+			"planner_timeout_seconds": float(timeout_seconds),
+			"planner_exit_code": planner_result.exit_code,
+			"planner_seconds": planner_result.elapsed_seconds,
+			"planner_stdout": str(planner_result.stdout_file),
+			"planner_stderr": str(planner_result.stderr_file),
+			"runtime_lock_wait_seconds": planner_result.runtime_lock_wait_seconds,
+			"planner_wall_seconds": planner_result.wall_seconds,
+			"elapsed_seconds": planner_result.elapsed_seconds,
+		}
+	)
+	if planner_result.exit_code != 0:
+		record["status"] = stage_failure_status("planner", planner_result.stderr_file)
+		_write_json(task.output_dir / "result.json", record)
+		return record
+
+	try:
+		tide_plan = _single_tide_output(task.output_dir, "problem_plan_1")
+	except ValueError as error:
+		record.update(status="output_contract_error", error=str(error))
+		_write_json(task.output_dir / "result.json", record)
+		return record
+	if tide_plan is None:
+		record["status"] = "no_plan"
+		_write_json(task.output_dir / "result.json", record)
+		return record
+
+	try:
+		projected_actions = extract_tide_plan_actions(
+			tide_plan.read_text(encoding="utf-8", errors="replace"),
+		)
+		statistics_file = _single_tide_output(task.output_dir, "stats.txt")
+		if statistics_file is None:
+			raise ValueError("TIDE exited successfully without stats.txt.")
+		statistics = parse_tide_statistics(
+			statistics_file.read_text(encoding="utf-8", errors="replace"),
+		)
+	except ValueError as error:
+		record.update(status="output_contract_error", error=str(error))
+		_write_json(task.output_dir / "result.json", record)
+		return record
+
+	projected_plan = task.output_dir / "plan.plan"
+	projected_plan.write_text(
+		"".join(f"{action}\n" for action in projected_actions),
+		encoding="utf-8",
+	)
+	record.update(
+		{
+			"action_count": len(projected_actions),
+			"raw_plan_file": str(tide_plan),
+			"plan_file": str(projected_plan),
+			"tide_statistics_file": str(statistics_file),
+			"tide_statistics": statistics,
+		}
+	)
+	try:
+		execution = validate_execution_trace(
+			audit_row=task.audit_row,
+			prediction=benchmark_prediction(task.sample_id, task.benchmark_case),
+			domain_file=task.domain_file,
+			problem_file=task.problem_file,
+			plan_file=projected_plan,
+			output_dir=task.output_dir / "temporal_validation",
+			plan_verifier_command=plan_verifier_command,
+			plan_verifier_timeout_seconds=plan_verifier_timeout_seconds,
+			mona_executable=mona_executable,
+		)
+		execution_payload = execution.to_dict()
+		record.update(
+			{
+				"execution_validation": execution_payload,
+				"success": execution.success,
+				"status": "valid" if execution.success else execution_status(execution_payload),
+				"action_count": execution.action_count,
+			}
+		)
+	except (OSError, RuntimeError, ValueError) as error:
+		message = str(error)
+		status = "pddl_replay_failed" if "Trace step " in message else "trace_validation_error"
+		record.update(status=status, error=message)
+	_write_json(task.output_dir / "result.json", record)
+	return record
+
+
 def unsupported_status(error: ValueError) -> str:
 	"""Map official FOND4LTLf limitations to explicit applicability outcomes."""
 
@@ -586,6 +823,23 @@ def unsupported_status(error: ValueError) -> str:
 		return "unsupported_identifier_encoding"
 	if "does not support pddl requirements" in message:
 		return "unsupported_pddl_requirement"
+	return "input_error"
+
+
+def unsupported_tide_status(error: ValueError) -> str:
+	"""Map declared TIDE input boundaries to explicit applicability outcomes."""
+
+	message = str(error).lower()
+	if "numeric equality" in message:
+		return "unsupported_numeric_formula"
+	if "numeric pddl" in message:
+		return "unsupported_numeric_pddl"
+	if "instantaneous" in message:
+		return "unsupported_durative_pddl"
+	if "deterministic" in message:
+		return "unsupported_nondeterministic_pddl"
+	if "formula operator" in message or "negation on literals" in message:
+		return "unsupported_formula_operator"
 	return "input_error"
 
 
@@ -636,10 +890,14 @@ def summarize_temporal_reference_records(
 	}
 
 
-def base_record(task: DirectTemporalTask) -> dict[str, Any]:
+def base_record(
+	task: DirectTemporalTask,
+	*,
+	method: ExternalReferenceMethod = METHOD,
+) -> dict[str, Any]:
 	return {
-		"method": METHOD.display_name,
-		"variant": METHOD.value,
+		"method": method.display_name,
+		"variant": method.value,
 		"domain": task.domain,
 		"sample_id": task.sample_id,
 		"profile": task.profile,
@@ -657,6 +915,8 @@ def base_record(task: DirectTemporalTask) -> dict[str, Any]:
 
 def load_completed_records(
 	tasks: Sequence[DirectTemporalTask],
+	*,
+	method: ExternalReferenceMethod = METHOD,
 ) -> dict[str, dict[str, Any]]:
 	"""Reuse only results whose benchmark inputs still match byte-for-byte."""
 
@@ -667,7 +927,7 @@ def load_completed_records(
 			continue
 		record = _read_json(result_file)
 		if (
-			record.get("variant") == METHOD.value
+			record.get("variant") == method.value
 			and record.get("sample_id") == task.sample_id
 			and record.get("domain_sha256") == _sha256(task.domain_file)
 			and record.get("problem_sha256") == _sha256(task.problem_file)
@@ -687,7 +947,7 @@ def progress_line(record: Mapping[str, Any]) -> str:
 		record.get("runtime_lock_wait_seconds") or 0.0,
 	)
 	return (
-		f"[{prefix}] method={METHOD.display_name} domain={record.get('domain')} "
+		f"[{prefix}] method={record.get('method')} domain={record.get('domain')} "
 		f"sample={record.get('sample_id')} status={record.get('status')} "
 		f"actions={record.get('action_count', 0)} "
 		f"elapsed={elapsed:.1f}s wait={wait:.1f}s wall={elapsed + wait:.1f}s"
@@ -701,8 +961,35 @@ def record_sort_key(record: Mapping[str, Any]) -> tuple[str, str]:
 def temporal_toolchain_metadata(
 	fond4ltlf_executable: Path,
 	mona_executable: Path,
+	*,
+	method: ExternalReferenceMethod = METHOD,
+	tide_root: Path = DEFAULT_TIDE_ROOT,
+	tide_image: str = DEFAULT_TIDE_IMAGE,
 ) -> dict[str, Any]:
 	"""Record pinned direct-reference compiler and planner identities."""
+
+	if method == TIDE_METHOD:
+		return {
+			"tide": {
+				"root": str(tide_root.expanduser().resolve()),
+				"git_revision": _git_revision(tide_root.expanduser().resolve()),
+				"pinned_revision": PINNED_TIDE_REVISION,
+				"docker_image": str(tide_image),
+				"configuration": {
+					"feedback": True,
+					"trace_heuristic": True,
+					"prefix_cache": True,
+					"planner": "fast-downward",
+					"search": "lama-first",
+				},
+			},
+			"mona": {
+				"version": "1.4-18",
+				"executable": str(mona_executable.expanduser().resolve()),
+				"executable_sha256": _sha256(mona_executable),
+				"role": "independent GP2PL trace-validation oracle",
+			},
+		}
 
 	executable = fond4ltlf_executable.expanduser().resolve()
 	fond_root = executable.parents[2] if len(executable.parents) >= 3 else executable.parent
@@ -750,11 +1037,107 @@ def _git_revision(repository: Path) -> str | None:
 	return completed.stdout.strip() if completed.returncode == 0 else None
 
 
+@lru_cache(maxsize=4)
+def _tide_runtime_error(*, tide_root: Path, tide_image: str) -> str | None:
+	revision = _git_revision(tide_root.expanduser().resolve())
+	if revision != PINNED_TIDE_REVISION:
+		return (
+			"Missing or mismatched pinned TIDE repository: "
+			f"expected={PINNED_TIDE_REVISION} actual={revision or 'missing'}"
+		)
+	completed = subprocess.run(
+		(
+			"docker",
+			"image",
+			"inspect",
+			"--format",
+			'{{ index .Config.Labels "org.gp2pl.tide.revision" }}',
+			str(tide_image),
+		),
+		capture_output=True,
+		text=True,
+		check=False,
+	)
+	if completed.returncode != 0:
+		return f"Missing pinned TIDE Docker image: {tide_image}"
+	image_revision = completed.stdout.strip()
+	if image_revision != PINNED_TIDE_REVISION:
+		return (
+			"TIDE Docker image revision mismatch: "
+			f"expected={PINNED_TIDE_REVISION} actual={image_revision or 'missing'}"
+		)
+	return None
+
+
+def _build_tide_docker_command(
+	*,
+	tide_image: str,
+	workspace: Path,
+	max_rss_gb: float,
+	official_command: Sequence[str],
+) -> tuple[str, ...]:
+	if max_rss_gb <= 0:
+		raise ValueError("TIDE memory limit must be positive.")
+	memory_bytes = int(float(max_rss_gb) * 1024**3)
+	return (
+		"docker",
+		"run",
+		"--rm",
+		"--platform",
+		"linux/amd64",
+		"--network",
+		"none",
+		"--cpus",
+		"1",
+		"--memory",
+		str(memory_bytes),
+		"--volume",
+		f"{workspace.expanduser().resolve()}:/work",
+		"--workdir",
+		"/work",
+		str(tide_image),
+		*(str(item) for item in official_command),
+	)
+
+
+def _single_tide_output(output_dir: Path, name: str) -> Path | None:
+	matches = tuple(sorted((output_dir / "solutions").rglob(name)))
+	if not matches:
+		return None
+	if len(matches) != 1:
+		raise ValueError(
+			f"Expected one TIDE {name} artifact; found {len(matches)}.",
+		)
+	return matches[0]
+
+
 def _mapping(payload: Mapping[str, Any], key: str) -> Mapping[str, Any]:
 	value = payload.get(key)
 	if not isinstance(value, Mapping):
 		raise ValueError(f"Expected object field {key!r}.")
 	return value
+
+
+def _required_mapping(payload: Mapping[str, Any], key: str) -> Mapping[str, Any]:
+	value = payload.get(key)
+	if not isinstance(value, Mapping):
+		raise ValueError(f"Expected object field {key!r}.")
+	return value
+
+
+def _required_mapping_sequence(
+	payload: Mapping[str, Any],
+	key: str,
+) -> tuple[Mapping[str, Any], ...]:
+	value = payload.get(key)
+	if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+		raise ValueError(f"Expected array field {key!r}.")
+	result: list[Mapping[str, Any]] = []
+	for index, item in enumerate(value):
+		if not isinstance(item, Mapping):
+			raise ValueError(f"Expected object at {key}[{index}].")
+		result.append(item)
+	return tuple(result)
 
 
 def _as_mapping(value: Any, *, label: str) -> Mapping[str, Any]:

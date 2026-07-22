@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EXTERNAL_DIR="${ROOT_DIR}/.external"
 ENHSP_ROOT="${EXTERNAL_DIR}/enhsp-socs24"
 FOND4LTLF_ROOT="${EXTERNAL_DIR}/fond4ltlf-0.0.4"
+TIDE_ROOT="${EXTERNAL_DIR}/tide"
 MONA_EXECUTABLE="${EXTERNAL_DIR}/mona-1.4/Front/mona"
 MONA_VERSION="1.4-18"
 MOOSE_ROOT="${EXTERNAL_DIR}/moose"
@@ -18,6 +19,10 @@ ENHSP_JAR_SHA256="7e82ec74844a3722e48acafb25eafdd334e1ee35a3b9ba52a8cb6c2baae1dc
 FOND4LTLF_URL="https://github.com/whitemech/FOND4LTLf.git"
 FOND4LTLF_REVISION="011d9d9a5bfd6406d2c358faf8f63167f6c839bb"
 FOND4LTLF_RELEASE="v0.0.4"
+TIDE_URL="https://github.com/YuliiaSuprun/TIDE.git"
+TIDE_REVISION="9bdd247752817352714eac115ea6b78d90f26c09"
+TIDE_DOCKER_IMAGE="gp2pl-tide:${TIDE_REVISION:0:12}"
+TIDE_DOCKER_PLATFORM="linux/amd64"
 FOND_PYTHON="3.12"
 CLICK_VERSION="8.4.2"
 PLY_VERSION="3.11"
@@ -89,6 +94,23 @@ checkout_pinned_repository() {
 	fi
 }
 
+build_tide_image() {
+	local image_revision
+	image_revision="$(docker image inspect \
+		--format '{{ index .Config.Labels "org.gp2pl.tide.revision" }}' \
+		"${TIDE_DOCKER_IMAGE}" 2>/dev/null || true)"
+	if [[ "${image_revision}" == "${TIDE_REVISION}" ]]; then
+		return
+	fi
+	printf '[external-reference] building pinned TIDE image=%s\n' \
+		"${TIDE_DOCKER_IMAGE}"
+	docker build \
+		--platform "${TIDE_DOCKER_PLATFORM}" \
+		--label org.gp2pl.tide.revision="${TIDE_REVISION}" \
+		--tag "${TIDE_DOCKER_IMAGE}" \
+		"${TIDE_ROOT}"
+}
+
 materialize_moose_sandbox() {
 	local moose_sha="$1"
 	if [[ -d "${MOOSE_SANDBOX}" ]] \
@@ -133,7 +155,12 @@ materialize_moose_sandbox() {
 verify_installation() {
 	verify_revision "${ENHSP_ROOT}" "${ENHSP_REVISION}" "ENHSP"
 	verify_revision "${FOND4LTLF_ROOT}" "${FOND4LTLF_REVISION}" "FOND4LTLf"
+	verify_revision "${TIDE_ROOT}" "${TIDE_REVISION}" "TIDE"
 	verify_revision "${VAL_ROOT}" "${VAL_REVISION}" "VAL"
+	if git -C "${TIDE_ROOT}" submodule status --recursive | grep -Eq '^[+-]'; then
+		printf '[external-reference] TIDE submodules are missing or not pinned\n' >&2
+		exit 1
+	fi
 	if ! java -version >/dev/null 2>&1; then
 		printf '[external-reference] java exists but no working Java runtime is installed\n' >&2
 		exit 1
@@ -188,12 +215,33 @@ verify_installation() {
 			"${MOOSE_DOCKER_IMAGE}" >&2
 		exit 1
 	fi
+	if ! docker image inspect "${TIDE_DOCKER_IMAGE}" >/dev/null 2>&1; then
+		printf '[external-reference] missing TIDE image: %s\n' \
+			"${TIDE_DOCKER_IMAGE}" >&2
+		exit 1
+	fi
+	local tide_image_revision
+	tide_image_revision="$(docker image inspect \
+		--format '{{ index .Config.Labels "org.gp2pl.tide.revision" }}' \
+		"${TIDE_DOCKER_IMAGE}")"
+	if [[ "${tide_image_revision}" != "${TIDE_REVISION}" ]]; then
+		printf '[external-reference] TIDE image revision mismatch: expected=%s actual=%s\n' \
+			"${TIDE_REVISION}" "${tide_image_revision}" >&2
+		exit 1
+	fi
+	if ! docker run --rm --platform "${TIDE_DOCKER_PLATFORM}" \
+		"${TIDE_DOCKER_IMAGE}" test -x /app/bin/main_single; then
+		printf '[external-reference] TIDE image has no executable main_single\n' >&2
+		exit 1
+	fi
 	printf '[external-reference] ENHSP revision=%s planner=sat-hmrphj\n' \
 		"${ENHSP_REVISION}"
 	printf '[external-reference] FOND4LTLf release=%s revision=%s\n' \
 		"${FOND4LTLF_RELEASE}" "${FOND4LTLF_REVISION}"
 	printf '[external-reference] MONA executable=%s\n' "${MONA_EXECUTABLE}"
 	printf '[external-reference] MOOSE image=%s\n' "${MOOSE_DOCKER_IMAGE}"
+	printf '[external-reference] TIDE revision=%s image=%s\n' \
+		"${TIDE_REVISION}" "${TIDE_DOCKER_IMAGE}"
 }
 
 require_command git
@@ -208,6 +256,10 @@ if [[ "${MODE}" == "setup" ]]; then
 		"${ENHSP_ROOT}" "${ENHSP_URL}" "${ENHSP_REVISION}" "ENHSP"
 	checkout_pinned_repository \
 		"${FOND4LTLF_ROOT}" "${FOND4LTLF_URL}" "${FOND4LTLF_REVISION}" "FOND4LTLf"
+	checkout_pinned_repository \
+		"${TIDE_ROOT}" "${TIDE_URL}" "${TIDE_REVISION}" "TIDE"
+	git -C "${TIDE_ROOT}" submodule sync --recursive
+	git -C "${TIDE_ROOT}" submodule update --init --recursive
 	checkout_pinned_repository \
 		"${VAL_ROOT}" "${VAL_URL}" "${VAL_REVISION}" "VAL"
 	if [[ ! -x "${FOND4LTLF_ROOT}/.venv/bin/python" ]]; then
@@ -228,6 +280,7 @@ if [[ "${MODE}" == "setup" ]]; then
 			materialize_moose_sandbox "${moose_sha}"
 		fi
 	fi
+	build_tide_image
 fi
 
 verify_installation

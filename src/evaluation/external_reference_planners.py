@@ -9,10 +9,21 @@ from typing import Any
 from typing import Mapping
 from typing import Sequence
 
+from lark.exceptions import LarkError
+from ltlf2dfa.ltlf import LTLfAnd
+from ltlf2dfa.ltlf import LTLfAtomic
+from ltlf2dfa.ltlf import LTLfEventually
+from ltlf2dfa.ltlf import LTLfFormula
+from ltlf2dfa.ltlf import LTLfNext
+from ltlf2dfa.ltlf import LTLfNot
+from ltlf2dfa.ltlf import LTLfUntil
+from ltlf2dfa.parser.ltlf import LTLfParser
+
 from utils.pddl_parser import PDDLParser
 
 
 _FOND4LTLF_IDENTIFIER = re.compile(r"^[a-z][a-z0-9]*$")
+_PDDL_IDENTIFIER = re.compile(r"^[a-z][a-z0-9_-]*$", flags=re.IGNORECASE)
 _FORMULA_ATOM = re.compile(r"\ba\d+\b")
 _PLAN_ACTION = re.compile(r"^\(\s*([^\s()]+)(?:\s|\))", flags=re.IGNORECASE)
 _COMPILATION_ACTION = re.compile(r"^trans-\d+$", flags=re.IGNORECASE)
@@ -50,6 +61,7 @@ class ExternalReferenceMethod(str, Enum):
 	LAMA = "lama"
 	ENHSP_HMRPHJ = "enhsp_hmrphj"
 	FOND4LTLF_LAMA = "fond4ltlf_lama"
+	TIDE_LAMA = "tide_lama"
 
 	@property
 	def display_name(self) -> str:
@@ -60,6 +72,7 @@ class ExternalReferenceMethod(str, Enum):
 			ExternalReferenceMethod.LAMA: "LAMA",
 			ExternalReferenceMethod.ENHSP_HMRPHJ: "MRP+HJ",
 			ExternalReferenceMethod.FOND4LTLF_LAMA: "FOND4LTLf + LAMA",
+			ExternalReferenceMethod.TIDE_LAMA: "TIDE + LAMA",
 		}[self]
 
 
@@ -125,6 +138,196 @@ def build_fond4ltlf_command(
 		"-outp",
 		str(output_problem_file),
 	)
+
+
+def build_tide_command(
+	*,
+	executable: str | Path,
+	domain_file: str | Path,
+	problem_file: str | Path,
+	subproblem_timeout_ms: int = 60_000,
+) -> tuple[str, ...]:
+	"""Build the official TIDE feedback, heuristic, cache, and LAMA command."""
+
+	if subproblem_timeout_ms <= 0:
+		raise ValueError("TIDE subproblem timeout must be positive.")
+	return (
+		str(executable),
+		str(domain_file),
+		str(problem_file),
+		"1",
+		"-f",
+		"-h",
+		"-c",
+		"--planner",
+		"fd",
+		"--search",
+		"lama-first",
+		"--timeout",
+		str(int(subproblem_timeout_ms)),
+	)
+
+
+def build_tide_pddl_goal(
+	*,
+	ltlf_formula: str,
+	atoms: Sequence[Mapping[str, Any]],
+	bindings: Mapping[str, Any],
+) -> str:
+	"""Render the persisted bound LTLf query as TIDE temporal PDDL syntax."""
+
+	bound_values = {str(key): str(value) for key, value in bindings.items()}
+	atom_expressions: dict[str, str] = {}
+	for index, atom in enumerate(atoms):
+		atom_id = str(atom.get("atom_id") or atom.get("symbol") or "").strip()
+		kind = str(atom.get("kind") or "predicate").strip()
+		if not atom_id or atom_id in atom_expressions:
+			raise ValueError(f"TIDE atom {index} has a missing or duplicate identifier.")
+		if kind != "predicate":
+			raise ValueError("TIDE does not support numeric equality temporal atoms.")
+		predicate = str(atom.get("predicate") or "").strip()
+		arguments_raw = atom.get("arguments", atom.get("args"))
+		if not predicate or not isinstance(arguments_raw, Sequence) or isinstance(
+			arguments_raw,
+			(str, bytes),
+		):
+			raise ValueError(f"TIDE atom {atom_id!r} is malformed.")
+		arguments: list[str] = []
+		for raw_argument in arguments_raw:
+			argument = str(raw_argument)
+			grounded = bound_values.get(argument, argument)
+			if not _PDDL_IDENTIFIER.fullmatch(grounded):
+				raise ValueError(
+					f"TIDE atom {atom_id!r} has invalid PDDL object {grounded!r}.",
+				)
+			arguments.append(grounded)
+		if not _PDDL_IDENTIFIER.fullmatch(predicate):
+			raise ValueError(
+				f"TIDE atom {atom_id!r} has invalid predicate {predicate!r}.",
+			)
+		atom_expressions[atom_id] = "(" + " ".join((predicate, *arguments)) + ")"
+
+	formula_text = str(ltlf_formula).strip()
+	if not formula_text:
+		raise ValueError("TIDE requires a non-empty LTLf formula.")
+	try:
+		formula = LTLfParser()(formula_text)
+	except (LarkError, ValueError) as error:
+		raise ValueError(f"TIDE could not parse the persisted LTLf formula: {error}") from error
+
+	def render(node: LTLfFormula) -> str:
+		if isinstance(node, LTLfAtomic):
+			atom_id = str(node.s).strip()
+			if atom_id not in atom_expressions:
+				raise ValueError(f"TIDE formula references unknown atom {atom_id!r}.")
+			return atom_expressions[atom_id]
+		if isinstance(node, LTLfNot):
+			if not isinstance(node.f, LTLfAtomic):
+				raise ValueError("TIDE adapter supports negation on literals only.")
+			return f"(not {render(node.f)})"
+		if isinstance(node, LTLfNext):
+			return f"(next {render(node.f)})"
+		if isinstance(node, LTLfEventually):
+			return f"(eventually {render(node.f)})"
+		if isinstance(node, LTLfAnd):
+			rendered = tuple(render(operand) for operand in node.formulas)
+			if not rendered:
+				raise ValueError("TIDE conjunction must not be empty.")
+			return "(and " + " ".join(rendered) + ")"
+		if isinstance(node, LTLfUntil):
+			if len(node.formulas) != 2:
+				raise ValueError("TIDE strong-until requires exactly two operands.")
+			left, right = (render(operand) for operand in node.formulas)
+			return f"(until {left} {right})"
+		raise ValueError(
+			"TIDE adapter does not support formula operator "
+			f"{type(node).__name__!r}.",
+		)
+
+	return render(formula)
+
+
+def ensure_tide_domain_compatible(domain_text: str) -> None:
+	"""Reject PDDL constructs outside the official deterministic TIDE runtime."""
+
+	code = _mask_pddl_comments(str(domain_text)).lower()
+	functions_start = re.search(r"\(\s*:functions\b", code)
+	if functions_start is not None:
+		functions_end = _matching_parenthesis(code, functions_start.start())
+		functions_block = code[functions_start.start() : functions_end + 1]
+		function_names = {
+			match.group(1)
+			for match in re.finditer(r"\(\s*([a-z][a-z0-9_-]*)\b", functions_block)
+		}
+		if function_names - {"total-cost"}:
+			raise ValueError(
+				"TIDE with Fast Downward does not support resource numeric PDDL.",
+			)
+	if re.search(r"\(\s*:durative-action\b", code):
+		raise ValueError("TIDE reference supports instantaneous PDDL actions only.")
+	if re.search(r"\(\s*(?:oneof|probabilistic)\b", code):
+		raise ValueError("TIDE reference supports deterministic PDDL effects only.")
+
+
+def rewrite_pddl_problem_goal(problem_text: str, temporal_goal: str) -> str:
+	"""Replace exactly one PDDL goal block with a rendered TIDE temporal goal."""
+
+	goal = str(temporal_goal).strip()
+	if not goal.startswith("(") or not goal.endswith(")"):
+		raise ValueError("TIDE temporal goal must be one PDDL expression.")
+	text = str(problem_text)
+	code = _mask_pddl_comments(text)
+	matches = tuple(re.finditer(r"\(\s*:goal\b", code, flags=re.IGNORECASE))
+	if len(matches) != 1:
+		raise ValueError(f"Expected exactly one PDDL :goal block; found {len(matches)}.")
+	start = matches[0].start()
+	end = _matching_parenthesis(code, start)
+	return text[:start] + f"(:goal {goal})" + text[end + 1 :]
+
+
+def extract_tide_plan_actions(plan_artifact: str) -> tuple[str, ...]:
+	"""Extract primitive PDDL actions from TIDE's plan section only."""
+
+	lines = str(plan_artifact).splitlines()
+	try:
+		plan_start = next(
+			index for index, line in enumerate(lines) if line.strip().lower() == "plan:"
+		)
+	except StopIteration as error:
+		raise ValueError("TIDE plan artifact has no Plan section.") from error
+	result: list[str] = []
+	for raw_line in lines[plan_start + 1 :]:
+		line = raw_line.strip()
+		if line.lower() == "dfa path:":
+			break
+		if not line:
+			continue
+		if _PLAN_ACTION.match(line) is None or not line.endswith(")"):
+			raise ValueError(f"Malformed TIDE plan action: {line!r}.")
+		result.append(line)
+	else:
+		raise ValueError("TIDE plan artifact has no DFA Path boundary.")
+	return tuple(result)
+
+
+def parse_tide_statistics(statistics_text: str) -> dict[str, float]:
+	"""Parse the official TIDE single-problem statistics artifact."""
+
+	patterns = {
+		"average_dfa_seconds": r"Average DFA construction time:\s*([0-9.eE+-]+)",
+		"average_search_seconds": r"Average search time:\s*([0-9.eE+-]+)",
+		"average_total_seconds": r"Average total time:\s*([0-9.eE+-]+)",
+		"average_expanded_nodes": r"Average number of expanded nodes:\s*([0-9.eE+-]+)",
+		"average_plan_length": r"Average plan length:\s*([0-9.eE+-]+)",
+		"average_backtracks": r"Average number of backtracks:\s*([0-9.eE+-]+)",
+	}
+	result: dict[str, float] = {}
+	for field, pattern in patterns.items():
+		match = re.search(pattern, str(statistics_text), flags=re.IGNORECASE)
+		if match is None:
+			raise ValueError(f"TIDE statistics are missing {field}.")
+		result[field] = float(match.group(1))
+	return result
 
 
 def build_ground_fond4ltlf_formula(case: Mapping[str, Any]) -> str:
@@ -253,3 +456,23 @@ def filter_compilation_actions(
 			continue
 		raise ValueError(f"Compiled plan contains unknown action {action_name!r}.")
 	return tuple(result)
+
+
+def _mask_pddl_comments(text: str) -> str:
+	return re.sub(
+		r";[^\r\n]*",
+		lambda match: " " * len(match.group(0)),
+		str(text),
+	)
+
+
+def _matching_parenthesis(text: str, start: int) -> int:
+	depth = 0
+	for index in range(start, len(text)):
+		if text[index] == "(":
+			depth += 1
+		elif text[index] == ")":
+			depth -= 1
+			if depth == 0:
+				return index
+	raise ValueError("Unbalanced PDDL expression.")

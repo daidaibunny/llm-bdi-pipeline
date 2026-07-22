@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -8,9 +9,15 @@ from evaluation.external_reference_planners import ExternalReferenceMethod
 from evaluation.external_reference_planners import build_enhsp_command
 from evaluation.external_reference_planners import build_fond4ltlf_command
 from evaluation.external_reference_planners import build_ground_fond4ltlf_formula
+from evaluation.external_reference_planners import build_tide_command
+from evaluation.external_reference_planners import build_tide_pddl_goal
+from evaluation.external_reference_planners import ensure_tide_domain_compatible
+from evaluation.external_reference_planners import extract_tide_plan_actions
 from evaluation.external_reference_planners import filter_compilation_actions
 from evaluation.external_reference_planners import normalize_fond4ltlf_domain
+from evaluation.external_reference_planners import parse_tide_statistics
 from evaluation.external_reference_planners import reference_methods_for_domain
+from evaluation.external_reference_planners import rewrite_pddl_problem_goal
 
 
 def test_reference_methods_use_short_paper_names() -> None:
@@ -18,6 +25,7 @@ def test_reference_methods_use_short_paper_names() -> None:
 	assert ExternalReferenceMethod.LAMA.display_name == "LAMA"
 	assert ExternalReferenceMethod.ENHSP_HMRPHJ.display_name == "MRP+HJ"
 	assert ExternalReferenceMethod.FOND4LTLF_LAMA.display_name == "FOND4LTLf + LAMA"
+	assert ExternalReferenceMethod.TIDE_LAMA.display_name == "TIDE + LAMA"
 
 
 def test_reference_methods_follow_domain_features_not_domain_names(tmp_path: Path) -> None:
@@ -244,3 +252,188 @@ def test_compilation_action_filter_fails_on_unknown_actions() -> None:
 			"(move box1 room1 room2)\n(mystery box1)\n",
 			original_action_names={"move"},
 		)
+
+
+def test_tide_goal_renderer_preserves_strong_next_and_until() -> None:
+	atoms = [
+		{"symbol": "a0", "kind": "predicate", "predicate": "clear", "args": ["X"]},
+		{"symbol": "a1", "kind": "predicate", "predicate": "on", "args": ["X", "Y"]},
+		{"symbol": "a2", "kind": "predicate", "predicate": "on", "args": ["Z", "X"]},
+	]
+
+	assert build_tide_pddl_goal(
+		ltlf_formula="a0 U F(a1 & X(a2))",
+		atoms=atoms,
+		bindings={"X": "b2", "Y": "b3", "Z": "b1"},
+	) == (
+		"(until (clear b2) "
+		"(eventually (and (on b2 b3) (next (on b1 b2)))))"
+	)
+
+
+def test_tide_goal_renderer_rejects_numeric_atoms() -> None:
+	with pytest.raises(ValueError, match="numeric"):
+		build_tide_pddl_goal(
+			ltlf_formula="a0",
+			atoms=[
+				{
+					"symbol": "a0",
+					"kind": "numeric_equality",
+					"function": "fuel",
+					"arguments": [],
+					"value": 0,
+				},
+			],
+			bindings={},
+		)
+
+
+def test_tide_goal_renderer_rejects_nonliteral_negation() -> None:
+	with pytest.raises(ValueError, match="negation on literals only"):
+		build_tide_pddl_goal(
+			ltlf_formula="!(F(a0))",
+			atoms=[
+				{
+					"symbol": "a0",
+					"kind": "predicate",
+					"predicate": "ready",
+					"arguments": [],
+				},
+			],
+			bindings={},
+		)
+
+
+def test_tide_domain_capability_rejects_resource_numeric_fluents() -> None:
+	with pytest.raises(ValueError, match="numeric PDDL"):
+		ensure_tide_domain_compatible(
+			"""
+(define (domain numeric)
+ (:requirements :strips :numeric-fluents)
+ (:predicates (ready))
+ (:functions (fuel))
+ (:action consume
+  :parameters ()
+  :precondition (> (fuel) 0)
+  :effect (decrease (fuel) 1)))
+""".strip(),
+		)
+
+
+def test_tide_problem_rewrite_replaces_only_goal_block() -> None:
+	problem = """
+(define (problem p)
+ (:domain d)
+ (:objects b1 b2)
+ (:init (clear b1))
+ (:goal (and (clear b2))))
+""".strip()
+
+	rewritten = rewrite_pddl_problem_goal(
+		problem,
+		"(eventually (on b1 b2))",
+	)
+
+	assert "(:init (clear b1))" in rewritten
+	assert "(:goal (eventually (on b1 b2)))" in rewritten
+	assert "(:goal (and (clear b2)))" not in rewritten
+
+
+def test_tide_command_uses_official_feedback_heuristic_cache_configuration() -> None:
+	assert build_tide_command(
+		executable="/app/bin/main_single",
+		domain_file="/work/domain.pddl",
+		problem_file="/work/problem.pddl",
+		subproblem_timeout_ms=60_000,
+	) == (
+		"/app/bin/main_single",
+		"/work/domain.pddl",
+		"/work/problem.pddl",
+		"1",
+		"-f",
+		"-h",
+		"-c",
+		"--planner",
+		"fd",
+		"--search",
+		"lama-first",
+		"--timeout",
+		"60000",
+	)
+
+
+def test_tide_plan_parser_extracts_only_primitive_plan_section() -> None:
+	artifact = """
+Plan:
+(unstack b1 b2)
+(put-down b1)
+
+DFA Path:
+1 -> 2 -> 3
+
+Product Path:
+diagnostic state text
+""".strip()
+
+	assert extract_tide_plan_actions(artifact) == (
+		"(unstack b1 b2)",
+		"(put-down b1)",
+	)
+
+
+def test_tide_statistics_parser_preserves_search_diagnostics() -> None:
+	statistics = parse_tide_statistics(
+		"""
+For 1 runs:
+Average DFA construction time: 0.25 seconds
+First DFA construction time: 0.25 seconds
+Average DFA construction time (without first): 0 seconds
+Average search time: 1.5 seconds
+Average total time: 1.75 seconds
+Average number of expanded nodes: 42
+Average plan length: 3
+Average number of backtracks: 2
+""".strip(),
+	)
+
+	assert statistics == {
+		"average_dfa_seconds": 0.25,
+		"average_search_seconds": 1.5,
+		"average_total_seconds": 1.75,
+		"average_expanded_nodes": 42.0,
+		"average_plan_length": 3.0,
+		"average_backtracks": 2.0,
+	}
+
+
+def test_tide_adapter_covers_frozen_boolean_temporal_benchmark() -> None:
+	project_root = Path(__file__).resolve().parents[2]
+	benchmark = json.loads(
+		(
+			project_root
+			/ "paper_artifacts/temporal_goal_benchmark/v1/benchmark.json"
+		).read_text(encoding="utf-8"),
+	)
+	supported = 0
+	unsupported_numeric = 0
+	for domain_name, domain_record in benchmark["domains"].items():
+		domain_text = (
+			project_root / "src/domains" / domain_name / "domain.pddl"
+		).read_text(encoding="utf-8")
+		try:
+			ensure_tide_domain_compatible(domain_text)
+		except ValueError as error:
+			assert "numeric PDDL" in str(error)
+			unsupported_numeric += len(domain_record["cases"])
+			continue
+		for case in domain_record["cases"].values():
+			goal = build_tide_pddl_goal(
+				ltlf_formula=case["ltlf_formula"],
+				atoms=case["atoms"],
+				bindings=case["bindings"],
+			)
+			assert goal.startswith("(") and goal.endswith(")")
+			supported += 1
+
+	assert supported == 868
+	assert unsupported_numeric == 360

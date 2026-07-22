@@ -70,6 +70,7 @@ ACHIEVEMENT_METHODS = (
 )
 INFRASTRUCTURE_FAILURES = {
 	"input_error",
+	"output_contract_error",
 	"plan_verifier_unavailable",
 	"runner_error",
 	"tool_unavailable",
