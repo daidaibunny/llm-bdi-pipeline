@@ -35,6 +35,9 @@ monitor claims (Sec.~2), and gives compiler pseudocode (Sec.~3).
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
+Figure~\ref{fig:compiler-stages}(a) summarizes the query-independent path from
+raw evidence through canonical lifting and certified candidate selection to
+$\mathcal M_D$.
 An evidence provider is admissible when its raw artifact
 $\mathcal E_{\mathrm{raw}}$ parses to a singleton-goal evidence program $E_0$.
 Canonical lifting produces
@@ -218,6 +221,10 @@ slice: internal subgoal expansion followed by schema-action execution.}
 
 \section{DFA-Guided Composition of Temporally Extended Goals}
 \label{sec:temporal-composition}
+
+Figure~\ref{fig:compiler-stages}(b) summarizes the query-specific path from a
+bound TEG and its DFA progress guard to a certified transition-repair tree and
+appended query plans.
 
 \paragraph{Progress-edge compilation.}
 Given the validated bound query $\widehat\tau_q$ and DFA $\mathcal D_q$ of

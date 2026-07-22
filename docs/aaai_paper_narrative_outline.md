@@ -1002,6 +1002,9 @@ panels separated by one thin rule. Panel (a) remains domain-independent.
 Panel (b) embeds the bound Blocks World tower query that previously occupied a
 separate temporal-composition figure. It must retain a clear left-to-right
 compiler spine rather than becoming a standalone automaton diagram.
+Do not use the Introduction to narrate the implementation shown here. Cite
+panel (a) from Evidence Normalization and Canonical Lifting and panel (b) from
+DFA-Guided Composition of Temporally Extended Goals.
 
 - Panel (a), `Query-independent atomic-core compiler`, shows
   `$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$` entering
