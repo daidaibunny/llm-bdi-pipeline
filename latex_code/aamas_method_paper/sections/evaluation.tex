@@ -88,35 +88,33 @@ resource-choice patterns.
 \input{sections/result_five_seed_atomic_table}
 
 All \ChallengeSuccessCount{}/\ChallengeCaseCount{} registered structural
-challenges pass: seven test exact acceptance or rejection, and six test
+challenges pass: seven test exact acceptance or rejection and six test
 invariance under symbol renaming, parameter permutation, object renaming, or
-irrelevant vocabulary. These checks complement held-out coverage without
-claiming certificate completeness.
+irrelevant vocabulary, complementing held-out coverage without claiming
+certificate completeness.
 
 \paragraph{End-to-end temporal validation.}
 \label{sec:end-to-end-results}
-The paired ablation holds one atomic core per domain fixed; the selected
-compiler is then evaluated over all five seed-specific core sets. The five
-benchmark profiles instantiate $\Phi_{\mathrm{bench}}$, not all of
-$\Phi_{\mathrm{syn}}$, and execution includes only queries admitted to
-$\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. All
+The paired ablation fixes one atomic core per domain; the selected compiler is
+additionally evaluated over all five seed-specific core sets. Its five profiles
+sample $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$, and execution includes
+only queries admitted to $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. All
 \TranslationEquivalentCount{}/\TranslationInputCount{} translations are
-DFA-language equivalent. Certified Balanced validates
-\TemporalCrossSeedValidCount{}/\TemporalCrossSeedEvaluationCount{} executions,
-and all \TemporalCrossSeedAllSeedValidQueryCount{} queries succeed under every
-seed. Mean per-seed PAR-2 is \TemporalCrossSeedMeanParTwoSeconds{} $\pm$
-\TemporalCrossSeedParTwoSDSeconds{} seconds; median trace length is two actions
-in every seed, and action count is invariant for all
-\TemporalCrossSeedActionInvariantQueryCount{} queries. Trace length is
-descriptive, not an action-cost optimality claim.
-Across 740 same-seed added-family cases, GP2PL raises VAL-valid coverage from
-15.8\% to 97.3\%; original-scope MOOSE results are separate
-\cite{Chen2025MooseExtended}. On the \ExternalDirectSupportedCount{} Boolean
-queries in the direct FOND4LTLf comparison, GP2PL validates
+DFA-language equivalent, and Certified Balanced validates
+\TemporalCrossSeedValidCount{}/\TemporalCrossSeedEvaluationCount{} executions:
+all \TemporalCrossSeedAllSeedValidQueryCount{} queries succeed under every seed,
+with invariant action counts for all
+\TemporalCrossSeedActionInvariantQueryCount{} queries (median two) and mean
+per-seed PAR-2 of
+\TemporalCrossSeedMeanParTwoSeconds{} $\pm$
+\TemporalCrossSeedParTwoSDSeconds{} seconds; trace length is descriptive, not an
+action-cost optimality claim. Across 740 same-seed added-family cases, GP2PL
+raises VAL-valid coverage from 15.8\% to 97.3\%; original-scope MOOSE results are
+separate \cite{Chen2025MooseExtended}. On the
+\ExternalDirectSupportedCount{} Boolean queries admitted by the direct
+FOND4LTLf reference, GP2PL validates
 \ExternalDirectSupportedCount{}/\ExternalDirectSupportedCount{} and FOND4LTLf
-with LAMA validates
-\ExternalDirectValidCount{} (supported-set PAR-2
-\ExternalDirectParTwoSeconds{} seconds) \cite{DeGiacomoFuggitti2021FOND4LTLf}.
-The other \ExternalDirectUnsupportedCount{} inputs fall outside the reference's
-declared input scope, so this is a task reference rather than a compiler
-ablation.
+with LAMA validates \ExternalDirectValidCount{} (supported-set PAR-2
+\ExternalDirectParTwoSeconds{} seconds) \cite{DeGiacomoFuggitti2021FOND4LTLf};
+the other \ExternalDirectUnsupportedCount{} inputs are outside its declared
+scope, making this a task reference rather than a compiler ablation.

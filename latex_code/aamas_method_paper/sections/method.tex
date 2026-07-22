@@ -29,11 +29,10 @@ certify an occurrence-specific preservation portfolio $\boldsymbol\Pi_\chi$ and
 serialization $\boldsymbol\ell_\chi$ for each DFA guard $\chi$; it neither
 reopens atomic selection nor relearns $\mathcal M_D$.
 
-These obligations are checked on trigger--context--body rules before rendering,
-and the \asl{} realization preserves each selected trigger, context, ordered
-body, and internal-call edge. The Technical Supplement formalizes the
-accept/reject boundary and constructors (Sec.~1), proves the certificate and
-monitor claims (Sec.~2), and gives compiler pseudocode (Sec.~3).
+These obligations are checked before rendering, which preserves each selected
+trigger, context, ordered body, and internal-call edge; the Technical Supplement
+formalizes the constructors and accept/reject boundary, proves the certificate
+and monitor claims, and gives compiler pseudocode (Secs.~1--3).
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -100,11 +99,12 @@ constrain unification; rendered sort membership is context-only.
 
 \subsection{Candidate Soundness Certificates}
 
-Each candidate's conditional module-completion summary $\Sigma_b$ has Boolean
-projections $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, together with any
-exact constant-integer delta and keyed resource-mode transition. The
-$\mustadd_b$ facts hold after every feasible completion; $\mayadd_b$ and
-$\maydelete_b$ overapproximate possible effects. Let
+Symbolic progression proves preconditions and target achievement and yields each
+candidate's conditional module-completion summary $\Sigma_b$, with Boolean
+projections $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, any exact
+constant-integer delta, and a keyed resource-mode transition. The $\mustadd_b$
+facts hold after every feasible completion; $\mayadd_b$ and $\maydelete_b$
+overapproximate possible effects. Let
 $\operatorname{Cert}_D(b)$ denote the conjunction of typed binding, symbolic
 executability, target achievement, and any constructor-specific progress or
 resource obligation. The selected core must additionally satisfy the set-level
@@ -113,8 +113,7 @@ condition $\operatorname{Closed}_D(\mathcal M_D)$; the definitions follow.
 \paragraph{Binding, symbolic execution, and internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
 certified static sort membership; negative contexts and comparisons only
-filter. Symbolic progression proves preconditions and target achievement while
-recording $\mustadd$, $\mayadd$, and $\maydelete$.
+filter.
 $\operatorname{Closed}_D(\mathcal R)$ holds when every internal call in plan set
 $\mathcal R$ type-unifies with a selected trigger under $D$'s type hierarchy.
 Requiring $\operatorname{Closed}_D(\mathcal M_D)$ is a set-level Clingo
@@ -344,16 +343,14 @@ dispatch at the
 current state. Every intervening state change is an actual DFA edge enabled by
 the observed valuation, and a rejecting state cannot report success.
 
-\textbf{Proof sketch.} Induct over the certified order: each leaf establishes
-its signed literal; later summaries exclude deleting prior positives or adding
-forbidden atoms. If the source is left during a call, the remaining suffix still
-contains only these certified calls and observations, so it preserves the prefix
-at return boundaries. The monitor evaluates full cubes after every action and
-cannot be written by the controller; the suffix can therefore cause only real,
-fully observed DFA transitions. After the full pass, the completion plan tests
-the current state and either retries or returns to top-level dispatch.
-\hfill$\square$ This does not guarantee that a post-exit suffix avoids
-rejection.
+\textbf{Proof sketch.} Induction over the certified order shows that each leaf
+establishes its signed literal and later summaries preserve prior positives and
+absences; if a call leaves the source, the remaining certified suffix preserves
+this prefix at return boundaries. Because only the monitor evaluates full cubes
+after every primitive action, every observed source exit is a real DFA
+transition. After a complete pass, completion retries exactly while the source
+remains active. \hfill$\square$ This does not guarantee that a post-exit suffix
+avoids rejection.
 
 \paragraph{Structural and monitor-fidelity guarantees.}
 The balanced tree for $n$ signed literals and $e$ repair plans has
