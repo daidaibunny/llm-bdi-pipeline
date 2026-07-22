@@ -421,6 +421,40 @@ def test_tide_normalization_is_type_ordered_and_delimiter_safe() -> None:
 	assert normalized.temporal_goal == f"(eventually ({on_table} {room_a}))"
 
 
+def test_tide_normalization_distinguishes_temporal_next_from_next_predicate() -> None:
+	domain = """
+(define (domain operator-collision)
+ (:requirements :strips :typing)
+ (:types level item)
+ (:predicates
+  (next ?from - level ?to - level)
+  (holding ?item - item))
+ (:action advance
+  :parameters (?from - level ?to - level ?item - item)
+  :precondition (and (next ?from ?to) (holding ?item))
+  :effect (holding ?item)))
+""".strip()
+	problem = """
+(define (problem operator-collision-1)
+ (:domain operator-collision)
+ (:objects l0 l1 - level shaker - item)
+ (:init (next l0 l1))
+ (:goal (and)))
+""".strip()
+
+	normalized = normalize_tide_pddl_task(
+		domain_text=domain,
+		problem_text=problem,
+		temporal_goal="(eventually (next (eventually (holding shaker))))",
+	)
+
+	next_predicate = "gp2plp_6e657874"
+	assert f"({next_predicate} ?gp2plv66726f6d" in normalized.domain_text
+	assert f"({next_predicate} gp2plo6c30 gp2plo6c31)" in normalized.problem_text
+	assert "(next (eventually" in normalized.temporal_goal
+	assert f"({next_predicate} (eventually" not in normalized.temporal_goal
+
+
 def test_tide_plan_parser_decodes_normalized_action_and_object_names() -> None:
 	artifact = """
 Plan:

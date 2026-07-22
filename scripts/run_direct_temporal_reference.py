@@ -97,6 +97,7 @@ DEFAULT_TIDE_ROOT = PROJECT_ROOT / ".external/tide"
 DEFAULT_TIDE_IMAGE = f"gp2pl-tide:{PINNED_TIDE_REVISION[:12]}"
 _TIDE_FRONTEND_DIAGNOSTICS = (
 	"exception translating domain",
+	"invalid op eventually in predicate",
 	"invalid parent type",
 	"predicate not found for ap",
 	"invalid ap name format",

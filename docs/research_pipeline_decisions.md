@@ -386,11 +386,14 @@ temporal PDDL goal, then invokes official TIDE with feedback, trace heuristic,
 prefix caching, and Fast Downward `lama-first`. Before invocation, a bijective
 category-scoped alpha-renaming removes ambiguity between TIDE's underscore AP
 separator and PDDL symbols, while a dependency-preserving rewrite declares
-parent types before their children. Projected actions are decoded to the
-original PDDL vocabulary before replay and validation. TIDE front-end contract
-errors are infrastructure failures, not planning failures. TIDE's `next` node is the
-upstream pddlboat strong-next operator `X[!]`, and `until` is strong `U`; the
-adapter preserves the declared formula semantics. The gold formula is never
+parent types before their children. Temporal operators are recognized from
+their syntax-tree positions and arities, so a domain predicate such as
+`next/2` is alpha-renamed without rewriting the LTLf `next` operator. Projected
+actions are decoded to the original PDDL vocabulary before replay and
+validation. TIDE front-end contract errors are infrastructure failures, not
+planning failures. TIDE's `next` node is the upstream pddlboat strong-next
+operator `X[!]`, and `until` is strong `U`; the adapter preserves the declared
+formula semantics. The gold formula is never
 supplied to TIDE search; it remains an independent validation oracle. Both modes
 submit only original PDDL actions to replay, neutral-goal VAL, gold-DFA
 acceptance, and predicted-DFA acceptance. Neither consumes an atomic ASL library.

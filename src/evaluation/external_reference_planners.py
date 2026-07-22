@@ -284,7 +284,11 @@ def normalize_tide_pddl_task(
 	symbols = _tide_symbol_table(domain, problem)
 	normalized_domain = _transform_tide_domain(domain, symbols)
 	normalized_problem = _transform_tide_problem(problem, symbols)
-	normalized_goal = _transform_tide_expression(goal, symbols)
+	normalized_goal = _transform_tide_expression(
+		goal,
+		symbols,
+		temporal_context=True,
+	)
 	return TidePDDLTask(
 		domain_text=_render_pddl_document(normalized_domain),
 		problem_text=_render_pddl_document(normalized_problem),
@@ -599,6 +603,17 @@ def _transform_tide_problem(
 			result.append([":domain", _encode_tide_symbol(str(form[1]), "d")])
 		elif head == ":objects":
 			result.append(_transform_typed_form(form, name_kind="o"))
+		elif head == ":goal" and len(form) == 2:
+			result.append(
+				[
+					":goal",
+					_transform_tide_expression(
+						form[1],
+						symbols,
+						temporal_context=True,
+					),
+				],
+			)
 		else:
 			result.append(_transform_tide_expression(form, symbols))
 	return result
@@ -694,6 +709,8 @@ def _transform_action_form(
 def _transform_tide_expression(
 	expression: _PDDLSExpression,
 	symbols: _TideSymbolTable,
+	*,
+	temporal_context: bool = False,
 ) -> _PDDLSExpression:
 	if isinstance(expression, str):
 		name = expression.lower()
@@ -708,9 +725,18 @@ def _transform_tide_expression(
 		return []
 	head_raw = expression[0]
 	if not isinstance(head_raw, str):
-		return [_transform_tide_expression(item, symbols) for item in expression]
+		return [
+			_transform_tide_expression(
+				item,
+				symbols,
+				temporal_context=temporal_context,
+			)
+			for item in expression
+		]
 	head = head_raw.lower()
-	if head in symbols.predicates:
+	if temporal_context and _is_tide_temporal_operator(expression):
+		encoded_head = head
+	elif head in symbols.predicates:
 		encoded_head = _encode_tide_symbol(head, "p_")
 	elif head in symbols.functions and head != "total-cost":
 		encoded_head = _encode_tide_symbol(head, "f")
@@ -727,12 +753,42 @@ def _transform_tide_expression(
 		return [
 			encoded_head,
 			parameter_form[1:],
-			*(_transform_tide_expression(item, symbols) for item in expression[2:]),
+			*(
+				_transform_tide_expression(
+					item,
+					symbols,
+					temporal_context=temporal_context,
+				)
+				for item in expression[2:]
+			),
 		]
 	return [
 		encoded_head,
-		*(_transform_tide_expression(item, symbols) for item in expression[1:]),
+		*(
+			_transform_tide_expression(
+				item,
+				symbols,
+				temporal_context=temporal_context,
+			)
+			for item in expression[1:]
+		),
 	]
+
+
+def _is_tide_temporal_operator(expression: Sequence[_PDDLSExpression]) -> bool:
+	"""Recognize an operator node by syntax, not by a potentially colliding name."""
+
+	if not expression or not isinstance(expression[0], str):
+		return False
+	head = expression[0].lower()
+	operands = expression[1:]
+	if head in {"next", "eventually", "always", "not"}:
+		return len(operands) == 1 and isinstance(operands[0], list)
+	if head in {"until", "release"}:
+		return len(operands) == 2 and all(isinstance(operand, list) for operand in operands)
+	if head in {"and", "or"}:
+		return bool(operands) and all(isinstance(operand, list) for operand in operands)
+	return head in {"true", "false"} and not operands
 
 
 def _encode_tide_symbol(symbol: str, kind: str) -> str:

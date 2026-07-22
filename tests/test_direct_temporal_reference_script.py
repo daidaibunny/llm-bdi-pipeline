@@ -70,7 +70,7 @@ def test_tide_frontend_diagnostics_are_not_reported_as_planning_failures(
 ) -> None:
 	stderr_file = tmp_path / "stderr.txt"
 	stderr_file.write_text(
-		"Predicate not found for AP: arm_empty\n",
+		"Error: Exception translating problem: Invalid op eventually in predicate!\n",
 		encoding="utf-8",
 	)
 
