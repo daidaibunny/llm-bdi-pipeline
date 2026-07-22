@@ -69,6 +69,7 @@ ACHIEVEMENT_METHODS = (
 	ExternalReferenceMethod.ENHSP_HMRPHJ,
 )
 INFRASTRUCTURE_FAILURES = {
+	"adapter_error",
 	"input_error",
 	"output_contract_error",
 	"plan_verifier_unavailable",

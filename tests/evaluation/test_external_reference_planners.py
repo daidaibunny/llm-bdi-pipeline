@@ -17,6 +17,7 @@ from evaluation.external_reference_planners import filter_compilation_actions
 from evaluation.external_reference_planners import normalize_fond4ltlf_domain
 from evaluation.external_reference_planners import parse_tide_statistics
 from evaluation.external_reference_planners import reference_methods_for_domain
+from evaluation.external_reference_planners import normalize_tide_pddl_task
 from evaluation.external_reference_planners import rewrite_pddl_problem_goal
 
 
@@ -381,6 +382,88 @@ diagnostic state text
 	)
 
 
+def test_tide_normalization_is_type_ordered_and_delimiter_safe() -> None:
+	domain = """
+(define (domain arbitrary-domain)
+ (:requirements :strips :typing)
+ (:types child - parent parent - object)
+ (:predicates (arm-empty) (on-table ?x - child))
+ (:action put-down
+  :parameters (?x - child)
+  :precondition (arm-empty)
+  :effect (on-table ?x)))
+""".strip()
+	problem = """
+(define (problem arbitrary-problem)
+ (:domain arbitrary-domain)
+ (:objects room-a - child)
+ (:init (arm-empty))
+ (:goal (and)))
+""".strip()
+
+	normalized = normalize_tide_pddl_task(
+		domain_text=domain,
+		problem_text=problem,
+		temporal_goal="(eventually (on-table room-a))",
+	)
+
+	parent = "gp2plt706172656e74"
+	child = "gp2plt6368696c64"
+	arm_empty = "gp2plp_61726d2d656d707479"
+	on_table = "gp2plp_6f6e2d7461626c65"
+	room_a = "gp2plo726f6f6d2d61"
+	assert f"(:types {parent} - object {child} - {parent})" in normalized.domain_text
+	assert f"({arm_empty})" in normalized.domain_text
+	assert f"({on_table} ?gp2plv78 - {child})" in normalized.domain_text
+	assert f":parameters (?gp2plv78 - {child})" in normalized.domain_text
+	assert f"(:objects {room_a} - {child})" in normalized.problem_text
+	assert f"(:goal (eventually ({on_table} {room_a})))" in normalized.problem_text
+	assert normalized.temporal_goal == f"(eventually ({on_table} {room_a}))"
+
+
+def test_tide_plan_parser_decodes_normalized_action_and_object_names() -> None:
+	artifact = """
+Plan:
+(gp2pla7075742d646f776e gp2plo726f6f6d2d61)
+
+DFA Path:
+1 -> 2
+""".strip()
+
+	assert extract_tide_plan_actions(
+		artifact,
+		decode_normalized_symbols=True,
+	) == ("(put-down room-a)",)
+
+
+def test_tide_normalization_preserves_metric_only_total_cost() -> None:
+	normalized = normalize_tide_pddl_task(
+		domain_text="""
+(define (domain costed)
+ (:requirements :strips :action-costs)
+ (:predicates (ready))
+ (:functions (total-cost) - number)
+ (:action prepare
+  :parameters ()
+  :precondition (and)
+  :effect (and (ready) (increase (total-cost) 1))))
+""".strip(),
+		problem_text="""
+(define (problem costed-1)
+ (:domain costed)
+ (:objects)
+ (:init (= (total-cost) 0))
+ (:goal (and))
+ (:metric minimize (total-cost)))
+""".strip(),
+		temporal_goal="(eventually (ready))",
+	)
+
+	assert "(:functions (total-cost) - number)" in normalized.domain_text
+	assert "(increase (total-cost) 1)" in normalized.domain_text
+	assert "(:metric minimize (total-cost))" in normalized.problem_text
+
+
 def test_tide_statistics_parser_preserves_search_diagnostics() -> None:
 	statistics = parse_tide_statistics(
 		"""
@@ -433,6 +516,14 @@ def test_tide_adapter_covers_frozen_boolean_temporal_benchmark() -> None:
 				bindings=case["bindings"],
 			)
 			assert goal.startswith("(") and goal.endswith(")")
+			normalized = normalize_tide_pddl_task(
+				domain_text=domain_text,
+				problem_text=(project_root / case["problem_file"]).read_text(
+					encoding="utf-8",
+				),
+				temporal_goal=goal,
+			)
+			assert "gp2plp_" in normalized.problem_text
 			supported += 1
 
 	assert supported == 868

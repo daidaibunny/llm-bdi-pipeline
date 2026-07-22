@@ -12,6 +12,7 @@ from scripts.run_direct_temporal_reference import run_direct_temporal_task
 from scripts.run_direct_temporal_reference import run_tide_temporal_task
 from scripts.run_direct_temporal_reference import stage_failure_status
 from scripts.run_direct_temporal_reference import summarize_temporal_reference_records
+from scripts.run_direct_temporal_reference import tide_process_failure_status
 from scripts.run_direct_temporal_reference import unsupported_tide_status
 from scripts.run_external_planning_references import GuardedCommandResult
 
@@ -62,6 +63,18 @@ def test_temporal_stage_failure_uses_stage_specific_status(tmp_path: Path) -> No
 		unsupported_tide_status(ValueError("negation on literals only"))
 		== "unsupported_formula_operator"
 	)
+
+
+def test_tide_frontend_diagnostics_are_not_reported_as_planning_failures(
+	tmp_path: Path,
+) -> None:
+	stderr_file = tmp_path / "stderr.txt"
+	stderr_file.write_text(
+		"Predicate not found for AP: arm_empty\n",
+		encoding="utf-8",
+	)
+
+	assert tide_process_failure_status(stderr_file) == "adapter_error"
 
 
 def test_direct_temporal_runner_filters_compiler_actions_before_validation(
@@ -255,7 +268,7 @@ def test_direct_resume_retries_infrastructure_results(tmp_path: Path) -> None:
 
 	infra_task = task_for("infra")
 	planner_task = task_for("planner")
-	for task, status in ((infra_task, "planner_runner_error"), (planner_task, "planner_failed")):
+	for task, status in ((infra_task, "adapter_error"), (planner_task, "planner_failed")):
 		task.output_dir.mkdir()
 		(task.output_dir / "result.json").write_text(
 			json.dumps(
@@ -364,7 +377,7 @@ def test_tide_runner_projects_and_independently_validates_official_plan(
 		(result_dir / "problem_plan_1").write_text(
 			"""
 Plan:
-(place item)
+(gp2pla706c616365 gp2plo6974656d)
 
 DFA Path:
 1 -> 2
@@ -454,6 +467,6 @@ Average number of backtracks: 0
 	assert record["success"] is True
 	assert record["action_count"] == 1
 	assert record["tide_statistics"]["average_backtracks"] == 0.0
-	assert "(:goal (eventually (at item)))" in (
+	assert "(:goal (eventually (gp2plp_6174 gp2plo6974656d)))" in (
 		task.output_dir / "problem.pddl"
 	).read_text(encoding="utf-8")

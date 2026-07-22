@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 import re
@@ -52,6 +53,19 @@ _NUMERIC_REQUIREMENTS = {
 	":action-costs",
 }
 _REMOVABLE_DECLARATIVE_REQUIREMENTS = {":action-costs"}
+_TIDE_SYMBOL_PREFIX = "gp2pl"
+
+
+type _PDDLSExpression = str | list["_PDDLSExpression"]
+
+
+@dataclass(frozen=True)
+class TidePDDLTask:
+	"""One semantics-preserving PDDL task normalized for TIDE's AP parser."""
+
+	domain_text: str
+	problem_text: str
+	temporal_goal: str
 
 
 class ExternalReferenceMethod(str, Enum):
@@ -247,6 +261,37 @@ def build_tide_pddl_goal(
 	return render(formula)
 
 
+def normalize_tide_pddl_task(
+	*,
+	domain_text: str,
+	problem_text: str,
+	temporal_goal: str,
+) -> TidePDDLTask:
+	"""Normalize one supported PDDL task to TIDE's identifier and type contracts.
+
+	TIDE serializes grounded propositions with ``_`` and reconstructs the
+	predicate by scanning that string. Category-specific hexadecimal names keep
+	that delimiter out of objects while giving every predicate one delimiter,
+	which also makes zero-arity predicates decodable. The transformation is a
+	bijective alpha-renaming; returned plans are decoded before validation.
+	"""
+
+	ensure_tide_domain_compatible(domain_text)
+	domain = _parse_pddl_document(domain_text, label="domain")
+	problem = _parse_pddl_document(problem_text, label="problem")
+	goal = _parse_pddl_expression(temporal_goal, label="temporal goal")
+	_replace_problem_goal(problem, goal)
+	symbols = _tide_symbol_table(domain, problem)
+	normalized_domain = _transform_tide_domain(domain, symbols)
+	normalized_problem = _transform_tide_problem(problem, symbols)
+	normalized_goal = _transform_tide_expression(goal, symbols)
+	return TidePDDLTask(
+		domain_text=_render_pddl_document(normalized_domain),
+		problem_text=_render_pddl_document(normalized_problem),
+		temporal_goal=_render_pddl_expression(normalized_goal),
+	)
+
+
 def ensure_tide_domain_compatible(domain_text: str) -> None:
 	"""Reject PDDL constructs outside the official deterministic TIDE runtime."""
 
@@ -285,7 +330,11 @@ def rewrite_pddl_problem_goal(problem_text: str, temporal_goal: str) -> str:
 	return text[:start] + f"(:goal {goal})" + text[end + 1 :]
 
 
-def extract_tide_plan_actions(plan_artifact: str) -> tuple[str, ...]:
+def extract_tide_plan_actions(
+	plan_artifact: str,
+	*,
+	decode_normalized_symbols: bool = False,
+) -> tuple[str, ...]:
 	"""Extract primitive PDDL actions from TIDE's plan section only."""
 
 	lines = str(plan_artifact).splitlines()
@@ -304,10 +353,440 @@ def extract_tide_plan_actions(plan_artifact: str) -> tuple[str, ...]:
 			continue
 		if _PLAN_ACTION.match(line) is None or not line.endswith(")"):
 			raise ValueError(f"Malformed TIDE plan action: {line!r}.")
-		result.append(line)
+		result.append(
+			_decode_tide_plan_action(line) if decode_normalized_symbols else line,
+		)
 	else:
 		raise ValueError("TIDE plan artifact has no DFA Path boundary.")
 	return tuple(result)
+
+
+@dataclass(frozen=True)
+class _TideSymbolTable:
+	types: frozenset[str]
+	predicates: frozenset[str]
+	functions: frozenset[str]
+	objects: frozenset[str]
+
+
+def _parse_pddl_document(text: str, *, label: str) -> list[_PDDLSExpression]:
+	expression = _parse_pddl_expression(text, label=label)
+	if not isinstance(expression, list) or not expression:
+		raise ValueError(f"TIDE {label} must be one non-empty PDDL expression.")
+	if str(expression[0]).lower() != "define":
+		raise ValueError(f"TIDE {label} must start with a PDDL define form.")
+	return expression
+
+
+def _parse_pddl_expression(text: str, *, label: str) -> _PDDLSExpression:
+	code = re.sub(r";.*$", "", str(text), flags=re.MULTILINE)
+	tokens = tuple(re.findall(r"\(|\)|[^\s()]+", code))
+	if not tokens:
+		raise ValueError(f"TIDE {label} is empty.")
+
+	def parse(cursor: int) -> tuple[_PDDLSExpression, int]:
+		if cursor >= len(tokens):
+			raise ValueError(f"TIDE {label} has an incomplete expression.")
+		token = tokens[cursor]
+		if token != "(":
+			if token == ")":
+				raise ValueError(f"TIDE {label} has an unexpected closing parenthesis.")
+			return token.lower(), cursor + 1
+		items: list[_PDDLSExpression] = []
+		cursor += 1
+		while cursor < len(tokens) and tokens[cursor] != ")":
+			item, cursor = parse(cursor)
+			items.append(item)
+		if cursor >= len(tokens):
+			raise ValueError(f"TIDE {label} has an unmatched opening parenthesis.")
+		return items, cursor + 1
+
+	result, cursor = parse(0)
+	if cursor != len(tokens):
+		raise ValueError(f"TIDE {label} contains more than one top-level expression.")
+	return result
+
+
+def _replace_problem_goal(
+	problem: list[_PDDLSExpression],
+	goal: _PDDLSExpression,
+) -> None:
+	indices = [
+		index
+		for index, form in enumerate(problem)
+		if isinstance(form, list) and form and str(form[0]).lower() == ":goal"
+	]
+	if len(indices) != 1:
+		raise ValueError(f"Expected exactly one PDDL :goal block; found {len(indices)}.")
+	problem[indices[0]] = [":goal", goal]
+
+
+def _tide_symbol_table(
+	domain: list[_PDDLSExpression],
+	problem: list[_PDDLSExpression],
+) -> _TideSymbolTable:
+	_definition_name(domain, "domain")
+	_definition_name(problem, "problem")
+	types: set[str] = set()
+	predicates: set[str] = set()
+	functions: set[str] = set()
+	objects: set[str] = set()
+
+	for form in domain[2:]:
+		if not isinstance(form, list) or not form:
+			continue
+		head = str(form[0]).lower()
+		if head == ":types":
+			for children, parent in _typed_groups(form[1:], label="type declaration"):
+				types.update(children)
+				if parent not in {"object", "number"}:
+					types.add(parent)
+		elif head == ":constants":
+			for names, _ in _typed_groups(form[1:], label="constant declaration"):
+				objects.update(names)
+		elif head == ":predicates":
+			predicates.update(
+				str(schema[0]).lower()
+				for schema in form[1:]
+				if isinstance(schema, list) and schema
+			)
+		elif head == ":functions":
+			functions.update(
+				str(schema[0]).lower()
+				for schema in form[1:]
+				if isinstance(schema, list) and schema
+			)
+	for form in problem[2:]:
+		if not isinstance(form, list) or not form:
+			continue
+		if str(form[0]).lower() == ":objects":
+			for names, _ in _typed_groups(form[1:], label="object declaration"):
+				objects.update(names)
+
+	return _TideSymbolTable(
+		types=frozenset(types),
+		predicates=frozenset(predicates),
+		functions=frozenset(functions),
+		objects=frozenset(objects),
+	)
+
+
+def _definition_name(document: list[_PDDLSExpression], kind: str) -> str:
+	if len(document) < 2 or not isinstance(document[1], list):
+		raise ValueError(f"TIDE PDDL document is missing its {kind} declaration.")
+	header = document[1]
+	if len(header) != 2 or str(header[0]).lower() != kind:
+		raise ValueError(f"TIDE PDDL document is missing its {kind} declaration.")
+	return str(header[1]).lower()
+
+
+def _typed_groups(
+	items: Sequence[_PDDLSExpression],
+	*,
+	label: str,
+) -> tuple[tuple[tuple[str, ...], str], ...]:
+	if any(not isinstance(item, str) for item in items):
+		raise ValueError(f"TIDE {label} uses an unsupported nested type expression.")
+	tokens = [str(item).lower() for item in items]
+	groups: list[tuple[tuple[str, ...], str]] = []
+	pending: list[str] = []
+	index = 0
+	while index < len(tokens):
+		token = tokens[index]
+		if token == "-":
+			if not pending or index + 1 >= len(tokens):
+				raise ValueError(f"TIDE {label} has a malformed typed list.")
+			groups.append((tuple(pending), tokens[index + 1]))
+			pending = []
+			index += 2
+			continue
+		pending.append(token)
+		index += 1
+	if pending:
+		groups.append((tuple(pending), "object"))
+	return tuple(groups)
+
+
+def _ordered_type_groups(
+	items: Sequence[_PDDLSExpression],
+) -> tuple[tuple[tuple[str, ...], str], ...]:
+	groups = _typed_groups(items, label="type declaration")
+	parent_by_child: dict[str, str] = {}
+	declared: set[str] = set()
+	children_by_parent: dict[str, list[str]] = {}
+	parent_order: dict[str, int] = {}
+	for children, parent in groups:
+		parent_order.setdefault(parent, len(parent_order))
+		bucket = children_by_parent.setdefault(parent, [])
+		for child in children:
+			if child in parent_by_child and parent_by_child[child] != parent:
+				raise ValueError(f"TIDE type {child!r} has multiple parents.")
+			parent_by_child[child] = parent
+			declared.add(child)
+			if child not in bucket:
+				bucket.append(child)
+	for parent in children_by_parent:
+		if parent not in {"object", "number"} and parent not in declared:
+			raise ValueError(f"TIDE type declaration references unknown parent {parent!r}.")
+
+	depth_cache: dict[str, int] = {"object": 0, "number": 0}
+
+	def depth(type_name: str, visiting: frozenset[str] = frozenset()) -> int:
+		if type_name in depth_cache:
+			return depth_cache[type_name]
+		if type_name in visiting:
+			raise ValueError("TIDE type hierarchy must be acyclic.")
+		parent = parent_by_child.get(type_name, "object")
+		result = depth(parent, visiting | {type_name}) + 1
+		depth_cache[type_name] = result
+		return result
+
+	ordered_parents = sorted(
+		children_by_parent,
+		key=lambda parent: (depth(parent), parent_order[parent]),
+	)
+	return tuple((tuple(children_by_parent[parent]), parent) for parent in ordered_parents)
+
+
+def _transform_tide_domain(
+	domain: list[_PDDLSExpression],
+	symbols: _TideSymbolTable,
+) -> list[_PDDLSExpression]:
+	result: list[_PDDLSExpression] = ["define"]
+	result.append(["domain", _encode_tide_symbol(_definition_name(domain, "domain"), "d")])
+	for form in domain[2:]:
+		if not isinstance(form, list) or not form:
+			result.append(form)
+			continue
+		head = str(form[0]).lower()
+		if head == ":types":
+			result.append(_transform_type_form(form))
+		elif head == ":constants":
+			result.append(_transform_typed_form(form, name_kind="o"))
+		elif head == ":predicates":
+			result.append(
+				[
+					":predicates",
+					*(
+						_transform_schema(schema, head_kind="p_")
+						for schema in form[1:]
+					),
+				],
+			)
+		elif head == ":functions":
+			result.append(_transform_function_form(form))
+		elif head == ":action":
+			result.append(_transform_action_form(form, symbols))
+		else:
+			result.append(_transform_tide_expression(form, symbols))
+	return result
+
+
+def _transform_tide_problem(
+	problem: list[_PDDLSExpression],
+	symbols: _TideSymbolTable,
+) -> list[_PDDLSExpression]:
+	result: list[_PDDLSExpression] = ["define"]
+	result.append(
+		["problem", _encode_tide_symbol(_definition_name(problem, "problem"), "q")],
+	)
+	for form in problem[2:]:
+		if not isinstance(form, list) or not form:
+			result.append(form)
+			continue
+		head = str(form[0]).lower()
+		if head == ":domain" and len(form) == 2:
+			result.append([":domain", _encode_tide_symbol(str(form[1]), "d")])
+		elif head == ":objects":
+			result.append(_transform_typed_form(form, name_kind="o"))
+		else:
+			result.append(_transform_tide_expression(form, symbols))
+	return result
+
+
+def _transform_type_form(form: list[_PDDLSExpression]) -> list[_PDDLSExpression]:
+	result: list[_PDDLSExpression] = [":types"]
+	for children, parent in _ordered_type_groups(form[1:]):
+		result.extend(_encode_tide_symbol(child, "t") for child in children)
+		result.extend(("-", _encode_tide_type(parent)))
+	return result
+
+
+def _transform_typed_form(
+	form: list[_PDDLSExpression],
+	*,
+	name_kind: str,
+) -> list[_PDDLSExpression]:
+	result: list[_PDDLSExpression] = [str(form[0]).lower()]
+	for names, type_name in _typed_groups(form[1:], label=str(form[0])):
+		result.extend(
+			_encode_tide_variable(name)
+			if name_kind == "v"
+			else _encode_tide_symbol(name, name_kind)
+			for name in names
+		)
+		if type_name != "object" or any("-" == str(item) for item in form[1:]):
+			result.extend(("-", _encode_tide_type(type_name)))
+	return result
+
+
+def _transform_schema(
+	schema: _PDDLSExpression,
+	*,
+	head_kind: str,
+) -> list[_PDDLSExpression]:
+	if not isinstance(schema, list) or not schema:
+		raise ValueError("TIDE predicate or function schema is malformed.")
+	result: list[_PDDLSExpression] = [_encode_tide_symbol(str(schema[0]), head_kind)]
+	for names, type_name in _typed_groups(schema[1:], label="schema parameters"):
+		result.extend(_encode_tide_variable(name) for name in names)
+		if type_name != "object" or any("-" == str(item) for item in schema[1:]):
+			result.extend(("-", _encode_tide_type(type_name)))
+	return result
+
+
+def _transform_function_form(
+	form: list[_PDDLSExpression],
+) -> list[_PDDLSExpression]:
+	result: list[_PDDLSExpression] = [":functions"]
+	for item in form[1:]:
+		if isinstance(item, list) and item:
+			name = str(item[0]).lower()
+			head = name if name == "total-cost" else _encode_tide_symbol(name, "f")
+			transformed = _transform_schema([name, *item[1:]], head_kind="f")
+			transformed[0] = head
+			result.append(transformed)
+		else:
+			value = str(item).lower()
+			result.append("-" if value == "-" else _encode_tide_type(value))
+	return result
+
+
+def _transform_action_form(
+	form: list[_PDDLSExpression],
+	symbols: _TideSymbolTable,
+) -> list[_PDDLSExpression]:
+	if len(form) < 2:
+		raise ValueError("TIDE action declaration is missing its name.")
+	result: list[_PDDLSExpression] = [
+		":action",
+		_encode_tide_symbol(str(form[1]), "a"),
+	]
+	index = 2
+	while index < len(form):
+		keyword = form[index]
+		if index + 1 >= len(form):
+			raise ValueError("TIDE action declaration has a keyword without a value.")
+		result.append(str(keyword).lower() if isinstance(keyword, str) else keyword)
+		value = form[index + 1]
+		if str(keyword).lower() == ":parameters" and isinstance(value, list):
+			parameter_form = _transform_typed_form(
+				[":parameters", *value],
+				name_kind="v",
+			)
+			result.append(parameter_form[1:])
+		else:
+			result.append(_transform_tide_expression(value, symbols))
+		index += 2
+	return result
+
+
+def _transform_tide_expression(
+	expression: _PDDLSExpression,
+	symbols: _TideSymbolTable,
+) -> _PDDLSExpression:
+	if isinstance(expression, str):
+		name = expression.lower()
+		if name.startswith("?"):
+			return _encode_tide_variable(name)
+		if name in symbols.objects:
+			return _encode_tide_symbol(name, "o")
+		if name in symbols.types:
+			return _encode_tide_type(name)
+		return name
+	if not expression:
+		return []
+	head_raw = expression[0]
+	if not isinstance(head_raw, str):
+		return [_transform_tide_expression(item, symbols) for item in expression]
+	head = head_raw.lower()
+	if head in symbols.predicates:
+		encoded_head = _encode_tide_symbol(head, "p_")
+	elif head in symbols.functions and head != "total-cost":
+		encoded_head = _encode_tide_symbol(head, "f")
+	else:
+		encoded_head = head
+	if head in {"forall", "exists"} and len(expression) >= 3:
+		variables = expression[1]
+		if not isinstance(variables, list):
+			raise ValueError(f"TIDE {head} expression has malformed parameters.")
+		parameter_form = _transform_typed_form(
+			[":parameters", *variables],
+			name_kind="v",
+		)
+		return [
+			encoded_head,
+			parameter_form[1:],
+			*(_transform_tide_expression(item, symbols) for item in expression[2:]),
+		]
+	return [
+		encoded_head,
+		*(_transform_tide_expression(item, symbols) for item in expression[1:]),
+	]
+
+
+def _encode_tide_symbol(symbol: str, kind: str) -> str:
+	name = str(symbol).lower()
+	return f"{_TIDE_SYMBOL_PREFIX}{kind}{name.encode('utf-8').hex()}"
+
+
+def _encode_tide_variable(symbol: str) -> str:
+	name = str(symbol).lower().removeprefix("?")
+	return f"?{_encode_tide_symbol(name, 'v')}"
+
+
+def _encode_tide_type(symbol: str) -> str:
+	name = str(symbol).lower()
+	return name if name in {"object", "number"} else _encode_tide_symbol(name, "t")
+
+
+def _decode_tide_plan_action(action: str) -> str:
+	match = re.fullmatch(r"\(\s*([^\s()]+)(?P<args>(?:\s+[^\s()]+)*)\s*\)", action)
+	if match is None:
+		raise ValueError(f"Malformed normalized TIDE plan action: {action!r}.")
+	tokens = [match.group(1), *match.group("args").split()]
+	return "(" + " ".join(_decode_tide_symbol(token) for token in tokens) + ")"
+
+
+def _decode_tide_symbol(symbol: str) -> str:
+	value = str(symbol).lower()
+	for kind in ("a", "o"):
+		prefix = f"{_TIDE_SYMBOL_PREFIX}{kind}"
+		if not value.startswith(prefix):
+			continue
+		encoded = value[len(prefix) :]
+		if not encoded or not re.fullmatch(r"[0-9a-f]+", encoded) or len(encoded) % 2:
+			raise ValueError(f"Malformed normalized TIDE symbol: {symbol!r}.")
+		try:
+			return bytes.fromhex(encoded).decode("utf-8")
+		except UnicodeDecodeError as error:
+			raise ValueError(f"Malformed normalized TIDE symbol: {symbol!r}.") from error
+	return value
+
+
+def _render_pddl_document(document: list[_PDDLSExpression]) -> str:
+	if len(document) < 2:
+		return _render_pddl_expression(document) + "\n"
+	lines = [f"(define {_render_pddl_expression(document[1])}"]
+	lines.extend(f" {_render_pddl_expression(form)}" for form in document[2:])
+	lines.append(")")
+	return "\n".join(lines) + "\n"
+
+
+def _render_pddl_expression(expression: _PDDLSExpression) -> str:
+	if isinstance(expression, str):
+		return expression
+	return "(" + " ".join(_render_pddl_expression(item) for item in expression) + ")"
 
 
 def parse_tide_statistics(statistics_text: str) -> dict[str, float]:

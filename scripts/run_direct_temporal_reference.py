@@ -46,7 +46,7 @@ from evaluation.external_reference_planners import (  # noqa: E402
 from evaluation.external_reference_planners import build_tide_command  # noqa: E402
 from evaluation.external_reference_planners import build_tide_pddl_goal  # noqa: E402
 from evaluation.external_reference_planners import (  # noqa: E402
-	ensure_tide_domain_compatible,
+	normalize_tide_pddl_task,
 )
 from evaluation.external_reference_planners import (  # noqa: E402
 	extract_tide_plan_actions,
@@ -58,9 +58,6 @@ from evaluation.external_reference_planners import (  # noqa: E402
 	normalize_fond4ltlf_domain,
 )
 from evaluation.external_reference_planners import parse_tide_statistics  # noqa: E402
-from evaluation.external_reference_planners import (  # noqa: E402
-	rewrite_pddl_problem_goal,
-)
 from evaluation.temporal_goal_validation import validate_execution_trace  # noqa: E402
 from scripts.run_external_planning_references import (  # noqa: E402
 	build_moose_reference_arguments,
@@ -98,6 +95,13 @@ TIDE_METHOD = ExternalReferenceMethod.TIDE_LAMA
 PINNED_TIDE_REVISION = "9bdd247752817352714eac115ea6b78d90f26c09"
 DEFAULT_TIDE_ROOT = PROJECT_ROOT / ".external/tide"
 DEFAULT_TIDE_IMAGE = f"gp2pl-tide:{PINNED_TIDE_REVISION[:12]}"
+_TIDE_FRONTEND_DIAGNOSTICS = (
+	"exception translating domain",
+	"invalid parent type",
+	"predicate not found for ap",
+	"invalid ap name format",
+	"cannot bind object",
+)
 
 
 @dataclass(frozen=True)
@@ -678,7 +682,6 @@ def run_tide_temporal_task(
 
 	try:
 		domain_text = task.domain_file.read_text(encoding="utf-8")
-		ensure_tide_domain_compatible(domain_text)
 		ltlf_formula = str(task.benchmark_case.get("ltlf_formula") or "").strip()
 		query_atoms = _required_mapping_sequence(task.benchmark_case, "atoms")
 		bindings = _required_mapping(task.benchmark_case, "bindings")
@@ -687,9 +690,10 @@ def run_tide_temporal_task(
 			atoms=query_atoms,
 			bindings=bindings,
 		)
-		temporal_problem = rewrite_pddl_problem_goal(
-			task.problem_file.read_text(encoding="utf-8"),
-			temporal_goal,
+		normalized_task = normalize_tide_pddl_task(
+			domain_text=domain_text,
+			problem_text=task.problem_file.read_text(encoding="utf-8"),
+			temporal_goal=temporal_goal,
 		)
 	except ValueError as error:
 		record.update(
@@ -700,11 +704,15 @@ def run_tide_temporal_task(
 		_write_json(task.output_dir / "result.json", record)
 		return record
 
-	record.update(supported=True, tide_temporal_goal=temporal_goal)
+	record.update(
+		supported=True,
+		tide_temporal_goal=temporal_goal,
+		tide_symbol_encoding="category_scoped_hex_v1",
+	)
 	tide_domain = task.output_dir / "domain.pddl"
 	tide_problem = task.output_dir / "problem.pddl"
-	tide_domain.write_text(domain_text, encoding="utf-8")
-	tide_problem.write_text(temporal_problem, encoding="utf-8")
+	tide_domain.write_text(normalized_task.domain_text, encoding="utf-8")
+	tide_problem.write_text(normalized_task.problem_text, encoding="utf-8")
 	official_command = build_tide_command(
 		executable="/app/bin/main_single",
 		domain_file="/work/domain.pddl",
@@ -737,8 +745,14 @@ def run_tide_temporal_task(
 			"elapsed_seconds": planner_result.elapsed_seconds,
 		}
 	)
-	if planner_result.exit_code != 0:
-		record["status"] = stage_failure_status("planner", planner_result.stderr_file)
+	process_status = tide_process_failure_status(planner_result.stderr_file)
+	if process_status == "adapter_error" or planner_result.exit_code != 0:
+		record["status"] = process_status
+		if process_status == "adapter_error":
+			record["error"] = planner_result.stderr_file.read_text(
+				encoding="utf-8",
+				errors="replace",
+			).strip()[-2000:]
 		_write_json(task.output_dir / "result.json", record)
 		return record
 
@@ -756,6 +770,7 @@ def run_tide_temporal_task(
 	try:
 		projected_actions = extract_tide_plan_actions(
 			tide_plan.read_text(encoding="utf-8", errors="replace"),
+			decode_normalized_symbols=True,
 		)
 		statistics_file = _single_tide_output(task.output_dir, "stats.txt")
 		if statistics_file is None:
@@ -852,6 +867,15 @@ def stage_failure_status(stage: str, stderr_file: Path) -> str:
 	if failure == "planner_failed":
 		return f"{stage}_failed"
 	return f"{stage}_{failure}"
+
+
+def tide_process_failure_status(stderr_file: Path) -> str:
+	"""Separate TIDE front-end contract failures from planning outcomes."""
+
+	stderr = stderr_file.read_text(encoding="utf-8", errors="replace").lower()
+	if any(diagnostic in stderr for diagnostic in _TIDE_FRONTEND_DIAGNOSTICS):
+		return "adapter_error"
+	return stage_failure_status("planner", stderr_file)
 
 
 def summarize_temporal_reference_records(
@@ -981,6 +1005,8 @@ def temporal_toolchain_metadata(
 					"prefix_cache": True,
 					"planner": "fast-downward",
 					"search": "lama-first",
+					"pddl_symbol_encoding": "category_scoped_hex_v1",
+					"type_declaration_order": "parent_before_child",
 				},
 			},
 			"mona": {

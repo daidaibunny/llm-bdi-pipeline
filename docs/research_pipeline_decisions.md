@@ -383,7 +383,12 @@ official FOND4LTLf v0.0.4, solves the compiled deterministic instance with the
 same LAMA backend, and removes only the compiler's `trans-*` DFA-update actions.
 Its `tide_lama` mode renders the persisted validated LTLf query and binding as a
 temporal PDDL goal, then invokes official TIDE with feedback, trace heuristic,
-prefix caching, and Fast Downward `lama-first`. TIDE's `next` node is the
+prefix caching, and Fast Downward `lama-first`. Before invocation, a bijective
+category-scoped alpha-renaming removes ambiguity between TIDE's underscore AP
+separator and PDDL symbols, while a dependency-preserving rewrite declares
+parent types before their children. Projected actions are decoded to the
+original PDDL vocabulary before replay and validation. TIDE front-end contract
+errors are infrastructure failures, not planning failures. TIDE's `next` node is the
 upstream pddlboat strong-next operator `X[!]`, and `until` is strong `U`; the
 adapter preserves the declared formula semantics. The gold formula is never
 supplied to TIDE search; it remains an independent validation oracle. Both modes
