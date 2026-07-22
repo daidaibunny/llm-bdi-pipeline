@@ -352,14 +352,13 @@ certificate-carrying compiler that derives summaries from generalized-planning
 evidence and PDDL schemas, constructs executable domain modules, and composes
 query-local controllers.
 
-### 4. Validated Query Input and Plan-Library Compilation
+### 4. Certified Policy Lifting into a Reusable Atomic Core
 
-First define the controlled-language input, frozen prompt, exact JSON contract,
-deterministic PDDL/schema checks, and externally bound parameter semantics.
-State that hidden-gold DFA equivalence is an evaluation oracle, not an online
-requirement. Then present the post-evidence domain compiler. Its candidate and
-certificate representation is defined at the trigger--context--body BDI
-plan-rule level; the implemented final rendering targets AgentSpeak(L).
+Open with the two certification boundaries, then present the query-independent
+post-evidence domain compiler. Its candidate and certificate representation is
+defined at the trigger--context--body BDI plan-rule level; the implemented final
+rendering targets AgentSpeak(L), and the section outputs the reusable core
+`M_D`.
 
 Present certification at three distinct levels. Candidate-local atomic
 certification establishes `Cert_D(b)` and `Sigma_b`; selected-core feasibility
@@ -404,18 +403,21 @@ understand a contribution. Long proof steps and secondary implementation cases
 belong in supplementary material so that final results fit the seven-page AAAI
 technical-content limit.
 
-### 5. DFA-Guided Composition of Bound Queries
+### 5. Typed Query Translation and Preservation-Safe Goal Composition
 
-This section covers query-specific control over the selected atomic core
-`M_D`. Assume the notation and semantic boundary already fixed in Sec. 2:
+This section covers the query-specific path from a controlled-language request
+to plans `Q_q` over the selected atomic core `M_D`. First define the frozen
+prompt, typed parameter and constraint inputs, deterministic PDDL/schema checks,
+and externally supplied binding. State that hidden-gold DFA equivalence is an
+evaluation oracle, not an online requirement. Then use the notation and semantic
+boundary fixed in Sec. 2:
 `tau_q`, the external type-consistent binding `theta_q`, the bound query
 `widehat tau_q`, `Phi_ach`, `Phi_syn`, `Phi_bench`,
 `Phi_cert(D,M_D)`, `val_q`, and the
-deterministic automaton. Do not redefine them here. Keep the eight-key input
-schema, fail-closed field validation, prompt, and formula-to-DFA construction
-details in the Technical Supplement; keep controlled utterances, profile
-sampling, and translation equivalence in Experimental Evaluation. The main
-method begins from a validated bound query and its DFA. State once that an
+deterministic automaton. Keep the full eight-key schema, prompt, and
+formula-to-DFA construction details in the Technical Supplement; keep controlled
+utterances, profile sampling, and translation equivalence in Experimental
+Evaluation. State once that an
 atemporal achievement formula `psi` is canonically embedded as `F(psi)` before
 the same real LTLf2DFA/MONA path; this is not a second controller fast path.
 
@@ -1016,7 +1018,7 @@ separate temporal-composition figure. It must retain a clear left-to-right
 compiler spine rather than becoming a standalone automaton diagram.
 Do not use the Introduction to narrate the implementation shown here. Cite
 panel (a) from Evidence Normalization and Canonical Lifting and panel (b) from
-DFA-Guided Composition of Bound Queries.
+Typed Query Translation and Preservation-Safe Goal Composition.
 
 - Panel (a), `Query-independent atomic-core compiler`, shows
   `$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$` entering
@@ -1057,8 +1059,8 @@ Approved caption:
 ### Figure 3: Selected Atomic-Core Compositional Derivation
 
 Place this single-column figure after Feasible-Core Optimization and immediately
-before DFA-Guided Composition. It demonstrates the result of Figure 2(a), rather
-than repeating candidate construction:
+before query-specific translation and composition. It demonstrates the result
+of Figure 2(a), rather than repeating candidate construction:
 
 - Show the three-block state `on(z,y), on(y,x), clear(z), arm_empty` and the
   invocation `!on(y,z)`.

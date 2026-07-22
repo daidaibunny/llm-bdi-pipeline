@@ -1,23 +1,7 @@
-\section{Validated Query Input and Plan-Library Compilation}
+\section{Certified Policy Lifting into a Reusable Atomic Core}
 \label{sec:method}
 
-\subsection{Controlled-Language Translation}
-
-A frozen language-model prompt receives one controlled-language request, its
-declared typed parameters and constraints, and the public PDDL catalogue. It
-returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
-query formula and a one-to-one proposition table. A formula without $F$, $X$, or
-$U$ is an ordinary achievement query; a formula using one of these operators is
-a TEG. Deterministic validation rejects
-undeclared symbols, wrong arities or types, unsupported operators, incomplete
-atom tables, and altered parameter constraints; it neither grounds parameters
-nor selects actions or objects. Invocation later supplies $\theta_q$. For
-evaluation only, a hidden construction formula permits exact finite-trace
-language equivalence; this gold oracle is not an online input requirement. The
-complete prompt and translation protocol appear in the Technical Supplement,
-Sec.~4.
-
-\subsection{Compiler Certification Structure}
+\subsection{Certification Boundaries}
 
 GP2PL separates deterministic input validation from two compiler certification
 stages. Atomic compilation first checks each candidate branch locally through
@@ -220,8 +204,24 @@ slice: internal subgoal expansion followed by schema-action execution.}
 \label{fig:atomic-case}
 \end{figure}
 
-\section{DFA-Guided Composition of Bound Queries}
+\section{Typed Query Translation and Preservation-Safe Goal Composition}
 \label{sec:temporal-composition}
+
+\subsection{Controlled-Language Translation}
+
+A frozen language-model prompt receives one controlled-language request, its
+declared typed parameters and constraints, and the public PDDL catalogue. It
+returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
+query formula and a one-to-one proposition table. A formula without $F$, $X$, or
+$U$ is an ordinary achievement query; a formula using one of these operators is
+a TEG. Deterministic validation rejects
+undeclared symbols, wrong arities or types, unsupported operators, incomplete
+atom tables, and altered parameter constraints; it neither grounds parameters
+nor selects actions or objects. Invocation later supplies $\theta_q$. For
+evaluation only, a hidden construction formula permits exact finite-trace
+language equivalence; this gold oracle is not an online input requirement. The
+complete prompt and translation protocol appear in the Technical Supplement,
+Sec.~4.
 
 Figure~\ref{fig:compiler-stages}(b) summarizes the query-specific path from a
 bound query and its DFA progress guard to a certified transition-repair tree and
