@@ -84,6 +84,7 @@ developers supply these libraries by encoding domain-specific behavior and
 anticipating applicable situations before deployment, creating a substantial
 knowledge-engineering burden
 \cite{Meneguzzi2004PropositionalPlanning,MeneguzziDeSilva2015PlanningBDI}.
+Generalized-planning evidence offers a basis for automating this construction.
 Given a planning domain $D$ and training instances
 $\mathcal I_{\mathrm{train}}$, an external generalized-planning backend produces
 raw singleton-goal policy evidence $\mathcal E_{\mathrm{raw}}$. This evidence
@@ -97,7 +98,8 @@ reusable atomic module core, then reuses that core when compiling each bound
 query into the same maintained library. A query may be an achievement
 condition or a temporally extended goal (TEG) \cite{Hindriks2009TemporalGoals}.
 A bound query assigns each parameter a type-compatible PDDL object at invocation;
-no quantification is implied. The external backend is neither replaced nor rerun.
+no quantification is implied. The backend is therefore neither replaced nor
+rerun for each query.
 
 \begin{figure}[htbp]
 \centering
@@ -142,10 +144,11 @@ literal requires no action.}
 \label{fig:compiler-stages}
 \end{figure*}
 
-GP2PL makes four contributions: an evidence-to-library compiler that supplies
-omitted producible subgoals and selects a compact, internally closed atomic core;
-machine-checkable conditions for executable, terminating, and composable modules; a
-typed input contract mapping controlled natural-language requests to bound
+Together, these stages yield four contributions: an evidence-to-library compiler
+that adds modules for producible targets omitted from the evidence and selects a
+compact, internally closed atomic core; machine-checkable conditions for module
+executability, termination, and composability; a typed input contract mapping
+controlled natural-language requests to bound
 achievement and TEG specifications, evaluated by exact finite-trace language
 equivalence on a TEG benchmark; and query-specific
 temporal controllers that reuse and extend one maintained BDI library.
