@@ -77,22 +77,18 @@ Classical PDDL planning computes an action sequence for one grounded problem
 \cite{McDermott1998PDDL}; generalized planning amortizes this effort by learning
 reusable behavior for a family of related problems
 \cite{Srivastava2011DirectedSearch,Chen2026Moose}. Belief--Desire--Intention
-(BDI) agents also reuse behavior, but through plan libraries that connect events
-and belief contexts to actions and subsidiary goals
+(BDI) agents encode reusable behavior in plan libraries that connect events and
+belief contexts to actions and subsidiary goals
 \cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. Traditionally,
 developers supply these libraries by encoding domain-specific behavior and
 anticipating applicable situations before deployment, creating a substantial
 knowledge-engineering burden
 \cite{Meneguzzi2004PropositionalPlanning,MeneguzziDeSilva2015PlanningBDI}.
-Generalized-planning evidence and BDI plan libraries obey different contracts:
-singleton-goal policy evidence need not provide the callable, context-indexed
-modules required by a maintained BDI library.
-
-Consider a planning domain $D$, training instances
-$\mathcal I_{\mathrm{train}}$, and raw singleton-goal policy evidence
-$\mathcal E_{\mathrm{raw}}$ produced by an external generalized-planning backend.
-Such evidence records how individual achievements can be reached under
-particular conditions, but need not supply every subsidiary module or the
+Given a planning domain $D$ and training instances
+$\mathcal I_{\mathrm{train}}$, an external generalized-planning backend produces
+raw singleton-goal policy evidence $\mathcal E_{\mathrm{raw}}$. This evidence
+records how individual achievements can be reached under particular conditions,
+but need not provide the callable, context-indexed subsidiary modules or
 composition guarantees required by an executable BDI library.
 
 GP2PL addresses this representation gap as shown in
