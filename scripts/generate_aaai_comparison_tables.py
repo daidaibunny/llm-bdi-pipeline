@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate final comparison artifacts and generate AAAI result tables."""
+"""Validate final comparison result files and generate AAAI result tables."""
 
 from __future__ import annotations
 
@@ -1664,7 +1664,7 @@ def render_comparison_macros(result: Mapping[str, Any]) -> str:
 
 
 def write_comparison_files(result: Mapping[str, Any], *, output_dir: str | Path) -> None:
-	"""Write compiler-comparison artifacts without replacing the frozen external table."""
+	"""Write compiler-comparison files without replacing the frozen external table."""
 
 	root = Path(output_dir).expanduser().resolve()
 	root.mkdir(parents=True, exist_ok=True)
@@ -1724,9 +1724,9 @@ def _read_json(path: str | Path) -> dict[str, Any]:
 	try:
 		payload = json.loads(resolved.read_text(encoding="utf-8"))
 	except (OSError, json.JSONDecodeError) as error:
-		raise ValueError(f"cannot read result artifact {resolved}: {error}") from error
+		raise ValueError(f"cannot read result file {resolved}: {error}") from error
 	if not isinstance(payload, dict):
-		raise ValueError(f"result artifact is not a JSON object: {resolved}")
+		raise ValueError(f"result file is not a JSON object: {resolved}")
 	return payload
 
 
@@ -1737,7 +1737,7 @@ def _parse_args() -> argparse.Namespace:
 		"--published-moose-reference",
 		type=Path,
 		default=DEFAULT_PUBLISHED_MOOSE_REFERENCE,
-		help="Verified MOOSE arXiv v1 Table 4 coverage artifact.",
+		help="Verified MOOSE arXiv v1 Table 4 coverage record.",
 	)
 	parser.add_argument(
 		"--raw-moose-extension-summary",

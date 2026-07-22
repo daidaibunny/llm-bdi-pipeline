@@ -291,13 +291,13 @@ def format_moose_domain_progress(
 	"""Render one stable, concise terminal line after a domain finishes."""
 
 	library = record.get("canonical_library")
-	artifact = "not_generated"
+	asl_file = "not_generated"
 	if isinstance(library, dict):
-		artifact = str(library.get("asl") or artifact)
+		asl_file = str(library.get("asl") or asl_file)
 	status = "ok" if bool(record.get("success")) else "fail"
 	return (
 		f"[moose-domain] domain={record.get('domain')} status={status} "
-		f"elapsed={max(0.0, float(elapsed_seconds)):.1f}s artifact={artifact}"
+		f"elapsed={max(0.0, float(elapsed_seconds)):.1f}s asl={asl_file}"
 	)
 
 
@@ -645,7 +645,7 @@ def load_domain_source_metadata(domain_root: Path) -> dict[str, Any]:
 
 
 def is_moose_official_benchmark(source_metadata: dict[str, Any]) -> bool:
-	"""Return whether the selected domain came from the MOOSE official artifact."""
+	"""Return whether the selected domain came from the MOOSE companion release."""
 
 	return str(source_metadata.get("source_id") or "") == "moose_official_artifact"
 
@@ -913,8 +913,8 @@ def moose_parallel_runtime_available() -> bool:
 
 	if not MOOSE_SANDBOX.is_dir() or not MOOSE_SANDBOX_MARKER.is_file():
 		return False
-	artifact = MOOSE_ROOT / "moose.sif"
-	if not artifact.is_file():
+	image_path = MOOSE_ROOT / "moose.sif"
+	if not image_path.is_file():
 		return False
 	try:
 		expected = MOOSE_SANDBOX_MARKER.read_text(encoding="utf-8").strip()
@@ -923,7 +923,7 @@ def moose_parallel_runtime_available() -> bool:
 	if len(expected) != 64:
 		return False
 	digest = hashlib.sha256()
-	with artifact.open("rb") as handle:
+	with image_path.open("rb") as handle:
 		for chunk in iter(lambda: handle.read(1024 * 1024), b""):
 			digest.update(chunk)
 	return digest.hexdigest() == expected

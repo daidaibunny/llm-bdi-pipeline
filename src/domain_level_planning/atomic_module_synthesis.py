@@ -1,7 +1,7 @@
 """
 Synthesize compact recursive atomic literal modules from PDDL schemas.
 
-The synthesizer uses external generalized-planning artifacts as evidence for
+The synthesizer uses external generalized-planning policy programs as evidence for
 which atomic predicates matter, then compresses flat primitive macro evidence
 into reusable predicate modules using PDDL action precondition/effect structure.
 
@@ -329,7 +329,7 @@ def synthesize_atomic_minimal_literal_module_library(
 					else "empty_or_unbound_atomic_template_library"
 				),
 				"artifact_classification_basis": (
-					"generic artifact label; structural categories are "
+					"generic library label; structural categories are "
 					"plan-template-level, not domain-level"
 				),
 				"library_profile": _library_template_profile(

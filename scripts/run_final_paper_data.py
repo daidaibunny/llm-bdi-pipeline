@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build the final artifact package for the current atomic-template framework.
+Build the final result package for the current atomic-template framework.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ RESULT_MACRO_END = "% END GENERATED RESULT MACROS"
 
 def main() -> None:
 	parser = argparse.ArgumentParser(
-		description="Run the artifact-only data protocol for the current ASL framework.",
+		description="Run the result-only data protocol for the current ASL framework.",
 	)
 	parser.add_argument("--output-dir", type=Path, default=Path("tmp/paper-final"))
 	parser.add_argument("--manifest", type=Path, default=FINAL_PAPER_MANIFEST)
@@ -50,7 +50,7 @@ def main() -> None:
 	if args.validate_only:
 		validation = validate_final_paper_package(output_dir, manifest=manifest)
 		print(
-			"validated final paper artifact package "
+			"validated final paper result package "
 			f"{output_dir} checks={validation['check_count']}",
 		)
 		return
@@ -58,14 +58,14 @@ def main() -> None:
 	_reset_managed_output(output_dir)
 	write_final_paper_configs(output_dir, manifest=manifest)
 	if args.config_only:
-		print(f"wrote artifact configs under {output_dir}")
+		print(f"wrote experiment configs under {output_dir}")
 		return
 
 	_write_backend_audit_logs(output_dir / "backend-audit")
-	comparison = _write_current_artifact_only_package(output_dir=output_dir, manifest=manifest)
+	comparison = _write_current_result_only_package(output_dir=output_dir, manifest=manifest)
 	validation = validate_final_paper_package(output_dir, manifest=manifest)
 	print(
-		"wrote final paper artifact package "
+		"wrote final paper result package "
 		f"{output_dir} checks={validation['check_count']} "
 		f"reports={comparison['report_count']} baselines={comparison['baseline_count']}",
 	)
@@ -74,7 +74,7 @@ def main() -> None:
 def load_final_paper_manifest(
 	manifest_file: str | Path = FINAL_PAPER_MANIFEST,
 ) -> dict[str, object]:
-	"""Load the tracked final-paper artifact contract."""
+	"""Load the tracked final-paper result contract."""
 
 	manifest_path = Path(manifest_file).expanduser()
 	if not manifest_path.is_absolute():
@@ -111,7 +111,7 @@ def validate_final_paper_package(
 	*,
 	manifest: dict[str, object] | None = None,
 ) -> dict[str, object]:
-	"""Validate the current artifact-only final package."""
+	"""Validate the current result-only final package."""
 
 	root = Path(output_dir).expanduser().resolve()
 	manifest_payload = manifest or load_final_paper_manifest()
@@ -122,13 +122,13 @@ def validate_final_paper_package(
 			raise AssertionError(message)
 		checks.append(message)
 
-	require(root.exists(), "artifact output directory exists")
-	artifact_manifest = root / "artifact-manifest.json"
-	require(artifact_manifest.exists(), "artifact manifest copy exists")
+	require(root.exists(), "result output directory exists")
+	manifest_copy = root / "artifact-manifest.json"
+	require(manifest_copy.exists(), "result manifest copy exists")
 	require(
-		json.loads(artifact_manifest.read_text(encoding="utf-8")).get("artifact_id")
+		json.loads(manifest_copy.read_text(encoding="utf-8")).get("artifact_id")
 		== manifest_payload.get("artifact_id"),
-		"artifact manifest id matches",
+		"result manifest id matches",
 	)
 	comparison_file = root / "comparison.json"
 	require(comparison_file.exists(), "comparison file exists")
@@ -153,7 +153,7 @@ def validate_final_paper_package(
 		config = json.loads(config_file.read_text(encoding="utf-8"))
 		require(tuple(config.get("experiments") or ()) == (), f"matrix config is empty: {name}")
 	require((root / "backend-audit/gp-backend-status.txt").exists(), "backend status audit exists")
-	require((root / "artifact-summary.json").exists(), "artifact summary exists")
+	require((root / "artifact-summary.json").exists(), "result summary exists")
 	summary = json.loads((root / "artifact-summary.json").read_text(encoding="utf-8"))
 	require(summary.get("runtime_full_trace_planner") is False, "runtime planner disabled")
 	require(
@@ -195,7 +195,7 @@ def _run_audit_command(command: list[str]) -> str:
 			text=True,
 			timeout=60,
 		)
-	except Exception as error:  # noqa: BLE001 - artifact records diagnostics.
+	except Exception as error:  # noqa: BLE001 - the result record keeps diagnostics.
 		return f"command_failed: {' '.join(command)}\n{error}\n"
 	return (
 		f"$ {' '.join(command)}\n"
@@ -204,7 +204,7 @@ def _run_audit_command(command: list[str]) -> str:
 	)
 
 
-def _write_current_artifact_only_package(
+def _write_current_result_only_package(
 	*,
 	output_dir: Path,
 	manifest: dict[str, object],
@@ -217,8 +217,8 @@ def _write_current_artifact_only_package(
 		label="atomic_artifact_smoke.readable_policy",
 	)
 	source_name = str(smoke.get("source_name") or readable_policy.stem).replace(".model", "")
-	artifact_dir = output_dir / "atomic-artifacts" / domain_name
-	artifact_dir.mkdir(parents=True, exist_ok=True)
+	domain_output_dir = output_dir / "atomic-artifacts" / domain_name
+	domain_output_dir.mkdir(parents=True, exist_ok=True)
 	if provider_name == "moose" and readable_policy.exists():
 		library = compile_moose_readable_policy_to_asl_library(
 			readable_policy.read_text(encoding="utf-8"),
@@ -226,11 +226,11 @@ def _write_current_artifact_only_package(
 			source_name=source_name,
 			policy_file=readable_policy,
 		)
-		(artifact_dir / "plan_library.json").write_text(
+		(domain_output_dir / "plan_library.json").write_text(
 			json.dumps(library.to_dict(), indent=2, sort_keys=True) + "\n",
 			encoding="utf-8",
 		)
-		(artifact_dir / "plan_library.asl").write_text(
+		(domain_output_dir / "plan_library.asl").write_text(
 			render_plan_library_asl(library),
 			encoding="utf-8",
 		)
@@ -249,7 +249,7 @@ def _write_current_artifact_only_package(
 			"compiled_singleton_rule_count": 0,
 			"status": "missing_or_unsupported_readable_policy",
 		}
-	_write_json(artifact_dir / "atomic_library_metadata.json", atomic_status)
+	_write_json(domain_output_dir / "atomic_library_metadata.json", atomic_status)
 	contract = domain_level_architecture_contract()
 	_write_json(
 		output_dir / "artifact-summary.json",
@@ -300,11 +300,11 @@ def _validate_atomic_smoke(
 
 
 def format_comparison_latex_macros(comparison: dict[str, object]) -> str:
-	"""Return the stable generated macro block for the artifact-only package."""
+	"""Return the stable generated macro block for the result-only package."""
 
 	return (
 		"% Auto-generated by scripts/run_final_paper_data.py.\n"
-		"% Current artifact-only package contains no experiment matrix rows.\n"
+		"% Current result-only package contains no experiment matrix rows.\n"
 	)
 
 

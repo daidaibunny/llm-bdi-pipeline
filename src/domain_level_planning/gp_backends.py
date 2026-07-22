@@ -211,7 +211,7 @@ BACKEND_RESEARCH_PROFILES = {
 			"minimized_policy",
 		),
 		"reusable_evidence": (
-			"qualitative sketch-policy artifact",
+			"qualitative sketch-policy representation",
 			"DLPlan feature vocabulary",
 			"qualitative feature conditions and effects",
 		),
@@ -289,7 +289,7 @@ BACKEND_RESEARCH_PROFILES = {
 			"reproduction_gap": (
 				"exact cluster-scale hierarchical-policy experiments are not re-run "
 				"by the audit command",
-				"artifact-to-ASL parser validation remains a project-side adapter task",
+				"policy-to-ASL parser validation remains a project-side adapter task",
 			),
 		},
 		"current_consumption_role": ATOMIC_COMPILER_PENDING_CONSUMPTION_ROLE,
@@ -350,7 +350,7 @@ BACKEND_RESEARCH_PROFILES = {
 		),
 		"preferred_use": (
 			"candidate policy-first backend for learned LiftedPolicyProgram "
-			"artifacts; ASL compilation remains a verified-adapter gap"
+			"representations; ASL compilation remains a verified-adapter gap"
 		),
 		"input_artifacts": (
 			"PDDL domain",
@@ -368,7 +368,7 @@ BACKEND_RESEARCH_PROFILES = {
 			"domain-independent feature generation",
 			"hitting-set-style policy selection",
 			"structural termination evidence",
-			"policy-first artifact before atomic ASL compilation",
+			"policy-first representation before atomic ASL compilation",
 		),
 		"known_failure_modes": (
 			"no_verified_atomic_literal_asl_compiler",
@@ -486,7 +486,7 @@ BACKEND_RESEARCH_PROFILES = {
 			),
 			"reproduction_gap": (
 				"repository is a reusable library rather than a full paper "
-				"experiment artifact with all training scripts and checkpoints",
+				"experiment release with all training scripts and checkpoints",
 				"neural policy distillation to symbolic ASL is not available",
 			),
 		},
@@ -638,7 +638,7 @@ BACKEND_RESEARCH_PROFILES = {
 		"output_artifacts": (
 			"sample files",
 			"feature matrices",
-			"learned feature policy artifacts",
+			"learned feature policy files",
 		),
 		"reusable_evidence": (
 			"description-logic feature generation",
@@ -681,7 +681,7 @@ BACKEND_RESEARCH_PROFILES = {
 		),
 		"output_artifacts": (
 			"Unified Planning engine result",
-			"BFGP++ planning program artifacts",
+			"BFGP++ planning programs",
 		),
 		"reusable_evidence": (
 			"Unified Planning integration pattern",
@@ -708,8 +708,7 @@ BACKEND_RESEARCH_PROFILES = {
 				"installation path for the interface is documented",
 			),
 			"reproduction_gap": (
-				"it is an integration interface, not a standalone paper experiment "
-				"artifact",
+				"it is an integration interface, not a standalone experiment release",
 				"depends on a custom Unified Planning checkout and BFGP++ installation",
 			),
 		},
@@ -801,7 +800,7 @@ BACKEND_RESEARCH_PROFILES = {
 				"are documented",
 			),
 			"reproduction_gap": (
-				"pretrained checkpoints are external release artifacts",
+				"pretrained checkpoints are external release files",
 				"neural transition model is not a direct lifted ASL plan library",
 			),
 		},
@@ -816,7 +815,7 @@ BACKEND_RESEARCH_PROFILES = {
 		),
 		"output_artifacts": (
 			"GNN preprocessor model",
-			"planner-domain knowledge artifacts",
+			"planner-domain knowledge files",
 		),
 		"reusable_evidence": (
 			"IPC learning-track comparison",
@@ -844,7 +843,7 @@ BACKEND_RESEARCH_PROFILES = {
 				"are present",
 			),
 			"reproduction_gap": (
-				"artifact emits planner domain knowledge rather than a standalone "
+				"competition release emits planner domain knowledge rather than a standalone "
 				"generalized policy",
 				"not a direct route to ASL without a separate domain-knowledge adapter",
 			),
@@ -1484,7 +1483,7 @@ def run_learner_sketches(
 	config: LearnerSketchesRunConfig,
 	env: Mapping[str, str] | None = None,
 ) -> LearnerSketchesRunResult:
-	"""Run learner-sketches with guards and return the minimized policy artifact."""
+	"""Run learner-sketches with guards and return the minimized policy file."""
 
 	runner = GPBackendRunner(manifest)
 	workspace = Path(config.workspace)
@@ -1543,7 +1542,7 @@ def run_learning_general_policies(
 	config: LearningGeneralPoliciesRunConfig,
 	env: Mapping[str, str] | None = None,
 ) -> LearningGeneralPoliciesRunResult:
-	"""Run the KR 2025 generalized-policy learner and discover policy artifacts."""
+	"""Run the KR 2025 generalized-policy learner and discover policy files."""
 
 	runner = GPBackendRunner(manifest)
 	workspace = Path(config.workspace)
@@ -1609,7 +1608,7 @@ def discover_learner_sketches_policy_file(
 	width: int,
 	minimized: bool = True,
 ) -> Path | None:
-	"""Return learner-sketches policy file path if the expected artifact exists."""
+	"""Return learner-sketches policy file path when the expected file exists."""
 
 	output_dir = Path(workspace) / "output"
 	name = f"sketch_minimized_{width}.txt" if minimized else f"sketch_{width}.txt"
@@ -1623,7 +1622,7 @@ def discover_learning_general_policies_policy_file(
 	width: int,
 	minimized: bool = True,
 ) -> Path | None:
-	"""Return the KR 2025 learner policy artifact from `output.<uuid>` folders."""
+	"""Return the KR 2025 learner policy file from `output.<uuid>` folders."""
 
 	workspace_path = Path(workspace)
 	name = f"sketch_minimized_{width}.txt" if minimized else f"sketch_{width}.txt"

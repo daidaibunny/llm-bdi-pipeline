@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the portable GP2PL result bundle used by the paper and public artifact."""
+"""Build the portable GP2PL result bundle used by the paper and public release."""
 
 from __future__ import annotations
 
@@ -77,7 +77,7 @@ def build_reproducibility_release(
 		for filename in ATOMIC_LIBRARY_FILENAMES:
 			source = source_domain_root / filename
 			if not source.is_file():
-				raise FileNotFoundError(f"Missing atomic library artifact: {source}")
+				raise FileNotFoundError(f"Missing atomic library file: {source}")
 			target = target_domain_root / filename
 			if source.suffix == ".json":
 				_write_json(target, outcome_only_payload(_read_json(source)))
@@ -152,7 +152,7 @@ def _repository_relative_path(path: Path, *, project_root: Path) -> str:
 	try:
 		return str(path.relative_to(project_root))
 	except ValueError as error:
-		raise ValueError(f"Artifact path is outside the project root: {path}") from error
+		raise ValueError(f"Release input path is outside the project root: {path}") from error
 
 
 def _execution_distribution(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:

@@ -76,7 +76,7 @@ bash scripts/setup_mona.sh
 bash scripts/setup_moose.sh
 ```
 
-Jason is resolved as Maven artifact `io.github.jason-lang:jason:3.1.2` when a
+Jason is resolved from Maven coordinate `io.github.jason-lang:jason:3.1.2` when a
 runtime validation is first requested. Docker is required by the supplied VAL
 wrapper.
 
@@ -84,7 +84,7 @@ wrapper.
 
 The PDDL benchmarks are drawn from pinned public repositories. Because several
 upstream repositories do not declare redistribution licenses, the GP2PL public
-artifact does not relicense their files. Materialize exact local copies with:
+code-and-data release does not relicense their files. Materialize exact local copies with:
 
 ```bash
 bash scripts/setup_benchmark_sources.sh
@@ -94,7 +94,7 @@ uv run python scripts/materialize_achievement_benchmarks.py
 Every materialized domain records its source URL, source commit, and split
 policy in `src/domains/<domain>/source.json`.
 
-## Reproducing Reported Artifacts
+## Reproducing Reported Results
 
 The versioned temporal benchmark has a dedicated
 [dataset landing page](paper_artifacts/temporal_goal_benchmark/v1/README.md)
@@ -140,12 +140,12 @@ PYTHONDONTWRITEBYTECODE=1 uv run ruff check src scripts tests
 PYTHONDONTWRITEBYTECODE=1 uv run pytest -p no:cacheprovider -q
 ```
 
-## Paper and Public Artifact
+## Paper and Public Release
 
 The manuscript source is in `latex_code/aamas_method_paper`. The public
-artifact is <https://github.com/daidaibunny/gp2pl>. The anonymous submission PDF
+code-and-data release is <https://github.com/daidaibunny/gp2pl>. The anonymous submission PDF
 does not display this identifying URL; the camera-ready source contains a
-conditional artifact statement.
+conditional code-and-data availability statement.
 
 ## Licensing
 

@@ -76,7 +76,7 @@ class PolicyModule:
 
 @dataclass(frozen=True)
 class LiftedPolicyProgram:
-	"""Learned generalized-planning artifact consumed by the ASL compiler."""
+	"""Learned generalized-planning program consumed by the ASL compiler."""
 
 	domain_name: str
 	backend_name: str

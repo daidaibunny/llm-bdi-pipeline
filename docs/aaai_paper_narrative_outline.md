@@ -38,10 +38,12 @@ The paper has one thesis:
 An obligation is a condition the compiler must establish. A witness is finite
 evidence for one obligation. For example, a binding witness shows that every
 variable in `stack(X,Y)` is supplied by the trigger or positive context. A
-certificate is the structured record collecting an artifact's applicable
-obligations and witnesses; a transition certificate records portfolios,
+certificate is the structured record linking a candidate branch, selected
+atomic core, serialization, or controller to its applicable obligations and
+witnesses; a transition certificate records portfolios,
 effect-summary completeness, threats, and a safe order. Certification checks that record;
-certified denotes only an artifact that passes all required checks. Otherwise,
+certified describes one of those compiler outputs only after all required checks
+pass. Otherwise,
 the compiler returns a structured rejection.
 
 ## Canonical Formal Notation
@@ -51,8 +53,8 @@ second tuple or reuse one symbol for a different semantic role.
 
 - `D = <P,F,A,T>` is the typed planning domain. A problem instance is
   `I=<D,O_I,s_I^0,G_I>`, where `O_I` is its finite typed object set;
-  `I_train` is the finite training instance set. `E_raw` is a raw
-  generalized-planning provider artifact; `E_0` is its provider-normalized
+  `I_train` is the finite training instance set. `E_raw` is a provider-native
+  singleton-goal policy representation; `E_0` is its provider-normalized
   program; and `E = CanonicalLift_D(E_0)` is the typed, alpha-normalized
   singleton-goal evidence program. The lifting step preserves repeated-variable
   sharing and PDDL domain constants; it does not claim the provider's upstream
@@ -201,7 +203,7 @@ The main paper explains each mechanism through a research failure mode, a
 semantic condition, and the resulting guarantee or rejection boundary. It does
 not present process scheduling, output-directory layout, command-line flags, or
 internal class names as contributions. Those details belong in the
-reproducibility artifact and `docs/research_pipeline_decisions.md`.
+reproducibility package and `docs/research_pipeline_decisions.md`.
 
 Every paragraph must carry one identifiable argumentative role: motivate a
 problem, define a concept, state a method, justify a design choice, present
@@ -217,7 +219,7 @@ Apply citations at the sentence or tightly coupled claim cluster they support.
 External definitions, prior methods, software behavior, benchmark provenance,
 and baseline protocols require a verified primary source. GP2PL definitions,
 algorithms, theorems, and measured results instead point to the relevant
-internal figure, table, proposition, appendix, or released artifact; do not use
+internal figure, table, proposition, appendix, or released file; do not use
 an adjacent prior-work citation to imply that a new GP2PL claim is inherited.
 The abstract remains citation-free under the AAAI convention, but every
 externally attributable claim must be supported when it first appears in the
@@ -235,7 +237,7 @@ interfaces respectively.
 Internal class names, path layouts, worker scheduling, and command-line flags
 belong in the technical or code-and-data appendix. Empirical result prose and
 tests assert case identities and outcomes rather than file hashes or byte
-equality; machine manifests may retain integrity digests for artifact checking.
+equality; machine manifests may retain integrity digests for file checking.
 
 Use one symbol-invariant example whenever a certificate would otherwise be
 opaque. For target-preserving resource discharge, an illustrative acquisition deletes
@@ -371,7 +373,7 @@ portfolio `Pi_chi` and serialization `ell_chi` for each DFA progress guard.
 Deterministic translation validation is an input gate, not an additional
 compiler-certification stage.
 
-1. Normalize the raw provider artifact `E_raw` into a provider-neutral singleton-goal evidence
+1. Normalize the provider-native policy representation `E_raw` into a provider-neutral singleton-goal evidence
    program. Do not expose an internal class name in the main narrative.
 2. Define the domain-wide producible target universe
    `T_D(E) = goalPred(E) union prod(D)`, where `prod(D)` contains every predicate
@@ -624,7 +626,7 @@ Supplement. Run identifiers remain only in transient local logs. Every seed is
 compiled and evaluated
 independently; report the mean and sample standard deviation in the main paper,
 and preserve every individual result in the supplement. Never union evidence or
-select a best seed. Concurrent launch is only an artifact-level throughput
+select a best seed. Concurrent launch is only an experiment-orchestration throughput
 choice, and contended wall time is not a method result. Cross-seed
 Jason/VAL runs remain sequential while per-test validation is parallel within
 one seed.
@@ -646,7 +648,7 @@ original-domain actions and requires PDDL replay, neutral-goal VAL, gold-DFA
 acceptance, and predicted-DFA acceptance. FOND4LTLf compilation and LAMA search
 share one 1,800-second, 8-GiB deadline. Numeric inputs and identifiers incompatible
 with its underscore encoding are explicit unsupported cases. The pinned MOOSE
-artifact is executed through a hash-checked extracted sandbox, with one private
+container image is executed through a hash-checked extracted sandbox, with one private
 `/work/out` mount per Raw MOOSE or LAMA case. FOND4LTLf redirects the fixed
 `ltlf2dfa` `automa.mona` scratch path into one private directory per case. The
 registered remote LAMA/MRP+HJ and direct FOND4LTLf matrices therefore use 20
@@ -743,14 +745,14 @@ template containing the public PDDL catalogue, atom-table contract,
 externally-bound parameter contract, allowed operator fragment, normal forms,
 schematic examples, exact eight-key JSON output, public user payload, and
 model-correctable retry message. State that catalogue/sample placeholders are
-deterministic substitutions and that the artifact retains the exact rendered
+deterministic substitutions and that the run record retains the exact rendered
 requests and responses. Prompt compliance is not a semantic oracle: exact
 schema/PDDL validation and reachable-product DFA-language equivalence remain
 separate gates. Distinguish this input contribution from the policy-lifting
 compiler and state that hidden-gold equivalence is an evaluation oracle rather
 than an online validation requirement.
 
-The pinned version-1 artifact is not two duplicated execution runs. Gold-DFA
+The pinned version-1 dataset is not two duplicated execution runs. Gold-DFA
 and predicted-DFA acceptance are separate semantic oracles over the same trace.
 Do not describe this result as an independently executed gold-controller matrix.
 
@@ -794,7 +796,7 @@ is sealed first. Describe this as scaling evidence acquisition and domain
 onboarding, not as expanding the supported PDDL-times-LTLf fragment, proving
 representative sampling, or changing any certification criterion.
 
-## Supplementary and Public Artifact Contract
+## Supplementary and Public Code-and-Data Contract
 
 The standalone source
 `latex_code/aamas_method_paper/technical_appendix.tex` is the canonical
@@ -875,7 +877,7 @@ Figures 1--3 and the planned supplementary DFA diagram are conceptual. Their
 labels and examples below come from the implemented architecture, evidence, and
 domain schemas, not from estimated experimental measurements. Experimental
 numbers enter the manuscript only through deterministic tables generated from
-pinned JSON artifacts. No colleague or paper-writing agent may infer missing
+pinned JSON result files. No colleague or paper-writing agent may infer missing
 values from prose, terminal logs, an earlier run, or another method.
 
 Use one normalized coordinate system for all object specifications below:
@@ -896,7 +898,7 @@ Canvas, PowerPoint, Python, and export settings:
   verified on the paper's white page; generated conceptual figures use a white
   opaque background.
 - Use Arial Regular 18 pt for labels and panel headings, and Courier New Regular
-  18 pt for domain schemas, AgentSpeak, formulas encoded as text, and artifact
+  18 pt for domain schemas, AgentSpeak, formulas encoded as text, and data
   field names. Do not use bold text inside any figure. These fonts become at
   least 9 pt after scaling to their final AAAI dimensions.
 - Use square or 0.06-inch-corner rectangles. Do not use shadows, gradients,
@@ -923,7 +925,7 @@ dark Clingo box, in which case text is white.
 | Input or prior state | `#F2F2F2` | `#4D4D4D` |
 | External MOOSE evidence | `#FFF1CC` | `#B26A00` |
 | Our compiler operation | `#DDEBF7` | `#0072B2` |
-| Certified selected artifact | `#DDF2E9` | `#009E73` |
+| Certified selected output | `#DDF2E9` | `#009E73` |
 | Runtime monitor or temporal observation | `#EEE4F2` | `#CC79A7` |
 | Fail-closed rejection | `#FBE3D5` | `#D55E00` |
 | Feasible but unselected candidate | `#FFFFFF` | `#9E9E9E` |
@@ -931,7 +933,7 @@ dark Clingo box, in which case text is white.
 Connector semantics are global and must not change between figures:
 
 - A 2.25 pt solid `#333333` line with a filled triangular arrowhead means
-  artifact, control, or action flow from source to target.
+  data, control, or action flow from source to target.
 - A 2.25 pt solid `#009E73` line with a filled triangular arrowhead is the
   success-only form of the solid flow: use it only after certification or
   acceptance has succeeded, never for an unproved candidate or replay path.
@@ -958,7 +960,7 @@ Use this exact back-to-front layer order in PowerPoint's Selection Pane:
 2. lane and panel containers;
 3. panel dividers and plot grid lines;
 4. semantic connectors and arrow labels;
-5. operation, artifact, state, and code boxes;
+5. operation, data, state, and code boxes;
 6. certification badges, state circles, checks, and rejection marks;
 7. headings, annotations, and abbreviated-name notes.
 
@@ -982,7 +984,7 @@ figure generator. The placeholder reserves 1.40 inches of artwork height before
 the caption. The figure is a problem-level overview, not a software-component
 inventory.
 
-Use a compact vertical flow with one side input and one final library artifact:
+Use a compact vertical flow with one side input and one final library output:
 
 - `Domain model D` and `Singleton-goal policy evidence E` converge on
   `(1) Lift + certify core once`, producing
@@ -995,10 +997,10 @@ Use a compact vertical flow with one side input and one final library artifact:
   boundary without adding a model-specific software box.
 - Label the output arrow `query plans $\mathcal Q_q$`; do not draw
   `$\mathcal Q_q$` as a separately maintained component.
-- End at one emphasized stacked-document artifact labelled
+- End at one emphasized stacked-document output labelled
   `Executable BDI domain library $\mathcal L_D^{[k]}$`. Place the append equation
   `$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$` beside the output
-  arrow rather than drawing a second library artifact.
+  arrow rather than drawing a second library icon.
 - Do not use a dashed outer library container or the implementation-level
   `reuse module contracts` feedback connector.
 
@@ -1204,7 +1206,7 @@ All helper names in panel (c) omit the common prefix
 ### Reproducibility-Only Diagnostic Plot
 
 Do not insert this plot into the main paper. The checked-in script remains a
-reproducibility diagnostic for the frozen paired-ablation artifact and owns
+reproducibility diagnostic for the frozen paired-ablation result file and owns
 every point, interval, curve, label, and style; PowerPoint must not be used to
 reconstruct its data marks.
 
@@ -1218,7 +1220,7 @@ uv run python scripts/generate_aaai_figures.py \
   latex_code/aamas_method_paper/figures/fig3_evaluation.png
 ```
 
-The generator accepts only the frozen paired-ablation artifact. It requires the
+The generator accepts only the frozen paired-ablation result file. It requires the
 four registered atomic variants, the four registered temporal variants, seeds
 0--4, all 16 domains, the common case contracts, certified atomic and temporal
 pairing, the 1,800-second limit, six workers, and the 64-MiB Java stack. It
@@ -1391,7 +1393,7 @@ compiler time
 
 Use short descriptive column phrases such as `Method`, `Coverage`, `Branches`,
 `Library Size`, and `Time (s)`. Keep stable experiment identifiers in the
-machine-readable artifact, not as `C0`/`C1`-style table labels.
+machine-readable result file, not as `C0`/`C1`-style table labels.
 
 ### Temporal Baseline/Ablation Table
 
@@ -1434,7 +1436,7 @@ Generate the compiler ablation tables with
 reference table only with `scripts/freeze_external_reference_results.py`, from
 the complete frozen achievement, FOND4LTLf, TIDE, and MOOSE records. Their
 mandatory inputs include the paired compiler result, the checked MOOSE
-arXiv-v1 Table-4 reference artifact, four-domain Raw MOOSE extension summaries
+arXiv-v1 Table-4 reference record, four-domain Raw MOOSE extension summaries
 explicitly assigned to seeds 0--4, the native LAMA/MRP+HJ summary, the direct
 FOND4LTLf summary, the complete TIDE summary, and the challenge summary. The
 scripts must fail rather than render a partial table
@@ -1484,8 +1486,8 @@ Supplement.
 
 The main paper keeps the atomic compiler table and reports five-seed temporal
 totals and scope-qualified external-reference endpoints in prose. The Technical
-Supplement and machine-readable artifact preserve all raw domain--seed,
-per-profile, paired-input, and external-reference values. The supplementary artifact should always
+Supplement and machine-readable result release preserve all raw domain--seed,
+per-profile, paired-input, and external-reference values. The supplementary release should always
 keep translation errors, schema validation
 errors, unsupported DFA structure, certification rejection, Jason failure,
 timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or
@@ -1512,7 +1514,7 @@ than as runner bookkeeping.
   precondition repair, resource discharge, and numeric progress. Write cited
   software-system names such as MOOSE, LTLf2DFA, MONA, Clingo, AgentSpeak(L),
   Jason, and VAL in roman text. Use Courier through `\texttt{}` only for literal
-  code, predicate, action, module-signature, path, and artifact identifiers such
+  code, predicate, action, module-signature, path, and data-field identifiers such
   as `clear/1`, `stack(X,Y)`, and `summary.json`. Use
   upright serif mathematical notation for formal named summaries such as
   $\mathrm{MayAdd}$ and conventional operators such as
@@ -1555,7 +1557,7 @@ than as runner bookkeeping.
 The agent that receives the final TEG run must:
 
 1. use a clean, pinned Git revision and record all runtime settings;
-2. regenerate LaTeX result macros from machine-readable artifacts instead of
+2. regenerate LaTeX result macros from machine-readable result files instead of
    typing aggregate numbers into prose;
 3. report predicted-controller execution separately from gold-DFA and
    predicted-DFA trace acceptance; do not count one trace as two executions;
@@ -1612,17 +1614,17 @@ The remaining submission tasks are:
 
 1. full or supplementary proofs for any claim stronger than the current proof
    sketches; and
-2. final camera-ready author and artifact metadata. The current compiled draft
+2. final camera-ready author and code-and-data metadata. The current compiled draft
    uses seven technical-content pages, followed by references. Under the
    AAAI-27 submission instructions, the reproducibility checklist is compiled
    and uploaded separately rather than appended to the main-paper PDF.
 
-The five-seed public artifact records the declared protocol and every one of the
+The five-seed public evaluation release records the declared protocol and every one of the
 6,140 seed--case outcomes. Timing is not reported because the runs overlapped
 unrelated workloads; this qualification does not change coverage or independent
 VAL outcomes.
 
-The temporal public artifact records all 4,912 paired ablation outcomes and all
+The temporal public evaluation release records all 4,912 paired ablation outcomes and all
 6,140 selected-controller cross-seed outcomes. The manuscript must not infer
 atomic generation time from provisional diagnostic logs.
 

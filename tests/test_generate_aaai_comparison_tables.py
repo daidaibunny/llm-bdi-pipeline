@@ -94,7 +94,7 @@ def test_comparison_table_cli_runs_from_script_path() -> None:
 	)
 
 	assert completed.returncode == 0, completed.stderr
-	assert "Validate final comparison artifacts" in completed.stdout
+	assert "Validate final comparison result files" in completed.stdout
 	assert "--published-moose-reference" in completed.stdout
 	assert "--raw-moose-extension-summary" in completed.stdout
 	assert "--raw-moose-summary" not in completed.stdout

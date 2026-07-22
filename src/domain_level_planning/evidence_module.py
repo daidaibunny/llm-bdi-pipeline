@@ -2,7 +2,8 @@
 
 The evidence module is the boundary between external generalized-planning
 providers and the validated policy-lifting compiler. Provider-specific adapters
-parse native artifacts, such as a MOOSE ``policy --dump-policy`` readable
+parse provider-native policy representations, such as a MOOSE
+``policy --dump-policy`` readable
 decision list, into a provider-neutral policy evidence program. The compiler
 then consumes that evidence program plus the PDDL domain schema; it does not
 need to know which provider produced the evidence.
@@ -107,7 +108,7 @@ class PolicyEvidenceProgram:
 	``source_provider`` records provenance, for example ``"moose"``. ``rules``
 	are the normalized singleton-goal policy rules. A future D2L or sketch
 	adapter should emit this same shape rather than making the compiler parse its
-	native artifact directly.
+	provider-native representation directly.
 	"""
 
 	source_provider: str
@@ -507,7 +508,8 @@ def compile_policy_evidence_program_to_minimal_module_asl_library(
 	"""Compile provider-neutral singleton evidence into an atomic ASL library.
 
 		The evidence program is the decoupling point: MOOSE, D2L, or future sketch
-		providers should normalize their native artifacts into this IR before the
+		providers should normalize their provider-native policy representations
+		into this IR before the
 		validated policy-lifting compiler sees them.
 	"""
 
@@ -833,7 +835,7 @@ def _evidence_compiler_library_quality(
 			else "empty_or_unbound_atomic_template_library"
 		),
 		"artifact_classification_basis": (
-			"generic artifact label; structural categories are plan-template-level, "
+			"generic library label; structural categories are plan-template-level, "
 			"not domain-level"
 		),
 		"library_profile": _library_template_profile(plan_template_kind_counts),

@@ -26,7 +26,7 @@ to evaluate translation, not as an online acceptance oracle. An input formula
 with no `F`, `X`, or `U` is an ordinary achievement query; a formula containing
 one of those operators is a temporally extended goal.
 
-**MOOSE evidence** is the readable first-order decision-list artifact emitted by
+**MOOSE evidence** is the readable first-order decision-list output emitted by
 `policy --dump-policy`. For example, one evidence rule may associate the
 singleton goal `at(package0,location2)` with the fixed primitive sequence
 `load-truck; drive-truck; unload-truck` under a regressed state condition. MOOSE
@@ -79,9 +79,10 @@ the generated certified candidate set.
 An **obligation** is a condition the compiler must establish. A **witness** is
 finite evidence for one obligation, such as a symbolic derivation, ranking, or
 resource-mode path. A **certificate** is the finite, machine-recheckable record
-that identifies an artifact's applicable obligations and their witnesses; a
-prose metadata label is not a certificate. **Certification** checks that record,
-and **certified** denotes only an artifact that passes all required checks.
+linking a candidate branch, selected atomic core, serialization, or controller
+to its applicable obligations and witnesses; a prose metadata label is not a
+certificate. **Certification** checks that record, and **certified** describes
+one of those compiler outputs only after all required checks pass.
 `Cert_D(b)` is the branch-certification predicate, not a certificate object.
 Branch-local witnesses cover binding, symbolic execution, achievement,
 completion effects, recursive progress, and resource discharge; coverage,
@@ -118,7 +119,8 @@ for each semantic object:
   Generator revision, digest, parameters, seeds, output manifest, and a
   content-disjoint sealed test split are then part of provenance. This scales
   evidence acquisition and domain onboarding, not the compiler's supported
-  fragment or certification criteria. `E_raw` is one raw provider artifact;
+  fragment or certification criteria. `E_raw` is one provider-native
+  singleton-goal policy representation;
   `E_0` is the provider-normalized evidence program; and
   `E = CanonicalLift_D(E_0)` is its typed, alpha-normalized singleton-goal
   evidence program. Canonical lifting preserves repeated-variable sharing and
@@ -179,7 +181,7 @@ repair`, `preservation portfolio`, `joint guard-establishment certificate`, and
 or bare `repair tree` in research-facing prose.
 
 The **Temporal Query Compiler** is the third production component. It consumes
-a validated lifted LTLf query artifact and derives `Q_q`, whose plans call modules
+a validated lifted LTLf query specification and derives `Q_q`, whose plans call modules
 in `M_D` and update `L_D^[k]` to `L_D^[k+1]`. The concrete AgentSpeak
 realization uses query-local `trans` goals. For an atemporal achievement formula
 `psi`, compilation first applies the canonical completion embedding `F(psi)`;
@@ -190,7 +192,7 @@ LTLf against the sealed gold temporal semantics, replays hidden source
 witnesses, and checks generated execution traces with both PDDL action
 semantics and DFA acceptance.
 
-## Reproducibility and Public Artifact Contract
+## Reproducibility and Public Code-and-Data Contract
 
 The manuscript presents GP2PL as a theoretical representation-compilation
 framework. Its primary scientific objects are the normalized singleton-goal
@@ -218,7 +220,7 @@ paper_artifacts/gp2pl_evaluation/v1
 The temporal-goal dataset is independently citable through its own README,
 CC BY 4.0 notice, and `CITATION.cff`. Its 475 translation inputs and 1,228 bound
 query cases report exact automaton-language equivalence and sealed-witness
-acceptance. Runtime controller results remain a separate evaluation artifact.
+acceptance. Runtime controller results remain a separate evaluation record.
 Publication metadata and source archives must pass the portable-path and hash
 checks in `scripts/verify_public_teg_dataset.py`.
 
@@ -248,8 +250,8 @@ is gated on the registered paired five-seed analysis.
 
 This repository no longer builds a universal generalized planner and no longer
 routes domains by prior-paper taxonomy labels. The Typed Temporal Input Module
-produces validated parametric LTLf; the Evidence Module imports external
-generalized-planning artifacts and normalizes them into provider-neutral
+produces validated parametric LTLf; the Evidence Module imports provider-native
+singleton-goal policy representations and normalizes them into provider-neutral
 singleton-goal evidence. The compiler constructs `M_D` from accepted evidence;
 later queries contribute `Q_q` to the same maintained `L_D^[k]`. MOOSE is the
 current Evidence Module provider for positive singleton PDDL predicate goals;
@@ -263,9 +265,9 @@ The architecture separates five modules.
    parameters and constraints, and the public PDDL catalogue to validated
    parametric LTLf JSON under the fixed prompt and payload contract. It does not
    ground parameters, select objects, or choose actions.
-2. The Evidence Module imports provider artifacts and emits a
+2. The Evidence Module imports provider-native policy representations and emits a
    `PolicyEvidenceProgram`. A `PolicyEvidenceProgram` is the common evidence
-   intermediate representation: it records a provider name, a source artifact,
+   intermediate representation: it records a provider name, a source file,
    and singleton-goal policy rules. For example, the MOOSE adapter parses a
    `policy --dump-policy` first-order decision-list rule whose singleton goal is
    `at(package0, location2)` and whose macro sequence loads a package, flies it,
@@ -280,7 +282,7 @@ The architecture separates five modules.
    the certified atomic module core `M_D`, including plans such as
    `+!at(X,Y)`.
 4. The Temporal Query Compiler consumes validated lifted LTLf/DFA query
-   artifacts, constructs the query-local plan set `Q_q`, and appends it to the
+   specifications, constructs the query-local plan set `Q_q`, and appends it to the
    maintained library, updating `L_D^[k]` to `L_D^[k+1]`.
 5. The Execution Validation Module evaluates translation with gold/predicted DFA
    language equivalence and the hidden source witness, then consumes the
@@ -343,7 +345,7 @@ coverage, size, and runtime measurements.
 Unprotected Serialization and Module-Return Monitor are evaluation modes, never
 production fallbacks. The historical
 sequence-only PDDL-goal wrapper may be retained only as a weak evaluation
-reference in isolated artifacts; production temporal append always follows the
+reference in isolated runs; production temporal append always follows the
 real DFA transition path. The three rows above are the reported
 temporal baseline and ablation matrix. Signed-negative and bounded-numeric cases
 remain in the full benchmark and are reported by support and failure status;
@@ -379,7 +381,7 @@ reference row.
 The native achievement reference runner is
 `scripts/run_external_planning_references.py`. Raw MOOSE executes the exact
 learned model; LAMA is invoked as `search lama-first` from the official MOOSE
-artifact; ENHSP uses the pinned `sat-hmrphj` configuration. Every nonempty
+container image; ENHSP uses the pinned `sat-hmrphj` configuration. Every nonempty
 achievement plan must pass VAL against the original PDDL goal. The native direct
 temporal runner is `scripts/run_direct_temporal_reference.py`. Its
 `fond4ltlf_lama` mode grounds only the declared invocation binding, invokes
@@ -421,7 +423,7 @@ approximating them. The setup contract in
 `9bdd247752817352714eac115ea6b78d90f26c09` and its recursive submodules, VAL revision
 `3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4`, its Python dependencies, and
 MONA 1.4-18; `--check` verifies functional Java and MONA runtimes plus all
-pinned sources, artifact hashes, and the revision-labelled official TIDE
+pinned sources, archive digests, and the revision-labelled official TIDE
 `linux/amd64` image without modifying them. The exact
 MOOSE-hosted LAMA image is extracted once into a hash-checked Apptainer sandbox.
 The sandbox avoids per-process loop-device allocation, and every Raw MOOSE or
@@ -506,7 +508,7 @@ domains are heterogeneous and the core claims concern exact valid-case counts,
 library structure, and effects of certification checks rather than one shared
 continuous difficulty axis. `scripts/generate_aaai_figures.py` may still regenerate the
 former three-panel view from the complete frozen
-`paired_ablation_results.json` as a supplementary diagnostic artifact. Dirty
+`paired_ablation_results.json` as a supplementary diagnostic plot. Dirty
 revisions, incomplete seed/domain/variant matrices, unpaired hashes, or protocol
 mismatches produce a diagnostic instead of a PNG. The manuscript label for
 `validated_evidence_adapter` remains `Evidence Only`.
@@ -531,7 +533,7 @@ ranking in the main paper. TIDE admits all 868 Boolean
 queries and validates 675; its 360 numeric inputs remain explicitly
 unsupported.
 
-Machine-readable artifacts retain stable identifiers such as
+Machine-readable result files retain stable identifiers such as
 `validated_evidence_adapter` and `certified_balanced`. Manuscript tables and
 terminal summaries use short method names and short column phrases, for example
 `Evidence Only`, `Full GP2PL`, `Valid Traces`, and `Time (s)`. Numeric
@@ -560,7 +562,7 @@ separately assigned four-domain Raw MOOSE extension summaries, one native
 LAMA/MRP+HJ summary, one FOND4LTLf plus LAMA summary, and one clean challenge
 matrix, while the external-reference freeze additionally requires one complete
 TIDE plus LAMA summary. It rejects missing seeds or variants, mismatched case sets, incomplete
-pairing, and infrastructure failures. The published-reference artifact fixes
+pairing, and infrastructure failures. The published-reference record fixes
 the arXiv version, table number, per-domain means, and three immutable scope
 contracts: 1,080 original MOOSE cases, 148 locally measured extension cases,
 and their 1,228-case union. The paired manifest
@@ -579,7 +581,7 @@ tool versions, and resource limits plus explicit hardware-equivalence and
 runtime-comparability attestations.
 The challenge input must contain exactly the 13 unique registered nodes with 13
 successes. LaTeX cells and the compact release JSON are generated from those
-checked artifacts; aggregate values are never typed into the manuscript by hand.
+checked result files; aggregate values are never typed into the manuscript by hand.
 The independently generated external-reference release is
 `paper_artifacts/gp2pl_evaluation/v1/external_reference_results.json`. It
 contains 3,684 portable case records: the complete 1,228-case achievement
@@ -637,7 +639,7 @@ generated by `literal ::= atom | !atom` and
 formula U formula`. The validator rejects negation over a compound formula, so
 `!(F(a0))` and `!!a0` are outside `Phi_syn`. `Phi_ach` is the atemporal
 literal-and-conjunction subset. Its formula `psi` is written without a temporal
-operator in the query artifact and embedded as `F(psi)` for execution. The
+operator in the persisted query specification and embedded as `F(psi)` for execution. The
 remaining formulae are TEGs. `Phi_bench` is the TEG family generated
 from the five registered formula profiles. `Phi_cert(D, M_D)` is the subset of
 validated bound formulas whose required distance-reducing DFA obligations pass
@@ -702,7 +704,7 @@ VAL, malformed sealed audit data, and PDDL replay disagreement fail closed as
 infrastructure or benchmark-consistency outcomes; they are never relabelled as
 model semantic errors.
 
-### Canonical TEG Benchmark Artifact
+### Canonical TEG Benchmark Dataset
 
 The repository tracks the frozen release at
 `paper_artifacts/temporal_goal_benchmark/v1`. Its single canonical
@@ -751,7 +753,7 @@ VAL, gold-DFA, and predicted-DFA outcomes separately. Unsupported DFA structure
 and missing required witnesses are structured compiler rejections rather than Jason
 failures. Results are aggregated by domain and formula profile. The public
 record retains case outcomes and validation statuses; verbose DFA, Jason,
-trace, and validator artifacts remain local diagnostics.
+trace, and validator files remain local diagnostics.
 
 The planning model uses instantaneous deterministic typed STRIPS actions and
 fully observable states. Conditional effects, durative actions, stochastic
@@ -835,7 +837,7 @@ MOOSE paper provides the following settings:
 
 - `num_permutations = 3` is the default effort parameter in Algorithm 1. It is
   the maximum number of goal orderings sampled per training problem.
-- `goal_max_size = 1` is our artifact flag that enforces the paper algorithm's
+- `goal_max_size = 1` is our configuration flag that enforces the paper algorithm's
   singleton-goal step, where each relaxed subproblem has goal `{g_k}`. It is
   not a compactness threshold for the final ASL library.
 - Generalized-plan synthesis receives 12 hours and 32 GB and is repeated five
@@ -1525,7 +1527,7 @@ The formal local corpus lives under `src/domains/<domain>/` with
 
 Materialization also checks referential PDDL validity. Every problem's
 `(:domain ...)` declaration is compared with the actual copied `domain.pddl`
-declaration and, when an upstream companion artifact retains an obsolete alias,
+declaration and, when an upstream companion release retains an obsolete alias,
 is normalized to the actual declaration. The number of normalized files is
 recorded in `source.json`. This is a syntax-level, symbol-independent corpus
 repair applied to every domain; predicates, actions, initial states, goals, and
@@ -1578,7 +1580,7 @@ action-schema-derived candidates, but `8puzzle-1tile` requires graph-search and
 permutation-progress reasoning:
 placing one tile depends on moving the blank through a grid while preserving
 solvability constraints. That structure needs a graph-search controller,
-planning-program artifact, or a separate ranking witness before it can be
+planning program, or a separate ranking witness before it can be
 compiled into a compact AgentSpeak(L) atomic library. Until then, the correct
 result is `unsupported_by_current_compiler`, not a domain-specific patch.
 
@@ -1660,7 +1662,7 @@ validated lifted LTLf JSON, then LTLf-to-DFA, then conjunctive/negative/numeric
 guard validation, then AgentSpeak(L) append with a query-local primitive-step
 DFA monitor. Direct PDDL test-goal wrappers are only an evaluation bridge for
 benchmark smoke runs where the input is a PDDL problem file rather than a user
-query artifact. Those bridge plans are marked with
+query specification. Those bridge plans are marked with
 `evaluation_pddl_goal_wrapper_bridge` metadata and must not be described as the
 final natural-language query interface.
 

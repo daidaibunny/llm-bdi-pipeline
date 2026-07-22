@@ -136,7 +136,7 @@ def main() -> int:
 	parser.add_argument(
 		"--output-dir",
 		type=Path,
-		help="Output directory for commands that materialize project artifacts.",
+		help="Output directory for commands that materialize project files.",
 	)
 	parser.add_argument(
 		"--random-seed",
@@ -551,7 +551,7 @@ def print_moose_atomic_command(
 
 
 def print_moose_readable_summary(*, policy_file: Path, domain_name: str) -> None:
-	"""Print adapter status for a MOOSE readable policy artifact."""
+	"""Print adapter status for a MOOSE readable policy file."""
 
 	text = policy_file.read_text(encoding="utf-8")
 	source_name = policy_file.stem.replace(".model", "")

@@ -29,8 +29,9 @@ constant-integer effects.
 \end{definition}
 
 \begin{definition}[Singleton-goal evidence]
-A raw provider artifact $\mathcal E_{\mathrm{raw}}$ is admissible when it can be
-normalized into a finite evidence program $E_0$, understood as a finite rule set.
+A provider-native singleton-goal policy representation
+$\mathcal E_{\mathrm{raw}}$ is admissible when it can be normalized into a
+finite evidence program $E_0$, understood as a finite rule set.
 A normalized evidence rule is
 \[
 e=\langle\bar X_e,C_e^s,g_e,\bar a_e,\nu_e,\pi_e\rangle.
@@ -88,10 +89,12 @@ graph. This is a structural condition over renamed schemas, not a domain label.
 Throughout, an obligation is a condition the compiler must establish. A witness
 is finite evidence for one obligation, such as a symbolic-progression derivation,
 decreasing rank, or resource-discharge path. A certificate is the finite,
-machine-checkable record that identifies an artifact's applicable obligations
-and their witnesses; for example, a transition certificate records portfolios,
+machine-checkable record linking a candidate branch, selected atomic core,
+serialization, or controller to its applicable obligations and witnesses; for
+example, a transition certificate records portfolios,
 effect-summary completeness, threats, and a safe order. Certification checks that
-record, and certified denotes only an artifact that passes all required checks.
+record, and certified describes one of those compiler outputs only after all
+required checks pass.
 
 \begin{table*}[htbp]
 \centering
@@ -114,8 +117,9 @@ and validated bound query. \\
 $I,O_I,\mathcal I_{\mathrm{train}}$ & Problem instance, its typed object set,
 and finite training instance set. &
 $\iota_q,g_q$ & Query identifier and generated top-level BDI goal. \\
-$\mathcal E_{\mathrm{raw}},E_0,E,e$ & Raw provider artifact, provider-normalized
-program, canonically lifted finite evidence program, and one evidence rule. &
+$\mathcal E_{\mathrm{raw}},E_0,E,e$ & Provider-native policy representation,
+provider-normalized program, canonically lifted finite evidence program, and
+one evidence rule. &
 $\mu_q,\Theta_q,\Gamma_q$ & Proposition map, parameter type signature, and
 binding constraints. \\
 $T_D(E),T_D^{\mathbb Z}(E)$ & Boolean producible target universe and admitted
@@ -203,7 +207,8 @@ F\varphi,&\varphi\in\Phi_{\mathrm{ach}},\\
 \end{cases}
 \]
 Thus an ordinary achievement is written without a temporal operator in the
-query artifact, while both query classes enter the same LTLf2DFA/MONA path.
+persisted query specification, while both query classes enter the same
+LTLf2DFA/MONA path.
 \end{definition}
 
 \begin{definition}[Bound proposition valuation]
@@ -475,8 +480,8 @@ $\mathcal L_D^{[k]}$ is
 \mathcal L_D^{[k]}=
 \mathcal M_D\cup\bigcup_{i=1}^{k}\mathcal Q_{q_i}.
 \]
-$\mathcal M_D$ and $\mathcal Q_{q_i}$ are logical subsets of this one library, not
-separately maintained plan-library artifacts. The compiler establishes
+$\mathcal M_D$ and $\mathcal Q_{q_i}$ are logical subsets of this one library,
+not separately maintained plan-library files. The compiler establishes
 $\operatorname{Closed}_D(\mathcal L_D^{[0]})$ and accepts an append only when
 $\operatorname{Closed}_D(\mathcal L_D^{[k+1]})$ holds. Consequently,
 $\operatorname{Closed}_D(\mathcal L_D^{[k]})$ is an invariant of every
@@ -1052,7 +1057,7 @@ stages are defined in the main paper and formalized above.
 \label{alg:atomic}
 \begin{algorithmic}[1]
 \REQUIRE PDDL domain $D$, training split $\mathcal I_{\mathrm{train}}$,
-raw provider artifact $\mathcal E_{\mathrm{raw}}$
+provider-native singleton-goal policy representation $\mathcal E_{\mathrm{raw}}$
 \ENSURE Certified lifted atomic module core $\mathcal M_D$ or a rejection diagnostic
 \STATE $E_0\leftarrow\textsc{NormalizeEvidence}(\mathcal E_{\mathrm{raw}},D,\mathcal I_{\mathrm{train}})$
 \STATE $E\leftarrow\textsc{CanonicalLift}(E_0,D)$
@@ -1785,7 +1790,7 @@ FOND4LTLf with LAMA supports \ExternalDirectSupportedCount{} of
 failures; this total includes both numeric PDDL outside the tool's scope and
 identifiers rejected by the current adapter encoding. Supported-set PAR-2 is
 \ExternalDirectParTwoSeconds{} seconds. Raw MOOSE extension runtime remains
-omitted under its coverage-only protocol. The artifact records preserve the
+omitted under its coverage-only protocol. The evaluation records preserve the
 planner, compiler, timeout, and unsupported outcome taxonomy.
 
 TIDE with LAMA supports all \ExternalTIDESupportedCount{} Boolean queries and
@@ -1814,7 +1819,7 @@ admissible substitutes.
 All five seeded runs use the same benchmark case set and declared compiler
 configuration. Timing is excluded from cross-method speed and
 significance claims because the sequential runs overlapped unrelated machine
-workloads. A supplementary diagnostic artifact may report the descriptive,
+workloads. A supplementary diagnostic plot may report the descriptive,
 within-method cumulative distribution of Jason subprocess
 \texttt{run\_seconds}; it excludes queue waiting and VAL time, keeps failures
 in the denominator, and is not evidence of superiority over another planner.
@@ -1892,7 +1897,7 @@ cross-seed summaries are descriptive. The Balanced representation claim is
 structural rather than runtime-based, and continuous values carry no superiority
 test.
 
-\subsection{Reproduction Commands and Artifact Map}
+\subsection{Reproduction Commands and File Map}
 
 The code-and-data appendix contains every GP2PL-authored source file required to
 conduct and analyze the experiments: compiler and runtime source, tests,
@@ -1984,7 +1989,7 @@ results.py
 \endgroup
 
 The former three-panel empirical view remains reproducible as a supplementary
-diagnostic artifact generated from the frozen paired-ablation release rather
+diagnostic plot generated from the frozen paired-ablation result file rather
 than from manually copied table values. It is not included in the main paper;
 the exact endpoint results appear in the generated tables. The release itself
 is derived from the complete registered runner matrix by the preceding command:
@@ -2035,7 +2040,7 @@ all author-created preprocessing, execution, and analysis code; complete
 parameters; hardware and software; distributional statistics; and a
 theory-to-code map.
 
-The availability answers distinguish authored artifacts from dependencies.
+The availability answers distinguish authored code and data from dependencies.
 Every GP2PL-authored source file needed by the reported experiments is included
 and Apache-2.0 licensed. External tools and benchmark repositories remain
 third-party works: the appendix cites them, records exact revisions, and supplies

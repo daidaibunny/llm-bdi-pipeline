@@ -13,7 +13,7 @@
     "testing/*.pddl"
   ],
   "source_url": "https://github.com/DillonZChen/moose-dataset",
-  "split_policy": "MOOSE official artifact split: training/ as train and testing/ as test",
+  "split_policy": "MOOSE companion release split: training/ as train and testing/ as test",
   "test_count": 90,
   "test_source_path": null,
   "test_source_problem_globs": [],

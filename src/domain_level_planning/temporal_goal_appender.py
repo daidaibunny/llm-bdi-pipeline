@@ -186,7 +186,7 @@ def dfa_semantic_fingerprint(dfa_payload: Mapping[str, Any]) -> str:
 
 	The selected fields identify the formula, atom binding, and guarded state
 	graph consumed by every temporal compiler variant. Conversion timings,
-	artifact paths, and DOT rendering are provenance rather than DFA semantics.
+	file paths and DOT rendering are provenance rather than DFA semantics.
 	"""
 
 	semantic_payload = {

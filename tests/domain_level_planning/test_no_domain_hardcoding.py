@@ -340,7 +340,7 @@ def test_paper_experiment_scripts_use_registry_instead_of_embedded_domain_rows()
 
 
 def test_obsolete_generated_benchmark_implementation_names_are_absent() -> None:
-	"""Deprecated generated benchmark artifacts should not re-enter current code."""
+	"""Deprecated generated benchmark files should not re-enter current code."""
 
 	forbidden_tokens = (
 		"blocksworld_qclear",

@@ -60,7 +60,7 @@ def build_temporal_benchmark_release(
 		"source",
 	):
 		if (output / reserved).exists():
-			raise ValueError(f"Refusing to overwrite existing release artifact: {output / reserved}")
+			raise ValueError(f"Refusing to overwrite existing release file: {output / reserved}")
 	output.mkdir(parents=True, exist_ok=True)
 	source_output = output / "source"
 	source_output.mkdir()

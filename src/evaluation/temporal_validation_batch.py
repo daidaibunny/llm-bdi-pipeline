@@ -404,7 +404,7 @@ def _validate_run_provenance(
 	expected_prompt_source_commit: str,
 ) -> None:
 	if not records:
-		raise ValueError("Prediction artifact must contain at least one record.")
+		raise ValueError("Prediction file must contain at least one record.")
 	model_ids = {record.model_id for record in records}
 	model_parameters = {
 		json.dumps(record.model_parameters, sort_keys=True, separators=(",", ":"))

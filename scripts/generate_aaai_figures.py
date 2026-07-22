@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate gated GP2PL empirical figures from frozen experiment artifacts."""
+"""Generate gated GP2PL empirical figures from frozen experiment records."""
 
 from __future__ import annotations
 
@@ -391,7 +391,7 @@ def build_frozen_ablation_figure_dataset(
 
 def _validate_frozen_ablation_gate(payload: Mapping[str, Any]) -> None:
 	if payload.get("artifact_kind") != "gp2pl_paired_ablation_results":
-		raise ValueError("unsupported frozen ablation artifact")
+		raise ValueError("unsupported frozen ablation result file")
 	if int(payload.get("schema_version") or 0) != 1:
 		raise ValueError("unsupported frozen ablation schema")
 	protocol = _mapping_field(payload, "protocol", label="frozen ablation")
@@ -799,7 +799,7 @@ def _validate_five_seed_result_gate(payload: Mapping[str, Any]) -> None:
 	if payload.get("artifact_kind") != (
 		"gp2pl_five_seed_full_compiler_submission_result"
 	):
-		raise ValueError("unsupported five-seed result artifact")
+		raise ValueError("unsupported five-seed result file")
 	if int(payload.get("schema_version") or 0) != 1:
 		raise ValueError("unsupported five-seed result schema")
 	protocol = _mapping_field(payload, "protocol", label="five-seed result")
@@ -2107,7 +2107,7 @@ def main() -> int:
 		print(f"[fail] empirical_figure error={error}", file=sys.stderr)
 		return 2
 	print(
-		f"[ok] empirical_figure artifact={metadata['artifact_kind']}",
+		f"[ok] empirical_figure result_kind={metadata['artifact_kind']}",
 		flush=True,
 	)
 	return 0

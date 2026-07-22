@@ -3,9 +3,9 @@
 This document identifies the complete public inputs for the manuscript. It is
 an execution guide, not part of the theoretical contribution.
 
-## Fixed Research Artifacts
+## Fixed Research Releases
 
-| Artifact | Path | Purpose |
+| Release | Path | Purpose |
 | --- | --- | --- |
 | Temporal-goal benchmark | [`paper_artifacts/temporal_goal_benchmark/v1`](paper_artifacts/temporal_goal_benchmark/v1/README.md) | 475 unique natural-language translations and 1,228 bound query cases over 16 domains. |
 | Semantic conformance suite | `paper_artifacts/temporal_semantic_conformance/v1` | Direct finite-trace semantics versus MONA-derived automata, including zero-action cases. |
@@ -164,7 +164,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run python \
 
 The runner supplies the persisted predicted formula and explicit invocation
 binding to TIDE. It projects only primitive PDDL actions from the official plan
-artifact, then applies replay, neutral-goal VAL, gold-DFA acceptance, and
+output, then applies replay, neutral-goal VAL, gold-DFA acceptance, and
 predicted-DFA acceptance. Unsupported numeric inputs remain explicit
 applicability outcomes rather than planner failures.
 

@@ -86,10 +86,12 @@ achievements from atoms that must remain absent. We reserve four related terms.
 An obligation is a condition the compiler must establish. A witness is finite
 evidence for one obligation, such as a symbolic-progression derivation,
 decreasing rank, or resource-discharge path. A certificate is the structured
-record that identifies an artifact's applicable obligations and their witnesses;
+record linking a candidate branch, selected atomic core, serialization, or
+controller to its applicable obligations and witnesses;
 for example, a transition certificate records portfolios, effect-summary
 completeness, threats, and a safe order. Certification checks that record, and
-certified denotes only an artifact that passes all required checks. The certified subset
+certified describes one of those compiler outputs only after all required checks
+pass. The certified subset
 $\Phi_{\mathrm{cert}}(D,\mathcal M_D)\subseteq\Phi_{\mathrm{syn}}$ contains the
 validated bound formulas whose DFA progress transitions pass the checks in
 Sec.~\ref{sec:temporal-composition}; soundness claims apply to this subset and
@@ -121,8 +123,9 @@ $q_1,\ldots,q_k$, the one maintained domain library is
 \]
 Thus $\mathcal M_D$ is the stable core of $\mathcal L_D^{[k]}$, not a
 second persisted library, and appending $\mathcal Q_{q_i}$ neither reconstructs
-nor reoptimizes the atomic core. Throughout, calligraphic symbols denote finite
-sets or structured artifacts; $b$ denotes one candidate branch, $e$ one
+nor reoptimizes the atomic core. Throughout, calligraphic symbols denote the
+finite programs, candidate sets, automata, plan sets, and libraries defined
+above; $b$ denotes one candidate branch, $e$ one
 normalized evidence rule, and $\chi$ one DFA transition guard. The Technical
 Supplement, Sec.~1 gives the formal definitions, supported-fragment
 assumptions, and the acceptance and rejection boundary used below.

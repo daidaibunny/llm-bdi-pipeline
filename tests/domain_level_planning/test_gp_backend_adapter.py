@@ -131,7 +131,7 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	)
 	assert "feature_rule_policy" in by_name["learner-sketches"]["output_artifacts"]
 	assert (
-		"qualitative sketch-policy artifact"
+		"qualitative sketch-policy representation"
 		in by_name["learner-sketches"]["reusable_evidence"]
 	)
 	assert by_name["learner-sketches"]["resource_profile"]["default_max_rss_gb"] == 16.0
@@ -181,7 +181,7 @@ def test_backend_audit_matrix_reports_reusable_evidence_and_resource_profile(
 	assert "KR 2025" in by_name["learner-policies-from-examples"]["paper_role"]
 	assert by_name["learner-policies-from-examples"]["preferred_use"] == (
 		"candidate policy-first backend for learned LiftedPolicyProgram "
-		"artifacts; ASL compilation remains a verified-adapter gap"
+		"representations; ASL compilation remains a verified-adapter gap"
 	)
 	assert (
 		"Docker linux/amd64"

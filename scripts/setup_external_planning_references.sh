@@ -193,13 +193,13 @@ verify_installation() {
 		exit 1
 	fi
 	if [[ ! -f "${MOOSE_ROOT}/moose.sif" ]]; then
-		printf '[external-reference] missing official MOOSE artifact\n' >&2
+		printf '[external-reference] missing official MOOSE image\n' >&2
 		exit 1
 	fi
 	local moose_sha
 	moose_sha="$(sha256_file "${MOOSE_ROOT}/moose.sif")"
 	if [[ "${moose_sha}" != "${MOOSE_ARTIFACT_SHA256}" ]]; then
-		printf '[external-reference] MOOSE artifact digest mismatch: %s\n' \
+		printf '[external-reference] MOOSE image digest mismatch: %s\n' \
 			"${moose_sha}" >&2
 		exit 1
 	fi

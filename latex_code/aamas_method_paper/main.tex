@@ -36,10 +36,10 @@ Libraries for Achievement and Temporally Extended Goals}
 \providecommand{\gpplfigureonepath}{figures/fig1_architecture.png}
 \providecommand{\gpplfiguretwopath}{figures/fig2_compiler_stages.png}
 \providecommand{\gpplatomiccasepath}{figures/fig3_atomic_case.png}
-\newif\ifgpplpublicartifact
+\newif\ifgpplpublicrelease
 % Keep false for anonymous review; set true only in the camera-ready source.
-\gpplpublicartifactfalse
-\newcommand{\gpplartifacturl}{https://github.com/daidaibunny/gp2pl}
+\gpplpublicreleasefalse
+\newcommand{\gpplreleaseurl}{https://github.com/daidaibunny/gp2pl}
 
 \input{sections/result_macros}
 \input{sections/result_five_seed_atomic_macros}
@@ -178,10 +178,10 @@ For a new domain supplied without instances, parameterized PDDL problem
 generators can synthesize a reproducible training curriculum for evidence
 learning \cite{Bacchus2001AIPS00}.
 
-\ifgpplpublicartifact
-\paragraph{Artifact availability.}
-Code, proofs, fixed result artifacts, and the versioned GP2PL temporal-goal
-dataset are available at \url{\gpplartifacturl}.
+\ifgpplpublicrelease
+\paragraph{Code and data availability.}
+Code, proofs, fixed evaluation records, and the versioned GP2PL temporal-goal
+dataset are available at \url{\gpplreleaseurl}.
 \fi
 
 \bibliography{references}

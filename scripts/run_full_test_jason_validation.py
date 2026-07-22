@@ -441,7 +441,7 @@ def main() -> int:
 		"--output-root",
 		type=Path,
 		default=DEFAULT_OUTPUT_ROOT,
-		help="Root for full-test Jason validation artifacts.",
+		help="Root for full-test Jason validation files.",
 	)
 	parser.add_argument(
 		"--run-id",
@@ -518,7 +518,7 @@ def main() -> int:
 		action="store_true",
 		help=(
 			"Also write one full-test ASL per domain. Disabled by default because "
-			"large validation suites can still produce bulky ASL artifacts."
+			"large validation suites can still produce bulky ASL files."
 		),
 	)
 	parser.add_argument(

@@ -211,9 +211,9 @@ def _read_json(path: Path) -> dict[str, Any]:
 	try:
 		payload = json.loads(path.read_text(encoding="utf-8"))
 	except (OSError, json.JSONDecodeError) as error:
-		raise ValueError(f"Cannot read JSON artifact {path}: {error}") from error
+		raise ValueError(f"Cannot read JSON file {path}: {error}") from error
 	if not isinstance(payload, dict):
-		raise ValueError(f"JSON artifact is not an object: {path}")
+		raise ValueError(f"JSON file is not an object: {path}")
 	return payload
 
 
@@ -253,7 +253,7 @@ def main() -> int:
 		"merged direct temporal reference "
 		f"valid={metrics['valid_trace_count']}/{metrics['supported_case_count']} "
 		f"domain={merged['domain_rerun']['replacement_domain']} "
-		f"artifact={output_dir / 'summary.json'}",
+		f"summary={output_dir / 'summary.json'}",
 	)
 	return 0
 

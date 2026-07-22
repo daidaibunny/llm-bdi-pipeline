@@ -1,7 +1,7 @@
 # Materialized PDDL Benchmarks
 
 This directory is generated from pinned public benchmark repositories. In the
-public GP2PL artifact, run:
+public GP2PL code-and-data release, run:
 
 ```bash
 bash scripts/setup_benchmark_sources.sh

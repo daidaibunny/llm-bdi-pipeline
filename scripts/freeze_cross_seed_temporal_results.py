@@ -298,12 +298,12 @@ def merge_into_paired_result(
 	paired_result_file: str | Path,
 	update_manifest: bool,
 ) -> None:
-	"""Insert the extension into the existing public paired result artifact."""
+	"""Insert the extension into the existing public paired result file."""
 
 	paired_path = Path(paired_result_file).expanduser().resolve()
 	paired = _read_json(paired_path)
 	if paired.get("artifact_kind") != "gp2pl_paired_ablation_results":
-		raise ValueError("cross-seed extension target is not the paired result artifact")
+		raise ValueError("cross-seed extension target is not the paired result file")
 	case_records = list(result.get("case_records") or ())
 	_reconcile_seed_zero_paired_records(paired, cross_seed_records=case_records)
 	paired["temporal_cross_seed"] = {
@@ -437,7 +437,7 @@ def _load_seed_run(path: Path, *, seed: int) -> LoadedSeedRun:
 		)
 	else:
 		if payload.get("artifact_kind") != "temporal_goal_execution_validation":
-			raise ValueError(f"seed {seed} has the wrong temporal artifact kind")
+			raise ValueError(f"seed {seed} has the wrong temporal result kind")
 		if not payload.get("completed_at"):
 			raise ValueError(f"seed {seed} temporal summary is incomplete")
 		if payload.get("temporal_compiler_variant") != TEMPORAL_VARIANT:
@@ -684,7 +684,7 @@ def main() -> int:
 		f"{aggregate['pooled_evaluation_count']} "
 		f"mean={aggregate['mean_success_rate'] * 100:.2f}% "
 		f"sd={aggregate['sample_sd_success_rate'] * 100:.2f}pp "
-		f"artifact={Path(args.release_paired_result).expanduser().resolve()}",
+		f"output={Path(args.release_paired_result).expanduser().resolve()}",
 	)
 	return 0
 

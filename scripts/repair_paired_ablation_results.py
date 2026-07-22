@@ -45,7 +45,7 @@ def transition_repair_fanout_from_asl(asl: str) -> int:
 
 
 def repair_paired_results(paired_results_file: str | Path) -> dict[str, Any]:
-	"""Replace derived fan-out values from retained AgentSpeak artifacts."""
+	"""Replace derived fan-out values from retained AgentSpeak files."""
 
 	paired_path = Path(paired_results_file).expanduser().resolve()
 	paired = _read_json(paired_path)
@@ -69,7 +69,7 @@ def repair_paired_results(paired_results_file: str | Path) -> dict[str, Any]:
 			case_root = _case_root(result, child_root=child_root)
 			asl_path = case_root / "jason/agentspeak_generated.asl"
 			if not asl_path.is_file():
-				raise ValueError(f"temporal case has no retained AgentSpeak artifact: {asl_path}")
+				raise ValueError(f"temporal case has no retained AgentSpeak file: {asl_path}")
 			fanout = transition_repair_fanout_from_asl(
 				asl_path.read_text(encoding="utf-8"),
 			)
@@ -316,7 +316,7 @@ def _repair_result_record(result: dict[str, Any], *, fanout: int) -> None:
 def _read_json(path: Path) -> dict[str, Any]:
 	payload = json.loads(path.read_text(encoding="utf-8"))
 	if not isinstance(payload, dict):
-		raise ValueError(f"JSON artifact is not an object: {path}")
+		raise ValueError(f"JSON file is not an object: {path}")
 	return payload
 
 

@@ -138,7 +138,7 @@ def _reset_directory(
 
 def _domain_specs() -> tuple[DomainSpec, ...]:
 	moose_split_policy = (
-		"MOOSE official artifact split: training/ as train and testing/ as test"
+		"MOOSE companion release split: training/ as train and testing/ as test"
 	)
 	return (
 		_moose_domain_spec(

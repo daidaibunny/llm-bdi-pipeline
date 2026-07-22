@@ -19,7 +19,7 @@
       "subgoal_step_count": 0,
       "warnings": [
         "Direct MOOSE output contains primitive macro actions but no recursive atomic subgoal calls; do not claim compact module-level quality when the domain requires recursive decomposition.",
-        "Plan count exceeds the compact-library threshold; this artifact is backend evidence or a smoke output, not the final compact library.",
+        "Plan count exceeds the compact-library threshold; this plan library contains backend evidence or smoke-test output, not the final compact library.",
         "At least one plan body exceeds the compact macro threshold; inspect whether raw trace replay leaked into the library."
       ]
     },

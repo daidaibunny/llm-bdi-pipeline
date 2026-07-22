@@ -10,10 +10,10 @@ The versioned GP2PL Temporally Extended Goal Benchmark has a dataset-specific
 landing page, license notice, and citation file under
 `paper_artifacts/temporal_goal_benchmark/v1`.
 
-Attribution should identify the artifact as:
+Attribution should identify the dataset as:
 
 > GP2PL: From Generalized Planning Evidence to Certified BDI Plan Libraries
-> for Temporally Extended Goals, version 1 public artifact.
+> for Temporally Extended Goals, version 1 public dataset.
 
 This license does not apply to:
 

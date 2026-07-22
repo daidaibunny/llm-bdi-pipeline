@@ -347,7 +347,7 @@ def extract_tide_plan_actions(
 			index for index, line in enumerate(lines) if line.strip().lower() == "plan:"
 		)
 	except StopIteration as error:
-		raise ValueError("TIDE plan artifact has no Plan section.") from error
+		raise ValueError("TIDE plan output has no Plan section.") from error
 	result: list[str] = []
 	for raw_line in lines[plan_start + 1 :]:
 		line = raw_line.strip()
@@ -361,7 +361,7 @@ def extract_tide_plan_actions(
 			_decode_tide_plan_action(line) if decode_normalized_symbols else line,
 		)
 	else:
-		raise ValueError("TIDE plan artifact has no DFA Path boundary.")
+		raise ValueError("TIDE plan output has no DFA Path boundary.")
 	return tuple(result)
 
 
@@ -846,7 +846,7 @@ def _render_pddl_expression(expression: _PDDLSExpression) -> str:
 
 
 def parse_tide_statistics(statistics_text: str) -> dict[str, float]:
-	"""Parse the official TIDE single-problem statistics artifact."""
+	"""Parse the official TIDE single-problem statistics file."""
 
 	patterns = {
 		"average_dfa_seconds": r"Average DFA construction time:\s*([0-9.eE+-]+)",

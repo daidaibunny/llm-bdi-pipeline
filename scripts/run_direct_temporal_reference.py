@@ -183,7 +183,7 @@ def main() -> int:
 		run_root.relative_to(PROJECT_ROOT)
 	except ValueError as error:
 		raise ValueError(
-			"Direct temporal artifacts must remain under the project root so the "
+			"Direct temporal result files must remain under the project root so the "
 			"official LAMA container can access them.",
 		) from error
 	if run_root.exists() and not args.resume:
@@ -344,7 +344,7 @@ def main() -> int:
 	print(
 		f"[summary] valid={metrics['valid_trace_count']}/"
 		f"{metrics['supported_case_count']} supported "
-		f"unsupported={metrics['unsupported_case_count']} artifact={summary_file}",
+		f"unsupported={metrics['unsupported_case_count']} summary={summary_file}",
 		flush=True,
 	)
 	return 0 if summary["success"] else 1
@@ -1040,7 +1040,7 @@ def temporal_toolchain_metadata(
 			"executable_sha256": _sha256(mona_executable),
 		},
 		"lama": {
-			"source": "MOOSE official artifact search lama-first",
+			"source": "MOOSE official container image search lama-first",
 			"moose_root": str(MOOSE_ROOT),
 			"moose_git_revision": _git_revision(MOOSE_ROOT),
 			"moose_artifact_sha256": _sha256(MOOSE_ROOT / "moose.sif"),
@@ -1132,9 +1132,9 @@ def _single_tide_output(output_dir: Path, name: str) -> Path | None:
 	if not matches:
 		return None
 	if len(matches) != 1:
-		raise ValueError(
-			f"Expected one TIDE {name} artifact; found {len(matches)}.",
-		)
+			raise ValueError(
+				f"Expected one TIDE {name} file; found {len(matches)}.",
+			)
 	return matches[0]
 
 

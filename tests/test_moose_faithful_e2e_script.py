@@ -51,7 +51,7 @@ def test_moose_domain_progress_is_concise_and_identifies_artifact() -> None:
 
 	assert message == (
 		"[moose-domain] domain=logistics status=ok elapsed=12.3s "
-		"artifact=/tmp/logistics/plan_library.asl"
+		"asl=/tmp/logistics/plan_library.asl"
 	)
 
 

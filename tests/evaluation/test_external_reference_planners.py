@@ -364,7 +364,7 @@ def test_tide_command_uses_official_feedback_heuristic_cache_configuration() -> 
 
 
 def test_tide_plan_parser_extracts_only_primitive_plan_section() -> None:
-	artifact = """
+	tide_output = """
 Plan:
 (unstack b1 b2)
 (put-down b1)
@@ -376,7 +376,7 @@ Product Path:
 diagnostic state text
 """.strip()
 
-	assert extract_tide_plan_actions(artifact) == (
+	assert extract_tide_plan_actions(tide_output) == (
 		"(unstack b1 b2)",
 		"(put-down b1)",
 	)
@@ -456,7 +456,7 @@ def test_tide_normalization_distinguishes_temporal_next_from_next_predicate() ->
 
 
 def test_tide_plan_parser_decodes_normalized_action_and_object_names() -> None:
-	artifact = """
+	tide_output = """
 Plan:
 (gp2pla7075742d646f776e gp2plo726f6f6d2d61)
 
@@ -465,7 +465,7 @@ DFA Path:
 """.strip()
 
 	assert extract_tide_plan_actions(
-		artifact,
+		tide_output,
 		decode_normalized_symbols=True,
 	) == ("(put-down room-a)",)
 

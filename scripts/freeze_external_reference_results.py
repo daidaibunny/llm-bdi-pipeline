@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze complete external-reference matrices into portable paper artifacts."""
+"""Freeze complete external-reference matrices into portable paper result files."""
 
 from __future__ import annotations
 
@@ -266,7 +266,7 @@ def build_external_reference_dataset(
 
 def _validate_raw_moose_result(payload: Mapping[str, Any]) -> None:
 	if payload.get("artifact_kind") != "gp2pl_raw_moose_extension_five_seed_result":
-		raise ValueError("unexpected Raw MOOSE extension artifact")
+		raise ValueError("unexpected Raw MOOSE extension result")
 	protocol = dict(payload.get("protocol") or {})
 	if (
 		int(protocol.get("record_count") or 0) != 740
@@ -756,9 +756,9 @@ def _read_json(path: Path) -> dict[str, Any]:
 	try:
 		payload = json.loads(path.read_text(encoding="utf-8"))
 	except (OSError, json.JSONDecodeError) as error:
-		raise ValueError(f"Cannot read JSON artifact {path}: {error}") from error
+		raise ValueError(f"Cannot read JSON file {path}: {error}") from error
 	if not isinstance(payload, dict):
-		raise ValueError(f"JSON artifact is not an object: {path}")
+		raise ValueError(f"JSON file is not an object: {path}")
 	return payload
 
 
@@ -818,7 +818,7 @@ def main() -> int:
 		f"{rows['FOND4LTLf + LAMA']['supported_case_count']} "
 		f"tide={rows['TIDE + LAMA']['valid_trace_count']}/"
 		f"{rows['TIDE + LAMA']['supported_case_count']} "
-		f"artifact={Path(args.output_json).expanduser().resolve()}",
+		f"output={Path(args.output_json).expanduser().resolve()}",
 	)
 	return 0
 

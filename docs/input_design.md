@@ -21,7 +21,7 @@ This glossary is normative.
 | --- | --- |
 | **PDDL domain (`D`)** | The domain file containing types, predicates, numeric functions, and action schemas. An action schema is a parameterized action such as `stack(X,Y)` with preconditions and effects. |
 | **PDDL problem (`P_i`)** | One held-out test problem providing concrete objects and an initial state. Its original achievement goal is not used to construct the temporal query. |
-| **Achievement query** | An LTLf state formula containing literals and conjunction but no temporal operator. The query artifact keeps that atemporal form; execution embeds it as `F(formula)` before the common DFA path. |
+| **Achievement query** | An LTLf state formula containing literals and conjunction but no temporal operator. The persisted query specification keeps that atemporal form; execution embeds it as `F(formula)` before the common DFA path. |
 | **Temporally extended goal (TEG)** | A goal whose truth depends on a finite sequence of states, not only the final state. “Hold `A`, then later hold `B`” is a TEG. |
 | **Linear temporal logic on finite traces (LTLf)** | Temporal logic interpreted over a finite state trace. This builder creates a hidden structured oracle with LTLf semantics but does not call a model or produce a predicted LTLf manifest. |
 | **Legal rollout** | A short action sequence generated from the PDDL initial state in which every action satisfies its typed propositional and numeric preconditions. Example: `unstack(b1,b8); stack(b1,b4)`. |
@@ -40,13 +40,13 @@ This glossary is normative.
 | **Natural-language manifest** | The problem-complete public handoff containing one row per test problem, with `q_i`, declared parameters, constraints, profile, and a reference to the domain catalogue. It contains no assignment, witness, or gold formula. Version 1 has 1,228 rows. |
 | **Translation input signature** | A SHA-256 hash of the complete language-model input: the rendered domain system prompt plus `source_text`, declared parameters, constraints, and parameter semantics. Two rows may share this signature only when the model would receive byte-equivalent semantic inputs. |
 | **Translation worklist** | The deduplicated public call list containing one row per unique complete language-model input. Each row retains `member_sample_ids` so one prediction can be expanded back to every covered problem row. Version 1 has 475 rows and therefore requires 475 primary model calls. |
-| **Construction audit** | The private artifact containing `T_i`, `theta_i`, `pi_i`, and state fingerprints. It allows reproducibility checks without leaking answers to the translation model. |
+| **Construction audit** | The private audit record containing `T_i`, `theta_i`, `pi_i`, and state fingerprints. It allows reproducibility checks without leaking answers to the translation model. |
 | **Smoke translation set** | Five pre-registered worklist rows, one for each supported formula profile, used to check model connectivity, prompt rendering, JSON capture, and public payload validation before continuing the primary run. These five calls are retained as part of the 475 primary calls; they are not rerun. |
 | **Prediction contract validation** | A fail-closed check of one model response against the public input and domain catalogue. It verifies the exact JSON shape, copied parameters and constraints, declared symbols, arities, types, atom table, and allowed operators. It does not inspect the hidden gold formula. |
 | **DFA language equivalence** | Exact comparison of the finite-trace languages accepted by the hidden gold deterministic finite automaton and predicted deterministic finite automaton. A product-state search either proves equality or returns a distinguishing finite valuation trace. |
 | **Hidden-witness acceptance** | Replay of the sealed PDDL action witness `pi_i`, followed by evaluation of both gold and predicted deterministic finite automata on the resulting state trace. It checks the prediction on every problem-level binding covered by a deduplicated translation. |
 | **Execution-trace validation** | Optional downstream validation of a generated primitive-action plan. Every action must replay legally from `P_i`, an independent PDDL plan verifier must accept it against a neutral final goal, and both gold and predicted deterministic finite automata must accept the complete state trace. |
-| **Validated append dataset** | One per-domain LTLf JSON artifact containing only predictions that passed the public payload contract, exact DFA language equivalence, and hidden-witness acceptance. It is the only prediction artifact eligible for later temporal-goal append. |
+| **Validated append dataset** | One per-domain LTLf JSON file containing only predictions that passed the public payload contract, exact DFA language equivalence, and hidden-witness acceptance. It is the only prediction file eligible for later temporal-goal append. |
 | **Structured non-construction** | A retained row such as `source_witness_not_found`. A problem is never silently dropped. |
 
 Requirement words are normative:
@@ -348,7 +348,7 @@ numeric-preservation gaps, negative-guard failures, timeout, and validator
 infrastructure errors are not collapsed into one generic failure. The run root
 is `artifacts/temporal_goal_execution_runs/<run-id>/`; `summary.json` contains
 domain and formula-profile aggregates, while `cases/<domain>/<sample-id>/`
-contains the auditable per-case artifacts. A nonzero process exit means at least
+contains the auditable per-case files. A nonzero process exit means at least
 one selected case did not satisfy every end-to-end obligation; it does not
 discard the completed records.
 
@@ -480,7 +480,7 @@ Negation is literal-only: `!` may apply directly to one proposition symbol, not
 to a temporal or conjunctive subformula. `X` is strong next and `U` is strong
 Until. `Phi_ach` is the subset generated by literals and conjunction alone. An
 ordinary achievement request retains its atemporal formula `psi` in the input
-artifact and is canonically embedded as `F(psi)` for execution; formulae using
+specification and is canonically embedded as `F(psi)` for execution; formulae using
 `F`, `X`, or `U` are TEGs and remain unchanged. Both use the same real
 LTLf2DFA/MONA path. Parsing a member of `Phi_syn` does not imply that the PDDL
 domain and atomic library provide a certified action strategy.
@@ -898,7 +898,7 @@ exposes only the representative `sample_id` and semantic input fields. It never
 passes `member_sample_ids`, benchmark membership, or deduplication metadata to
 the model.
 
-For the final version-1 artifact:
+For the final version-1 dataset:
 
 ```text
 1,228 problem-complete rows
@@ -909,7 +909,7 @@ For the final version-1 artifact:
 
 The membership list is sufficient to expand each predicted translation back to
 its problem rows. Predicted LTLf generation and expansion remain separate
-artifacts and are not performed by the natural-language benchmark builder.
+outputs and are not performed by the natural-language benchmark builder.
 
 ## Complete Test-Split Scope
 
@@ -944,7 +944,7 @@ source_witness_not_found
 
 An unsupported PDDL construct or internal exception aborts the run before the
 aggregate manifest is finalized. Such a partial directory is not a benchmark
-artifact and MUST NOT be reported as construction coverage.
+release and MUST NOT be reported as construction coverage.
 
 Construction coverage is reported over all 1,228 rows. Translation metrics
 must never hide non-construction rows.
@@ -1058,7 +1058,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run python \
 ```
 
 Optional bounds are explicit command-line arguments. Every completed problem
-prints one concise line; full metadata is written to artifacts.
+prints one concise line; full metadata is written to the run directory.
 
 ## Validation Requirements
 

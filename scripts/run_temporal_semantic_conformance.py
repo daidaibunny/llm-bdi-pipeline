@@ -125,7 +125,7 @@ def main() -> int:
 	print(
 		f"[summary] success={summary['success']} "
 		f"passed={summary['success_count']}/{len(all_records)} "
-		f"artifact={run_root / 'summary.json'}",
+		f"summary={run_root / 'summary.json'}",
 		flush=True,
 	)
 	return 0 if summary["success"] else 1

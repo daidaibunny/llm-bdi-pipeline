@@ -63,7 +63,7 @@ DEFAULT_SUMMARY_FILES = {
 
 
 def main() -> None:
-	"""Validate local summaries and write portable paper artifacts."""
+	"""Validate local summaries and write portable paper result files."""
 
 	parser = argparse.ArgumentParser(
 		description="Freeze five-seed Raw MOOSE extension results.",
@@ -108,7 +108,7 @@ def main() -> None:
 		f"{result['aggregate']['pooled_evaluation_count']} "
 		f"mean={result['aggregate']['mean_valid_count']:.1f}/"
 		f"{result['protocol']['case_count_per_seed']} "
-		f"artifact={Path(args.output_json).expanduser().resolve()}",
+		f"output={Path(args.output_json).expanduser().resolve()}",
 	)
 
 

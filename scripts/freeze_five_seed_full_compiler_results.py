@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze five independent Full GP2PL runs into paper-facing result artifacts."""
+"""Freeze five independent Full GP2PL runs into paper-facing result files."""
 
 from __future__ import annotations
 
@@ -93,7 +93,7 @@ def main() -> None:
 		f"{result['aggregate']['pooled_evaluation_count']} "
 		f"mean={result['aggregate']['mean_success_rate'] * 100:.2f}% "
 		f"sd={result['aggregate']['sample_sd_success_rate'] * 100:.2f}pp "
-		f"artifact={Path(args.output_json).expanduser().resolve()}",
+		f"output={Path(args.output_json).expanduser().resolve()}",
 	)
 
 
@@ -523,7 +523,7 @@ def _validate_summary_header(
 	seed: int,
 ) -> None:
 	if summary.get("artifact_kind") != "full_test_jason_validation_from_moose_asl_batch":
-		raise ValueError(f"seed {seed} has the wrong artifact kind")
+		raise ValueError(f"seed {seed} has the wrong result kind")
 	settings = dict(summary.get("settings") or {})
 	expected_settings = {
 		"atomic_library_mode": "validated-policy-lifting",

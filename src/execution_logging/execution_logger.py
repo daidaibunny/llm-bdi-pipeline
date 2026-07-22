@@ -2,8 +2,8 @@
 Structured logger for PDDL-only atomic-library and temporal-goal append runs.
 
 This is a refactored subset of the historical execution logger. It keeps the
-useful artifact externalization and human-readable execution log, but removes
-the old HDDL/HTN artifact model.
+useful result-file externalization and a human-readable execution log, but
+removes the old HDDL/HTN output model.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from typing import Any, Mapping
 
 
 STEP_TITLES = {
-	"input_artifact": "INPUT ARTIFACT",
+	"input_artifact": "INPUT FILE",
 	"atomic_backend_selection": "ATOMIC BACKEND SELECTION",
 	"atomic_library_generation": "ATOMIC LIBRARY GENERATION",
 	"dfa_conversion": "DFA CONVERSION",
@@ -353,7 +353,7 @@ class ExecutionLogger:
 				lines.append("Metadata:")
 				lines.append(json.dumps(payload["metadata"], indent=2, default=str))
 			if payload.get("artifacts"):
-				lines.append("Artifacts:")
+				lines.append("Files:")
 				lines.append(json.dumps(payload["artifacts"], indent=2, default=str))
 			if payload.get("llm"):
 				lines.append("LLM:")

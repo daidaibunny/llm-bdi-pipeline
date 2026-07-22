@@ -129,7 +129,7 @@ def main() -> int:
 	parser.add_argument(
 		"--run-jason-validation",
 		action="store_true",
-		help="Also execute appended goals in Jason. Default only generates ASL artifacts.",
+		help="Also execute appended goals in Jason. Default only generates ASL files.",
 	)
 	parser.add_argument(
 		"--run-moose-policy-validation",
@@ -159,7 +159,7 @@ def main() -> int:
 		action="store_true",
 		help=(
 			"Reuse an existing completed batch only when its full command, settings, "
-			"domain set, and expected ASL artifacts match this invocation exactly."
+			"domain set, and expected ASL files match this invocation exactly."
 		),
 	)
 	args = parser.parse_args()
@@ -253,10 +253,10 @@ def validate_completed_batch_for_resume(
 		raise ValueError("existing batch did not complete successfully")
 	expected_files = manifest.get("expected_asl_files")
 	if not isinstance(expected_files, list) or not expected_files:
-		raise ValueError("existing batch has no expected ASL artifacts")
+		raise ValueError("existing batch has no expected ASL files")
 	missing = [path for path in expected_files if not Path(str(path)).is_file()]
 	if missing:
-		raise ValueError(f"existing batch is missing ASL artifact: {missing[0]}")
+		raise ValueError(f"existing batch is missing ASL file: {missing[0]}")
 	return manifest
 
 
@@ -336,7 +336,7 @@ def preflight(*, domains: Sequence[str], batch_root: Path, overwrite: bool) -> l
 		if image_check.returncode != 0 or "moose-exact-ubuntu22:local" not in images:
 			errors.append("missing Docker image: moose-exact-ubuntu22:local")
 	if not (MOOSE_ROOT / "moose.sif").exists():
-		errors.append(f"missing MOOSE artifact image: {MOOSE_ROOT / 'moose.sif'}")
+		errors.append(f"missing MOOSE image: {MOOSE_ROOT / 'moose.sif'}")
 	for domain in domains:
 		domain_root = PROJECT_ROOT / "src" / "domains" / domain
 		domain_file = domain_root / "domain.pddl"

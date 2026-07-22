@@ -24,8 +24,8 @@ soundness and monitor claims, and gives compiler pseudocode (Secs.~1--3).
 Figure~\ref{fig:compiler-stages}(a) summarizes the query-independent path from
 raw evidence through canonical lifting and certified candidate selection to
 $\mathcal M_D$.
-An evidence provider is admissible when its raw artifact
-$\mathcal E_{\mathrm{raw}}$ parses to a singleton-goal evidence program $E_0$.
+An evidence provider is admissible when its provider-native singleton-goal
+policy representation $\mathcal E_{\mathrm{raw}}$ parses to an evidence program $E_0$.
 Canonical lifting produces
 $E=\operatorname{Lift}_D(E_0)$, whose rules pair a partial state condition and
 one goal atom with a PDDL action macro, numeric effects, and provenance.
@@ -321,8 +321,9 @@ control symbols; only primitive PDDL actions change the observed state.
 \section{Conditional Guarantees}
 \label{sec:guarantees}
 
-These guarantees apply only to accepted artifacts; each proposition states its
-branch-local, candidate-space, or supported-composition boundary.
+These guarantees apply only to accepted branches, cores, and query controllers;
+each proposition states its branch-local, candidate-space, or
+supported-composition boundary.
 
 \paragraph{Atomic branch soundness.}
 \textbf{Proposition 1.} If an emitted $p(\bar X)$ branch's context holds under a

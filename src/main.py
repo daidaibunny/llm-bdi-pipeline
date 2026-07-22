@@ -54,8 +54,8 @@ def build_argument_parser() -> argparse.ArgumentParser:
 	parser = argparse.ArgumentParser(
 		description=(
 			"Build domain-level lifted AgentSpeak(L) atomic libraries from external "
-			"generalized-planning artifacts, then append validated lifted LTLf/DFA "
-			"query wrappers."
+			"generalized-planning singleton-goal policy files, then append validated "
+			"lifted LTLf/DFA query wrappers."
 		),
 		formatter_class=argparse.RawDescriptionHelpFormatter,
 		epilog="""
@@ -203,7 +203,7 @@ Examples:
 	)
 	jason_parser.add_argument(
 		"--output-dir",
-		help="Directory for Jason runtime artifacts. Defaults to artifacts/jason_validation/<domain>/<goal>.",
+		help="Directory for Jason runtime files. Defaults to artifacts/jason_validation/<domain>/<goal>.",
 	)
 	jason_parser.add_argument(
 		"--timeout-seconds",

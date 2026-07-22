@@ -704,7 +704,7 @@ def write_natural_language_benchmark(
 	config: BuildConfig | None = None,
 	progress: Callable[[ManifestRow, float], None] | None = None,
 ) -> dict[str, object]:
-	"""Write public NL manifests plus private witness/oracle audit artifacts."""
+	"""Write public NL manifests plus private witness and oracle audit records."""
 	root = Path(output_root)
 	root.mkdir(parents=True, exist_ok=True)
 	settings = config or BuildConfig()

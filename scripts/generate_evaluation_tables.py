@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate conference-neutral result data and LaTeX tables from pinned artifacts."""
+"""Generate conference-neutral result data and LaTeX tables from pinned files."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "artifacts/evaluation_tables"
 
 def main() -> None:
 	parser = argparse.ArgumentParser(
-		description="Generate fail-closed evaluation tables from pinned artifacts.",
+		description="Generate fail-closed evaluation tables from pinned result files.",
 	)
 	parser.add_argument("--benchmark-root", type=Path, default=DEFAULT_BENCHMARK_ROOT)
 	parser.add_argument("--execution-summary", type=Path, required=True)
@@ -114,7 +114,7 @@ def build_evaluation_result_dataset(
 		str(row.get("translation_id") or ""): row for row in translation_results
 	}
 	if len(set(prediction_ids)) != len(prediction_ids):
-		raise ValueError("prediction artifact contains duplicate translation ids")
+		raise ValueError("prediction file contains duplicate translation ids")
 	if set(prediction_ids) != set(validation_by_id):
 		raise ValueError("prediction and translation-validation ids differ")
 	benchmark_translation_ids = {
@@ -466,10 +466,10 @@ def _load_conformance_result(root: Path) -> dict[str, Any]:
 	release_file = root / str(release_record.get("filename") or "")
 	result = _read_json(release_file)
 	if result.get("success") is not True:
-		raise ValueError("conformance artifact is not successful")
+		raise ValueError("conformance result is not successful")
 	records = tuple(result.get("records") or ())
 	if any(record.get("success") is not True for record in records):
-		raise ValueError("conformance artifact contains a failed record")
+		raise ValueError("conformance result contains a failed record")
 	_require_equal(
 		len(records),
 		result.get("success_count"),
@@ -592,7 +592,7 @@ def _read_json(path: Path) -> dict[str, Any]:
 	try:
 		return json.loads(path.read_text(encoding="utf-8"))
 	except (OSError, json.JSONDecodeError) as error:
-		raise ValueError(f"cannot read JSON artifact {path}: {error}") from error
+		raise ValueError(f"cannot read JSON file {path}: {error}") from error
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -603,7 +603,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
 			if line.strip()
 		]
 	except (OSError, json.JSONDecodeError) as error:
-		raise ValueError(f"cannot read JSONL artifact {path}: {error}") from error
+		raise ValueError(f"cannot read JSONL file {path}: {error}") from error
 
 
 def _require_equal(observed: object, expected: object, message: str) -> None:

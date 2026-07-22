@@ -28,7 +28,7 @@ class ArchitectureDecision:
 
 @dataclass(frozen=True)
 class ArchitectureGap:
-	"""A known gap between current implementation and the target artifact."""
+	"""A known gap between current implementation and the target research object."""
 
 	id: str
 	layer: str
@@ -102,7 +102,7 @@ class LayerPaperQualityContract:
 
 @dataclass(frozen=True)
 class ArchitectureContract:
-	"""The current paper claim reported with generated artifacts."""
+	"""The current paper claim reported with generated evaluation records."""
 
 	guarantee: str
 	paper_core_method: tuple[str, ...]
@@ -148,15 +148,15 @@ class ArchitectureContract:
 				"The core method is atomic-template import plus temporal-goal "
 				"append: the system extracts singleton predicate or literal "
 				"targets from a PDDL training split, consumes a verified external "
-				"generalized-planning artifact, normalizes it as a "
+				"singleton-goal policy representation, normalizes it as a "
 				"LiftedPolicyProgram, and compiles lifted atomic AgentSpeak(L) "
 				"plans."
 			),
 			(
 				"The framework does not route whole domains by prior paper classes "
 				"and does not claim a new universal generalized planner. Backend "
-				"choice is driven by the required atomic templates and by artifact "
-				"parser, binding, compiler, and validation gates."
+				"choice is driven by the required atomic templates and by policy "
+				"parsing, binding, compilation, and validation gates."
 			),
 			(
 				"MOOSE is the first candidate for positive singleton predicate "
@@ -183,18 +183,18 @@ class ArchitectureContract:
 
 
 def domain_level_architecture_contract() -> ArchitectureContract:
-	"""Return the current research contract for lifted ASL artifacts."""
+	"""Return the current research contract for lifted ASL libraries."""
 
 	return ArchitectureContract(
 		guarantee=(
 			"bounded atomic-template guarantee: import or learn lifted singleton "
-			"predicate/literal plan templates from verified external generalized-"
-			"planning artifacts, append achievement or temporal DFA transition wrappers, "
+			"predicate/literal plan templates from verified provider-native policy "
+			"representations, append achievement or temporal DFA transition wrappers, "
 			"and do not claim universal PDDL generalized-planning completeness"
 		),
 		paper_core_method=(
 			"atomic goal-template extraction",
-			"verified external generalized-planning artifact consumption",
+			"verified provider-native policy normalization",
 			"LiftedPolicyProgram normalizer",
 			"AgentSpeak(L) compiler for lifted atomic plans",
 			"lifted LTLf-to-DFA bound-query append",
@@ -203,7 +203,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 		implementation_safeguards=(
 			"old in-repository GP synthesis and conjunctive-goal ordering code is not part of the current method",
 			"external learners must run under resource guards",
-			"backend artifacts must pass parser, binding, compiler, and validation gates",
+			"provider-native policies must pass parsing, binding, compilation, and validation gates",
 			"negative guard literals remain context-only and never become subgoals",
 			"DFA wrapper progress is encoded through one validated helper per progress edge",
 		),
@@ -211,13 +211,13 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"universal completeness for arbitrary PDDL domains",
 			"routing a whole domain by a paper taxonomy class",
 			"runtime full-trace planning for each new problem",
-			"query-specific or problem-specific atomic libraries as the main artifact",
+			"query-specific or problem-specific atomic libraries as the maintained output",
 			"synthetic achievement names such as achieve_*, transition_*, or dfa_state",
 			"reimplementing the external natural-language Input component",
 		),
 		supported_pddl_fragment=(
 			"classical PDDL predicate and literal goals whose required atomic "
-			"templates are accepted by a verified backend artifact"
+			"templates are accepted by a verified evidence adapter"
 		),
 		runtime_planner_policy=(
 			"classical planners may support external backend training or validation, "
@@ -225,7 +225,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 		),
 		atomic_template_target=(
 			"lifted +!P(Args) atomic modules compiled from "
-			"verified external singleton-goal artifacts"
+			"verified external singleton-goal evidence rules"
 		),
 		temporal_append_target=(
 			"query-specific +!g_query wrappers for atemporal achievements or "
@@ -233,7 +233,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"conjunctive DFA progress transitions with context-only negation"
 		),
 		temporal_descriptor_semantics=(
-			"lifted LTLf atoms and DFA metadata are external Input artifacts, not "
+			"lifted LTLf atoms and DFA metadata are external input specifications, not "
 			"mutable beliefs, primitive actions, or synthetic achievement goals. "
 			"The current ASL output may contain query-specific g_query wrappers "
 			"whose contexts are validated DFA prefix/progress literals, but not "
@@ -252,7 +252,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 				id="D2",
 				decision="Select backends by atomic template needs, not by domain taxonomy.",
 				status="accepted",
-				rationale="The same domain can provide different goal items; backend suitability is artifact-level.",
+				rationale="The same domain can provide different goal items; backend suitability is evidence-item-level.",
 			),
 			ArchitectureDecision(
 				id="D3",
@@ -331,13 +331,13 @@ def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
 			layer="Atomic Template Layer",
 			target_artifact="domain-level lifted atomic AgentSpeak(L) library",
 			core_claim=(
-				"compile verified singleton predicate/literal generalized-planning "
-				"artifacts into reusable +!P(Args) ASL plans"
+				"compile verified singleton-goal evidence programs into reusable "
+				"+!P(Args) ASL plans"
 			),
 			admissible_evidence=(
 				"Evidence Module policy evidence programs",
-				"MOOSE readable policy artifacts after adapter normalization",
-				"other backend artifacts after adapter, parser, and binding gates",
+				"MOOSE readable policy files after adapter normalization",
+				"other provider-native policy representations after parsing and binding gates",
 				"PDDL domain predicate and action declarations",
 				"held-out validation without runtime full-trace planning",
 			),
@@ -428,7 +428,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 			),
 			"external_features": (
 				"verified MOOSE readable singleton-goal rules",
-				"fallback backend artifacts only after parser and binding gates",
+				"fallback provider-native policies only after parsing and binding gates",
 			),
 		},
 		module_language={
@@ -457,7 +457,7 @@ def bounded_hypothesis_class_contract() -> HypothesisClassContract:
 		},
 		progress_language={
 			"selection_constraints": (
-				"backend artifact parser success",
+				"provider-native policy parsing success",
 				"declared predicate and arity checks",
 				"conjunctive guard-transition DFA validation",
 			),

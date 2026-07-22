@@ -81,7 +81,7 @@ INFRASTRUCTURE_FAILURES = {
 
 @dataclass(frozen=True)
 class ReferenceTask:
-	"""One method/problem pair evaluated in an isolated artifact directory."""
+	"""One method/problem pair evaluated in an isolated result directory."""
 
 	method: ExternalReferenceMethod
 	domain: str
@@ -152,7 +152,7 @@ def build_moose_reference_arguments(
 	plan_file: str,
 	model_file: str | None = None,
 ) -> tuple[str, ...]:
-	"""Build arguments consumed by the official MOOSE Apptainer artifact."""
+	"""Build arguments consumed by the official MOOSE Apptainer image."""
 
 	if method is ExternalReferenceMethod.RAW_MOOSE:
 		if not model_file:
@@ -176,7 +176,7 @@ def build_moose_reference_arguments(
 			"--plan-file",
 			str(plan_file),
 		)
-	raise ValueError(f"{method.value} is not executed by the MOOSE artifact.")
+	raise ValueError(f"{method.value} is not executed by the MOOSE image.")
 
 
 def resolve_model_batch(
@@ -504,7 +504,7 @@ def main() -> int:
 	_write_jsonl(run_root / "results.jsonl", records)
 	print(
 		f"[summary] valid={metrics['valid_trace_count']}/{metrics['case_count']} "
-		f"artifact={summary_file}",
+		f"summary={summary_file}",
 		flush=True,
 	)
 	return 0 if manifest["success"] else 1

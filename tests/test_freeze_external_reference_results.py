@@ -201,8 +201,8 @@ def test_registered_external_reference_result_is_complete_portable_and_manifeste
 	manifest = json.loads((RELEASE_ROOT / "manifest.json").read_text(encoding="utf-8"))
 	assert manifest["external_reference_record_count"] == 3684
 	for relative_path in manifest["files"]:
-		artifact = RELEASE_ROOT / relative_path
-		assert artifact.is_file()
+		release_file = RELEASE_ROOT / relative_path
+		assert release_file.is_file()
 
 
 def test_external_reference_table_distinguishes_failure_from_unsupported() -> None:

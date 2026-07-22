@@ -899,7 +899,7 @@ def load_completed_records(
 
 
 def source_revision_metadata(project_root: Path) -> dict[str, Any]:
-	"""Capture code revision and distinguish tracked changes from local artifacts."""
+	"""Capture code revision and distinguish tracked changes from local outputs."""
 
 	try:
 		commit = subprocess.run(

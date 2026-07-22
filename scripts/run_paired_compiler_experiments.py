@@ -47,7 +47,7 @@ from scripts.run_moose_faithful_e2e import DEFAULT_DOMAINS  # noqa: E402
 
 @dataclass(frozen=True)
 class RegisteredRun:
-	"""One isolated subprocess and the summary artifact it must produce."""
+	"""One isolated subprocess and the summary file it must produce."""
 
 	stage: str
 	method: str
@@ -100,7 +100,7 @@ def resolve_temporal_atomic_input(
 	requested_batch_id: str | None,
 	seed_batches: Mapping[int, str],
 ) -> TemporalAtomicInput:
-	"""Bind temporal variants to a current Full Compiler atomic artifact."""
+	"""Bind temporal variants to a current Full Compiler atomic library."""
 
 	if stage == "all":
 		if requested_batch_id:

@@ -17,8 +17,8 @@ from domain_level_planning.architecture_contract import (
 )
 
 
-def test_write_final_paper_configs_uses_artifact_only_manifest(tmp_path: Path) -> None:
-	manifest = _artifact_manifest(tmp_path)
+def test_write_final_paper_configs_uses_result_manifest(tmp_path: Path) -> None:
+	manifest = _result_manifest(tmp_path)
 
 	package = write_final_paper_configs(tmp_path, manifest=manifest)
 
@@ -31,22 +31,22 @@ def test_write_final_paper_configs_uses_artifact_only_manifest(tmp_path: Path) -
 	] == "unit-test-artifact"
 
 
-def test_validate_final_paper_package_accepts_artifact_only_outputs(
+def test_validate_final_paper_package_accepts_current_result_outputs(
 	tmp_path: Path,
 ) -> None:
-	manifest = _artifact_manifest(tmp_path)
+	manifest = _result_manifest(tmp_path)
 	write_final_paper_configs(tmp_path, manifest=manifest)
-	_write_minimal_artifact_outputs(tmp_path, manifest)
+	_write_minimal_result_outputs(tmp_path, manifest)
 
 	validation = validate_final_paper_package(tmp_path, manifest=manifest)
 
 	assert validation["check_count"] > 0
 
 
-def test_artifact_only_runner_does_not_own_paper_result_macros() -> None:
+def test_current_result_runner_does_not_own_paper_result_macros() -> None:
 	source = Path("scripts/run_final_paper_data.py").read_text(encoding="utf-8")
 	current_package_body = source.split(
-		"def _write_current_artifact_only_package(",
+		"def _write_current_result_only_package(",
 		maxsplit=1,
 	)[1].split("def _validate_atomic_smoke(", maxsplit=1)[0]
 
@@ -63,7 +63,7 @@ def test_load_final_paper_manifest_reads_tracked_contract() -> None:
 	assert manifest["expected_package"]["baseline_count"] == 0
 
 
-def _artifact_manifest(tmp_path: Path) -> dict[str, object]:
+def _result_manifest(tmp_path: Path) -> dict[str, object]:
 	policy_file = tmp_path / "policy.readable"
 	policy_file.write_text(
 		"""
@@ -97,7 +97,7 @@ def _artifact_manifest(tmp_path: Path) -> dict[str, object]:
 	}
 
 
-def _write_minimal_artifact_outputs(output_dir: Path, manifest: dict[str, object]) -> None:
+def _write_minimal_result_outputs(output_dir: Path, manifest: dict[str, object]) -> None:
 	(output_dir / "backend-audit").mkdir(parents=True, exist_ok=True)
 	(output_dir / "backend-audit" / "gp-backend-status.txt").write_text("ok\n", encoding="utf-8")
 	(output_dir / "comparison.json").write_text(

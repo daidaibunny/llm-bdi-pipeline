@@ -103,7 +103,7 @@ def test_build_frozen_ablation_figure_dataset_recomputes_paired_results() -> Non
 	(
 		(
 			lambda payload: payload.update({"artifact_kind": "wrong"}),
-			"artifact",
+			"result file",
 		),
 		(
 			lambda payload: payload["protocol"]["atomic_pairing"].update(

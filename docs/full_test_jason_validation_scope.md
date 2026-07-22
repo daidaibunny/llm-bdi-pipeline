@@ -95,7 +95,7 @@ by VAL or an IPC-style verifier against the same domain and problem file.
 The exported trace uses PDDL action names and object names, not Jason-safe
 identifiers. For example, an ASL action functor `pick_up(b1)` is written as the
 PDDL plan line `(pick-up b1)` when the source PDDL action is `pick-up`. The
-artifact `pddl_symbol_map.tsv` maps Jason-safe symbols back to original PDDL
+file `pddl_symbol_map.tsv` maps Jason-safe symbols back to original PDDL
 symbols when sanitization was needed.
 
 The full-test runner now defaults to `1800` seconds for each Jason validation
@@ -111,7 +111,7 @@ DFA, preservation-certified balanced controller, primitive-step monitor, Jason,
 and VAL. Experimental modes are explicit, isolated output variants; none may be
 selected as a silent fallback.
 
-Atomic experiment modes share one normalized evidence artifact. Evidence Only
+Atomic experiment modes share one normalized evidence program. Evidence Only
 renders only PDDL-validated evidence macros. Direct Producers adds
 certified PDDL producers but no internal subgoals. Maximum Feasible selects a
 maximum-cardinality jointly compatible program from the full generated
@@ -294,14 +294,14 @@ context count, and body cost within the generated certified candidate set.
 This repository does not modify MOOSE's goal regression learner and should not
 claim to replace the generalized planner. The implemented architecture uses an
 Evidence Module followed by a validated policy-lifting compiler. The Evidence
-Module imports backend artifacts such as MOOSE singleton-goal policy evidence
+Module imports provider-native policy representations such as MOOSE singleton-goal policy evidence
 and normalizes them into a `PolicyEvidenceProgram`. The compiler checks that
 evidence against the PDDL schema, lifts grounded-looking rule variables into
 domain-level AgentSpeak(L) variables, and writes one maintained ASL library for
 the domain.
 
 A MOOSE readable policy is the `policy --dump-policy` first-order decision-list
-artifact. For example, one readable rule may have goal condition
+output. For example, one readable rule may have goal condition
 `at(package0, location2)` and action sequence `load-airplane(package0,
 airplane0, location0); fly-airplane(airplane0, location0, location1);
 unload-airplane(package0, airplane0, location1); load-truck(package0, truck0,
@@ -629,9 +629,9 @@ preservation; acyclicity alone is intentionally insufficient.
 
 ## Current Benchmark Scope And Library Profiles
 
-The component between backend artifacts and ASL rendering is called the
+The component between provider-normalized evidence programs and ASL rendering is called the
 validated policy-lifting compiler. It runs after the Evidence Module has
-normalized a backend artifact into a `PolicyEvidenceProgram`; for example, the
+normalized a provider-native policy representation into a `PolicyEvidenceProgram`; for example, the
 MOOSE adapter normalizes a `policy --dump-policy` first-order decision-list rule
 whose goal condition is `at(package0, location2)` and whose body is a macro
 sequence of PDDL actions. The compiler runs before rendering the final
@@ -696,7 +696,7 @@ to Jason as a normal percept or belief. That mixed dynamic state facts, such as
 `room(rooma)`. Large Miconic and Gripper instances then forced Jason to match
 plan contexts against tens of thousands of mostly static facts.
 
-The runner now writes three fact artifacts per validation case:
+The runner now writes three fact files per validation case:
 
 ```text
 initial_facts.txt      complete initial world used by the Java environment
@@ -756,7 +756,7 @@ The runner also limits successful-action trace output:
 This keeps large validations from spending time and disk space printing every
 primitive action to stdout. It does not truncate the exported PDDL plan trace:
 `jason_plan.plan` still contains every successful primitive action and is the
-artifact passed to VAL or the configured IPC-style verifier. The real action
+plan file passed to VAL or the configured IPC-style verifier. The real action
 count is still reported through `runtime_summary`, so validation records
 preserve whether a run executed a short or very long plan.
 
@@ -832,12 +832,12 @@ resource-capacity policy exists, but such batching would change action choices
 and needs its own progress and preservation proof. It is intentionally not
 inferred from a predicate name such as `at` or a domain name such as Gripper.
 
-### Domain-Long ASL Artifact Policy
+### Domain-Long ASL Output Policy
 
 The full-test script no longer writes the combined domain-long ASL file by
 default. The combined file appends every test wrapper for a domain to one
 library. For Gripper, 90 full-test wrappers produced an 820,781-line ASL file.
-That artifact is useful only for offline inspection of all appended test
+That file is useful only for offline inspection of all appended test
 wrappers together; it is not required for Jason execution because each test
 uses a per-test runtime ASL containing the atomic library plus one query
 wrapper.
@@ -862,6 +862,6 @@ jason/gripper/test_0071_p2_11/plan_library.asl
 ```
 
 The best practice for full-test validation is therefore to keep per-test ASL
-artifacts and omit domain-long ASL unless the specific debugging question needs
+files and omit domain-long ASL unless the specific debugging question needs
 one file containing all wrappers. This reduces large redundant file writes and
 keeps inspection focused on the exact ASL Jason executed for one test case.

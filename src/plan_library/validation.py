@@ -55,7 +55,7 @@ def validate_plan_library_structure(
 	*,
 	plan_library: PlanLibrary,
 ) -> PlanLibraryStructuralValidation:
-	"""Validate a current atomic-library plus temporal-wrapper artifact."""
+	"""Validate a current atomic library plus temporal-wrapper plan set."""
 
 	warnings: List[str] = []
 	plans = tuple(plan_library.plans or ())

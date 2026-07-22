@@ -229,7 +229,7 @@ class RuntimeProblemArtifacts:
 
 @dataclass(frozen=True)
 class RuntimeOutputSummary:
-	"""Bounded in-memory summary of a Jason stdout/stderr artifact pair."""
+	"""Bounded in-memory summary of a Jason stdout/stderr log pair."""
 
 	stdout_excerpt: str
 	stderr_excerpt: str
@@ -2675,7 +2675,7 @@ def _logging_properties() -> str:
 	)
 
 
-def _resolve_jason_classpath(artifact: str) -> str:
+def _resolve_jason_classpath(coordinate: str) -> str:
 	override = os.getenv("JASON_CLASSPATH")
 	if override:
 		return override
@@ -2683,9 +2683,9 @@ def _resolve_jason_classpath(artifact: str) -> str:
 	if not maven:
 		raise JasonValidationError(
 			"Jason validation requires Maven to resolve the Jason runtime classpath.",
-			metadata={"artifact": artifact},
+			metadata={"maven_coordinate": coordinate},
 		)
-	group_id, artifact_id, version = artifact.split(":", 2)
+	group_id, artifact_id, version = coordinate.split(":", 2)
 	with tempfile.TemporaryDirectory(prefix="jason-classpath-") as tmp_dir:
 		tmp_path = Path(tmp_dir)
 		pom_path = tmp_path / "pom.xml"
@@ -2728,7 +2728,7 @@ def _resolve_jason_classpath(artifact: str) -> str:
 			raise JasonValidationError(
 				"Maven failed to resolve the Jason runtime classpath.",
 				metadata={
-					"artifact": artifact,
+					"maven_coordinate": coordinate,
 					"stdout": completed.stdout,
 					"stderr": completed.stderr,
 					"return_code": completed.returncode,
@@ -2738,7 +2738,7 @@ def _resolve_jason_classpath(artifact: str) -> str:
 		if not classpath:
 			raise JasonValidationError(
 				"Maven returned an empty Jason runtime classpath.",
-				metadata={"artifact": artifact},
+				metadata={"maven_coordinate": coordinate},
 			)
 		return classpath
 
@@ -2970,7 +2970,7 @@ def _bounded_file_excerpt(path: Path, max_chars: int) -> str:
 	text = path.read_text(encoding="utf-8", errors="replace")
 	if len(text) <= max_chars:
 		return text
-	return text[:max_chars] + "\n... [output truncated; full log is in the artifact file] ...\n"
+	return text[:max_chars] + "\n... [output truncated; full text is in the log file] ...\n"
 
 
 def _scan_runtime_output_files(
@@ -2980,7 +2980,7 @@ def _scan_runtime_output_files(
 	excerpt_char_limit: int = _RUNTIME_OUTPUT_EXCERPT_MAX_CHARS,
 	action_path_limit: int = _RUNTIME_ACTION_PATH_MAX_ITEMS,
 ) -> RuntimeOutputSummary:
-	"""Scan Jason output artifacts without loading complete logs into memory."""
+	"""Scan Jason output logs without loading complete files into memory."""
 
 	stdout_scan = _scan_runtime_output_file(
 		stdout_path,
@@ -3064,7 +3064,7 @@ def _scan_runtime_output_file(
 					action_count = max(action_count, int(count_text))
 
 	if truncated:
-		excerpt_parts.append("\n... [output truncated; full log is in the artifact file] ...\n")
+		excerpt_parts.append("\n... [output truncated; full text is in the log file] ...\n")
 	return _SingleOutputScan(
 		excerpt="".join(excerpt_parts),
 		marker_lines=tuple(marker_lines),
