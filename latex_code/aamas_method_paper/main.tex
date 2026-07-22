@@ -66,15 +66,11 @@ compact closed atomic core, and appends DFA-guided query controllers without
 relearning that core. For the
 generated candidate language and supported fragment, accepted branches and
 controllers satisfy conditional soundness guarantees; uncertified obligations
-are rejected. Across five fixed evidence seeds, mean held-out coverage over
-\BenchmarkDomainCount{} domains is \AtomicFiveSeedMeanSuccessPercent{}\%, with a
-sample standard deviation of \AtomicFiveSeedSampleSDPercent{} percentage points.
-Recursive candidates improve paired atomic success by 10.42 percentage points,
-and preservation certification improves paired temporal success by 9.36
-percentage points. All \TranslationEquivalentCount{} controlled-language
-translations match their gold finite-trace languages, and all
-\TEGProblemCount{} admitted bound queries produce independently validated
-accepting traces.
+are rejected. Across \BenchmarkDomainCount{} classical and numeric domains,
+five-seed atomic libraries achieve \AtomicFiveSeedMeanSuccessPercent{}\% mean
+held-out coverage; all \TranslationEquivalentCount{} controlled-language
+translations and \TEGProblemCount{} admitted bound queries pass independent
+semantic validation.
 \end{abstract}
 
 \section{Introduction}
@@ -99,7 +95,7 @@ composition guarantees required by an executable BDI library.
 GP2PL addresses this representation gap as shown in
 Figure~\ref{fig:architecture}. It compiles the evidence once into a certified,
 reusable atomic module core, then reuses that core when compiling each bound
-query into the same maintained library. A query may be an ordinary achievement
+query into the same maintained library. A query may be an achievement
 condition or a temporally extended goal (TEG) \cite{Hindriks2009TemporalGoals};
 the external backend is neither replaced nor rerun.
 
