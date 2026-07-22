@@ -98,8 +98,8 @@ $\mathcal{I}_{\mathrm{train}}$, and normalized singleton-goal evidence $E$,
 atomic compilation produces the certified atomic module core $\mathcal{M}_D$:
 the query-independent branches whose triggers are singleton achievements.
 
-An unbound query is $\tau_q$; $\theta_q$ assigns each parameter a type-compatible
-object, and $\widehat\tau_q=(\tau_q,\theta_q)$ is the validated bound query. Query
+A validated bound query is $\widehat\tau_q=(\tau_q,\theta_q)$, where $\theta_q$
+assigns each parameter of $\tau_q$ a type-compatible object. Query
 compilation produces the query-local plan set $\mathcal{Q}_q$, comprising its
 top-level goal, DFA dispatch, and transition-repair plans. For appended queries
 $q_1,\ldots,q_k$, the one maintained domain library is
