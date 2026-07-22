@@ -426,10 +426,10 @@ def render_profile_table(result: dict[str, Any]) -> str:
 			"\\caption{Translation and execution by temporal profile. DFA equiv. "
 			"counts the 475 distinct translation inputs whose gold and predicted "
 			"DFAs have exactly the same finite-trace language. E2E valid counts all "
-			"1,228 admitted bound queries and requires controller compilation, Jason "
+			"1,228 admitted bound queries per seed and requires controller compilation, Jason "
 			"completion, neutral-goal VAL, and acceptance by both DFA trace oracles. "
-			"Medians are primitive actions and wall-clock seconds; the All row is "
-			"pooled across admitted bound queries.}",
+			"Medians are primitive actions and wall-clock seconds for the paired run; "
+			"the All row is pooled across admitted bound queries.}",
 			"\\label{tab:profile-results}",
 			"\\end{table}",
 		],

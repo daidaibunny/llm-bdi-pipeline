@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from scripts.freeze_paired_ablation_results import write_paired_ablation_files
+from scripts.generate_aaai_comparison_tables import render_atomic_table
 from scripts.generate_aaai_comparison_tables import render_comparison_macros
 
 
@@ -46,6 +47,13 @@ def test_registered_paired_ablation_is_complete_portable_and_manifested() -> Non
 	assert r"\newcommand{\TemporalCrossSeedValidCount}{6,140}" in macros
 	assert r"\newcommand{\TemporalCrossSeedMeanParTwoSeconds}{5.36}" in macros
 	assert r"\newcommand{\TemporalCrossSeedParTwoSDSeconds}{0.27}" in macros
+	atomic_table = render_atomic_table(result)
+	assert r"Evidence Only & 88.3 $\pm$ 1.2" in atomic_table
+	assert r"Direct Producers & 88.3 $\pm$ 1.2" in atomic_table
+	assert r"\resultbest{98.7 $\pm$ 1.3}" in atomic_table
+	assert "All entries are mean $\\pm$ sample SD across five evidence seeds" in (
+		atomic_table
+	)
 
 
 def test_write_paired_ablation_files_updates_tables_macros_and_manifest(

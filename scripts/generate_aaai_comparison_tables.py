@@ -1298,7 +1298,12 @@ def render_atomic_table(result: Mapping[str, Any]) -> str:
 	for row in result["atomic"]:
 		variant = str(row["variant"])
 		method = str(row["method"])
-		valid = f"{100 * int(row['valid_trace_count']) / int(row['test_count']):.1f}"
+		mean_valid, sd_valid = _atomic_seed_coverage_stats(
+			result,
+			variant=variant,
+			fallback_row=row,
+		)
+		valid = _mean_sd_text(100.0 * mean_valid, 100.0 * sd_valid)
 		branches = _mean_sd_text(row["mean_branch_count"], row["sd_branch_count"])
 		library_kib = _mean_sd_text(row["mean_library_kib"], row["sd_library_kib"])
 		if variant in {"maximal_certified_program", "full"}:
@@ -1315,14 +1320,49 @@ def render_atomic_table(result: Mapping[str, Any]) -> str:
 			"\\bottomrule",
 			"\\end{tabular}",
 			"\\caption{Paired atomic compiler comparison over 6,140 held-out seed--cases.",
-			"Branches and KiB are per-seed totals over 16 libraries (mean $\\pm$ sample SD",
-			"across five seeds). Bold marks tied best coverage and the smaller selected core;",
+			"All entries are mean $\\pm$ sample SD across five evidence seeds; Branches and",
+			"KiB are per-seed totals over 16 libraries. Bold marks tied best coverage and",
+			"the smaller selected core;",
 			"$\\dagger$ marks the selected method.}",
 			"\\label{tab:atomic-comparison}",
 			"\\end{table}",
 		),
 	)
 	return "\n".join(lines) + "\n"
+
+
+def _atomic_seed_coverage_stats(
+	result: Mapping[str, Any],
+	*,
+	variant: str,
+	fallback_row: Mapping[str, Any],
+) -> tuple[float, float]:
+	"""Return mean and sample SD of per-seed atomic held-out coverage."""
+
+	seed_rows = tuple(
+		dict(row)
+		for row in result.get("atomic_seed_results") or ()
+		if str(row.get("variant")) == variant
+	)
+	if not seed_rows:
+		return (
+			int(fallback_row["valid_trace_count"]) / int(fallback_row["test_count"]),
+			0.0,
+		)
+	seeds = tuple(int(row["seed"]) for row in seed_rows)
+	if len(seeds) != len(set(seeds)):
+		raise ValueError(f"duplicate atomic seed result for variant={variant}")
+	registered_seeds = tuple(
+		int(seed)
+		for seed in dict(result.get("protocol") or {}).get("registered_seeds") or ()
+	)
+	if registered_seeds and set(seeds) != set(registered_seeds):
+		raise ValueError(f"incomplete atomic seed coverage for variant={variant}")
+	rates = tuple(
+		int(row["valid_count"]) / int(row["case_count"])
+		for row in seed_rows
+	)
+	return _mean_sample_sd(rates)
 
 
 def render_temporal_table(result: Mapping[str, Any]) -> str:

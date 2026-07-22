@@ -57,6 +57,13 @@ targets under every seed (365 seed--target obligations); Evidence Only covers
 Table~\ref{tab:atomic-comparison}, entirely on the four added serialized-width
 domains; every nonzero averaged paired difference favors a recursive variant.
 At equal coverage, lexicographic selection yields the smallest certified core.
+On the four added families under matched evidence seeds, Full GP2PL raises
+VAL-valid coverage from Raw MOOSE's 15.8\% to 97.3\% over 740 held-out
+seed--cases \cite{Chen2025MooseExtended}. Full GP2PL is complete on 14 of 16
+domains under every seed, and all \ChallengeSuccessCount{}/\ChallengeCaseCount{}
+registered structural challenges pass. Complete per-domain seed counts,
+challenge definitions, and failure analysis appear in the Technical Supplement,
+Sec.~5.3.
 
 \paragraph{Temporal composition.}
 Unprotected Serialization omits completion-effect analysis. Module-Return
@@ -72,49 +79,29 @@ Certified Balanced gains 9.36 points over Unprotected Serialization
 domains and two in Transport. Lower Module-Return coverage supports
 primitive-step observation.
 
-\subsection{Full-System Coverage and Robustness}
-\label{sec:full-system-results}
-
-\paragraph{Five-seed atomic robustness.}
-\label{sec:atomic-results}
-Across 80 domain--seed cores, mean held-out coverage is
-\AtomicFiveSeedMeanSuccessPercent{}\% $\pm$
-\AtomicFiveSeedSampleSDPercent{} percentage points
-(Table~\ref{tab:five-seed-atomic}). The other 14 domains succeed in all 5,635
-seed--case executions. Variation is confined to Logistics and Depots; the
-Technical Supplement analyzes their unresolved cyclic-producer and nested
-resource-choice patterns.
-
-\input{sections/result_five_seed_atomic_table}
-
-All \ChallengeSuccessCount{}/\ChallengeCaseCount{} registered structural
-challenges pass: seven test exact acceptance or rejection and six test
-invariance under symbol renaming, parameter permutation, object renaming, or
-irrelevant vocabulary, complementing held-out coverage without claiming
-certificate completeness.
-
-\paragraph{End-to-end temporal validation.}
+\subsection{End-to-End Temporal Validation}
 \label{sec:end-to-end-results}
-The paired ablation fixes one atomic core per domain; the selected compiler is
-additionally evaluated over all five seed-specific core sets. Its five profiles
-sample $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$, and execution includes
-only queries admitted to $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. All
-\TranslationEquivalentCount{}/\TranslationInputCount{} translations are
-DFA-language equivalent, and Certified Balanced validates
-\TemporalCrossSeedValidCount{}/\TemporalCrossSeedEvaluationCount{} executions:
-all \TemporalCrossSeedAllSeedValidQueryCount{} queries succeed under every seed,
-with invariant action counts for all
-\TemporalCrossSeedActionInvariantQueryCount{} queries (median two) and mean
-per-seed PAR-2 of
-\TemporalCrossSeedMeanParTwoSeconds{} $\pm$
-\TemporalCrossSeedParTwoSDSeconds{} seconds; trace length is descriptive, not an
-action-cost optimality claim. Across 740 same-seed added-family cases, GP2PL
-raises VAL-valid coverage from 15.8\% to 97.3\%; original-scope MOOSE results are
-separate \cite{Chen2025MooseExtended}. On the
-\ExternalDirectSupportedCount{} Boolean queries admitted by the direct
-FOND4LTLf reference, GP2PL validates
-\ExternalDirectSupportedCount{}/\ExternalDirectSupportedCount{} and FOND4LTLf
-with LAMA validates \ExternalDirectValidCount{} (supported-set PAR-2
-\ExternalDirectParTwoSeconds{} seconds) \cite{DeGiacomoFuggitti2021FOND4LTLf};
-the other \ExternalDirectUnsupportedCount{} inputs are outside its declared
-scope, making this a task reference rather than a compiler ablation.
+All \TranslationEquivalentCount{}/\TranslationInputCount{} translated
+specifications are DFA-language equivalent to their gold formulas. Across five
+independently compiled atomic-core sets, Certified Balanced validates all
+\TemporalCrossSeedValidCount{} admitted executions
+(\TemporalCrossSeedQueryCount{} queries under each seed), with no seed-sensitive
+query. Primitive-action counts are invariant across seeds, and mean per-seed
+PAR-2 is \TemporalCrossSeedMeanParTwoSeconds{} $\pm$
+\TemporalCrossSeedParTwoSDSeconds{} seconds. Breakdowns by temporal profile,
+runtime, and trace length appear in the Technical Supplement, Sec.~5.3.
+
+\paragraph{External task references.}
+On the same achievement corpus, LAMA validates
+\ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} classical instances and
+ENHSP MRP+HJ validates
+\ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} bounded-integer instances
+\cite{RichterWestphal2010LAMA,Scala2020NumericSubgoaling}; Full GP2PL averages
+\AtomicFiveSeedMeanSuccessPercent{}\% across all 1,228 held-out cases. Among the
+\ExternalDirectSupportedCount{} Boolean temporal queries admitted by FOND4LTLf,
+GP2PL validates all \ExternalDirectSupportedCount{} and FOND4LTLf with LAMA
+validates \ExternalDirectValidCount{} (PAR-2
+\ExternalDirectParTwoSeconds{} seconds) \cite{DeGiacomoFuggitti2021FOND4LTLf}.
+The other \ExternalDirectUnsupportedCount{} queries are outside its declared
+scope. Complete scope-separated results and protocols appear in the Technical
+Supplement, Sec.~5.3.

@@ -532,11 +532,12 @@ the evidence that answers it:
 
 After the protocol, present evidence in dependency order. First,
 paired component ablations identify which mechanisms change coverage or
-structure. Second, full-system results report five-seed atomic robustness and
-fixed-library temporal validation. Third, external planning references place
-those results in context. Use compact tables at the point where each claim is
-introduced. Do not add a dashboard-style empirical figure that duplicates
-endpoint values already reported exactly in those tables.
+structure; the atomic table reports coverage, branch count, and library size as
+mean plus or minus sample standard deviation across five seeds. Second,
+full-system prose reports five-seed selected-controller temporal validation.
+Third, concise external-reference prose places those results in context, while
+the complete scope-separated table remains in the Technical Supplement. Do not
+add a dashboard-style empirical figure that duplicates exact endpoint values.
 
 The registered atomic comparison is cumulative and paired on one exact
 normalized evidence hash:
@@ -660,12 +661,13 @@ holding the task-level planner fixed while comparing temporal compilations; it
 is not directly comparable until any future-LTLf-to-past-LTLf translation has
 been proved language-equivalent.
 
-The main result narrative may report the direct FOND4LTLf comparison only on
-the 492 Boolean queries accepted by its adapter, separating the other 736 inputs
-as unsupported. The pinned TIDE adapter now executes the persisted bound query
-through the official feedback, trace-heuristic, prefix-cache, and LAMA path and
-uses the same neutral-goal VAL and DFA oracles. Do not imply an empirical TIDE
-comparison until its complete same-scope matrix is run and frozen.
+The main result narrative reports concise scope-qualified endpoints for Raw
+MOOSE, LAMA, MRP+HJ, and FOND4LTLf. The direct FOND4LTLf comparison is restricted
+to the 492 Boolean queries accepted by its adapter, with the other 736 inputs
+separated as unsupported. The pinned TIDE adapter now executes the persisted
+bound query through the official feedback, trace-heuristic, prefix-cache, and
+LAMA path and uses the same neutral-goal VAL and DFA oracles. Do not imply an
+empirical TIDE comparison until its complete same-scope matrix is run and frozen.
 
 Repair only cases explicitly recorded as infrastructure failures in those
 complete 20-worker matrices. Run the exact repair set serially with one worker,
@@ -1406,11 +1408,10 @@ maximum transition-repair trigger fan-out
 Use the method names above directly. Do not replace them with numbered temporal
 variants or compressed one-letter oracle headings.
 
-The main paper uses a standalone evidence-to-library table for Raw MOOSE
-evidence and Full GP2PL on the identical 740 added-domain seed--case
-evaluations. It is separate from the compiler ablation because it compares
-provider execution with the final library on a narrower paired scope, rather
-than comparing compiler variants over all 16 domains. Keep
+The main paper reports the Raw MOOSE versus Full GP2PL result on the identical
+740 added-domain seed--case evaluations in prose beside the atomic compiler
+table. This comparison concerns provider execution versus the final library on
+a narrower paired scope, rather than compiler variants over all 16 domains. Keep
 MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a separate
 Technical-Supplement reference table with short columns such as `Method`,
 `Source`, `Scope`, `Coverage`, `Unsupported`, and `PAR-2`. Do not mix their
@@ -1444,23 +1445,14 @@ contract as an infrastructure failure, never as a method score.
 
 ### TEG Table
 
-### Main Five-Seed Atomic Table
+### Five-Seed Atomic Reporting
 
-The main paper reports one compact, non-pooled table:
-
-```text
-Scope | Cases per seed | Success-count range per seed |
-Coverage mean +/- sample standard deviation
-```
-
-Rows contain the complete 16-domain corpus, the transparent aggregate of
-domains that complete in every seed, and every remaining varying domain
-individually. The complete-domain set and varying-domain rows are computed from
-the frozen matrix rather than named in the generator. Values are mean $\pm$
-sample standard deviation over five independently compiled libraries
-($n=5$); the success range preserves the raw minimum and maximum. The Technical
-Supplement's domain--seed table preserves the complete within-domain
-distribution.
+The main atomic compiler table reports Valid, Branches, and KiB as mean $\pm$
+sample standard deviation over five independently compiled evidence seeds.
+Branches and KiB are per-seed totals over the 16 domain libraries. Do not add a
+second main-paper robustness table that repeats the Full GP2PL coverage cell.
+Main prose retains only the nonduplicate facts that 14 of 16 domains complete
+under every seed and that all registered structural challenges pass.
 
 The Technical Supplement contains `result_five_seed_atomic_domain_table.tex`,
 with raw Seed 0--4 counts and one combined mean $\pm$ sample-standard-deviation
@@ -1480,9 +1472,10 @@ Supplement.
 
 ### Failure and Rejection Reporting
 
-The main paper keeps the compact atomic table and reports five-seed temporal
-totals in prose. The Technical Supplement and machine-readable artifact preserve
-all raw domain--seed, per-profile, and paired-input values. The supplementary artifact should always
+The main paper keeps the atomic compiler table and reports five-seed temporal
+totals and scope-qualified external-reference endpoints in prose. The Technical
+Supplement and machine-readable artifact preserve all raw domain--seed,
+per-profile, paired-input, and external-reference values. The supplementary artifact should always
 keep translation errors, schema validation
 errors, unsupported DFA structure, certificate rejection, Jason failure,
 timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or
