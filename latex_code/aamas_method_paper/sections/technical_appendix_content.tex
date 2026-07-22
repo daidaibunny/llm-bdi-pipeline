@@ -1615,76 +1615,6 @@ Maven 3.9.11, Docker 28.5.1, and VAL revision \texttt{3c7a1f3}
 \cite{Howey2004VAL}. The Python dependency lockfile and external setup scripts
 specify the software environment used by the experiments.
 
-The external MOOSE comparison has two predeclared provenance scopes. For the
-twelve original MOOSE domains, we copy only the five-model mean planning
-coverage from Table~4 of arXiv \texttt{2511.11095v1}
-\cite{Chen2025MooseExtended}: 1079.6 of 1080 cases. For the four GP2PL-added
-domains, we execute the exact seed-specific Raw MOOSE models locally over five
-seeds and validate every nonempty returned plan with VAL. The reference record
-identifies the source table, its twelve per-domain means, and the disjoint
-1080-case published scope and 148-case local extension. The scopes are never
-selected per domain after execution.
-Published MOOSE time and memory are not combined with locally measured
-penalized average runtime, where a failure is charged twice the cutoff (PAR-2).
-
-The local coverage record is frozen at
-\texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
-\texttt{raw\_moose\_extension\_}
-\texttt{five\_seed\_summary.json}. It retains 740 portable case records, the
-declared five-seed protocol, and per-domain outcomes; run bookkeeping,
-machine-local paths, and commands are excluded. The seed-level
-valid-plan counts are 26, 23, 23, 25, and 20, giving 117 successes, 619 planner
-failures, and four timeouts over 740 evaluations. Per-domain five-seed means
-are 7.0/30 for Blocks Clear, 2.0/30 for Blocks On, 6.0/77 for Blocks Tower,
-and 8.4/11 for Depots. All five summaries completed with zero infrastructure
-failures. Coverage is interpreted on the declared case set under the recorded
-resource limits and requires a VAL-valid returned plan. Runtime is not used
-because the registered coverage
-protocol permits differing worker isolation and forbids cross-hardware timing
-comparison.
-
-The remaining task-level references are frozen in
-\texttt{external\_reference\_results.json} in the same release. The achievement
-matrix contains \ExternalAchievementValidCount{}/\ExternalAchievementCaseCount{}
-validated outcomes: \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} for LAMA
-on classical PDDL and \ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} for
-ENHSP MRP+HJ on numeric PDDL. Each direct temporal matrix retains all
-\ExternalDirectTotalCaseCount{} identifiers. FOND4LTLf supports
-\ExternalDirectSupportedCount{} and validates \ExternalDirectValidCount{};
-TIDE supports \ExternalTIDESupportedCount{} and validates
-\ExternalTIDEValidCount{}. Their unsupported inputs remain explicit rather than
-being counted as planning failures.
-
-The achievement-reference taxonomy is: LAMA has 591 valid plans, 249 planner
-failures, 24 timeouts, and four
-\texttt{no\_plan} records; MRP+HJ has 253 valid plans, 23 planner failures, and
-84 timeouts. The four LAMA \texttt{no\_plan} cases have goals true in the
-initial state, but the registered nonempty-plan wrapper does not credit a
-zero-action solution. The reported 591/868 row is therefore conservative by
-four cases.
-
-Within the 492 inputs accepted by the direct temporal adapter, FOND4LTLf with
-LAMA has 298 valid traces, 85 planner failures, and 109 compiler failures. The
-736 unsupported inputs comprise 360 numeric problems and 376 identifier-
-encoding rejections. The latter are an adapter boundary, not a limitation of
-the \ltlf{} semantics, so the row is interpreted only on its declared supported
-subset.
-
-TIDE with LAMA accepts all 868 Boolean inputs and yields 675 valid traces, 188
-\texttt{no\_plan} outcomes, and five timeouts. The remaining 360 inputs are
-explicitly unsupported numeric cases: 207 contain numeric formulae and 153 use
-numeric PDDL.
-
-The achievement and FOND4LTLf matrices used 20 case workers; TIDE used 12. The
-\ExternalAchievementRepairCount{} achievement and
-\ExternalDirectRepairCount{} direct-temporal infrastructure failures were
-rerun with one worker under the same case inputs, tool versions, limits, and
-validation contract. The local and remote systems have equivalent hardware
-configurations, and queue waiting is excluded from case runtime, so these
-repaired records remain eligible for PAR-2. Only cases classified as
-infrastructure failures are replaceable; planner failures, timeouts, unsupported
-inputs, compiler failures, and validation failures remain unchanged.
-
 \subsection{Parameters and Development Values}
 
 MOOSE defaults and synthesis budgets follow its published algorithm and
@@ -1728,16 +1658,11 @@ Method-defining constants were not selected on test performance.}
 \label{tab:parameters}
 \end{table*}
 
-All five MOOSE seeds use one internal worker and are compiled independently.
-Seed processes may be launched concurrently in isolated operating-system
-processes, but their evidence is never concatenated. The standalone five-seed
-Full GP2PL study uses eight validation workers, whereas every paired atomic and
-temporal ablation uses the registered six workers.
-
-The paired temporal ablation fixes one core per domain so controller variants
-receive identical inputs. The selected Certified Balanced controller is also
-evaluated with each of the five independently compiled core sets using six
-workers.
+Each MOOSE seed uses one internal worker and is compiled independently; isolated
+seed processes may run concurrently, but their evidence is never pooled. The
+standalone five-seed atomic study uses eight validation workers, while paired
+variants share one core per domain and use six; the selected controller is also
+evaluated over all five cores with six workers.
 
 \subsection{Metrics, Distribution, and Validation}
 
@@ -1774,32 +1699,58 @@ cross-seed selected-controller matrix repeats that partition without failures.
 
 \input{sections/result_profile_table}
 
+The MOOSE reference uses two predeclared, disjoint scopes. For the twelve
+original domains, it reports the five-model mean from Table~4 of arXiv
+\texttt{2511.11095v1} \cite{Chen2025MooseExtended}: 1079.6/1080. For the four
+GP2PL-added domains, the exact seed-specific Raw MOOSE models are executed
+locally over five seeds and every nonempty plan is checked by VAL. The local
+record, \path{raw_moose_extension_five_seed_summary.json}, contains 117
+valid plans, 619 planner failures, four timeouts, and no infrastructure failure
+over 740 evaluations; seed-level valid counts are 26, 23, 23, 25, and 20.
+Published MOOSE time and memory are not combined with local PAR-2 because the
+coverage protocol permits different worker isolation.
+
 \input{sections/result_moose_reference_table}
 
 \input{sections/result_external_reference_table}
 
 \paragraph{Instance-planner outcomes.}
+The remaining matrices are recorded in
+\texttt{external\_reference\_results.json}. Unsupported inputs remain explicit
+rather than being counted as planning failures.
 LAMA validates \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} classical
 instances, while MRP+HJ validates
 \ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} numeric instances. Their
 PAR-2 values are \ExternalLAMAParTwoSeconds{} and
 \ExternalMRPHJParTwoSeconds{} seconds. These rows cover disjoint fragments and
-are interpreted within scope rather than as a same-instance ranking.
+are interpreted within scope rather than as a same-instance ranking. LAMA has
+249 planner failures, 24 timeouts, and four \texttt{no\_plan} records; MRP+HJ
+has 23 planner failures and 84 timeouts. The four LAMA \texttt{no\_plan} cases
+have initially true goals, but the nonempty-plan wrapper does not credit a
+zero-action solution, making the reported LAMA result conservative by four.
 
 FOND4LTLf with LAMA supports \ExternalDirectSupportedCount{} of
 \ExternalDirectTotalCaseCount{} temporal queries and validates
 \ExternalDirectValidCount{}. The remaining
 \ExternalDirectUnsupportedCount{} inputs are unsupported rather than planner
-failures; this total includes both numeric PDDL outside the tool's scope and
-identifiers rejected by the current adapter encoding. Supported-set PAR-2 is
-\ExternalDirectParTwoSeconds{} seconds. Raw MOOSE extension runtime remains
-omitted under its coverage-only protocol. The evaluation records preserve the
-planner, compiler, timeout, and unsupported outcome taxonomy.
+failures: 360 are numeric and 376 have identifiers rejected by the adapter
+encoding. Among supported inputs, 85 are planner failures and 109 compiler
+failures; supported-set PAR-2 is \ExternalDirectParTwoSeconds{} seconds. The
+identifier boundary belongs to the adapter rather than \ltlf{} semantics.
 
 TIDE with LAMA supports all \ExternalTIDESupportedCount{} Boolean queries and
-validates \ExternalTIDEValidCount{}; its \ExternalTIDEUnsupportedCount{}
-numeric inputs remain unsupported. Supported-set PAR-2 is
+validates \ExternalTIDEValidCount{}, with 188 \texttt{no\_plan} outcomes and
+five timeouts. Its \ExternalTIDEUnsupportedCount{} numeric inputs comprise 207
+numeric formulas and 153 numeric PDDL problems; supported-set PAR-2 is
 \ExternalTIDEParTwoSeconds{} seconds.
+
+The achievement and FOND4LTLf matrices used 20 case workers and TIDE used 12.
+The \ExternalAchievementRepairCount{} achievement and
+\ExternalDirectRepairCount{} temporal infrastructure failures were rerun with
+one worker under the same inputs, tool versions, limits, and validation
+contract. Equivalent hardware and exclusion of queue waiting keep these records
+eligible for PAR-2. Only infrastructure failures are replaceable; all method
+failures and unsupported inputs remain unchanged.
 
 Diagnostic inspection localizes the variation at the method boundary. A provider
 macro is a
@@ -1891,14 +1842,6 @@ resource capacity, cyclic transition threats, forbidden negative completion,
 and exact terminal numeric progress. Six test invariance under predicate/action
 renaming, action-parameter permutation, evidence-object renaming, irrelevant
 static vocabulary, negative-guard renaming, and progress-relation renaming.
-
-The completed matrix pairs binary atomic success by seed, domain, and test, and
-binary temporal ablation success by query under identical inputs; the selected
-controller additionally has five-seed outcomes. The atomic sign test uses
-distinct case identifiers as its inferential unit. Temporal contrasts and
-cross-seed summaries are descriptive. The Balanced representation claim is
-structural rather than runtime-based, and continuous values carry no superiority
-test.
 
 \subsection{Reproduction Commands and File Map}
 

@@ -22,15 +22,11 @@ atomic module core $\mathcal M_D$ that later queries extend.
 \paragraph{Modular policies and BDI plan libraries.}
 Policy-reuse languages let one generalized policy invoke another with
 parameters \cite{Bonet2024PolicyReuse}, motivating internal calls such as
-\texttt{!clear(Y)}. Procedural BDI languages organize behavior as
-event-triggered plans selected from a context-dependent library
-\cite{MeneguzziDeSilva2015PlanningBDI,DeSilva2020BDIArchitectures,
-Rao1996AgentSpeak,Bordini2007Jason}, with declarative-goal rechecking
-\cite{Hubner2006DeclarativeGoals}, plan-failure handling
-\cite{Sardina2007PlanFailure}, and effect-summary interference analysis
-\cite{Thangarajah2003GoalInterference}. GP2PL adopts these execution
-principles and derives certified modules, completion summaries, and
-declarative completion controllers from planning evidence and PDDL schemas.
+\texttt{!clear(Y)}. BDI work also studies plan-failure handling
+\cite{Sardina2007PlanFailure} and effect-summary interference
+\cite{Thangarajah2003GoalInterference}. Building on these mechanisms, GP2PL
+derives certified modules, completion summaries, and declarative completion
+controllers from planning evidence and PDDL schemas.
 
 \paragraph{Finite-trace temporal control.}
 \ltlf{} admits automata-based reasoning \cite{DeGiacomoVardi2013}, which we

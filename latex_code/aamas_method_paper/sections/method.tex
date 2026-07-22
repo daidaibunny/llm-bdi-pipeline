@@ -4,15 +4,16 @@
 \subsection{Certification Boundaries}
 
 GP2PL separates deterministic input validation from two compiler certification
-stages. Atomic compilation first checks each candidate branch locally through
-$\operatorname{Cert}_D(b)$ and records its completion summary $\Sigma_b$. It
-then checks candidate sets globally for evidence and schema coverage,
-internal-call closure, and compatible progress and dependency ranks before
-selecting $\mathcal M_D$. Query compilation reuses the selected summaries to
-construct a transition certificate recording an occurrence-specific preservation
+stages. Atomic compilation checks every candidate branch locally through
+$\operatorname{Cert}_D(b)$, records its completion summary $\Sigma_b$, and
+retains the certified subset $\mathcal C^{\checkmark}_{D,E}$. Clingo then selects
+$\mathcal M_D$ from the feasible family whose members satisfy evidence and
+schema-achievement coverage, internal-call closure, and compatible progress and
+dependency ranks. Query compilation reuses the selected summaries to construct
+a transition certificate recording an occurrence-specific preservation
 portfolio $\boldsymbol\Pi_\chi$ and serialization $\boldsymbol\ell_\chi$ for each
-DFA guard $\chi$; it neither
-reopens atomic selection nor relearns $\mathcal M_D$.
+DFA progress guard $\chi$; it neither reopens atomic selection nor relearns
+$\mathcal M_D$.
 
 After these obligations pass, rendering preserves each selected trigger,
 context, ordered body, and internal-call edge. The Technical Supplement
@@ -218,9 +219,9 @@ internal subgoal expansion followed by schema-action execution.}
 A frozen language-model prompt receives one controlled natural-language request,
 its declared typed parameters and constraints, and the public PDDL catalogue. The
 language model returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
-query formula and a one-to-one proposition table. A formula without $F$, $X$, or
-$U$ is an ordinary achievement query; a formula using one of these operators is
-a TEG. Deterministic validation rejects
+query formula and a one-to-one proposition table. The result is interpreted under
+the achievement-query and TEG classes defined in Sec.~\ref{sec:background}.
+Deterministic validation rejects
 undeclared symbols, wrong arities or types, unsupported operators, incomplete
 atom tables, and altered parameter constraints; it neither grounds parameters
 nor selects actions or objects. Query invocation later supplies $\theta_q$. For
@@ -229,19 +230,15 @@ language-equivalence testing; this oracle is not an online input requirement. Th
 complete prompt and translation protocol appear in the Technical Supplement,
 Sec.~4.
 
-Figure~\ref{fig:compiler-stages}(b) summarizes the query-specific path from a
-bound query and its DFA progress guard to a certified transition-repair tree and
-appended query plans.
+Figure~\ref{fig:compiler-stages}(b) follows a bound query through its MONA DFA,
+singleton and conjunctive progress-edge certification, query-local repair
+controllers, and the top-level dispatcher that joins them in $\mathcal Q_q$.
 
 \paragraph{Achievement completion embedding.}
-Let $\varphi_q$ be the bound query formula. If
-$\varphi_q\in\Phi_{\mathrm{ach}}$, GP2PL compiles $F\varphi_q$ and returns when
-the DFA first accepts, so the controller ends satisfying
-$\varphi_q$; if $\varphi_q$ is a TEG, it is compiled unchanged. Both cases then
-pass through the same DFA construction stage and progress-edge certification,
-then use the same runtime monitor and transition-repair controller. The
-completion embedding therefore
-neither introduces a separate wrapper nor bypasses the DFA path.
+GP2PL uses the execution formula defined in Sec.~\ref{sec:background}:
+$F\varphi_q$ for achievement queries and $\varphi_q$ otherwise. Both classes
+share DFA construction, progress-edge certification, runtime monitoring, and
+transition repair; no separate achievement path is introduced.
 
 \paragraph{Progress-edge compilation.}
 Given the validated bound query $\widehat\tau_q$ and DFA $\mathcal D_q$ of its
