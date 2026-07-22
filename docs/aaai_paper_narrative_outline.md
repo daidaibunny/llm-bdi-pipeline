@@ -275,7 +275,9 @@ software components.
    complete certificate inventory to the Method.
 3. Explain why a temporally extended goal (TEG), meaning a goal over a finite
    state trace, cannot generally be replaced by an arbitrary sequence of
-   achievement calls.
+   achievement calls. Keep the Introduction at this level; defer LTLf syntax,
+   DFA guards, monitor boundaries, and individual certificates to the formal
+   sections.
 4. Keep Figure 1 at the representation-boundary level: domain and provider
    evidence compile once into `M_D`, while each bound temporal query appends
    `Q_q` to the maintained library. Introduce the Blocks running example only
@@ -986,13 +988,11 @@ Figure 1. Those details belong in Figure 2, the algorithms, and Evaluation.
 Draft caption:
 
 > **Figure 1:** GP2PL separates reusable domain compilation from query-specific
-> temporal compilation. An external generalized-planning backend derives raw
-> singleton-goal evidence $\mathcal E_{\mathrm{raw}}$ from domain $D$ and training
-> instances $\mathcal I_{\mathrm{train}}$. Validated policy lifting compiles these
-> inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$. A typed controlled-language
-> front end produces $\tau_q$, and an external type-consistent binding $\theta_q$
-> forms $\widehat{\tau}_q$; DFA-guided compilation maps it to query-local plans
-> $\mathcal Q_q$, updating the sole library by
+> temporal compilation. From domain $D$, training instances
+> $\mathcal I_{\mathrm{train}}$, and external singleton-goal evidence
+> $\mathcal E_{\mathrm{raw}}$, it compiles one atomic core
+> $\mathcal M_D=\mathcal L_D^{[0]}$. Each bound TEG $\widehat{\tau}_q$ yields
+> query-local plans $\mathcal Q_q$, updating the sole maintained library by
 > $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
 
 ### Figure 2: Inside the Two GP2PL Compiler Stages

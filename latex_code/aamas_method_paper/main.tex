@@ -88,20 +88,18 @@ and belief contexts to actions and subsidiary goals
 different contracts: singleton-goal policy evidence need not provide the
 callable, context-indexed modules required by a maintained BDI library.
 
-Consider a typed planning domain $D$ and training instances
-$\mathcal I_{\mathrm{train}}$. An external generalized-planning backend produces
-a raw singleton-goal evidence artifact $\mathcal E_{\mathrm{raw}}$; at the
-compiler interface, normalization maps it to rules relating a partial state and
-one achievement to a PDDL action macro. This evidence is not yet an atomic
-plan-library core: it may omit producible achievements needed by internal calls,
-and its macros need not form a callable, executable, or terminating module set.
+Consider a planning domain $D$, training instances
+$\mathcal I_{\mathrm{train}}$, and raw singleton-goal policy evidence
+$\mathcal E_{\mathrm{raw}}$ produced by an external generalized-planning backend.
+Such evidence records how individual achievements can be reached under
+particular conditions, but need not supply every subsidiary module or the
+composition guarantees required by an executable BDI library.
 
-GP2PL addresses this representation-compilation gap as shown in
-Figure~\ref{fig:architecture}. It lifts the evidence, constructs schema-derived
-candidates, certifies the joint candidate set, and selects a compact, internally
-closed atomic core once per domain. It then extends the same library with a
-controller for each bound temporal query; the external backend is neither
-replaced nor rerun.
+GP2PL addresses this representation gap as shown in
+Figure~\ref{fig:architecture}. It compiles the evidence once into a certified,
+reusable atomic module core, then reuses that core when compiling each bound
+temporally extended goal (TEG) \cite{Hindriks2009TemporalGoals} into the same
+maintained library. The external backend is neither replaced nor rerun.
 
 \begin{figure}[htbp]
 \centering
@@ -114,26 +112,23 @@ Single-column GP2PL overview\\
 Domain compilation $+$ query-specific temporal compilation}}
 }
 \caption{GP2PL separates reusable domain compilation from query-specific
-temporal compilation. An external generalized-planning backend derives raw
-singleton-goal evidence $\mathcal E_{\mathrm{raw}}$ from domain $D$ and training
-instances $\mathcal I_{\mathrm{train}}$. Validated policy lifting compiles these
-inputs once into $\mathcal M_D=\mathcal L_D^{[0]}$. A typed controlled-language
-front end produces $\tau_q$, and an external type-consistent binding $\theta_q$
-forms $\widehat{\tau}_q$; DFA-guided compilation maps it to query-local plans
-$\mathcal Q_q$, updating the sole library by
+temporal compilation. From domain $D$, training instances
+$\mathcal I_{\mathrm{train}}$, and external singleton-goal evidence
+$\mathcal E_{\mathrm{raw}}$, it compiles one atomic core
+$\mathcal M_D=\mathcal L_D^{[0]}$. Each bound TEG $\widehat{\tau}_q$ yields
+query-local plans $\mathcal Q_q$, updating the sole maintained library by
 $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 \label{fig:architecture}
 \end{figure}
 
-Temporally extended requests add a second representation gap
-\cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. The input contract must
-preserve typed external parameters in parametric \ltlf{}, while conjunctive DFA
-guards may contain achievements that interfere and safety-sensitive formulas
-require observation within atomic modules \cite{Thangarajah2003GoalInterference}.
-GP2PL certifies a preservation-safe realization of each admitted progress guard,
-monitors the DFA after primitive actions, and appends the resulting controller
-without relearning the core. Figure~\ref{fig:compiler-stages} details both
-compiler stages.
+A TEG constrains a finite state trace rather than only a final state
+\cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. Conditions required
+along that trace may interfere, so an arbitrary sequence of achievement calls
+need not preserve the intended temporal behavior
+\cite{Thangarajah2003GoalInterference}. GP2PL instead composes a query-local
+controller from the reusable core, rejects compositions it cannot justify, and
+appends accepted controllers without relearning the core.
+Figure~\ref{fig:compiler-stages} details both compiler stages.
 
 \begin{figure*}[t!]
 \centering
@@ -155,12 +150,12 @@ renders the certified order as a balanced transition-repair tree.}
 \label{fig:compiler-stages}
 \end{figure*}
 
-GP2PL makes four contributions: a typed controlled-language-to-parametric-\ltlf{}
-contract and benchmark with exact DFA-language evaluation; an internally closed
-BDI core compiled from singleton-goal evidence and PDDL schemas, including
-omitted producible subgoals; compile-time certificates for binding, execution,
-achievement, completion effects, and progress; and preservation-safe
-finite-trace controllers that monitor DFA progress after each primitive action.
+GP2PL makes four contributions: a typed controlled-language contract and
+benchmark for bound TEGs with exact semantic translation evaluation; an
+evidence-to-library compiler that supplies omitted producible subgoals and
+selects a compact, internally closed atomic core; certificate conditions for
+executable, terminating, and composable modules; and query-specific temporal
+controllers that reuse and extend one maintained BDI library.
 
 \input{sections/background}
 \input{sections/related_work}
