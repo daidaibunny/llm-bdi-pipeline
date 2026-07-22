@@ -11,9 +11,10 @@ MOOSE & Reported & Original MOOSE domains, five seeds & 1079.6/1080 & 0 & -- \\
 Raw MOOSE extension & Measured & Added domains, five seeds & 23.4 $\pm$ 2.3/148 & 0 & -- \\
 LAMA & Measured & Classical achievement & 591/868 & 0 & 1178.4 \\
 MRP+HJ & Measured & Numeric achievement & 253/360 & 0 & 1127.4 \\
-FOND4LTLf + LAMA & Measured & Supported Boolean TEG & 298/492 & 736 & 1457.5 \\
+FOND4LTLf + LAMA & Measured & FOND4LTLf-admitted Boolean TEG & 298/492 & 736 & 1457.5 \\
+TIDE + LAMA & Measured & All Boolean TEG & 675/868 & 360 & 821.0 \\
 \bottomrule
 \end{tabular}
-\caption{Scope-separated external planning references. Reported MOOSE coverage is copied from Table~4 of the five-seed extended paper~\cite{Chen2025MooseExtended}; its runtime is not compared with local measurements. Measured rows use a 1,800-second, 8-GiB per-task budget, and PAR-2 charges nonvalid supported cases twice the cutoff. Raw MOOSE extension coverage is mean $\pm$ sample standard deviation over five seeds; its runtime is omitted by protocol. FOND4LTLf unsupported inputs are excluded from its coverage denominator and separated from planner and compiler failures. Rows with different scopes are not ranked.}
+\caption{Scope-separated external planning references. Reported MOOSE coverage is copied from Table~4 of the five-seed extended paper~\cite{Chen2025MooseExtended}; its runtime is not compared with local measurements. Measured rows use a 1,800-second, 8-GiB per-task budget, and PAR-2 charges nonvalid supported cases twice the cutoff. Raw MOOSE extension coverage is mean $\pm$ sample standard deviation over five seeds; its runtime is omitted by protocol. Direct temporal references exclude unsupported inputs from their coverage denominator and report them separately from planning failures. Rows with different scopes are not ranked.}
 \label{tab:external-references}
 \end{table*}

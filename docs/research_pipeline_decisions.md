@@ -102,6 +102,13 @@ transitive calls. Primitive PDDL actions are not internal achievement calls.
 Do not use the unqualified phrase `schema closure` for both target expansion and
 this selection obligation.
 
+Use **certificate** only for a finite witness checked before emission, such as a
+symbolic-progression derivation, ranking function, resource-discharge path, or
+preservation order. **Certification** is the process that checks all applicable
+soundness conditions using those witnesses; **certified** denotes an artifact
+that passes every required check. `Cert_D(b)` is the branch-certification
+predicate, not the certificate object itself.
+
 ## Canonical Formal Notation
 
 The manuscript, supplement, figures, and paper-facing reports use one symbol
@@ -137,7 +144,7 @@ for each semantic object:
   certificate. Its labelled edges are target-preserving symbolic action-schema
   transitions between alpha-normalized occupancy modes.
 - `C_D^nr(E)` is the nonrecursive action-schema-derived obligation set and
-  `realizes_D(b,c)` its certified schema-achievement relation.
+  `realizes_D(b,c)` its schema-achievement relation.
   `C^check_{D,E}` is the certified candidate set. `Omega_{D,E}` contains
   evidence coverage, nonrecursive schema-achievement coverage, preparation
   acyclicity, and recursive-ranking compatibility;
@@ -167,7 +174,7 @@ for each semantic object:
   typographically distinct.
 
 Use the academic terms `action-schema candidate generation`, `candidate
-soundness certificate`, `conditional module-completion summary`,
+certification`, `conditional module-completion summary`,
 `target-preserving resource discharge`, `ranked cross-module precondition
 repair`, `preservation portfolio`, `joint guard-establishment certificate`, and
 `balanced binary transition-repair tree`. Do not use `schema closure`, bare
@@ -426,8 +433,8 @@ LAMA case mounts a private `/work/out` directory. FOND4LTLf keeps the pinned
 path into a per-case directory. These two isolation boundaries remove the prior
 host-wide runtime locks while retaining the pinned planners. The registered
 remote LAMA/MRP+HJ and direct FOND4LTLf reference matrices use 20 case workers;
-the already registered paired compiler and local Raw MOOSE extension matrices
-retain six.
+the complete TIDE matrix uses 12, and the paired compiler and local Raw MOOSE
+extension matrices retain six.
 Runs with more than one MOOSE-backed worker fail before scheduling if the
 hash-checked sandbox is absent. `--resume` reuses scientific planner outcomes
 but retries infrastructure failures.
@@ -519,11 +526,11 @@ tables; per-profile, per-domain, per-seed, runtime, and diagnostic views belong
 in the Technical Supplement. The main paper reports the identical 740
 added-domain seed--case comparison with Raw MOOSE and the 492 Boolean temporal
 queries accepted by the direct FOND4LTLf adapter; unsupported inputs remain
-separate. The complete scope-separated MOOSE, LAMA, MRP+HJ, and FOND4LTLf
-matrix remains in the Technical Supplement, avoiding a cross-scope ranking and
-a page-breaking double-column float. The pinned TIDE adapter is executable
-locally, but it remains a related-work comparison until a complete same-scope
-matrix has been run and frozen; do not imply an empirical TIDE result earlier.
+separate. The complete scope-separated MOOSE, LAMA, MRP+HJ, FOND4LTLf, and
+TIDE matrix remains in the Technical Supplement, avoiding a cross-scope
+ranking and a page-breaking double-column float. TIDE admits all 868 Boolean
+queries and validates 675; its 360 numeric inputs remain explicitly
+unsupported.
 
 Machine-readable artifacts retain stable identifiers such as
 `validated_evidence_adapter` and `certified_balanced`. Manuscript tables and
@@ -552,7 +559,8 @@ compiler result, the checked
 `paper_artifacts/gp2pl_evaluation/v1/moose_published_reference.json`, five
 separately assigned four-domain Raw MOOSE extension summaries, one native
 LAMA/MRP+HJ summary, one FOND4LTLf plus LAMA summary, and one clean challenge
-matrix. It rejects missing seeds or variants, mismatched case sets, incomplete
+matrix, while the external-reference freeze additionally requires one complete
+TIDE plus LAMA summary. It rejects missing seeds or variants, mismatched case sets, incomplete
 pairing, and infrastructure failures. The published-reference artifact fixes
 the arXiv version, table number, per-domain means, and three immutable scope
 contracts: 1,080 original MOOSE cases, 148 locally measured extension cases,
@@ -564,7 +572,7 @@ rejects omissions, duplicates, or substitutions even if every compared method
 made the same mistake. It binds each local Raw MOOSE extension run to its
 declared seed and evidence assignment,
 checks six workers for the paired compiler and Raw MOOSE extension matrices, 20 workers
-for the remote LAMA/MRP+HJ and direct FOND4LTLf matrices, the common
+for the remote LAMA/MRP+HJ and direct FOND4LTLf matrices, 12 for TIDE, the common
 1,800-second and 8-GiB external-planner limits, and the paired compiler's
 64-MiB Java stack. When an external matrix contains an infrastructure repair,
 it additionally requires an exact one-worker retry set, unchanged inputs,
@@ -575,8 +583,8 @@ successes. LaTeX cells and the compact release JSON are generated from those
 checked artifacts; aggregate values are never typed into the manuscript by hand.
 The independently generated external-reference release is
 `paper_artifacts/gp2pl_evaluation/v1/external_reference_results.json`. It
-contains 2,456 portable case records: the complete 1,228-case achievement
-matrix and complete 1,228-case direct temporal matrix. It can be frozen before
+contains 3,684 portable case records: the complete 1,228-case achievement
+matrix and separate complete 1,228-case FOND4LTLf and TIDE temporal matrices. It can be frozen before
 the paired compiler matrix completes, but the final combined comparison
 generator must reproduce its external rows exactly.
 The paired compiler release is
@@ -1326,8 +1334,8 @@ preparation branch. Predicate preparation strictly reduces the number of
 missing positive producer preconditions. Numeric preparation strictly reduces
 the prerequisite deficit, leaves the target numeric fluent unchanged, and
 preserves the producer's other preconditions. The resulting ranking is
-lexicographic and is persisted in the candidate soundness certificate; no fluent or action
-name is recognized.
+lexicographic and is persisted in the candidate's certification record; no
+fluent or action name is recognized.
 
 For an Until source state, literals common to all waiting self-loop cubes are
 source invariants. The current action-strategy fragment requires one positive

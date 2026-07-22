@@ -12,6 +12,7 @@ import statistics
 import sys
 from typing import Any
 from typing import Mapping
+from typing import Sequence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -35,6 +36,9 @@ from scripts.generate_aaai_comparison_tables import (  # noqa: E402
 	_validate_external_reference_protocol,
 )
 from scripts.generate_aaai_comparison_tables import (  # noqa: E402
+	_validate_direct_temporal_toolchain,
+)
+from scripts.generate_aaai_comparison_tables import (  # noqa: E402
 	_validate_published_moose_reference,
 )
 from scripts.generate_aaai_comparison_tables import render_external_table  # noqa: E402
@@ -50,6 +54,11 @@ DEFAULT_DIRECT_SUMMARY = (
 	PROJECT_ROOT
 	/ "artifacts/direct_temporal_references/"
 	/ "aaai-direct-temporal-72b0604f/summary.json"
+)
+DEFAULT_TIDE_SUMMARY = (
+	PROJECT_ROOT
+	/ "artifacts/direct_temporal_references/"
+	/ "tide-paper-full-c3f7c57a-barman-merged/summary.json"
 )
 DEFAULT_RAW_MOOSE_RESULT = (
 	PROJECT_ROOT
@@ -81,6 +90,10 @@ MRPHJ_CONTRACT = {
 TEMPORAL_CONTRACT = {
 	"count": 1228,
 }
+REGISTERED_TIDE_NUM_WORKERS = 12
+PINNED_TIDE_REVISION = "9bdd247752817352714eac115ea6b78d90f26c09"
+PINNED_MONA_SHA256 = "7a25d22766e6f0d9db58fe6e1af7c37e8127242c539272d5d8f337b8b8fc0e2d"
+REGISTERED_TIDE_CONFIGURATION = "feedback+trace-heuristic+prefix-cache+lama-first"
 REPAIR_CONTRACTS = {
 	"achievement": {
 		"count": 9,
@@ -95,6 +108,7 @@ def build_external_reference_dataset(
 	*,
 	instance_summary_file: str | Path,
 	direct_summary_file: str | Path,
+	tide_summary_file: str | Path,
 	raw_moose_result_file: str | Path,
 	published_reference_file: str | Path,
 	benchmark_file: str | Path,
@@ -103,11 +117,13 @@ def build_external_reference_dataset(
 
 	instance_path = Path(instance_summary_file).expanduser().resolve()
 	direct_path = Path(direct_summary_file).expanduser().resolve()
+	tide_path = Path(tide_summary_file).expanduser().resolve()
 	raw_path = Path(raw_moose_result_file).expanduser().resolve()
 	published_path = Path(published_reference_file).expanduser().resolve()
 	benchmark_path = Path(benchmark_file).expanduser().resolve()
 	instance = _read_json(instance_path)
 	direct = _read_json(direct_path)
+	tide = _read_json(tide_path)
 	raw_moose = _read_json(raw_path)
 	published = _read_json(published_path)
 	benchmark = _read_json(benchmark_path)
@@ -116,6 +132,7 @@ def build_external_reference_dataset(
 	_validate_raw_moose_result(raw_moose)
 	_validate_clean_success(instance, label="instance references")
 	_validate_clean_success(direct, label="direct temporal reference")
+	_validate_clean_success(tide, label="TIDE temporal reference")
 	_validate_external_reference_protocol(
 		instance,
 		label="instance references",
@@ -127,15 +144,28 @@ def build_external_reference_dataset(
 		direct_temporal=True,
 		expected_num_workers=REGISTERED_REMOTE_REFERENCE_NUM_WORKERS,
 	)
+	_validate_direct_temporal_toolchain(direct)
+	_validate_external_reference_protocol(
+		tide,
+		label="TIDE temporal reference",
+		direct_temporal=True,
+		expected_num_workers=REGISTERED_TIDE_NUM_WORKERS,
+	)
+	_validate_tide_temporal_toolchain(tide)
 
 	_validate_achievement_case_sets(instance)
 	_validate_temporal_case_set(
 		direct,
 		benchmark=benchmark,
 	)
+	_validate_temporal_case_set(
+		tide,
+		benchmark=benchmark,
+	)
 	rows = _external_rows(
 		instance=instance,
 		direct=direct,
+		tide=tide,
 		raw_moose=raw_moose,
 		published=published,
 	)
@@ -149,38 +179,50 @@ def build_external_reference_dataset(
 				_portable_direct_record(record)
 				for record in direct.get("results") or ()
 			),
+			*(
+				_portable_direct_record(record)
+				for record in tide.get("results") or ()
+			),
 		),
 		key=lambda record: (
 			str(record["record_kind"]),
+			str(record["method"]),
 			str(record["case_id"]),
 		),
 	)
-	if len(records) != 2456:
+	if len(records) != 3684:
 		raise ValueError(f"portable external record count mismatch: {len(records)}")
 	result = {
 		"artifact_kind": "gp2pl_external_reference_results",
-		"schema_version": 1,
+		"schema_version": 2,
 		"protocol": {
 			"achievement_case_count": ACHIEVEMENT_UNION_CONTRACT["count"],
-			"temporal_case_count": TEMPORAL_CONTRACT["count"],
+			"temporal_case_count_per_method": TEMPORAL_CONTRACT["count"],
 			"record_count": len(records),
 			"primary_num_workers": REGISTERED_REMOTE_REFERENCE_NUM_WORKERS,
+			"tide_num_workers": REGISTERED_TIDE_NUM_WORKERS,
 			"repair_num_workers": 1,
 			"timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
 			"max_rss_gb": REGISTERED_MAX_RSS_GB,
 			"plan_verifier_timeout_seconds": REGISTERED_TIMEOUT_SECONDS,
 			"hardware_equivalence_confirmed_by_experiment_owner": True,
 			"runtime_measurement_excludes_queue_wait": True,
-			"par2_allowed_methods": ["LAMA", "MRP+HJ", "FOND4LTLf + LAMA"],
+			"par2_allowed_methods": [
+				"LAMA",
+				"MRP+HJ",
+				"FOND4LTLf + LAMA",
+				"TIDE + LAMA",
+			],
 			"raw_moose_runtime_comparison_allowed": False,
 		},
 		"case_contracts": {
 			"achievement_union": dict(ACHIEVEMENT_UNION_CONTRACT),
 			"lama": dict(LAMA_CONTRACT),
 			"enhsp_hmrphj": dict(MRPHJ_CONTRACT),
-			"temporal": dict(TEMPORAL_CONTRACT),
+			"fond4ltlf_temporal": dict(TEMPORAL_CONTRACT),
+			"tide_temporal": dict(TEMPORAL_CONTRACT),
 			"achievement_repair": dict(REPAIR_CONTRACTS["achievement"]),
-			"direct_temporal_repair": dict(REPAIR_CONTRACTS["direct_temporal"]),
+			"fond4ltlf_repair": dict(REPAIR_CONTRACTS["direct_temporal"]),
 		},
 		"rows": rows,
 		"status_counts": {
@@ -192,14 +234,20 @@ def build_external_reference_dataset(
 					).items(),
 				),
 			),
-			"direct_temporal": dict(
-				sorted(
-					Counter(
-						str(record.get("status") or "")
-						for record in direct.get("results") or ()
-					).items(),
-				),
-			),
+			"direct_temporal_by_method": {
+				method: dict(
+					sorted(
+						Counter(
+							str(record.get("status") or "")
+							for record in payload.get("results") or ()
+						).items(),
+					),
+				)
+				for method, payload in (
+					("FOND4LTLf + LAMA", direct),
+					("TIDE + LAMA", tide),
+				)
+			},
 		},
 		"records": records,
 	}
@@ -286,10 +334,50 @@ def _validate_temporal_case_set(
 		raise ValueError("direct temporal benchmark identity changed")
 
 
+def _validate_tide_temporal_toolchain(payload: Mapping[str, Any]) -> None:
+	if payload.get("method") != "TIDE + LAMA" or payload.get("variant") != "tide_lama":
+		raise ValueError("TIDE temporal reference has an unexpected method identity")
+	parameters = dict(payload.get("parameters") or {})
+	if (
+		str(parameters.get("tide_configuration") or "")
+		!= REGISTERED_TIDE_CONFIGURATION
+		or int(parameters.get("tide_internal_runs_per_case") or 0) != 1
+		or int(parameters.get("tide_subproblem_timeout_ms") or 0) != 60_000
+	):
+		raise ValueError("TIDE temporal reference changes the registered search protocol")
+	toolchain = dict(payload.get("toolchain") or {})
+	tide = dict(toolchain.get("tide") or {})
+	mona = dict(toolchain.get("mona") or {})
+	if str(tide.get("pinned_revision") or "") != PINNED_TIDE_REVISION:
+		raise ValueError("TIDE temporal reference does not use the pinned revision")
+	if dict(tide.get("configuration") or {}) != {
+		"feedback": True,
+		"pddl_symbol_encoding": "category_scoped_hex_v1",
+		"planner": "fast-downward",
+		"prefix_cache": True,
+		"search": "lama-first",
+		"trace_heuristic": True,
+		"type_declaration_order": "parent_before_child",
+	}:
+		raise ValueError("TIDE temporal reference changes the pinned configuration")
+	if (
+		str(mona.get("version") or "") != "1.4-18"
+		or str(mona.get("executable_sha256") or "") != PINNED_MONA_SHA256
+	):
+		raise ValueError("TIDE temporal reference does not use the pinned MONA oracle")
+	methods = {str(record.get("method") or "") for record in payload.get("results") or ()}
+	variants = {
+		str(record.get("variant") or "") for record in payload.get("results") or ()
+	}
+	if methods != {"TIDE + LAMA"} or variants != {"tide_lama"}:
+		raise ValueError("TIDE temporal records have inconsistent method identities")
+
+
 def _external_rows(
 	*,
 	instance: Mapping[str, Any],
 	direct: Mapping[str, Any],
+	tide: Mapping[str, Any],
 	raw_moose: Mapping[str, Any],
 	published: Mapping[str, Any],
 ) -> list[dict[str, Any]]:
@@ -337,27 +425,59 @@ def _external_rows(
 			("MRP+HJ", "Numeric achievement"),
 		)
 	)
-	direct_records = tuple(dict(record) for record in direct.get("results") or ())
-	supported = [record for record in direct_records if record.get("supported") is True]
-	valid = [record for record in supported if _direct_temporal_valid(record)]
-	rows.append(
-		{
-			"method": "FOND4LTLf + LAMA",
-			"source": "Measured",
-			"scope": "Supported Boolean TEG",
-			"case_count": len(supported),
-			"supported_case_count": len(supported),
-			"unsupported_case_count": len(direct_records) - len(supported),
-			"valid_trace_count": len(valid),
-			"par2_seconds": statistics.mean(
-				float(record.get("elapsed_seconds") or 0.0)
-				if _direct_temporal_valid(record)
-				else float(2 * REGISTERED_TIMEOUT_SECONDS)
-				for record in supported
+	rows.extend(
+		(
+			_direct_temporal_row(
+				method="FOND4LTLf + LAMA",
+				scope="FOND4LTLf-admitted Boolean TEG",
+				records=tuple(dict(record) for record in direct.get("results") or ()),
 			),
-		},
+			_direct_temporal_row(
+				method="TIDE + LAMA",
+				scope="All Boolean TEG",
+				records=tuple(dict(record) for record in tide.get("results") or ()),
+			),
+		),
 	)
 	return rows
+
+
+def _direct_temporal_row(
+	*,
+	method: str,
+	scope: str,
+	records: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+	supported = [record for record in records if record.get("supported") is True]
+	valid = [record for record in supported if _frozen_direct_temporal_valid(record)]
+	return {
+		"method": method,
+		"source": "Measured",
+		"scope": scope,
+		"case_count": len(supported),
+		"supported_case_count": len(supported),
+		"unsupported_case_count": len(records) - len(supported),
+		"valid_trace_count": len(valid),
+		"par2_seconds": (
+			statistics.mean(
+				float(record.get("elapsed_seconds") or 0.0)
+				if _frozen_direct_temporal_valid(record)
+				else float(2 * REGISTERED_TIMEOUT_SECONDS)
+				for record in supported
+			)
+			if supported
+			else None
+		),
+	}
+
+
+def _frozen_direct_temporal_valid(record: Mapping[str, Any]) -> bool:
+	validation = dict(record.get("execution_validation") or {})
+	return (
+		_direct_temporal_valid(record)
+		and validation.get("replay_valid") is True
+		and validation.get("prediction_accepted") is True
+	)
 
 
 def _portable_achievement_record(record: Mapping[str, Any]) -> dict[str, Any]:
@@ -395,7 +515,7 @@ def _portable_direct_record(record: Mapping[str, Any]) -> dict[str, Any]:
 		"grounded_formula": str(record.get("grounded_formula") or ""),
 		"status": str(record.get("status") or ""),
 		"supported": record.get("supported") is True,
-		"valid": _direct_temporal_valid(record),
+		"valid": _frozen_direct_temporal_valid(record),
 		"action_count": int(record.get("action_count") or 0),
 		"compiled_action_count": int(record.get("compiled_action_count") or 0),
 		"elapsed_seconds": float(record.get("elapsed_seconds") or 0.0),
@@ -440,9 +560,10 @@ def render_external_reference_macros(result: Mapping[str, Any]) -> str:
 	lama = rows["LAMA"]
 	mrphj = rows["MRP+HJ"]
 	direct = rows["FOND4LTLf + LAMA"]
+	tide = rows["TIDE + LAMA"]
 	contracts = dict(result["case_contracts"])
 	achievement_repair_count = int(dict(contracts["achievement_repair"])["count"])
-	direct_repair_count = int(dict(contracts["direct_temporal_repair"])["count"])
+	direct_repair_count = int(dict(contracts["fond4ltlf_repair"])["count"])
 	return "\n".join(
 		(
 			"% Auto-generated by scripts/freeze_external_reference_results.py.",
@@ -462,6 +583,12 @@ def render_external_reference_macros(result: Mapping[str, Any]) -> str:
 			"\\newcommand{\\ExternalDirectTotalCaseCount}"
 			f"{{{direct['supported_case_count'] + direct['unsupported_case_count']}}}",
 			f"\\newcommand{{\\ExternalDirectParTwoSeconds}}{{{direct['par2_seconds']:.1f}}}",
+			f"\\newcommand{{\\ExternalTIDEValidCount}}{{{tide['valid_trace_count']}}}",
+			f"\\newcommand{{\\ExternalTIDESupportedCount}}{{{tide['supported_case_count']}}}",
+			f"\\newcommand{{\\ExternalTIDEUnsupportedCount}}{{{tide['unsupported_case_count']}}}",
+			"\\newcommand{\\ExternalTIDETotalCaseCount}"
+			f"{{{tide['supported_case_count'] + tide['unsupported_case_count']}}}",
+			f"\\newcommand{{\\ExternalTIDEParTwoSeconds}}{{{tide['par2_seconds']:.1f}}}",
 			"\\newcommand{\\ExternalAchievementRepairCount}"
 			f"{{{achievement_repair_count}}}",
 			"\\newcommand{\\ExternalDirectRepairCount}"
@@ -541,6 +668,7 @@ def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--instance-summary", type=Path, default=DEFAULT_INSTANCE_SUMMARY)
 	parser.add_argument("--direct-summary", type=Path, default=DEFAULT_DIRECT_SUMMARY)
+	parser.add_argument("--tide-summary", type=Path, default=DEFAULT_TIDE_SUMMARY)
 	parser.add_argument("--raw-moose-result", type=Path, default=DEFAULT_RAW_MOOSE_RESULT)
 	parser.add_argument(
 		"--published-reference",
@@ -563,6 +691,7 @@ def main() -> int:
 	result = build_external_reference_dataset(
 		instance_summary_file=args.instance_summary,
 		direct_summary_file=args.direct_summary,
+		tide_summary_file=args.tide_summary,
 		raw_moose_result_file=args.raw_moose_result,
 		published_reference_file=args.published_reference,
 		benchmark_file=args.benchmark,
@@ -581,6 +710,8 @@ def main() -> int:
 		f"{rows['MRP+HJ']['case_count']} "
 		f"direct={rows['FOND4LTLf + LAMA']['valid_trace_count']}/"
 		f"{rows['FOND4LTLf + LAMA']['supported_case_count']} "
+		f"tide={rows['TIDE + LAMA']['valid_trace_count']}/"
+		f"{rows['TIDE + LAMA']['supported_case_count']} "
 		f"artifact={Path(args.output_json).expanduser().resolve()}",
 	)
 	return 0

@@ -2,7 +2,7 @@
   "artifact_kind": "gp2pl_reproducibility_release",
   "challenge_case_count": 13,
   "domain_count": 16,
-  "external_reference_record_count": 2456,
+  "external_reference_record_count": 3684,
   "files": [
     "README.md",
     "atomic_libraries/barman/atomic_library_metadata.json",

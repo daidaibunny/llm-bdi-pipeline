@@ -17,8 +17,9 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
   117 VAL-valid plans, 619 planner failures, and four timeouts without retaining
   machine-local paths.
 - `external_reference_results.json` freezes the complete 1,228-case
-  LAMA/MRP+HJ matrix and 1,228-case FOND4LTLf-plus-LAMA matrix. Its 2,456
-  portable records retain method outcomes, runtimes, and validation status.
+  LAMA/MRP+HJ matrix and separate 1,228-case FOND4LTLf-plus-LAMA and
+  TIDE-plus-LAMA matrices. Its 3,684 portable records retain method outcomes,
+  runtimes, and validation status.
 - `paired_ablation_results.json` freezes all 24,560 atomic and 4,912 temporal
   paired-ablation outcomes, their aggregate tables, adjacent-method exact
   paired contrasts, corrected transition-repair fan-out, and the 13-case

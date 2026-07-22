@@ -35,12 +35,13 @@ The paper has one thesis:
 > that library, provided that every accepted atomic branch and temporal
 > transition carries the required action-schema-derived certificates.
 
-A certificate is a compile-time, machine-checkable obligation. For example, a
-binding certificate proves that every variable in `stack(X,Y)` is supplied by
-the trigger or positive context; a completion-effect certificate proves which
-PDDL literals may be added or deleted when `!on(X,Y)` successfully returns.
-The compiler accepts a candidate only when its obligations are proved and
-otherwise returns a structured rejection.
+A certificate is a finite witness checked at compile time. For example, a
+binding witness shows that every variable in `stack(X,Y)` is supplied by the
+trigger or positive context; a completion-effect summary records which PDDL
+literals may be added or deleted when `!on(X,Y)` successfully returns.
+Certification checks all applicable soundness conditions using such witnesses;
+certified denotes only an artifact that passes every required check. Otherwise,
+the compiler returns a structured rejection.
 
 ## Canonical Formal Notation
 
@@ -73,7 +74,7 @@ second tuple or reuse one symbol for a different semantic role.
   numeric-delta, and keyed resource-mode projections. `Cert_D(b)` is its
   candidate soundness predicate, and `covers_D(b,e)` is evidence coverage.
 - `C_D^nr(E)` is the set of nonrecursive action-schema-derived obligations, and
-  `realizes_D(b,c)` is their certified schema-achievement relation.
+  `realizes_D(b,c)` is their schema-achievement relation.
   `Omega_{D,E}` contains evidence coverage, nonrecursive schema-achievement
   coverage, preparation acyclicity, and recursive-ranking compatibility.
   `Closed_D(R)` means that every internal `!goal` in plan set `R` has a
@@ -96,7 +97,7 @@ second tuple or reuse one symbol for a different semantic role.
   literal-and-conjunction subset; an achievement formula `psi` is embedded as
   `F(psi)` only for execution, while formulae already containing temporal
   operators are TEGs and remain unchanged. `Phi_bench` is the five-profile TEG
-  evaluation family; `Phi_cert(D,M_D)` is the certificate-accepted subset.
+  evaluation family; `Phi_cert(D,M_D)` is the certified subset.
   Never call these scopes interchangeably "the supported fragment".
 - `D_q = <Q_q^dfa,2^AP_q,delta_q,q_q^0,F_q>` is the deterministic finite
   automaton. For the bound query, `val_q` maps a proposition to true exactly
@@ -662,12 +663,12 @@ is not directly comparable until any future-LTLf-to-past-LTLf translation has
 been proved language-equivalent.
 
 The main result narrative reports concise scope-qualified endpoints for Raw
-MOOSE, LAMA, MRP+HJ, and FOND4LTLf. The direct FOND4LTLf comparison is restricted
+MOOSE, LAMA, MRP+HJ, FOND4LTLf, and TIDE. The direct FOND4LTLf comparison is restricted
 to the 492 Boolean queries accepted by its adapter, with the other 736 inputs
-separated as unsupported. The pinned TIDE adapter now executes the persisted
-bound query through the official feedback, trace-heuristic, prefix-cache, and
-LAMA path and uses the same neutral-goal VAL and DFA oracles. Do not imply an
-empirical TIDE comparison until its complete same-scope matrix is run and frozen.
+separated as unsupported. TIDE accepts all 868 Boolean queries, validates 675,
+and reports the 360 numeric inputs as unsupported. Its official
+feedback, trace-heuristic, prefix-cache, and LAMA path uses the same
+neutral-goal VAL and DFA oracles.
 
 Repair only cases explicitly recorded as infrastructure failures in those
 complete 20-worker matrices. Run the exact repair set serially with one worker,
@@ -1412,13 +1413,14 @@ The main paper reports the Raw MOOSE versus Full GP2PL result on the identical
 740 added-domain seed--case evaluations in prose beside the atomic compiler
 table. This comparison concerns provider execution versus the final library on
 a narrower paired scope, rather than compiler variants over all 16 domains. Keep
-MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, and FOND4LTLf + LAMA in a separate
+MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, FOND4LTLf + LAMA, and TIDE + LAMA in a separate
 Technical-Supplement reference table with short columns such as `Method`,
 `Source`, `Scope`, `Coverage`, `Unsupported`, and `PAR-2`. Do not mix their
 output representations or costs into the compiler ablation table. The
 completed outcome matrix gives
-LAMA 591/868, MRP+HJ 253/360, and FOND4LTLf plus LAMA 298/492 on its supported
-subset, with 736 explicitly unsupported temporal inputs. Retain every row in
+LAMA 591/868, MRP+HJ 253/360, FOND4LTLf plus LAMA 298/492 on its supported
+subset, and TIDE plus LAMA 675/868 on all Boolean inputs. Their 736 and 360
+unsupported inputs remain separate. Retain every row in
 the Technical Supplement; moving the matrix out of the main paper changes
 placement, not the registered comparison protocol.
 
@@ -1426,8 +1428,8 @@ Generate all three comparison tables with
 `scripts/generate_aaai_comparison_tables.py`. Its mandatory inputs are the
 complete paired compiler result, the checked MOOSE arXiv-v1 Table-4 reference
 artifact, four-domain Raw MOOSE extension summaries explicitly assigned to
-seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, and
-the challenge summary. The script must fail rather than render a partial table
+seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, the
+complete TIDE summary, and the challenge summary. The script must fail rather than render a partial table
 when a method, seed, case, protocol field, or semantic outcome is missing. The
 final generator must fail closed over the registered corpus rather than only
 compare methods with each other. It checks the complete identifier sets for all
@@ -1436,7 +1438,7 @@ classical LAMA cases, and the 360 numeric MRP+HJ cases; duplicates and shared
 omissions are invalid. It additionally requires the five Raw MOOSE runs to use
 the exact 148-case extension scope and seed-specific evidence assignment, six workers for paired
 compiler and Raw MOOSE extension runs, 20 workers for remote LAMA/MRP+HJ and direct
-FOND4LTLf runs, the remaining registered resource protocol, pinned external
+FOND4LTLf runs, 12 workers for TIDE, the remaining registered resource protocol, pinned external
 binaries, and exactly 13 unique successful challenge nodes. A repaired external
 summary must additionally prove that its primary matrix retained 20 workers,
 its exact infrastructure-only retry used one worker, and hardware-equivalent

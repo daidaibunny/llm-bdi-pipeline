@@ -1453,9 +1453,10 @@ def render_external_table(result: Mapping[str, Any]) -> str:
 			"measurements. Measured rows use a 1,800-second, 8-GiB per-task budget, and "
 			"PAR-2 charges nonvalid supported cases twice the cutoff. Raw MOOSE "
 			"extension coverage is mean $\\pm$ sample standard deviation over five "
-			"seeds; its runtime is omitted by protocol. FOND4LTLf unsupported inputs "
-			"are excluded from its coverage denominator and separated from planner "
-			"and compiler failures. Rows with different scopes are not ranked.}",
+			"seeds; its runtime is omitted by protocol. Direct temporal references "
+			"exclude unsupported inputs from their coverage denominator and report "
+			"them separately from planning failures. Rows with different scopes are "
+			"not ranked.}",
 			"\\label{tab:external-references}",
 			"\\end{table*}",
 		),

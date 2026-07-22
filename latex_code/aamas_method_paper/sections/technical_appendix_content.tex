@@ -85,6 +85,12 @@ action-schema producer for $p$ has a positive dynamic precondition with
 predicate $r$. Action-schema regression is admitted only on an acyclic such
 graph. This is a structural condition over renamed schemas, not a domain label.
 
+Throughout, a certificate is a finite witness checked before an artifact is
+emitted, such as a symbolic-progression derivation, ranking function, resource
+discharge path, or preservation order. Certification is the process that checks
+all applicable soundness conditions using these witnesses; certified denotes an
+artifact that passes every required check.
+
 \begin{table*}[htbp]
 \centering
 \small
@@ -137,15 +143,15 @@ ranking, dependency ranking, and resource-mode graph. &
 $\rho_{\mathrm{num}},b_\chi^{\mathrm{joint}}$ & Numeric-progress ranking and
 complete joint guard-establishment branch. \\
 $\operatorname{Closed}_D,\operatorname{covers}_D$ & Internal-call closure
-predicate and certified evidence-coverage relation. &
+predicate and evidence-coverage relation. &
 $R_\chi[i,j],c_{q_s,\chi}$ & Transition-repair subtree and source-state
 completion test. \\
 $\mathcal C_D^{\mathrm{nr}}(E),\operatorname{realizes}_D$ & Nonrecursive
-schema obligations and certified realization relation. &
+schema obligations and schema-realization relation. &
 $\operatorname{Pass}_{q_s,\chi},\mathcal R_{q_s,\chi}$ & Complete repair pass
 and plan set for one source-state obligation. \\
-$\mathcal C^{\checkmark}_{D,E},\Omega_{D,E},\mathfrak F_{D,E}$ & Certified
-set, set-level obligations, and feasible selection family. &
+$\mathcal C^{\checkmark}_{D,E},\Omega_{D,E},\mathfrak F_{D,E}$ & Branch-certified
+candidate set, set-level obligations, and feasible selection family. &
 $\mathcal Q_q,\mathcal L_D^{[k]}$ & Query-local controller plans and maintained
 library after $k$ appends. \\
 $\mathcal M_D$ & Lexicographically optimal feasible atomic module core. &
@@ -156,7 +162,7 @@ body steps. &
 $\Phi_{\mathrm{ach}},\Phi_{\mathrm{syn}}$; \newline
 $\Phi_{\mathrm{bench}},\Phi_{\mathrm{cert}}$; \newline
 $\operatorname{emb}$ & Atemporal achievement fragment, declared input syntax,
-evaluated TEG family, certificate-accepted subset, and execution embedding. \\
+evaluated TEG family, certified subset, and execution embedding. \\
 \bottomrule
 \end{tabular}
 \caption{Canonical GP2PL notation. A symbol is not reused across evidence,
@@ -248,10 +254,10 @@ Table~\ref{tab:teg-construction-profiles}. For fixed $D$ and $\mathcal M_D$,
 $\Phi_{\mathrm{cert}}(D,\mathcal M_D)\subseteq\Phi_{\mathrm{syn}}$ contains
 validated bound formulas whose required distance-reducing DFA obligations admit
 the binding, completion-effect, preservation, progress, and resource
-certificates used by the compiler. Formula parsing alone therefore establishes
+checks used by the compiler. Formula parsing alone therefore establishes
 membership only in $\Phi_{\mathrm{syn}}$.
 
-Before certificate construction, the DFA converter expands its Boolean
+Before transition-certificate construction, the DFA converter expands its Boolean
 transition relation into separate conjunctive transition records. The runtime
 monitor retains the complete DFA transition relation.
 \end{definition}
@@ -306,9 +312,10 @@ and comparisons only filter already bound variables. A plan such as
 is therefore admitted only when the call to $clear(Y)$ is closed by another
 selected module and the recursive call carries a well-founded progress proof.
 
-\begin{definition}[Candidate soundness certificate]
-For domain $D$, $\operatorname{Cert}_D(b)$ holds exactly when every obligation required
-by the structure of $b$ is established:
+\begin{definition}[Candidate certification]
+For domain $D$, $\operatorname{Cert}_D(b)$ is the branch-certification predicate.
+It holds exactly when every condition required by the structure of $b$ has a
+valid finite witness:
 \begin{enumerate}
 \item every action and subgoal variable is range restricted and type compatible;
 \item symbolic progression proves each primitive precondition;
@@ -344,7 +351,7 @@ Branch constructor & Additional acceptance obligation & Excluded failure \\
 Validated evidence macro & every macro step maps to a PDDL action schema and
 symbolic execution establishes the singleton evidence target & invalid or
 misbound provider evidence \\
-Direct producer & one action adds the target under the certified context and
+Direct producer & one action adds the target under the checked context and
 preserves its completion summary & action chosen only by predicate name \\
 Acyclic regression & each open positive requirement is discharged without a
 repeated normalized producer role or conflicting delete effect & arbitrary
@@ -558,7 +565,7 @@ threats \\
 Negative predicate & Observe absence or use an exact certified deleter & Synthetic
 negated achievement or possible re-addition \\
 Mixed Boolean and numeric guard & Complete net-effect and preservation certificate &
-Incomplete mixed-effect certificate \\
+Missing net-effect or preservation witness \\
 Primitive-state safety & DFA monitor after every primitive action & Completion-only
 observation \\
 \bottomrule
@@ -582,8 +589,8 @@ positive context witness.
 \end{lemma}
 
 \begin{proof}
-The certificate constructs the bound-variable set from trigger variables,
-positive context literals, and certified static sort witnesses. A body term is
+The binding checker constructs the bound-variable set from trigger variables,
+positive context literals, and validated static sort witnesses. A body term is
 accepted only if it is a constant or belongs to this set. Negative contexts and
 comparisons are checked after their arguments enter the set and never add a
 binding. Induction over body positions therefore yields a ground, type-compatible
@@ -1645,7 +1652,12 @@ encoding rejections. The latter are an adapter boundary, not a limitation of
 the \ltlf{} semantics, so the row is interpreted only on its declared supported
 subset.
 
-Both primary matrices used 20 case workers. The
+TIDE with LAMA accepts all 868 Boolean inputs and yields 675 valid traces, 188
+\texttt{no\_plan} outcomes, and five timeouts. The remaining 360 inputs are
+explicitly unsupported numeric cases: 207 contain numeric formulae and 153 use
+numeric PDDL.
+
+The achievement and FOND4LTLf matrices used 20 case workers; TIDE used 12. The
 \ExternalAchievementRepairCount{} achievement and
 \ExternalDirectRepairCount{} direct-temporal infrastructure failures were
 rerun with one worker under the same case inputs, tool versions, limits, and
@@ -1766,6 +1778,11 @@ identifiers rejected by the current adapter encoding. Supported-set PAR-2 is
 omitted under its coverage-only protocol. The artifact records preserve the
 planner, compiler, timeout, and unsupported outcome taxonomy.
 
+TIDE with LAMA supports all \ExternalTIDESupportedCount{} Boolean queries and
+validates \ExternalTIDEValidCount{}; its \ExternalTIDEUnsupportedCount{}
+numeric inputs remain unsupported. Supported-set PAR-2 is
+\ExternalTIDEParTwoSeconds{} seconds.
+
 Diagnostic inspection localizes the variation at the method boundary. A provider
 macro is a
 complete lifted action sequence in MOOSE's readable evidence; a Logistics
@@ -1775,11 +1792,11 @@ regressed. When one is absent, action-schema-derived candidate generation cannot
 replace it because
 \texttt{at} may require \texttt{in} while loading to establish \texttt{in}
 requires \texttt{at}; this is a cyclic producer dependency with no current
-decreasing mode certificate. Depots \texttt{p12} and \texttt{p20} expose a
+decreasing-mode witness. Depots \texttt{p12} and \texttt{p20} expose a
 different limit: a crate may be suspended while the controller must choose and
-bring a typed support resource. The current certificate proves finite release
-for a capacity resource already bound in the branch, but cannot synthesize a
-nested support-resource selection certificate. A generic extension would need an
+bring a typed support resource. The current resource-discharge check proves
+finite release for a capacity resource already bound in the branch, but cannot
+construct a nested support-resource selection witness. A generic extension would need an
 evidence-guided decreasing mode path for Logistics and a certified nested
 resource choice for Depots. Domain-specific transport or parking rules are not
 admissible substitutes.
@@ -1888,7 +1905,7 @@ Every generated problem must parse against $D$, training and held-out content
 hashes must be disjoint, and the held-out set must be sealed before evidence
 learning. The generalized-planning backend receives only
 $\mathcal I_{\mathrm{train}}$; GP2PL receives its normalized evidence. A
-generator supplies coverage opportunities, not certificates, so every compiler
+generator supplies coverage opportunities, not certification witnesses, so every compiler
 gate remains unchanged.
 
 \begingroup

@@ -18,6 +18,7 @@ FORBIDDEN_EXACT_KEYS = {
 	"commit",
 	"compiler_freeze",
 	"domain_file",
+	"infrastructure_retry",
 	"method_source_equivalence",
 	"model_file",
 	"policy_file",
