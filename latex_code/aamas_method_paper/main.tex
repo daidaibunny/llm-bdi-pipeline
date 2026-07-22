@@ -174,9 +174,9 @@ extended goals without relearning the core.
 Future work should study unrestricted PDDL--\ltlf{} strategy synthesis, richer
 PDDL models with numeric, conditional, and durative effects, and scalable
 certificate discovery for larger candidate spaces.
-Pinned PDDL instance generators can supply training data for new domains while
-keeping training instances disjoint from held-out evaluation, extending domain
-onboarding without changing the certification criteria.
+For a new domain supplied without instances, parameterized PDDL problem
+generators can synthesize a reproducible training curriculum for evidence
+learning \cite{Bacchus2001AIPS00}.
 
 \ifgpplpublicartifact
 \paragraph{Artifact availability.}
