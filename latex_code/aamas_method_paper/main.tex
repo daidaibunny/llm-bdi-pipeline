@@ -78,9 +78,14 @@ reusable behavior for a family of related problems
 \cite{Srivastava2011DirectedSearch,Chen2026Moose}. Belief--Desire--Intention
 (BDI) agents also reuse behavior, but through plan libraries that connect events
 and belief contexts to actions and subsidiary goals
-\cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. These artifacts obey
-different contracts: singleton-goal policy evidence need not provide the
-callable, context-indexed modules required by a maintained BDI library.
+\cite{Rao1996AgentSpeak,MeneguzziDeSilva2015PlanningBDI}. Traditionally,
+developers supply these libraries by encoding domain-specific behavior and
+anticipating applicable situations before deployment, creating a substantial
+knowledge-engineering burden
+\cite{Meneguzzi2004PropositionalPlanning,MeneguzziDeSilva2015PlanningBDI}.
+These artifacts obey different contracts: singleton-goal policy evidence need
+not provide the callable, context-indexed modules required by a maintained BDI
+library.
 
 Consider a planning domain $D$, training instances
 $\mathcal I_{\mathrm{train}}$, and raw singleton-goal policy evidence
