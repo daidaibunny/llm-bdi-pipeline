@@ -94,8 +94,10 @@ GP2PL addresses this representation gap as shown in
 Figure~\ref{fig:architecture}. It compiles the evidence once into a certified,
 reusable atomic module core, then reuses that core when compiling each bound
 query into the same maintained library. A query may be an achievement
-condition or a temporally extended goal (TEG) \cite{Hindriks2009TemporalGoals};
-the external backend is neither replaced nor rerun.
+condition or a temporally extended goal (TEG) \cite{Hindriks2009TemporalGoals}.
+Here, bound means that each query parameter is assigned a type-compatible PDDL
+object at invocation, rather than quantified over. The external backend is
+neither replaced nor rerun.
 
 \begin{figure}[htbp]
 \centering
