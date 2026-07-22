@@ -91,17 +91,19 @@ $\Phi_{\mathrm{bench}}$.
 A query-local monitor evaluates the DFA initially and after every successful
 primitive PDDL action.
 
-\subsection{Certified Compilation Problem}
+\subsection{Certified Compilation Problems}
 
-\textbf{Compilation problem.} Given $D$, training instances
+\textbf{Atomic-core compilation.} Given $D$, training instances
 $\mathcal{I}_{\mathrm{train}}$, and normalized singleton-goal evidence $E$,
-atomic compilation produces the certified atomic module core $\mathcal{M}_D$:
-the query-independent branches whose triggers are singleton achievements.
+atomic compilation produces the certified atomic module core $\mathcal{M}_D$,
+whose query-independent branches are triggered by singleton achievements.
 
-A validated bound query is $\widehat\tau_q=(\tau_q,\theta_q)$, where $\theta_q$
-assigns each parameter of $\tau_q$ a type-compatible object. Query
-compilation produces the query-local plan set $\mathcal{Q}_q$, comprising its
-top-level goal, DFA dispatch, and transition-repair plans. For appended queries
+\textbf{Query compilation.} For a validated bound query
+$\widehat\tau_q=(\tau_q,\theta_q)$ whose binding maps each parameter to a
+type-compatible object, query compilation takes $\mathcal D_q$ and $\mathcal M_D$
+and produces $\mathcal Q_q$: top-level, DFA-dispatch, and transition-repair
+plans. A conjunctive guard is a certified serialization of signed atomic
+obligations, not a trigger in $\mathcal M_D$. For appended queries
 $q_1,\ldots,q_k$, the one maintained domain library is
 \[
 \mathcal{L}_D^{[0]}=\mathcal{M}_D,
