@@ -246,8 +246,12 @@ neither introduces a separate wrapper nor bypasses the DFA path.
 \paragraph{Progress-edge compilation.}
 Given the validated bound query $\widehat\tau_q$ and DFA $\mathcal D_q$ of its
 execution formula from Sec.~\ref{sec:background}, GP2PL compiles one controller
-for each progress edge
-$(q_s,\chi,q_t)$; an accepting \texttt{true} self-loop requires no controller. The external
+for each progress source--target pair $(q_s,q_t)$. A conjunctive valuation-cube
+record $(q_s,\chi,q_t)$ contributes its signed obligations; records for the same
+pair share the controller when they expose a common certified repair objective.
+This supports Boolean alternatives introduced by DFA construction, but not
+arbitrary disjunctive achievement choice. An accepting \texttt{true} self-loop
+requires no controller. The external
 binding $\theta_q$ instantiates query propositions while the shared atomic core
 $\mathcal M_D$ remains lifted. For signed obligation
 $\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle$, compilation derives a
