@@ -131,16 +131,18 @@ Figure 2 artwork placeholder\\[8pt]
 (a) Query-independent atomic-core compiler\qquad
 (b) Bound query $\rightarrow$ DFA guard $\rightarrow$ certified repair tree}}
 }
-\caption{Inside the two GP2PL compiler stages. The query-independent stage
-normalizes and lifts evidence, constructs and certifies schema-derived
-candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. For the bound Blocks
-World tower query, the query-specific stage reuses selected completion summaries
-to construct a transition certificate recording the preservation portfolio
-$\boldsymbol\Pi_\chi$ and serialization $\boldsymbol\ell_\chi$ for the query's
-MONA-derived conjunctive progress guard, then
-renders the certified order as a balanced transition-repair tree. Here, repair
-uses a certified plan to satisfy an unmet signed guard literal; a satisfied
-literal requires no action.}
+\caption{Inside the two GP2PL compiler stages. (a) Query-independent compilation
+canonically lifts normalized singleton-goal evidence, constructs evidence- and
+schema-derived candidate branches over $T_D(E)$, filters them with the
+per-branch predicate $\operatorname{Cert}_D$, and jointly selects the feasible
+core $\mathcal M_D=\mathcal L_D^{[0]}$. (b) For a bound Blocks World query,
+LTLf2DFA/MONA produces a DFA whose progress guards are certified from their
+signed obligations $\mathcal O_\chi$ and the selected completion summaries
+$\{\Sigma_b\mid b\in\mathcal M_D\}$. Certification yields preservation
+portfolios $\boldsymbol\Pi_\chi$ and serializations $\boldsymbol\ell_\chi$; a
+singleton order becomes one repair leaf, while a conjunctive order becomes a
+balanced repair tree. The dispatcher and transition plans form $\mathcal Q_q$,
+which is appended without relearning $\mathcal M_D$.}
 \label{fig:compiler-stages}
 \end{figure*}
 

@@ -1028,25 +1028,23 @@ Do not use the Introduction to narrate the implementation shown here. Cite
 panel (a) from Evidence Normalization and Canonical Lifting and panel (b) from
 Typed Query Translation and Preservation-Safe Goal Composition.
 
-- Panel (a), `Query-independent atomic-core compiler`, shows
-  `$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$` entering
-  `normalize and canonically lift`, then `construct candidates over the
-  producible target universe`, `certify branches`, and `joint lexicographic
-  selection`, yielding `$\mathcal M_D=\mathcal L_D^{[0]}$`.
-- Panel (b), `DFA-guided query compilation`, begins with a bound eventual tower
-  query
-  `F(on(b1,b2) & on(b2,b3) & on(b3,b4))`, understood as the grounded projection
-  of one typed query invocation. Show one relevant MONA progress edge rather
-  than the complete automaton. Its guard contains exactly those three required
-  `on` literals.
-- Convert that guard into three signed positive obligations. Completion-summary
-  threats induce the bottom-up order `on(b3,b4)`, `on(b2,b3)`, `on(b1,b2)`.
-  An arrow labelled `preservation-safe serialization` connects the obligations
-  to this order.
-- Show the compact balanced transition-repair tree whose leaves follow that
-  fixed order. The tree emits `$\mathcal Q_q$`; end with
-  `$\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$`, not a second
-  maintained-library drawing.
+- Panel (a), `Certified atomic-core compilation`, shows domain $D$ and normalized
+  singleton-goal evidence $E_0$, canonical lifting to $E$, candidate generation
+  over $T_D(E)$, per-branch certification into
+  `$\mathcal C^{\checkmark}_{D,E}$`, and joint lexicographic selection from the
+  feasible family, yielding `$\mathcal M_D=\mathcal L_D^{[0]}$`.
+- Panel (b), `DFA-guided query compilation`, shows the compact MONA DFA for one
+  bound Blocks World query. The two illustrated progress guards are a singleton
+  `$\chi_1=on(C,D)$` and a conjunction
+  `$\chi_2=on(B,C)\land on(A,B)$`.
+- For each progress guard, show
+  `$\textsc{CertifySerialization}(\mathcal O_\chi,
+  \{\Sigma_b\mid b\in\mathcal M_D\})$`, producing the preservation portfolios
+  $\boldsymbol\Pi_\chi$ and serialization $\boldsymbol\ell_\chi$ or rejection.
+- Render the singleton order as one repair leaf and the conjunctive order as a
+  compact balanced transition-repair tree. Both controllers feed the top-level
+  DFA dispatcher; together they form $\mathcal Q_q$ in the sole maintained
+  library.
 - A single reuse connector carries certified completion summaries from
   `$\mathcal M_D$` to temporal certification. Label it `reuse; no relearning`.
 - Use short noun phrases and the notation already defined in the paper. The
@@ -1054,13 +1052,19 @@ Typed Query Translation and Preservation-Safe Goal Composition.
 
 Approved caption:
 
-> Figure 2: Inside the two GP2PL compiler stages. The query-independent stage
-> normalizes and lifts evidence, constructs and certifies schema-derived
-> candidates, and selects $\mathcal M_D=\mathcal L_D^{[0]}$. The query-specific
-> stage is instantiated by a bound Blocks World tower query: a MONA-derived
-> conjunctive progress guard is converted into signed obligations, ordered by
-> completion-effect threats, and rendered as a balanced transition-repair tree.
-> The resulting $\mathcal Q_q$ is appended without relearning the core.
+> Figure 2: Inside the two GP2PL compiler stages. (a) Query-independent
+> compilation canonically lifts normalized singleton-goal evidence, constructs
+> evidence- and schema-derived candidate branches over $T_D(E)$, filters them
+> with the per-branch predicate $\operatorname{Cert}_D$, and jointly selects the
+> feasible core $\mathcal M_D=\mathcal L_D^{[0]}$. (b) For a bound Blocks World
+> query, LTLf2DFA/MONA produces a DFA whose progress guards are certified from
+> their signed obligations $\mathcal O_\chi$ and the selected completion
+> summaries $\{\Sigma_b\mid b\in\mathcal M_D\}$. Certification yields
+> preservation portfolios $\boldsymbol\Pi_\chi$ and serializations
+> $\boldsymbol\ell_\chi$; a singleton order becomes one repair leaf, while a
+> conjunctive order becomes a balanced repair tree. The dispatcher and
+> transition plans form $\mathcal Q_q$, which is appended without relearning
+> $\mathcal M_D$.
 > Figure 3 separately illustrates a compositional derivation available in the
 > selected atomic core.
 

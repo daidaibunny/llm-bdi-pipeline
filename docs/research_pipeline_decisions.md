@@ -514,13 +514,14 @@ mismatches produce a diagnostic instead of a PNG. The manuscript label for
 `validated_evidence_adapter` remains `Evidence Only`.
 
 The main visual program separates abstraction from instantiation. Figure 1
-states the representation bridge. Figure 2 exposes both compiler-stage flows,
-while its temporal half embeds one bound Blocks World tower guard, the induced
-preservation order, and the balanced transition-repair tree. This concrete
-right-hand chain prevents the DFA-guided compiler from being represented only
-by unexplained process boxes. Figure 3 separately shows execution of the
-selected variable-level atomic core on an unseen Blocks stack and is placed
-after feasible-core optimization. Main-paper results use exact generated
+states the representation bridge. Figure 2 exposes both compiler-stage flows.
+Its temporal half embeds a compact MONA DFA for one bound Blocks World query,
+the certificates for one singleton and one conjunctive progress guard, their
+query-local repair controllers, and the shared dispatcher. This concrete chain
+prevents the DFA-guided compiler from being represented only by unexplained
+process boxes. Figure 3 separately shows execution of the selected
+variable-level atomic core on an unseen Blocks stack and is placed after
+feasible-core optimization. Main-paper results use exact generated
 tables; per-profile, per-domain, per-seed, runtime, and diagnostic views belong
 in the Technical Supplement. The main paper reports the identical 740
 added-domain seed--case comparison with Raw MOOSE and the 492 Boolean temporal
