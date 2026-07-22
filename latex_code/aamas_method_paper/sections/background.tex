@@ -54,10 +54,9 @@ constrains a finite execution trace \cite{Hindriks2009TemporalGoals}. We express
 TEGs in linear temporal logic over finite traces (\ltlf{})
 \cite{DeGiacomoVardi2013}. The declared language $\Phi_{\mathrm{syn}}$ extends
 $\Phi_{\mathrm{ach}}$ with $F$ (eventually), $X$ (strong next), and $U$ (strong
-until), with negation restricted to atoms and no explicit disjunction. This
-input restriction does not exclude Boolean alternatives in the derived DFA
-transition relation. Thus a formula without a temporal operator is an
-achievement goal, whereas a formula containing one is a TEG.
+until), with atom-level negation and no explicit disjunction. Thus a formula
+without a temporal operator is an achievement goal, whereas a formula containing
+one is a TEG.
 The full grammar and finite-trace semantics appear in the Technical Supplement,
 Sec.~1. The evaluation family
 $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains instances of the
@@ -87,10 +86,9 @@ $\chi$ has normal form
 \mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle,
 \]
 where the signed transition obligation $\mathcal O_\chi$ separates positive
-achievements from atoms that must remain absent. The converter expands a
-Boolean alternative into separate conjunctive valuation-cube records; the
-runtime monitor evaluates their complete DFA relation. We reserve four related
-terms.
+achievements from atoms that must remain absent. DFA-derived Boolean alternatives
+are retained as separate conjunctive guard records, while the runtime monitor
+evaluates the complete transition relation. We reserve four related terms.
 An obligation is a condition the compiler must establish. A witness is finite
 evidence for one obligation, such as a symbolic-progression derivation,
 decreasing rank, or resource-discharge path. A certificate is the structured
