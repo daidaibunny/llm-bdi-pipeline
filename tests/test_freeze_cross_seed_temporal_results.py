@@ -94,12 +94,23 @@ def test_merge_into_paired_result_updates_existing_release(tmp_path: Path) -> No
 	release_root = tmp_path / "release"
 	release_root.mkdir()
 	paired_result_file = release_root / "paired_ablation_results.json"
+	seed_zero_records = [
+		{
+			**record,
+			"duration_seconds": float(record["duration_seconds"]) + 100.0,
+			"variant": "certified_balanced",
+		}
+		for record in result["case_records"]
+		if record["seed"] == 0
+	]
 	paired_result_file.write_text(
 		json.dumps(
 			{
 				"artifact_kind": "gp2pl_paired_ablation_results",
-				"temporal": [],
-				"temporal_records": [],
+				"temporal": [
+					{"par2_seconds": 102.0, "variant": "certified_balanced"},
+				],
+				"temporal_records": seed_zero_records,
 			},
 		),
 		encoding="utf-8",
@@ -119,6 +130,14 @@ def test_merge_into_paired_result_updates_existing_release(tmp_path: Path) -> No
 	paired = json.loads(paired_result_file.read_text(encoding="utf-8"))
 	assert paired["temporal_cross_seed"]["aggregate"]["pooled_success_count"] == 9
 	assert len(paired["temporal_cross_seed_records"]) == 10
+	assert [
+		row["duration_seconds"]
+		for row in paired["temporal_records"]
+		if row["variant"] == "certified_balanced"
+	] == [1.0, 2.0]
+	assert paired["temporal"][0]["par2_seconds"] == result["seed_results"][0][
+		"par2_seconds"
+	]
 	manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
 	assert manifest["paired_ablation_temporal_cross_seed_record_count"] == 10
 	assert manifest["paired_ablation_temporal_cross_seed_seed_count"] == 5

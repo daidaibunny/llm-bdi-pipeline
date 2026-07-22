@@ -120,6 +120,31 @@ def test_cross_seed_temporal_aggregate_is_recomputable_from_outcomes() -> None:
 	assert sum(record["valid"] is True for record in records) == extension[
 		"aggregate"
 	]["pooled_success_count"]
+	seed_zero = {
+		record["sample_id"]: record for record in records if record["seed"] == 0
+	}
+	paired_balanced = {
+		record["sample_id"]: record
+		for record in result["temporal_records"]
+		if record["variant"] == "certified_balanced"
+	}
+	assert set(seed_zero) == set(paired_balanced)
+	for sample_id, cross_seed_record in seed_zero.items():
+		paired_record = paired_balanced[sample_id]
+		for key in (
+			"action_count",
+			"domain",
+			"duration_seconds",
+			"gold_accepted",
+			"jason_status",
+			"prediction_accepted",
+			"profile",
+			"status",
+			"val_attempted",
+			"val_success",
+			"valid",
+		):
+			assert paired_record[key] == cross_seed_record[key]
 
 
 def _all_keys(value: Any) -> list[str]:
