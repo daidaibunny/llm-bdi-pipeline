@@ -64,9 +64,8 @@ evidence, generates schema-derived modules for producible goals, selects a
 compact closed atomic core, and appends DFA-guided query controllers without
 relearning that core. Within the supported candidate language and query fragment,
 GP2PL accepts only branches and controllers satisfying its soundness conditions.
-Experiments across classical and numeric planning domains
-demonstrate the effectiveness of GP2PL in atomic plan-library coverage,
-temporal goal composition, and controlled-language translation.
+Atomic coverage averages 98.7\% across five seeds; all 475 translations are
+DFA-language equivalent, and all 6,140 admitted temporal executions validate.
 \end{abstract}
 
 \section{Introduction}
@@ -173,7 +172,7 @@ Certified Balanced validates
 across five seed-specific core sets, with every admitted query succeeding under
 every seed.
 Unsupported are unrestricted PDDL--\ltlf{} synthesis, out-of-fragment
-arithmetic/formulae, and uncertified repair. Future work studies candidate-size
+arithmetic/formulae, and uncertified repair; future work studies candidate-size
 scaling, action-quality overhead, same-scope trace-search comparisons, and richer
 models under fail-closed certification. Pinned PDDL generators with
 held-out-disjoint instances can extend domain onboarding without changing the
