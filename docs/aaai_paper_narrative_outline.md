@@ -155,13 +155,10 @@ our evidence-to-library compiler.
 
 ## One Running Example
 
-Use one small Blocks example across the Introduction, Method, Temporal
-Composition, and Evaluation case study. The Introduction first defines Blocks
-World in plain language: a robot rearranges blocks, placing one block on another
-requires holding the first block and clearing the destination, and an executable
-library must know how to achieve that missing condition. Introduce exact
-predicate and action notation only after this explanation, in the method figure
-and formal sections.
+Use one small Blocks example across Figure 2, the Method, Temporal Composition,
+and the Evaluation case study. Keep the Introduction domain-independent; the
+first concrete Blocks instance appears in Figure 2, where plain-language roles
+accompany the exact predicate and action notation used by the formal sections.
 
 The evidence-side example begins with a readable MOOSE singleton-goal rule for
 `on(X,Y)`, such as a regressed condition that permits `stack(X,Y)`. The compiler
@@ -270,10 +267,12 @@ software components.
 
 1. Contrast one grounded classical plan, one generalized policy, and one BDI
    plan library.
-2. Explain why compilation is not formatting at a conceptual level: a policy
-   may rely on subsidiary conditions for which an executable library has no
-   plan. Defer the complete binding, closure, recursion, and resource
-   certificate inventory to the method.
+2. Introduce $D$, $\mathcal I_{\mathrm{train}}$, and
+   $\mathcal E_{\mathrm{raw}}$ before stating the evidence gap; explain that
+   normalization relates a partial state and one achievement to an action macro.
+   Then explain why compilation is not formatting: a policy may rely on
+   subsidiary conditions for which an executable library has no plan. Defer the
+   complete certificate inventory to the Method.
 3. Explain why a temporally extended goal (TEG), meaning a goal over a finite
    state trace, cannot generally be replaced by an arbitrary sequence of
    achievement calls.
@@ -952,10 +951,10 @@ this preserves editable routing when a label changes.
 ### Figure 1: GP2PL Representation Bridge
 
 Use a single-column `figure[htbp]` in the first page's right column. Place its
-source after the Introduction's compact singleton-goal example and before the
-temporal-goal motivation. In the AAAI two-column layout, this leaves the abstract
-and opening domain-compilation motivation in the left column while the overview
-occupies the top of the right column without forced placement. Insert the approved
+source after the domain-independent evidence definition and compilation gap and
+before the temporal-goal motivation. In the AAAI two-column layout, this leaves
+the abstract and opening domain-compilation motivation in the left column while
+the overview occupies the top of the right column without forced placement. Insert the approved
 `fig1_architecture.png` at `\columnwidth` and its native aspect ratio; do not
 regenerate, resample, or recompress it. The locked SHA-256 is recorded in the
 figure generator. The placeholder reserves 1.40 inches of artwork height before
