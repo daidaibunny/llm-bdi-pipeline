@@ -87,8 +87,8 @@ Branch-local witnesses cover binding, symbolic execution, achievement,
 completion effects, recursive progress, and resource discharge; coverage,
 internal-call closure, and compatible dependency ranks are set-level checks. A
 transition certificate records its selected portfolios, effect-summary
-completeness, induced threats, and safe serialization. Optimality is claimed only within the
-resulting certified candidate set.
+completeness, induced threats, and safe serialization. Optimality is claimed
+only within the resulting certified candidate set.
 
 The term **producible target universe** has one exact meaning. If
 `goalPred(E)` is the set of predicates targeted by positive evidence and
