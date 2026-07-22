@@ -232,7 +232,7 @@ Let $\varphi_q$ be the bound query formula. If
 $\varphi_q\in\Phi_{\mathrm{ach}}$, GP2PL compiles $F\varphi_q$ and returns when
 the DFA first accepts, so the controller ends satisfying
 $\varphi_q$; if $\varphi_q$ is a TEG, it is compiled unchanged. Both cases then
-pass through the same LTLf2DFA/MONA stage, progress-edge certification,
+pass through the same DFA construction stage, progress-edge certification,
 monitor, and transition-repair controller. The embedding is therefore not a
 second wrapper or a bypass of the DFA path.
 
