@@ -93,12 +93,14 @@ primitive PDDL action.
 
 \subsection{Certified Compilation Problems}
 
-\textbf{Atomic-core compilation.} Given $D$, training instances
+\paragraph{Atomic-core compilation.}
+Given $D$, training instances
 $\mathcal{I}_{\mathrm{train}}$, and normalized singleton-goal evidence $E$,
 atomic compilation produces the certified atomic module core $\mathcal{M}_D$,
 whose query-independent branches are triggered by singleton achievements.
 
-\textbf{Query compilation.} For a validated bound query
+\paragraph{Query compilation.}
+For a validated bound query
 $\widehat\tau_q=(\tau_q,\theta_q)$ whose binding maps each parameter to a
 type-compatible object, query compilation takes $\mathcal D_q$ and $\mathcal M_D$
 and produces $\mathcal Q_q$: top-level, DFA-dispatch, and transition-repair
