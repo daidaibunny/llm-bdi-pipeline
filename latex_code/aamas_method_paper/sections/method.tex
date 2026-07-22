@@ -15,8 +15,8 @@ reopens atomic selection nor relearns $\mathcal M_D$.
 
 These obligations are checked before rendering, which preserves each selected
 trigger, context, ordered body, and internal-call edge; the Technical Supplement
-formalizes the constructors and accept/reject boundary, proves the certificate
-and monitor claims, and gives compiler pseudocode (Secs.~1--3).
+formalizes the constructors and accept/reject boundary, proves the resulting
+soundness and monitor claims, and gives compiler pseudocode (Secs.~1--3).
 
 \subsection{Evidence Normalization and Canonical Lifting}
 
@@ -81,22 +81,23 @@ $\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$ is finite, but
 $\mathfrak G$ is not a complete hypothesis language for PDDL planning. Types
 constrain unification; rendered sort membership is context-only.
 
-\subsection{Candidate Soundness Certificates}
+\subsection{Candidate Certification}
 
 Symbolic progression proves preconditions and target achievement and yields each
 candidate's conditional module-completion summary $\Sigma_b$, with Boolean
 projections $\mustadd_b$, $\mayadd_b$, and $\maydelete_b$, any exact
 constant-integer delta, and a keyed resource-mode transition. The $\mustadd_b$
 facts hold after every feasible completion; $\mayadd_b$ and $\maydelete_b$
-overapproximate possible effects. Let
-$\operatorname{Cert}_D(b)$ denote the conjunction of typed binding, symbolic
-executability, target achievement, and any constructor-specific progress or
-resource obligation. The selected core must additionally satisfy the set-level
-condition $\operatorname{Closed}_D(\mathcal M_D)$; the definitions follow.
+overapproximate possible effects. Let $\operatorname{Cert}_D(b)$ be the
+branch-certification predicate: it holds exactly when typed binding, symbolic
+executability, target achievement, and every applicable constructor-specific
+progress or resource condition have valid witnesses. The selected core must
+additionally satisfy the set-level condition
+$\operatorname{Closed}_D(\mathcal M_D)$; the definitions follow.
 
 \paragraph{Binding, symbolic execution, and internal-call closure.}
 Action and subgoal variables must be bound by the trigger, positive context, or
-certified static sort membership; negative contexts and comparisons only
+validated static sort membership; negative contexts and comparisons only
 filter.
 $\operatorname{Closed}_D(\mathcal R)$ holds when every internal call in plan set
 $\mathcal R$ type-unifies with a selected trigger under $D$'s type hierarchy.
@@ -139,7 +140,7 @@ target is retried before primitive production. For a candidate core
 $\mathcal M$, Clingo assigns each trigger signature in its selected call graph
 a dependency rank $\kappa_{\mathcal M}$ that strictly decreases along every
 selected call edge; same-predicate recursion instead requires the relational
-certificate above.
+ranking witness above.
 
 \subsection{Feasible-Core Optimization}
 
@@ -243,11 +244,13 @@ $(q_s,\chi,q_t)$; an accepting \texttt{true} self-loop needs none. The external
 binding $\theta_q$ instantiates query propositions while the shared atomic core
 $\mathcal M_D$ remains lifted. For signed obligation
 $\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle$, compilation derives a
-certified serialization $\boldsymbol\ell_\chi$ and occurrence-specific
-preservation portfolios $\boldsymbol\Pi_\chi$ from the selected completion
-summaries. Failure to certify this pair rejects the progress edge; otherwise
-$\boldsymbol\ell_\chi$ is rendered as the balanced binary transition-repair
-tree of Sec.~\ref{sec:balanced-trees}.
+serialization $\boldsymbol\ell_\chi$ and occurrence-specific preservation
+portfolios $\boldsymbol\Pi_\chi$ from the selected completion summaries. The
+transition certificate records the selected branches, confirmation that their
+summaries are complete, the induced threat relation, and the checked order. If
+this certificate cannot be constructed, compilation rejects the progress edge;
+otherwise $\boldsymbol\ell_\chi$ is rendered as the balanced binary
+transition-repair tree of Sec.~\ref{sec:balanced-trees}.
 
 \subsection{Summaries and Preservation Portfolios}
 
@@ -272,9 +275,9 @@ requires a joint branch $b_\chi^{\mathrm{joint}}$ whose complete net effect
 establishes the entire guard, is callable from every positive occurrence it
 establishes, and retains every query variable; otherwise it rejects the edge.
 
-\subsection{Numeric and Joint Guard Certificates}
+\subsection{Numeric and Joint-Guard Certification}
 
-Numeric obligations reuse the same certificate machinery. A positive
+Numeric obligations reuse the same certification machinery. A positive
 integer equality is achieved by a complete constant-delta action: a unit delta
 requires strict direction and a larger delta the exact predecessor value. A
 mixed Boolean--numeric guard uses complete action-only net effects; for example,
@@ -297,8 +300,8 @@ per progress obligation. Each $\mathcal R_{q_s,\chi}$ realizes
 $\boldsymbol\ell_\chi$ by recursively splitting contiguous literal ranges at
 their midpoint. Internal nodes dispatch two child ranges, leaves observe or
 repair one signed literal, and the completion plan retries only while the
-monitor remains at $q_s$. The certificate pair, rather than the tree shape,
-provides the temporal guarantee. Trigger fan-out denotes the number of sibling
+monitor remains at $q_s$. The transition certificate, rather than the tree
+shape, provides the temporal guarantee. Trigger fan-out denotes the number of sibling
 AgentSpeak plans sharing one transition-repair trigger. Flat control therefore
 has fan-out $O(n)$, whereas a direct linear body gives an $O(n)$-long intention
 continuation; balanced dispatch preserves the certified order while bounding
@@ -342,7 +345,7 @@ dispatch at the
 current state. Every intervening state change is an actual DFA edge enabled by
 the observed valuation, and a rejecting state cannot report success.
 
-\textbf{Proof sketch.} Induction over the certified order shows that each leaf
+\noindent\textbf{Proof sketch.} Induction over the certified order shows that each leaf
 establishes its signed literal and later summaries preserve prior positives and
 absences; if a call leaves the source, the remaining certified suffix preserves
 this prefix at return boundaries. Because only the monitor evaluates full cubes
