@@ -21,10 +21,10 @@ predicate events and bounded-integer changes to instantiate five predeclared
 profiles: $F(A\land B)$, $F(A\land\neg B)$,
 $F(A\land X(F(B)))$,
 $F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$.
-Each selected hidden formula is lifted and rendered deterministically as
+Each hidden formula is lifted and rendered deterministically as
 controlled English. GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates 475
 deduplicated inputs, which expand to 1,228 witness-backed bound queries.
-These profiles isolate proper TEGs; the PDDL study evaluates ordinary
+These profiles isolate proper TEGs; the PDDL study evaluates
 achievement conditions.
 
 \paragraph{Controlled inputs and validation.}
@@ -69,8 +69,8 @@ Sec.~5.3.
 Unprotected Serialization omits completion-effect analysis. Module-Return
 Monitor retains ordering, preservation portfolios, and balanced repair but
 checks the DFA only after an atomic module finishes all primitive actions;
-Certified Balanced checks after every primitive action. All share the same
-automaton, library, and monitor implementation.
+Certified Balanced checks after every primitive action. All share the
+automaton, library, and monitor.
 
 \input{sections/result_temporal_comparison_table}
 

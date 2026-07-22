@@ -230,10 +230,10 @@ appended query plans.
 \paragraph{Achievement completion embedding.}
 Let $\varphi_q$ be the bound query formula. If
 $\varphi_q\in\Phi_{\mathrm{ach}}$, GP2PL compiles $F\varphi_q$ and returns when
-the resulting DFA first accepts, so the controller completion state satisfies
+the DFA first accepts, so the controller completion state satisfies
 $\varphi_q$; if $\varphi_q$ is a TEG, it is compiled unchanged. Both cases then
 pass through the same LTLf2DFA/MONA construction, progress-edge certification,
-monitor, and transition-repair controller. The embedding is therefore not a
+monitor, and repair controller. The embedding is not a
 second wrapper or a bypass of the DFA path.
 
 \paragraph{Progress-edge compilation.}
@@ -303,7 +303,7 @@ repair one signed literal, and the completion plan retries only while the
 monitor remains at $q_s$. The transition certificate, rather than the tree
 shape, provides the temporal guarantee. Trigger fan-out denotes the number of sibling
 AgentSpeak plans sharing one transition-repair trigger. Flat control therefore
-has fan-out $O(n)$, whereas a direct linear body gives an $O(n)$-long intention
+has fan-out $O(n)$, whereas a linear body gives an $O(n)$-long intention
 continuation; balanced dispatch preserves the certified order while bounding
 both local quantities by two.
 
@@ -361,7 +361,7 @@ while preserving the certified order (Proposition~4). After every successful
 primitive action, the runtime monitor state equals the deterministic automaton
 state over the observed finite trace, so leaving a controller source state is
 exactly a DFA exit and controller plans cannot write monitor beliefs
-(Proposition~5). If the initial valuation is accepting, successful execution
+(Proposition~5). If the initial valuation is accepting, execution
 commits no primitive action and denotes the one-state trace
-$\langle s_0\rangle$ rather than an inserted noop, which could change
+$\langle s_0\rangle$ rather than a noop, which could change
 strong-Next or Until truth (Proposition~6).

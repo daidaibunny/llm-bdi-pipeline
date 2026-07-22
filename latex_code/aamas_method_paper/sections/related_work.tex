@@ -40,8 +40,8 @@ the domain--automaton product \cite{DeGiacomoRubin2018AutomataFOND}. TIDE instea
 searches automaton traces and backtracks over classical reach--avoid subproblems
 \cite{Suprun2026TIDE}. GP2PL performs neither product nor trace search: it
 compiles certificate-admitted repairs over an existing BDI library and makes no
-complete strategy-synthesis claim. Temporally extended goals also have explicit
-agent-language semantics \cite{Hindriks2009TemporalGoals}; we retain standard
+complete strategy-synthesis claim. Temporally extended goals have explicit
+agent-language semantics \cite{Hindriks2009TemporalGoals}; we retain
 plan execution and add a query-local monitor. Following the fixed-planner
 principle of \cite{Bonassi2023Plan4Past}, FOND4LTLf
 \cite{DeGiacomoFuggitti2021FOND4LTLf} is a task-level reference on its accepted
@@ -54,7 +54,7 @@ language-to-logic translation \cite{Chen2023NL2TL,Guo2025CaStL}, or modular
 grounding \cite{Liu2023Lang2LTL}. Translation is
 part of GP2PL's input contribution: unlike unrestricted semantic parsing, our
 contract preserves typed, externally bound parameters in a fixed structured
-representation for ordinary achievements and their temporal extensions,
+representation for achievements and temporal extensions,
 validates PDDL vocabulary and types, and evaluates temporal predictions by exact
 finite-trace language equivalence.
 
