@@ -229,6 +229,9 @@ evaluation only, a hidden gold formula enables exact finite-trace
 language-equivalence testing; this oracle is not an online input requirement. The
 complete prompt and translation protocol appear in the Technical Supplement,
 Sec.~4.
+Figure~\ref{fig:compiler-stages}(b) abbreviates this upstream translation at
+the DFA input; LTLf2DFA consumes the validated execution formula, not
+unvalidated model output.
 
 Figure~\ref{fig:compiler-stages}(b) follows a bound query through its MONA DFA,
 singleton and conjunctive progress-edge certification, query-local repair
