@@ -11,12 +11,12 @@ Blocksworld Clear and On
 \cite{Frances2021LearningGeneralPolicies,BonetLearnerPoliciesRepository},
 Tower \cite{Bacchus2001AIPS00,PotasscoPDDLInstances}, and Depots
 \cite{Bonet2018Features,RLeapD2LRepository}. MOOSE readable policies provide
-$\mathcal E_{\mathrm{raw}}$. Following MOOSE, each of five fixed seeds uses every
-training instance and three goal orders to compile one core per domain (80
+$\mathcal E_{\mathrm{raw}}$. Following MOOSE, each of five fixed seeds determines
+three goal orders over every training instance, producing one core per domain (80
 total).
 
 \paragraph{Temporal benchmark construction.}
-For each held-out problem, construction discards the original goal and uses
+For each held-out problem, benchmark construction discards the original goal and uses
 predicate events and bounded-integer changes to instantiate five predeclared
 profiles: $F(A\land B)$, $F(A\land\neg B)$,
 $F(A\land X(F(B)))$,
@@ -24,7 +24,7 @@ $F(A\land X(F(B\land X(F(C)))))$, and strong $A\,U\,B$.
 Each hidden formula is lifted and rendered deterministically as
 controlled English. GPT-5.5 \cite{OpenAI2026GPT55SystemCard} translates 475
 deduplicated inputs, which expand to 1,228 witness-backed bound queries.
-These profiles isolate proper TEGs; the PDDL study evaluates
+The five profiles contain only proper TEGs; the atomic-core study evaluates
 achievement conditions.
 
 \paragraph{Controlled inputs and validation.}
@@ -56,7 +56,8 @@ targets under every seed (365 seed--target obligations); Evidence Only covers
 90/365. Recursive generation supplies the 10.42-point gain in
 Table~\ref{tab:atomic-comparison}, entirely on the four added serialized-width
 domains; every nonzero averaged paired difference favors a recursive variant.
-At equal coverage, lexicographic selection yields the smallest certified core.
+Maximum Feasible and Full GP2PL have equal coverage; lexicographic selection
+yields the smaller certified core.
 On the four added families under matched evidence seeds, Full GP2PL raises
 VAL-valid coverage from Raw MOOSE's 15.8\% to 97.3\% over 740 held-out
 seed--cases \cite{Chen2025MooseExtended}. Full GP2PL is complete on 14 of 16
@@ -76,8 +77,8 @@ automaton, library, and monitor.
 
 Certified Balanced gains 9.36 points over Unprotected Serialization
 (Table~\ref{tab:temporal-comparison}); 113 of 115 gains are in bounded-integer
-domains and two in Transport. Lower Module-Return coverage supports
-primitive-step observation.
+domains and two in Transport. The lower coverage of Module-Return Monitor
+supports monitoring after every primitive action.
 
 \subsection{End-to-End Temporal Validation}
 \label{sec:end-to-end-results}
@@ -85,8 +86,8 @@ All \TranslationEquivalentCount{}/\TranslationInputCount{} translated
 specifications are DFA-language equivalent to their gold formulas. Across five
 independently compiled atomic-core sets, Certified Balanced validates all
 \TemporalCrossSeedValidCount{} admitted executions
-(\TemporalCrossSeedQueryCount{} queries under each seed), with no seed-sensitive
-query. Primitive-action counts are invariant across seeds, and mean per-seed
+(\TemporalCrossSeedQueryCount{} queries under each seed), and no admitted query
+changes outcome across seeds. Primitive-action counts are invariant across seeds, and mean per-seed
 PAR-2 is \TemporalCrossSeedMeanParTwoSeconds{} $\pm$
 \TemporalCrossSeedParTwoSDSeconds{} seconds. Breakdowns by temporal profile,
 runtime, and trace length appear in the Technical Supplement, Sec.~5.3.
@@ -102,10 +103,10 @@ Boolean temporal queries admitted by FOND4LTLf, GP2PL validates all
 \ExternalDirectSupportedCount{}, whereas FOND4LTLf with LAMA validates
 \ExternalDirectValidCount{}/\ExternalDirectSupportedCount{} (PAR-2
 \ExternalDirectParTwoSeconds{} seconds) \cite{DeGiacomoFuggitti2021FOND4LTLf}.
-The other \ExternalDirectUnsupportedCount{} queries are outside its declared
+The other \ExternalDirectUnsupportedCount{} queries are outside FOND4LTLf's declared
 scope. TIDE with LAMA validates
 \ExternalTIDEValidCount{}/\ExternalTIDESupportedCount{} Boolean queries (PAR-2
 \ExternalTIDEParTwoSeconds{} seconds); the \ExternalTIDEUnsupportedCount{}
-numeric queries are outside its scope \cite{Suprun2026TIDE}. Complete
+numeric queries are outside TIDE's scope \cite{Suprun2026TIDE}. Complete
 scope-separated results and protocols appear in the Technical Supplement,
 Sec.~5.3.

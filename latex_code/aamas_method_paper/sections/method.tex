@@ -14,8 +14,8 @@ portfolio $\boldsymbol\Pi_\chi$ and serialization $\boldsymbol\ell_\chi$ for eac
 DFA guard $\chi$; it neither
 reopens atomic selection nor relearns $\mathcal M_D$.
 
-These obligations are checked before rendering, which preserves each selected
-trigger, context, ordered body, and internal-call edge; the Technical Supplement
+After these obligations pass, rendering preserves each selected trigger,
+context, ordered body, and internal-call edge. The Technical Supplement
 formalizes the constructors and accept/reject boundary, proves the resulting
 soundness and monitor claims, and gives compiler pseudocode (Secs.~1--3).
 
@@ -32,7 +32,7 @@ one goal atom with a PDDL action macro, numeric effects, and provenance.
 Every symbol and arity must occur in $D$. Lifting capture-avoidingly
 alpha-normalizes provider variables, preserves repeated-variable sharing, and
 keeps constants declared by $D$ fixed, so
-\texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. It normalizes a policy
+\texttt{on(block0,block1)} becomes \texttt{on(X,Y)}. Canonical lifting normalizes a policy
 already generalized by the provider rather than inferring one from ground
 plans. Atomic evidence is restricted to positive singleton achievements;
 negative literals remain guard conditions and do not induce synthetic atomic
@@ -51,7 +51,8 @@ universe is
 T_D(E)=\operatorname{goalPred}(E)\cup\operatorname{prod}(D).
 \]
 Every add-effect predicate thus receives candidate atomic modules. Predicates
-with neither validated evidence nor a positive producer do not; static and
+with neither validated evidence nor a positive producer receive no candidate
+modules; static and
 delete-only predicates remain non-achievement context. Supported numeric
 equalities form $T_D^{\mathbb Z}(E)$, the admitted singleton integer-equality
 targets in $E$.
@@ -71,16 +72,17 @@ Backward STRIPS regression
 on an acyclic reachable graph first unifies compatible open requirements,
 introduces fresh variables only for unbound parameters, and rejects conflicting
 deletes. An alpha-normalized regression state records open requirements,
-producer role, and resource modes; search stops before repeating such a state
-and keeps the shortest body for an equivalent completion summary. Construction
-is therefore finite without an arbitrary action-depth constant; validated
+producer role, and resource modes; the regression search stops before repeating
+such a state and keeps the shortest body for an equivalent completion summary.
+Candidate generation is therefore finite without an arbitrary action-depth
+constant; validated
 evidence macros are never truncated. Symbolic progression verifies every
 candidate, while cyclic dependencies require provider evidence or a separately
 certified recursive module. Let $\mathcal C_E$ be the validated evidence
 branches. The resulting candidate set
 $\mathcal C_{D,E}=\mathcal C_E\cup\mathcal C_D(E)$ is finite, but
 $\mathfrak G$ is not a complete hypothesis language for PDDL planning. Types
-constrain unification; rendered sort membership is context-only.
+constrain unification; rendered sort-membership tests occur only in plan contexts.
 
 \subsection{Candidate Certification}
 
@@ -103,7 +105,7 @@ filter.
 $\operatorname{Closed}_D(\mathcal R)$ holds when every internal call in plan set
 $\mathcal R$ type-unifies with a selected trigger under $D$'s type hierarchy.
 Requiring $\operatorname{Closed}_D(\mathcal M_D)$ is a set-level Clingo
-obligation: it proves call resolution, not universal branch applicability.
+obligation that proves call resolution, not universal branch applicability.
 
 \paragraph{Well-founded recursive progress.}
 A same-predicate recursive branch $b$ requires a ranking function
@@ -113,11 +115,12 @@ $\rho_{R,x}(s)=|\{y\mid R(y,x)\in s\}|$ that strictly decreases under a
 reachable-state acyclicity assumption, together with an
 already-satisfied, direct-producer, or validated-evidence terminal branch.
 Acyclicity prevents recursive calls from returning to an earlier anchor.
-Threats are checked over the preparation graph selected by Clingo; a branch may
+Relation threats are checked over the preparation graph selected by Clingo: a branch may
 add the ranked relation at another anchor only under a guard proving that the
 new anchor differs from the protected one. The ranking is a compile-time
-witness, not an agent belief, and claims only generated schema-certified
-features. The construction follows relational progress witnesses in
+witness, not an agent belief; its guarantee applies only to generated,
+schema-certified features. This ranking construction follows relational progress
+witnesses in
 general-policy work \cite{Frances2021LearningGeneralPolicies}.
 
 \paragraph{Target-preserving resource discharge.}
@@ -134,14 +137,15 @@ action.
 
 \paragraph{Ranked cross-module precondition repair.}
 Preparing one of several dynamic preconditions may temporarily change another,
-such as an object's location. A repair branch may defer an unrelated sibling
+such as an object's location. A repair branch may defer repair of an unrelated
+sibling precondition
 only through a schema-inferred single-valued fluent when every deferred sibling
-has one producer, all static feasibility witnesses remain, and the original
-target is retried before primitive production. For a candidate core
+has a unique producer, all static feasibility witnesses remain valid, and each deferred
+precondition is restored before the original target is retried. For a candidate core
 $\mathcal M$, Clingo assigns each trigger signature in its selected call graph
 a dependency rank $\kappa_{\mathcal M}$ that strictly decreases along every
-selected call edge; same-predicate recursion instead requires the relational
-ranking witness above.
+selected call edge; same-predicate recursion instead requires its own relational
+ranking witness.
 
 \subsection{Feasible-Core Optimization}
 
@@ -209,19 +213,19 @@ internal subgoal expansion followed by schema-action execution.}
 \section{Typed Query Translation and Preservation-Safe Goal Composition}
 \label{sec:temporal-composition}
 
-\subsection{Controlled-Language Translation}
+\subsection{Controlled Natural-Language Translation}
 
-A frozen language-model prompt receives one controlled-language request, its
-declared typed parameters and constraints, and the public PDDL catalogue. It
-returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
+A frozen language-model prompt receives one controlled natural-language request,
+its declared typed parameters and constraints, and the public PDDL catalogue. The
+language model returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
 query formula and a one-to-one proposition table. A formula without $F$, $X$, or
 $U$ is an ordinary achievement query; a formula using one of these operators is
 a TEG. Deterministic validation rejects
 undeclared symbols, wrong arities or types, unsupported operators, incomplete
 atom tables, and altered parameter constraints; it neither grounds parameters
-nor selects actions or objects. Invocation later supplies $\theta_q$. For
-evaluation only, a hidden construction formula permits exact finite-trace
-language equivalence; this gold oracle is not an online input requirement. The
+nor selects actions or objects. Query invocation later supplies $\theta_q$. For
+evaluation only, a hidden gold formula enables exact finite-trace
+language-equivalence testing; this oracle is not an online input requirement. The
 complete prompt and translation protocol appear in the Technical Supplement,
 Sec.~4.
 
@@ -234,22 +238,23 @@ Let $\varphi_q$ be the bound query formula. If
 $\varphi_q\in\Phi_{\mathrm{ach}}$, GP2PL compiles $F\varphi_q$ and returns when
 the DFA first accepts, so the controller ends satisfying
 $\varphi_q$; if $\varphi_q$ is a TEG, it is compiled unchanged. Both cases then
-pass through the same DFA construction stage, progress-edge certification,
-monitor, and transition-repair controller. The embedding is therefore not a
-second wrapper or a bypass of the DFA path.
+pass through the same DFA construction stage and progress-edge certification,
+then use the same runtime monitor and transition-repair controller. The
+completion embedding therefore
+neither introduces a separate wrapper nor bypasses the DFA path.
 
 \paragraph{Progress-edge compilation.}
 Given the validated bound query $\widehat\tau_q$ and DFA $\mathcal D_q$ of its
 execution formula from Sec.~\ref{sec:background}, GP2PL compiles one controller
 for each progress edge
-$(q_s,\chi,q_t)$; an accepting \texttt{true} self-loop needs none. The external
+$(q_s,\chi,q_t)$; an accepting \texttt{true} self-loop requires no controller. The external
 binding $\theta_q$ instantiates query propositions while the shared atomic core
 $\mathcal M_D$ remains lifted. For signed obligation
 $\mathcal O_\chi=\langle P_\chi^+,P_\chi^-\rangle$, compilation derives a
 serialization $\boldsymbol\ell_\chi$ and occurrence-specific preservation
 portfolios $\boldsymbol\Pi_\chi$ from the selected completion summaries. The
-transition certificate records the selected branches, confirmation that their
-summaries are complete, the induced threat relation, and the checked order. If
+transition certificate records the selected branches, a completeness check for
+their summaries, the induced threat relation, and the checked order. If
 this certificate cannot be constructed, compilation rejects the progress edge;
 otherwise $\boldsymbol\ell_\chi$ is rendered as the balanced binary
 transition-repair tree of Sec.~\ref{sec:balanced-trees}.
@@ -275,7 +280,8 @@ $\maydelete$ of $\Pi_{\chi,j}$ may delete $G_i$. An acyclic graph yields a
 topological serialization. If no portfolio choice removes a cycle, compilation
 requires a joint branch $b_\chi^{\mathrm{joint}}$ whose complete net effect
 establishes the entire guard, is callable from every positive occurrence it
-establishes, and retains every query variable; otherwise it rejects the edge.
+establishes, and retains every query variable. Compilation rejects the edge if
+no such joint branch exists.
 
 \subsection{Numeric and Joint-Guard Certification}
 
@@ -305,9 +311,9 @@ repair one signed literal, and the completion plan retries only while the
 monitor remains at $q_s$. The transition certificate, rather than the tree
 shape, provides the temporal guarantee. Trigger fan-out denotes the number of sibling
 AgentSpeak plans sharing one transition-repair trigger. Flat control therefore
-has fan-out $O(n)$, whereas a linear body gives an $O(n)$-long intention
-continuation; balanced dispatch preserves the certified order while bounding
-both local quantities by two.
+has trigger fan-out $O(n)$, whereas a linear realization has plan-body length
+$O(n)$; balanced dispatch preserves the certified order while bounding both
+local quantities by two.
 
 Appending $\mathcal Q_q$ leaves $\mathcal M_D$ unchanged. Query-local goals are
 control symbols; only primitive PDDL actions change the observed state.
@@ -330,7 +336,7 @@ reachable-state coverage.
 
 \paragraph{Certified-candidate-set optimality.}
 
-\textbf{Proposition 2.} For the grounded selection instance defined above, a
+\textbf{Proposition 2.} For the grounded feasible-core selection instance, a
 Clingo optimum $\mathcal M_D$ belongs to $\mathfrak F_{D,E}$ and minimizes the
 declared lexicographic cost over that feasible family. The result does not imply
 complete candidate generation or optimality over all AgentSpeak programs.
@@ -342,7 +348,7 @@ P_\chi^+,P_\chi^-\rangle$ be an accepted signed transition obligation. If each
 required signed repair has an applicable certified branch,
 each selected call terminates, and later repairs preserve earlier obligations,
 then at the end of a complete transition-repair pass the controller retries
-exactly when the monitor reports the source state; otherwise it returns to
+exactly when the monitor reports the source state; otherwise the controller returns to
 dispatch at the
 current state. Every intervening state change is an actual DFA edge enabled by
 the observed valuation, and a rejecting state cannot report success.
@@ -351,9 +357,9 @@ the observed valuation, and a rejecting state cannot report success.
 Induction over the certified order shows that each leaf
 establishes its signed literal and later summaries preserve prior positives and
 absences; if a call leaves the source, the remaining certified suffix preserves
-this prefix at return boundaries. Because only the monitor evaluates full cubes
+the established prefix at return boundaries. Because only the monitor evaluates full cubes
 after every primitive action, every observed source exit is a real DFA
-transition. After a complete pass, completion retries exactly while the source
+transition. After a complete pass, the completion plan retries exactly while the source
 remains active. \hfill$\square$ This does not guarantee that a post-exit suffix
 avoids rejection.
 
