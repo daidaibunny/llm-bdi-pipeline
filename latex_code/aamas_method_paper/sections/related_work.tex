@@ -32,16 +32,16 @@ controllers from planning evidence and PDDL schemas.
 \ltlf{} admits automata-based reasoning \cite{DeGiacomoVardi2013}, which we
 instantiate with the MONA-backed LTLf2DFA construction
 \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}. Full temporal synthesis solves
-the domain--automaton product \cite{DeGiacomoRubin2018AutomataFOND}. TIDE instead
+the domain--automaton product \cite{DeGiacomoRubin2018AutomataFOND}. FOND4LTLf
+compiles \ltlf{} goals into standard FOND planning
+\cite{DeGiacomoFuggitti2021FOND4LTLf}; Plan4Past compiles pure-past goals into
+classical planning \cite{Bonassi2023Plan4Past}. TIDE instead
 searches automaton traces and backtracks over classical reach--avoid subproblems
 \cite{Suprun2026TIDE}. GP2PL performs neither product nor trace search: it
 compiles certified repairs over the domain's compiled BDI library and makes no
 complete strategy-synthesis claim. Temporally extended goals have explicit
 agent-language semantics \cite{Hindriks2009TemporalGoals}; we retain
-plan execution and add a query-local monitor. Following the fixed-planner
-principle of \cite{Bonassi2023Plan4Past}, FOND4LTLf
-\cite{DeGiacomoFuggitti2021FOND4LTLf} is a task-level reference on its accepted
-subset, not a compiler ablation.
+plan execution and add a query-local monitor.
 
 \paragraph{Natural-language query specifications.}
 Prior systems map natural-language instructions to temporal logic through

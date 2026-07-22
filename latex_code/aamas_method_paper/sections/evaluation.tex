@@ -93,6 +93,8 @@ PAR-2 is \TemporalCrossSeedMeanParTwoSeconds{} $\pm$
 runtime, and trace length appear in the Technical Supplement, Sec.~5.3.
 
 \paragraph{External task references.}
+For the two external temporal references, we fix LAMA as the backend; FOND4LTLf
+and TIDE are end-to-end task references rather than GP2PL compiler ablations.
 On the same achievement corpus, LAMA validates
 \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} classical instances and
 ENHSP MRP+HJ validates
@@ -100,11 +102,11 @@ ENHSP MRP+HJ validates
 \cite{RichterWestphal2010LAMA,Scala2020NumericSubgoaling}; Full GP2PL averages
 \AtomicFiveSeedMeanSuccessPercent{}\% across all 1,228 held-out cases. Among the
 Boolean temporal queries admitted by FOND4LTLf, GP2PL validates all
-\ExternalDirectSupportedCount{}, whereas FOND4LTLf with LAMA validates
+\ExternalDirectSupportedCount{}, whereas FOND4LTLf validates
 \ExternalDirectValidCount{}/\ExternalDirectSupportedCount{} (PAR-2
 \ExternalDirectParTwoSeconds{} seconds) \cite{DeGiacomoFuggitti2021FOND4LTLf}.
 The other \ExternalDirectUnsupportedCount{} queries are outside FOND4LTLf's declared
-scope. TIDE with LAMA validates
+scope. TIDE validates
 \ExternalTIDEValidCount{}/\ExternalTIDESupportedCount{} Boolean queries (PAR-2
 \ExternalTIDEParTwoSeconds{} seconds); the \ExternalTIDEUnsupportedCount{}
 numeric queries are outside TIDE's scope \cite{Suprun2026TIDE}. Complete
