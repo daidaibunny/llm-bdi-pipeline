@@ -168,6 +168,23 @@ def test_registered_external_reference_result_is_complete_portable_and_manifeste
 		"unsupported_numeric_pddl": 153,
 		"valid": 675,
 	}
+	domains = {row["domain"]: row for row in result["domain_rows"]}
+	assert len(domains) == 16
+	assert domains["barman"]["tide_lama"] == {
+		"supported_case_count": 90,
+		"valid_trace_count": 63,
+	}
+	assert domains["blocksworld-clear"]["fond4ltlf_lama"] == {
+		"supported_case_count": 19,
+		"valid_trace_count": 0,
+	}
+	assert domains["numeric-ferry"]["fond4ltlf_lama"] is None
+	assert domains["numeric-ferry"]["tide_lama"] is None
+	assert domains["numeric-ferry"]["lama"] is None
+	assert domains["numeric-ferry"]["mrp_hj"] == {
+		"supported_case_count": 90,
+		"valid_trace_count": 60,
+	}
 	for record in result["records"]:
 		if record["record_kind"] == "direct_temporal" and record["valid"] is True:
 			assert all(
@@ -186,3 +203,20 @@ def test_registered_external_reference_result_is_complete_portable_and_manifeste
 	for relative_path in manifest["files"]:
 		artifact = RELEASE_ROOT / relative_path
 		assert artifact.is_file()
+
+
+def test_external_reference_table_distinguishes_failure_from_unsupported() -> None:
+	result = json.loads(RESULT_FILE.read_text(encoding="utf-8"))
+	table = freeze_external_reference_results.render_external_table(
+		{
+			"external": result["rows"],
+			"external_domains": result["domain_rows"],
+		},
+	)
+
+	assert "Entries are valid/supported" in table
+	assert "0/19" in table
+	assert "barman &" in table
+	assert "63/90" in table
+	assert "numeric-ferry &" in table
+	assert "--" in table

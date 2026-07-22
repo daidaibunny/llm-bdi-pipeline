@@ -3,18 +3,30 @@
 \centering
 \small
 \setlength{\tabcolsep}{3.2pt}
-\begin{tabular}{lllrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Method & Source & Scope & Coverage & Unsupported & PAR-2 s \\
+& \multicolumn{3}{c}{Achievement task} & \multicolumn{2}{c}{Temporal task} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-6}
+Domain & MOOSE & LAMA & MRP+HJ & FOND4LTLf & TIDE \\
 \midrule
-MOOSE & Reported & Original MOOSE domains, five seeds & 1079.6/1080 & 0 & -- \\
-Raw MOOSE extension & Measured & Added domains, five seeds & 23.4 $\pm$ 2.3/148 & 0 & -- \\
-LAMA & Measured & Classical achievement & 591/868 & 0 & 1178.4 \\
-MRP+HJ & Measured & Numeric achievement & 253/360 & 0 & 1127.4 \\
-FOND4LTLf + LAMA & Measured & FOND4LTLf-admitted Boolean TEG & 298/492 & 736 & 1457.5 \\
-TIDE + LAMA & Measured & All Boolean TEG & 675/868 & 360 & 821.0 \\
+barman & 90/90$^{\mathrm{R}}$ & 49/90 & -- & 71/90 & 63/90 \\
+blocksworld-clear & 7/30$^{\mathrm{M}}$ & 26/30 & -- & 0/19 & 30/30 \\
+blocksworld-on & 2/30$^{\mathrm{M}}$ & 30/30 & -- & 0/18 & 30/30 \\
+blocksworld-tower & 6/77$^{\mathrm{M}}$ & 61/77 & -- & 67/77 & 77/77 \\
+depots & 8.4/11$^{\mathrm{M}}$ & 9/11 & -- & 0/11 & 11/11 \\
+ferry & 90/90$^{\mathrm{R}}$ & 64/90 & -- & 12/16 & 70/90 \\
+gripper & 90/90$^{\mathrm{R}}$ & 60/90 & -- & 0/51 & 68/90 \\
+logistics & 89.6/90$^{\mathrm{R}}$ & 60/90 & -- & 15/16 & 69/90 \\
+miconic & 90/90$^{\mathrm{R}}$ & 65/90 & -- & 24/28 & 70/90 \\
+numeric-ferry & 90/90$^{\mathrm{R}}$ & -- & 60/90 & -- & -- \\
+numeric-miconic & 90/90$^{\mathrm{R}}$ & -- & 66/90 & -- & -- \\
+numeric-minecraft & 90/90$^{\mathrm{R}}$ & -- & 64/90 & -- & -- \\
+numeric-transport & 90/90$^{\mathrm{R}}$ & -- & 63/90 & -- & -- \\
+rovers & 90/90$^{\mathrm{R}}$ & 45/90 & -- & 16/27 & 55/90 \\
+satellite & 90/90$^{\mathrm{R}}$ & 68/90 & -- & 41/49 & 75/90 \\
+transport & 90/90$^{\mathrm{R}}$ & 54/90 & -- & 52/90 & 57/90 \\
 \bottomrule
 \end{tabular}
-\caption{Scope-separated external planning references. Reported MOOSE coverage is copied from Table~4 of the five-seed extended paper~\cite{Chen2025MooseExtended}; its runtime is not compared with local measurements. Measured rows use a 1,800-second, 8-GiB per-task budget, and PAR-2 charges nonvalid supported cases twice the cutoff. Raw MOOSE extension coverage is mean $\pm$ sample standard deviation over five seeds; its runtime is omitted by protocol. Direct temporal references exclude unsupported inputs from their coverage denominator and report them separately from planning failures. Rows with different scopes are not ranked.}
+\caption{Per-domain external task references. Entries are valid/supported; -- means that the method declares the entire domain unsupported. Planning failures, compiler failures, and timeouts remain in the supported denominator, so $0/n$ is distinct from --. FOND4LTLf and TIDE use LAMA. MOOSE values are five-seed means: $^{\mathrm{R}}$ denotes values reported in Table~4 of the MOOSE extended paper~\cite{Chen2025MooseExtended}, and $^{\mathrm{M}}$ denotes the measured extension; its uncertainty is reported in Table~\ref{tab:moose-reference}. Aggregate PAR-2 is reported in the text.}
 \label{tab:external-references}
 \end{table*}

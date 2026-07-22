@@ -23,6 +23,340 @@
       "count": 1228
     }
   },
+  "domain_rows": [
+    {
+      "domain": "barman",
+      "fond4ltlf_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 71
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 49
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 63
+      }
+    },
+    {
+      "domain": "blocksworld-clear",
+      "fond4ltlf_lama": {
+        "supported_case_count": 19,
+        "valid_trace_count": 0
+      },
+      "lama": {
+        "supported_case_count": 30,
+        "valid_trace_count": 26
+      },
+      "moose": {
+        "sample_sd_valid_count": 0.0,
+        "source": "measured",
+        "supported_case_count": 30,
+        "valid_trace_count": 7.0
+      },
+      "mrp_hj": null,
+      "test_count": 30,
+      "tide_lama": {
+        "supported_case_count": 30,
+        "valid_trace_count": 30
+      }
+    },
+    {
+      "domain": "blocksworld-on",
+      "fond4ltlf_lama": {
+        "supported_case_count": 18,
+        "valid_trace_count": 0
+      },
+      "lama": {
+        "supported_case_count": 30,
+        "valid_trace_count": 30
+      },
+      "moose": {
+        "sample_sd_valid_count": 0.0,
+        "source": "measured",
+        "supported_case_count": 30,
+        "valid_trace_count": 2.0
+      },
+      "mrp_hj": null,
+      "test_count": 30,
+      "tide_lama": {
+        "supported_case_count": 30,
+        "valid_trace_count": 30
+      }
+    },
+    {
+      "domain": "blocksworld-tower",
+      "fond4ltlf_lama": {
+        "supported_case_count": 77,
+        "valid_trace_count": 67
+      },
+      "lama": {
+        "supported_case_count": 77,
+        "valid_trace_count": 61
+      },
+      "moose": {
+        "sample_sd_valid_count": 1.7320508075688772,
+        "source": "measured",
+        "supported_case_count": 77,
+        "valid_trace_count": 6.0
+      },
+      "mrp_hj": null,
+      "test_count": 77,
+      "tide_lama": {
+        "supported_case_count": 77,
+        "valid_trace_count": 77
+      }
+    },
+    {
+      "domain": "depots",
+      "fond4ltlf_lama": {
+        "supported_case_count": 11,
+        "valid_trace_count": 0
+      },
+      "lama": {
+        "supported_case_count": 11,
+        "valid_trace_count": 9
+      },
+      "moose": {
+        "sample_sd_valid_count": 1.140175425099138,
+        "source": "measured",
+        "supported_case_count": 11,
+        "valid_trace_count": 8.4
+      },
+      "mrp_hj": null,
+      "test_count": 11,
+      "tide_lama": {
+        "supported_case_count": 11,
+        "valid_trace_count": 11
+      }
+    },
+    {
+      "domain": "ferry",
+      "fond4ltlf_lama": {
+        "supported_case_count": 16,
+        "valid_trace_count": 12
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 64
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 70
+      }
+    },
+    {
+      "domain": "gripper",
+      "fond4ltlf_lama": {
+        "supported_case_count": 51,
+        "valid_trace_count": 0
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 60
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 68
+      }
+    },
+    {
+      "domain": "logistics",
+      "fond4ltlf_lama": {
+        "supported_case_count": 16,
+        "valid_trace_count": 15
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 60
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 89.6
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 69
+      }
+    },
+    {
+      "domain": "miconic",
+      "fond4ltlf_lama": {
+        "supported_case_count": 28,
+        "valid_trace_count": 24
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 65
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 70
+      }
+    },
+    {
+      "domain": "numeric-ferry",
+      "fond4ltlf_lama": null,
+      "lama": null,
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": {
+        "supported_case_count": 90,
+        "valid_trace_count": 60
+      },
+      "test_count": 90,
+      "tide_lama": null
+    },
+    {
+      "domain": "numeric-miconic",
+      "fond4ltlf_lama": null,
+      "lama": null,
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": {
+        "supported_case_count": 90,
+        "valid_trace_count": 66
+      },
+      "test_count": 90,
+      "tide_lama": null
+    },
+    {
+      "domain": "numeric-minecraft",
+      "fond4ltlf_lama": null,
+      "lama": null,
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": {
+        "supported_case_count": 90,
+        "valid_trace_count": 64
+      },
+      "test_count": 90,
+      "tide_lama": null
+    },
+    {
+      "domain": "numeric-transport",
+      "fond4ltlf_lama": null,
+      "lama": null,
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": {
+        "supported_case_count": 90,
+        "valid_trace_count": 63
+      },
+      "test_count": 90,
+      "tide_lama": null
+    },
+    {
+      "domain": "rovers",
+      "fond4ltlf_lama": {
+        "supported_case_count": 27,
+        "valid_trace_count": 16
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 45
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 55
+      }
+    },
+    {
+      "domain": "satellite",
+      "fond4ltlf_lama": {
+        "supported_case_count": 49,
+        "valid_trace_count": 41
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 68
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 75
+      }
+    },
+    {
+      "domain": "transport",
+      "fond4ltlf_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 52
+      },
+      "lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 54
+      },
+      "moose": {
+        "source": "reported",
+        "supported_case_count": 90,
+        "valid_trace_count": 90.0
+      },
+      "mrp_hj": null,
+      "test_count": 90,
+      "tide_lama": {
+        "supported_case_count": 90,
+        "valid_trace_count": 57
+      }
+    }
+  ],
   "protocol": {
     "achievement_case_count": 1228,
     "hardware_equivalence_confirmed_by_experiment_owner": true,

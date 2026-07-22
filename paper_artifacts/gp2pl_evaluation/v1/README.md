@@ -19,7 +19,8 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
 - `external_reference_results.json` freezes the complete 1,228-case
   LAMA/MRP+HJ matrix and separate 1,228-case FOND4LTLf-plus-LAMA and
   TIDE-plus-LAMA matrices. Its 3,684 portable records retain method outcomes,
-  runtimes, and validation status.
+  runtimes, and validation status; generated per-domain rows distinguish
+  valid/supported coverage from wholly unsupported domains.
 - `paired_ablation_results.json` freezes all 24,560 atomic and 4,912 temporal
   paired-ablation outcomes, their aggregate tables, adjacent-method exact
   paired contrasts, corrected transition-repair fan-out, and the 13-case

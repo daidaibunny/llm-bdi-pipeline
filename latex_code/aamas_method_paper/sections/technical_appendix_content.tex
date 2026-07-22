@@ -1631,11 +1631,12 @@ The remaining task-level references are frozen in
 matrix contains \ExternalAchievementValidCount{}/\ExternalAchievementCaseCount{}
 validated outcomes: \ExternalLAMAValidCount{}/\ExternalLAMACaseCount{} for LAMA
 on classical PDDL and \ExternalMRPHJValidCount{}/\ExternalMRPHJCaseCount{} for
-ENHSP MRP+HJ on numeric PDDL. The direct temporal matrix retains all
-\ExternalDirectTotalCaseCount{} identifiers, of which
-\ExternalDirectSupportedCount{} are supported Boolean inputs and
-\ExternalDirectValidCount{} produce independently validated accepting traces;
-\ExternalDirectUnsupportedCount{} remain explicitly unsupported.
+ENHSP MRP+HJ on numeric PDDL. Each direct temporal matrix retains all
+\ExternalDirectTotalCaseCount{} identifiers. FOND4LTLf supports
+\ExternalDirectSupportedCount{} and validates \ExternalDirectValidCount{};
+TIDE supports \ExternalTIDESupportedCount{} and validates
+\ExternalTIDEValidCount{}. Their unsupported inputs remain explicit rather than
+being counted as planning failures.
 
 The achievement-reference taxonomy is: LAMA has 591 valid plans, 249 planner
 failures, 24 timeouts, and four

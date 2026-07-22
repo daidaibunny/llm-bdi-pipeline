@@ -1414,9 +1414,11 @@ The main paper reports the Raw MOOSE versus Full GP2PL result on the identical
 table. This comparison concerns provider execution versus the final library on
 a narrower paired scope, rather than compiler variants over all 16 domains. Keep
 MOOSE, Raw MOOSE extension, LAMA, MRP+HJ, FOND4LTLf + LAMA, and TIDE + LAMA in a separate
-Technical-Supplement reference table with short columns such as `Method`,
-`Source`, `Scope`, `Coverage`, `Unsupported`, and `PAR-2`. Do not mix their
-output representations or costs into the compiler ablation table. The
+Technical-Supplement per-domain reference table. Each cell is
+`valid/supported`; use `--` only when a method declares the entire domain
+unsupported, never for a supported planning or compilation failure. Keep
+aggregate PAR-2 in the accompanying prose, and do not mix external output
+representations or costs into the compiler ablation table. The
 completed outcome matrix gives
 LAMA 591/868, MRP+HJ 253/360, FOND4LTLf plus LAMA 298/492 on its supported
 subset, and TIDE plus LAMA 675/868 on all Boolean inputs. Their 736 and 360
@@ -1424,12 +1426,15 @@ unsupported inputs remain separate. Retain every row in
 the Technical Supplement; moving the matrix out of the main paper changes
 placement, not the registered comparison protocol.
 
-Generate all three comparison tables with
-`scripts/generate_aaai_comparison_tables.py`. Its mandatory inputs are the
-complete paired compiler result, the checked MOOSE arXiv-v1 Table-4 reference
-artifact, four-domain Raw MOOSE extension summaries explicitly assigned to
-seeds 0--4, the native LAMA/MRP+HJ summary, the direct FOND4LTLf summary, the
-complete TIDE summary, and the challenge summary. The script must fail rather than render a partial table
+Generate the compiler ablation tables with
+`scripts/generate_aaai_comparison_tables.py`; generate the per-domain external
+reference table only with `scripts/freeze_external_reference_results.py`, from
+the complete frozen achievement, FOND4LTLf, TIDE, and MOOSE records. Their
+mandatory inputs include the paired compiler result, the checked MOOSE
+arXiv-v1 Table-4 reference artifact, four-domain Raw MOOSE extension summaries
+explicitly assigned to seeds 0--4, the native LAMA/MRP+HJ summary, the direct
+FOND4LTLf summary, the complete TIDE summary, and the challenge summary. The
+scripts must fail rather than render a partial table
 when a method, seed, case, protocol field, or semantic outcome is missing. The
 final generator must fail closed over the registered corpus rather than only
 compare methods with each other. It checks the complete identifier sets for all

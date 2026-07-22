@@ -527,8 +527,10 @@ in the Technical Supplement. The main paper reports the identical 740
 added-domain seed--case comparison with Raw MOOSE and the 492 Boolean temporal
 queries accepted by the direct FOND4LTLf adapter; unsupported inputs remain
 separate. The complete scope-separated MOOSE, LAMA, MRP+HJ, FOND4LTLf, and
-TIDE matrix remains in the Technical Supplement, avoiding a cross-scope
-ranking and a page-breaking double-column float. TIDE admits all 868 Boolean
+TIDE matrix remains in the Technical Supplement as per-domain
+`valid/supported` cells. A dash denotes only an entirely unsupported domain;
+supported failures remain in the denominator. This avoids a cross-scope
+ranking in the main paper. TIDE admits all 868 Boolean
 queries and validates 675; its 360 numeric inputs remain explicitly
 unsupported.
 
