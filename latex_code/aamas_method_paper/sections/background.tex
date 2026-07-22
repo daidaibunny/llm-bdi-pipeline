@@ -37,37 +37,34 @@ action or an internal achievement call $!q(\bar Y)$. A library is lifted when
 plans contain variables rather than training objects, and internally closed
 when every internal call resolves to a type-compatible selected module.
 
-Our certificates apply to this trigger--context--body model and to the PDDL
-semantics of primitive actions. A certificate is a compile-time, machine-checkable
-witness derived from $D$; for example, symbolic progression verifies sequential
-action applicability and target achievement. Formally, a candidate branch is
-$b=\langle g_b,C_b,\beta_b,\Sigma_b,\pi_b\rangle$: one lifted achievement
-literal, a conjunctive applicability condition, a finite body of primitive
-actions and internal calls, a conservative conditional module-completion
-summary, and provenance. We map selected branches to \asl{} and evaluate them
-with Jason \cite{Bordini2007Jason}; claims about another BDI language would
-require a semantics-preserving translation and an independent execution study.
-Query controllers follow declarative goal patterns by rechecking their intended
-state after subsidiary plans return \cite{Hubner2006DeclarativeGoals}.
+The evaluated target language is \asl{}, and Jason executes the selected lifted
+rules \cite{Bordini2007Jason}. Extending the empirical claims to another BDI
+language would require a semantics-preserving translation and an independent
+execution study. Query controllers follow declarative goal patterns by
+rechecking their intended state after subsidiary plans return
+\cite{Hubner2006DeclarativeGoals}.
 
-\subsection{Achievement and Finite-Trace Temporal Goals}
+\subsection{Achievement and Temporal Goals}
 
-Linear temporal logic over finite traces (\ltlf{}) is interpreted over a
-nonempty finite state sequence \cite{DeGiacomoVardi2013}. For proposition
-alphabet $AP_q$, the declared input language $\Phi_{\mathrm{syn}}$ admits
-literals, conjunction, and the operators $F$ (eventually), $X$ (strong next),
-and $U$ (strong until) over $AP_q$, with negation restricted to atoms. Its
-atemporal subset $\Phi_{\mathrm{ach}}$ contains literals and conjunctions with no
-temporal operator and denotes ordinary achievement conditions; formulae in
-$\Phi_{\mathrm{syn}}\setminus\Phi_{\mathrm{ach}}$ are TEGs. The full grammar and
-finite-trace semantics appear in the Technical Supplement, Sec.~1.
-The evaluation family
+An achievement goal requires a state condition to hold at completion
+\cite{Rao1996AgentSpeak,Sardina2007PlanFailure}. For proposition alphabet
+$AP_q$, we write such conditions as literals or conjunctions in the atemporal
+language $\Phi_{\mathrm{ach}}$. A temporally extended goal (TEG) instead
+constrains a finite execution trace \cite{Hindriks2009TemporalGoals}. We express
+TEGs in linear temporal logic over finite traces (\ltlf{})
+\cite{DeGiacomoVardi2013}. The declared language $\Phi_{\mathrm{syn}}$ extends
+$\Phi_{\mathrm{ach}}$ with $F$ (eventually), $X$ (strong next), and $U$ (strong
+until), with negation restricted to atoms. Thus a formula without a temporal
+operator is an achievement goal, whereas a formula containing one is a TEG.
+The full grammar and finite-trace semantics appear in the Technical Supplement,
+Sec.~1. The evaluation family
 $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains instances of the
 five predeclared profiles in Sec.~\ref{sec:evaluation}; membership in either
 set is not an action-strategy guarantee.
 
-For $\varphi_q\in\Phi_{\mathrm{ach}}$, the canonical completion embedding is
-$F\varphi_q$; a TEG is unchanged. Following automata-theoretic planning
+Both goal classes use the same automata path. For
+$\varphi_q\in\Phi_{\mathrm{ach}}$, the completion embedding is $F\varphi_q$; a
+TEG is unchanged. Following automata-theoretic planning
 \cite{DeGiacomoRubin2018AutomataFOND}, we construct the deterministic finite
 automaton (DFA) for this execution formula
 $\mathcal D_q=\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle$
