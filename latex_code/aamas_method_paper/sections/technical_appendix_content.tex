@@ -1687,7 +1687,7 @@ Translation temperature & 0 & 0 & Deterministic structured translation \\
 Translation token limit & 60,000 & 60,000 & Accommodate the complete JSON response schema \\
 Semantic retries & 0--3 & at most 3 & Retry only structured validation failure \\
 Jason/VAL timeout & 30 minutes & 30 minutes each & Common per-instance evaluation cap \\
-Validation workers & 6,8,10,12,16,20 & 6 paired; 12 fixed temporal; 20 external &
+Validation workers & 6,8,10,12,16,20 & 6 paired/five-seed temporal; 20 external &
 Fixed per registered experiment; not a method parameter \\
 Java thread stack & default, 64 MiB & 64 MiB &
 Prevent parser stack exhaustion on large query libraries \\
@@ -1704,9 +1704,10 @@ processes, but their evidence is never concatenated. The standalone five-seed
 Full GP2PL study uses eight validation workers, whereas every paired atomic and
 temporal ablation uses the registered six workers.
 
-The fixed temporal release predates this five-seed protocol and conditions on
-one declared seed-0 library set. Its 12-worker launch changes throughput, not
-query semantics, and does not support a five-seed robustness claim.
+The paired temporal ablation fixes one core per domain so controller variants
+receive identical inputs. The selected Certified Balanced controller is also
+evaluated with each of the five independently compiled core sets using six
+workers.
 
 \subsection{Metrics, Distribution, and Validation}
 
@@ -1722,17 +1723,22 @@ Depots \texttt{p12} and \texttt{p20} fail for every seed.
 
 Table~\ref{tab:five-seed-atomic-domains} preserves every raw domain--seed
 success count together with its cross-seed descriptive statistic.
-Table~\ref{tab:domain-results} records the fixed seed-0 library inputs used by
-the separate temporal evaluation; it is not a five-seed robustness result.
+Table~\ref{tab:domain-results} records the common seed-0 inputs used by the
+paired controller ablation.
 
 \input{sections/result_five_seed_atomic_domain_table}
 
 \input{sections/result_domain_table}
 
-The main paper reports only the aggregate fixed-core temporal result and the
-same-scope evidence-to-library contrast. The profile decomposition, per-domain
-Raw MOOSE extension results, and complete scope-separated external references
-are retained here because they refine, rather than define, the headline claims.
+The selected controller validates
+\TemporalCrossSeedValidCount{}/\TemporalCrossSeedEvaluationCount{} executions:
+all \TemporalCrossSeedQueryCount{} queries succeed for all
+\TemporalCrossSeedCount{} seeds, with no seed-sensitive case. Action count is
+invariant across seeds for every query. Mean per-seed PAR-2 is
+\TemporalCrossSeedMeanParTwoSeconds{} $\pm$
+\TemporalCrossSeedParTwoSDSeconds{} seconds. The profile decomposition,
+per-domain Raw MOOSE extension results, and complete scope-separated external
+references refine this aggregate result.
 
 \input{sections/result_profile_table}
 
@@ -1796,17 +1802,18 @@ evidence seeds. We average the five paired binary differences for each identifie
 and apply a two-sided exact sign test to the nonzero case-level differences;
 the 6,140 seed--case outcomes are not treated as independent units.
 
-The temporal matrix contains one query per held-out problem under one fixed
-atomic core. Queries nevertheless cluster by domain and may share one of 475
-translated inputs. We therefore report paired discordant counts and their
-domain/profile concentration, but attach no case-level $p$-value to temporal
-coverage differences.
+The temporal ablation contains one query per held-out problem under a common
+atomic core. Queries cluster by domain and may share one of 475 translated
+inputs, so paired contrasts are descriptive. The robustness extension repeats
+only the selected controller over five independent cores and reports variation
+across seeds.
 
 The completed paired release is
 \texttt{paper\_artifacts/gp2pl\_evaluation/v1/}
 \texttt{paired\_ablation\_results.json}. It contains 24,560 portable atomic
 outcomes (1,228 cases, four variants, and five seeds), 4,912 portable temporal
-outcomes (1,228 cases), and the 13 challenge outcomes.
+ablation outcomes, \TemporalCrossSeedEvaluationCount{} selected-controller
+cross-seed outcomes, and the 13 challenge outcomes.
 Machine-local paths and transient logs are excluded; the report below is
 computed from the recorded outcomes.
 
@@ -1834,12 +1841,12 @@ Module-Return Monitor have
 primitive-step observation. PAR-2 and action counts remain descriptive; no
 continuous-measure superiority claim is made.
 
-For the 1,228 fixed temporal cases, runtime has minimum 2.29, first quartile
-4.28, median 5.49, third quartile 8.49, maximum 110.31, mean 9.39, and sample
-standard deviation 13.66 seconds. Primitive-action count has minimum 1, first
-quartile 1, median 2, third quartile 2, maximum 4, mean 1.75, and sample standard
-deviation 0.80. The complete records, rather than only these summaries, are
-included.
+Across the \TemporalCrossSeedEvaluationCount{} selected-controller executions,
+runtime has minimum 1.02, first quartile 1.90, median 2.35, third quartile 4.81,
+maximum 66.88, mean 5.36, and sample standard deviation 7.64 seconds.
+Primitive-action count has minimum 1, first quartile 1, median 2, third quartile
+2, maximum 4, mean 1.77, and sample standard deviation 0.83. The complete
+records, rather than only these summaries, are included.
 
 Thirteen registered challenge cases all pass. Seven exercise rejection or exact
 acceptance for binding, cyclic preparation, obstruction exchange, ambiguous
@@ -1849,12 +1856,12 @@ renaming, action-parameter permutation, evidence-object renaming, irrelevant
 static vocabulary, negative-guard renaming, and progress-relation renaming.
 
 The completed matrix pairs binary atomic success by seed, domain, and test, and
-binary temporal success by query under identical inputs. The atomic sign test
-uses distinct case identifiers as its inferential unit; temporal contrasts are
-descriptive because domain and translation-input clustering remains. The
-Balanced representation claim is structural rather than runtime-based.
-Continuous values are reported on the registered denominator or jointly solved
-cases without a superiority test.
+binary temporal ablation success by query under identical inputs; the selected
+controller additionally has five-seed outcomes. The atomic sign test uses
+distinct case identifiers as its inferential unit. Temporal contrasts and
+cross-seed summaries are descriptive. The Balanced representation claim is
+structural rather than runtime-based, and continuous values carry no superiority
+test.
 
 \subsection{Reproduction Commands and Artifact Map}
 
@@ -1941,6 +1948,9 @@ uv run python \
 results.py \
   --paired-results "$PAIRED_RESULTS" \
   --challenge-summary "$CHALLENGE_SUMMARY"
+uv run python \
+  scripts/freeze_cross_seed_temporal_\
+results.py
 \end{verbatim}
 \endgroup
 

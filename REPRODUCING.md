@@ -143,17 +143,16 @@ development-only flag is supplied.
 
 ## Statistical Reporting Boundary
 
-The fixed temporal release reports the complete per-query distribution. Across
-1,228 cases, execution time has median 5.49 seconds, interquartile range
-4.28--8.49 seconds, and sample standard deviation 13.66 seconds; action count
-has median 2, interquartile range 1--2, and sample standard deviation 0.80.
+The selected temporal compiler reports the complete five-seed distribution.
+Across 6,140 executions, runtime has median 2.35 seconds, interquartile range
+1.90--4.81 seconds, and sample standard deviation 7.64 seconds; action count has
+median 2, interquartile range 1--2, and sample standard deviation 0.83. Every
+query succeeds under all five seeds.
 
-The current manuscript does not claim a statistically significant improvement
-between compiler variants. All fixed-release differences are descriptive. The
-checklist answer is therefore `yes` in a claim-scoped sense: no improvement or
-decrease is presented as statistically significant without an appropriate paired
-test. The registered five-seed comparison must complete before any such claim is
-added; documentation alone cannot supply that evidence.
+Temporal compiler contrasts and five-seed runtime summaries are descriptive;
+the manuscript makes no continuous-measure superiority claim. Atomic coverage
+uses the paired test defined in the Technical Supplement. Documentation alone
+does not supply statistical evidence beyond these frozen outcomes.
 
 ## Checklist Evidence Map
 

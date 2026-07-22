@@ -95,17 +95,20 @@ claiming certificate completeness.
 
 \paragraph{End-to-end temporal validation.}
 \label{sec:end-to-end-results}
-To isolate temporal compilation, the paired study conditions every controller
-variant on the same seed-0 core per domain; it does not estimate cross-seed
-temporal variability. Its five structures instantiate
-$\Phi_{\mathrm{bench}}$, not all of
+The paired ablation holds one atomic core per domain fixed; the selected
+compiler is then evaluated over all five seed-specific core sets. The five
+benchmark profiles instantiate $\Phi_{\mathrm{bench}}$, not all of
 $\Phi_{\mathrm{syn}}$, and execution includes only queries admitted to
 $\Phi_{\mathrm{cert}}(D,\mathcal M_D)$. All
-\TranslationEquivalentCount{}/\TranslationInputCount{} are DFA-language
-equivalent, and all \TEGProblemCount{} admitted queries pass Jason, neutral-goal
-VAL, and both DFA oracles. Median runtime is \TEGMedianRuntimeSeconds{} seconds
-(IQR 4.28--8.49), and median trace length is \TEGMedianActionCount{} actions
-(IQR 1--2); trace length is descriptive, not an action-cost optimality claim.
+\TranslationEquivalentCount{}/\TranslationInputCount{} translations are
+DFA-language equivalent. Certified Balanced validates
+\TemporalCrossSeedValidCount{}/\TemporalCrossSeedEvaluationCount{} executions,
+and all \TemporalCrossSeedAllSeedValidQueryCount{} queries succeed under every
+seed. Mean per-seed PAR-2 is \TemporalCrossSeedMeanParTwoSeconds{} $\pm$
+\TemporalCrossSeedParTwoSDSeconds{} seconds; median trace length is two actions
+in every seed, and action count is invariant for all
+\TemporalCrossSeedActionInvariantQueryCount{} queries. Trace length is
+descriptive, not an action-cost optimality claim.
 Across 740 same-seed added-family cases, GP2PL raises VAL-valid coverage from
 15.8\% to 97.3\%; original-scope MOOSE results are separate
 \cite{Chen2025MooseExtended}. On the \ExternalDirectSupportedCount{} Boolean

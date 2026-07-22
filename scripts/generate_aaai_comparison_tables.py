@@ -1440,6 +1440,36 @@ def render_comparison_macros(result: Mapping[str, Any]) -> str:
 		f"\\newcommand{{\\AtomicAblationCaseCount}}{{{atomic_rows[0]['test_count']}}}",
 		f"\\newcommand{{\\TemporalAblationCaseCount}}{{{temporal_rows[0]['test_count']}}}",
 	]
+	temporal_cross_seed = dict(result.get("temporal_cross_seed") or {})
+	if temporal_cross_seed:
+		cross_seed_protocol = dict(temporal_cross_seed["protocol"])
+		cross_seed_aggregate = dict(temporal_cross_seed["aggregate"])
+		lines.extend(
+			(
+				"\\newcommand{\\TemporalCrossSeedCount}"
+				f"{{{len(tuple(cross_seed_protocol['seeds'])):,}}}",
+				"\\newcommand{\\TemporalCrossSeedQueryCount}"
+				f"{{{int(cross_seed_protocol['case_count_per_seed']):,}}}",
+				"\\newcommand{\\TemporalCrossSeedEvaluationCount}"
+				f"{{{int(cross_seed_aggregate['pooled_evaluation_count']):,}}}",
+				"\\newcommand{\\TemporalCrossSeedValidCount}"
+				f"{{{int(cross_seed_aggregate['pooled_success_count']):,}}}",
+				"\\newcommand{\\TemporalCrossSeedAllSeedValidQueryCount}"
+				f"{{{int(cross_seed_aggregate['all_seed_success_case_count']):,}}}",
+				"\\newcommand{\\TemporalCrossSeedSensitiveQueryCount}"
+				f"{{{int(cross_seed_aggregate['seed_sensitive_case_count']):,}}}",
+				"\\newcommand{\\TemporalCrossSeedMeanSuccessPercent}"
+				f"{{{100.0 * float(cross_seed_aggregate['mean_success_rate']):.1f}}}",
+				"\\newcommand{\\TemporalCrossSeedSuccessSDPercent}"
+				f"{{{100.0 * float(cross_seed_aggregate['sample_sd_success_rate']):.1f}}}",
+				"\\newcommand{\\TemporalCrossSeedMeanParTwoSeconds}"
+				f"{{{float(cross_seed_aggregate['mean_seed_par2_seconds']):.2f}}}",
+				"\\newcommand{\\TemporalCrossSeedParTwoSDSeconds}"
+				f"{{{float(cross_seed_aggregate['sample_sd_seed_par2_seconds']):.2f}}}",
+				"\\newcommand{\\TemporalCrossSeedActionInvariantQueryCount}"
+				f"{{{int(cross_seed_aggregate['action_count_invariant_case_count']):,}}}",
+			),
+		)
 	for row in atomic_rows:
 		prefix = ATOMIC_MACRO_PREFIXES[str(row["variant"])]
 		lines.extend(

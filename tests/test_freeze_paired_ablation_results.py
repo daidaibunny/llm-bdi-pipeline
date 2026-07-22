@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from scripts.freeze_paired_ablation_results import write_paired_ablation_files
+from scripts.generate_aaai_comparison_tables import render_comparison_macros
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +40,12 @@ def test_registered_paired_ablation_is_complete_portable_and_manifested() -> Non
 	manifest = json.loads((RELEASE_ROOT / "manifest.json").read_text(encoding="utf-8"))
 	assert manifest["paired_ablation_atomic_record_count"] == 24560
 	assert manifest["paired_ablation_temporal_record_count"] == 4912
+	macros = render_comparison_macros(result)
+	assert r"\newcommand{\TemporalCrossSeedCount}{5}" in macros
+	assert r"\newcommand{\TemporalCrossSeedEvaluationCount}{6,140}" in macros
+	assert r"\newcommand{\TemporalCrossSeedValidCount}{6,140}" in macros
+	assert r"\newcommand{\TemporalCrossSeedMeanParTwoSeconds}{5.36}" in macros
+	assert r"\newcommand{\TemporalCrossSeedParTwoSDSeconds}{0.27}" in macros
 
 
 def test_write_paired_ablation_files_updates_tables_macros_and_manifest(

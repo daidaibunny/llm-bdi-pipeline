@@ -349,8 +349,9 @@ there is no separate unimplemented capability-switch row.
 
 Raw MOOSE execution distinguishes evidence quality from compiler and
 AgentSpeak execution. LAMA for classical instances, ENHSP MRP+HJ for numeric
-instances, and FOND4LTLf plus LAMA for direct temporal planning are external
-task-level references. Their outputs and cost structures differ from a reusable
+instances, FOND4LTLf plus LAMA for temporal product compilation, and TIDE plus
+LAMA for automaton-trace decomposition are external task-level references.
+Their outputs and cost structures differ from a reusable
 AgentSpeak library, so they are reported separately from compiler and controller
 ablations. Plan4Past supplies the experimental design precedent of fixing the
 downstream planner while comparing temporal compilations; its pure-past input is
@@ -376,12 +377,18 @@ The native achievement reference runner is
 learned model; LAMA is invoked as `search lama-first` from the official MOOSE
 artifact; ENHSP uses the pinned `sat-hmrphj` configuration. Every nonempty
 achievement plan must pass VAL against the original PDDL goal. The native direct
-temporal runner is `scripts/run_direct_temporal_reference.py`. It grounds only
-the declared invocation binding, invokes official FOND4LTLf v0.0.4, solves the
-compiled deterministic instance with the same LAMA backend, removes only the
-compiler's `trans-*` DFA-update actions, and submits the remaining original PDDL
-actions to replay, neutral-goal VAL, gold-DFA acceptance, and predicted-DFA
-acceptance. It does not consume an atomic ASL library.
+temporal runner is `scripts/run_direct_temporal_reference.py`. Its
+`fond4ltlf_lama` mode grounds only the declared invocation binding, invokes
+official FOND4LTLf v0.0.4, solves the compiled deterministic instance with the
+same LAMA backend, and removes only the compiler's `trans-*` DFA-update actions.
+Its `tide_lama` mode renders the persisted validated LTLf query and binding as a
+temporal PDDL goal, then invokes official TIDE with feedback, trace heuristic,
+prefix caching, and Fast Downward `lama-first`. TIDE's `next` node is the
+upstream pddlboat strong-next operator `X[!]`, and `until` is strong `U`; the
+adapter preserves the declared formula semantics. The gold formula is never
+supplied to TIDE search; it remains an independent validation oracle. Both modes
+submit only original PDDL actions to replay, neutral-goal VAL, gold-DFA
+acceptance, and predicted-DFA acceptance. Neither consumes an atomic ASL library.
 
 FOND4LTLf v0.0.4 is an explicit partial reference: it rejects numeric PDDL and
 numeric atoms, and its underscore atom encoding is accepted only when predicate
@@ -391,13 +398,19 @@ the tool parser and removes an unused `:action-costs` declaration when the domai
 contains no functions or numeric effects, without changing action formulas.
 Unsupported inputs are counted
 as outside tool applicability, not planner failures. FOND4LTLf compilation and
-LAMA search share one 1,800-second, 8-GiB per-query budget. The setup contract in
+LAMA search share one 1,800-second, 8-GiB per-query budget. TIDE receives the
+same total budget and a 60-second limit for each generated Fast Downward
+subproblem. Its adapter accepts deterministic predicate PDDL in the declared
+LTLf fragment and rejects resource-numeric PDDL and numeric atoms rather than
+approximating them. The setup contract in
 `scripts/setup_external_planning_references.sh` pins ENHSP revision
 `537bed55a60d9456975c56afbadd50fc8acb1dc9`, FOND4LTLf revision
-`011d9d9a5bfd6406d2c358faf8f63167f6c839bb`, VAL revision
+`011d9d9a5bfd6406d2c358faf8f63167f6c839bb`, TIDE revision
+`9bdd247752817352714eac115ea6b78d90f26c09` and its recursive submodules, VAL revision
 `3c7a1f330bdab0ba28a4762bb45c3f06c27fb6d4`, its Python dependencies, and
 MONA 1.4-18; `--check` verifies functional Java and MONA runtimes plus all
-pinned sources and artifact hashes without modifying them. The exact
+pinned sources, artifact hashes, and the revision-labelled official TIDE
+`linux/amd64` image without modifying them. The exact
 MOOSE-hosted LAMA image is extracted once into a hash-checked Apptainer sandbox.
 The sandbox avoids per-process loop-device allocation, and every Raw MOOSE or
 LAMA case mounts a private `/work/out` directory. FOND4LTLf keeps the pinned
@@ -500,8 +513,9 @@ added-domain seed--case comparison with Raw MOOSE and the 492 Boolean temporal
 queries accepted by the direct FOND4LTLf adapter; unsupported inputs remain
 separate. The complete scope-separated MOOSE, LAMA, MRP+HJ, and FOND4LTLf
 matrix remains in the Technical Supplement, avoiding a cross-scope ranking and
-a page-breaking double-column float. TIDE remains a conceptual trace-search
-comparison until a same-scope executable adapter is evaluated.
+a page-breaking double-column float. The pinned TIDE adapter is executable
+locally, but it remains a related-work comparison until a complete same-scope
+matrix has been run and frozen; do not imply an empirical TIDE result earlier.
 
 Machine-readable artifacts retain stable identifiers such as
 `validated_evidence_adapter` and `certified_balanced`. Manuscript tables and
@@ -574,7 +588,10 @@ whether the final temporal method is robust to evidence-seed variation; it does
 not recast the four seed-0 temporal ablation variants as a five-seed ablation.
 Seed-specific evidence is neither pooled nor selected by best outcome. The
 seed-0 record includes only the already registered, fully validated targeted
-correction for `logistics_p0_24`.
+correction for `logistics_p0_24`. Certified Balanced validates all 6,140
+executions; all 1,228 queries succeed under every seed, no case is
+seed-sensitive, and primitive-action counts are invariant across seeds. Mean
+per-seed PAR-2 is 5.36 seconds with a 0.27-second sample standard deviation.
 
 The generated paired-ablation tables use bold for tied best results and blue
 bold for the selected configuration or its structurally distinguishing metric.
@@ -1666,24 +1683,25 @@ run identifiers, source revisions, byte digests, and machine-local paths; every
 reported aggregate is recomputable from the included outcomes. Cross-seed
 timing is excluded because unrelated workloads overlapped the runs.
 
-## Temporal Execution Results
+## Five-Seed Temporal Execution Results
 
-The fixed Temporal Extended Goal evaluation executes the complete 1,228-case
-benchmark with one declared seed-0 atomic core per domain, 12 workers,
-1,800-second Jason and VAL limits, and a 64-MiB Java stack.
+The selected Certified Balanced controller executes the complete 1,228-case
+benchmark with each independently compiled seed-specific atomic-library set,
+using six workers, 1,800-second Jason and VAL limits, and a 64-MiB Java stack.
+Evidence is neither pooled nor selected by best seed.
 
-All 1,228 cases have an explicit Jason success marker, a complete primitive
-PDDL action trace accepted by neutral-goal VAL, and acceptance by both the gold
-and predicted finite-trace automata. Each predicted formula is compiled and
-executed once; gold-DFA and predicted-DFA acceptance are two semantic checks on
-that same replayed state trace, not two independent controller executions. The
-domain totals are 720/720 classical,
-360/360 bounded-numeric, and 148/148 serialized-width cases. The formula-profile
-totals are 273/273 ordered-two, 272/272 ordered-three, 275/275 strong-Until,
-137/137 same-state conjunction, and 271/271 same-state-with-negation.
+All 6,140 seed--case executions have an explicit Jason success marker, a
+complete primitive PDDL action trace accepted by neutral-goal VAL, and
+acceptance by both the gold and predicted finite-trace automata. Every one of
+the 1,228 queries succeeds under all five seeds, with no seed-sensitive case;
+primitive-action counts are also invariant across seeds. Each predicted formula
+is compiled and executed once per core, while gold-DFA and predicted-DFA
+acceptance are two checks on the same replayed state trace rather than separate
+controller executions. Mean per-seed PAR-2 is 5.36 seconds with a 0.27-second
+sample standard deviation.
 
 This result establishes complete execution coverage only for the released
-benchmark, supplied atomic libraries, and declared temporal and numeric
+benchmark, five supplied atomic-library sets, and declared temporal and numeric
 fragments. It does not establish action-strategy completeness for arbitrary
 PDDL-times-LTLf products, arbitrary arithmetic planning, or universal
 realizability under every type-compatible parameter assignment.

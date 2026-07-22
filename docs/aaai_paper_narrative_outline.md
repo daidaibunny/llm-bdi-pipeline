@@ -624,10 +624,11 @@ one seed.
 
 Keep the two experimental estimands explicit. The five-seed atomic matrix
 measures variability of evidence discovery, compilation, and atomic achievement
-coverage. The temporal matrix conditions on one declared seed-0 atomic-library
-set and measures translation, query-controller execution,
-and trace semantics. It isolates temporal variants but cannot support a
-cross-seed temporal-robustness claim.
+coverage. The paired temporal ablation conditions on one declared seed-0
+atomic-library set to isolate controller variants. The selected Certified
+Balanced controller is additionally evaluated on all five independently
+compiled atomic-library sets, measuring robustness of query-controller execution
+and trace semantics to evidence-seed variation.
 
 Raw MOOSE, LAMA for classical planning, ENHSP MRP+HJ for numeric planning, and
 FOND4LTLf v0.0.4 plus LAMA for its grounded Boolean temporal subset are external
@@ -659,8 +660,10 @@ been proved language-equivalent.
 
 The main result narrative may report the direct FOND4LTLf comparison only on
 the 492 Boolean queries accepted by its adapter, separating the other 736 inputs
-as unsupported. TIDE is a conceptual trace-search comparator until a common
-adapter and same-scope experiment exist; do not imply an empirical comparison.
+as unsupported. The pinned TIDE adapter now executes the persisted bound query
+through the official feedback, trace-heuristic, prefix-cache, and LAMA path and
+uses the same neutral-goal VAL and DFA oracles. Do not imply an empirical TIDE
+comparison until its complete same-scope matrix is run and frozen.
 
 Repair only cases explicitly recorded as infrastructure failures in those
 complete 20-worker matrices. Run the exact repair set serially with one worker,
@@ -768,13 +771,12 @@ are certified. Do not repeat the implementation inventory.
 
 Compress the main-paper limitations into one short sentence for each claim
 boundary: evidence-provider and candidate-grammar scope; temporal-dataset and
-fixed-core scope; and incomplete strategy synthesis. Preserve the detailed
+admitted-query scope; and incomplete strategy synthesis. Preserve the detailed
 rejection categories and implemented bounds in the Technical Supplement.
 
 Name unmeasured extensions as future work rather than implied evidence:
-cross-seed temporal robustness, scaling with generated candidate-set size,
-action-quality or repair-overhead analysis, same-scope trace-search comparison,
-and richer planning models.
+scaling with generated candidate-set size, action-quality or repair-overhead
+analysis, same-scope trace-search comparison, and richer planning models.
 
 Close the section with generator-assisted domain onboarding as a bounded future
 extension. A pinned parameterized PDDL problem generator may create a finite
@@ -1461,22 +1463,24 @@ distribution.
 The Technical Supplement contains `result_five_seed_atomic_domain_table.tex`,
 with raw Seed 0--4 counts and one combined mean $\pm$ sample-standard-deviation
 coverage column. It also contains `result_domain_table.tex`, explicitly
-labelled as the fixed seed-0 input table for the separate temporal evaluation.
-The latter must never be described as a five-seed robustness result.
+labelled as the common seed-0 input table for the paired temporal ablation. The
+selected temporal method's five-seed result is reported separately.
 
-### Main Fixed-Core Temporal Summary
+### Main Five-Seed Temporal Summary
 
-Report the two endpoint totals in one self-contained paragraph: distinct
+Report the endpoints in one self-contained paragraph: distinct
 controlled-language specifications must be valid and DFA-language equivalent;
-bound temporal queries must complete controller compilation and Jason execution,
-pass neutral-goal VAL, and be accepted by both DFA trace oracles. Keep the five
-per-profile rows and runtime/action distributions in the Technical Supplement.
+the selected controller must complete all five seed-specific executions, pass
+neutral-goal VAL, and be accepted by both DFA trace oracles. Report the pooled
+denominator, all-seed query count, and seed-level PAR-2 variation. Keep the five
+per-profile rows and pooled runtime/action distributions in the Technical
+Supplement.
 
 ### Failure and Rejection Reporting
 
-The main paper keeps the compact five-seed table and reports fixed-core temporal
+The main paper keeps the compact atomic table and reports five-seed temporal
 totals in prose. The Technical Supplement and machine-readable artifact preserve
-all raw domain--seed, per-profile, and fixed-input values. The supplementary artifact should always
+all raw domain--seed, per-profile, and paired-input values. The supplementary artifact should always
 keep translation errors, schema validation
 errors, unsupported DFA structure, certificate rejection, Jason failure,
 timeout, VAL failure, and DFA-trace rejection as separate statuses. A failed or
@@ -1594,10 +1598,10 @@ The following result insertions are complete:
    failure-boundary explanation, and Conclusion and Future Work text; and
 9. the paired ablation release generated by
    `scripts/freeze_paired_ablation_results.py`: 24,560 atomic outcomes and
-   4,912 temporal outcomes, with 6,059/6,140 Full GP2PL atomic successes,
-   1,228/1,228 Certified Balanced temporal successes, exact adjacent-method
-   paired contrasts, corrected transition-repair fan-out, and generated main
-   and supplementary tables.
+   4,912 temporal ablation outcomes, plus the 6,140-outcome selected-controller
+   extension, with 6,059/6,140 Full GP2PL atomic successes and 6,140/6,140
+   Certified Balanced temporal successes, exact adjacent-method paired contrasts,
+   corrected transition-repair fan-out, and generated manuscript tables.
 
 The remaining submission tasks are:
 
@@ -1613,9 +1617,9 @@ The five-seed public artifact records the declared protocol and every one of the
 unrelated workloads; this qualification does not change coverage or independent
 VAL outcomes.
 
-The temporal public artifact records all 1,228 semantic outcomes for the
-declared seed-0 atomic core. The manuscript must not infer atomic generation
-time from provisional diagnostic logs.
+The temporal public artifact records all 4,912 paired ablation outcomes and all
+6,140 selected-controller cross-seed outcomes. The manuscript must not infer
+atomic generation time from provisional diagnostic logs.
 
 ## Page Budget and Maintenance
 

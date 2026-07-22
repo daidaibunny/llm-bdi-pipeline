@@ -166,12 +166,15 @@ seeds, atomic coverage over
 \BenchmarkDomainCount{} domains is \AtomicFiveSeedMeanSuccessPercent{}\%
 (\AtomicFiveSeedSampleSDPercent{}-point sample SD); recursion and preservation
 add 10.42 and 9.36 paired-success points. All
-\TranslationEquivalentCount{} translations and \TEGProblemCount{} admitted
-queries pass DFA-language and execution validation. Unsupported are unrestricted
-PDDL--\ltlf{} synthesis, out-of-fragment arithmetic/formulae, and uncertified
-repair. Future work studies cross-seed temporal robustness, candidate-size
-scaling, action-quality overhead, same-scope trace-search comparisons, and
-richer models under fail-closed certification. Pinned PDDL generators with
+\TranslationEquivalentCount{} translations are DFA-language equivalent, and
+Certified Balanced validates
+\TemporalCrossSeedValidCount{}/\TemporalCrossSeedEvaluationCount{} executions
+across five seed-specific core sets, with every admitted query succeeding under
+every seed.
+Unsupported are unrestricted PDDL--\ltlf{} synthesis, out-of-fragment
+arithmetic/formulae, and uncertified repair. Future work studies candidate-size
+scaling, action-quality overhead, same-scope trace-search comparisons, and richer
+models under fail-closed certification. Pinned PDDL generators with
 held-out-disjoint instances can extend domain onboarding without changing the
 certificates.
 
