@@ -164,7 +164,9 @@ class ArchitectureContract:
 				"rules over singleton goal conditions."
 			),
 			(
-				"The temporal layer consumes lifted LTLf JSON, compiles it to a "
+				"The query layer consumes lifted LTLf JSON, canonically embeds an "
+				"atemporal achievement formula as an eventual completion condition, "
+				"compiles it to a "
 				"DFA, validates conjunctive guard transitions, and appends one "
 				"query-local transition helper per progress edge plus "
 				"query-specific +!g_query wrappers to the same domain library."
@@ -187,7 +189,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 		guarantee=(
 			"bounded atomic-template guarantee: import or learn lifted singleton "
 			"predicate/literal plan templates from verified external generalized-"
-			"planning artifacts, append conjunction-and-negation DFA transition wrappers, "
+			"planning artifacts, append achievement or temporal DFA transition wrappers, "
 			"and do not claim universal PDDL generalized-planning completeness"
 		),
 		paper_core_method=(
@@ -195,7 +197,7 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"verified external generalized-planning artifact consumption",
 			"LiftedPolicyProgram normalizer",
 			"AgentSpeak(L) compiler for lifted atomic plans",
-			"lifted LTLf-to-DFA temporal goal append",
+			"lifted LTLf-to-DFA bound-query append",
 			"conjunctive guard-transition DFA validator",
 		),
 		implementation_safeguards=(
@@ -226,7 +228,8 @@ def domain_level_architecture_contract() -> ArchitectureContract:
 			"verified external singleton-goal artifacts"
 		),
 		temporal_append_target=(
-			"query-specific +!g_query wrappers from "
+			"query-specific +!g_query wrappers for atemporal achievements or "
+			"temporally extended goals, compiled from "
 			"conjunctive DFA progress transitions with context-only negation"
 		),
 		temporal_descriptor_semantics=(
@@ -368,7 +371,8 @@ def paper_layer_quality_contracts() -> tuple[LayerPaperQualityContract, ...]:
 			layer="Temporal Goal Append Layer",
 			target_artifact="query-specific +!g_query wrappers over the domain library",
 			core_claim=(
-				"compile lifted LTLf goals to DFA metadata and append wrapper plans "
+				"compile lifted achievement or temporally extended LTLf queries to "
+				"DFA metadata and append wrapper plans "
 				"when the unique accepting progress path uses conjunction and negation"
 			),
 			admissible_evidence=(

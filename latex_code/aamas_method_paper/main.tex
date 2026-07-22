@@ -19,7 +19,7 @@
 \setcounter{secnumdepth}{2}
 
 \title{GP2PL: From Generalized Planning Evidence to Certified BDI Plan
-Libraries for Temporally Extended Goals}
+Libraries for Achievement and Temporally Extended Goals}
 \author{Anonymous Submission}
 \affiliations{}
 
@@ -57,12 +57,13 @@ leaves a representation gap: singleton-goal evidence may omit modules for
 subsidiary achievements and does not certify temporal composition. We introduce
 \methodname{}, short for Generalized Planning to Plan Libraries. Its typed input
 contract maps controlled-language requests to externally bound parametric
-\ltlf{} specifications consistent with the planning domain, while its compiler
-turns generalized-planning evidence and PDDL action models into certified BDI
-plan libraries. GP2PL validates and lifts evidence, generates
-schema-derived modules for producible goals, selects a compact closed
-atomic core, and appends query controllers guided by deterministic finite
-automata for finite-trace temporal goals without relearning that core. For the
+\ltlf{} query specifications consistent with the planning domain. Atemporal
+formulae denote achievements; temporal operators denote temporally extended
+goals. Its compiler turns generalized-planning evidence and
+PDDL action models into certified BDI plan libraries. GP2PL validates and lifts
+evidence, generates schema-derived modules for producible goals, selects a
+compact closed atomic core, and appends DFA-guided query controllers without
+relearning that core. For the
 generated candidate language and supported fragment, accepted branches and
 controllers satisfy conditional soundness guarantees; uncertified obligations
 are rejected. Across five fixed evidence seeds, mean held-out coverage over
@@ -98,8 +99,9 @@ composition guarantees required by an executable BDI library.
 GP2PL addresses this representation gap as shown in
 Figure~\ref{fig:architecture}. It compiles the evidence once into a certified,
 reusable atomic module core, then reuses that core when compiling each bound
-temporally extended goal (TEG) \cite{Hindriks2009TemporalGoals} into the same
-maintained library. The external backend is neither replaced nor rerun.
+query into the same maintained library. A query may be an ordinary achievement
+condition or a temporally extended goal (TEG) \cite{Hindriks2009TemporalGoals};
+the external backend is neither replaced nor rerun.
 
 \begin{figure}[htbp]
 \centering
@@ -109,22 +111,23 @@ maintained library. The external backend is neither replaced nor rerun.
 \fbox{\parbox[c][1.40in][c]{0.92\columnwidth}{\centering
 Figure 1 artwork placeholder\\[5pt]
 Single-column GP2PL overview\\
-Domain compilation $+$ query-specific temporal compilation}}
+Domain compilation $+$ query-specific compilation}}
 }
 \caption{GP2PL separates reusable domain compilation from query-specific
-temporal compilation. From domain $D$, training instances
+compilation. From domain $D$, training instances
 $\mathcal I_{\mathrm{train}}$, and external singleton-goal evidence
 $\mathcal E_{\mathrm{raw}}$, it compiles one atomic core
-$\mathcal M_D=\mathcal L_D^{[0]}$. Each bound TEG $\widehat{\tau}_q$ yields
+$\mathcal M_D=\mathcal L_D^{[0]}$. Each bound query $\widehat{\tau}_q$ yields
 query-local plans $\mathcal Q_q$, updating the sole maintained library by
 $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.}
 \label{fig:architecture}
 \end{figure}
 
-A TEG constrains a finite state trace rather than only a final state
+A conventional achievement goal requires one state condition to hold at
+completion. A TEG extends this interface by constraining a finite state trace
 \cite{DeGiacomoVardi2013,DeGiacomoRubin2018AutomataFOND}. Conditions required
 along that trace may interfere, so an arbitrary sequence of achievement calls
-need not preserve the intended temporal behavior
+need not preserve the intended behavior
 \cite{Thangarajah2003GoalInterference}.
 
 \begin{figure*}[t!]
@@ -147,9 +150,9 @@ renders the certified order as a balanced transition-repair tree.}
 \label{fig:compiler-stages}
 \end{figure*}
 
-GP2PL makes four contributions: a typed controlled-language contract and
-benchmark for bound TEGs with exact semantic translation evaluation; an
-evidence-to-library compiler that supplies omitted producible subgoals and
+GP2PL makes four contributions: a typed controlled-language contract for bound
+achievement goals and TEGs, with exact semantic translation evaluation on a TEG
+benchmark; an evidence-to-library compiler that supplies omitted producible subgoals and
 selects a compact, internally closed atomic core; certificate conditions for
 executable, terminating, and composable modules; and query-specific temporal
 controllers that reuse and extend one maintained BDI library.
@@ -162,8 +165,9 @@ controllers that reuse and extend one maintained BDI library.
 \FloatBarrier
 \section{Conclusion and Future Work}
 
-GP2PL translates typed controlled-language requests and compiles GP evidence and
-PDDL schemas into a closed atomic core with certified DFA controllers. Across five
+GP2PL translates typed achievement and temporally extended requests and compiles
+GP evidence and PDDL schemas into a closed atomic core with certified DFA
+controllers. Across five
 seeds, atomic coverage over
 \BenchmarkDomainCount{} domains is \AtomicFiveSeedMeanSuccessPercent{}\%
 (\AtomicFiveSeedSampleSDPercent{}-point sample SD); recursion and preservation

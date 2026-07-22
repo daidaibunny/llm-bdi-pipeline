@@ -2404,6 +2404,36 @@ def test_append_lifted_temporal_goal_case_uses_dfa_builder(tmp_path: Path) -> No
 	assert updated.metadata["temporal_goal_append"]["goal_name"] == "g_query_1"
 
 
+def test_append_lifted_achievement_goal_uses_completion_embedding(tmp_path: Path) -> None:
+	domain_file = _write_domain(tmp_path)
+	library = PlanLibrary(domain_name="tiny", plans=())
+	case = LiftedLTLfGoalCase(
+		query_id="query_1",
+		goal_name="g_query_1",
+		problem_file="p01.pddl",
+		source_text="Make X done.",
+		ltlf_formula="done(X)",
+		atoms=(),
+		bindings={},
+	)
+
+	updated, dfa_payload = append_lifted_temporal_goal_case_to_library(
+		plan_library=library,
+		goal_case=case,
+		domain_file=domain_file,
+		dfa_builder=_FakeDFABuilder(),
+	)
+
+	assert dfa_payload["original_formula"] == "F(done(X))"
+	assert dfa_payload["query_source_formula"] == "done(X)"
+	assert dfa_payload["query_execution_formula"] == "F(done(X))"
+	assert dfa_payload["query_kind"] == "achievement_goal"
+	append_record = updated.metadata["temporal_goal_append"]
+	assert append_record["query_kind"] == "achievement_goal"
+	assert append_record["query_source_formula"] == "done(X)"
+	assert append_record["query_execution_formula"] == "F(done(X))"
+
+
 def test_append_lifted_temporal_goal_restores_proposition_labels_from_atoms(
 	tmp_path: Path,
 ) -> None:

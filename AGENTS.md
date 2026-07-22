@@ -180,6 +180,10 @@ Do not refer to the current method as Layer A, Layer B, or Layer C. Use
   DFA-language equivalence is an evaluation oracle, not an online requirement.
 - Temporal append consumes the persisted validated LTLf artifact and must not
   rerun the language model during query compilation.
+- A query with no temporal operator is an ordinary achievement request and
+  remains atemporal in the persisted artifact. Before the common DFA path,
+  embed its completion semantics as `F(formula)`; preserve a TEG unchanged.
+  Do not add a separate linear or non-DFA achievement path.
 - The historical LTLf-to-DFA and logger code may be restored and refactored, but
   it must be PDDL-only and must not reintroduce HDDL, HTN, or legacy event-to-
   fluent mappings.

@@ -1,4 +1,4 @@
-\section{Validated Temporal Input and Plan-Library Compilation}
+\section{Validated Query Input and Plan-Library Compilation}
 \label{sec:method}
 
 \subsection{Controlled-Language Translation}
@@ -6,7 +6,9 @@
 A frozen language-model prompt receives one controlled-language request, its
 declared typed parameters and constraints, and the public PDDL catalogue. It
 returns a fixed eight-key JSON object containing an unbound parametric \ltlf{}
-formula and a one-to-one proposition table. Deterministic validation rejects
+query formula and a one-to-one proposition table. A formula without $F$, $X$, or
+$U$ is an ordinary achievement query; a formula using one of these operators is
+a TEG. Deterministic validation rejects
 undeclared symbols, wrong arities or types, unsupported operators, incomplete
 atom tables, and altered parameter constraints; it neither grounds parameters
 nor selects actions or objects. Invocation later supplies $\theta_q$. For
@@ -22,7 +24,7 @@ stages. Atomic compilation first checks each candidate branch locally through
 $\operatorname{Cert}_D(b)$ and records its completion summary $\Sigma_b$. It
 then checks candidate sets globally for evidence and schema coverage,
 internal-call closure, and compatible progress and dependency ranks before
-selecting $\mathcal M_D$. Temporal compilation reuses the selected summaries to
+selecting $\mathcal M_D$. Query compilation reuses the selected summaries to
 certify an occurrence-specific preservation portfolio $\boldsymbol\Pi_\chi$ and
 serialization $\boldsymbol\ell_\chi$ for each DFA guard $\chi$; it neither
 reopens atomic selection nor relearns $\mathcal M_D$.
@@ -219,16 +221,26 @@ slice: internal subgoal expansion followed by schema-action execution.}
 \label{fig:atomic-case}
 \end{figure}
 
-\section{DFA-Guided Composition of Temporally Extended Goals}
+\section{DFA-Guided Composition of Bound Queries}
 \label{sec:temporal-composition}
 
 Figure~\ref{fig:compiler-stages}(b) summarizes the query-specific path from a
-bound TEG and its DFA progress guard to a certified transition-repair tree and
+bound query and its DFA progress guard to a certified transition-repair tree and
 appended query plans.
 
+\paragraph{Achievement completion embedding.}
+Let $\varphi_q$ be the bound query formula. If
+$\varphi_q\in\Phi_{\mathrm{ach}}$, GP2PL compiles $F\varphi_q$ and returns when
+the resulting DFA first accepts, so the controller completion state satisfies
+$\varphi_q$; if $\varphi_q$ is a TEG, it is compiled unchanged. Both cases then
+pass through the same LTLf2DFA/MONA construction, progress-edge certification,
+monitor, and transition-repair controller. The embedding is therefore not a
+second wrapper or a bypass of the DFA path.
+
 \paragraph{Progress-edge compilation.}
-Given the validated bound query $\widehat\tau_q$ and DFA $\mathcal D_q$ of
-Sec.~\ref{sec:background}, GP2PL compiles one controller for each progress edge
+Given the validated bound query $\widehat\tau_q$ and DFA $\mathcal D_q$ of its
+execution formula from Sec.~\ref{sec:background}, GP2PL compiles one controller
+for each progress edge
 $(q_s,\chi,q_t)$; an accepting \texttt{true} self-loop needs none. The external
 binding $\theta_q$ instantiates query propositions while the shared atomic core
 $\mathcal M_D$ remains lifted. For signed obligation

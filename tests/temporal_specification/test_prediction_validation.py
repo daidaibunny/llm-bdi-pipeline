@@ -111,6 +111,39 @@ def test_validate_prediction_payload_accepts_numeric_equality() -> None:
 	)
 
 
+def test_validate_prediction_payload_accepts_atemporal_achievement_formula() -> None:
+	expected = {
+		"sample_id": "achievement_1",
+		"declared_parameters": [{"name": "X", "pddl_type": "item"}],
+		"constraints": [],
+	}
+	payload = {
+		"schema_version": 1,
+		"sample_id": "achievement_1",
+		"temporal_logic": "LTLf",
+		"ltlf_formula": "a0",
+		"atoms": [
+			{
+				"symbol": "a0",
+				"kind": "predicate",
+				"predicate": "ready",
+				"args": ["X"],
+			},
+		],
+		"declared_parameters": expected["declared_parameters"],
+		"constraints": [],
+		"status": "supported",
+	}
+
+	validated = validate_prediction_payload(
+		payload,
+		expected_sample=expected,
+		catalog=CATALOG,
+	)
+
+	assert validated.ltlf_formula == "a0"
+
+
 @pytest.mark.parametrize(
 	"formula",
 	(

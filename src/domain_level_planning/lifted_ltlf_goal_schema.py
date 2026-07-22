@@ -1,5 +1,5 @@
 """
-Parser for lifted LTLf goal JSON produced by the external Input component.
+Parser for lifted LTLf query JSON produced by the external Input component.
 
 This module intentionally performs local file I/O and schema validation only.
 It does not call a language model.
@@ -16,6 +16,9 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+
+from temporal_specification.query_semantics import LTLfQueryKind
+from temporal_specification.query_semantics import classify_ltlf_query
 
 
 @dataclass(frozen=True)
@@ -36,7 +39,7 @@ class LTLfAtomSpec:
 
 @dataclass(frozen=True)
 class LiftedLTLfGoalCase:
-	"""One query case in the lifted temporal-goal dataset."""
+	"""One ordinary achievement or temporally extended lifted query case."""
 
 	query_id: str
 	goal_name: str
@@ -64,7 +67,7 @@ class LiftedLTLfGoalCase:
 
 @dataclass(frozen=True)
 class LiftedLTLfGoalDataset:
-	"""Validated lifted LTLf goal dataset."""
+	"""Validated lifted LTLf query dataset."""
 
 	schema_version: int
 	goal_specification_kind: str
@@ -83,23 +86,28 @@ class LiftedLTLfGoalDataset:
 
 
 def load_lifted_ltlf_goal_dataset(path: str | Path) -> LiftedLTLfGoalDataset:
-	"""Load and validate a lifted LTLf goal dataset from disk."""
+	"""Load and validate a lifted LTLf query dataset from disk."""
 
 	payload = json.loads(Path(path).read_text(encoding="utf-8"))
 	return parse_lifted_ltlf_goal_dataset(payload)
 
 
 def parse_lifted_ltlf_goal_dataset(payload: Mapping[str, Any]) -> LiftedLTLfGoalDataset:
-	"""Validate and parse the external Input module's lifted LTLf JSON."""
+	"""Validate and parse the external Input module's lifted LTLf query JSON."""
 
 	if not isinstance(payload, Mapping):
-		raise ValueError("Lifted LTLf goal dataset must be a JSON object.")
+		raise ValueError("Lifted LTLf query dataset must be a JSON object.")
 	schema_version = int(payload.get("schema_version") or 0)
 	if schema_version != 1:
 		raise ValueError("schema_version must be 1.")
 	goal_specification_kind = str(payload.get("goal_specification_kind") or "").strip()
-	if goal_specification_kind != "temporal_extended_goal":
-		raise ValueError("goal_specification_kind must be temporal_extended_goal.")
+	try:
+		declared_query_kind = LTLfQueryKind(goal_specification_kind)
+	except ValueError as error:
+		raise ValueError(
+			"goal_specification_kind must be achievement_goal or "
+			"temporal_extended_goal.",
+		) from error
 	temporal_logic = str(payload.get("temporal_logic") or "").strip()
 	if temporal_logic != "LTLf":
 		raise ValueError("temporal_logic must be LTLf.")
@@ -109,15 +117,26 @@ def parse_lifted_ltlf_goal_dataset(payload: Mapping[str, Any]) -> LiftedLTLfGoal
 	raw_cases = payload.get("cases")
 	if not isinstance(raw_cases, Mapping):
 		raise ValueError("cases must be a JSON object.")
+	cases = tuple(
+		_parse_case(query_id, case_payload)
+		for query_id, case_payload in sorted(raw_cases.items())
+	)
+	for case in cases:
+		actual_query_kind = classify_ltlf_query(case.ltlf_formula)
+		if actual_query_kind != declared_query_kind:
+			if declared_query_kind == LTLfQueryKind.ACHIEVEMENT:
+				raise ValueError(
+					"achievement_goal cases must not contain temporal operators.",
+				)
+			raise ValueError(
+				"temporal_extended_goal cases must contain at least one temporal operator.",
+			)
 	return LiftedLTLfGoalDataset(
 		schema_version=schema_version,
 		goal_specification_kind=goal_specification_kind,
 		temporal_logic=temporal_logic,
 		domain=domain,
-		cases=tuple(
-			_parse_case(query_id, case_payload)
-			for query_id, case_payload in sorted(raw_cases.items())
-		),
+		cases=cases,
 	)
 
 

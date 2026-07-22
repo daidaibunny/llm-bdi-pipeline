@@ -2,7 +2,8 @@
 
 **GP2PL** (Generalized Planning to Plan Libraries) is a framework for compiling
 generalized-planning evidence into certified Belief--Desire--Intention (BDI)
-plan libraries and composing temporally extended goals over those libraries.
+plan libraries and composing ordinary achievement goals or their temporal
+extensions over those libraries.
 
 The framework addresses a representation problem. A generalized planner may
 return a lifted policy or macro rule, while a BDI interpreter requires a closed
@@ -28,12 +29,16 @@ include internal targets such as `clear(X)`, certifies candidate branches, and
 asks Clingo to select a minimum-cost feasible core from the generated certified
 candidate set.
 
-The query-specific temporal compilation is
+The query-specific compilation is
 
 ```text
-typed and bound LTLf specification + real ltlf2dfa/MONA automaton
+typed and bound achievement or TEG specification + real ltlf2dfa/MONA automaton
 -> certified query-local BDI controllers appended to the domain library
 ```
+
+An ordinary achievement query is an LTLf state formula with no temporal
+operator. GP2PL embeds it as `F(formula)` for execution; a temporally extended
+goal is unchanged. Both then use the same automaton and controller pipeline.
 
 A controller interprets one deterministic finite automaton transition guard as
 one signed state condition. Positive literals are achievement obligations;

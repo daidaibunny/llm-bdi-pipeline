@@ -13,7 +13,7 @@ the manuscript.
 The preferred title is:
 
 > **GP2PL: From Generalized Planning Evidence to Certified BDI Plan Libraries
-> for Temporally Extended Goals**
+> for Achievement and Temporally Extended Goals**
 
 **GP2PL** expands to **Generalized Planning to Plan Libraries** and names the
 complete framework: evidence normalization, validated policy lifting, temporal
@@ -30,7 +30,8 @@ the evaluated interpreter; neither name defines the upper-level contribution.
 The paper has one thesis:
 
 > Generalized-planning evidence can be compiled into a reusable, executable BDI
-> plan library, and supported temporally extended goals can be composed over
+> plan library, and supported achievement goals and temporal extensions can be
+> composed over
 > that library, provided that every accepted atomic branch and temporal
 > transition carries the required action-schema-derived certificates.
 
@@ -85,15 +86,18 @@ second tuple or reuse one symbol for a different semantic role.
   keyed resource-mode graph whose labelled edges are target-preserving symbolic
   action-schema transitions. These compile-time witnesses do not become agent
   beliefs.
-- `tau_q = <iota_q,varphi_q,mu_q,Theta_q,Gamma_q>` is one unbound temporal
+- `tau_q = <iota_q,varphi_q,mu_q,Theta_q,Gamma_q>` is one unbound query
   specification: identifier, formula, proposition map, typed parameter
   signature, and binding constraints. `theta_q:Xbar_q->O_I` is the external
   object binding for the invoked instance,
   and `hat(tau)_q = (tau_q,theta_q)` is the bound query.
 - `Phi_syn` is the recursive `F`, strong-`X`, strong-`U`, conjunction, and
-  literal-negation input grammar; `Phi_bench` is the five-profile evaluation
-  family; and `Phi_cert(D,M_D)` is the certificate-accepted subset. Never call
-  these three scopes interchangeably "the supported fragment".
+  literal-negation input grammar. `Phi_ach` is its atemporal
+  literal-and-conjunction subset; an achievement formula `psi` is embedded as
+  `F(psi)` only for execution, while formulae already containing temporal
+  operators are TEGs and remain unchanged. `Phi_bench` is the five-profile TEG
+  evaluation family; `Phi_cert(D,M_D)` is the certificate-accepted subset.
+  Never call these scopes interchangeably "the supported fragment".
 - `D_q = <Q_q^dfa,2^AP_q,delta_q,q_q^0,F_q>` is the deterministic finite
   automaton. For the bound query, `val_q` maps a proposition to true exactly
   when its `mu_q` predicate instance holds or its bounded integer equality has
@@ -273,13 +277,14 @@ software components.
    Then explain why compilation is not formatting: a policy may rely on
    subsidiary conditions for which an executable library has no plan. Defer the
    complete certificate inventory to the Method.
-3. Explain why a temporally extended goal (TEG), meaning a goal over a finite
-   state trace, cannot generally be replaced by an arbitrary sequence of
-   achievement calls. Keep the Introduction at this level; defer LTLf syntax,
-   DFA guards, monitor boundaries, and individual certificates to the formal
-   sections.
+3. Establish that the query interface accepts ordinary achievement conditions
+   and their temporal extensions. Then explain why a TEG, meaning a goal over a
+   finite state trace, cannot generally be replaced by an arbitrary sequence of
+   achievement calls. Keep the Introduction at this level; defer the canonical
+   achievement embedding, LTLf syntax, DFA guards, monitor boundaries, and
+   individual certificates to the formal sections.
 4. Keep Figure 1 at the representation-boundary level: domain and provider
-   evidence compile once into `M_D`, while each bound temporal query appends
+   evidence compile once into `M_D`, while each bound query appends
    `Q_q` to the maintained library. Introduce the Blocks running example only
    in Figure 2 and the method, where its rules carry explanatory value.
 5. Present the input boundary, two-stage compiler, and four contributions in a
@@ -306,7 +311,8 @@ Define only concepts used by the algorithms:
 - AgentSpeak(L) as the concrete rendering used by the implementation and Jason
   as its evaluated interpreter, without claiming portability to unevaluated BDI
   languages;
-- an LTLf formula and its deterministic finite automaton (DFA);
+- the atemporal achievement fragment, its canonical completion embedding, and
+  temporally extended LTLf formulae with their deterministic finite automata;
 - the domain-compilation input `(D, I_train, E)` and atomic-core output `M_D`;
 - the per-query input `(M_D, hat(tau)_q)`, where
   `hat(tau)_q=(tau_q,theta_q)`, and query-plan output `Q_q`; and
@@ -346,7 +352,7 @@ certificate-carrying compiler that derives summaries from generalized-planning
 evidence and PDDL schemas, constructs executable domain modules, and composes
 query-local controllers.
 
-### 4. Validated Temporal Input and Plan-Library Compilation
+### 4. Validated Query Input and Plan-Library Compilation
 
 First define the controlled-language input, frozen prompt, exact JSON contract,
 deterministic PDDL/schema checks, and externally bound parameter semantics.
@@ -398,17 +404,20 @@ understand a contribution. Long proof steps and secondary implementation cases
 belong in supplementary material so that final results fit the seven-page AAAI
 technical-content limit.
 
-### 5. DFA-Guided Composition of Temporally Extended Goals
+### 5. DFA-Guided Composition of Bound Queries
 
-This section covers only query-specific control over the selected atomic core
+This section covers query-specific control over the selected atomic core
 `M_D`. Assume the notation and semantic boundary already fixed in Sec. 2:
 `tau_q`, the external type-consistent binding `theta_q`, the bound query
-`widehat tau_q`, `Phi_syn`, `Phi_bench`, `Phi_cert(D,M_D)`, `val_q`, and the
+`widehat tau_q`, `Phi_ach`, `Phi_syn`, `Phi_bench`,
+`Phi_cert(D,M_D)`, `val_q`, and the
 deterministic automaton. Do not redefine them here. Keep the eight-key input
 schema, fail-closed field validation, prompt, and formula-to-DFA construction
 details in the Technical Supplement; keep controlled utterances, profile
 sampling, and translation equivalence in Experimental Evaluation. The main
-method begins from a validated bound query and its DFA.
+method begins from a validated bound query and its DFA. State once that an
+atemporal achievement formula `psi` is canonically embedded as `F(psi)` before
+the same real LTLf2DFA/MONA path; this is not a second controller fast path.
 
 1. Give every DFA edge that strictly reduces graph distance to acceptance one
    transition controller guarded by the current query-local monitor state.
@@ -969,7 +978,8 @@ Use a compact vertical flow with one side input and one final library artifact:
   `(1) Lift + certify core once`, producing
   `Certified atomic module core $\mathcal M_D$`.
 - Draw one solid reuse arrow from `$\mathcal M_D$` to `(2) Compose + append`.
-  A side input `Bound temporal query $\widehat\tau_q=(\tau_q,\theta_q)$`, produced
+  A side input `Bound query $\widehat\tau_q=(\tau_q,\theta_q)$`, which may be an
+  ordinary achievement or a TEG and is produced
   by the typed controlled-language input contribution described in the text,
   enters this second operation. The user/thought-bubble motif denotes this input
   boundary without adding a model-specific software box.
@@ -988,10 +998,10 @@ Figure 1. Those details belong in Figure 2, the algorithms, and Evaluation.
 Draft caption:
 
 > **Figure 1:** GP2PL separates reusable domain compilation from query-specific
-> temporal compilation. From domain $D$, training instances
+> compilation. From domain $D$, training instances
 > $\mathcal I_{\mathrm{train}}$, and external singleton-goal evidence
 > $\mathcal E_{\mathrm{raw}}$, it compiles one atomic core
-> $\mathcal M_D=\mathcal L_D^{[0]}$. Each bound TEG $\widehat{\tau}_q$ yields
+> $\mathcal M_D=\mathcal L_D^{[0]}$. Each bound query $\widehat{\tau}_q$ yields
 > query-local plans $\mathcal Q_q$, updating the sole maintained library by
 > $\mathcal L_D^{[k+1]}=\mathcal L_D^{[k]}\cup\mathcal Q_q$.
 
@@ -1004,7 +1014,7 @@ separate temporal-composition figure. It must retain a clear left-to-right
 compiler spine rather than becoming a standalone automaton diagram.
 Do not use the Introduction to narrate the implementation shown here. Cite
 panel (a) from Evidence Normalization and Canonical Lifting and panel (b) from
-DFA-Guided Composition of Temporally Extended Goals.
+DFA-Guided Composition of Bound Queries.
 
 - Panel (a), `Query-independent atomic-core compiler`, shows
   `$D,\mathcal I_{\mathrm{train}},\mathcal E_{\mathrm{raw}}$` entering

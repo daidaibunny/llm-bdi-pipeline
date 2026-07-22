@@ -1,5 +1,5 @@
 """
-Append query-specific temporal goals to a domain-level atomic ASL library.
+Append query-specific achievement or temporal goals to an atomic ASL library.
 
 The input side is expected to provide a validated LTLf JSON object and a DFA
 payload. This module only checks the DFA interface required by the ASL layer and
@@ -25,6 +25,8 @@ from plan_library.models import AgentSpeakBodyStep
 from plan_library.models import AgentSpeakPlan
 from plan_library.models import AgentSpeakTrigger
 from plan_library.models import PlanLibrary
+from temporal_specification.query_semantics import classify_ltlf_query
+from temporal_specification.query_semantics import execution_ltlf_formula
 from utils.symbol_normalizer import SymbolNormalizer
 from utils.pddl_parser import PDDLDomain
 from utils.pddl_parser import PDDLParser
@@ -388,6 +390,13 @@ def append_temporal_goal_to_library(
 			declared_arities=declared_arities,
 		),
 	}
+	for query_field in (
+		"query_kind",
+		"query_source_formula",
+		"query_execution_formula",
+	):
+		if query_field in dfa_payload:
+			append_record[query_field] = dfa_payload[query_field]
 	plans = list(plan_library.plans)
 	transition_path = _monitored_progress_objectives(
 		dfa_payload=dfa_payload,
@@ -487,7 +496,7 @@ def append_lifted_temporal_goal_case_to_library(
 		TemporalCompilerVariant.CERTIFIED_BALANCED
 	),
 ) -> tuple[PlanLibrary, Mapping[str, Any]]:
-	"""Compile one lifted LTLf goal case to DFA and append it to a library."""
+	"""Compile one lifted LTLf query case to DFA and append it to a library."""
 
 	dfa_payload = build_lifted_temporal_goal_case_dfa(
 		goal_case=goal_case,
@@ -508,12 +517,20 @@ def build_lifted_temporal_goal_case_dfa(
 	goal_case: LiftedLTLfGoalCase,
 	dfa_builder: Any,
 ) -> Mapping[str, Any]:
-	"""Build and bind one real MONA-derived DFA before variant-specific compilation."""
+	"""Build and bind one real MONA-derived query DFA before compilation."""
 
-	return _rewrite_dfa_payload_labels_from_lifted_atoms(
-		dfa_builder.build(goal_case.ltlf_formula),
+	source_formula = goal_case.ltlf_formula.strip()
+	execution_formula = execution_ltlf_formula(source_formula)
+	rewritten = _rewrite_dfa_payload_labels_from_lifted_atoms(
+		dfa_builder.build(execution_formula),
 		goal_case=goal_case,
 	)
+	return {
+		**dict(rewritten),
+		"query_kind": classify_ltlf_query(source_formula).value,
+		"query_source_formula": source_formula,
+		"query_execution_formula": execution_formula,
+	}
 
 
 def _has_existing_goal_trigger(plan_library: PlanLibrary, goal_name: str) -> bool:

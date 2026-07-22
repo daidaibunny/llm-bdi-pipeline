@@ -50,21 +50,26 @@ require a semantics-preserving translation and an independent execution study.
 Query controllers follow declarative goal patterns by rechecking their intended
 state after subsidiary plans return \cite{Hubner2006DeclarativeGoals}.
 
-\subsection{Finite-Trace Temporal Goals}
+\subsection{Achievement and Finite-Trace Temporal Goals}
 
 Linear temporal logic over finite traces (\ltlf{}) is interpreted over a
 nonempty finite state sequence \cite{DeGiacomoVardi2013}. For proposition
 alphabet $AP_q$, the declared input language $\Phi_{\mathrm{syn}}$ admits
 literals, conjunction, and the operators $F$ (eventually), $X$ (strong next),
-and $U$ (strong until) over $AP_q$, with negation restricted to atoms; the full
-grammar and finite-trace semantics appear in the Technical Supplement, Sec.~1.
+and $U$ (strong until) over $AP_q$, with negation restricted to atoms. Its
+atemporal subset $\Phi_{\mathrm{ach}}$ contains literals and conjunctions with no
+temporal operator and denotes ordinary achievement conditions; formulae in
+$\Phi_{\mathrm{syn}}\setminus\Phi_{\mathrm{ach}}$ are TEGs. The full grammar and
+finite-trace semantics appear in the Technical Supplement, Sec.~1.
 The evaluation family
 $\Phi_{\mathrm{bench}}\subset\Phi_{\mathrm{syn}}$ contains instances of the
 five predeclared profiles in Sec.~\ref{sec:evaluation}; membership in either
 set is not an action-strategy guarantee.
 
-Following automata-theoretic planning \cite{DeGiacomoRubin2018AutomataFOND}, we
-construct the deterministic finite automaton (DFA)
+For $\varphi_q\in\Phi_{\mathrm{ach}}$, the canonical completion embedding is
+$F\varphi_q$; a TEG is unchanged. Following automata-theoretic planning
+\cite{DeGiacomoRubin2018AutomataFOND}, we construct the deterministic finite
+automaton (DFA) for this execution formula
 $\mathcal D_q=\langle Q_q^{\mathrm{dfa}},2^{AP_q},\delta_q,q_q^0,F_q\rangle$
 with LTLf2DFA and MONA \cite{Fuggitti2020LTLf2DFA,Henriksen1995MONA}, and a
 valuation map $\mathit{val}_q$ interprets a PDDL state over $AP_q$. For
@@ -96,9 +101,9 @@ $\mathcal{I}_{\mathrm{train}}$, and normalized singleton-goal evidence $E$,
 atomic compilation produces the certified atomic module core $\mathcal{M}_D$:
 the query-independent branches whose triggers are singleton achievements.
 
-An unbound temporal specification is $\tau_q$, its externally supplied
+An unbound query specification is $\tau_q$, its externally supplied
 type-consistent object binding is $\theta_q$, and
-$\widehat\tau_q=(\tau_q,\theta_q)$ is the validated bound query. Temporal
+$\widehat\tau_q=(\tau_q,\theta_q)$ is the validated bound query. Query
 compilation produces the query-local plan set $\mathcal{Q}_q$, comprising its
 top-level goal, DFA dispatch, and transition-repair plans. For appended queries
 $q_1,\ldots,q_k$, the one maintained domain library is

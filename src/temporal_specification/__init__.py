@@ -22,10 +22,16 @@ from .prediction_validation import (
 	ValidatedTemporalAtom,
 	validate_prediction_payload,
 )
+from .query_semantics import (
+	LTLfQueryKind,
+	classify_ltlf_query,
+	execution_ltlf_formula,
+)
 
 __all__ = [
 	"BASELINE_PROMPT_CONFIG",
 	"FULL_PROMPT_CONFIG",
+	"LTLfQueryKind",
 	"NON_RETRYABLE_ERROR_CODES",
 	"PROMPT_COMPONENTS",
 	"PromptConfig",
@@ -39,5 +45,7 @@ __all__ = [
 	"build_lifted_ltlf_user_prompt",
 	"build_retry_feedback",
 	"build_retry_user_message",
+	"classify_ltlf_query",
+	"execution_ltlf_formula",
 	"validate_prediction_payload",
 ]

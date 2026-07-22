@@ -311,6 +311,68 @@ def test_main_appends_lifted_temporal_goal_to_existing_library(
 	assert "dfa_state" not in asl
 
 
+def test_main_appends_atemporal_achievement_through_common_dfa_path(
+	tmp_path: Path,
+) -> None:
+	domain_file, _ = _write_tiny_domain_and_problem(tmp_path)
+	library_root = tmp_path / "domain_libraries"
+	_write_atomic_library_json(library_root, domain_name="tiny")
+	goal_json = tmp_path / "lifted_achievement_goal.json"
+	goal_json.write_text(
+		json.dumps(
+			{
+				"schema_version": 1,
+				"goal_specification_kind": "achievement_goal",
+				"temporal_logic": "LTLf",
+				"domain": "tiny",
+				"cases": {
+					"query_1": {
+						"goal_name": "g_query_1",
+						"problem_file": "problem.pddl",
+						"source_text": "Finish.",
+						"ltlf_formula": "done",
+						"atoms": ["done"],
+						"bindings": {},
+						"atom_vocabulary": "pddl_fluents",
+						"status": "supported",
+					},
+				},
+			},
+		),
+		encoding="utf-8",
+	)
+
+	completed = subprocess.run(
+		[
+			sys.executable,
+			str(PROJECT_ROOT / "src" / "main.py"),
+			"append-lifted-temporal-goal",
+			"--domain-file",
+			str(domain_file),
+			"--ltlf-goal-json",
+			str(goal_json),
+			"--query-id",
+			"query_1",
+			"--library-root",
+			str(library_root),
+		],
+		cwd=PROJECT_ROOT,
+		check=True,
+		capture_output=True,
+		text=True,
+	)
+	result = json.loads(completed.stdout)
+	library_payload = json.loads(
+		Path(result["artifact_paths"]["plan_library"]).read_text(encoding="utf-8"),
+	)
+	append_record = library_payload["metadata"]["temporal_goal_append"]
+
+	assert result["success"] is True
+	assert append_record["query_kind"] == "achievement_goal"
+	assert append_record["query_source_formula"] == "done"
+	assert append_record["query_execution_formula"] == "F(done)"
+
+
 def test_main_registers_temporal_compiler_variant_in_artifacts(tmp_path: Path) -> None:
 	domain_file, _ = _write_tiny_domain_and_problem(tmp_path)
 	library_root = tmp_path / "domain_libraries"
