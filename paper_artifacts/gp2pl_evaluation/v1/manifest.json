@@ -63,6 +63,8 @@
     "temporal_execution_summary.json"
   ],
   "paired_ablation_atomic_record_count": 24560,
+  "paired_ablation_temporal_cross_seed_record_count": 6140,
+  "paired_ablation_temporal_cross_seed_seed_count": 5,
   "paired_ablation_temporal_record_count": 4912,
   "raw_moose_extension_record_count": 740,
   "result_count": 1228,

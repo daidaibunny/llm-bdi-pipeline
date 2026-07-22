@@ -76,6 +76,8 @@ def test_release_manifest_lists_files_without_integrity_digests() -> None:
 	assert files == sorted(files)
 	assert "paired_ablation_results.json" in files
 	assert "benchmark_compatibility.json" not in files
+	assert manifest["paired_ablation_temporal_cross_seed_record_count"] == 6140
+	assert manifest["paired_ablation_temporal_cross_seed_seed_count"] == 5
 
 
 def test_paired_result_aggregates_are_recomputable_from_outcomes() -> None:
@@ -100,6 +102,24 @@ def test_paired_result_aggregates_are_recomputable_from_outcomes() -> None:
 		assert sum(record["valid"] is True for record in records) == row[
 			"valid_trace_count"
 		]
+
+
+def test_cross_seed_temporal_aggregate_is_recomputable_from_outcomes() -> None:
+	result = json.loads(
+		(RELEASE_ROOT / "paired_ablation_results.json").read_text(encoding="utf-8"),
+	)
+	extension = result["temporal_cross_seed"]
+	records = tuple(result["temporal_cross_seed_records"])
+	assert len(records) == 6140
+	for row in extension["seed_results"]:
+		seed_records = [record for record in records if record["seed"] == row["seed"]]
+		assert len(seed_records) == row["evaluation_count"] == 1228
+		assert sum(record["valid"] is True for record in seed_records) == row[
+			"success_count"
+		]
+	assert sum(record["valid"] is True for record in records) == extension[
+		"aggregate"
+	]["pooled_success_count"]
 
 
 def _all_keys(value: Any) -> list[str]:

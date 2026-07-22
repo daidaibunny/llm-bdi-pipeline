@@ -20,9 +20,11 @@ used by the reported evaluation. The temporal benchmark is `paper_artifacts/temp
   LAMA/MRP+HJ matrix and 1,228-case FOND4LTLf-plus-LAMA matrix. Its 2,456
   portable records retain method outcomes, runtimes, and validation status.
 - `paired_ablation_results.json` freezes all 24,560 atomic and 4,912 temporal
-  paired outcomes, their aggregate tables, adjacent-method exact paired
-  contrasts, corrected transition-repair fan-out, and the 13-case challenge
-  outcomes.
+  paired-ablation outcomes, their aggregate tables, adjacent-method exact
+  paired contrasts, corrected transition-repair fan-out, and the 13-case
+  challenge outcomes. Its integrated cross-seed extension adds 6,140
+  Certified Balanced outcomes: the same 1,228 temporal queries over each of
+  five independently seeded Full GP2PL atomic libraries.
 - `certificate_challenge_summary.json` records fail-closed and renaming tests.
 - `execution_distribution.json` records distributional execution statistics.
 - `manifest.json` lists the public files and result counts.

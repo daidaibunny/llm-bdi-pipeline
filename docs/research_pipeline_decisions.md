@@ -566,6 +566,16 @@ temporal tables and macros are the only manuscript insertion path for these
 values. The optional diagnostic plot is regenerated from the same release and
 is never reconstructed from LaTeX cells or used as a main-paper result figure.
 
+The same paired release contains an integrated cross-seed temporal extension.
+It applies only the selected Certified Balanced temporal compiler to the same
+1,228 bound queries over each of the five independently seeded Full GP2PL
+atomic-library sets, for 6,140 additional case outcomes. This extension tests
+whether the final temporal method is robust to evidence-seed variation; it does
+not recast the four seed-0 temporal ablation variants as a five-seed ablation.
+Seed-specific evidence is neither pooled nor selected by best outcome. The
+seed-0 record includes only the already registered, fully validated targeted
+correction for `logistics_p0_24`.
+
 The generated paired-ablation tables use bold for tied best results and blue
 bold for the selected configuration or its structurally distinguishing metric.
 Captions state this convention, so color is redundant. External-reference rows
